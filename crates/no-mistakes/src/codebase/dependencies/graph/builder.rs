@@ -25,12 +25,6 @@ pub(crate) struct PreparedGraphBuild<'a> {
     pub(crate) visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
 }
 
-pub(crate) struct PreparedGraphFacts<'a> {
-    pub(crate) ts: Option<&'a dyn TsFactLookup>,
-    pub(crate) dotnet: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
-    pub(crate) swift: Option<&'a crate::codebase::swift::SwiftFactMap>,
-}
-
 impl DepGraph {
     /// Build from request-scoped files and config that the caller prepared
     /// before entering a multi-consumer analysis fanout.
@@ -62,47 +56,32 @@ impl DepGraph {
         prepared: &PreparedGraphConfig,
         facts: Option<&dyn TsFactLookup>,
     ) -> Result<Self> {
-        Self::build_with_plan_files_prepared_config_facts_and_resolution_cache(PreparedGraphBuild {
-            root,
-            tsconfig,
-            plan,
-            graph_files,
-            config_path,
-            prepared,
-            facts,
-            import_resolution_cache: None,
-            dotnet_facts: None,
-            swift_facts: None,
-            visible_paths: None,
-        })
-    }
-
-    pub(crate) fn build_with_plan_files_prepared_config_and_all_facts(
-        root: &Path,
-        tsconfig: &TsConfig,
-        plan: GraphBuildPlan,
-        graph_files: &GraphFiles,
-        config_path: Option<&Path>,
-        prepared: &PreparedGraphConfig,
-        facts: PreparedGraphFacts<'_>,
-    ) -> Result<Self> {
-        Self::build_with_plan_files_prepared_config_facts_and_resolution_cache(PreparedGraphBuild {
-            root,
-            tsconfig,
-            plan,
-            graph_files,
-            config_path,
-            prepared,
-            facts: facts.ts,
-            import_resolution_cache: None,
-            dotnet_facts: facts.dotnet,
-            swift_facts: facts.swift,
-            visible_paths: None,
-        })
+        Self::build_with_plan_files_prepared_config_facts_and_session(
+            PreparedGraphBuildRequest {
+                root,
+                tsconfig,
+                plan,
+                graph_files,
+                config_path,
+                prepared,
+                facts,
+            },
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
+        )
     }
 
     pub(crate) fn build_with_plan_files_prepared_config_facts_and_resolution_cache(
         input: PreparedGraphBuild<'_>,
+    ) -> Result<Self> {
+        Self::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
+            input,
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
+        )
+    }
+
+    pub(crate) fn build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
+        input: PreparedGraphBuild<'_>,
+        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
         let PreparedGraphBuild {
             root,
@@ -134,6 +113,7 @@ impl DepGraph {
             },
             facts,
             SuppliedFactPolicy::RequireComplete,
+            session,
         )
     }
 
@@ -163,6 +143,7 @@ impl DepGraph {
             },
             None,
             SuppliedFactPolicy::RequireComplete,
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
         )
     }
 
@@ -192,7 +173,7 @@ impl DepGraph {
             },
             facts,
             SuppliedFactPolicy::FillSparse,
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
         )
     }
-
 }

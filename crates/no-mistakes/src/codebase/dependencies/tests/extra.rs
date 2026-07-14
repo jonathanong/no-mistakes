@@ -153,8 +153,7 @@ fn file_filters_exclude_module_nodes_without_target_module_filter() {
         base_url: None,
     };
     let visible = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, &[]);
-    let filtered =
-        apply_filters(entries, &args, root, &config, &tsconfig, &visible, None).unwrap();
+    let filtered = apply_filters(entries, &args, root, &config, &tsconfig, &visible, None).unwrap();
 
     assert_eq!(filtered.len(), 2);
     assert!(filtered
@@ -279,3 +278,4 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
 include!("extra_execution.rs");
 include!("extra_execution_framework.rs");
 include!("extra_execution_output.rs");
+include!("extra_execution_session.rs");

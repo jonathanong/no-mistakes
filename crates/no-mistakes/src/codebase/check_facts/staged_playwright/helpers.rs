@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub(super) fn collect_test_partition(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     files: &[PathBuf],
     plan: CheckFactPlan,
@@ -16,6 +17,7 @@ pub(super) fn collect_test_partition(
         .cloned()
         .collect::<Vec<_>>();
     facts.extend(super::super::collect::collect_fact_map_with_sources(
+        session,
         root,
         &files,
         &plan,

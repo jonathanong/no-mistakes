@@ -8,9 +8,9 @@ pub(crate) type RunnerConfigFacts = std::collections::BTreeMap<
 >;
 
 pub(crate) fn collect_prepared_runner_facts(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
-    files: &[PathBuf],
-    graph_only_files: &[PathBuf],
+    file_scope: (&[PathBuf], &[PathBuf]),
     plan: &CheckFactPlan,
     graph_plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
@@ -19,10 +19,12 @@ pub(crate) fn collect_prepared_runner_facts(
     (HashMap<PathBuf, CheckFileFacts>, RunnerConfigFacts),
     HashMap<PathBuf, CheckFileFacts>,
 ) {
+    let (files, graph_only_files) = file_scope;
     let (runner_files, _) = split_runner_config_files(files, plan);
     let (runner_graph_files, _) = split_runner_config_files(graph_only_files, plan);
     let collect = || {
         let mut facts = super::collect::collect_fact_map_sequential_with_sources(
+            session,
             root,
             &runner_files,
             plan,
@@ -30,6 +32,7 @@ pub(crate) fn collect_prepared_runner_facts(
             &sources,
         );
         facts.extend(super::collect::collect_fact_map_sequential_with_sources(
+            session,
             root,
             &runner_graph_files,
             graph_plan,
@@ -42,7 +45,7 @@ pub(crate) fn collect_prepared_runner_facts(
                 if configs.contains_key(path) {
                     continue;
                 }
-                if let Some(config) = runner_plan.parse_path_for_facts(path) {
+                if let Some(config) = runner_plan.parse_path_for_facts_with_session(session, path) {
                     configs.insert(path.clone(), config);
                 }
             }

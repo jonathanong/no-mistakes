@@ -1,0 +1,37 @@
+id: no-aggregate-standalone-analysis
+valid:
+  - |
+    fn analyze(session: &AnalysisSession, root: &Path) {
+        let visible = session.visible_paths(root);
+        let graph = session.graph(plan)?;
+    }
+invalid:
+  - |
+    fn analyze(root: &Path) {
+        let visible = discover_visible_paths(root);
+    }
+  - |
+    fn analyze(root: &Path, tsconfig: &TsConfig) {
+        let graph = DepGraph::build(root, tsconfig)?;
+    }
+  - |
+    fn analyze(files: &[PathBuf]) {
+        let facts = collect_ts_facts(files, TsFactPlan::imports());
+    }
+  - |
+    fn analyze(root: &Path) {
+        let visible = crate::codebase::ts_source::discover_visible_paths(root);
+    }
+  - |
+    fn analyze(root: &Path, tsconfig: &TsConfig) {
+        let graph = graph::DepGraph::build_with_plan(root, tsconfig, GraphBuildPlan::all())?;
+    }
+  - |
+    fn analyze(root: &Path, tsconfig: &TsConfig) {
+        let graph = crate::codebase::dependencies::graph::DepGraph::build_with_plan_and_config(
+            root,
+            tsconfig,
+            GraphBuildPlan::all(),
+            None,
+        )?;
+    }

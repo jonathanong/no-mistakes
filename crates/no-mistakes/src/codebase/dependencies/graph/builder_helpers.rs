@@ -119,3 +119,11 @@ fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
         adj.dedup();
     }
 }
+
+fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {
+    edges.push((
+        NodeId::File(source.to_path_buf()),
+        NodeId::File(target.to_path_buf()),
+        EdgeKind::RouteRef,
+    ));
+}

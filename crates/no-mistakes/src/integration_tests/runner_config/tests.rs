@@ -44,7 +44,10 @@ fn prepared_runner_records_cached_parse_errors_as_project_results() {
     );
     let path = root.join("vitest.syntax-error.mts");
 
-    let facts = prepared.parse_path_for_facts(&path).unwrap();
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = prepared
+        .parse_path_for_facts_with_session(&session, &path)
+        .unwrap();
     assert_eq!(facts.results.len(), 1);
     assert!(facts.results[0]
         .projects
@@ -61,7 +64,10 @@ fn prepared_runner_records_config_read_errors_as_project_results() {
     let root = fixture_root("parse-errors");
     let prepared = prepare_vitest(&root, StringOrList::One("src".to_string()));
 
-    let facts = prepared.parse_path_for_facts(&root.join("src")).unwrap();
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = prepared
+        .parse_path_for_facts_with_session(&session, &root.join("src"))
+        .unwrap();
     assert_eq!(facts.results.len(), 1);
     assert!(facts.results[0].projects.is_err());
 }
@@ -83,6 +89,34 @@ fn prepared_runner_deduplicates_config_parsing_and_supports_direct_fact_parsing(
     .unwrap();
     assert_eq!(facts.results.len(), 2);
     assert!(facts.results.iter().all(|result| result.projects.is_ok()));
+}
+
+#[test]
+fn prepared_runner_uses_session_source_and_parser_gateways_once() {
+    let root = fixture_root("basic");
+    let path = root.join("vitest.config.mts");
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".to_string()));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(Some(Arc::clone(&observer)));
+
+    crate::ast::with_request_parse_cache(|| {
+        for _ in 0..2 {
+            assert!(prepared
+                .parse_path_for_facts_with_session(&session, &path)
+                .is_some());
+        }
+    });
+
+    let snapshot = session.work_snapshot();
+    assert_eq!(snapshot.source_reads[&path], 1);
+    assert_eq!(snapshot.parse_attempts[&path], 1);
+    let work = observer.snapshot().work;
+    assert_eq!(work["source.requests"], 2);
+    assert_eq!(work["source.reads"], 1);
+    assert_eq!(work["source.cache_hits"], 1);
+    assert_eq!(work["parse.requests"], 2);
+    assert_eq!(work["parse.files"], 1);
 }
 
 #[test]

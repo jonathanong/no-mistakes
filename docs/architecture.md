@@ -40,6 +40,34 @@ databases, and filesystem cache directories are intentionally outside the
 architecture. If a future feature needs speedups, prefer reducing the per-run
 work or sharing more in-memory facts during that run.
 
+### Analysis session and observability
+
+`AnalysisSession` is the invocation-owned gateway for visible-path discovery,
+source reads, parsing, and typed document/config parsing. Request contexts layer
+resolver, canonical-graph, and traversal memoization over the same observer.
+Source, document, parser, and resolver gateways memoize both successful
+results and failures; graph and traversal caches use normalized effective plans.
+
+The session optionally carries one `InvocationObserver`. When diagnostics are
+disabled the observer is `None`: hot paths branch before reading the clock and
+do not allocate work ledgers. With `--verbose-timings`, the same gateways expose
+deterministic aggregate counts and keyed test snapshots. Independent Rayon
+durations are labeled non-additive because they overlap.
+
+One-pass fixture tests enforce these ceilings:
+
+1. One discovery per normalized root.
+2. At most one physical source read and parse attempt per requested path.
+3. One config or manifest parse per `(document kind, path)`.
+4. One resolver computation per normalized resolution key, including misses.
+5. At most one graph/index build per effective request plan.
+6. One traversal computation per roots/direction/edge-set/depth/symbol-mode key.
+
+Lazy import-only traversal remains deliberately free of canonical graph builds.
+It reuses any prepared per-file facts already supplied by an enclosing request,
+then reads and parses only missing files reached through the import frontier. It
+never eagerly prepares the full indexable universe for the lazy query itself.
+
 ## Current Pipeline Shape
 
 The main graph pipeline is centered in `no-mistakes`:
@@ -219,6 +247,23 @@ When adding a new analyzer:
 7. Use in-memory caches only.
 8. Sort outputs for determinism.
 9. Add fixture-based regression tests.
+10. Route physical work through `AnalysisSession` and add an exact work-count
+    assertion for any new gateway category.
+
+## Performance regression suite
+
+`crates/no-mistakes/benches/core_analysis.rs` is the single checked-in
+Criterion-compatible harness. It uses `fixtures/performance/core-analysis`
+and measures only in-process APIs: lazy traversal, fact extraction, canonical
+graph build/query, workspace load/resolution, symbols, aggregate checks, reused
+multi-report analysis, impacted checks, and disabled/timings/verbose observer
+overhead. Every workload runs a preflight that validates stable, fixture-specific
+output invariants before the measured loop.
+
+CI builds the harness once for CodSpeed CPU simulation and memory instrumentation
+and runs those modes serially. New workloads must use checked-in fixtures,
+`BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
+and must not generate repositories or launch the CLI as a subprocess.
 
 ## Anti-Patterns
 

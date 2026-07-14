@@ -403,6 +403,8 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         indexable: vec![],
         visible: HashSet::new(),
     };
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let fact_context = TsFactContext::default();
 
     assert!(lazy_import_deps_of_with_files(
         &[NodeId::File(root.join("packages/api/src/index.mts"))],
@@ -419,7 +421,8 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
         None,
-        LazyImportFacts::new(None, TsFactPlan::imports(), &TsFactContext::new(&root)),
+        LazyImportFacts::new(None, TsFactPlan::imports(), &fact_context),
+        &session,
     )
     .0
     .is_empty());
@@ -471,7 +474,6 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
             .is_empty()
     );
 }
-
 #[test]
 fn lazy_import_facts_memoize_parse_errors() {
     let root = crate::codebase::ts_resolver::normalize_path(
@@ -492,6 +494,7 @@ fn lazy_import_facts_memoize_parse_errors() {
         visible: [malformed.clone()].into(),
     };
     let context = TsFactContext::new(&root);
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
     let (neighbors, collected) = import_neighbors(
         &malformed,
@@ -500,6 +503,7 @@ fn lazy_import_facts_memoize_parse_errors() {
         &graph_files,
         None,
         LazyImportFacts::new(None, TsFactPlan::imports(), &context),
+        &session,
     );
 
     assert!(neighbors.is_empty());

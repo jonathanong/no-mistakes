@@ -1,0 +1,40 @@
+id: no-process-spawn-in-file-loop
+valid:
+  - |
+    fn discover(files: &[PathBuf]) {
+        let output = Command::new("git").arg("ls-files").output()?;
+        for file in files {
+            analyze(file);
+        }
+    }
+invalid:
+  - |
+    fn analyze(files: &[PathBuf]) {
+        for file in files {
+            Command::new("node").arg(file).status()?;
+        }
+    }
+  - |
+    fn analyze(queue: &mut Vec<PathBuf>) {
+        while let Some(file) = queue.pop() {
+            std::process::Command::new("node").arg(file).status()?;
+        }
+    }
+  - |
+    fn analyze(files: &[PathBuf]) {
+        files.iter().map(|file| {
+            Command::new("node").arg(file).output()
+        }).collect::<Vec<_>>();
+    }
+  - |
+    fn analyze(files: &[PathBuf]) {
+        files.par_iter().for_each(|file| {
+            Command::new("node").arg(file).status()?;
+        });
+    }
+  - |
+    fn analyze(files: Vec<PathBuf>) {
+        files.into_par_iter().filter_map(|file| {
+            std::process::Command::new("node").arg(file).output().ok()
+        }).collect::<Vec<_>>();
+    }

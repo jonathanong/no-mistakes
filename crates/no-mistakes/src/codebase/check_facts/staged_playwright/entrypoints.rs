@@ -10,9 +10,11 @@ pub(crate) fn collect_with_precollected_ts(
     playwright: PlaywrightFactPlan,
     precollected_ts: crate::codebase::ts_source::facts::TsFactMap,
 ) -> CheckFactMap {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let sources =
         super::super::collect::request_sources(&files, &graph_files, &plan, Some(&playwright));
-    super::collect_with_precollected_ts_and_sources(
+    super::collect_with_precollected_ts_sources_and_session(
+        &session,
         root,
         (files, graph_files, graph_files_complete),
         plan,

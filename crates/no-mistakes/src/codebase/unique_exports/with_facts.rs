@@ -1,12 +1,14 @@
 use super::{analyze_unique_exports, filter_source_files, load_codebase_config_with_path};
 use super::{normalize_path, workspaces};
 use super::{ImportResolver, UniqueExportFinding, UniqueExportsOptions};
+use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use anyhow::Result;
 use std::collections::HashSet;
 use std::path::Path;
 
 mod prepared;
+pub use prepared::analyze_project_with_prepared_facts_and_inferred_and_session;
 pub use prepared::{
     analyze_project_with_config_and_facts, analyze_project_with_prepared_facts,
     analyze_project_with_prepared_facts_and_inferred,
@@ -25,6 +27,7 @@ pub fn analyze_project_with_facts(
 }
 
 struct ProjectRootsAnalysis<'a> {
+    session: &'a AnalysisSession,
     root: &'a Path,
     application_filter: Option<(
         &'a crate::codebase::config::Config,
@@ -42,6 +45,7 @@ fn analyze_project_roots_with_facts(
     inputs: ProjectRootsAnalysis<'_>,
 ) -> Result<Vec<UniqueExportFinding>> {
     let ProjectRootsAnalysis {
+        session,
         root,
         application_filter,
         tsconfig_path,
@@ -89,8 +93,9 @@ fn analyze_project_roots_with_facts(
         .iter()
         .map(|path| normalize_path(path))
         .collect::<HashSet<_>>();
-    let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
-    let workspace = workspaces::load_from_files(root, &workspace_files).unwrap_or_default();
+    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
+    let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
+        .unwrap_or_default();
     let source_files = super::scan::collect_source_files_from_facts(root, &symbol_files, shared)?;
     analyze_unique_exports(
         root,

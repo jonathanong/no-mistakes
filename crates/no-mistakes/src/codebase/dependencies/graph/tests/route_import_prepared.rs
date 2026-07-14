@@ -148,11 +148,13 @@ fn route_import_resolution_tolerates_missing_source_directories() {
         ..TsConfig::default()
     };
 
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     assert!(collect_route_import_edges(
         std::slice::from_ref(&source),
         &facts,
         &tsconfig,
         &graph_files,
+        &session,
     )
     .is_empty());
     assert_eq!(

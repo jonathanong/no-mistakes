@@ -82,7 +82,8 @@ pub fn analyze_contracts_with_prepared(
         prepared.facts.plan(),
     );
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new(&prepared.tsconfig).with_visible(&visible);
+    let resolver =
+        ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
 
     let mut client_refs = Vec::new();
     let mut mismatches = Vec::new();

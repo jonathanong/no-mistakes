@@ -19,9 +19,7 @@ use std::path::{Path, PathBuf};
 
 pub use crate::codebase::dependencies::Format;
 use crate::codebase::ts_resolver::TsConfig;
-use crate::codebase::ts_symbols::{
-    extract_symbols_at_path, Export, ExportKind, FileSymbols, NamedImport,
-};
+use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols, NamedImport};
 
 include!("types.rs");
 include!("resolve.rs");
@@ -39,24 +37,21 @@ pub(crate) fn signature_impact_graph_plan() -> crate::codebase::dependencies::gr
     impact::signature_impact_graph_plan()
 }
 
+pub(crate) struct PreparedSignatureImpact<'a> {
+    pub(crate) session: &'a crate::codebase::analysis_session::AnalysisSession,
+    pub(crate) graph_files: &'a crate::codebase::dependencies::graph::GraphFiles,
+    pub(crate) test_filter: &'a crate::codebase::test_filter::TestFileFilter,
+    pub(crate) graph: &'a crate::codebase::dependencies::graph::DepGraph,
+    pub(crate) facts: &'a crate::codebase::ts_source::facts::TsFactMap,
+}
+
 pub(crate) fn signature_impact_json_with_prepared(
     args: &SymbolsArgs,
     root: &Path,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
-    graph_files: &crate::codebase::dependencies::graph::GraphFiles,
-    test_filter: &crate::codebase::test_filter::TestFileFilter,
-    graph: &crate::codebase::dependencies::graph::DepGraph,
-    facts: &crate::codebase::ts_source::facts::TsFactMap,
+    prepared: PreparedSignatureImpact<'_>,
 ) -> Result<String> {
-    let report = impact::collect_report_with_prepared(
-        args,
-        root,
-        tsconfig,
-        graph_files,
-        test_filter,
-        graph,
-        facts,
-    )?;
+    let report = impact::collect_report_with_prepared(args, root, tsconfig, prepared)?;
     let mut output = Vec::new();
     impact::write_report(&report, Format::Json, &mut output)?;
     String::from_utf8(output).context("signature-impact JSON output must be UTF-8")

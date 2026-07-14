@@ -1,4 +1,7 @@
 use super::*;
+use oxc_allocator::Allocator;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::path::PathBuf;
 
 #[test]
@@ -285,7 +288,6 @@ fn test_expression_path() {
         None
     );
 }
-
 pub(crate) fn request_parse_cache_len() -> usize {
     super::current_request_parse_cache().map_or(0, |cache| super::parsed_cache::tests::len(&cache))
 }

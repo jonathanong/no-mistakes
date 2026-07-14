@@ -11,6 +11,7 @@ pub struct VisiblePathSnapshot {
     request_root: PathBuf,
     request_view: Arc<SnapshotPathView>,
     scoped_views: Mutex<HashMap<PathBuf, Arc<OnceLock<Arc<SnapshotPathView>>>>>,
+    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
 }
 
 struct SnapshotPathView {
@@ -21,13 +22,28 @@ struct SnapshotPathView {
 impl VisiblePathSnapshot {
     #[doc(hidden)]
     pub fn new(request_root: &Path) -> Self {
+        Self::new_observed(request_root, None)
+    }
+
+    #[doc(hidden)]
+    pub fn new_observed(
+        request_root: &Path,
+        observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
+    ) -> Self {
         let normalized_request_root = normalize_discovery_path(request_root);
-        let request_view =
-            snapshot_path_view(discover_classified_path_views(&normalized_request_root));
+        let request_paths = discover_classified_path_views(&normalized_request_root);
+        increment(&observer, "discovery.roots", 1);
+        increment(
+            &observer,
+            "discovery.candidates",
+            request_paths.visible.len() as u64,
+        );
+        let request_view = snapshot_path_view(request_paths, observer.clone());
         Self {
             request_root: normalized_request_root,
             request_view,
             scoped_views: Mutex::new(HashMap::new()),
+            observer,
         }
     }
 
@@ -39,8 +55,9 @@ impl VisiblePathSnapshot {
         let normalized_request_root = normalize_discovery_path(request_root);
         Self {
             request_root: normalized_request_root,
-            request_view: snapshot_path_view_from_paths(request_paths),
+            request_view: snapshot_path_view_from_paths(request_paths, None),
             scoped_views: Mutex::new(HashMap::new()),
+            observer: None,
         }
     }
 
@@ -104,11 +121,15 @@ impl VisiblePathSnapshot {
                 .scoped_views
                 .lock()
                 .expect("visible-path snapshot mutex poisoned");
-            Arc::clone(
-                scoped_views
-                    .entry(normalized_root.clone())
-                    .or_insert_with(|| Arc::new(OnceLock::new())),
-            )
+            match scoped_views.entry(normalized_root.clone()) {
+                std::collections::hash_map::Entry::Occupied(entry) => {
+                    increment(&self.observer, "discovery.cache_hits", 1);
+                    Arc::clone(entry.get())
+                }
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    Arc::clone(entry.insert(Arc::new(OnceLock::new())))
+                }
+            }
         };
         Arc::clone(view.get_or_init(|| {
             if normalized_root.starts_with(&self.request_root)
@@ -116,13 +137,23 @@ impl VisiblePathSnapshot {
             {
                 Arc::clone(&self.request_view)
             } else {
-                snapshot_path_view(discover_classified_path_views(&normalized_root))
+                let paths = discover_classified_path_views(&normalized_root);
+                increment(&self.observer, "discovery.roots", 1);
+                increment(
+                    &self.observer,
+                    "discovery.candidates",
+                    paths.visible.len() as u64,
+                );
+                snapshot_path_view(paths, self.observer.clone())
             }
         }))
     }
 }
 
-fn snapshot_path_view(paths: DiscoveredClassifiedPathViews) -> Arc<SnapshotPathView> {
+fn snapshot_path_view(
+    paths: DiscoveredClassifiedPathViews,
+    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
+) -> Arc<SnapshotPathView> {
     let mut tracked_paths = paths
         .tracked
         .into_iter()
@@ -131,18 +162,22 @@ fn snapshot_path_view(paths: DiscoveredClassifiedPathViews) -> Arc<SnapshotPathV
     tracked_paths.sort();
     tracked_paths.dedup();
     Arc::new(SnapshotPathView {
-        sources: Arc::new(SourceStore::new(Arc::new(
-            FileInventory::from_classified_paths(paths.visible),
-        ))),
+        sources: Arc::new(SourceStore::new_observed(
+            Arc::new(FileInventory::from_classified_paths(paths.visible)),
+            observer,
+        )),
         tracked_paths: Arc::new(tracked_paths),
     })
 }
 
-fn snapshot_path_view_from_paths(paths: &[PathBuf]) -> Arc<SnapshotPathView> {
+fn snapshot_path_view_from_paths(
+    paths: &[PathBuf],
+    observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
+) -> Arc<SnapshotPathView> {
     let inventory = Arc::new(FileInventory::from_paths(paths));
     let tracked_paths = inventory.paths();
     Arc::new(SnapshotPathView {
-        sources: Arc::new(SourceStore::new(inventory)),
+        sources: Arc::new(SourceStore::new_observed(inventory, observer)),
         tracked_paths,
     })
 }
@@ -151,6 +186,16 @@ fn contains_path(paths: &[PathBuf], path: &Path) -> bool {
     paths
         .binary_search_by(|candidate| candidate.as_path().cmp(path))
         .is_ok()
+}
+
+fn increment(
+    observer: &Option<Arc<crate::diagnostics::InvocationObserver>>,
+    metric: &'static str,
+    amount: u64,
+) {
+    if let Some(observer) = observer {
+        observer.increment(metric, amount);
+    }
 }
 
 fn has_nested_git_boundary(request_root: &Path, root: &Path) -> bool {

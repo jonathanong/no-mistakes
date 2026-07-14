@@ -6,7 +6,7 @@ use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 mod filesystem;
 
@@ -24,22 +24,27 @@ pub(crate) fn run_react_check(
     facts: &CheckFactMap,
     prepared: &react_traits::PreparedReactCheck,
 ) -> Result<CheckTask<Vec<react_traits::Violation>>> {
-    let start = Instant::now();
-    let (findings, warning) = if enabled {
-        match react_traits::run_check_with_prepared_facts(root, &[], facts, prepared) {
-            Ok(findings) => (findings, None),
-            Err(err) => (
-                Vec::new(),
-                Some(format!("warning: react check skipped: {err:#}")),
-            ),
-        }
-    } else {
-        (Vec::new(), None)
-    };
+    let ((findings, warning), duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "analysis.react",
+        no_mistakes::diagnostics::TimingKind::Parallel,
+        || {
+            if enabled {
+                match react_traits::run_check_with_prepared_facts(root, &[], facts, prepared) {
+                    Ok(findings) => (findings, None),
+                    Err(err) => (
+                        Vec::new(),
+                        Some(format!("warning: react check skipped: {err:#}")),
+                    ),
+                }
+            } else {
+                (Vec::new(), None)
+            }
+        },
+    );
     Ok(CheckTask {
         findings,
         warning,
-        duration: start.elapsed(),
+        duration,
     })
 }
 
@@ -49,22 +54,28 @@ pub(crate) fn run_queue_check(
     enabled: bool,
     facts: &CheckFactMap,
 ) -> Result<CheckTask<Vec<CheckFinding>>> {
-    let start = Instant::now();
-    let findings = if enabled {
-        no_mistakes::queue::analyze_project_with_prepared_facts(
-            root,
-            prepared_tsconfig,
-            &[],
-            facts,
-        )?
-        .check
-    } else {
-        Vec::new()
-    };
+    let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "analysis.queues",
+        no_mistakes::diagnostics::TimingKind::Parallel,
+        || -> Result<_> {
+            Ok(if enabled {
+                no_mistakes::queue::analyze_project_with_prepared_facts(
+                    root,
+                    prepared_tsconfig,
+                    &[],
+                    facts,
+                )?
+                .check
+            } else {
+                Vec::new()
+            })
+        },
+    );
+    let findings = findings?;
     Ok(CheckTask {
         findings,
         warning: None,
-        duration: start.elapsed(),
+        duration,
     })
 }
 
@@ -72,64 +83,86 @@ pub(crate) fn run_rules_check(
     inputs: rules::PreparedRulesCheck<'_>,
     dependency_graph: Option<&no_mistakes::codebase::dependencies::graph::DepGraph>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
-    let start = Instant::now();
-    let (findings, warning) =
-        match rules::run_check_with_config_facts_playwright_and_graph(inputs, dependency_graph) {
+    let ((findings, warning), duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "analysis.rules",
+        no_mistakes::diagnostics::TimingKind::Parallel,
+        || match rules::run_check_with_config_facts_playwright_and_graph(inputs, dependency_graph) {
             Ok(findings) => (findings, None),
             Err(err) => (
                 Vec::new(),
                 Some(format!("warning: rules check skipped: {err:#}")),
             ),
-        };
+        },
+    );
     Ok(CheckTask {
         findings,
         warning,
-        duration: start.elapsed(),
+        duration,
     })
 }
 
 pub(crate) fn run_integration_check(
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     root: &std::path::Path,
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
     tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
     visible_paths: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<CheckTask<Vec<IntegrationFinding>>> {
-    let start = Instant::now();
-    let findings =
-        integration_tests::check_with_prepared_facts(root, config, facts, tsconfig, visible_paths)?;
+    let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "analysis.integration",
+        no_mistakes::diagnostics::TimingKind::Parallel,
+        || {
+            integration_tests::check_with_prepared_facts_and_session(
+                root,
+                config,
+                facts,
+                tsconfig,
+                visible_paths,
+                session,
+            )
+        },
+    );
+    let findings = findings?;
     Ok(CheckTask {
         findings,
         warning: None,
-        duration: start.elapsed(),
+        duration,
     })
 }
 
 pub(crate) fn run_codebase_check(
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     root: &std::path::Path,
     config: &no_mistakes::codebase::config::Config,
-    _tsconfig: Option<&std::path::Path>,
     prepared_tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
     enabled: bool,
     facts: &CheckFactMap,
     inferred_roots: &no_mistakes::codebase::config::InferredRoots,
 ) -> Result<CheckTask<Vec<UniqueExportFinding>>> {
-    let start = Instant::now();
-    let findings = if enabled {
-        unique_exports::analyze_project_with_prepared_facts_and_inferred(
-            root,
-            config,
-            prepared_tsconfig,
-            facts,
-            inferred_roots,
-        )?
-    } else {
-        Vec::new()
-    };
+    let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "analysis.codebase",
+        no_mistakes::diagnostics::TimingKind::Parallel,
+        || -> Result<_> {
+            Ok(if enabled {
+                unique_exports::analyze_project_with_prepared_facts_and_inferred_and_session(
+                    root,
+                    config,
+                    prepared_tsconfig,
+                    facts,
+                    inferred_roots,
+                    session,
+                )?
+            } else {
+                Vec::new()
+            })
+        },
+    );
+    let findings = findings?;
     Ok(CheckTask {
         findings,
         warning: None,
-        duration: start.elapsed(),
+        duration,
     })
 }
 

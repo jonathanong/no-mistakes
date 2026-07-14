@@ -408,6 +408,130 @@ fn import_resolver_cache_preserves_missing_result() {
     assert!(resolver.resolve("./utils", &importer).is_none());
 }
 
+#[test]
+fn import_resolver_reports_exact_cached_work_for_hits_and_misses() {
+    let root = fixture("explicit-json");
+    let importer = root.join("src/main.mts");
+    let target = normalize_path(&root.join("src/data.json"));
+    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root,
+        base_url: None,
+    };
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let resolver =
+        ImportResolver::new_observed(&config, Some(observer.clone())).with_visible(&visible);
+
+    assert_eq!(
+        resolver.resolve("./data.json", &importer),
+        Some(target.clone())
+    );
+    assert_eq!(resolver.resolve("./data.json", &importer), Some(target));
+    assert!(resolver.resolve("./missing.json", &importer).is_none());
+    assert!(resolver.resolve("./missing.json", &importer).is_none());
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["resolver.requests"], 4);
+    assert_eq!(work["resolver.computations"], 2);
+    assert_eq!(work["resolver.cache_hits"], 2);
+    assert_eq!(work["resolver.resolved"], 1);
+    assert_eq!(work["resolver.unresolved"], 1);
+}
+
+#[test]
+fn import_resolver_single_flights_concurrent_hits_and_misses() {
+    let root = fixture("explicit-json");
+    let importer = root.join("src/main.mts");
+    let target = normalize_path(&root.join("src/data.json"));
+    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root,
+        base_url: None,
+    };
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let resolver =
+        ImportResolver::new_observed(&config, Some(observer.clone())).with_visible(&visible);
+    let requests_per_key = 32;
+    let barrier = std::sync::Barrier::new(requests_per_key * 2);
+
+    std::thread::scope(|scope| {
+        for request in 0..requests_per_key * 2 {
+            let resolver = &resolver;
+            let importer = &importer;
+            let target = &target;
+            let barrier = &barrier;
+            scope.spawn(move || {
+                barrier.wait();
+                if request % 2 == 0 {
+                    assert_eq!(
+                        resolver.resolve("./data.json", importer),
+                        Some(target.clone())
+                    );
+                } else {
+                    assert!(resolver.resolve("./missing.json", importer).is_none());
+                }
+            });
+        }
+    });
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["resolver.requests"], 64);
+    assert_eq!(work["resolver.computations"], 2);
+    assert_eq!(work["resolver.cache_hits"], 62);
+    assert_eq!(work["resolver.resolved"], 1);
+    assert_eq!(work["resolver.unresolved"], 1);
+}
+
+#[test]
+fn import_resolver_session_reuses_only_exact_resolution_scopes() {
+    let root = fixture("explicit-json");
+    let importer = root.join("src/main.mts");
+    let target = normalize_path(&root.join("src/data.json"));
+    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let hidden = HashSet::new();
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root,
+        base_url: None,
+    };
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+
+    let first = ImportResolver::new_in_session(&config, Some(&visible), &session);
+    assert_eq!(
+        first.resolve("./data.json", &importer),
+        Some(target.clone())
+    );
+    assert!(first.resolve("./missing.json", &importer).is_none());
+    let second = ImportResolver::new_in_session(&config, Some(&visible), &session);
+    assert_eq!(
+        second.resolve("./data.json", &importer),
+        Some(target.clone())
+    );
+    assert!(second.resolve("./missing.json", &importer).is_none());
+
+    let hidden_scope = ImportResolver::new_in_session(&config, Some(&hidden), &session);
+    assert!(hidden_scope.resolve("./data.json", &importer).is_none());
+    let filesystem_scope = ImportResolver::new_in_session(&config, None, &session);
+    assert_eq!(
+        filesystem_scope.resolve("./data.json", &importer),
+        Some(target)
+    );
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["resolver.requests"], 6);
+    assert_eq!(work["resolver.computations"], 4);
+    assert_eq!(work["resolver.unique_keys"], 4);
+    assert_eq!(work["resolver.cache_hits"], 2);
+    assert_eq!(work["resolver.resolved"], 2);
+    assert_eq!(work["resolver.unresolved"], 2);
+}
+
 // ── match_alias ───────────────────────────────────────────────────────
 
 #[test]

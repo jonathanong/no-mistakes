@@ -96,8 +96,8 @@ pub struct SymbolsArgs {
     #[arg(long, default_value_t = false)]
     pub json: bool,
 
-    /// Emit phase timings to stderr.
-    #[arg(long, default_value_t = false)]
+    /// Legacy programmatic timing switch. CLI timing flags are root-global.
+    #[arg(skip)]
     pub timings: bool,
 }
 

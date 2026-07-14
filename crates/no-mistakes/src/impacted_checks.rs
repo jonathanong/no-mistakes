@@ -61,8 +61,8 @@ pub struct ImpactedChecksArgs {
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
     pub(crate) json: bool,
-    /// Emit live phase progress and timings to stderr.
-    #[arg(long, default_value_t = false)]
+    /// Legacy programmatic timing switch. CLI timing flags are root-global.
+    #[arg(skip)]
     pub(crate) timings: bool,
 }
 

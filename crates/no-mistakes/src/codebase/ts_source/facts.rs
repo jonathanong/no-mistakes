@@ -16,9 +16,12 @@ mod map;
 mod plan;
 
 pub(crate) use collect::{
-    collect_file_facts_from_program, collect_ts_facts_with_context_and_sources,
+    collect_file_facts_from_program, collect_ts_facts_with_context_sources_and_session,
 };
-pub use collect::{collect_ts_facts, collect_ts_facts_with_context};
+pub use collect::{
+    collect_ts_facts, collect_ts_facts_with_context, collect_ts_facts_with_context_and_sources,
+    collect_ts_facts_with_session_and_context,
+};
 pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

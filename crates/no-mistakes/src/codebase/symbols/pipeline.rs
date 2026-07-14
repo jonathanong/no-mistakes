@@ -9,12 +9,16 @@ pub(crate) fn collect_entries_with_prepared_facts(
     visible_files: &std::collections::HashSet<PathBuf>,
     facts: &crate::codebase::check_facts::CheckFactMap,
     supplemental: &crate::codebase::check_facts::CheckFactMap,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<(Vec<FileEntry>, Vec<String>)> {
     let cwd = std::env::current_dir().context("reading current directory")?;
     let abs_files = resolve_input_files(&args.files, root, &cwd);
     let kind_filter = build_kind_filter(&args.kinds);
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(tsconfig)
-        .with_visible(visible_files);
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        tsconfig,
+        Some(visible_files),
+        session,
+    );
     let entries = abs_files
         .iter()
         .map(|path| {
@@ -40,7 +44,11 @@ pub(crate) fn collect_entries_with_prepared_facts(
             )
         })
         .collect::<Result<Vec<_>>>()?;
-    let root_strs = args.files.iter().map(|file| file.display().to_string()).collect();
+    let root_strs = args
+        .files
+        .iter()
+        .map(|file| file.display().to_string())
+        .collect();
     Ok((entries, root_strs))
 }
 
@@ -50,16 +58,27 @@ fn collect_entries_with_timings(
 ) -> Result<(Vec<FileEntry>, Vec<String>)> {
     let cwd = std::env::current_dir().context("reading current directory")?;
     let root = resolve_root(args.root.as_deref(), &cwd);
-    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        args.tsconfig.as_deref(),
-        &root,
-        &visible_paths,
-    )?;
+    let session = crate::codebase::analysis_session::AnalysisSession::new(
+        crate::diagnostics::current(),
+    );
+    let visible_snapshot = session.visible_paths(&root);
+    let visible_paths = visible_snapshot.paths_for(&root);
+    let tsconfig_key = args
+        .tsconfig
+        .as_deref()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(&root.join(path)))
+        .unwrap_or_else(|| root.join("tsconfig.auto.json"));
+    let tsconfig = session.load_document("tsconfig", &tsconfig_key, || {
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+            args.tsconfig.as_deref(),
+            &root,
+            &visible_paths,
+        )
+    })?;
     let visible_files = visible_paths
-        .into_iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-        .collect();
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<std::collections::HashSet<_>>();
     let abs_files = resolve_input_files(&args.files, &root, &cwd);
     if let Some(timings) = &mut timings {
         timings.mark("search");
@@ -70,14 +89,48 @@ fn collect_entries_with_timings(
         timings.mark("ingest");
     }
 
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_session_and_context(
+        &session,
+        &abs_files,
+        crate::codebase::ts_source::facts::TsFactPlan {
+            symbols: true,
+            ..Default::default()
+        },
+        &crate::codebase::ts_source::facts::TsFactContext::default(),
+    );
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        &tsconfig,
+        Some(&visible_files),
+        &session,
+    );
     let entries: Vec<FileEntry> = abs_files
         .par_iter()
         .map(|abs| {
-            build_entry(
+            let file = facts
+                .get(abs)
+                .with_context(|| format!("reading {}", abs.display()))?;
+            if let Some(error) = &file.parse_error {
+                if let Some(detail) = error.strip_prefix("failed to read ") {
+                    anyhow::bail!("reading {detail}");
+                }
+                let prefix = format!("parsing {}: ", abs.display());
+                let detail = error
+                    .strip_prefix(&prefix)
+                    .expect("central parser diagnostics include the source path");
+                anyhow::bail!(
+                    "extracting symbols from {}: failed to parse TypeScript source: {detail}",
+                    abs.display()
+                );
+            }
+            let symbols = file
+                .symbols
+                .clone()
+                .context("symbol fact plan must populate symbols")?;
+            build_entry_from_symbols(
                 abs,
                 &root,
-                &tsconfig,
-                &visible_files,
+                &resolver,
+                symbols,
                 args.include,
                 kind_filter.as_ref(),
             )
@@ -92,6 +145,7 @@ fn collect_entries_with_timings(
 }
 
 pub fn run(args: SymbolsArgs) -> Result<()> {
+    let _diagnostics = crate::diagnostics::LegacyDiagnosticsGuard::new(args.timings, false);
     let mut timings = crate::codebase::timing::PhaseTimings::start();
     if args.mode == SymbolsMode::SignatureImpact {
         let report = impact::collect_report(&args)?;

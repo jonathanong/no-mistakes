@@ -1,0 +1,15 @@
+id: no-direct-oxc-parser
+valid:
+  - |
+    fn parse(session: &AnalysisSession, path: &Path, source: &str) {
+        session.with_recovered_program(path, source, |program, source, error| analyze(program));
+    }
+invalid:
+  - |
+    fn parse(allocator: &Allocator, source: &str, source_type: SourceType) {
+        let parsed = Parser::new(allocator, source, source_type).parse();
+    }
+  - |
+    fn parse(allocator: &Allocator, source: &str, source_type: SourceType) {
+        let parsed = oxc_parser::Parser::new(allocator, source, source_type).parse();
+    }

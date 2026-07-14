@@ -19,6 +19,7 @@ use findings::unique_export_findings;
 use scan::{filter_source_files, sorted_paths};
 use types::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile};
 pub use types::{UniqueExportFinding, UniqueExportsOptions};
+pub use with_facts::analyze_project_with_prepared_facts_and_inferred_and_session;
 pub use with_facts::{
     analyze_project_with_config_and_facts, analyze_project_with_facts,
     analyze_project_with_prepared_facts, analyze_project_with_prepared_facts_and_inferred,

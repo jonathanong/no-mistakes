@@ -1,3 +1,5 @@
+use crate::codebase::ts_source::facts::collect_ts_facts_with_context;
+
 fn package_name_from_spec(spec: &str) -> &str {
     if spec.starts_with('@') {
         let after_scope = spec.trim_start_matches('@');
@@ -40,10 +42,12 @@ fn playwright_graph_build_has_one_snapshot_construction_site() {
     );
 }
 
+include!("build_check_fact_adapters.rs");
 include!("core.rs");
 include!("route_import.rs");
 include!("route_import_prepared.rs");
 include!("extra_cases.rs");
+include!("lazy_import_session.rs");
 include!("extra_playwright_routes.rs");
 include!("extra_selector.rs");
 include!("extra_symbol_scoped.rs");

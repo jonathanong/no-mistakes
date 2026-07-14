@@ -4,6 +4,7 @@ struct PreparedReportContext<'a> {
     args: &'a SymbolsArgs,
     root: &'a Path,
     tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
+    session: &'a crate::codebase::analysis_session::AnalysisSession,
     graph_files: &'a GraphFiles,
     test_filter: &'a TestFileFilter,
     graph: &'a DepGraph,
@@ -19,13 +20,18 @@ fn build_report_from_prepared(
         args,
         root,
         tsconfig,
+        session,
         graph_files,
         test_filter,
         graph,
         facts,
     } = context;
-    let workspace =
-        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
+    let workspace = crate::codebase::workspaces::load_from_files_with_session(
+        root,
+        graph_files.all(),
+        Some(session),
+    )
+    .unwrap_or_default();
     let visible_files = graph_files.visible().clone();
     let target = NodeId::Symbol {
         file: target_file.to_path_buf(),
@@ -100,11 +106,16 @@ fn build_report_from_prepared(
         entries.extend(file_entries);
     }
     let local_caller_context = prepare_local_caller_context(facts, &workspace, &visible_files);
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        tsconfig,
+        Some(local_caller_context.visible_files),
+        session,
+    );
     let production_extra_callers = local_caller_entries(
         &local_caller_context,
         &target_symbols,
         root,
-        tsconfig,
+        &resolver,
         test_filter,
         false,
     );
@@ -112,7 +123,7 @@ fn build_report_from_prepared(
         &local_caller_context,
         &target_symbols,
         root,
-        tsconfig,
+        &resolver,
         test_filter,
         true,
     );

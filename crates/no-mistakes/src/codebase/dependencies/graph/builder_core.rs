@@ -3,7 +3,9 @@ impl DepGraph {
         edge_inputs: GraphEdgeBuildInputs<'_>,
         facts: Option<&dyn TsFactLookup>,
         supplied_fact_policy: SuppliedFactPolicy,
+        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
+        session.record_work("graph.builds", 1);
         let root = edge_inputs.root;
         let tsconfig = edge_inputs.tsconfig;
         let plan = edge_inputs.plan;
@@ -11,7 +13,8 @@ impl DepGraph {
         let config_options = edge_inputs.config_options;
         let config_path = edge_inputs.config_path;
         let supplied_workspace = edge_inputs.workspace;
-        let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
+        let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
+            .with_visible(graph_files.visible());
         let resolver = match edge_inputs.import_resolution_cache {
             Some(cache) => resolver.with_shared_cache(cache),
             None => resolver,
@@ -20,7 +23,8 @@ impl DepGraph {
         let mut fact_context = ts_fact_context_from_options(root, plan, config_options);
         fact_context.set_visible_files(graph_files.visible().iter().cloned());
         let owned_facts = if !fact_plan.is_empty() && facts.is_none() {
-            Some(collect_ts_facts_with_context(
+            Some(collect_ts_facts_with_session_and_context(
+                &session,
                 graph_files.indexable(),
                 fact_plan,
                 &fact_context,
@@ -70,7 +74,12 @@ impl DepGraph {
                             missing
                         };
                         (!fallback_paths.is_empty() || universe_mismatch).then(|| {
-                            collect_ts_facts_with_context(&fallback_paths, fact_plan, &fact_context)
+                            collect_ts_facts_with_session_and_context(
+                                &session,
+                                &fallback_paths,
+                                fact_plan,
+                                &fact_context,
+                            )
                         })
                     }
                 }
@@ -157,7 +166,10 @@ impl DepGraph {
             &edge_inputs,
             playwright_snapshot,
             facts,
-            &resolver,
+            EdgeResolutionContext {
+                resolver: &resolver,
+                session: &session,
+            },
             &parsed_imports,
             workspace,
             EdgeMaps {
@@ -189,6 +201,17 @@ impl DepGraph {
                 )
             })?;
             graph.merge_canonical_edges(selector_edges);
+        }
+        if let Some(observer) = session.observer().filter(|observer| observer.verbose()) {
+            let mut nodes = HashSet::new();
+            let mut edges = 0_u64;
+            for (from, neighbors) in graph.edges.forward() {
+                nodes.insert(from);
+                edges += neighbors.len() as u64;
+                nodes.extend(neighbors.iter().map(|(to, _)| to));
+            }
+            observer.increment("graph.nodes", nodes.len() as u64);
+            observer.increment("graph.edges", edges);
         }
         Ok(graph)
     }

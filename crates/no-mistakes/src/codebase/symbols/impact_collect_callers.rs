@@ -2,7 +2,7 @@ fn local_caller_entries(
     context: &LocalCallerContext,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     root: &Path,
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
     test_filter: &TestFileFilter,
     want_tests: bool,
 ) -> Vec<CallerEntry> {
@@ -25,9 +25,8 @@ fn local_caller_entries(
             symbols,
             &file,
             target_symbols,
-            tsconfig,
+            resolver,
             workspace,
-            context.visible_files,
         );
         if local_names.is_empty() {
             continue;

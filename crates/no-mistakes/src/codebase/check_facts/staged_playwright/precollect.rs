@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 
 pub(super) fn cached_config_graph_facts(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     files: &[PathBuf],
     graph_files: &[PathBuf],
     plan: &CheckFactPlan,
@@ -22,12 +23,13 @@ pub(super) fn cached_config_graph_facts(
             .filter(|path| universe.contains(path))
             .filter_map(|path| {
                 let source = sources.read_path(path).ok()?;
-                let mut facts = crate::ast::with_program(path, &source, |program, source| {
-                    crate::codebase::ts_source::facts::collect_file_facts_from_program(
-                        path, plan.graph, &context, source, program, None,
-                    )
-                })
-                .ok()?;
+                let mut facts = session
+                    .with_program(path, &source, |program, source| {
+                        crate::codebase::ts_source::facts::collect_file_facts_from_program(
+                            path, plan.graph, &context, source, program, None,
+                        )
+                    })
+                    .ok()?;
                 if plan.graph.source {
                     facts.source = Some(source.to_string());
                 }

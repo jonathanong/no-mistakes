@@ -5,6 +5,10 @@ pub(super) struct AnalyzeProjectContext {
 
 impl AnalyzeProjectContext {
     pub(super) fn prepare(options: &AnalyzeProjectOptions) -> Result<Self> {
+        crate::ast::with_request_parse_cache(|| Self::prepare_with_cache(options))
+    }
+
+    fn prepare_with_cache(options: &AnalyzeProjectOptions) -> Result<Self> {
         if options.reports.is_empty() {
             return Ok(Self {
                 scopes: HashMap::new(),
@@ -12,8 +16,16 @@ impl AnalyzeProjectContext {
             });
         }
         let master_root = super::options::resolve_root(options.root.as_deref())?;
+        // N-API workers normally have no observer, so this remains a
+        // zero-instrumentation session. In-process benchmark/test callers may
+        // explicitly scope one without changing the structured response.
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
         let master_snapshot = std::sync::Arc::new(
-            crate::codebase::ts_source::VisiblePathSnapshot::new(&master_root),
+            crate::codebase::ts_source::VisiblePathSnapshot::new_observed(
+                &master_root,
+                session.observer().cloned(),
+            ),
         );
         let mut visible_by_root = HashMap::new();
         let mut scope_aliases = HashMap::new();
@@ -29,9 +41,12 @@ impl AnalyzeProjectContext {
                     if raw.root.starts_with(&master_root) {
                         master_snapshot.clone()
                     } else {
-                        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::new(
-                            &raw.root,
-                        ))
+                        std::sync::Arc::new(
+                            crate::codebase::ts_source::VisiblePathSnapshot::new_observed(
+                                &raw.root,
+                                session.observer().cloned(),
+                            ),
+                        )
                     }
                 })
                 .clone();
@@ -63,7 +78,10 @@ impl AnalyzeProjectContext {
                 filters: options.filters.clone(),
                 reports,
             };
-            scopes.insert(key, PreparedScope::prepare(&scoped_options, visible_paths)?);
+            scopes.insert(
+                key,
+                PreparedScope::prepare(&scoped_options, visible_paths, session.clone())?,
+            );
         }
         Ok(Self {
             scopes,

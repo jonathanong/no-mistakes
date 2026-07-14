@@ -15,7 +15,7 @@ source).
 > question — matching an AST shape regardless of the import graph — reach for
 > `ast-grep` directly.
 
-Both rules below are exactly that: "does this Rust function/call have shape
+The rules below are exactly that: "does this Rust function/call have shape
 X?", with no dependency-graph or project-config awareness required. That
 places them on the `ast-grep` side of the tool boundary, run at pre-push/CI
 time, rather than as a new native Rust-source `no-mistakes` rule.
@@ -36,7 +36,7 @@ ast-grep scan                                    # scan the whole project
 ast-grep test --skip-snapshot-tests               # run rule test cases
 ```
 
-Both rules use `severity: error`, so `ast-grep scan` exits non-zero on any
+All rules use `severity: error`, so `ast-grep scan` exits non-zero on any
 finding — no extra flag needed.
 
 ## Rules
@@ -105,6 +105,37 @@ narrower than the other two rules' allowlists, which exempt specific call
 sites rather than a whole file. A second, unguarded call added anywhere else
 in that file would not be caught by this rule; review that file's diffs by
 hand for this specific regression class.
+
+### One-pass gateway guards
+
+Four narrow rules protect the shared analysis boundary:
+
+- `no-direct-source-read` covers the TS/JS shared-fact directories and the
+  demand-driven import traversal, shared traversal fact seeder, and prepared
+  integration-runner config readers, and requires `AnalysisSession::read_source`.
+  It deliberately does not flag Markdown, YAML, lockfile, or other document
+  readers.
+- `no-direct-oxc-parser` blocks new OXC parser construction outside the AST
+  gateway. Its exact file allowlist contains legacy source-string extractors;
+  remove an entry when its adapter is migrated.
+- `no-aggregate-standalone-analysis` covers aggregate `check`,
+  `analyzeProject`, and impacted-check aggregation paths. It rejects standalone
+  discovery, resolver, graph, fact, or extractor calls that bypass prepared
+  invocation state.
+- `no-direct-analysis-clock` requires analysis timings to flow through the
+  optional invocation observer. Only that observer and compatibility timing
+  adapters may construct `Instant`s directly.
+
+These rules use exact path allowlists. They are intentionally narrower than a
+blanket ban on reads or parser libraries because non-source documents and
+bounded string-only adapters are valid inputs.
+
+### `no-process-spawn-in-file-loop`
+
+Flags `Command::new` inside `for`, `while`, or `loop` bodies in production
+source. Process startup must be batched once per invocation or replaced with
+an in-process parser/resolver. A canonical one-shot Git discovery subprocess
+outside a loop remains valid.
 
 ## Adding more rules of this shape
 

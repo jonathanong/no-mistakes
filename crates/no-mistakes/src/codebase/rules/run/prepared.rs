@@ -17,6 +17,7 @@ mod execution;
 /// leaving the standalone rule-check entry points unchanged.
 #[doc(hidden)]
 pub struct PreparedRulesCheck<'a> {
+    pub session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     pub root: &'a Path,
     pub config_path: Option<&'a Path>,
     pub tsconfig_path: Option<&'a Path>,

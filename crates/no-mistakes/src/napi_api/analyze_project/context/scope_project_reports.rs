@@ -29,9 +29,11 @@ impl PreparedScope {
                     .check
                     .as_ref()
                     .context("check analysis was not prepared")?;
-                Ok(crate::check_runner::json_value(
-                    &check.run(&self.facts, dependency_graph.as_ref())?,
-                ))
+                Ok(crate::check_runner::json_value(&check.run(
+                    &self.facts,
+                    dependency_graph.as_ref(),
+                    self.traversal.session_arc(),
+                )?))
             }
             _ => unreachable!("project report types are checked before dispatch"),
         }

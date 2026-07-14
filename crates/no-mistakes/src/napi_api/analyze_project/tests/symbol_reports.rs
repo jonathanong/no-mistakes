@@ -124,6 +124,8 @@ fn analyze_project_symbol_entrypoints_match_standalone_without_symbol_output() {
 
 #[test]
 fn analyze_project_dispatches_signature_impact_symbols_report() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
     let output = analyze_project_json_impl(
         json!({
             "root": fixture_root("tests-impact-symbol"),
@@ -148,6 +150,19 @@ fn analyze_project_dispatches_signature_impact_symbols_report() {
         .unwrap()
         .iter()
         .any(|entry| { entry["file"] == "helper-export.test.mts" }));
+
+    let work = observer.snapshot().work;
+    assert_ne!(work["resolver.computations"], 0, "{work:#?}");
+    assert_eq!(
+        work["resolver.computations"],
+        work["resolver.unique_keys"],
+        "{work:#?}"
+    );
+    assert_ne!(work["manifest.cache_hits"], 0, "{work:#?}");
+    assert_eq!(
+        work["manifest.requests"],
+        work["manifest.parses"] + work["manifest.cache_hits"],
+    );
 }
 
 #[test]

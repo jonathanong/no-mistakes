@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Aggregate fanout paths must consume their prepared session/fact/graph state.
+# Standalone calls here silently reintroduce discovery, parse, or graph passes.
+id: no-aggregate-standalone-analysis
+language: rust
+severity: error
+message: >-
+  Standalone discovery, resolver, graph, or extractor call in an aggregate
+  analysis path. Request the fact/edge in the shared AnalysisSession plan and
+  consume the prepared result instead.
+rule:
+  any:
+    - pattern: discover_visible_paths($$$)
+    - pattern: crate::codebase::ts_source::discover_visible_paths($$$)
+    - pattern: ImportResolver::new($$$)
+    - pattern: DepGraph::build($$$)
+    - pattern: DepGraph::build_with_plan($$$)
+    - pattern: DepGraph::build_with_plan_and_config($$$)
+    - pattern: graph::DepGraph::build($$$)
+    - pattern: graph::DepGraph::build_with_plan($$$)
+    - pattern: graph::DepGraph::build_with_plan_and_config($$$)
+    - pattern: crate::codebase::dependencies::graph::DepGraph::build($$$)
+    - pattern: crate::codebase::dependencies::graph::DepGraph::build_with_plan($$$)
+    - pattern: crate::codebase::dependencies::graph::DepGraph::build_with_plan_and_config($$$)
+    - pattern: collect_ts_facts($$$)
+    - pattern: extract_symbols($$$)
+    - pattern: extract_http_calls($$$)
+    - pattern: extract_spawn_edges($$$)
+files:
+  - "crates/no-mistakes/src/check_runner.rs"
+  - "crates/no-mistakes/src/check_runner/forbidden_plan.rs"
+  - "crates/no-mistakes/src/check_tasks.rs"
+  - "crates/no-mistakes/src/check_tasks/**"
+  - "crates/no-mistakes/src/napi_api/analyze_project/**"
+  - "crates/no-mistakes/src/impacted_checks/**"
+ignores:
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes/src/**/test_support.rs"

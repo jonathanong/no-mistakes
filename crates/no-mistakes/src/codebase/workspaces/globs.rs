@@ -76,7 +76,8 @@ fn load_optional_root_dependency_names(
     if !visible.contains(&pkg_path) {
         return std::collections::HashSet::new();
     }
-    sources.parse_json(&pkg_path)
+    sources
+        .parse_json(&pkg_path)
         .ok()
         .and_then(|value| serde_json::from_value::<PackageJson>((*value).clone()).ok())
         .map_or_else(std::collections::HashSet::new, |package| {

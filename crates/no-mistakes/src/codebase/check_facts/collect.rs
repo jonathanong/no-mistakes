@@ -5,112 +5,25 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod entrypoints;
+
 pub(crate) use super::collect_helpers::graph_only_files;
 pub(super) use super::collect_helpers::request_sources;
 use super::collect_helpers::uncollected_files;
 pub(super) use super::collect_helpers::{
     collect_fact_map_sequential_with_sources, collect_fact_map_with_sources,
 };
-
-#[doc(hidden)]
-pub fn collect_check_facts_with_graph_files_playwright_and_sources(
-    root: &Path,
-    files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-    sources: Arc<crate::codebase::ts_source::SourceStore>,
-) -> CheckFactMap {
-    collect_check_facts_with_graph_files_and_playwright_impl(
-        root,
-        files,
-        graph_files,
-        plan,
-        playwright,
-        Some(sources),
-    )
-}
-
-pub(super) fn collect_check_facts_with_graph_files_and_playwright_impl(
-    root: &Path,
-    files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    mut plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-    sources: Option<Arc<crate::codebase::ts_source::SourceStore>>,
-) -> CheckFactMap {
-    if plan.graph_context.visible_files.is_none() {
-        let mut visible_files = files.clone();
-        visible_files.extend(graph_files.iter().cloned());
-        if let Some(playwright) = &playwright {
-            visible_files.extend(playwright.source_files().iter().cloned());
-        }
-        plan.graph_context.set_visible_files(visible_files);
-    }
-    let sources = sources
-        .unwrap_or_else(|| request_sources(&files, &graph_files, &plan, playwright.as_ref()));
-    if let Some(playwright) = playwright {
-        return super::staged_playwright::collect_with_sources(
-            root,
-            (files, graph_files, true),
-            plan,
-            playwright,
-            sources,
-        );
-    }
-    collect_check_facts_inner(root, files, graph_files, true, plan, playwright, sources)
-}
-
-pub(crate) fn collect_check_facts_with_precollected_graph_facts(
-    root: &Path,
-    graph_files: Vec<PathBuf>,
-    mut plan: CheckFactPlan,
-    playwright: PlaywrightFactPlan,
-    precollected_ts: crate::codebase::ts_source::facts::TsFactMap,
-) -> CheckFactMap {
-    if plan.graph_context.visible_files.is_none() {
-        let mut visible_files = graph_files.clone();
-        visible_files.extend(playwright.source_files().iter().cloned());
-        plan.graph_context.set_visible_files(visible_files);
-    }
-    super::staged_playwright::collect_with_precollected_ts(
-        root,
-        Vec::new(),
-        graph_files,
-        true,
-        plan,
-        playwright,
-        precollected_ts,
-    )
-}
-
-pub fn collect_check_facts_with_playwright(
-    root: &Path,
-    files: Vec<PathBuf>,
-    mut plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-) -> CheckFactMap {
-    if plan.graph_context.visible_files.is_none() {
-        let mut visible_files = files.clone();
-        if let Some(playwright) = &playwright {
-            visible_files.extend(playwright.source_files().iter().cloned());
-        }
-        plan.graph_context.set_visible_files(visible_files);
-    }
-    let sources = request_sources(&files, &[], &plan, playwright.as_ref());
-    if let Some(playwright) = playwright {
-        return super::staged_playwright::collect_with_sources(
-            root,
-            (files, Vec::new(), false),
-            plan,
-            playwright,
-            sources,
-        );
-    }
-    collect_check_facts_inner(root, files, Vec::new(), false, plan, playwright, sources)
-}
+pub(crate) use entrypoints::collect_check_facts_with_precollected_graph_facts;
+pub use entrypoints::{
+    collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
+    collect_check_facts_with_graph_files_playwright_and_session,
+    collect_check_facts_with_graph_files_playwright_and_sources,
+    collect_check_facts_with_graph_files_playwright_sources_and_session,
+    collect_check_facts_with_playwright, collect_check_facts_with_playwright_and_session,
+};
 
 fn collect_check_facts_inner(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     files: Vec<PathBuf>,
     graph_files: Vec<PathBuf>,
@@ -138,9 +51,9 @@ fn collect_check_facts_inner(
     };
     let ((mut ts, mut integration_runner_configs), helper_facts) =
         super::collect_prepared_runner_facts(
+            session,
             root,
-            &files,
-            &graph_only_files,
+            (&files, &graph_only_files),
             &plan,
             &graph_plan,
             playwright,
@@ -151,6 +64,7 @@ fn collect_check_facts_inner(
     let remaining_files = uncollected_files(&files, &ts, &helper_paths);
     let remaining_graph_files = uncollected_files(&graph_only_files, &ts, &helper_paths);
     ts.extend(collect_fact_map_with_sources(
+        session,
         root,
         &remaining_files,
         &plan,
@@ -158,6 +72,7 @@ fn collect_check_facts_inner(
         &sources,
     ));
     ts.extend(collect_fact_map_with_sources(
+        session,
         root,
         &remaining_graph_files,
         &graph_plan,

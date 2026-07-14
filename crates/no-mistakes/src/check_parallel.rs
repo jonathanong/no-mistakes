@@ -20,6 +20,7 @@ pub(crate) type DomainResults = (
 );
 
 pub(crate) struct DomainCheckInputs<'a> {
+    pub(crate) session: std::sync::Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
     pub(crate) root: &'a Path,
     pub(crate) config_path: &'a Option<PathBuf>,
     pub(crate) tsconfig_path: &'a Option<PathBuf>,
@@ -47,6 +48,8 @@ pub(crate) struct DomainCheckInputs<'a> {
 }
 
 pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
+    let observer = no_mistakes::diagnostics::current();
+    let session = inputs.session;
     let root = inputs.root;
     let config_path = inputs.config_path;
     let tsconfig_path = inputs.tsconfig_path;
@@ -72,62 +75,86 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
             rayon::join(
-                || run_react_check(root, react_enabled, facts, prepared_react),
-                || run_queue_check(root, prepared_tsconfig, queues_enabled, facts),
+                || {
+                    no_mistakes::diagnostics::with_observer(observer.clone(), || {
+                        run_react_check(root, react_enabled, facts, prepared_react)
+                    })
+                },
+                || {
+                    no_mistakes::diagnostics::with_observer(observer.clone(), || {
+                        run_queue_check(root, prepared_tsconfig, queues_enabled, facts)
+                    })
+                },
             )
         },
         || {
             rayon::join(
                 || {
-                    run_rules_check(
-                        no_mistakes::codebase::rules::PreparedRulesCheck {
-                            root,
-                            config_path: config_path.as_deref(),
-                            tsconfig_path: tsconfig_path.as_deref(),
-                            shared: facts,
-                            prepared_playwright,
-                            config,
-                            prepared_graph,
-                            prepared_tsconfig,
-                            inferred_roots: Some(inferred_roots),
-                            sources: Some(&rule_sources),
-                        },
-                        dependency_graph.as_deref(),
-                    )
+                    no_mistakes::diagnostics::with_observer(observer.clone(), || {
+                        run_rules_check(
+                            no_mistakes::codebase::rules::PreparedRulesCheck {
+                                session: session.clone(),
+                                root,
+                                config_path: config_path.as_deref(),
+                                tsconfig_path: tsconfig_path.as_deref(),
+                                shared: facts,
+                                prepared_playwright,
+                                config,
+                                prepared_graph,
+                                prepared_tsconfig,
+                                inferred_roots: Some(inferred_roots),
+                                sources: Some(&rule_sources),
+                            },
+                            dependency_graph.as_deref(),
+                        )
+                    })
                 },
                 || {
                     rayon::join(
                         || {
-                            run_integration_check(
-                                root,
-                                config,
-                                facts,
-                                prepared_tsconfig,
-                                visible_paths,
-                            )
+                            no_mistakes::diagnostics::with_observer(observer.clone(), || {
+                                run_integration_check(
+                                    &session,
+                                    root,
+                                    config,
+                                    facts,
+                                    prepared_tsconfig,
+                                    visible_paths,
+                                )
+                            })
                         },
                         || {
                             rayon::join(
                                 || {
-                                    run_codebase_check(
-                                        root,
-                                        codebase_config,
-                                        tsconfig_path.as_deref(),
-                                        prepared_tsconfig,
-                                        unique_exports_enabled,
-                                        facts,
-                                        inferred_roots,
+                                    no_mistakes::diagnostics::with_observer(
+                                        observer.clone(),
+                                        || {
+                                            run_codebase_check(
+                                                &session,
+                                                root,
+                                                codebase_config,
+                                                prepared_tsconfig,
+                                                unique_exports_enabled,
+                                                facts,
+                                                inferred_roots,
+                                            )
+                                        },
                                     )
                                 },
                                 || {
-                                    run_filesystem_rules_check(
-                                        root,
-                                        config,
-                                        filesystem_rules_enabled,
-                                        &discovered_files,
-                                        visible_paths,
-                                        sources,
-                                        vitest_projects,
+                                    no_mistakes::diagnostics::with_observer(
+                                        observer.clone(),
+                                        || {
+                                            run_filesystem_rules_check(
+                                                root,
+                                                config,
+                                                filesystem_rules_enabled,
+                                                &discovered_files,
+                                                visible_paths,
+                                                sources,
+                                                vitest_projects,
+                                            )
+                                        },
                                     )
                                 },
                             )

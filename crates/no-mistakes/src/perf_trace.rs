@@ -9,32 +9,24 @@
 //! `eprintln!` calls into hot paths, rebuilding, and reverting before commit;
 //! this makes that available permanently behind a flag.
 //!
-//! `enabled()` is a single process-wide flag, set once (if at all) by the
-//! CLI entrypoint before any work starts. It is never set by library/N-API
-//! callers, so it has no effect on programmatic usage. This module is `pub`
-//! only because `check.rs` is compiled as part of the separate `main.rs`
-//! binary crate root and needs a real cross-crate reference to reach it —
-//! it is not a stable public API and has no N-API binding.
+//! The root CLI installs one invocation observer. Library and N-API callers do
+//! not install that compatibility bridge, so this has no effect on ordinary
+//! programmatic usage. New code should carry the observer in `AnalysisSession`;
+//! this module remains as an adapter for existing deep trace call sites.
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
-
-static ENABLED: AtomicBool = AtomicBool::new(false);
-
-pub fn set_enabled(enabled: bool) {
-    ENABLED.store(enabled, Ordering::Relaxed);
-}
+use std::time::Duration;
 
 pub fn enabled() -> bool {
-    ENABLED.load(Ordering::Relaxed)
+    crate::diagnostics::current().is_some_and(|observer| observer.verbose())
 }
 
-/// Print `label: <duration>` to stderr if verbose timing is enabled; a no-op
-/// otherwise. Duration formatting matches `check.rs`'s existing `--timings`
-/// output so both can be read the same way.
+/// Record a duration if verbose timing is enabled; a no-op otherwise. The CLI
+/// boundary later renders all records in deterministic order.
 pub fn record(label: &str, elapsed: Duration) {
-    if enabled() {
-        eprintln!("[timing] {label}: {:.3}ms", elapsed.as_secs_f64() * 1000.0);
+    if let Some(observer) = crate::diagnostics::current() {
+        if observer.verbose() {
+            observer.record_duration(label, elapsed, crate::diagnostics::current_timing_kind());
+        }
     }
 }
 
@@ -43,13 +35,11 @@ pub fn record(label: &str, elapsed: Duration) {
 /// a `trace`-wrapped call added inside a future hot inner loop stays free
 /// when the flag is off. Returns `f`'s result unchanged.
 pub fn trace<T>(label: &str, f: impl FnOnce() -> T) -> T {
-    if enabled() {
-        let start = Instant::now();
-        let result = f();
-        record(label, start.elapsed());
-        result
-    } else {
-        f()
+    match crate::diagnostics::current() {
+        Some(observer) if observer.verbose() => {
+            observer.trace(label, crate::diagnostics::current_timing_kind(), f)
+        }
+        _ => f(),
     }
 }
 

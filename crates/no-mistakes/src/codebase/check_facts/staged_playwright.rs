@@ -17,7 +17,8 @@ use helpers::{
 use partitions::FilePartitions;
 use precollect::cached_config_graph_facts;
 
-pub(super) fn collect_with_sources(
+pub(super) fn collect_with_sources_and_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     plan: CheckFactPlan,
@@ -25,19 +26,27 @@ pub(super) fn collect_with_sources(
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> CheckFactMap {
     module_resolution::initialize_if_missing(root, &mut playwright, &sources);
-    let (files, graph_files, graph_files_complete) = file_scope;
-    let precollected_ts =
-        cached_config_graph_facts(&files, &graph_files, &plan, &playwright, &sources);
-    collect_with_precollected_ts_and_sources(
+    let precollected_ts = cached_config_graph_facts(
+        session,
+        &file_scope.0,
+        &file_scope.1,
+        &plan,
+        &playwright,
+        &sources,
+    );
+    collect_with_precollected_ts_sources_and_session(
+        session,
         root,
-        (files, graph_files, graph_files_complete),
+        file_scope,
         plan,
         playwright,
         precollected_ts,
         sources,
     )
 }
-pub(super) fn collect_with_precollected_ts_and_sources(
+
+pub(super) fn collect_with_precollected_ts_sources_and_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     mut plan: CheckFactPlan,
@@ -84,15 +93,14 @@ pub(super) fn collect_with_precollected_ts_and_sources(
         .cloned()
         .collect::<Vec<_>>();
     // Runner-config helpers can overlap Playwright source files. Collect import
-    // facts while their cached AST is available so a later text-reachability
-    // demand never has to parse those helpers again.
+    // facts while their cached AST is available so later demands never reparse.
     let runner_plan = with_imports(plan.clone());
     let graph_fact_plan = with_imports(graph_plan(&plan));
     let ((collected, integration_runner_configs), helper_facts) =
         super::collect_prepared_runner_facts(
+            session,
             root,
-            &uncollected_files,
-            &uncollected_graph_only_files,
+            (&uncollected_files, &uncollected_graph_only_files),
             &runner_plan,
             &graph_fact_plan,
             Some(&playwright),
@@ -100,82 +108,15 @@ pub(super) fn collect_with_precollected_ts_and_sources(
         );
     ts.extend(collected);
     ts.extend(helper_facts);
-    collect_test_partition(
+    collect_partitions(
+        session,
         root,
-        &partitions.scoped_tests,
-        with_imports(plan.clone()),
+        &partitions,
+        &mut plan,
         &playwright,
         &sources,
         &mut ts,
     );
-    collect_test_partition(
-        root,
-        &partitions.graph_tests,
-        with_imports(graph_plan(&plan)),
-        &playwright,
-        &sources,
-        &mut ts,
-    );
-    collect_test_partition(
-        root,
-        &partitions.playwright_only_tests,
-        with_imports(CheckFactPlan::default()),
-        &playwright,
-        &sources,
-        &mut ts,
-    );
-    let playwright_facts = ts
-        .iter()
-        .filter_map(|(path, facts)| facts.playwright.as_ref().map(|facts| (path.clone(), facts)))
-        .collect::<BTreeMap<_, _>>();
-    if playwright.demands_text_imports(&playwright_facts) {
-        plan.graph
-            .include(crate::codebase::ts_source::facts::TsFactPlan::imports());
-    }
-    collect_test_partition(
-        root,
-        &partitions.scoped_sources,
-        plan.clone(),
-        &playwright,
-        &sources,
-        &mut ts,
-    );
-    collect_test_partition(
-        root,
-        &partitions.graph_sources,
-        graph_plan(&plan),
-        &playwright,
-        &sources,
-        &mut ts,
-    );
-    collect_test_partition(
-        root,
-        &partitions.playwright_only_sources,
-        graph_plan(&plan),
-        &playwright,
-        &sources,
-        &mut ts,
-    );
-    if needs_scoped_facts(&plan) {
-        collect_test_partition(
-            root,
-            &partitions.remaining_scoped,
-            plan.clone(),
-            &playwright,
-            &sources,
-            &mut ts,
-        );
-    }
-    if !plan.graph.is_empty() {
-        collect_test_partition(
-            root,
-            &partitions.remaining_graph,
-            graph_plan(&plan),
-            &playwright,
-            &sources,
-            &mut ts,
-        );
-    }
     finish_map(FinishMapInput {
         files,
         graph_files,
@@ -188,6 +129,82 @@ pub(super) fn collect_with_precollected_ts_and_sources(
         playwright_test_files_by_project,
         integration_runner_configs,
     })
+}
+
+fn collect_partitions(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    root: &Path,
+    partitions: &FilePartitions,
+    plan: &mut CheckFactPlan,
+    playwright: &PlaywrightFactPlan,
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &mut HashMap<PathBuf, super::CheckFileFacts>,
+) {
+    let test_partitions = [
+        (&partitions.scoped_tests, with_imports(plan.clone())),
+        (&partitions.graph_tests, with_imports(graph_plan(plan))),
+        (
+            &partitions.playwright_only_tests,
+            with_imports(CheckFactPlan::default()),
+        ),
+    ];
+    for (files, partition_plan) in test_partitions {
+        collect_test_partition(
+            session,
+            root,
+            files,
+            partition_plan,
+            playwright,
+            sources,
+            facts,
+        );
+    }
+    let playwright_facts = facts
+        .iter()
+        .filter_map(|(path, facts)| facts.playwright.as_ref().map(|facts| (path.clone(), facts)))
+        .collect::<BTreeMap<_, _>>();
+    if playwright.demands_text_imports(&playwright_facts) {
+        plan.graph
+            .include(crate::codebase::ts_source::facts::TsFactPlan::imports());
+    }
+    let source_partitions = [
+        (&partitions.scoped_sources, plan.clone()),
+        (&partitions.graph_sources, graph_plan(plan)),
+        (&partitions.playwright_only_sources, graph_plan(plan)),
+    ];
+    for (files, partition_plan) in source_partitions {
+        collect_test_partition(
+            session,
+            root,
+            files,
+            partition_plan,
+            playwright,
+            sources,
+            facts,
+        );
+    }
+    if needs_scoped_facts(plan) {
+        collect_test_partition(
+            session,
+            root,
+            &partitions.remaining_scoped,
+            plan.clone(),
+            playwright,
+            sources,
+            facts,
+        );
+    }
+    if !plan.graph.is_empty() {
+        collect_test_partition(
+            session,
+            root,
+            &partitions.remaining_graph,
+            graph_plan(plan),
+            playwright,
+            sources,
+            facts,
+        );
+    }
 }
 
 #[cfg(test)]

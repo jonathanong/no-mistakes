@@ -48,13 +48,16 @@ impl PreparedScope {
             let output = self.traversal.signature_impact_json(&args)?;
             return Ok(serde_json::from_str(&output)?);
         }
-        let (entries, roots) = crate::codebase::symbols::collect_entries_with_prepared_facts(
+        let session = self.traversal.session_arc();
+        let (entries, roots) =
+            crate::codebase::symbols::collect_entries_with_prepared_facts(
             &args,
             self.traversal.root(),
             self.traversal.tsconfig(),
             self.traversal.graph_files().visible(),
             &self.facts,
             &self.symbol_facts,
+            &session,
         )?;
         let mut output = Vec::new();
         crate::codebase::symbols::output::write_json(&roots, &entries, &mut output)?;

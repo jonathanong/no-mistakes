@@ -5,6 +5,7 @@ fn import_neighbors(
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
     fact_source: LazyImportFacts<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<(NodeId, EdgeKind)>, Option<TsFileFacts>) {
     if let Some(facts) = fact_source
         .prepared
@@ -24,15 +25,15 @@ fn import_neighbors(
     }
 
     let facts = {
-        let source = match fact_source
-            .sources
-            .map(|sources| sources.read_path(path))
-            .unwrap_or_else(|| {
-                std::fs::read_to_string(path)
-                    .map(std::sync::Arc::<str>::from)
-                    .map_err(std::sync::Arc::new)
-            })
-        {
+        let source_result = match fact_source.sources {
+            Some(sources) => sources
+                .read_path(path)
+                .map_err(|error| error.to_string()),
+            None => session
+                .read_source(path)
+                .map_err(|error| error.to_string()),
+        };
+        let source = match source_result {
             Ok(source) => source,
             Err(error) => {
                 return (
@@ -44,7 +45,7 @@ fn import_neighbors(
                 );
             }
         };
-        match crate::ast::with_program(path, &source, |program, source| {
+        match session.with_program(path, &source, |program, source| {
             crate::codebase::ts_source::facts::collect_file_facts_from_program(
                 path,
                 fact_source.collect_plan,

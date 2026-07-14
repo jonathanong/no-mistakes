@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{BinaryExpression, BinaryOperator, Expression, Program, TemplateLiteral};
 use oxc_parser::{Parser, ParserReturn};
@@ -40,7 +40,8 @@ pub(crate) fn clear_request_parse_cache() {
     }
 }
 
-pub(crate) fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
+#[doc(hidden)]
+pub fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     let cache = current_request_parse_cache().unwrap_or_default();
     REQUEST_PARSE_CACHES.with(|caches| caches.borrow_mut().push(cache));
     let _guard = RequestParseCacheGuard;
@@ -132,21 +133,67 @@ pub fn with_program<T>(
             .with_program(path, source, analyze)
             .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()));
     }
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(path)
-        .with_context(|| format!("unsupported JavaScript/TypeScript file: {}", path.display()))?;
-    let parsed = parse(path, &allocator, source, source_type);
+    ParsedProgramCache::default()
+        .with_program(path, source, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
+}
 
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
-        let detail = parsed
-            .diagnostics
-            .first()
-            .map(|e| format!("{e:?}"))
-            .unwrap_or("unknown error (parser panicked)".to_string());
-        anyhow::bail!("failed to parse {}: {detail}", path.display());
-    }
+/// Parse strictly while reporting only a physical parser invocation through
+/// `on_parse`.
+pub(crate) fn with_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
+}
 
-    Ok(analyze(&parsed.program, source))
+/// Parse a JavaScript or TypeScript source while preserving OXC's recovered
+/// program when diagnostics are present. `on_parse` runs only for a physical
+/// parser invocation, not for a request-cache hit.
+pub(crate) fn with_recovered_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_recovered_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
+}
+
+/// Parse recovered source with an explicit TypeScript fallback for unknown
+/// extensions. `on_parse` has the same physical-work semantics as above.
+pub(crate) fn with_recovered_typescript_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_recovered_typescript_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
+}
+
+/// Parse with the historical symbols source type: TypeScript for every file
+/// except `.tsx` and `.jsx`, which use TSX. Recovered diagnostics remain
+/// available to the caller; only a parser panic is fatal.
+pub(crate) fn with_legacy_symbols_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_legacy_symbols_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
 pub fn span_text(source: &str, span: Span) -> &str {

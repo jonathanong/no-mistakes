@@ -10,7 +10,8 @@ fn standalone_preparation_parses_each_config_once_across_distinct_selections() {
     let root = fixture.path().canonicalize().unwrap();
 
     no_mistakes::ast::begin_parse_count(&root);
-    let prepared = prepared::prepare(&root, None, None).unwrap();
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::disabled();
+    let prepared = prepared::prepare_with_session(&session, &root, None, None).unwrap();
     let counts = no_mistakes::ast::finish_parse_count(&root);
     let expected = [
         root.join("playwright.admin.config.ts"),

@@ -2,14 +2,9 @@ use crate::check_runner;
 use anyhow::{Context, Result};
 use clap::Args;
 use no_mistakes::cli::{resolve_root, Format};
-use no_mistakes::codebase::rules::RuleFinding;
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
-use no_mistakes::integration_tests::IntegrationFinding;
-use no_mistakes::queue::CheckFinding;
-use no_mistakes::react_traits;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use std::time::Duration;
+mod output;
 
 #[derive(Args, Debug)]
 pub(crate) struct CheckArgs {
@@ -34,40 +29,34 @@ pub(crate) struct CheckArgs {
     /// Shorthand for --format json.
     #[arg(long, global = true, conflicts_with = "format")]
     json: bool,
-    /// Print per-check timing information to stderr.
-    #[arg(long, global = true)]
+    /// Legacy programmatic timing switch. CLI timing flags are root-global.
+    #[arg(skip)]
     timings: bool,
     /// Print fine-grained timing for internal hot paths to stderr (which
     /// `rules` sub-check dominates, which dependency-graph edge kind is
     /// expensive, which Playwright analysis step is slow). Implies
     /// `--timings`-level detail is not enough on its own to diagnose a
     /// regression; use this instead of a special instrumented build.
-    #[arg(long, global = true)]
+    #[arg(skip)]
     verbose_timings: bool,
 }
 
 pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
-    no_mistakes::perf_trace::set_enabled(args.verbose_timings);
+    let _diagnostics = no_mistakes::diagnostics::LegacyDiagnosticsGuard::new(
+        args.timings || args.verbose_timings,
+        args.verbose_timings,
+    );
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &cwd);
     let results = check_runner::run_all(root, args.config, args.tsconfig)?;
+    record_missing_check_timings(&results);
     for warning in &results.warnings {
         eprintln!("{warning}");
     }
 
     let has_failures = has_failures(&results);
     let format = if args.json { Format::Json } else { args.format };
-    match format {
-        Format::Json => print_check_json(&results),
-        Format::Yml => print_check_yml(&results),
-        Format::Md => print_check_md(&results),
-        Format::Paths => print_check_paths(&results),
-        Format::Human => print_check_human(&results),
-    }
-
-    if args.timings {
-        print_timings(&results.timings);
-    }
+    output::print(&results, format);
 
     Ok(if has_failures {
         ExitCode::from(1)
@@ -76,128 +65,49 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     })
 }
 
-fn print_timings(timings: &[(&str, Duration)]) {
-    for (label, duration) in timings {
-        eprintln!("{label}: {:.3}ms", duration.as_secs_f64() * 1000.0);
-    }
-}
-
-fn print_check_json(results: &check_runner::CheckResults) {
-    println!(
-        "{}",
-        serde_json::to_string_pretty(&check_runner::json_value(results))
-            .expect("serialization of Rust structs never fails")
-    );
-}
-
-fn print_check_yml(results: &check_runner::CheckResults) {
-    println!(
-        "{}",
-        serde_yaml::to_string(&check_runner::json_value(results))
-            .expect("serialization of Rust structs never fails")
-    );
-}
-
-fn print_check_md(results: &check_runner::CheckResults) {
-    println!("# no-mistakes check");
-    println!("## react");
-    for v in &results.react {
-        println!("- `{}` `{}`: {}", v.file, v.component, v.rule);
-    }
-    println!("## queues");
-    for f in &results.queues {
-        println!("- `{}`:{} {}", f.file, f.line, f.message);
-    }
-    println!("## rules");
-    for f in &results.rules {
-        println!("- `{}`:{} {} {}", f.file, f.line, f.rule, f.message);
-    }
-    println!("## integration");
-    for f in &results.integration {
-        println!("- `{}`:{} {}", f.file, f.line, f.message);
-    }
-    println!("## codebase");
-    for f in &results.codebase {
-        println!(
-            "- `{}`:{} `{}` {}",
-            f.file, f.line, f.export_name, f.message
-        );
-    }
-    println!("## advisories");
-    for f in &results.advisories {
-        println!("- `{}`:{} {} {}", f.file, f.line, f.rule, f.message);
-    }
-}
-
-fn print_check_paths(results: &check_runner::CheckResults) {
-    for v in &results.react {
-        println!("{}", v.file);
-    }
-    for f in &results.queues {
-        println!("{}:{}", f.file, f.line);
-    }
-    for f in &results.rules {
-        println!("{}:{}", f.file, f.line);
-    }
-    for f in &results.integration {
-        println!("{}:{}", f.file, f.line);
-    }
-    for f in &results.codebase {
-        println!("{}:{}:{}", f.file, f.line, f.export_name);
-    }
-}
-
-fn print_check_human(results: &check_runner::CheckResults) {
-    if !results.react.is_empty() {
-        react_traits::print_violations(&results.react);
-    }
-    print_queue_human(&results.queues);
-    print_rules_human(&results.rules);
-    print_integration_human(&results.integration);
-    print_codebase_human(&results.codebase);
-    print_advisories_human(&results.advisories);
-}
-
-fn print_queue_human(findings: &[CheckFinding]) {
-    for f in findings {
-        println!(
-            "{}[{}] {}:{} {}",
-            f.kind,
-            f.job.as_deref().unwrap_or("*"),
-            f.file,
-            f.line,
-            f.message
-        );
-    }
-}
-
-fn print_rules_human(findings: &[RuleFinding]) {
-    for f in findings {
-        println!("{} {}:{} {}", f.rule, f.file, f.line, f.message);
-    }
-}
-
-fn print_integration_human(findings: &[IntegrationFinding]) {
-    for f in findings {
-        println!(
-            "integration[{}:{}] {}:{} {}",
-            f.framework, f.suite, f.file, f.line, f.message
-        );
-    }
-}
-
-fn print_codebase_human(findings: &[UniqueExportFinding]) {
-    for f in findings {
-        println!(
-            "{}[{}] {}:{} {}",
-            f.rule, f.export_name, f.file, f.line, f.message
-        );
-    }
-}
-
-fn print_advisories_human(findings: &[RuleFinding]) {
-    for f in findings {
-        println!("advisory {} {}:{} {}", f.rule, f.file, f.line, f.message);
+fn record_missing_check_timings(results: &check_runner::CheckResults) {
+    let Some(observer) = no_mistakes::diagnostics::current() else {
+        return;
+    };
+    let existing = observer
+        .snapshot()
+        .timings
+        .into_iter()
+        .map(|entry| entry.label)
+        .collect::<std::collections::HashSet<_>>();
+    for (label, duration) in &results.timings {
+        let (label, kind) = match *label {
+            "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
+            "parse_extract" => ("parse", no_mistakes::diagnostics::TimingKind::Serial),
+            "react" => (
+                "analysis.react",
+                no_mistakes::diagnostics::TimingKind::Parallel,
+            ),
+            "queues" => (
+                "analysis.queues",
+                no_mistakes::diagnostics::TimingKind::Parallel,
+            ),
+            "rules" => (
+                "analysis.rules",
+                no_mistakes::diagnostics::TimingKind::Parallel,
+            ),
+            "integration" => (
+                "analysis.integration",
+                no_mistakes::diagnostics::TimingKind::Parallel,
+            ),
+            "codebase" => (
+                "analysis.codebase",
+                no_mistakes::diagnostics::TimingKind::Parallel,
+            ),
+            "filesystem_rules" => (
+                "analysis.filesystem_rules",
+                no_mistakes::diagnostics::TimingKind::Parallel,
+            ),
+            _ => continue,
+        };
+        if !existing.contains(label) {
+            observer.record_duration(label, *duration, kind);
+        }
     }
 }
 

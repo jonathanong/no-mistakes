@@ -2,6 +2,7 @@
 fn aggregate_check_injects_prepared_config_into_every_domain() {
     let runner = include_str!("../../check_runner.rs");
     let prepared = include_str!("../prepared.rs");
+    let forbidden_plan = include_str!("../forbidden_plan.rs");
     let parallel = include_str!("../../check_parallel.rs");
     let tasks = check_task_sources();
 
@@ -36,8 +37,8 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
 
     assert!(prepared.contains("prepare_check_from_loaded_config"));
     assert_eq!(prepared.matches("resolve_tsconfig_from_visible").count(), 1);
-    assert!(runner.contains("prepare_graph_config"));
-    assert!(runner.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
+    assert!(forbidden_plan.contains("prepare_graph_config"));
+    assert!(forbidden_plan.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
     assert!(!runner.contains("react_traits::check_enabled"));
     assert!(tasks.contains("queue::analyze_project_with_prepared_facts"));
     assert!(!tasks.contains("queue::analyze_project_with_facts"));

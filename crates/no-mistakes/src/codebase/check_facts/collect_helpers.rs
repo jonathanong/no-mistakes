@@ -48,35 +48,49 @@ pub(super) fn uncollected_files(
 }
 
 pub(crate) fn collect_fact_map_with_sources(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     files: &[PathBuf],
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> HashMap<PathBuf, CheckFileFacts> {
+    let files = crate::codebase::ts_source::deduplicate_analysis_paths(
+        files
+            .iter()
+            .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path))),
+    );
     files
         .par_iter()
-        .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path)))
         .filter_map(|path| {
-            super::collect_file_facts_with_sources(root, path, plan, playwright, sources)
-                .map(|facts| (path.clone(), facts))
+            super::collect_file_facts_with_session_and_sources(
+                session, root, path, plan, playwright, sources,
+            )
+            .map(|facts| (path.clone(), facts))
         })
         .collect()
 }
 
 pub(super) fn collect_fact_map_sequential_with_sources(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     files: &[PathBuf],
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> HashMap<PathBuf, CheckFileFacts> {
+    let files = crate::codebase::ts_source::deduplicate_analysis_paths(
+        files
+            .iter()
+            .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path))),
+    );
     files
         .iter()
-        .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path)))
         .filter_map(|path| {
-            super::collect_file_facts_with_sources(root, path, plan, playwright, sources)
-                .map(|facts| (path.clone(), facts))
+            super::collect_file_facts_with_session_and_sources(
+                session, root, path, plan, playwright, sources,
+            )
+            .map(|facts| (path.clone(), facts))
         })
         .collect()
 }

@@ -1,32 +1,3 @@
-fn build_entry(
-    abs_path: &Path,
-    root: &Path,
-    tsconfig: &TsConfig,
-    visible_files: &std::collections::HashSet<PathBuf>,
-    include: Include,
-    kind_filter: Option<&KindFilter>,
-) -> Result<FileEntry> {
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(tsconfig)
-        .with_visible(visible_files);
-    let source =
-        std::fs::read_to_string(abs_path).context(format!("reading {}", abs_path.display()))?;
-    let is_tsx = matches!(
-        abs_path.extension().and_then(|s| s.to_str()),
-        Some("tsx") | Some("jsx")
-    );
-    let symbols: FileSymbols = extract_symbols_at_path(abs_path, &source, is_tsx)
-        .context(format!("extracting symbols from {}", abs_path.display()))?;
-
-    build_entry_from_symbols(
-        abs_path,
-        root,
-        &resolver,
-        symbols,
-        include,
-        kind_filter,
-    )
-}
-
 fn build_entry_from_symbols(
     abs_path: &Path,
     root: &Path,

@@ -1,0 +1,8 @@
+{
+  "name": "performance-root",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "@fixture/core": "workspace:*"
+  }
+}

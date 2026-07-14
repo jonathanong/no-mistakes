@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# New parsers must enter through the request-scoped AST gateway. The exact
+# allowlist contains legacy, source-string-only extractors that do not discover
+# or read files; migrating one removes its entry here.
+id: no-direct-oxc-parser
+language: rust
+severity: error
+message: >-
+  Direct OXC Parser construction outside an approved parser adapter. Route
+  file analysis through AnalysisSession/ast so parses and failures participate
+  in one-pass accounting.
+rule:
+  any:
+    - pattern: Parser::new($ALLOCATOR, $SOURCE, $SOURCE_TYPE)
+    - pattern: oxc_parser::Parser::new($ALLOCATOR, $SOURCE, $SOURCE_TYPE)
+files:
+  - "crates/no-mistakes/src/**"
+ignores:
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes/src/**/test_support.rs"
+  - "crates/no-mistakes/src/ast/parsed_cache.rs"
+  - "crates/no-mistakes/src/codebase/dependencies/extract.rs"
+  - "crates/no-mistakes/src/codebase/rules/require_storybook_stories/config/story_patterns.rs"
+  - "crates/no-mistakes/src/codebase/rules/server_route_client_boundary/ast/client.rs"
+  - "crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/ast.rs"
+  - "crates/no-mistakes/src/codebase/ts_http_calls.rs"
+  - "crates/no-mistakes/src/codebase/ts_process_spawn/types.rs"
+  - "crates/no-mistakes/src/codebase/ts_queues/factory/create_queue.rs"
+  - "crates/no-mistakes/src/codebase/ts_queues/factory/queue_name.rs"
+  - "crates/no-mistakes/src/codebase/ts_queues/factory/reachability.rs"
+  - "crates/no-mistakes/src/codebase/ts_queues/usage/types.rs"
+  - "crates/no-mistakes/src/codebase/ts_routes/defs_backend/types.rs"
+  - "crates/no-mistakes/src/codebase/ts_routes/refs/types.rs"
+  - "crates/no-mistakes/src/codebase/ts_symbols/types.rs"
+  - "crates/no-mistakes/src/server_routes/extract/shape.rs"

@@ -92,7 +92,17 @@ fn check_with_facts(
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
-    check_with_prepared_facts(root, config, config_path, &tsconfig, shared, None)
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    check_with_prepared_facts_and_session(
+        root,
+        config,
+        config_path,
+        &tsconfig,
+        shared,
+        None,
+        &session,
+    )
 }
 
 #[test]

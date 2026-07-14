@@ -23,11 +23,13 @@ include!("traversal_validation.rs");
 include!("traversal_queue_roots.rs");
 include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
+include!("shared_traversal_prepare.rs");
 include!("shared_traversal_facts.rs");
 include!("shared_traversal_reports.rs");
 include!("shared_graph_cache.rs");
 include!("shared_traversal_graph.rs");
 include!("shared_traversal_collect.rs");
+include!("shared_traversal_uncached.rs");
 include!("output_args.rs");
 include!("run.rs");
 

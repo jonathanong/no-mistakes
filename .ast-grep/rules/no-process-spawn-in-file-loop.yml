@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Process startup is never acceptable per source file. Batch it once outside
+# the loop or use an in-process parser/resolver.
+id: no-process-spawn-in-file-loop
+language: rust
+severity: error
+message: >-
+  Process spawned inside a per-file loop. Batch the operation once per
+  invocation or replace it with the in-process analysis gateway.
+rule:
+  all:
+    - any:
+        - pattern: Command::new($PROGRAM)
+        - pattern: std::process::Command::new($PROGRAM)
+    - inside:
+        any:
+          - pattern: for $ITEM in $ITEMS { $$$BODY }
+          - pattern: while $CONDITION { $$$BODY }
+          - pattern: loop { $$$BODY }
+          - pattern: $ITER.iter().map(|$ITEM| { $$$BODY })
+          - pattern: $ITER.iter().for_each(|$ITEM| { $$$BODY })
+          - pattern: $ITER.iter().filter_map(|$ITEM| { $$$BODY })
+          - pattern: $ITER.par_iter().map(|$ITEM| { $$$BODY })
+          - pattern: $ITER.par_iter().for_each(|$ITEM| { $$$BODY })
+          - pattern: $ITER.par_iter().filter_map(|$ITEM| { $$$BODY })
+          - pattern: $ITER.into_iter().map(|$ITEM| { $$$BODY })
+          - pattern: $ITER.into_iter().for_each(|$ITEM| { $$$BODY })
+          - pattern: $ITER.into_par_iter().map(|$ITEM| { $$$BODY })
+          - pattern: $ITER.into_par_iter().for_each(|$ITEM| { $$$BODY })
+          - pattern: $ITER.into_par_iter().filter_map(|$ITEM| { $$$BODY })
+        stopBy: end
+files:
+  - "crates/no-mistakes/src/**"
+ignores:
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes/src/**/test_support.rs"

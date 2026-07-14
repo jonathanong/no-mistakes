@@ -3,8 +3,6 @@ use crate::codebase::dependencies::extract::{
     extract_import_facts_from_program_with_source, is_indexable,
 };
 use crate::codebase::ts_symbols::extract_symbols_from_program;
-use oxc_allocator::Allocator;
-use oxc_span::SourceType;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
@@ -27,23 +25,66 @@ pub fn collect_ts_facts_with_context(
     collect_ts_facts_with_context_and_sources(files, plan, context, &sources)
 }
 
-pub(crate) fn collect_ts_facts_with_context_and_sources(
+#[doc(hidden)]
+pub fn collect_ts_facts_with_context_and_sources(
     files: &[PathBuf],
     plan: TsFactPlan,
     context: &TsFactContext,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> TsFactMap {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    collect_ts_facts_with_context_sources_and_session(&session, files, plan, context, sources)
+}
+
+#[doc(hidden)]
+pub fn collect_ts_facts_with_session_and_context(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    files: &[PathBuf],
+    plan: TsFactPlan,
+    context: &TsFactContext,
+) -> TsFactMap {
+    let inventory =
+        std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(files));
+    let sources = crate::codebase::ts_source::SourceStore::new_observed(
+        inventory,
+        session.observer().cloned(),
+    );
+    collect_ts_facts_with_context_sources_and_session(session, files, plan, context, &sources)
+}
+
+pub(crate) fn collect_ts_facts_with_context_sources_and_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    files: &[PathBuf],
+    plan: TsFactPlan,
+    context: &TsFactContext,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> TsFactMap {
+    let files = crate::codebase::ts_source::deduplicate_analysis_paths(
+        files.iter().filter(|path| is_indexable(path)),
+    );
     let facts = files
         .par_iter()
-        .filter(|path| is_indexable(path))
         .filter_map(|path| {
-            collect_file_facts_with_sources(path, plan, context, sources)
+            collect_file_facts_with_sources_and_session(session, path, plan, context, sources)
                 .map(|facts| (path.clone(), facts))
         })
         .collect();
     TsFactMap::with_plan(facts, plan)
 }
+
+#[cfg(test)]
 pub(crate) fn collect_file_facts_with_sources(
+    path: &Path,
+    plan: TsFactPlan,
+    context: &TsFactContext,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Option<TsFileFacts> {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    collect_file_facts_with_sources_and_session(&session, path, plan, context, sources)
+}
+
+fn collect_file_facts_with_sources_and_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     path: &Path,
     plan: TsFactPlan,
     context: &TsFactContext,
@@ -58,23 +99,22 @@ pub(crate) fn collect_file_facts_with_sources(
             });
         }
     };
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
-    let parsed = crate::ast::parse(path, &allocator, &source, source_type);
-    let parse_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
-        Some(crate::codebase::ts_source::format_parse_diagnostic(
-            path,
-            &parsed.diagnostics,
-        ))
-    } else {
-        None
-    };
-    let mut facts =
-        collect_file_facts_from_program(path, plan, context, &source, &parsed.program, parse_error);
-    if plan.source {
-        facts.source = Some(source.to_string());
+    match session.with_recovered_typescript_program(
+        path,
+        &source,
+        |program, source, parse_error| {
+            collect_file_facts_from_program(path, plan, context, source, program, parse_error)
+        },
+    ) {
+        Ok(facts) => Some(facts),
+        // This collector historically parsed unsupported extensions as TS.
+        // It is only called for indexable files, so reaching this branch means
+        // the extension allowlist and OXC source-type support drifted apart.
+        Err(error) => Some(TsFileFacts {
+            parse_error: Some(error.to_string()),
+            ..TsFileFacts::default()
+        }),
     }
-    Some(facts)
 }
 
 pub(crate) fn collect_file_facts_from_program(

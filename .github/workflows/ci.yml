@@ -230,6 +230,11 @@ jobs:
   bench:
     name: Benchmarks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RAYON_NUM_THREADS: "4"
 
     steps:
       - name: Checkout
@@ -245,35 +250,28 @@ jobs:
         with:
           key: bench
 
-      - name: Build benchmarks
-        run: cargo bench -p no-mistakes --benches --no-run
+      - name: Install cargo-codspeed
+        run: cargo install cargo-codspeed --version 5.0.1 --locked
 
-      - name: Run graph related benchmark
-        run: cargo bench -p no-mistakes --bench graph_related -- --noplot
+      - name: Build CPU and memory benchmarks
+        run: >-
+          cargo codspeed build
+          -p no-mistakes
+          --features test-instrumentation
+          --bench core_analysis
+          -m simulation
+          -m memory
 
-      - name: Run large repo dependencies benchmark
-        run: cargo bench -p no-mistakes --bench dependencies_large_repo -- --noplot
+      - name: Run CPU benchmarks
+        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
+        with:
+          mode: simulation
+          run: cargo codspeed run -m simulation
 
-      - name: Run check benchmark
-        run: cargo bench -p no-mistakes --bench check -- --noplot
-
-      - name: Run playwright config load benchmark
-        run: cargo bench -p no-mistakes --bench bench_playwright_load -- --noplot
-
-      - name: Build release CLI for timing smoke
-        run: cargo build --release -p no-mistakes
-
-      - name: Run large graph timing smoke
-        run: |
-          target/release/no-mistakes dependencies \
-            --root test-cases/codebase-analysis/large-graph-monorepo/fixture \
-            --relationship all \
-            --timings \
-            --format json \
-            apps/web/src/entrypoints/graph-smoke.tsx \
-            apps/api/src/entrypoints/public-api.mts \
-            scripts/orchestrate.mts \
-            tests/e2e/all-routes.spec.ts \
-            .github/workflows/ci.yml \
-            README.md > large-graph-dependencies.json
-          wc -c large-graph-dependencies.json
+      # Keep memory execution separate: CodSpeed instruments the same in-process
+      # fixture workloads with allocation tracking instead of CPU simulation.
+      - name: Run memory benchmarks
+        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
+        with:
+          mode: memory
+          run: cargo codspeed run -m memory

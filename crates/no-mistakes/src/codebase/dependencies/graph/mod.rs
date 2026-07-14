@@ -1,8 +1,8 @@
 use super::extract::{is_indexable, ExtractedImport, FunctionCall, ImportKind};
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{
-    collect_ts_facts, collect_ts_facts_with_context, TsFactContext, TsFactMap, TsFactPlan,
-    TsFileFacts,
+    collect_ts_facts, collect_ts_facts_with_session_and_context, TsFactContext, TsFactMap,
+    TsFactPlan, TsFileFacts,
 };
 use crate::codebase::ts_symbols::ExportKind;
 use crate::config::v2::{load_v2_config, ConfigView};

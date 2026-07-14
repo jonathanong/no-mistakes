@@ -138,6 +138,7 @@ impl PreparedIntegrationRunnerConfigs {
         Ok(parsed)
     }
 
+    #[cfg(test)]
     pub(crate) fn parse_path_for_facts(&self, path: &Path) -> Option<RunnerConfigFileFacts> {
         if !self.contains(path)
             || !self
@@ -151,6 +152,27 @@ impl PreparedIntegrationRunnerConfigs {
             Err(error) => return self.parse_error(path, error.to_string()),
         };
         match with_request_program(path, &source, |program, source| {
+            self.parse_program(path, program, source)
+                .expect("runner config path was prepared")
+        }) {
+            Ok(facts) => Some(facts),
+            Err(error) => self.parse_error(path, error.to_string()),
+        }
+    }
+
+    pub(crate) fn parse_path_for_facts_with_session(
+        &self,
+        session: &crate::codebase::analysis_session::AnalysisSession,
+        path: &Path,
+    ) -> Option<RunnerConfigFileFacts> {
+        if !self.contains(path) || !path.exists() {
+            return None;
+        }
+        let source = match self.read_source(path) {
+            Ok(source) => source,
+            Err(error) => return self.parse_error(path, error.to_string()),
+        };
+        match session.with_program(path, &source, |program, source| {
             self.parse_program(path, program, source)
                 .expect("runner config path was prepared")
         }) {

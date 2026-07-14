@@ -91,10 +91,11 @@ struct CanonicalGraphBuild<'a> {
     dotnet_facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
     visible_paths: &'a crate::codebase::ts_source::VisiblePathSnapshot,
+    session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 }
 
 fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGraph> {
-    graph::DepGraph::build_with_plan_files_prepared_config_facts_and_resolution_cache(
+    graph::DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
         graph::PreparedGraphBuild {
             root: input.root,
             tsconfig: input.tsconfig,
@@ -108,5 +109,6 @@ fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGra
             swift_facts: input.swift_facts,
             visible_paths: Some(input.visible_paths),
         },
+        input.session,
     )
 }

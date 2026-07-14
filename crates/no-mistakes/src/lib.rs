@@ -1,6 +1,9 @@
 extern crate self as no_mistakes;
 
 pub mod ast;
+#[cfg(feature = "test-instrumentation")]
+#[doc(hidden)]
+pub mod benchmark_support;
 mod check_discovery;
 mod check_parallel;
 mod check_runner;
@@ -10,6 +13,7 @@ pub mod cli;
 pub mod codebase;
 pub mod config;
 pub mod data_pw_query;
+pub mod diagnostics;
 pub(crate) mod edge_index;
 pub mod effects_query;
 pub mod fetch;

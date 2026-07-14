@@ -1,7 +1,5 @@
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::ts_source::facts::TsFileFacts;
-use oxc_allocator::Allocator;
-use oxc_span::SourceType;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -15,7 +13,34 @@ pub(crate) use program::collect_file_facts_from_program;
 pub(crate) fn is_mdx_file(path: &Path) -> bool {
     path.extension().and_then(|ext| ext.to_str()) == Some("mdx")
 }
+
 pub(crate) fn collect_file_facts_with_sources(
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+    playwright: Option<&PlaywrightFactPlan>,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Option<CheckFileFacts> {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    collect_file_facts_with_session_and_sources(&session, root, path, plan, playwright, sources)
+}
+
+pub(crate) fn collect_file_facts_with_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+    playwright: Option<&PlaywrightFactPlan>,
+) -> Option<CheckFileFacts> {
+    let inventory = Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
+        path.to_path_buf(),
+    ]));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    collect_file_facts_with_session_and_sources(session, root, path, plan, playwright, &sources)
+}
+
+pub(crate) fn collect_file_facts_with_session_and_sources(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
@@ -39,8 +64,8 @@ pub(crate) fn collect_file_facts_with_sources(
             });
         }
     };
-    if plan.storybook && path.extension().and_then(|ext| ext.to_str()) == Some("mdx") {
-        let stored_source = should_store_source(plan).then(|| std::sync::Arc::clone(&source));
+    if plan.storybook && is_mdx_file(path) {
+        let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
         return Some(CheckFileFacts {
             ts: Arc::new(ts_source(stored_source.clone())),
             source: stored_source,
@@ -53,20 +78,63 @@ pub(crate) fn collect_file_facts_with_sources(
     }
     if plan.raw_source && !requires_parse(plan, path, playwright) {
         return Some(CheckFileFacts {
-            ts: Arc::new(ts_source(Some(std::sync::Arc::clone(&source)))),
-            source: Some(std::sync::Arc::clone(&source)),
+            ts: Arc::new(ts_source(Some(Arc::clone(&source)))),
+            source: Some(Arc::clone(&source)),
             ..CheckFileFacts::default()
         });
     }
     if !requires_parse(plan, path, playwright) {
         return Some(CheckFileFacts::default());
     }
-    let source_type = match SourceType::from_path(path) {
-        Ok(source_type) => source_type,
+    let collected =
+        session.with_recovered_program(path, &source, |program, parsed_source, parse_error| {
+            if let Some(parse_error) = parse_error {
+                let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
+                let ts = super::file_parse_error::ts_facts(
+                    plan,
+                    stored_source.clone(),
+                    program,
+                    parse_error.clone(),
+                );
+                let integration_runner_config =
+                    plan.integration_runner_configs.as_ref().and_then(|plan| {
+                        plan.parse_error(
+                            path,
+                            format!("failed to parse {}: {parse_error}", path.display()),
+                        )
+                    });
+                return CheckFileFacts {
+                    ts: Arc::new(ts),
+                    source: stored_source,
+                    integration_runner_config,
+                    parse_error: Some(parse_error),
+                    parsed: true,
+                    server_route_client_boundary: plan
+                        .server_route_client_boundary
+                        .then(Default::default),
+                    ..CheckFileFacts::default()
+                };
+            }
+            let mut facts = collect_file_facts_from_program(
+                root,
+                path,
+                plan,
+                playwright,
+                parsed_source,
+                program,
+            );
+            if should_store_source(plan) {
+                Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
+                facts.source = Some(Arc::clone(&source));
+            }
+            facts
+        });
+    match collected {
+        Ok(facts) => Some(facts),
         Err(_) => {
-            let stored_source = should_store_source(plan).then(|| std::sync::Arc::clone(&source));
+            let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
             let parse_error = format!("unsupported file type: {}", path.display());
-            return Some(CheckFileFacts {
+            Some(CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
                     parse_error: Some(parse_error.clone()),
                     source: stored_source.as_deref().map(str::to_owned),
@@ -78,42 +146,7 @@ pub(crate) fn collect_file_facts_with_sources(
                     .server_route_client_boundary
                     .then(Default::default),
                 ..CheckFileFacts::default()
-            });
+            })
         }
-    };
-    let allocator = Allocator::default();
-    let parsed = crate::ast::parse(path, &allocator, &source, source_type);
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
-        let parse_error =
-            crate::codebase::ts_source::format_parse_diagnostic(path, &parsed.diagnostics);
-        let stored_source = should_store_source(plan).then(|| std::sync::Arc::clone(&source));
-        let ts = super::file_parse_error::ts_facts(
-            plan,
-            stored_source.clone(),
-            &parsed.program,
-            parse_error.clone(),
-        );
-        let integration_runner_config = plan.integration_runner_configs.as_ref().and_then(|plan| {
-            plan.parse_error(
-                path,
-                format!("failed to parse {}: {parse_error}", path.display()),
-            )
-        });
-        return Some(CheckFileFacts {
-            ts: ts.into(),
-            source: stored_source,
-            integration_runner_config,
-            parse_error: Some(parse_error),
-            parsed: true,
-            server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
-            ..CheckFileFacts::default()
-        });
     }
-    let mut facts =
-        collect_file_facts_from_program(root, path, plan, playwright, &source, &parsed.program);
-    if should_store_source(plan) {
-        std::sync::Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
-        facts.source = Some(source);
-    }
-    Some(facts)
 }

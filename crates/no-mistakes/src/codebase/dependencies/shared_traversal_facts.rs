@@ -15,6 +15,7 @@ impl SharedTraversalContext {
     pub(crate) fn seed_cached_program_facts(&mut self, paths: &std::collections::HashSet<PathBuf>) {
         let context = self.fact_context.clone();
         let sources = self.dataset.sources_for(&self.root);
+        let session = self.session.clone();
         let collected = crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
             paths
                 .iter()
@@ -25,24 +26,47 @@ impl SharedTraversalContext {
                 })
                 .filter_map(|path| {
                     let source = sources.read_path(path).ok()?;
-                    let mut facts = crate::ast::with_program(path, &source, |program, source| {
-                        crate::codebase::ts_source::facts::collect_file_facts_from_program(
-                            path,
-                            self.fact_plan,
-                            &context,
-                            source,
-                            program,
-                            None,
-                        )
-                    })
-                    .ok()?;
-                    if self.fact_plan.source {
-                        facts.source = Some(source.to_string());
-                    }
-                    Some((path.clone(), facts))
+                    session
+                        .with_recovered_program(path, &source, |program, source, error| {
+                            error.is_none().then(|| {
+                                let mut facts = crate::codebase::ts_source::facts::collect_file_facts_from_program(
+                                    path,
+                                    self.fact_plan,
+                                    &context,
+                                    source,
+                                    program,
+                                    None,
+                                );
+                                if self.fact_plan.source {
+                                    facts.source = Some(source.to_string());
+                                }
+                                facts
+                            })
+                        })
+                        .ok()
+                        .flatten()
+                        .map(|facts| (path.clone(), facts))
                 }),
             self.fact_plan,
         );
+        self.facts
+            .get_or_insert_with(|| {
+                crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
+                    std::iter::empty(),
+                    self.fact_plan,
+                )
+            })
+            .extend(collected);
+        self.invalidate_analysis_caches();
+    }
+
+    pub(crate) fn extend_lazy_facts(
+        &mut self,
+        collected: crate::codebase::ts_source::facts::TsFactMap,
+    ) {
+        if collected.is_empty() {
+            return;
+        }
         self.facts
             .get_or_insert_with(|| {
                 crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(

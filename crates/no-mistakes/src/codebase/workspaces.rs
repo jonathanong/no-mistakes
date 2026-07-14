@@ -10,6 +10,7 @@ include!("workspaces/indexed.rs");
 include!("workspaces/package_model.rs");
 include!("workspaces/types.rs");
 include!("workspaces/globs.rs");
+include!("workspaces/loading.rs");
 include!("workspaces/package.rs");
 include!("workspaces/exports.rs");
 include!("workspaces/path.rs");

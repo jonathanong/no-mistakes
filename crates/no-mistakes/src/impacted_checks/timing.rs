@@ -2,41 +2,38 @@ use super::ImpactedChecksTiming;
 use anyhow::Result;
 use std::time::{Duration, Instant};
 
-/// Per-invocation timing state shared by the CLI and N-API entry points.
-///
-/// Planner phases call [`Self::run_phase`] with their stable phase label. The
-/// CLI enables `emit_progress`, while the N-API enables `collect`; keeping the
-/// two controls separate prevents diagnostics from leaking into either CLI
-/// stdout or a Node process's stderr.
+/// Adapter shared by the root CLI observer and N-API timing collection.
+/// Planner phases keep their stable labels and exclusive-duration behavior;
+/// only N-API requests populate the structured timing array.
 pub(crate) struct TimingTracker {
     emit_progress: bool,
     collect: bool,
-    invocation_started: Instant,
+    observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
+    invocation_started: Option<Instant>,
     completed_phase_time: Duration,
     timings: Vec<ImpactedChecksTiming>,
 }
 
 pub(crate) struct PhaseTimer {
-    started: Instant,
+    started: Option<Instant>,
     completed_phase_time: Duration,
 }
 
 impl TimingTracker {
     pub(crate) fn new(emit_progress: bool, collect: bool) -> Self {
-        if emit_progress {
-            eprintln!("total: started");
-        }
+        let observer = crate::diagnostics::current();
+        let enabled = emit_progress || collect || observer.is_some();
         Self {
             emit_progress,
             collect,
-            invocation_started: Instant::now(),
+            observer,
+            invocation_started: enabled.then(Instant::now),
             completed_phase_time: Duration::ZERO,
             timings: Vec::new(),
         }
     }
 
-    /// Run one phase, emitting its start before expensive work and recording
-    /// its duration only after successful completion.
+    /// Run one phase and record its duration after completion.
     pub(crate) fn run_phase<T>(
         &mut self,
         phase: &'static str,
@@ -69,11 +66,9 @@ impl TimingTracker {
     }
 
     pub(crate) fn start_phase(&self, phase: &'static str) -> PhaseTimer {
-        if self.emit_progress {
-            eprintln!("{phase}: started");
-        }
+        let _ = phase;
         PhaseTimer {
-            started: Instant::now(),
+            started: self.invocation_started.map(|_| Instant::now()),
             completed_phase_time: self.completed_phase_time,
         }
     }
@@ -87,11 +82,10 @@ impl TimingTracker {
     pub(crate) fn fail_phase(&mut self, phase: &'static str, timer: PhaseTimer) {
         let duration = self.exclusive_duration(&timer);
         self.completed_phase_time += duration;
-        if self.emit_progress {
-            eprintln!(
-                "{phase}: failed after {:.3}ms",
-                duration.as_secs_f64() * 1000.0
-            );
+        if let Some(observer) = &self.observer {
+            observer.record_duration(phase, duration, crate::diagnostics::TimingKind::Serial);
+        } else if self.emit_progress {
+            eprintln!("[timing] {phase}: {:.3}ms", duration.as_secs_f64() * 1000.0);
         }
     }
 
@@ -101,23 +95,38 @@ impl TimingTracker {
 
     /// Finish the invocation-level timer after all nested phases complete.
     pub(crate) fn finish_total(&mut self) {
-        self.record_success("total", self.invocation_started.elapsed());
+        let duration = self
+            .invocation_started
+            .map(|started| started.elapsed())
+            .unwrap_or_default();
+        if self.collect {
+            self.timings.push(ImpactedChecksTiming {
+                phase: "total".to_string(),
+                duration_ms: duration.as_secs_f64() * 1000.0,
+            });
+        }
+        if self.observer.is_none() && !self.collect {
+            self.record_success("total", duration);
+        }
     }
 
     /// Report an invocation that failed after its active phase reported the
     /// more specific failure.
     pub(crate) fn fail_total(&self) {
-        if self.emit_progress {
-            eprintln!(
-                "total: failed after {:.3}ms",
-                self.invocation_started.elapsed().as_secs_f64() * 1000.0
-            );
+        if self.emit_progress && self.observer.is_none() {
+            let duration = self
+                .invocation_started
+                .map(|started| started.elapsed())
+                .unwrap_or_default();
+            eprintln!("[timing] total: {:.3}ms", duration.as_secs_f64() * 1000.0);
         }
     }
 
     fn record_success(&mut self, phase: &'static str, duration: Duration) {
-        if self.emit_progress {
-            eprintln!("{phase}: {:.3}ms", duration.as_secs_f64() * 1000.0);
+        if let Some(observer) = &self.observer {
+            observer.record_duration(phase, duration, crate::diagnostics::TimingKind::Serial);
+        } else if self.emit_progress {
+            eprintln!("[timing] {phase}: {:.3}ms", duration.as_secs_f64() * 1000.0);
         }
         if self.collect {
             self.timings.push(ImpactedChecksTiming {
@@ -131,6 +140,9 @@ impl TimingTracker {
         let nested = self
             .completed_phase_time
             .saturating_sub(timer.completed_phase_time);
-        timer.started.elapsed().saturating_sub(nested)
+        timer
+            .started
+            .map(|started| started.elapsed().saturating_sub(nested))
+            .unwrap_or_default()
     }
 }

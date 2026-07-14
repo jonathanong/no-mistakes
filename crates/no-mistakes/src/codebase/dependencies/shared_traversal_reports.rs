@@ -4,6 +4,7 @@ impl SharedTraversalContext {
         args: &crate::codebase::symbols::SymbolsArgs,
     ) -> Result<String> {
         let test_filter = self.test_filter.clone();
+        let session = self.session.clone();
         self.graph()?;
         let graph = self
             .graph
@@ -17,10 +18,13 @@ impl SharedTraversalContext {
             args,
             &self.root,
             &self.tsconfig,
-            &self.graph_files,
-            &test_filter,
-            graph,
-            facts,
+            crate::codebase::symbols::PreparedSignatureImpact {
+                session: &session,
+                graph_files: &self.graph_files,
+                test_filter: &test_filter,
+                graph,
+                facts,
+            },
         )
     }
 

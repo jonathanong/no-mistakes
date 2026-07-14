@@ -68,6 +68,15 @@ fn integration_suites(
         .collect()
 }
 
+fn prepare(
+    root: &Path,
+    config_path: Option<&Path>,
+    tsconfig_path: Option<&Path>,
+) -> anyhow::Result<prepared::PreparedCheckInputs> {
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::disabled();
+    prepared::prepare_with_session(&session, root, config_path, tsconfig_path)
+}
+
 #[test]
 fn aggregate_integration_skips_ignored_automatic_runner_configs() {
     let dir = fixture();
@@ -121,12 +130,12 @@ fn banned_paths_uses_ignore_aware_files_outside_git() {
 fn aggregate_integration_skips_ignored_automatic_tsconfig_but_honors_explicit_path() {
     let dir = fixture();
 
-    let automatic = prepared::prepare(dir.path(), None, None).unwrap();
+    let automatic = prepare(dir.path(), None, None).unwrap();
     assert!(automatic.tsconfig.paths.is_empty());
     assert!(automatic.tsconfig.base_url.is_none());
 
     let explicit_path = PathBuf::from("tsconfig.json");
-    let explicit = prepared::prepare(dir.path(), None, Some(&explicit_path)).unwrap();
+    let explicit = prepare(dir.path(), None, Some(&explicit_path)).unwrap();
     assert!(!explicit.tsconfig.paths.is_empty());
     assert_eq!(explicit.tsconfig.base_url.as_deref(), Some(dir.path()));
 

@@ -25,23 +25,29 @@ impl PreparedScope {
     fn prepare(
         options: &AnalyzeProjectOptions,
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
+        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
-        crate::ast::with_request_parse_cache(|| Self::prepare_with_cache(options, visible_paths))
+        crate::ast::with_request_parse_cache(|| {
+            Self::prepare_with_cache(options, visible_paths, session)
+        })
     }
 
     fn prepare_with_cache(
         options: &AnalyzeProjectOptions,
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
+        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
         let root = super::options::resolve_root(options.root.as_deref())?;
         let build_plan = graph_build_plan(options)?;
         let framework_plan = framework_preparation_plan(options, build_plan)?;
-        let mut traversal = SharedTraversalContext::prepare_with_snapshot_check_and_framework_plan(
+        let mut traversal = SharedTraversalContext::
+            prepare_with_snapshot_session_check_and_framework_plan(
             root.clone(),
             options.tsconfig.as_deref().map(Path::new),
             options.config.as_deref().map(Path::new),
             build_plan,
             visible_paths,
+            session.clone(),
             options
                 .reports
                 .iter()
@@ -145,19 +151,19 @@ impl PreparedScope {
         supplemental_plan.dynamic_imports |= check_plan.dynamic_imports;
         supplemental_plan.source |= check_plan.source;
         let facts = crate::codebase::check_facts::
-            collect_check_facts_with_graph_files_playwright_and_sources(
+            collect_check_facts_with_graph_files_playwright_sources_and_session(
+                &session,
                 &root,
-                files,
-                graph_files,
+                (files, graph_files),
                 check_plan,
                 playwright_fact_plan,
                 std::sync::Arc::clone(&sources),
             );
         let symbol_facts = crate::codebase::check_facts::
-            collect_check_facts_with_graph_files_playwright_and_sources(
+            collect_check_facts_with_graph_files_playwright_sources_and_session(
+                &session,
                 &root,
-                supplemental_report_files,
-                Vec::new(),
+                (supplemental_report_files, Vec::new()),
                 supplemental_plan,
                 None,
                 sources,
@@ -178,12 +184,13 @@ impl PreparedScope {
         }
         crate::ast::clear_request_parse_cache();
         let server = has_server_report(options).then(|| {
-            crate::server_routes::prepare_analysis_with_shared_facts(
+            crate::server_routes::prepare_analysis_with_shared_facts_and_session(
                 &root,
                 traversal.tsconfig(),
                 traversal.config(),
                 facts.files(),
                 &facts,
+                session.clone(),
             )
         });
         let (queue_traversal_keys, server_traversal_keys) = traversal_report_keys(options)?;
