@@ -43,7 +43,20 @@ impl TimingTracker {
         operation: impl FnOnce() -> Result<T>,
     ) -> Result<T> {
         let started = self.start_phase(phase);
-        match operation() {
+        let result = operation();
+        self.finish_phase_result(phase, started, result)
+    }
+
+    /// Finish a phase whose operation had to receive this tracker for nested
+    /// phase timing and therefore could not be passed directly to
+    /// [`Self::run_phase`].
+    pub(crate) fn finish_phase_result<T>(
+        &mut self,
+        phase: &'static str,
+        started: PhaseTimer,
+        result: Result<T>,
+    ) -> Result<T> {
+        match result {
             Ok(value) => {
                 self.finish_phase(phase, started);
                 Ok(value)

@@ -59,16 +59,7 @@ pub(crate) fn generate_impacted_checks_with_timing(
                 request,
                 Some(timing),
             );
-            let plan = match plan_result {
-                Ok(plan) => {
-                    timing.finish_phase(phase, started);
-                    plan
-                }
-                Err(error) => {
-                    timing.fail_phase(phase, started);
-                    return Err(error);
-                }
-            };
+            let plan = timing.finish_phase_result(phase, started, plan_result)?;
             fallback_triggered |= plan.fallback_triggered;
             warnings.extend(plan.warnings.iter().cloned());
             append_test_checks(&mut checks, &plan);
