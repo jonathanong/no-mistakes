@@ -130,7 +130,7 @@ fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
                 println!("- `{}` -> `{}` ({})", edge.from, edge.to, edge.kind);
             }
         }
-        Format::Paths => print_edge_paths(&edges),
+        Format::Paths => print_edge_paths(edges),
         Format::Human => {
             for edge in edges {
                 println!("{} -> {}", edge.from, edge.to);
