@@ -115,7 +115,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         files,
         &snapshot.tracked_paths_from(files),
         &metadata_files,
-        Some(sources.inventory().paths()),
+        Some(snapshot.tracked_paths_for(root)),
     );
     macro_rules! run_rules {
         ($($id:expr => $call:path),* $(,)?) => {

@@ -49,6 +49,13 @@ impl VisiblePathSnapshot {
         self.path_view_for(root).sources.inventory().paths()
     }
 
+    /// Return the complete tracked path inventory for a discovered scope. In
+    /// non-Git fallbacks, this is the complete ignore-aware visible path set.
+    #[doc(hidden)]
+    pub fn tracked_paths_for(&self, root: &Path) -> Arc<Vec<PathBuf>> {
+        Arc::clone(&self.path_view_for(root).tracked_paths)
+    }
+
     /// Restrict candidates to the tracked (or non-Git fallback) inventories
     /// for request scopes that have already been discovered.
     #[doc(hidden)]

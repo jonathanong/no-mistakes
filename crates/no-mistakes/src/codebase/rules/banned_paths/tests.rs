@@ -93,3 +93,41 @@ fn respects_rule_include_and_suppression() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "web/pages/index.tsx");
 }
+
+#[test]
+fn repository_application_bypasses_skips_but_project_application_does_not() {
+    let root = fixture_root("fail");
+    let external_root = root.parent().unwrap().join("external-project");
+    let config: NoMistakesConfig = serde_yaml::from_str(&format!(
+        r#"
+projects:
+  external:
+    root: '{}'
+rules:
+  - rule: banned-paths
+    scope: repository
+    projects: [external]
+    options:
+      bannedPaths:
+        - glob: build/repository.patch
+        - glob: build/combined.patch
+  - rule: banned-paths
+    projects: [external]
+    options:
+      bannedPaths:
+        - glob: build/project.patch
+"#,
+        external_root.display()
+    ))
+    .unwrap();
+    let files = vec![
+        root.join("build/repository.patch"),
+        external_root.join("build/combined.patch"),
+        external_root.join("build/project.patch"),
+    ];
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "build/repository.patch");
+}

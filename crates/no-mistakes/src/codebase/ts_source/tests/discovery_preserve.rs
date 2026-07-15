@@ -10,6 +10,23 @@ fn saved_fixture(name: &str) -> TempDir {
 }
 
 #[test]
+fn rebase_walk_path_preserves_paths_outside_the_walker_root() {
+    let dir = saved_fixture("discovery-frozen-visible");
+    let path = dir.path().join("src/main.mts");
+
+    // Normal walker entries are always descendants of the walker root. This
+    // unrelated root exercises the defensive fallback without changing files.
+    assert_eq!(
+        crate::codebase::ts_source::rebase_walk_path(
+            dir.path(),
+            dir.path().join("unrelated").as_path(),
+            &path,
+        ),
+        path
+    );
+}
+
+#[test]
 fn discover_files_preserving_roots_walks_preserved_skip_dir_subtrees() {
     let dir = saved_fixture("discovery-preserved-roots");
 

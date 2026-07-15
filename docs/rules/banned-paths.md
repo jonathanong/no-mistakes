@@ -29,6 +29,12 @@ Fix: remove or rename the file so it no longer matches the configured path ban.
 Paths supplied directly to the programmatic matcher are authoritative. This
 lets callers check a known path set without creating a Git repository.
 
+Repository-scoped bans inspect the repository inventory before source-analysis
+directory skips are applied. Tracked matches under built-in skip directories
+such as `fixtures`, `build`, `dist`, and `target` are therefore still reported.
+Use the rule's `include` and `exclude` filters when the repository policy should
+intentionally cover a narrower path set.
+
 Suppression caveat: findings report line 1 of the offending file, so prefer a
 top-of-file `no-mistakes-disable-file banned-paths` directive for intentional
 exceptions.
