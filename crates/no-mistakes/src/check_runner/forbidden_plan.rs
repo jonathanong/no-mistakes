@@ -6,12 +6,16 @@ use no_mistakes::codebase::ts_source::VisiblePathSnapshot;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::Path;
 
+pub(super) struct PreparedInputs<'a> {
+    pub(super) codebase_config: &'a no_mistakes::codebase::config::Config,
+    pub(super) tsconfig: &'a TsConfig,
+    pub(super) visible_paths: &'a VisiblePathSnapshot,
+}
+
 pub(super) fn prepare(
     root: &Path,
     config: &NoMistakesConfig,
-    codebase_config: &no_mistakes::codebase::config::Config,
-    tsconfig: &TsConfig,
-    visible_paths: &VisiblePathSnapshot,
+    inputs: PreparedInputs<'_>,
     graph_plan: Option<GraphBuildPlan>,
     playwright_fact_plan: &mut Option<PlaywrightFactPlan>,
     plan: &mut CheckFactPlan,
@@ -21,15 +25,15 @@ pub(super) fn prepare(
             no_mistakes::codebase::dependencies::graph::prepare_graph_config(
                 root,
                 graph_plan,
-                codebase_config,
+                inputs.codebase_config,
                 config,
-                visible_paths,
+                inputs.visible_paths,
             )
         })
         .transpose()?;
     if let Some(graph_playwright) = prepared_graph
         .as_ref()
-        .map(|graph| graph.playwright_fact_plan(root, tsconfig, visible_paths))
+        .map(|graph| graph.playwright_fact_plan(root, inputs.tsconfig, inputs.visible_paths))
         .transpose()?
         .flatten()
     {

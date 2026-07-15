@@ -86,9 +86,11 @@ pub(crate) fn run_all(
     let prepared_graph = forbidden_plan::prepare(
         &root,
         config,
-        &prepared.codebase_config,
-        &prepared.tsconfig,
-        prepared.visible_paths.as_ref(),
+        forbidden_plan::PreparedInputs {
+            codebase_config: &prepared.codebase_config,
+            tsconfig: &prepared.tsconfig,
+            visible_paths: prepared.visible_paths.as_ref(),
+        },
         forbidden_graph_plan,
         &mut playwright_fact_plan,
         &mut plan,
