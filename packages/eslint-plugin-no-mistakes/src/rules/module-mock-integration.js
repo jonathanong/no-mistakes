@@ -1,9 +1,11 @@
 "use strict";
 
-const { existsSync, readFileSync } = require("node:fs");
-const { resolve } = require("node:path");
+const { existsSync, readFileSync, statSync } = require("node:fs");
+const { dirname, join, resolve } = require("node:path");
 const { isInternalSpecifier, propertyName } = require("./module-mock-helpers");
 const { analyzeFactory, spreadPreservesRealModule } = require("./module-mock-preserve-factory");
+
+const DEFAULT_REEXPORT_EXTENSIONS = [".mts", ".ts", ".mjs", ".js", ".cts", ".cjs"];
 
 function mockedExportNames(factory, specifier, mock, context) {
   if (!factory) return null;
@@ -51,27 +53,28 @@ function safeRegExp(source, flags) {
   }
 }
 
-function integrationExportNames(specifier, config) {
-  const path = integrationSourcePath(specifier, config);
-  if (!path) return null;
-  const source = readFileSync(path, "utf8");
+// Built once per `integrationExportNames` call and reused across every file the
+// local re-export graph reaches. Safe to share: `String.prototype.matchAll` clones
+// the regex per call and never mutates the shared `lastIndex`.
+function tagPatterns(config) {
   const marker = config.markerRegex ?? String.raw`/\*\s*no-mistakes:\s*integration=[^*]+\*/`;
-  const names = new Set();
   const declaration = safeRegExp(
     `${marker}\\s*export\\s+(?:async\\s+)?(?:function|const|let|var|class)\\s+([A-Za-z_$][\\w$]*)`,
     "g",
   );
-  if (!declaration) return null;
-  for (const match of source.matchAll(declaration)) names.add(match[1]);
   const defaultDeclaration = safeRegExp(
     `${marker}\\s*export\\s+default\\s+(?:async\\s+)?(?:function|class)\\b`,
     "g",
   );
-  if (!defaultDeclaration) return null;
-  for (const _match of source.matchAll(defaultDeclaration)) names.add("default");
   const named = safeRegExp(`${marker}\\s*export\\s*\\{([^}]+)\\}`, "g");
-  if (!named) return null;
-  for (const match of source.matchAll(named)) {
+  if (!declaration || !defaultDeclaration || !named) return null;
+  return { declaration, defaultDeclaration, named };
+}
+
+function addTaggedNames(source, patterns, names) {
+  for (const match of source.matchAll(patterns.declaration)) names.add(match[1]);
+  for (const _match of source.matchAll(patterns.defaultDeclaration)) names.add("default");
+  for (const match of source.matchAll(patterns.named)) {
     for (const part of (match[1] ?? "").split(",")) {
       const exported = part
         .trim()
@@ -81,6 +84,55 @@ function integrationExportNames(specifier, config) {
       if (/^[A-Za-z_$][\w$]*$/.test(exported ?? "")) names.add(exported);
     }
   }
+}
+
+// Only plain `export * from '<specifier>'` re-exports propagate individual runtime
+// export names; `export * as ns from ...` and type-only re-exports are intentionally
+// left unmatched.
+const REEXPORT_ALL = /export\s*\*\s*from\s*['"]([^'"]+)['"]/g;
+
+function resolveReexportPath(fromPath, specifier, extensions) {
+  const base = resolve(dirname(fromPath), specifier);
+  const candidates = [
+    base,
+    ...extensions.map((ext) => base + ext),
+    ...extensions.map((ext) => join(base, `index${ext}`)),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
+  }
+  return null;
+}
+
+function reexportTargets(source, fromPath, extensions) {
+  const targets = [];
+  for (const match of source.matchAll(REEXPORT_ALL)) {
+    const specifier = match[1];
+    if (!specifier.startsWith(".")) continue; // leave bare-specifier re-exports unresolved
+    const resolved = resolveReexportPath(fromPath, specifier, extensions);
+    if (resolved) targets.push(resolved);
+  }
+  return targets;
+}
+
+function collectTaggedExports(path, extensions, patterns, names, visited) {
+  if (visited.has(path)) return; // guard against re-export cycles
+  visited.add(path);
+  const source = readFileSync(path, "utf8");
+  addTaggedNames(source, patterns, names);
+  for (const target of reexportTargets(source, path, extensions)) {
+    collectTaggedExports(target, extensions, patterns, names, visited);
+  }
+}
+
+function integrationExportNames(specifier, config) {
+  const path = integrationSourcePath(specifier, config);
+  if (!path) return null;
+  const patterns = tagPatterns(config);
+  if (!patterns) return null;
+  const extensions = config.reexportExtensions ?? DEFAULT_REEXPORT_EXTENSIONS;
+  const names = new Set();
+  collectTaggedExports(path, extensions, patterns, names, new Set());
   return names;
 }
 
