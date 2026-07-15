@@ -60,11 +60,15 @@ Re-export following is on by default — it can only ever widen the allowed set
 `export *` syntax the author already wrote, not an inferred convention. The
 candidate extensions (`.mts`, `.ts`, `.tsx`, `.mjs`, `.js`, `.jsx`, `.cts`,
 `.cjs` — the repo's documented TS/JS source-extension set, plus `index.*` for
-directory targets) are overridable via `reexportExtensions`. A
-specifier carrying a compiled output extension (`export * from "./leaf.js"`,
-the NodeNext/ESM TypeScript convention) resolves against the same candidate
-extensions on the stripped stem, so it still finds `leaf.ts`. Re-export cycles
-are detected and terminate safely. Comments (line and block) are excluded from
+directory targets) are overridable via `reexportExtensions`. A specifier
+carrying a compiled output extension (`export * from "./leaf.js"`, the
+NodeNext/ESM TypeScript convention) resolves against the specific source
+extensions Node/TypeScript actually emit that output from — `.js` → `.ts`/
+`.tsx`, `.jsx` → `.tsx`, `.mjs` → `.mts`, `.cjs` → `.cts` — rather than the
+full candidate list, so it can't pick an unrelated sibling extension (e.g. a
+`.mts` file that happens to share a stem with the real `.ts` source) ahead of
+the correct one. Re-export cycles are detected and terminate safely. Comments
+(line and block) are excluded from
 the scan, so a disabled `// export * from './leaf'` line is not treated as a
 live barrel edge; a string literal whose *contents* merely resemble re-export
 syntax is a narrower, accepted heuristic gap. A tagged `default` export is

@@ -424,6 +424,48 @@ describe("module-mock-boundary barrel re-exports", () => {
       [],
     );
   });
+
+  it("resolves a .js specifier to its .ts sibling, not an ambiguous .mts sibling", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedAmbiguousProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "ambiguous-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("resolves a .jsx specifier to its .tsx source", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedButtonProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "jsx-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
 });
 
 describe("module-mock-preserve-exports", () => {

@@ -117,17 +117,29 @@ function withoutComments(source) {
 
 // NodeNext/ESM TypeScript projects conventionally write re-export specifiers with
 // the compiled output extension (`./leaf.js`) even though the checked-in source is
-// `./leaf.ts`; stripping a known compiled extension lets the configured `extensions`
-// candidates resolve against the real source stem instead of probing `leaf.js.ts`.
-const COMPILED_JS_EXTENSIONS = [".js", ".mjs", ".cjs"];
+// `./leaf.ts`. Each emitted extension maps to a specific, ordered set of TS/JS
+// source extensions Node/TypeScript actually resolve it from — trying the full
+// configured extension list instead could pick an unrelated sibling (e.g. probing
+// `.mts`, which emits `.mjs`, ahead of `.ts` for a `.js` specifier).
+const REEXPORT_EXTENSION_SOURCES = {
+  ".js": [".ts", ".tsx"],
+  ".jsx": [".tsx"],
+  ".mjs": [".mts"],
+  ".cjs": [".cts"],
+};
 
 function resolveReexportPath(fromPath, specifier, extensions) {
   const base = resolve(dirname(fromPath), specifier);
-  const compiledExt = COMPILED_JS_EXTENSIONS.find((ext) => specifier.endsWith(ext));
+  const compiledExt = Object.keys(REEXPORT_EXTENSION_SOURCES).find((ext) =>
+    specifier.endsWith(ext),
+  );
   const stem = compiledExt ? base.slice(0, -compiledExt.length) : null;
+  const stemExtensions = compiledExt
+    ? REEXPORT_EXTENSION_SOURCES[compiledExt].filter((ext) => extensions.includes(ext))
+    : [];
   const candidates = [
     base,
-    ...(stem ? extensions.map((ext) => stem + ext) : []),
+    ...stemExtensions.map((ext) => stem + ext),
     ...extensions.map((ext) => base + ext),
     ...extensions.map((ext) => join(base, `index${ext}`)),
   ];
