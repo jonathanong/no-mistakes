@@ -1,12 +1,17 @@
-use super::{fixture, git_add_all, git_init, write};
+use super::{fixture, git_add_all, git_init};
+use std::path::PathBuf;
 use tempfile::TempDir;
+
+fn saved_fixture(name: &str) -> TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ts-source")
+        .join(name);
+    crate::test_support::materialize_saved_fixture(&source)
+}
 
 #[test]
 fn discover_files_preserving_roots_walks_preserved_skip_dir_subtrees() {
-    let dir = TempDir::new().unwrap();
-    write(dir.path(), "src/main.mts", "");
-    write(dir.path(), "fixtures/app/src/lib.rs", "");
-    write(dir.path(), "fixtures/other/src/lib.rs", "");
+    let dir = saved_fixture("discovery-preserved-roots");
 
     let files = crate::codebase::ts_source::discover_files_preserving_roots(
         dir.path(),
@@ -25,16 +30,14 @@ fn discover_files_preserving_roots_walks_preserved_skip_dir_subtrees() {
 
 #[test]
 fn preserving_roots_from_visible_reuses_the_supplied_snapshot() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_fixture("discovery-frozen-visible");
     git_init(dir.path());
-    write(dir.path(), "src/main.mts", "");
-    write(dir.path(), "fixtures/app/src/lib.rs", "");
     git_add_all(dir.path());
     let visible = crate::codebase::ts_source::discover_visible_paths(dir.path());
 
-    // This file is intentionally added after discovery. Both filtered views
-    // must reuse the same request snapshot instead of rediscovering it.
-    write(dir.path(), "fixtures/app/src/late.rs", "");
+    // Runtime creation is the invariant under test: both filtered views must
+    // reuse the earlier snapshot instead of rediscovering this late file.
+    std::fs::write(dir.path().join("fixtures/app/src/late.rs"), "").unwrap();
     git_add_all(dir.path());
     for skip in [&["fixtures".to_string()][..], &[][..]] {
         let files = crate::codebase::ts_source::discover_files_preserving_roots_from_visible(
@@ -56,9 +59,8 @@ fn preserving_roots_from_visible_reuses_the_supplied_snapshot() {
 
 #[test]
 fn filtered_views_keep_files_deleted_after_the_snapshot() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_fixture("discovery-deleted");
     let path = dir.path().join("src/main.mts");
-    write(dir.path(), "src/main.mts", "");
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
     let visible = snapshot.paths_for(dir.path());
     std::fs::remove_file(&path).unwrap();
@@ -87,6 +89,24 @@ fn preserved_root_discovery_matches_non_git_hidden_file_semantics() {
 
     assert!(visible.contains(&hidden));
     assert!(preserved.contains(&hidden));
+}
+
+#[test]
+fn fallback_visible_discovery_prunes_git_metadata_but_keeps_other_hidden_paths() {
+    let dir = saved_fixture("fallback-git-pruning");
+    // A real `.git` tree cannot be stored as a repository fixture. Renaming
+    // the saved pseudo-metadata directory is the runtime mutation under test.
+    std::fs::rename(dir.path().join("git.fixture"), dir.path().join(".git")).unwrap();
+
+    assert!(crate::codebase::ts_source::git_visible_files(dir.path()).is_none());
+    let visible = crate::codebase::ts_source::discover_visible_paths(dir.path());
+
+    assert!(visible.contains(&dir.path().join("visible.ts")));
+    assert!(visible.contains(&dir.path().join(".hidden/source.mts")));
+    assert!(!visible.contains(&dir.path().join(".git/objects/trap.ts")));
+    assert!(visible
+        .iter()
+        .all(|path| !path.starts_with(dir.path().join(".git"))));
 }
 
 #[test]
@@ -195,15 +215,40 @@ fn visible_snapshot_reuses_the_inventory_and_source_store_for_each_scope() {
 }
 
 #[test]
+fn visible_snapshot_initializes_one_scoped_store_across_threads() {
+    let request_root = fixture("nextjs-selectors/frontend-tsconfig");
+    let additional_root = fixture("react-traits-components/bad-file");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&request_root);
+
+    let stores = std::thread::scope(|scope| {
+        (0..16)
+            .map(|_| scope.spawn(|| snapshot.source_store_for(&additional_root)))
+            .collect::<Vec<_>>()
+            .into_iter()
+            .map(|thread| thread.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+
+    assert!(stores
+        .iter()
+        .all(|store| std::sync::Arc::ptr_eq(store, &stores[0])));
+    let normalized_additional =
+        crate::codebase::ts_source::normalize_discovery_path(&additional_root);
+    assert!(stores[0]
+        .inventory()
+        .paths()
+        .contains(&normalized_additional.join("app/components/Broken.tsx")));
+}
+
+#[test]
 fn visible_snapshot_classifies_nested_git_scope_once() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_fixture("discovery-nested-git");
     git_init(dir.path());
-    write(dir.path(), "root.ts", "");
     git_add_all(dir.path());
     let nested = dir.path().join("packages/nested");
-    std::fs::create_dir_all(&nested).unwrap();
+    // Git metadata is necessarily runtime-only; the source hierarchy is a
+    // saved fixture so this test mutates only repository boundaries.
     git_init(&nested);
-    write(&nested, "src/nested.ts", "");
     git_add_all(&nested);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
 

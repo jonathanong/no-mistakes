@@ -7,9 +7,16 @@ use crate::playwright::selectors;
 use crate::playwright::test_support::fixture_path;
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
+
+fn saved_fixture(name: &str) -> TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/playwright")
+        .join(name);
+    crate::test_support::materialize_saved_fixture(&source)
+}
 
 fn git_init(dir: &Path) {
     let output = Command::new("git")
@@ -41,12 +48,6 @@ fn git_add_all(dir: &Path) {
         "git add failed: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-}
-
-fn write(dir: &Path, path: &str, content: &str) {
-    let full = dir.join(path);
-    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
-    std::fs::write(full, content).unwrap();
 }
 
 fn collect_app_selectors(
@@ -213,19 +214,8 @@ fn collect_app_selectors_honors_include_and_exclude_globs() {
 /// would ever see it survive `git ls-files`.
 #[test]
 fn walk_files_prefers_git_visible_files_over_gitignored_directory() {
-    let dir = TempDir::new().unwrap();
+    let dir = crate::test_support::materialize_gitignore_fixture("playwright-fsutil");
     git_init(dir.path());
-    write(dir.path(), ".gitignore", "vendor/\n");
-    write(
-        dir.path(),
-        "src/App.tsx",
-        "export default function App() {}\n",
-    );
-    write(
-        dir.path(),
-        "vendor/nested/Trap.tsx",
-        "export default function Trap() {}\n",
-    );
     git_add_all(dir.path());
 
     let files: Vec<String> = walk_files(dir.path())
@@ -239,8 +229,9 @@ fn walk_files_prefers_git_visible_files_over_gitignored_directory() {
 #[test]
 #[cfg(unix)]
 fn walk_files_uses_frozen_non_following_symlink_classification() {
-    let dir = TempDir::new().unwrap();
-    write(dir.path(), "src/target.tsx", "");
+    let dir = saved_fixture("fsutil-symlink");
+    // Symlink creation and target deletion are runtime-only because their
+    // before/after classification is the invariant under test.
     std::os::unix::fs::symlink(
         dir.path().join("src/target.tsx"),
         dir.path().join("src/link.tsx"),
@@ -260,10 +251,8 @@ fn walk_files_uses_frozen_non_following_symlink_classification() {
 /// (i.e. it is not merely relying on `.gitignore` to prune it).
 #[test]
 fn walk_files_still_skips_hardcoded_dirs_when_git_tracked() {
-    let dir = TempDir::new().unwrap();
+    let dir = saved_fixture("fsutil-skip-dirs");
     git_init(dir.path());
-    write(dir.path(), "src/App.tsx", "");
-    write(dir.path(), "node_modules/pkg/index.tsx", "");
     git_add_all(dir.path());
 
     let files: Vec<String> = walk_files(dir.path())
@@ -278,9 +267,7 @@ fn walk_files_still_skips_hardcoded_dirs_when_git_tracked() {
 /// directories to the shared ignore-aware candidate list.
 #[test]
 fn walk_files_applies_skip_dirs_outside_git_repositories() {
-    let dir = TempDir::new().unwrap();
-    write(dir.path(), "src/App.tsx", "");
-    write(dir.path(), "node_modules/pkg/index.tsx", "");
+    let dir = saved_fixture("fsutil-skip-dirs");
 
     let files: Vec<String> = walk_files(dir.path())
         .into_iter()

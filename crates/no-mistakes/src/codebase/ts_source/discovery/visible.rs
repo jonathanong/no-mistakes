@@ -35,6 +35,13 @@ pub(crate) fn discover_visible_classified_paths(root: &Path) -> Vec<ClassifiedPa
         None => WalkBuilder::new(root)
             .hidden(false)
             .require_git(false)
+            .filter_entry(|entry| {
+                entry.depth() == 0
+                    || !entry
+                        .file_type()
+                        .is_some_and(|file_type| file_type.is_dir())
+                    || entry.file_name() != ".git"
+            })
             .build()
             .scan(root.to_path_buf(), |walker_root, entry| {
                 Some(entry.ok().and_then(|entry| {

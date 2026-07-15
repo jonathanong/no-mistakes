@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 /// Canonical, request-scoped view of paths that are not ignored.
 ///
@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 pub struct VisiblePathSnapshot {
     request_root: PathBuf,
     request_sources: Arc<SourceStore>,
-    scoped_sources: Mutex<HashMap<PathBuf, Arc<SourceStore>>>,
+    scoped_sources: Mutex<HashMap<PathBuf, Arc<OnceLock<Arc<SourceStore>>>>>,
 }
 
 impl VisiblePathSnapshot {
@@ -69,22 +69,26 @@ impl VisiblePathSnapshot {
         if normalized_root == self.request_root {
             return Arc::clone(&self.request_sources);
         }
-        let mut scoped_sources = self
-            .scoped_sources
-            .lock()
-            .expect("visible-path snapshot mutex poisoned");
-        if let Some(sources) = scoped_sources.get(&normalized_root) {
-            return Arc::clone(sources);
-        }
-        let sources = if normalized_root.starts_with(&self.request_root)
-            && !has_nested_git_boundary(&self.request_root, &normalized_root)
-        {
-            Arc::clone(&self.request_sources)
-        } else {
-            source_store(discover_visible_classified_paths(&normalized_root))
+        let sources = {
+            let mut scoped_sources = self
+                .scoped_sources
+                .lock()
+                .expect("visible-path snapshot mutex poisoned");
+            Arc::clone(
+                scoped_sources
+                    .entry(normalized_root.clone())
+                    .or_insert_with(|| Arc::new(OnceLock::new())),
+            )
         };
-        scoped_sources.insert(normalized_root, Arc::clone(&sources));
-        sources
+        Arc::clone(sources.get_or_init(|| {
+            if normalized_root.starts_with(&self.request_root)
+                && !has_nested_git_boundary(&self.request_root, &normalized_root)
+            {
+                Arc::clone(&self.request_sources)
+            } else {
+                source_store(discover_visible_classified_paths(&normalized_root))
+            }
+        }))
     }
 }
 
