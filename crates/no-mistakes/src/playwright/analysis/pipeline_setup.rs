@@ -129,7 +129,8 @@ pub(crate) fn collect_app_selectors(
         .iter()
         .filter(|selector| {
             if selector.attribute == selectors::HTML_ID_ATTRIBUTE {
-                return settings.html_ids || unique_selector_policy.configured_html_id_selector;
+                return settings.html_ids
+                    || configured_attributes.contains(selectors::HTML_ID_ATTRIBUTE);
             }
             configured_attributes.contains(selector.attribute.as_str())
         })
