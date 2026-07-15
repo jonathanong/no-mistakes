@@ -64,6 +64,8 @@ pub(crate) struct CheckFileFacts {
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
     pub storybook: Option<StorybookFileFacts>,
+    pub(crate) server_route_client_boundary:
+        Option<crate::codebase::rules::server_route_client_boundary::FileFacts>,
     pub(crate) playwright: Option<PlaywrightTestFacts>,
     pub(crate) playwright_fetch: Option<crate::fetch::file_facts::ParsedFileFacts>,
     pub(crate) playwright_app_selectors: HashMap<(PlaywrightSettingsKey, bool), Vec<AppSelector>>,
@@ -95,6 +97,14 @@ impl CheckFactMap {
         graph_files.extend(supplemental.ts.keys().cloned());
         graph_files.sort();
         graph_files.dedup();
+        self.view_with_supplemental(supplemental, graph_files)
+    }
+
+    pub(crate) fn scoped_view_with_supplemental(&self, supplemental: &Self) -> Self {
+        self.view_with_supplemental(supplemental, self.graph_files.clone())
+    }
+
+    fn view_with_supplemental(&self, supplemental: &Self, graph_files: Vec<PathBuf>) -> Self {
         let mut ts = self.ts.clone();
         ts.extend(
             supplemental

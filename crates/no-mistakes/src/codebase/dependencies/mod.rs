@@ -68,8 +68,16 @@ pub(crate) fn collect_and_filter_entries(
     let allowed = relationship_filter(&args.relationships);
     let build_plan = graph::GraphBuildPlan::from_allowed(allowed.as_ref())
         .with_symbols(traversal_needs_symbol_facts(args));
-    let mut shared =
-        SharedTraversalContext::prepare(root, args.tsconfig.as_deref(), None, build_plan)?;
+    let mut framework_plan =
+        crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
+    framework_plan.include_framework_names(args.tests.iter().map(String::as_str));
+    let mut shared = SharedTraversalContext::prepare_with_framework_plan(
+        root,
+        args.tsconfig.as_deref(),
+        None,
+        build_plan,
+        framework_plan,
+    )?;
 
     timings.mark("search");
     timings.mark("ingest");
@@ -121,13 +129,7 @@ fn test_filters_from_prepared(
     visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
     prepared_test_projects: Option<&crate::codebase::test_discovery::PreparedTestProjects>,
 ) -> Vec<String> {
-    let runner = match framework {
-        "dotnet" => Some(crate::codebase::test_discovery::TestRunner::Dotnet),
-        "vitest" => Some(crate::codebase::test_discovery::TestRunner::Vitest),
-        "playwright" => Some(crate::codebase::test_discovery::TestRunner::Playwright),
-        "swift" => Some(crate::codebase::test_discovery::TestRunner::Swift),
-        _ => None,
-    };
+    let runner = crate::codebase::test_discovery::TestRunner::from_name(framework);
     if let Some(runner) = runner {
         let root_visible_paths = visible_paths.paths_for(root);
         let discovered = match prepared_test_projects {

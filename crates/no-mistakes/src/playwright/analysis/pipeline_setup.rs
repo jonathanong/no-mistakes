@@ -53,8 +53,7 @@ pub(crate) fn collect_playwright_routes(
 ) -> Result<Arc<Vec<routes::Route>>> {
     let route_root = root.join(&settings.frontend_root);
     let compute_routes = || {
-        let route_paths = snapshot.paths_for(&route_root);
-        let mut routes = routes::collect_routes_from_visible(&route_root, &route_paths);
+        let mut routes = routes::collect_routes_from_snapshot(&route_root, snapshot);
         let virtual_routes = crate::routes::rewrites::expand_rewrites(&settings.rewrites, &routes);
         routes.extend(virtual_routes);
         routes

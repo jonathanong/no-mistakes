@@ -43,14 +43,20 @@ fn prepare_inner(
         &config.tests.vitest.projects,
         visible_paths,
     );
+    let mut visible_files = visible_paths
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<HashSet<_>>();
+    // Explicit runner configs are authoritative even when Git ignores them.
+    // Add their normalized paths to the frozen request view up front; reads are
+    // still memoized by the request source store and failures become prepared
+    // project results rather than triggering a second filesystem discovery.
+    visible_files.extend(specs.iter().map(|spec| spec.path.clone()));
     PreparedIntegrationRunnerConfigs {
         root: root.to_path_buf(),
         specs,
         tsconfig: tsconfig.clone(),
-        visible_files: visible_paths
-            .iter()
-            .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-            .collect(),
+        visible_files,
         sources,
     }
 }

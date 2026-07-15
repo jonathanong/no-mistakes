@@ -1,7 +1,6 @@
 use anyhow::Context;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use self_cell::self_cell;
 use std::cell::RefCell;
@@ -59,6 +58,15 @@ impl ParsedProgramCache {
         self.entries.borrow_mut().clear();
     }
 
+    pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
+        let path = crate::codebase::ts_resolver::normalize_path(path);
+        let cached = self.entries.borrow().get(&path)?.clone();
+        match cached {
+            Ok(cached) => cached.with_dependent(|_, parsed| parsed.parse_error.clone()),
+            Err(error) => Some(error),
+        }
+    }
+
     fn cached_program(&self, path: &Path, source: &str) -> Result<Rc<CachedProgram>, String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
         if let Some(cached) = self.entries.borrow().get(&path) {
@@ -79,10 +87,8 @@ fn parse_program(path: &Path, source: &str) -> Result<CachedProgram, String> {
         source: source.to_string(),
         source_type,
     };
-    #[cfg(any(test, feature = "test-instrumentation"))]
-    crate::ast::record_parse_path(path);
     CachedProgram::try_new(owner, |owner| {
-        let parsed = Parser::new(&owner.allocator, &owner.source, owner.source_type).parse();
+        let parsed = crate::ast::parse(path, &owner.allocator, &owner.source, owner.source_type);
         let parse_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
             let detail = parsed
                 .diagnostics

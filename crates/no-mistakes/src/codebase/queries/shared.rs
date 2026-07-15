@@ -1,6 +1,6 @@
 use crate::codebase::dependencies::extract::is_tsx_file;
 use crate::codebase::ts_resolver::{normalize_path, TsConfig};
-use crate::codebase::ts_symbols::{extract_symbols, FileSymbols};
+use crate::codebase::ts_symbols::{extract_symbols_at_path, FileSymbols};
 use anyhow::{Context, Result};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -83,7 +83,7 @@ pub(crate) fn rel_str(abs: &Path, root: &Path) -> String {
 pub(crate) fn read_symbols(abs_file: &Path) -> Result<FileSymbols> {
     let source =
         std::fs::read_to_string(abs_file).context(format!("reading {}", abs_file.display()))?;
-    extract_symbols(&source, is_tsx_file(abs_file))
+    extract_symbols_at_path(abs_file, &source, is_tsx_file(abs_file))
         .context(format!("extracting symbols from {}", abs_file.display()))
 }
 

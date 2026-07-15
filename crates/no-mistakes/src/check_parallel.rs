@@ -63,6 +63,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let prepared_tsconfig = inputs.prepared_tsconfig;
     let visible_paths = inputs.visible_paths;
     let sources = inputs.sources;
+    let rule_sources = std::sync::Arc::clone(&sources);
     let inferred_roots = inputs.inferred_roots;
     let config = inputs.config;
     let codebase_config = inputs.codebase_config;
@@ -89,6 +90,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                             prepared_graph,
                             prepared_tsconfig,
                             inferred_roots: Some(inferred_roots),
+                            sources: Some(&rule_sources),
                         },
                         dependency_graph.as_deref(),
                     )

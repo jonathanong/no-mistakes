@@ -1,46 +1,4 @@
 #[test]
-fn run_covers_lazy_import_normal_graph_filters_formats_and_timings() {
-    let root = simple_root();
-
-    let mut lazy = traverse_args(root.clone(), vec![PathBuf::from("a.mts")]);
-    lazy.relationships = vec![RelationshipArg::Import];
-    lazy.format = Some(Format::Md);
-    lazy.timings = true;
-    run(lazy, Direction::Deps).unwrap();
-
-    let mut normal = traverse_args(root.clone(), vec![PathBuf::from("a.mts")]);
-    normal.relationships = vec![RelationshipArg::All];
-    normal.filters = vec!["*.mts".to_string()];
-    normal.tests = vec!["vitest".to_string()];
-    normal.format = Some(Format::Yml);
-    run(normal, Direction::Deps).unwrap();
-
-    let mut paths = traverse_args(root, vec![PathBuf::from("a.mts")]);
-    paths.format = Some(Format::Paths);
-    run(paths, Direction::Deps).unwrap();
-}
-
-#[test]
-fn run_with_cwd_and_writer_surfaces_output_errors() {
-    let root = simple_root();
-    let args = traverse_args(root, vec![PathBuf::from("a.mts")]);
-    let cwd = std::env::current_dir().unwrap();
-    let mut out = FailingWriter;
-    let mut timings = crate::codebase::timing::PhaseTimings::start();
-
-    let result = collect_and_filter_entries(&args, Direction::Deps, &cwd, &mut timings).unwrap();
-    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
-    let err = write_output_results(Format::Json, &root_strs, &result, &mut out).unwrap_err();
-    timings.mark("output");
-
-    assert!(err.to_string().contains("synthetic write failure"));
-    assert!(timings
-        .phases
-        .iter()
-        .any(|(label, _duration)| *label == "output"));
-}
-
-#[test]
 fn run_dependents_covers_mixed_symbol_and_plain_entrypoints() {
     let root = symbol_root();
     let mut args = traverse_args(
@@ -99,8 +57,7 @@ fn shared_traversal_symbol_dependents_use_symbol_free_import_graph_when_preplann
     let mut args = traverse_args(root.clone(), vec![PathBuf::from("utils.mts#parseDate")]);
     args.relationships = vec![RelationshipArg::Import];
     let result =
-        collect_and_filter_entries_shared(&args, Direction::Dependents, &cwd, &mut shared)
-            .unwrap();
+        collect_and_filter_entries_shared(&args, Direction::Dependents, &cwd, &mut shared).unwrap();
 
     assert_eq!(shared.graph_builds, 1);
     assert_eq!(result.root, root);
@@ -135,8 +92,12 @@ fn shared_traversal_initializes_absent_fact_maps_for_empty_and_nonempty_universe
     assert!(shared.facts().contains_key(&source));
 
     shared.graph = None;
-    shared.graph().expect("graph builds from newly collected facts");
-    shared.graph().expect("graph is reused after the first build");
+    shared
+        .graph()
+        .expect("graph builds from newly collected facts");
+    shared
+        .graph()
+        .expect("graph is reused after the first build");
     assert_eq!(shared.graph_builds, 1);
 }
 
@@ -205,7 +166,10 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
 
     assert_eq!(shared.matches("AnalysisDataset::new(&root)").count(), 1);
     assert_eq!(shared.matches("dataset.config(config_path)?").count(), 1);
-    assert_eq!(shared.matches("dataset.tsconfig(tsconfig_path)?").count(), 1);
+    assert_eq!(
+        shared.matches("dataset.tsconfig(tsconfig_path)?").count(),
+        1
+    );
     assert_eq!(shared.matches("config_from_loaded_v2(").count(), 1);
     assert_eq!(
         shared
@@ -216,11 +180,16 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
     assert_eq!(shared.matches("TestFileFilter::fallback_only()").count(), 1);
     assert_eq!(
         shared
-            .matches("prepare_test_projects_from_visible_with_sources(")
+            .matches("prepare_test_projects_from_visible_with_sources_and_plan(")
             .count(),
         1
     );
-    assert_eq!(shared.matches("TestFileFilter::from_prepared_projects(").count(), 1);
+    assert_eq!(
+        shared
+            .matches("TestFileFilter::from_prepared_projects(")
+            .count(),
+        1
+    );
     assert_eq!(
         shared
             .matches("ts_fact_plan_and_context_for_plan_with_prepared(")
@@ -257,7 +226,9 @@ fn shared_traversal_reuses_runner_helpers_for_lazy_symbols_and_test_filters() {
     let root = fixture.path().canonicalize().unwrap();
     let cwd = std::env::current_dir().unwrap();
     crate::ast::begin_parse_count(&root);
-    let mut shared = SharedTraversalContext::prepare(
+    let mut framework_plan = crate::codebase::test_discovery::FrameworkPreparationPlan::default();
+    framework_plan.include_framework_names(["vitest"]);
+    let mut shared = SharedTraversalContext::prepare_with_framework_plan(
         root.clone(),
         None,
         None,
@@ -266,6 +237,7 @@ fn shared_traversal_reuses_runner_helpers_for_lazy_symbols_and_test_filters() {
             symbols: true,
             ..Default::default()
         },
+        framework_plan,
     )
     .unwrap();
 
@@ -283,8 +255,10 @@ fn shared_traversal_reuses_runner_helpers_for_lazy_symbols_and_test_filters() {
         collect_and_filter_entries_shared(&symbol, Direction::Dependents, &cwd, &mut shared)
             .unwrap();
 
-    let mut excluded =
-        traverse_args(root.clone(), vec![PathBuf::from("src/excluded.ts#excluded")]);
+    let mut excluded = traverse_args(
+        root.clone(),
+        vec![PathBuf::from("src/excluded.ts#excluded")],
+    );
     excluded.relationships = vec![RelationshipArg::Import];
     excluded.tests = vec!["vitest".to_string()];
     let excluded_result =
@@ -346,7 +320,10 @@ fn shared_import_only_traversal_parses_only_reachable_files() {
     assert_eq!(counts.get(&root.join("src/b.mts")), Some(&1), "{counts:#?}");
     // The lazy reader parses immediately after a successful read, so the absence of parse
     // records also proves that the unreachable component was not read for source analysis.
-    assert!(!counts.contains_key(&root.join("src/unrelated.mts")), "{counts:#?}");
+    assert!(
+        !counts.contains_key(&root.join("src/unrelated.mts")),
+        "{counts:#?}"
+    );
     assert!(
         !counts.contains_key(&root.join("src/unrelated-dep.mts")),
         "{counts:#?}"

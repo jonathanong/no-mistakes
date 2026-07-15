@@ -69,4 +69,23 @@ fn logical_symlink_and_target_paths_remain_distinct() {
         inventory.id_for_path(&target)
     );
     assert_eq!(inventory.len(), 2);
+    let symlink_kind = inventory.classification_for_path(&symlink).unwrap();
+    assert!(!symlink_kind.is_lexical_file());
+    assert!(symlink_kind.is_lexical_symlink());
+    assert!(symlink_kind.target_is_file());
+    let target_kind = inventory.classification_for_path(&target).unwrap();
+    assert!(target_kind.is_lexical_file());
+    assert!(!target_kind.is_lexical_symlink());
+    assert!(target_kind.target_is_file());
+}
+
+#[test]
+fn non_file_entries_have_no_file_classification() {
+    let directory = fixture("alpha.ts").parent().unwrap().to_path_buf();
+    let inventory = FileInventory::from_paths(std::slice::from_ref(&directory));
+    let classification = inventory.classification_for_path(&directory).unwrap();
+
+    assert!(!classification.is_lexical_file());
+    assert!(!classification.is_lexical_symlink());
+    assert!(!classification.target_is_file());
 }

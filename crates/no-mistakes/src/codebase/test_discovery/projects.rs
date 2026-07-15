@@ -69,6 +69,23 @@ pub(super) fn runner_projects_lossy_from_visible(
     projects
 }
 
+/// Build only the projects described directly by no-mistakes policy.
+///
+/// This deliberately does not load runner config files. It lets a
+/// demand-driven Vitest request reserve explicitly configured Playwright tests
+/// without preparing Playwright itself.
+pub(super) fn explicit_policy_projects(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+) -> Vec<ConfigProject> {
+    let (configs, policies) = runner_config(config, runner);
+    policies
+        .iter()
+        .filter_map(|(name, policy)| configured_project(root, name, policy, single_config(configs)))
+        .collect()
+}
+
 fn apply_explicit_policy_projects(
     root: &Path,
     configs: Option<&StringOrList>,
@@ -107,7 +124,7 @@ fn single_config(configs: Option<&StringOrList>) -> Option<String> {
     }
 }
 
-fn runner_config(
+pub(super) fn runner_config(
     config: &NoMistakesConfig,
     runner: TestRunner,
 ) -> (Option<&StringOrList>, &BTreeMap<String, TestProjectPolicy>) {

@@ -19,7 +19,7 @@ fn empty_options() -> GraphConfigOptions {
 #[test]
 fn dotnet_edges_return_empty_without_config_or_files() {
     let root = p("/repo");
-    assert!(collect_dotnet_edges(&root, &[], None).is_empty());
+    assert!(collect_dotnet_edges(&root, &[], None, None).is_empty());
 
     let mut options = empty_options();
     options
@@ -32,7 +32,7 @@ fn dotnet_edges_return_empty_without_config_or_files() {
             test: true,
         });
 
-    assert!(collect_dotnet_edges(&root, &[], Some(&options)).is_empty());
+    assert!(collect_dotnet_edges(&root, &[], Some(&options), None).is_empty());
 }
 
 #[test]

@@ -1,21 +1,16 @@
 use super::ServerRouteVisitor;
 use crate::server_routes::types::Framework;
-use oxc_allocator::Allocator;
+use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
-use oxc_parser::Parser;
-use oxc_span::SourceType;
 use std::path::Path;
 
-pub(crate) fn has_server_route_shape(path: &Path, source: &str) -> bool {
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
-    let parsed = Parser::new(&allocator, source, source_type).parse();
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
-        return false;
-    }
-
+pub(crate) fn has_server_route_shape_from_program(
+    path: &Path,
+    source: &str,
+    program: &Program<'_>,
+) -> bool {
     let mut visitor = ServerRouteVisitor::new(path, source);
-    visitor.visit_program(&parsed.program);
+    visitor.visit_program(program);
     let facts = visitor.facts;
     let has_known_route = facts.routes.iter().any(|route| {
         facts

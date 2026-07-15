@@ -270,6 +270,13 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
     let include = types::GlobMatcher::new(&opts.include).unwrap();
     let exclude = types::GlobMatcher::new(&opts.exclude).unwrap();
     let mut shared = CheckFactMap {
+        files: vec![
+            excluded.clone(),
+            parsed_bad.clone(),
+            missing_react.clone(),
+            no_source.clone(),
+            included.clone(),
+        ],
         ts: HashMap::from([
             (
                 outside,

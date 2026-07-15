@@ -31,6 +31,20 @@ fn graph_build_plan(options: &AnalyzeProjectOptions) -> Result<GraphBuildPlan> {
     Ok(plan)
 }
 
+fn framework_preparation_plan(
+    options: &AnalyzeProjectOptions,
+    graph_plan: GraphBuildPlan,
+) -> Result<crate::codebase::test_discovery::FrameworkPreparationPlan> {
+    let mut plan = crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(graph_plan);
+    for request in &options.reports {
+        if super::graph_direction(&request.report_type).is_some() {
+            let args = super::traverse_args(request, options)?;
+            plan.include_framework_names(args.tests.iter().map(String::as_str));
+        }
+    }
+    Ok(plan)
+}
+
 fn check_fact_plan(
     options: &AnalyzeProjectOptions,
     traversal: &SharedTraversalContext,

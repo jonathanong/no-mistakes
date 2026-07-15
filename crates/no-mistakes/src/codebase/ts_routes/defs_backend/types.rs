@@ -5,7 +5,12 @@ const HTTP_VERBS: &[&str] = &["get", "post", "put", "patch", "delete", "head", "
 pub fn extract_backend_routes(source: &str, register_object: &str) -> Vec<(String, u32)> {
     let allocator = Allocator::default();
     let source_type = SourceType::ts();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(
+        std::path::Path::new("backend-routes.ts"),
+        &allocator,
+        source,
+        source_type,
+    );
     extract_backend_routes_from_program(&ret.program, source, register_object)
 }
 

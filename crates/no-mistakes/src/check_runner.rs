@@ -51,7 +51,6 @@ pub(crate) fn run_all(
         )
         .context("failed to prepare Playwright shared facts")?,
     };
-    let playwright_facts_enabled = playwright_fact_plan.is_some();
     let integration_enabled = integration_configured(config);
     let react_enabled = prepared.react.enabled();
     let mut plan = fact_plan(enabled::EnabledChecks {
@@ -119,9 +118,7 @@ pub(crate) fn run_all(
     }
     let discover_start = Instant::now();
     let skip_directories = config.filesystem.skip_directories.clone();
-    let needs_full_graph_files = forbidden_graph_plan.is_some() || playwright_facts_enabled;
-    let needs_graph_files =
-        needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
+    let needs_full_graph_files = forbidden_graph_plan.is_some() || playwright_fact_plan.is_some();
     let views = crate::check_discovery::discover_check_file_views_from_snapshot(
         &root,
         config,
@@ -131,7 +128,7 @@ pub(crate) fn run_all(
     );
     let (discovered, graph_files) = if needs_full_graph_files {
         (views.filesystem, views.graph)
-    } else if needs_graph_files {
+    } else if needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules) {
         // The dynamic-import rule traverses the same filesystem-scoped
         // visible universe it analyzes. Supplying that universe explicitly
         // keeps prepared graph construction strict without a fallback parse.
@@ -163,6 +160,7 @@ pub(crate) fn run_all(
     };
     let facts_duration = facts_start.elapsed();
 
+    let sources = prepared.visible_paths.source_store_for(&root);
     let (react, queues, rules, integration, codebase, filesystem_rules) =
         run_domain_checks(DomainCheckInputs {
             root: &root,
@@ -180,7 +178,7 @@ pub(crate) fn run_all(
             dependency_graph: None,
             prepared_tsconfig: &prepared.tsconfig,
             visible_paths: prepared.visible_paths.as_ref(),
-            sources: prepared.visible_paths.source_store_for(&root),
+            sources: std::sync::Arc::clone(&sources),
             inferred_roots: &prepared.inferred_roots,
             config,
             codebase_config: &prepared.codebase_config,
@@ -191,6 +189,7 @@ pub(crate) fn run_all(
         root: &root,
         config,
         filesystem_files: &fs_files,
+        sources: &sources,
         filesystem_rules_enabled,
         react_warning: None,
         discover_duration,

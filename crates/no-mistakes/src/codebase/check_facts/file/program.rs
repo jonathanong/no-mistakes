@@ -79,6 +79,9 @@ pub(crate) fn collect_file_facts_from_program(
     let storybook = plan
         .storybook
         .then(|| crate::codebase::storybook::extract_program(source, program));
+    let server_route_client_boundary = plan.server_route_client_boundary.then(|| {
+        crate::codebase::rules::server_route_client_boundary::extract_program(path, source, program)
+    });
     let domain = if plan.graph.has_domain_facts() {
         facts::domain::collect_domain_facts(program, path, source, plan.graph, &plan.graph_context)
     } else {
@@ -146,6 +149,7 @@ pub(crate) fn collect_file_facts_from_program(
         dynamic_imports,
         nextjs_caching,
         storybook,
+        server_route_client_boundary,
         playwright,
         playwright_fetch,
         playwright_app_selectors: playwright_source.selectors,

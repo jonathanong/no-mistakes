@@ -5,9 +5,22 @@ pub use core_routes::Route;
 
 const PAGE_STEMS: &[&str] = &["page"];
 
-pub(crate) fn collect_routes_from_visible(
+pub(crate) fn collect_routes_from_snapshot(
+    frontend_root: &Path,
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+) -> Vec<Route> {
+    let sources = snapshot.source_store_for(frontend_root);
+    collect_routes(
+        frontend_root,
+        &sources.inventory().paths(),
+        sources.inventory(),
+    )
+}
+
+fn collect_routes(
     frontend_root: &Path,
     visible_paths: &[PathBuf],
+    inventory: &crate::codebase::ts_source::FileInventory,
 ) -> Vec<Route> {
     let frontend_root = crate::codebase::ts_resolver::normalize_path(frontend_root);
     let mut routes = visible_paths
@@ -34,7 +47,9 @@ pub(crate) fn collect_routes_from_visible(
                 .and_then(|extension| extension.to_str())?;
             if !PAGE_STEMS.contains(&stem)
                 || !["tsx", "ts", "jsx", "js"].contains(&extension)
-                || !file.is_file()
+                || !inventory
+                    .classification_for_path(file)
+                    .is_some_and(crate::codebase::ts_source::FileClassification::target_is_file)
             {
                 return None;
             }

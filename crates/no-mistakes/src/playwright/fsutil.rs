@@ -19,13 +19,18 @@ pub(crate) fn walk_files_from_snapshot(
     root: &Path,
     snapshot: &VisiblePathSnapshot,
 ) -> Vec<PathBuf> {
-    let visible_paths = snapshot.paths_for(root);
-    let mut files = visible_matching_files(root, &visible_paths);
+    let sources = snapshot.source_store_for(root);
+    let visible_paths = sources.inventory().paths();
+    let mut files = visible_matching_files(root, &visible_paths, sources.inventory());
     files.sort();
     files
 }
 
-fn visible_matching_files(root: &Path, files: &[PathBuf]) -> Vec<PathBuf> {
+fn visible_matching_files(
+    root: &Path,
+    files: &[PathBuf],
+    inventory: &crate::codebase::ts_source::FileInventory,
+) -> Vec<PathBuf> {
     let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
     files
         .iter()
@@ -36,7 +41,11 @@ fn visible_matching_files(root: &Path, files: &[PathBuf]) -> Vec<PathBuf> {
         })
         // Mirrors `WalkDir`'s default (non-follow-symlink) `file_type().is_file()`
         // check: a symlink to a file is not itself a file entry.
-        .filter(|path| std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_file()))
+        .filter(|path| {
+            inventory
+                .classification_for_path(path)
+                .is_some_and(crate::codebase::ts_source::FileClassification::is_lexical_file)
+        })
         .cloned()
         .collect()
 }

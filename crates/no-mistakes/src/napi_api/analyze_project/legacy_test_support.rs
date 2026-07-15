@@ -55,12 +55,14 @@ pub(super) fn prepare_shared_traversal(
 
     let root = resolve_root(options.root.as_deref())?;
     let mut build_plan = crate::codebase::dependencies::graph::GraphBuildPlan::default();
+    let mut requested_frameworks = Vec::new();
     for request in &options.reports {
         if matches!(
             request.report_type.as_str(),
             "dependencies" | "dependents" | "related"
         ) {
             let args = traverse_args(request, options)?;
+            requested_frameworks.extend(args.tests.iter().cloned());
             let allowed = crate::codebase::dependencies::relationship_filter(&args.relationships);
             build_plan.include(
                 crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(
@@ -76,11 +78,15 @@ pub(super) fn prepare_shared_traversal(
         }
     }
 
-    Ok(Some(SharedTraversalContext::prepare(
+    let mut framework_plan =
+        crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
+    framework_plan.include_framework_names(requested_frameworks.iter().map(String::as_str));
+    Ok(Some(SharedTraversalContext::prepare_with_framework_plan(
         root,
         options.tsconfig.as_deref().map(std::path::Path::new),
         options.config.as_deref().map(std::path::Path::new),
         build_plan,
+        framework_plan,
     )?))
 }
 

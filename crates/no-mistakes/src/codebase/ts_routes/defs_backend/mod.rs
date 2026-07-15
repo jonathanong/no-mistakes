@@ -4,7 +4,6 @@ use oxc_ast::ast::{
     Argument, BindingPattern, Expression, ForStatementInit, ForStatementLeft, Program, Statement,
     TemplateLiteral, VariableDeclarationKind,
 };
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::PathBuf;
 

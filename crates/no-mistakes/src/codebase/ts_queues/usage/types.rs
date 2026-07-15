@@ -35,7 +35,12 @@ pub struct QueueUsage {
 pub fn extract_queue_usage(source: &str) -> QueueUsage {
     let allocator = Allocator::default();
     let source_type = SourceType::ts();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(
+        std::path::Path::new("queue-usage.ts"),
+        &allocator,
+        source,
+        source_type,
+    );
     extract_queue_usage_from_program(&ret.program, source)
 }
 

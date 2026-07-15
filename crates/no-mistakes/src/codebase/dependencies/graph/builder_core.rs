@@ -139,14 +139,31 @@ impl DepGraph {
                 .unwrap_or_default()
         };
 
+        let owned_playwright_snapshot = (plan.playwright_routes || plan.playwright_selectors)
+            .then(|| {
+                edge_inputs.visible_paths.is_none().then(|| {
+                    crate::playwright::fsutil::VisiblePathSnapshot::from_paths(
+                        root,
+                        graph_files.all(),
+                    )
+                })
+            })
+            .flatten();
+        let playwright_snapshot = edge_inputs
+            .visible_paths
+            .or(owned_playwright_snapshot.as_ref());
+
         collect_and_merge_all_edges(
             &edge_inputs,
+            playwright_snapshot,
             facts,
             &resolver,
             &parsed_imports,
             workspace,
-            &mut forward,
-            &mut reverse,
+            EdgeMaps {
+                forward: &mut forward,
+                reverse: &mut reverse,
+            },
         )?;
         let mut graph = Self {
             root: root.to_path_buf(),
@@ -154,8 +171,9 @@ impl DepGraph {
             parse_errors,
         };
         if plan.playwright_selectors {
-            let snapshot =
-                crate::playwright::fsutil::VisiblePathSnapshot::from_paths(root, graph_files.all());
+            let snapshot = playwright_snapshot
+                .as_ref()
+                .expect("Playwright selector plan prepares a visible-path snapshot");
             let selector_edges = crate::perf_trace::trace("graph.playwright_selectors", || {
                 collect_playwright_selector_edges_with_graph(
                     root,
@@ -165,7 +183,7 @@ impl DepGraph {
                         facts,
                         partial_graph: plan.route_imports.then_some(&graph),
                         graph_tsconfig: plan.route_imports.then_some(tsconfig),
-                        snapshot: &snapshot,
+                        snapshot,
                         prepared_settings: edge_inputs.playwright_settings,
                     },
                 )

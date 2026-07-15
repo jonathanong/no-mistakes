@@ -6,7 +6,6 @@ use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-pub(crate) use manifest::extract_test_target_names;
 use manifest::parse_manifest_targets;
 use source::parse_swift_file;
 
@@ -47,6 +46,8 @@ pub(crate) fn collect_swift_facts(
     all_files: &[PathBuf],
     packages: &[String],
 ) -> SwiftFactMap {
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    test_support::record_fact_collection(root);
     if packages.is_empty() {
         return SwiftFactMap::default();
     }
@@ -148,5 +149,7 @@ fn target_index(
     index
 }
 
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub mod test_support;
 #[cfg(test)]
 mod tests;

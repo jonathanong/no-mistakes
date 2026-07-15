@@ -18,7 +18,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
 pub(crate) use bindings::is_client_http_module;
-pub(crate) use shape::has_server_route_shape;
+pub(crate) use shape::has_server_route_shape_from_program;
 
 pub(super) const VERBS: &[&str] = &[
     "get", "post", "put", "patch", "delete", "del", "head", "options", "all",

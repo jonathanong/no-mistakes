@@ -14,6 +14,7 @@ pub struct CheckFactPlan {
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
     pub storybook: bool,
+    pub server_route_client_boundary: bool,
     pub source: bool,
     pub raw_source: bool,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
@@ -37,6 +38,7 @@ impl CheckFactPlan {
         self.dynamic_imports |= other.dynamic_imports;
         self.nextjs_caching |= other.nextjs_caching;
         self.storybook |= other.storybook;
+        self.server_route_client_boundary |= other.server_route_client_boundary;
         self.source |= other.source;
         self.raw_source |= other.raw_source;
         self.graph.include(other.graph);

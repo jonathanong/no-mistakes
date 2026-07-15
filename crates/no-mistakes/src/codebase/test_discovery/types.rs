@@ -13,6 +13,16 @@ pub enum TestRunner {
 }
 
 impl TestRunner {
+    pub(crate) fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "dotnet" => Some(Self::Dotnet),
+            "playwright" => Some(Self::Playwright),
+            "vitest" => Some(Self::Vitest),
+            "swift" => Some(Self::Swift),
+            _ => None,
+        }
+    }
+
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Dotnet => "dotnet",

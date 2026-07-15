@@ -8,12 +8,55 @@ pub(super) fn swift_projects_from_visible(
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
 ) -> Vec<ConfigProject> {
+    if visible_paths.is_empty() || config.tests.swift.packages.is_empty() {
+        return swift_projects_from_facts(root, config, &Default::default());
+    }
+    let all_files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        visible_paths,
+    );
+    let facts =
+        crate::codebase::swift::collect_swift_facts(root, &all_files, &config.tests.swift.packages);
+    swift_projects_from_facts(root, config, &facts)
+}
+
+pub(super) fn swift_projects_from_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    facts: &crate::codebase::swift::SwiftFactMap,
+) -> Vec<ConfigProject> {
     let mut projects = Vec::new();
     for package in &config.tests.swift.packages {
-        let package_root = root.join(package);
         let package_slash = package.trim_end_matches('/');
-        let package_projects =
-            swift_test_targets_from_package(root, &package_root, package_slash, visible_paths);
+        let package_root = crate::codebase::ts_resolver::normalize_path(&root.join(package_slash));
+        let package_projects = facts
+            .packages
+            .iter()
+            .find(|candidate| {
+                crate::codebase::ts_resolver::normalize_path(&candidate.package_root)
+                    == package_root
+            })
+            .map(|facts| {
+                facts
+                    .targets
+                    .values()
+                    .filter(|target| target.is_test)
+                    .map(|target| ConfigProject {
+                        config: Some(package_slash.to_string()),
+                        policy_name: Some(target.name.clone()),
+                        runner_project_arg: Some(target.name.clone()),
+                        scope: Some(format!("{package_slash}/Tests")),
+                        include: prefix_globs(
+                            root,
+                            root,
+                            &[format!("{package_slash}/Tests/{}/**/*.swift", target.name)],
+                        ),
+                        exclude: Vec::new(),
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
         if package_projects.is_empty() {
             projects.push(ConfigProject {
                 config: Some(package_slash.to_string()),
@@ -27,6 +70,15 @@ pub(super) fn swift_projects_from_visible(
             projects.extend(package_projects);
         }
     }
+    apply_configured_projects(root, config, &mut projects);
+    projects
+}
+
+fn apply_configured_projects(
+    root: &Path,
+    config: &NoMistakesConfig,
+    projects: &mut Vec<ConfigProject>,
+) {
     for (name, policy) in &config.tests.swift.projects {
         if let Some(project) =
             configured_swift_project(root, name, policy, &config.tests.swift.packages)
@@ -35,7 +87,6 @@ pub(super) fn swift_projects_from_visible(
             projects.push(project);
         }
     }
-    projects
 }
 
 fn configured_swift_project(
@@ -71,36 +122,4 @@ fn swift_package_for_policy(
     packages
         .first()
         .map(|package| package.trim_end_matches('/').to_string())
-}
-
-fn swift_test_targets_from_package(
-    root: &Path,
-    package_root: &Path,
-    package: &str,
-    visible_paths: &[PathBuf],
-) -> Vec<ConfigProject> {
-    let manifest =
-        crate::codebase::ts_resolver::normalize_path(&package_root.join("Package.swift"));
-    if !visible_paths
-        .iter()
-        .any(|path| crate::codebase::ts_resolver::normalize_path(path) == manifest)
-    {
-        return Vec::new();
-    }
-    let Ok(source) = std::fs::read_to_string(manifest) else {
-        return Vec::new();
-    };
-    let mut projects = Vec::new();
-    for target in crate::codebase::swift::extract_test_target_names(&source) {
-        let include = vec![format!("{package}/Tests/{target}/**/*.swift")];
-        projects.push(ConfigProject {
-            config: Some(package.to_string()),
-            policy_name: Some(target.clone()),
-            runner_project_arg: Some(target),
-            scope: Some(format!("{package}/Tests")),
-            include: prefix_globs(root, root, &include),
-            exclude: Vec::new(),
-        });
-    }
-    projects
 }

@@ -2,7 +2,7 @@ fn extract_processor_job_names(
     processors_file: &Path,
     facts: Option<&dyn TsFactLookup>,
 ) -> Option<Vec<String>> {
-    use crate::codebase::ts_symbols::extract_symbols;
+    use crate::codebase::ts_symbols::extract_symbols_at_path;
 
     if let Some(symbols) = facts
         .and_then(|facts| facts.get_ts_facts(processors_file))
@@ -24,7 +24,7 @@ fn extract_processor_job_names(
         .and_then(|e| e.to_str())
         .map(|e| e == "tsx" || e == "jsx")
         .unwrap_or(false);
-    let symbols = extract_symbols(&proc_source, is_tsx).ok()?;
+    let symbols = extract_symbols_at_path(processors_file, &proc_source, is_tsx).ok()?;
     Some(
         symbols
             .exports
@@ -41,4 +41,3 @@ fn is_processor_export_kind(kind: &ExportKind) -> bool {
         ExportKind::Function | ExportKind::Const | ExportKind::Let | ExportKind::Var
     )
 }
-

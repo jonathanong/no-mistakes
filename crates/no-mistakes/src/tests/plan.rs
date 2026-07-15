@@ -521,6 +521,12 @@ fn discover_all_tests_from_prepared(
         prepared.root_visible_paths(),
     )
     .into_iter()
+    .filter(|file| {
+        prepared
+            .visible_paths
+            .classification_for(&prepared.root, file)
+            .is_some_and(|classification| classification.target_is_file())
+    })
     .filter(|file| prepared.test_filter().is_match(&prepared.root, file))
     .collect()
 }

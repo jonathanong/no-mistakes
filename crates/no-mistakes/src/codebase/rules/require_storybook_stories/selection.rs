@@ -9,6 +9,7 @@ use crate::codebase::ts_source::{
     has_disable_comment, has_disable_file_comment, relative_slash_path,
 };
 use crate::codebase::ts_symbols::ExportKind;
+use std::collections::HashSet;
 use std::path::Path;
 
 pub(super) fn selected_components(
@@ -21,8 +22,13 @@ pub(super) fn selected_components(
     test_filter: &crate::codebase::test_filter::TestFileFilter,
 ) -> Vec<Component> {
     let mut components = Vec::new();
+    let scoped_files = shared.files().iter().collect::<HashSet<_>>();
     for (path, facts) in &shared.ts {
-        if !path.starts_with(project_root) || !is_indexable(path) || !is_react_source_file(path) {
+        if !scoped_files.contains(path)
+            || !path.starts_with(project_root)
+            || !is_indexable(path)
+            || !is_react_source_file(path)
+        {
             continue;
         }
         if test_filter.is_match(root, path) {

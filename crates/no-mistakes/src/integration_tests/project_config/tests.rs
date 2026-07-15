@@ -110,3 +110,29 @@ fn pass4b_runner_helpers_skip_ignored_candidates_for_visible_fallbacks() {
     );
     assert_eq!(vitest[0].policy_name.as_deref(), Some("visible-vitest"));
 }
+
+#[test]
+fn explicit_ignored_runner_config_is_authorized_without_exposing_ignored_helpers() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("auto-discovery");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let ignored_config = root.join("playwright.ignored.config.ts");
+    assert!(!visible_paths.contains(&ignored_config));
+    assert!(
+        !discovered_config_paths(&root, Framework::Playwright, &visible_paths)
+            .iter()
+            .any(|raw| raw == "playwright.ignored.config.ts")
+    );
+
+    let configs = StringOrList::One("playwright.ignored.config.ts".to_string());
+    let projects = load_projects(&root, Framework::Playwright, Some(&configs)).unwrap();
+
+    assert_eq!(projects.len(), 1);
+    assert_eq!(
+        projects[0].config.as_deref(),
+        Some("playwright.ignored.config.ts")
+    );
+    assert!(!visible_paths.contains(&ignored_config));
+}

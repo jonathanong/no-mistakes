@@ -130,6 +130,73 @@ fn swift_projects_lossy_uses_swift_project_loader() {
 }
 
 #[test]
+fn swift_projects_skip_fact_collection_for_empty_inputs_and_keep_explicit_policies() {
+    let root = Path::new("");
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.to_path_buf(),
+        paths: Vec::new(),
+        paths_dir: root.to_path_buf(),
+        base_url: None,
+    };
+    let policy = TestProjectPolicy {
+        include: vec!["ExternalTests/**/*.swift".to_string()],
+        exclude: vec!["ExternalTests/Skipped/**/*.swift".to_string()],
+        ..Default::default()
+    };
+
+    let mut no_packages = NoMistakesConfig::default();
+    no_packages
+        .tests
+        .swift
+        .projects
+        .insert("policy-only".to_string(), policy.clone());
+    crate::codebase::swift::test_support::begin_fact_collection_count(root);
+    let projects = runner_projects_from_visible(
+        root,
+        &no_packages,
+        TestRunner::Swift,
+        &[PathBuf::from("ExternalTests/Test.swift")],
+        &tsconfig,
+    )
+    .unwrap();
+    assert_eq!(
+        crate::codebase::swift::test_support::finish_fact_collection_count(root),
+        0
+    );
+    assert!(projects.iter().any(|project| {
+        project.policy_name.as_deref() == Some("policy-only")
+            && project.config.is_none()
+            && project.include == policy.include
+            && project.exclude == policy.exclude
+    }));
+
+    let mut no_visible_paths = NoMistakesConfig::default();
+    no_visible_paths.tests.swift.packages = vec!["swift-client/".to_string()];
+    no_visible_paths.tests.swift.projects.insert(
+        "custom".to_string(),
+        TestProjectPolicy {
+            include: vec!["swift-client/CustomTests/**/*.swift".to_string()],
+            exclude: vec!["swift-client/CustomTests/Skipped/**/*.swift".to_string()],
+            ..Default::default()
+        },
+    );
+    crate::codebase::swift::test_support::begin_fact_collection_count(root);
+    let projects =
+        runner_projects_from_visible(root, &no_visible_paths, TestRunner::Swift, &[], &tsconfig)
+            .unwrap();
+    assert_eq!(
+        crate::codebase::swift::test_support::finish_fact_collection_count(root),
+        0
+    );
+    assert!(projects.iter().any(|project| {
+        project.policy_name.as_deref() == Some("custom")
+            && project.config.as_deref() == Some("swift-client")
+            && project.include == vec!["swift-client/CustomTests/**/*.swift"]
+            && project.exclude == vec!["swift-client/CustomTests/Skipped/**/*.swift"]
+    }));
+}
+
+#[test]
 fn runner_config_returns_swift_policy_map() {
     let config = NoMistakesConfig::default();
     let (configs, policies) = runner_config(&config, TestRunner::Swift);

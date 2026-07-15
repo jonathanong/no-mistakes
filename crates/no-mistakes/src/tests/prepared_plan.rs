@@ -100,20 +100,33 @@ impl PreparedTestPlanInputs {
         let workspace_map =
             no_mistakes::codebase::workspaces::load_from_files(&root, &root_visible_paths)
                 .unwrap_or_default();
-        let mut graph_files = GraphFiles::from_files(
+        let framework_plan = args.framework.map_or_else(
+            no_mistakes::codebase::test_discovery::FrameworkPreparationPlan::all,
+            |framework| {
+                no_mistakes::codebase::test_discovery::FrameworkPreparationPlan::for_runners([
+                    test_runner(framework),
+                ])
+            },
+        );
+        let excluded_configs =
+            framework_plan.excluded_config_paths(&root, &config, &root_visible_paths);
+        let mut graph_files = GraphFiles::from_files_excluding_indexable(
             no_mistakes::codebase::ts_source::discover_files_from_visible(
                 &root,
                 &[],
                 &root_visible_paths,
             ),
+            &excluded_configs,
         );
         for path in &collected.authoritative_files {
             graph_files.add_explicit_root(path);
         }
         // Framework plans historically ignore --symbols. The non-framework
         // planner is the only stable surface that opts into symbol edges.
-        let graph_plan =
-            GraphBuildPlan::all().with_symbols(args.framework.is_none() && args.include_symbols);
+        let graph_plan = args
+            .framework
+            .map_or_else(GraphBuildPlan::all, framework_graph_plan)
+            .with_symbols(args.framework.is_none() && args.include_symbols);
         let codebase_config = no_mistakes::codebase::config::config_from_loaded_v2(
             &root,
             args.config.as_deref(),
@@ -135,14 +148,17 @@ impl PreparedTestPlanInputs {
                 &preliminary_graph_config,
             );
         let prepared_test_projects = Arc::new(
-            no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible(
+            no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
                 &root,
                 &config,
                 &root_visible_paths,
                 &tsconfig,
-                graph_files.indexable(),
-                runner_graph_plan,
-                runner_graph_context,
+                no_mistakes::codebase::test_discovery::PreparedTestProjectRequest {
+                    graph: (graph_files.indexable(), runner_graph_plan, runner_graph_context),
+                    sources: visible_paths.source_store_for(&root),
+                    collect_graph_facts: true,
+                    preparation_plan: &framework_plan,
+                },
             ),
         );
         let test_filter =
@@ -217,29 +233,49 @@ impl PreparedTestPlanRequest {
             let playwright = self
                 .prepared_graph_config
                 .playwright_fact_plan(&self.root, &self.tsconfig, &graph_visible_paths)
-                .map_err(|error| format!("{error:#}"))?
-                .ok_or_else(|| {
-                    "prepared all-edge graph is missing its Playwright fact plan".to_string()
-                })?;
-            let facts = no_mistakes::codebase::check_facts::collect_check_facts_with_precollected_graph_facts(
-                &self.root,
-                self.graph_files.visible().iter().cloned().collect(),
-                no_mistakes::codebase::check_facts::CheckFactPlan {
-                    graph: fact_plan,
-                    graph_context: fact_context,
-                    ..Default::default()
-                },
-                playwright,
-                self.prepared_test_projects.graph_facts().clone(),
-            );
-            DepGraph::build_with_plan_files_prepared_config_and_facts(
+                .map_err(|error| format!("{error:#}"))?;
+            let facts: Box<dyn no_mistakes::codebase::dependencies::graph::TsFactLookup> =
+                if let Some(playwright) = playwright {
+                    Box::new(no_mistakes::codebase::check_facts::collect_check_facts_with_precollected_graph_facts(
+                        &self.root,
+                        self.graph_files.visible().iter().cloned().collect(),
+                        no_mistakes::codebase::check_facts::CheckFactPlan {
+                            graph: fact_plan,
+                            graph_context: fact_context,
+                            ..Default::default()
+                        },
+                        playwright,
+                        self.prepared_test_projects.graph_facts().clone(),
+                    ))
+                } else {
+                    let mut facts = self.prepared_test_projects.graph_facts().clone();
+                    let remaining = self
+                        .graph_files
+                        .indexable()
+                        .iter()
+                        .filter(|path| !facts.contains_key(*path))
+                        .cloned()
+                        .collect::<Vec<_>>();
+                    facts.extend(no_mistakes::codebase::ts_source::facts::collect_ts_facts_with_context_and_sources(
+                        &remaining,
+                        fact_plan,
+                        &fact_context,
+                        &self.visible_paths.source_store_for(&self.root),
+                    ));
+                    Box::new(facts)
+                };
+            DepGraph::build_with_plan_files_prepared_config_and_all_facts(
                 &self.root,
                 &self.tsconfig,
                 self.graph_plan,
                 &self.graph_files,
                 self.args.config.as_deref(),
                 &self.prepared_graph_config,
-                Some(&facts),
+                no_mistakes::codebase::dependencies::graph::PreparedGraphFacts {
+                    ts: Some(facts.as_ref()),
+                    dotnet: self.prepared_test_projects.dotnet_facts(),
+                    swift: self.prepared_test_projects.swift_facts(),
+                },
             )
             .map_err(|error| format!("{error:#}"))
         })
@@ -280,6 +316,20 @@ impl PreparedTestPlanRequest {
                     &self.root_visible_paths,
                     &self.tsconfig,
                 )
+                .map(|mut discovered| {
+                    // Automatic test discovery follows regular files, matching the pre-snapshot
+                    // behavior without a live `is_file` pass. Explicit changed paths remain
+                    // authoritative and are handled separately by the planner.
+                    discovered.tests.retain(|path| {
+                        self.visible_paths
+                            .classification_for(&self.root, path)
+                            .is_some_and(|classification| classification.target_is_file())
+                    });
+                    discovered
+                        .targets_by_path
+                        .retain(|path, _| discovered.tests.binary_search(path).is_ok());
+                    discovered
+                })
                 .map_err(|error| format!("{error:#}"))
             })
             .clone()
@@ -326,6 +376,16 @@ fn test_runner(framework: TestFramework) -> TestRunner {
     }
 }
 
+fn framework_graph_plan(framework: TestFramework) -> GraphBuildPlan {
+    let mut plan = GraphBuildPlan::test_impact();
+    plan.dotnet = framework == TestFramework::Dotnet;
+    plan.swift = framework == TestFramework::Swift;
+    let playwright = framework == TestFramework::Playwright;
+    plan.playwright_routes = playwright;
+    plan.playwright_selectors = playwright;
+    plan
+}
+
 fn test_framework(runner: TestRunner) -> TestFramework {
     match runner {
         TestRunner::Dotnet => TestFramework::Dotnet,
@@ -336,98 +396,5 @@ fn test_framework(runner: TestRunner) -> TestFramework {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use no_mistakes::codebase::dependencies::graph::NodeId;
-
-    #[test]
-    fn non_framework_plan_reuses_prepared_runner_config_facts_and_filter() {
-        let source = no_mistakes::codebase::ts_resolver::normalize_path(
-            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../fixtures/parser-count/non-framework-prepared-plan"),
-        );
-        let fixture = crate::test_support::materialize_saved_fixture(&source);
-        let root = fixture.path().canonicalize().unwrap();
-        let args = PlanArgs {
-            framework: None,
-            root: root.clone(),
-            config: None,
-            tsconfig: None,
-            base: None,
-            head: None,
-            from_git_diff: None,
-            changed_file: vec![root.join("src/unit.ts")],
-            changed_files: None,
-            diff: None,
-            diff_stdin: false,
-            diff_command: None,
-            entrypoints: Vec::new(),
-            entrypoint_symbols: Vec::new(),
-            include_symbols: false,
-            diff_content: None,
-            environment: "pre-push".to_string(),
-            limit_percent: None,
-            limit_files: None,
-            global_config_fallback: None,
-            format: None,
-            json: false,
-        };
-
-        crate::ast::begin_parse_count(&root);
-        let plan = crate::tests::plan::generate_plan(&args).unwrap();
-        let counts = crate::ast::finish_parse_count(&root);
-
-        assert!(plan
-            .selected_tests
-            .iter()
-            .any(|test| test.test_file == "src/unit.test.ts"));
-        assert_eq!(counts.len(), 6, "{counts:#?}");
-        assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
-    }
-
-    #[test]
-    fn complete_prepared_graph_keeps_standard_skipped_playwright_sources_outside_its_universe() {
-        let source = no_mistakes::codebase::ts_resolver::normalize_path(
-            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../fixtures/check-discovery/project-pattern-reopen/fixture"),
-        );
-        let fixture = crate::test_support::materialize_saved_fixture(&source);
-        let root = fixture.path().canonicalize().unwrap();
-        let changed = root.join("web/next.config.ts");
-        let args = PlanArgs {
-            framework: Some(TestFramework::Vitest),
-            root: root.clone(),
-            config: None,
-            tsconfig: None,
-            base: None,
-            head: None,
-            from_git_diff: None,
-            changed_file: vec![changed.clone()],
-            changed_files: None,
-            diff: None,
-            diff_stdin: false,
-            diff_command: None,
-            entrypoints: Vec::new(),
-            entrypoint_symbols: Vec::new(),
-            include_symbols: false,
-            diff_content: None,
-            environment: "pre-push".to_string(),
-            limit_percent: None,
-            limit_files: None,
-            global_config_fallback: None,
-            format: None,
-            json: false,
-        };
-
-        let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
-        crate::ast::begin_parse_count(&root);
-        let graph = prepared.graph().unwrap();
-        let counts = crate::ast::finish_parse_count(&root);
-
-        assert!(graph.dependencies_of_node(&NodeId::File(changed)).is_some());
-        assert!(graph
-            .dependencies_of_node(&NodeId::File(root.join("web/fixtures/included.ts")))
-            .is_none());
-        assert!(!counts.contains_key(&root.join("web/fixtures/included.ts")));
-    }
-}
+#[path = "prepared_plan/tests.rs"]
+mod tests;

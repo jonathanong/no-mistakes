@@ -27,6 +27,17 @@ fn storybook_findings(
     }
 }
 
+fn suppress_findings(
+    root: &Path,
+    findings: &mut Vec<RuleFinding>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) {
+    match sources {
+        Some(sources) => suppress_rule_findings_with_sources(root, findings, sources),
+        None => suppress_rule_findings(root, findings),
+    }
+}
+
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
@@ -41,6 +52,7 @@ pub(super) fn run(
         prepared_graph,
         prepared_tsconfig,
         inferred_roots,
+        sources,
     } = inputs;
     if !any_codebase_rule_enabled(config) {
         return Ok(Vec::new());
@@ -184,7 +196,7 @@ pub(super) fn run(
             },
         )?);
     }
-    suppress_rule_findings(root, &mut findings);
+    suppress_findings(root, &mut findings, sources);
     sort_findings(&mut findings);
     Ok(findings)
 }

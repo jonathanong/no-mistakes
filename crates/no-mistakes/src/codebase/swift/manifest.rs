@@ -3,17 +3,6 @@ use super::scanner::{
 };
 use super::SwiftTargetFacts;
 
-pub(crate) fn extract_test_target_names(package_swift: &str) -> Vec<String> {
-    let mut names: Vec<String> = parse_manifest_targets(package_swift)
-        .into_iter()
-        .filter(|target| target.is_test)
-        .map(|target| target.name)
-        .collect();
-    names.sort();
-    names.dedup();
-    names
-}
-
 pub(super) fn parse_manifest_targets(source: &str) -> Vec<SwiftTargetFacts> {
     target_calls(source)
         .into_iter()
@@ -105,5 +94,7 @@ fn manifest_dependency_names(dependencies_body: &str) -> Vec<String> {
     names
 }
 
+#[cfg(test)]
+mod test_support;
 #[cfg(test)]
 mod tests;

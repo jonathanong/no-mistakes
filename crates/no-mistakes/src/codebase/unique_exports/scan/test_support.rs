@@ -22,7 +22,7 @@ pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec
             let symbols = if disabled {
                 Default::default()
             } else {
-                crate::codebase::ts_symbols::extract_symbols(&source, is_tsx)
+                crate::codebase::ts_symbols::extract_symbols_at_path(path, &source, is_tsx)
                     .with_context(|| format!("extracting symbols from {}", path.display()))?
             };
             Ok(SourceFile {

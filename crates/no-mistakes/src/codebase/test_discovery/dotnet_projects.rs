@@ -1,7 +1,7 @@
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 pub(super) fn dotnet_projects_from_visible(
@@ -9,15 +9,29 @@ pub(super) fn dotnet_projects_from_visible(
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
 ) -> Result<Vec<ConfigProject>> {
-    let (projects, missing) = collect_projects(root, config, visible_paths);
+    dotnet_projects_and_facts_from_visible(root, config, visible_paths).0
+}
+
+pub(super) fn dotnet_projects_and_facts_from_visible(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+) -> (
+    Result<Vec<ConfigProject>>,
+    crate::codebase::dotnet::DotnetFactMap,
+) {
+    let (projects, missing, facts) = collect_projects(root, config, visible_paths);
     if let Some(project) = missing.first() {
-        bail!(
-            "configured dotnet project `{}` at `{}` could not be resolved",
-            project.name,
-            project.project
+        return (
+            Err(anyhow::anyhow!(
+                "configured dotnet project `{}` at `{}` could not be resolved",
+                project.name,
+                project.project
+            )),
+            facts,
         );
     }
-    Ok(projects)
+    (Ok(projects), facts)
 }
 
 pub(super) fn dotnet_projects_lossy_from_visible(
@@ -35,6 +49,7 @@ fn collect_projects(
 ) -> (
     Vec<ConfigProject>,
     Vec<crate::codebase::dotnet::DotnetConfigProject>,
+    crate::codebase::dotnet::DotnetFactMap,
 ) {
     let all_files = crate::codebase::ts_source::discover_files_from_visible(
         root,
@@ -64,7 +79,7 @@ fn collect_projects(
             exclude: prefix_globs(root, root, &configured_project.exclude),
         });
     }
-    (projects, missing)
+    (projects, missing, facts)
 }
 
 fn project_scope(root: &Path, project_path: &Path) -> Option<String> {

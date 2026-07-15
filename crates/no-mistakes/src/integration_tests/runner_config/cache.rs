@@ -30,6 +30,35 @@ impl RequestCache {
             sources,
         }
     }
+
+    fn into_helper_facts(
+        mut self,
+    ) -> HashMap<PathBuf, crate::codebase::check_facts::CheckFileFacts> {
+        if let Some(plan) = &self.fact_plan {
+            for path in plan.primary_files.iter().chain(&plan.graph_files) {
+                if self.helper_facts.contains_key(path) {
+                    continue;
+                }
+                let Some(detail) = self.programs.parse_error(path) else {
+                    continue;
+                };
+                let parse_error = format!("failed to parse {}: {detail}", path.display());
+                self.helper_facts.insert(
+                    path.clone(),
+                    crate::codebase::check_facts::CheckFileFacts {
+                        ts: std::sync::Arc::new(crate::codebase::ts_source::facts::TsFileFacts {
+                            parse_error: Some(parse_error.clone()),
+                            ..Default::default()
+                        }),
+                        parse_error: Some(parse_error),
+                        parsed: true,
+                        ..Default::default()
+                    },
+                );
+            }
+        }
+        self.helper_facts
+    }
 }
 
 thread_local! {
@@ -71,7 +100,7 @@ impl PreparedIntegrationRunnerConfigs {
                 .borrow_mut()
                 .pop()
                 .expect("runner-config request cache must be active")
-                .helper_facts
+                .into_helper_facts()
         });
         (result, helper_facts)
     }

@@ -1,7 +1,6 @@
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_allocator::Allocator;
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::Path;
 use std::sync::Arc;
@@ -33,6 +32,9 @@ pub(crate) fn collect_file_facts_with_sources(
                     ..TsFileFacts::default()
                 }),
                 parse_error: Some(parse_error),
+                server_route_client_boundary: plan
+                    .server_route_client_boundary
+                    .then(Default::default),
                 ..CheckFileFacts::default()
             });
         }
@@ -43,6 +45,9 @@ pub(crate) fn collect_file_facts_with_sources(
             ts: Arc::new(ts_source(stored_source.clone())),
             source: stored_source,
             storybook: Some(crate::codebase::storybook::extract_mdx_source(&source)),
+            // MDX is intentionally not sent through OXC, but every requested fact
+            // family still needs an explicit entry for prepared consumers.
+            server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
             ..CheckFileFacts::default()
         });
     }
@@ -69,14 +74,15 @@ pub(crate) fn collect_file_facts_with_sources(
                 }),
                 source: stored_source,
                 parse_error: Some(parse_error),
+                server_route_client_boundary: plan
+                    .server_route_client_boundary
+                    .then(Default::default),
                 ..CheckFileFacts::default()
             });
         }
     };
     let allocator = Allocator::default();
-    #[cfg(any(test, feature = "test-instrumentation"))]
-    crate::ast::record_parse_path(path);
-    let parsed = Parser::new(&allocator, &source, source_type).parse();
+    let parsed = crate::ast::parse(path, &allocator, &source, source_type);
     if parsed.panicked || !parsed.diagnostics.is_empty() {
         let parse_error =
             crate::codebase::ts_source::format_parse_diagnostic(path, &parsed.diagnostics);
@@ -99,6 +105,7 @@ pub(crate) fn collect_file_facts_with_sources(
             integration_runner_config,
             parse_error: Some(parse_error),
             parsed: true,
+            server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
             ..CheckFileFacts::default()
         });
     }

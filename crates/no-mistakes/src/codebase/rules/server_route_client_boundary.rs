@@ -10,9 +10,32 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 mod ast;
+mod execution;
 mod paths;
+use execution::{check_files, BorrowedFactItem};
 
 pub const RULE_ID: &str = "server-route-client-boundary";
+
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct FileFacts {
+    has_server_route_shape: bool,
+    client_call_lines: Vec<usize>,
+}
+
+pub(crate) fn extract_program(
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+) -> FileFacts {
+    FileFacts {
+        has_server_route_shape: ast::has_server_like_route_call_from_program(path, source, program),
+        client_call_lines: if has_disable_file_comment(source, RULE_ID) {
+            Vec::new()
+        } else {
+            ast::client_call_lines_from_program(source, program)
+        },
+    }
+}
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -55,86 +78,32 @@ fn check_with_optional_inferred(
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
-    let mut sources = Vec::new();
+    let mut facts = Vec::new();
     for path in shared.files() {
-        let Some(facts) = shared.ts.get(path) else {
+        let Some(file) = shared.ts.get(path) else {
             continue;
         };
-        let Some(source) = facts.source.as_ref() else {
-            bail!("{} requires source facts for {}", RULE_ID, path.display());
+        let Some(boundary) = file.server_route_client_boundary.as_ref() else {
+            bail!("{} requires boundary facts for {}", RULE_ID, path.display());
         };
-        sources.push(SourceItem::new(path.as_path(), source.as_ref()));
+        facts.push(BorrowedFactItem::new(path.as_path(), boundary));
     }
-    check_sources(&root, config, &sources, inferred_roots)
-}
-
-struct SourceItem<'a> {
-    path: &'a Path,
-    source: &'a str,
-}
-
-impl<'a> SourceItem<'a> {
-    fn new(path: &'a Path, source: &'a str) -> Self {
-        Self { path, source }
-    }
-}
-
-struct LoadedSourceItem {
-    path: PathBuf,
-    source: String,
-}
-
-impl LoadedSourceItem {
-    fn new(path: PathBuf, source: String) -> Self {
-        Self { path, source }
-    }
-}
-
-fn check_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources: Vec<_> = files
-        .par_iter()
-        .filter_map(|path| {
-            std::fs::read_to_string(path)
-                .ok()
-                .map(|source| LoadedSourceItem::new(path.clone(), source))
-        })
-        .collect();
     check_items(
-        root,
+        &root,
         config,
-        &sources,
-        |item| item.path.as_path(),
-        |item| item.source.as_ref(),
-        None,
-    )
-}
-
-fn check_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    sources: &[SourceItem<'_>],
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-) -> Result<Vec<RuleFinding>> {
-    check_items(
-        root,
-        config,
-        sources,
+        &facts,
         |item| item.path,
-        |item| item.source,
+        |item| item.facts,
         inferred_roots,
     )
 }
 
-fn check_items<T>(
+pub(super) fn check_items<T>(
     root: &Path,
     config: &NoMistakesConfig,
     items: &[T],
     path_for: impl Fn(&T) -> &Path + Sync,
-    source_for: impl Fn(&T) -> &str + Sync,
+    facts_for: impl Fn(&T) -> &FileFacts + Sync,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<RuleFinding>>
 where
@@ -162,7 +131,8 @@ where
                     && !exclude_matcher.is_match(root, path)
                     && filter.is_match(path))
                 .then(|| {
-                    ast::has_server_like_route_call(path, source_for(item))
+                    facts_for(item)
+                        .has_server_route_shape
                         .then(|| path.parent().map(Path::to_path_buf))
                         .flatten()
                 })
@@ -183,7 +153,7 @@ where
                 })
                 .flat_map(|item| {
                     let path = path_for(item);
-                    client_findings_for_file(root, path, source_for(item))
+                    client_findings_for_file(root, path, facts_for(item))
                 })
                 .collect::<Vec<_>>(),
         );
@@ -192,13 +162,12 @@ where
     Ok(findings)
 }
 
-fn client_findings_for_file(root: &Path, path: &Path, source: &str) -> Vec<RuleFinding> {
-    if has_disable_file_comment(source, RULE_ID) {
-        return Vec::new();
-    }
+fn client_findings_for_file(root: &Path, path: &Path, facts: &FileFacts) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
-    ast::client_call_lines(path, source)
-        .into_iter()
+    facts
+        .client_call_lines
+        .iter()
+        .copied()
         .map(|line| RuleFinding {
             rule: RULE_ID.to_string(),
             file: file.clone(),

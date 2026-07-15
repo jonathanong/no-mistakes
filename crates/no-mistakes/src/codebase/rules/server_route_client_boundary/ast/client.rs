@@ -7,14 +7,10 @@ mod scopes;
 mod visit;
 
 use modules::{client_module_expr, is_client_factory_member, is_client_http_module};
-use oxc_allocator::Allocator;
-use oxc_ast::ast::{BindingPattern, Expression};
+use oxc_ast::ast::{BindingPattern, Expression, Program};
 use oxc_ast_visit::Visit;
-use oxc_parser::Parser;
-use oxc_span::SourceType;
 use patterns::binding_names;
 use scopes::ClientScopes;
-use std::path::Path;
 
 const HTTP_VERBS: &[&str] = &[
     "get", "post", "put", "patch", "delete", "del", "head", "options", "all",
@@ -24,18 +20,12 @@ fn is_client_method_name(name: &str) -> bool {
     HTTP_VERBS.contains(&name) || name == "request"
 }
 
-pub(in crate::codebase::rules::server_route_client_boundary) fn client_call_lines(
-    path: &Path,
+pub(in crate::codebase::rules::server_route_client_boundary) fn client_call_lines_from_program(
     source: &str,
+    program: &Program<'_>,
 ) -> Vec<usize> {
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
-    let parsed = Parser::new(&allocator, source, source_type).parse();
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
-        return Vec::new();
-    }
     let mut visitor = ClientHttpVisitor::new(source);
-    visitor.visit_program(&parsed.program);
+    visitor.visit_program(program);
     visitor.lines.sort_unstable();
     visitor.lines.dedup();
     visitor.lines

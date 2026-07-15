@@ -113,14 +113,21 @@ impl PreparedIntegrationRunnerConfigs {
             if !seen.insert(spec.path.clone()) {
                 continue;
             }
-            if !spec.path.exists() {
+            if !self.visible_files.contains(&spec.path) {
                 anyhow::bail!(
                     "{} config does not exist: {}",
                     spec.framework.as_str(),
                     spec.path.display()
                 );
             }
-            let source = self.read_source(&spec.path)?;
+            let source = self.read_source(&spec.path).map_err(|error| {
+                anyhow::anyhow!(
+                    "{} config does not exist or could not be read: {}: {}",
+                    spec.framework.as_str(),
+                    spec.path.display(),
+                    error
+                )
+            })?;
             let facts = with_request_program(&spec.path, &source, |program, source| {
                 self.parse_program(&spec.path, program, source)
                     .expect("runner config path was prepared")
@@ -132,7 +139,11 @@ impl PreparedIntegrationRunnerConfigs {
     }
 
     pub(crate) fn parse_path_for_facts(&self, path: &Path) -> Option<RunnerConfigFileFacts> {
-        if !self.contains(path) || !path.exists() {
+        if !self.contains(path)
+            || !self
+                .visible_files
+                .contains(&crate::codebase::ts_resolver::normalize_path(path))
+        {
             return None;
         }
         let source = match self.read_source(path) {

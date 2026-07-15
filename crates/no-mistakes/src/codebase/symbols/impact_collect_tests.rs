@@ -133,7 +133,8 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
         .collect::<HashSet<_>>();
     let importer = root.join("impact/importer.ts");
     let source = std::fs::read_to_string(&importer).unwrap();
-    let symbols = crate::codebase::ts_symbols::extract_symbols(&source, false).unwrap();
+    let symbols =
+        crate::codebase::ts_symbols::extract_symbols_at_path(&importer, &source, false).unwrap();
     let target = root.join("packages/pkg/src/feature.ts");
     let target_symbols = BTreeMap::from([(
         target,

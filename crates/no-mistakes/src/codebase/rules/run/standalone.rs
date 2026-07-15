@@ -4,7 +4,7 @@ use super::{
     SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::check_facts::{
-    collect_check_facts_with_graph_files_and_playwright, CheckFactPlan,
+    collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -76,12 +76,14 @@ pub(super) fn run_check(
     let playwright_fact_plan = prepared_playwright
         .as_ref()
         .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
-    let shared = collect_check_facts_with_graph_files_and_playwright(
+    let sources = snapshot.source_store_for(root);
+    let shared = collect_check_facts_with_graph_files_playwright_and_sources(
         root,
         files,
         graph_files,
         fact_plan,
         playwright_fact_plan,
+        Arc::clone(&sources),
     );
 
     super::run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
@@ -94,6 +96,7 @@ pub(super) fn run_check(
         prepared_graph: prepared_graph.as_ref(),
         prepared_tsconfig: &prepared_tsconfig,
         inferred_roots: Some(&inferred_roots),
+        sources: Some(&sources),
     })
 }
 
@@ -110,8 +113,9 @@ fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> CheckFa
         dynamic_imports: dynamic_imports || storybook,
         nextjs_caching,
         storybook,
+        server_route_client_boundary: boundary,
         raw_source: nextjs_api_routes,
-        source: dynamic_imports || boundary || nextjs_caching || storybook,
+        source: dynamic_imports || nextjs_caching || storybook,
         ..CheckFactPlan::default()
     }
 }

@@ -1,4 +1,5 @@
 use super::{super::*, route_fixture_source};
+use oxc_parser::Parser;
 use std::collections::HashMap;
 
 #[test]

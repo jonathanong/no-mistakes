@@ -21,6 +21,81 @@ fn parser_reports_invalid_sources_and_extensions() {
 }
 
 #[test]
+fn parser_chokepoint_observes_successes_and_failures() {
+    let root = PathBuf::from("parser-observation");
+    let valid = root.join("valid.ts");
+    let invalid = root.join("invalid.ts");
+    begin_parse_count(&root);
+
+    assert!(with_program(&valid, "export const value = 1;", |_, _| ()).is_ok());
+    assert!(with_program(&invalid, "export const =", |_, _| ()).is_err());
+
+    let counts = finish_parse_count(&root);
+    assert_eq!(counts.get(&valid), Some(&1));
+    assert_eq!(counts.get(&invalid), Some(&1));
+}
+
+#[test]
+fn parser_chokepoint_observes_synthetic_parses_from_rayon_workers() {
+    let root = PathBuf::from("rayon-parser-observation");
+    let sentinel = root.join("source-only-compatibility.ts");
+    begin_parse_count(&root);
+
+    rayon::scope(|scope| {
+        scope.spawn(|_| {
+            let allocator = Allocator::default();
+            let parsed = parse(&sentinel, &allocator, "export {};", SourceType::ts());
+            assert!(parsed.diagnostics.is_empty());
+        });
+    });
+
+    let counts = finish_parse_count(&root);
+    assert_eq!(counts.get(&sentinel), Some(&1));
+}
+
+#[test]
+fn production_oxc_parses_use_the_observable_chokepoint() {
+    let src = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&src);
+    let sources = snapshot.source_store_for(&src);
+    let offenders = sources
+        .inventory()
+        .paths()
+        .iter()
+        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("rs"))
+        .filter(|path| {
+            let relative = path.strip_prefix(&src).unwrap();
+            relative != Path::new("ast.rs")
+                && !relative
+                    .components()
+                    .any(|component| component.as_os_str() == "tests")
+                && !relative
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.ends_with("_tests.rs") || name == "tests.rs")
+        })
+        .filter_map(|path| {
+            let source = sources.read_path(path).ok()?;
+            let lines = source.lines().collect::<Vec<_>>();
+            let has_production_reference = lines.iter().enumerate().any(|(index, line)| {
+                let references_parser =
+                    line.contains("oxc_parser") || line.contains("Parser::new(");
+                let test_only_import = index > 0
+                    && lines[index - 1].trim() == "#[cfg(test)]"
+                    && line.trim_start().starts_with("use ");
+                references_parser && !test_only_import
+            });
+            has_production_reference.then(|| path.strip_prefix(&src).unwrap().to_path_buf())
+        })
+        .collect::<Vec<_>>();
+
+    assert!(
+        offenders.is_empty(),
+        "production OXC parser entrypoints must call crate::ast::parse: {offenders:?}"
+    );
+}
+
+#[test]
 fn parsed_program_cache_reuses_parse_and_source_type_errors() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/integration-tests/parse-errors/fixture");

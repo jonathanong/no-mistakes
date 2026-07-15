@@ -1,6 +1,6 @@
 //! `symbols` binary: dump the named exports and imports of one or more TS/JS files.
 //!
-//! Wraps `crate::codebase::ts_symbols::extract_symbols` and renders the result as JSON
+//! Wraps `crate::codebase::ts_symbols::extract_symbols_at_path` and renders the result as JSON
 //! (default for non-TTY), YAML, Markdown, paths, or a human tree.
 //!
 //! Re-export `source` and import `source` specifiers are resolved through
@@ -19,7 +19,9 @@ use std::path::{Path, PathBuf};
 
 pub use crate::codebase::dependencies::Format;
 use crate::codebase::ts_resolver::TsConfig;
-use crate::codebase::ts_symbols::{extract_symbols, Export, ExportKind, FileSymbols, NamedImport};
+use crate::codebase::ts_symbols::{
+    extract_symbols_at_path, Export, ExportKind, FileSymbols, NamedImport,
+};
 
 include!("types.rs");
 include!("resolve.rs");

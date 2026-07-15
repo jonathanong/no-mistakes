@@ -33,6 +33,7 @@ pub(super) fn requires_parse(
         || plan.dynamic_imports
         || plan.nextjs_caching
         || plan.storybook
+        || plan.server_route_client_boundary
         || !plan.graph.is_empty()
         || match playwright {
             Some(plan) => plan.file(path).is_some() || plan.contains_source(path),

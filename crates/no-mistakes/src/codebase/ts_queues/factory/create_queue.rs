@@ -5,7 +5,7 @@ pub fn find_create_queue_line(
 ) -> Option<u32> {
     let allocator = Allocator::default();
     let source_type = SourceType::ts();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(Path::new("queue-create.ts"), &allocator, source, source_type);
     find_create_queue_line_from_program(&ret.program, source, factory_specifier, factory_function)
 }
 

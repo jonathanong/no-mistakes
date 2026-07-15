@@ -132,6 +132,24 @@ fn advisories_report_near_limit_files_without_findings() {
 }
 
 #[test]
+fn checks_advisories_and_suppressions_share_one_source_read() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(&path, "hello world").unwrap();
+    let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 10}");
+    let files = vec![path];
+    let sources = super::super::source_store_for_files(&files);
+
+    let findings = check_with_files_and_sources(tmp.path(), &config, &files, &sources).unwrap();
+    let advisories =
+        advisories_with_files_and_sources(tmp.path(), &config, &files, &sources).unwrap();
+
+    assert!(findings.is_empty());
+    assert_eq!(advisories.len(), 1);
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
 fn advisories_skip_over_limit_files() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("CLAUDE.md");

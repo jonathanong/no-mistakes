@@ -35,7 +35,12 @@ pub fn bfs_reachable(entrypoint: &Path, tsconfig: &ts_resolver::TsConfig) -> Has
 pub fn collect_import_specifiers(source: &str) -> Vec<String> {
     let allocator = Allocator::default();
     let source_type = SourceType::ts();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(
+        Path::new("queue-reachability.ts"),
+        &allocator,
+        source,
+        source_type,
+    );
     let mut specifiers = Vec::new();
 
     for stmt in &ret.program.body {

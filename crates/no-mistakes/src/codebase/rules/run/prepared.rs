@@ -1,9 +1,9 @@
 use super::{
     any_codebase_rule_enabled, forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching,
     require_storybook_stories, rule_enabled, server_route_client_boundary, sort_findings,
-    suppress_rule_findings, test_no_unmocked_dynamic_imports, RuleFinding, FORBIDDEN_DEPENDENCIES,
-    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
-    SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    suppress_rule_findings, suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports,
+    RuleFinding, FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use anyhow::Result;
@@ -26,6 +26,7 @@ pub struct PreparedRulesCheck<'a> {
     pub prepared_graph: Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
     pub prepared_tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
     pub inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
 
 /// Shared-config entry point used by the aggregate `check` command.

@@ -6,7 +6,6 @@ use oxc_ast::ast::{
     ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclaration,
     ImportDeclarationSpecifier, Program, Statement, VariableDeclarationKind,
 };
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::collections::HashSet;
 include!("ts_symbols/types.rs");

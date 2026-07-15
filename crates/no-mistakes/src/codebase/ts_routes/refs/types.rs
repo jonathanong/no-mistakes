@@ -45,7 +45,7 @@ pub fn extract_route_refs(source: &str, file: &str) -> Vec<RouteRef> {
 pub fn extract_route_ref_facts(source: &str, file: &str) -> RouteRefFacts {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(Path::new(file)).unwrap_or(SourceType::tsx());
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(Path::new(file), &allocator, source, source_type);
 
     extract_route_ref_facts_from_program(&ret.program, source, file)
 }

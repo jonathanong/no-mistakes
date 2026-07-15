@@ -323,6 +323,31 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
 }
 
 #[test]
+fn mdx_records_empty_boundary_facts_for_combined_storybook_plan() {
+    let file = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/require-storybook-stories/fixture/mdx-story/stories/card.mdx",
+    );
+    let root = file.ancestors().nth(2).unwrap();
+    let facts = collect_file_facts(
+        root,
+        &file,
+        &CheckFactPlan {
+            storybook: true,
+            server_route_client_boundary: true,
+            ..Default::default()
+        },
+        None,
+    )
+    .unwrap();
+
+    assert!(facts.storybook.is_some());
+    assert_eq!(
+        facts.server_route_client_boundary,
+        Some(crate::codebase::rules::server_route_client_boundary::FileFacts::default())
+    );
+}
+
+#[test]
 fn collect_check_facts_parses_once_for_playwright_and_shared_facts() {
     let root = fixture_path("");
     let file = fixture_path("src/everything.tsx");

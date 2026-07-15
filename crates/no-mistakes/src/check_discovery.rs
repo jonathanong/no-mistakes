@@ -30,12 +30,18 @@ fn relative_visible_paths(
     root: &Path,
 ) -> Vec<String> {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(root);
-    snapshot
-        .paths_for(&root)
+    let sources = snapshot.source_store_for(&root);
+    let inventory = sources.inventory();
+    inventory
+        .paths()
         .iter()
+        .filter(|path| {
+            inventory
+                .classification_for_path(path)
+                .is_some_and(no_mistakes::codebase::ts_source::FileClassification::target_is_file)
+        })
         .filter_map(|path| {
-            no_mistakes::codebase::ts_resolver::normalize_path(path)
-                .strip_prefix(&root)
+            path.strip_prefix(&root)
                 .ok()
                 .map(|relative| relative.to_string_lossy().into_owned())
         })

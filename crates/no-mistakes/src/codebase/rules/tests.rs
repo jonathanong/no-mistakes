@@ -160,7 +160,7 @@ fn standalone_rules_prepare_one_request_without_nested_rule_discovery() {
     assert_eq!(source.matches("standalone_fact_plan(&config)").count(), 1);
     assert_eq!(
         source
-            .matches("collect_check_facts_with_graph_files_and_playwright(")
+            .matches("collect_check_facts_with_graph_files_playwright_and_sources(")
             .count(),
         1
     );
@@ -224,7 +224,7 @@ fn run_check_with_facts_reports_missing_forbidden_dependency_graph_facts() {
 }
 
 #[test]
-fn aggregate_check_propagates_server_route_missing_source_error() {
+fn aggregate_check_propagates_server_route_missing_boundary_facts_error() {
     let root = fixture("rules/server-route-client-boundary/fail");
     let config = root.join("boundary-only.no-mistakes.yml");
     let shared = crate::codebase::check_facts::collect_check_facts(
@@ -238,7 +238,7 @@ fn aggregate_check_propagates_server_route_missing_source_error() {
     assert_eq!(
         error.to_string(),
         format!(
-            "server-route-client-boundary requires source facts for {}",
+            "server-route-client-boundary requires boundary facts for {}",
             root.join("backend/api/client.ts").display()
         )
     );

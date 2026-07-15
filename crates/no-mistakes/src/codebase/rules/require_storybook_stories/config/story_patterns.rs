@@ -2,7 +2,6 @@ use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectExpression, Statement};
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::Path;
 
@@ -12,7 +11,12 @@ pub(in crate::codebase::rules::require_storybook_stories) fn extract_storybook_s
     source: &str,
 ) -> Vec<String> {
     let allocator = Allocator::default();
-    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let parsed = crate::ast::parse(
+        std::path::Path::new("storybook-config.ts"),
+        &allocator,
+        source,
+        SourceType::ts(),
+    );
     if parsed.panicked || !parsed.diagnostics.is_empty() {
         return Vec::new();
     }

@@ -10,8 +10,19 @@ impl GraphFiles {
     }
 
     pub(crate) fn from_files(all: Vec<PathBuf>) -> Self {
+        Self::from_files_excluding_indexable(all, &HashSet::new())
+    }
+
+    pub(crate) fn from_files_excluding_indexable(
+        all: Vec<PathBuf>,
+        excluded_indexable: &HashSet<PathBuf>,
+    ) -> Self {
         let visible = all.iter().cloned().collect();
-        let indexable = all.iter().filter(|p| is_indexable(p)).cloned().collect();
+        let indexable = all
+            .iter()
+            .filter(|path| is_indexable(path) && !excluded_indexable.contains(*path))
+            .cloned()
+            .collect();
         Self {
             all,
             indexable,
@@ -25,16 +36,24 @@ impl GraphFiles {
     /// resolve against `visible`, so ignored transitive files remain excluded.
     pub(crate) fn add_explicit_root(&mut self, path: &Path) -> bool {
         let path = crate::codebase::ts_resolver::normalize_path(path);
-        if !path.is_file() || !self.visible.insert(path.clone()) {
+        if !path.is_file() {
             return false;
         }
-        self.all.push(path.clone());
-        self.all.sort();
-        if is_indexable(&path) {
+        let mut changed = false;
+        if self.visible.insert(path.clone()) {
+            self.all.push(path.clone());
+            self.all.sort();
+            changed = true;
+        }
+        // A demand plan may leave an unrequested runner config visible for import resolution
+        // while excluding it from eager graph parsing. An explicit query restores that ordinary
+        // source file to the indexable universe even though it was already visible.
+        if is_indexable(&path) && !self.indexable.contains(&path) {
             self.indexable.push(path);
             self.indexable.sort();
+            changed = true;
         }
-        true
+        changed
     }
 
     fn is_visible(&self, path: &Path) -> bool {
