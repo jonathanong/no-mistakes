@@ -39,6 +39,26 @@ function integrationPreserveRules() {
   };
 }
 
+const integrationBarrelFixtureRoot = resolve(
+  __dirname,
+  "../../../fixtures/eslint-plugin/module-mock-integration-barrel",
+);
+
+function barrelRules(sourceFile = "index.ts", overrides = {}) {
+  const options = {
+    integrationExports: {
+      specifiers: ["@app/**"],
+      sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, sourceFile)],
+      ...overrides,
+    },
+    internalSpecifiers: ["@app/**"],
+  };
+  return {
+    "no-mistakes/module-mock-boundary": ["error", options],
+    "no-mistakes/module-mock-preserve-exports": ["error", options],
+  };
+}
+
 describe("module mock integration export preservation", () => {
   it("allows proven real-module spreads through both rules", () => {
     assert.deepEqual(
@@ -76,6 +96,395 @@ describe("module mock integration export preservation", () => {
         "preserve",
         "preserve",
       ],
+    );
+  });
+});
+
+describe("module-mock-boundary barrel re-exports", () => {
+  it("allows a spread-preserving mock of a barrel entrypoint tagged on a re-exported leaf", () => {
+    assert.deepEqual(
+      lint(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", async (importOriginal) => ({
+            ...(await importOriginal()),
+            taggedProviderCall: vi.fn(),
+          }));
+        `,
+        barrelRules(),
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("allows a plain-object mock of a barrel entrypoint tagged on a re-exported leaf", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "index.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("follows a multi-level barrel chain including directory-index resolution", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ nestedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "index.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("terminates and allows a tagged export reached through a re-export cycle", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ cycledProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "cycle-a.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("still blocks untagged exports reached through the barrel (monotonic, never over-allows)", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ untaggedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "index.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+  });
+
+  it("leaves bare-specifier re-exports unresolved", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ anything: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "bare-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+  });
+
+  it("does not throw when a local re-export target is missing on disk", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ anything: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "missing-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+  });
+
+  it("honors a reexportExtensions override that excludes the leaf's actual extension", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "index.ts")],
+            reexportExtensions: [".mjs"],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+  });
+
+  it("ignores re-export syntax inside comments while still following live re-exports", () => {
+    const options = {
+      integrationExports: {
+        specifiers: ["@app/**"],
+        sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "commented-barrel.ts")],
+      },
+      internalSpecifiers: ["@app/**"],
+    };
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        options,
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ nestedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        options,
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("does not propagate a tagged default export through export-star barrels", () => {
+    const mockDefault = `
+      import { vi } from "vitest";
+      vi.mock("@app/aws", () => ({ default: vi.fn() }));
+    `;
+    // Reached only through `export *`: ES modules never re-export a target's
+    // default binding this way, so the barrel must not expose it either.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "default-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+    // Mocked as the direct root specifier (no barrel involved): the tagged default
+    // export is collected normally.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "default-leaf.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("resolves a re-export specifier carrying a compiled .js extension to its .ts source", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "esm-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("resolves an extensionless re-export specifier to a .tsx leaf by default", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedButtonProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "tsx-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("does not propagate a named-export-list default alias through export-star barrels", () => {
+    const mockDefault = `
+      import { vi } from "vitest";
+      vi.mock("@app/aws", () => ({ default: vi.fn() }));
+    `;
+    // Reached only through `export *`: the tag sits on `export { x as default }`
+    // rather than an `export default` declaration, but the same ES module rule
+    // applies — star re-exports never include the target's default binding.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "named-default-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+    // Mocked as the direct root specifier (no barrel involved): the tagged
+    // `export { x as default }` alias is collected normally.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "named-default-leaf.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("resolves a .js specifier to its .ts sibling, not an ambiguous .mts sibling", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedAmbiguousProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "ambiguous-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("resolves a .jsx specifier to its .tsx source", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedButtonProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "jsx-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("does not fall back to generic extension/directory probing for a compiled-extension specifier", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedFallbackProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "fallback-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
     );
   });
 });

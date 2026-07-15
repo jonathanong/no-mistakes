@@ -1,9 +1,14 @@
 "use strict";
 
-const { existsSync, readFileSync } = require("node:fs");
-const { resolve } = require("node:path");
+const { existsSync, readFileSync, statSync } = require("node:fs");
+const { dirname, join, resolve } = require("node:path");
 const { isInternalSpecifier, propertyName } = require("./module-mock-helpers");
 const { analyzeFactory, spreadPreservesRealModule } = require("./module-mock-preserve-factory");
+
+// Matches the repo's documented TS/JS source-extension set (docs/ast-analysis.md
+// "Shared File Model"), so a barrel re-exporting a .tsx/.jsx leaf (e.g. a React
+// component) resolves the same way the rest of the toolchain treats source files.
+const DEFAULT_REEXPORT_EXTENSIONS = [".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cts", ".cjs"];
 
 function mockedExportNames(factory, specifier, mock, context) {
   if (!factory) return null;
@@ -51,36 +56,138 @@ function safeRegExp(source, flags) {
   }
 }
 
-function integrationExportNames(specifier, config) {
-  const path = integrationSourcePath(specifier, config);
-  if (!path) return null;
-  const source = readFileSync(path, "utf8");
+// Built once per `integrationExportNames` call and reused across every file the
+// local re-export graph reaches. Safe to share: `String.prototype.matchAll` clones
+// the regex per call and never mutates the shared `lastIndex`.
+function tagPatterns(config) {
   const marker = config.markerRegex ?? String.raw`/\*\s*no-mistakes:\s*integration=[^*]+\*/`;
-  const names = new Set();
   const declaration = safeRegExp(
     `${marker}\\s*export\\s+(?:async\\s+)?(?:function|const|let|var|class)\\s+([A-Za-z_$][\\w$]*)`,
     "g",
   );
-  if (!declaration) return null;
-  for (const match of source.matchAll(declaration)) names.add(match[1]);
   const defaultDeclaration = safeRegExp(
     `${marker}\\s*export\\s+default\\s+(?:async\\s+)?(?:function|class)\\b`,
     "g",
   );
-  if (!defaultDeclaration) return null;
-  for (const _match of source.matchAll(defaultDeclaration)) names.add("default");
   const named = safeRegExp(`${marker}\\s*export\\s*\\{([^}]+)\\}`, "g");
-  if (!named) return null;
-  for (const match of source.matchAll(named)) {
+  if (!declaration || !defaultDeclaration || !named) return null;
+  return { declaration, defaultDeclaration, named };
+}
+
+// `includeDefault` is false for every file reached via `export *`: ES modules never
+// re-export a target's default binding through a star re-export, only through the
+// root specifier itself or an explicit named re-export.
+function addTaggedNames(source, patterns, names, includeDefault) {
+  for (const match of source.matchAll(patterns.declaration)) names.add(match[1]);
+  if (includeDefault) {
+    for (const _match of source.matchAll(patterns.defaultDeclaration)) names.add("default");
+  }
+  for (const match of source.matchAll(patterns.named)) {
     for (const part of (match[1] ?? "").split(",")) {
       const exported = part
         .trim()
         .split(/\s+as\s+/)
         .pop()
         ?.trim();
+      if (exported === "default" && !includeDefault) continue; // e.g. `export { x as default }`
       if (/^[A-Za-z_$][\w$]*$/.test(exported ?? "")) names.add(exported);
     }
   }
+}
+
+// Only plain `export * from '<specifier>'` re-exports propagate individual runtime
+// export names; `export * as ns from ...` and type-only re-exports are intentionally
+// left unmatched.
+const REEXPORT_ALL = /export\s*\*\s*from\s*['"]([^'"]+)['"]/g;
+
+// Matches whichever comes first at each position: a string/template literal (kept
+// verbatim — it may be a real re-export's own specifier) or a line/block comment
+// (dropped). This keeps a disabled `// export * from './leaf'` line, or the same
+// text inside a `/* ... */` block, from being mistaken for a live barrel edge.
+// A string literal whose *contents* merely spell out re-export-like text (rather
+// than containing an actual disabled statement) is a narrower, accepted heuristic
+// gap — matching the tag-marker scan's own text-based blind spots elsewhere in
+// this file; resolving it would need a real lexer, not a regex pass.
+const COMMENT_OR_STRING =
+  /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+
+function withoutComments(source) {
+  return source.replace(COMMENT_OR_STRING, (match) => (/^['"`]/.test(match) ? match : ""));
+}
+
+// NodeNext/ESM TypeScript projects conventionally write re-export specifiers with
+// the compiled output extension (`./leaf.js`) even though the checked-in source is
+// `./leaf.ts`. Each emitted extension maps to a specific, ordered set of TS/JS
+// source extensions Node/TypeScript actually resolve it from — trying the full
+// configured extension list instead could pick an unrelated sibling (e.g. probing
+// `.mts`, which emits `.mjs`, ahead of `.ts` for a `.js` specifier).
+const REEXPORT_EXTENSION_SOURCES = {
+  ".js": [".ts", ".tsx"],
+  ".jsx": [".tsx"],
+  ".mjs": [".mts"],
+  ".cjs": [".cts"],
+};
+
+// A specifier carrying a recognized compiled extension only ever resolves through
+// its mapped source extensions (see REEXPORT_EXTENSION_SOURCES) — never through
+// the generic "append any configured extension" or directory-index fallbacks below,
+// which correspond to no real resolver behavior for an already-extension-ful path
+// (e.g. `./leaf.js` never resolves to a literal `leaf.js.ts` file or a `leaf.js/`
+// directory).
+function resolveReexportPath(fromPath, specifier, extensions) {
+  const base = resolve(dirname(fromPath), specifier);
+  const compiledExt = Object.keys(REEXPORT_EXTENSION_SOURCES).find((ext) =>
+    specifier.endsWith(ext),
+  );
+  const stem = compiledExt ? base.slice(0, -compiledExt.length) : null;
+  const candidates = compiledExt
+    ? [
+        base,
+        ...REEXPORT_EXTENSION_SOURCES[compiledExt]
+          .filter((ext) => extensions.includes(ext))
+          .map((ext) => stem + ext),
+      ]
+    : [
+        base,
+        ...extensions.map((ext) => base + ext),
+        ...extensions.map((ext) => join(base, `index${ext}`)),
+      ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
+  }
+  return null;
+}
+
+function reexportTargets(source, fromPath, extensions) {
+  const targets = [];
+  for (const match of withoutComments(source).matchAll(REEXPORT_ALL)) {
+    const specifier = match[1];
+    if (!specifier.startsWith(".")) continue; // leave bare-specifier re-exports unresolved
+    const resolved = resolveReexportPath(fromPath, specifier, extensions);
+    if (resolved) targets.push(resolved);
+  }
+  return targets;
+}
+
+function collectTaggedExports(path, extensions, patterns, names, visited, includeDefault) {
+  if (visited.has(path)) return; // guard against re-export cycles
+  visited.add(path);
+  const source = readFileSync(path, "utf8");
+  addTaggedNames(source, patterns, names, includeDefault);
+  for (const target of reexportTargets(source, path, extensions)) {
+    // `export *` never re-exports `default`, at any recursion depth.
+    collectTaggedExports(target, extensions, patterns, names, visited, false);
+  }
+}
+
+function integrationExportNames(specifier, config) {
+  const path = integrationSourcePath(specifier, config);
+  if (!path) return null;
+  const patterns = tagPatterns(config);
+  if (!patterns) return null;
+  const extensions = config.reexportExtensions ?? DEFAULT_REEXPORT_EXTENSIONS;
+  const names = new Set();
+  collectTaggedExports(path, extensions, patterns, names, new Set(), true);
   return names;
 }
 
