@@ -15,6 +15,12 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  # The release/bench profile enables full LTO with a single codegen unit,
+  # which exhausts memory when linking this crate on the standard runner.
+  # Relax those settings for the CodSpeed benchmark build to avoid the
+  # out-of-memory killer while keeping optimized, representative binaries.
+  CARGO_PROFILE_BENCH_LTO: "false"
+  CARGO_PROFILE_BENCH_CODEGEN_UNITS: "16"
 
 jobs:
   benchmarks:
@@ -27,8 +33,6 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        with:
-          toolchain: "1.96.0"
 
       - name: Cache Rust build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
