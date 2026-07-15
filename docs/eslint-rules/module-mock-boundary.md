@@ -76,7 +76,7 @@ Not followed, by design: named re-exports (`export { x } from './leaf'` — only
 (`export * from 'some-package'` — out of the rule's internal-only scope).
 
 Name conflicts across multiple `export *` targets, and shadowing by an
-explicit local export, are not modeled — collected tagged names are unioned
+explicit local export, are not modeled — collected tagged names are combined
 across every reachable file. This is an accepted false-negative risk (a
 mock could in a rare, ambiguous-barrel case be allowed when the real
 barrel doesn't actually expose that name), not a false-positive one: it
