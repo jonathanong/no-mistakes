@@ -4,6 +4,26 @@ fn bfs(
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry> {
+    bfs_with_file_universe(starts, edges, max_depth, allowed, None)
+}
+
+fn bfs_in_file_universe(
+    starts: &[NodeId],
+    edges: &EdgeMap,
+    max_depth: Option<usize>,
+    allowed: Option<&HashSet<EdgeKind>>,
+    file_universe: &HashSet<PathBuf>,
+) -> Vec<NodeEntry> {
+    bfs_with_file_universe(starts, edges, max_depth, allowed, Some(file_universe))
+}
+
+fn bfs_with_file_universe(
+    starts: &[NodeId],
+    edges: &EdgeMap,
+    max_depth: Option<usize>,
+    allowed: Option<&HashSet<EdgeKind>>,
+    file_universe: Option<&HashSet<PathBuf>>,
+) -> Vec<NodeEntry> {
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
@@ -11,6 +31,9 @@ fn bfs(
     let mut dynamic_import_files: HashSet<NodeId> = HashSet::new();
 
     for start in starts {
+        if file_universe.is_some_and(|universe| !start.is_in_file_universe(universe)) {
+            continue;
+        }
         if !visited.contains(start) {
             visited.insert(start.clone());
             queue.push_back((start.clone(), 0));
@@ -25,6 +48,9 @@ fn bfs(
 
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
+                if file_universe.is_some_and(|universe| !neighbor.is_in_file_universe(universe)) {
+                    continue;
+                }
                 if dynamic_import_files.contains(&node)
                     && matches!(neighbor, NodeId::Symbol { .. })
                 {

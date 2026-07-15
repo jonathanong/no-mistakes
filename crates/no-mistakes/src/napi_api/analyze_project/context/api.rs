@@ -103,10 +103,13 @@ impl AnalyzeProjectContext {
                 .expect("supplemental scope facts are collected");
             scopes.insert(key, plan.materialize(facts, supplemental)?);
         }
+        // Every effective scope may seed facts from programs parsed while the
+        // scope plans were prepared. Retain those programs until all scopes
+        // have materialized, then release them before report execution.
+        crate::ast::clear_request_parse_cache();
         Ok(Self {
             scopes,
             scope_aliases,
         })
     }
-
 }

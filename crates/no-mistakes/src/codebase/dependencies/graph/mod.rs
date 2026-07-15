@@ -27,6 +27,7 @@ include!("fact_lookup.rs");
 
 include!("builder.rs");
 include!("builder_check_facts.rs");
+include!("builder_observability.rs");
 include!("builder_core.rs");
 include!("builder_edges.rs");
 include!("builder_helpers.rs");

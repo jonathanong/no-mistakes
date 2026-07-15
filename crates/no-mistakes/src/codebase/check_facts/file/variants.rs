@@ -8,6 +8,11 @@ use std::sync::Arc;
 
 mod errors;
 use errors::{fill_parse_errors, read_errors};
+mod parse_modes;
+use parse_modes::{collect_legacy_variants, collect_standard_variants, VariantParseModes};
+
+#[cfg(test)]
+mod tests;
 
 pub(crate) struct CheckFactVariant<'a> {
     pub(crate) root: &'a Path,
@@ -22,8 +27,17 @@ pub(crate) fn collect_file_fact_variants_with_session(
 ) -> Vec<Option<CheckFileFacts>> {
     let source = match session.read_source(path) {
         Ok(source) => source,
-        Err(error) => return read_errors(path, variants.len(), error),
+        Err(error) => return read_errors(path, variants, error),
     };
+    collect_file_fact_variants_from_source_with_session(session, path, source, variants)
+}
+
+pub(crate) fn collect_file_fact_variants_from_source_with_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    path: &Path,
+    source: Arc<str>,
+    variants: &[CheckFactVariant<'_>],
+) -> Vec<Option<CheckFileFacts>> {
     let mut results = (0..variants.len()).map(|_| None).collect::<Vec<_>>();
     let mut parse_variants = Vec::new();
     for (index, variant) in variants.iter().enumerate() {
@@ -45,44 +59,19 @@ pub(crate) fn collect_file_fact_variants_with_session(
     if parse_variants.is_empty() {
         return results;
     }
-    let legacy = parse_variants.iter().any(|(_, variant)| {
-        variant
-            .plan
-            .legacy_symbol_paths
-            .contains(&crate::codebase::ts_resolver::normalize_path(path))
-    });
-    let collect =
-        |program: &oxc_ast::ast::Program<'_>, parsed_source: &str, parse_error: Option<String>| {
-            parse_variants
-                .iter()
-                .map(|(index, variant)| {
-                    (
-                        *index,
-                        collect_variant(
-                            path,
-                            variant,
-                            &source,
-                            program,
-                            parsed_source,
-                            parse_error.clone(),
-                        ),
-                    )
-                })
-                .collect::<Vec<_>>()
-        };
-    let collected = if legacy {
-        session.with_legacy_symbols_program(path, &source, collect)
-    } else {
-        session.with_recovered_program(path, &source, collect)
-    };
-    match collected {
-        Ok(collected) => {
-            for (index, facts) in collected {
-                results[index] = Some(facts);
-            }
-        }
-        Err(error) => fill_parse_errors(&mut results, parse_variants, path, &source, legacy, error),
-    }
+    let modes = parse_variants
+        .iter()
+        .map(|(_, variant)| VariantParseModes::for_variant(path, variant))
+        .collect::<Vec<_>>();
+    collect_standard_variants(
+        session,
+        path,
+        &source,
+        &parse_variants,
+        &modes,
+        &mut results,
+    );
+    collect_legacy_variants(session, path, &source, parse_variants, &modes, &mut results);
     results
 }
 
@@ -93,11 +82,8 @@ fn collect_variant(
     program: &oxc_ast::ast::Program<'_>,
     parsed_source: &str,
     parse_error: Option<String>,
+    recover_symbols: bool,
 ) -> CheckFileFacts {
-    let legacy = variant
-        .plan
-        .legacy_symbol_paths
-        .contains(&crate::codebase::ts_resolver::normalize_path(path));
     if let Some(parse_error) = parse_error {
         return recovered_error_facts(
             path,
@@ -106,7 +92,7 @@ fn collect_variant(
             program,
             parsed_source,
             parse_error,
-            legacy,
+            recover_symbols,
         );
     }
     let mut facts = collect_file_facts_from_program(
@@ -121,6 +107,9 @@ fn collect_variant(
         Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
         facts.source = Some(Arc::clone(source));
     }
+    if recover_symbols {
+        facts.legacy_symbols = facts.symbols.clone();
+    }
     facts
 }
 
@@ -131,7 +120,7 @@ fn recovered_error_facts(
     program: &oxc_ast::ast::Program<'_>,
     parsed_source: &str,
     parse_error: String,
-    legacy: bool,
+    recover_symbols: bool,
 ) -> CheckFileFacts {
     let stored_source = should_store_source(plan).then(|| Arc::clone(source));
     let mut ts = super::super::file_parse_error::ts_facts(
@@ -140,7 +129,7 @@ fn recovered_error_facts(
         program,
         parse_error.clone(),
     );
-    let symbols = (legacy && (plan.symbols || plan.graph.symbols)).then(|| {
+    let symbols = (recover_symbols && (plan.symbols || plan.graph.symbols)).then(|| {
         Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
             program,
             parsed_source,
@@ -158,10 +147,12 @@ fn recovered_error_facts(
     CheckFileFacts {
         ts: Arc::new(ts),
         source: stored_source,
-        symbols,
+        symbols: symbols.clone(),
+        legacy_symbols: symbols,
         integration_runner_config,
         parse_error: Some(parse_error),
         parsed: true,
+        server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
         ..CheckFileFacts::default()
     }
 }

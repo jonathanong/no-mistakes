@@ -26,20 +26,24 @@ pub(crate) fn collect_check_fact_batch_with_session(
     let collected = demands
         .into_par_iter()
         .map(|(path, demands)| {
-            let variants = demands
-                .iter()
-                .map(|demand| {
-                    let request = &requests[demand.request];
-                    super::file::CheckFactVariant {
-                        root: &request.root,
-                        plan: &demand.plan,
-                        playwright: request.playwright.as_ref(),
-                    }
-                })
-                .collect::<Vec<_>>();
-            let facts =
-                super::file::collect_file_fact_variants_with_session(session, &path, &variants);
-            (path, demands, facts)
+            // Request parser caches are thread-local, so each Rayon path task
+            // owns a scope that all of its fact variants and modes can share.
+            crate::ast::with_request_parse_cache(|| {
+                let variants = demands
+                    .iter()
+                    .map(|demand| {
+                        let request = &requests[demand.request];
+                        super::file::CheckFactVariant {
+                            root: &request.root,
+                            plan: &demand.plan,
+                            playwright: request.playwright.as_ref(),
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                let facts =
+                    super::file::collect_file_fact_variants_with_session(session, &path, &variants);
+                (path, demands, facts)
+            })
         })
         .collect::<Vec<_>>();
     let mut precollected = (0..requests.len())

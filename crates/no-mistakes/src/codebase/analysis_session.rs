@@ -8,7 +8,7 @@ use dashmap::DashMap;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 mod io;
 mod parsing;
@@ -22,12 +22,14 @@ mod parsing;
 #[doc(hidden)]
 pub struct AnalysisSession {
     observer: Option<Arc<InvocationObserver>>,
-    datasets: DashMap<PathBuf, Arc<crate::codebase::analysis_dataset::AnalysisDataset>>,
+    datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
     resolver_caches: DashMap<ResolverScopeKey, Arc<ResolverResultCache>>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
 }
 
+type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
+type DatasetCell = OnceLock<Arc<AnalysisDataset>>;
 type SourceReadResult = Result<Arc<str>, SourceReadError>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -96,69 +98,82 @@ impl AnalysisSession {
     /// Return the canonical visible-path snapshot for `root`, discovering a
     /// normalized root no more than once during this invocation.
     pub fn visible_paths(&self, root: &Path) -> Arc<VisiblePathSnapshot> {
-        let root = normalize_path(root);
         self.increment("discovery.requests", 1);
-        match self.datasets.entry(root.clone()) {
-            Entry::Occupied(entry) => {
-                self.increment("discovery.cache_hits", 1);
-                entry.get().visible_paths_arc()
-            }
-            Entry::Vacant(entry) => {
-                let dataset = Arc::new(
-                    crate::codebase::analysis_dataset::AnalysisDataset::new_observed(
-                        &root,
-                        self.observer.clone(),
-                    ),
-                );
-                let snapshot = dataset.visible_paths_arc();
-                entry.insert(dataset);
-                snapshot
-            }
+        let (dataset, cache_hit) = self.dataset_with(root, |root| {
+            AnalysisDataset::new_observed(root, self.observer.clone())
+        });
+        if cache_hit {
+            self.increment("discovery.cache_hits", 1);
         }
+        dataset.visible_paths_arc()
     }
 
     /// Seed a snapshot prepared by an enclosing pipeline. This is used by
     /// compatibility adapters while callers migrate to session discovery.
     pub fn insert_visible_paths(&self, root: &Path, snapshot: Arc<VisiblePathSnapshot>) {
-        let root = normalize_path(root);
-        self.datasets.entry(root.clone()).or_insert_with(|| {
-            Arc::new(
-                crate::codebase::analysis_dataset::AnalysisDataset::from_snapshot_observed(
-                    &root,
-                    snapshot,
-                    self.observer.clone(),
-                ),
-            )
+        let (root, cell, _) = self.dataset_cell(root);
+        cell.get_or_init(|| {
+            Arc::new(AnalysisDataset::from_snapshot_observed(
+                &root,
+                snapshot,
+                self.observer.clone(),
+            ))
         });
     }
 
-    pub(crate) fn dataset(
+    pub(crate) fn dataset(&self, root: &Path) -> Arc<AnalysisDataset> {
+        self.dataset_with(root, |root| {
+            AnalysisDataset::new_observed(root, self.observer.clone())
+        })
+        .0
+    }
+
+    fn dataset_with(
         &self,
         root: &Path,
-    ) -> Arc<crate::codebase::analysis_dataset::AnalysisDataset> {
+        initialize: impl FnOnce(&Path) -> AnalysisDataset,
+    ) -> (Arc<AnalysisDataset>, bool) {
+        let (root, cell, cache_hit) = self.dataset_cell(root);
+
+        let dataset = cell.get_or_init(|| Arc::new(initialize(&root)));
+        (Arc::clone(dataset), cache_hit)
+    }
+
+    fn dataset_cell(&self, root: &Path) -> (PathBuf, Arc<DatasetCell>, bool) {
         let root = normalize_path(root);
-        match self.datasets.entry(root.clone()) {
-            Entry::Occupied(entry) => Arc::clone(entry.get()),
+        let (cell, cache_hit) = match self.datasets.entry(root.clone()) {
+            Entry::Occupied(entry) => (Arc::clone(entry.get()), true),
             Entry::Vacant(entry) => {
-                let dataset = Arc::new(
-                    crate::codebase::analysis_dataset::AnalysisDataset::new_observed(
-                        &root,
-                        self.observer.clone(),
-                    ),
-                );
-                entry.insert(Arc::clone(&dataset));
-                dataset
+                let cell = Arc::new(OnceLock::new());
+                entry.insert(Arc::clone(&cell));
+                (cell, false)
             }
-        }
+        };
+
+        // Callers initialize only after this entry match drops the DashMap
+        // shard guard, keeping discovery outside the registry lock.
+        (root, cell, cache_hit)
+    }
+
+    fn dataset_from_cell(&self, root: &Path, cell: &DatasetCell) -> Arc<AnalysisDataset> {
+        Arc::clone(
+            cell.get_or_init(|| {
+                Arc::new(AnalysisDataset::new_observed(root, self.observer.clone()))
+            }),
+        )
     }
 
     fn source_store_for_path(&self, path: &Path) -> Arc<SourceStore> {
         let path = normalize_path(path);
-        self.datasets
+        let matching_dataset = self
+            .datasets
             .iter()
             .filter(|entry| path.starts_with(entry.key()))
             .max_by_key(|entry| entry.key().components().count())
-            .map(|entry| entry.value().sources_for(entry.key()))
+            .map(|entry| (entry.key().clone(), Arc::clone(entry.value())));
+
+        matching_dataset
+            .map(|(root, cell)| self.dataset_from_cell(&root, &cell).sources_for(&root))
             .unwrap_or_else(|| Arc::clone(&self.supplemental_sources))
     }
 }

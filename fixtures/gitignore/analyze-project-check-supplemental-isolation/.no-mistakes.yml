@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src/entry.ts]
+      forbiddenFiles: [src/forbidden.ts]
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

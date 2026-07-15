@@ -4,11 +4,14 @@ impl SharedTraversalContext {
         tsconfig_path: Option<&Path>,
         config_path: Option<&Path>,
         build_plan: graph::GraphBuildPlan,
-        dataset: std::sync::Arc<crate::codebase::analysis_dataset::AnalysisDataset>,
-        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
-        include_check_plan: bool,
-        mut framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+        preparation: TraversalPreparationContext,
     ) -> Result<Self> {
+        let TraversalPreparationContext {
+            dataset,
+            session,
+            include_check_plan,
+            mut framework_plan,
+        } = preparation;
         session.record_work("analysis.requests", 1);
         let root_visible_paths = dataset.paths_for(&root);
         let config = (*session.config(&root, config_path)?).clone();

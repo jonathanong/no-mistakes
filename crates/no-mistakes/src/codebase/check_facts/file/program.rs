@@ -142,6 +142,7 @@ pub(crate) fn collect_file_facts_from_program(
         ts: ts.into(),
         source: stored_source,
         symbols,
+        legacy_symbols: None,
         react,
         react_usages,
         integration,
@@ -156,6 +157,7 @@ pub(crate) fn collect_file_facts_from_program(
         playwright_app_text_targets: playwright_source.text_targets,
         playwright_static_exports,
         parse_error: None,
+        legacy_symbol_parse_error: None,
         parsed: true,
     }
 }

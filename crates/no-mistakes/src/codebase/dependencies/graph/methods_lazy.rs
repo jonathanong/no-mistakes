@@ -29,6 +29,23 @@ impl DepGraph {
         bfs(&roots, self.edges.forward(), max_depth, allowed)
     }
 
+    pub(crate) fn deps_of_in_file_universe(
+        &self,
+        roots: &[NodeId],
+        max_depth: Option<usize>,
+        allowed: Option<&HashSet<EdgeKind>>,
+        file_universe: &HashSet<PathBuf>,
+    ) -> Vec<NodeEntry> {
+        let roots = normalize_nodes(roots);
+        bfs_in_file_universe(
+            &roots,
+            self.edges.forward(),
+            max_depth,
+            allowed,
+            file_universe,
+        )
+    }
+
     /// Find all nodes that transitively reference `roots` (reverse direction).
     pub fn dependents_of(
         &self,

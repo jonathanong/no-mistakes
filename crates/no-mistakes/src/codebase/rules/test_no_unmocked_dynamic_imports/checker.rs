@@ -25,6 +25,7 @@ pub(super) struct DynamicCheckContext<'a> {
     pub(super) file: &'a Path,
     pub(super) resolver: &'a ImportResolver<'a>,
     pub(super) graph: &'a DepGraph,
+    pub(super) file_universe: Option<&'a HashSet<PathBuf>>,
     pub(super) mocks: &'a HashSet<PathBuf>,
     pub(super) dependency_cache: &'a DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     pub(super) findings: &'a mut Vec<RuleFinding>,
@@ -81,7 +82,7 @@ pub(super) fn evaluate_dynamic_import(
     let deps = ctx
         .dependency_cache
         .entry(target.clone())
-        .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, target.clone())))
+        .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, target.clone(), ctx.file_universe)))
         .clone();
     let mut findings = Vec::new();
     for dependency in std::iter::once(&target).chain(deps.iter()) {

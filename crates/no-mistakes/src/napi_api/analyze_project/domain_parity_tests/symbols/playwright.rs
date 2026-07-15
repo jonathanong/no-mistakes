@@ -38,6 +38,52 @@ fn playwright_and_symbols_share_full_config_facts_with_standalone_parity() {
 }
 
 #[test]
+fn playwright_mts_config_keeps_distinct_legacy_symbols_with_parity() {
+    let source = repo_fixture(&[
+        "fixtures",
+        "napi",
+        "analyze-project-playwright-mts-symbols",
+    ]);
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let playwright = json!({
+        "root": root,
+        "files": ["app/page.tsx"],
+        "playwrightConfig": ["playwright.config.mts"]
+    });
+    let standalone = [
+        parse_json(crate::napi_api::playwright_tests_json_impl(playwright.to_string()).unwrap()),
+        parse_json(
+            crate::napi_api::symbols_json_impl(
+                json!({ "root": root, "files": ["playwright.config.mts"] }).to_string(),
+            )
+            .unwrap(),
+        ),
+    ];
+
+    crate::ast::begin_parse_count(&root);
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "playwrightTests",
+                    "files": ["app/page.tsx"],
+                    "playwrightConfig": ["playwright.config.mts"]
+                },
+                { "type": "symbols", "files": ["playwright.config.mts"] }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(report_results(&output), standalone);
+    assert_eq!(counts.get(&root.join("playwright.config.mts")), Some(&2));
+}
+
+#[test]
 fn check_playwright_and_symbols_keep_config_symbols_and_check_output() {
     let source = parser_fixture("playwright");
     let fixture = crate::test_support::materialize_saved_fixture(&source);

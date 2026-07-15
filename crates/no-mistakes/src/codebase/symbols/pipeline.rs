@@ -31,9 +31,15 @@ pub(crate) fn collect_entries_with_prepared_facts(
                 .or_else(|| supplemental.ts.get(path))
                 .with_context(|| format!("reading {}", path.display()))?;
             let symbols = file
-                .symbols
-                .clone()
-                .with_context(|| match &file.parse_error {
+                .legacy_symbol_parse_error
+                .is_none()
+                .then(|| file.legacy_symbols.clone().or_else(|| file.symbols.clone()))
+                .flatten()
+                .with_context(|| match file
+                    .legacy_symbol_parse_error
+                    .as_ref()
+                    .or(file.parse_error.as_ref())
+                {
                     Some(error) => format!("extracting symbols from {}: {error}", path.display()),
                     None => "shared analyzeProject facts are missing symbols".to_string(),
                 })?;

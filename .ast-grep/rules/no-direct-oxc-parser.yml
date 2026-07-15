@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
 #
 # New parsers must enter through the request-scoped AST gateway. The exact
-# allowlist contains legacy, source-string-only extractors that do not discover
-# or read files; migrating one removes its entry here.
+# allowlist contains that single gateway plus legacy, source-string-only
+# extractors that do not discover or read files; migrating one removes its entry.
 id: no-direct-oxc-parser
 language: rust
 severity: error
@@ -21,7 +21,7 @@ ignores:
   - "crates/no-mistakes/src/**/*_tests.rs"
   - "crates/no-mistakes/src/**/tests.rs"
   - "crates/no-mistakes/src/**/test_support.rs"
-  - "crates/no-mistakes/src/ast/parsed_cache.rs"
+  - "crates/no-mistakes/src/ast.rs"
   - "crates/no-mistakes/src/codebase/dependencies/extract.rs"
   - "crates/no-mistakes/src/codebase/rules/require_storybook_stories/config/story_patterns.rs"
   - "crates/no-mistakes/src/codebase/rules/server_route_client_boundary/ast/client.rs"

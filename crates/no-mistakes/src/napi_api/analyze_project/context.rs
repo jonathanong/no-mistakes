@@ -1,7 +1,9 @@
 use super::options::{playwright_options, project_options};
 use super::types::{AnalyzeProjectOptions, AnalyzeReportRequest};
 use crate::codebase::dependencies::graph::GraphBuildPlan;
-use crate::codebase::dependencies::{relationship_filter, Direction, SharedTraversalContext};
+use crate::codebase::dependencies::{
+    relationship_filter, Direction, SharedTraversalContext, SnapshotTraversalPreparation,
+};
 use crate::napi_api::options::{PlaywrightOptions, ProjectOptions};
 use anyhow::{bail, Context, Result};
 use serde_json::Value;

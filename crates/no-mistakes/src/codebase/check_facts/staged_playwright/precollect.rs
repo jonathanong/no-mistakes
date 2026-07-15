@@ -22,22 +22,17 @@ pub(super) fn cached_config_file_facts(
         .filter(|path| universe.contains(path) || plan.legacy_symbol_paths.contains(*path))
         .filter_map(|path| {
             let source = sources.read_path(path).ok()?;
-            let mut facts = session
-                .with_program(path, &source, |program, parsed_source| {
-                    super::super::collect_file_facts_from_program(
-                        root,
-                        path,
-                        plan,
-                        Some(playwright),
-                        parsed_source,
-                        program,
-                    )
-                })
-                .ok()?;
-            if plan.source || plan.raw_source {
-                std::sync::Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
-                facts.source = Some(source);
-            }
+            let variants = [super::super::file::CheckFactVariant {
+                root,
+                plan,
+                playwright: Some(playwright),
+            }];
+            let facts = super::super::file::collect_file_fact_variants_from_source_with_session(
+                session, path, source, &variants,
+            )
+            .into_iter()
+            .next()
+            .flatten()?;
             Some((path.clone(), facts))
         })
         .collect()

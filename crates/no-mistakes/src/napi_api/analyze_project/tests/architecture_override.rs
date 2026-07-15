@@ -115,6 +115,54 @@ fn playwright_prepared_views_share_one_parse_per_indexable_file() {
 }
 
 #[test]
+fn distinct_config_scopes_reuse_one_shared_playwright_config_parse() {
+    let source = fixture(&[
+        "fixtures",
+        "napi",
+        "analyze-project-shared-playwright-config",
+    ]);
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+
+    // The two config paths intentionally form distinct effective scopes while both
+    // scopes prepare and seed facts for the same Playwright configuration.
+    crate::ast::begin_parse_count(&root);
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "playwrightCheck",
+                    "id": "scope-a",
+                    "config": "scope-a.no-mistakes.yml",
+                    "playwrightConfig": ["playwright.config.ts"]
+                },
+                {
+                    "type": "playwrightCheck",
+                    "id": "scope-b",
+                    "config": "scope-b.no-mistakes.yml",
+                    "playwrightConfig": ["playwright.config.ts"]
+                }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let output = parse_json(output);
+
+    assert_eq!(output["reports"].as_array().unwrap().len(), 2);
+    let expected = crate::codebase::ts_source::discover_files(&root, &[])
+        .into_iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+        .collect::<Vec<_>>();
+    assert_eq!(counts.len(), expected.len(), "{counts:#?}");
+    for path in expected {
+        assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
+    }
+}
+
+#[test]
 fn explicit_config_playwright_scope_reuses_canonical_manifest_and_sources() {
     let source = fixture(&["fixtures", "parser-count", "playwright"]);
     let directory = crate::test_support::materialize_saved_fixture(&source);

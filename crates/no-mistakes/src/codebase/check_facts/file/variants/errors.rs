@@ -6,18 +6,23 @@ use std::sync::Arc;
 
 pub(super) fn read_errors(
     path: &Path,
-    len: usize,
+    variants: &[CheckFactVariant<'_>],
     error: impl std::fmt::Display,
 ) -> Vec<Option<CheckFileFacts>> {
     let parse_error = format!("failed to read {}: {error}", path.display());
-    (0..len)
-        .map(|_| {
+    variants
+        .iter()
+        .map(|variant| {
             Some(CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
                     parse_error: Some(parse_error.clone()),
                     ..TsFileFacts::default()
                 }),
                 parse_error: Some(parse_error.clone()),
+                server_route_client_boundary: variant
+                    .plan
+                    .server_route_client_boundary
+                    .then(Default::default),
                 ..CheckFileFacts::default()
             })
         })
@@ -47,6 +52,10 @@ pub(super) fn fill_parse_errors(
             }),
             source: stored_source,
             parse_error: Some(parse_error),
+            server_route_client_boundary: variant
+                .plan
+                .server_route_client_boundary
+                .then(Default::default),
             ..CheckFileFacts::default()
         });
     }

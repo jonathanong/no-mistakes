@@ -7,14 +7,11 @@ use std::sync::{Arc, OnceLock};
 
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
+mod validation;
+use validation::ValidatedPathCache;
 
 /// Memoized result of a strict UTF-8 source read.
 pub type SourceReadOutcome = Result<Arc<str>, Arc<io::Error>>;
-
-type ValidatedPathCache = std::collections::HashMap<
-    (std::path::PathBuf, std::path::PathBuf),
-    Arc<OnceLock<Option<std::path::PathBuf>>>,
->;
 
 /// Lazy request-scoped source storage for a frozen file inventory.
 ///
@@ -190,33 +187,12 @@ impl SourceStore {
         root: &Path,
         candidate: &Path,
     ) -> Option<std::path::PathBuf> {
-        if self
-            .inventory
-            .classification_for_path(candidate)
-            .is_some_and(super::FileClassification::is_lexical_file)
-        {
-            return Some(candidate.to_path_buf());
-        }
-        let key = (root.to_path_buf(), candidate.to_path_buf());
-        let cell = {
-            let mut validations = self
-                .validated_regular_paths
-                .lock()
-                .expect("source path validation mutex poisoned");
-            Arc::clone(
-                validations
-                    .entry(key.clone())
-                    .or_insert_with(|| Arc::new(OnceLock::new())),
-            )
-        };
-        cell.get_or_init(|| {
-            let canonical_root = std::fs::canonicalize(&key.0).ok()?;
-            let canonical_candidate = std::fs::canonicalize(&key.1).ok()?;
-            let metadata = std::fs::metadata(&canonical_candidate).ok()?;
-            (canonical_candidate.starts_with(canonical_root) && metadata.is_file())
-                .then_some(key.1.clone())
-        })
-        .clone()
+        validation::validated_regular_path(
+            &self.inventory,
+            &self.validated_regular_paths,
+            root,
+            candidate,
+        )
     }
 
     #[doc(hidden)]

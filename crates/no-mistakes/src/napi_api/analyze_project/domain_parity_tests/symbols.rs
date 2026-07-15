@@ -47,7 +47,10 @@ fn prepared_symbols_signature_and_flow_match_standalone_and_parse_once() {
     let counts = crate::ast::finish_parse_count(&root);
 
     assert_eq!(report_results(&output), standalone);
-    assert_each_indexable_file_parsed_once(&root, &counts);
+    assert_eq!(counts.len(), 3, "{counts:#?}");
+    assert_eq!(counts.get(&root.join("consumer.mts")), Some(&1));
+    assert_eq!(counts.get(&root.join("consumer.test.mts")), Some(&1));
+    assert_eq!(counts.get(&root.join("utils.mts")), Some(&2));
 }
 
 #[test]

@@ -47,6 +47,87 @@ fn discovery_is_memoized_by_normalized_root() {
 }
 
 #[test]
+fn dataset_initialization_releases_registry_guard_and_preserves_identity() {
+    let observer = InvocationObserver::new(true);
+    let session = AnalysisSession::new(Some(Arc::clone(&observer)));
+    let root = fixture_root();
+    let normalized_root = normalize_path(&root);
+    let (started_tx, started_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+
+    let first_session = Arc::clone(&session);
+    let first_root = root.clone();
+    let first_observer = Some(Arc::clone(&observer));
+    let first = std::thread::spawn(move || {
+        first_session
+            .dataset_with(&first_root, move |root| {
+                started_tx.send(()).unwrap();
+                release_rx.recv().unwrap();
+                AnalysisDataset::new_observed(root, first_observer)
+            })
+            .0
+    });
+
+    started_rx
+        .recv_timeout(std::time::Duration::from_secs(5))
+        .expect("dataset initializer did not start");
+    let registry_guard_released = matches!(
+        session.datasets.try_get(&normalized_root),
+        dashmap::try_result::TryResult::Present(_)
+    );
+
+    let second_session = Arc::clone(&session);
+    let second_root = root.clone();
+    let second = std::thread::spawn(move || second_session.dataset(&second_root));
+    release_tx.send(()).unwrap();
+
+    let first_dataset = first.join().unwrap();
+    let second_dataset = second.join().unwrap();
+    assert!(
+        registry_guard_released,
+        "dataset discovery ran while holding the DashMap entry guard"
+    );
+    assert!(Arc::ptr_eq(&first_dataset, &second_dataset));
+
+    let visible_paths = session.visible_paths(&root);
+    assert!(Arc::ptr_eq(
+        &visible_paths,
+        &first_dataset.visible_paths_arc()
+    ));
+    let diagnostics = observer.snapshot();
+    assert_eq!(diagnostics.work["discovery.roots"], 1);
+    assert_eq!(diagnostics.work["discovery.requests"], 1);
+    assert_eq!(diagnostics.work["discovery.cache_hits"], 1);
+}
+
+#[test]
+fn inserted_visible_paths_remain_the_canonical_dataset_snapshot() {
+    let observer = InvocationObserver::new(true);
+    let session = AnalysisSession::new(Some(Arc::clone(&observer)));
+    let root = fixture_root();
+    let source = normalize_path(&root.join("consumer.mts"));
+    let snapshot = Arc::new(VisiblePathSnapshot::from_paths(
+        &root,
+        std::slice::from_ref(&source),
+    ));
+    let replacement = Arc::new(VisiblePathSnapshot::from_paths(&root, &[]));
+
+    session.insert_visible_paths(&root, Arc::clone(&snapshot));
+    session.insert_visible_paths(&root.join("."), replacement);
+
+    let visible_paths = session.visible_paths(&root.join("."));
+    let dataset = session.dataset(&root);
+    assert!(Arc::ptr_eq(&visible_paths, &snapshot));
+    assert!(Arc::ptr_eq(&dataset.visible_paths_arc(), &snapshot));
+    assert_eq!(visible_paths.paths_for(&root).as_ref(), &[source]);
+
+    let diagnostics = observer.snapshot();
+    assert!(!diagnostics.work.contains_key("discovery.roots"));
+    assert_eq!(diagnostics.work["discovery.requests"], 1);
+    assert_eq!(diagnostics.work["discovery.cache_hits"], 1);
+}
+
+#[test]
 fn disabled_session_allocates_no_work_ledger() {
     let session = AnalysisSession::disabled();
     let source = fixture_root().join("consumer.mts");
@@ -168,6 +249,34 @@ fn legacy_symbol_parse_mode_is_distinct_from_standard_javascript() {
     assert_eq!(work["parse.requests"], 2);
     assert_eq!(work["parse.files"], 2);
     assert_eq!(work["parse.errors"], 1);
+}
+
+#[test]
+fn standard_and_legacy_requests_share_only_equivalent_physical_parses() {
+    for (name, expected_attempts) in [
+        ("ordinary.ts", 1),
+        ("ordinary.tsx", 1),
+        ("module.mts", 2),
+        ("commonjs.cts", 2),
+        ("definition.d.ts", 2),
+    ] {
+        let observer = InvocationObserver::new(true);
+        let session = AnalysisSession::new(Some(observer));
+        let path = normalize_path(&fixture_root().join(name));
+        crate::ast::with_request_parse_cache(|| {
+            session
+                .with_recovered_program(&path, "export const value = 1;", |_, _, _| ())
+                .unwrap();
+            session
+                .with_legacy_symbols_program(&path, "export const value = 1;", |_, _, _| ())
+                .unwrap();
+        });
+        assert_eq!(
+            session.work_snapshot().parse_attempts[&path],
+            expected_attempts,
+            "{name}"
+        );
+    }
 }
 
 #[test]

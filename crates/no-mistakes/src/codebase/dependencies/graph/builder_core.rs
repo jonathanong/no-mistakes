@@ -193,17 +193,7 @@ impl DepGraph {
             })?;
             graph.merge_canonical_edges(selector_edges);
         }
-        if let Some(observer) = session.observer().filter(|observer| observer.verbose()) {
-            let mut nodes = HashSet::new();
-            let mut edges = 0_u64;
-            for (from, neighbors) in graph.edges.forward() {
-                nodes.insert(from);
-                edges += neighbors.len() as u64;
-                nodes.extend(neighbors.iter().map(|(to, _)| to));
-            }
-            observer.increment("graph.nodes", nodes.len() as u64);
-            observer.increment("graph.edges", edges);
-        }
+        record_graph_observability(&graph, &session);
         Ok(graph)
     }
 }

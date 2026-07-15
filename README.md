@@ -73,8 +73,9 @@ cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 
 - Local and deterministic: no services, databases, remote AI calls, or
   persistent filesystem caches.
-- One pass per invocation: discover files once, parse TS/JS once for requested
-  facts, and reuse shared fact maps across checks.
+- One pass per invocation: discover files once, read each requested source
+  once, parse it once per required semantic mode, and reuse shared fact maps
+  across checks.
 - Programmatic parity: stable CLI capabilities also expose async N-API
   functions for Node callers.
 - Explicit configuration: route roots, queue factories, test projects, and

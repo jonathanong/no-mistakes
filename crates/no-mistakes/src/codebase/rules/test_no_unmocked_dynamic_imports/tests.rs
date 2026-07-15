@@ -148,6 +148,7 @@ fn next_line_disable_and_unresolved_import_branches_are_reported() {
         file: &disabled,
         resolver: &resolver,
         graph: &graph,
+        file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
         findings: &mut findings,
@@ -169,6 +170,7 @@ fn next_line_disable_and_unresolved_import_branches_are_reported() {
         file: &disabled,
         resolver: &resolver,
         graph: &graph,
+        file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
         findings: &mut findings,
@@ -205,6 +207,7 @@ fn mocked_dynamic_import_target_skips_transitive_dependency_checks() {
         file: &test_file,
         resolver: &resolver,
         graph: &graph,
+        file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
         findings: &mut findings,
@@ -257,6 +260,7 @@ fn reachable_dependencies_respect_skips_and_disable_comments() {
                 config: &config,
                 resolver: &resolver,
                 graph: &graph,
+                file_universe: None,
                 shared: None,
                 file_cache: None,
             },
@@ -286,6 +290,7 @@ fn repeated_dynamic_import_target_uses_dependency_cache() {
         file: &test_file,
         resolver: &resolver,
         graph: &graph,
+        file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
         findings: &mut findings,
@@ -302,7 +307,7 @@ fn repeated_dynamic_import_target_uses_dependency_cache() {
         .get(&target)
         .map(|r| r.clone())
         .expect("target should be cached after first call");
-    let expected_deps = runtime_deps(&graph, target.clone());
+    let expected_deps = runtime_deps(&graph, target.clone(), None);
     assert_eq!(*cached_deps, expected_deps);
 
     let cache_len = dependency_cache.len();
@@ -358,6 +363,7 @@ fn reachable_check_shared_skips_dep_with_disable_file_comment() {
             config: &config,
             resolver: &resolver,
             graph: &graph,
+            file_universe: None,
             shared: Some(&shared),
             file_cache: None,
         },
@@ -410,6 +416,7 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
             config: &config,
             resolver: &resolver,
             graph: &graph,
+            file_universe: None,
             shared: Some(&shared),
             file_cache: None,
         },
@@ -463,6 +470,7 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
             config: &config,
             resolver: &resolver,
             graph: &graph,
+            file_universe: None,
             shared: Some(&shared),
             file_cache: None,
         },
@@ -481,9 +489,9 @@ fn check_inner_propagates_reachable_dep_disk_error() {
     let test_file = root.join("tests").join("bad.test.mts");
     let unreadable = root.join("src").join("unreadable.mts");
     let mut forward = HashMap::new();
-    forward.insert(test_file.clone(), vec![unreadable]);
+    forward.insert(test_file.clone(), vec![unreadable.clone()]);
     let graph = from_raw_maps(root.clone(), forward, Default::default());
-    let files = vec![test_file];
+    let files = vec![test_file, unreadable];
     let manual_mocks = HashSet::new();
     let error = check_inner(&root, &config, &files, &tsconfig, &graph, &manual_mocks).unwrap_err();
     assert!(error.to_string().contains("failed to read dependency file"));

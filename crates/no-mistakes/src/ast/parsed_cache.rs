@@ -1,4 +1,3 @@
-use anyhow::Context;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
 use oxc_span::SourceType;
@@ -48,6 +47,9 @@ pub(crate) struct ParsedProgramCache {
 
 #[cfg(test)]
 pub(super) mod tests;
+
+mod parse;
+use parse::parse_program;
 
 impl ParsedProgramCache {
     pub(crate) fn with_program<T>(
@@ -131,7 +133,12 @@ impl ParsedProgramCache {
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
     ) -> Result<T, String> {
-        let cached = self.cached_program(path, source, ParseMode::LegacySymbols, on_parse)?;
+        let mode = if legacy_symbols_share_standard_parse(path) {
+            ParseMode::Standard
+        } else {
+            ParseMode::LegacySymbols
+        };
+        let cached = self.cached_program(path, source, mode, on_parse)?;
         cached.with_dependent(|owner, parsed| match &parsed.panic_error {
             Some(error) => Err(error.clone()),
             None => Ok(analyze(
@@ -161,62 +168,11 @@ impl ParsedProgramCache {
     }
 }
 
-fn parse_program(path: &Path, source: &str, mode: ParseMode) -> Result<CachedProgram, String> {
-    let source_type = source_type(path, mode)
-        .with_context(|| format!("unsupported JavaScript/TypeScript file: {}", path.display()))
-        .map_err(|error| error.to_string())?;
-    let owner = ProgramOwner {
-        allocator: Allocator::default(),
-        source: source.to_string(),
-        source_type,
+pub(super) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
+    let Ok(source_type) = SourceType::from_path(path) else {
+        return false;
     };
-    CachedProgram::try_new(owner, |owner| {
-        let parsed = crate::ast::parse(path, &owner.allocator, &owner.source, owner.source_type);
-        let strict_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
-            Some(
-                parsed
-                    .diagnostics
-                    .first()
-                    .map(|error| format!("{error:?}"))
-                    .unwrap_or("unknown error (parser panicked)".to_string()),
-            )
-        } else {
-            None
-        };
-        let diagnostic_error = (parsed.panicked || !parsed.diagnostics.is_empty()).then(|| {
-            crate::codebase::ts_source::format_parse_diagnostic(path, &parsed.diagnostics)
-        });
-        let panic_error = parsed.panicked.then(|| {
-            let detail = parsed
-                .diagnostics
-                .first()
-                .map(|error| format!("{error:?}"))
-                .unwrap_or("unknown error (parser panicked)".to_string());
-            format!("failed to parse TypeScript source: {detail}")
-        });
-        Ok(ParsedProgram {
-            program: parsed.program,
-            strict_error,
-            diagnostic_error,
-            panic_error,
-        })
-    })
-}
-
-fn source_type(path: &Path, mode: ParseMode) -> anyhow::Result<SourceType> {
-    match mode {
-        ParseMode::Standard => SourceType::from_path(path).map_err(Into::into),
-        ParseMode::TypeScriptFallback => SourceType::from_path(path).or(Ok(SourceType::ts())),
-        ParseMode::LegacySymbols => {
-            let is_tsx = matches!(
-                path.extension().and_then(|extension| extension.to_str()),
-                Some("tsx" | "jsx")
-            );
-            Ok(if is_tsx {
-                SourceType::tsx()
-            } else {
-                SourceType::ts()
-            })
-        }
-    }
+    !source_type.is_javascript()
+        && !source_type.is_typescript_definition()
+        && source_type.is_unambiguous()
 }

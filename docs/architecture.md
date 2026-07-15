@@ -28,12 +28,22 @@ Each CLI invocation is self-contained:
 1. Resolve root, tsconfig, config, entrypoints, and requested relationships.
 2. Create a request-scoped `AnalysisDataset`, discover visible project files once,
    and assign stable lexical file identities.
-3. Read each requested file once and parse eligible TS/JS files once for the
-   union of facts required by the invocation.
-4. Build graph edges and symbol indexes once per normalized effective plan and
+3. Read each requested file once and plan the union of facts required by the
+   invocation.
+4. Parse each file once per required semantic parse mode, then build graph
+   edges and symbol indexes once per normalized effective plan and
    file universe.
 5. Query the graph or shared fact maps.
 6. Emit deterministic output.
+
+Grammar, module kind, and declaration interpretation are fixed when OXC
+constructs a parser. A mixed `analyzeProject()` request that needs both normal
+extension-based semantics and the legacy list-symbols TypeScript interpretation
+therefore performs one cached parse in each distinct required mode. Ordinary
+`.ts` and `.tsx` inputs share a physical parse when their modes are equivalent;
+JavaScript-family, explicit module-kind, and declaration inputs do not. Legacy
+results remain isolated to list-symbols output, while graph and check facts
+retain extension-based semantics.
 
 No state is trusted across invocations. Persistent graph caches, daemons,
 databases, and filesystem cache directories are intentionally outside the
@@ -59,7 +69,8 @@ durations are labeled non-additive because they overlap.
 One-pass fixture tests enforce these ceilings:
 
 1. One discovery per normalized root.
-2. At most one physical source read and parse attempt per requested path.
+2. At most one physical source read per requested path and one parse attempt
+   per `(normalized path, semantic mode)` key.
 3. One config or tsconfig parse per normalized effective manifest path,
    including cached failures.
 4. One resolver computation per normalized resolution key, including misses.
@@ -81,7 +92,7 @@ The main graph pipeline is centered in `no-mistakes`:
 | Request analysis | `SharedTraversalContext` | Owns shared immutable facts, the canonical resolver, and normalized graph/symbol caches. |
 | File universe | `FileInventory`, `GraphFiles` | Assigns stable lexical file identities and exposes the selected visible/indexable views. |
 | Source text | `SourceStore` | Lazily memoizes successful and failed reads without changing consumer-specific error policy. |
-| TS/JS facts | `TsFactPlan`, `TsFileFacts`, `TsFactMap` | Selects and stores facts extracted from one OXC parse per source file. |
+| TS/JS facts | `TsFactPlan`, `TsFileFacts`, `TsFactMap` | Selects and stores facts extracted from one OXC parse per required semantic mode. |
 | Import resolution | `ImportResolver` | Resolves relative imports and tsconfig aliases using an invocation-scoped cache. |
 | Graph build | `DepGraph`, `GraphBuildPlan` | Builds forward and reverse adjacency maps once per normalized plan and file universe. |
 | Traversal | `deps_of`, `dependents_of`, `related` | Runs BFS over the canonical graph with optional edge and path filters. |

@@ -36,14 +36,20 @@ fn shared_traversal_keeps_the_session_owned_seeded_dataset() {
     let visible_paths =
         std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::new(&root));
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    let shared = SharedTraversalContext::prepare_with_snapshot_and_session_and_optional_check_plan(
+    let build_plan = graph::GraphBuildPlan::all();
+    let shared = SharedTraversalContext::prepare_with_snapshot_session_check_and_framework_plan(
         root.clone(),
         None,
         None,
-        graph::GraphBuildPlan::all(),
-        std::sync::Arc::clone(&visible_paths),
-        std::sync::Arc::clone(&session),
-        false,
+        build_plan,
+        SnapshotTraversalPreparation {
+            visible_paths: std::sync::Arc::clone(&visible_paths),
+            session: std::sync::Arc::clone(&session),
+            include_check_plan: false,
+            framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(
+                build_plan,
+            ),
+        },
     )
     .unwrap();
 
@@ -337,10 +343,7 @@ fn shared_traversal_reuses_workspace_manifest_documents_across_lazy_and_symbol_p
     )
     .unwrap();
     let baseline_work = observer.snapshot().work;
-    let baseline = baseline_work
-        .get("manifest.parses")
-        .copied()
-        .unwrap_or(0);
+    let baseline = baseline_work.get("manifest.parses").copied().unwrap_or(0);
     let baseline_hits = baseline_work
         .get("manifest.cache_hits")
         .copied()
@@ -367,9 +370,7 @@ fn shared_traversal_reuses_workspace_manifest_documents_across_lazy_and_symbol_p
         let work = observer.snapshot().work;
         assert_eq!(work["manifest.parses"], baseline, "{work:#?}");
         assert_eq!(
-            work.get("manifest.cache_hits")
-                .copied()
-                .unwrap_or_default(),
+            work.get("manifest.cache_hits").copied().unwrap_or_default(),
             baseline_hits,
             "{work:#?}",
         );

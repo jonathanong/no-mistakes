@@ -104,9 +104,9 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
         "test_no_unmocked_dynamic_imports.dependency_cache_prepopulate",
         || {
             test_files.par_iter().for_each(|file| {
-                dependency_cache
-                    .entry(file.clone())
-                    .or_insert_with(|| Arc::new(runtime_deps(graph, file.clone())));
+                dependency_cache.entry(file.clone()).or_insert_with(|| {
+                    Arc::new(runtime_deps(graph, file.clone(), Some(&visible_files)))
+                });
             });
         },
     );
@@ -151,6 +151,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                             file: &file,
                             resolver: &resolver,
                             graph,
+                            file_universe: Some(&visible_files),
                             mocks: &mocks,
                             dependency_cache: &dependency_cache,
                             findings: &mut local_findings,
@@ -167,6 +168,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                             config,
                             resolver: &resolver,
                             graph,
+                            file_universe: Some(&visible_files),
                             shared: Some(shared),
                             file_cache: None,
                         },

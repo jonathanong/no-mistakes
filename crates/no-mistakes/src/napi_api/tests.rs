@@ -35,14 +35,6 @@ fn fixture(category: &str, name: &str) -> String {
     .to_string()
 }
 
-fn saved_fixture(path: &[&str]) -> String {
-    let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
-    root.extend(path);
-    crate::codebase::ts_resolver::normalize_path(&root)
-        .display()
-        .to_string()
-}
-
 #[test]
 fn version_returns_crate_version() {
     assert_eq!(version_impl(), env!("CARGO_PKG_VERSION"));

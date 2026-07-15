@@ -20,20 +20,23 @@ impl PreparedScopePlan {
             prepare_import_usage_views(options, &root, &session)?;
         let build_plan = graph_build_plan(options)?;
         let framework_plan = framework_preparation_plan(options, build_plan)?;
-        let mut traversal = SharedTraversalContext::
-            prepare_with_snapshot_session_check_and_framework_plan(
-            root.clone(),
-            options.tsconfig.as_deref().map(Path::new),
-            options.config.as_deref().map(Path::new),
-            build_plan,
-            visible_paths,
-            session.clone(),
-            options
-                .reports
-                .iter()
-                .any(|request| request.report_type == "check"),
-            framework_plan,
-        )?;
+        let include_check_plan = options
+            .reports
+            .iter()
+            .any(|request| request.report_type == "check");
+        let mut traversal =
+            SharedTraversalContext::prepare_with_snapshot_session_check_and_framework_plan(
+                root.clone(),
+                options.tsconfig.as_deref().map(Path::new),
+                options.config.as_deref().map(Path::new),
+                build_plan,
+                SnapshotTraversalPreparation {
+                    visible_paths,
+                    session: session.clone(),
+                    include_check_plan,
+                    framework_plan,
+                },
+            )?;
         let authoritative_report_files = authoritative_report_files(options, &root)?;
         traversal.add_explicit_roots(&authoritative_report_files);
         let check = options
@@ -171,5 +174,4 @@ impl PreparedScopePlan {
             session,
         })
     }
-
 }

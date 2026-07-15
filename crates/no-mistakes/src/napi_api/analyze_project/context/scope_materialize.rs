@@ -25,7 +25,6 @@ impl PreparedScopePlan {
             self.traversal
                 .prepare_canonical_graph_with_check_facts(&graph_facts)?;
         }
-        crate::ast::clear_request_parse_cache();
         let server = has_server_report(&self.options).then(|| {
             crate::server_routes::prepare_analysis_with_shared_facts_and_session(
                 &self.root,
@@ -58,10 +57,7 @@ impl PreparedScopePlan {
 }
 
 impl ScopeFactPlan {
-    fn batch_request(
-        &self,
-        root: &Path,
-    ) -> crate::codebase::check_facts::BatchCheckFactRequest {
+    fn batch_request(&self, root: &Path) -> crate::codebase::check_facts::BatchCheckFactRequest {
         crate::codebase::check_facts::BatchCheckFactRequest {
             root: root.to_path_buf(),
             files: self.files.clone(),
