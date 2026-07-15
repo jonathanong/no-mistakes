@@ -14,7 +14,7 @@ fn build_entry(
         abs_path.extension().and_then(|s| s.to_str()),
         Some("tsx") | Some("jsx")
     );
-    let symbols: FileSymbols = extract_symbols(&source, is_tsx)
+    let symbols: FileSymbols = extract_symbols_at_path(abs_path, &source, is_tsx)
         .context(format!("extracting symbols from {}", abs_path.display()))?;
 
     build_entry_from_symbols(

@@ -51,19 +51,26 @@ pub struct FileSymbols {
 
 /// Extract top-level exports and named imports from TypeScript/TSX source.
 pub fn extract_symbols(source: &str, is_tsx: bool) -> Result<FileSymbols> {
+    let sentinel = if is_tsx { "symbols.tsx" } else { "symbols.ts" };
+    extract_symbols_at_path(std::path::Path::new(sentinel), source, is_tsx)
+}
+
+/// Extract top-level exports and named imports from a file-backed source.
+///
+/// Callers that know the source file must use this entrypoint so parser
+/// observation and diagnostics are attributed to the real path.
+pub fn extract_symbols_at_path(
+    path: &std::path::Path,
+    source: &str,
+    is_tsx: bool,
+) -> Result<FileSymbols> {
     let allocator = Allocator::default();
     let source_type = if is_tsx {
         SourceType::tsx()
     } else {
         SourceType::ts()
     };
-    let sentinel = if is_tsx { "symbols.tsx" } else { "symbols.ts" };
-    let ret = crate::ast::parse(
-        std::path::Path::new(sentinel),
-        &allocator,
-        source,
-        source_type,
-    );
+    let ret = crate::ast::parse(path, &allocator, source, source_type);
     if ret.panicked {
         let detail = ret
             .diagnostics

@@ -24,6 +24,29 @@ fn signature_parser_count_fixture_root() -> PathBuf {
 }
 
 #[test]
+fn file_backed_symbol_workers_report_absolute_parse_paths() {
+    let source = signature_parser_count_fixture_root();
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let files = ["consumer.mts", "consumer.test.mts", "utils.mts"];
+    let args = args_for(&root, files.to_vec(), Format::Json);
+
+    crate::ast::begin_parse_count(&root);
+    let (entries, _) = collect_entries(&args).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(entries.len(), files.len());
+    assert_eq!(counts.len(), files.len(), "{counts:?}");
+    // These parses happen on Rayon workers. Keeping exact absolute keys here
+    // prevents a source-only sentinel from hiding or cross-attributing them.
+    for file in files {
+        assert_eq!(counts.get(&root.join(file)), Some(&1), "{counts:?}");
+    }
+    assert!(!counts.contains_key(Path::new("symbols.ts")), "{counts:?}");
+    assert!(!counts.contains_key(Path::new("symbols.tsx")), "{counts:?}");
+}
+
+#[test]
 fn signature_impact_parses_each_source_file_once() {
     let source = signature_parser_count_fixture_root();
     let fixture = crate::test_support::materialize_saved_fixture(&source);

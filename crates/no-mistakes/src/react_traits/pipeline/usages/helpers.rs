@@ -1,7 +1,7 @@
 //! Pure helpers for the `react usages` pipeline: include parsing, target
 //! splitting, symbol matching, story/test classification, and prop type lookup.
 
-use crate::codebase::ts_symbols::{extract_symbols, ExportKind};
+use crate::codebase::ts_symbols::{extract_symbols_at_path, ExportKind};
 use anyhow::Result;
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -80,7 +80,7 @@ pub(crate) fn prop_type_names(path: &Path) -> Vec<String> {
         path.extension().and_then(|e| e.to_str()),
         Some("tsx") | Some("jsx")
     );
-    let Ok(symbols) = extract_symbols(&source, is_tsx) else {
+    let Ok(symbols) = extract_symbols_at_path(path, &source, is_tsx) else {
         return Vec::new();
     };
     prop_type_names_from_symbols(&symbols)
