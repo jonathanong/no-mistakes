@@ -1,7 +1,6 @@
 use super::*;
 use no_mistakes::config::v2::{load_v2_config, NoMistakesConfig};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use tempfile::TempDir;
 
 #[path = "tests/mixed_availability.rs"]
@@ -55,8 +54,8 @@ fn materialized_git_case(path: &str) -> (TempDir, PathBuf) {
         .join("../../test-cases")
         .join(path);
     let case = crate::test_support::materialize_saved_fixture(&source);
-    git_init(case.path());
-    git_add_all(case.path());
+    crate::test_support::git_init(case.path());
+    crate::test_support::git_add_all(case.path());
     let root = no_mistakes::codebase::ts_resolver::normalize_path(&case.path().join("fixture"));
     (case, root)
 }
@@ -88,38 +87,6 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
     let mut inferred_roots =
         no_mistakes::codebase::config::InferredRoots::from_visible(root, visible_paths.as_ref());
     super::unique_exports_project_roots_with_inferred(root, config, &mut inferred_roots)
-}
-
-fn git_init(dir: &Path) {
-    let output = Command::new("git")
-        .args(["init", "-q", "--initial-branch=main"])
-        .current_dir(dir)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_INDEX_FILE")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "git init failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-}
-
-fn git_add_all(dir: &Path) {
-    let output = Command::new("git")
-        .args(["add", "."])
-        .current_dir(dir)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_INDEX_FILE")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "git add failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
 }
 
 fn write(dir: &Path, path: &str, content: &str) {
@@ -309,8 +276,8 @@ fn discover_check_file_views_derive_filesystem_scope_from_complete_universe() {
 #[test]
 fn repository_inventory_retains_files_pruned_from_source_views() {
     let fixture = crate::test_support::materialize_gitignore_fixture("banned-paths-source-skips");
-    git_init(fixture.path());
-    git_add_all(fixture.path());
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
     let root = no_mistakes::codebase::ts_resolver::normalize_path(fixture.path());
     let config = load_config(&root);
     let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
@@ -464,7 +431,7 @@ fn nextjs_project_without_single_config_root_is_ignored() {
 #[test]
 fn discover_check_files_preserves_roots_without_descending_into_gitignored_directory() {
     let dir = TempDir::new().unwrap();
-    git_init(dir.path());
+    crate::test_support::git_init(dir.path());
     write(dir.path(), ".gitignore", "dependency-store/\n");
     write(dir.path(), "web/fixtures/tracked.json", "{}");
     write(
@@ -477,7 +444,7 @@ fn discover_check_files_preserves_roots_without_descending_into_gitignored_direc
         ".no-mistakes.yml",
         "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n    include:\n      - \"**/fixtures/**\"\n    options:\n      bannedDomains:\n        - example.com\n",
     );
-    git_add_all(dir.path());
+    crate::test_support::git_add_all(dir.path());
 
     let config = load_config(dir.path());
     let files = discover_files(dir.path(), &config, &[], false);

@@ -57,8 +57,8 @@ fn git_and_known_no_git_roots_preserve_external_project_includes() {
 #[test]
 fn mixed_git_availability_walks_external_base_with_its_patterns_once() {
     let (_case, root) = materialized_root_fixture("external-project-include");
-    git_init(&root);
-    git_add_all(&root);
+    crate::test_support::git_init(&root);
+    crate::test_support::git_add_all(&root);
     let config = load_config(&root);
     let root_files = no_mistakes::codebase::ts_source::git_visible_files(&root)
         .expect("workspace fixture should have a git-visible root universe");
