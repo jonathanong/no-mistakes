@@ -114,6 +114,47 @@ fn git_visible_files_include_tracked_and_untracked_non_ignored_files() {
 }
 
 #[test]
+fn tagged_git_paths_separate_index_entries_from_untracked_entries() {
+    let views = parse_git_tagged_paths(
+        b"broken\0H \0H tracked file.mts\0S sparse.mts\0? untracked file.mts\0K killed.mts\0R deleted.mts\0",
+    );
+
+    assert_eq!(
+        views.visible,
+        vec![
+            PathBuf::from("deleted.mts"),
+            PathBuf::from("killed.mts"),
+            PathBuf::from("sparse.mts"),
+            PathBuf::from("tracked file.mts"),
+            PathBuf::from("untracked file.mts"),
+        ]
+    );
+    assert_eq!(
+        views.tracked,
+        vec![
+            PathBuf::from("deleted.mts"),
+            PathBuf::from("sparse.mts"),
+            PathBuf::from("tracked file.mts"),
+        ]
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn tagged_git_paths_preserve_non_utf8_path_bytes() {
+    use std::os::unix::ffi::OsStrExt;
+
+    let views = parse_git_tagged_paths(b"H src/non-utf8-\xff.mts\0");
+
+    assert_eq!(views.visible.len(), 1);
+    assert_eq!(
+        views.visible[0].as_os_str().as_bytes(),
+        b"src/non-utf8-\xff.mts"
+    );
+    assert_eq!(views.tracked, views.visible);
+}
+
+#[test]
 fn discover_files_falls_back_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     write(dir.path(), "src/main.mts", "");

@@ -195,6 +195,25 @@ fn dispatch_with_files_skips_disabled_rules() {
 }
 
 #[test]
+fn dispatch_with_files_keeps_supplied_banned_paths_authoritative() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/gitignore/banned-paths-tracked-only");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let supplied = fixture.path().join("untracked-visible.patch");
+
+    let findings = run_filesystem_rules_with_files(
+        fixture.path(),
+        Some(&fixture.path().join(".no-mistakes.yml")),
+        std::slice::from_ref(&supplied),
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].rule, BANNED_PATHS);
+    assert_eq!(findings[0].file, "untracked-visible.patch");
+}
+
+#[test]
 fn aggregate_finding_and_suppression_share_one_physical_read() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/no-empty-or-comments-only-files/fixture/fail");

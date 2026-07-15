@@ -16,8 +16,15 @@ fails so agents do not guess which config is authoritative.
 Automatic file discovery uses Git's visible file set: tracked files plus
 untracked files not excluded by `.gitignore`, `.git/info/exclude`, or global
 Git excludes. Tracked files remain visible even when they match an ignore
-pattern. Outside a Git checkout, `.gitignore` and `.ignore` files are still
-applied by the fallback walker.
+pattern. The request snapshot also retains a tracked-only view for
+repository-state rules such as `banned-paths`; that view contains files present
+in both the Git index and working tree, including tracked files that now match
+an ignore pattern, but excludes all untracked files. Both views come from the
+same Git discovery command and are reused throughout the request.
+
+Outside a Git checkout, `.gitignore` and `.ignore` files are still applied by
+the fallback walker. Because there is no Git index, rules that normally use the
+tracked-only view use this ignore-aware visible set instead.
 
 Explicit paths supplied through CLI flags or configuration remain authoritative
 and may name an ignored file. This exception applies to explicit configuration,

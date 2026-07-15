@@ -174,3 +174,4 @@ pub fn discover_source_files_from_visible(
 
 include!("discovery/helpers.rs");
 include!("discovery/visible.rs");
+include!("discovery/path_views.rs");

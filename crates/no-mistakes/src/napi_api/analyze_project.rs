@@ -38,6 +38,9 @@ mod options_tests;
 mod tests;
 #[cfg(test)]
 mod tests_dispatch;
+#[cfg(test)]
+#[path = "analyze_project/tracked_banned_paths_tests.rs"]
+mod tracked_banned_paths_tests;
 
 pub(crate) fn analyze_project_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<AnalyzeProjectOptions>(&options_json)?;
