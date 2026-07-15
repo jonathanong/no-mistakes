@@ -68,6 +68,7 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
         include_str!("../../codebase/rules/run/prepared/execution.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/helpers.rs"),
     );
     let rule_roots = include_str!("../../codebase/rules/mod.rs");
     let unique_exports = include_str!("../../codebase/unique_exports/with_facts/prepared.rs");
@@ -150,6 +151,7 @@ fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
         include_str!("../../codebase/rules/run/prepared/execution.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/helpers.rs"),
     );
 
     // Aggregate preparation must consume the session-owned manifest once and pass the loaded
@@ -204,6 +206,7 @@ fn aggregate_storybook_prepares_visible_tsconfig_per_project_root() {
 #[test]
 fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     let execution = include_str!("../../codebase/rules/run/prepared/execution.rs");
+    let helpers = include_str!("../../codebase/rules/run/prepared/execution/helpers.rs");
     let coordinator = execution
         .split("pub(super) fn run")
         .nth(1)
@@ -220,7 +223,10 @@ fn aggregate_rule_coordinator_delegates_variant_dispatch() {
 
     // Keep per-rule variant selection out of the aggregate coordinator so its
     // complexity remains bounded as additional rules are introduced.
-    assert!(execution.contains("fn storybook_findings("));
+    assert!(execution.contains("mod helpers;"));
+    assert!(execution.contains("use helpers::{storybook_findings, suppress_findings};"));
+    assert!(helpers.contains("pub(super) fn storybook_findings("));
+    assert!(helpers.contains("check_with_prepared_facts_and_inferred_and_session"));
     assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);
     assert!(!storybook_block.contains("check_with_prepared_facts_and_inferred"));
 }
