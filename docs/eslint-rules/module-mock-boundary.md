@@ -64,10 +64,10 @@ directory targets) are overridable via `reexportExtensions`. A specifier
 carrying a compiled output extension (`export * from "./leaf.js"`, the
 NodeNext/ESM TypeScript convention) resolves against the specific source
 extensions Node/TypeScript actually emit that output from — `.js` → `.ts`/
-`.tsx`, `.jsx` → `.tsx`, `.mjs` → `.mts`, `.cjs` → `.cts` — rather than the
-full candidate list, so it can't pick an unrelated sibling extension (e.g. a
-`.mts` file that happens to share a stem with the real `.ts` source) ahead of
-the correct one. Re-export cycles are detected and terminate safely. Comments
+`.tsx`, `.jsx` → `.tsx`, `.mjs` → `.mts`, `.cjs` → `.cts` — with no fallback to
+the generic candidate list or directory-index probing, since neither
+corresponds to any real resolver behavior for an already-extension-ful
+specifier. Re-export cycles are detected and terminate safely. Comments
 (line and block) are excluded from
 the scan, so a disabled `// export * from './leaf'` line is not treated as a
 live barrel edge; a string literal whose *contents* merely resemble re-export
@@ -78,6 +78,19 @@ star re-exports never include the target's default binding.
 Not followed, by design: named re-exports (`export { x } from './leaf'` — only
 `export *` propagates individual export names) and bare-specifier re-exports
 (`export * from 'some-package'` — out of the rule's internal-only scope).
+
+A specifier with no extension at all (`export * from './leaf'`) is not
+restricted away from `.mts`/`.cts` sources by default, even though strict
+`nodenext`/`node16` TypeScript module resolution never reaches those
+extensions without an explicit extension in the specifier. Whether that
+restriction applies depends on the project's `moduleResolution` setting —
+under `bundler` resolution (common with Vite/esbuild/Next.js), a
+no-extension specifier does reach `.mts`/`.cts` sources — and this scanner
+has no visibility into `tsconfig.json` to tell which mode a given project
+uses. Hardcoding the stricter rule would silently under-collect tags for
+`bundler`-resolution projects. A project that wants the stricter,
+`nodenext`-accurate behavior can already opt in via
+`reexportExtensions: [".ts", ".tsx", ...]`, omitting `.mts`/`.cts`.
 
 Name conflicts across multiple `export *` targets, and shadowing by an
 explicit local export, are not modeled — collected tagged names are combined

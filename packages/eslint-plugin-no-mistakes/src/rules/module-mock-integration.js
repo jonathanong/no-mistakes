@@ -128,21 +128,30 @@ const REEXPORT_EXTENSION_SOURCES = {
   ".cjs": [".cts"],
 };
 
+// A specifier carrying a recognized compiled extension only ever resolves through
+// its mapped source extensions (see REEXPORT_EXTENSION_SOURCES) — never through
+// the generic "append any configured extension" or directory-index fallbacks below,
+// which correspond to no real resolver behavior for an already-extension-ful path
+// (e.g. `./leaf.js` never resolves to a literal `leaf.js.ts` file or a `leaf.js/`
+// directory).
 function resolveReexportPath(fromPath, specifier, extensions) {
   const base = resolve(dirname(fromPath), specifier);
   const compiledExt = Object.keys(REEXPORT_EXTENSION_SOURCES).find((ext) =>
     specifier.endsWith(ext),
   );
   const stem = compiledExt ? base.slice(0, -compiledExt.length) : null;
-  const stemExtensions = compiledExt
-    ? REEXPORT_EXTENSION_SOURCES[compiledExt].filter((ext) => extensions.includes(ext))
-    : [];
-  const candidates = [
-    base,
-    ...stemExtensions.map((ext) => stem + ext),
-    ...extensions.map((ext) => base + ext),
-    ...extensions.map((ext) => join(base, `index${ext}`)),
-  ];
+  const candidates = compiledExt
+    ? [
+        base,
+        ...REEXPORT_EXTENSION_SOURCES[compiledExt]
+          .filter((ext) => extensions.includes(ext))
+          .map((ext) => stem + ext),
+      ]
+    : [
+        base,
+        ...extensions.map((ext) => base + ext),
+        ...extensions.map((ext) => join(base, `index${ext}`)),
+      ];
   for (const candidate of candidates) {
     if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
   }

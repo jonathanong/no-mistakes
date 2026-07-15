@@ -466,6 +466,27 @@ describe("module-mock-boundary barrel re-exports", () => {
       [],
     );
   });
+
+  it("does not fall back to generic extension/directory probing for a compiled-extension specifier", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedFallbackProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "fallback-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+  });
 });
 
 describe("module-mock-preserve-exports", () => {
