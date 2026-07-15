@@ -7,5 +7,5 @@ mod gitignore_fixture;
 #[cfg(feature = "test-instrumentation")]
 pub(crate) use git::{git_add_all, git_init};
 pub(crate) use gitignore_fixture::materialize_gitignore_fixture;
-#[cfg(feature = "test-instrumentation")]
+#[cfg(any(test, feature = "test-instrumentation"))]
 pub(crate) use gitignore_fixture::materialize_saved_fixture;
