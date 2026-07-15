@@ -148,6 +148,29 @@ fn import_usages_report_requires_shared_context() {
 }
 
 #[test]
+fn import_usages_report_reuses_shared_traversal_facts() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("import-usages"),
+            "reports": [{ "type": "importUsages", "filters": ["src/main.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let mut shared = prepare_shared_traversal(&options)
+        .unwrap()
+        .expect("import usages prepares shared traversal facts");
+
+    let result = import_usages_report(&options.reports[0], &options, Some(&mut shared)).unwrap();
+
+    assert!(result["files"][0]["imports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|row| row["kind"] == "require-resolve" && row["packageName"] == "@scope/pkg"));
+}
+
+#[test]
 fn analyze_project_rejects_unknown_report_type() {
     let error = analyze_project_json_impl(
         json!({

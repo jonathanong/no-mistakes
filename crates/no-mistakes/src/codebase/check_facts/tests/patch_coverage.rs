@@ -1,9 +1,20 @@
+use super::super::file::{collect_file_fact_variants_with_session, CheckFactVariant};
 use super::{collect_file_facts, CheckFactPlan};
 use crate::codebase::check_facts::{
     playwright_aggregate_facts, CheckFileFacts, PlaywrightSettingsKey,
 };
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+fn legacy_symbol_plan(path: &Path) -> CheckFactPlan {
+    CheckFactPlan {
+        symbols: true,
+        legacy_symbol_paths: std::collections::HashSet::from([
+            crate::codebase::ts_resolver::normalize_path(path),
+        ]),
+        ..CheckFactPlan::default()
+    }
+}
 
 #[test]
 fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
@@ -98,6 +109,44 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
 }
 
 #[test]
+fn legacy_symbol_facts_recover_symbols_with_a_parse_diagnostic() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/symbols-output/fixture"),
+    );
+    let file = root.join("src/recoverable-diagnostic.mts");
+    let facts = collect_file_facts(&root, &file, &legacy_symbol_plan(&file), None)
+        .expect("recoverable legacy parse retains facts");
+
+    assert!(facts.parsed);
+    assert!(facts.parse_error.is_some());
+    assert!(facts.symbols.is_some());
+    assert!(facts.ts.symbols.is_some());
+}
+
+#[test]
+fn legacy_symbol_facts_retain_a_meaningful_fatal_parse_error() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/napi/analyze-project-legacy-symbol-panic"),
+    );
+    let file = root.join("invalid.ts");
+    let facts = collect_file_facts(&root, &file, &legacy_symbol_plan(&file), None)
+        .expect("fatal legacy parse retains error facts");
+    let error = facts
+        .parse_error
+        .as_deref()
+        .expect("fatal legacy parse error is recorded");
+
+    assert!(
+        error.contains("failed to parse TypeScript source"),
+        "{error}"
+    );
+    assert_eq!(facts.ts.parse_error.as_deref(), Some(error));
+    assert!(facts.symbols.is_none());
+}
+
+#[test]
 fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
     use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 
@@ -124,20 +173,32 @@ fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
     let runner_configs =
         crate::integration_tests::prepare_runner_configs(&root, &config, &visible, &tsconfig);
 
-    let facts = collect_file_facts(
-        &root,
-        &file,
-        &CheckFactPlan {
-            integration_runner_configs: Some(std::sync::Arc::new(runner_configs)),
-            ..Default::default()
-        },
-        None,
-    )
-    .expect("prepared runner config parse error is retained as facts");
+    let plan = CheckFactPlan {
+        integration_runner_configs: Some(std::sync::Arc::new(runner_configs)),
+        ..Default::default()
+    };
+    let facts = collect_file_facts(&root, &file, &plan, None)
+        .expect("prepared runner config parse error is retained as facts");
 
     assert!(facts.integration_runner_config.is_some());
     assert!(facts
         .parse_error
         .as_deref()
         .is_some_and(|error| error.contains("vitest.syntax-error.mts")));
+
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let batched = collect_file_fact_variants_with_session(
+        &session,
+        &file,
+        &[CheckFactVariant {
+            root: &root,
+            plan: &plan,
+            playwright: None,
+        }],
+    )
+    .into_iter()
+    .next()
+    .flatten()
+    .expect("batched prepared runner config parse error is retained as facts");
+    assert!(batched.integration_runner_config.is_some());
 }
