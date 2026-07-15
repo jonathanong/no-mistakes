@@ -113,6 +113,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         root,
         config,
         files,
+        &snapshot.tracked_paths_from(files),
         &metadata_files,
         Some(sources.inventory().paths()),
     );

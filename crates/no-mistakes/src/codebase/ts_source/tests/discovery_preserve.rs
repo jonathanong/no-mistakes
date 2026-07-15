@@ -209,6 +209,13 @@ fn visible_snapshot_reuses_the_inventory_and_source_store_for_each_scope() {
     let source_path = crate::codebase::ts_source::normalize_discovery_path(
         &request_root.join("web/app/page.tsx"),
     );
+    let additional_path = crate::codebase::ts_source::normalize_discovery_path(
+        &additional_root.join("app/components/Broken.tsx"),
+    );
+    assert_eq!(
+        snapshot.tracked_paths_from(&[source_path.clone(), additional_path.clone()]),
+        [source_path.clone(), additional_path]
+    );
     let first = request_store.read_path(&source_path).unwrap();
     let second = request_store.read_path(&source_path).unwrap();
     assert!(std::sync::Arc::ptr_eq(&first, &second));
@@ -243,13 +250,12 @@ fn visible_snapshot_initializes_one_scoped_store_across_threads() {
 #[test]
 fn visible_snapshot_classifies_nested_git_scope_once() {
     let dir = saved_fixture("discovery-nested-git");
-    git_init(dir.path());
-    git_add_all(dir.path());
     let nested = dir.path().join("packages/nested");
     // Git metadata is necessarily runtime-only; the source hierarchy is a
     // saved fixture so this test mutates only repository boundaries.
     git_init(&nested);
-    git_add_all(&nested);
+    git_init(dir.path());
+    crate::test_support::git_add_force(dir.path(), &["root.ts"]);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
 
     let first = snapshot.source_store_for(&nested);
@@ -261,4 +267,69 @@ fn visible_snapshot_classifies_nested_git_scope_once() {
         .inventory()
         .classification_for_path(&nested_file)
         .is_some_and(crate::codebase::ts_source::FileClassification::is_lexical_file));
+    assert!(snapshot
+        .tracked_paths_from(std::slice::from_ref(&nested_file))
+        .is_empty());
+}
+
+#[test]
+fn visible_snapshot_tracks_only_existing_index_paths_inside_git() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/gitignore/banned-paths-tracked-only");
+    let dir = crate::test_support::materialize_saved_fixture(&source);
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_force(dir.path(), &["tracked.patch", "deleted.patch"]);
+    std::fs::remove_file(dir.path().join("deleted.patch")).unwrap();
+    std::fs::rename(
+        dir.path().join("gitignore-after.fixture"),
+        dir.path().join(".gitignore"),
+    )
+    .unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let visible = snapshot.paths_for(dir.path());
+    let candidates = vec![
+        dir.path().join("tracked.patch"),
+        dir.path().join("deleted.patch"),
+        dir.path().join("untracked-visible.patch"),
+        dir.path().join("untracked-ignored.patch"),
+    ];
+
+    assert!(visible.contains(&dir.path().join("tracked.patch")));
+    assert!(visible.contains(&dir.path().join("untracked-visible.patch")));
+    assert!(!visible.contains(&dir.path().join("deleted.patch")));
+    assert!(!visible.contains(&dir.path().join("untracked-ignored.patch")));
+    assert_eq!(
+        snapshot.tracked_paths_from(&candidates),
+        vec![dir.path().join("tracked.patch")]
+    );
+}
+
+#[test]
+fn visible_snapshot_treats_non_git_fallback_and_supplied_paths_as_authoritative() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/gitignore/banned-paths-tracked-only");
+    let dir = crate::test_support::materialize_saved_fixture(&source);
+    std::fs::rename(
+        dir.path().join("gitignore-after.fixture"),
+        dir.path().join(".gitignore"),
+    )
+    .unwrap();
+    let visible = dir.path().join("untracked-visible.patch");
+    let ignored = dir.path().join("untracked-ignored.patch");
+
+    let discovered = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    assert_eq!(
+        discovered.tracked_paths_from(&[visible.clone(), ignored.clone()]),
+        vec![visible.clone()]
+    );
+
+    let supplied = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
+        dir.path(),
+        &[visible.clone(), ignored.clone()],
+    );
+    assert_eq!(
+        supplied.tracked_paths_from(&[ignored.clone(), visible.clone()]),
+        vec![ignored, visible]
+    );
 }

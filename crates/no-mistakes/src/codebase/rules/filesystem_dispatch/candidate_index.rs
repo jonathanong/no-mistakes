@@ -28,11 +28,12 @@ impl RuleCandidateIndex {
         root: &Path,
         config: &NoMistakesConfig,
         files: &[PathBuf],
+        tracked_files: &[PathBuf],
         metadata_files: &[PathBuf],
         inventory_paths: Option<Arc<Vec<PathBuf>>>,
     ) -> Self {
         let root = crate::codebase::ts_resolver::normalize_path(root);
-        let mut plans = BTreeMap::<(Vec<PathBuf>, bool), Vec<&'static str>>::new();
+        let mut plans = BTreeMap::<(Vec<PathBuf>, bool, bool), Vec<&'static str>>::new();
         for rule_id in FILESYSTEM_RULE_IDS
             .iter()
             .copied()
@@ -42,19 +43,23 @@ impl RuleCandidateIndex {
                 .entry((
                     preserved::filesystem_rule_preserved_roots(&root, config, rule_id),
                     rule_id == FORBIDDEN_WORKSPACE_CLOSURE,
+                    rule_id == BANNED_PATHS,
                 ))
                 .or_default()
                 .push(rule_id);
         }
         let files = normalized_paths(files);
+        let tracked_files = normalized_paths(tracked_files);
         let metadata_files = normalized_paths(metadata_files);
         let skip = super::super::skip_dir_set(config);
         let mut by_rule = BTreeMap::new();
 
         // Rules with identical effective scopes share one candidate vector.
-        for ((preserved_roots, includes_metadata), rule_ids) in plans {
+        for ((preserved_roots, includes_metadata, tracked_only), rule_ids) in plans {
             let universe = if includes_metadata {
                 metadata_files.as_ref()
+            } else if tracked_only {
+                tracked_files.as_ref()
             } else {
                 files.as_ref()
             };

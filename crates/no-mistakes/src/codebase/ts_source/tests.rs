@@ -2,8 +2,9 @@ use super::{
     discover_files, discover_files_from_visible, discover_source_files,
     discover_source_files_from_visible, discover_visible_paths, format_parse_diagnostic,
     git_visible_files, has_disable_comment, has_disable_file_comment, has_disable_line_comment,
-    is_skipped_dir, is_test_file, line_number, normalize_discovery_path, relative_slash_path,
-    starts_with_use_client, static_property_key_name, unwrap_ts_wrappers, walk_files,
+    is_skipped_dir, is_test_file, line_number, normalize_discovery_path, parse_git_tagged_paths,
+    relative_slash_path, starts_with_use_client, static_property_key_name, unwrap_ts_wrappers,
+    walk_files,
 };
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, ObjectPropertyKind, Statement};

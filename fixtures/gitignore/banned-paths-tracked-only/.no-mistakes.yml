@@ -1,0 +1,7 @@
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+        - glob: "**/*.patch"
+          message: repository patch files are not allowed

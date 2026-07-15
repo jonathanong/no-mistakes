@@ -16,7 +16,8 @@ fn fixture() -> (PathBuf, NoMistakesConfig, Arc<Vec<PathBuf>>) {
 #[test]
 fn classification_matches_legacy_rule_views_and_reuses_owned_results() {
     let (root, config, files) = fixture();
-    let index = RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &files, None);
+    let index =
+        RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &files, &files, None);
 
     for rule_id in FILESYSTEM_RULE_IDS
         .iter()
@@ -84,6 +85,7 @@ fn rust_exclusivity_tracks_enabled_non_rust_candidate_overlap() {
         &path_specific_non_rust,
         &files,
         &files,
+        &files,
         Some(Arc::clone(&files)),
     );
     assert_eq!(
@@ -114,8 +116,14 @@ fn rust_exclusivity_tracks_enabled_non_rust_candidate_overlap() {
         ],
         ..Default::default()
     };
-    let shared =
-        RuleCandidateIndex::prepare_with_inventory(&root, &overlapping, &files, &files, None);
+    let shared = RuleCandidateIndex::prepare_with_inventory(
+        &root,
+        &overlapping,
+        &files,
+        &files,
+        &files,
+        None,
+    );
     assert!(shared.exclusive_rust_candidates().is_empty());
 }
 
@@ -139,7 +147,8 @@ fn classification_normalizes_deduplicates_and_keeps_metadata_rule_context() {
     ];
     let metadata = vec![package.clone(), metadata_context.clone()];
 
-    let index = RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &metadata, None);
+    let index =
+        RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &files, &metadata, None);
     let candidates = index.candidates(FORBIDDEN_WORKSPACE_CLOSURE);
 
     assert_eq!(
@@ -148,4 +157,40 @@ fn classification_normalizes_deduplicates_and_keeps_metadata_rule_context() {
     );
     assert!(candidates.contains(&metadata_context));
     assert!(candidates.windows(2).all(|pair| pair[0] < pair[1]));
+}
+
+#[test]
+fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
+    let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
+    let tracked = root.join("tracked.patch");
+    let untracked = root.join("untracked.patch");
+    let files = vec![tracked.clone(), untracked.clone()];
+    let tracked_files = vec![tracked.clone()];
+    let repository_rule = |rule: &str| RuleDef {
+        rule: rule.to_string(),
+        scope: Some(RuleScope::Repository),
+        ..Default::default()
+    };
+    let config = NoMistakesConfig {
+        rules: vec![
+            repository_rule(BANNED_PATHS),
+            repository_rule(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
+        ],
+        ..Default::default()
+    };
+
+    let index = RuleCandidateIndex::prepare_with_inventory(
+        &root,
+        &config,
+        &files,
+        &tracked_files,
+        &[],
+        None,
+    );
+
+    assert_eq!(index.candidates(BANNED_PATHS), [tracked]);
+    assert_eq!(
+        index.candidates(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
+        files
+    );
 }

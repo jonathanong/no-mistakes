@@ -1,0 +1,4 @@
+# Installed after tracked.patch enters the index to prove tracked files stay eligible.
+tracked.patch
+deleted.patch
+untracked-ignored.patch

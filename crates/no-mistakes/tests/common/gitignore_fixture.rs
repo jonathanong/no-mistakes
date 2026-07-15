@@ -1,6 +1,13 @@
 use std::path::PathBuf;
 
 pub fn materialize(name: &str) -> tempfile::TempDir {
+    let destination = materialize_saved(name);
+    let gitignore_fixture = destination.path().join(".gitignore.fixture");
+    std::fs::rename(gitignore_fixture, destination.path().join(".gitignore")).unwrap();
+    destination
+}
+
+pub fn materialize_saved(name: &str) -> tempfile::TempDir {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/gitignore")
         .join(name);
@@ -24,7 +31,5 @@ pub fn materialize(name: &str) -> tempfile::TempDir {
             std::fs::copy(entry.path(), &target).unwrap();
         }
     }
-    let gitignore_fixture = destination.path().join(".gitignore.fixture");
-    std::fs::rename(gitignore_fixture, destination.path().join(".gitignore")).unwrap();
     destination
 }

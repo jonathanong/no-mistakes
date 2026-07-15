@@ -17,7 +17,9 @@ pub fn run_filesystem_rules_with_files(
 /// Standalone entry point: discover files once, then reuse the with-files
 /// dispatcher for every enabled filesystem rule.
 pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let visible_paths = snapshot.paths_for(root);
+    let config = crate::config::v2::load_v2_config_from_visible(root, config_path, &visible_paths)?;
     if !FILESYSTEM_RULE_IDS
         .iter()
         .any(|rule_id| rule_enabled(&config, rule_id))
@@ -26,12 +28,13 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
     }
     let preserved_roots =
         preserved::filesystem_rule_target_roots(root, &config, FILESYSTEM_RULE_IDS);
-    let files = crate::codebase::ts_source::discover_files_preserving_roots(
+    let files = crate::codebase::ts_source::discover_files_preserving_roots_from_visible(
         root,
         &config.filesystem.skip_directories,
         &preserved_roots,
+        &visible_paths,
     );
-    run_filesystem_rules_with_config(root, &config, &files)
+    run_filesystem_rules_with_config_and_snapshot(root, &config, &files, &snapshot)
 }
 
 #[doc(hidden)]

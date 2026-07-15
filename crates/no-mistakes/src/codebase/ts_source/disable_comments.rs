@@ -16,10 +16,15 @@ pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSe
     })
 }
 
-fn git_ls_paths(root: &Path) -> Option<Vec<PathBuf>> {
+struct DiscoveredPathViews {
+    visible: Vec<PathBuf>,
+    tracked: Vec<PathBuf>,
+}
+
+fn git_ls_path_views(root: &Path) -> Option<DiscoveredPathViews> {
     let mut cmd = Command::new("git");
     cmd.current_dir(root);
-    cmd.arg("ls-files").arg("-z");
+    cmd.arg("ls-files").arg("-z").arg("-t");
     cmd.env_remove("GIT_DIR")
         .env_remove("GIT_COMMON_DIR")
         .env_remove("GIT_WORK_TREE")
@@ -31,15 +36,33 @@ fn git_ls_paths(root: &Path) -> Option<Vec<PathBuf>> {
     if !out.status.success() {
         return None;
     }
-    let mut files: Vec<PathBuf> = out
-        .stdout
+    Some(parse_git_tagged_paths(&out.stdout))
+}
+
+fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {
+    let mut visible = Vec::new();
+    let mut tracked = Vec::new();
+    for record in output
         .split(|byte| *byte == 0)
-        .filter(|path| !path.is_empty())
-        .map(git_output_path)
-        .collect();
-    files.sort();
-    files.dedup();
-    Some(files)
+        .filter(|record| !record.is_empty())
+    {
+        let [tag, b' ', path @ ..] = record else {
+            continue;
+        };
+        if path.is_empty() {
+            continue;
+        }
+        let path = git_output_path(path);
+        visible.push(path.clone());
+        if !matches!(*tag, b'?' | b'K') {
+            tracked.push(path);
+        }
+    }
+    visible.sort();
+    visible.dedup();
+    tracked.sort();
+    tracked.dedup();
+    DiscoveredPathViews { visible, tracked }
 }
 
 #[cfg(unix)]
