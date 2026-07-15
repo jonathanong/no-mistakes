@@ -127,7 +127,20 @@ jobs:
     name: Validate
     needs: prepare
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
+      - name: Reclaim runner disk space
+        uses: insightsengineering/disk-space-reclaimer@dae9fabcb8febe09f6585471948acf9dc9a57489 # v1.1.2
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          docker-images: true
+          large-packages: false
+          swap-storage: false
+          tools-cache: false
+
       - name: Download prepared source
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:

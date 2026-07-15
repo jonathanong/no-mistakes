@@ -50,6 +50,17 @@ fn fixture(path: &str) -> PathBuf {
     )
 }
 
+fn materialized_git_case(path: &str) -> (TempDir, PathBuf) {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases")
+        .join(path);
+    let case = crate::test_support::materialize_saved_fixture(&source);
+    git_init(case.path());
+    git_add_all(case.path());
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(&case.path().join("fixture"));
+    (case, root)
+}
+
 fn load_config(root: &Path) -> NoMistakesConfig {
     load_v2_config(root, None).unwrap()
 }
@@ -264,7 +275,7 @@ fn discover_check_files_preserves_included_fixture_roots() {
 
 #[test]
 fn discover_check_file_views_derive_filesystem_scope_from_complete_universe() {
-    let root = fixture("check-discovery/include-preserved-roots");
+    let (_case, root) = materialized_git_case("check-discovery/include-preserved-roots");
     let config = load_config(&root);
     let expected_filesystem =
         discover_files(&root, &config, &config.filesystem.skip_directories, false);
@@ -383,7 +394,7 @@ fn discover_check_file_views_preserve_unique_export_project_scope() {
 
 #[test]
 fn discover_check_file_views_scope_normalized_external_unique_export_project() {
-    let root = fixture("check-discovery/unique-exports-external-project");
+    let (_case, root) = materialized_git_case("check-discovery/unique-exports-external-project");
     let config = load_config(&root);
     let expected_filesystem =
         discover_files(&root, &config, &config.filesystem.skip_directories, true);

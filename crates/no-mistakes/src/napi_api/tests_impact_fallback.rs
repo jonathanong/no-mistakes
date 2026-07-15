@@ -30,8 +30,12 @@ fn tests_plan_json_binary_lockfile_fallback_matches_cli_opt_in_semantics() {
 
 #[test]
 fn tests_plan_json_diff_only_fallback_matches_cli_opt_in_semantics() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/tests-plan-lockfile/diff-only-fallback");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path();
+    crate::test_support::git_init(root);
+    crate::test_support::git_commit_all(root, "initial fixture");
     let diff = std::fs::read_to_string(root.join("lockfile.diff")).unwrap();
     for (fallback, expected) in [(false, false), (true, true)] {
         let output = tests_plan_json_impl(
