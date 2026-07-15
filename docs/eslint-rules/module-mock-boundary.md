@@ -59,14 +59,30 @@ Re-export following is on by default — it can only ever widen the allowed set
 (following `export *` adds names, never removes them), and it only reads
 `export *` syntax the author already wrote, not an inferred convention. The
 candidate extensions (`.mts`, `.ts`, `.mjs`, `.js`, `.cts`, `.cjs`, plus
-`index.*` for directory targets) are overridable via `reexportExtensions`.
-Re-export cycles are detected and terminate safely.
+`index.*` for directory targets) are overridable via `reexportExtensions`. A
+specifier carrying a compiled output extension (`export * from "./leaf.js"`,
+the NodeNext/ESM TypeScript convention) resolves against the same candidate
+extensions on the stripped stem, so it still finds `leaf.ts`. Re-export cycles
+are detected and terminate safely. Comments (line and block) are excluded from
+the scan, so a disabled `// export * from './leaf'` line is not treated as a
+live barrel edge; a string literal whose *contents* merely resemble re-export
+syntax is a narrower, accepted heuristic gap. A tagged `default` export is
+never propagated through an `export *` — matching ES module semantics, where
+star re-exports never include the target's default binding.
 
 Not followed, by design: named re-exports (`export { x } from './leaf'` — only
-`export *` propagates individual export names), bare-specifier re-exports
-(`export * from 'some-package'` — out of the rule's internal-only scope), and
-commented-out re-export lines (the scan is a text/regex match, like the tag
-scan itself, not a real parse).
+`export *` propagates individual export names) and bare-specifier re-exports
+(`export * from 'some-package'` — out of the rule's internal-only scope).
+
+Name conflicts across multiple `export *` targets, and shadowing by an
+explicit local export, are not modeled — collected tagged names are unioned
+across every reachable file. This is an accepted false-negative risk (a
+mock could in a rare, ambiguous-barrel case be allowed when the real
+barrel doesn't actually expose that name), not a false-positive one: it
+never rejects a mock that should be allowed, only in this narrow edge case
+might allow one that a full ES module resolver would reject. Widening the
+allowed set can't turn a previously-passing config into a failing one, which
+is the same monotonic guarantee `integrationExports` relies on throughout.
 
 Options: `internalSpecifiers`, `includePathPatterns`, `excludePathPatterns`,
 `requireLiteralSpecifiers`, `baseline`, and `integrationExports` (including its

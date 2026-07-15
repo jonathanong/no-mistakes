@@ -299,6 +299,68 @@ describe("module-mock-boundary barrel re-exports", () => {
       [],
     );
   });
+
+  it("does not propagate a tagged default export through export-star barrels", () => {
+    const mockDefault = `
+      import { vi } from "vitest";
+      vi.mock("@app/aws", () => ({ default: vi.fn() }));
+    `;
+    // Reached only through `export *`: ES modules never re-export a target's
+    // default binding this way, so the barrel must not expose it either.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "default-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+    // Mocked as the direct root specifier (no barrel involved): the tagged default
+    // export is collected normally.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "default-leaf.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("resolves a re-export specifier carrying a compiled .js extension to its .ts source", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "esm-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
 });
 
 describe("module-mock-preserve-exports", () => {

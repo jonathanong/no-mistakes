@@ -71,9 +71,14 @@ function tagPatterns(config) {
   return { declaration, defaultDeclaration, named };
 }
 
-function addTaggedNames(source, patterns, names) {
+// `includeDefault` is false for every file reached via `export *`: ES modules never
+// re-export a target's default binding through a star re-export, only through the
+// root specifier itself or an explicit named re-export.
+function addTaggedNames(source, patterns, names, includeDefault) {
   for (const match of source.matchAll(patterns.declaration)) names.add(match[1]);
-  for (const _match of source.matchAll(patterns.defaultDeclaration)) names.add("default");
+  if (includeDefault) {
+    for (const _match of source.matchAll(patterns.defaultDeclaration)) names.add("default");
+  }
   for (const match of source.matchAll(patterns.named)) {
     for (const part of (match[1] ?? "").split(",")) {
       const exported = part
@@ -106,10 +111,19 @@ function withoutComments(source) {
   return source.replace(COMMENT_OR_STRING, (match) => (/^['"`]/.test(match) ? match : ""));
 }
 
+// NodeNext/ESM TypeScript projects conventionally write re-export specifiers with
+// the compiled output extension (`./leaf.js`) even though the checked-in source is
+// `./leaf.ts`; stripping a known compiled extension lets the configured `extensions`
+// candidates resolve against the real source stem instead of probing `leaf.js.ts`.
+const COMPILED_JS_EXTENSIONS = [".js", ".mjs", ".cjs"];
+
 function resolveReexportPath(fromPath, specifier, extensions) {
   const base = resolve(dirname(fromPath), specifier);
+  const compiledExt = COMPILED_JS_EXTENSIONS.find((ext) => specifier.endsWith(ext));
+  const stem = compiledExt ? base.slice(0, -compiledExt.length) : null;
   const candidates = [
     base,
+    ...(stem ? extensions.map((ext) => stem + ext) : []),
     ...extensions.map((ext) => base + ext),
     ...extensions.map((ext) => join(base, `index${ext}`)),
   ];
@@ -130,13 +144,14 @@ function reexportTargets(source, fromPath, extensions) {
   return targets;
 }
 
-function collectTaggedExports(path, extensions, patterns, names, visited) {
+function collectTaggedExports(path, extensions, patterns, names, visited, includeDefault) {
   if (visited.has(path)) return; // guard against re-export cycles
   visited.add(path);
   const source = readFileSync(path, "utf8");
-  addTaggedNames(source, patterns, names);
+  addTaggedNames(source, patterns, names, includeDefault);
   for (const target of reexportTargets(source, path, extensions)) {
-    collectTaggedExports(target, extensions, patterns, names, visited);
+    // `export *` never re-exports `default`, at any recursion depth.
+    collectTaggedExports(target, extensions, patterns, names, visited, false);
   }
 }
 
@@ -147,7 +162,7 @@ function integrationExportNames(specifier, config) {
   if (!patterns) return null;
   const extensions = config.reexportExtensions ?? DEFAULT_REEXPORT_EXTENSIONS;
   const names = new Set();
-  collectTaggedExports(path, extensions, patterns, names, new Set());
+  collectTaggedExports(path, extensions, patterns, names, new Set(), true);
   return names;
 }
 
