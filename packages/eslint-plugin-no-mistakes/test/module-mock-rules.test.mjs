@@ -382,6 +382,48 @@ describe("module-mock-boundary barrel re-exports", () => {
       [],
     );
   });
+
+  it("does not propagate a named-export-list default alias through export-star barrels", () => {
+    const mockDefault = `
+      import { vi } from "vitest";
+      vi.mock("@app/aws", () => ({ default: vi.fn() }));
+    `;
+    // Reached only through `export *`: the tag sits on `export { x as default }`
+    // rather than an `export default` declaration, but the same ES module rule
+    // applies — star re-exports never include the target's default binding.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "named-default-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+    // Mocked as the direct root specifier (no barrel involved): the tagged
+    // `export { x as default }` alias is collected normally.
+    assert.deepEqual(
+      messages(
+        mockDefault,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "named-default-leaf.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
 });
 
 describe("module-mock-preserve-exports", () => {

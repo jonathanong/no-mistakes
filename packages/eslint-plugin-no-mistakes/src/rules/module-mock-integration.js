@@ -89,6 +89,7 @@ function addTaggedNames(source, patterns, names, includeDefault) {
         .split(/\s+as\s+/)
         .pop()
         ?.trim();
+      if (exported === "default" && !includeDefault) continue; // e.g. `export { x as default }`
       if (/^[A-Za-z_$][\w$]*$/.test(exported ?? "")) names.add(exported);
     }
   }
