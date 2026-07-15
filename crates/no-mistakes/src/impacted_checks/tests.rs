@@ -514,3 +514,22 @@ fn impacted_fanout_prepares_and_builds_the_graph_once() {
         1
     );
 }
+
+#[test]
+fn timing_tracker_emits_progress_without_diagnostics_observer() {
+    assert!(crate::diagnostics::current().is_none());
+
+    let mut successful = super::timing::TimingTracker::new(true, false);
+    successful.run_phase("success", || Ok(())).unwrap();
+    successful.finish_total();
+    assert!(successful.into_timings().is_none());
+
+    let mut failed = super::timing::TimingTracker::new(true, false);
+    let error = failed
+        .run_phase::<()>("failure", || anyhow::bail!("expected failure"))
+        .unwrap_err();
+    failed.fail_total();
+
+    assert_eq!(error.to_string(), "expected failure");
+    assert!(failed.into_timings().is_none());
+}

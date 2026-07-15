@@ -10,6 +10,11 @@ no-mistakes dependents src/utils.mts --test vitest --format paths
 Global `--jobs <N>` controls rayon worker count for commands that parallelize
 analysis.
 
+Global `--timings` prints invocation phase durations to stderr.
+`--verbose-timings` implies timings and adds deterministic work counters. Both
+flags are inherited by every nested command and may appear before or after the
+command name. See [Performance diagnostics](diagnostics.md).
+
 ## Command Index
 
 | Command | Purpose |

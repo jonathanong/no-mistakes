@@ -1,5 +1,60 @@
 use super::*;
 
+pub(super) fn check_with_prepared_facts_and_session(
+    root: &Path,
+    config: &NoMistakesConfig,
+    config_path: Option<&Path>,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
+    session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+) -> Result<Vec<RuleFinding>> {
+    let applications = config.rule_applications(RULE_ID);
+    if applications.is_empty() {
+        return Ok(Vec::new());
+    }
+    let options = applications
+        .iter()
+        .map(|rule| rule.rule_options())
+        .collect::<Vec<Options>>();
+    let plan = GraphBuildPlan::from_allowed(union_allowed_set(&options).as_ref());
+    shared::validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
+    let graph = match prepared_graph {
+        Some(prepared) => DepGraph::build_with_prepared_check_facts_and_session(
+            crate::codebase::dependencies::graph::PreparedCheckFactGraphBuildRequest {
+                root,
+                tsconfig,
+                plan,
+                files: shared.graph_file_universe().to_vec(),
+                config_path,
+                facts: shared,
+                prepared,
+            },
+            session.clone(),
+        )?,
+        None => DepGraph::build_with_complete_check_facts_and_session(
+            crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
+                root,
+                tsconfig,
+                plan,
+                files: shared.graph_file_universe().to_vec(),
+                config_path,
+                facts: shared,
+            },
+            session.clone(),
+        )?,
+    };
+    check_with_prepared_facts_and_graph(
+        root,
+        config,
+        config_path,
+        shared,
+        prepared_graph,
+        None,
+        &graph,
+    )
+}
+
 #[test]
 fn shared_facts_path_matches_standalone_check() {
     let root = fixture("forbidden-dependencies-basic");

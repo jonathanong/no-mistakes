@@ -7,8 +7,12 @@ fn collect_route_import_edges(
     facts: &dyn TsFactLookup,
     tsconfig: &TsConfig,
     graph_files: &GraphFiles,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Vec<Edge> {
-    let resolver = ImportResolver::new(tsconfig);
+    // Route imports intentionally resolve through the real filesystem before
+    // mapping symlink targets back to the visible universe. Keep that `None`
+    // scope distinct from ordinary graph resolution.
+    let resolver = ImportResolver::new_in_session(tsconfig, None, session);
     let import_files = files
         .par_iter()
         .filter_map(|path| facts.get_ts_facts(path).map(|file_facts| (path, file_facts)))

@@ -47,6 +47,7 @@ impl SharedCheckContext {
         &self,
         facts: &crate::codebase::check_facts::CheckFactMap,
         dependency_graph: Option<&std::sync::Arc<crate::codebase::dependencies::graph::DepGraph>>,
+        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
         use crate::codebase::rules::agents_md_max_size::advisories_with_files_and_sources;
@@ -63,6 +64,7 @@ impl SharedCheckContext {
         let sources = self.prepared.visible_paths.source_store_for(&self.root);
         let (react, queues, rules, integration, codebase, filesystem_rules) =
             run_domain_checks(DomainCheckInputs {
+                session,
                 root: &self.root,
                 config_path: &self.config_path,
                 tsconfig_path: &self.tsconfig_path,

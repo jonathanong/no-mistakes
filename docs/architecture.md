@@ -4,7 +4,7 @@
 architecture is optimized for AI agents that need reliable project facts while
 spending as few tokens and CPU cycles as possible.
 
-This document codifies the performance architecture behind issues `#126`, `#130`, `#132`, `#133`, and `#530`.
+This document codifies the performance architecture behind issues `#126`, `#130`, `#132`, `#133`, `#530`, and `#531`.
 
 ## Core Decisions
 
@@ -28,17 +28,59 @@ Each CLI invocation is self-contained:
 1. Resolve root, tsconfig, config, entrypoints, and requested relationships.
 2. Create a request-scoped `AnalysisDataset`, discover visible project files once,
    and assign stable lexical file identities.
-3. Read each requested file once and parse eligible TS/JS files once for the
-   union of facts required by the invocation.
-4. Build graph edges and symbol indexes once per normalized effective plan and
+3. Read each requested file once and plan the union of facts required by the
+   invocation.
+4. Parse each file once per required semantic parse mode, then build graph
+   edges and symbol indexes once per normalized effective plan and
    file universe.
 5. Query the graph or shared fact maps.
 6. Emit deterministic output.
+
+Grammar, module kind, and declaration interpretation are fixed when OXC
+constructs a parser. A mixed `analyzeProject()` request that needs both normal
+extension-based semantics and the legacy list-symbols TypeScript interpretation
+therefore performs one cached parse in each distinct required mode. Ordinary
+`.ts` and `.tsx` inputs share a physical parse when their modes are equivalent;
+JavaScript-family, explicit module-kind, and declaration inputs do not. Legacy
+results remain isolated to list-symbols output, while graph and check facts
+retain extension-based semantics.
 
 No state is trusted across invocations. Persistent graph caches, daemons,
 databases, and filesystem cache directories are intentionally outside the
 architecture. If a future feature needs speedups, prefer reducing the per-run
 work or sharing more in-memory facts during that run.
+
+### Analysis session and observability
+
+`AnalysisSession` owns the invocation observer, root datasets, parser gateway,
+and resolver caches. Each root's `AnalysisDataset` owns the canonical visible
+inventory and `SourceStore`; its config and tsconfig result caches are keyed by
+normalized effective paths so distinct same-root report scopes cannot reuse the
+first scope's manifest. Automatic and explicit aliases for the same effective
+path share one entry. Source reads and manifest loads memoize both successes and
+failures; graph and traversal caches use normalized effective plans.
+
+The session optionally carries one `InvocationObserver`. When diagnostics are
+disabled the observer is `None`: hot paths branch before reading the clock and
+do not allocate work ledgers. With `--verbose-timings`, the same gateways expose
+deterministic aggregate counts and keyed test snapshots. Independent Rayon
+durations are labeled non-additive because they overlap.
+
+One-pass fixture tests enforce these ceilings:
+
+1. One discovery per normalized root.
+2. At most one physical source read per requested path and one parse attempt
+   per `(normalized path, semantic mode)` key.
+3. One config or tsconfig parse per normalized effective manifest path,
+   including cached failures.
+4. One resolver computation per normalized resolution key, including misses.
+5. At most one graph/index build per effective request plan.
+6. One traversal computation per roots/direction/edge-set/depth/symbol-mode key.
+
+Lazy import-only traversal remains deliberately free of canonical graph builds.
+It reuses any prepared per-file facts already supplied by an enclosing request,
+then reads and parses only missing files reached through the import frontier. It
+never eagerly prepares the full indexable universe for the lazy query itself.
 
 ## Current Pipeline Shape
 
@@ -50,7 +92,7 @@ The main graph pipeline is centered in `no-mistakes`:
 | Request analysis | `SharedTraversalContext` | Owns shared immutable facts, the canonical resolver, and normalized graph/symbol caches. |
 | File universe | `FileInventory`, `GraphFiles` | Assigns stable lexical file identities and exposes the selected visible/indexable views. |
 | Source text | `SourceStore` | Lazily memoizes successful and failed reads without changing consumer-specific error policy. |
-| TS/JS facts | `TsFactPlan`, `TsFileFacts`, `TsFactMap` | Selects and stores facts extracted from one OXC parse per source file. |
+| TS/JS facts | `TsFactPlan`, `TsFileFacts`, `TsFactMap` | Selects and stores facts extracted from one OXC parse per required semantic mode. |
 | Import resolution | `ImportResolver` | Resolves relative imports and tsconfig aliases using an invocation-scoped cache. |
 | Graph build | `DepGraph`, `GraphBuildPlan` | Builds forward and reverse adjacency maps once per normalized plan and file universe. |
 | Traversal | `deps_of`, `dependents_of`, `related` | Runs BFS over the canonical graph with optional edge and path filters. |
@@ -219,6 +261,23 @@ When adding a new analyzer:
 7. Use in-memory caches only.
 8. Sort outputs for determinism.
 9. Add fixture-based regression tests.
+10. Route physical work through `AnalysisSession` and add an exact work-count
+    assertion for any new gateway category.
+
+## Performance regression suite
+
+`crates/no-mistakes/benches/core_analysis.rs` is the single checked-in
+Criterion-compatible harness. It uses `fixtures/performance/core-analysis`
+and measures only in-process APIs: lazy traversal, fact extraction, canonical
+graph build/query, workspace load/resolution, symbols, aggregate checks, reused
+multi-report analysis, impacted checks, and disabled/timings/verbose observer
+overhead. Every workload runs a preflight that validates stable, fixture-specific
+output invariants before the measured loop.
+
+CI builds the harness once for CodSpeed CPU simulation and memory instrumentation
+and runs those modes serially. New workloads must use checked-in fixtures,
+`BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
+and must not generate repositories or launch the CLI as a subprocess.
 
 ## Anti-Patterns
 
@@ -242,13 +301,12 @@ Already aligned:
 3. `DepGraph` stores forward and reverse maps.
 4. Many file and edge collectors use `rayon`.
 5. The top-level `check` command shares facts and parallelizes domain checks.
+6. `TsFactPlan` and `TsFileFacts` cover route, queue, HTTP, and process facts,
+   and aggregate consumers reuse them through the unified `TsFactMap`.
 
 Still to converge:
 
-1. Expand `TsFactPlan` and `TsFileFacts` for route, queue, HTTP, process, and
-   other domain-specific facts that currently read source independently.
-2. Make graph construction consume the unified fact map wherever possible.
-3. Keep lazy query paths explicit so they do not become hidden duplicate parse
+1. Keep lazy query paths explicit so they do not become hidden duplicate parse
    passes.
-4. Continue replacing serial shared mutation with concurrent caches or
+2. Continue replacing serial shared mutation with concurrent caches or
    thread-local collection plus deterministic merge.

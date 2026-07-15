@@ -78,6 +78,20 @@ pub fn check_with_prepared_facts(
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<Vec<IntegrationFinding>> {
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    check_with_prepared_facts_and_session(root, config, shared, tsconfig, visible_paths, &session)
+}
+
+#[doc(hidden)]
+pub fn check_with_prepared_facts_and_session(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> Result<Vec<IntegrationFinding>> {
     config::validate_config(config)?;
 
     let root_paths = visible_paths.paths_for(root);
@@ -112,7 +126,7 @@ pub fn check_with_prepared_facts(
                 .map(|analysis| (path.clone(), analysis.clone()))
         })
         .collect();
-    check_suites(root, &suites, tsconfig, &analyses)
+    check_suites(root, &suites, tsconfig, &analyses, session)
 }
 
 fn fail_on_dropped_files(shared: &crate::codebase::check_facts::CheckFactMap) -> Result<()> {
@@ -132,15 +146,20 @@ fn check_suites(
     suites: &[types::Suite],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     analyses: &std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<Vec<IntegrationFinding>> {
     let function_index = resolve::build_function_index(analyses);
     let export_index = resolve::build_export_index(analyses);
     let visible_files = analyses.keys().cloned().collect();
+    let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        tsconfig,
+        Some(&visible_files),
+        session,
+    );
     let resolver = resolve::ImportResolution {
         analyses,
         export_index: &export_index,
-        tsconfig,
-        visible_files: &visible_files,
+        resolver: &import_resolver,
     };
 
     let mut findings = Vec::new();

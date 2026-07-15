@@ -1,15 +1,14 @@
 use super::types::{
     CallTarget, FileAnalysis, FunctionInfo, FunctionKey, ImportBinding, ImportedName,
 };
-use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::ImportResolver;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub(super) struct ImportResolution<'a> {
     pub analyses: &'a BTreeMap<PathBuf, FileAnalysis>,
     pub export_index: &'a HashMap<(PathBuf, String), FunctionKey>,
-    pub tsconfig: &'a TsConfig,
-    pub visible_files: &'a HashSet<PathBuf>,
+    pub resolver: &'a ImportResolver<'a>,
 }
 
 pub(super) fn build_function_index(
@@ -143,7 +142,5 @@ fn resolve_visible_import(
     caller_file: &Path,
     resolution: &ImportResolution<'_>,
 ) -> Option<PathBuf> {
-    ImportResolver::new(resolution.tsconfig)
-        .with_visible(resolution.visible_files)
-        .resolve(source, caller_file)
+    resolution.resolver.resolve(source, caller_file)
 }

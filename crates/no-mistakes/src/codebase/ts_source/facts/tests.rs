@@ -10,7 +10,7 @@ fn collect_file_facts(
         path.to_path_buf(),
     ]));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-    super::collect::collect_file_facts_with_sources(path, plan, context, &sources)
+    super::collect::test_support::collect_file_facts_with_sources(path, plan, context, &sources)
 }
 
 impl TsFactMap {
@@ -52,7 +52,7 @@ fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
     let expected = sources.read_path(&file).unwrap();
 
-    let mut facts = collect_ts_facts_with_context_and_sources(
+    let mut facts = super::collect::collect_ts_facts_with_context_and_sources(
         std::slice::from_ref(&file),
         TsFactPlan {
             source: true,
@@ -453,3 +453,6 @@ fn collect_file_facts_falls_back_to_ts_source_type_for_unknown_extension() {
 
     assert_eq!(facts.imports.len(), 1);
 }
+
+#[path = "tests_observer.rs"]
+mod observer_tests;

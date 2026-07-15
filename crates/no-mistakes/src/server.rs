@@ -36,8 +36,8 @@ pub(crate) struct ServerArgs {
     /// Shorthand for --format json.
     #[arg(long, global = true, conflicts_with = "format")]
     json: bool,
-    /// Emit phase timings to stderr.
-    #[arg(long, global = true)]
+    /// Legacy programmatic timing switch. CLI timing flags are root-global.
+    #[arg(skip)]
     timings: bool,
     #[command(subcommand)]
     command: ServerCommand,
@@ -86,31 +86,37 @@ impl From<ServerDirection> for RelatedDirection {
 pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
     let base = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &base);
-    let started = std::time::Instant::now();
     let format = if args.json { Format::Json } else { args.format };
-    let prepared = prepare_analysis(&root, args.tsconfig.as_deref())?;
+    let _ = args.timings;
+    let prepared = trace_server_analysis("analysis.prepare", || {
+        prepare_analysis(&root, args.tsconfig.as_deref())
+    })?;
     match &args.command {
         ServerCommand::Routes { files } => {
-            let report = analyze_project_with_prepared(&prepared, &args.filters)?;
-            print_analysis_timing(args.timings, started);
+            let report = trace_server_analysis("analysis.server", || {
+                analyze_project_with_prepared(&prepared, &args.filters)
+            })?;
             print_routes(&report, files, format)?;
         }
         ServerCommand::Edges { roots } => {
-            let report = analyze_project_with_prepared_indexed(&prepared, &args.filters)?;
-            print_analysis_timing(args.timings, started);
+            let report = trace_server_analysis("analysis.server", || {
+                analyze_project_with_prepared_indexed(&prepared, &args.filters)
+            })?;
             let depth = root_scoped_edge_depth(roots, args.depth);
             let edges = report.edge_view(roots, depth);
             print_edges(&edges, format)?;
         }
         ServerCommand::Related { roots, direction } => {
-            let report = analyze_project_with_prepared_indexed(&prepared, &args.filters)?;
-            print_analysis_timing(args.timings, started);
+            let report = trace_server_analysis("analysis.server", || {
+                analyze_project_with_prepared_indexed(&prepared, &args.filters)
+            })?;
             let edges = report.related(roots, (*direction).into());
             print_related(roots, &edges, format)?;
         }
         ServerCommand::Contracts => {
-            let report = analyze_project_with_prepared(&prepared, &args.filters)?;
-            print_analysis_timing(args.timings, started);
+            let report = trace_server_analysis("analysis.server", || {
+                analyze_project_with_prepared(&prepared, &args.filters)
+            })?;
             let contracts = no_mistakes::server_routes::analyze_contracts_with_prepared(
                 &prepared,
                 &report,
@@ -122,12 +128,17 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
     Ok(ExitCode::SUCCESS)
 }
 
-fn print_analysis_timing(enabled: bool, started: std::time::Instant) {
-    if enabled {
-        eprintln!(
-            "analysis: {:.3}ms",
-            started.elapsed().as_secs_f64() * 1000.0
-        );
+fn trace_server_analysis<T>(
+    label: &'static str,
+    operation: impl FnOnce() -> Result<T>,
+) -> Result<T> {
+    match no_mistakes::diagnostics::current() {
+        Some(observer) => observer.trace(
+            label,
+            no_mistakes::diagnostics::TimingKind::Serial,
+            operation,
+        ),
+        None => operation(),
     }
 }
 

@@ -17,7 +17,7 @@ use types::{
 };
 
 #[cfg(test)]
-#[path = "analyze_project/architecture_override_tests.rs"]
+#[path = "analyze_project/tests/architecture_override.rs"]
 mod architecture_override_tests;
 #[cfg(test)]
 #[path = "analyze_project/cli_parity_tests.rs"]
@@ -28,6 +28,9 @@ mod domain_parity_tests;
 #[cfg(test)]
 #[path = "analyze_project/flow_server_tests.rs"]
 mod flow_server_tests;
+#[cfg(test)]
+#[path = "analyze_project/import_usages_scope_tests.rs"]
+mod import_usages_scope_tests;
 #[cfg(test)]
 mod legacy_test_support;
 #[cfg(test)]

@@ -46,7 +46,10 @@ pub fn run_check_with_facts_and_playwright(
         root,
         shared.files(),
     )?;
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
+        session,
         root,
         config_path,
         tsconfig_path,

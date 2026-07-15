@@ -1,0 +1,17 @@
+id: no-direct-analysis-clock
+valid:
+  - |
+    fn analyze(observer: Option<&InvocationObserver>) {
+        trace_if_enabled(observer, "parse", || parse());
+    }
+invalid:
+  - |
+    fn analyze() {
+        let started = Instant::now();
+        parse();
+    }
+  - |
+    fn analyze() {
+        let started = std::time::Instant::now();
+        parse();
+    }

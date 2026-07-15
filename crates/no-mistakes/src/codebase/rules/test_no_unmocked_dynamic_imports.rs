@@ -20,7 +20,7 @@ use runtime::runtime_deps;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-pub(crate) use with_facts::check_with_prepared_facts_and_graph;
+pub(crate) use with_facts::check_with_prepared_facts_graph_and_session;
 pub use with_facts::{check_with_facts, check_with_prepared_facts};
 
 pub const RULE_ID: &str = "test-no-unmocked-dynamic-imports";
@@ -82,6 +82,7 @@ pub(super) fn check_inner(
             file: &file,
             resolver: &resolver,
             graph,
+            file_universe: Some(&visible_files),
             mocks: &mocks,
             dependency_cache: &dependency_cache,
             findings: &mut findings,
@@ -98,6 +99,7 @@ pub(super) fn check_inner(
                 config,
                 resolver: &resolver,
                 graph,
+                file_universe: Some(&visible_files),
                 shared: None,
                 file_cache: Some(&file_cache),
             },

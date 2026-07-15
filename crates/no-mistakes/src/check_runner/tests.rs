@@ -104,7 +104,8 @@ fn run_all_shares_visible_candidates_across_check_phases() {
 fn run_all_constructs_one_canonical_root_snapshot() {
     let source = include_str!("prepared.rs");
 
-    assert_eq!(source.matches("VisiblePathSnapshot::new").count(), 1);
+    assert_eq!(source.matches("session.visible_paths(root)").count(), 1);
+    assert_eq!(source.matches("VisiblePathSnapshot::new").count(), 0);
     assert_eq!(source.matches("discover_visible_paths").count(), 0);
 }
 
@@ -183,10 +184,11 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
         Some(config.as_path()),
     )
     .unwrap();
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(None);
     let results = crate::check_tasks::run_codebase_check(
+        &session,
         &root,
         &loaded_config,
-        Some(tsconfig.as_path()),
         &prepared_tsconfig,
         true,
         &facts,

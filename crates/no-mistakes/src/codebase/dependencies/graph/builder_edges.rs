@@ -8,16 +8,23 @@ struct EdgeMaps<'a> {
     reverse: &'a mut EdgeMap,
 }
 
+struct EdgeResolutionContext<'a, 'config> {
+    resolver: &'a ImportResolver<'config>,
+    session: &'a crate::codebase::analysis_session::AnalysisSession,
+}
+
 fn collect_and_merge_all_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     playwright_snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
     facts: Option<&dyn TsFactLookup>,
-    resolver: &ImportResolver<'_>,
+    resolution: EdgeResolutionContext<'_, '_>,
     parsed_imports: &ParsedImports<'_>,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     maps: EdgeMaps<'_>,
 ) -> Result<()> {
     let EdgeMaps { forward, reverse } = maps;
+    let resolver = resolution.resolver;
+    let session = resolution.session;
     let root = edge_inputs.root;
     let tsconfig = edge_inputs.tsconfig;
     let plan = edge_inputs.plan;
@@ -40,7 +47,7 @@ fn collect_and_merge_all_edges(
                 anyhow::bail!("TS import facts are required for route-import edges");
             };
             let route_import_edges =
-                collect_route_import_edges(files, facts, tsconfig, graph_files);
+                collect_route_import_edges(files, facts, tsconfig, graph_files, session);
             merge_edges(forward, reverse, route_import_edges);
         }
         Ok(())

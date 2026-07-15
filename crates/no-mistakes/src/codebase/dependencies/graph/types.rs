@@ -24,6 +24,14 @@ impl NodeId {
         }
     }
 
+    fn is_in_file_universe(&self, universe: &HashSet<PathBuf>) -> bool {
+        match self {
+            Self::File(path) | Self::Symbol { file: path, .. } => universe.contains(path),
+            Self::Module(_) => true,
+            Self::QueueJob { queue_file, .. } => universe.contains(queue_file),
+        }
+    }
+
     /// Render this node relative to `root` for display.
     pub fn display_name(&self, root: &Path) -> String {
         match self {

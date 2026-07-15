@@ -3,7 +3,9 @@ use crate::codebase::ts_source::FileInventory;
 use rayon::prelude::*;
 use std::io::ErrorKind;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Barrier};
+
+const CONCURRENT_CALLERS: usize = 16;
 
 fn fixture(path: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -15,7 +17,8 @@ fn fixture(path: &str) -> PathBuf {
 fn successful_reads_are_exact_and_memoized_across_threads() {
     let path = fixture("alpha.ts");
     let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
-    let store = SourceStore::new(inventory);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let store = SourceStore::new_observed(inventory, Some(Arc::clone(&observer)));
 
     let sources = (0..16)
         .into_par_iter()
@@ -27,6 +30,14 @@ fn successful_reads_are_exact_and_memoized_across_threads() {
         .iter()
         .all(|source| Arc::ptr_eq(source, &sources[0])));
     assert_eq!(store.physical_read_count(), 1);
+    assert_eq!(
+        observer.source_read_snapshot()[&crate::codebase::ts_resolver::normalize_path(&path)],
+        1
+    );
+    let work = observer.snapshot().work;
+    assert_eq!(work["source.requests"], 16);
+    assert_eq!(work["source.reads"], 1);
+    assert_eq!(work["source.cache_hits"], 15);
 }
 
 #[test]
@@ -168,4 +179,80 @@ fn package_manifest_json_is_parsed_once_across_workspace_and_rule_consumers() {
 
     assert_eq!(store.json_parse_count(), 1);
     assert_eq!(store.physical_read_count(), 1);
+}
+
+#[test]
+fn concurrent_json_successes_have_exact_parse_and_cache_hit_metrics() {
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/gitignore/workspace-symbol/package.json");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&manifest)));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let store = SourceStore::new_observed(inventory, Some(Arc::clone(&observer)));
+    let barrier = Arc::new(Barrier::new(CONCURRENT_CALLERS));
+
+    let values = std::thread::scope(|scope| {
+        let handles = (0..CONCURRENT_CALLERS)
+            .map(|_| {
+                let barrier = Arc::clone(&barrier);
+                let manifest = &manifest;
+                let store = &store;
+                scope.spawn(move || {
+                    barrier.wait();
+                    store.parse_json_path(manifest).unwrap()
+                })
+            })
+            .collect::<Vec<_>>();
+        handles
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+
+    assert!(values.iter().all(|value| Arc::ptr_eq(value, &values[0])));
+    assert_eq!(store.json_parse_count(), 1);
+    let work = observer.snapshot().work;
+    assert_eq!(work["manifest.requests"], CONCURRENT_CALLERS as u64);
+    assert_eq!(work["manifest.parses"], 1);
+    assert_eq!(work["manifest.cache_hits"], (CONCURRENT_CALLERS - 1) as u64);
+    assert_eq!(work.get("manifest.errors").copied().unwrap_or_default(), 0);
+}
+
+#[test]
+fn concurrent_json_failures_have_exact_parse_and_cache_hit_metrics() {
+    let malformed = fixture("alpha.ts");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&malformed)));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let store = SourceStore::new_observed(inventory, Some(Arc::clone(&observer)));
+    let barrier = Arc::new(Barrier::new(CONCURRENT_CALLERS));
+
+    let errors = std::thread::scope(|scope| {
+        let handles = (0..CONCURRENT_CALLERS)
+            .map(|_| {
+                let barrier = Arc::clone(&barrier);
+                let malformed = &malformed;
+                let store = &store;
+                scope.spawn(move || {
+                    barrier.wait();
+                    store.parse_json_path(malformed).unwrap_err()
+                })
+            })
+            .collect::<Vec<_>>();
+        handles
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+
+    let super::JsonLoadError::Syntax(first) = &errors[0] else {
+        panic!("malformed JSON must retain its syntax error");
+    };
+    assert!(errors.iter().all(|error| {
+        matches!(error, super::JsonLoadError::Syntax(current) if Arc::ptr_eq(current, first))
+    }));
+    assert_eq!(store.json_parse_count(), 1);
+    let work = observer.snapshot().work;
+    assert_eq!(work["manifest.requests"], CONCURRENT_CALLERS as u64);
+    assert_eq!(work["manifest.parses"], 1);
+    assert_eq!(work["manifest.cache_hits"], (CONCURRENT_CALLERS - 1) as u64);
+    assert_eq!(work["manifest.errors"], 1);
 }

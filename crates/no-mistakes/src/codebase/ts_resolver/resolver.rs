@@ -4,8 +4,10 @@ pub struct ImportResolver<'a> {
     alias_order: Vec<usize>,
     policy: ImportResolutionPolicy<'a>,
     cache_enabled: bool,
-    cache: DashMap<ResolveKey, Option<PathBuf>>,
+    cache: std::sync::Arc<ResolverResultCache>,
     shared_cache: Option<&'a ImportResolutionCache>,
+    session_scoped: bool,
+    observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
 }
 
 #[derive(Clone, Copy)]
@@ -15,9 +17,41 @@ enum ImportResolutionPolicy<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct ResolveKey {
+pub(crate) struct ResolveKey {
     importing_file: PathBuf,
     specifier: String,
+}
+
+pub(crate) type ResolverResultCache = DashMap<ResolveKey, Option<PathBuf>>;
+
+/// Exact identity for a resolver cache within one analysis invocation.
+///
+/// Store the complete effective config and visible universe rather than a hash
+/// fingerprint so distinct resolution semantics can never share an entry.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct ResolverScopeKey {
+    dir: PathBuf,
+    paths: Vec<(String, Vec<String>)>,
+    paths_dir: PathBuf,
+    base_url: Option<PathBuf>,
+    visible: Option<Vec<PathBuf>>,
+}
+
+impl ResolverScopeKey {
+    pub(crate) fn new(tsconfig: &TsConfig, visible: Option<&HashSet<PathBuf>>) -> Self {
+        let visible = visible.map(|paths| {
+            let mut paths = paths.iter().cloned().collect::<Vec<_>>();
+            paths.sort();
+            paths
+        });
+        Self {
+            dir: tsconfig.dir.clone(),
+            paths: tsconfig.paths.clone(),
+            paths_dir: tsconfig.paths_dir.clone(),
+            base_url: tsconfig.base_url.clone(),
+            visible,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Starting a clock directly defeats the observer's zero-clock disabled path.
+id: no-direct-analysis-clock
+language: rust
+severity: error
+message: >-
+  Direct analysis clock. Use the optional InvocationObserver so disabled
+  instrumentation does not call Instant::now and parallel spans are labeled.
+rule:
+  any:
+    - pattern: Instant::now()
+    - pattern: std::time::Instant::now()
+files:
+  - "crates/no-mistakes/src/**"
+ignores:
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes/src/**/test_support.rs"
+  - "crates/no-mistakes/src/diagnostics/observer.rs"
+  - "crates/no-mistakes/src/impacted_checks/timing.rs"
+  - "crates/no-mistakes/src/codebase/timing.rs"

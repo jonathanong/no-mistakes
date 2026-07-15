@@ -1,4 +1,5 @@
 pub(crate) mod analysis_dataset;
+pub mod analysis_session;
 pub mod check_facts;
 pub mod ci_graph;
 pub mod ci_workflows;

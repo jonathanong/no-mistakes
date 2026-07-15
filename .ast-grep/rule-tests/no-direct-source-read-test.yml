@@ -1,0 +1,20 @@
+id: no-direct-source-read
+valid:
+  - |
+    fn collect(sources: &SourceStore, path: &Path) {
+        let source = sources.read_path(path)?;
+    }
+invalid:
+  - |
+    fn collect(path: &Path) {
+        let source = std::fs::read_to_string(path)?;
+    }
+  - |
+    fn collect(path: &Path) {
+        let source = fs::read_to_string(path)?;
+    }
+  - |
+    use std::fs::read_to_string;
+    fn collect(path: &Path) {
+        let source = read_to_string(path)?;
+    }

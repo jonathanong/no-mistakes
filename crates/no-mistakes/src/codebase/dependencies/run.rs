@@ -1,4 +1,5 @@
 pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
+    let _diagnostics = crate::diagnostics::LegacyDiagnosticsGuard::new(args.timings, false);
     let cwd_early = std::env::current_dir().context("reading current directory")?;
     let mut timings = crate::codebase::timing::PhaseTimings::start();
 

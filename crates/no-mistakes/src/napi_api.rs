@@ -6,6 +6,8 @@ use napi::bindgen_prelude::AsyncTask;
 use napi_derive::napi;
 
 mod analyze_project;
+#[cfg(feature = "test-instrumentation")]
+pub(crate) use analyze_project::analyze_project_json_impl;
 mod async_task;
 mod cli_parity;
 mod codebase;

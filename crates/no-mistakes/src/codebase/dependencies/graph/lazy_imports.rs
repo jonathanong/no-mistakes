@@ -1,6 +1,16 @@
 pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(
     input: LazyImportBuild<'_>,
 ) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
+    let session = crate::codebase::analysis_session::AnalysisSession::new(
+        crate::diagnostics::current(),
+    );
+    lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(input, &session)
+}
+
+pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
+    input: LazyImportBuild<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
     let LazyImportBuild {
         roots,
         tsconfig,
@@ -11,11 +21,13 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cach
         workspace,
         import_resolution_cache,
     } = input;
-    let resolver = ImportResolver::new(tsconfig).with_visible(&graph_files.visible);
+    let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
+        .with_visible(&graph_files.visible);
     let resolver = match import_resolution_cache {
         Some(cache) => resolver.with_shared_cache(cache),
         None => resolver,
     };
+    let fact_plan = facts.collect_plan;
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut frontier: Vec<NodeId> = Vec::new();
     let mut result: Vec<NodeEntry> = Vec::new();
@@ -32,10 +44,8 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cach
 
     let mut depth = 0;
     while !frontier.is_empty() {
-        if let Some(max) = max_depth {
-            if depth >= max {
-                break;
-            }
+        if max_depth.is_some_and(|max| depth >= max) {
+            break;
         }
 
         let mut expanded: Vec<ExpandedImportNode> = frontier
@@ -55,8 +65,15 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cach
                         collected: None,
                     };
                 }
-                let (neighbors, collected) =
-                    import_neighbors(path, &resolver, workspace, graph_files, allowed, facts);
+                let (neighbors, collected) = import_neighbors(
+                    path,
+                    &resolver,
+                    workspace,
+                    graph_files,
+                    allowed,
+                    facts,
+                    session,
+                );
                 ExpandedImportNode {
                     node: node.clone(),
                     neighbors,
@@ -68,8 +85,6 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cach
                 }
             })
             .collect();
-        // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
-        // `node_sort_key` (which involves allocation and formatting) during the sort operations.
         expanded.sort_by_cached_key(|expanded| node_sort_key(&expanded.node));
 
         let next_depth = depth + 1;
@@ -97,10 +112,8 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cach
                     });
                     result_idx.insert(neighbor.clone(), idx);
                     next_frontier.push(neighbor);
-                } else {
-                    if let Some(&idx) = result_idx.get(&neighbor) {
-                        add_via_kind(&mut result[idx], kind);
-                    }
+                } else if let Some(&idx) = result_idx.get(&neighbor) {
+                    add_via_kind(&mut result[idx], kind);
                 }
             }
         }
@@ -108,13 +121,11 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cach
         depth = next_depth;
     }
 
-    (result, collected_facts)
-}
-
-fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {
-    edges.push((
-        NodeId::File(source.to_path_buf()),
-        NodeId::File(target.to_path_buf()),
-        EdgeKind::RouteRef,
-    ));
+    session.record_work("traversal.lazy_nodes", result.len() as u64);
+    (
+        result,
+        TsFactMap::from_iter_with_plan(collected_facts, fact_plan)
+            .into_iter()
+            .collect(),
+    )
 }

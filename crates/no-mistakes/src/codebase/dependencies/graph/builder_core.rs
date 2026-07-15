@@ -3,7 +3,9 @@ impl DepGraph {
         edge_inputs: GraphEdgeBuildInputs<'_>,
         facts: Option<&dyn TsFactLookup>,
         supplied_fact_policy: SuppliedFactPolicy,
+        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
+        session.record_work("graph.builds", 1);
         let root = edge_inputs.root;
         let tsconfig = edge_inputs.tsconfig;
         let plan = edge_inputs.plan;
@@ -11,16 +13,22 @@ impl DepGraph {
         let config_options = edge_inputs.config_options;
         let config_path = edge_inputs.config_path;
         let supplied_workspace = edge_inputs.workspace;
-        let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let resolver = match edge_inputs.import_resolution_cache {
-            Some(cache) => resolver.with_shared_cache(cache),
-            None => resolver,
+            Some(cache) => ImportResolver::new_observed(tsconfig, session.observer().cloned())
+                .with_visible(graph_files.visible())
+                .with_shared_cache(cache),
+            None => ImportResolver::new_in_session(
+                tsconfig,
+                Some(graph_files.visible()),
+                &session,
+            ),
         };
         let fact_plan = effective_ts_fact_plan(plan, config_options);
         let mut fact_context = ts_fact_context_from_options(root, plan, config_options);
         fact_context.set_visible_files(graph_files.visible().iter().cloned());
         let owned_facts = if !fact_plan.is_empty() && facts.is_none() {
-            Some(collect_ts_facts_with_context(
+            Some(collect_ts_facts_with_session_and_context(
+                &session,
                 graph_files.indexable(),
                 fact_plan,
                 &fact_context,
@@ -70,7 +78,12 @@ impl DepGraph {
                             missing
                         };
                         (!fallback_paths.is_empty() || universe_mismatch).then(|| {
-                            collect_ts_facts_with_context(&fallback_paths, fact_plan, &fact_context)
+                            collect_ts_facts_with_session_and_context(
+                                &session,
+                                &fallback_paths,
+                                fact_plan,
+                                &fact_context,
+                            )
                         })
                     }
                 }
@@ -102,16 +115,7 @@ impl DepGraph {
             forward.entry(NodeId::File(file.clone())).or_default();
         }
 
-        let parsed_imports = if plan.imports || plan.workspace || plan.assets {
-            let Some(facts) = facts else {
-                anyhow::bail!(
-                    "TS import facts are required when import, workspace, or asset edges are requested"
-                );
-            };
-            collect_parsed_imports_from_facts(files, facts)
-        } else {
-            Vec::new()
-        };
+        let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
         let needs_workspace = plan.imports || plan.workspace || plan.package || plan.symbols;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
             crate::codebase::workspaces::load_indexed_from_files(root, &graph_files.all)
@@ -157,7 +161,10 @@ impl DepGraph {
             &edge_inputs,
             playwright_snapshot,
             facts,
-            &resolver,
+            EdgeResolutionContext {
+                resolver: &resolver,
+                session: &session,
+            },
             &parsed_imports,
             workspace,
             EdgeMaps {
@@ -190,6 +197,7 @@ impl DepGraph {
             })?;
             graph.merge_canonical_edges(selector_edges);
         }
+        record_graph_observability(&graph, &session);
         Ok(graph)
     }
 }

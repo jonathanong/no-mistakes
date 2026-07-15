@@ -1,4 +1,3 @@
-use anyhow::Context;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
 use oxc_span::SourceType;
@@ -16,10 +15,19 @@ struct ProgramOwner {
 
 struct ParsedProgram<'a> {
     program: Program<'a>,
-    parse_error: Option<String>,
+    strict_error: Option<String>,
+    diagnostic_error: Option<String>,
+    panic_error: Option<String>,
 }
 
-type CachedPrograms = HashMap<PathBuf, Result<Rc<CachedProgram>, String>>;
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+enum ParseMode {
+    Standard,
+    TypeScriptFallback,
+    LegacySymbols,
+}
+
+type CachedPrograms = HashMap<(PathBuf, ParseMode), Result<Rc<CachedProgram>, String>>;
 
 self_cell! {
     struct CachedProgram {
@@ -40,6 +48,9 @@ pub(crate) struct ParsedProgramCache {
 #[cfg(test)]
 pub(super) mod tests;
 
+mod parse;
+use parse::parse_program;
+
 impl ParsedProgramCache {
     pub(crate) fn with_program<T>(
         &self,
@@ -47,8 +58,18 @@ impl ParsedProgramCache {
         source: &str,
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
     ) -> Result<T, String> {
-        let cached = self.cached_program(path, source)?;
-        cached.with_dependent(|owner, parsed| match &parsed.parse_error {
+        self.with_program_observed(path, source, || {}, analyze)
+    }
+
+    pub(crate) fn with_program_observed<T>(
+        &self,
+        path: &Path,
+        source: &str,
+        on_parse: impl FnOnce(),
+        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
+    ) -> Result<T, String> {
+        let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
+        cached.with_dependent(|owner, parsed| match &parsed.strict_error {
             Some(error) => Err(error.clone()),
             None => Ok(analyze(&parsed.program, owner.source.as_str())),
         })
@@ -60,48 +81,98 @@ impl ParsedProgramCache {
 
     pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
-        let cached = self.entries.borrow().get(&path)?.clone();
+        let cached = self
+            .entries
+            .borrow()
+            .get(&(path, ParseMode::Standard))?
+            .clone();
         match cached {
-            Ok(cached) => cached.with_dependent(|_, parsed| parsed.parse_error.clone()),
+            Ok(cached) => cached.with_dependent(|_, parsed| parsed.strict_error.clone()),
             Err(error) => Some(error),
         }
     }
 
-    fn cached_program(&self, path: &Path, source: &str) -> Result<Rc<CachedProgram>, String> {
+    pub(crate) fn with_recovered_program_observed<T>(
+        &self,
+        path: &Path,
+        source: &str,
+        on_parse: impl FnOnce(),
+        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+    ) -> Result<T, String> {
+        let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
+        Ok(cached.with_dependent(|owner, parsed| {
+            analyze(
+                &parsed.program,
+                owner.source.as_str(),
+                parsed.diagnostic_error.clone(),
+            )
+        }))
+    }
+
+    pub(crate) fn with_recovered_typescript_program_observed<T>(
+        &self,
+        path: &Path,
+        source: &str,
+        on_parse: impl FnOnce(),
+        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+    ) -> Result<T, String> {
+        let cached = self.cached_program(path, source, ParseMode::TypeScriptFallback, on_parse)?;
+        Ok(cached.with_dependent(|owner, parsed| {
+            analyze(
+                &parsed.program,
+                owner.source.as_str(),
+                parsed.diagnostic_error.clone(),
+            )
+        }))
+    }
+
+    pub(crate) fn with_legacy_symbols_program_observed<T>(
+        &self,
+        path: &Path,
+        source: &str,
+        on_parse: impl FnOnce(),
+        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+    ) -> Result<T, String> {
+        let mode = if legacy_symbols_share_standard_parse(path) {
+            ParseMode::Standard
+        } else {
+            ParseMode::LegacySymbols
+        };
+        let cached = self.cached_program(path, source, mode, on_parse)?;
+        cached.with_dependent(|owner, parsed| match &parsed.panic_error {
+            Some(error) => Err(error.clone()),
+            None => Ok(analyze(
+                &parsed.program,
+                owner.source.as_str(),
+                parsed.diagnostic_error.clone(),
+            )),
+        })
+    }
+
+    fn cached_program(
+        &self,
+        path: &Path,
+        source: &str,
+        mode: ParseMode,
+        on_parse: impl FnOnce(),
+    ) -> Result<Rc<CachedProgram>, String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
-        if let Some(cached) = self.entries.borrow().get(&path) {
+        let key = (path.clone(), mode);
+        if let Some(cached) = self.entries.borrow().get(&key) {
             return cached.clone();
         }
-        let cached = parse_program(&path, source).map(Rc::new);
-        self.entries.borrow_mut().insert(path, cached.clone());
+        on_parse();
+        let cached = parse_program(&path, source, mode).map(Rc::new);
+        self.entries.borrow_mut().insert(key, cached.clone());
         cached
     }
 }
 
-fn parse_program(path: &Path, source: &str) -> Result<CachedProgram, String> {
-    let source_type = SourceType::from_path(path)
-        .with_context(|| format!("unsupported JavaScript/TypeScript file: {}", path.display()))
-        .map_err(|error| error.to_string())?;
-    let owner = ProgramOwner {
-        allocator: Allocator::default(),
-        source: source.to_string(),
-        source_type,
+pub(super) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
+    let Ok(source_type) = SourceType::from_path(path) else {
+        return false;
     };
-    CachedProgram::try_new(owner, |owner| {
-        let parsed = crate::ast::parse(path, &owner.allocator, &owner.source, owner.source_type);
-        let parse_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
-            let detail = parsed
-                .diagnostics
-                .first()
-                .map(|error| format!("{error:?}"))
-                .unwrap_or("unknown error (parser panicked)".to_string());
-            Some(detail)
-        } else {
-            None
-        };
-        Ok(ParsedProgram {
-            program: parsed.program,
-            parse_error,
-        })
-    })
+    !source_type.is_javascript()
+        && !source_type.is_typescript_definition()
+        && source_type.is_unambiguous()
 }

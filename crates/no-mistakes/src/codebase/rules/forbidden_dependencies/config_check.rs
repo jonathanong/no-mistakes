@@ -48,7 +48,7 @@ fn check_with_config_tsconfig_and_files(
     let mut findings = Vec::new();
     for (rule, opts) in applications.iter().zip(opts_list.iter()) {
         findings.extend(check_rule_application(
-            root, config, rule, opts, &graph, None,
+            root, config, rule, opts, &graph, None, None,
         )?);
     }
     crate::codebase::rules::sort_findings(&mut findings);

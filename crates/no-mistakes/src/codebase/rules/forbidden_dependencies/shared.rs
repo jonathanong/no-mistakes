@@ -47,10 +47,17 @@ pub(crate) fn check_with_prepared_facts_and_graph(
     if applications.is_empty() {
         return Ok(Vec::new());
     }
-    let opts_list: Vec<Options> = applications.iter().map(|r| r.rule_options()).collect();
-    let union_allowed = union_allowed_set(&opts_list);
-    let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
+    let opts_list: Vec<Options> = applications
+        .iter()
+        .map(|rule| rule.rule_options())
+        .collect();
+    let plan = GraphBuildPlan::from_allowed(union_allowed_set(&opts_list).as_ref());
     validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
+    let file_universe = shared
+        .graph_file_universe()
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<std::collections::HashSet<_>>();
     let mut findings = Vec::new();
     for (rule, opts) in applications.iter().zip(opts_list.iter()) {
         findings.extend(check_rule_application(
@@ -60,6 +67,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
             opts,
             graph,
             inferred_roots,
+            Some(&file_universe),
         )?);
     }
     crate::codebase::rules::sort_findings(&mut findings);

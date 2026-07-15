@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+    frontendRoot: app
+    testInclude:
+      - tests/**/*.ts

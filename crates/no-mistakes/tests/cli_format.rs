@@ -103,7 +103,7 @@ fn queues_timings_emits_analysis_timing() {
         "edges",
     ]);
     assert!(output.status.success());
-    assert!(stderr(&output).contains("analysis:"));
+    assert!(stderr(&output).contains("[timing] analysis.queues:"));
 }
 
 #[test]
@@ -198,7 +198,7 @@ fn server_timings_emits_analysis_timing() {
         "edges",
     ]);
     assert!(output.status.success());
-    assert!(stderr(&output).contains("analysis:"));
+    assert!(stderr(&output).contains("[timing] analysis.server:"));
 }
 
 #[test]

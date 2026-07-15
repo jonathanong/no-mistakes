@@ -9,27 +9,40 @@ pub(crate) fn collect_entries_with_prepared_facts(
     visible_files: &std::collections::HashSet<PathBuf>,
     facts: &crate::codebase::check_facts::CheckFactMap,
     supplemental: &crate::codebase::check_facts::CheckFactMap,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<(Vec<FileEntry>, Vec<String>)> {
     let cwd = std::env::current_dir().context("reading current directory")?;
     let abs_files = resolve_input_files(&args.files, root, &cwd);
     let kind_filter = build_kind_filter(&args.kinds);
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(tsconfig)
-        .with_visible(visible_files);
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        tsconfig,
+        Some(visible_files),
+        session,
+    );
     let entries = abs_files
         .iter()
         .map(|path| {
             let file = facts
                 .ts
                 .get(path)
+                .filter(|facts| facts.symbols.is_some())
+                .or_else(|| supplemental.ts.get(path).filter(|facts| facts.symbols.is_some()))
+                .or_else(|| facts.ts.get(path))
                 .or_else(|| supplemental.ts.get(path))
                 .with_context(|| format!("reading {}", path.display()))?;
-            if let Some(error) = &file.parse_error {
-                anyhow::bail!("extracting symbols from {}: {error}", path.display());
-            }
             let symbols = file
-                .symbols
-                .clone()
-                .context("shared analyzeProject facts are missing symbols")?;
+                .legacy_symbol_parse_error
+                .is_none()
+                .then(|| file.legacy_symbols.clone().or_else(|| file.symbols.clone()))
+                .flatten()
+                .with_context(|| match file
+                    .legacy_symbol_parse_error
+                    .as_ref()
+                    .or(file.parse_error.as_ref())
+                {
+                    Some(error) => format!("extracting symbols from {}: {error}", path.display()),
+                    None => "shared analyzeProject facts are missing symbols".to_string(),
+                })?;
             build_entry_from_symbols(
                 path,
                 root,
@@ -40,7 +53,11 @@ pub(crate) fn collect_entries_with_prepared_facts(
             )
         })
         .collect::<Result<Vec<_>>>()?;
-    let root_strs = args.files.iter().map(|file| file.display().to_string()).collect();
+    let root_strs = args
+        .files
+        .iter()
+        .map(|file| file.display().to_string())
+        .collect();
     Ok((entries, root_strs))
 }
 
@@ -50,16 +67,15 @@ fn collect_entries_with_timings(
 ) -> Result<(Vec<FileEntry>, Vec<String>)> {
     let cwd = std::env::current_dir().context("reading current directory")?;
     let root = resolve_root(args.root.as_deref(), &cwd);
-    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        args.tsconfig.as_deref(),
-        &root,
-        &visible_paths,
-    )?;
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let visible_snapshot = session.visible_paths(&root);
+    let visible_paths = visible_snapshot.paths_for(&root);
+    let tsconfig = session.tsconfig(&root, args.tsconfig.as_deref())?;
     let visible_files = visible_paths
-        .into_iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-        .collect();
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<std::collections::HashSet<_>>();
     let abs_files = resolve_input_files(&args.files, &root, &cwd);
     if let Some(timings) = &mut timings {
         timings.mark("search");
@@ -70,14 +86,42 @@ fn collect_entries_with_timings(
         timings.mark("ingest");
     }
 
+    let symbol_paths = crate::codebase::ts_source::deduplicate_analysis_paths(abs_files.iter());
+    let symbols = symbol_paths
+        .par_iter()
+        .map(|path| {
+            let normalized = crate::codebase::ts_resolver::normalize_path(path);
+            let source = session
+                .read_source(&normalized)
+                .with_context(|| format!("reading {}", normalized.display()))?;
+            let symbols = session
+                .with_legacy_symbols_program(
+                    &normalized,
+                    &source,
+                    |program, source, _diagnostic| {
+                        crate::codebase::ts_symbols::extract_symbols_from_program(program, source)
+                    },
+                )
+                .with_context(|| format!("extracting symbols from {}", normalized.display()))?;
+            Ok((normalized, symbols))
+        })
+        .collect::<Result<std::collections::HashMap<_, _>>>()?;
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        &tsconfig,
+        Some(&visible_files),
+        &session,
+    );
     let entries: Vec<FileEntry> = abs_files
         .par_iter()
         .map(|abs| {
-            build_entry(
+            let symbols = symbols
+                .get(&crate::codebase::ts_resolver::normalize_path(abs))
+                .with_context(|| format!("reading {}", abs.display()))?;
+            build_entry_from_symbols(
                 abs,
                 &root,
-                &tsconfig,
-                &visible_files,
+                &resolver,
+                symbols.clone(),
                 args.include,
                 kind_filter.as_ref(),
             )
@@ -92,6 +136,7 @@ fn collect_entries_with_timings(
 }
 
 pub fn run(args: SymbolsArgs) -> Result<()> {
+    let _diagnostics = crate::diagnostics::LegacyDiagnosticsGuard::new(args.timings, false);
     let mut timings = crate::codebase::timing::PhaseTimings::start();
     if args.mode == SymbolsMode::SignatureImpact {
         let report = impact::collect_report(&args)?;

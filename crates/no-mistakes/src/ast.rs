@@ -1,12 +1,14 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{BinaryExpression, BinaryOperator, Expression, Program, TemplateLiteral};
+use oxc_ast::ast::Program;
 use oxc_parser::{Parser, ParserReturn};
-use oxc_span::{GetSpan, SourceType, Span};
+use oxc_span::SourceType;
 use std::cell::RefCell;
 use std::path::Path;
 
+mod expression;
 mod parsed_cache;
+pub use expression::{binary_concat_path_text, expression_path, span_text, template_literal_text};
 pub(crate) use parsed_cache::ParsedProgramCache;
 
 thread_local! {
@@ -40,7 +42,8 @@ pub(crate) fn clear_request_parse_cache() {
     }
 }
 
-pub(crate) fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
+#[doc(hidden)]
+pub fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     let cache = current_request_parse_cache().unwrap_or_default();
     REQUEST_PARSE_CACHES.with(|caches| caches.borrow_mut().push(cache));
     let _guard = RequestParseCacheGuard;
@@ -132,100 +135,67 @@ pub fn with_program<T>(
             .with_program(path, source, analyze)
             .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()));
     }
-    let allocator = Allocator::default();
-    let source_type = SourceType::from_path(path)
-        .with_context(|| format!("unsupported JavaScript/TypeScript file: {}", path.display()))?;
-    let parsed = parse(path, &allocator, source, source_type);
-
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
-        let detail = parsed
-            .diagnostics
-            .first()
-            .map(|e| format!("{e:?}"))
-            .unwrap_or("unknown error (parser panicked)".to_string());
-        anyhow::bail!("failed to parse {}: {detail}", path.display());
-    }
-
-    Ok(analyze(&parsed.program, source))
+    ParsedProgramCache::default()
+        .with_program(path, source, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
-pub fn span_text(source: &str, span: Span) -> &str {
-    source
-        .get(span.start as usize..span.end as usize)
-        .unwrap_or_default()
+/// Parse strictly while reporting only a physical parser invocation through
+/// `on_parse`.
+pub(crate) fn with_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
-pub fn template_literal_text(template: &TemplateLiteral<'_>, source: &str) -> String {
-    let mut text = String::new();
-    for (index, quasi) in template.quasis.iter().enumerate() {
-        text.push_str(
-            quasi
-                .value
-                .cooked
-                .as_ref()
-                .unwrap_or(&quasi.value.raw)
-                .as_str(),
-        );
-        if let Some(expression) = template.expressions.get(index) {
-            text.push_str("${");
-            text.push_str(span_text(source, expression.span()));
-            text.push('}');
-        }
-    }
-    text
+/// Parse a JavaScript or TypeScript source while preserving OXC's recovered
+/// program when diagnostics are present. `on_parse` runs only for a physical
+/// parser invocation, not for a request-cache hit.
+pub(crate) fn with_recovered_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_recovered_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
-/// Fold a `+` string-concatenation chain into a single path string, emitting any
-/// non-string operand as an unresolved `${...}` interpolation (mirroring
-/// [`template_literal_text`]). For example `'/users/' + userId` yields
-/// `/users/${userId}`, which downstream route matching treats as a single dynamic segment.
-///
-/// Returns `None` when the top-level operator is not `+`, so callers can fall back to their
-/// default handling for unrelated binary expressions.
-pub fn binary_concat_path_text(expression: &BinaryExpression<'_>, source: &str) -> Option<String> {
-    if expression.operator != BinaryOperator::Addition {
-        return None;
-    }
-    let mut text = String::new();
-    append_concat_operand(&mut text, &expression.left, source);
-    append_concat_operand(&mut text, &expression.right, source);
-    Some(text)
+/// Parse recovered source with an explicit TypeScript fallback for unknown
+/// extensions. `on_parse` has the same physical-work semantics as above.
+pub(crate) fn with_recovered_typescript_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_recovered_typescript_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
-fn append_concat_operand(text: &mut String, expression: &Expression<'_>, source: &str) {
-    match expression {
-        Expression::StringLiteral(literal) => text.push_str(literal.value.as_str()),
-        Expression::TemplateLiteral(template) => {
-            text.push_str(&template_literal_text(template, source))
-        }
-        Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
-            append_concat_operand(text, &binary.left, source);
-            append_concat_operand(text, &binary.right, source);
-        }
-        Expression::ParenthesizedExpression(parenthesized) => {
-            append_concat_operand(text, &parenthesized.expression, source)
-        }
-        other => {
-            text.push_str("${");
-            text.push_str(span_text(source, other.span()));
-            text.push('}');
-        }
-    }
-}
-
-pub fn expression_path(expression: &Expression<'_>) -> Option<Vec<String>> {
-    match expression {
-        Expression::Identifier(identifier) => Some(vec![identifier.name.to_string()]),
-        Expression::StaticMemberExpression(member) => {
-            let mut parts = expression_path(&member.object).unwrap_or_default();
-            parts.push(member.property.name.to_string());
-            Some(parts)
-        }
-        Expression::ParenthesizedExpression(parenthesized) => {
-            expression_path(&parenthesized.expression)
-        }
-        _ => None,
-    }
+/// Parse with the historical symbols source type: TypeScript for every file
+/// except `.tsx` and `.jsx`, which use TSX. Recovered diagnostics remain
+/// available to the caller; only a parser panic is fatal.
+pub(crate) fn with_legacy_symbols_program_observed<T>(
+    path: &Path,
+    source: &str,
+    on_parse: impl FnOnce(),
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+) -> Result<T> {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    cache
+        .with_legacy_symbols_program_observed(path, source, on_parse, analyze)
+        .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
 #[cfg(test)]

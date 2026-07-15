@@ -4,6 +4,7 @@ pub(crate) fn collect_and_filter_entries_shared(
     cwd_early: &Path,
     shared: &mut SharedTraversalContext,
 ) -> Result<TraversalResult> {
+    shared.session.record_work("traversal.requests", 1);
     let explicit_roots = explicit_existing_entry_files(args, &shared.root, cwd_early);
     shared.add_explicit_roots(&explicit_roots);
     let workspace = shared.dataset.workspace();
@@ -28,97 +29,64 @@ pub(crate) fn collect_and_filter_entries_shared(
     let any_symbol = entrypoints
         .iter()
         .any(|entrypoint| entrypoint.symbol.is_some());
-    let symbol_index =
-        if matches!(direction, Direction::Dependents) && any_symbol && !args.include_symbols {
+    let mut allowed_key = allowed
+        .iter()
+        .flat_map(|allowed| allowed.iter().copied())
+        .collect::<Vec<_>>();
+    allowed_key.sort();
+    let traversal_key = TraversalCacheKey {
+        generation: shared.analysis_generation,
+        dependents: matches!(direction, Direction::Dependents),
+        entrypoints: entrypoints
+            .iter()
+            .map(|entrypoint| {
+                (
+                    entrypoint.file.clone(),
+                    entrypoint.node.clone(),
+                    entrypoint.symbol.clone(),
+                )
+            })
+            .collect(),
+        depth: args.depth,
+        allowed: allowed_key,
+        include_symbols: args.include_symbols,
+        import_only,
+    };
+    let cached_entries = shared
+        .traversal_results
+        .iter()
+        .find(|(cached_key, _)| cached_key == &traversal_key)
+        .map(|(_, entries)| entries.clone());
+    let entries = if let Some(entries) = cached_entries {
+        shared.session.record_work("traversal.reuses", 1);
+        entries
+    } else {
+        let symbol_index = if matches!(direction, Direction::Dependents)
+            && any_symbol
+            && !args.include_symbols
+        {
             Some(shared.symbol_index()?)
         } else {
             None
         };
-    let root = shared.root.clone();
-    let entries = match direction {
-        Direction::Deps if import_only => {
-            let sources = shared.dataset.sources_for(&shared.root);
-
-            let (entries, collected) =
-                graph::lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(
-                    graph::LazyImportBuild {
-                        roots: &roots,
-                        tsconfig: &shared.tsconfig,
-                        max_depth: args.depth,
-                        graph_files: &shared.graph_files,
-                        allowed: allowed.as_ref(),
-                        facts: graph::LazyImportFacts::new(
-                            shared
-                                .facts
-                                .as_ref()
-                                .map(|facts| facts as &dyn graph::TsFactLookup),
-                            shared.fact_plan,
-                            &shared.fact_context,
-                        )
-                        .with_source_store(&sources)
-                        .retain_collected(),
-                        workspace: &workspace,
-                        import_resolution_cache: Some(&shared.import_resolution_cache),
-                    },
-                );
-            if !collected.is_empty() {
-                if let Some(facts) = &mut shared.facts {
-                    facts.extend(collected);
-                } else {
-                    shared.facts = Some(
-                        crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
-                            collected,
-                            shared.fact_plan,
-                        ),
-                    );
-                }
-                shared.invalidate_analysis_caches();
-            }
-            entries
-        }
-        Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed.as_ref())?
-            .deps_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Deps => shared
-            .graph()?
-            .deps_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Dependents if args.include_symbols => {
-            let graph = shared.graph()?;
-            let roots = roots_with_existing_queue_jobs(&roots, &entrypoints, graph);
-            let roots = roots_with_exported_symbol_roots(&roots, graph);
-            graph.dependents_of_symbol_nodes(&roots, args.depth, allowed.as_ref())
-        }
-        Direction::Dependents if any_symbol && shared.build_plan.symbols => {
-            let graph = shared.request_graph_without_symbols(allowed.as_ref())?;
-            resolve_symbol_dependents(
-                &root,
-                &entrypoints,
-                args.depth,
-                allowed.as_ref(),
-                &graph,
-                symbol_index
-                    .as_ref()
-                    .expect("symbol index is built for symbol dependents"),
-            )
-        }
-        Direction::Dependents if any_symbol => resolve_symbol_dependents(
-            &root,
-            &entrypoints,
-            args.depth,
-            allowed.as_ref(),
-            shared.graph()?,
-            symbol_index
-                .as_ref()
-                .expect("symbol index is built for symbol dependents"),
-        ),
-        Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed.as_ref())?
-            .dependents_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Dependents => {
-            shared
-                .graph()?
-                .dependents_of(&roots, args.depth, allowed.as_ref())
-        }
+        let entries = collect_uncached_entries(
+            UncachedTraversalRequest {
+                args,
+                direction,
+                entrypoints: &entrypoints,
+                roots: &roots,
+                allowed: allowed.as_ref(),
+                import_only,
+                any_symbol,
+                symbol_index: symbol_index.as_deref(),
+            },
+            shared,
+        )?;
+        shared.session.record_work("traversal.computations", 1);
+        shared
+            .traversal_results
+            .push((traversal_key, entries.clone()));
+        entries
     };
     let entries = apply_filters(
         entries,
@@ -129,6 +97,9 @@ pub(crate) fn collect_and_filter_entries_shared(
         shared.dataset.visible_paths(),
         shared.prepared_test_projects.as_ref(),
     )?;
+    shared
+        .session
+        .record_work("traversal.nodes", entries.len() as u64);
 
     Ok(TraversalResult {
         entries,

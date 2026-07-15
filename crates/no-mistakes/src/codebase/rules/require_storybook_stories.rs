@@ -19,7 +19,9 @@ use config::effective_story_patterns;
 use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};
 use findings::{namespace_import_findings, stale_or_blank_allow_findings};
-pub(crate) use prepared::{check_with_prepared_facts, check_with_prepared_facts_and_inferred};
+pub(crate) use prepared::{
+    check_with_prepared_facts_and_inferred_and_session, check_with_prepared_facts_and_session,
+};
 use selection::{component_disabled, file_disabled, selected_components};
 use types::{GlobMatcher, Options};
 
@@ -53,10 +55,13 @@ pub(crate) fn check_with_facts(
     tsconfig_path: Option<&Path>,
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     runner::check_with_tsconfig(
         root,
         config,
         shared,
+        &session,
         |project_root| {
             crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
                 tsconfig_path,

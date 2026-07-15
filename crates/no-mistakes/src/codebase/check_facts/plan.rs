@@ -1,9 +1,12 @@
 use std::sync::Arc;
+use std::{collections::HashSet, path::PathBuf};
 
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
     pub symbols: bool,
+    #[doc(hidden)]
+    pub legacy_symbol_paths: HashSet<PathBuf>,
     pub react: bool,
     pub react_usages: bool,
     pub queue: bool,
@@ -25,6 +28,7 @@ impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
         self.symbols |= other.symbols;
+        self.legacy_symbol_paths.extend(other.legacy_symbol_paths);
         self.react |= other.react;
         self.react_usages |= other.react_usages;
         self.queue |= other.queue;

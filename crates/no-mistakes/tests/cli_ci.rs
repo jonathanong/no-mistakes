@@ -133,10 +133,10 @@ fn impacted_checks_timings_preserve_json_and_report_ordered_phases() {
     assert!(timed.get("timings").is_none());
 
     let err = stderr(&with_timings);
-    assert!(err.contains("total: started"), "{err}");
     let completed_phases = err
         .lines()
         .filter_map(|line| {
+            let line = line.strip_prefix("[timing] ")?;
             let (phase, duration) = line.split_once(": ")?;
             duration
                 .strip_suffix("ms")?
@@ -165,7 +165,7 @@ fn impacted_checks_timings_preserve_json_and_report_ordered_phases() {
     );
     assert!(
         err.lines().any(|line| {
-            line.strip_prefix("graph: ")
+            line.strip_prefix("[timing] graph: ")
                 .and_then(|duration| duration.strip_suffix("ms"))
                 .is_some_and(|duration| duration.parse::<f64>().is_ok())
         }),
@@ -192,11 +192,12 @@ fn impacted_checks_timings_omit_lazy_graph_when_every_framework_runs_all() {
     assert!(output.status.success(), "{}", stderr(&output));
     let err = stderr(&output);
     assert!(
-        !err.lines().any(|line| line.starts_with("graph: ")),
+        !err.lines().any(|line| line.starts_with("[timing] graph: ")),
         "{err}"
     );
     assert!(
-        err.lines().any(|line| line.starts_with("select.dotnet: ")),
+        err.lines()
+            .any(|line| line.starts_with("[timing] select.dotnet: ")),
         "{err}"
     );
 }
@@ -220,7 +221,7 @@ fn impacted_checks_timings_report_phase_and_total_before_actionable_error() {
     assert!(!output.status.success());
     assert!(output.stdout.is_empty());
     let err = stderr(&output);
-    assert!(err.contains("prepare: failed after "), "{err}");
-    assert!(err.contains("total: failed after "), "{err}");
+    assert!(err.contains("[timing] prepare: "), "{err}");
+    assert!(err.contains("[timing] total: "), "{err}");
     assert!(err.contains("invalid.no-mistakes.yml"), "{err}");
 }

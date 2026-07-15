@@ -45,7 +45,7 @@ walkdir = "2"
 
 [dev-dependencies]
 assert_cmd = "2"
-criterion = "0.8.2"
+criterion = { package = "codspeed-criterion-compat", version = "=5.0.1" }
 predicates = "3"
 tempfile = "3"
 
@@ -53,21 +53,6 @@ tempfile = "3"
 napi-build = "2.3.2"
 
 [[bench]]
-name = "dependencies_large_repo"
+name = "core_analysis"
 harness = false
-
-[[bench]]
-name = "graph_related"
-harness = false
-
-[[bench]]
-name = "check"
-harness = false
-
-[[bench]]
-name = "bench_playwright_load"
-harness = false
-
-[[bench]]
-name = "impacted_checks"
-harness = false
+required-features = ["test-instrumentation"]

@@ -42,16 +42,18 @@ fn effective_scope(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> Result<EffectiveScope> {
-    let root =
-        super::options::resolve_root(string_option(request, "root")?.or(options.root.as_deref()))?;
-    let tsconfig = effective_path(
-        &root,
-        string_option(request, "tsconfig")?.or(options.tsconfig.as_deref()),
-    );
-    let config = effective_path(
-        &root,
-        string_option(request, "config")?.or(options.config.as_deref()),
-    );
+    let root = super::options::resolve_root(
+        string_option(request, "root")?.or(options.root.as_deref()),
+    )?;
+    let inherited_root = super::options::resolve_root(options.root.as_deref())?;
+    let tsconfig = match string_option(request, "tsconfig")? {
+        Some(path) => effective_path(&root, Some(path)),
+        None => effective_path(&inherited_root, options.tsconfig.as_deref()),
+    };
+    let config = match string_option(request, "config")? {
+        Some(path) => effective_path(&root, Some(path)),
+        None => effective_path(&inherited_root, options.config.as_deref()),
+    };
     let key = EffectiveScopeKey {
         root: root.clone(),
         tsconfig: tsconfig.clone(),

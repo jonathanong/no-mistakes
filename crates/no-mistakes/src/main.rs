@@ -16,7 +16,7 @@ mod rsc_callers;
 mod server;
 mod swift;
 #[cfg(test)]
-#[path = "test_support/gitignore_fixture.rs"]
+#[path = "main/test_support.rs"]
 mod test_support;
 
 use anyhow::Result;
@@ -26,13 +26,17 @@ use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
 use no_mistakes::codebase::import_usages::{self, ImportUsagesArgs};
 use no_mistakes::codebase::queries;
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
+use no_mistakes::diagnostics::{DiagnosticsArgs, InvocationGuard};
 use no_mistakes::playwright;
 use no_mistakes::{ci_run, impacted_checks_run, tests_run, CiArgs, ImpactedChecksArgs, TestsArgs};
 use std::process::ExitCode;
+use std::sync::Arc;
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Cli {
+    #[command(flatten)]
+    diagnostics: DiagnosticsArgs,
     #[command(flatten)]
     jobs: JobsArg,
     #[command(subcommand)]
@@ -110,8 +114,20 @@ fn main() -> ExitCode {
 
 fn run() -> Result<ExitCode> {
     let cli = Cli::parse();
+    let observer = cli.diagnostics.observer();
+    let _diagnostics_guard = observer
+        .as_ref()
+        .map(|observer| InvocationGuard::install(Arc::clone(observer)));
     init_rayon_threads(cli.jobs);
-    run_command(cli.command)
+    let result = no_mistakes::ast::with_request_parse_cache(|| run_command(cli.command));
+    if let Some(observer) = observer {
+        match &result {
+            Ok(_) => observer.increment("output.renders", 1),
+            Err(_) => observer.increment("output.errors", 1),
+        }
+        observer.render_stderr();
+    }
+    result
 }
 
 enum CommandDispatch {
@@ -178,3 +194,7 @@ fn run_domain_command(command: Command) -> Result<CommandDispatch> {
     }?;
     Ok(CommandDispatch::Handled(code))
 }
+
+#[cfg(test)]
+#[path = "main/diagnostics_args_tests.rs"]
+mod diagnostics_args_tests;

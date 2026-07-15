@@ -1,9 +1,7 @@
 use std::path::PathBuf;
 
-use napi::{Env, Task};
 use serde_json::json;
 
-use super::async_task::{JsonTask, VersionTask};
 use super::options::{
     parse_export_kind, parse_include, parse_options, parse_queue_direction, parse_relationship,
     parse_server_direction, project_roots, resolve_project_root, ProjectOptions, SymbolOptions,
@@ -37,52 +35,9 @@ fn fixture(category: &str, name: &str) -> String {
     .to_string()
 }
 
-fn saved_fixture(path: &[&str]) -> String {
-    let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
-    root.extend(path);
-    crate::codebase::ts_resolver::normalize_path(&root)
-        .display()
-        .to_string()
-}
-
 #[test]
 fn version_returns_crate_version() {
     assert_eq!(version_impl(), env!("CARGO_PKG_VERSION"));
-}
-
-fn echo_task(input: String) -> napi::Result<String> {
-    Ok(format!("echo:{input}"))
-}
-
-fn failing_task(_input: String) -> napi::Result<String> {
-    Err(napi::Error::from_reason("task failed"))
-}
-
-#[test]
-fn async_json_task_runs_on_task_interface() {
-    let mut task = JsonTask::new("{}".to_string(), echo_task);
-
-    assert_eq!(task.compute().unwrap(), "echo:{}");
-    assert_eq!(
-        task.resolve(Env::from_raw(std::ptr::null_mut()), "done".to_string())
-            .unwrap(),
-        "done"
-    );
-
-    let mut task = JsonTask::new("{}".to_string(), failing_task);
-    assert!(task.compute().unwrap_err().reason.contains("task failed"));
-}
-
-#[test]
-fn async_version_task_runs_on_task_interface() {
-    let mut task = VersionTask;
-
-    assert_eq!(task.compute().unwrap(), env!("CARGO_PKG_VERSION"));
-    assert_eq!(
-        task.resolve(Env::from_raw(std::ptr::null_mut()), "0.0.0".to_string())
-            .unwrap(),
-        "0.0.0"
-    );
 }
 
 #[test]
@@ -544,6 +499,8 @@ include!("tests_impact_fallback.rs");
 include!("tests_queries.rs");
 include!("tests_playwright.rs");
 
+mod analysis_session_tests;
+mod async_task_tests;
 mod check;
 mod ci;
 mod react_usages;

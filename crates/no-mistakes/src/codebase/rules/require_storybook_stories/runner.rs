@@ -13,10 +13,22 @@ use anyhow::{bail, Result};
 use std::collections::HashSet;
 use std::path::Path;
 
+struct RuleCheck<'a> {
+    root: &'a Path,
+    project_root: &'a Path,
+    config: &'a NoMistakesConfig,
+    rule: &'a RuleDef,
+    shared: &'a CheckFactMap,
+    tsconfig: &'a TsConfig,
+    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    session: &'a crate::codebase::analysis_session::AnalysisSession,
+}
+
 pub(super) fn check_with_tsconfig(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &CheckFactMap,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     mut resolve: impl FnMut(&Path) -> Result<TsConfig>,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<RuleFinding>> {
@@ -36,35 +48,38 @@ pub(super) fn check_with_tsconfig(
             .unwrap_or_else(|| root.to_path_buf());
         let project_root = normalize_path(&project_root);
         let tsconfig = resolve(&project_root)?;
-        findings.extend(check_rule(
-            &root,
-            &project_root,
+        findings.extend(check_rule(RuleCheck {
+            root: &root,
+            project_root: &project_root,
             config,
             rule,
             shared,
-            &tsconfig,
+            tsconfig: &tsconfig,
             inferred_roots,
-        )?);
+            session,
+        })?);
     }
     sort_findings(&mut findings);
     Ok(findings)
 }
 
-fn check_rule(
-    root: &Path,
-    project_root: &Path,
-    config: &NoMistakesConfig,
-    rule: &RuleDef,
-    shared: &CheckFactMap,
-    tsconfig: &TsConfig,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-) -> Result<Vec<RuleFinding>> {
+fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
+    let RuleCheck {
+        root,
+        project_root,
+        config,
+        rule,
+        shared,
+        tsconfig,
+        inferred_roots,
+        session,
+    } = inputs;
     let visible_files = shared
         .files()
         .iter()
         .map(|path| normalize_path(path))
         .collect::<HashSet<_>>();
-    let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
+    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
     let opts: Options = rule.rule_options();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;

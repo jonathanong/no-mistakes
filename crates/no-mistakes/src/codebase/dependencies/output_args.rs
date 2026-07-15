@@ -54,8 +54,8 @@ pub struct TraverseArgs {
     #[arg(long = "symbols", default_value_t = false)]
     pub include_symbols: bool,
 
-    /// Emit phase timings to stderr.
-    #[arg(long, default_value_t = false)]
+    /// Legacy programmatic timing switch. CLI timing flags are root-global.
+    #[arg(skip)]
     pub timings: bool,
 
     /// Files to start from. Supports `FILE#SYMBOL` for symbol-level dependents queries

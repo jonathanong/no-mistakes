@@ -11,11 +11,14 @@ pub(crate) fn collect_file_facts(
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
 ) -> Option<super::CheckFileFacts> {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
         path.to_path_buf(),
     ]));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-    super::collect_file_facts_with_sources(root, path, plan, playwright, &sources)
+    super::collect_file_facts_with_session_and_sources(
+        &session, root, path, plan, playwright, &sources,
+    )
 }
 
 #[path = "tests/patch_coverage.rs"]

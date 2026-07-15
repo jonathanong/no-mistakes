@@ -76,9 +76,15 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
         ),
     ]);
     let filter = TestFileFilter::new(&root, &NoMistakesConfig::default());
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        &tsconfig,
+        Some(&visible_files),
+        &session,
+    );
     let production =
-        local_caller_entries(&context, &target_symbols, &root, &tsconfig, &filter, false);
-    let tests = local_caller_entries(&context, &target_symbols, &root, &tsconfig, &filter, true);
+        local_caller_entries(&context, &target_symbols, &root, &resolver, &filter, false);
+    let tests = local_caller_entries(&context, &target_symbols, &root, &resolver, &filter, true);
 
     assert!(production
         .iter()

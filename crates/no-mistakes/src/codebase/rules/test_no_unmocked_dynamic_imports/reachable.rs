@@ -35,7 +35,13 @@ pub(super) fn collect(
 ) -> Result<ReachableResult> {
     let test_reachable = dependency_cache
         .entry(test_file.to_path_buf())
-        .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, test_file.to_path_buf())))
+        .or_insert_with(|| {
+            Arc::new(runtime_deps(
+                ctx.graph,
+                test_file.to_path_buf(),
+                ctx.file_universe,
+            ))
+        })
         .clone();
     let mut result = ReachableResult {
         findings: Vec::new(),
@@ -56,37 +62,41 @@ pub(super) fn collect(
             continue;
         }
         if let Some(shared) = ctx.shared {
-            if let Some(file_facts) = shared.ts.get(file) {
-                if file_facts.parse_error.is_some() {
+            // Canonical graphs may contain supplemental roots requested by another report.
+            // A missing entry is outside this check's prepared scope and must not widen it.
+            let Some(file_facts) = shared.ts.get(file) else {
+                continue;
+            };
+            if file_facts.parse_error.is_some() {
+                continue;
+            }
+            if let (Some(source), Some(facts)) = (
+                file_facts.source.as_deref(),
+                file_facts.dynamic_imports.as_ref(),
+            ) {
+                if has_disable_file_comment(source, RULE_ID) {
                     continue;
                 }
-                if let (Some(source), Some(facts)) = (
-                    file_facts.source.as_deref(),
-                    file_facts.dynamic_imports.as_ref(),
-                ) {
-                    if has_disable_file_comment(source, RULE_ID) {
-                        continue;
+                let mut local_findings = Vec::new();
+                let check_context = DynamicCheckContext {
+                    root: ctx.root,
+                    file,
+                    resolver: ctx.resolver,
+                    graph: ctx.graph,
+                    file_universe: ctx.file_universe,
+                    mocks,
+                    dependency_cache,
+                    findings: &mut local_findings,
+                };
+                for import in &facts.dynamic_imports {
+                    if !has_disable_comment(source, import.line as u32, RULE_ID) {
+                        collect_outcome(
+                            &mut result,
+                            evaluate_dynamic_import(&check_context, import.clone()),
+                        );
                     }
-                    let mut local_findings = Vec::new();
-                    let check_context = DynamicCheckContext {
-                        root: ctx.root,
-                        file,
-                        resolver: ctx.resolver,
-                        graph: ctx.graph,
-                        mocks,
-                        dependency_cache,
-                        findings: &mut local_findings,
-                    };
-                    for import in &facts.dynamic_imports {
-                        if !has_disable_comment(source, import.line as u32, RULE_ID) {
-                            collect_outcome(
-                                &mut result,
-                                evaluate_dynamic_import(&check_context, import.clone()),
-                            );
-                        }
-                    }
-                    continue;
                 }
+                continue;
             }
         }
         let cached = get_or_cache_file(file, ctx.file_cache)?;
@@ -99,6 +109,7 @@ pub(super) fn collect(
             file,
             resolver: ctx.resolver,
             graph: ctx.graph,
+            file_universe: ctx.file_universe,
             mocks,
             dependency_cache,
             findings: &mut local_findings,
@@ -137,6 +148,7 @@ pub(super) struct ReachableContext<'a> {
     pub(super) config: &'a NoMistakesConfig,
     pub(super) resolver: &'a ImportResolver<'a>,
     pub(super) graph: &'a DepGraph,
+    pub(super) file_universe: Option<&'a HashSet<PathBuf>>,
     pub(super) shared: Option<&'a CheckFactMap>,
     pub(super) file_cache: Option<&'a DashMap<PathBuf, Arc<CachedFileFacts>>>,
 }

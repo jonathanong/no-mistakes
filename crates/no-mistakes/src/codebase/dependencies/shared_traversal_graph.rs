@@ -27,7 +27,8 @@ impl SharedTraversalContext {
         }
         let sources = self.dataset.sources_for(&self.root);
         let collected =
-            crate::codebase::ts_source::facts::collect_ts_facts_with_context_and_sources(
+            crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
+                &self.session,
                 &remaining,
                 self.fact_plan,
                 &self.fact_context,
@@ -65,6 +66,7 @@ impl SharedTraversalContext {
     ) -> Result<std::sync::Arc<graph::DepGraph>> {
         self.ensure_facts();
         let key = EffectiveGraphPlanKey::new(plan, &self.graph_files, self.analysis_generation);
+        let builds_before = self.graph_cache.build_count();
         let graph = self.graph_cache.get_or_build(key, || {
             build_canonical_graph(CanonicalGraphBuild {
                 root: &self.root,
@@ -87,9 +89,13 @@ impl SharedTraversalContext {
                     .as_ref()
                     .and_then(|projects| projects.swift_facts()),
                 visible_paths: self.dataset.visible_paths(),
+                session: self.session.clone(),
             })
         });
         self.graph_builds = self.graph_cache.build_count();
+        if self.graph_builds == builds_before {
+            self.session.record_work("graph.reuses", 1);
+        }
         graph
     }
 
@@ -121,6 +127,7 @@ impl SharedTraversalContext {
                     .as_ref()
                     .and_then(|projects| projects.swift_facts()),
                 visible_paths: self.dataset.visible_paths(),
+                session: self.session.clone(),
             })
         })?;
         self.graph = Some(graph);
@@ -132,18 +139,23 @@ impl SharedTraversalContext {
         self.ensure_facts();
         let key = GraphFileUniverseKey::new(&self.graph_files, self.analysis_generation);
         let workspace = self.dataset.workspace();
+        let builds_before = self.symbol_index_cache.build_count();
         let index = self.symbol_index_cache.get_or_build(key, || {
             Ok(
-                graph::SymbolIndex::build_from_facts_workspace_and_resolution_cache(
+                graph::SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
                     &self.tsconfig,
                     &self.graph_files,
                     self.facts.as_ref().expect("TS facts are initialized"),
                     &workspace,
                     Some(&self.import_resolution_cache),
+                    &self.session,
                 ),
             )
         });
         self.symbol_index_builds = self.symbol_index_cache.build_count();
+        if self.symbol_index_builds == builds_before {
+            self.session.record_work("symbol_index.reuses", 1);
+        }
         index
     }
 
@@ -152,6 +164,7 @@ impl SharedTraversalContext {
         self.analysis_generation = self.analysis_generation.wrapping_add(1);
         self.graph_cache.clear();
         self.symbol_index_cache.clear();
+        self.traversal_results.clear();
     }
 }
 

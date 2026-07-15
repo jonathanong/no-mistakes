@@ -56,6 +56,7 @@ pub(crate) struct CheckFileFacts {
     pub ts: Arc<TsFileFacts>,
     pub source: Option<Arc<str>>,
     pub symbols: Option<Arc<FileSymbols>>,
+    pub(crate) legacy_symbols: Option<Arc<FileSymbols>>,
     pub react: Option<Arc<ReactFileAnalysis>>,
     pub(crate) react_usages: Option<crate::react_traits::pipeline::usages::UsageFileFacts>,
     pub integration: Option<IntegrationFileAnalysis>,
@@ -72,6 +73,7 @@ pub(crate) struct CheckFileFacts {
     pub(crate) playwright_app_text_targets: HashMap<PlaywrightSettingsKey, Vec<AppTextTarget>>,
     pub(crate) playwright_static_exports: Option<StaticExportValues>,
     pub parse_error: Option<String>,
+    pub(crate) legacy_symbol_parse_error: Option<String>,
     pub(crate) parsed: bool,
 }
 
@@ -98,10 +100,6 @@ impl CheckFactMap {
         graph_files.sort();
         graph_files.dedup();
         self.view_with_supplemental(supplemental, graph_files)
-    }
-
-    pub(crate) fn scoped_view_with_supplemental(&self, supplemental: &Self) -> Self {
-        self.view_with_supplemental(supplemental, self.graph_files.clone())
     }
 
     fn view_with_supplemental(&self, supplemental: &Self, graph_files: Vec<PathBuf>) -> Self {

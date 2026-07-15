@@ -1,48 +1,14 @@
 use super::*;
 
-fn storybook_findings(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    tsconfig_path: Option<&Path>,
-    prepared_tsconfig: &crate::codebase::ts_resolver::TsConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-) -> Result<Vec<RuleFinding>> {
-    match inferred_roots {
-        Some(inferred_roots) => require_storybook_stories::check_with_prepared_facts_and_inferred(
-            root,
-            config,
-            tsconfig_path,
-            prepared_tsconfig,
-            shared,
-            inferred_roots,
-        ),
-        None => require_storybook_stories::check_with_prepared_facts(
-            root,
-            config,
-            tsconfig_path,
-            prepared_tsconfig,
-            shared,
-        ),
-    }
-}
-
-fn suppress_findings(
-    root: &Path,
-    findings: &mut Vec<RuleFinding>,
-    sources: Option<&crate::codebase::ts_source::SourceStore>,
-) {
-    match sources {
-        Some(sources) => suppress_rule_findings_with_sources(root, findings, sources),
-        None => suppress_rule_findings(root, findings),
-    }
-}
+mod helpers;
+use helpers::{storybook_findings, suppress_findings};
 
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
 ) -> Result<Vec<RuleFinding>> {
     let PreparedRulesCheck {
+        session,
         root,
         config_path,
         tsconfig_path,
@@ -78,24 +44,28 @@ pub(super) fn run(
             crate::perf_trace::trace(
                 "rules.canonical_dependency_graph",
                 || match prepared_graph {
-                    Some(prepared) => {
-                        DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
+                    Some(prepared) => DepGraph::build_with_prepared_check_facts_and_session(
+                        crate::codebase::dependencies::graph::PreparedCheckFactGraphBuildRequest {
                             root,
-                            prepared_tsconfig,
+                            tsconfig: prepared_tsconfig,
                             plan,
-                            shared.graph_file_universe().to_vec(),
+                            files: shared.graph_file_universe().to_vec(),
                             config_path,
-                            shared,
+                            facts: shared,
                             prepared,
-                        )
-                    }
-                    None => DepGraph::build_with_plan_file_list_config_and_complete_check_facts(
-                        root,
-                        prepared_tsconfig,
-                        plan,
-                        shared.graph_file_universe().to_vec(),
-                        config_path,
-                        shared,
+                        },
+                        session.clone(),
+                    ),
+                    None => DepGraph::build_with_complete_check_facts_and_session(
+                        crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
+                            root,
+                            tsconfig: prepared_tsconfig,
+                            plan,
+                            files: shared.graph_file_universe().to_vec(),
+                            config_path,
+                            facts: shared,
+                        },
+                        session.clone(),
                     ),
                 },
             )?;
@@ -108,12 +78,13 @@ pub(super) fn run(
         findings.extend(crate::perf_trace::trace(
             "rules.test_no_unmocked_dynamic_imports",
             || {
-                test_no_unmocked_dynamic_imports::check_with_prepared_facts_and_graph(
+                test_no_unmocked_dynamic_imports::check_with_prepared_facts_graph_and_session(
                     root,
                     config,
                     prepared_tsconfig,
                     shared,
                     dependency_graph.expect("dynamic-import rule requires canonical graph"),
+                    &session,
                 )
             },
         )?);
@@ -161,6 +132,7 @@ pub(super) fn run(
             prepared_tsconfig,
             shared,
             inferred_roots,
+            &session,
         )?);
     }
     if crate::playwright::rules::configured(config) {

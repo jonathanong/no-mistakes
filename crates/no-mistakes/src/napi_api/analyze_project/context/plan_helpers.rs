@@ -113,6 +113,7 @@ fn check_fact_plan(
         react,
         react_usages,
         symbols: symbols || react_usages,
+        legacy_symbol_paths: legacy_symbol_target_files(options, traversal.root())?,
         source: signature,
         graph: graph.0,
         graph_context: graph.1,

@@ -182,9 +182,11 @@ no-mistakes server routes --format json
 ```
 
 Prefer `--format json` for agent parsing and `--format paths` for command
-substitution. `--timings` writes phase timings to stderr on graph, queue,
-server, and `impacted-checks` commands. `impacted-checks` also reports the
-current phase before expensive analysis and reuses one in-memory graph across
+substitution. Every command accepts root-global `--timings`; use
+`--verbose-timings` when deterministic discovery/read/parse/resolver/graph/
+traversal/output work counts are needed. Both are stderr-only, verbose implies
+timings, and parallel phase lines are explicitly non-additive. Ordinary runs do
+not start diagnostic clocks. `impacted-checks` reuses one in-memory graph across
 configured test frameworks.
 
 For repeated graph/symbol/playwright/project queries in the same process,
@@ -207,7 +209,8 @@ reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 - `--test vitest|playwright|cargo|dotnet|swift` to filter to test files.
 - `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|md|ci|http|process|asset|react|dotnet|swift|terraform|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
-- `--format json|md|yml|paths|human`, `--json`, `--timings` (stderr), and `--jobs`.
+- `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
+  `--verbose-timings` (stderr), and `--jobs`.
 
 `FILE#SYMBOL` works only for `dependents`/`related`, not `dependencies`.
 Namespace imports match all symbols; use `rg` on returned files to confirm exact

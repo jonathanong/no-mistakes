@@ -22,6 +22,8 @@ fn run_covers_lazy_import_normal_graph_filters_formats_and_timings() {
 
 #[test]
 fn run_with_cwd_and_writer_surfaces_output_errors() {
+    let observer = crate::diagnostics::InvocationObserver::new(false);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer);
     let root = simple_root();
     let args = traverse_args(root, vec![PathBuf::from("a.mts")]);
     let cwd = std::env::current_dir().unwrap();

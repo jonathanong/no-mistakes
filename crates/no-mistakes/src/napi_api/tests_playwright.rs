@@ -28,7 +28,12 @@ fn playwright_check_napi_parses_each_source_file_once() {
 
 #[test]
 fn playwright_wrapper_edges_have_cli_napi_and_analyze_project_parity() {
-    let root = saved_fixture(&["playwright", "selector-wrappers"]);
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/playwright/selector-wrappers"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
     let check = playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();
     let check_value: serde_json::Value = serde_json::from_str(&check).unwrap();
     assert_eq!(check_value["summary"]["coveredSelectors"], 6);
@@ -80,17 +85,32 @@ fn playwright_wrapper_edges_have_cli_napi_and_analyze_project_parity() {
         assert!(!selectors.iter().any(|value| value.contains(uncovered)));
     }
 
-    let batched = super::analyze_project::analyze_project_json_impl(
-        json!({
+    let request = json!({
             "root": root,
             "reports": [
                 { "type": "playwrightCheck" },
                 { "type": "playwrightEdges" }
             ]
         })
-        .to_string(),
-    )
-    .unwrap();
+        .to_string();
+    crate::ast::begin_parse_count(&root);
+    let batched = super::analyze_project::analyze_project_json_impl(request).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let expected = [
+        root.join("playwright.config.ts"),
+        root.join("packages/locators/src/aside.ts"),
+        root.join("tests/default-locator.ts"),
+        root.join("tests/helpers.ts"),
+        root.join("tests/namespace-locators.ts"),
+        root.join("tests/page.spec.ts"),
+        root.join("tests/unconfigured.ts"),
+        root.join("web/page.tsx"),
+    ];
+    assert_eq!(counts.len(), expected.len(), "{counts:?}");
+    assert!(counts.values().all(|count| *count == 1), "{counts:?}");
+    for file in expected {
+        assert_eq!(counts.get(&file), Some(&1), "{counts:?}");
+    }
     let batched: serde_json::Value = serde_json::from_str(&batched).unwrap();
     assert_eq!(batched["reports"][0]["result"], check_value);
     assert_eq!(batched["reports"][1]["result"], standalone_value);

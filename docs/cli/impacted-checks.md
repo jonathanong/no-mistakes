@@ -24,7 +24,8 @@ no-mistakes impacted-checks src/api/handler.ts --json --timings
 | `--diff` | Unified diff file. |
 | `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
 | `--json` | Shorthand for `--format json`. |
-| `--timings` | Emit live analysis progress and phase durations to stderr. |
+| `--timings` | Emit analysis phase durations to stderr. |
+| `--verbose-timings` | Also emit deterministic one-pass work counters; implies timings. |
 
 Changed files may also be passed as positional arguments.
 
@@ -41,14 +42,15 @@ Changed files may also be passed as positional arguments.
 - Commands are deduped and sorted. If the test-plan engine triggers a
   full-suite fallback (e.g. a global config change), `fallback_triggered` is set.
 
-`--timings` reports the current phase before expensive work starts and prints
-its duration on completion. Stable phase names include `prepare`,
+`--timings` emits one deterministic diagnostics block after analysis. Stable
+phase names include `prepare`,
 `discover.<framework>`, `select.<framework>`, `generic-checks`, and `total`, plus
 `graph` when dependency analysis is needed. Phase durations exclude nested work,
 so the first selection phase does not double-count the lazy graph build.
 Diagnostics go only to stderr, so stdout remains byte-compatible and safe to
 parse or pipe. If a phase fails, stderr reports the phase and elapsed time before
-the normal actionable error.
+the normal actionable error. See [Performance diagnostics](diagnostics.md) for
+the shared stderr contract and verbose work counters.
 
 `--diff-stdin` / `--diff-command` are not supported by this command; use a
 reusable `--diff <file>` input instead.

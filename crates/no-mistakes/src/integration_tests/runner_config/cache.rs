@@ -67,6 +67,10 @@ thread_local! {
     static REQUEST_CACHES: RefCell<Vec<RequestCache>> = const { RefCell::new(Vec::new()) };
 }
 
+mod source;
+pub(in crate::integration_tests) use source::read_request_source;
+pub(super) use source::read_request_source_with_session;
+
 impl PreparedIntegrationRunnerConfigs {
     pub(crate) fn with_request_cache<T>(
         &self,
@@ -140,25 +144,6 @@ pub(super) fn collect_analyses<T>(
         });
     }
     (result, analyses)
-}
-
-pub(in crate::integration_tests) fn read_request_source(
-    path: &Path,
-) -> Result<std::sync::Arc<str>> {
-    let sources = REQUEST_CACHES.with(|caches| {
-        caches
-            .borrow()
-            .last()
-            .and_then(|request| request.sources.clone())
-    });
-    match sources {
-        Some(sources) => sources
-            .read_path(path)
-            .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
-        None => std::fs::read_to_string(path)
-            .map(std::sync::Arc::<str>::from)
-            .map_err(anyhow::Error::from),
-    }
 }
 
 pub(super) fn with_request_program<T>(

@@ -44,35 +44,59 @@ impl SymbolIndex {
         graph_files: &GraphFiles,
         facts: &TsFactMap,
     ) -> Self {
-        let workspace = crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
-            .unwrap_or_default();
-        Self::build_from_facts_and_workspace(tsconfig, graph_files, facts, &workspace)
+        let session = crate::codebase::analysis_session::AnalysisSession::new(
+            crate::diagnostics::current(),
+        );
+        Self::build_from_facts_with_session(root, tsconfig, graph_files, facts, &session)
     }
 
-    pub(crate) fn build_from_facts_and_workspace(
-        tsconfig: &TsConfig,
-        graph_files: &GraphFiles,
-        facts: &dyn TsFactLookup,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    ) -> Self {
-        Self::build_from_facts_workspace_and_resolution_cache(
-            tsconfig, graph_files, facts, workspace, None,
-        )
-    }
-
-    pub(crate) fn build_from_facts_workspace_and_resolution_cache(
+    pub(crate) fn build_from_facts_workspace_resolution_cache_and_session(
         tsconfig: &TsConfig,
         graph_files: &GraphFiles,
         facts: &dyn TsFactLookup,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
         import_resolution_cache: Option<&crate::codebase::ts_resolver::ImportResolutionCache>,
+        session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
-        type SymEntry = (PathBuf, String, String, bool);
-        let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
+        let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
+            .with_visible(graph_files.visible());
         let resolver = match import_resolution_cache {
             Some(cache) => resolver.with_shared_cache(cache),
             None => resolver,
         };
+        session.record_work("symbol_index.builds", 1);
+        Self::build_index(&resolver, graph_files, facts, workspace)
+    }
+
+    pub(crate) fn build_from_facts_with_session(
+        root: &Path,
+        tsconfig: &TsConfig,
+        graph_files: &GraphFiles,
+        facts: &TsFactMap,
+        session: &crate::codebase::analysis_session::AnalysisSession,
+    ) -> Self {
+        let dataset = crate::codebase::analysis_dataset::AnalysisDataset::new_observed(
+            root,
+            session.observer().cloned(),
+        );
+        let workspace = dataset.workspace();
+        Self::build_from_facts_workspace_resolution_cache_and_session(
+            tsconfig,
+            graph_files,
+            facts,
+            &workspace,
+            None,
+            session,
+        )
+    }
+
+    fn build_index(
+        resolver: &ImportResolver<'_>,
+        graph_files: &GraphFiles,
+        facts: &dyn TsFactLookup,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    ) -> Self {
+        type SymEntry = (PathBuf, String, String, bool);
 
         let per_file: Vec<(PathBuf, Vec<SymEntry>)> = graph_files
             .indexable()

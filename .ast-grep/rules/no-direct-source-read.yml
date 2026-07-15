@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Unified fact collectors must read through the request's canonical SourceStore
+# so successful and failed reads are both memoized and observed. SourceStore is
+# the sole physical-read boundary for this analysis pipeline.
+id: no-direct-source-read
+language: rust
+severity: error
+message: >-
+  Direct source read in the shared TS/JS fact pipeline. Use
+  SourceStore::read_path so one invocation performs at most one physical read
+  per canonical FileId or supplemental normalized path and memoizes failures.
+rule:
+  any:
+    - pattern: std::fs::read_to_string($PATH)
+    - pattern: fs::read_to_string($PATH)
+    - pattern: read_to_string($PATH)
+files:
+  - "crates/no-mistakes/src/codebase/check_facts/**"
+  - "crates/no-mistakes/src/codebase/dependencies/graph/lazy_import_neighbors.rs"
+  - "crates/no-mistakes/src/codebase/dependencies/shared_traversal_facts.rs"
+  - "crates/no-mistakes/src/codebase/ts_source/**"
+  - "crates/no-mistakes/src/integration_tests/runner_config/prepared.rs"
+  - "crates/no-mistakes/src/integration_tests/runner_config/prepared_all.rs"
+ignores:
+  - "crates/no-mistakes/src/codebase/ts_source/source_store.rs"
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes/src/**/test_support.rs"

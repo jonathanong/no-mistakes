@@ -54,6 +54,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
         imports: enabled.dynamic_import_rules,
         symbols: enabled.unique_exports || enabled.storybook_stories,
+        legacy_symbol_paths: Default::default(),
         react: enabled.react || enabled.storybook_stories,
         react_usages: false,
         queue: enabled.queue,

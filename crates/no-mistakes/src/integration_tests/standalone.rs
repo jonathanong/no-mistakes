@@ -35,11 +35,17 @@ pub(super) fn check(
     let function_index = resolve::build_function_index(&analyses);
     let export_index = resolve::build_export_index(&analyses);
     let visible_files = analyses.keys().cloned().collect();
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        &tsconfig,
+        Some(&visible_files),
+        &session,
+    );
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
-        tsconfig: &tsconfig,
-        visible_files: &visible_files,
+        resolver: &import_resolver,
     };
 
     let mut findings = Vec::new();

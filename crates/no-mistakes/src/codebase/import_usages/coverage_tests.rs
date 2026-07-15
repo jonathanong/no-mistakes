@@ -86,14 +86,16 @@ fn scan_roots_filters_and_output_roots_cover_path_branches() {
     let mut scan_args = base_args();
     scan_args.scan_roots = vec![PathBuf::from(".")];
     scan_args.filters = vec!["src/".to_string()];
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
-    let files = paths::resolve_files(&scan_args, &root, &cwd).unwrap();
+    let files = paths::resolve_files_with_session(&session, &scan_args, &root, &cwd).unwrap();
     assert!(files.iter().any(|path| path.ends_with("src/main.mts")));
     assert_eq!(paths::roots_for_output(&scan_args, &root), vec!["."]);
 
     let mut absolute_scan_args = base_args();
     absolute_scan_args.scan_roots = vec![root.join("src")];
-    let absolute_files = paths::resolve_files(&absolute_scan_args, &root, &cwd).unwrap();
+    let absolute_files =
+        paths::resolve_files_with_session(&session, &absolute_scan_args, &root, &cwd).unwrap();
     assert!(absolute_files
         .iter()
         .any(|path| path.ends_with("src/main.mts")));
@@ -107,15 +109,39 @@ fn scan_roots_filters_and_output_roots_cover_path_branches() {
 
     let mut absolute_file_args = base_args();
     absolute_file_args.files = vec![root.join("src/main.mts")];
-    let absolute_input = paths::resolve_files(&absolute_file_args, &root, &cwd).unwrap();
+    let absolute_input =
+        paths::resolve_files_with_session(&session, &absolute_file_args, &root, &cwd).unwrap();
     assert_eq!(absolute_input, vec![root.join("src/main.mts")]);
+}
+
+#[test]
+fn session_scan_roots_reuse_inside_snapshot_and_discover_external_root() {
+    let cwd = std::env::current_dir().unwrap();
+    let root = fixture_root();
+    let external_root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/signature-impact"),
+    );
+    let root_main = root.join("src/main.mts");
+    let external_consumer = external_root.join("consumer.mts");
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let mut args = base_args();
+    args.scan_roots = vec![PathBuf::from("src"), root.join("src"), external_root];
+
+    let files = paths::resolve_files_with_session(&session, &args, &root, &cwd).unwrap();
+
+    assert_eq!(files.iter().filter(|path| *path == &root_main).count(), 1);
+    assert!(files.contains(&external_consumer));
 }
 
 #[test]
 fn relative_roots_and_empty_package_segments_are_handled() {
     let mut file_args = base_args();
     file_args.files = vec![PathBuf::from("src/main.mts")];
-    let files = paths::resolve_files(&file_args, Path::new("."), &fixture_root()).unwrap();
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let files =
+        paths::resolve_files_with_session(&session, &file_args, Path::new("."), &fixture_root())
+            .unwrap();
 
     assert_eq!(paths::normalize_root(None, &fixture_root()), fixture_root());
     assert!(files[0].ends_with("src/main.mts"));

@@ -1,0 +1,18 @@
+{
+  "advisories": [],
+  "codebase": [],
+  "integration": [],
+  "queues": [],
+  "react": [],
+  "rules": [
+    {
+      "file": "entrypoints/api.mts",
+      "import": "import",
+      "line": 1,
+      "message": "entrypoints/api.mts reaches forbidden module 'sharp' via import. Reproduce: no-mistakes dependencies 'entrypoints/api.mts' --target-module 'sharp' --relationship all --format json",
+      "rule": "forbidden-dependencies",
+      "target": "sharp"
+    }
+  ],
+  "warnings": []
+}

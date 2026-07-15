@@ -36,8 +36,11 @@ pub(super) fn import_usages_report(
     let args = build_import_usages_args(options);
     let cwd = std::env::current_dir().context("reading current directory")?;
     let root = shared.root().to_path_buf();
+    let session = shared.session_arc();
+    let prepared =
+        crate::codebase::import_usages::prepare_file_universe(&args, &root, &cwd, &session)?;
     let report =
-        crate::codebase::import_usages::collect_with_facts(&args, &root, &cwd, shared.facts())?;
+        crate::codebase::import_usages::collect_with_facts(&root, &prepared, shared.facts())?;
     Ok(serde_json::to_value(report)?)
 }
 

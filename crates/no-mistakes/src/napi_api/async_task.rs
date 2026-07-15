@@ -16,7 +16,7 @@ impl Task for JsonTask {
     type JsValue = String;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        (self.run)(std::mem::take(&mut self.options_json))
+        crate::ast::with_request_parse_cache(|| (self.run)(std::mem::take(&mut self.options_json)))
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {

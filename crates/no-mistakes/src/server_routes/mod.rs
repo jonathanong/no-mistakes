@@ -13,7 +13,7 @@ pub(crate) use extract::{has_server_route_shape_from_program, is_client_http_mod
 pub use graph::{
     analyze_project, analyze_project_indexed, analyze_project_with_prepared,
     analyze_project_with_prepared_indexed, prepare_analysis, prepare_analysis_with_shared_facts,
-    PreparedServerAnalysis, RelatedDirection,
+    prepare_analysis_with_shared_facts_and_session, PreparedServerAnalysis, RelatedDirection,
 };
 pub(crate) use graph::{
     configure_fact_context, route_defs_from_files, route_defs_from_prepared_facts,

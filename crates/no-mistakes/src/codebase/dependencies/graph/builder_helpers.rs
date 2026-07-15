@@ -13,6 +13,22 @@ struct GraphEdgeBuildInputs<'a> {
     visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
 }
 
+fn parsed_imports_for_plan<'a>(
+    plan: GraphBuildPlan,
+    files: &'a [PathBuf],
+    facts: Option<&'a dyn TsFactLookup>,
+) -> Result<ParsedImports<'a>> {
+    if !(plan.imports || plan.workspace || plan.assets) {
+        return Ok(Vec::new());
+    }
+    let Some(facts) = facts else {
+        anyhow::bail!(
+            "TS import facts are required when import, workspace, or asset edges are requested"
+        );
+    };
+    Ok(collect_parsed_imports_from_facts(files, facts))
+}
+
 fn merge_http_process_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
@@ -118,4 +134,12 @@ fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
         adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), *k as u8));
         adj.dedup();
     }
+}
+
+fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {
+    edges.push((
+        NodeId::File(source.to_path_buf()),
+        NodeId::File(target.to_path_buf()),
+        EdgeKind::RouteRef,
+    ));
 }

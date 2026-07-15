@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use no_mistakes::codebase::ts_source::VisiblePathSnapshot;
-use no_mistakes::config::v2::{load_v2_config_from_visible, NoMistakesConfig};
+use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -15,20 +15,26 @@ pub(crate) struct PreparedCheckInputs {
     pub(crate) vitest_projects: Option<no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
 }
 
-pub(super) fn prepare(
+pub(super) fn prepare_with_session(
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     root: &Path,
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
 ) -> Result<PreparedCheckInputs> {
-    let visible_paths = Arc::new(VisiblePathSnapshot::new(root));
-    let root_paths = visible_paths.paths_for(root);
-    let config = load_v2_config_from_visible(root, config_path, &root_paths)?;
-    let tsconfig = no_mistakes::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        tsconfig_path,
+    let (visible_paths, _) = no_mistakes::diagnostics::measure_if_enabled(
+        "discovery",
+        no_mistakes::diagnostics::TimingKind::Serial,
+        || session.visible_paths(root),
+    );
+    let config = session.config(root, config_path)?;
+    let tsconfig = session.tsconfig(root, tsconfig_path)?;
+    prepare_from_shared(
         root,
-        &root_paths,
-    )?;
-    prepare_from_shared(root, config_path, visible_paths, config, tsconfig)
+        config_path,
+        visible_paths,
+        config.as_ref().clone(),
+        tsconfig.as_ref().clone(),
+    )
 }
 
 pub(crate) fn prepare_from_shared(

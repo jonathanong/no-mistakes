@@ -9,6 +9,7 @@ request structured output, understand config, and keep source code analyzable.
 | Goal | Doc |
 | --- | --- |
 | Pick the right CLI command | [CLI commands](cli/README.md) |
+| Diagnose analysis cost without changing command output | [Performance diagnostics](cli/diagnostics.md) |
 | Call the async Node API | [Node/N-API guide](node-api.md) |
 | Configure projects, tests, selectors, and rules | [Configuration](configuration/README.md) |
 | Configure repository checks | [no-mistakes rules](rules/README.md) |
@@ -20,6 +21,8 @@ request structured output, understand config, and keep source code analyzable.
 
 - [Architecture](architecture.md) describes the one-pass, in-memory, graph-based
   execution model.
+- [AST-grep regression rules](ast-grep-rules.md) guard the source shapes that
+  would bypass the one-pass gateways.
 - [Graph edges](graph-edges.md) lists dependency edge kinds with fixture-backed
   examples, counterexamples, relationship filters, and caveats.
 - [Test planning](test-plan.md) explains configured test selection in more

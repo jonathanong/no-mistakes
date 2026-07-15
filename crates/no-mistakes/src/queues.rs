@@ -35,8 +35,8 @@ pub(crate) struct QueuesArgs {
     /// Alias for --format json; cannot be combined with --format.
     #[arg(long, global = true, conflicts_with = "format")]
     json: bool,
-    /// Emit phase timings to stderr.
-    #[arg(long, global = true)]
+    /// Legacy programmatic timing switch. CLI timing flags are root-global.
+    #[arg(skip)]
     timings: bool,
     #[command(subcommand)]
     command: QueuesCommand,
@@ -80,27 +80,30 @@ impl From<QueueDirection> for RelatedDirection {
 pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
     let base = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &base);
-    let started = std::time::Instant::now();
     let format = if args.json { Format::Json } else { args.format };
+    let _ = args.timings;
     match &args.command {
         QueuesCommand::Edges { files } => {
-            let report = analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)?;
-            print_analysis_timing(args.timings, started);
+            let report = trace_queue_analysis(|| {
+                analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)
+            })?;
             let depth = root_scoped_edge_depth(files, args.depth);
             let edges = report.edge_view(files, depth);
             print_edges(&edges, format)?;
             Ok(ExitCode::SUCCESS)
         }
         QueuesCommand::Related { files, direction } => {
-            let report = analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)?;
-            print_analysis_timing(args.timings, started);
+            let report = trace_queue_analysis(|| {
+                analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)
+            })?;
             let edges = report.related(files, (*direction).into());
             print_related(files, &edges, format)?;
             Ok(ExitCode::SUCCESS)
         }
         QueuesCommand::Check => {
-            let report = analyze_project(&root, args.tsconfig.as_deref(), &args.filters)?;
-            print_analysis_timing(args.timings, started);
+            let report = trace_queue_analysis(|| {
+                analyze_project(&root, args.tsconfig.as_deref(), &args.filters)
+            })?;
             print_check(&report.check, format)?;
             Ok(if report.check.is_empty() {
                 ExitCode::SUCCESS
@@ -111,12 +114,14 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
     }
 }
 
-fn print_analysis_timing(enabled: bool, started: std::time::Instant) {
-    if enabled {
-        eprintln!(
-            "analysis: {:.3}ms",
-            started.elapsed().as_secs_f64() * 1000.0
-        );
+fn trace_queue_analysis<T>(operation: impl FnOnce() -> Result<T>) -> Result<T> {
+    match no_mistakes::diagnostics::current() {
+        Some(observer) => observer.trace(
+            "analysis.queues",
+            no_mistakes::diagnostics::TimingKind::Serial,
+            operation,
+        ),
+        None => operation(),
     }
 }
 

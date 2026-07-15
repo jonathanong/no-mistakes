@@ -1,7 +1,5 @@
-use crate::codebase::ts_resolver::{
-    find_tsconfig_from_visible, load_tsconfig, ImportResolver, TsConfig,
-};
-use crate::config::v2::{load_v2_config_from_visible, ConfigView};
+use crate::codebase::ts_resolver::{find_tsconfig_from_visible, ImportResolver, TsConfig};
+use crate::config::v2::ConfigView;
 use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
 use crate::server_routes::model::{FileFacts, PreparedProjectReport, ProjectReport, RouteSite};
 use crate::server_routes::mounts::{prefixes_for, resolve_mounts_with_resolver};
@@ -30,6 +28,7 @@ pub struct PreparedServerAnalysis {
     pub(crate) tsconfig: TsConfig,
     pub(crate) config: Option<crate::config::v2::NoMistakesConfig>,
     pub(crate) facts: crate::codebase::ts_source::facts::TsFactMap,
+    pub(crate) session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 }
 
 include!("graph_prepare.rs");
@@ -58,7 +57,7 @@ pub fn analyze_project_with_prepared(
     prepared: &PreparedServerAnalysis,
     filters: &[String],
 ) -> anyhow::Result<ProjectReport> {
-    analyze_project_with_prepared_inner(prepared, filters, build_report)
+    analyze_project_with_prepared_inner(prepared, filters, build_report_with_session)
 }
 
 #[doc(hidden)]
@@ -72,7 +71,12 @@ pub fn analyze_project_with_prepared_indexed(
 fn analyze_project_with_prepared_inner<T>(
     prepared: &PreparedServerAnalysis,
     filters: &[String],
-    builder: impl FnOnce(&Path, &HashMap<PathBuf, FileFacts>, &TsConfig) -> T,
+    builder: impl FnOnce(
+        &Path,
+        &HashMap<PathBuf, FileFacts>,
+        &TsConfig,
+        &crate::codebase::analysis_session::AnalysisSession,
+    ) -> T,
 ) -> anyhow::Result<T> {
     let root = &prepared.root;
     let config_route_filter = prepared
@@ -109,7 +113,7 @@ fn analyze_project_with_prepared_inner<T>(
             }
         }
     }
-    Ok(builder(root, &facts, &prepared.tsconfig))
+    Ok(builder(root, &facts, &prepared.tsconfig, &prepared.session))
 }
 
 pub(crate) fn route_defs_from_files(

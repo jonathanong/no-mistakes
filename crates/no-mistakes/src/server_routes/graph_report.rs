@@ -3,15 +3,27 @@ pub(super) fn build_report(
     facts: &HashMap<PathBuf, FileFacts>,
     tsconfig: &TsConfig,
 ) -> ProjectReport {
-    build_report_and_relationships(root, facts, tsconfig).0
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    build_report_with_session(root, facts, tsconfig, &session)
+}
+
+fn build_report_with_session(
+    root: &Path,
+    facts: &HashMap<PathBuf, FileFacts>,
+    tsconfig: &TsConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> ProjectReport {
+    build_report_and_relationships(root, facts, tsconfig, session).0
 }
 
 pub(super) fn build_prepared_report(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
     tsconfig: &TsConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> PreparedProjectReport {
-    let (report, mut relationships) = build_report_and_relationships(root, facts, tsconfig);
+    let (report, mut relationships) =
+        build_report_and_relationships(root, facts, tsconfig, session);
     relationships.sort_by_key(|edge| {
         (
             public_node(root, &edge.from),
@@ -52,13 +64,14 @@ fn build_report_and_relationships(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
     tsconfig: &TsConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (ProjectReport, Vec<RelationshipEdge>) {
     let mut routes = Vec::new();
     let mut edges = Vec::new();
     let mut relationships = Vec::new();
     let mut diagnostics = Vec::new();
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new(tsconfig).with_visible(&visible);
+    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
     let mounts = resolve_mounts_with_resolver(facts, &resolver);
     for (path, file_facts) in facts {
         diagnostics.extend(

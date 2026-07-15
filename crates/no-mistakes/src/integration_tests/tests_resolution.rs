@@ -95,11 +95,17 @@ fn direct_resolution_covers_cycles_and_import_shapes() {
     export_index.insert((helper, "default".into()), imported_key);
     let tsconfig = test_support::tsconfig_without_config(&root);
     let visible_files = analyses.keys().cloned().collect();
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        &tsconfig,
+        Some(&visible_files),
+        &session,
+    );
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
-        tsconfig: &tsconfig,
-        visible_files: &visible_files,
+        resolver: &import_resolver,
     };
 
     assert_eq!(
@@ -129,11 +135,17 @@ fn pass4b_call_tracing_skips_ignored_helper_for_visible_fallback() {
     let export_index = resolve::build_export_index(&analyses);
     let visible_files = files.into_iter().collect();
     let tsconfig = test_support::tsconfig_without_config(&root);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
+        &tsconfig,
+        Some(&visible_files),
+        &session,
+    );
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
-        tsconfig: &tsconfig,
-        visible_files: &visible_files,
+        resolver: &import_resolver,
     };
 
     let integrations = resolve::resolved_integrations(

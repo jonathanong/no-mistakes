@@ -5,11 +5,11 @@ use crate::check_tasks::{
 };
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
-use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources;
+use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_playwright_sources_and_session;
 use std::path::PathBuf;
-use std::time::Instant;
 
 pub(crate) mod enabled;
+mod forbidden_plan;
 pub(crate) mod prepared;
 mod results;
 
@@ -21,7 +21,15 @@ pub(crate) fn run_all(
     tsconfig_path: Option<PathBuf>,
 ) -> Result<CheckResults> {
     let root = root.canonicalize().unwrap_or(root);
-    let prepared = prepared::prepare(&root, config_path.as_deref(), tsconfig_path.as_deref())?;
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(
+        no_mistakes::diagnostics::current(),
+    );
+    let prepared = prepared::prepare_with_session(
+        &session,
+        &root,
+        config_path.as_deref(),
+        tsconfig_path.as_deref(),
+    )?;
     let config = &prepared.config;
     let queues_enabled = queues_configured(config);
     let unique_exports_enabled = unique_exports_configured(config);
@@ -75,38 +83,18 @@ pub(crate) fn run_all(
             ),
         ));
     }
-    let prepared_graph = forbidden_graph_plan
-        .map(|graph_plan| {
-            no_mistakes::codebase::dependencies::graph::prepare_graph_config(
-                &root,
-                graph_plan,
-                &prepared.codebase_config,
-                config,
-                prepared.visible_paths.as_ref(),
-            )
-        })
-        .transpose()?;
-    if let Some(graph_playwright) = prepared_graph
-        .as_ref()
-        .map(|graph| graph.playwright_fact_plan(&root, &prepared.tsconfig, &prepared.visible_paths))
-        .transpose()?
-        .flatten()
-    {
-        match playwright_fact_plan.as_mut() {
-            Some(plan) => plan.include(graph_playwright),
-            None => playwright_fact_plan = Some(graph_playwright),
-        }
-    }
-    if let (Some(graph_plan), Some(prepared)) = (forbidden_graph_plan, prepared_graph.as_ref()) {
-        let (fact_plan, fact_context) =
-            no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
-                &root,
-                graph_plan,
-                prepared,
-            );
-        plan.graph.include(fact_plan);
-        plan.graph_context = fact_context;
-    }
+    let prepared_graph = forbidden_plan::prepare(
+        &root,
+        config,
+        forbidden_plan::PreparedInputs {
+            codebase_config: &prepared.codebase_config,
+            tsconfig: &prepared.tsconfig,
+            visible_paths: prepared.visible_paths.as_ref(),
+        },
+        forbidden_graph_plan,
+        &mut playwright_fact_plan,
+        &mut plan,
+    )?;
     let needs_shared_facts =
         plan_requests_facts(&plan) || playwright_fact_plan.is_some() || forbidden_deps_enabled;
     if !needs_shared_facts
@@ -116,19 +104,26 @@ pub(crate) fn run_all(
     {
         return Ok(empty_results([None]));
     }
-    let discover_start = Instant::now();
     let skip_directories = config.filesystem.skip_directories.clone();
     let needs_full_graph_files = forbidden_graph_plan.is_some() || playwright_fact_plan.is_some();
-    let views = crate::check_discovery::discover_check_file_views_from_snapshot(
-        &root,
-        config,
-        &skip_directories,
-        unique_exports_enabled,
-        prepared.visible_paths.as_ref(),
+    let needs_graph_files =
+        needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
+    let (views, discover_duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "discovery",
+        no_mistakes::diagnostics::TimingKind::Serial,
+        || {
+            crate::check_discovery::discover_check_file_views_from_snapshot(
+                &root,
+                config,
+                &skip_directories,
+                unique_exports_enabled,
+                prepared.visible_paths.as_ref(),
+            )
+        },
     );
     let (discovered, graph_files) = if needs_full_graph_files {
         (views.filesystem, views.graph)
-    } else if needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules) {
+    } else if needs_graph_files {
         // The dynamic-import rule traverses the same filesystem-scoped
         // visible universe it analyzes. Supplying that universe explicitly
         // keeps prepared graph construction strict without a fallback parse.
@@ -137,32 +132,36 @@ pub(crate) fn run_all(
     } else {
         (views.filesystem, Vec::new())
     };
-    let discover_duration = discover_start.elapsed();
-    let facts_start = Instant::now();
     // When only filesystem rules are enabled, no TS/JS parsing is needed.
-    let (fs_files, facts) = if needs_shared_facts {
-        let fs = if filesystem_rules_enabled {
-            discovered.clone()
-        } else {
-            Vec::new()
-        };
-        let f = collect_check_facts_with_graph_files_playwright_and_sources(
-            &root,
-            discovered,
-            graph_files,
-            plan,
-            playwright_fact_plan,
-            prepared.visible_paths.source_store_for(&root),
-        );
-        (fs, f)
-    } else {
-        (discovered, Default::default())
-    };
-    let facts_duration = facts_start.elapsed();
-
     let sources = prepared.visible_paths.source_store_for(&root);
+    let ((fs_files, facts), facts_duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "parse",
+        no_mistakes::diagnostics::TimingKind::Serial,
+        || {
+            if needs_shared_facts {
+                let fs = if filesystem_rules_enabled {
+                    discovered.clone()
+                } else {
+                    Vec::new()
+                };
+                let f = collect_check_facts_with_graph_files_playwright_sources_and_session(
+                    &session,
+                    &root,
+                    (discovered, graph_files),
+                    plan,
+                    playwright_fact_plan,
+                    std::sync::Arc::clone(&sources),
+                );
+                (fs, f)
+            } else {
+                (discovered, Default::default())
+            }
+        },
+    );
+
     let (react, queues, rules, integration, codebase, filesystem_rules) =
         run_domain_checks(DomainCheckInputs {
+            session: session.clone(),
             root: &root,
             config_path: &config_path,
             tsconfig_path: &tsconfig_path,

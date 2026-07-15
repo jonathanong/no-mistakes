@@ -3,7 +3,6 @@ use anyhow::Result;
 use no_mistakes::codebase::rules::{self, RuleFinding};
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
-use std::time::Instant;
 
 const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::AGENTS_MD_MAX_SIZE,
@@ -50,23 +49,29 @@ pub(crate) fn run_filesystem_rules_check(
     sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
     vitest_projects: Option<&rules::PreparedVitestProjectCatalog>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
-    let start = Instant::now();
-    let findings = if enabled {
-        rules::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
-            root,
-            config,
-            files,
-            visible_paths,
-            vitest_projects,
-            sources,
-        )?
-    } else {
-        Vec::new()
-    };
+    let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
+        "analysis.filesystem_rules",
+        no_mistakes::diagnostics::TimingKind::Parallel,
+        || -> Result<_> {
+            Ok(if enabled {
+                rules::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+                    root,
+                    config,
+                    files,
+                    visible_paths,
+                    vitest_projects,
+                    sources,
+                )?
+            } else {
+                Vec::new()
+            })
+        },
+    );
+    let findings = findings?;
     Ok(CheckTask {
         findings,
         warning: None,
-        duration: start.elapsed(),
+        duration,
     })
 }
 

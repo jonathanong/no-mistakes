@@ -2,6 +2,7 @@
 fn aggregate_check_injects_prepared_config_into_every_domain() {
     let runner = include_str!("../../check_runner.rs");
     let prepared = include_str!("../prepared.rs");
+    let forbidden_plan = include_str!("../forbidden_plan.rs");
     let parallel = include_str!("../../check_parallel.rs");
     let tasks = check_task_sources();
 
@@ -35,9 +36,23 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     }
 
     assert!(prepared.contains("prepare_check_from_loaded_config"));
-    assert_eq!(prepared.matches("resolve_tsconfig_from_visible").count(), 1);
-    assert!(runner.contains("prepare_graph_config"));
-    assert!(runner.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
+    // The session is the canonical manifest cache boundary. Reintroducing a direct resolver here
+    // would bypass request-wide config/tsconfig reuse even though it looks locally self-contained.
+    assert_eq!(
+        prepared
+            .matches("session.config(root, config_path)?")
+            .count(),
+        1
+    );
+    assert_eq!(
+        prepared
+            .matches("session.tsconfig(root, tsconfig_path)?")
+            .count(),
+        1
+    );
+    assert!(!prepared.contains("resolve_tsconfig_from_visible"));
+    assert!(forbidden_plan.contains("prepare_graph_config"));
+    assert!(forbidden_plan.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
     assert!(!runner.contains("react_traits::check_enabled"));
     assert!(tasks.contains("queue::analyze_project_with_prepared_facts"));
     assert!(!tasks.contains("queue::analyze_project_with_facts"));
@@ -53,6 +68,7 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
         include_str!("../../codebase/rules/run/prepared/execution.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/helpers.rs"),
     );
     let rule_roots = include_str!("../../codebase/rules/mod.rs");
     let unique_exports = include_str!("../../codebase/unique_exports/with_facts/prepared.rs");
@@ -135,9 +151,18 @@ fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
         include_str!("../../codebase/rules/run/prepared/execution.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/helpers.rs"),
     );
 
-    assert_eq!(aggregate.matches("load_v2_config_from_visible(").count(), 1);
+    // Aggregate preparation must consume the session-owned manifest once and pass the loaded
+    // value onward; direct loading here would split the cache from other request consumers.
+    assert_eq!(
+        aggregate
+            .matches("session.config(root, config_path)?")
+            .count(),
+        1
+    );
+    assert!(!aggregate.contains("load_v2_config_from_visible"));
     assert!(!aggregate.contains("prepare_check_from_visible"));
     let aggregate_playwright = playwright
         .split("pub fn prepare_from_snapshot")
@@ -181,6 +206,7 @@ fn aggregate_storybook_prepares_visible_tsconfig_per_project_root() {
 #[test]
 fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     let execution = include_str!("../../codebase/rules/run/prepared/execution.rs");
+    let helpers = include_str!("../../codebase/rules/run/prepared/execution/helpers.rs");
     let coordinator = execution
         .split("pub(super) fn run")
         .nth(1)
@@ -197,7 +223,10 @@ fn aggregate_rule_coordinator_delegates_variant_dispatch() {
 
     // Keep per-rule variant selection out of the aggregate coordinator so its
     // complexity remains bounded as additional rules are introduced.
-    assert!(execution.contains("fn storybook_findings("));
+    assert!(execution.contains("mod helpers;"));
+    assert!(execution.contains("use helpers::{storybook_findings, suppress_findings};"));
+    assert!(helpers.contains("pub(super) fn storybook_findings("));
+    assert!(helpers.contains("check_with_prepared_facts_and_inferred_and_session"));
     assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);
     assert!(!storybook_block.contains("check_with_prepared_facts_and_inferred"));
 }

@@ -39,7 +39,7 @@ fn shared_traversal_rebuilds_without_symbols_for_plain_reports() {
 }
 
 #[test]
-fn shared_traversal_symbol_dependents_use_symbol_free_import_graph_when_preplanned() {
+fn dataset_shared_traversal_symbol_dependents_use_symbol_free_import_graph_when_preplanned() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis")
         .join("tests-impact-symbol")
@@ -64,7 +64,7 @@ fn shared_traversal_symbol_dependents_use_symbol_free_import_graph_when_preplann
 }
 
 #[test]
-fn shared_traversal_initializes_absent_fact_maps_for_empty_and_nonempty_universes() {
+fn dataset_shared_traversal_initializes_absent_fact_maps_for_empty_and_nonempty_universes() {
     let root = simple_root();
     let mut shared = SharedTraversalContext::prepare(
         root.clone(),
@@ -102,7 +102,7 @@ fn shared_traversal_initializes_absent_fact_maps_for_empty_and_nonempty_universe
 }
 
 #[test]
-fn shared_traversal_extends_absent_facts_and_seeds_cached_program_facts() {
+fn dataset_shared_traversal_extends_absent_facts_and_seeds_cached_program_facts() {
     let source = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/parser-count/shared-traversal-prepared-projects"),
@@ -157,17 +157,29 @@ fn shared_traversal_extends_absent_facts_and_seeds_cached_program_facts() {
 
 #[test]
 fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() {
-    let shared = include_str!("../shared_traversal.rs");
+    let shared = concat!(
+        include_str!("../shared_traversal.rs"),
+        include_str!("../shared_traversal_prepare.rs"),
+        include_str!("../shared_traversal_prepare_core.rs")
+    );
     let shared_graph = concat!(
         include_str!("../shared_traversal_graph.rs"),
         include_str!("../shared_graph_cache.rs"),
     );
     let standalone = include_str!("../mod.rs");
 
-    assert_eq!(shared.matches("AnalysisDataset::new(&root)").count(), 1);
-    assert_eq!(shared.matches("dataset.config(config_path)?").count(), 1);
+    assert!(!shared.contains("AnalysisDataset::new"));
+    assert_eq!(shared.matches("session.dataset(&root)").count(), 2);
     assert_eq!(
-        shared.matches("dataset.tsconfig(tsconfig_path)?").count(),
+        shared
+            .matches("session.config(&root, config_path)?")
+            .count(),
+        1
+    );
+    assert_eq!(
+        shared
+            .matches("session.tsconfig(&root, tsconfig_path)?")
+            .count(),
         1
     );
     assert_eq!(shared.matches("config_from_loaded_v2(").count(), 1);
@@ -198,7 +210,7 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
     );
     assert_eq!(
         shared_graph
-            .matches("build_with_plan_files_prepared_config_facts_and_resolution_cache(")
+            .matches("build_with_plan_files_prepared_config_facts_resolution_cache_and_session(")
             .count(),
         1
     );

@@ -56,7 +56,11 @@ fn signature_impact_parses_each_source_file_once() {
     args.symbol = Some("parseDate".to_string());
 
     crate::ast::begin_parse_count(&root);
-    let output = impact::report_json(args).unwrap();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        impact::report_json(args).unwrap()
+    };
     let counts = crate::ast::finish_parse_count(&root);
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
     let expected = [
@@ -80,6 +84,17 @@ fn signature_impact_parses_each_source_file_once() {
     for file in expected {
         assert_eq!(counts.get(&file), Some(&1), "{counts:?}");
     }
+    // This fixture intentionally has no package manifests, so only the config
+    // and tsconfig gateways perform manifest work. Workspace preparation must
+    // be threaded into reporting instead of issuing cache-hit reloads.
+    let work = observer.snapshot().work;
+    assert_eq!(work["manifest.requests"], 2, "{work:#?}");
+    assert_eq!(work["manifest.parses"], 2, "{work:#?}");
+    assert_eq!(
+        work.get("manifest.cache_hits").copied().unwrap_or_default(),
+        0,
+        "{work:#?}",
+    );
 }
 
 #[test]
