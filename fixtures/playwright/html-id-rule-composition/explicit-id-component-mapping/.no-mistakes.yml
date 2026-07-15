@@ -1,0 +1,19 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: []
+      componentTestIds:
+        htmlId: id
+      htmlIds: false
+
+rules:
+  - rule: playwright-coverage
+    scope: repository
+  - rule: playwright-unique-html-ids
+    scope: repository

@@ -18,6 +18,67 @@ mod integration_gitignore;
 mod prepared_parser_cache;
 mod prepared_tsconfig;
 
+fn aggregate_html_id_rule_composition(name: &str) -> Vec<RuleFinding> {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/playwright/html-id-rule-composition")
+        .join(name);
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+
+    run_all(root, None, None).unwrap().rules
+}
+
+#[test]
+fn aggregate_html_id_uniqueness_does_not_enable_coverage() {
+    let findings = aggregate_html_id_rule_composition("html-disabled-unique");
+    assert!(findings.is_empty(), "{findings:?}");
+
+    let findings = aggregate_html_id_rule_composition("html-disabled-duplicate");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_UNIQUE_HTML_IDS
+                && finding.target.as_deref() == Some("id=duplicate-disabled")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings.iter().all(|finding| {
+            finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_UNIQUE_HTML_IDS
+        }),
+        "{findings:?}"
+    );
+
+    let findings = aggregate_html_id_rule_composition("html-enabled-unique");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_COVERAGE
+                && finding.target.as_deref() == Some("id=unique-enabled")
+        }),
+        "{findings:?}"
+    );
+
+    for (fixture, target) in [
+        ("explicit-id-test-attribute", "id=explicit-test-id"),
+        ("explicit-id-component-mapping", "id=explicit-component-id"),
+    ] {
+        let findings = aggregate_html_id_rule_composition(fixture);
+        assert!(
+            findings.iter().any(|finding| {
+                finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_COVERAGE
+                    && finding.target.as_deref() == Some(target)
+            }),
+            "{fixture}: {findings:?}"
+        );
+    }
+}
+
+#[test]
+fn aggregate_html_id_rule_targets_keep_coverage_isolated() {
+    let findings = aggregate_html_id_rule_composition("multi-project-isolation");
+
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
 #[test]
 fn empty_results_records_cli_side_channels() {
     let results = results::empty_results([Some("warning".to_string())]);

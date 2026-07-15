@@ -124,13 +124,13 @@ pub(crate) fn collect_app_selectors(
         .chain(settings.component_selector_attributes.values())
         .map(String::as_str)
         .collect::<std::collections::HashSet<_>>();
+    // Occurrences may include IDs requested only for uniqueness; coverage candidates may not.
     let mut app_selectors: Vec<_> = app_selector_occurrences
         .iter()
         .filter(|selector| {
             if selector.attribute == selectors::HTML_ID_ATTRIBUTE {
                 return settings.html_ids
-                    || unique_selector_policy.configured_html_id_selector
-                    || unique_html_id_scan;
+                    || configured_attributes.contains(selectors::HTML_ID_ATTRIBUTE);
             }
             configured_attributes.contains(selector.attribute.as_str())
         })

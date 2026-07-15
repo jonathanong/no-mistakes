@@ -40,6 +40,67 @@ fn staged_playwright_fixture() -> std::path::PathBuf {
     )
 }
 
+fn html_id_rule_composition_findings(name: &str) -> Vec<RuleFinding> {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/playwright/html-id-rule-composition")
+        .join(name);
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+
+    check(&root, None, &config).unwrap()
+}
+
+#[test]
+fn html_id_uniqueness_does_not_enable_coverage_in_standalone_checks() {
+    let findings = html_id_rule_composition_findings("html-disabled-unique");
+    assert!(findings.is_empty(), "{findings:?}");
+
+    let findings = html_id_rule_composition_findings("html-disabled-duplicate");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.rule == PLAYWRIGHT_UNIQUE_HTML_IDS
+                && finding.target.as_deref() == Some("id=duplicate-disabled")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.rule == PLAYWRIGHT_UNIQUE_HTML_IDS),
+        "{findings:?}"
+    );
+
+    let findings = html_id_rule_composition_findings("html-enabled-unique");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.rule == PLAYWRIGHT_COVERAGE
+                && finding.target.as_deref() == Some("id=unique-enabled")
+        }),
+        "{findings:?}"
+    );
+
+    for (fixture, target) in [
+        ("explicit-id-test-attribute", "id=explicit-test-id"),
+        ("explicit-id-component-mapping", "id=explicit-component-id"),
+    ] {
+        let findings = html_id_rule_composition_findings(fixture);
+        assert!(
+            findings.iter().any(|finding| {
+                finding.rule == PLAYWRIGHT_COVERAGE && finding.target.as_deref() == Some(target)
+            }),
+            "{fixture}: {findings:?}"
+        );
+    }
+}
+
+#[test]
+fn html_id_uniqueness_on_one_target_does_not_widen_another_targets_coverage() {
+    let findings = html_id_rule_composition_findings("multi-project-isolation");
+
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
 #[test]
 fn aggregate_playwright_rule_parses_each_source_file_once() {
     let source = crate::codebase::ts_resolver::normalize_path(
