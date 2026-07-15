@@ -41,7 +41,13 @@ pub(crate) fn check_with_files(
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
                 .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
+                .filter(|p| {
+                    if rule.applies_to_repository() && p.starts_with(root) {
+                        true
+                    } else {
+                        super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots)
+                    }
+                })
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;

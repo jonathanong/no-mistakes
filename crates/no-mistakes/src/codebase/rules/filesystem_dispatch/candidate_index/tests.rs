@@ -1,5 +1,5 @@
 use super::*;
-use crate::config::v2::schema::{RuleDef, RuleScope};
+use crate::config::v2::schema::{Project, RuleDef, RuleScope};
 
 fn fixture() -> (PathBuf, NoMistakesConfig, Arc<Vec<PathBuf>>) {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
@@ -192,5 +192,62 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
     assert_eq!(
         index.candidates(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
         files
+    );
+}
+
+#[test]
+fn repository_banned_paths_uses_full_inventory_and_keeps_external_project_candidates() {
+    let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
+    let external_root = root.parent().unwrap().join("external-app");
+    let source = root.join("src/lib.rs");
+    let skipped = root.join("fixtures/generated.patch");
+    let external = external_root.join("src/index.ts");
+    let files = Arc::new(vec![source.clone(), external.clone()]);
+    let inventory = Arc::new(vec![skipped.clone(), source.clone()]);
+    let config = NoMistakesConfig {
+        projects: [(
+            "external".to_string(),
+            Project {
+                root: Some(external_root.to_string_lossy().into_owned()),
+                ..Default::default()
+            },
+        )]
+        .into_iter()
+        .collect(),
+        rules: vec![
+            RuleDef {
+                rule: BANNED_PATHS.to_string(),
+                scope: Some(RuleScope::Repository),
+                ..Default::default()
+            },
+            RuleDef {
+                rule: BANNED_PATHS.to_string(),
+                projects: vec!["external".to_string()],
+                ..Default::default()
+            },
+            RuleDef {
+                rule: super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES.to_string(),
+                scope: Some(RuleScope::Repository),
+                ..Default::default()
+            },
+        ],
+        ..Default::default()
+    };
+
+    let index = RuleCandidateIndex::prepare_with_inventory(
+        &root,
+        &config,
+        &files,
+        &files,
+        &[],
+        Some(inventory),
+    );
+
+    let mut expected_banned_paths = vec![skipped, source.clone(), external];
+    expected_banned_paths.sort();
+    assert_eq!(index.candidates(BANNED_PATHS), expected_banned_paths);
+    assert_eq!(
+        index.candidates(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
+        std::slice::from_ref(&source)
     );
 }

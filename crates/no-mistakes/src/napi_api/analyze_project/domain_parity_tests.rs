@@ -50,6 +50,7 @@ fn assert_each_indexable_file_parsed_once(
 }
 
 include!("domain_parity_tests/check_effects.rs");
+include!("domain_parity_tests/repository_inventory.rs");
 include!("domain_parity_tests/playwright_react_server.rs");
 include!("domain_parity_tests/symbols.rs");
 include!("domain_parity_tests/heterogeneous.rs");

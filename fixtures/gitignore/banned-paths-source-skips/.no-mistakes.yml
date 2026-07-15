@@ -1,0 +1,6 @@
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+        - glob: "**/*.patch"

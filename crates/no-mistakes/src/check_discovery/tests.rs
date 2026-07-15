@@ -296,6 +296,40 @@ fn discover_check_file_views_derive_filesystem_scope_from_complete_universe() {
 }
 
 #[test]
+fn repository_inventory_retains_files_pruned_from_source_views() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("banned-paths-source-skips");
+    git_init(fixture.path());
+    git_add_all(fixture.path());
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(fixture.path());
+    let config = load_config(&root);
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let inventory = snapshot.paths_for(&root);
+    let views = discover_check_file_views_from_snapshot(
+        &root,
+        &config,
+        &config.filesystem.skip_directories,
+        false,
+        &snapshot,
+    );
+
+    for relative in [
+        "build/blocked.patch",
+        "dist/blocked.patch",
+        "fixtures/blocked.patch",
+        "target/blocked.patch",
+    ] {
+        let path = root.join(relative);
+        assert!(inventory.contains(&path), "{relative}");
+        assert!(!views.filesystem.contains(&path), "{relative}");
+        assert!(!views.graph.contains(&path), "{relative}");
+    }
+    let nested = root.join("nested/blocked.patch");
+    assert!(inventory.contains(&nested));
+    assert!(views.filesystem.contains(&nested));
+    assert!(views.graph.contains(&nested));
+}
+
+#[test]
 fn discover_check_file_views_fall_back_outside_git() {
     let root = fixture("check-discovery/include-preserved-roots");
     let config = load_config(&root);

@@ -89,6 +89,45 @@ fn standalone_filesystem_rules_preserve_project_roots_under_skipped_dirs() {
 }
 
 #[test]
+fn standalone_banned_paths_adds_only_tracked_entries_from_source_skips() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("banned-paths-source-skips");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let output = std::process::Command::new("git")
+        .current_dir(fixture.path())
+        .args([
+            "rm",
+            "--cached",
+            "--",
+            "build/blocked.patch",
+            "nested/blocked.patch",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let findings = run_filesystem_rules(fixture.path(), None).unwrap();
+    let files = findings
+        .iter()
+        .filter(|finding| finding.rule == BANNED_PATHS)
+        .map(|finding| finding.file.as_str())
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        files,
+        vec![
+            "dist/blocked.patch",
+            "fixtures/blocked.patch",
+            "target/blocked.patch",
+        ]
+    );
+}
+
+#[test]
 fn standalone_filesystem_rules_preserve_option_roots_without_leaking() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/filesystem-dispatch/option-root-under-skipped-dir/fixture");

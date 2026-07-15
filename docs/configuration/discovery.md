@@ -26,6 +26,13 @@ Outside a Git checkout, `.gitignore` and `.ignore` files are still applied by
 the fallback walker. Because there is no Git index, rules that normally use the
 tracked-only view use this ignore-aware visible set instead.
 
+Source, dependency-graph, and test discovery derive narrower views from that
+inventory and prune built-in source skip directories such as `fixtures`,
+`build`, `dist`, and `target`. Repository-state policies such as a
+repository-scoped `banned-paths` rule consume the repository inventory instead,
+so putting a tracked artifact below a source skip directory does not exempt it
+from the policy.
+
 Explicit paths supplied through CLI flags or configuration remain authoritative
 and may name an ignored file. This exception applies to explicit configuration,
 not to automatically discovered source, test, workflow, or runner-config files.

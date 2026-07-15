@@ -2,6 +2,33 @@ use super::*;
 use serde_json::json;
 
 #[test]
+fn check_json_reports_tracked_artifacts_below_source_skip_directories() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("banned-paths-source-skips");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let output = check_json_impl(json!({ "root": fixture.path() }).to_string()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let files = value["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["rule"] == "banned-paths")
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        files,
+        vec![
+            "build/blocked.patch",
+            "dist/blocked.patch",
+            "fixtures/blocked.patch",
+            "nested/blocked.patch",
+            "target/blocked.patch",
+        ]
+    );
+}
+
+#[test]
 fn check_json_returns_global_check_report() {
     let options = json!({
         "root": fixture_root("unique-exports-basic"),

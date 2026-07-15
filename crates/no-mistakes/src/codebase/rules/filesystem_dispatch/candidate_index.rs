@@ -33,7 +33,7 @@ impl RuleCandidateIndex {
         inventory_paths: Option<Arc<Vec<PathBuf>>>,
     ) -> Self {
         let root = crate::codebase::ts_resolver::normalize_path(root);
-        let mut plans = BTreeMap::<(Vec<PathBuf>, bool, bool), Vec<&'static str>>::new();
+        let mut plans = BTreeMap::<(Vec<PathBuf>, bool, bool, bool), Vec<&'static str>>::new();
         for rule_id in FILESYSTEM_RULE_IDS
             .iter()
             .copied()
@@ -44,6 +44,11 @@ impl RuleCandidateIndex {
                     preserved::filesystem_rule_preserved_roots(&root, config, rule_id),
                     rule_id == FORBIDDEN_WORKSPACE_CLOSURE,
                     rule_id == BANNED_PATHS,
+                    rule_id == BANNED_PATHS
+                        && config
+                            .rule_applications(rule_id)
+                            .iter()
+                            .any(|rule| rule.applies_to_repository()),
                 ))
                 .or_default()
                 .push(rule_id);
@@ -55,7 +60,11 @@ impl RuleCandidateIndex {
         let mut by_rule = BTreeMap::new();
 
         // Rules with identical effective scopes share one candidate vector.
-        for ((preserved_roots, includes_metadata, tracked_only), rule_ids) in plans {
+        for (
+            (preserved_roots, includes_metadata, tracked_only, includes_repository_inventory),
+            rule_ids,
+        ) in plans
+        {
             let universe = if includes_metadata {
                 metadata_files.as_ref()
             } else if tracked_only {
@@ -66,23 +75,38 @@ impl RuleCandidateIndex {
             let allowed = |path: &PathBuf| {
                 super::super::file_allowed_by_roots_and_skip(&root, &skip, path, &preserved_roots)
             };
-            let shared = inventory_paths
-                .as_ref()
-                .filter(|inventory| {
-                    !includes_metadata
-                        && inventory.as_slice() == universe
-                        && universe.iter().all(&allowed)
-                })
-                .map(Arc::clone)
-                .unwrap_or_else(|| {
-                    Arc::new(
-                        universe
-                            .iter()
-                            .filter(|path| allowed(path))
-                            .cloned()
-                            .collect(),
-                    )
-                });
+            let shared = if includes_repository_inventory {
+                let mut candidates = inventory_paths
+                    .as_ref()
+                    .map(|paths| paths.as_slice())
+                    .unwrap_or_default()
+                    .iter()
+                    .filter(|path| path.starts_with(&root))
+                    .cloned()
+                    .collect::<Vec<_>>();
+                candidates.extend(universe.iter().filter(|path| allowed(path)).cloned());
+                candidates.sort();
+                candidates.dedup();
+                Arc::new(candidates)
+            } else {
+                inventory_paths
+                    .as_ref()
+                    .filter(|inventory| {
+                        !includes_metadata
+                            && inventory.as_slice() == universe
+                            && universe.iter().all(&allowed)
+                    })
+                    .map(Arc::clone)
+                    .unwrap_or_else(|| {
+                        Arc::new(
+                            universe
+                                .iter()
+                                .filter(|path| allowed(path))
+                                .cloned()
+                                .collect(),
+                        )
+                    })
+            };
             for rule_id in rule_ids {
                 by_rule.insert(rule_id, Arc::clone(&shared));
             }
