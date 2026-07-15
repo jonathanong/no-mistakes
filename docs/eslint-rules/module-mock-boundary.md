@@ -58,8 +58,9 @@ vi.mock("@app/aws", async (importOriginal) => ({
 Re-export following is on by default — it can only ever widen the allowed set
 (following `export *` adds names, never removes them), and it only reads
 `export *` syntax the author already wrote, not an inferred convention. The
-candidate extensions (`.mts`, `.ts`, `.mjs`, `.js`, `.cts`, `.cjs`, plus
-`index.*` for directory targets) are overridable via `reexportExtensions`. A
+candidate extensions (`.mts`, `.ts`, `.tsx`, `.mjs`, `.js`, `.jsx`, `.cts`,
+`.cjs` — the repo's documented TS/JS source-extension set, plus `index.*` for
+directory targets) are overridable via `reexportExtensions`. A
 specifier carrying a compiled output extension (`export * from "./leaf.js"`,
 the NodeNext/ESM TypeScript convention) resolves against the same candidate
 extensions on the stripped stem, so it still finds `leaf.ts`. Re-export cycles

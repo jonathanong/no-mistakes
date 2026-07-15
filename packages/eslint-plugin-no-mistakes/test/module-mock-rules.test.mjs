@@ -361,6 +361,27 @@ describe("module-mock-boundary barrel re-exports", () => {
       [],
     );
   });
+
+  it("resolves an extensionless re-export specifier to a .tsx leaf by default", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedButtonProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        {
+          integrationExports: {
+            specifiers: ["@app/**"],
+            sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "tsx-barrel.ts")],
+          },
+          internalSpecifiers: ["@app/**"],
+        },
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
 });
 
 describe("module-mock-preserve-exports", () => {

@@ -5,7 +5,10 @@ const { dirname, join, resolve } = require("node:path");
 const { isInternalSpecifier, propertyName } = require("./module-mock-helpers");
 const { analyzeFactory, spreadPreservesRealModule } = require("./module-mock-preserve-factory");
 
-const DEFAULT_REEXPORT_EXTENSIONS = [".mts", ".ts", ".mjs", ".js", ".cts", ".cjs"];
+// Matches the repo's documented TS/JS source-extension set (docs/ast-analysis.md
+// "Shared File Model"), so a barrel re-exporting a .tsx/.jsx leaf (e.g. a React
+// component) resolves the same way the rest of the toolchain treats source files.
+const DEFAULT_REEXPORT_EXTENSIONS = [".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cts", ".cjs"];
 
 function mockedExportNames(factory, specifier, mock, context) {
   if (!factory) return null;
