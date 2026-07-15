@@ -90,9 +90,44 @@ impl AnalysisSession {
         result
     }
 
+    /// Parse with the historical symbols source type while retaining recovered
+    /// diagnostics for generic fact consumers. Only parser panics are fatal.
+    pub(crate) fn with_legacy_symbols_program<T>(
+        &self,
+        path: &Path,
+        source: &str,
+        analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
+    ) -> anyhow::Result<T> {
+        let path = normalize_path(path);
+        self.increment("parse.requests", 1);
+        let parse_started = Cell::new(false);
+        let result = crate::ast::with_legacy_symbols_program_observed(
+            &path,
+            source,
+            || {
+                parse_started.set(true);
+                self.record_parse(&path);
+            },
+            |program, source, parse_error| {
+                if parse_started.get() && parse_error.is_some() {
+                    self.increment("parse.errors", 1);
+                }
+                analyze(program, source, parse_error)
+            },
+        );
+        if parse_started.get() && result.is_err() {
+            self.increment("parse.errors", 1);
+        }
+        result
+    }
+
     pub fn work_snapshot(&self) -> SessionWorkSnapshot {
         SessionWorkSnapshot {
-            source_reads: BTreeMap::new(),
+            source_reads: self
+                .observer
+                .as_ref()
+                .map(|observer| observer.source_read_snapshot())
+                .unwrap_or_default(),
             parse_attempts: snapshot_map(self.parse_attempts.as_ref()),
         }
     }

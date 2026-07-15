@@ -42,16 +42,18 @@ fn effective_scope(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> Result<EffectiveScope> {
-    let root =
-        super::options::resolve_root(string_option(request, "root")?.or(options.root.as_deref()))?;
-    let tsconfig = effective_path(
-        &root,
-        string_option(request, "tsconfig")?.or(options.tsconfig.as_deref()),
-    );
-    let config = effective_path(
-        &root,
-        string_option(request, "config")?.or(options.config.as_deref()),
-    );
+    let root = super::options::resolve_root(
+        string_option(request, "root")?.or(options.root.as_deref()),
+    )?;
+    let inherited_root = super::options::resolve_root(options.root.as_deref())?;
+    let tsconfig = match string_option(request, "tsconfig")? {
+        Some(path) => effective_path(&root, Some(path)),
+        None => effective_path(&inherited_root, options.tsconfig.as_deref()),
+    };
+    let config = match string_option(request, "config")? {
+        Some(path) => effective_path(&root, Some(path)),
+        None => effective_path(&inherited_root, options.config.as_deref()),
+    };
     let key = EffectiveScopeKey {
         root: root.clone(),
         tsconfig: tsconfig.clone(),
@@ -87,33 +89,4 @@ fn effective_path(root: &Path, value: Option<&str>) -> Option<PathBuf> {
         };
         crate::codebase::ts_resolver::normalize_path(&path)
     })
-}
-
-fn traversal_report_keys(
-    options: &AnalyzeProjectOptions,
-) -> Result<(
-    std::collections::HashSet<String>,
-    std::collections::HashSet<String>,
-)> {
-    let mut queue = std::collections::HashSet::new();
-    let mut server = std::collections::HashSet::new();
-    for request in &options.reports {
-        if !matches!(
-            request.report_type.as_str(),
-            "queueEdges" | "queueRelated" | "serverRouteEdges" | "serverRouteRelated"
-        ) {
-            continue;
-        }
-        let raw = project_options(request, options)?;
-        let parsed: ProjectOptions = serde_json::from_str(&raw)?;
-        if matches!(request.report_type.as_str(), "queueEdges" | "queueRelated") {
-            queue.insert(canonical_filter_key(&parsed.filters)?);
-        } else {
-            server.insert(canonical_filter_key(&server_filters(
-                &request.report_type,
-                &parsed,
-            ))?);
-        }
-    }
-    Ok((queue, server))
 }

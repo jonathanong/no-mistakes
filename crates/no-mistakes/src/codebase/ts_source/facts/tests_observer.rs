@@ -48,7 +48,15 @@ fn parallel_collection_deduplicates_successful_and_failed_parse_work() {
     assert!(facts[&syntax_error].parse_error.is_some());
     assert_eq!(sources.physical_read_count(), 2);
     let work = session.work_snapshot();
-    assert!(work.source_reads.is_empty());
+    assert_eq!(work.source_reads.len(), 2);
+    assert_eq!(
+        work.source_reads[&crate::codebase::ts_resolver::normalize_path(&valid)],
+        1
+    );
+    assert_eq!(
+        work.source_reads[&crate::codebase::ts_resolver::normalize_path(&syntax_error)],
+        1
+    );
     assert_eq!(
         work.parse_attempts[&crate::codebase::ts_resolver::normalize_path(&valid)],
         1

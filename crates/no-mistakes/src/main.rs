@@ -16,7 +16,7 @@ mod rsc_callers;
 mod server;
 mod swift;
 #[cfg(test)]
-#[path = "test_support/gitignore_fixture.rs"]
+#[path = "main/test_support.rs"]
 mod test_support;
 
 use anyhow::Result;

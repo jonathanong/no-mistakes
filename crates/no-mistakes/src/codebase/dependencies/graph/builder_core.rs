@@ -111,16 +111,7 @@ impl DepGraph {
             forward.entry(NodeId::File(file.clone())).or_default();
         }
 
-        let parsed_imports = if plan.imports || plan.workspace || plan.assets {
-            let Some(facts) = facts else {
-                anyhow::bail!(
-                    "TS import facts are required when import, workspace, or asset edges are requested"
-                );
-            };
-            collect_parsed_imports_from_facts(files, facts)
-        } else {
-            Vec::new()
-        };
+        let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
         let needs_workspace = plan.imports || plan.workspace || plan.package || plan.symbols;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
             crate::codebase::workspaces::load_indexed_from_files(root, &graph_files.all)

@@ -73,18 +73,6 @@ pub(crate) fn check_with_prepared_facts_and_session(
     check_with_prepared_facts_graph_and_session(root, config, tsconfig, shared, &graph, session)
 }
 
-pub(crate) fn check_with_prepared_facts_and_graph(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig: &TsConfig,
-    shared: &CheckFactMap,
-    graph: &DepGraph,
-) -> Result<Vec<RuleFinding>> {
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    check_with_prepared_facts_graph_and_session(root, config, tsconfig, shared, graph, &session)
-}
-
 pub(crate) fn check_with_prepared_facts_graph_and_session(
     root: &Path,
     config: &NoMistakesConfig,

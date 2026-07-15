@@ -22,6 +22,7 @@ impl SharedTraversalContext {
                 session: &session,
                 graph_files: &self.graph_files,
                 test_filter: &test_filter,
+                workspace: self.prepared_graph.workspace(),
                 graph,
                 facts,
             },

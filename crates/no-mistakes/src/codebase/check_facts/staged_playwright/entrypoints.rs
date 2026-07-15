@@ -19,7 +19,10 @@ pub(crate) fn collect_with_precollected_ts(
         (files, graph_files, graph_files_complete),
         plan,
         playwright,
-        precollected_ts,
+        super::PrecollectedFacts {
+            ts: precollected_ts,
+            files: Default::default(),
+        },
         sources,
     )
 }

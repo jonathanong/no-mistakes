@@ -80,6 +80,7 @@ pub fn collect_check_facts_with_graph_files_playwright_sources_and_session(
         plan,
         playwright,
         sources,
+        Default::default(),
     )
 }
 
@@ -132,6 +133,27 @@ pub fn collect_check_facts_with_playwright_and_session(
         plan,
         playwright,
         sources,
+        Default::default(),
+    )
+}
+
+pub(crate) fn collect_check_facts_with_precollected_file_facts(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    root: &Path,
+    file_scope: (Vec<PathBuf>, Vec<PathBuf>),
+    plan: CheckFactPlan,
+    playwright: Option<PlaywrightFactPlan>,
+    sources: Arc<crate::codebase::ts_source::SourceStore>,
+    precollected: std::collections::HashMap<PathBuf, super::super::CheckFileFacts>,
+) -> CheckFactMap {
+    collect_with_scope(
+        session,
+        root,
+        (file_scope.0, file_scope.1, true),
+        plan,
+        playwright,
+        sources,
+        precollected,
     )
 }
 
@@ -142,6 +164,7 @@ fn collect_with_scope(
     mut plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
+    precollected: std::collections::HashMap<PathBuf, super::super::CheckFileFacts>,
 ) -> CheckFactMap {
     let (files, graph_files, graph_files_complete) = file_scope;
     if plan.graph_context.visible_files.is_none() {
@@ -160,16 +183,16 @@ fn collect_with_scope(
             plan,
             playwright,
             sources,
+            precollected,
         );
     }
     super::collect_check_facts_inner(
         session,
         root,
-        files,
-        graph_files,
-        graph_files_complete,
+        (files, graph_files, graph_files_complete),
         plan,
         playwright,
         sources,
+        precollected,
     )
 }

@@ -25,15 +25,18 @@ pub(crate) fn collect_entries_with_prepared_facts(
             let file = facts
                 .ts
                 .get(path)
+                .filter(|facts| facts.symbols.is_some())
+                .or_else(|| supplemental.ts.get(path).filter(|facts| facts.symbols.is_some()))
+                .or_else(|| facts.ts.get(path))
                 .or_else(|| supplemental.ts.get(path))
                 .with_context(|| format!("reading {}", path.display()))?;
-            if let Some(error) = &file.parse_error {
-                anyhow::bail!("extracting symbols from {}: {error}", path.display());
-            }
             let symbols = file
                 .symbols
                 .clone()
-                .context("shared analyzeProject facts are missing symbols")?;
+                .with_context(|| match &file.parse_error {
+                    Some(error) => format!("extracting symbols from {}: {error}", path.display()),
+                    None => "shared analyzeProject facts are missing symbols".to_string(),
+                })?;
             build_entry_from_symbols(
                 path,
                 root,
@@ -58,23 +61,11 @@ fn collect_entries_with_timings(
 ) -> Result<(Vec<FileEntry>, Vec<String>)> {
     let cwd = std::env::current_dir().context("reading current directory")?;
     let root = resolve_root(args.root.as_deref(), &cwd);
-    let session = crate::codebase::analysis_session::AnalysisSession::new(
-        crate::diagnostics::current(),
-    );
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let visible_snapshot = session.visible_paths(&root);
     let visible_paths = visible_snapshot.paths_for(&root);
-    let tsconfig_key = args
-        .tsconfig
-        .as_deref()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(&root.join(path)))
-        .unwrap_or_else(|| root.join("tsconfig.auto.json"));
-    let tsconfig = session.load_document("tsconfig", &tsconfig_key, || {
-        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-            args.tsconfig.as_deref(),
-            &root,
-            &visible_paths,
-        )
-    })?;
+    let tsconfig = session.tsconfig(&root, args.tsconfig.as_deref())?;
     let visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
@@ -89,15 +80,26 @@ fn collect_entries_with_timings(
         timings.mark("ingest");
     }
 
-    let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_session_and_context(
-        &session,
-        &abs_files,
-        crate::codebase::ts_source::facts::TsFactPlan {
-            symbols: true,
-            ..Default::default()
-        },
-        &crate::codebase::ts_source::facts::TsFactContext::default(),
-    );
+    let symbol_paths = crate::codebase::ts_source::deduplicate_analysis_paths(abs_files.iter());
+    let symbols = symbol_paths
+        .par_iter()
+        .map(|path| {
+            let normalized = crate::codebase::ts_resolver::normalize_path(path);
+            let source = session
+                .read_source(&normalized)
+                .with_context(|| format!("reading {}", normalized.display()))?;
+            let symbols = session
+                .with_legacy_symbols_program(
+                    &normalized,
+                    &source,
+                    |program, source, _diagnostic| {
+                        crate::codebase::ts_symbols::extract_symbols_from_program(program, source)
+                    },
+                )
+                .with_context(|| format!("extracting symbols from {}", normalized.display()))?;
+            Ok((normalized, symbols))
+        })
+        .collect::<Result<std::collections::HashMap<_, _>>>()?;
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,
         Some(&visible_files),
@@ -106,31 +108,14 @@ fn collect_entries_with_timings(
     let entries: Vec<FileEntry> = abs_files
         .par_iter()
         .map(|abs| {
-            let file = facts
-                .get(abs)
+            let symbols = symbols
+                .get(&crate::codebase::ts_resolver::normalize_path(abs))
                 .with_context(|| format!("reading {}", abs.display()))?;
-            if let Some(error) = &file.parse_error {
-                if let Some(detail) = error.strip_prefix("failed to read ") {
-                    anyhow::bail!("reading {detail}");
-                }
-                let prefix = format!("parsing {}: ", abs.display());
-                let detail = error
-                    .strip_prefix(&prefix)
-                    .expect("central parser diagnostics include the source path");
-                anyhow::bail!(
-                    "extracting symbols from {}: failed to parse TypeScript source: {detail}",
-                    abs.display()
-                );
-            }
-            let symbols = file
-                .symbols
-                .clone()
-                .context("symbol fact plan must populate symbols")?;
             build_entry_from_symbols(
                 abs,
                 &root,
                 &resolver,
-                symbols,
+                symbols.clone(),
                 args.include,
                 kind_filter.as_ref(),
             )

@@ -1,47 +1,5 @@
 use super::*;
 
-fn check_with_prepared_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    config_path: Option<&Path>,
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
-    shared_facts: &crate::codebase::check_facts::CheckFactMap,
-    prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
-) -> Result<Vec<RuleFinding>> {
-    let Some(plan) = graph_plan(config) else {
-        return Ok(Vec::new());
-    };
-    shared::validate_shared_graph_plan(root, config_path, shared_facts, prepared_graph, plan)?;
-    let graph = match prepared_graph {
-        Some(prepared) => DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
-            root,
-            tsconfig,
-            plan,
-            shared_facts.graph_file_universe().to_vec(),
-            config_path,
-            shared_facts,
-            prepared,
-        )?,
-        None => DepGraph::build_with_plan_file_list_config_and_complete_check_facts(
-            root,
-            tsconfig,
-            plan,
-            shared_facts.graph_file_universe().to_vec(),
-            config_path,
-            shared_facts,
-        )?,
-    };
-    shared::check_with_prepared_facts_and_graph(
-        root,
-        config,
-        config_path,
-        shared_facts,
-        prepared_graph,
-        None,
-        &graph,
-    )
-}
-
 #[test]
 fn prepared_forbidden_dependencies_never_enters_legacy_discovery_fallback() {
     let source = include_str!("shared.rs");
@@ -94,7 +52,7 @@ fn check_with_facts(
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    check_with_prepared_facts_and_session(
+    shared_facts::check_with_prepared_facts_and_session(
         root,
         config,
         config_path,

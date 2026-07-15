@@ -4,7 +4,7 @@
 architecture is optimized for AI agents that need reliable project facts while
 spending as few tokens and CPU cycles as possible.
 
-This document codifies the performance architecture behind issues `#126`, `#130`, `#132`, `#133`, and `#530`.
+This document codifies the performance architecture behind issues `#126`, `#130`, `#132`, `#133`, `#530`, and `#531`.
 
 ## Core Decisions
 
@@ -42,11 +42,13 @@ work or sharing more in-memory facts during that run.
 
 ### Analysis session and observability
 
-`AnalysisSession` is the invocation-owned gateway for visible-path discovery,
-source reads, parsing, and typed document/config parsing. Request contexts layer
-resolver, canonical-graph, and traversal memoization over the same observer.
-Source, document, parser, and resolver gateways memoize both successful
-results and failures; graph and traversal caches use normalized effective plans.
+`AnalysisSession` owns the invocation observer, root datasets, parser gateway,
+and resolver caches. Each root's `AnalysisDataset` owns the canonical visible
+inventory and `SourceStore`; its config and tsconfig result caches are keyed by
+normalized effective paths so distinct same-root report scopes cannot reuse the
+first scope's manifest. Automatic and explicit aliases for the same effective
+path share one entry. Source reads and manifest loads memoize both successes and
+failures; graph and traversal caches use normalized effective plans.
 
 The session optionally carries one `InvocationObserver`. When diagnostics are
 disabled the observer is `None`: hot paths branch before reading the clock and
@@ -58,7 +60,8 @@ One-pass fixture tests enforce these ceilings:
 
 1. One discovery per normalized root.
 2. At most one physical source read and parse attempt per requested path.
-3. One config or manifest parse per `(document kind, path)`.
+3. One config or tsconfig parse per normalized effective manifest path,
+   including cached failures.
 4. One resolver computation per normalized resolution key, including misses.
 5. At most one graph/index build per effective request plan.
 6. One traversal computation per roots/direction/edge-set/depth/symbol-mode key.

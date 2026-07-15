@@ -20,11 +20,8 @@ use runtime::runtime_deps;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+pub(crate) use with_facts::check_with_prepared_facts_graph_and_session;
 pub use with_facts::{check_with_facts, check_with_prepared_facts};
-pub(crate) use with_facts::{
-    check_with_prepared_facts_and_graph, check_with_prepared_facts_and_session,
-    check_with_prepared_facts_graph_and_session,
-};
 
 pub const RULE_ID: &str = "test-no-unmocked-dynamic-imports";
 

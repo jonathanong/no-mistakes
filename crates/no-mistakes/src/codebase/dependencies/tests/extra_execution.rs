@@ -170,9 +170,16 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
 
     assert!(!shared.contains("AnalysisDataset::new"));
     assert_eq!(shared.matches("session.dataset(&root)").count(), 2);
-    assert_eq!(shared.matches("dataset.config(config_path)?").count(), 1);
     assert_eq!(
-        shared.matches("dataset.tsconfig(tsconfig_path)?").count(),
+        shared
+            .matches("session.config(&root, config_path)?")
+            .count(),
+        1
+    );
+    assert_eq!(
+        shared
+            .matches("session.tsconfig(&root, tsconfig_path)?")
+            .count(),
         1
     );
     assert_eq!(shared.matches("config_from_loaded_v2(").count(), 1);

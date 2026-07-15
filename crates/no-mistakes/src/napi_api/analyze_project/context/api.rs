@@ -27,7 +27,7 @@ impl AnalyzeProjectContext {
                 session.observer().cloned(),
             ),
         );
-        let mut visible_by_root = HashMap::new();
+        let mut visible_by_root = std::collections::BTreeMap::new();
         let mut scope_aliases = HashMap::new();
         let mut grouped = std::collections::BTreeMap::<
             EffectiveScopeKey,
@@ -59,7 +59,10 @@ impl AnalyzeProjectContext {
                 .1
                 .push(request.clone());
         }
-        let mut scopes = HashMap::new();
+        for (root, snapshot) in &visible_by_root {
+            session.insert_visible_paths(root, snapshot.clone());
+        }
+        let mut scope_plans = Vec::new();
         for (key, (effective, reports)) in grouped {
             let visible_paths = visible_by_root
                 .get(&effective.root)
@@ -78,10 +81,27 @@ impl AnalyzeProjectContext {
                 filters: options.filters.clone(),
                 reports,
             };
-            scopes.insert(
+            scope_plans.push((
                 key,
-                PreparedScope::prepare(&scoped_options, visible_paths, session.clone())?,
-            );
+                PreparedScopePlan::prepare(&scoped_options, visible_paths, session.clone())?,
+            ));
+        }
+        let fact_requests = scope_plans
+            .iter()
+            .flat_map(|(_, scope)| scope.fact_requests())
+            .collect();
+        let mut collected = crate::codebase::check_facts::collect_check_fact_batch_with_session(
+            &session,
+            fact_requests,
+        )
+        .into_iter();
+        let mut scopes = HashMap::new();
+        for (key, plan) in scope_plans {
+            let facts = collected.next().expect("primary scope facts are collected");
+            let supplemental = collected
+                .next()
+                .expect("supplemental scope facts are collected");
+            scopes.insert(key, plan.materialize(facts, supplemental)?);
         }
         Ok(Self {
             scopes,
@@ -89,96 +109,4 @@ impl AnalyzeProjectContext {
         })
     }
 
-    fn scope_mut(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<&mut PreparedScope> {
-        let raw_key = effective_scope(request, options)?.key;
-        let key = self.scope_aliases.get(&raw_key).unwrap_or(&raw_key).clone();
-        self.scopes
-            .get_mut(&key)
-            .with_context(|| format!("prepared analyzeProject scope is missing for `{key:?}`"))
-    }
-
-    pub(super) fn graph_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-        direction: Direction,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.graph_report(request, &scoped_options, direction)
-    }
-
-    pub(super) fn import_usages_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.import_usages_report(request, &scoped_options)
-    }
-
-    pub(super) fn symbols_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.symbols_report(request, &scoped_options)
-    }
-
-    pub(super) fn flow_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.flow_report(request, &scoped_options)
-    }
-
-    pub(super) fn effects_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.effects_report(request, &scoped_options)
-    }
-
-    pub(super) fn rsc_callers_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.rsc_callers_report(request, &scoped_options)
-    }
-
-    pub(super) fn project_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.project_report(request, &scoped_options)
-    }
-
-    pub(super) fn playwright_report(
-        &mut self,
-        request: &AnalyzeReportRequest,
-        options: &AnalyzeProjectOptions,
-    ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        scope.playwright_report(request, &scoped_options)
-    }
 }

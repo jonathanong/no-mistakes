@@ -62,15 +62,7 @@ pub(crate) fn load_v2_config_from_source_store(
     visible_paths: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<NoMistakesConfig> {
-    let path = if let Some(path) = cli_config {
-        let resolved = resolve(root, path);
-        if !resolved.exists() {
-            anyhow::bail!("config file does not exist: {}", resolved.display());
-        }
-        Some(resolved)
-    } else {
-        find_automatic_config_path_from_visible(root, V2_STEMS, visible_paths)?
-    };
+    let path = effective_v2_config_path_from_visible(root, cli_config, visible_paths)?;
     let Some(path) = path else {
         return Ok(NoMistakesConfig::default());
     };
@@ -78,6 +70,22 @@ pub(crate) fn load_v2_config_from_source_store(
         .read_path(&path)
         .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?;
     parse_v2_config(&source, &path)
+}
+
+pub(crate) fn effective_v2_config_path_from_visible(
+    root: &Path,
+    cli_config: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<Option<PathBuf>> {
+    Ok(if let Some(path) = cli_config {
+        let resolved = resolve(root, path);
+        if !resolved.exists() {
+            anyhow::bail!("config file does not exist: {}", resolved.display());
+        }
+        Some(resolved)
+    } else {
+        find_automatic_config_path_from_visible(root, V2_STEMS, visible_paths)?
+    })
 }
 
 fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {

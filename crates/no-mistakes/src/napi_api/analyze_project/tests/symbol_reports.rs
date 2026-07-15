@@ -23,6 +23,52 @@ fn analyze_project_shared_dependencies_uses_symbol_graph_when_included() {
 }
 
 #[test]
+fn analyze_project_list_symbols_matches_legacy_standalone_parse_semantics_once() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/symbols-output/fixture");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let files = [
+        "src/recoverable-diagnostic.mts",
+        "src/types-in-js.js",
+        "src/types-in-mjs.mjs",
+    ];
+    let standalone = crate::napi_api::symbols_json_impl(
+        json!({ "root": root, "files": files }).to_string(),
+    )
+    .unwrap();
+    let standalone: Value = serde_json::from_str(&standalone).unwrap();
+
+    crate::ast::begin_parse_count(&root);
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [{ "type": "symbols", "files": files }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let output: Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(output["reports"][0]["result"], standalone);
+    assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
+    for file in files {
+        assert_eq!(counts.get(&root.join(file)), Some(&1), "{counts:#?}");
+    }
+
+    let error = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [{ "type": "symbols", "files": ["src/invalid.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap_err();
+    assert!(error.reason.contains("failed to parse TypeScript source"));
+}
+
+#[test]
 fn analyze_project_shared_symbol_graph_does_not_leak_into_plain_reports() {
     let output = analyze_project_json_impl(
         json!({
@@ -154,14 +200,20 @@ fn analyze_project_dispatches_signature_impact_symbols_report() {
     let work = observer.snapshot().work;
     assert_ne!(work["resolver.computations"], 0, "{work:#?}");
     assert_eq!(
-        work["resolver.computations"],
-        work["resolver.unique_keys"],
+        work["resolver.computations"], work["resolver.unique_keys"],
         "{work:#?}"
     );
-    assert_ne!(work["manifest.cache_hits"], 0, "{work:#?}");
+    // This fixture intentionally has both a root package.json and a workspace
+    // package.json. Canonical preparation parses those two manifests plus the
+    // config and tsconfig exactly once; a second workspace load would surface
+    // as cache hits and weaken the one-pass invariant protected here.
+    let manifest_cache_hits = work.get("manifest.cache_hits").copied().unwrap_or(0);
+    assert_eq!(manifest_cache_hits, 0, "{work:#?}");
+    assert_eq!(work["manifest.requests"], 4, "{work:#?}");
+    assert_eq!(work["manifest.parses"], 4, "{work:#?}");
     assert_eq!(
         work["manifest.requests"],
-        work["manifest.parses"] + work["manifest.cache_hits"],
+        work["manifest.parses"] + manifest_cache_hits,
     );
 }
 

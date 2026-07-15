@@ -138,28 +138,6 @@ impl PreparedIntegrationRunnerConfigs {
         Ok(parsed)
     }
 
-    #[cfg(test)]
-    pub(crate) fn parse_path_for_facts(&self, path: &Path) -> Option<RunnerConfigFileFacts> {
-        if !self.contains(path)
-            || !self
-                .visible_files
-                .contains(&crate::codebase::ts_resolver::normalize_path(path))
-        {
-            return None;
-        }
-        let source = match self.read_source(path) {
-            Ok(source) => source,
-            Err(error) => return self.parse_error(path, error.to_string()),
-        };
-        match with_request_program(path, &source, |program, source| {
-            self.parse_program(path, program, source)
-                .expect("runner config path was prepared")
-        }) {
-            Ok(facts) => Some(facts),
-            Err(error) => self.parse_error(path, error.to_string()),
-        }
-    }
-
     pub(crate) fn parse_path_for_facts_with_session(
         &self,
         session: &crate::codebase::analysis_session::AnalysisSession,
@@ -168,7 +146,12 @@ impl PreparedIntegrationRunnerConfigs {
         if !self.contains(path) || !path.exists() {
             return None;
         }
-        let source = match self.read_source(path) {
+        let source = match match &self.sources {
+            Some(sources) => sources
+                .read_path(path)
+                .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
+            None => super::cache::read_request_source_with_session(session, path),
+        } {
             Ok(source) => source,
             Err(error) => return self.parse_error(path, error.to_string()),
         };

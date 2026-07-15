@@ -6,6 +6,9 @@ use crate::codebase::ts_symbols::extract_symbols_from_program;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+#[cfg(test)]
+pub(crate) mod test_support;
+
 pub fn collect_ts_facts(files: &[PathBuf], plan: TsFactPlan) -> TsFactMap {
     assert!(
         !plan.has_domain_facts(),
@@ -70,17 +73,6 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session(
         })
         .collect();
     TsFactMap::with_plan(facts, plan)
-}
-
-#[cfg(test)]
-pub(crate) fn collect_file_facts_with_sources(
-    path: &Path,
-    plan: TsFactPlan,
-    context: &TsFactContext,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Option<TsFileFacts> {
-    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    collect_file_facts_with_sources_and_session(&session, path, plan, context, sources)
 }
 
 fn collect_file_facts_with_sources_and_session(

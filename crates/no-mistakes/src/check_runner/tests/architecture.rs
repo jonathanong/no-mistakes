@@ -36,7 +36,21 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     }
 
     assert!(prepared.contains("prepare_check_from_loaded_config"));
-    assert_eq!(prepared.matches("resolve_tsconfig_from_visible").count(), 1);
+    // The session is the canonical manifest cache boundary. Reintroducing a direct resolver here
+    // would bypass request-wide config/tsconfig reuse even though it looks locally self-contained.
+    assert_eq!(
+        prepared
+            .matches("session.config(root, config_path)?")
+            .count(),
+        1
+    );
+    assert_eq!(
+        prepared
+            .matches("session.tsconfig(root, tsconfig_path)?")
+            .count(),
+        1
+    );
+    assert!(!prepared.contains("resolve_tsconfig_from_visible"));
     assert!(forbidden_plan.contains("prepare_graph_config"));
     assert!(forbidden_plan.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
     assert!(!runner.contains("react_traits::check_enabled"));
@@ -138,7 +152,15 @@ fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
         include_str!("../../codebase/rules/run/prepared/execution.rs"),
     );
 
-    assert_eq!(aggregate.matches("load_v2_config_from_visible(").count(), 1);
+    // Aggregate preparation must consume the session-owned manifest once and pass the loaded
+    // value onward; direct loading here would split the cache from other request consumers.
+    assert_eq!(
+        aggregate
+            .matches("session.config(root, config_path)?")
+            .count(),
+        1
+    );
+    assert!(!aggregate.contains("load_v2_config_from_visible"));
     assert!(!aggregate.contains("prepare_check_from_visible"));
     let aggregate_playwright = playwright
         .split("pub fn prepare_from_snapshot")

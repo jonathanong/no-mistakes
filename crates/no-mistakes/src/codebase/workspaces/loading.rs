@@ -28,19 +28,6 @@ pub(crate) fn load_from_files_with_session(
         .map(|indexed| indexed.workspace.as_ref().clone())
 }
 
-#[cfg(test)]
-pub(crate) fn root_dependency_names_from_files_with_session(
-    root: &Path,
-    files: &[PathBuf],
-    session: &crate::codebase::analysis_session::AnalysisSession,
-) -> std::collections::HashSet<String> {
-    let snapshot = session.visible_paths(root);
-    let sources = snapshot.source_store_for(root);
-    load_workspace_metadata_from_files(root, files, WorkspaceSources::Store(&sources))
-        .map(|metadata| metadata.root_dependency_names)
-        .unwrap_or_default()
-}
-
 pub(crate) fn load_indexed_from_files(
     root: &Path,
     files: &[PathBuf],

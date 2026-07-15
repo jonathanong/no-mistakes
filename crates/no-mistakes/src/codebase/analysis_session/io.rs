@@ -1,9 +1,8 @@
 use super::*;
 
 impl AnalysisSession {
-    /// Compatibility source gateway backed by the canonical request source
-    /// store. New analysis pipelines should retain and pass that store
-    /// directly so inventory identity remains explicit.
+    /// Read through the canonical store for the most-specific prepared dataset.
+    /// This keeps source identity stable when one fact universe spans roots.
     pub fn read_source(&self, path: &Path) -> SourceReadResult {
         let path = normalize_path(path);
         self.source_store_for_path(&path)
@@ -14,42 +13,23 @@ impl AnalysisSession {
             })
     }
 
-    /// Compatibility loader for typed documents that do not have a canonical
-    /// dataset cache. Config, tsconfig, workspace, and package callers should
-    /// use `AnalysisDataset` or `SourceStore` instead.
-    pub fn load_document<T>(
+    /// Return the invocation's canonical, memoized configuration.
+    #[doc(hidden)]
+    pub fn config(
         &self,
-        _kind: &'static str,
-        _path: &Path,
-        load: impl FnOnce() -> anyhow::Result<T>,
-    ) -> Result<Arc<T>, DocumentError>
-    where
-        T: Send + Sync,
-    {
-        self.increment("manifest.requests", 1);
-        self.increment("manifest.parses", 1);
-        load().map(Arc::new).map_err(|error| {
-            self.increment("manifest.errors", 1);
-            DocumentError {
-                detail: Arc::from(format!("{error:#}")),
-            }
-        })
+        root: &Path,
+        config_path: Option<&Path>,
+    ) -> anyhow::Result<Arc<crate::config::v2::NoMistakesConfig>> {
+        self.dataset(root).config(config_path)
     }
 
-    pub fn parse_document<T>(
+    /// Return the invocation's canonical, memoized TypeScript configuration.
+    #[doc(hidden)]
+    pub fn tsconfig(
         &self,
-        kind: &'static str,
-        path: &Path,
-        parse: impl FnOnce(&str) -> anyhow::Result<T>,
-    ) -> Result<Arc<T>, DocumentError>
-    where
-        T: Send + Sync,
-    {
-        self.load_document(kind, path, || {
-            let source = self
-                .read_source(path)
-                .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-            parse(&source)
-        })
+        root: &Path,
+        tsconfig_path: Option<&Path>,
+    ) -> anyhow::Result<Arc<crate::codebase::ts_resolver::TsConfig>> {
+        self.dataset(root).tsconfig(tsconfig_path)
     }
 }

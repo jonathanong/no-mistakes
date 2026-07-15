@@ -53,18 +53,3 @@ struct ExpandedImportNode {
     neighbors: Vec<(NodeId, EdgeKind)>,
     collected: Option<(PathBuf, TsFileFacts)>,
 }
-
-pub(crate) struct LazyImportTraversalRequest<'a> {
-    pub(crate) roots: &'a [NodeId],
-    pub(crate) root: &'a Path,
-    pub(crate) tsconfig: &'a TsConfig,
-    pub(crate) max_depth: Option<usize>,
-    pub(crate) graph_files: &'a GraphFiles,
-    pub(crate) allowed: Option<&'a HashSet<EdgeKind>>,
-    pub(crate) facts: LazyImportFacts<'a>,
-}
-
-pub(crate) struct LazyImportTraversalResult {
-    pub(crate) entries: Vec<NodeEntry>,
-    pub(crate) collected_facts: TsFactMap,
-}

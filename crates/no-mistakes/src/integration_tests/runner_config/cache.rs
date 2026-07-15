@@ -161,6 +161,26 @@ pub(in crate::integration_tests) fn read_request_source(
     }
 }
 
+pub(super) fn read_request_source_with_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    path: &Path,
+) -> Result<std::sync::Arc<str>> {
+    let sources = REQUEST_CACHES.with(|caches| {
+        caches
+            .borrow()
+            .last()
+            .and_then(|request| request.sources.clone())
+    });
+    match sources {
+        Some(sources) => sources
+            .read_path(path)
+            .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
+        None => session
+            .read_source(path)
+            .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
+    }
+}
+
 pub(super) fn with_request_program<T>(
     path: &Path,
     source: &str,

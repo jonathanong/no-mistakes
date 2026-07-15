@@ -41,6 +41,7 @@ pub(crate) struct PreparedSignatureImpact<'a> {
     pub(crate) session: &'a crate::codebase::analysis_session::AnalysisSession,
     pub(crate) graph_files: &'a crate::codebase::dependencies::graph::GraphFiles,
     pub(crate) test_filter: &'a crate::codebase::test_filter::TestFileFilter,
+    pub(crate) workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     pub(crate) graph: &'a crate::codebase::dependencies::graph::DepGraph,
     pub(crate) facts: &'a crate::codebase::ts_source::facts::TsFactMap,
 }

@@ -23,10 +23,38 @@ fn shared_traversal_reuses_equivalent_symbol_free_graphs_for_plain_reports() {
         .unwrap();
 
     let work = observer.snapshot().work;
-    assert_eq!(shared.graph_builds, 0);
+    // Preparation materializes the canonical graph once; both reports reuse it.
+    assert_eq!(shared.graph_builds, 1);
     assert_eq!(work["graph.builds"], 1);
     assert_eq!(work["graph.reuses"], 1);
     assert_eq!(work["traversal.computations"], 2);
+}
+
+#[test]
+fn shared_traversal_keeps_the_session_owned_seeded_dataset() {
+    let root = simple_root();
+    let visible_paths =
+        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::new(&root));
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let shared = SharedTraversalContext::prepare_with_snapshot_and_session_and_optional_check_plan(
+        root.clone(),
+        None,
+        None,
+        graph::GraphBuildPlan::all(),
+        std::sync::Arc::clone(&visible_paths),
+        std::sync::Arc::clone(&session),
+        false,
+    )
+    .unwrap();
+
+    assert!(std::sync::Arc::ptr_eq(
+        &shared.visible_paths_arc(),
+        &visible_paths,
+    ));
+    assert!(std::sync::Arc::ptr_eq(
+        &shared.dataset,
+        &session.dataset(&root),
+    ));
 }
 
 #[test]
@@ -51,15 +79,15 @@ fn shared_traversal_symbol_dependents_use_symbol_free_import_graph_when_preplann
     let mut args = traverse_args(root.clone(), vec![PathBuf::from("utils.mts#parseDate")]);
     args.relationships = vec![RelationshipArg::Import];
     let result =
-        collect_and_filter_entries_shared(&args, Direction::Dependents, &cwd, &mut shared)
-            .unwrap();
+        collect_and_filter_entries_shared(&args, Direction::Dependents, &cwd, &mut shared).unwrap();
 
     let mut second = traverse_args(root.clone(), vec![PathBuf::from("utils.mts#formatDate")]);
     second.relationships = vec![RelationshipArg::Import];
     collect_and_filter_entries_shared(&second, Direction::Dependents, &cwd, &mut shared).unwrap();
 
     let work = observer.snapshot().work;
-    assert_eq!(shared.graph_builds, 0);
+    // The preplanned symbol graph is the context's single canonical build.
+    assert_eq!(shared.graph_builds, 1);
     assert_eq!(result.root, root);
     assert_eq!(work["graph.builds"], 1);
     assert_eq!(work["graph.reuses"], 1);
@@ -128,8 +156,12 @@ fn shared_traversal_initializes_absent_fact_maps_for_empty_and_nonempty_universe
     assert!(shared.facts().contains_key(&source));
 
     shared.graph = None;
-    shared.graph().expect("graph builds from newly collected facts");
-    shared.graph().expect("graph is reused after the first build");
+    shared
+        .graph()
+        .expect("graph builds from newly collected facts");
+    shared
+        .graph()
+        .expect("graph is reused after the first build");
     assert_eq!(shared.graph_builds, 1);
 }
 
@@ -139,9 +171,8 @@ fn traversal_work_metrics_distinguish_lazy_and_canonical_graph_paths() {
     let cwd = std::env::current_dir().unwrap();
 
     let lazy_observer = crate::diagnostics::InvocationObserver::new(true);
-    let lazy_session = crate::codebase::analysis_session::AnalysisSession::new(Some(
-        lazy_observer.clone(),
-    ));
+    let lazy_session =
+        crate::codebase::analysis_session::AnalysisSession::new(Some(lazy_observer.clone()));
     let mut lazy_shared = SharedTraversalContext::prepare_with_session(
         root.clone(),
         None,
@@ -167,9 +198,8 @@ fn traversal_work_metrics_distinguish_lazy_and_canonical_graph_paths() {
     );
 
     let graph_observer = crate::diagnostics::InvocationObserver::new(true);
-    let graph_session = crate::codebase::analysis_session::AnalysisSession::new(Some(
-        graph_observer.clone(),
-    ));
+    let graph_session =
+        crate::codebase::analysis_session::AnalysisSession::new(Some(graph_observer.clone()));
     let mut graph_shared = SharedTraversalContext::prepare_with_session(
         root.clone(),
         None,
@@ -288,8 +318,7 @@ fn shared_import_traversal_only_reads_and_parses_reachable_frontier() {
 #[test]
 fn shared_traversal_reuses_workspace_manifest_documents_across_lazy_and_symbol_paths() {
     let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/performance/core-analysis"),
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/performance/core-analysis"),
     );
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let session = crate::codebase::analysis_session::AnalysisSession::new(Some(
@@ -307,12 +336,18 @@ fn shared_traversal_reuses_workspace_manifest_documents_across_lazy_and_symbol_p
         std::sync::Arc::clone(&session),
     )
     .unwrap();
-    let baseline = observer
-        .snapshot()
-        .work
+    let baseline_work = observer.snapshot().work;
+    let baseline = baseline_work
         .get("manifest.parses")
         .copied()
         .unwrap_or(0);
+    let baseline_hits = baseline_work
+        .get("manifest.cache_hits")
+        .copied()
+        .unwrap_or(0);
+    // Config, tsconfig, and workspace manifests are canonicalized during
+    // preparation, before any lazy or symbol traversal begins.
+    assert!(baseline > 0, "{baseline_work:#?}");
 
     crate::ast::with_request_parse_cache(|| {
         let mut lazy = traverse_args(root.clone(), vec![PathBuf::from("src/app.tsx")]);
@@ -320,19 +355,24 @@ fn shared_traversal_reuses_workspace_manifest_documents_across_lazy_and_symbol_p
         lazy.depth = Some(1);
         collect_and_filter_entries_shared(&lazy, Direction::Deps, &root, &mut shared).unwrap();
         let after_first = observer.snapshot().work["manifest.parses"];
-        assert!(after_first > baseline);
+        assert_eq!(after_first, baseline);
 
         lazy.depth = Some(2);
         collect_and_filter_entries_shared(&lazy, Direction::Deps, &root, &mut shared).unwrap();
-        let mut symbol =
-            traverse_args(root.clone(), vec![PathBuf::from("src/app.tsx#App")]);
+        let mut symbol = traverse_args(root.clone(), vec![PathBuf::from("src/app.tsx#App")]);
         symbol.relationships = vec![RelationshipArg::Import];
         collect_and_filter_entries_shared(&symbol, Direction::Dependents, &root, &mut shared)
             .unwrap();
 
         let work = observer.snapshot().work;
-        assert_eq!(work["manifest.parses"], after_first, "{work:#?}");
-        assert!(work["manifest.cache_hits"] >= 6, "{work:#?}");
+        assert_eq!(work["manifest.parses"], baseline, "{work:#?}");
+        assert_eq!(
+            work.get("manifest.cache_hits")
+                .copied()
+                .unwrap_or_default(),
+            baseline_hits,
+            "{work:#?}",
+        );
     });
 }
 
@@ -351,7 +391,7 @@ fn shared_traversal_seed_uses_invocation_source_and_parser_gateways_once() {
         std::sync::Arc::clone(&observer),
     ));
 
-    crate::ast::with_request_parse_cache(|| {
+    let baseline = crate::ast::with_request_parse_cache(|| {
         let mut shared = SharedTraversalContext::prepare_with_session(
             root,
             None,
@@ -363,6 +403,9 @@ fn shared_traversal_seed_uses_invocation_source_and_parser_gateways_once() {
             std::sync::Arc::clone(&session),
         )
         .unwrap();
+        // Preparation legitimately reads project manifests. Capture that work
+        // so the assertions below isolate only the repeated seed requests.
+        let baseline = observer.snapshot().work;
         let requested = std::collections::HashSet::from([excluded.clone(), missing.clone()]);
         for _ in 0..2 {
             shared.facts = None;
@@ -370,6 +413,7 @@ fn shared_traversal_seed_uses_invocation_source_and_parser_gateways_once() {
             assert!(shared.facts.as_ref().unwrap().contains_key(&excluded));
             assert!(!shared.facts.as_ref().unwrap().contains_key(&missing));
         }
+        baseline
     });
 
     let work = session.work_snapshot();
@@ -378,10 +422,14 @@ fn shared_traversal_seed_uses_invocation_source_and_parser_gateways_once() {
     assert_eq!(work.parse_attempts[&excluded], 1);
     assert!(!work.parse_attempts.contains_key(&missing));
     let metrics = observer.snapshot().work;
-    assert_eq!(metrics["source.requests"], 4);
-    assert_eq!(metrics["source.reads"], 2);
-    assert_eq!(metrics["source.cache_hits"], 2);
-    assert_eq!(metrics["source.read_errors"], 1);
-    assert_eq!(metrics["parse.requests"], 2);
-    assert_eq!(metrics["parse.files"], 1);
+    let delta = |key| {
+        metrics.get(key).copied().unwrap_or_default()
+            - baseline.get(key).copied().unwrap_or_default()
+    };
+    assert_eq!(delta("source.requests"), 4);
+    assert_eq!(delta("source.reads"), 2);
+    assert_eq!(delta("source.cache_hits"), 2);
+    assert_eq!(delta("source.read_errors"), 1);
+    assert_eq!(delta("parse.requests"), 2);
+    assert_eq!(delta("parse.files"), 1);
 }

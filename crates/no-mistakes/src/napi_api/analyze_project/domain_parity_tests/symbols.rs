@@ -21,7 +21,6 @@ fn prepared_symbols_signature_and_flow_match_standalone_and_parse_once() {
         parse_json(crate::napi_api::symbols_json_impl(impact.to_string()).unwrap()),
         parse_json(crate::napi_api::flow_json_impl(flow.to_string()).unwrap()),
     ];
-
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
         json!({
@@ -124,3 +123,5 @@ fn mixed_check_and_symbols_keep_explicit_ignored_targets_in_the_one_parse_scope(
     assert_eq!(counts.get(&explicit), Some(&1), "{counts:#?}");
     assert!(!counts.contains_key(&root.join("ignored-transitive/Button.test.tsx")));
 }
+
+include!("symbols/playwright.rs");

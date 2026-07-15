@@ -10,7 +10,7 @@ fn collect_file_facts(
         path.to_path_buf(),
     ]));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-    super::collect::collect_file_facts_with_sources(path, plan, context, &sources)
+    super::collect::test_support::collect_file_facts_with_sources(path, plan, context, &sources)
 }
 
 impl TsFactMap {

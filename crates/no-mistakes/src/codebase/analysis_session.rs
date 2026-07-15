@@ -44,19 +44,6 @@ impl fmt::Display for SourceReadError {
 
 impl std::error::Error for SourceReadError {}
 
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct DocumentError {
-    detail: Arc<str>,
-}
-
-impl fmt::Display for DocumentError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{}", self.detail)
-    }
-}
-
-impl std::error::Error for DocumentError {}
-
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SessionWorkSnapshot {
     pub source_reads: BTreeMap<PathBuf, u64>,

@@ -1,7 +1,8 @@
 use super::*;
 use oxc_allocator::Allocator;
+use oxc_ast::ast::{Expression, TemplateLiteral};
 use oxc_parser::Parser;
-use oxc_span::SourceType;
+use oxc_span::{SourceType, Span};
 use std::path::PathBuf;
 
 #[test]

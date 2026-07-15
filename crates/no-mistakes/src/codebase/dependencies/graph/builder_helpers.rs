@@ -13,6 +13,22 @@ struct GraphEdgeBuildInputs<'a> {
     visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
 }
 
+fn parsed_imports_for_plan<'a>(
+    plan: GraphBuildPlan,
+    files: &'a [PathBuf],
+    facts: Option<&'a dyn TsFactLookup>,
+) -> Result<ParsedImports<'a>> {
+    if !(plan.imports || plan.workspace || plan.assets) {
+        return Ok(Vec::new());
+    }
+    let Some(facts) = facts else {
+        anyhow::bail!(
+            "TS import facts are required when import, workspace, or asset edges are requested"
+        );
+    };
+    Ok(collect_parsed_imports_from_facts(files, facts))
+}
+
 fn merge_http_process_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,

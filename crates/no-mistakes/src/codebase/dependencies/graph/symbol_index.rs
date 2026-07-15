@@ -50,45 +50,6 @@ impl SymbolIndex {
         Self::build_from_facts_with_session(root, tsconfig, graph_files, facts, &session)
     }
 
-    pub(crate) fn build_from_facts_and_workspace(
-        tsconfig: &TsConfig,
-        graph_files: &GraphFiles,
-        facts: &dyn TsFactLookup,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    ) -> Self {
-        let session = crate::codebase::analysis_session::AnalysisSession::new(
-            crate::diagnostics::current(),
-        );
-        Self::build_from_facts_workspace_resolution_cache_and_session(
-            tsconfig,
-            graph_files,
-            facts,
-            workspace,
-            None,
-            &session,
-        )
-    }
-
-    pub(crate) fn build_from_facts_workspace_and_resolution_cache(
-        tsconfig: &TsConfig,
-        graph_files: &GraphFiles,
-        facts: &dyn TsFactLookup,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        import_resolution_cache: Option<&crate::codebase::ts_resolver::ImportResolutionCache>,
-    ) -> Self {
-        let session = crate::codebase::analysis_session::AnalysisSession::new(
-            crate::diagnostics::current(),
-        );
-        Self::build_from_facts_workspace_resolution_cache_and_session(
-            tsconfig,
-            graph_files,
-            facts,
-            workspace,
-            import_resolution_cache,
-            &session,
-        )
-    }
-
     pub(crate) fn build_from_facts_workspace_resolution_cache_and_session(
         tsconfig: &TsConfig,
         graph_files: &GraphFiles,

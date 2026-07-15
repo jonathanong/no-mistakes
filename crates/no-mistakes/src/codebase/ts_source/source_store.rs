@@ -1,40 +1,15 @@
 use super::{FileId, FileInventory};
+use std::cell::Cell;
 use std::io;
 use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 
+mod json;
+pub use json::{JsonLoadError, JsonParseOutcome};
+
 /// Memoized result of a strict UTF-8 source read.
 pub type SourceReadOutcome = Result<Arc<str>, Arc<io::Error>>;
-
-/// Cached failure while loading a JSON document.
-#[derive(Debug, Clone)]
-#[doc(hidden)]
-pub enum JsonLoadError {
-    Io(Arc<io::Error>),
-    Syntax(Arc<serde_json::Error>),
-}
-
-impl std::fmt::Display for JsonLoadError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Io(error) => write!(formatter, "{error}"),
-            Self::Syntax(error) => write!(formatter, "{error}"),
-        }
-    }
-}
-
-impl std::error::Error for JsonLoadError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Io(error) => Some(error.as_ref()),
-            Self::Syntax(error) => Some(error.as_ref()),
-        }
-    }
-}
-
-#[doc(hidden)]
-pub type JsonParseOutcome = Result<Arc<serde_json::Value>, JsonLoadError>;
 
 type ValidatedPathCache = std::collections::HashMap<
     (std::path::PathBuf, std::path::PathBuf),
@@ -95,13 +70,11 @@ impl SourceStore {
         let path = self.inventory.path(id)?;
         let slot = self.reads.get(id.index())?;
         self.increment("source.requests", 1);
-        if slot.get().is_some() {
-            self.increment("source.cache_hits", 1);
-        }
-        Some(
-            slot.get_or_init(|| {
-                self.physical_reads.fetch_add(1, Ordering::Relaxed);
-                self.increment("source.reads", 1);
+        let physical_read = Cell::new(false);
+        let result = slot
+            .get_or_init(|| {
+                physical_read.set(true);
+                self.record_source_read(path);
                 match std::fs::read_to_string(path) {
                     Ok(source) => {
                         self.increment("source.bytes", source.len() as u64);
@@ -113,8 +86,11 @@ impl SourceStore {
                     }
                 }
             })
-            .clone(),
-        )
+            .clone();
+        if !physical_read.get() {
+            self.increment("source.cache_hits", 1);
+        }
+        Some(result)
     }
 
     #[doc(hidden)]
@@ -142,24 +118,27 @@ impl SourceStore {
             )
         };
         self.increment("source.requests", 1);
-        if cell.get().is_some() {
+        let physical_read = Cell::new(false);
+        let result = cell
+            .get_or_init(|| {
+                physical_read.set(true);
+                self.record_source_read(&path);
+                match std::fs::read_to_string(&path) {
+                    Ok(source) => {
+                        self.increment("source.bytes", source.len() as u64);
+                        Ok(Arc::<str>::from(source))
+                    }
+                    Err(error) => {
+                        self.increment("source.read_errors", 1);
+                        Err(Arc::new(error))
+                    }
+                }
+            })
+            .clone();
+        if !physical_read.get() {
             self.increment("source.cache_hits", 1);
         }
-        cell.get_or_init(|| {
-            self.physical_reads.fetch_add(1, Ordering::Relaxed);
-            self.increment("source.reads", 1);
-            match std::fs::read_to_string(&path) {
-                Ok(source) => {
-                    self.increment("source.bytes", source.len() as u64);
-                    Ok(Arc::<str>::from(source))
-                }
-                Err(error) => {
-                    self.increment("source.read_errors", 1);
-                    Err(Arc::new(error))
-                }
-            }
-        })
-        .clone()
+        result
     }
 
     #[doc(hidden)]
@@ -177,26 +156,30 @@ impl SourceStore {
             )
         };
         self.increment("manifest.requests", 1);
-        if cell.get().is_some() {
+        let parsed = Cell::new(false);
+        let result = cell
+            .get_or_init(|| {
+                parsed.set(true);
+                self.json_parse_count.fetch_add(1, Ordering::Relaxed);
+                self.increment("manifest.parses", 1);
+                match self.read_path(&path) {
+                    Ok(source) => serde_json::from_str(&source)
+                        .map(Arc::new)
+                        .map_err(|error| {
+                            self.increment("manifest.errors", 1);
+                            JsonLoadError::Syntax(Arc::new(error))
+                        }),
+                    Err(error) => {
+                        self.increment("manifest.errors", 1);
+                        Err(JsonLoadError::Io(error))
+                    }
+                }
+            })
+            .clone();
+        if !parsed.get() {
             self.increment("manifest.cache_hits", 1);
         }
-        cell.get_or_init(|| {
-            self.json_parse_count.fetch_add(1, Ordering::Relaxed);
-            self.increment("manifest.parses", 1);
-            match self.read_path(&path) {
-                Ok(source) => serde_json::from_str(&source)
-                    .map(Arc::new)
-                    .map_err(|error| {
-                        self.increment("manifest.errors", 1);
-                        JsonLoadError::Syntax(Arc::new(error))
-                    }),
-                Err(error) => {
-                    self.increment("manifest.errors", 1);
-                    Err(JsonLoadError::Io(error))
-                }
-            }
-        })
-        .clone()
+        result
     }
 
     /// Validate a lexical candidate once for suppression consumers. Regular
@@ -243,6 +226,14 @@ impl SourceStore {
 
     pub fn physical_read_count(&self) -> usize {
         self.physical_reads.load(Ordering::Relaxed)
+    }
+
+    fn record_source_read(&self, path: &Path) {
+        self.physical_reads.fetch_add(1, Ordering::Relaxed);
+        self.increment("source.reads", 1);
+        if let Some(observer) = &self.observer {
+            observer.record_source_read(path);
+        }
     }
 
     fn increment(&self, metric: &'static str, amount: u64) {

@@ -14,11 +14,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     );
     let visible_paths = session.visible_paths(&root);
     let root_visible_paths = visible_paths.paths_for(&root);
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        args.tsconfig.as_deref(),
-        &root,
-        &root_visible_paths,
-    )?;
+    let tsconfig = session.tsconfig(&root, args.tsconfig.as_deref())?;
     let abs_files = resolve_input_files(&args.files, &root, &cwd);
     let target_file = crate::codebase::ts_resolver::normalize_path(&abs_files[0]);
     let mut graph_file_paths = root_visible_paths.as_ref().clone();
@@ -26,11 +22,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         graph_file_paths.push(target_file.clone());
     }
     let graph_files = GraphFiles::from_files(graph_file_paths);
-    let config = crate::config::v2::load_v2_config_from_visible(
-        &root,
-        args.config.as_deref(),
-        &root_visible_paths,
-    )?;
+    let config = session.config(&root, args.config.as_deref())?;
     let test_filter = TestFileFilter::new(&root, &config);
     let graph_plan = signature_impact_graph_plan();
     let codebase_config =
@@ -79,6 +71,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
             session: &session,
             graph_files: &graph_files,
             test_filter: &test_filter,
+            workspace: prepared_graph.workspace(),
             graph: &graph,
             facts: &facts,
         },
@@ -103,6 +96,7 @@ pub(super) fn collect_report_with_prepared(
         session,
         graph_files,
         test_filter,
+        workspace,
         graph,
         facts,
     } = prepared;
@@ -118,6 +112,7 @@ pub(super) fn collect_report_with_prepared(
             session,
             graph_files,
             test_filter,
+            workspace,
             graph,
             facts,
         },

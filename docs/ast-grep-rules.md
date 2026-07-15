@@ -112,7 +112,8 @@ Four narrow rules protect the shared analysis boundary:
 
 - `no-direct-source-read` covers the TS/JS shared-fact directories and the
   demand-driven import traversal, shared traversal fact seeder, and prepared
-  integration-runner config readers, and requires `AnalysisSession::read_source`.
+  integration-runner config readers, and requires the canonical
+  `SourceStore::read_path` gateway.
   It deliberately does not flag Markdown, YAML, lockfile, or other document
   readers.
 - `no-direct-oxc-parser` blocks new OXC parser construction outside the AST

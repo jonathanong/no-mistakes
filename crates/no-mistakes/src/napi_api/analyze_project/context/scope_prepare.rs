@@ -1,27 +1,4 @@
-struct PreparedPlaywrightView {
-    settings: crate::playwright::config::Settings,
-    fact_plan: crate::codebase::check_facts::PlaywrightFactPlan,
-}
-
-struct PreparedScope {
-    options: AnalyzeProjectOptions,
-    traversal: SharedTraversalContext,
-    facts: crate::codebase::check_facts::CheckFactMap,
-    symbol_facts: crate::codebase::check_facts::CheckFactMap,
-    server: Option<crate::server_routes::PreparedServerAnalysis>,
-    check: Option<SharedCheckContext>,
-    playwright: HashMap<String, PreparedPlaywrightView>,
-    queue_reports: HashMap<String, crate::queue::ProjectReport>,
-    queue_indexed_reports: HashMap<String, crate::queue::PreparedProjectReport>,
-    queue_traversal_keys: std::collections::HashSet<String>,
-    server_indexed_reports: HashMap<String, crate::server_routes::PreparedProjectReport>,
-    server_traversal_keys: std::collections::HashSet<String>,
-    server_reports: HashMap<String, crate::server_routes::ProjectReport>,
-    playwright_analyses: HashMap<String, crate::playwright::analysis::types::Analysis>,
-    react_analyses: HashMap<String, Vec<crate::react_traits::ComponentFacts>>,
-}
-
-impl PreparedScope {
+impl PreparedScopePlan {
     fn prepare(
         options: &AnalyzeProjectOptions,
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
@@ -38,6 +15,9 @@ impl PreparedScope {
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
         let root = super::options::resolve_root(options.root.as_deref())?;
+        session.insert_visible_paths(&root, visible_paths.clone());
+        let (import_usages, import_usage_files) =
+            prepare_import_usage_views(options, &root, &session)?;
         let build_plan = graph_build_plan(options)?;
         let framework_plan = framework_preparation_plan(options, build_plan)?;
         let mut traversal = SharedTraversalContext::
@@ -94,6 +74,7 @@ impl PreparedScope {
         // unrelated check domains continue to honor automatic discovery and `.gitignore`.
         if check.is_none() {
             files.extend(symbol_targets.iter().cloned());
+            files.extend(import_usage_files.iter().cloned());
         }
         files.sort();
         files.dedup();
@@ -102,9 +83,16 @@ impl PreparedScope {
             .flat_map(|view| view.settings.playwright_configs.iter())
             .map(|path| crate::codebase::ts_resolver::normalize_path(path))
             .collect::<std::collections::HashSet<_>>();
+        let symbol_configs = symbol_targets
+            .iter()
+            .filter(|path| configs.contains(*path))
+            .cloned()
+            .collect::<std::collections::HashSet<_>>();
         if !configs.is_empty() {
-            files.retain(|path| !configs.contains(path));
+            files.retain(|path| !configs.contains(path) || symbol_configs.contains(path));
         }
+        files.sort();
+        files.dedup();
         let mut playwright_fact_plan = check
             .as_ref()
             .and_then(SharedCheckContext::playwright_fact_plan);
@@ -135,9 +123,14 @@ impl PreparedScope {
         let primary_paths = files
             .iter()
             .chain(graph_files.iter())
+            // Explicit Playwright config symbol targets are staged directly
+            // into primary facts without widening the check file scope.
+            .chain(symbol_configs.iter())
             .collect::<std::collections::HashSet<_>>();
         let mut supplemental_report_files = if check.is_some() {
-            authoritative_report_files
+            let mut supplemental = authoritative_report_files;
+            supplemental.extend(import_usage_files);
+            supplemental
                 .into_iter()
                 .filter(|path| !primary_paths.contains(path))
                 .collect::<Vec<_>>()
@@ -150,66 +143,33 @@ impl PreparedScope {
         let mut supplemental_plan = report_plan;
         supplemental_plan.dynamic_imports |= check_plan.dynamic_imports;
         supplemental_plan.source |= check_plan.source;
-        let facts = crate::codebase::check_facts::
-            collect_check_facts_with_graph_files_playwright_sources_and_session(
-                &session,
-                &root,
-                (files, graph_files),
-                check_plan,
-                playwright_fact_plan,
-                std::sync::Arc::clone(&sources),
-            );
-        let symbol_facts = crate::codebase::check_facts::
-            collect_check_facts_with_graph_files_playwright_sources_and_session(
-                &session,
-                &root,
-                (supplemental_report_files, Vec::new()),
-                supplemental_plan,
-                None,
-                sources,
-            );
-        let graph_facts = facts.graph_view_with_supplemental(&symbol_facts);
-        let facts = facts.scoped_view_with_supplemental(&symbol_facts);
-        traversal.use_check_facts(&graph_facts);
-        // Playwright configs were parsed while preparing the shared report/check view. Seed
-        // traversal facts before the canonical graph so invalidation cannot force a later
-        // TS-only rebuild that loses shared Playwright occurrences.
-        traversal.seed_cached_program_facts(&configs);
-        if check
-            .as_ref()
-            .and_then(SharedCheckContext::graph_plan)
-            .is_some()
-        {
-            traversal.prepare_canonical_graph_with_check_facts(&graph_facts)?;
-        }
-        crate::ast::clear_request_parse_cache();
-        let server = has_server_report(options).then(|| {
-            crate::server_routes::prepare_analysis_with_shared_facts_and_session(
-                &root,
-                traversal.tsconfig(),
-                traversal.config(),
-                facts.files(),
-                &facts,
-                session.clone(),
-            )
-        });
         let (queue_traversal_keys, server_traversal_keys) = traversal_report_keys(options)?;
         Ok(Self {
             options: options.clone(),
+            root,
             traversal,
-            facts,
-            symbol_facts,
-            server,
+            primary: ScopeFactPlan {
+                files,
+                graph_files,
+                plan: check_plan,
+                playwright: playwright_fact_plan,
+                sources: std::sync::Arc::clone(&sources),
+            },
+            supplemental: ScopeFactPlan {
+                files: supplemental_report_files,
+                graph_files: Vec::new(),
+                plan: supplemental_plan,
+                playwright: None,
+                sources,
+            },
+            configs,
+            import_usages,
             check,
             playwright,
-            queue_reports: HashMap::new(),
-            queue_indexed_reports: HashMap::new(),
             queue_traversal_keys,
-            server_indexed_reports: HashMap::new(),
             server_traversal_keys,
-            server_reports: HashMap::new(),
-            playwright_analyses: HashMap::new(),
-            react_analyses: HashMap::new(),
+            session,
         })
     }
+
 }

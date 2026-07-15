@@ -150,21 +150,20 @@ fn forwarded_path(options: &AnalyzeProjectOptions, value: &str) -> AnyhowResult<
 }
 
 fn resolve_forward_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
-    let root = resolve_root(root)?;
-    if root.is_absolute() {
-        return Ok(root);
-    }
-    Ok(crate::codebase::ts_resolver::normalize_path(
-        &std::env::current_dir()
-            .context("reading current directory")?
-            .join(root),
-    ))
+    resolve_root(root)
 }
 
 pub(super) fn resolve_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
     let root = match root {
         Some(root) => PathBuf::from(root),
         None => std::env::current_dir().context("reading current directory")?,
+    };
+    let root = if root.is_absolute() {
+        root
+    } else {
+        std::env::current_dir()
+            .context("reading current directory")?
+            .join(root)
     };
     Ok(crate::codebase::ts_resolver::normalize_path(&root))
 }

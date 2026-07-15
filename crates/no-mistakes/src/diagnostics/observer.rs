@@ -2,6 +2,7 @@ mod timing_order;
 
 use super::context::{measure_optional, with_timing_kind};
 use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -30,7 +31,8 @@ pub struct InvocationObserver {
     verbose: bool,
     started: Instant,
     timings: Mutex<Vec<TimingDiagnostic>>,
-    work: Mutex<BTreeMap<&'static str, u64>>,
+    work: Option<Mutex<BTreeMap<&'static str, u64>>>,
+    source_reads: Option<Mutex<BTreeMap<PathBuf, u64>>>,
 }
 
 impl InvocationObserver {
@@ -39,7 +41,8 @@ impl InvocationObserver {
             verbose,
             started: Instant::now(),
             timings: Mutex::new(Vec::new()),
-            work: Mutex::new(BTreeMap::new()),
+            work: verbose.then(|| Mutex::new(BTreeMap::new())),
+            source_reads: verbose.then(|| Mutex::new(BTreeMap::new())),
         })
     }
 
@@ -79,15 +82,37 @@ impl InvocationObserver {
     }
 
     pub fn increment(&self, metric: &'static str, amount: u64) {
-        if !self.verbose {
+        let Some(work) = &self.work else {
             return;
-        }
-        *self
-            .work
+        };
+        *work
             .lock()
             .expect("diagnostics work mutex must not be poisoned")
             .entry(metric)
             .or_default() += amount;
+    }
+
+    pub(crate) fn record_source_read(&self, path: &Path) {
+        let Some(source_reads) = &self.source_reads else {
+            return;
+        };
+        *source_reads
+            .lock()
+            .expect("diagnostics source-read mutex must not be poisoned")
+            .entry(path.to_path_buf())
+            .or_default() += 1;
+    }
+
+    pub(crate) fn source_read_snapshot(&self) -> BTreeMap<PathBuf, u64> {
+        self.source_reads
+            .as_ref()
+            .map(|source_reads| {
+                source_reads
+                    .lock()
+                    .expect("diagnostics source-read mutex must not be poisoned")
+                    .clone()
+            })
+            .unwrap_or_default()
     }
 
     pub fn snapshot(&self) -> DiagnosticsSnapshot {
@@ -119,9 +144,13 @@ impl InvocationObserver {
             timings,
             work: self
                 .work
-                .lock()
-                .expect("diagnostics work mutex must not be poisoned")
-                .clone(),
+                .as_ref()
+                .map(|work| {
+                    work.lock()
+                        .expect("diagnostics work mutex must not be poisoned")
+                        .clone()
+                })
+                .unwrap_or_default(),
         }
     }
 

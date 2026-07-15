@@ -23,14 +23,14 @@ impl PreparedScope {
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
         let value = super::import_usages_options(request, options)?;
-        let options = serde_json::from_str(value.as_str())?;
-        let args = crate::napi_api::codebase::build_import_usages_args(options);
-        let cwd = std::env::current_dir().context("reading current directory")?;
         let root = self.traversal.root().to_path_buf();
+        let prepared = self
+            .import_usages
+            .get(&value)
+            .context("prepared importUsages file universe is missing")?;
         let report = crate::codebase::import_usages::collect_with_facts(
-            &args,
             &root,
-            &cwd,
+            prepared,
             self.traversal.facts(),
         )?;
         Ok(serde_json::to_value(report)?)
@@ -49,8 +49,7 @@ impl PreparedScope {
             return Ok(serde_json::from_str(&output)?);
         }
         let session = self.traversal.session_arc();
-        let (entries, roots) =
-            crate::codebase::symbols::collect_entries_with_prepared_facts(
+        let (entries, roots) = crate::codebase::symbols::collect_entries_with_prepared_facts(
             &args,
             self.traversal.root(),
             self.traversal.tsconfig(),

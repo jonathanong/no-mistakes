@@ -11,7 +11,7 @@ impl SharedTraversalContext {
     ) -> Result<Self> {
         session.record_work("analysis.requests", 1);
         let root_visible_paths = dataset.paths_for(&root);
-        let config = (*dataset.config(config_path)?).clone();
+        let config = (*session.config(&root, config_path)?).clone();
         let mut build_plan = build_plan;
         if include_check_plan {
             if let Some(check_plan) = crate::codebase::rules::canonical_graph_plan(&config) {
@@ -31,7 +31,7 @@ impl SharedTraversalContext {
             ),
             &excluded_configs,
         );
-        let tsconfig = (*dataset.tsconfig(tsconfig_path)?).clone();
+        let tsconfig = (*session.tsconfig(&root, tsconfig_path)?).clone();
         let codebase_config =
             crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
         let workspace = dataset.workspace();

@@ -21,15 +21,14 @@ fn prepare_playwright_views(
             Some(view) => view,
             None => {
                 let root = traversal.root();
-                let config = parsed.config.as_deref().map(Path::new);
                 let playwright_configs = parsed
                     .playwright_config
                     .iter()
                     .map(PathBuf::from)
                     .collect::<Vec<_>>();
-                let settings = crate::playwright::report_settings(
+                let settings = crate::playwright::config::settings_from_loaded_v2(
                     root,
-                    config,
+                    traversal.config(),
                     &playwright_configs,
                     parsed.project.clone(),
                     traversal.visible_paths(),

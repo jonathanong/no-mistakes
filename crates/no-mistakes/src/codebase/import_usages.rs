@@ -15,6 +15,17 @@ mod model;
 mod output;
 mod paths;
 
+pub(crate) struct PreparedImportUsages {
+    graph_files: GraphFiles,
+    roots: Vec<String>,
+}
+
+impl PreparedImportUsages {
+    pub(crate) fn files(&self) -> &[PathBuf] {
+        self.graph_files.all()
+    }
+}
+
 #[derive(clap::Parser, Debug)]
 pub struct ImportUsagesArgs {
     /// TS/JS files to inspect. If omitted, scans discovered source files.
@@ -68,20 +79,25 @@ pub fn collect(args: &ImportUsagesArgs) -> Result<ImportUsagesReport> {
     collect_with_timings(args, None)
 }
 
-pub(crate) fn collect_with_facts(
+pub(crate) fn prepare_file_universe(
     args: &ImportUsagesArgs,
     root: &Path,
     cwd: &Path,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> Result<PreparedImportUsages> {
+    let files = paths::resolve_files_with_session(session, args, root, cwd)?;
+    Ok(PreparedImportUsages {
+        graph_files: GraphFiles::from_files(files),
+        roots: paths::roots_for_output(args, root),
+    })
+}
+
+pub(crate) fn collect_with_facts(
+    root: &Path,
+    prepared: &PreparedImportUsages,
     facts: &dyn TsFactLookup,
 ) -> Result<ImportUsagesReport> {
-    let files = paths::resolve_files(args, root, cwd)?;
-    let graph_files = GraphFiles::from_files(files);
-    collect_from_facts(
-        root,
-        paths::roots_for_output(args, root),
-        &graph_files,
-        facts,
-    )
+    collect_from_facts(root, prepared.roots.clone(), &prepared.graph_files, facts)
 }
 
 fn collect_with_timings(
@@ -92,27 +108,21 @@ fn collect_with_timings(
     let root = paths::normalize_root(args.root.as_deref(), &cwd);
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    let files = paths::resolve_files_with_session(&session, args, &root, &cwd)?;
+    let prepared = prepare_file_universe(args, &root, &cwd, &session)?;
     if let Some(timings) = &mut timings {
         timings.mark("search");
     }
 
     let facts = collect_ts_facts_with_session_and_context(
         &session,
-        &files,
+        prepared.files(),
         TsFactPlan::imports(),
         &TsFactContext::default(),
     );
     if let Some(timings) = &mut timings {
         timings.mark("parse");
     }
-    let graph_files = GraphFiles::from_files(files);
-    let report = collect_from_facts(
-        &root,
-        paths::roots_for_output(args, &root),
-        &graph_files,
-        &facts,
-    )?;
+    let report = collect_with_facts(&root, &prepared, &facts)?;
     if let Some(timings) = &mut timings {
         timings.mark("analysis");
     }

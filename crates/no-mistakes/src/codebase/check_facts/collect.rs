@@ -1,7 +1,7 @@
-use super::{CheckFactMap, CheckFactPlan, CheckFactStats, PlaywrightFactPlan};
+use super::{CheckFactMap, CheckFactPlan, CheckFactStats, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::dependencies::extract::is_indexable;
 use dashmap::DashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -13,6 +13,7 @@ use super::collect_helpers::uncollected_files;
 pub(super) use super::collect_helpers::{
     collect_fact_map_sequential_with_sources, collect_fact_map_with_sources,
 };
+pub(crate) use entrypoints::collect_check_facts_with_precollected_file_facts;
 pub(crate) use entrypoints::collect_check_facts_with_precollected_graph_facts;
 pub use entrypoints::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
@@ -25,13 +26,13 @@ pub use entrypoints::{
 fn collect_check_facts_inner(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
-    files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    graph_files_complete: bool,
+    file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
+    mut ts: HashMap<PathBuf, CheckFileFacts>,
 ) -> CheckFactMap {
+    let (files, graph_files, graph_files_complete) = file_scope;
     let graph_only_files = graph_only_files(&files, &graph_files);
     let collected_ts_plan = if graph_only_files.iter().any(|path| is_indexable(path)) {
         plan.graph
@@ -49,7 +50,7 @@ fn collect_check_facts_inner(
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
     };
-    let ((mut ts, mut integration_runner_configs), helper_facts) =
+    let ((collected, mut integration_runner_configs), helper_facts) =
         super::collect_prepared_runner_facts(
             session,
             root,
@@ -59,6 +60,7 @@ fn collect_check_facts_inner(
             playwright,
             Arc::clone(&sources),
         );
+    ts.extend(collected);
     let helper_paths = helper_facts.keys().cloned().collect::<HashSet<_>>();
     ts.extend(helper_facts);
     let remaining_files = uncollected_files(&files, &ts, &helper_paths);

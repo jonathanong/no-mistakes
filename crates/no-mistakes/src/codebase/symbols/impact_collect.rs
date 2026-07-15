@@ -7,6 +7,7 @@ struct PreparedReportContext<'a> {
     session: &'a crate::codebase::analysis_session::AnalysisSession,
     graph_files: &'a GraphFiles,
     test_filter: &'a TestFileFilter,
+    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     graph: &'a DepGraph,
     facts: &'a TsFactMap,
 }
@@ -23,15 +24,10 @@ fn build_report_from_prepared(
         session,
         graph_files,
         test_filter,
+        workspace,
         graph,
         facts,
     } = context;
-    let workspace = crate::codebase::workspaces::load_from_files_with_session(
-        root,
-        graph_files.all(),
-        Some(session),
-    )
-    .unwrap_or_default();
     let visible_files = graph_files.visible().clone();
     let target = NodeId::Symbol {
         file: target_file.to_path_buf(),
@@ -105,7 +101,7 @@ fn build_report_from_prepared(
         }
         entries.extend(file_entries);
     }
-    let local_caller_context = prepare_local_caller_context(facts, &workspace, &visible_files);
+    let local_caller_context = prepare_local_caller_context(facts, workspace, &visible_files);
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         tsconfig,
         Some(local_caller_context.visible_files),

@@ -10,12 +10,15 @@ use std::path::{Path, PathBuf};
 
 include!("context/check_prepare.rs");
 include!("context/check_run.rs");
+include!("context/scope_types.rs");
 include!("context/scope_prepare.rs");
+include!("context/scope_materialize.rs");
 include!("context/traversal_report_keys.rs");
 include!("context/scope_graph_reports.rs");
 include!("context/scope_project_reports.rs");
 include!("context/scope_cached_reports.rs");
 include!("context/api.rs");
+include!("context/api_reports.rs");
 include!("context/scope_helpers.rs");
 include!("context/plan_helpers.rs");
 include!("context/target_helpers.rs");
