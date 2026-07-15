@@ -1,5 +1,7 @@
 # no-mistakes
 
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge)
+
 Deterministic AST-based codebase intelligence for AI agents.
 
 `no-mistakes` answers structural questions about TypeScript, JavaScript,
