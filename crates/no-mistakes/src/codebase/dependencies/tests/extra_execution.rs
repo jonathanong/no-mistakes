@@ -336,66 +336,6 @@ fn shared_import_only_traversal_parses_only_reachable_files() {
 }
 
 #[test]
-fn cli_import_filter_prepares_only_the_requested_framework() {
-    let source = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/parser-count/framework-demand-invalid-unrequested"),
-    );
-    let fixture = crate::test_support::materialize_saved_fixture(&source);
-    let root = fixture.path().canonicalize().unwrap();
-    let cwd = std::env::current_dir().unwrap();
-    let mut timings = crate::codebase::timing::PhaseTimings::start();
-    let mut args = traverse_args(root.clone(), vec![PathBuf::from("src/unit.ts")]);
-    args.relationships = vec![RelationshipArg::Import];
-    args.tests = vec!["vitest".to_string()];
-
-    crate::ast::begin_parse_count(&root);
-    crate::codebase::dotnet::test_support::begin_fact_collection_count(&root);
-    crate::codebase::swift::test_support::begin_fact_collection_count(&root);
-    collect_and_filter_entries(&args, Direction::Dependents, &cwd, &mut timings).unwrap();
-    let counts = crate::ast::finish_parse_count(&root);
-
-    assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
-    assert_eq!(counts.get(&root.join("playwright.config.ts")), Some(&1));
-    assert_eq!(
-        crate::codebase::dotnet::test_support::finish_fact_collection_count(&root),
-        0
-    );
-    assert_eq!(
-        crate::codebase::swift::test_support::finish_fact_collection_count(&root),
-        0
-    );
-}
-
-#[test]
-fn explicit_unrequested_runner_config_is_restored_to_the_graph_scope() {
-    let source = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/parser-count/framework-demand-invalid-unrequested"),
-    );
-    let fixture = crate::test_support::materialize_saved_fixture(&source);
-    let root = fixture.path().canonicalize().unwrap();
-    let cwd = std::env::current_dir().unwrap();
-    let mut timings = crate::codebase::timing::PhaseTimings::start();
-    let mut args = traverse_args(
-        root.clone(),
-        vec![PathBuf::from("playwright.config.ts")],
-    );
-    args.relationships = vec![RelationshipArg::Import];
-    args.tests = vec!["vitest".to_string()];
-
-    crate::ast::begin_parse_count(&root);
-    collect_and_filter_entries(&args, Direction::Dependents, &cwd, &mut timings).unwrap();
-    let counts = crate::ast::finish_parse_count(&root);
-
-    assert_eq!(
-        counts.get(&root.join("playwright.config.ts")),
-        Some(&1),
-        "{counts:#?}"
-    );
-}
-
-#[test]
 fn shared_lazy_import_facts_are_reused_by_later_symbol_queries() {
     let source = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

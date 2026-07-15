@@ -74,9 +74,6 @@ impl FrameworkPreparationPlan {
         config: &NoMistakesConfig,
         visible_paths: &[PathBuf],
     ) -> std::collections::HashSet<PathBuf> {
-        if self.runners.is_empty() {
-            return std::collections::HashSet::new();
-        }
         [TestRunner::Playwright, TestRunner::Vitest]
             .into_iter()
             .filter(|runner| !self.runners.contains(runner))
