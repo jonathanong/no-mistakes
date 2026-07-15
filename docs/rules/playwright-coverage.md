@@ -14,6 +14,15 @@ Playwright coverage.
 
 Fix: add coverage, adjust selector config, or exclude intentional gaps.
 
+## HTML IDs
+
+HTML `id` values are coverage candidates only when
+[`tests.playwright.selectors.htmlIds`](../configuration/tests.md) is enabled or
+`id` is explicitly configured as a test ID or component selector attribute.
+Enabling `playwright-unique-html-ids` does not add IDs to coverage; that rule
+scans IDs independently so it can detect duplicates without widening
+`playwright-coverage`.
+
 ## `getByTestId` and `testIdAttribute`
 
 Coverage matching is attribute-aware: a `page.getByTestId('save')` assertion only

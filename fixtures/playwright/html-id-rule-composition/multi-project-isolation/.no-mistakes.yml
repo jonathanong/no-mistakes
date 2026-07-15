@@ -1,0 +1,22 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+tests:
+  playwright:
+    configs:
+      - playwright.web.config.ts
+      - playwright.storybook.config.ts
+    selectors:
+      htmlIds: false
+
+rules:
+  - rule: playwright-coverage
+    scope: repository
+    tests:
+      playwright: [web]
+  - rule: playwright-unique-html-ids
+    scope: repository
+    tests:
+      playwright: [storybook]
