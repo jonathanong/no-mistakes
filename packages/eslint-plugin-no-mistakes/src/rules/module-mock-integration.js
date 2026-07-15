@@ -91,6 +91,21 @@ function addTaggedNames(source, patterns, names) {
 // left unmatched.
 const REEXPORT_ALL = /export\s*\*\s*from\s*['"]([^'"]+)['"]/g;
 
+// Matches whichever comes first at each position: a string/template literal (kept
+// verbatim — it may be a real re-export's own specifier) or a line/block comment
+// (dropped). This keeps a disabled `// export * from './leaf'` line, or the same
+// text inside a `/* ... */` block, from being mistaken for a live barrel edge.
+// A string literal whose *contents* merely spell out re-export-like text (rather
+// than containing an actual disabled statement) is a narrower, accepted heuristic
+// gap — matching the tag-marker scan's own text-based blind spots elsewhere in
+// this file; resolving it would need a real lexer, not a regex pass.
+const COMMENT_OR_STRING =
+  /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\/\/[^\n]*|\/\*[\s\S]*?\*\//g;
+
+function withoutComments(source) {
+  return source.replace(COMMENT_OR_STRING, (match) => (/^['"`]/.test(match) ? match : ""));
+}
+
 function resolveReexportPath(fromPath, specifier, extensions) {
   const base = resolve(dirname(fromPath), specifier);
   const candidates = [
@@ -106,7 +121,7 @@ function resolveReexportPath(fromPath, specifier, extensions) {
 
 function reexportTargets(source, fromPath, extensions) {
   const targets = [];
-  for (const match of source.matchAll(REEXPORT_ALL)) {
+  for (const match of withoutComments(source).matchAll(REEXPORT_ALL)) {
     const specifier = match[1];
     if (!specifier.startsWith(".")) continue; // leave bare-specifier re-exports unresolved
     const resolved = resolveReexportPath(fromPath, specifier, extensions);

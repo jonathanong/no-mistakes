@@ -265,6 +265,40 @@ describe("module-mock-boundary barrel re-exports", () => {
       ["boundary"],
     );
   });
+
+  it("ignores re-export syntax inside comments while still following live re-exports", () => {
+    const options = {
+      integrationExports: {
+        specifiers: ["@app/**"],
+        sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, "commented-barrel.ts")],
+      },
+      internalSpecifiers: ["@app/**"],
+    };
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ taggedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        options,
+        "module-mock-boundary.test.ts",
+      ),
+      ["boundary"],
+    );
+    assert.deepEqual(
+      messages(
+        `
+          import { vi } from "vitest";
+          vi.mock("@app/aws", () => ({ nestedProviderCall: vi.fn() }));
+        `,
+        "module-mock-boundary",
+        options,
+        "module-mock-boundary.test.ts",
+      ),
+      [],
+    );
+  });
 });
 
 describe("module-mock-preserve-exports", () => {
