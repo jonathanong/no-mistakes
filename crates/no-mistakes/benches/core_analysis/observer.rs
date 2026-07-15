@@ -52,7 +52,8 @@ pub(super) fn bench_observer_overhead(c: &mut Criterion) {
     assert_eq!(verbose_snapshot.work["manifest.cache_hits"], 4);
     assert_eq!(verbose_snapshot.work["parse.requests"], 14);
     assert_eq!(verbose_snapshot.work["parse.files"], 13);
-    assert_eq!(verbose_snapshot.work["graph.builds"], 2);
+    // All configured check domains share one canonical union graph.
+    assert_eq!(verbose_snapshot.work["graph.builds"], 1);
     assert_eq!(
         verbose_snapshot.work["resolver.computations"],
         EXPECTED_CHECK_RESOLVER_KEYS,

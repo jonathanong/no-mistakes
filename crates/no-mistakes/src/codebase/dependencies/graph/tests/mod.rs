@@ -46,6 +46,7 @@ include!("build_check_fact_adapters.rs");
 include!("core.rs");
 include!("scoped_universe.rs");
 include!("legacy_symbol_channel.rs");
+include!("session_resolver_cache.rs");
 include!("route_import.rs");
 include!("route_import_prepared.rs");
 include!("extra_cases.rs");

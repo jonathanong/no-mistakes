@@ -13,11 +13,15 @@ impl DepGraph {
         let config_options = edge_inputs.config_options;
         let config_path = edge_inputs.config_path;
         let supplied_workspace = edge_inputs.workspace;
-        let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
-            .with_visible(graph_files.visible());
         let resolver = match edge_inputs.import_resolution_cache {
-            Some(cache) => resolver.with_shared_cache(cache),
-            None => resolver,
+            Some(cache) => ImportResolver::new_observed(tsconfig, session.observer().cloned())
+                .with_visible(graph_files.visible())
+                .with_shared_cache(cache),
+            None => ImportResolver::new_in_session(
+                tsconfig,
+                Some(graph_files.visible()),
+                &session,
+            ),
         };
         let fact_plan = effective_ts_fact_plan(plan, config_options);
         let mut fact_context = ts_fact_context_from_options(root, plan, config_options);

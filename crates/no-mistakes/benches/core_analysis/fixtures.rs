@@ -6,10 +6,12 @@ use std::path::{Path, PathBuf};
 
 pub(super) const EXPECTED_SOURCE_FILES: usize = 14;
 pub(super) const EXPECTED_IMPACTED_CHECKS: usize = 1;
-pub(super) const EXPECTED_MULTI_REPORT_RESOLVER_KEYS: u64 = 8;
-pub(super) const EXPECTED_CHECK_SOURCE_READS: u64 = 16;
+// Nine graph-scope keys plus two session-scoped legacy-symbol keys.
+pub(super) const EXPECTED_MULTI_REPORT_RESOLVER_KEYS: u64 = 11;
+// Fourteen source files plus four configuration and manifest reads.
+pub(super) const EXPECTED_CHECK_SOURCE_READS: u64 = 18;
 pub(super) const EXPECTED_CHECK_MANIFEST_PARSES: u64 = 4;
-pub(super) const EXPECTED_CHECK_RESOLVER_KEYS: u64 = 12;
+pub(super) const EXPECTED_CHECK_RESOLVER_KEYS: u64 = 14;
 
 pub(super) fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
