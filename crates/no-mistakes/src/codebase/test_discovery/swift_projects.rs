@@ -8,6 +8,9 @@ pub(super) fn swift_projects_from_visible(
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
 ) -> Vec<ConfigProject> {
+    if visible_paths.is_empty() || config.tests.swift.packages.is_empty() {
+        return swift_projects_from_facts(root, config, &Default::default());
+    }
     let all_files = crate::codebase::ts_source::discover_files_from_visible(
         root,
         &config.filesystem.skip_directories,
