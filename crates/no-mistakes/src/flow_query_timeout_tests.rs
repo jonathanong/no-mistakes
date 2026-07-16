@@ -27,3 +27,8 @@ fn flow_query_returns_timeout_instead_of_a_partial_report() {
 
     assert_eq!(crate::invocation::timeout_exit_code(&error), Some(124));
 }
+
+#[test]
+fn flow_traversal_checks_periodic_deadlines() {
+    assert!(check_traversal_timeout(256).is_ok());
+}

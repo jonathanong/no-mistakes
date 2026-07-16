@@ -28,17 +28,15 @@ impl ProcessTree {
             signal_hook::consts::SIGTERM,
         ])
         .ok()
-        .map(|mut signals| {
+        .map(|signals| {
             let handle = signals.handle();
-            let thread = std::thread::spawn(move || {
-                if let Some(signal) = signals.forever().next() {
-                    forward_signal(process_group, signal);
-                    // Forwarding must not replace the invoking process's normal
-                    // signal semantics. This runs outside the OS signal handler,
-                    // so restoring and emulating the default action is safe.
-                    let _ = signal_hook::low_level::emulate_default_handler(signal);
-                }
-            });
+            // Forwarding must not replace the invoking process's normal signal
+            // semantics. The listener invokes this outside the OS signal handler.
+            let thread = spawn_signal_listener(
+                signals,
+                process_group,
+                signal_hook::low_level::emulate_default_handler,
+            );
             (handle, thread)
         });
         let (signal_handle, signal_thread) = listener
@@ -126,6 +124,20 @@ pub(crate) fn forward_signal(process_group: i32, signal: i32) {
     unsafe {
         nix::libc::kill(-process_group, signal);
     }
+}
+
+#[cfg(unix)]
+pub(crate) fn spawn_signal_listener<R>(
+    mut signals: signal_hook::iterator::Signals,
+    process_group: i32,
+    terminate_parent: impl FnOnce(i32) -> R + Send + 'static,
+) -> std::thread::JoinHandle<()> {
+    std::thread::spawn(move || {
+        if let Some(signal) = signals.forever().next() {
+            forward_signal(process_group, signal);
+            let _ = terminate_parent(signal);
+        }
+    })
 }
 
 #[cfg(unix)]

@@ -20,9 +20,7 @@ impl Traversal<'_> {
         let mut check_counter = 0u32;
         while let Some((node, depth)) = queue.pop_front() {
             check_counter += 1;
-            if check_counter.is_multiple_of(256) {
-                crate::invocation::check_timeout()?;
-            }
+            check_traversal_timeout(check_counter)?;
             if depth >= self.max_depth {
                 continue;
             }
@@ -75,6 +73,13 @@ impl Traversal<'_> {
         }
         crate::invocation::check_timeout()
     }
+}
+
+fn check_traversal_timeout(check_counter: u32) -> Result<()> {
+    if check_counter.is_multiple_of(256) {
+        crate::invocation::check_timeout()?;
+    }
+    Ok(())
 }
 
 fn insert_node(nodes: &mut BTreeMap<String, FlowNode>, node: &NodeId, root: &Path, depth: usize) {

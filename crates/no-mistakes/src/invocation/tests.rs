@@ -402,6 +402,27 @@ fn child_process_group_receives_forwarded_termination_signal() {
 
 #[cfg(unix)]
 #[test]
+fn signal_listener_forwards_before_terminating_parent() {
+    let signals = signal_hook::iterator::Signals::new([signal_hook::consts::SIGUSR1]).unwrap();
+    let (sender, receiver) = std::sync::mpsc::channel();
+    let thread =
+        super::child::process_tree::spawn_signal_listener(signals, i32::MAX, move |signal| {
+            sender.send(signal).unwrap()
+        });
+
+    unsafe {
+        nix::libc::raise(signal_hook::consts::SIGUSR1);
+    }
+
+    assert_eq!(
+        receiver.recv_timeout(Duration::from_secs(1)).unwrap(),
+        signal_hook::consts::SIGUSR1
+    );
+    thread.join().unwrap();
+}
+
+#[cfg(unix)]
+#[test]
 fn signal_forwarder_subprocess_helper() {
     if std::env::var_os("NO_MISTAKES_SIGNAL_FORWARDER_SUBPROCESS").is_none() {
         return;
