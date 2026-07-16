@@ -177,13 +177,7 @@ pub fn run(
     };
 
     let files = discover_files_from_visible_paths(&root, &visible_paths, view.skip_directories());
-    let hits: Vec<(FileKind, DataPwHit)> = files
-        .par_iter()
-        .flat_map(|path| {
-            let rel = relative_slash_path(&root, path);
-            scan_file(path, &rel, &scan)
-        })
-        .collect();
+    let hits = scan_files(&files, &root, &scan)?;
 
     let mut source: Vec<DataPwHit> = Vec::new();
     let mut test: Vec<DataPwHit> = Vec::new();

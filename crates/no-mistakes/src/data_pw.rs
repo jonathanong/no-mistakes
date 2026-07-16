@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use clap::Args;
 use no_mistakes::cli::{resolve_root, Format};
 use no_mistakes::data_pw_query::{self, DataPwInclude, DataPwReport};
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -59,64 +60,103 @@ pub(crate) fn run(args: DataPwArgs) -> Result<ExitCode> {
         &scan,
         &include,
     )?;
+    let output = render_report(&report, effective_format)?;
     no_mistakes::invocation::check_timeout()?;
-    match effective_format {
-        Format::Json => {
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&report)
-                    .expect("serialization of Rust structs never fails")
-            );
-        }
-        Format::Yml => {
-            println!(
-                "{}",
-                serde_yaml::to_string(&report).expect("serialization of Rust structs never fails")
-            );
-        }
-        Format::Md => print_md(&report),
-        Format::Paths => {
-            for path in report.paths() {
-                println!("{path}");
-            }
-        }
-        Format::Human => print_human(&report),
-    }
+    std::io::stdout()
+        .lock()
+        .write_all(&output)
+        .context("publishing data-pw output")?;
     Ok(ExitCode::SUCCESS)
 }
 
-fn print_human(report: &DataPwReport) {
-    println!(
+fn render_report(report: &DataPwReport, format: Format) -> Result<Vec<u8>> {
+    render_report_with_deadline_check(report, format, no_mistakes::invocation::check_timeout)
+}
+
+fn render_report_with_deadline_check<F>(
+    report: &DataPwReport,
+    format: Format,
+    mut check_deadline: F,
+) -> Result<Vec<u8>>
+where
+    F: FnMut() -> Result<()>,
+{
+    check_deadline()?;
+    let mut output = Vec::new();
+    match format {
+        Format::Json => {
+            writeln!(
+                output,
+                "{}",
+                serde_json::to_string_pretty(&report)
+                    .expect("serialization of Rust structs never fails")
+            )?;
+        }
+        Format::Yml => {
+            writeln!(
+                output,
+                "{}",
+                serde_yaml::to_string(&report).expect("serialization of Rust structs never fails")
+            )?;
+        }
+        Format::Md => write_md(report, &mut output)?,
+        Format::Paths => {
+            for path in report.paths() {
+                writeln!(output, "{path}")?;
+            }
+        }
+        Format::Human => write_human(report, &mut output)?,
+    }
+    check_deadline()?;
+    Ok(output)
+}
+
+fn write_human(report: &DataPwReport, output: &mut dyn Write) -> io::Result<()> {
+    writeln!(
+        output,
         "{} (attributes: {})",
         report.value,
         report.attributes.join(", ")
-    );
-    print_section_human("source", report.source.as_deref());
-    print_section_human("test", report.test.as_deref());
+    )?;
+    write_section_human(output, "source", report.source.as_deref())?;
+    write_section_human(output, "test", report.test.as_deref())
 }
 
-fn print_section_human(label: &str, hits: Option<&[data_pw_query::DataPwHit]>) {
+fn write_section_human(
+    output: &mut dyn Write,
+    label: &str,
+    hits: Option<&[data_pw_query::DataPwHit]>,
+) -> io::Result<()> {
     let Some(hits) = hits else {
-        return;
+        return Ok(());
     };
-    println!("  {label} ({})", hits.len());
+    writeln!(output, "  {label} ({})", hits.len())?;
     for hit in hits {
-        println!("    {}:{} [{}]", hit.file, hit.line, hit.attribute);
+        writeln!(output, "    {}:{} [{}]", hit.file, hit.line, hit.attribute)?;
     }
+    Ok(())
 }
 
-fn print_md(report: &DataPwReport) {
-    println!("# data-pw `{}`", report.value);
-    print_section_md("Source", report.source.as_deref());
-    print_section_md("Test", report.test.as_deref());
+fn write_md(report: &DataPwReport, output: &mut dyn Write) -> io::Result<()> {
+    writeln!(output, "# data-pw `{}`", report.value)?;
+    write_section_md(output, "Source", report.source.as_deref())?;
+    write_section_md(output, "Test", report.test.as_deref())
 }
 
-fn print_section_md(label: &str, hits: Option<&[data_pw_query::DataPwHit]>) {
+fn write_section_md(
+    output: &mut dyn Write,
+    label: &str,
+    hits: Option<&[data_pw_query::DataPwHit]>,
+) -> io::Result<()> {
     let Some(hits) = hits else {
-        return;
+        return Ok(());
     };
-    println!("\n## {label}");
+    writeln!(output, "\n## {label}")?;
     for hit in hits {
-        println!("- `{}:{}` ({})", hit.file, hit.line, hit.attribute);
+        writeln!(output, "- `{}:{}` ({})", hit.file, hit.line, hit.attribute)?;
     }
+    Ok(())
 }
+
+#[cfg(test)]
+mod tests;
