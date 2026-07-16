@@ -126,16 +126,23 @@ impl InvocationGuard {
 }
 
 pub fn timeout_exit_code(error: &anyhow::Error) -> Option<u8> {
-    error
-        .chain()
-        .find_map(|cause| cause.downcast_ref::<InvocationError>())
-        .and_then(|error| {
-            matches!(
-                error.kind(),
-                InvocationErrorKind::LockTimeout | InvocationErrorKind::CommandTimeout
-            )
+    error.chain().find_map(|cause| {
+        if cause
+            .downcast_ref::<std::io::Error>()
+            .is_some_and(|error| error.kind() == std::io::ErrorKind::TimedOut)
+        {
+            return Some(124);
+        }
+        cause
+            .downcast_ref::<InvocationError>()
+            .is_some_and(|error| {
+                matches!(
+                    error.kind(),
+                    InvocationErrorKind::LockTimeout | InvocationErrorKind::CommandTimeout
+                )
+            })
             .then_some(124)
-        })
+    })
 }
 
 pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {

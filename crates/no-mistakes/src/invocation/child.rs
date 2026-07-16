@@ -5,6 +5,13 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 use wait_timeout::ChildExt;
 
+pub(super) mod process_tree;
+#[cfg(not(unix))]
+use process_tree::configure_process_group;
+#[cfg(unix)]
+pub(super) use process_tree::configure_process_group;
+pub(super) use process_tree::ProcessTree;
+
 const CLEANUP_TIMEOUT: Duration = Duration::from_millis(100);
 type PipeReader = Receiver<std::io::Result<Vec<u8>>>;
 
@@ -18,6 +25,17 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
     command.stdout(Stdio::piped()).stderr(Stdio::piped());
     configure_process_group(command);
     let mut child = command.spawn()?;
+    #[cfg(unix)]
+    let process_tree = ProcessTree::attach(&child);
+    #[cfg(not(unix))]
+    let process_tree = match ProcessTree::attach(&child) {
+        Ok(process_tree) => process_tree,
+        Err(error) => {
+            let _ = child.kill();
+            let _ = child.wait_timeout(CLEANUP_TIMEOUT);
+            return Err(error);
+        }
+    };
     let stdout = child.stdout.take().expect("child stdout must be piped");
     let stderr = child.stderr.take().expect("child stderr must be piped");
     let stdout_reader = spawn_reader(stdout);
@@ -28,6 +46,7 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
         Ok(None) => {
             return cleanup_wait_error(
                 child,
+                &process_tree,
                 stdout_reader,
                 stderr_reader,
                 std::io::Error::new(
@@ -36,10 +55,12 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
                 ),
             );
         }
-        Err(err) => return cleanup_wait_error(child, stdout_reader, stderr_reader, err),
+        Err(err) => {
+            return cleanup_wait_error(child, &process_tree, stdout_reader, stderr_reader, err)
+        }
     };
-    let stdout = receive_or_terminate(&stdout_reader, &mut child)?;
-    let stderr = receive_or_terminate(&stderr_reader, &mut child)?;
+    let stdout = receive_or_terminate(&stdout_reader, &mut child, &process_tree)?;
+    let stderr = receive_or_terminate(&stderr_reader, &mut child, &process_tree)?;
     Ok(Output {
         status,
         stdout,
@@ -49,11 +70,12 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
 
 pub(super) fn cleanup_wait_error(
     mut child: std::process::Child,
+    process_tree: &ProcessTree,
     stdout_reader: PipeReader,
     stderr_reader: PipeReader,
     error: std::io::Error,
 ) -> std::io::Result<Output> {
-    let cleanup_error = terminate_process_tree(&mut child).err();
+    let cleanup_error = process_tree.terminate(&mut child).err();
     let _ = child.wait_timeout(CLEANUP_TIMEOUT);
     let _ = stdout_reader.recv_timeout(CLEANUP_TIMEOUT);
     let _ = stderr_reader.recv_timeout(CLEANUP_TIMEOUT);
@@ -70,32 +92,6 @@ pub(super) fn cleanup_result(
             format!("{error}; terminating the child process tree failed: {cleanup_error}"),
         )),
         None => Err(error),
-    }
-}
-
-fn configure_process_group(command: &mut Command) {
-    #[cfg(unix)]
-    {
-        use std::os::unix::process::CommandExt;
-        command.process_group(0);
-    }
-}
-
-fn terminate_process_tree(child: &mut std::process::Child) -> std::io::Result<()> {
-    #[cfg(unix)]
-    {
-        use nix::errno::Errno;
-        use nix::sys::signal::{killpg, Signal};
-        use nix::unistd::Pid;
-
-        match killpg(Pid::from_raw(child.id() as i32), Signal::SIGKILL) {
-            Ok(()) | Err(Errno::ESRCH) => Ok(()),
-            Err(error) => Err(std::io::Error::from_raw_os_error(error as i32)),
-        }
-    }
-    #[cfg(not(unix))]
-    {
-        child.kill()
     }
 }
 
@@ -129,11 +125,12 @@ pub(super) fn receive_reader(reader: &PipeReader) -> std::io::Result<Vec<u8>> {
 fn receive_or_terminate(
     reader: &PipeReader,
     child: &mut std::process::Child,
+    process_tree: &ProcessTree,
 ) -> std::io::Result<Vec<u8>> {
     match receive_reader(reader) {
         Ok(bytes) => Ok(bytes),
         Err(error) => {
-            let _ = terminate_process_tree(child);
+            let _ = process_tree.terminate(child);
             Err(error)
         }
     }

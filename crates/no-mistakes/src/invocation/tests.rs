@@ -3,6 +3,7 @@ use super::*;
 use serde_json::Value;
 use std::process::Command;
 use std::time::Instant;
+use wait_timeout::ChildExt;
 
 fn deadline_test_lock() -> &'static std::sync::Mutex<()> {
     static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
@@ -130,6 +131,15 @@ fn expired_deadline_returns_timeout_exit_code() {
     }
     assert_eq!(timeout_exit_code(&error), Some(124));
     assert!(error.to_string().contains("3 seconds"));
+}
+
+#[test]
+fn io_deadlines_return_timeout_exit_code() {
+    let error = anyhow::Error::new(std::io::Error::new(
+        std::io::ErrorKind::TimedOut,
+        "child deadline elapsed",
+    ));
+    assert_eq!(timeout_exit_code(&error), Some(124));
 }
 
 #[test]
@@ -289,12 +299,14 @@ fn child_wait_errors_cleanup_the_child() {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     let mut child = command.spawn().unwrap();
+    let process_tree = super::child::ProcessTree::attach(&child);
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
     let stdout_reader = super::child::spawn_reader(stdout);
     let stderr_reader = super::child::spawn_reader(stderr);
     let error = std::io::Error::other("synthetic wait failure");
-    let result = super::child::cleanup_wait_error(child, stdout_reader, stderr_reader, error);
+    let result =
+        super::child::cleanup_wait_error(child, &process_tree, stdout_reader, stderr_reader, error);
     assert_eq!(result.unwrap_err().to_string(), "synthetic wait failure");
 }
 
@@ -337,6 +349,24 @@ fn command_output_deadline_kills_descendants_holding_output_pipes() {
     let error = command_output(&mut command).unwrap_err();
     assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
     assert!(started.elapsed() < Duration::from_secs(1));
+}
+
+#[cfg(unix)]
+#[test]
+fn child_process_group_receives_forwarded_termination_signal() {
+    let mut command = Command::new("sh");
+    command.args(["-c", "trap 'exit 42' TERM; while :; do sleep 1; done"]);
+    super::child::configure_process_group(&mut command);
+    let mut child = command.spawn().unwrap();
+    let process_tree = super::child::ProcessTree::attach(&child);
+    std::thread::sleep(Duration::from_millis(50));
+    super::child::process_tree::signal_forwarder(child.id() as i32, signal_hook::consts::SIGTERM)();
+    let Some(status) = child.wait_timeout(Duration::from_secs(1)).unwrap() else {
+        process_tree.terminate(&mut child).unwrap();
+        panic!("forwarded signal did not terminate the child process group");
+    };
+    drop(process_tree);
+    assert_eq!(status.code(), Some(42));
 }
 
 #[test]
