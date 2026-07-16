@@ -12,6 +12,7 @@ fn committed_output_disables_later_deadline_checks() {
     .unwrap();
 
     commit_timeout().unwrap();
+    commit_timeout().unwrap();
     active_deadline()
         .write()
         .unwrap()
