@@ -331,6 +331,18 @@ fn disconnected_child_output_reader_reports_broken_pipe() {
 }
 
 #[test]
+fn disconnected_child_output_reader_with_deadline_is_not_a_timeout() {
+    let _guard = install_test_deadline(Duration::from_secs(1)).unwrap();
+    let (sender, receiver) = std::sync::mpsc::channel::<std::io::Result<Vec<u8>>>();
+    drop(sender);
+
+    let error = super::child::receive_reader(&receiver).unwrap_err();
+
+    assert_eq!(error.kind(), std::io::ErrorKind::BrokenPipe);
+    assert_eq!(timeout_exit_code(&error.into()), None);
+}
+
+#[test]
 fn child_output_reader_returns_bytes_without_deadline() {
     let _serial = deadline_test_lock()
         .lock()
@@ -364,12 +376,21 @@ fn command_output_deadline_kills_descendants_holding_output_pipes() {
 #[cfg(unix)]
 #[test]
 fn child_process_group_receives_forwarded_termination_signal() {
+    use std::io::Read;
+
     let mut command = Command::new("sh");
-    command.args(["-c", "trap 'exit 42' TERM; while :; do sleep 1; done"]);
+    command
+        .args([
+            "-c",
+            "trap 'exit 42' TERM; sleep 10 & worker=$!; printf x; wait \"$worker\"",
+        ])
+        .stdout(std::process::Stdio::piped());
     super::child::configure_process_group(&mut command);
     let mut child = command.spawn().unwrap();
     let process_tree = super::child::ProcessTree::attach(&child);
-    std::thread::sleep(Duration::from_millis(50));
+    let mut ready = [0u8; 1];
+    child.stdout.take().unwrap().read_exact(&mut ready).unwrap();
+    assert_eq!(ready, *b"x");
     super::child::process_tree::forward_signal(child.id() as i32, signal_hook::consts::SIGTERM);
     let Some(status) = child.wait_timeout(Duration::from_secs(1)).unwrap() else {
         process_tree.terminate(&mut child).unwrap();
@@ -403,14 +424,19 @@ fn signal_forwarder_subprocess_helper() {
 fn signal_forwarder_preserves_parent_default_termination() {
     use std::os::unix::process::ExitStatusExt;
 
-    let status = Command::new(std::env::current_exe().unwrap())
+    let mut subprocess = Command::new(std::env::current_exe().unwrap());
+    subprocess
         .args([
             "--exact",
             "invocation::tests::signal_forwarder_subprocess_helper",
         ])
-        .env("NO_MISTAKES_SIGNAL_FORWARDER_SUBPROCESS", "1")
-        .status()
-        .unwrap();
+        .env("NO_MISTAKES_SIGNAL_FORWARDER_SUBPROCESS", "1");
+    let mut subprocess = subprocess.spawn().unwrap();
+    let Some(status) = subprocess.wait_timeout(Duration::from_secs(2)).unwrap() else {
+        let _ = subprocess.kill();
+        let _ = subprocess.wait();
+        panic!("signal-forwarding subprocess did not terminate");
+    };
 
     assert_eq!(status.signal(), Some(signal_hook::consts::SIGTERM));
 }
