@@ -121,7 +121,7 @@ fn run() -> Result<ExitCode> {
     let _diagnostics_guard = observer
         .as_ref()
         .map(|observer| InvocationGuard::install(Arc::clone(observer)));
-    let _execution_guard = ExecutionGuard::acquire(cli.invocation.options())?;
+    let _execution_guard = ExecutionGuard::acquire_for_cli(cli.invocation.options())?;
     init_rayon_threads(cli.jobs);
     no_mistakes::invocation::check_timeout()?;
     let result = no_mistakes::ast::with_request_parse_cache(|| run_command(cli.command));

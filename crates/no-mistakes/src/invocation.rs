@@ -142,13 +142,29 @@ pub struct InvocationGuard {
 
 impl InvocationGuard {
     pub fn acquire(options: InvocationOptions) -> Result<Self> {
-        let path = lock_path()?;
-        Self::acquire_at_path(options, &path)
+        Self::acquire_with_parent_signal_forwarding(options, false)
     }
 
-    fn acquire_at_path(options: InvocationOptions, path: &Path) -> Result<Self> {
+    pub fn acquire_for_cli(options: InvocationOptions) -> Result<Self> {
+        Self::acquire_with_parent_signal_forwarding(options, true)
+    }
+
+    fn acquire_with_parent_signal_forwarding(
+        options: InvocationOptions,
+        forward_parent_signals: bool,
+    ) -> Result<Self> {
+        let path = lock_path()?;
+        Self::acquire_at_path(options, &path, forward_parent_signals)
+    }
+
+    fn acquire_at_path(
+        options: InvocationOptions,
+        path: &Path,
+        forward_parent_signals: bool,
+    ) -> Result<Self> {
         let lock = acquire_lock(path, options.lock_timeout, options.fail_on_lock)?;
-        let deadline = DeadlineGuard::install(options.timeout)?;
+        let deadline =
+            DeadlineGuard::install_for_invocation(options.timeout, None, forward_parent_signals)?;
         Ok(Self {
             _deadline: deadline,
             _lock: lock,

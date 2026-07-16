@@ -29,16 +29,18 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
     configure_process_group(command);
     let mut child = command.spawn()?;
     #[cfg(unix)]
-    let process_tree = ProcessTree::attach(&child);
+    let process_tree =
+        ProcessTree::attach(&child, super::deadline::parent_signal_forwarding_enabled());
     #[cfg(not(unix))]
-    let process_tree = match ProcessTree::attach(&child) {
-        Ok(process_tree) => process_tree,
-        Err(error) => {
-            let _ = child.kill();
-            let _ = child.wait_timeout(CLEANUP_TIMEOUT);
-            return Err(error);
-        }
-    };
+    let process_tree =
+        match ProcessTree::attach(&child, super::deadline::parent_signal_forwarding_enabled()) {
+            Ok(process_tree) => process_tree,
+            Err(error) => {
+                let _ = child.kill();
+                let _ = child.wait_timeout(CLEANUP_TIMEOUT);
+                return Err(error);
+            }
+        };
     let stdout = child.stdout.take().expect("child stdout must be piped");
     let stderr = child.stderr.take().expect("child stderr must be piped");
     let stdout_reader = spawn_reader(stdout);

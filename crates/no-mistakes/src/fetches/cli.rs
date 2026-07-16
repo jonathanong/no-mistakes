@@ -1,9 +1,10 @@
 use crate::fetches::pipeline::run::run_with_base_root;
-use crate::fetches::report::print::print_markdown_report;
+use crate::fetches::report::print::write_markdown_report;
 use anyhow::{Context, Result};
 use clap::Parser;
 use no_mistakes::cli::Format;
 use std::collections::BTreeSet;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -56,17 +57,49 @@ pub(crate) fn run(cli: FetchesArgs) -> Result<ExitCode> {
     let base_root = std::env::current_dir().context("reading current directory")?;
     let report = run_with_base_root(&base_root, &cli)?;
     let format = if cli.json { Format::Json } else { cli.format };
+    publish_report_with_deadline_check(
+        &report,
+        format,
+        &mut std::io::stdout().lock(),
+        no_mistakes::invocation::check_timeout,
+    )?;
+    Ok(ExitCode::SUCCESS)
+}
+
+pub(crate) fn publish_report_with_deadline_check<F>(
+    report: &crate::fetches::report::types::FinalReport,
+    format: Format,
+    writer: &mut dyn Write,
+    mut check_deadline: F,
+) -> Result<()>
+where
+    F: FnMut() -> Result<()>,
+{
+    check_deadline()?;
+    let output = render_report(report, format)?;
+    check_deadline()?;
+    writer.write_all(&output).context("publishing fetch report")
+}
+
+fn render_report(
+    report: &crate::fetches::report::types::FinalReport,
+    format: Format,
+) -> Result<Vec<u8>> {
+    let mut output = Vec::new();
     match format {
         Format::Json => {
-            println!(
+            writeln!(
+                output,
                 "{}",
-                serde_json::to_string_pretty(&report).context("serializing fetch report")?
-            );
+                serde_json::to_string_pretty(&report)
+                    .expect("serialization of Rust structs never fails")
+            )?;
         }
-        Format::Yml => println!(
+        Format::Yml => writeln!(
+            output,
             "{}",
-            serde_yaml::to_string(&report).context("serializing fetch report to YAML")?
-        ),
+            serde_yaml::to_string(&report).expect("serialization of Rust structs never fails")
+        )?,
         Format::Paths => {
             for file in report
                 .routes
@@ -77,10 +110,10 @@ pub(crate) fn run(cli: FetchesArgs) -> Result<ExitCode> {
                 })
                 .collect::<BTreeSet<_>>()
             {
-                println!("{file}");
+                writeln!(output, "{file}")?;
             }
         }
-        Format::Md | Format::Human => print_markdown_report(&report),
+        Format::Md | Format::Human => write_markdown_report(report, &mut output)?,
     }
-    Ok(ExitCode::SUCCESS)
+    Ok(output)
 }

@@ -117,6 +117,7 @@ fn expired_deadline_returns_timeout_exit_code() {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(3),
             owner: Some(std::thread::current().id()),
+            forward_parent_signals: false,
         })
     };
     let error = check_timeout().unwrap_err();
@@ -149,9 +150,11 @@ fn deadline_owned_by_another_thread_does_not_affect_this_thread() {
         expires_at: Instant::now(),
         timeout: Duration::from_secs(1),
         owner: Some(foreign_owner),
+        forward_parent_signals: true,
     });
     check_timeout().unwrap();
     assert_eq!(super::deadline::remaining_timeout().unwrap(), None);
+    assert!(!super::deadline::parent_signal_forwarding_enabled());
     *active_deadline().write().unwrap() = previous;
 }
 
@@ -168,11 +171,29 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
             fail_on_lock: false,
         },
         &directory.path().join("invocation.lock"),
+        true,
     )
     .unwrap();
     check_timeout().unwrap();
+    assert!(super::deadline::parent_signal_forwarding_enabled());
+    assert!(
+        std::thread::spawn(super::deadline::parent_signal_forwarding_enabled)
+            .join()
+            .unwrap()
+    );
     drop(guard);
     assert!(active_deadline().read().unwrap().is_none());
+    assert!(!super::deadline::parent_signal_forwarding_enabled());
+}
+
+#[test]
+fn cli_and_napi_entrypoints_select_distinct_parent_signal_policies() {
+    let cli = include_str!("../main.rs");
+    let napi = include_str!("../napi_api/async_task.rs");
+
+    assert!(cli.contains("ExecutionGuard::acquire_for_cli"));
+    assert!(napi.contains("InvocationGuard::acquire(invocation_options)"));
+    assert!(!napi.contains("InvocationGuard::acquire_for_cli"));
 }
 
 #[test]
@@ -320,7 +341,7 @@ fn child_wait_errors_cleanup_the_child() {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     let mut child = command.spawn().unwrap();
-    let process_tree = super::child::ProcessTree::attach(&child);
+    let process_tree = super::child::ProcessTree::attach(&child, false);
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
     let stdout_reader = super::child::spawn_reader(stdout);
@@ -410,7 +431,7 @@ fn child_process_group_receives_forwarded_termination_signal() {
         .stdout(std::process::Stdio::piped());
     super::child::configure_process_group(&mut command);
     let mut child = command.spawn().unwrap();
-    let process_tree = super::child::ProcessTree::attach(&child);
+    let process_tree = super::child::ProcessTree::attach(&child, false);
     let mut ready = [0u8; 1];
     child.stdout.take().unwrap().read_exact(&mut ready).unwrap();
     assert_eq!(ready, *b"x");
@@ -455,7 +476,7 @@ fn signal_forwarder_subprocess_helper() {
     command.args(["-c", "while :; do sleep 1; done"]);
     super::child::configure_process_group(&mut command);
     let mut child = command.spawn().unwrap();
-    let _process_tree = super::child::ProcessTree::attach(&child);
+    let _process_tree = super::child::ProcessTree::attach(&child, true);
     unsafe {
         nix::libc::raise(signal_hook::consts::SIGTERM);
     }
@@ -496,6 +517,7 @@ fn expired_deadline_prevents_child_spawn() {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(1),
             owner: Some(std::thread::current().id()),
+            forward_parent_signals: false,
         })
     };
     let mut command = Command::new("definitely-not-a-real-no-mistakes-command");

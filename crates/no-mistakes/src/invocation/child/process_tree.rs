@@ -30,24 +30,29 @@ pub(crate) struct ProcessTree {
 
 impl ProcessTree {
     #[cfg(unix)]
-    pub(crate) fn attach(child: &std::process::Child) -> Self {
+    pub(crate) fn attach(child: &std::process::Child, forward_parent_signals: bool) -> Self {
         let process_group = child.id() as i32;
-        let listener = signal_hook::iterator::Signals::new([
-            signal_hook::consts::SIGINT,
-            signal_hook::consts::SIGTERM,
-        ])
-        .ok()
-        .map(|signals| {
-            let handle = signals.handle();
-            // Forwarding must not replace the invoking process's normal signal
-            // semantics. The listener invokes this outside the OS signal handler.
-            let thread = spawn_signal_listener(
-                signals,
-                process_group,
-                signal_hook::low_level::emulate_default_handler,
-            );
-            (handle, thread)
-        });
+        let listener = forward_parent_signals
+            .then(|| {
+                signal_hook::iterator::Signals::new([
+                    signal_hook::consts::SIGINT,
+                    signal_hook::consts::SIGTERM,
+                ])
+            })
+            .transpose()
+            .ok()
+            .flatten()
+            .map(|signals| {
+                let handle = signals.handle();
+                // CLI invocations forward terminal signals to the isolated child
+                // group, then preserve the CLI's default termination semantics.
+                let thread = spawn_signal_listener(
+                    signals,
+                    process_group,
+                    signal_hook::low_level::emulate_default_handler,
+                );
+                (handle, thread)
+            });
         let (signal_handle, signal_thread) = listener
             .map(|(handle, thread)| (Some(handle), Some(thread)))
             .unwrap_or((None, None));
@@ -58,7 +63,10 @@ impl ProcessTree {
     }
 
     #[cfg(windows)]
-    pub(crate) fn attach(child: &std::process::Child) -> std::io::Result<Self> {
+    pub(crate) fn attach(
+        child: &std::process::Child,
+        _forward_parent_signals: bool,
+    ) -> std::io::Result<Self> {
         use std::os::windows::io::AsRawHandle;
         use windows_sys::Win32::System::JobObjects::{
             AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
@@ -100,7 +108,10 @@ impl ProcessTree {
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub(crate) fn attach(child: &std::process::Child) -> std::io::Result<Self> {
+    pub(crate) fn attach(
+        child: &std::process::Child,
+        _forward_parent_signals: bool,
+    ) -> std::io::Result<Self> {
         let _ = child;
         Ok(Self {})
     }

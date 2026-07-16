@@ -8,6 +8,7 @@ pub(super) struct Deadline {
     pub(super) expires_at: Instant,
     pub(super) timeout: Duration,
     pub(super) owner: Option<std::thread::ThreadId>,
+    pub(super) forward_parent_signals: bool,
 }
 
 pub(super) fn active_deadline() -> &'static RwLock<Option<Deadline>> {
@@ -20,13 +21,18 @@ pub(super) struct DeadlineGuard {
 }
 
 impl DeadlineGuard {
-    pub(super) fn install(timeout: Option<Duration>) -> Result<Self> {
-        Self::install_with_owner(timeout, None)
-    }
-
+    #[cfg(any(test, feature = "test-instrumentation"))]
     pub(super) fn install_with_owner(
         timeout: Option<Duration>,
         owner: Option<std::thread::ThreadId>,
+    ) -> Result<Self> {
+        Self::install_for_invocation(timeout, owner, false)
+    }
+
+    pub(super) fn install_for_invocation(
+        timeout: Option<Duration>,
+        owner: Option<std::thread::ThreadId>,
+        forward_parent_signals: bool,
     ) -> Result<Self> {
         let deadline = timeout
             .map(|timeout| {
@@ -36,6 +42,7 @@ impl DeadlineGuard {
                         expires_at,
                         timeout,
                         owner,
+                        forward_parent_signals,
                     })
                     .context("command timeout is too large")
             })
@@ -46,6 +53,18 @@ impl DeadlineGuard {
         let previous = std::mem::replace(&mut *active, deadline);
         Ok(Self { previous })
     }
+}
+
+pub(super) fn parent_signal_forwarding_enabled() -> bool {
+    active_deadline()
+        .read()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .is_some_and(|deadline| {
+            deadline.forward_parent_signals
+                && deadline
+                    .owner
+                    .is_none_or(|owner| owner == std::thread::current().id())
+        })
 }
 
 impl Drop for DeadlineGuard {
