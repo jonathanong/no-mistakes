@@ -21,7 +21,7 @@ struct DiscoveredPathViews {
     tracked: Vec<PathBuf>,
 }
 
-fn git_ls_path_views(root: &Path) -> Option<DiscoveredPathViews> {
+fn git_ls_path_views(root: &Path) -> std::io::Result<Option<DiscoveredPathViews>> {
     let mut cmd = Command::new("git");
     cmd.current_dir(root);
     cmd.arg("ls-files").arg("-z").arg("-t");
@@ -32,11 +32,15 @@ fn git_ls_path_views(root: &Path) -> Option<DiscoveredPathViews> {
     cmd.arg("--cached")
         .arg("--others")
         .arg("--exclude-standard");
-    let out = crate::invocation::command_output(&mut cmd).ok()?;
+    let out = match crate::invocation::command_output(&mut cmd) {
+        Ok(output) => output,
+        Err(error) if error.kind() == std::io::ErrorKind::TimedOut => return Err(error),
+        Err(_) => return Ok(None),
+    };
     if !out.status.success() {
-        return None;
+        return Ok(None);
     }
-    Some(parse_git_tagged_paths(&out.stdout))
+    Ok(Some(parse_git_tagged_paths(&out.stdout)))
 }
 
 fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {

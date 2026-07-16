@@ -122,6 +122,7 @@ pub fn run(
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let visible_paths = snapshot.paths_for(&root);
+    crate::invocation::check_timeout()?;
     let config = load_v2_config_from_visible(&root, config_path, &visible_paths)?;
     let view = ConfigView::new(&config);
 
@@ -197,6 +198,7 @@ pub fn run(
     test.sort();
     test.dedup();
 
+    crate::invocation::check_timeout()?;
     Ok(DataPwReport {
         value: value.to_string(),
         attributes,

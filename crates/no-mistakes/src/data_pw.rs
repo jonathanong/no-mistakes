@@ -59,6 +59,7 @@ pub(crate) fn run(args: DataPwArgs) -> Result<ExitCode> {
         &scan,
         &include,
     )?;
+    no_mistakes::invocation::check_timeout()?;
     match effective_format {
         Format::Json => {
             println!(

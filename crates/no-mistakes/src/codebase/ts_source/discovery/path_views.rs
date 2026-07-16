@@ -4,11 +4,23 @@ struct DiscoveredClassifiedPathViews {
 }
 
 fn git_ls_paths(root: &Path) -> Option<Vec<PathBuf>> {
-    git_ls_path_views(root).map(|views| views.visible)
+    match git_ls_path_views(root) {
+        Ok(Some(views)) => Some(views.visible),
+        Ok(None) | Err(_) => None,
+    }
 }
 
 fn discover_classified_path_views(root: &Path) -> DiscoveredClassifiedPathViews {
-    match git_ls_path_views(root) {
+    try_discover_classified_path_views(root).unwrap_or_else(|_| DiscoveredClassifiedPathViews {
+        visible: Vec::new(),
+        tracked: Vec::new(),
+    })
+}
+
+fn try_discover_classified_path_views(
+    root: &Path,
+) -> std::io::Result<DiscoveredClassifiedPathViews> {
+    Ok(match git_ls_path_views(root)? {
         Some(views) => {
             let tracked_membership = views
                 .tracked
@@ -28,7 +40,7 @@ fn discover_classified_path_views(root: &Path) -> DiscoveredClassifiedPathViews 
             let tracked = visible.iter().map(|entry| entry.path.clone()).collect();
             DiscoveredClassifiedPathViews { visible, tracked }
         }
-    }
+    })
 }
 
 fn classify_existing_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<ClassifiedPath> {

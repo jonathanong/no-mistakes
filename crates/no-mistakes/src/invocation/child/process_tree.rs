@@ -1,12 +1,21 @@
-use std::process::Command;
+#[cfg(unix)]
+pub(crate) fn configure_process_group(command: &mut std::process::Command) {
+    use std::os::unix::process::CommandExt;
+    command.process_group(0);
+}
 
-pub(crate) fn configure_process_group(command: &mut Command) {
-    #[cfg(unix)]
-    {
-        use std::os::unix::process::CommandExt;
-        command.process_group(0);
-    }
-    #[cfg(not(unix))]
+#[cfg(windows)]
+pub(crate) fn configure_process_group(command: &mut std::process::Command) {
+    use std::os::windows::process::CommandExt;
+    use windows_sys::Win32::System::Threading::CREATE_SUSPENDED;
+
+    // The child must not execute until `ProcessTree::attach` assigns it to the
+    // job, otherwise an immediately spawned descendant can escape the job.
+    command.creation_flags(CREATE_SUSPENDED);
+}
+
+#[cfg(not(any(unix, windows)))]
+pub(crate) fn configure_process_group(command: &mut std::process::Command) {
     let _ = command;
 }
 
@@ -78,6 +87,12 @@ impl ProcessTree {
         }
         if unsafe { AssignProcessToJobObject(job, child.as_raw_handle()) } == 0 {
             let error = std::io::Error::last_os_error();
+            unsafe { windows_sys::Win32::Foundation::CloseHandle(job) };
+            return Err(error);
+        }
+        if let Err(error) = resume_initial_thread(child.id()) {
+            // Closing a kill-on-close job also cleans up the still-suspended
+            // child before the caller performs its best-effort cleanup.
             unsafe { windows_sys::Win32::Foundation::CloseHandle(job) };
             return Err(error);
         }
@@ -158,3 +173,8 @@ impl Drop for ProcessTree {
         unsafe { windows_sys::Win32::Foundation::CloseHandle(self.job) };
     }
 }
+#[cfg(windows)]
+mod windows;
+
+#[cfg(windows)]
+use windows::resume_initial_thread;

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Let repository-root discovery succeed, then keep git visibility discovery
+# running until no-mistakes terminates it at the invocation deadline.
+if [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then
+  pwd
+  exit 0
+fi
+
+if [ "$1" = "ls-files" ]; then
+  sleep 10
+  exit 0
+fi
+
+exit 1

@@ -75,7 +75,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
         }
         detect_lockfiles_from_head(&git_root, head, &root)?
     } else {
-        let visible_paths = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
+        let visible_paths = no_mistakes::codebase::ts_source::try_discover_visible_paths(&root)?;
         detect_lockfiles_in_root(&root, &visible_paths)
     };
 

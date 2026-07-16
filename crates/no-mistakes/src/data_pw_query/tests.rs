@@ -143,6 +143,23 @@ fn finds_source_and_test_usages() {
 }
 
 #[test]
+fn expired_deadline_returns_timeout_instead_of_a_partial_report() {
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+    let error = run(
+        &fixture(),
+        None,
+        "search-bar",
+        &[],
+        &[],
+        &DataPwInclude::default(),
+    )
+    .unwrap_err();
+
+    assert_eq!(crate::invocation::timeout_exit_code(&error), Some(124));
+}
+
+#[test]
 fn attribute_override_restricts_scan() {
     let report = run(
         &fixture(),

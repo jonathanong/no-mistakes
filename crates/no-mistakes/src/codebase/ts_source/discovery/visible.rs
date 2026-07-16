@@ -10,66 +10,31 @@ pub fn git_visible_files(root: &Path) -> Option<Vec<String>> {
 
 /// Return the filesystem entries Git would make visible under `root`.
 pub fn discover_visible_paths(root: &Path) -> Vec<PathBuf> {
-    discover_visible_classified_paths(root)
-        .into_iter()
-        .map(|entry| entry.path)
-        .collect()
+    try_discover_visible_paths(root).unwrap_or_default()
+}
+
+/// Fallible visible-path discovery for invocation boundaries that must preserve
+/// Git child-process timeouts rather than returning a partial path set.
+#[doc(hidden)]
+pub fn try_discover_visible_paths(root: &Path) -> std::io::Result<Vec<PathBuf>> {
+    try_discover_visible_classified_paths(root).map(|paths| {
+        paths
+            .into_iter()
+            .map(|entry| entry.path)
+            .collect()
+    })
+}
+
+fn try_discover_visible_classified_paths(root: &Path) -> std::io::Result<Vec<ClassifiedPath>> {
+    let paths = try_discover_classified_path_views(root)?.visible;
+    crate::invocation::check_timeout().map_err(|error| {
+        std::io::Error::new(std::io::ErrorKind::TimedOut, error.to_string())
+    })?;
+    Ok(paths)
 }
 
 pub(crate) fn discover_visible_classified_paths(root: &Path) -> Vec<ClassifiedPath> {
-    let mut paths: Vec<ClassifiedPath> = match git_ls_paths(root) {
-        Some(files) => files
-            .into_iter()
-            .take_while(|_| crate::invocation::check_timeout().is_ok())
-            .map(|relative| root.join(relative))
-            .filter_map(|path| {
-                let metadata = std::fs::symlink_metadata(&path).ok()?;
-                Some(ClassifiedPath {
-                    classification: FileClassification::from_file_type(
-                        &path,
-                        metadata.file_type(),
-                    ),
-                    path,
-                })
-            })
-            .collect(),
-        None => WalkBuilder::new(root)
-            .hidden(false)
-            .require_git(false)
-            .filter_entry(|entry| {
-                if crate::invocation::check_timeout().is_err() {
-                    return false;
-                }
-                entry.depth() == 0
-                    || !entry
-                        .file_type()
-                        .is_some_and(|file_type| file_type.is_dir())
-                    || entry.file_name() != ".git"
-            })
-            .build()
-            .take_while(|_| crate::invocation::check_timeout().is_ok())
-            .scan(root.to_path_buf(), |walker_root, entry| {
-                Some(entry.ok().and_then(|entry| {
-                    if entry.depth() == 0 {
-                        *walker_root = entry.path().to_path_buf();
-                    }
-                    entry.file_type().and_then(|file_type| {
-                        (file_type.is_file() || file_type.is_symlink()).then(|| ClassifiedPath {
-                            path: rebase_walk_path(root, walker_root, entry.path()),
-                            classification: FileClassification::from_file_type(
-                                entry.path(),
-                                file_type,
-                            ),
-                        })
-                    })
-                }))
-            })
-            .flatten()
-            .collect()
-    };
-    paths.sort_by(|left, right| left.path.cmp(&right.path));
-    paths.dedup_by(|left, right| left.path == right.path);
-    paths
+    try_discover_visible_classified_paths(root).unwrap_or_default()
 }
 
 fn rebase_walk_path(request_root: &Path, walker_root: &Path, path: &Path) -> PathBuf {

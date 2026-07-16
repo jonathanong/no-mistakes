@@ -20,6 +20,45 @@ fn stderr(output: &Output) -> String {
     String::from_utf8(output.stderr.clone()).expect("stderr should be utf8")
 }
 
+#[cfg(unix)]
+#[test]
+fn lockfile_git_discovery_timeout_does_not_render_partial_output() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/invocation/git-discovery-timeout");
+    let fake_bin = fixture.join("bin");
+    let root = fixture.join("repo");
+    let home = tempfile::tempdir().unwrap();
+    let path = std::env::join_paths(std::iter::once(fake_bin).chain(std::env::split_paths(
+        &std::env::var_os("PATH").unwrap_or_default(),
+    )))
+    .unwrap();
+
+    let output = Command::new(bin())
+        .args([
+            "--timeout",
+            "1",
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+        ])
+        .env("PATH", path)
+        .env("HOME", home.path())
+        .env("XDG_CACHE_HOME", home.path())
+        .output()
+        .expect("no-mistakes should run");
+
+    assert_eq!(output.status.code(), Some(124));
+    assert!(
+        output.stdout.is_empty(),
+        "timed-out discovery must not render a partial result: {}",
+        stdout(&output)
+    );
+    assert!(stderr(&output).contains("timed out"));
+}
+
 #[test]
 fn invocation_help_documents_independent_timeouts_and_lock_failure() {
     let output = run(&["--help"]);
