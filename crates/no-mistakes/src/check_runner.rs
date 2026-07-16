@@ -186,6 +186,7 @@ pub(crate) fn run_all(
             codebase_config: &prepared.codebase_config,
             vitest_projects: prepared.vitest_projects.as_ref(),
         });
+    no_mistakes::invocation::check_timeout()?;
 
     results::finalize_domain_checks(results::FinalizeInput {
         root: &root,

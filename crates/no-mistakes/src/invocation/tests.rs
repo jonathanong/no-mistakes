@@ -1,3 +1,5 @@
+#[cfg(unix)]
+use super::child::process_tree::signals;
 use super::deadline::{active_deadline, Deadline};
 use super::*;
 use serde_json::Value;
@@ -117,7 +119,6 @@ fn expired_deadline_returns_timeout_exit_code() {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(3),
             owner: Some(std::thread::current().id()),
-            forward_parent_signals: false,
         })
     };
     let error = check_timeout().unwrap_err();
@@ -150,11 +151,9 @@ fn deadline_owned_by_another_thread_does_not_affect_this_thread() {
         expires_at: Instant::now(),
         timeout: Duration::from_secs(1),
         owner: Some(foreign_owner),
-        forward_parent_signals: true,
     });
     check_timeout().unwrap();
     assert_eq!(super::deadline::remaining_timeout().unwrap(), None);
-    assert!(!super::deadline::parent_signal_forwarding_enabled());
     *active_deadline().write().unwrap() = previous;
 }
 
@@ -175,15 +174,8 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
     )
     .unwrap();
     check_timeout().unwrap();
-    assert!(super::deadline::parent_signal_forwarding_enabled());
-    assert!(
-        std::thread::spawn(super::deadline::parent_signal_forwarding_enabled)
-            .join()
-            .unwrap()
-    );
     drop(guard);
     assert!(active_deadline().read().unwrap().is_none());
-    assert!(!super::deadline::parent_signal_forwarding_enabled());
 }
 
 #[test]
@@ -341,7 +333,7 @@ fn child_wait_errors_cleanup_the_child() {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     let mut child = command.spawn().unwrap();
-    let process_tree = super::child::ProcessTree::attach(&child, false);
+    let process_tree = super::child::ProcessTree::attach(&child);
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
     let stdout_reader = super::child::spawn_reader(stdout);
@@ -431,11 +423,11 @@ fn child_process_group_receives_forwarded_termination_signal() {
         .stdout(std::process::Stdio::piped());
     super::child::configure_process_group(&mut command);
     let mut child = command.spawn().unwrap();
-    let process_tree = super::child::ProcessTree::attach(&child, false);
+    let process_tree = super::child::ProcessTree::attach(&child);
     let mut ready = [0u8; 1];
     child.stdout.take().unwrap().read_exact(&mut ready).unwrap();
     assert_eq!(ready, *b"x");
-    super::child::process_tree::forward_signal(child.id() as i32, signal_hook::consts::SIGTERM);
+    signals::forward_signal(child.id() as i32, signal_hook::consts::SIGTERM);
     let Some(status) = child.wait_timeout(Duration::from_secs(1)).unwrap() else {
         process_tree.terminate(&mut child).unwrap();
         panic!("forwarded signal did not terminate the child process group");
@@ -449,20 +441,43 @@ fn child_process_group_receives_forwarded_termination_signal() {
 fn signal_listener_forwards_before_terminating_parent() {
     let signals = signal_hook::iterator::Signals::new([signal_hook::consts::SIGUSR1]).unwrap();
     let (sender, receiver) = std::sync::mpsc::channel();
-    let thread =
-        super::child::process_tree::spawn_signal_listener(signals, i32::MAX, move |signal| {
-            sender.send(signal).unwrap()
-        });
+    let (forwarded_sender, forwarded_receiver) = std::sync::mpsc::channel();
+    let thread = signals::spawn_signal_listener(
+        signals,
+        move |signal| forwarded_sender.send(signal).unwrap(),
+        move |signal| sender.send(signal).unwrap(),
+    );
 
     unsafe {
         nix::libc::raise(signal_hook::consts::SIGUSR1);
     }
 
     assert_eq!(
+        forwarded_receiver
+            .recv_timeout(Duration::from_secs(1))
+            .unwrap(),
+        signal_hook::consts::SIGUSR1
+    );
+    assert_eq!(
         receiver.recv_timeout(Duration::from_secs(1)).unwrap(),
         signal_hook::consts::SIGUSR1
     );
     thread.join().unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn signal_registry_tracks_multiple_process_groups_independently() {
+    let registry = std::sync::Arc::new(signals::SignalRegistry::new());
+    let first = registry.register(11);
+    let second = registry.register(22);
+    assert_eq!(registry.snapshot(), [11, 22]);
+
+    drop(first);
+    assert_eq!(registry.snapshot(), [22]);
+    drop(second);
+    assert!(registry.snapshot().is_empty());
+    signals::forward_signal_to_groups(&[], signal_hook::consts::SIGTERM);
 }
 
 #[cfg(unix)]
@@ -476,7 +491,8 @@ fn signal_forwarder_subprocess_helper() {
     command.args(["-c", "while :; do sleep 1; done"]);
     super::child::configure_process_group(&mut command);
     let mut child = command.spawn().unwrap();
-    let _process_tree = super::child::ProcessTree::attach(&child, true);
+    let _forwarder = super::child::ParentSignalForwardingGuard::install(true).unwrap();
+    let _process_tree = super::child::ProcessTree::attach(&child);
     unsafe {
         nix::libc::raise(signal_hook::consts::SIGTERM);
     }
@@ -517,7 +533,6 @@ fn expired_deadline_prevents_child_spawn() {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(1),
             owner: Some(std::thread::current().id()),
-            forward_parent_signals: false,
         })
     };
     let mut command = Command::new("definitely-not-a-real-no-mistakes-command");

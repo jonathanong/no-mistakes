@@ -19,54 +19,39 @@ pub(crate) fn configure_process_group(command: &mut std::process::Command) {
     let _ = command;
 }
 
+#[cfg(unix)]
+pub(crate) mod signals;
+
+#[cfg(unix)]
+pub(crate) use signals::ParentSignalForwardingGuard;
+
+#[cfg(not(unix))]
+pub(crate) struct ParentSignalForwardingGuard;
+
+#[cfg(not(unix))]
+impl ParentSignalForwardingGuard {
+    pub(crate) fn install(_enabled: bool) -> std::io::Result<Self> {
+        Ok(Self)
+    }
+}
+
 pub(crate) struct ProcessTree {
     #[cfg(unix)]
-    signal_handle: Option<signal_hook::iterator::Handle>,
-    #[cfg(unix)]
-    signal_thread: Option<std::thread::JoinHandle<()>>,
+    registration: Option<signals::GroupRegistration>,
     #[cfg(windows)]
     job: windows_sys::Win32::Foundation::HANDLE,
 }
 
 impl ProcessTree {
     #[cfg(unix)]
-    pub(crate) fn attach(child: &std::process::Child, forward_parent_signals: bool) -> Self {
+    pub(crate) fn attach(child: &std::process::Child) -> Self {
         let process_group = child.id() as i32;
-        let listener = forward_parent_signals
-            .then(|| {
-                signal_hook::iterator::Signals::new([
-                    signal_hook::consts::SIGINT,
-                    signal_hook::consts::SIGTERM,
-                ])
-            })
-            .transpose()
-            .ok()
-            .flatten()
-            .map(|signals| {
-                let handle = signals.handle();
-                // CLI invocations forward terminal signals to the isolated child
-                // group, then preserve the CLI's default termination semantics.
-                let thread = spawn_signal_listener(
-                    signals,
-                    process_group,
-                    signal_hook::low_level::emulate_default_handler,
-                );
-                (handle, thread)
-            });
-        let (signal_handle, signal_thread) = listener
-            .map(|(handle, thread)| (Some(handle), Some(thread)))
-            .unwrap_or((None, None));
-        Self {
-            signal_handle,
-            signal_thread,
-        }
+        let registration = signals::register_process_group(process_group);
+        Self { registration }
     }
 
     #[cfg(windows)]
-    pub(crate) fn attach(
-        child: &std::process::Child,
-        _forward_parent_signals: bool,
-    ) -> std::io::Result<Self> {
+    pub(crate) fn attach(child: &std::process::Child) -> std::io::Result<Self> {
         use std::os::windows::io::AsRawHandle;
         use windows_sys::Win32::System::JobObjects::{
             AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
@@ -108,10 +93,7 @@ impl ProcessTree {
     }
 
     #[cfg(not(any(unix, windows)))]
-    pub(crate) fn attach(
-        child: &std::process::Child,
-        _forward_parent_signals: bool,
-    ) -> std::io::Result<Self> {
+    pub(crate) fn attach(child: &std::process::Child) -> std::io::Result<Self> {
         let _ = child;
         Ok(Self {})
     }
@@ -146,35 +128,9 @@ impl ProcessTree {
 }
 
 #[cfg(unix)]
-pub(crate) fn forward_signal(process_group: i32, signal: i32) {
-    unsafe {
-        nix::libc::kill(-process_group, signal);
-    }
-}
-
-#[cfg(unix)]
-pub(crate) fn spawn_signal_listener<R>(
-    mut signals: signal_hook::iterator::Signals,
-    process_group: i32,
-    terminate_parent: impl FnOnce(i32) -> R + Send + 'static,
-) -> std::thread::JoinHandle<()> {
-    std::thread::spawn(move || {
-        if let Some(signal) = signals.forever().next() {
-            forward_signal(process_group, signal);
-            let _ = terminate_parent(signal);
-        }
-    })
-}
-
-#[cfg(unix)]
 impl Drop for ProcessTree {
     fn drop(&mut self) {
-        if let Some(handle) = self.signal_handle.take() {
-            handle.close();
-        }
-        if let Some(thread) = self.signal_thread.take() {
-            let _ = thread.join();
-        }
+        let _ = self.registration.take();
     }
 }
 

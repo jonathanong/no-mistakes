@@ -137,6 +137,7 @@ impl std::error::Error for InvocationError {}
 
 pub struct InvocationGuard {
     _deadline: DeadlineGuard,
+    _parent_signals: child::ParentSignalForwardingGuard,
     _lock: File,
 }
 
@@ -163,10 +164,13 @@ impl InvocationGuard {
         forward_parent_signals: bool,
     ) -> Result<Self> {
         let lock = acquire_lock(path, options.lock_timeout, options.fail_on_lock)?;
-        let deadline =
-            DeadlineGuard::install_for_invocation(options.timeout, None, forward_parent_signals)?;
+        let deadline = DeadlineGuard::install_for_invocation(options.timeout, None)?;
+        let parent_signals = child::ParentSignalForwardingGuard::install(
+            forward_parent_signals && options.timeout.is_some(),
+        )?;
         Ok(Self {
             _deadline: deadline,
+            _parent_signals: parent_signals,
             _lock: lock,
         })
     }
