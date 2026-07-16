@@ -127,23 +127,7 @@ impl DepGraph {
         let workspace = supplied_workspace
             .or(owned_workspace.as_ref())
             .unwrap_or(&empty_workspace);
-        let parse_errors = if fact_plan.is_empty() {
-            HashMap::new()
-        } else {
-            facts
-                .map(|facts| {
-                    files
-                        .iter()
-                        .filter_map(|path| {
-                            facts
-                                .get_ts_facts(path)
-                                .and_then(|file_facts| file_facts.parse_error.as_ref())
-                                .map(|error| (path.clone(), error.clone()))
-                        })
-                        .collect()
-                })
-                .unwrap_or_default()
-        };
+        let parse_errors = graph_parse_errors(fact_plan, files, facts);
 
         let owned_playwright_snapshot = (plan.playwright_routes || plan.playwright_selectors)
             .then(|| {
