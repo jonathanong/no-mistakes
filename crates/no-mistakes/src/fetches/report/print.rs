@@ -33,6 +33,13 @@ pub(crate) fn write_markdown_report(
 ) -> io::Result<()> {
     writeln!(output, "# Next.js Fetch API Analysis")?;
     writeln!(output)?;
+    write_summary(report, output)?;
+    write_routes(report, output)?;
+    write_duplicates(report, output)?;
+    write_unsupported(report, output)
+}
+
+fn write_summary(report: &FinalReport, output: &mut dyn Write) -> io::Result<()> {
     writeln!(output, "## Summary")?;
     writeln!(output, "- Total Routes: {}", report.summary.total_routes)?;
     writeln!(
@@ -92,7 +99,10 @@ pub(crate) fn write_markdown_report(
         report.summary.error_handled_api_calls
     )?;
     writeln!(output)?;
+    Ok(())
+}
 
+fn write_routes(report: &FinalReport, output: &mut dyn Write) -> io::Result<()> {
     writeln!(output, "## Routes")?;
     for route in &report.routes {
         writeln!(output, "### {} ({})", route.route, route.file)?;
@@ -133,7 +143,10 @@ pub(crate) fn write_markdown_report(
         }
         writeln!(output)?;
     }
+    Ok(())
+}
 
+fn write_duplicates(report: &FinalReport, output: &mut dyn Write) -> io::Result<()> {
     if !report.duplicates.is_empty() {
         writeln!(output, "## Duplicates")?;
         writeln!(output, "| Key | Count | Route | File | Line |")?;
@@ -149,7 +162,10 @@ pub(crate) fn write_markdown_report(
         }
         writeln!(output)?;
     }
+    Ok(())
+}
 
+fn write_unsupported(report: &FinalReport, output: &mut dyn Write) -> io::Result<()> {
     if !report.unsupported.is_empty() {
         writeln!(output, "## Unsupported (Dynamic)")?;
         writeln!(output, "| Route | File | Line | Reason | Path |")?;
