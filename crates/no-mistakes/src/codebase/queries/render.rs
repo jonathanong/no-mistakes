@@ -17,16 +17,44 @@ pub(crate) trait Report: Serialize {
 
 /// Write `report` in the requested `format` to `w`.
 pub(crate) fn render<R: Report>(report: &R, format: Format, w: &mut dyn Write) -> Result<()> {
+    render_with_deadline_check(report, format, w, crate::invocation::check_timeout)
+}
+
+fn render_with_deadline_check<R, F>(
+    report: &R,
+    format: Format,
+    w: &mut dyn Write,
+    mut check_deadline: F,
+) -> Result<()>
+where
+    R: Report,
+    F: FnMut() -> Result<()>,
+{
+    // Query analysis may stop scheduling work when the invocation expires. Do
+    // not publish that potentially incomplete report before the CLI's final
+    // deadline check observes the timeout.
+    check_deadline()?;
+    let mut output = Vec::new();
     match format {
         Format::Json => {
-            serde_json::to_writer_pretty(&mut *w, report).context("serializing query JSON")?;
-            writeln!(w).context("writing query JSON")?;
+            serde_json::to_writer_pretty(&mut output, report).context("serializing query JSON")?;
+            writeln!(output).context("writing query JSON")?;
         }
-        Format::Yml => serde_yaml::to_writer(w, report).context("serializing query YAML")?,
-        Format::Human => report.write_human(w).context("writing human output")?,
-        Format::Paths => report.write_paths(w).context("writing paths output")?,
-        Format::Md => report.write_md(w).context("writing markdown output")?,
+        Format::Yml => {
+            serde_yaml::to_writer(&mut output, report).context("serializing query YAML")?
+        }
+        Format::Human => report
+            .write_human(&mut output)
+            .context("writing human output")?,
+        Format::Paths => report
+            .write_paths(&mut output)
+            .context("writing paths output")?,
+        Format::Md => report
+            .write_md(&mut output)
+            .context("writing markdown output")?,
     }
+    check_deadline()?;
+    w.write_all(&output).context("publishing query output")?;
     Ok(())
 }
 
@@ -48,3 +76,6 @@ pub(crate) fn resolve_format(json: bool, format: Option<Format>, is_tty: bool) -
         Format::Json
     }
 }
+
+#[cfg(test)]
+mod tests;

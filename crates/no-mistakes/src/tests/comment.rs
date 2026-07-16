@@ -11,6 +11,7 @@ pub(crate) fn run(args: CommentArgs) -> Result<ExitCode> {
         .context("Failed to parse plan JSON. Make sure it is a valid output of `tests plan`.")?;
 
     let markdown = render_markdown_plan(&plan);
+    crate::invocation::commit_timeout()?;
 
     if let Some(ref out_path) = args.out {
         fs::write(out_path, &markdown).with_context(|| {

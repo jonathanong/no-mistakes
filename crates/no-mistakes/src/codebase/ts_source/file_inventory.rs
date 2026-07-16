@@ -70,6 +70,7 @@ impl FileInventory {
     pub fn from_paths(paths: &[PathBuf]) -> Self {
         let paths = paths
             .iter()
+            .take_while(|_| crate::invocation::check_timeout().is_ok())
             .map(|path| {
                 let path = super::normalize_discovery_path(path);
                 let classification = std::fs::symlink_metadata(&path)

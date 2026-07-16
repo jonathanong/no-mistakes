@@ -34,12 +34,14 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
     let root = root.canonicalize().unwrap_or(root);
 
-    let git_root = find_git_root(&root).unwrap_or_else(|| root.clone());
+    let git_root = find_git_root(&root)
+        .map_err(|error| to_napi_error(error.into()))?
+        .unwrap_or_else(|| root.clone());
 
     let lf_paths: Vec<PathBuf> = if let Some(lf) = options.lockfile {
         vec![root.join(lf)]
     } else if let Some(head) = options.head.as_deref() {
-        if !git_ref_exists(&git_root, head) {
+        if !git_ref_exists(&git_root, head).map_err(|error| to_napi_error(error.into()))? {
             return Err(napi::Error::from_reason(format!(
                 "head ref `{}` does not exist; ensure it exists in the git history",
                 head
@@ -48,6 +50,7 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
         // Detect from head commit so newly added lockfiles are found even when
         // the working tree is still at a different commit.
         detect_lockfiles_from_head(&git_root, head, &root)
+            .map_err(|error| to_napi_error(error.into()))?
     } else {
         let visible_paths = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
         [
@@ -86,10 +89,14 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
             .to_string_lossy()
             .replace('\\', "/");
         let new_content = if let Some(head) = options.head.as_deref() {
-            match git_show_file(&git_root, head, &rel) {
+            match git_show_file(&git_root, head, &rel)
+                .map_err(|error| to_napi_error(error.into()))?
+            {
                 Some(content) => content,
                 None => {
-                    if !git_ref_exists(&git_root, head) {
+                    if !git_ref_exists(&git_root, head)
+                        .map_err(|error| to_napi_error(error.into()))?
+                    {
                         return Err(napi::Error::from_reason(format!(
                             "Could not retrieve `{}` at ref `{}`; ensure the head ref exists in the git history",
                             rel, head
@@ -103,10 +110,14 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
         let old_content = if options.head.is_some() {
-            match git_show_file(&git_root, &base, &rel) {
+            match git_show_file(&git_root, &base, &rel)
+                .map_err(|error| to_napi_error(error.into()))?
+            {
                 Some(content) => content,
                 None => {
-                    if !git_ref_exists(&git_root, &base) {
+                    if !git_ref_exists(&git_root, &base)
+                        .map_err(|error| to_napi_error(error.into()))?
+                    {
                         return Err(napi::Error::from_reason(format!(
                             "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
                             rel, base
@@ -117,10 +128,14 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
                 }
             }
         } else {
-            match git_show_file(&git_root, &base, &rel) {
+            match git_show_file(&git_root, &base, &rel)
+                .map_err(|error| to_napi_error(error.into()))?
+            {
                 Some(c) => c,
                 None => {
-                    if !git_ref_exists(&git_root, &base) {
+                    if !git_ref_exists(&git_root, &base)
+                        .map_err(|error| to_napi_error(error.into()))?
+                    {
                         return Err(napi::Error::from_reason(format!(
                             "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
                             rel, base

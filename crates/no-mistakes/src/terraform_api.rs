@@ -28,6 +28,7 @@ pub struct InfraReport {
 
 /// Discover and parse the configured Terraform files once.
 pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraReport> {
+    crate::invocation::check_timeout()?;
     let root = normalize_path(root);
     let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let root_visible_paths = visible_paths.paths_for(&root);
@@ -43,6 +44,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraR
     let files =
         crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths);
     let facts = collect_terraform_facts(&root, &files, &terraform);
+    crate::invocation::check_timeout()?;
     Ok(InfraReport {
         root,
         files,

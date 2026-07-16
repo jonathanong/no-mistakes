@@ -115,6 +115,7 @@ pub(crate) fn collect_terraform_facts(
     // unless listed separately.
     let tf_files: Vec<PathBuf> = all_files
         .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .filter(|path| has_extension(path, &extensions))
         .filter(|path| {
@@ -128,7 +129,13 @@ pub(crate) fn collect_terraform_facts(
 
     let mut file_facts: Vec<TerraformFileFacts> = tf_files
         .par_iter()
-        .filter_map(|path| parse_configured_file(path))
+        .map(|path| {
+            crate::invocation::check_timeout()
+                .ok()
+                .map(|()| parse_configured_file(path))
+        })
+        .while_some()
+        .flatten()
         .collect();
     file_facts.sort_by(|a, b| a.path.cmp(&b.path));
 
@@ -164,7 +171,10 @@ fn has_extension(path: &Path, extensions: &[String]) -> bool {
 
 fn build_fact_map(file_facts: Vec<TerraformFileFacts>) -> TerraformFactMap {
     let mut facts = TerraformFactMap::default();
-    for file in file_facts {
+    for file in file_facts
+        .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         facts
             .files_by_module
             .entry(file.module_dir.clone())

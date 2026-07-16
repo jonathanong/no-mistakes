@@ -64,6 +64,7 @@ pub fn run(
         },
         &fact_context,
     );
+    crate::invocation::check_timeout()?;
     let config =
         crate::config::v2::load_v2_config_from_visible(&root, config_path, &root_visible_paths)?;
     let codebase_config =

@@ -42,7 +42,7 @@ fn git_show_file_invalid_ref_returns_none() {
         .unwrap();
 
     // Non-existent ref → None
-    let result = git_show_file(root, "nonexistent-ref-xyz", "any-file.yaml");
+    let result = git_show_file(root, "nonexistent-ref-xyz", "any-file.yaml").unwrap();
     assert!(result.is_none());
 }
 

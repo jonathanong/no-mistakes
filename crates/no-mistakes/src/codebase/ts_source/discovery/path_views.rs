@@ -4,11 +4,23 @@ struct DiscoveredClassifiedPathViews {
 }
 
 fn git_ls_paths(root: &Path) -> Option<Vec<PathBuf>> {
-    git_ls_path_views(root).map(|views| views.visible)
+    match git_ls_path_views(root) {
+        Ok(Some(views)) => Some(views.visible),
+        Ok(None) | Err(_) => None,
+    }
 }
 
 fn discover_classified_path_views(root: &Path) -> DiscoveredClassifiedPathViews {
-    match git_ls_path_views(root) {
+    try_discover_classified_path_views(root).unwrap_or_else(|_| DiscoveredClassifiedPathViews {
+        visible: Vec::new(),
+        tracked: Vec::new(),
+    })
+}
+
+fn try_discover_classified_path_views(
+    root: &Path,
+) -> std::io::Result<DiscoveredClassifiedPathViews> {
+    Ok(match git_ls_path_views(root)? {
         Some(views) => {
             let tracked_membership = views
                 .tracked
@@ -28,12 +40,13 @@ fn discover_classified_path_views(root: &Path) -> DiscoveredClassifiedPathViews 
             let tracked = visible.iter().map(|entry| entry.path.clone()).collect();
             DiscoveredClassifiedPathViews { visible, tracked }
         }
-    }
+    })
 }
 
 fn classify_existing_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<ClassifiedPath> {
     paths
         .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|relative| {
             let path = root.join(relative);
             let metadata = std::fs::symlink_metadata(&path).ok()?;
@@ -50,6 +63,9 @@ fn discover_fallback_classified_paths(root: &Path) -> Vec<ClassifiedPath> {
         .hidden(false)
         .require_git(false)
         .filter_entry(|entry| {
+            if crate::invocation::check_timeout().is_err() {
+                return false;
+            }
             entry.depth() == 0
                 || !entry
                     .file_type()
@@ -57,6 +73,7 @@ fn discover_fallback_classified_paths(root: &Path) -> Vec<ClassifiedPath> {
                 || entry.file_name() != ".git"
         })
         .build()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .scan(root.to_path_buf(), |walker_root, entry| {
             Some(entry.ok().and_then(|entry| {
                 if entry.depth() == 0 {

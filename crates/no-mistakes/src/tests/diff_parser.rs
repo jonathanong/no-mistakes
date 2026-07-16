@@ -183,10 +183,9 @@ fn dedup_diff_files(files: Vec<DiffFile>) -> Vec<DiffFile> {
 }
 
 pub(crate) fn run_diff_command(command: &str, root: &Path) -> Result<String> {
-    let output = std::process::Command::new("sh")
-        .args(["-c", command])
-        .current_dir(root)
-        .output()
+    let mut child_command = std::process::Command::new("sh");
+    child_command.args(["-c", command]).current_dir(root);
+    let output = crate::invocation::command_output(&mut child_command)
         .with_context(|| format!("failed to run diff command: {command}"))?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -438,5 +437,17 @@ diff --git a/x.ts b/x.ts
         let dir = tempfile::tempdir().unwrap();
         let result = run_diff_command("exit 1", dir.path());
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn run_diff_command_respects_expired_invocation_deadline() {
+        let dir = tempfile::tempdir().unwrap();
+        let _deadline =
+            crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+        let result = run_diff_command("touch spawned", dir.path());
+
+        assert!(result.is_err());
+        assert!(!dir.path().join("spawned").exists());
     }
 }

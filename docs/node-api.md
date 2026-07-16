@@ -105,6 +105,39 @@ durations. The lazy `graph` phase is present only when dependency analysis is
 needed. The property is omitted by default. Unlike CLI `--timings`, Node timing
 collection does not print progress to stderr.
 
+## Invocation Lock And Timeouts
+
+Every async analysis function except `version()` accepts these common options:
+
+```ts
+interface InvocationOptions {
+  timeout?: number | null;
+  lockTimeout?: number | null;
+  failOnLock?: boolean;
+}
+```
+
+Durations are non-negative integer seconds. `timeout` limits command execution
+after the lock is acquired, while `lockTimeout` limits only the lock wait. Both
+default to 30 seconds; `0` or `null` disables the corresponding timeout.
+`failOnLock: true` fails immediately on contention and overrides
+`lockTimeout`.
+
+The lock is shared by CLI and Node/N-API analyses for the current OS user across
+all repositories. Waiting is silent, successful return values keep their
+existing shapes, and lock or timeout failures reject the returned Promise with
+an actionable error. For `analyzeProject()`, put these options at the top level,
+not inside individual report requests:
+
+```js
+const report = await analyzeProject({
+  timeout: 60,
+  lockTimeout: 10,
+  failOnLock: false,
+  reports: [{ type: "dependencies", files: ["src/api.mts"] }],
+});
+```
+
 ## Agent Defaults
 
 - Pass `root` explicitly.

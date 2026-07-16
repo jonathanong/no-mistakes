@@ -42,6 +42,8 @@ const {
     root: process.cwd(),
     files: ["src/main.mts"],
     relationships: ["import"],
+    timeout: 30,
+    lockTimeout: 30,
   });
   const tests = await dependents({
     root: process.cwd(),
@@ -107,6 +109,13 @@ const {
   });
 })();
 ```
+
+CLI and Node analyses share a per-user machine-wide lock. CLI flags
+`--timeout`, `--lock-timeout`, and `--fail-on-lock` have Node equivalents
+`timeout`, `lockTimeout`, and `failOnLock`. Both timeouts default to 30 seconds;
+`0` disables either CLI timeout, while `0` or `null` disables it in Node.
+Waiting does not alter successful output, and Node lock/timeout failures reject
+the returned Promise.
 
 External `no-mistakes-*` executables on `PATH` can be invoked as subcommands.
 For example, after installing `no-mistakes-scripts`:

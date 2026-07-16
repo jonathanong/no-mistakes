@@ -88,6 +88,7 @@ pub(crate) fn collect_and_filter_entries_shared(
             .push((traversal_key, entries.clone()));
         entries
     };
+    crate::invocation::check_timeout()?;
     let entries = apply_filters(
         entries,
         args,

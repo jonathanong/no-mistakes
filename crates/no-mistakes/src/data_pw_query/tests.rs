@@ -143,6 +143,23 @@ fn finds_source_and_test_usages() {
 }
 
 #[test]
+fn expired_deadline_returns_timeout_instead_of_a_partial_report() {
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+    let error = run(
+        &fixture(),
+        None,
+        "search-bar",
+        &[],
+        &[],
+        &DataPwInclude::default(),
+    )
+    .unwrap_err();
+
+    assert_eq!(crate::invocation::timeout_exit_code(&error), Some(124));
+}
+
+#[test]
 fn attribute_override_restricts_scan() {
     let report = run(
         &fixture(),
@@ -262,8 +279,54 @@ fn scan_file_ignores_unreadable_path() {
         selector_include_globs: None,
         exclude_globs: &globs,
     };
-    let hits = scan_file(Path::new("/no/such/file.tsx"), "x.tsx", &scan);
+    let hits = scan_file(
+        Path::new("/no/such/file.tsx"),
+        "x.tsx",
+        &scan,
+        &crate::invocation::check_timeout,
+    )
+    .unwrap();
     assert!(hits.is_empty());
+}
+
+#[test]
+fn parallel_scan_propagates_a_deadline_that_expires_inside_a_worker() {
+    let root = fixture();
+    let regex = compile_selector_attribute_value_regex(&["data-pw".to_string()]).unwrap();
+    let globs = build_globset(&[]).unwrap();
+    let scan = ScanConfig {
+        value: "search-bar",
+        regex: &regex,
+        roots: &[],
+        test_globs: &globs,
+        test_exclude_globs: &globs,
+        selector_include_globs: None,
+        exclude_globs: &globs,
+    };
+    let checks = std::sync::atomic::AtomicUsize::new(0);
+    // The first two checks happen at worker/file entry; expiring on the third
+    // proves the periodic check after the file read propagates through Rayon.
+    let expire_mid_scan = || {
+        if checks.fetch_add(1, std::sync::atomic::Ordering::Relaxed) < 2 {
+            Ok(())
+        } else {
+            Err(anyhow::Error::new(std::io::Error::new(
+                std::io::ErrorKind::TimedOut,
+                "synthetic mid-scan deadline",
+            )))
+        }
+    };
+
+    let error = scan_files_with_timeout_check(
+        &[root.join("app/search.tsx")],
+        &root,
+        &scan,
+        &expire_mid_scan,
+    )
+    .unwrap_err();
+
+    assert!(checks.load(std::sync::atomic::Ordering::Relaxed) >= 3);
+    assert_eq!(crate::invocation::timeout_exit_code(&error), Some(124));
 }
 
 #[test]

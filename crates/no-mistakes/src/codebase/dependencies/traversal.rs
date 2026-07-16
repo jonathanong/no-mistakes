@@ -80,6 +80,7 @@ pub(super) fn dependents_entries(
             &fact_context,
         )
     });
+    crate::invocation::check_timeout()?;
     let graph = build_dependents_graph(ctx, symbol_facts.as_ref())?;
     if any_symbol {
         let facts = symbol_facts

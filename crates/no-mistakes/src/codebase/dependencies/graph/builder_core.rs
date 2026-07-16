@@ -36,6 +36,7 @@ impl DepGraph {
         } else {
             None
         };
+        crate::invocation::check_timeout()?;
         let fallback_facts = match facts {
             Some(primary) => {
                 let covers_plan = primary.covers_ts_fact_plan(fact_plan);
@@ -116,6 +117,7 @@ impl DepGraph {
         }
 
         let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
+        crate::invocation::check_timeout()?;
         let needs_workspace = plan.imports || plan.workspace || plan.package || plan.symbols;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
             crate::codebase::workspaces::load_indexed_from_files(root, &graph_files.all)
@@ -125,23 +127,7 @@ impl DepGraph {
         let workspace = supplied_workspace
             .or(owned_workspace.as_ref())
             .unwrap_or(&empty_workspace);
-        let parse_errors = if fact_plan.is_empty() {
-            HashMap::new()
-        } else {
-            facts
-                .map(|facts| {
-                    files
-                        .iter()
-                        .filter_map(|path| {
-                            facts
-                                .get_ts_facts(path)
-                                .and_then(|file_facts| file_facts.parse_error.as_ref())
-                                .map(|error| (path.clone(), error.clone()))
-                        })
-                        .collect()
-                })
-                .unwrap_or_default()
-        };
+        let parse_errors = graph_parse_errors(fact_plan, files, facts);
 
         let owned_playwright_snapshot = (plan.playwright_routes || plan.playwright_selectors)
             .then(|| {
@@ -172,6 +158,7 @@ impl DepGraph {
                 reverse: &mut reverse,
             },
         )?;
+        crate::invocation::check_timeout()?;
         let mut graph = Self {
             root: root.to_path_buf(),
             edges: edge_index_from_maps(forward, reverse),

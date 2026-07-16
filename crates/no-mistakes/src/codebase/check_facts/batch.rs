@@ -26,30 +26,37 @@ pub(crate) fn collect_check_fact_batch_with_session(
     let collected = demands
         .into_par_iter()
         .map(|(path, demands)| {
-            // Request parser caches are thread-local, so each Rayon path task
-            // owns a scope that all of its fact variants and modes can share.
-            crate::ast::with_request_parse_cache(|| {
-                let variants = demands
-                    .iter()
-                    .map(|demand| {
-                        let request = &requests[demand.request];
-                        super::file::CheckFactVariant {
-                            root: &request.root,
-                            plan: &demand.plan,
-                            playwright: request.playwright.as_ref(),
-                        }
-                    })
-                    .collect::<Vec<_>>();
-                let facts =
-                    super::file::collect_file_fact_variants_with_session(session, &path, &variants);
-                (path, demands, facts)
+            crate::invocation::check_timeout().ok().map(|()| {
+                // Request parser caches are thread-local, so each Rayon path task
+                // owns a scope that all of its fact variants and modes can share.
+                crate::ast::with_request_parse_cache(|| {
+                    let variants = demands
+                        .iter()
+                        .map(|demand| {
+                            let request = &requests[demand.request];
+                            super::file::CheckFactVariant {
+                                root: &request.root,
+                                plan: &demand.plan,
+                                playwright: request.playwright.as_ref(),
+                            }
+                        })
+                        .collect::<Vec<_>>();
+                    let facts = super::file::collect_file_fact_variants_with_session(
+                        session, &path, &variants,
+                    );
+                    (path, demands, facts)
+                })
             })
         })
+        .while_some()
         .collect::<Vec<_>>();
     let mut precollected = (0..requests.len())
         .map(|_| HashMap::new())
         .collect::<Vec<_>>();
-    for (path, demands, facts) in collected {
+    for (path, demands, facts) in collected
+        .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         for (demand, facts) in demands.into_iter().zip(facts) {
             if let Some(facts) = facts {
                 precollected[demand.request].insert(path.clone(), facts);
@@ -75,7 +82,11 @@ pub(crate) fn collect_check_fact_batch_with_session(
 
 fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<FactDemand>> {
     let mut demands = BTreeMap::<PathBuf, Vec<FactDemand>>::new();
-    for (request_id, request) in requests.iter().enumerate() {
+    for (request_id, request) in requests
+        .iter()
+        .enumerate()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         let graph_only = super::graph_only_files(&request.files, &request.graph_files);
         let graph_plan = CheckFactPlan {
             graph: request.plan.graph,

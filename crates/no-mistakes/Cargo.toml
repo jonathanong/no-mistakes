@@ -16,6 +16,7 @@ test-instrumentation = []
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 dashmap = "6.2.1"
+directories = "6"
 globset = "0.4"
 hcl-rs = "0.19"
 ignore = "0.4"
@@ -42,6 +43,20 @@ self_cell = "1.2.2"
 syn = { version = "2", features = ["full", "visit"] }
 toml = "1.1"
 walkdir = "2"
+wait-timeout = "0.2"
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.30", features = ["process", "signal"] }
+signal-hook = "0.3"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_System_Diagnostics_ToolHelp",
+  "Win32_System_JobObjects",
+  "Win32_System_Threading",
+] }
 
 [dev-dependencies]
 assert_cmd = "2"

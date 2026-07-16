@@ -70,3 +70,15 @@ fn renders_formats_and_runs() {
 
     let _ = run(args("util.ts", false)).unwrap();
 }
+
+#[test]
+fn expired_deadline_rejects_output_before_rendering() {
+    let report = compute(&args("util.ts", false)).unwrap();
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+    let mut output = Vec::new();
+
+    let error = render(&report, Format::Json, &mut output).unwrap_err();
+
+    assert!(error.to_string().contains("timed out"));
+    assert!(output.is_empty());
+}

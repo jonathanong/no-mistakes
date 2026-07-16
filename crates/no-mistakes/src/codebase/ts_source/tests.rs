@@ -1,5 +1,5 @@
 use super::{
-    discover_files, discover_files_from_visible, discover_source_files,
+    deadline_checked_paths, discover_files, discover_files_from_visible, discover_source_files,
     discover_source_files_from_visible, discover_visible_paths, format_parse_diagnostic,
     git_visible_files, has_disable_comment, has_disable_file_comment, has_disable_line_comment,
     is_skipped_dir, is_test_file, line_number, normalize_discovery_path, parse_git_tagged_paths,
@@ -17,6 +17,17 @@ use tempfile::TempDir;
 mod discovery_preserve;
 mod gitignore;
 mod source_and_discovery;
+
+#[test]
+fn deadline_checked_paths_preserves_success_and_maps_timeout() {
+    assert!(deadline_checked_paths(Vec::new(), Ok(()))
+        .unwrap()
+        .is_empty());
+
+    let error = deadline_checked_paths(Vec::new(), Err(anyhow::anyhow!("expired"))).unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+    assert_eq!(error.to_string(), "expired");
+}
 
 #[test]
 fn parse_diagnostic_formatter_preserves_diagnostic_and_panic_messages() {

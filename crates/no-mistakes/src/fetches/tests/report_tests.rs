@@ -148,8 +148,8 @@ fn test_route_report_api_calls_uses_camel_case() {
 }
 
 #[test]
-fn test_print_markdown_report_is_rendered() {
-    use crate::fetches::report::print::print_markdown_report;
+fn test_markdown_report_is_rendered() {
+    use crate::fetches::report::print::write_markdown_report;
 
     let report = FinalReport {
         summary: Summary {
@@ -167,29 +167,36 @@ fn test_print_markdown_report_is_rendered() {
             parallel_api_calls: 0,
             error_handled_api_calls: 0,
         },
-        routes: vec![RouteReport {
-            route: "/".to_string(),
-            file: "app/page.tsx".to_string(),
-            api_calls: vec![FetchOccurrence {
-                path: "/api/page".to_string(),
-                raw_path: "/api/page".to_string(),
-                method: "GET".to_string(),
+        routes: vec![
+            RouteReport {
+                route: "/".to_string(),
                 file: "app/page.tsx".to_string(),
-                line: 1,
-                side: FetchSide::Server,
-                rsc: true,
-                cached: false,
-                cache_kind: CacheKind::None,
-                cached_function: None,
-                dynamic: false,
-                unsupported: false,
-                function_name: None,
-                conditional: false,
-                in_promise_all: false,
-                error_handled: false,
-                source_type: SourceType::Page,
-            }],
-        }],
+                api_calls: vec![FetchOccurrence {
+                    path: "/api/page".to_string(),
+                    raw_path: "/api/page".to_string(),
+                    method: "GET".to_string(),
+                    file: "app/page.tsx".to_string(),
+                    line: 1,
+                    side: FetchSide::Server,
+                    rsc: true,
+                    cached: false,
+                    cache_kind: CacheKind::None,
+                    cached_function: None,
+                    dynamic: false,
+                    unsupported: false,
+                    function_name: None,
+                    conditional: false,
+                    in_promise_all: false,
+                    error_handled: false,
+                    source_type: SourceType::Page,
+                }],
+            },
+            RouteReport {
+                route: "/empty".to_string(),
+                file: "app/empty/page.tsx".to_string(),
+                api_calls: Vec::new(),
+            },
+        ],
         duplicates: vec![DuplicateApiCall {
             key: "GET /api/page server rsc".to_string(),
             count: 2,
@@ -215,7 +222,99 @@ fn test_print_markdown_report_is_rendered() {
         }],
     };
 
-    print_markdown_report(&report);
+    let mut output = Vec::new();
+    write_markdown_report(&report, &mut output).unwrap();
+    let output = String::from_utf8(output).unwrap();
+    assert!(output.starts_with("# Next.js Fetch API Analysis\n\n"));
+    assert!(output.contains("## Duplicates"));
+    assert!(output.contains("## Unsupported (Dynamic)"));
+
+    struct FailAfter {
+        remaining_writes: usize,
+    }
+
+    impl std::io::Write for FailAfter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            if self.remaining_writes == 0 {
+                return Err(std::io::Error::other("synthetic write failure"));
+            }
+            self.remaining_writes -= 1;
+            Ok(bytes.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    let mut completed = false;
+    for remaining_writes in 0..512 {
+        let mut writer = FailAfter { remaining_writes };
+        if write_markdown_report(&report, &mut writer).is_ok() {
+            assert!(remaining_writes > 0);
+            completed = true;
+            break;
+        }
+    }
+    assert!(completed);
+}
+
+#[test]
+fn fetch_report_timeout_discards_buffered_output_for_every_format() {
+    use crate::fetches::cli::publish_report_with_deadline_check;
+    use no_mistakes::cli::Format;
+
+    for format in [
+        Format::Json,
+        Format::Yml,
+        Format::Paths,
+        Format::Md,
+        Format::Human,
+    ] {
+        let mut output = Vec::new();
+        let checks = std::cell::Cell::new(0);
+        let error = publish_report_with_deadline_check(
+            &FinalReport::default(),
+            format,
+            &mut output,
+            || {
+                checks.set(checks.get() + 1);
+                Ok(())
+            },
+            || anyhow::bail!("synthetic timeout"),
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains("synthetic timeout"));
+        assert!(output.is_empty());
+        assert_eq!(checks.get(), 1);
+    }
+}
+
+#[test]
+fn fetch_report_publication_errors_are_contextual() {
+    struct FailingWriter;
+
+    impl std::io::Write for FailingWriter {
+        fn write(&mut self, _bytes: &[u8]) -> std::io::Result<usize> {
+            Err(std::io::Error::other("synthetic write failure"))
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    let error = crate::fetches::cli::publish_report_with_deadline_check(
+        &FinalReport::default(),
+        no_mistakes::cli::Format::Json,
+        &mut FailingWriter,
+        || Ok(()),
+        || Ok(()),
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains("publishing fetch report"));
 }
 
 #[test]

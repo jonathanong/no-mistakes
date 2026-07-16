@@ -48,6 +48,7 @@ pub struct TestTargetRow {
 
 /// Build the Swift graph and target index once.
 pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftReport> {
+    crate::invocation::check_timeout()?;
     let root = normalize_path(root);
     let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let root_visible_paths = visible_paths.paths_for(&root);
@@ -75,6 +76,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
     )?;
     let all_files = graph_files.all();
     let facts = collect_swift_facts(&root, all_files, &packages);
+    crate::invocation::check_timeout()?;
     let graph = DepGraph::build_with_plan_files_prepared_config_and_swift_facts(
         &root,
         &tsconfig,
@@ -84,8 +86,10 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
         &prepared_graph,
         &facts,
     )?;
+    crate::invocation::check_timeout()?;
     let mut targets = HashMap::new();
     for package in &facts.packages {
+        crate::invocation::check_timeout()?;
         for (name, target) in &package.targets {
             // Target names are unique only within a package, and nested packages
             // can share a name, so scope membership to this target's own source
@@ -104,6 +108,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
         }
     }
 
+    crate::invocation::check_timeout()?;
     Ok(SwiftReport {
         root,
         graph,

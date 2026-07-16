@@ -139,10 +139,11 @@ pub(crate) fn run_shellcheck(
         ));
     }
 
-    let result = Command::new("shellcheck")
+    let mut command = Command::new("shellcheck");
+    command
         .args(["-f", "gcc", "-S", sev, "--"])
-        .args(shell_files)
-        .output();
+        .args(shell_files);
+    let result = crate::invocation::command_output(&mut command);
     handle_shellcheck_result(root, shell_files, result)
 }
 

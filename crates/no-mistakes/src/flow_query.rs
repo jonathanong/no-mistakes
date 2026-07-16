@@ -120,11 +120,13 @@ pub(crate) fn run_with_prepared_graph(
         edges: &mut edges,
     };
     match options.direction {
-        FlowDirection::Deps => traversal.traverse(&target, TraverseDirection::Deps),
-        FlowDirection::Dependents => traversal.traverse(&target, TraverseDirection::Dependents),
+        FlowDirection::Deps => traversal.traverse(&target, TraverseDirection::Deps)?,
+        FlowDirection::Dependents => {
+            traversal.traverse(&target, TraverseDirection::Dependents)?;
+        }
         FlowDirection::Both => {
-            traversal.traverse(&target, TraverseDirection::Deps);
-            traversal.traverse(&target, TraverseDirection::Dependents);
+            traversal.traverse(&target, TraverseDirection::Deps)?;
+            traversal.traverse(&target, TraverseDirection::Dependents)?;
         }
     }
 
@@ -141,6 +143,10 @@ include!("flow_query_traverse.rs");
 #[cfg(test)]
 #[path = "flow_query_tests.rs"]
 mod flow_query_tests;
+
+#[cfg(test)]
+#[path = "flow_query_timeout_tests.rs"]
+mod flow_query_timeout_tests;
 
 fn resolve_tsconfig_from_visible(
     root: &Path,

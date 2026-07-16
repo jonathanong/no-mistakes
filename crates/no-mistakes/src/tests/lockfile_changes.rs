@@ -152,11 +152,11 @@ fn is_diff_only_mode(args: &PlanArgs) -> bool {
 }
 
 fn find_git_root(dir: &Path) -> Option<PathBuf> {
-    let output = std::process::Command::new("git")
+    let mut command = std::process::Command::new("git");
+    command
         .args(["rev-parse", "--show-toplevel"])
-        .current_dir(dir)
-        .output()
-        .ok()?;
+        .current_dir(dir);
+    let output = crate::invocation::command_output(&mut command).ok()?;
     if output.status.success() {
         let s = String::from_utf8(output.stdout).ok()?;
         Some(PathBuf::from(s.trim()))
@@ -166,20 +166,21 @@ fn find_git_root(dir: &Path) -> Option<PathBuf> {
 }
 
 fn git_ref_exists(root: &Path, git_ref: &str) -> bool {
-    std::process::Command::new("git")
+    let mut command = std::process::Command::new("git");
+    command
         .args(["rev-parse", "--verify", git_ref])
-        .current_dir(root)
-        .output()
+        .current_dir(root);
+    crate::invocation::command_output(&mut command)
         .map(|o| o.status.success())
         .unwrap_or(false)
 }
 
 pub(crate) fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {
-    let output = std::process::Command::new("git")
+    let mut command = std::process::Command::new("git");
+    command
         .args(["show", &format!("{}:{}", git_ref, rel_path)])
-        .current_dir(root)
-        .output()
-        .ok()?;
+        .current_dir(root);
+    let output = crate::invocation::command_output(&mut command).ok()?;
     if output.status.success() {
         String::from_utf8(output.stdout).ok()
     } else {

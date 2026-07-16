@@ -51,15 +51,12 @@ fn walk_non_ignored_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<Path
         .require_git(false)
         .filter_entry(move |e| {
             let name = e.file_name().to_str().unwrap_or("");
-            if e.depth() > 0
+            !(e.depth() > 0
                 && e.file_type().is_some_and(|ft| ft.is_dir())
-                && (SKIP_DIRS.contains(&name) || entry_extra_skip.contains(name))
-            {
-                return false;
-            }
-            true
+                && (SKIP_DIRS.contains(&name) || entry_extra_skip.contains(name)))
         })
         .build()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_some_and(|ft| ft.is_file()))
         .map(|e| normalize_discovery_path(e.path()))
@@ -84,15 +81,14 @@ fn walk_github_workflow_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<
         .require_git(false)
         .filter_entry(move |e| {
             let name = e.file_name().to_str().unwrap_or("");
-            if e.depth() > 0
+            let allowed_directory = !(e.depth() > 0
                 && e.file_type().is_some_and(|ft| ft.is_dir())
-                && (SKIP_DIRS.contains(&name) || extra_skip.contains(name))
-            {
-                return false;
-            }
-            e.depth() == 0 || is_github_workflows_prefix(&filter_root, e.path())
+                && (SKIP_DIRS.contains(&name) || extra_skip.contains(name)));
+            allowed_directory
+                && (e.depth() == 0 || is_github_workflows_prefix(&filter_root, e.path()))
         })
         .build()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_some_and(|ft| ft.is_file()))
         .filter(|e| is_github_workflows_prefix(&file_root, e.path()))
@@ -132,6 +128,7 @@ pub fn discover_files_from_visible(
     let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
     visible_paths
         .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .map(|path| normalized_visible_path(path))
         .filter(|path| path.starts_with(&root))
         .filter(|path| !is_under_skipped_dir(&root, path, &extra_skip))

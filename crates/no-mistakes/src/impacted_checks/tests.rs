@@ -9,6 +9,8 @@ use crate::tests::TestFramework;
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod timeout;
+
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/impacted-checks/basic"),

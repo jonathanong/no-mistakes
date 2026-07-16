@@ -116,6 +116,26 @@ fn run_all_keeps_filesystem_files_when_fact_collection_is_needed() {
     );
 }
 
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn run_all_rejects_timed_out_facts_before_running_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-runner/facts-and-filesystem/fixture");
+    let config = root.join(".no-mistakes.yml");
+    let _deadline =
+        no_mistakes::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+    let error = match run_all(root, Some(config), None) {
+        Ok(_) => panic!("timed-out fact collection unexpectedly ran rules"),
+        Err(error) => error,
+    };
+
+    assert_eq!(
+        no_mistakes::invocation::timeout_exit_code(&error),
+        Some(124)
+    );
+}
+
 #[test]
 fn run_all_includes_playwright_coverage_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

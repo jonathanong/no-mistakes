@@ -87,12 +87,13 @@ pub(in crate::codebase::dotnet) fn evaluate_project_with_program(
     name: &str,
     program: &str,
 ) -> Result<DotnetProjectFacts, String> {
-    let output = std::process::Command::new(program)
+    let mut command = std::process::Command::new(program);
+    command
         .arg("msbuild")
         .arg(project_path)
         .arg("-getProperty:AssemblyName,RootNamespace,IsTestProject,TargetFramework,TargetFrameworks")
-        .arg("-getItem:Compile,ProjectReference,PackageReference")
-        .output()
+        .arg("-getItem:Compile,ProjectReference,PackageReference");
+    let output = crate::invocation::command_output(&mut command)
         .map_err(|error| format!("dotnet msbuild failed to start for `{name}`: {error}"))?;
     parse_msbuild_output(
         project_path,

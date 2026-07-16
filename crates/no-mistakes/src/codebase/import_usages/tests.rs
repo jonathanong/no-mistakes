@@ -19,6 +19,15 @@ fn args(files: Vec<&str>) -> ImportUsagesArgs {
 }
 
 #[test]
+fn fact_collection_timeout_prevents_a_partial_report() {
+    let _guard = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+    let error = collect(&args(vec!["src/main.mts"])).unwrap_err();
+
+    assert_eq!(crate::invocation::timeout_exit_code(&error), Some(124));
+}
+
+#[test]
 fn package_name_handles_npm_boundaries() {
     assert_eq!(
         package_name_from_specifier("react/jsx-runtime").as_deref(),

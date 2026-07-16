@@ -50,6 +50,7 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     let root = resolve_root(&args.root, &cwd);
     let results = check_runner::run_all(root, args.config, args.tsconfig)?;
     record_missing_check_timings(&results);
+    no_mistakes::invocation::commit_timeout()?;
     for warning in &results.warnings {
         eprintln!("{warning}");
     }

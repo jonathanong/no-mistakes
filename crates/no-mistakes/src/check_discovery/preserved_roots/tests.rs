@@ -204,6 +204,19 @@ fn literal_include_prefix_stops_before_brace_alternation() {
 }
 
 #[test]
+fn descendant_dirs_matching_suffix_handles_empty_relative_path() {
+    let files = [Path::new("")];
+    let roots = super::matching::descendant_dirs_matching_suffix_from_paths(
+        Path::new("/repo"),
+        Path::new("fixtures"),
+        files.into_iter(),
+        &[],
+    );
+
+    assert!(roots.is_empty());
+}
+
+#[test]
 fn include_preserved_roots_ignore_unknown_projects() {
     let root = PathBuf::from("/repo");
     let config = NoMistakesConfig {

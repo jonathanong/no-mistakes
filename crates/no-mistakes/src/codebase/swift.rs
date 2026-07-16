@@ -53,6 +53,7 @@ pub(crate) fn collect_swift_facts(
     }
     let package_facts: Vec<SwiftPackageFacts> = packages
         .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|package| parse_package(root, package))
         .collect();
     if package_facts.is_empty() {
@@ -60,6 +61,7 @@ pub(crate) fn collect_swift_facts(
     }
     let swift_files: Vec<PathBuf> = all_files
         .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("swift"))
         .filter(|path| {
             package_facts
@@ -72,7 +74,13 @@ pub(crate) fn collect_swift_facts(
     let target_by_file = target_index(&package_facts, &swift_files);
     let mut file_facts: Vec<SwiftFileFacts> = swift_files
         .par_iter()
-        .filter_map(|path| parse_swift_file(path, target_by_file.get(path).cloned()))
+        .map(|path| {
+            crate::invocation::check_timeout()
+                .ok()
+                .map(|()| parse_swift_file(path, target_by_file.get(path).cloned()))
+        })
+        .while_some()
+        .flatten()
         .collect();
     file_facts.sort_by(|a, b| a.path.cmp(&b.path));
 
@@ -80,7 +88,10 @@ pub(crate) fn collect_swift_facts(
         packages: package_facts,
         ..SwiftFactMap::default()
     };
-    for file in file_facts {
+    for file in file_facts
+        .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         if let Some(target) = &file.target {
             facts
                 .files_by_target
@@ -128,7 +139,10 @@ fn target_index(
     swift_files: &[PathBuf],
 ) -> HashMap<PathBuf, String> {
     let mut index = HashMap::new();
-    for file in swift_files {
+    for file in swift_files
+        .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         let mut best: Option<(&String, usize)> = None;
         for package in packages {
             for (name, target) in &package.targets {

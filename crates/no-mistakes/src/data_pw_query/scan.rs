@@ -83,13 +83,47 @@ struct ScanConfig<'a> {
     exclude_globs: &'a GlobSet,
 }
 
-fn scan_file(path: &Path, rel: &str, scan: &ScanConfig) -> Vec<(FileKind, DataPwHit)> {
+fn scan_files(
+    files: &[PathBuf],
+    root: &Path,
+    scan: &ScanConfig<'_>,
+) -> Result<Vec<(FileKind, DataPwHit)>> {
+    scan_files_with_timeout_check(files, root, scan, &crate::invocation::check_timeout)
+}
+
+fn scan_files_with_timeout_check(
+    files: &[PathBuf],
+    root: &Path,
+    scan: &ScanConfig<'_>,
+    check_timeout: &(impl Fn() -> Result<()> + Sync),
+) -> Result<Vec<(FileKind, DataPwHit)>> {
+    files
+        .par_iter()
+        .try_fold(Vec::new, |mut hits, path| -> Result<_> {
+            check_timeout()?;
+            let rel = relative_slash_path(root, path);
+            hits.extend(scan_file(path, &rel, scan, check_timeout)?);
+            Ok(hits)
+        })
+        .try_reduce(Vec::new, |mut left, mut right| -> Result<_> {
+            left.append(&mut right);
+            Ok(left)
+        })
+}
+
+fn scan_file(
+    path: &Path,
+    rel: &str,
+    scan: &ScanConfig,
+    check_timeout: &(impl Fn() -> Result<()> + Sync),
+) -> Result<Vec<(FileKind, DataPwHit)>> {
+    check_timeout()?;
     let matches_test = scan.test_globs.is_match(rel);
     if matches_test {
         // Test files are filtered only by `testExclude`; `selectorExclude` is a
         // source-scanning setting and must not drop legitimate test usages.
         if scan.test_exclude_globs.is_match(rel) {
-            return Vec::new();
+            return Ok(Vec::new());
         }
     } else {
         let in_source_root =
@@ -98,7 +132,7 @@ fn scan_file(path: &Path, rel: &str, scan: &ScanConfig) -> Vec<(FileKind, DataPw
             .selector_include_globs
             .is_none_or(|globs| globs.is_match(rel));
         if !in_source_root || !included || scan.exclude_globs.is_match(rel) {
-            return Vec::new();
+            return Ok(Vec::new());
         }
     }
     let is_test = matches_test;
@@ -108,11 +142,16 @@ fn scan_file(path: &Path, rel: &str, scan: &ScanConfig) -> Vec<(FileKind, DataPw
         FileKind::Source
     };
     let Ok(source) = std::fs::read_to_string(path) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
     let mut hits = Vec::new();
+    // Check on the first scanned line, then periodically while traversing a
+    // large file so one worker cannot monopolize the deadline past expiration.
+    let mut work_since_timeout_check = u8::MAX;
     for (index, line) in source.lines().enumerate() {
+        check_scan_timeout(&mut work_since_timeout_check, check_timeout)?;
         for caps in scan.regex.captures_iter(line) {
+            check_scan_timeout(&mut work_since_timeout_check, check_timeout)?;
             let attribute = &caps["attr"];
             let matched = caps
                 .name("dq")
@@ -131,7 +170,18 @@ fn scan_file(path: &Path, rel: &str, scan: &ScanConfig) -> Vec<(FileKind, DataPw
             }
         }
     }
-    hits
+    Ok(hits)
+}
+
+fn check_scan_timeout(
+    work_since_timeout_check: &mut u8,
+    check_timeout: &(impl Fn() -> Result<()> + Sync),
+) -> Result<()> {
+    *work_since_timeout_check = work_since_timeout_check.wrapping_add(1);
+    if *work_since_timeout_check == 0 {
+        check_timeout()?;
+    }
+    Ok(())
 }
 
 /// Whether `rel` lives under directory prefix `root` (e.g. `app` matches
