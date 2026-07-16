@@ -335,6 +335,18 @@ fn disconnected_child_output_reader_reports_broken_pipe() {
     assert_eq!(error.kind(), std::io::ErrorKind::BrokenPipe);
 }
 
+#[test]
+fn child_output_reader_returns_bytes_without_deadline() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _guard =
+        DeadlineGuard::install_with_owner(None, Some(std::thread::current().id())).unwrap();
+    let (sender, receiver) = std::sync::mpsc::channel();
+    sender.send(Ok(vec![1, 2, 3])).unwrap();
+    assert_eq!(super::child::receive_reader(&receiver).unwrap(), [1, 2, 3]);
+}
+
 #[cfg(unix)]
 #[test]
 fn command_output_deadline_kills_descendants_holding_output_pipes() {
