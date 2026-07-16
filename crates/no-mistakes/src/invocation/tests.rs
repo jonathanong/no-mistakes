@@ -166,6 +166,14 @@ fn lock_open_errors_include_the_path() {
 }
 
 #[test]
+fn lock_system_errors_include_the_path() {
+    let path = Path::new("synthetic-invocation.lock");
+    let error = super::lock::lock_error(path, std::io::Error::other("synthetic lock failure"));
+    assert!(error.to_string().contains(&path.display().to_string()));
+    assert!(format!("{error:#}").contains("synthetic lock failure"));
+}
+
+#[test]
 fn lock_path_and_directory_errors_are_contextualized() {
     let path = lock_path().unwrap();
     assert_eq!(path.file_name().unwrap(), "invocation.lock");

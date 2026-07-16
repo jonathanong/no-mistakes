@@ -43,10 +43,7 @@ pub(super) fn acquire_lock(
     loop {
         match file.try_lock() {
             Ok(()) => return Ok(file),
-            Err(TryLockError::Error(error)) => {
-                return Err(error)
-                    .with_context(|| format!("locking invocation file {}", path.display()));
-            }
+            Err(TryLockError::Error(error)) => return Err(lock_error(path, error)),
             Err(TryLockError::WouldBlock) if fail_on_lock => {
                 return Err(InvocationError::new(
                     InvocationErrorKind::LockBusy,
@@ -75,4 +72,8 @@ pub(super) fn acquire_lock(
         };
         std::thread::sleep(sleep_for);
     }
+}
+
+pub(super) fn lock_error(path: &Path, error: std::io::Error) -> anyhow::Error {
+    anyhow::Error::new(error).context(format!("locking invocation file {}", path.display()))
 }
