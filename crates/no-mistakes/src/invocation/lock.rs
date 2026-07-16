@@ -40,7 +40,13 @@ pub(super) fn acquire_lock(
         .open(path)
         .with_context(|| format!("opening invocation lock {}", path.display()))?;
     let started = clock::now();
+    let mut first_attempt = true;
     loop {
+        if !first_attempt {
+            if let Some(timeout) = timeout.filter(|timeout| started.elapsed() >= *timeout) {
+                return Err(lock_timeout_error(timeout));
+            }
+        }
         match file.try_lock() {
             Ok(()) => return Ok(file),
             Err(TryLockError::Error(error)) => return Err(lock_error(path, error)),
@@ -53,25 +59,27 @@ pub(super) fn acquire_lock(
             }
             Err(TryLockError::WouldBlock) => {}
         }
+        first_attempt = false;
 
         let sleep_for = match timeout {
-            Some(timeout) => {
-                let Some(remaining) = timeout.checked_sub(started.elapsed()) else {
-                    return Err(InvocationError::new(
-                        InvocationErrorKind::LockTimeout,
-                        format!(
-                            "timed out after {} seconds waiting for another no-mistakes invocation",
-                            timeout.as_secs()
-                        ),
-                    )
-                    .into());
-                };
-                remaining.min(LOCK_POLL_INTERVAL)
-            }
+            Some(timeout) => timeout
+                .saturating_sub(started.elapsed())
+                .min(LOCK_POLL_INTERVAL),
             None => LOCK_POLL_INTERVAL,
         };
         std::thread::sleep(sleep_for);
     }
+}
+
+fn lock_timeout_error(timeout: Duration) -> anyhow::Error {
+    InvocationError::new(
+        InvocationErrorKind::LockTimeout,
+        format!(
+            "timed out after {} seconds waiting for another no-mistakes invocation",
+            timeout.as_secs()
+        ),
+    )
+    .into()
 }
 
 pub(super) fn lock_error(path: &Path, error: std::io::Error) -> anyhow::Error {

@@ -18,11 +18,10 @@ impl Traversal<'_> {
         let mut queue = VecDeque::from([(target.clone(), 0usize)]);
         let mut seen = BTreeMap::from([(node_key(target, self.root), 0usize)]);
         let mut check_counter = 0u32;
-        while let Some((node, depth)) = queue.pop_front() {
+        while let Some((node, depth)) = queue.pop_front().filter(|_| {
             check_counter += 1;
-            if check_counter % 256 == 0 && crate::invocation::check_timeout().is_err() {
-                break;
-            }
+            !check_counter.is_multiple_of(256) || crate::invocation::check_timeout().is_ok()
+        }) {
             if depth >= self.max_depth {
                 continue;
             }

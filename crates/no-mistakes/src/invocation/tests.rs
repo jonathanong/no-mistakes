@@ -9,6 +9,12 @@ fn deadline_test_lock() -> &'static std::sync::Mutex<()> {
     LOCK.get_or_init(|| std::sync::Mutex::new(()))
 }
 
+fn fixture_path(name: &str) -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/invocation")
+        .join(name)
+}
+
 #[test]
 fn napi_options_default_and_strip_controls() {
     let (json, options) = extract_napi_options(
@@ -99,7 +105,8 @@ fn disabled_deadline_allows_timeout_check() {
     let _serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let _guard = DeadlineGuard::install(None).unwrap();
+    let _guard =
+        DeadlineGuard::install_with_owner(None, Some(std::thread::current().id())).unwrap();
     check_timeout().unwrap();
 }
 
@@ -113,6 +120,7 @@ fn expired_deadline_returns_timeout_exit_code() {
         active.replace(Deadline {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(3),
+            owner: Some(std::thread::current().id()),
         })
     };
     let error = check_timeout().unwrap_err();
@@ -149,7 +157,8 @@ fn oversized_deadline_is_rejected() {
     let _serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let result = DeadlineGuard::install(Some(Duration::MAX));
+    let result =
+        DeadlineGuard::install_with_owner(Some(Duration::MAX), Some(std::thread::current().id()));
     let Err(error) = result else {
         panic!("an oversized timeout should fail");
     };
@@ -178,11 +187,26 @@ fn lock_path_and_directory_errors_are_contextualized() {
     let path = lock_path().unwrap();
     assert_eq!(path.file_name().unwrap(), "invocation.lock");
 
-    let directory = tempfile::tempdir().unwrap();
-    let file = directory.path().join("not-a-directory");
-    std::fs::write(&file, "occupied").unwrap();
+    let file = fixture_path("not-a-directory");
     let error = super::lock::create_lock_directory(&file).unwrap_err();
     assert!(error.to_string().contains(&file.display().to_string()));
+}
+
+#[test]
+fn lock_released_after_deadline_still_times_out() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("invocation.lock");
+    let held = acquire_lock(&path, None, false).unwrap();
+    let release = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(10));
+        drop(held);
+    });
+    let error = acquire_lock(&path, Some(Duration::from_millis(1)), false).unwrap_err();
+    release.join().unwrap();
+    assert_eq!(
+        error.downcast_ref::<InvocationError>().unwrap().kind(),
+        InvocationErrorKind::LockTimeout
+    );
 }
 
 #[test]
@@ -206,7 +230,8 @@ fn command_output_captures_output_with_and_without_deadline() {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     for timeout in [None, Some(Duration::from_secs(5))] {
-        let _guard = DeadlineGuard::install(timeout).unwrap();
+        let _guard =
+            DeadlineGuard::install_with_owner(timeout, Some(std::thread::current().id())).unwrap();
         let mut command = Command::new("sh");
         command.args(["-c", "printf stdout; printf stderr >&2"]);
         let output = command_output(&mut command).unwrap();
@@ -222,7 +247,11 @@ fn command_output_terminates_child_at_deadline() {
     let _serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let _guard = DeadlineGuard::install(Some(Duration::from_millis(1))).unwrap();
+    let _guard = DeadlineGuard::install_with_owner(
+        Some(Duration::from_millis(1)),
+        Some(std::thread::current().id()),
+    )
+    .unwrap();
     let mut command = Command::new("sleep");
     command.arg("10");
     let error = command_output(&mut command).unwrap_err();
@@ -244,11 +273,52 @@ fn child_wait_errors_cleanup_the_child() {
     let mut child = command.spawn().unwrap();
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
-    let stdout_reader = std::thread::spawn(move || super::child::read_pipe(stdout));
-    let stderr_reader = std::thread::spawn(move || super::child::read_pipe(stderr));
+    let stdout_reader = super::child::spawn_reader(stdout);
+    let stderr_reader = super::child::spawn_reader(stderr);
     let error = std::io::Error::other("synthetic wait failure");
     let result = super::child::cleanup_wait_error(child, stdout_reader, stderr_reader, error);
     assert_eq!(result.unwrap_err().to_string(), "synthetic wait failure");
+}
+
+#[test]
+fn child_cleanup_errors_preserve_the_original_error_kind() {
+    let error = super::child::cleanup_result(
+        std::io::Error::new(std::io::ErrorKind::TimedOut, "deadline"),
+        Some(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            "kill denied",
+        )),
+    )
+    .unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+    assert!(error.to_string().contains("kill denied"));
+}
+
+#[test]
+fn disconnected_child_output_reader_reports_broken_pipe() {
+    let (sender, receiver) = std::sync::mpsc::channel::<std::io::Result<Vec<u8>>>();
+    drop(sender);
+    let error = super::child::receive_reader(&receiver).unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::BrokenPipe);
+}
+
+#[cfg(unix)]
+#[test]
+fn command_output_deadline_kills_descendants_holding_output_pipes() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _guard = DeadlineGuard::install_with_owner(
+        Some(Duration::from_millis(50)),
+        Some(std::thread::current().id()),
+    )
+    .unwrap();
+    let started = Instant::now();
+    let mut command = Command::new("sh");
+    command.args(["-c", "sleep 10 &"]);
+    let error = command_output(&mut command).unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+    assert!(started.elapsed() < Duration::from_secs(1));
 }
 
 #[test]
@@ -261,6 +331,7 @@ fn expired_deadline_prevents_child_spawn() {
         active.replace(Deadline {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(1),
+            owner: Some(std::thread::current().id()),
         })
     };
     let mut command = Command::new("definitely-not-a-real-no-mistakes-command");

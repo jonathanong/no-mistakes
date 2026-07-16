@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 pub(super) struct Deadline {
     pub(super) expires_at: Instant,
     pub(super) timeout: Duration,
+    pub(super) owner: Option<std::thread::ThreadId>,
 }
 
 pub(super) fn active_deadline() -> &'static RwLock<Option<Deadline>> {
@@ -20,6 +21,13 @@ pub(super) struct DeadlineGuard {
 
 impl DeadlineGuard {
     pub(super) fn install(timeout: Option<Duration>) -> Result<Self> {
+        Self::install_with_owner(timeout, None)
+    }
+
+    pub(super) fn install_with_owner(
+        timeout: Option<Duration>,
+        owner: Option<std::thread::ThreadId>,
+    ) -> Result<Self> {
         let deadline = timeout
             .map(|timeout| {
                 clock::now()
@@ -27,6 +35,7 @@ impl DeadlineGuard {
                     .map(|expires_at| Deadline {
                         expires_at,
                         timeout,
+                        owner,
                     })
                     .context("command timeout is too large")
             })
@@ -55,6 +64,12 @@ pub fn check_timeout() -> Result<()> {
     let Some(deadline) = deadline else {
         return Ok(());
     };
+    if deadline
+        .owner
+        .is_some_and(|owner| owner != std::thread::current().id())
+    {
+        return Ok(());
+    }
     if clock::now() < deadline.expires_at {
         return Ok(());
     }
@@ -75,6 +90,12 @@ pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
     let Some(deadline) = deadline else {
         return Ok(None);
     };
+    if deadline
+        .owner
+        .is_some_and(|owner| owner != std::thread::current().id())
+    {
+        return Ok(None);
+    }
     deadline
         .expires_at
         .checked_duration_since(clock::now())

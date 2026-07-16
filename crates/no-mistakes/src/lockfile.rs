@@ -59,21 +59,21 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 
     // Use the git repository root for `git show` so subdirectory --root values
     // produce repo-relative paths (e.g. `packages/api/pnpm-lock.yaml` not `pnpm-lock.yaml`).
-    let git_root = find_git_root(&root).unwrap_or_else(|| root.clone());
+    let git_root = find_git_root(&root)?.unwrap_or_else(|| root.clone());
 
     let lockfile_paths = if let Some(lf) = args.lockfile {
         vec![root.join(lf)]
     } else if let Some(head) = args.head.as_deref() {
         // When --head is supplied, detect from the head commit so we find lockfiles
         // added or removed between base and head that don't exist on disk.
-        if !git_ref_exists(&git_root, head) {
+        if !git_ref_exists(&git_root, head)? {
             eprintln!(
                 "warning: head ref `{}` does not exist; no lockfiles detected",
                 head
             );
             return Ok(ExitCode::SUCCESS);
         }
-        detect_lockfiles_from_head(&git_root, head, &root)
+        detect_lockfiles_from_head(&git_root, head, &root)?
     } else {
         let visible_paths = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
         detect_lockfiles_in_root(&root, &visible_paths)
@@ -97,7 +97,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {
-            let Some(c) = git_content_or_empty(&git_root, head, &rel) else {
+            let Some(c) = git_content_or_empty(&git_root, head, &rel)? else {
                 eprintln!("warning: could not retrieve {} at ref {}", rel, head);
                 continue;
             };
@@ -105,7 +105,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        let Some(old_content) = git_content_or_empty(&git_root, &args.base, &rel) else {
+        let Some(old_content) = git_content_or_empty(&git_root, &args.base, &rel)? else {
             eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
             continue;
         };
