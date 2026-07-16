@@ -14,8 +14,13 @@ test("programmatic API proxies object options through async native addon calls",
   require.extensions[".node"] = (module, filename) => {
     assert.equal(filename, addonPath);
     module.exports = {
-      dependenciesJson: async (json) =>
-        JSON.stringify({ command: "dependencies", options: JSON.parse(json) }),
+      dependenciesJson: async (json) => {
+        const options = JSON.parse(json);
+        if (options.root === "__locked__") {
+          throw new Error("another no-mistakes invocation holds the lock");
+        }
+        return JSON.stringify({ command: "dependencies", options });
+      },
       dependentsJson: async (json) =>
         JSON.stringify({ command: "dependents", options: JSON.parse(json) }),
       relatedJson: async (json) =>
@@ -99,15 +104,43 @@ test("programmatic API proxies object options through async native addon calls",
 
   try {
     const api = require(indexPath);
-    assert.deepEqual(await api.dependencies({ files: ["a.mts"] }), {
-      command: "dependencies",
-      options: { files: ["a.mts"] },
-    });
+    assert.deepEqual(
+      await api.dependencies({
+        files: ["a.mts"],
+        timeout: 12,
+        lockTimeout: null,
+        failOnLock: true,
+      }),
+      {
+        command: "dependencies",
+        options: {
+          files: ["a.mts"],
+          timeout: 12,
+          lockTimeout: null,
+          failOnLock: true,
+        },
+      },
+    );
+    await assert.rejects(
+      api.dependencies({ files: ["a.mts"], root: "__locked__", failOnLock: true }),
+      /another no-mistakes invocation holds the lock/,
+    );
     assert.equal((await api.dependents({ files: ["b.mts"] })).command, "dependents");
     assert.equal((await api.related({ files: ["c.mts"] })).command, "related");
-    assert.equal(
-      (await api.analyzeProject({ reports: [{ type: "dependencies", files: ["a.mts"] }] })).command,
-      "analyzeProject",
+    assert.deepEqual(
+      await api.analyzeProject({
+        timeout: 0,
+        lockTimeout: 5,
+        reports: [{ type: "dependencies", files: ["a.mts"] }],
+      }),
+      {
+        command: "analyzeProject",
+        options: {
+          timeout: 0,
+          lockTimeout: 5,
+          reports: [{ type: "dependencies", files: ["a.mts"] }],
+        },
+      },
     );
     assert.equal(
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
@@ -221,7 +254,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
-    /export function symbols\(options: SymbolsOptions\): Promise<SymbolsResult \| SignatureImpactResult>;/,
+    /options: WithInvocationOptions<SymbolsOptions>,\n\): Promise<SymbolsResult \| SignatureImpactResult>;/,
   );
   assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
@@ -246,7 +279,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
-    /export function importUsages\(options\?: ImportUsagesOptions\): Promise<ImportUsagesResult>;/,
+    /options\?: WithInvocationOptions<ImportUsagesOptions>,\n\): Promise<ImportUsagesResult>;/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -277,4 +310,28 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,
   );
+});
+
+test("declarations expose invocation controls on every analysis", () => {
+  const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  const invocationDeclarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
+
+  assert.match(invocationDeclarations, /timeout\?: number \| null;/);
+  assert.match(invocationDeclarations, /lockTimeout\?: number \| null;/);
+  assert.match(invocationDeclarations, /failOnLock\?: boolean;/);
+  assert.match(
+    indexDeclarations,
+    /analyzeProject\(\n  options: WithInvocationOptions<AnalyzeProjectOptions>/,
+  );
+
+  const declarations = indexDeclarations.matchAll(
+    /export function (\w+)\([\s\S]*?\): Promise<[^;]+>;/g,
+  );
+  for (const [declaration, name] of declarations) {
+    if (name === "version") {
+      assert.doesNotMatch(declaration, /WithInvocationOptions/);
+    } else {
+      assert.match(declaration, /WithInvocationOptions/, `${name} must accept invocation options`);
+    }
+  }
 });

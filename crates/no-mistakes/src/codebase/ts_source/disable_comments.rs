@@ -32,7 +32,7 @@ fn git_ls_path_views(root: &Path) -> Option<DiscoveredPathViews> {
     cmd.arg("--cached")
         .arg("--others")
         .arg("--exclude-standard");
-    let out = cmd.output().ok()?;
+    let out = crate::invocation::command_output(&mut cmd).ok()?;
     if !out.status.success() {
         return None;
     }

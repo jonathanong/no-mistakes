@@ -44,6 +44,9 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
 
     let mut depth = 0;
     while !frontier.is_empty() {
+        if crate::invocation::check_timeout().is_err() {
+            break;
+        }
         if max_depth.is_some_and(|max| depth >= max) {
             break;
         }
@@ -51,6 +54,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
         let mut expanded: Vec<ExpandedImportNode> = frontier
             .par_iter()
             .map(|node| {
+                crate::invocation::check_timeout().ok().map(|()| {
                 let Some(path) = node.as_file() else {
                     return ExpandedImportNode {
                         node: node.clone(),
@@ -83,7 +87,9 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
                         None
                     },
                 }
+                })
             })
+            .while_some()
             .collect();
         expanded.sort_by_cached_key(|expanded| node_sort_key(&expanded.node));
 

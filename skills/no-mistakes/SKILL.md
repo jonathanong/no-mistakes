@@ -189,6 +189,15 @@ timings, and parallel phase lines are explicitly non-additive. Ordinary runs do
 not start diagnostic clocks. `impacted-checks` reuses one in-memory graph across
 configured test frameworks.
 
+All analysis invocations share a per-user machine-wide lock. By default,
+`--lock-timeout 30` waits up to 30 seconds to acquire it and `--timeout 30`
+allows 30 seconds of execution after acquisition. Use `--fail-on-lock` when an
+agent should fail immediately instead of queueing; use `0` to disable either
+CLI timeout. Lock waits are silent, failures go to stderr, and successful JSON
+output is unchanged. The async Node API accepts `timeout`, `lockTimeout`, and
+`failOnLock` with the same semantics; `0` or `null` disables a Node timeout,
+and failures reject the Promise.
+
 For repeated graph/symbol/playwright/project queries in the same process,
 prefer `analyzeProject({reports:[…]})` from the async Node API documented at
 https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api.md — it

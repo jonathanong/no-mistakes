@@ -33,6 +33,7 @@ fn collect_and_merge_all_edges(
     let playwright_settings = edge_inputs.playwright_settings;
     let config_path = edge_inputs.config_path;
     let files = &graph_files.indexable;
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.imports", || {
         if plan.imports {
             let import_edges =
@@ -41,6 +42,7 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.route_imports", || -> Result<()> {
         if plan.route_imports {
             let Some(facts) = facts else {
@@ -53,6 +55,7 @@ fn collect_and_merge_all_edges(
         Ok(())
     })?;
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.workspace", || {
         if plan.workspace {
             let workspace_edges =
@@ -61,6 +64,7 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.package", || {
         if plan.package {
             let workspace_manifest_edges =
@@ -69,6 +73,7 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.assets", || {
         if plan.assets {
             merge_edges(
@@ -79,6 +84,7 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.symbols", || -> Result<()> {
         if plan.symbols {
             let Some(facts) = facts else {
@@ -101,6 +107,7 @@ fn collect_and_merge_all_edges(
         Ok(())
     })?;
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.tests", || {
         if plan.tests {
             let test_edges = collect_test_edges(
@@ -112,6 +119,7 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.markdown", || {
         if plan.markdown {
             let md_edges = collect_md_edges(&graph_files.all, graph_files);
@@ -119,12 +127,14 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.ci", || {
         if plan.ci {
             add_ci_edges(root, &graph_files.all, forward, reverse);
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.routes", || {
         if plan.routes {
             let route_edges = collect_route_edges(
@@ -139,6 +149,7 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.queues", || {
         if plan.queues {
             merge_edges(
@@ -149,6 +160,7 @@ fn collect_and_merge_all_edges(
         }
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.playwright_routes", || -> Result<()> {
         if plan.playwright_routes {
             let Some(snapshot) = playwright_snapshot else {
@@ -167,10 +179,12 @@ fn collect_and_merge_all_edges(
         Ok(())
     })?;
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.http_process", || {
         merge_http_process_edges(edge_inputs, facts, forward, reverse);
     });
 
+    crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.react", || {
         if plan.react {
             let react_edges = collect_react_render_edges(root, facts, graph_files.indexable());
@@ -187,5 +201,6 @@ fn collect_and_merge_all_edges(
     crate::perf_trace::trace("graph.terraform", || {
         merge_terraform_edges(edge_inputs, forward, reverse);
     });
+    crate::invocation::check_timeout()?;
     Ok(())
 }

@@ -67,10 +67,14 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session(
     );
     let facts = files
         .par_iter()
-        .filter_map(|path| {
-            collect_file_facts_with_sources_and_session(session, path, plan, context, sources)
-                .map(|facts| (path.clone(), facts))
+        .map(|path| {
+            crate::invocation::check_timeout().ok().map(|()| {
+                collect_file_facts_with_sources_and_session(session, path, plan, context, sources)
+                    .map(|facts| (path.clone(), facts))
+            })
         })
+        .while_some()
+        .flatten()
         .collect();
     TsFactMap::with_plan(facts, plan)
 }

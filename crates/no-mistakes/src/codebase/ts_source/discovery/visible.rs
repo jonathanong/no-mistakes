@@ -20,6 +20,7 @@ pub(crate) fn discover_visible_classified_paths(root: &Path) -> Vec<ClassifiedPa
     let mut paths: Vec<ClassifiedPath> = match git_ls_paths(root) {
         Some(files) => files
             .into_iter()
+            .take_while(|_| crate::invocation::check_timeout().is_ok())
             .map(|relative| root.join(relative))
             .filter_map(|path| {
                 let metadata = std::fs::symlink_metadata(&path).ok()?;
@@ -36,6 +37,9 @@ pub(crate) fn discover_visible_classified_paths(root: &Path) -> Vec<ClassifiedPa
             .hidden(false)
             .require_git(false)
             .filter_entry(|entry| {
+                if crate::invocation::check_timeout().is_err() {
+                    return false;
+                }
                 entry.depth() == 0
                     || !entry
                         .file_type()
@@ -43,6 +47,7 @@ pub(crate) fn discover_visible_classified_paths(root: &Path) -> Vec<ClassifiedPa
                     || entry.file_name() != ".git"
             })
             .build()
+            .take_while(|_| crate::invocation::check_timeout().is_ok())
             .scan(root.to_path_buf(), |walker_root, entry| {
                 Some(entry.ok().and_then(|entry| {
                     if entry.depth() == 0 {

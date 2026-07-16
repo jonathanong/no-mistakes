@@ -10,6 +10,23 @@ no-mistakes dependents src/utils.mts --test vitest --format paths
 Global `--jobs <N>` controls rayon worker count for commands that parallelize
 analysis.
 
+Every analysis invocation takes a per-user, machine-wide lock so CPU-intensive
+CLI and Node/N-API work cannot overlap, even across repositories. Lock waiting
+is silent and does not change successful stdout or JSON output. The following
+root-global options are inherited by every nested command and may appear before
+or after the command name:
+
+- `--timeout <SECONDS>` limits command execution after the lock is acquired.
+  The default is `30`; `0` disables the command timeout.
+- `--lock-timeout <SECONDS>` limits how long acquisition may wait. The default
+  is `30`; `0` waits indefinitely.
+- `--fail-on-lock` fails immediately when another invocation holds the lock,
+  overriding `--lock-timeout`.
+
+Command and lock-wait timeouts exit with status `124`. Immediate lock
+contention and lock setup errors exit with status `2`. Errors are written to
+stderr; successful structured output keeps its existing schema.
+
 Global `--timings` prints invocation phase durations to stderr.
 `--verbose-timings` implies timings and adds deterministic work counters. Both
 flags are inherited by every nested command and may appear before or after the

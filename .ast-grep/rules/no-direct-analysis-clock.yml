@@ -19,5 +19,6 @@ ignores:
   - "crates/no-mistakes/src/**/tests.rs"
   - "crates/no-mistakes/src/**/test_support.rs"
   - "crates/no-mistakes/src/diagnostics/observer.rs"
+  - "crates/no-mistakes/src/invocation/clock.rs"
   - "crates/no-mistakes/src/impacted_checks/timing.rs"
   - "crates/no-mistakes/src/codebase/timing.rs"

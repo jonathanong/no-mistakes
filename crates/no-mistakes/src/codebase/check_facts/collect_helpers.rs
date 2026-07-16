@@ -62,12 +62,16 @@ pub(crate) fn collect_fact_map_with_sources(
     );
     files
         .par_iter()
-        .filter_map(|path| {
-            super::collect_file_facts_with_session_and_sources(
-                session, root, path, plan, playwright, sources,
-            )
-            .map(|facts| (path.clone(), facts))
+        .map(|path| {
+            crate::invocation::check_timeout().ok().map(|()| {
+                super::collect_file_facts_with_session_and_sources(
+                    session, root, path, plan, playwright, sources,
+                )
+                .map(|facts| (path.clone(), facts))
+            })
         })
+        .while_some()
+        .flatten()
         .collect()
 }
 
@@ -86,6 +90,7 @@ pub(super) fn collect_fact_map_sequential_with_sources(
     );
     files
         .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|path| {
             super::collect_file_facts_with_session_and_sources(
                 session, root, path, plan, playwright, sources,

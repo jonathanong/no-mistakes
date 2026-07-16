@@ -16,6 +16,7 @@ test-instrumentation = []
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 dashmap = "6.2.1"
+directories = "6"
 globset = "0.4"
 hcl-rs = "0.19"
 ignore = "0.4"
@@ -42,6 +43,7 @@ self_cell = "1.2.2"
 syn = { version = "2", features = ["full", "visit"] }
 toml = "1.1"
 walkdir = "2"
+wait-timeout = "0.2"
 
 [dev-dependencies]
 assert_cmd = "2"

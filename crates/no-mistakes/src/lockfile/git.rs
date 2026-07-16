@@ -33,11 +33,9 @@ fn detect_lockfiles_in_root(root: &Path, visible_paths: &[PathBuf]) -> Vec<PathB
 }
 
 fn find_git_root(dir: &Path) -> Option<PathBuf> {
-    let output = std::process::Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .current_dir(dir)
-        .output()
-        .ok()?;
+    let mut command = std::process::Command::new("git");
+    command.args(["rev-parse", "--show-toplevel"]).current_dir(dir);
+    let output = no_mistakes::invocation::command_output(&mut command).ok()?;
     if output.status.success() {
         Some(PathBuf::from(String::from_utf8(output.stdout).ok()?.trim()))
     } else {
@@ -46,10 +44,11 @@ fn find_git_root(dir: &Path) -> Option<PathBuf> {
 }
 
 fn git_ref_exists(root: &Path, git_ref: &str) -> bool {
-    std::process::Command::new("git")
+    let mut command = std::process::Command::new("git");
+    command
         .args(["rev-parse", "--verify", git_ref])
-        .current_dir(root)
-        .output()
+        .current_dir(root);
+    no_mistakes::invocation::command_output(&mut command)
         .map(|output| output.status.success())
         .unwrap_or(false)
 }
@@ -63,10 +62,10 @@ fn git_content_or_empty(git_root: &Path, git_ref: &str, rel: &str) -> Option<Str
 }
 
 fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {
-    let output = std::process::Command::new("git")
+    let mut command = std::process::Command::new("git");
+    command
         .args(["show", &format!("{git_ref}:{rel_path}")])
-        .current_dir(root)
-        .output()
-        .ok()?;
+        .current_dir(root);
+    let output = no_mistakes::invocation::command_output(&mut command).ok()?;
     output.status.success().then(|| String::from_utf8(output.stdout).ok()).flatten()
 }

@@ -34,6 +34,7 @@ fn discover_classified_path_views(root: &Path) -> DiscoveredClassifiedPathViews 
 fn classify_existing_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<ClassifiedPath> {
     paths
         .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|relative| {
             let path = root.join(relative);
             let metadata = std::fs::symlink_metadata(&path).ok()?;
@@ -50,6 +51,9 @@ fn discover_fallback_classified_paths(root: &Path) -> Vec<ClassifiedPath> {
         .hidden(false)
         .require_git(false)
         .filter_entry(|entry| {
+            if crate::invocation::check_timeout().is_err() {
+                return false;
+            }
             entry.depth() == 0
                 || !entry
                     .file_type()
@@ -57,6 +61,7 @@ fn discover_fallback_classified_paths(root: &Path) -> Vec<ClassifiedPath> {
                 || entry.file_name() != ".git"
         })
         .build()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
         .scan(root.to_path_buf(), |walker_root, entry| {
             Some(entry.ok().and_then(|entry| {
                 if entry.depth() == 0 {

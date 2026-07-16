@@ -42,6 +42,9 @@ fn bfs_with_file_universe(
     let root_nodes: HashSet<NodeId> = starts.iter().cloned().collect();
 
     while let Some((node, depth)) = queue.pop_front() {
+        if crate::invocation::check_timeout().is_err() {
+            break;
+        }
         if max_depth.is_some_and(|max| depth >= max) {
             continue;
         }

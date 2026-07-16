@@ -16,12 +16,24 @@ impl Task for JsonTask {
     type JsValue = String;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        crate::ast::with_request_parse_cache(|| (self.run)(std::mem::take(&mut self.options_json)))
+        let options_json = std::mem::take(&mut self.options_json);
+        let (options_json, invocation_options) =
+            crate::invocation::extract_napi_options(options_json).map_err(to_napi_error)?;
+        let _guard = crate::invocation::InvocationGuard::acquire(invocation_options)
+            .map_err(to_napi_error)?;
+        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        let output = crate::ast::with_request_parse_cache(|| (self.run)(options_json));
+        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        output
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         Ok(output)
     }
+}
+
+fn to_napi_error(error: anyhow::Error) -> napi::Error {
+    napi::Error::from_reason(format!("{error:#}"))
 }
 
 pub struct VersionTask;
