@@ -17,9 +17,9 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
     let stdout_reader = std::thread::spawn(move || read_pipe(stdout));
     let stderr_reader = std::thread::spawn(move || read_pipe(stderr));
 
-    let status = match child.wait_timeout(remaining)? {
-        Some(status) => status,
-        None => {
+    let status = match child.wait_timeout(remaining) {
+        Ok(Some(status)) => status,
+        Ok(None) => {
             let _ = child.kill();
             let _ = child.wait();
             let _ = stdout_reader.join();
@@ -28,6 +28,13 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
                 std::io::ErrorKind::TimedOut,
                 "no-mistakes command deadline elapsed while waiting for a child process",
             ));
+        }
+        Err(err) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            let _ = stdout_reader.join();
+            let _ = stderr_reader.join();
+            return Err(err);
         }
     };
     let stdout = join_reader(stdout_reader)?;
