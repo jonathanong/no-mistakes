@@ -27,9 +27,12 @@ pub fn try_discover_visible_paths(root: &Path) -> std::io::Result<Vec<PathBuf>> 
 
 fn try_discover_visible_classified_paths(root: &Path) -> std::io::Result<Vec<ClassifiedPath>> {
     let paths = try_discover_classified_path_views(root)?.visible;
-    crate::invocation::check_timeout().map_err(|error| {
-        std::io::Error::new(std::io::ErrorKind::TimedOut, error.to_string())
-    })?;
+    if let Err(error) = crate::invocation::check_timeout() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::TimedOut,
+            error.to_string(),
+        ));
+    }
     Ok(paths)
 }
 
