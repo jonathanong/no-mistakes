@@ -34,7 +34,7 @@ pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
         GraphFormat::Json => serde_json::to_string_pretty(&graph_json(&plan)?)?,
         GraphFormat::Mermaid => graph_mermaid(&plan)?,
     };
-    crate::invocation::check_timeout()?;
+    crate::invocation::commit_timeout()?;
 
     if let Some(ref out_path) = args.out {
         fs::write(out_path, &output)

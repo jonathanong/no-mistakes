@@ -48,8 +48,9 @@ pub(crate) fn run(args: TargetsArgs) -> Result<ExitCode> {
             "{warnings}\n`tests targets --format commands` requires all requested files to be owned by a configured test framework.\n"
         );
     }
-    crate::invocation::check_timeout()?;
-    print!("{}", render_targets(&report, format)?);
+    let output = render_targets(&report, format)?;
+    crate::invocation::commit_timeout()?;
+    print!("{output}");
     Ok(ExitCode::SUCCESS)
 }
 

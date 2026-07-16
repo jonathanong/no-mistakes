@@ -1,4 +1,3 @@
-use crate::tests::comment::render_markdown_plan;
 use crate::tests::plan::{
     bfs_path_find, path_confidence, relative_path, slash_node_name, symbol_aware_start_nodes,
 };
@@ -23,23 +22,9 @@ pub(crate) fn run(args: ImpactArgs) -> Result<ExitCode> {
     } else {
         args.format.unwrap_or(PlanFormat::Json)
     };
-    crate::invocation::check_timeout()?;
-
-    match format {
-        PlanFormat::Json => println!("{}", serde_json::to_string_pretty(&plan)?),
-        PlanFormat::Paths => {
-            for test in &plan.selected_tests {
-                println!("{}", test.test_file);
-            }
-        }
-        PlanFormat::Commands => {
-            crate::tests::targets::ensure_plan_commands_available(&plan, "tests impact")?;
-            for command in crate::tests::targets::commands_for_plan(&plan) {
-                println!("{command}");
-            }
-        }
-        PlanFormat::Markdown | PlanFormat::Md => println!("{}", render_markdown_plan(&plan)),
-    }
+    let output = super::plan_output::render(&plan, format, "tests impact")?;
+    crate::invocation::commit_timeout()?;
+    print!("{output}");
 
     Ok(ExitCode::SUCCESS)
 }

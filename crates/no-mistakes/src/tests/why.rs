@@ -4,6 +4,7 @@ use crate::tests::{PlanArgs, WhyArgs, WhyFormat};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::fmt::Write;
 use std::fs;
 use std::path::Path;
 use std::process::ExitCode;
@@ -19,38 +20,39 @@ type WhyStepsByChangedFile = BTreeMap<String, Vec<WhyStep>>;
 pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
     let context = why_context(&args)?;
     let path_steps = why_steps_with_context(&args, &context)?;
-    crate::invocation::check_timeout()?;
+    let mut output = String::new();
 
     if path_steps.is_empty() {
-        println!(
+        writeln!(
+            output,
             "No path found connecting changed files to test target `{}`.",
             context.test_rel
-        );
-        return Ok(ExitCode::SUCCESS);
+        )?;
+    } else if matches!(args.format, WhyFormat::Text) {
+        for (changed_file, steps) in &path_steps {
+            writeln!(
+                output,
+                "Path from `{}` to `{}`:",
+                changed_file, context.test_rel
+            )?;
+            let chain: Vec<String> = steps
+                .iter()
+                .map(|step| {
+                    if let Some(ref via) = step.via {
+                        format!("`{}` ➔ [{}]", step.node, via)
+                    } else {
+                        format!("`{}`", step.node)
+                    }
+                })
+                .collect();
+            writeln!(output, "  {}\n", chain.join(" ➔ "))?;
+        }
+    } else {
+        writeln!(output, "{}", serde_json::to_string_pretty(&path_steps)?)?;
     }
 
-    match args.format {
-        WhyFormat::Text => {
-            for (changed_file, steps) in &path_steps {
-                println!("Path from `{}` to `{}`:", changed_file, context.test_rel);
-                let chain: Vec<String> = steps
-                    .iter()
-                    .map(|step| {
-                        if let Some(ref via) = step.via {
-                            format!("`{}` ➔ [{}]", step.node, via)
-                        } else {
-                            format!("`{}`", step.node)
-                        }
-                    })
-                    .collect();
-                println!("  {}\n", chain.join(" ➔ "));
-            }
-        }
-        WhyFormat::Json => {
-            println!("{}", serde_json::to_string_pretty(&path_steps)?);
-        }
-    }
-
+    crate::invocation::commit_timeout()?;
+    print!("{output}");
     Ok(ExitCode::SUCCESS)
 }
 
