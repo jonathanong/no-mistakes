@@ -80,7 +80,7 @@ impl ParentSignalForwardingGuard {
         let listener_registry = Arc::clone(&registry);
         let signal_thread = spawn_signal_listener(
             signals,
-            move |signal| forward_signal_to_groups(&listener_registry.snapshot(), signal),
+            listener_registry,
             signal_hook::low_level::emulate_default_handler,
         );
         Ok(Self {
@@ -112,17 +112,14 @@ pub(crate) fn forward_signal_to_groups(process_groups: &[i32], signal: i32) {
     }
 }
 
-pub(crate) fn spawn_signal_listener<F, R>(
+pub(crate) fn spawn_signal_listener<R>(
     mut signals: signal_hook::iterator::Signals,
-    forward: F,
+    registry: Arc<SignalRegistry>,
     terminate_parent: impl FnOnce(i32) -> R + Send + 'static,
-) -> std::thread::JoinHandle<()>
-where
-    F: FnOnce(i32) + Send + 'static,
-{
+) -> std::thread::JoinHandle<()> {
     std::thread::spawn(move || {
         if let Some(signal) = signals.forever().next() {
-            forward(signal);
+            forward_signal_to_groups(&registry.snapshot(), signal);
             let _ = terminate_parent(signal);
         }
     })

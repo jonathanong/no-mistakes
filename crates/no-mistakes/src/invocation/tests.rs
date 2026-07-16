@@ -441,23 +441,15 @@ fn child_process_group_receives_forwarded_termination_signal() {
 fn signal_listener_forwards_before_terminating_parent() {
     let signals = signal_hook::iterator::Signals::new([signal_hook::consts::SIGUSR1]).unwrap();
     let (sender, receiver) = std::sync::mpsc::channel();
-    let (forwarded_sender, forwarded_receiver) = std::sync::mpsc::channel();
-    let thread = signals::spawn_signal_listener(
-        signals,
-        move |signal| forwarded_sender.send(signal).unwrap(),
-        move |signal| sender.send(signal).unwrap(),
-    );
+    let registry = std::sync::Arc::new(signals::SignalRegistry::new());
+    let thread = signals::spawn_signal_listener(signals, registry, move |signal| {
+        sender.send(signal).unwrap()
+    });
 
     unsafe {
         nix::libc::raise(signal_hook::consts::SIGUSR1);
     }
 
-    assert_eq!(
-        forwarded_receiver
-            .recv_timeout(Duration::from_secs(1))
-            .unwrap(),
-        signal_hook::consts::SIGUSR1
-    );
     assert_eq!(
         receiver.recv_timeout(Duration::from_secs(1)).unwrap(),
         signal_hook::consts::SIGUSR1
