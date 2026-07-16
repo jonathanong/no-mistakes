@@ -13,7 +13,7 @@ use crate::tests::Warning;
 use anyhow::Result;
 use clap::Args;
 use serde::Serialize;
-use std::io::IsTerminal;
+use std::io::{IsTerminal, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -123,7 +123,13 @@ pub fn run(args: ImpactedChecksArgs) -> Result<ExitCode> {
         }
     };
     timings.finish_total();
-    print!("{}", render(&report, format)?);
+    let stdout = std::io::stdout();
+    publish_rendered_with_deadline_check(
+        &report,
+        format,
+        &mut stdout.lock(),
+        crate::invocation::check_timeout,
+    )?;
     Ok(ExitCode::SUCCESS)
 }
 
@@ -141,6 +147,19 @@ fn render(report: &ImpactedChecksReport, format: Format) -> Result<String> {
         Format::Md => render_text(report, "- "),
         Format::Human => render_text(report, ""),
     })
+}
+
+fn publish_rendered_with_deadline_check(
+    report: &ImpactedChecksReport,
+    format: Format,
+    output: &mut impl Write,
+    mut check_deadline: impl FnMut() -> Result<()>,
+) -> Result<()> {
+    check_deadline()?;
+    let rendered = render(report, format)?;
+    check_deadline()?;
+    output.write_all(rendered.as_bytes())?;
+    Ok(())
 }
 
 /// Join command tokens with POSIX shell quoting so the `paths` output is safe to
