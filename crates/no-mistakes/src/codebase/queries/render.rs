@@ -17,6 +17,10 @@ pub(crate) trait Report: Serialize {
 
 /// Write `report` in the requested `format` to `w`.
 pub(crate) fn render<R: Report>(report: &R, format: Format, w: &mut dyn Write) -> Result<()> {
+    // Query analysis may stop scheduling work when the invocation expires. Do
+    // not publish that potentially incomplete report before the CLI's final
+    // deadline check observes the timeout.
+    crate::invocation::check_timeout()?;
     match format {
         Format::Json => {
             serde_json::to_writer_pretty(&mut *w, report).context("serializing query JSON")?;

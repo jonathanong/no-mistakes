@@ -19,6 +19,7 @@ type WhyStepsByChangedFile = BTreeMap<String, Vec<WhyStep>>;
 pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
     let context = why_context(&args)?;
     let path_steps = why_steps_with_context(&args, &context)?;
+    crate::invocation::check_timeout()?;
 
     if path_steps.is_empty() {
         println!(

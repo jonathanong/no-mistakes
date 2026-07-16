@@ -330,10 +330,9 @@ fn parse_git_name_status(output: &str) -> GitChangedFiles {
 }
 
 fn run_git(args: &[&str], root: &Path) -> Result<String> {
-    let output = std::process::Command::new("git")
-        .args(args)
-        .current_dir(root)
-        .output()?;
+    let mut command = std::process::Command::new("git");
+    command.args(args).current_dir(root);
+    let output = crate::invocation::command_output(&mut command)?;
     if !output.status.success() {
         anyhow::bail!(
             "git command failed: {}",

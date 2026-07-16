@@ -23,6 +23,7 @@ pub(crate) fn run(args: ImpactArgs) -> Result<ExitCode> {
     } else {
         args.format.unwrap_or(PlanFormat::Json)
     };
+    crate::invocation::check_timeout()?;
 
     match format {
         PlanFormat::Json => println!("{}", serde_json::to_string_pretty(&plan)?),

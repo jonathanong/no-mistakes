@@ -19,6 +19,7 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     } else {
         args.format.unwrap_or(PlanFormat::Json)
     };
+    crate::invocation::check_timeout()?;
 
     match format {
         PlanFormat::Json => {

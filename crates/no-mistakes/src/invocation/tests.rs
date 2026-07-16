@@ -480,3 +480,14 @@ fn expired_deadline_prevents_child_spawn() {
     *active_deadline().write().unwrap() = previous;
     assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
 }
+
+#[test]
+fn production_test_planning_subprocesses_use_deadline_aware_output() {
+    let sources = [
+        include_str!("../tests/changed_files.rs"),
+        include_str!("../tests/diff_parser.rs"),
+        include_str!("../tests/lockfile_changes.rs"),
+    ];
+
+    assert!(sources.iter().all(|source| !source.contains(".output()")));
+}
