@@ -261,7 +261,10 @@ fn command_output_captures_output_with_and_without_deadline() {
         let _guard =
             DeadlineGuard::install_with_owner(timeout, Some(std::thread::current().id())).unwrap();
         let mut command = Command::new("sh");
-        command.args(["-c", "printf stdout; printf stderr >&2"]);
+        command.args([
+            "-c",
+            "if read line; then exit 1; else printf stdout; printf stderr >&2; fi",
+        ]);
         let output = command_output(&mut command).unwrap();
         assert!(output.status.success());
         assert_eq!(output.stdout, b"stdout");

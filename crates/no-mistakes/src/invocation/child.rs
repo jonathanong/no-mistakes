@@ -22,7 +22,10 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
         return command.output();
     };
 
-    command.stdout(Stdio::piped()).stderr(Stdio::piped());
+    command
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
     configure_process_group(command);
     let mut child = command.spawn()?;
     #[cfg(unix)]
