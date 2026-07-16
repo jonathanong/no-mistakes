@@ -144,6 +144,7 @@ pub fn run(
         },
         &fact_context,
     );
+    crate::invocation::check_timeout()?;
     let codebase_config =
         crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
     let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(

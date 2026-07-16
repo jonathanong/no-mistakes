@@ -12,7 +12,9 @@ pub(crate) fn configure_process_group(command: &mut Command) {
 
 pub(crate) struct ProcessTree {
     #[cfg(unix)]
-    signal_ids: Vec<signal_hook::SigId>,
+    signal_handle: Option<signal_hook::iterator::Handle>,
+    #[cfg(unix)]
+    signal_thread: Option<std::thread::JoinHandle<()>>,
     #[cfg(windows)]
     job: windows_sys::Win32::Foundation::HANDLE,
 }
@@ -21,14 +23,31 @@ impl ProcessTree {
     #[cfg(unix)]
     pub(crate) fn attach(child: &std::process::Child) -> Self {
         let process_group = child.id() as i32;
-        let signal_ids = [signal_hook::consts::SIGINT, signal_hook::consts::SIGTERM]
-            .into_iter()
-            .filter_map(|signal| unsafe {
-                signal_hook::low_level::register(signal, signal_forwarder(process_group, signal))
-                    .ok()
-            })
-            .collect();
-        Self { signal_ids }
+        let listener = signal_hook::iterator::Signals::new([
+            signal_hook::consts::SIGINT,
+            signal_hook::consts::SIGTERM,
+        ])
+        .ok()
+        .map(|mut signals| {
+            let handle = signals.handle();
+            let thread = std::thread::spawn(move || {
+                if let Some(signal) = signals.forever().next() {
+                    forward_signal(process_group, signal);
+                    // Forwarding must not replace the invoking process's normal
+                    // signal semantics. This runs outside the OS signal handler,
+                    // so restoring and emulating the default action is safe.
+                    let _ = signal_hook::low_level::emulate_default_handler(signal);
+                }
+            });
+            (handle, thread)
+        });
+        let (signal_handle, signal_thread) = listener
+            .map(|(handle, thread)| (Some(handle), Some(thread)))
+            .unwrap_or((None, None));
+        Self {
+            signal_handle,
+            signal_thread,
+        }
     }
 
     #[cfg(windows)]
@@ -103,22 +122,20 @@ impl ProcessTree {
 }
 
 #[cfg(unix)]
-fn forward_signal(process_group: i32, signal: i32) {
+pub(crate) fn forward_signal(process_group: i32, signal: i32) {
     unsafe {
         nix::libc::kill(-process_group, signal);
     }
 }
 
 #[cfg(unix)]
-pub(crate) fn signal_forwarder(process_group: i32, signal: i32) -> impl Fn() + Send + Sync {
-    move || forward_signal(process_group, signal)
-}
-
-#[cfg(unix)]
 impl Drop for ProcessTree {
     fn drop(&mut self) {
-        for id in self.signal_ids.drain(..) {
-            signal_hook::low_level::unregister(id);
+        if let Some(handle) = self.signal_handle.take() {
+            handle.close();
+        }
+        if let Some(thread) = self.signal_thread.take() {
+            let _ = thread.join();
         }
     }
 }

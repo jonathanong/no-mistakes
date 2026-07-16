@@ -14,14 +14,15 @@ struct Traversal<'a> {
 }
 
 impl Traversal<'_> {
-    fn traverse(&mut self, target: &NodeId, direction: TraverseDirection) {
+    fn traverse(&mut self, target: &NodeId, direction: TraverseDirection) -> Result<()> {
         let mut queue = VecDeque::from([(target.clone(), 0usize)]);
         let mut seen = BTreeMap::from([(node_key(target, self.root), 0usize)]);
         let mut check_counter = 0u32;
-        while let Some((node, depth)) = queue.pop_front().filter(|_| {
+        while let Some((node, depth)) = queue.pop_front() {
             check_counter += 1;
-            !check_counter.is_multiple_of(256) || crate::invocation::check_timeout().is_ok()
-        }) {
+            if check_counter.is_multiple_of(256) {
+                crate::invocation::check_timeout()?;
+            }
             if depth >= self.max_depth {
                 continue;
             }
@@ -72,6 +73,7 @@ impl Traversal<'_> {
                 }
             }
         }
+        crate::invocation::check_timeout()
     }
 }
 

@@ -120,11 +120,13 @@ pub(crate) fn run_with_prepared_graph(
         edges: &mut edges,
     };
     match options.direction {
-        FlowDirection::Deps => traversal.traverse(&target, TraverseDirection::Deps),
-        FlowDirection::Dependents => traversal.traverse(&target, TraverseDirection::Dependents),
+        FlowDirection::Deps => traversal.traverse(&target, TraverseDirection::Deps)?,
+        FlowDirection::Dependents => {
+            traversal.traverse(&target, TraverseDirection::Dependents)?;
+        }
         FlowDirection::Both => {
-            traversal.traverse(&target, TraverseDirection::Deps);
-            traversal.traverse(&target, TraverseDirection::Dependents);
+            traversal.traverse(&target, TraverseDirection::Deps)?;
+            traversal.traverse(&target, TraverseDirection::Dependents)?;
         }
     }
 

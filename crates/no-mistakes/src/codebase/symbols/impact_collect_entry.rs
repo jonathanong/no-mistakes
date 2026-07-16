@@ -51,6 +51,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         fact_plan,
         &fact_context,
     );
+    crate::invocation::check_timeout()?;
     let graph = DepGraph::build_with_plan_files_prepared_config_facts_and_session(
         crate::codebase::dependencies::graph::PreparedGraphBuildRequest {
             root: &root,

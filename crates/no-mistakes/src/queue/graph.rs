@@ -90,6 +90,7 @@ fn analyze_project_inner<T>(
         },
         &context,
     );
+    crate::invocation::check_timeout()?;
     let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
 
     let queue_defs = queue_definitions(&facts);

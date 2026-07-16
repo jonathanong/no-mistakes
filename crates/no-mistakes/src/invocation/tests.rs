@@ -5,11 +5,6 @@ use std::process::Command;
 use std::time::Instant;
 use wait_timeout::ChildExt;
 
-fn deadline_test_lock() -> &'static std::sync::Mutex<()> {
-    static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
-    LOCK.get_or_init(|| std::sync::Mutex::new(()))
-}
-
 fn fixture_path(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/invocation")
@@ -375,13 +370,49 @@ fn child_process_group_receives_forwarded_termination_signal() {
     let mut child = command.spawn().unwrap();
     let process_tree = super::child::ProcessTree::attach(&child);
     std::thread::sleep(Duration::from_millis(50));
-    super::child::process_tree::signal_forwarder(child.id() as i32, signal_hook::consts::SIGTERM)();
+    super::child::process_tree::forward_signal(child.id() as i32, signal_hook::consts::SIGTERM);
     let Some(status) = child.wait_timeout(Duration::from_secs(1)).unwrap() else {
         process_tree.terminate(&mut child).unwrap();
         panic!("forwarded signal did not terminate the child process group");
     };
     drop(process_tree);
     assert_eq!(status.code(), Some(42));
+}
+
+#[cfg(unix)]
+#[test]
+fn signal_forwarder_subprocess_helper() {
+    if std::env::var_os("NO_MISTAKES_SIGNAL_FORWARDER_SUBPROCESS").is_none() {
+        return;
+    }
+
+    let mut command = Command::new("sh");
+    command.args(["-c", "while :; do sleep 1; done"]);
+    super::child::configure_process_group(&mut command);
+    let mut child = command.spawn().unwrap();
+    let _process_tree = super::child::ProcessTree::attach(&child);
+    unsafe {
+        nix::libc::raise(signal_hook::consts::SIGTERM);
+    }
+    let _ = child.wait();
+    panic!("the default SIGTERM handler did not terminate the process");
+}
+
+#[cfg(unix)]
+#[test]
+fn signal_forwarder_preserves_parent_default_termination() {
+    use std::os::unix::process::ExitStatusExt;
+
+    let status = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "invocation::tests::signal_forwarder_subprocess_helper",
+        ])
+        .env("NO_MISTAKES_SIGNAL_FORWARDER_SUBPROCESS", "1")
+        .status()
+        .unwrap();
+
+    assert_eq!(status.signal(), Some(signal_hook::consts::SIGTERM));
 }
 
 #[test]

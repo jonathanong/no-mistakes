@@ -119,6 +119,7 @@ fn collect_with_timings(
         TsFactPlan::imports(),
         &TsFactContext::default(),
     );
+    crate::invocation::check_timeout()?;
     if let Some(timings) = &mut timings {
         timings.mark("parse");
     }

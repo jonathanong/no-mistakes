@@ -158,6 +158,9 @@ pub(crate) fn run_all(
             }
         },
     );
+    // Fact collectors stop scheduling work at the deadline. Reject their
+    // partial maps before rules can turn missing facts into incomplete output.
+    no_mistakes::invocation::check_timeout()?;
 
     let (react, queues, rules, integration, codebase, filesystem_rules) =
         run_domain_checks(DomainCheckInputs {

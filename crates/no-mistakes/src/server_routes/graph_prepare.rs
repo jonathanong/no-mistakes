@@ -37,6 +37,7 @@ pub fn prepare_analysis(
             &fact_context,
             &sources,
         );
+    crate::invocation::check_timeout()?;
     Ok(PreparedServerAnalysis {
         root,
         source_files: std::sync::Arc::new(source_files),
