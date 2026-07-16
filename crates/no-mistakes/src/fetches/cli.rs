@@ -62,8 +62,8 @@ pub(crate) fn run(cli: FetchesArgs) -> Result<ExitCode> {
         format,
         &mut std::io::stdout().lock(),
         no_mistakes::invocation::check_timeout,
-    )?;
-    Ok(ExitCode::SUCCESS)
+    )
+    .map(|()| ExitCode::SUCCESS)
 }
 
 pub(crate) fn publish_report_with_deadline_check<F>(
