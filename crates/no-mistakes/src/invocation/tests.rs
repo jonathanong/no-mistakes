@@ -157,6 +157,32 @@ fn lock_open_errors_include_the_path() {
         .contains(&directory.path().display().to_string()));
 }
 
+#[test]
+fn lock_path_and_directory_errors_are_contextualized() {
+    let path = lock_path().unwrap();
+    assert_eq!(path.file_name().unwrap(), "invocation.lock");
+
+    let directory = tempfile::tempdir().unwrap();
+    let file = directory.path().join("not-a-directory");
+    std::fs::write(&file, "occupied").unwrap();
+    let error = super::lock::create_lock_directory(&file).unwrap_err();
+    assert!(error.to_string().contains(&file.display().to_string()));
+}
+
+#[test]
+fn lock_wait_polls_before_acquiring() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("invocation.lock");
+    let held = acquire_lock(&path, None, false).unwrap();
+    let release = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(10));
+        drop(held);
+    });
+    let acquired = acquire_lock(&path, None, false).unwrap();
+    drop(acquired);
+    release.join().unwrap();
+}
+
 #[cfg(unix)]
 #[test]
 fn command_output_captures_output_with_and_without_deadline() {
@@ -182,6 +208,28 @@ fn command_output_terminates_child_at_deadline() {
     let error = command_output(&mut command).unwrap_err();
     assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
     assert!(check_timeout().is_err());
+}
+
+#[cfg(unix)]
+#[test]
+fn child_wait_errors_cleanup_the_child() {
+    use std::process::Stdio;
+
+    // `wait_timeout` errors are OS-level and cannot be induced reliably, so exercise
+    // the shared cleanup path with the same live child and reader handles.
+    let mut command = Command::new("sh");
+    command
+        .args(["-c", "printf stdout; printf stderr >&2; sleep 10"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut child = command.spawn().unwrap();
+    let stdout = child.stdout.take().unwrap();
+    let stderr = child.stderr.take().unwrap();
+    let stdout_reader = std::thread::spawn(move || super::child::read_pipe(stdout));
+    let stderr_reader = std::thread::spawn(move || super::child::read_pipe(stderr));
+    let error = std::io::Error::other("synthetic wait failure");
+    let result = super::child::cleanup_wait_error(child, stdout_reader, stderr_reader, error);
+    assert_eq!(result.unwrap_err().to_string(), "synthetic wait failure");
 }
 
 #[test]

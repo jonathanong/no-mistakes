@@ -29,13 +29,7 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
                 "no-mistakes command deadline elapsed while waiting for a child process",
             ));
         }
-        Err(err) => {
-            let _ = child.kill();
-            let _ = child.wait();
-            let _ = stdout_reader.join();
-            let _ = stderr_reader.join();
-            return Err(err);
-        }
+        Err(err) => return cleanup_wait_error(child, stdout_reader, stderr_reader, err),
     };
     let stdout = join_reader(stdout_reader)?;
     let stderr = join_reader(stderr_reader)?;
@@ -46,7 +40,20 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
     })
 }
 
-fn read_pipe<R: Read>(mut pipe: R) -> std::io::Result<Vec<u8>> {
+pub(super) fn cleanup_wait_error(
+    mut child: std::process::Child,
+    stdout_reader: std::thread::JoinHandle<std::io::Result<Vec<u8>>>,
+    stderr_reader: std::thread::JoinHandle<std::io::Result<Vec<u8>>>,
+    error: std::io::Error,
+) -> std::io::Result<Output> {
+    let _ = child.kill();
+    let _ = child.wait();
+    let _ = stdout_reader.join();
+    let _ = stderr_reader.join();
+    Err(error)
+}
+
+pub(super) fn read_pipe<R: Read>(mut pipe: R) -> std::io::Result<Vec<u8>> {
     let mut bytes = Vec::new();
     pipe.read_to_end(&mut bytes)?;
     Ok(bytes)

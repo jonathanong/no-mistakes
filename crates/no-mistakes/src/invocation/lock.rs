@@ -14,13 +14,17 @@ pub(super) fn lock_path() -> Result<PathBuf> {
         .runtime_dir()
         .map(Path::to_path_buf)
         .unwrap_or_else(|| project_dirs.cache_dir().to_path_buf());
-    std::fs::create_dir_all(&directory).with_context(|| {
+    create_lock_directory(&directory)?;
+    Ok(directory.join("invocation.lock"))
+}
+
+pub(super) fn create_lock_directory(directory: &Path) -> Result<()> {
+    std::fs::create_dir_all(directory).with_context(|| {
         format!(
             "creating no-mistakes invocation lock directory {}",
             directory.display()
         )
-    })?;
-    Ok(directory.join("invocation.lock"))
+    })
 }
 
 pub(super) fn acquire_lock(

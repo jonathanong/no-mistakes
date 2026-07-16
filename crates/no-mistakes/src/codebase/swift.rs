@@ -88,10 +88,10 @@ pub(crate) fn collect_swift_facts(
         packages: package_facts,
         ..SwiftFactMap::default()
     };
-    for file in file_facts {
-        if crate::invocation::check_timeout().is_err() {
-            break;
-        }
+    for file in file_facts
+        .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         if let Some(target) = &file.target {
             facts
                 .files_by_target
@@ -139,10 +139,10 @@ fn target_index(
     swift_files: &[PathBuf],
 ) -> HashMap<PathBuf, String> {
     let mut index = HashMap::new();
-    for file in swift_files {
-        if crate::invocation::check_timeout().is_err() {
-            break;
-        }
+    for file in swift_files
+        .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         let mut best: Option<(&String, usize)> = None;
         for package in packages {
             for (name, target) in &package.targets {

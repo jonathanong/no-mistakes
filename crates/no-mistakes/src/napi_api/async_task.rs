@@ -36,6 +36,9 @@ fn to_napi_error(error: anyhow::Error) -> napi::Error {
     napi::Error::from_reason(format!("{error:#}"))
 }
 
+#[cfg(test)]
+mod tests;
+
 pub struct VersionTask;
 
 impl Task for VersionTask {

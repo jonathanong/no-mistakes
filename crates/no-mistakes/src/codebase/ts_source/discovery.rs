@@ -50,17 +50,12 @@ fn walk_non_ignored_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<Path
         // same ignore semantics for source archives and ad-hoc directories.
         .require_git(false)
         .filter_entry(move |e| {
-            if crate::invocation::check_timeout().is_err() {
-                return false;
-            }
+            let within_deadline = crate::invocation::check_timeout().is_ok();
             let name = e.file_name().to_str().unwrap_or("");
-            if e.depth() > 0
+            within_deadline
+                && !(e.depth() > 0
                 && e.file_type().is_some_and(|ft| ft.is_dir())
-                && (SKIP_DIRS.contains(&name) || entry_extra_skip.contains(name))
-            {
-                return false;
-            }
-            true
+                && (SKIP_DIRS.contains(&name) || entry_extra_skip.contains(name)))
         })
         .build()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
@@ -87,17 +82,14 @@ fn walk_github_workflow_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<
         .hidden(false)
         .require_git(false)
         .filter_entry(move |e| {
-            if crate::invocation::check_timeout().is_err() {
-                return false;
-            }
+            let within_deadline = crate::invocation::check_timeout().is_ok();
             let name = e.file_name().to_str().unwrap_or("");
-            if e.depth() > 0
+            let allowed_directory = !(e.depth() > 0
                 && e.file_type().is_some_and(|ft| ft.is_dir())
-                && (SKIP_DIRS.contains(&name) || extra_skip.contains(name))
-            {
-                return false;
-            }
-            e.depth() == 0 || is_github_workflows_prefix(&filter_root, e.path())
+                && (SKIP_DIRS.contains(&name) || extra_skip.contains(name)));
+            within_deadline
+                && allowed_directory
+                && (e.depth() == 0 || is_github_workflows_prefix(&filter_root, e.path()))
         })
         .build()
         .take_while(|_| crate::invocation::check_timeout().is_ok())

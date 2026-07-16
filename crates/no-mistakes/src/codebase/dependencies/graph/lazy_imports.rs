@@ -43,10 +43,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     let root_nodes: HashSet<NodeId> = roots.iter().cloned().collect();
 
     let mut depth = 0;
-    while !frontier.is_empty() {
-        if crate::invocation::check_timeout().is_err() {
-            break;
-        }
+    while !frontier.is_empty() && crate::invocation::check_timeout().is_ok() {
         if max_depth.is_some_and(|max| depth >= max) {
             break;
         }

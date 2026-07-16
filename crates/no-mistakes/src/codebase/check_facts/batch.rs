@@ -53,10 +53,10 @@ pub(crate) fn collect_check_fact_batch_with_session(
     let mut precollected = (0..requests.len())
         .map(|_| HashMap::new())
         .collect::<Vec<_>>();
-    for (path, demands, facts) in collected {
-        if crate::invocation::check_timeout().is_err() {
-            break;
-        }
+    for (path, demands, facts) in collected
+        .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         for (demand, facts) in demands.into_iter().zip(facts) {
             if let Some(facts) = facts {
                 precollected[demand.request].insert(path.clone(), facts);
@@ -82,10 +82,11 @@ pub(crate) fn collect_check_fact_batch_with_session(
 
 fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<FactDemand>> {
     let mut demands = BTreeMap::<PathBuf, Vec<FactDemand>>::new();
-    for (request_id, request) in requests.iter().enumerate() {
-        if crate::invocation::check_timeout().is_err() {
-            break;
-        }
+    for (request_id, request) in requests
+        .iter()
+        .enumerate()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         let graph_only = super::graph_only_files(&request.files, &request.graph_files);
         let graph_plan = CheckFactPlan {
             graph: request.plan.graph,

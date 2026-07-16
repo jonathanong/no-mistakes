@@ -171,10 +171,10 @@ fn has_extension(path: &Path, extensions: &[String]) -> bool {
 
 fn build_fact_map(file_facts: Vec<TerraformFileFacts>) -> TerraformFactMap {
     let mut facts = TerraformFactMap::default();
-    for file in file_facts {
-        if crate::invocation::check_timeout().is_err() {
-            break;
-        }
+    for file in file_facts
+        .into_iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+    {
         facts
             .files_by_module
             .entry(file.module_dir.clone())
