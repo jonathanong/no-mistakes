@@ -110,9 +110,13 @@ pub(super) fn receive_reader(reader: &PipeReader) -> std::io::Result<Vec<u8>> {
     match remaining_timeout()? {
         Some(remaining) => match reader.recv_timeout(remaining) {
             Ok(result) => result,
-            Err(_) => Err(std::io::Error::new(
+            Err(mpsc::RecvTimeoutError::Timeout) => Err(std::io::Error::new(
                 std::io::ErrorKind::TimedOut,
                 "no-mistakes command deadline elapsed while reading child output",
+            )),
+            Err(mpsc::RecvTimeoutError::Disconnected) => Err(std::io::Error::new(
+                std::io::ErrorKind::BrokenPipe,
+                "child output reader stopped before returning output",
             )),
         },
         None => match reader.recv() {
