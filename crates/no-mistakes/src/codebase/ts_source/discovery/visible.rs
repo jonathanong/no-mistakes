@@ -27,7 +27,14 @@ pub fn try_discover_visible_paths(root: &Path) -> std::io::Result<Vec<PathBuf>> 
 
 fn try_discover_visible_classified_paths(root: &Path) -> std::io::Result<Vec<ClassifiedPath>> {
     let paths = try_discover_classified_path_views(root)?.visible;
-    if let Err(error) = crate::invocation::check_timeout() {
+    deadline_checked_paths(paths, crate::invocation::check_timeout())
+}
+
+fn deadline_checked_paths(
+    paths: Vec<ClassifiedPath>,
+    deadline: anyhow::Result<()>,
+) -> std::io::Result<Vec<ClassifiedPath>> {
+    if let Err(error) = deadline {
         return Err(std::io::Error::new(
             std::io::ErrorKind::TimedOut,
             error.to_string(),

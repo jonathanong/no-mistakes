@@ -45,3 +45,16 @@ fn buffered_human_and_markdown_outputs_preserve_sections() {
         "# data-pw `search-bar`\n\n## Source\n- `app/search.tsx:7` (data-pw)\n"
     );
 }
+
+#[test]
+fn buffered_structured_and_paths_outputs_preserve_formats() {
+    let json = String::from_utf8(render_report(&report(), Format::Json).unwrap()).unwrap();
+    let yaml = String::from_utf8(render_report(&report(), Format::Yml).unwrap()).unwrap();
+    let paths = String::from_utf8(render_report(&report(), Format::Paths).unwrap()).unwrap();
+
+    assert!(json.starts_with("{\n"));
+    assert!(json.ends_with("\n"));
+    assert!(yaml.contains("value: search-bar"));
+    assert!(yaml.ends_with("\n\n"));
+    assert_eq!(paths, "app/search.tsx\n");
+}
