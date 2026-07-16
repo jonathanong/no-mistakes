@@ -13,7 +13,7 @@ pub(super) fn lock_path() -> Result<PathBuf> {
     let directory = project_dirs
         .runtime_dir()
         .map(Path::to_path_buf)
-        .unwrap_or_else(|| fallback_runtime_dir(project_dirs.cache_dir()));
+        .unwrap_or_else(|| project_dirs.cache_dir().to_path_buf());
     std::fs::create_dir_all(&directory).with_context(|| {
         format!(
             "creating no-mistakes invocation lock directory {}",
@@ -21,18 +21,6 @@ pub(super) fn lock_path() -> Result<PathBuf> {
         )
     })?;
     Ok(directory.join("invocation.lock"))
-}
-
-fn fallback_runtime_dir(user_path: &Path) -> PathBuf {
-    // macOS has no ProjectDirs runtime directory, and `/tmp` may be shared on
-    // other platforms. Key the fallback by a stable per-user path so users do
-    // not contend with or need write access to one another's lock files.
-    let mut hash = 0xcbf2_9ce4_8422_2325_u64;
-    for byte in user_path.to_string_lossy().bytes() {
-        hash ^= u64::from(byte);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    std::env::temp_dir().join(format!("no-mistakes-{hash:016x}"))
 }
 
 pub(super) fn acquire_lock(
