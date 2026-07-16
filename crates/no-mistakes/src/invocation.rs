@@ -7,7 +7,7 @@ mod lock;
 mod napi_options;
 
 pub use child::command_output;
-pub use deadline::check_timeout;
+pub use deadline::{check_timeout, commit_timeout};
 pub use napi_options::extract_napi_options;
 
 use anyhow::Result;

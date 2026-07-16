@@ -119,6 +119,7 @@ fn expired_deadline_returns_timeout_exit_code() {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(3),
             owner: Some(std::thread::current().id()),
+            committed: false,
         })
     };
     let error = check_timeout().unwrap_err();
@@ -151,6 +152,7 @@ fn deadline_owned_by_another_thread_does_not_affect_this_thread() {
         expires_at: Instant::now(),
         timeout: Duration::from_secs(1),
         owner: Some(foreign_owner),
+        committed: false,
     });
     check_timeout().unwrap();
     assert_eq!(super::deadline::remaining_timeout().unwrap(), None);
@@ -525,6 +527,7 @@ fn expired_deadline_prevents_child_spawn() {
             expires_at: Instant::now(),
             timeout: Duration::from_secs(1),
             owner: Some(std::thread::current().id()),
+            committed: false,
         })
     };
     let mut command = Command::new("definitely-not-a-real-no-mistakes-command");

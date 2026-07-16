@@ -62,22 +62,25 @@ pub(crate) fn run(cli: FetchesArgs) -> Result<ExitCode> {
         format,
         &mut std::io::stdout().lock(),
         no_mistakes::invocation::check_timeout,
+        no_mistakes::invocation::commit_timeout,
     )
     .map(|()| ExitCode::SUCCESS)
 }
 
-pub(crate) fn publish_report_with_deadline_check<F>(
+pub(crate) fn publish_report_with_deadline_check<F, C>(
     report: &crate::fetches::report::types::FinalReport,
     format: Format,
     writer: &mut dyn Write,
     mut check_deadline: F,
+    commit_deadline: C,
 ) -> Result<()>
 where
     F: FnMut() -> Result<()>,
+    C: FnOnce() -> Result<()>,
 {
     check_deadline()?;
     let output = render_report(report, format)?;
-    check_deadline()?;
+    commit_deadline()?;
     writer.write_all(&output).context("publishing fetch report")
 }
 

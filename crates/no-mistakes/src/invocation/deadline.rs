@@ -8,6 +8,7 @@ pub(super) struct Deadline {
     pub(super) expires_at: Instant,
     pub(super) timeout: Duration,
     pub(super) owner: Option<std::thread::ThreadId>,
+    pub(super) committed: bool,
 }
 
 pub(super) fn active_deadline() -> &'static RwLock<Option<Deadline>> {
@@ -40,6 +41,7 @@ impl DeadlineGuard {
                         expires_at,
                         timeout,
                         owner,
+                        committed: false,
                     })
                     .context("command timeout is too large")
             })
@@ -68,6 +70,9 @@ pub fn check_timeout() -> Result<()> {
     let Some(deadline) = deadline else {
         return Ok(());
     };
+    if deadline.committed {
+        return Ok(());
+    }
     if deadline
         .owner
         .is_some_and(|owner| owner != std::thread::current().id())
@@ -87,6 +92,35 @@ pub fn check_timeout() -> Result<()> {
     .into())
 }
 
+/// Validate the deadline and make output publication the invocation's commit point.
+pub fn commit_timeout() -> Result<()> {
+    let mut active = active_deadline()
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(deadline) = active.as_mut() else {
+        return Ok(());
+    };
+    if deadline.committed
+        || deadline
+            .owner
+            .is_some_and(|owner| owner != std::thread::current().id())
+    {
+        return Ok(());
+    }
+    if clock::now() >= deadline.expires_at {
+        return Err(InvocationError::new(
+            InvocationErrorKind::CommandTimeout,
+            format!(
+                "command timed out after {} seconds",
+                deadline.timeout.as_secs()
+            ),
+        )
+        .into());
+    }
+    deadline.committed = true;
+    Ok(())
+}
+
 pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
     let deadline = *active_deadline()
         .read()
@@ -94,6 +128,9 @@ pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
     let Some(deadline) = deadline else {
         return Ok(None);
     };
+    if deadline.committed {
+        return Ok(None);
+    }
     if deadline
         .owner
         .is_some_and(|owner| owner != std::thread::current().id())
@@ -106,3 +143,6 @@ pub(super) fn remaining_timeout() -> std::io::Result<Option<Duration>> {
         .map(Some)
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::TimedOut, "command timed out"))
 }
+
+#[cfg(test)]
+mod tests;

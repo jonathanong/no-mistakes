@@ -272,24 +272,22 @@ fn fetch_report_timeout_discards_buffered_output_for_every_format() {
         Format::Human,
     ] {
         let mut output = Vec::new();
-        let mut checks = 0;
+        let checks = std::cell::Cell::new(0);
         let error = publish_report_with_deadline_check(
             &FinalReport::default(),
             format,
             &mut output,
             || {
-                checks += 1;
-                if checks == 2 {
-                    anyhow::bail!("synthetic timeout");
-                }
+                checks.set(checks.get() + 1);
                 Ok(())
             },
+            || anyhow::bail!("synthetic timeout"),
         )
         .unwrap_err();
 
         assert!(error.to_string().contains("synthetic timeout"));
         assert!(output.is_empty());
-        assert_eq!(checks, 2);
+        assert_eq!(checks.get(), 1);
     }
 }
 
@@ -311,6 +309,7 @@ fn fetch_report_publication_errors_are_contextual() {
         &FinalReport::default(),
         no_mistakes::cli::Format::Json,
         &mut FailingWriter,
+        || Ok(()),
         || Ok(()),
     )
     .unwrap_err();
