@@ -1,5 +1,4 @@
 use super::*;
-use std::time::Duration;
 
 fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
     resolve_tsconfig_from_visible(
@@ -209,28 +208,4 @@ fn flow_prepared_graph_honors_explicit_config_without_nested_discovery() {
         1
     );
     assert!(!run_body.contains("build_with_plan_and_files_config("));
-}
-
-#[test]
-fn flow_query_returns_timeout_instead_of_a_partial_report() {
-    let root = fixture_root("simple");
-    let graph = crate::codebase::dependencies::graph::test_support::from_raw_maps(
-        root.clone(),
-        Default::default(),
-        Default::default(),
-    );
-    let options = FlowOptions {
-        target: "entry.ts".to_string(),
-        root: root.clone(),
-        tsconfig: None,
-        config: None,
-        direction: FlowDirection::Deps,
-        depth: 1,
-        relationships: vec![RelationshipArg::Import],
-    };
-    let _guard = crate::invocation::install_test_deadline(Duration::ZERO).unwrap();
-
-    let error = run_with_prepared_graph(&options, &root, &graph).unwrap_err();
-
-    assert_eq!(crate::invocation::timeout_exit_code(&error), Some(124));
 }

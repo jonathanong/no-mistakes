@@ -144,6 +144,10 @@ include!("flow_query_traverse.rs");
 #[path = "flow_query_tests.rs"]
 mod flow_query_tests;
 
+#[cfg(test)]
+#[path = "flow_query_timeout_tests.rs"]
+mod flow_query_timeout_tests;
+
 fn resolve_tsconfig_from_visible(
     root: &Path,
     explicit: Option<&Path>,
