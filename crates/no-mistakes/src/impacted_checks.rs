@@ -129,8 +129,8 @@ pub fn run(args: ImpactedChecksArgs) -> Result<ExitCode> {
         format,
         &mut stdout.lock(),
         crate::invocation::check_timeout,
-    )?;
-    Ok(ExitCode::SUCCESS)
+    )
+    .map(|()| ExitCode::SUCCESS)
 }
 
 const _: fn(ImpactedChecksArgs) -> Result<ExitCode> = run;
