@@ -133,6 +133,24 @@ fn expired_deadline_returns_timeout_exit_code() {
 }
 
 #[test]
+fn deadline_owned_by_another_thread_does_not_affect_this_thread() {
+    let _serial = deadline_test_lock()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let foreign_owner = std::thread::spawn(|| std::thread::current().id())
+        .join()
+        .unwrap();
+    let previous = active_deadline().write().unwrap().replace(Deadline {
+        expires_at: Instant::now(),
+        timeout: Duration::from_secs(1),
+        owner: Some(foreign_owner),
+    });
+    check_timeout().unwrap();
+    assert_eq!(super::deadline::remaining_timeout().unwrap(), None);
+    *active_deadline().write().unwrap() = previous;
+}
+
+#[test]
 fn invocation_guard_installs_deadline_after_lock_acquisition() {
     let _serial = deadline_test_lock()
         .lock()
