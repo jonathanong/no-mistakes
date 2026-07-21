@@ -1,8 +1,14 @@
 "use strict";
 
-const DEFAULT_MAX_ATTEMPTS = 4;
-const DEFAULT_RETRY_BASE_MS = 500;
-const RETRY_MAX_DELAY_MS = 4_000;
+// A GitHub Releases asset download or its separate .sha256 checksum fetch can
+// hit a short-lived CDN 5xx, timeout, or connection reset. These defaults give
+// each network operation a bounded multi-attempt window (~15s avg / ~31s worst
+// case total sleep) to ride that out, rather than exhausting a tiny budget in a
+// few seconds. Override via NO_MISTAKES_DOWNLOAD_MAX_ATTEMPTS /
+// NO_MISTAKES_DOWNLOAD_RETRY_BASE_MS.
+const DEFAULT_MAX_ATTEMPTS = 6;
+const DEFAULT_RETRY_BASE_MS = 1_000;
+const RETRY_MAX_DELAY_MS = 30_000;
 const RETRYABLE_NETWORK_CODES = new Set([
   "ECONNRESET",
   "ECONNREFUSED",
