@@ -55,8 +55,11 @@ export type AnalyzeProjectReportRequest =
   | ({ type: "check"; id?: string } & BatchedCheckOptions);
 
 export interface AnalyzeProjectOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   filters?: string[];
   reports: AnalyzeProjectReportRequest[];

@@ -1,5 +1,7 @@
 export interface PlaywrightOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   playwrightConfig?: string[];
   project?: string;
@@ -40,7 +42,9 @@ export interface GraphEdge {
 }
 
 export interface InfraOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** `infraResourceRefs` address (`<type>.<name>`). */
   address?: string;
@@ -79,7 +83,9 @@ export interface TestForRow {
 }
 
 export interface SwiftOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** The Swift source file to query (relative to root). */
   file?: string;

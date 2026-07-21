@@ -2,8 +2,11 @@ import type { SymbolEntrypoint } from "./traversal-types";
 
 export interface TestsPlanOptions {
   framework?: "vitest" | "playwright" | "dotnet" | "swift";
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   base?: string;
   head?: string;
@@ -24,8 +27,11 @@ export interface TestsPlanOptions {
 }
 
 export interface TestsImpactOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   /** Entrypoints to trace impact from: strings may use file#export, or pass { file, symbol }. */
   entrypoints: Array<string | SymbolEntrypoint>;
@@ -35,7 +41,9 @@ export interface TestsImpactOptions {
 
 export interface TestsTargetsOptions {
   framework: "vitest" | "playwright" | "dotnet" | "swift";
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   files: string[];
 }
@@ -100,8 +108,11 @@ export interface TestTargetWarning {
 }
 
 export interface TestsWhyOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   test: string;
   changed?: string;
@@ -124,6 +135,7 @@ export interface TestGraph {
 }
 
 export interface LockfileDiffOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
   base: string;
   head?: string;

@@ -23,7 +23,9 @@ export type Relationship =
 
 export interface TraverseOptions {
   files: Array<string | SymbolEntrypoint>;
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   depth?: number;
   filters?: string[];
@@ -68,8 +70,11 @@ export type ExportKind =
 
 export interface SymbolsOptions {
   files: string[];
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   mode?: "list" | "signature-impact";
   symbol?: string;
@@ -155,8 +160,11 @@ export interface SignatureImpactResult {
 }
 
 export interface ProjectOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   filters?: string[];
   targets?: string[];

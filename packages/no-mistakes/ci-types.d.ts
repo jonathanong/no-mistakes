@@ -3,22 +3,29 @@
 // snake_case to match the serde-serialized output.
 
 export interface CiImpactOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Changed file paths (relative to root or absolute). */
   files: string[];
 }
 
 export interface CiEnvOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Environment variable name (case-sensitive). */
   var: string;
 }
 
 export interface ImpactedChecksOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   base?: string;
   head?: string;
