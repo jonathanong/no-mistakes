@@ -108,6 +108,7 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 | Language/Framework/Tool | Status |
 | -- | -- |
 | TypeScript | Mature |
+| Next | Mature, other frameworks should work but are untested |
 | `pnpm`, `npm`, `yarn`, `bun` | Supported, primarily tested using `pnpm` |
 | `bullmq`, `glide-mq` | Mature, primarily tested for `glide-mq` |
 | `vitest` | `vitest` is mature, `jest` has not been tested |
