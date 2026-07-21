@@ -1,7 +1,9 @@
 // Named query modes (issue #419): data-pw, effects, rsc-callers, registry-extension.
 
 export interface DataPwOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** The selector-attribute value to find (e.g. `search-bar`). */
   value: string;
@@ -29,8 +31,11 @@ export interface DataPwReport {
 }
 
 export interface EffectsOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Effect kind to resolve (a key under `effects:` in config). */
   kind: string;
@@ -59,8 +64,11 @@ export interface EffectsReport {
 }
 
 export interface RscCallersOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Component file to find RSC callers of. */
   component: string;
@@ -81,6 +89,7 @@ export interface RscCallersReport {
 }
 
 export interface RegistryExtensionOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
   /** Registry file to summarize the entry pattern of. */
   registryFile: string;

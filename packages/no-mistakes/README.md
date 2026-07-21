@@ -77,6 +77,8 @@ const {
   });
   const projectCheck = await check({
     root: process.cwd(),
+    // Path to tsconfig.json for alias resolution; searched upward if omitted.
+    // In monorepos, pass the workspace-scoped tsconfig (e.g. "web/tsconfig.json").
     tsconfig: "tsconfig.json",
   });
   const localFlow = await flow({
