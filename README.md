@@ -103,6 +103,22 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 2. Annotate which AI harness + model was used, Co-Authored-By is preferred
 3. Maintain 99% project and patch test coverage
 
+## Support
+
+| Language/Framework/Tool | Status |
+| -- | -- |
+| TypeScript | Mature |
+| `pnpm`, `npm`, `yarn`, `bun` | Supported, primarily tested using `pnpm` |
+| `bullmq`, `glide-mq` | Mature, primarily tested for `glide-mq` |
+| `vitest` | `vitest` is mature, `jest` has not been tested |
+| .NET | Nascent |
+| Swift | Nascent |
+| Rust | Minimal |
+| GitHub Actions | Minimal, planned |
+| Terraform | Minimal |
+| Go | Unsupported |
+| Python | Unsupported |
+
 ## Design Constraints
 
 - Local and deterministic: no services, databases, remote AI calls, or
