@@ -36,7 +36,7 @@ Yes, this is quite a huge undertaking to handle all cases, which is why this cod
 There are a few trade-offs with this approach:
 
 1. Some code is difficult to understnad through AST-parsing, so `no-mistakes` includes rules that enforce AST-parsing-friendly coding. For example, Playwright test selectors should be simple strings - dynamically generated strings will not match well, especially if you enable the "all Playwright test hooks must be covered by a Playwright test" rule.
-1. `no-mistakes` is best effort, with high recall and low precision, meaning it may return wrong information/relationships, but should never miss a relationship. An agent should verify if a relationship returned is true.
+1. `no-mistakes` is best effort, with high recall and low precision, meaning it may return wrong information/relationships, but should never miss a relationship (unless it cannot be inferred through AST-parsing such as `import('./${someRandomFile}')`). An agent should verify if a relationship returned is true.
   1. As such, some of the code is based on heuristics and may need fine-tuning. For example, there is some hardcoding to distinguish between an HTTP client vs. HTTP server, e.g. (`axios.get()` vs. `app = express(); app.get()`).
 1. High CPU usage - parsing your repository on-demand may cause high-CPU usage, but may be significantly faster than other methods (e.g. `vitest related` takes 2 minutes, but takes 1 second with `no-mistakes` via `no-mistakes test plan` and supports Playwright). This may become a bottleneck when working on multiple worktrees at once, but `no-mistakes` includes a locking mechanism to not run concurrently.
 
