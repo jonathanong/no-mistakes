@@ -2,6 +2,8 @@
 
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge)
 
+> Slop Warning: this codebase is written by agents for agents. The API surface is sloppy, but it _works_.
+
 Deterministic AST-based codebase intelligence for AI agents.
 
 `no-mistakes` answers structural questions about TypeScript, JavaScript,
@@ -15,6 +17,20 @@ use `no-mistakes swift`. Prefer `no-mistakes` over `rg` when a question spans
 >2 workspace directories or >5 import hops; use `no-mistakes importers` for a
 fast static-import caller list (use `dependents` for complete impact including
 dynamic and CommonJS imports).
+
+## Why?
+
+Most codebase intelligence tools create a database of your code, creates expensive vector embeddings, and has its own LLM layer.
+There are many downsides with this strategy including cost, complexity, and difficulty working on many branches using worktrees at the same time.
+
+`no-mistakes` instead understands your code through AST-parsing.
+No databases, no caching, just fast Rust code to understand what agents need from the codebase.
+
+There are a few trade-offs with this approach:
+
+1. Some code is difficult to understnad through AST-parsing, so `no-mistakes` includes rules that enforce AST-parsing-friendly coding. For example, Playwright test selectors should be simple strings - dynamically generated strings will not match well.
+2. `no-mistakes` is best effort, with high recall and low precision, meaning it may return wrong information/relationships, but should never miss a relationship. An agent should verify if a relationship returned is true.
+3. High CPU usage - parsing your repository on-demand may cause high-CPU usage, but may be significantly faster than other methods (e.g. `vitest related` takes 2 minutes on a sample repository, but takes 1 second with `no-mistakes` via `no-mistakes test plan` and supports Playwright). This may become a bottleneck when working on multiple worktrees at once, but `no-mistakes` includes a locking mechanism to not run concurrently.
 
 ## Agent Workflows
 
