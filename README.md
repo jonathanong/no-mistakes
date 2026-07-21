@@ -111,6 +111,7 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 | `pnpm`, `npm`, `yarn`, `bun` | Supported, primarily tested using `pnpm` |
 | `bullmq`, `glide-mq` | Mature, primarily tested for `glide-mq` |
 | `vitest` | `vitest` is mature, `jest` has not been tested |
+| `playwright` | Mature |
 | .NET | Nascent |
 | Swift | Nascent |
 | Rust | Minimal |
