@@ -13,24 +13,32 @@ that need small, reliable answers they can feed into follow-up edits and tests.
 
 **Core graph domain:** TypeScript and JavaScript. For CI-workflow analysis use
 `no-mistakes ci`; for Terraform/OpenTofu use `no-mistakes infra`; for Swift
-use `no-mistakes swift`. Prefer `no-mistakes` over `rg` when a question spans
->2 workspace directories or >5 import hops; use `no-mistakes importers` for a
+use `no-mistakes swift`. Prefer `no-mistakes` over `rg` when a question spans >2 
+workspace directories or >5 import hops; use `no-mistakes importers` for a
 fast static-import caller list (use `dependents` for complete impact including
 dynamic and CommonJS imports).
 
+The primary use-cases of `no-mistakes` is:
+
+1. Discovering impacted files and tests during planning
+2. Running selected tests in PR CI to minimize CI costs
+3. AST-based guardrails for your coding agents to minimize entropy and power the above use-cases
+
 ## Why?
 
-Most codebase intelligence tools create a database of your code, creates expensive vector embeddings, and has its own LLM layer.
+Most codebase intelligence tools create a database of your code, creates expensive vector embeddings, and/or has its own LLM layer.
 There are many downsides with this strategy including cost, complexity, and difficulty working on many branches using worktrees at the same time.
 
 `no-mistakes` instead understands your code through AST-parsing.
-No databases, no caching, just fast Rust code to understand what agents need from the codebase.
+No databases, no caching, just fast Rust code to understand the codebase.
+Yes, this is quite a huge undertaking to handle all cases, which is why this codebase is large with a lot of test fixtures.
 
 There are a few trade-offs with this approach:
 
-1. Some code is difficult to understnad through AST-parsing, so `no-mistakes` includes rules that enforce AST-parsing-friendly coding. For example, Playwright test selectors should be simple strings - dynamically generated strings will not match well.
-2. `no-mistakes` is best effort, with high recall and low precision, meaning it may return wrong information/relationships, but should never miss a relationship. An agent should verify if a relationship returned is true.
-3. High CPU usage - parsing your repository on-demand may cause high-CPU usage, but may be significantly faster than other methods (e.g. `vitest related` takes 2 minutes on a sample repository, but takes 1 second with `no-mistakes` via `no-mistakes test plan` and supports Playwright). This may become a bottleneck when working on multiple worktrees at once, but `no-mistakes` includes a locking mechanism to not run concurrently.
+1. Some code is difficult to understnad through AST-parsing, so `no-mistakes` includes rules that enforce AST-parsing-friendly coding. For example, Playwright test selectors should be simple strings - dynamically generated strings will not match well, especially if you enable the "all Playwright test hooks must be covered by a Playwright test" rule.
+1. `no-mistakes` is best effort, with high recall and low precision, meaning it may return wrong information/relationships, but should never miss a relationship. An agent should verify if a relationship returned is true.
+  1. As such, some of the code is based on heuristics and may need fine-tuning. For example, there is some hardcoding to distinguish between an HTTP client vs. HTTP server, e.g. (`axios.get()` vs. `app = express(); app.get()`).
+1. High CPU usage - parsing your repository on-demand may cause high-CPU usage, but may be significantly faster than other methods (e.g. `vitest related` takes 2 minutes, but takes 1 second with `no-mistakes` via `no-mistakes test plan` and supports Playwright). This may become a bottleneck when working on multiple worktrees at once, but `no-mistakes` includes a locking mechanism to not run concurrently.
 
 ## Agent Workflows
 
@@ -75,17 +83,13 @@ Local development from this repository:
 cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 ```
 
-## Documentation
+## Contributing
 
-- [Documentation index](docs/README.md)
-- [CLI commands](docs/cli/README.md)
-- [Node/N-API guide](docs/node-api.md)
-- [Configuration](docs/configuration/README.md)
-- [Graph edge types](docs/graph-edges.md)
-- [no-mistakes rules](docs/rules/README.md)
-- [ESLint rules](docs/eslint-rules/README.md)
-- [Agent guide](docs/agent-guide.md)
-- [AST analysis behavior](docs/ast-analysis.md)
+This repository is a huge token sink. Thus, contributions are welcomed.
+
+1. Please add test cases in `test-cases/`
+2. Annotate which AI harness + model was used, Co-Authored-By is preferred
+3. Maintain 99% project and patch test coverage
 
 ## Design Constraints
 
@@ -99,8 +103,14 @@ cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 - Explicit configuration: route roots, queue factories, test projects, and
   global fallback behavior are opt-in configuration, not inferred conventions.
 
-## Link Lint
+## Documentation
 
-```sh
-lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' CLAUDE.md
-```
+- [Documentation index](docs/README.md)
+- [CLI commands](docs/cli/README.md)
+- [Node/N-API guide](docs/node-api.md)
+- [Configuration](docs/configuration/README.md)
+- [Graph edge types](docs/graph-edges.md)
+- [no-mistakes rules](docs/rules/README.md)
+- [ESLint rules](docs/eslint-rules/README.md)
+- [Agent guide](docs/agent-guide.md)
+- [AST analysis behavior](docs/ast-analysis.md)
