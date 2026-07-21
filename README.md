@@ -24,6 +24,14 @@ The primary use-cases of `no-mistakes` is:
 2. Running selected tests in PR CI to minimize CI costs
 3. AST-based guardrails for your coding agents to minimize entropy and power the above use-cases
 
+Suppose you have the following dependency chain:
+
+> Backend `getPost(id)` -> Backend GET `/posts/:id` -> Next.js Fetch GET `/posts/:id` -> Next.js Page `/post/[id]` -> Playwright Test on `/post/[id]`
+
+During planning, `no-mistakes` will provide the full dependency chain to the agent in a single, fast, CLI command.
+During CI testing, a `getPost()` change will select the relevant Playwright tests to run.
+No embeddings, all determinstically.
+
 ## Why?
 
 Most codebase intelligence tools create a database of your code, creates expensive vector embeddings, and/or has its own LLM layer.
