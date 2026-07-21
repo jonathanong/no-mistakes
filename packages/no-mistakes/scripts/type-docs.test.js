@@ -31,7 +31,7 @@ test("every root/tsconfig/config option field carries its canonical JSDoc", () =
   let checked = 0;
 
   for (const file of declarationFiles()) {
-    const lines = readFileSync(join(packageRoot, file), "utf8").split("\n");
+    const lines = readFileSync(join(packageRoot, file), "utf8").split(/\r?\n/);
 
     lines.forEach((line, index) => {
       const match = line.match(FIELD_PATTERN);
