@@ -83,6 +83,18 @@ Local development from this repository:
 cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 ```
 
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [CLI commands](docs/cli/README.md)
+- [Node/N-API guide](docs/node-api.md)
+- [Configuration](docs/configuration/README.md)
+- [Graph edge types](docs/graph-edges.md)
+- [no-mistakes rules](docs/rules/README.md)
+- [ESLint rules](docs/eslint-rules/README.md)
+- [Agent guide](docs/agent-guide.md)
+- [AST analysis behavior](docs/ast-analysis.md)
+
 ## Contributing
 
 This repository is a huge token sink. Thus, contributions are welcomed.
@@ -103,14 +115,3 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 - Explicit configuration: route roots, queue factories, test projects, and
   global fallback behavior are opt-in configuration, not inferred conventions.
 
-## Documentation
-
-- [Documentation index](docs/README.md)
-- [CLI commands](docs/cli/README.md)
-- [Node/N-API guide](docs/node-api.md)
-- [Configuration](docs/configuration/README.md)
-- [Graph edge types](docs/graph-edges.md)
-- [no-mistakes rules](docs/rules/README.md)
-- [ESLint rules](docs/eslint-rules/README.md)
-- [Agent guide](docs/agent-guide.md)
-- [AST analysis behavior](docs/ast-analysis.md)
