@@ -193,6 +193,36 @@ fn git_diff_error_display_embeds_the_stable_code_token() {
     assert_eq!(error.to_string(), "detail [git-shallow-history]");
 }
 
+// Regression for a review finding on #587: if the invocation deadline
+// elapses during a classification probe, the timeout must survive as an
+// `io::Error` instead of being folded into "the ref does not resolve" —
+// otherwise `invocation::timeout_exit_code` never sees the `TimedOut` kind
+// and the CLI reports a misleading `git-merge-base-unavailable` instead of
+// a timeout.
+#[test]
+fn git_ref_resolves_propagates_a_deadline_timeout() {
+    let dir = two_commit_repo();
+    let root = dir.path();
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+    let error = git_ref_resolves(root, "HEAD").unwrap_err();
+
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+}
+
+// Same probe-timeout-propagation contract as `git_ref_resolves`, for the
+// shallow-repository check.
+#[test]
+fn is_shallow_repository_propagates_a_deadline_timeout() {
+    let dir = two_commit_repo();
+    let root = dir.path();
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+    let error = is_shallow_repository(root).unwrap_err();
+
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+}
+
 // Compatibility: spaces and non-ASCII paths. `-c core.quotePath=false` is
 // the whole reason a path like this comes back as raw UTF-8 instead of a
 // C-style-quoted, backslash-escaped string the parser would otherwise need

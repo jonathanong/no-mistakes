@@ -343,13 +343,9 @@ fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<
         .current_dir(root);
     let output = crate::invocation::command_output(&mut command)?;
     if !output.status.success() {
-        return Err(super::git_diff::classify_git_diff_failure(
-            root,
-            base,
-            head_commit,
-            &output.stderr,
-        )
-        .into());
+        let classification =
+            super::git_diff::classify_git_diff_failure(root, base, head_commit, &output.stderr)?;
+        return Err(classification.into());
     }
     Ok(parse_git_name_status(&String::from_utf8(output.stdout)?))
 }

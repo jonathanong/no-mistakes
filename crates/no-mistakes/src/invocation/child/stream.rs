@@ -7,12 +7,15 @@
 //! buffer is ever held on either side.
 
 use super::process_tree::{configure_process_group, ProcessTree};
-use super::{fold_cleanup_error, CLEANUP_TIMEOUT};
+use super::{fold_cleanup_error, receive_reader, PipeReader, CLEANUP_TIMEOUT};
 use crate::invocation::deadline::remaining_timeout;
+use reading::{decode_line, line_too_long, read_bounded, read_chunks};
 use std::io::Read;
 use std::process::{Command, ExitStatus, Stdio};
-use std::sync::mpsc::{self, Receiver, SyncSender};
+use std::sync::mpsc::{self, Receiver};
 use wait_timeout::ChildExt;
+
+mod reading;
 
 /// Bytes read per stdout chunk sent over the channel. Chosen to amortize
 /// channel-send overhead (a 10 MB patch is ~160 sends instead of one send
@@ -71,7 +74,7 @@ pub(crate) fn stream_command_lines(
     let stderr = child.stderr.take().expect("child stderr must be piped");
     let (chunk_tx, chunk_rx) = mpsc::sync_channel(CHUNK_QUEUE_CAPACITY);
     std::thread::spawn(move || read_chunks(stdout, chunk_tx));
-    let stderr_reader = std::thread::spawn(move || read_bounded(stderr, STDERR_CAP_BYTES));
+    let stderr_reader = spawn_bounded_stderr_reader(stderr);
 
     if let Err(error) = drain_lines(&chunk_rx, max_line_bytes, &mut on_line) {
         let cleanup_error = process_tree.terminate(&mut child).err();
@@ -79,19 +82,43 @@ pub(crate) fn stream_command_lines(
         // Wake any sender still blocked on the now-abandoned channel so its
         // thread can observe disconnection and exit rather than hang.
         drop(chunk_rx);
-        let _ = stderr_reader.join();
+        let _ = receive_reader(&stderr_reader);
         return Err(fold_cleanup_error(error, cleanup_error));
     }
 
     let status = match wait_for_exit(&mut child, &process_tree) {
         Ok(status) => status,
         Err(error) => {
-            let _ = stderr_reader.join();
+            let _ = receive_reader(&stderr_reader);
             return Err(error);
         }
     };
-    let stderr = stderr_reader.join().unwrap_or_default();
+    // Deadline-bounded, matching `command_output`'s stderr handling: a
+    // descendant that inherited the pipe and keeps it open past the direct
+    // child's own exit must not hang this call past the invocation deadline.
+    let stderr = match receive_reader(&stderr_reader) {
+        Ok(stderr) => stderr,
+        Err(error) => {
+            let cleanup_error = process_tree.terminate(&mut child).err();
+            let _ = child.wait_timeout(CLEANUP_TIMEOUT);
+            return Err(fold_cleanup_error(error, cleanup_error));
+        }
+    };
     Ok(StreamOutcome { status, stderr })
+}
+
+/// Spawns the stderr reader as a channel-backed [`PipeReader`] (like
+/// `command_output`'s `spawn_reader`) rather than a raw `JoinHandle`, so
+/// waiting for it goes through `receive_reader`'s deadline-aware
+/// `recv_timeout` instead of an unbounded `join()`. `read_bounded` never
+/// itself errors — it always eventually returns whatever it collected — so
+/// this always sends `Ok`.
+fn spawn_bounded_stderr_reader(pipe: impl Read + Send + 'static) -> PipeReader {
+    let (sender, receiver) = mpsc::channel();
+    std::thread::spawn(move || {
+        let _ = sender.send(Ok(read_bounded(pipe, STDERR_CAP_BYTES)));
+    });
+    receiver
 }
 
 /// Wait for the child to exit within the remaining invocation deadline (or
@@ -136,41 +163,6 @@ fn terminate_and_reap(
     let cleanup_error = process_tree.terminate(child).err();
     let _ = child.wait_timeout(CLEANUP_TIMEOUT);
     fold_cleanup_error(error, cleanup_error)
-}
-
-fn read_chunks(mut pipe: impl Read, tx: SyncSender<std::io::Result<Vec<u8>>>) {
-    let mut buf = vec![0u8; CHUNK_BYTES];
-    loop {
-        match pipe.read(&mut buf) {
-            Ok(0) => break,
-            Ok(n) => {
-                if tx.send(Ok(buf[..n].to_vec())).is_err() {
-                    break;
-                }
-            }
-            Err(error) => {
-                let _ = tx.send(Err(error));
-                break;
-            }
-        }
-    }
-}
-
-fn read_bounded(mut pipe: impl Read, cap: usize) -> Vec<u8> {
-    let mut buf = [0u8; CHUNK_BYTES];
-    let mut collected = Vec::new();
-    loop {
-        match pipe.read(&mut buf) {
-            Ok(0) => break,
-            Ok(n) if collected.len() < cap => {
-                let take = (cap - collected.len()).min(n);
-                collected.extend_from_slice(&buf[..take]);
-            }
-            Ok(_) => {} // already at cap; keep draining so the pipe can't back up
-            Err(_) => break,
-        }
-    }
-    collected
 }
 
 /// Consume chunks from `rx`, splitting on `\n` (stripping a trailing `\r` so
@@ -233,21 +225,6 @@ fn drain_lines(
         on_line(&decode_line(&pending))?;
     }
     Ok(())
-}
-
-fn line_too_long(max_line_bytes: usize) -> std::io::Error {
-    std::io::Error::new(
-        std::io::ErrorKind::InvalidData,
-        format!(
-            "git diff line exceeds {max_line_bytes} bytes without a newline; \
-             malformed or pathological unified diff"
-        ),
-    )
-}
-
-fn decode_line(line: &[u8]) -> std::borrow::Cow<'_, str> {
-    let line = line.strip_suffix(b"\r").unwrap_or(line);
-    String::from_utf8_lossy(line)
 }
 
 #[cfg(test)]

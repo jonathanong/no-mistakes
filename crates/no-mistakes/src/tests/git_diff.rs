@@ -103,7 +103,7 @@ pub(crate) fn stream_git_diff(
         return Ok(parser.finish());
     }
 
-    Err(classify_git_diff_failure(root, base, head, &outcome.stderr).into())
+    Err(classify_git_diff_failure(root, base, head, &outcome.stderr)?.into())
 }
 
 /// Classifies a failed `git diff <base>...<head>` by re-running small,
@@ -112,29 +112,34 @@ pub(crate) fn stream_git_diff(
 /// `changed_files::get_git_changed_files`'s name-status lookup (the
 /// "combined" `--diff-stdin --base --head` mode) so both base/head paths
 /// classify a Git failure into the same stable codes.
+///
+/// Returns the raw `io::Error` (never a `GitDiffError`) if a probe itself
+/// hits the invocation deadline, so the timeout — not a misclassified
+/// `git-merge-base-unavailable`/`git-shallow-history` — survives in the
+/// error chain for `invocation::timeout_exit_code` to detect.
 pub(super) fn classify_git_diff_failure(
     root: &Path,
     base: &str,
     head: &str,
     stderr: &[u8],
-) -> GitDiffError {
+) -> std::io::Result<GitDiffError> {
     let stderr_text = String::from_utf8_lossy(stderr).trim().to_string();
 
     if super::lockfile_changes::find_git_root(root).is_none() {
-        return GitDiffError {
+        return Ok(GitDiffError {
             code: "git-not-a-repository",
             message: format!("`{}` is not inside a Git repository", root.display()),
-        };
+        });
     }
 
     for (label, git_ref) in [("base", base), ("head", head)] {
-        if !git_ref_resolves(root, git_ref) {
-            return GitDiffError {
+        if !git_ref_resolves(root, git_ref)? {
+            return Ok(GitDiffError {
                 code: "git-merge-base-unavailable",
                 message: format!(
                     "{label} ref `{git_ref}` does not resolve to a commit: {stderr_text}"
                 ),
-            };
+            });
         }
     }
 
@@ -142,23 +147,25 @@ pub(super) fn classify_git_diff_failure(
     // remaining Git-diagnosed cause is an unreachable merge base — either
     // because history was fetched shallowly (common in CI checkouts) or the
     // two refs are simply unrelated.
-    if is_shallow_repository(root) {
-        return GitDiffError {
+    if is_shallow_repository(root)? {
+        return Ok(GitDiffError {
             code: "git-shallow-history",
             message: format!(
                 "no merge base between `{base}` and `{head}` in a shallow clone; fetch \
                  more history (e.g. `git fetch --unshallow` or a deeper `--depth`): {stderr_text}"
             ),
-        };
+        });
     }
 
-    GitDiffError {
+    Ok(GitDiffError {
         code: "git-exit-failure",
         message: format!("git diff {base}...{head} failed: {stderr_text}"),
-    }
+    })
 }
 
-fn git_ref_resolves(root: &Path, git_ref: &str) -> bool {
+/// `Ok(bool)` reports whether the ref resolves; a probe timeout propagates
+/// as `Err` instead of being folded into "does not resolve".
+fn git_ref_resolves(root: &Path, git_ref: &str) -> std::io::Result<bool> {
     let mut command = Command::new("git");
     command
         .args([
@@ -168,20 +175,28 @@ fn git_ref_resolves(root: &Path, git_ref: &str) -> bool {
             &format!("{git_ref}^{{commit}}"),
         ])
         .current_dir(root);
-    crate::invocation::command_output(&mut command)
-        .map(|output| output.status.success())
-        .unwrap_or(false)
+    match crate::invocation::command_output(&mut command) {
+        Ok(output) => Ok(output.status.success()),
+        Err(error) if error.kind() == std::io::ErrorKind::TimedOut => Err(error),
+        Err(_) => Ok(false),
+    }
 }
 
-fn is_shallow_repository(root: &Path) -> bool {
+/// `Ok(bool)` reports whether the repo is shallow; a probe timeout
+/// propagates as `Err` instead of being folded into "not shallow".
+fn is_shallow_repository(root: &Path) -> std::io::Result<bool> {
     let mut command = Command::new("git");
     command
         .args(["rev-parse", "--is-shallow-repository"])
         .current_dir(root);
-    crate::invocation::command_output(&mut command)
-        .ok()
-        .filter(|output| output.status.success())
-        .is_some_and(|output| String::from_utf8_lossy(&output.stdout).trim() == "true")
+    match crate::invocation::command_output(&mut command) {
+        Ok(output) if output.status.success() => {
+            Ok(String::from_utf8_lossy(&output.stdout).trim() == "true")
+        }
+        Ok(_) => Ok(false),
+        Err(error) if error.kind() == std::io::ErrorKind::TimedOut => Err(error),
+        Err(_) => Ok(false),
+    }
 }
 
 #[cfg(test)]
