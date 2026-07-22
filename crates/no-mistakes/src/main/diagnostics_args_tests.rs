@@ -23,7 +23,7 @@ fn leaf_paths(command: &clap::Command) -> Vec<Vec<String>> {
 #[test]
 fn every_cli_leaf_accepts_root_diagnostics_flags_at_every_command_boundary() {
     let leaves = leaf_paths(&Cli::command());
-    assert_eq!(leaves.len(), 46, "update the documented CLI leaf matrix");
+    assert_eq!(leaves.len(), 47, "update the documented CLI leaf matrix");
 
     for leaf in leaves {
         for flag in ["--timings", "--verbose-timings"] {

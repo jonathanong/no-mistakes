@@ -1,4 +1,6 @@
-use crate::napi_api::{ci_env_json_impl, ci_impact_json_impl, impacted_checks_json_impl};
+use crate::napi_api::{
+    ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl, impacted_checks_json_impl,
+};
 use serde_json::json;
 use std::path::PathBuf;
 
@@ -6,6 +8,16 @@ fn ci_graph(name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/ci-graph")
+            .join(name),
+    )
+    .display()
+    .to_string()
+}
+
+fn workflow_topology_fixture(name: &str) -> String {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/workflow-topology")
             .join(name),
     )
     .display()
@@ -150,4 +162,55 @@ fn ci_env_json_defaults_root() {
 #[test]
 fn impacted_checks_json_defaults_root() {
     assert!(impacted_checks_json_impl(json!({}).to_string()).is_ok());
+}
+
+#[test]
+fn ci_topology_json_returns_the_parsed_graph() {
+    let options = json!({ "root": workflow_topology_fixture("needs-basic") }).to_string();
+    let output = ci_topology_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(value["schemaVersion"], 1);
+    assert_eq!(value["workflows"].as_array().unwrap().len(), 1);
+    assert_eq!(value["jobs"].as_array().unwrap().len(), 3);
+    assert!(value["diagnostics"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn ci_topology_json_reports_diagnostics_without_failing() {
+    // Unlike the CLI (which exits non-zero and prints nothing on error
+    // diagnostics), the N-API entry point always returns the full graph —
+    // callers decide what to do with a non-empty `diagnostics` array.
+    let options = json!({ "root": workflow_topology_fixture("job-cycle") }).to_string();
+    let output = ci_topology_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let diagnostics = value["diagnostics"].as_array().unwrap();
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic["code"] == "job-dependency-cycle"));
+}
+
+#[test]
+fn ci_topology_json_applies_workflow_filter() {
+    let options = json!({
+        "root": workflow_topology_fixture("workflow-filters"),
+        "workflows": ["root.yml"],
+    })
+    .to_string();
+    let output = ci_topology_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let paths: Vec<&str> = value["workflows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["path"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        paths,
+        vec![".github/workflows/callee.yml", ".github/workflows/root.yml"]
+    );
+}
+
+#[test]
+fn ci_topology_json_defaults_root() {
+    assert!(ci_topology_json_impl(json!({}).to_string()).is_ok());
 }

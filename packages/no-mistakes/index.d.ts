@@ -6,6 +6,9 @@ import type {
   CiEnvReport,
   CiImpactOptions,
   CiImpactReport,
+  CiTopologyOptions,
+  WorkflowTopology,
+  WorkflowTopologyIndex,
   CallSitesOptions,
   CallSitesResult,
   DataPwOptions,
@@ -171,6 +174,11 @@ export function lockfileDiff(
 ): Promise<LockfileDiffEntry[]>;
 export function ciImpact(options: WithInvocationOptions<CiImpactOptions>): Promise<CiImpactReport>;
 export function ciEnv(options: WithInvocationOptions<CiEnvOptions>): Promise<CiEnvReport>;
+export function ciTopology(
+  options?: WithInvocationOptions<CiTopologyOptions>,
+): Promise<WorkflowTopology>;
+/** Builds a query index over a `ciTopology()` result. Pure JS — never crosses the N-API boundary. */
+export function createWorkflowTopologyIndex(topology: WorkflowTopology): WorkflowTopologyIndex;
 export function impactedChecks(
   options: WithInvocationOptions<ImpactedChecksOptions>,
 ): Promise<ImpactedChecksReport>;

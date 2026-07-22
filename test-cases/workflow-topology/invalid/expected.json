@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/dangling.yml",
+      "path": ".github/workflows/dangling.yml",
+      "name": "Dangling",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/dangling.yml#test"
+      ]
+    },
+    {
+      "id": ".github/workflows/malformed.yml",
+      "path": ".github/workflows/malformed.yml",
+      "name": "malformed.yml",
+      "callable": false,
+      "triggers": [],
+      "jobIds": []
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/dangling.yml#test",
+      "workflowId": ".github/workflows/dangling.yml",
+      "key": "test",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "needs",
+      "from": ".github/workflows/dangling.yml#missing",
+      "to": ".github/workflows/dangling.yml#test"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "missing-needs-dependency",
+      "message": ".github/workflows/dangling.yml#test needs missing job .github/workflows/dangling.yml#missing",
+      "workflowPath": ".github/workflows/dangling.yml",
+      "jobId": ".github/workflows/dangling.yml#test"
+    },
+    {
+      "severity": "error",
+      "code": "malformed-workflow",
+      "message": "deficient indentation (3:1)\n\n 1 | name: Malformed\n 2 | jobs: [\n 3 | \n-----^",
+      "workflowPath": ".github/workflows/malformed.yml"
+    }
+  ]
+}

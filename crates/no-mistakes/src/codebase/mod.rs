@@ -32,6 +32,7 @@ pub mod ts_routes;
 pub mod ts_source;
 pub mod ts_symbols;
 pub mod unique_exports;
+pub mod workflow_topology;
 pub mod workspaces;
 
 pub use dependencies::{Direction, TraverseArgs};

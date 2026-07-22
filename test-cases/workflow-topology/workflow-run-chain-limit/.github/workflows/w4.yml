@@ -1,0 +1,9 @@
+name: W4
+on:
+  workflow_run:
+    workflows: [W3]
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo w4

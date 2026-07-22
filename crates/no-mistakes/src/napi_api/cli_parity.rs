@@ -2,8 +2,9 @@ use std::path::{Path, PathBuf};
 
 use super::options::{
     parse_options, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
-    FetchesOptions, ImpactedChecksOptions, PlaywrightOptions, ProjectOptions, TestsImpactOptions,
-    TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
+    CiTopologyOptions, FetchesOptions, ImpactedChecksOptions, PlaywrightOptions, ProjectOptions,
+    TestsImpactOptions, TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions,
+    TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
@@ -107,6 +108,18 @@ pub(crate) fn ci_env_json_impl(options_json: String) -> napi::Result<String> {
         Path::new(&root),
         options.config.as_deref().map(Path::new),
         &var,
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn ci_topology_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<CiTopologyOptions>(&options_json)?;
+    let root = options.root.unwrap_or(String::from("."));
+    let report = crate::ci::topology_report(
+        Path::new(&root),
+        options.config.as_deref().map(Path::new),
+        &options.workflows,
     )
     .map_err(to_napi_error)?;
     to_pretty_json(&report)

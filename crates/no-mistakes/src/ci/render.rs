@@ -1,9 +1,11 @@
 //! Output rendering for the `ci` commands.
 
-use super::{CiEnvReport, CiImpactReport, EnvLocationKind, EnvScope, Format};
+use super::{CiEnvReport, CiImpactReport, EnvLocationKind, EnvScope, Format, TopologyFormat};
 use crate::codebase::ci_graph::model::PermissionLevel;
 use crate::codebase::ci_graph::permissions::ResolvedPermissions;
 use crate::codebase::ci_graph::triggers::TriggerMatch;
+use crate::codebase::workflow_topology::model::{WorkflowTopology, WorkflowTopologyDiagnostic};
+use crate::codebase::workflow_topology::{render_json, render_mermaid};
 use anyhow::Result;
 
 pub(super) fn render_impact(report: &CiImpactReport, format: Format) -> Result<String> {
@@ -123,4 +125,27 @@ fn render_env_text(report: &CiEnvReport, bullet: &str) -> String {
         out.push_str(&format!("warning: {}: {}\n", warning.path, warning.message));
     }
     out
+}
+
+pub(super) fn render_topology(report: &WorkflowTopology, format: TopologyFormat) -> Result<String> {
+    Ok(match format {
+        TopologyFormat::Json => render_json::render_workflow_topology_json(report)?,
+        TopologyFormat::Mermaid => render_mermaid::render_workflow_topology_mermaid(report),
+    })
+}
+
+/// `[<code>] <workflowPath>(<space><jobId in parens>)?: <message>`, matching
+/// the original engine's CLI error formatting for each diagnostic line.
+pub(super) fn format_topology_diagnostic(diagnostic: &WorkflowTopologyDiagnostic) -> String {
+    let job_suffix = diagnostic
+        .job_id
+        .as_deref()
+        .map(|id| format!(" ({id})"))
+        .unwrap_or_default();
+    format!(
+        "[{}] {}{job_suffix}: {}",
+        diagnostic.code.as_str(),
+        diagnostic.workflow_path,
+        diagnostic.message
+    )
 }

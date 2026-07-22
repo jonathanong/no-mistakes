@@ -1,0 +1,65 @@
+name: Caller
+on: push
+jobs:
+  missing-input:
+    uses: ./.github/workflows/callee.yml
+    secrets:
+      token: ${{ secrets.TOKEN }}
+
+  unknown-input:
+    uses: ./.github/workflows/callee.yml
+    with:
+      message: hi
+      extra: nope
+    secrets:
+      token: ${{ secrets.TOKEN }}
+
+  type-mismatch:
+    uses: ./.github/workflows/callee.yml
+    with:
+      message: hi
+      flag: "not-a-boolean"
+    secrets:
+      token: ${{ secrets.TOKEN }}
+
+  expression-input:
+    uses: ./.github/workflows/callee.yml
+    with:
+      message: hi
+      flag: ${{ vars.SOME_FLAG }}
+    secrets:
+      token: ${{ secrets.TOKEN }}
+
+  missing-secret:
+    uses: ./.github/workflows/callee.yml
+    with:
+      message: hi
+    secrets: {}
+
+  unknown-secret:
+    uses: ./.github/workflows/callee.yml
+    with:
+      message: hi
+    secrets:
+      token: ${{ secrets.TOKEN }}
+      bogus: ${{ secrets.BOGUS }}
+
+  inherited-secrets:
+    uses: ./.github/workflows/callee.yml
+    with:
+      message: hi
+    secrets: inherit
+
+  happy:
+    uses: ./.github/workflows/callee.yml
+    with:
+      message: hi
+    secrets:
+      token: ${{ secrets.TOKEN }}
+
+  consumer:
+    needs: happy
+    runs-on: ubuntu-latest
+    if: needs.happy.outputs.result == 'ok'
+    steps:
+      - run: echo "${{ needs.happy.outputs.bogus }}"

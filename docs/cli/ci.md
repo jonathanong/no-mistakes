@@ -8,6 +8,9 @@ the dependency graph cannot:
   `paths:` / `paths-ignore:` filters) and the permissions each job requires.
 - [`ci env`](ci-env.md) — where an environment variable is defined or referenced
   across workflows.
+- [`ci topology`](ci-topology.md) — a typed graph of workflows, jobs, and
+  `needs`/reusable-call/`workflow_run` edges, with diagnostics for malformed,
+  dangling, cyclic, or contract-violating definitions.
 
 Workflow directories come from the [`ci`](../configuration/ci.md) config block
 and default to `.github/workflows`.
@@ -22,4 +25,4 @@ documented limitations (filter-glob approximation, assumed default permissions,
 textual env reference scan). For exact line numbers of an env reference, follow
 up with `rg 'env.VAR' <file>`.
 
-Node API: `ciImpact(options)`, `ciEnv(options)`.
+Node API: `ciImpact(options)`, `ciEnv(options)`, `ciTopology(options)`.

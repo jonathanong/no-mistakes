@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/a.yml",
+      "path": ".github/workflows/a.yml",
+      "name": "A",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "B"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/a.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/b.yml",
+      "path": ".github/workflows/b.yml",
+      "name": "B",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "A"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/b.yml#noop"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/a.yml#noop",
+      "workflowId": ".github/workflows/a.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/b.yml#noop",
+      "workflowId": ".github/workflows/b.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/a.yml",
+      "to": ".github/workflows/b.yml"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/b.yml",
+      "to": ".github/workflows/a.yml"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "workflow-run-cycle",
+      "message": "workflow_run cycle: .github/workflows/a.yml -> .github/workflows/b.yml -> .github/workflows/a.yml",
+      "workflowPath": ".github/workflows/a.yml"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+[missing-workflow-call-input] .github/workflows/caller.yml (.github/workflows/caller.yml#missing-input): .github/workflows/caller.yml#missing-input does not provide required input message to .github/workflows/callee.yml
+[missing-workflow-call-secret] .github/workflows/caller.yml (.github/workflows/caller.yml#missing-secret): .github/workflows/caller.yml#missing-secret does not provide required secret token to .github/workflows/callee.yml
+[unknown-workflow-call-input] .github/workflows/caller.yml (.github/workflows/caller.yml#unknown-input): .github/workflows/caller.yml#unknown-input provides unknown input extra to .github/workflows/callee.yml
+[unknown-workflow-call-output] .github/workflows/caller.yml (.github/workflows/caller.yml#consumer): .github/workflows/caller.yml#consumer references unknown output bogus from .github/workflows/caller.yml#happy (.github/workflows/callee.yml)
+[unknown-workflow-call-secret] .github/workflows/caller.yml (.github/workflows/caller.yml#unknown-secret): .github/workflows/caller.yml#unknown-secret provides unknown secret bogus to .github/workflows/callee.yml
+[workflow-call-input-type-mismatch] .github/workflows/caller.yml (.github/workflows/caller.yml#type-mismatch): .github/workflows/caller.yml#type-mismatch provides input flag as string, but .github/workflows/callee.yml declares boolean
