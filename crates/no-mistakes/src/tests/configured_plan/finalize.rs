@@ -1,7 +1,19 @@
 use crate::tests::configured_plan_candidates::{first_take, stable_take};
-use crate::tests::{SelectedTest, TestPlanGroupResult, Warning};
+use crate::tests::{SelectedTest, TestPlan, TestPlanGroupResult, Warning};
+use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+pub(super) fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests) {
+    for test in &mut plan.selected_tests {
+        if test.targets.is_empty() {
+            let path = root.join(&test.test_file);
+            if let Some(targets) = discovered.targets_by_path.get(&path) {
+                test.targets = targets.clone();
+            }
+        }
+    }
+}
 
 pub(super) fn sorted_selected_tests(
     selected_map: BTreeMap<PathBuf, SelectedTest>,

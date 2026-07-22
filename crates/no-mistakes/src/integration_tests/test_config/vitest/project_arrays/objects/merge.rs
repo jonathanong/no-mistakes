@@ -19,7 +19,7 @@ pub(super) fn merge_options(base: &mut Options, next: Options) {
     if next.global_setup.is_some() {
         base.global_setup = next.global_setup;
     }
-    if next.config_base.is_some() {
-        base.config_base = next.config_base;
+    if next.extends.is_some() {
+        base.extends = next.extends;
     }
 }

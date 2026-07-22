@@ -204,6 +204,41 @@ fn unresolved_vitest_setup_deleted_candidate_uses_owner_scoped_fallback() {
 }
 
 #[test]
+fn unresolved_vitest_setup_deleted_alias_and_base_url_index_candidates_use_owner_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let cases = [
+        (
+            "aliases/setup/missing.tsx",
+            "alias-owner/alias-owner.test.ts",
+        ),
+        (
+            "aliases/setup/missing.jsx",
+            "alias-owner/alias-owner.test.ts",
+        ),
+        (
+            "base-setup/missing/index.mts",
+            "base-owner/base-owner.test.ts",
+        ),
+    ];
+    for (deleted_path, expected_test) in cases {
+        let mut args = vitest_setup_args(root.clone(), Vec::new());
+        args.diff_content = Some(format!(
+            "diff --git a/{deleted_path} b/{deleted_path}\n--- a/{deleted_path}\n+++ /dev/null\n@@ -1 +0,0 @@\n-export const removed = true\n"
+        ));
+        let plan = crate::tests::plan::generate_plan(&args).unwrap();
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            [expected_test],
+            "{deleted_path}: {plan:#?}"
+        );
+        assert!(plan.fallback_triggered, "{deleted_path}: {plan:#?}");
+    }
+}
+
+#[test]
 fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/test-discovery-policy-fallback/fixture");

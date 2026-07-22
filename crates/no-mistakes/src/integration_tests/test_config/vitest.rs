@@ -7,8 +7,11 @@ use oxc_ast::ast::Program;
 use std::path::{Path, PathBuf};
 
 mod project_arrays;
+mod setup_resolution;
 #[cfg(test)]
 pub(in crate::integration_tests) mod tests;
+
+use setup_resolution::resolve_setup_dependencies;
 
 const DEFAULT_EXTENSIONS: &[&str] = &[
     "js", "jsx", "ts", "tsx", "mjs", "mjsx", "mts", "mtsx", "cjs", "cjsx", "cts", "ctsx",
@@ -22,6 +25,15 @@ pub(super) struct Options {
     pub(super) exclude: Option<Vec<String>>,
     pub(super) setup_files: Option<Vec<VitestSetupDependency>>,
     pub(super) global_setup: Option<Vec<VitestSetupDependency>>,
+    /// Whether an inline project explicitly sets `extends`. Root setup fields
+    /// are inherited only when its final value is `Some(true)`.
+    pub(super) extends: Option<bool>,
+    /// A config named directly by `test.projects` is independent of the
+    /// aggregate config that referenced it.
+    pub(super) standalone_config: bool,
+    /// Canonical path of a standalone `test.projects` config, retained only
+    /// while parsing so glob negations can remove the matching entry.
+    pub(super) standalone_config_path: Option<PathBuf>,
     /// A project config named by `test.projects` is a standalone config file.
     /// Its relative settings are therefore based on that file, not the
     /// aggregate config that happened to reference it.
@@ -50,12 +62,12 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
     }
 
     for project_options in project_options {
-        projects.push(to_project(
-            config_dir,
-            root,
-            merge_options(&root_options, project_options),
-            resolver,
-        ));
+        let options = if project_options.standalone_config {
+            project_options
+        } else {
+            merge_options(&root_options, project_options)
+        };
+        projects.push(to_project(config_dir, root, options, resolver));
     }
     Ok(projects)
 }
@@ -109,32 +121,25 @@ fn to_project(
     }
 }
 
-fn resolve_setup_dependencies<'a>(
-    dependencies: impl Iterator<Item = &'a mut VitestSetupDependency>,
-    project_root: &Path,
-    resolver: &dyn ImportResolution,
-) {
-    // `ImportResolver` takes an importing file, while Vitest resolves these
-    // fields from the effective project root. A stable synthetic filename
-    // makes its parent exactly that root without reading or executing config.
-    let resolution_source = project_root.join(".no-mistakes-vitest-setup.ts");
-    for dependency in dependencies {
-        dependency.resolution_base = project_root.to_path_buf();
-        dependency.resolved_path = dependency
-            .specifier
-            .as_deref()
-            .and_then(|specifier| resolver.resolve(specifier, &resolution_source));
-    }
-}
-
 fn merge_options(root: &Options, project: Options) -> Options {
     Options {
         name: project.name.or_else(|| root.name.clone()),
         root: project.root.or_else(|| root.root.clone()),
         include: project.include.or_else(|| root.include.clone()),
         exclude: combine(root.exclude.clone(), project.exclude),
-        setup_files: project.setup_files.or_else(|| root.setup_files.clone()),
-        global_setup: project.global_setup.or_else(|| root.global_setup.clone()),
+        setup_files: project.setup_files.or_else(|| {
+            (project.extends == Some(true))
+                .then(|| root.setup_files.clone())
+                .flatten()
+        }),
+        global_setup: project.global_setup.or_else(|| {
+            (project.extends == Some(true))
+                .then(|| root.global_setup.clone())
+                .flatten()
+        }),
+        extends: project.extends,
+        standalone_config: project.standalone_config,
+        standalone_config_path: project.standalone_config_path,
         config_base: project.config_base.or_else(|| root.config_base.clone()),
     }
 }

@@ -46,17 +46,30 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
     bindings
 }
 
-/// Runtime import sources, including side-effect imports. Dynamic Vitest setup
-/// values use this for a bounded helper-module closure.
+/// Runtime module sources, including side-effect imports and re-exports.
+/// Dynamic Vitest setup values use this for a bounded helper-module closure.
 pub(super) fn import_sources(program: &Program<'_>) -> BTreeSet<String> {
     program
         .body
         .iter()
-        .filter_map(|statement| {
-            let Statement::ImportDeclaration(import) = statement else {
-                return None;
-            };
-            (!import.import_kind.is_type()).then(|| import.source.value.to_string())
+        .filter_map(|statement| match statement {
+            Statement::ImportDeclaration(import)
+                if crate::fetch::import_shape::is_runtime_import(import) =>
+            {
+                Some(import.source.value.to_string())
+            }
+            Statement::ExportNamedDeclaration(export)
+                if crate::fetch::import_shape::is_runtime_export(export) =>
+            {
+                export
+                    .source
+                    .as_ref()
+                    .map(|source| source.value.to_string())
+            }
+            Statement::ExportAllDeclaration(export) if !export.export_kind.is_type() => {
+                Some(export.source.value.to_string())
+            }
+            _ => None,
         })
         .collect()
 }

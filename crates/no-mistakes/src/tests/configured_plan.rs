@@ -29,7 +29,8 @@ mod vitest_setup_fallback;
 use dep_triggers::dependency_triggers;
 use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
-    empty_group_result, select_limited_group_candidates, sorted_selected_tests, sorted_warnings,
+    attach_targets, empty_group_result, select_limited_group_candidates, sorted_selected_tests,
+    sorted_warnings,
 };
 use hints::build_coverage_hints_from_prepared;
 use lockfile_seeds::{
@@ -39,9 +40,6 @@ use native_fallback::{native_fallback_selection, native_traceable_changed_files}
 use targeted_triggers::{
     insert_synthesized_dependency_group, merge_targeted_candidates, targeted_dependency_candidates,
     TargetedOverlapRecovery,
-};
-use vitest_setup_fallback::{
-    selection as vitest_setup_fallback_selection, warnings as vitest_setup_warnings,
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -62,11 +60,8 @@ pub(crate) fn generate_configured_plan_with_prepared(
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
     let all_tests = discovered_tests.tests.clone();
-    let vitest_setup_warnings = if framework == TestFramework::Vitest {
-        vitest_setup_warnings(root, prepared.vitest_projects())
-    } else {
-        Vec::new()
-    };
+    let vitest_setup_warnings =
+        vitest_setup_fallback::framework_warnings(framework, root, prepared.vitest_projects());
     let all_test_set: HashSet<PathBuf> = all_tests.iter().cloned().collect();
     let effective_limit = override_limit(env.limit.as_ref(), args);
     let has_global_limit = effective_limit.is_some();
@@ -383,35 +378,21 @@ pub(crate) fn generate_configured_plan_with_prepared(
         }
     }
 
-    if framework == TestFramework::Vitest && !all_tests.is_empty() {
-        let fallback_remaining = global_limit.saturating_sub(used.len());
-        if let Some((reason, picked)) = vitest_setup_fallback_selection(
-            root,
-            changed_files,
-            deleted_files,
-            prepared.vitest_projects(),
-            &discovered_tests,
-            &used,
-            fallback_remaining,
-        ) {
-            for test in &picked {
-                used.insert(test.test_file.clone());
-                selected_map
-                    .entry(root.join(&test.test_file))
-                    .and_modify(|entry| merge_selected(entry, test))
-                    .or_insert_with(|| test.clone());
-            }
-            if !picked.is_empty() {
-                group_results.push(TestPlanGroupResult {
-                    r#type: "dependencies".to_string(),
-                    selected: picked.iter().map(|test| test.test_file.clone()).collect(),
-                    remaining: all_tests.len().saturating_sub(used.len()),
-                    limit: has_global_limit.then_some(fallback_remaining),
-                });
-            }
-            fallback_reasons.push(reason);
-        }
-    }
+    vitest_setup_fallback::apply_selection(
+        framework,
+        root,
+        changed_files,
+        deleted_files,
+        prepared.vitest_projects(),
+        &discovered_tests,
+        &mut used,
+        &mut selected_map,
+        &mut group_results,
+        &mut fallback_reasons,
+        global_limit,
+        has_global_limit,
+        all_tests.len(),
+    );
 
     let mut plan = TestPlan {
         selected_tests: sorted_selected_tests(selected_map),
@@ -551,18 +532,6 @@ pub(crate) fn discover_framework_tests_from_prepared(
         .targets_by_path
         .retain(|path, _| allowed.contains(path));
     Ok(discovered)
-}
-
-fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests) {
-    for test in &mut plan.selected_tests {
-        if !test.targets.is_empty() {
-            continue;
-        }
-        let path = root.join(&test.test_file);
-        if let Some(targets) = discovered.targets_by_path.get(&path) {
-            test.targets = targets.clone();
-        }
-    }
 }
 
 pub(super) fn compile_globset(patterns: &[String]) -> Result<Option<GlobSet>> {

@@ -1,11 +1,16 @@
 use super::{ImportClassification, ImportResolver, ScopedImportResolver};
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
 /// Import resolution whose configuration is selected from the importing file.
 /// This is the shared graph boundary during automatic workspace resolution.
 pub(crate) trait ImportResolverFacade: Sync {
     fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf>;
+
+    /// Return conservative local resolution targets, including paths that no
+    /// longer exist. This keeps deleted-file planning aligned with the
+    /// importer-scoped resolver's aliases and compiler options.
+    fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf>;
 
     fn visible_files(&self) -> Option<&HashSet<PathBuf>>;
 
@@ -28,6 +33,10 @@ impl<'a> ImportResolverFacade for ImportResolver<'a> {
         ImportResolver::resolve(self, specifier, importing_file)
     }
 
+    fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf> {
+        ImportResolver::resolution_candidates(self, specifier, importing_file)
+    }
+
     fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
         ImportResolver::visible_files(self)
     }
@@ -46,6 +55,10 @@ impl<'a> ImportResolverFacade for ImportResolver<'a> {
 impl ImportResolverFacade for ScopedImportResolver<'_> {
     fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
         ScopedImportResolver::resolve(self, specifier, importing_file)
+    }
+
+    fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf> {
+        ScopedImportResolver::resolution_candidates(self, specifier, importing_file)
     }
 
     fn visible_files(&self) -> Option<&HashSet<PathBuf>> {

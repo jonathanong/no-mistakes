@@ -11,6 +11,17 @@ impl ImportResolution for GraphImportResolver<'_> {
         }
     }
 
+    fn resolution_candidates(
+        &self,
+        specifier: &str,
+        importing_file: &Path,
+    ) -> std::collections::BTreeSet<PathBuf> {
+        match self {
+            Self::Scoped(resolver) => resolver.resolution_candidates(specifier, importing_file),
+            Self::Legacy(resolver) => resolver.resolution_candidates(specifier, importing_file),
+        }
+    }
+
     fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
         match self {
             Self::Scoped(resolver) => ImportResolution::visible_files(resolver),

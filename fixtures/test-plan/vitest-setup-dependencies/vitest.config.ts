@@ -15,6 +15,9 @@ export default defineConfig({
           name: 'inherits',
           root: './inherits',
           include: ['**/*.test.ts'],
+          // Vitest defaults inline projects to independent config; this one
+          // deliberately exercises inherited root setup fields.
+          extends: true,
           // Keep unsafe setup declarations project-scoped so resolved setup
           // changes can prove exact ownership without triggering this fallback.
           setupFiles: ['./setup/root.ts', dynamicSetup, './setup/missing.ts'],
@@ -54,6 +57,27 @@ export default defineConfig({
           // The transitive helper is outside this project root. Keep this
           // dynamic declaration so impact fallback must follow its closure.
           setupFiles: localDynamicSetup,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'alias-deleted',
+          root: './alias-owner',
+          include: ['**/*.test.ts'],
+          // Keep the target absent: its deletion must still resolve through
+          // the configured TypeScript alias during impact fallback.
+          setupFiles: '@setup/missing',
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'base-url-index-deleted',
+          root: './base-owner',
+          include: ['**/*.test.ts'],
+          // This extensionless baseUrl target exercises index-file parity.
+          setupFiles: 'base-setup/missing',
           globalSetup: [],
         },
       },

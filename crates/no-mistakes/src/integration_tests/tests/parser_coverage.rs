@@ -170,6 +170,15 @@ fn vitest_setup_dependencies_preserve_effective_project_ownership() {
     assert!(closure[0]
         .trigger_paths
         .contains(&root.join("config/transitive-dynamic-helper.ts")));
+    assert!(closure[0]
+        .trigger_paths
+        .contains(&root.join("config/runtime-star-helper.ts")));
+    assert!(
+        !closure[0]
+            .trigger_paths
+            .contains(&root.join("config/type-only-helper.ts")),
+        "dynamic setup closures follow runtime re-exports but exclude type-only sources"
+    );
 
     let overridden = setup("override");
     assert_eq!(overridden.len(), 1, "{overridden:#?}");
@@ -301,4 +310,120 @@ fn vitest_setup_config_fallbacks_are_fixture_backed() {
     assert!(directory_dynamic.vitest_setup[0]
         .trigger_paths
         .contains(&root.join("config")));
+}
+
+#[test]
+fn vitest_project_string_entries_use_only_the_visible_config_universe() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config/vitest-project-entries");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+
+    let projects =
+        test_support::parse_vitest_from_visible(&source, &path, &root, &root, &tsconfig, &visible)
+            .unwrap();
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        vec![
+            "z",
+            "folder",
+            "inline-z",
+            "inline-direct-spread",
+            "a",
+            "inline-a",
+            "direct",
+            "glob",
+            "named",
+        ],
+    );
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .take(6)
+            .collect::<Vec<_>>(),
+        vec![
+            "z",
+            "folder",
+            "inline-z",
+            "inline-direct-spread",
+            "a",
+            "inline-a",
+        ],
+        "string and inline projects retain their first-occurrence source order",
+    );
+    assert_eq!(
+        projects
+            .iter()
+            .filter(|project| project.policy_name.as_deref() == Some("folder"))
+            .count(),
+        1,
+        "the folder entry and wildcard overlap but produce one project",
+    );
+    assert!(projects
+        .iter()
+        .all(|project| project.policy_name.as_deref() != Some("excluded")));
+    let direct = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("direct"))
+        .unwrap();
+    assert_eq!(direct.vitest_setup.len(), 1);
+    assert!(direct.vitest_setup[0]
+        .resolved_path
+        .as_ref()
+        .is_some_and(|path| path.ends_with("projects/direct-setup.ts")));
+}
+
+#[test]
+fn vitest_inline_setup_inheritance_requires_extends_true() {
+    let source =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/test-config/vitest-extends");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+
+    for name in ["default", "false", "nonboolean", "spread-false-last"] {
+        assert!(projects
+            .iter()
+            .find(|project| project.policy_name.as_deref() == Some(name))
+            .unwrap()
+            .vitest_setup
+            .is_empty());
+    }
+    for name in ["true", "spread-true-last"] {
+        let inherited = projects
+            .iter()
+            .find(|project| project.policy_name.as_deref() == Some(name))
+            .unwrap();
+        assert_eq!(inherited.vitest_setup.len(), 2, "{name}");
+        assert_eq!(
+            inherited
+                .vitest_setup
+                .iter()
+                .map(|setup| setup.field.as_str())
+                .collect::<Vec<_>>(),
+            vec!["setupFiles", "globalSetup"],
+            "{name}",
+        );
+    }
+    let standalone = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("standalone"))
+        .unwrap();
+    assert_eq!(standalone.vitest_setup.len(), 1);
+    assert_eq!(
+        standalone.vitest_setup[0].specifier.as_deref(),
+        Some("./standalone-setup.ts")
+    );
 }

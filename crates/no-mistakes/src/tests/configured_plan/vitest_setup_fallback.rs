@@ -5,7 +5,7 @@
 use crate::integration_tests::types::{ConfigProject, VitestSetupDependency};
 use crate::tests::configured_plan_candidates::{merge_selected, selected_from_paths, stable_take};
 use crate::tests::plan::relative_path;
-use crate::tests::{SelectedTest, Warning};
+use crate::tests::{SelectedTest, TestFramework, TestPlanGroupResult, Warning};
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
@@ -29,6 +29,67 @@ pub(super) fn warnings(root: &Path, projects: Option<&[ConfigProject]>) -> Vec<W
         left.r#type == right.r#type && left.file == right.file && left.message == right.message
     });
     warnings
+}
+
+pub(super) fn framework_warnings(
+    framework: TestFramework,
+    root: &Path,
+    projects: Option<&[ConfigProject]>,
+) -> Vec<Warning> {
+    if framework == TestFramework::Vitest {
+        warnings(root, projects)
+    } else {
+        Vec::new()
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(super) fn apply_selection(
+    framework: TestFramework,
+    root: &Path,
+    changed_files: &[PathBuf],
+    deleted_files: &[PathBuf],
+    projects: Option<&[ConfigProject]>,
+    discovered: &DiscoveredTests,
+    used: &mut HashSet<String>,
+    selected_map: &mut BTreeMap<PathBuf, SelectedTest>,
+    group_results: &mut Vec<TestPlanGroupResult>,
+    fallback_reasons: &mut Vec<String>,
+    global_limit: usize,
+    has_global_limit: bool,
+    all_test_count: usize,
+) {
+    if framework != TestFramework::Vitest || all_test_count == 0 {
+        return;
+    }
+    let fallback_remaining = global_limit.saturating_sub(used.len());
+    let Some((reason, picked)) = selection(
+        root,
+        changed_files,
+        deleted_files,
+        projects,
+        discovered,
+        used,
+        fallback_remaining,
+    ) else {
+        return;
+    };
+    for test in &picked {
+        used.insert(test.test_file.clone());
+        selected_map
+            .entry(root.join(&test.test_file))
+            .and_modify(|entry| merge_selected(entry, test))
+            .or_insert_with(|| test.clone());
+    }
+    if !picked.is_empty() {
+        group_results.push(TestPlanGroupResult {
+            r#type: "dependencies".to_string(),
+            selected: picked.iter().map(|test| test.test_file.clone()).collect(),
+            remaining: all_test_count.saturating_sub(used.len()),
+            limit: has_global_limit.then_some(fallback_remaining),
+        });
+    }
+    fallback_reasons.push(reason);
 }
 
 /// Select a conservative, project-bounded fallback only after an unsafe setup
@@ -153,7 +214,6 @@ fn trigger_paths(
 ) -> Vec<PathBuf> {
     let config = config_absolute_path(root, project, setup);
     let declaration = normalize(&setup.declaration_path);
-    let literal_candidates = setup_literal_candidates(setup);
     let scope = project
         .scope
         .as_deref()
@@ -167,12 +227,11 @@ fn trigger_paths(
                 .trigger_paths
                 .iter()
                 .any(|trigger| changed == normalize(trigger));
-        let literal_candidate = setup.specifier.is_some() && literal_candidates.contains(&changed);
         let dynamic_owner_scope = setup.specifier.is_none()
             && scope
                 .as_ref()
                 .is_some_and(|scope| changed == *scope || changed.starts_with(scope));
-        if config_or_helper || literal_candidate || dynamic_owner_scope {
+        if config_or_helper || dynamic_owner_scope {
             triggered.insert(changed);
         }
     }
@@ -204,27 +263,6 @@ fn owner_is_known(project: &ConfigProject) -> bool {
         || project.runner_project_arg.is_some()
         || project.policy_name.is_some()
         || project.scope.is_some()
-}
-
-fn setup_literal_candidates(setup: &VitestSetupDependency) -> BTreeSet<PathBuf> {
-    let Some(specifier) = setup.specifier.as_deref() else {
-        return BTreeSet::new();
-    };
-    let specifier_path = Path::new(specifier);
-    if !specifier_path.is_absolute() && !specifier.starts_with('.') {
-        return BTreeSet::new();
-    }
-    let base = if specifier_path.is_absolute() {
-        specifier_path.to_path_buf()
-    } else {
-        setup.resolution_base.join(specifier_path)
-    };
-    let mut candidates = BTreeSet::from([normalize(&base)]);
-    for extension in ["ts", "mts", "cts", "js", "mjs", "cjs"] {
-        candidates.insert(normalize(&base.with_extension(extension)));
-        candidates.insert(normalize(&base.join(format!("index.{extension}"))));
-    }
-    candidates
 }
 
 fn config_path(root: &Path, project: &ConfigProject, setup: &VitestSetupDependency) -> String {
@@ -275,6 +313,12 @@ mod tests {
     }
 
     fn setup(specifier: Option<&str>) -> VitestSetupDependency {
+        let mut trigger_paths = BTreeSet::from([PathBuf::from("/repo/config/setup.ts")]);
+        if specifier.is_some() {
+            // Literal resolution candidates are retained on the parsed setup
+            // dependency, including targets that no longer exist.
+            trigger_paths.insert(PathBuf::from("/repo/config/missing.ts"));
+        }
         VitestSetupDependency {
             field: VitestSetupField::SetupFiles,
             specifier: specifier.map(str::to_string),
@@ -282,7 +326,7 @@ mod tests {
             resolution_base: PathBuf::from("/repo/config"),
             declaration_path: PathBuf::from("/repo/config/setup.ts"),
             declaration_line: 7,
-            trigger_paths: BTreeSet::from([PathBuf::from("/repo/config/setup.ts")]),
+            trigger_paths,
         }
     }
 

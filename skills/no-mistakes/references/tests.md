@@ -89,8 +89,10 @@ single config for the whole plan.
 `tests plan vitest` and `testsPlan()` statically trace each project's effective
 `setupFiles` and `globalSetup`, including their ordinary import/re-export
 closure. A changed setup dependency selects only tests owned by that Vitest
-project. Project fields inherit a root field when absent; explicit values
-replace it and `[]` clears it.
+project. Inline project fields inherit a root field only with `extends: true`;
+the default and `extends: false` keep the project independent. A string config
+in `test.projects` is likewise independent of its referencing config. Explicit
+values replace inherited fields and `[]` clears them.
 
 Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
 `vitest-setup-unresolved` warnings. If relevant, planning safely selects the

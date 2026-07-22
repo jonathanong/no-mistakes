@@ -73,6 +73,12 @@ fn merge_property(
     match name.as_deref() {
         Some("name") => options.name = shared::optional_string(value, ctx.source),
         Some("root") => options.root = shared::optional_string(value, ctx.source),
+        Some("extends") => {
+            options.extends = match crate::codebase::ts_source::unwrap_ts_wrappers(value) {
+                Expression::BooleanLiteral(boolean) => Some(boolean.value),
+                _ => None,
+            };
+        }
         Some("include") => {
             let include = shared::inferred_string_or_array(value, ctx.source, "include")?;
             if include.is_empty() {

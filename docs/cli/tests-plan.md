@@ -113,9 +113,11 @@ global fallback.
 Vitest `setupFiles` and `globalSetup` are included in the test dependency
 graph automatically. A change to either configured module, or to a static
 import/re-export reachable from one, selects only the tests owned by that
-Vitest project. Root setup fields apply to projects that do not explicitly set
-that field; an explicit project value replaces the root value and `[]` clears
-it.
+Vitest project. Inline projects inherit root setup fields only with
+`extends: true`; otherwise (including the default and `extends: false`) their
+own value applies, and `[]` clears it. A config referenced as a string in
+`test.projects` is parsed as an independent config and does not inherit the
+referencing config's setup fields.
 
 Setup values are extracted statically from string and array forms. Dynamic
 expressions and unresolved literal modules produce a JSON warning with the

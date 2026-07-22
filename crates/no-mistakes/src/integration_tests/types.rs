@@ -146,7 +146,8 @@ pub(crate) struct VitestSetupDependency {
     pub(crate) resolution_base: PathBuf,
     pub(crate) declaration_path: PathBuf,
     pub(crate) declaration_line: u32,
-    /// Config and helper modules that contributed this declaration. Dynamic
-    /// setup expressions use these paths as conservative impact triggers.
+    /// Config, helper, and literal-resolution candidate modules that
+    /// contributed this declaration. These paths are conservative impact
+    /// triggers, including targets deleted before planning.
     pub(crate) trigger_paths: BTreeSet<PathBuf>,
 }

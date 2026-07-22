@@ -100,6 +100,33 @@ fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
     );
 }
 
+#[test]
+fn vitest_setup_root_scope_is_an_ancestor_of_nested_projects() {
+    let test = p("/repo/src/widget.test.ts");
+    let root_setup = p("/repo/setup/root.ts");
+    let nested_setup = p("/repo/setup/nested.ts");
+    let graph = from_typed_maps(
+        p("/repo"),
+        HashMap::from([
+            (NodeId::File(test.clone()), Vec::new()),
+            (NodeId::Module("vitest".to_string()), Vec::new()),
+        ]),
+        EdgeMap::new(),
+    )
+    .with_vitest_setup_projects(vec![
+        vitest_project("root", Some("."), "src/**/*.test.ts", &root_setup),
+        vitest_project("nested", Some("src"), "src/**/*.test.ts", &nested_setup),
+    ]);
+
+    assert_eq!(
+        graph.dependencies_of_node(&NodeId::File(test)),
+        Some(&vec![(
+            NodeId::File(nested_setup),
+            EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
+        )]),
+    );
+}
+
 fn vitest_project(
     config: &str,
     scope: Option<&str>,

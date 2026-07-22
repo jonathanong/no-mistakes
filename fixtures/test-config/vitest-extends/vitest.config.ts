@@ -1,0 +1,26 @@
+const extendsTrue = { extends: true }
+const extendsFalse = { extends: false }
+
+export default {
+  test: {
+    setupFiles: './root-setup.ts',
+    globalSetup: './root-global.ts',
+    projects: [
+      { test: { name: 'default', include: ['default/**/*.test.ts'] } },
+      { extends: false, test: { name: 'false', include: ['false/**/*.test.ts'] } },
+      { extends: 'not-boolean', test: { name: 'nonboolean', include: ['nonboolean/**/*.test.ts'] } },
+      { extends: true, test: { name: 'true', include: ['true/**/*.test.ts'] } },
+      {
+        ...extendsTrue,
+        ...extendsFalse,
+        test: { name: 'spread-false-last', include: ['spread-false-last/**/*.test.ts'] },
+      },
+      {
+        ...extendsFalse,
+        ...extendsTrue,
+        test: { name: 'spread-true-last', include: ['spread-true-last/**/*.test.ts'] },
+      },
+      './standalone.config.ts',
+    ],
+  },
+}

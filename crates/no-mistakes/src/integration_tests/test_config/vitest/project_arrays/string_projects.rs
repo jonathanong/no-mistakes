@@ -1,30 +1,89 @@
 use super::{import_bindings, objects, shared, top_level_function_bodies, Ctx, Options};
 use anyhow::Result;
+use globset::{Glob, GlobSetBuilder};
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// Vitest allows `test.projects` to name project config files directly. Parse
-/// only static strings and feed their exported object through the same
-/// object/config extractor as inline projects; never execute the config.
-pub(super) fn string_project_options(
-    specifier: &str,
+/// Parse static project config files through the same object/config extractor
+/// as inline projects; never execute the config.
+pub(super) fn string_project_options_for_paths(
+    paths: impl IntoIterator<Item = PathBuf>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    let Some(path) = ctx.resolver.resolve(specifier, ctx.path) else {
-        return Ok(Vec::new());
-    };
-    if !ctx.seen.insert(path.clone()) {
-        return Ok(Vec::new());
+    paths
+        .into_iter()
+        .map(|path| parse_string_project(&path, ctx))
+        .collect::<Result<Vec<_>>>()
+        .map(|options| options.into_iter().flatten().collect())
+}
+
+pub(super) fn string_project_paths(specifier: &str, ctx: &Ctx<'_, '_>) -> Vec<PathBuf> {
+    let mut paths = BTreeSet::new();
+    if let Some(path) = ctx.resolver.resolve(specifier, ctx.path) {
+        paths.insert(path);
     }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(Vec::new()),
+    let Some(visible) = ctx.resolver.visible_files() else {
+        return paths.into_iter().collect();
+    };
+    let base = ctx.path.parent().unwrap_or_else(|| Path::new("."));
+    let visible_specifier = specifier.trim_start_matches("./");
+    let has_glob = visible_specifier.contains(['*', '?', '[', '{']);
+    let glob = has_glob.then(|| visible_config_glob(visible_specifier));
+    for path in visible.iter().filter(|path| is_vitest_project_config(path)) {
+        let relative = crate::codebase::ts_source::relative_slash_path(base, path);
+        let matches = match &glob {
+            Some(Ok(glob)) => glob.is_match(&relative),
+            Some(Err(_)) => false,
+            None => path.starts_with(base.join(visible_specifier)),
+        };
+        if matches {
+            paths.insert(path.clone());
+        }
+    }
+    paths.into_iter().collect()
+}
+
+fn visible_config_glob(specifier: &str) -> Result<globset::GlobSet, globset::Error> {
+    let mut builder = GlobSetBuilder::new();
+    builder.add(Glob::new(specifier)?);
+    builder.add(Glob::new(&format!(
+        "{}/**",
+        specifier.trim_end_matches('/')
+    ))?);
+    builder.build()
+}
+
+fn is_vitest_project_config(path: &Path) -> bool {
+    // Keep config discovery aligned with the resolver's executable TS/JS
+    // extensions. Declaration files are intentionally not Vitest configs.
+    const EXTENSIONS: &[&str] = &["mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts"];
+    let Some(extension) = path.extension().and_then(|extension| extension.to_str()) else {
+        return false;
+    };
+    if !EXTENSIONS.contains(&extension) {
+        return false;
+    }
+    let stem = path
+        .file_stem()
+        .map(|stem| stem.to_string_lossy())
+        .unwrap_or_default();
+    (stem.starts_with("vitest.") || stem.starts_with("vite.")) && stem.ends_with(".config")
+        || stem == "vitest.workspace"
+}
+
+fn parse_string_project(path: &Path, ctx: &mut Ctx<'_, '_>) -> Result<Option<Options>> {
+    if !ctx.seen.insert(path.to_path_buf()) {
+        return Ok(None);
+    }
+    let result = match crate::integration_tests::runner_config::read_request_source(path) {
+        Err(_) => Ok(None),
         Ok(source) => crate::integration_tests::runner_config::with_program(
-            &path,
+            path,
             &source,
             |program, source| {
                 let bindings = shared::top_level_object_bindings(program);
                 let Some(object) = shared::default_export_object(program, &bindings) else {
-                    return Ok(Vec::new());
+                    return Ok(None);
                 };
                 let mut local_seen = BTreeSet::new();
                 let mut object_seen = BTreeSet::new();
@@ -34,18 +93,20 @@ pub(super) fn string_project_options(
                     functions: top_level_function_bodies(program),
                     imports: import_bindings(program),
                     resolver: ctx.resolver,
-                    path: &path,
+                    path,
                     seen: ctx.seen,
                     local_seen: &mut local_seen,
                     object_seen: &mut object_seen,
                 };
                 let mut options = objects::project_options(object, &mut project_ctx)?;
+                options.standalone_config = true;
                 options.config_base = path.parent().map(Path::to_path_buf);
-                Ok(vec![options])
+                options.standalone_config_path = Some(path.to_path_buf());
+                Ok(Some(options))
             },
         )
         .and_then(|options| options),
     };
-    ctx.seen.remove(&path);
+    ctx.seen.remove(path);
     result
 }

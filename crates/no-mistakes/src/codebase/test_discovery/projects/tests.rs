@@ -76,6 +76,25 @@ fn explicit_policy_replaces_each_matching_config_project() {
 }
 
 #[test]
+fn explicit_policy_projects_builds_config_free_runner_projects() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "unit".to_string(),
+        TestProjectPolicy {
+            include: vec!["tests/**/*.test.ts".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let projects = explicit_policy_projects(Path::new("/repo"), &config, TestRunner::Vitest);
+    assert_eq!(projects.len(), 1);
+    assert!(projects[0].config.is_none());
+    assert_eq!(projects[0].policy_name.as_deref(), Some("unit"));
+    assert_eq!(projects[0].runner_project_arg.as_deref(), Some("unit"));
+    assert_eq!(projects[0].include, ["tests/**/*.test.ts"]);
+}
+
+#[test]
 fn swift_projects_cover_package_fallback_and_policy_overrides() {
     let root = Path::new("");
     let mut config = NoMistakesConfig::default();

@@ -1126,6 +1126,31 @@ fn relative_nonexistent_returns_none() {
     assert!(resolve_import("./ghost", &importer, &tc).is_none());
 }
 
+#[test]
+fn resolution_candidates_cover_absolute_and_queue_compatibility_fallbacks() {
+    let root = PathBuf::from("/resolver-candidate-fixture");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let absolute = PathBuf::from("/absolute/missing");
+    let standard = ImportResolver::new(&tsconfig)
+        .resolution_candidates(absolute.to_str().unwrap(), &root.join("src/main.ts"));
+    assert!(standard.contains(&absolute.with_extension("ts")));
+    assert!(standard.contains(&absolute.join("index.mts")));
+
+    let queue = ImportResolver::new(&tsconfig).with_queue_compatibility(&root);
+    let candidates = queue.resolution_candidates("workers/missing", &root.join("src/main.ts"));
+    assert!(candidates.contains(&root.join("workers/missing.ts")));
+    assert!(candidates.contains(&root.join("workers/missing/index.mts")));
+    let source_candidates =
+        queue.resolution_candidates("workers/missing.ts", &root.join("src/main.ts"));
+    assert!(source_candidates.contains(&root.join("workers/missing.ts")));
+    assert!(source_candidates.contains(&root.join("workers/missing.mts")));
+}
+
 // ── resolve_import — aliases ──────────────────────────────────────────
 
 #[test]
