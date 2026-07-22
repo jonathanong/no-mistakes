@@ -343,6 +343,24 @@ Binary files a/bin.dat and /dev/null differ
     assert_eq!(files[0].status, DiffFileStatus::Deleted);
 }
 
+// Regression for a review finding on #587: a hunkless deletion has no
+// `--- `/`+++ ` lines to fall back on (see
+// `parse_hunkless_deletion_uses_deleted_file_mode_header`), so a path
+// containing the literal substring " b/" relies entirely on
+// `parse_diff_header` resolving the ambiguous split correctly.
+#[test]
+fn parse_hunkless_deletion_resolves_ambiguous_header_path() {
+    let diff = "\
+diff --git a/a b/empty.txt b/a b/empty.txt
+deleted file mode 100644
+index e69de29..0000000
+";
+    let files = parse_unified_diff(diff);
+    assert_eq!(files.len(), 1);
+    assert_eq!(files[0].path, PathBuf::from("a b/empty.txt"));
+    assert_eq!(files[0].status, DiffFileStatus::Deleted);
+}
+
 // Regression for a review finding on #587: `diff --git a/X b/Y` is split on
 // the first literal " b/", which misparses a path that itself contains that
 // substring. The `--- `/`+++ ` lines are single, unambiguous paths and must

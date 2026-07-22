@@ -332,6 +332,29 @@ fn stream_git_diff_handles_a_path_containing_the_header_split_delimiter() {
     assert_eq!(diff[0].path, Path::new(path));
 }
 
+// Regression for a review finding on #587: a hunkless deletion (no
+// `--- `/`+++ ` lines) under a directory whose name contains the literal
+// substring " b/" must still resolve to the correct path, via
+// `parse_diff_header`'s equal-halves disambiguation rather than the
+// `---`/`+++` preference (which doesn't apply here — there's no hunk).
+#[test]
+fn stream_git_diff_resolves_hunkless_deletion_with_an_ambiguous_path() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    std::fs::create_dir_all(root.join("a b")).unwrap();
+    let path = "a b/empty.txt";
+    std::fs::write(root.join(path), "").unwrap();
+    commit_all(root, "base");
+    std::fs::remove_file(root.join(path)).unwrap();
+    commit_all(root, "head");
+
+    let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
+    assert_eq!(diff.len(), 1);
+    assert_eq!(diff[0].path, Path::new(path));
+    assert_eq!(diff[0].status, DiffFileStatus::Deleted);
+}
+
 #[test]
 fn stream_git_diff_handles_a_path_starting_with_a_dash() {
     let dir = tempfile::tempdir().unwrap();

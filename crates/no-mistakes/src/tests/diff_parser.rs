@@ -279,11 +279,44 @@ fn strip_ab_prefix(raw: &str) -> PathBuf {
 
 fn parse_diff_header(line: &str) -> (Option<PathBuf>, PathBuf) {
     let rest = line.strip_prefix("diff --git ").unwrap_or("");
+    // For anything but a rename, git shows the *same* path on both sides
+    // (`a/P b/P`), so the correct split is wherever the two halves match —
+    // not necessarily the first " b/" substring, which a path containing
+    // that literal text (e.g. `a b/file.ts`) would misparse. This is the
+    // only path source hunkless deletions/additions have (no `--- `/`+++ `
+    // lines to fall back on), so it must be resolved here rather than left
+    // to the `---`/`+++` preference in `PendingDiffFile::finish`.
+    if let Some(path) = split_matching_ab_halves(rest) {
+        return (Some(PathBuf::from(path)), PathBuf::from(path));
+    }
     let (a_part, b_part) = match rest.split_once(" b/") {
         Some((a, b)) => (a.strip_prefix("a/").unwrap_or(a), b),
         None => return (None, PathBuf::from(rest)),
     };
     (Some(PathBuf::from(a_part)), PathBuf::from(b_part))
+}
+
+/// Find the `" b/"` occurrence in a `diff --git a/X b/Y` header's `a/X b/Y`
+/// remainder where stripping the leading `a/` from the left half yields a
+/// string identical to the right half — i.e. `X == Y`, true for every
+/// non-rename diff. Tries every occurrence (not just the first), so a path
+/// containing the literal substring `" b/"` still resolves correctly. A
+/// genuine rename (`X != Y`) never matches here and falls through to the
+/// naive first-occurrence split, which is fine: a rename's real path comes
+/// from `rename from`/`rename to` lines, not this header.
+fn split_matching_ab_halves(rest: &str) -> Option<&str> {
+    let a_part = rest.strip_prefix("a/")?;
+    let mut search_from = 0;
+    while let Some(offset) = a_part[search_from..].find(" b/") {
+        let split_at = search_from + offset;
+        let candidate = &a_part[..split_at];
+        let remainder = &a_part[split_at + " b/".len()..];
+        if candidate == remainder {
+            return Some(candidate);
+        }
+        search_from = split_at + 1;
+    }
+    None
 }
 
 fn dedup_diff_files(files: Vec<DiffFile>) -> Vec<DiffFile> {
