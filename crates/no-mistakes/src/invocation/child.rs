@@ -13,6 +13,8 @@ pub(super) use process_tree::configure_process_group;
 pub(super) use process_tree::ParentSignalForwardingGuard;
 pub(super) use process_tree::ProcessTree;
 
+pub(super) mod stream;
+
 const CLEANUP_TIMEOUT: Duration = Duration::from_millis(100);
 type PipeReader = Receiver<std::io::Result<Vec<u8>>>;
 

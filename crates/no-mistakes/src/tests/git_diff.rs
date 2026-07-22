@@ -1,0 +1,169 @@
+//! Streams `git diff <base>...<head>` into the same unified-diff parser
+//! `--diff-stdin` uses, so `--base`/`--head`/`--from-git-diff` planning gets
+//! identical hunks, rename/delete facts, and selector/route/queue/HTTP
+//! coverage hints instead of only file names (see
+//! `changed_files::collect_changed_files`). On failure, classifies the
+//! Git-input problem into a stable, greppable diagnostic code so a caller
+//! never mistakes a broken revision range for "nothing changed."
+
+use super::diff_parser::DiffFile;
+use super::diff_parser::DiffStreamParser;
+use crate::invocation::stream_command_lines;
+use std::path::Path;
+use std::process::Command;
+
+/// A single diff line without a newline beyond this many bytes is rejected
+/// as malformed rather than grown without bound.
+const MAX_DIFF_LINE_BYTES: usize = 16 * 1024 * 1024;
+
+/// Stable, greppable diagnostic for a Git-input failure. `Display` embeds the
+/// `[code]` token verbatim so it survives both the CLI's `eprintln!("error:
+/// {error:#}")` and Node's `napi::Error::from_reason(format!("{error:#}"))` —
+/// callers should match on the bracketed code, not the prose.
+pub(crate) struct GitDiffError {
+    code: &'static str,
+    message: String,
+}
+
+impl GitDiffError {
+    #[cfg(test)]
+    pub(crate) fn code(&self) -> &'static str {
+        self.code
+    }
+}
+
+impl std::fmt::Debug for GitDiffError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self, f)
+    }
+}
+
+impl std::fmt::Display for GitDiffError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} [{}]", self.message, self.code)
+    }
+}
+
+impl std::error::Error for GitDiffError {}
+
+pub(crate) fn stream_git_diff(
+    root: &Path,
+    base: &str,
+    head: &str,
+) -> anyhow::Result<Vec<DiffFile>> {
+    let mut command = Command::new("git");
+    command
+        .args([
+            "-c",
+            "core.quotePath=false",
+            "diff",
+            "--relative",
+            "-M",
+            "--unified=3",
+            "--no-color",
+            &format!("{base}...{head}"),
+        ])
+        .current_dir(root);
+
+    let mut parser = DiffStreamParser::new();
+    let outcome = stream_command_lines(&mut command, MAX_DIFF_LINE_BYTES, |line| {
+        parser.push_line(line);
+        Ok(())
+    });
+
+    let outcome = match outcome {
+        Ok(outcome) => outcome,
+        Err(io_error) if io_error.kind() == std::io::ErrorKind::InvalidData => {
+            return Err(GitDiffError {
+                code: "git-malformed-output",
+                message: io_error.to_string(),
+            }
+            .into());
+        }
+        // Spawn failures and invocation-deadline timeouts are not Git-input
+        // problems; propagate the raw `io::Error` unwrapped so existing
+        // timeout detection (`invocation::timeout_exit_code`, which
+        // downcasts to `std::io::Error` with kind `TimedOut`) still applies.
+        Err(io_error) => return Err(io_error.into()),
+    };
+
+    if outcome.status.success() {
+        return Ok(parser.finish());
+    }
+
+    Err(classify_git_diff_failure(root, base, head, &outcome.stderr).into())
+}
+
+/// Classifies a failed `git diff <base>...<head>` by re-running small,
+/// cheap Git probes — only reached on failure, so the common (successful)
+/// path pays for nothing beyond the one streamed `git diff`.
+fn classify_git_diff_failure(root: &Path, base: &str, head: &str, stderr: &[u8]) -> GitDiffError {
+    let stderr_text = String::from_utf8_lossy(stderr).trim().to_string();
+
+    if super::lockfile_changes::find_git_root(root).is_none() {
+        return GitDiffError {
+            code: "git-not-a-repository",
+            message: format!("`{}` is not inside a Git repository", root.display()),
+        };
+    }
+
+    for (label, git_ref) in [("base", base), ("head", head)] {
+        if !git_ref_resolves(root, git_ref) {
+            return GitDiffError {
+                code: "git-merge-base-unavailable",
+                message: format!(
+                    "{label} ref `{git_ref}` does not resolve to a commit: {stderr_text}"
+                ),
+            };
+        }
+    }
+
+    // Both refs resolve individually, yet `git diff` itself failed: the only
+    // remaining Git-diagnosed cause is an unreachable merge base — either
+    // because history was fetched shallowly (common in CI checkouts) or the
+    // two refs are simply unrelated.
+    if is_shallow_repository(root) {
+        return GitDiffError {
+            code: "git-shallow-history",
+            message: format!(
+                "no merge base between `{base}` and `{head}` in a shallow clone; fetch \
+                 more history (e.g. `git fetch --unshallow` or a deeper `--depth`): {stderr_text}"
+            ),
+        };
+    }
+
+    GitDiffError {
+        code: "git-exit-failure",
+        message: format!("git diff {base}...{head} failed: {stderr_text}"),
+    }
+}
+
+fn git_ref_resolves(root: &Path, git_ref: &str) -> bool {
+    let mut command = Command::new("git");
+    command
+        .args([
+            "rev-parse",
+            "--verify",
+            "--quiet",
+            &format!("{git_ref}^{{commit}}"),
+        ])
+        .current_dir(root);
+    crate::invocation::command_output(&mut command)
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+fn is_shallow_repository(root: &Path) -> bool {
+    let mut command = Command::new("git");
+    command
+        .args(["rev-parse", "--is-shallow-repository"])
+        .current_dir(root);
+    crate::invocation::command_output(&mut command)
+        .ok()
+        .filter(|output| output.status.success())
+        .is_some_and(|output| String::from_utf8_lossy(&output.stdout).trim() == "true")
+}
+
+#[cfg(test)]
+#[path = "git_diff/tests.rs"]
+mod tests;

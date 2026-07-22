@@ -144,14 +144,10 @@ pub(crate) fn analyze_lockfile_changes(
 }
 
 fn is_diff_only_mode(args: &PlanArgs) -> bool {
-    args.head.is_none()
-        && (args.diff.is_some()
-            || args.diff_stdin
-            || args.diff_command.is_some()
-            || args.diff_content.is_some())
+    args.head.is_none() && super::changed_files::has_explicit_diff_source(args)
 }
 
-fn find_git_root(dir: &Path) -> Option<PathBuf> {
+pub(super) fn find_git_root(dir: &Path) -> Option<PathBuf> {
     let mut command = std::process::Command::new("git");
     command
         .args(["rev-parse", "--show-toplevel"])

@@ -53,7 +53,9 @@ pub(crate) struct PlanArgs {
     pub(crate) head: Option<String>,
 
     /// Git diff refspec, e.g. origin/main...HEAD. Sugar for --base/--head;
-    /// desugars to the same `git diff --relative --name-status <base>...<head>` lookup.
+    /// desugars to the same streamed `git diff <base>...<head>` lookup, which
+    /// carries full unified-diff hunks (selector/route/queue/HTTP coverage
+    /// hints, rename/delete facts) the same as `--diff-stdin`.
     #[arg(long = "from-git-diff", conflicts_with_all = ["base", "head"])]
     pub(crate) from_git_diff: Option<String>,
 

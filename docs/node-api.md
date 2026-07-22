@@ -73,6 +73,14 @@ Node option or result type is required.
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests.
 
+`testsPlan(options)` rejects (rather than resolving to an empty plan) when
+`base`/`head`/`fromGitDiff` can't be resolved by Git — an invalid ref, a
+shallow clone missing the merge base, a non-repository root, or a Git exit
+failure. The rejection message embeds a stable, greppable diagnostic code
+(`git-not-a-repository`, `git-merge-base-unavailable`, `git-shallow-history`,
+`git-exit-failure`, `git-malformed-output`) matching the CLI's stderr —
+see `docs/cli/tests-plan.md`.
+
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 
