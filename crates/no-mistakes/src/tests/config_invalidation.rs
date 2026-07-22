@@ -8,22 +8,27 @@ use super::changed_files::ChangedFiles;
 use super::diff_parser::{DiffFile, DiffFileStatus, HunkLineKind};
 use super::{PlanArgs, TestFramework};
 use anyhow::{Context, Result};
-use no_mistakes::config::v2::schema::{NoMistakesConfig, TestPlanFrameworkConfig};
+use no_mistakes::config::v2::schema::NoMistakesConfig;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod semantics;
+
 pub(crate) struct ConfigInvalidation {
+    comparisons: Vec<ConfigComparison>,
+    trigger_file: PathBuf,
+}
+
+struct ConfigComparison {
     before: NoMistakesConfig,
     after: NoMistakesConfig,
-    trigger_file: PathBuf,
 }
 
 impl ConfigInvalidation {
     pub(crate) fn framework_changed(&self, framework: TestFramework) -> bool {
-        framework_test_plan(&self.before, framework) != framework_test_plan(&self.after, framework)
-            || framework_tests(&self.before, framework) != framework_tests(&self.after, framework)
-            || framework_trigger_projects(&self.before, framework)
-                != framework_trigger_projects(&self.after, framework)
+        self.comparisons.iter().any(|comparison| {
+            semantics::framework_semantics_changed(&comparison.before, &comparison.after, framework)
+        })
     }
 
     pub(crate) fn trigger(&self) -> (String, PathBuf) {
@@ -51,21 +56,51 @@ pub(crate) fn compare_changed_config(
         return Ok(None);
     };
 
-    let (before_source, after_source) = if let Some(base) = args.base.as_deref() {
-        sources_from_git(root, base, args.head.as_deref(), args.config.as_deref())?
-    } else if !collected.diff_files.is_empty() {
-        sources_from_diff(root, args.config.as_deref(), &collected.diff_files)?
-    } else {
+    let mut comparisons = Vec::new();
+    if let Some(base) = args.base.as_deref() {
+        comparisons.push(parse_comparison(sources_from_git(
+            root,
+            base,
+            args.head.as_deref(),
+            args.config.as_deref(),
+        )?)?);
+    }
+    if diff_changes_config(args, root, &collected.diff_files) {
+        comparisons.push(parse_comparison(sources_from_diff(
+            root,
+            args.config.as_deref(),
+            &collected.diff_files,
+        )?)?);
+    }
+    if comparisons.is_empty() {
         anyhow::bail!("configuration change has no revision or unified diff to compare")
-    };
-
-    let before = parse_endpoint(before_source)?;
-    let after = parse_endpoint(after_source)?;
+    }
     Ok(Some(ConfigInvalidation {
-        before,
-        after,
+        comparisons,
         trigger_file,
     }))
+}
+
+fn parse_comparison(
+    (before, after): (Option<ConfigSource>, Option<ConfigSource>),
+) -> Result<ConfigComparison> {
+    Ok(ConfigComparison {
+        before: parse_endpoint(before)?,
+        after: parse_endpoint(after)?,
+    })
+}
+
+fn diff_changes_config(args: &PlanArgs, root: &Path, diff_files: &[DiffFile]) -> bool {
+    let candidates = config_candidates(args, root);
+    diff_files.iter().any(|diff| {
+        candidates.iter().any(|candidate| {
+            same_path(&diff.path, candidate)
+                || diff
+                    .old_path
+                    .as_ref()
+                    .is_some_and(|old| same_path(old, candidate))
+        })
+    })
 }
 
 fn config_candidates(args: &PlanArgs, root: &Path) -> Vec<PathBuf> {
@@ -416,87 +451,6 @@ fn same_path(left: &Path, right: &Path) -> bool {
         == no_mistakes::codebase::ts_resolver::normalize_path(right)
 }
 
-fn framework_test_plan(
-    config: &NoMistakesConfig,
-    framework: TestFramework,
-) -> TestPlanFrameworkConfig {
-    let mut plan = match framework {
-        TestFramework::Dotnet => config.test_plan.dotnet.clone(),
-        TestFramework::Playwright => config.test_plan.playwright.clone(),
-        TestFramework::Vitest => config.test_plan.vitest.clone(),
-        TestFramework::Swift => config.test_plan.swift.clone(),
-    };
-    // Compatibility warning bookkeeping is not behavior.
-    plan.deprecated_dependencies_key = false;
-    plan
-}
-
-fn framework_tests(config: &NoMistakesConfig, framework: TestFramework) -> serde_json::Value {
-    match framework {
-        TestFramework::Dotnet => serde_json::to_value(&config.tests.dotnet),
-        TestFramework::Playwright => serde_json::to_value(&config.tests.playwright),
-        TestFramework::Vitest => serde_json::to_value(&config.tests.vitest),
-        TestFramework::Swift => serde_json::to_value(&config.tests.swift),
-    }
-    .expect("test configuration must serialize")
-}
-
-fn framework_trigger_projects(
-    config: &NoMistakesConfig,
-    framework: TestFramework,
-) -> Vec<(&str, Option<&no_mistakes::config::v2::schema::Project>)> {
-    let plan = match framework {
-        TestFramework::Dotnet => &config.test_plan.dotnet,
-        TestFramework::Playwright => &config.test_plan.playwright,
-        TestFramework::Vitest => &config.test_plan.vitest,
-        TestFramework::Swift => &config.test_plan.swift,
-    };
-    plan.full_suite_triggers
-        .projects
-        .keys()
-        .map(|name| (name.as_str(), config.projects.get(name)))
-        .collect()
-}
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::tests::diff_parser::parse_unified_diff;
-
-    #[test]
-    fn reverses_positioned_hunks_against_the_on_disk_version() {
-        let diff = parse_unified_diff(
-            "diff --git a/.no-mistakes.yml b/.no-mistakes.yml\n--- a/.no-mistakes.yml\n+++ b/.no-mistakes.yml\n@@ -1,3 +1,3 @@\n tests:\n   vitest:\n-    configs: old.ts\n+    configs: new.ts\n",
-        );
-        assert_eq!(
-            apply_unified_hunks("tests:\n  vitest:\n    configs: new.ts\n", &diff[0], true)
-                .unwrap(),
-            "tests:\n  vitest:\n    configs: old.ts\n"
-        );
-    }
-
-    #[test]
-    fn ignores_deprecated_marker_but_compares_the_selected_framework_only() {
-        let mut before = NoMistakesConfig::default();
-        before.test_plan.vitest.deprecated_dependencies_key = true;
-        let after = NoMistakesConfig::default();
-        let invalidation = ConfigInvalidation {
-            before,
-            after,
-            trigger_file: PathBuf::from(".no-mistakes.yml"),
-        };
-        assert!(!invalidation.framework_changed(TestFramework::Vitest));
-        assert!(!invalidation.framework_changed(TestFramework::Playwright));
-    }
-
-    #[test]
-    fn content_identical_rename_needs_no_hunks_to_reconstruct_its_before_side() {
-        let diff = parse_unified_diff(
-            "diff --git a/.no-mistakes.yml b/.no-mistakes.yaml\nsimilarity index 100%\nrename from .no-mistakes.yml\nrename to .no-mistakes.yaml\n",
-        );
-        assert_eq!(
-            apply_unified_hunks("tests: {}\n", &diff[0], true).unwrap(),
-            "tests: {}\n"
-        );
-    }
-}
+#[path = "config_invalidation/tests.rs"]
+mod tests;
