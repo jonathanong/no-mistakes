@@ -284,6 +284,17 @@ pub(crate) fn trace_entrypoints(
     Ok(())
 }
 
+fn global_config_fallback(args: &PlanArgs) -> bool {
+    args.global_config_fallback.unwrap_or(false)
+}
+
+fn next_project_root(path: &Path) -> bool {
+    path.join("app").is_dir()
+        || path.join("pages").is_dir()
+        || path.join("src/app").is_dir()
+        || path.join("src/pages").is_dir()
+}
+
 #[cfg(test)]
 mod tests {
     include!("plan_extra_inputs/tests.rs");

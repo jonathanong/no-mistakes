@@ -484,10 +484,6 @@ pub(crate) fn generate_plan_with_prepared(
     })
 }
 
-fn global_config_fallback(args: &PlanArgs) -> bool {
-    args.global_config_fallback.unwrap_or(false)
-}
-
 pub(crate) fn global_config_trigger(
     root: &Path,
     changed_files: &[PathBuf],
@@ -559,13 +555,6 @@ fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
         return false;
     };
     parent == root || next_project_root(parent)
-}
-
-fn next_project_root(path: &Path) -> bool {
-    path.join("app").is_dir()
-        || path.join("pages").is_dir()
-        || path.join("src/app").is_dir()
-        || path.join("src/pages").is_dir()
 }
 
 fn discover_all_tests_from_prepared(
