@@ -152,12 +152,20 @@ fn stderr_beyond_the_cap_is_dropped_without_deadlocking() {
 // pipe open. Waiting for stderr must respect the invocation deadline (and
 // terminate the whole process group, killing the orphaned descendant too)
 // rather than joining unboundedly until that descendant's own pipe closes.
+// The descendant closes its own inherited stdout (`1>&-`) before sleeping,
+// so `drain_lines` (stdout) finishes normally and the stderr receive is the
+// one step still pending — without that, the descendant would hold *both*
+// pipes open and `drain_lines`'s own (already-covered) timeout would fire
+// first, never exercising the stderr path this test targets. The deadline
+// is generous (2s) so that spawn/drain_lines/wait_for_exit — each already
+// deadline-checked separately — reliably complete well within budget under
+// coverage instrumentation or CI load.
 #[test]
 fn stderr_wait_respects_the_deadline_when_a_descendant_holds_the_pipe_open() {
     let mut command = Command::new("sh");
-    command.args(["-c", "(sleep 120) & exit 0"]);
+    command.args(["-c", "(sleep 120 1>&-) & exit 0"]);
     let _deadline =
-        crate::invocation::install_test_deadline(std::time::Duration::from_millis(300)).unwrap();
+        crate::invocation::install_test_deadline(std::time::Duration::from_secs(2)).unwrap();
     let start = std::time::Instant::now();
     let result = collect_lines(&mut command, 1024);
     let error = result.expect_err("an orphaned descendant holding stderr open must time out");
