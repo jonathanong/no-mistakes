@@ -100,7 +100,14 @@ impl ImportExtractor {
         };
         let ret = crate::ast::parse(Path::new(sentinel), &allocator, source, source_type);
 
-        Ok(extract_import_facts_from_program_with_source(&ret.program, source).imports)
+        Ok(
+            extract_import_facts_from_program_with_source_and_resource_roots(
+                &ret.program,
+                source,
+                false,
+            )
+            .imports,
+        )
     }
 }
 
@@ -116,8 +123,17 @@ pub fn extract_import_facts_from_program_with_source<'a>(
     program: &Program<'a>,
     source: &str,
 ) -> ImportFacts {
+    extract_import_facts_from_program_with_source_and_resource_roots(program, source, true)
+}
+
+pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'a>(
+    program: &Program<'a>,
+    source: &str,
+    collect_resource_roots: bool,
+) -> ImportFacts {
     let mut collector = ImportCollector {
         source: source.to_string(),
+        collect_resource_roots,
         ..ImportCollector::default()
     };
     let local_type_names = local_type_declaration_names(program);

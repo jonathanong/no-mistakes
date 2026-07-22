@@ -12,6 +12,7 @@ struct ImportCollector {
     function_scope_stack: Vec<usize>,
     exported_functions: HashSet<String>,
     exported_resource_roots: HashSet<String>,
+    collect_resource_roots: bool,
     exported_type_scopes: HashSet<String>,
     callable_scopes: HashSet<String>,
     class_scopes: HashSet<String>,

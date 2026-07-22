@@ -1,6 +1,6 @@
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use super::should_store_source;
-use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source;
+use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_resource_roots;
 use crate::codebase::ts_source::facts::{self, TsFileFacts};
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
@@ -18,7 +18,11 @@ pub(crate) fn collect_file_facts_from_program(
         || plan.graph.function_calls
         || playwright.is_some_and(|plan| plan.file(path).is_some());
     let import_facts = if needs_import_facts {
-        extract_import_facts_from_program_with_source(program, source)
+        extract_import_facts_from_program_with_source_and_resource_roots(
+            program,
+            source,
+            plan.graph.resources,
+        )
     } else {
         Default::default()
     };

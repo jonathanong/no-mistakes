@@ -133,7 +133,7 @@ fn visit_variable_declarator_with_scope<'a>(
                     .is_some_and(|name| collector.is_exported_top_level_name(name));
             if exported {
                 if let Some(name) = name.as_deref() {
-                    collector.exported_resource_roots.insert(name.to_string());
+                    collector.record_exported_resource_root(name);
                 }
                 visit_exported_variable_declarator_reference(collector, declarator, name);
             } else {
@@ -149,7 +149,7 @@ fn visit_variable_declarator_with_scope<'a>(
             if let Some(name) = name.as_deref() {
                 record_class_member_calls(collector, name, class);
                 if collector.is_exported_top_level_name(name) {
-                    collector.exported_resource_roots.insert(name.to_string());
+                    collector.record_exported_resource_root(name);
                 }
             }
             visit_exported_variable_declarator_reference(collector, declarator, name);
