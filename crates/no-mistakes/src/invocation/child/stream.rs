@@ -149,9 +149,10 @@ fn wait_for_exit(
             )),
             Err(error) => Err(terminate_and_reap(process_tree, child, error)),
         },
-        None => child
-            .wait()
-            .map_err(|error| terminate_and_reap(process_tree, child, error)),
+        None => match child.wait() {
+            Ok(status) => Ok(status),
+            Err(error) => Err(terminate_and_reap(process_tree, child, error)),
+        },
     }
 }
 
