@@ -1,0 +1,9 @@
+name: B
+on:
+  workflow_run:
+    workflows: [A]
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo b

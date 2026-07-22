@@ -98,6 +98,8 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "swiftImporters", options: JSON.parse(json) }),
       swiftTestTargetsJson: async (json) =>
         JSON.stringify({ command: "swiftTestTargets", options: JSON.parse(json) }),
+      ciTopologyJson: async (json) =>
+        JSON.stringify({ command: "ciTopology", options: JSON.parse(json) }),
       version: async () => "1.2.3",
     };
   };
@@ -231,6 +233,7 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.swiftTestTargets({ file: "Sources/A.swift" })).command,
       "swiftTestTargets",
     );
+    assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
     assert.equal(await api.version(), "1.2.3");
   } finally {
     delete require.cache[require.resolve(indexPath)];

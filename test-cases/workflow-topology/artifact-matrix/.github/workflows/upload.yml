@@ -1,0 +1,6 @@
+on: workflow_call
+jobs:
+  upload:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: reusable-shared}

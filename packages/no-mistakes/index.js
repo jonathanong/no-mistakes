@@ -2,6 +2,7 @@
 
 const native = require("./bin/no-mistakes.node");
 const planning = require("./planning");
+const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
 
 async function callJson(fn, options) {
   return JSON.parse(await fn(JSON.stringify(options || {})));
@@ -115,6 +116,10 @@ async function ciEnv(options) {
   return callJson(native.ciEnvJson, options);
 }
 
+async function ciTopology(options) {
+  return callJson(native.ciTopologyJson, options);
+}
+
 async function impactedChecks(options) {
   return callJson(native.impactedChecksJson, options);
 }
@@ -149,6 +154,8 @@ module.exports = {
   check,
   ciEnv,
   ciImpact,
+  ciTopology,
+  createWorkflowTopologyIndex,
   dataPw,
   deadExports,
   dependencies,

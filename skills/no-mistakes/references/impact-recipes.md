@@ -148,6 +148,12 @@ no-mistakes ci impact .github/workflows/ci.yml --format json
 no-mistakes ci impact crates/no-mistakes/src/codebase/ci_graph/mod.rs --format json
 ```
 
+For the workflow/job/reusable-call graph itself (not path-filter impact):
+
+```bash
+no-mistakes ci topology --workflow ci.yml --format json
+```
+
 For Rust binaries invoked by supported Cargo commands in GitHub Actions:
 
 ```bash
@@ -161,6 +167,11 @@ Use the results as:
 - `ci impact` maps changed files to workflows/jobs whose path filters match and
   reports resolved permissions; it is branch-agnostic and intentionally does not
   recursively evaluate called reusable workflows.
+- `ci topology` is the tool for that recursive structure: it parses every
+  workflow into typed `needs`/`calls`/`workflow-run` edges plus diagnostics
+  for dangling, cyclic, or contract-violating definitions. Use `--workflow`
+  to scope to one workflow and its transitive local reusable-workflow
+  callees.
 - `--relationship ci` is narrow: it maps GitHub Actions workflow files to Rust
   binary sources invoked by supported Cargo command shapes. It is not a general
   shell, npm script, or workflow dependency graph.

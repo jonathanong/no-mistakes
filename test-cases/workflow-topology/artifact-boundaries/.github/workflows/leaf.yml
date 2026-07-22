@@ -1,0 +1,6 @@
+on: workflow_call
+jobs:
+  consume:
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: nested}

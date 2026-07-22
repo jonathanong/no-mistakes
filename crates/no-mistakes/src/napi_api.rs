@@ -20,11 +20,11 @@ pub mod queries;
 #[cfg(not(coverage))]
 use async_task::{JsonTask, VersionTask};
 pub(crate) use cli_parity::{
-    check_json_impl, ci_env_json_impl, ci_impact_json_impl, fetches_json_impl,
-    impacted_checks_json_impl, playwright_check_json_impl, playwright_edges_json_impl,
-    playwright_related_json_impl, playwright_tests_json_impl, tests_comment_markdown_impl,
-    tests_graph_json_impl, tests_graph_mermaid_impl, tests_impact_json_impl, tests_plan_json_impl,
-    tests_targets_json_impl, tests_why_json_impl,
+    check_json_impl, ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl,
+    fetches_json_impl, impacted_checks_json_impl, playwright_check_json_impl,
+    playwright_edges_json_impl, playwright_related_json_impl, playwright_tests_json_impl,
+    tests_comment_markdown_impl, tests_graph_json_impl, tests_graph_mermaid_impl,
+    tests_impact_json_impl, tests_plan_json_impl, tests_targets_json_impl, tests_why_json_impl,
 };
 pub(crate) use codebase::{
     dependencies_json_impl, dependents_json_impl, import_usages_json_impl, related_json_impl,

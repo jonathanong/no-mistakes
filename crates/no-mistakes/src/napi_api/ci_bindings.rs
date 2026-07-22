@@ -14,6 +14,12 @@ pub fn ci_env_json(options_json: String) -> AsyncTask<JsonTask> {
 }
 
 #[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "ciTopologyJson"))]
+pub fn ci_topology_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, ci_topology_json_impl))
+}
+
+#[cfg(not(coverage))]
 #[cfg_attr(not(test), napi(js_name = "impactedChecksJson"))]
 pub fn impacted_checks_json(options_json: String) -> AsyncTask<JsonTask> {
     AsyncTask::new(JsonTask::new(options_json, impacted_checks_json_impl))

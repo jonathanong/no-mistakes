@@ -55,7 +55,7 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`react`](react.md) | React component trait analysis and fetch checks. |
 | [`queues`](queues.md) | Queue producer/worker graph checks. |
 | [`server`](server.md) | Express, Hono, and Koa route graphs. |
-| [`ci`](ci.md) | GitHub Actions impact ([`ci-impact`](ci-impact.md)) and env usage ([`ci-env`](ci-env.md)). |
+| [`ci`](ci.md) | GitHub Actions impact ([`ci-impact`](ci-impact.md)), env usage ([`ci-env`](ci-env.md)), and workflow topology ([`ci-topology`](ci-topology.md)). |
 | [`impacted-checks`](impacted-checks.md) | Minimal local validation commands for changed files. |
 | [`infra`](infra.md) | Terraform/OpenTofu resource, module, and output relationships. |
 | [`swift`](swift.md) | Swift package importers and covering test targets. |

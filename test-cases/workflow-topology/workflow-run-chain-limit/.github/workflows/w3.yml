@@ -1,0 +1,9 @@
+name: W3
+on:
+  workflow_run:
+    workflows: [W2]
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo w3

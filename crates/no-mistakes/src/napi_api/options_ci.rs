@@ -20,6 +20,16 @@ pub(crate) struct CiEnvOptions {
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct CiTopologyOptions {
+    pub(crate) root: Option<String>,
+    pub(crate) config: Option<String>,
+    /// Workflow filter(s) — basename or a path inside `.github/workflows`.
+    /// Empty selects every workflow.
+    pub(crate) workflows: Vec<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ImpactedChecksOptions {
     pub(crate) root: Option<String>,
     pub(crate) config: Option<String>,

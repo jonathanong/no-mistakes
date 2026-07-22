@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/pipeline.yml",
+      "path": ".github/workflows/pipeline.yml",
+      "name": "Job Cycle",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/pipeline.yml#a",
+        ".github/workflows/pipeline.yml#b",
+        ".github/workflows/pipeline.yml#self"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/pipeline.yml#a",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "a",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/pipeline.yml#b",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "b",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/pipeline.yml#self",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "self",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "needs",
+      "from": ".github/workflows/pipeline.yml#a",
+      "to": ".github/workflows/pipeline.yml#b"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/pipeline.yml#b",
+      "to": ".github/workflows/pipeline.yml#a"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/pipeline.yml#self",
+      "to": ".github/workflows/pipeline.yml#self"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "job-dependency-cycle",
+      "message": "job dependency cycle: .github/workflows/pipeline.yml#a, .github/workflows/pipeline.yml#b",
+      "workflowPath": ".github/workflows/pipeline.yml",
+      "jobId": ".github/workflows/pipeline.yml#a"
+    },
+    {
+      "severity": "error",
+      "code": "job-dependency-cycle",
+      "message": "job dependency cycle: .github/workflows/pipeline.yml#self",
+      "workflowPath": ".github/workflows/pipeline.yml",
+      "jobId": ".github/workflows/pipeline.yml#self"
+    }
+  ]
+}

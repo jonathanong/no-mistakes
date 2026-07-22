@@ -1,0 +1,21 @@
+on: push
+jobs:
+  # A separate root (its own `on: push` trigger) so this dynamic-name
+  # upload doesn't taint main.yml's certainty determinations — a dynamic
+  # or path-derived producer anywhere in a run context downgrades every
+  # other name-selector download in that same context to "possible".
+  symbolic-producer:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with:
+          name: report-${{ inputs.suffix }}
+  symbolic-match:
+    needs: symbolic-producer
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {pattern: report-*}
+  symbolic-no-match:
+    needs: symbolic-producer
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {pattern: report-a*}
