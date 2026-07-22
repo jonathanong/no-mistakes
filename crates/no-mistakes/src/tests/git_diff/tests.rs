@@ -223,6 +223,22 @@ fn is_shallow_repository_propagates_a_deadline_timeout() {
     assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
 }
 
+// Regression for a review finding on #587: `classify_git_diff_failure`'s
+// *first* probe (`find_git_root`, reused from `lockfile_changes`) had the
+// same swallow-any-error-as-false bug as `git_ref_resolves`/
+// `is_shallow_repository` above. An already-elapsed deadline must surface
+// as a `TimedOut` `io::Error`, not a misleading `git-not-a-repository`.
+#[test]
+fn classify_git_diff_failure_propagates_a_deadline_timeout_from_the_repo_root_probe() {
+    let dir = two_commit_repo();
+    let root = dir.path();
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+
+    let error = classify_git_diff_failure(root, "HEAD~1", "HEAD", b"").unwrap_err();
+
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+}
+
 // Compatibility: spaces and non-ASCII paths. `-c core.quotePath=false` is
 // the whole reason a path like this comes back as raw UTF-8 instead of a
 // C-style-quoted, backslash-escaped string the parser would otherwise need

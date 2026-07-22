@@ -125,7 +125,7 @@ pub(super) fn classify_git_diff_failure(
 ) -> std::io::Result<GitDiffError> {
     let stderr_text = String::from_utf8_lossy(stderr).trim().to_string();
 
-    if super::lockfile_changes::find_git_root(root).is_none() {
+    if super::lockfile_changes::find_git_root(root)?.is_none() {
         return Ok(GitDiffError {
             code: "git-not-a-repository",
             message: format!("`{}` is not inside a Git repository", root.display()),
