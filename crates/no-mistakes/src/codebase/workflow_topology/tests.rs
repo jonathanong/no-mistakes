@@ -182,6 +182,27 @@ fn workflow_filter_resolves_a_bare_basename_against_a_configured_workflow_dir() 
     assert_eq!(explicit.workflows.len(), 1);
 }
 
+/// A `./`-prefixed `workflowDirs` entry is exactly as valid as an
+/// unprefixed one — discovery normalizes it away (`root.join(dir)` then
+/// lexical normalize), so the filter normalizer's directory comparisons
+/// must apply the identical normalization, not compare against the raw
+/// config spelling verbatim (which would never match a discovered path).
+#[test]
+fn workflow_filter_resolves_against_a_dot_slash_prefixed_configured_dir() {
+    let root = fixture("custom-workflow-dir");
+    let config = CiConfig {
+        workflow_dirs: vec!["./ci-pipelines".to_string()],
+        ..CiConfig::default()
+    };
+    let bare = load_workflow_topology(&root, &config, &["build.yml".to_string()]);
+    assert!(bare.diagnostics.is_empty());
+    assert_eq!(bare.workflows.len(), 1);
+
+    let explicit = load_workflow_topology(&root, &config, &["ci-pipelines/build.yml".to_string()]);
+    assert!(explicit.diagnostics.is_empty());
+    assert_eq!(explicit.workflows.len(), 1);
+}
+
 /// `serde_yaml`'s and `js-yaml`'s parse-error messages are different
 /// libraries' wording for the same malformed-YAML failure, so
 /// `malformed-workflow`'s `message` text can never byte-match the TS

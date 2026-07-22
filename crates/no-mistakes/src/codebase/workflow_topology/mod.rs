@@ -98,6 +98,24 @@ pub fn load_workflow_topology_from_snapshot(
         .collect();
     paths.sort();
 
+    // The same `root.join(dir)` + normalize + relative-slash round trip
+    // discovery itself applies to `ci.workflow_dirs` above — so a
+    // `--workflow` filter's directory comparisons (`normalize_workflow_filter`)
+    // see the exact spelling every discovered workflow's path actually uses
+    // (e.g. a configured `./ci-pipelines` or `../external-workflows` matches
+    // the discovered `ci-pipelines`/`../external-workflows`, not the raw
+    // config string).
+    let workflow_dirs: Vec<String> = ci
+        .workflow_dirs
+        .iter()
+        .map(|dir| {
+            relative_slash(
+                root,
+                &crate::codebase::ts_resolver::normalize_path(&root.join(dir)),
+            )
+        })
+        .collect();
+
     let mut workflows = Vec::new();
     let mut jobs = Vec::new();
     let mut edges = Vec::new();
@@ -146,14 +164,14 @@ pub fn load_workflow_topology_from_snapshot(
         workflow_filters,
         &workflow_by_path,
         &mut diagnostics,
-        &ci.workflow_dirs,
+        &workflow_dirs,
     );
 
     let selected = topology_graph::select_workflow_paths(
         workflow_filters,
         &workflow_by_path,
         &edges,
-        &ci.workflow_dirs,
+        &workflow_dirs,
     );
 
     let topology = model::WorkflowTopology {
