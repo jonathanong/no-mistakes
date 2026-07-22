@@ -218,6 +218,52 @@ fn vitest_setup_dependencies_preserve_effective_project_ownership() {
         .iter()
         .all(|dependency| dependency.resolution_base == root.join("imported")));
 
+    let imported_values = setup("imported-values");
+    assert_eq!(imported_values.len(), 9, "{imported_values:#?}");
+    assert!(imported_values
+        .iter()
+        .all(|dependency| dependency.specifier.is_some() && dependency.resolved_path.is_some()));
+    assert!(imported_values.iter().take(2).all(|dependency| {
+        dependency.declaration_path == root.join("config/imported-setup-values.ts")
+    }));
+    assert_eq!(
+        imported_values[0].resolved_path.as_deref(),
+        Some(
+            root.join("imported-values/setup/imported-value.ts")
+                .as_path()
+        )
+    );
+    assert_eq!(
+        imported_values[1].resolved_path.as_deref(),
+        Some(
+            root.join("imported-values/setup/imported-array.ts")
+                .as_path()
+        )
+    );
+    assert_eq!(
+        imported_values[2].resolved_path.as_deref(),
+        Some(
+            root.join("imported-values/setup/imported-template.ts")
+                .as_path()
+        )
+    );
+    assert_eq!(
+        imported_values
+            .iter()
+            .skip(3)
+            .filter_map(|dependency| dependency.resolved_path.as_ref())
+            .map(|path| path.file_name().unwrap().to_string_lossy().to_string())
+            .collect::<Vec<_>>(),
+        [
+            "default-imported.ts",
+            "default-named.ts",
+            "source-reexported.ts",
+            "imported-reexported.ts",
+            "barrel.ts",
+            "template-default.ts",
+        ],
+    );
+
     let string_project = setup("string-project");
     assert_eq!(string_project.len(), 2, "{string_project:#?}");
     assert!(string_project.iter().all(|dependency| {
@@ -341,6 +387,7 @@ fn vitest_project_string_entries_use_only_the_visible_config_universe() {
         vec![
             "z",
             "folder",
+            "imported-allowed",
             "inline-z",
             "inline-direct-spread",
             "a",
@@ -361,10 +408,10 @@ fn vitest_project_string_entries_use_only_the_visible_config_universe() {
         vec![
             "z",
             "folder",
+            "imported-allowed",
             "inline-z",
             "inline-direct-spread",
             "a",
-            "inline-a",
         ],
         "string and inline projects retain their first-occurrence source order",
     );
@@ -379,6 +426,30 @@ fn vitest_project_string_entries_use_only_the_visible_config_universe() {
     assert!(projects
         .iter()
         .all(|project| project.policy_name.as_deref() != Some("excluded")));
+    assert!(projects
+        .iter()
+        .all(|project| project.policy_name.as_deref() != Some("imported-excluded")));
+    assert!(
+        projects
+            .iter()
+            .all(|project| project.policy_name.as_deref() != Some("negated-outer")),
+        "an imported negation must skip an outer config before its setup state is parsed"
+    );
+    assert!(
+        projects.iter().all(|project| {
+            !matches!(
+                project.policy_name.as_deref(),
+                Some(
+                    "negated-local"
+                        | "negated-imported"
+                        | "negated-default-function"
+                        | "negated-default-function-identifier"
+                        | "negated-named-function"
+                )
+            )
+        }),
+        "local and imported static call returns must suppress outer setup configs"
+    );
     let direct = projects
         .iter()
         .find(|project| project.policy_name.as_deref() == Some("direct"))

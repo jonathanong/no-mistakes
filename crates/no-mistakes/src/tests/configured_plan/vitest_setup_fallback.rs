@@ -109,14 +109,26 @@ pub(super) fn selection(
     let mut selected_owner = false;
     let mut selected_framework = false;
     let mut triggered = false;
+    let mut unresolved_triggered = false;
+    let mut deleted_resolved_triggered = false;
 
     for project in projects {
-        for setup in project.vitest_setup.iter().filter(|setup| is_unsafe(setup)) {
-            let triggers = trigger_paths(root, project, setup, changed_files, deleted_files);
+        for setup in &project.vitest_setup {
+            let unsafe_setup = is_unsafe(setup);
+            let triggers = if unsafe_setup {
+                trigger_paths(root, project, setup, changed_files, deleted_files)
+            } else {
+                deleted_transitive_trigger_paths(setup, deleted_files)
+            };
             if triggers.is_empty() {
                 continue;
             }
             triggered = true;
+            if unsafe_setup {
+                unresolved_triggered = true;
+            } else {
+                deleted_resolved_triggered = true;
+            }
             let owner_tests = owner_tests(project, discovered);
             // An owner is established by the parsed project identity, not by
             // whether that owner happens to have an eligible test in this
@@ -153,22 +165,44 @@ pub(super) fn selection(
     if !triggered {
         return None;
     }
-    let reason = match (selected_owner, selected_framework) {
-        (true, false) => {
-            "Vitest setup dependencies could not be resolved statically; selected owning project tests"
-        }
-        (false, true) => {
-            "Vitest setup dependencies could not be resolved statically; selected discovered Vitest tests"
-        }
-        (true, true) => {
-            "Vitest setup dependencies could not be resolved statically; selected owning project and discovered Vitest tests"
-        }
+    let scope = match (selected_owner, selected_framework) {
+        (true, false) => "selected owning project tests",
+        (false, true) => "selected discovered Vitest tests",
+        (true, true) => "selected owning project and discovered Vitest tests",
         (false, false) => unreachable!("a relevant Vitest setup fallback has an owner decision"),
     };
+    let reason = match (unresolved_triggered, deleted_resolved_triggered) {
+        (true, false) => {
+            format!("Vitest setup dependencies could not be resolved statically; {scope}")
+        }
+        (false, true) => {
+            format!("A transitive dependency of a resolved setup was deleted; {scope}")
+        }
+        (true, true) => format!(
+            "Vitest setup dependencies could not be resolved statically and a transitive dependency of a resolved setup was deleted; {scope}"
+        ),
+        (false, false) => unreachable!("a relevant Vitest setup fallback has a trigger type"),
+    };
     Some((
-        reason.to_string(),
+        reason,
         stable_take(candidates.into_values().collect(), limit),
     ))
+}
+
+fn deleted_transitive_trigger_paths(
+    setup: &VitestSetupDependency,
+    deleted_files: &[PathBuf],
+) -> Vec<PathBuf> {
+    deleted_files
+        .iter()
+        .map(|path| normalize(path))
+        .filter(|deleted| {
+            setup
+                .transitive_trigger_paths
+                .iter()
+                .any(|trigger| deleted == &normalize(trigger))
+        })
+        .collect()
 }
 
 fn is_unsafe(setup: &VitestSetupDependency) -> bool {
@@ -202,6 +236,7 @@ fn warning(root: &Path, project: &ConfigProject, setup: &VitestSetupDependency) 
         r#type: r#type.to_string(),
         message,
         file: config,
+        line: Some(setup.declaration_line),
     }
 }
 
@@ -294,187 +329,4 @@ fn normalize(path: &Path) -> PathBuf {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::integration_tests::types::{VitestSetupDependency, VitestSetupField};
-    use no_mistakes::codebase::test_discovery::TestExecutionTarget;
-    use std::collections::BTreeMap;
-
-    fn project(scope: Option<&str>, setup: VitestSetupDependency) -> ConfigProject {
-        ConfigProject {
-            config: Some("vitest.config.ts".to_string()),
-            policy_name: None,
-            runner_project_arg: Some("unit".to_string()),
-            scope: scope.map(str::to_string),
-            include: Vec::new(),
-            exclude: Vec::new(),
-            vitest_setup: vec![setup],
-        }
-    }
-
-    fn setup(specifier: Option<&str>) -> VitestSetupDependency {
-        let mut trigger_paths = BTreeSet::from([PathBuf::from("/repo/config/setup.ts")]);
-        if specifier.is_some() {
-            // Literal resolution candidates are retained on the parsed setup
-            // dependency, including targets that no longer exist.
-            trigger_paths.insert(PathBuf::from("/repo/config/missing.ts"));
-        }
-        VitestSetupDependency {
-            field: VitestSetupField::SetupFiles,
-            specifier: specifier.map(str::to_string),
-            resolved_path: None,
-            resolution_base: PathBuf::from("/repo/config"),
-            declaration_path: PathBuf::from("/repo/config/setup.ts"),
-            declaration_line: 7,
-            trigger_paths,
-        }
-    }
-
-    fn discovered() -> DiscoveredTests {
-        let unit = PathBuf::from("/repo/unit/a.test.ts");
-        let other = PathBuf::from("/repo/other/b.test.ts");
-        let target = |project: Option<&str>| TestExecutionTarget {
-            runner: "vitest".to_string(),
-            config: Some("vitest.config.ts".to_string()),
-            project: project.map(str::to_string),
-            base_command: Vec::new(),
-            runner_args: Vec::new(),
-        };
-        DiscoveredTests {
-            tests: vec![unit.clone(), other.clone()],
-            targets_by_path: BTreeMap::from([
-                (unit, vec![target(Some("unit"))]),
-                (other, vec![target(Some("other"))]),
-            ]),
-            used_fallback: false,
-        }
-    }
-
-    #[test]
-    fn dynamic_setup_falls_back_to_its_owner_scope() {
-        let root = Path::new("/repo");
-        let result = selection(
-            root,
-            &[root.join("config/setup.ts")],
-            &[],
-            Some(&[project(Some("unit"), setup(None))]),
-            &discovered(),
-            &HashSet::new(),
-            10,
-        )
-        .expect("owner-scope change must be conservative");
-        assert!(result.0.contains("owning project"));
-        assert_eq!(
-            result
-                .1
-                .iter()
-                .map(|test| test.test_file.as_str())
-                .collect::<Vec<_>>(),
-            ["unit/a.test.ts"]
-        );
-    }
-
-    #[test]
-    fn unresolved_literal_matches_deleted_extension_candidate() {
-        let root = Path::new("/repo");
-        let result = selection(
-            root,
-            &[],
-            &[root.join("config/missing.ts")],
-            Some(&[project(Some("unit"), setup(Some("./missing")))]),
-            &discovered(),
-            &HashSet::new(),
-            10,
-        )
-        .expect("deleted literal candidate must trigger fallback");
-        assert_eq!(result.1.len(), 1);
-        assert_eq!(result.1[0].test_file, "unit/a.test.ts");
-    }
-
-    #[test]
-    fn dynamic_setup_tracks_imported_helper_outside_owner_scope() {
-        let root = Path::new("/repo");
-        let mut dynamic = setup(None);
-        dynamic
-            .trigger_paths
-            .insert(root.join("config/helpers/resolve-setup.ts"));
-        let project = project(Some("unit"), dynamic);
-        let result = selection(
-            root,
-            &[root.join("config/helpers/resolve-setup.ts")],
-            &[],
-            Some(std::slice::from_ref(&project)),
-            &discovered(),
-            &HashSet::new(),
-            10,
-        )
-        .expect("a dynamic setup helper must trigger the owning fallback");
-        assert_eq!(result.1.len(), 1);
-        assert_eq!(result.1[0].test_file, "unit/a.test.ts");
-
-        let deleted = selection(
-            root,
-            &[],
-            &[root.join("config/helpers/resolve-setup.ts")],
-            Some(std::slice::from_ref(&project)),
-            &discovered(),
-            &HashSet::new(),
-            10,
-        )
-        .expect("a deleted dynamic setup helper must trigger the owning fallback");
-        assert_eq!(deleted.1.len(), 1);
-        assert_eq!(deleted.1[0].test_file, "unit/a.test.ts");
-    }
-
-    #[test]
-    fn known_owner_without_eligible_tests_does_not_widen_to_framework() {
-        let root = Path::new("/repo");
-        let mut discovered = discovered();
-        discovered.targets_by_path.clear();
-        let result = selection(
-            root,
-            &[root.join("unit/src/service.ts")],
-            &[],
-            Some(&[project(Some("unit"), setup(None))]),
-            &discovered,
-            &HashSet::new(),
-            10,
-        )
-        .expect("known owner-scope change must still record fallback");
-        assert!(result.0.contains("owning project"));
-        assert!(result.1.is_empty(), "{result:#?}");
-    }
-
-    #[test]
-    fn missing_owner_identity_uses_framework_fallback() {
-        let root = Path::new("/repo");
-        let mut unknown = project(Some("unit"), setup(None));
-        unknown.config = None;
-        unknown.runner_project_arg = None;
-        unknown.policy_name = None;
-        unknown.scope = None;
-        let result = selection(
-            root,
-            &[root.join("config/setup.ts")],
-            &[],
-            Some(&[unknown]),
-            &discovered(),
-            &HashSet::new(),
-            10,
-        )
-        .expect("unknown ownership should use framework fallback");
-        assert!(result.0.contains("discovered Vitest tests"));
-        assert_eq!(result.1.len(), 2);
-    }
-
-    #[test]
-    fn warnings_name_the_config_field_project_and_location() {
-        let root = Path::new("/repo");
-        let warnings = warnings(root, Some(&[project(Some("unit"), setup(None))]));
-        assert_eq!(warnings[0].r#type, "vitest-setup-dynamic");
-        assert_eq!(warnings[0].file, "vitest.config.ts");
-        assert!(warnings[0].message.contains("`setupFiles`"));
-        assert!(warnings[0].message.contains("project `unit`"));
-        assert!(warnings[0].message.contains("config/setup.ts"));
-    }
-}
+mod tests;

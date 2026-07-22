@@ -30,7 +30,7 @@ fn tests_why_preserves_vitest_setup_provenance_from_plan_json() {
                 "changed_file": "setup/helpers.mts",
                 "path": ["setup/helpers.mts", "setup/vitest.mts", "a.test.mts"],
                 "via": ["import", "vitest-setup"],
-                "via_details": [null, "setupFiles"]
+                "via_details": [null, {"type": "vitest-setup", "field": "setupFiles"}]
             }]
         }],
         "warnings": [],
@@ -51,8 +51,12 @@ fn tests_why_preserves_vitest_setup_provenance_from_plan_json() {
 
     assert!(output.status.success());
     let why: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(why["setup/helpers.mts"][1]["via_detail"], "setupFiles");
-    assert!(why["setup/helpers.mts"][0]["via_detail"].is_null());
+    assert_eq!(
+        why["setup/helpers.mts"][1]["detail"]["type"],
+        "vitest-setup"
+    );
+    assert_eq!(why["setup/helpers.mts"][1]["detail"]["field"], "setupFiles");
+    assert!(why["setup/helpers.mts"][0]["detail"].is_null());
 }
 
 #[test]
@@ -96,7 +100,7 @@ fn tests_graph_mermaid_outputs_flowchart() {
                 "changed_file": "c.mts",
                 "path": ["c.mts", "b.mts", "a.mts", "a.test.mts"],
                 "via": ["Import", "vitest-setup", "Import"],
-                "via_details": [null, "setupFiles", null]
+                "via_details": [null, {"type": "vitest-setup", "field": "setupFiles"}, null]
             }]
         }],
         "warnings": [],
@@ -133,7 +137,9 @@ fn tests_graph_mermaid_outputs_flowchart() {
     assert!(graph["nodes"].as_array().unwrap().len() >= 4);
     let edges = graph["edges"].as_array().unwrap();
     assert!(edges.iter().any(|edge| edge["via"] == "Import"));
-    assert!(edges
-        .iter()
-        .any(|edge| edge["via"] == "vitest-setup" && edge["detail"] == "setupFiles"));
+    assert!(edges.iter().any(|edge| {
+        edge["via"] == "vitest-setup"
+            && edge["detail"]["type"] == "vitest-setup"
+            && edge["detail"]["field"] == "setupFiles"
+    }));
 }

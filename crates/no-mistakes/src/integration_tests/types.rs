@@ -150,4 +150,8 @@ pub(crate) struct VitestSetupDependency {
     /// contributed this declaration. These paths are conservative impact
     /// triggers, including targets deleted before planning.
     pub(crate) trigger_paths: BTreeSet<PathBuf>,
+    /// Runtime candidates reached through a resolved setup module. These stay
+    /// separate so a deletion can recover the missing graph edge without
+    /// treating unrelated alternate candidates as unsafe fallbacks.
+    pub(crate) transitive_trigger_paths: BTreeSet<PathBuf>,
 }

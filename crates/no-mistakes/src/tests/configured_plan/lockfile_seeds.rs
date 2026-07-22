@@ -97,7 +97,6 @@ pub(super) fn lockfile_seed_candidates(
                 changed_file: lockfile_rel.clone(),
                 path: node_chain,
                 via: via_strings,
-                via_details: Vec::new(),
                 via_details: via_details_from_edges(&edge_path),
             };
 

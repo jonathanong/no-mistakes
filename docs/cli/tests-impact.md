@@ -19,8 +19,8 @@ Impact traversal also follows supported literal filesystem reads, directory
 reads, and static `glob`/`fast-glob`/`tinyglobby` calls. A changed tracked
 resource therefore selects tests through its importing consumer. JSON reasons
 retain `via: ["resource"]` and include optional edge-aligned `via_details`
-with the consumer file and call-site line. Path output still contains only test
-paths.
+with `{ "type": "resource", "consumer_file", "call_sites": [{ "call_kind",
+"line" }] }`. Path output still contains only test paths.
 
 Computed paths, patterns, and cwd values never create guessed edges. They emit
 `dynamic-resource-path`, `dynamic-resource-pattern`, or

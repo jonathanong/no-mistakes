@@ -10,6 +10,7 @@ mod members;
 mod merge;
 mod object_expressions;
 mod setup_dependencies;
+mod setup_imports;
 
 use merge::merge_options;
 pub(super) use object_expressions::expression_object_options;
@@ -67,7 +68,7 @@ fn merge_property(
     options: &mut Options,
     name: Option<String>,
     value: &Expression<'_>,
-    ctx: &Ctx<'_, '_>,
+    ctx: &mut Ctx<'_, '_>,
 ) -> Result<()> {
     let value = shared::expression_value(value, &ctx.bindings);
     match name.as_deref() {

@@ -89,7 +89,6 @@ fn add_deleted_direct(
         path: vec![rel_deleted.to_string(), rel_test.clone()],
         via: vec!["deleted-dependency".to_string()],
         via_details: Vec::new(),
-        via_details: None,
     };
     let entry = selected_map
         .entry(neighbor_path.to_path_buf())
@@ -143,8 +142,7 @@ fn add_deleted_transitive(
             changed_file: rel_deleted.to_string(),
             path: node_chain,
             via: via_strings,
-            via_details: Vec::new(),
-            via_details: via_details_from_edges(&edge_path),
+            via_details: deleted_transitive_via_details(&edge_path),
         };
         let entry = selected_map
             .entry(test_path.clone())
@@ -161,6 +159,12 @@ fn add_deleted_transitive(
             entry.reasons.push(reason);
         }
     }
+}
+
+fn deleted_transitive_via_details(edge_path: &[EdgeKind]) -> Vec<Option<ImpactEdgeDetail>> {
+    std::iter::once(None)
+        .chain(via_details_from_edges(edge_path))
+        .collect()
 }
 
 pub(crate) fn trace_entrypoints(
@@ -224,7 +228,6 @@ pub(crate) fn trace_entrypoints(
                 path: vec![slash_node_name(&display_start_node, root)],
                 via: vec!["self".to_string()],
                 via_details: Vec::new(),
-                via_details: None,
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -259,7 +262,6 @@ pub(crate) fn trace_entrypoints(
                     changed_file: rel_changed.clone(),
                     path: node_chain,
                     via: via_strings,
-                    via_details: Vec::new(),
                     via_details: via_details_from_edges(&edge_path),
                 };
                 let entry = selected_map
@@ -280,4 +282,9 @@ pub(crate) fn trace_entrypoints(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    include!("plan_extra_inputs/tests.rs");
 }

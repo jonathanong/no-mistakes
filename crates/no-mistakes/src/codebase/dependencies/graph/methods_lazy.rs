@@ -16,6 +16,8 @@ impl DepGraph {
             crate::codebase::ts_resolver::normalize_path(resource),
         );
         self.resource_edge_details.get(&key).map(Vec::as_slice)
+    }
+
     fn traversal_edges(&self) -> &EdgeIndex<NodeId, EdgeKind> {
         if self.vitest_setup_projects.is_empty() {
             return &self.edges;

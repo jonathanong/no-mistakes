@@ -94,12 +94,13 @@ framework-scoped discovered tests. Vitest plans also use this surface for a
 dynamic or unresolved `setupFiles`/`globalSetup` declaration: the result is
 bounded to its known project owner when possible. Resolved setup paths use
 `via: ["vitest-setup"]` and may add `via_details`, an optional array aligned
-with `via` whose setup edge detail is `"setupFiles"` or `"globalSetup"`.
+with `via` whose setup edge detail is `{ type: "vitest-setup", field:
+"setupFiles" | "globalSetup" }`.
 
-`testsWhy()` returns that detail as optional `via_detail`; `testsGraph()` adds
-it as optional edge `detail`, and the Mermaid graph renders it in the edge
-label. The optional fields preserve compatibility with previously saved plan
-JSON and are absent for ordinary edges.
+`testsWhy()` and `testsGraph()` expose the same optional structured `detail`,
+and the Mermaid graph renders the Vitest field in the edge label. The optional
+fields preserve compatibility with previously saved plan JSON and are absent
+for ordinary edges.
 
 `testsPlan(options)` rejects (rather than resolving to an empty plan) when
 `base`/`head`/`fromGitDiff` can't be resolved by Git — an invalid ref, a
@@ -118,8 +119,10 @@ also identical for revision and inline-diff inputs.
 `testsPlan`, `testsImpact`, `testsWhy`, and `testsGraph` expose resource-edge
 provenance without a separate API: plan reasons use optional edge-aligned
 `via_details`, why steps use optional `detail`, and graph JSON edges use
-optional `detail`. All include `{ type: "resource", consumer_file,
-call_sites: [{ call_kind, line }] }` only for literal runtime filesystem edges.
+optional `detail`. Details are `{ type: "resource", consumer_file,
+call_sites: [{ call_kind, line }] }` for literal runtime filesystem edges or
+`{ type: "vitest-setup", field: "setupFiles" | "globalSetup" }` for setup
+edges.
 
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.

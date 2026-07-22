@@ -77,16 +77,19 @@ export interface ImpactReason {
   via: string[];
   /** When present, aligns index-for-index with `via`. */
   via_details?: Array<ImpactEdgeDetail | null>;
-  /** Optional per-edge provenance aligned one-for-one with `via`. */
-  via_details?: Array<string | null>;
 }
 
-export type ImpactEdgeDetail = ResourceImpactEdgeDetail;
+export type ImpactEdgeDetail = ResourceImpactEdgeDetail | VitestSetupImpactEdgeDetail;
 
 export interface ResourceImpactEdgeDetail {
   type: "resource";
   consumer_file: string;
   call_sites: ResourceCallSite[];
+}
+
+export interface VitestSetupImpactEdgeDetail {
+  type: "vitest-setup";
+  field: "setupFiles" | "globalSetup";
 }
 
 export interface ResourceCallSite {
@@ -150,7 +153,6 @@ export interface WhyStep {
   node: string;
   via?: string | null;
   detail?: ImpactEdgeDetail | null;
-  via_detail?: string | null;
 }
 
 export interface TestsPlanDocumentOptions {
@@ -161,7 +163,6 @@ export interface TestsPlanDocumentOptions {
 export interface TestGraph {
   nodes: Array<{ name: string; type: "changed" | "test" | "intermediate" }>;
   edges: Array<{ from: string; to: string; via: string; detail?: ImpactEdgeDetail }>;
-  edges: Array<{ from: string; to: string; via: string; detail?: string }>;
 }
 
 export interface LockfileDiffOptions {

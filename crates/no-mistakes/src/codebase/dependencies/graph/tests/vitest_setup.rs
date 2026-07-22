@@ -56,6 +56,58 @@ fn vitest_setup_edge_detail_and_sort_key_are_stable() {
 }
 
 #[test]
+fn edge_kind_sort_keys_preserve_resource_order_and_append_vitest() {
+    let kinds = [
+        EdgeKind::Import,
+        EdgeKind::TypeImport,
+        EdgeKind::DynamicImport,
+        EdgeKind::RouteImport,
+        EdgeKind::Require,
+        EdgeKind::TestOf,
+        EdgeKind::RouteRef,
+        EdgeKind::QueueEnqueue,
+        EdgeKind::QueueWorker,
+        EdgeKind::RouteTest,
+        EdgeKind::Layout,
+        EdgeKind::MarkdownLink,
+        EdgeKind::WorkspaceImport,
+        EdgeKind::PackageDependency,
+        EdgeKind::CiInvocation,
+        EdgeKind::HttpCall,
+        EdgeKind::ProcessSpawn,
+        EdgeKind::AssetImport,
+        EdgeKind::Resource,
+        EdgeKind::ReactRender,
+        EdgeKind::Selector,
+        EdgeKind::SwiftImport,
+        EdgeKind::SwiftReference,
+        EdgeKind::SwiftPackageDependency,
+        EdgeKind::DotnetUsing,
+        EdgeKind::DotnetReference,
+        EdgeKind::DotnetProjectDependency,
+        EdgeKind::TerraformReference,
+        EdgeKind::TerraformModuleRef,
+        EdgeKind::TerraformOutputRef,
+        EdgeKind::WorkflowJob,
+        EdgeKind::WorkflowStep,
+        EdgeKind::WorkflowNeeds,
+        EdgeKind::WorkflowUses,
+        EdgeKind::WorkflowRun,
+        EdgeKind::WorkflowArtifact,
+        EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
+        EdgeKind::VitestSetup(VitestSetupField::GlobalSetup),
+    ];
+    let keys: Vec<_> = kinds.into_iter().map(EdgeKind::sort_key).collect();
+    assert_eq!(
+        keys,
+        (0..=36)
+            .map(|key| (key, 0))
+            .chain([(36, 1)])
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
 fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
     let test = p("/repo/src/nested/widget.test.ts");
     let root_setup = p("/repo/setup/root.ts");

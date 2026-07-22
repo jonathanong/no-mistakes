@@ -48,7 +48,9 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
 
 /// Runtime module sources, including side-effect imports and re-exports.
 /// Dynamic Vitest setup values use this for a bounded helper-module closure.
-pub(super) fn import_sources(program: &Program<'_>) -> BTreeSet<String> {
+pub(in crate::integration_tests::test_config::vitest) fn import_sources(
+    program: &Program<'_>,
+) -> BTreeSet<String> {
     program
         .body
         .iter()

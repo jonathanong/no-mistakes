@@ -60,8 +60,62 @@ fn vitest_setup_transitive_dependency_selects_only_the_owning_project() {
     assert_eq!(reason.via, ["dependency", "vitest-setup"]);
     assert_eq!(
         reason.via_details,
-        Some(vec![None, Some("setupFiles".to_string())])
+        vec![
+            None,
+            Some(crate::tests::ImpactEdgeDetail::VitestSetup {
+                field: "setupFiles".to_string(),
+            }),
+        ]
     );
+}
+
+#[test]
+fn deleted_vitest_setup_transitive_helper_uses_owner_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut args = vitest_setup_args(root.clone(), Vec::new());
+    args.config = Some(root.join("resolved.no-mistakes.yml"));
+    args.diff_content = Some(
+        "diff --git a/setup/resolved-helper.ts b/setup/resolved-helper.ts\n\
+--- a/setup/resolved-helper.ts\n\
++++ /dev/null\n\
+@@ -1 +0,0 @@\n\
+-export const resolvedHelper = true\n"
+            .to_string(),
+    );
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["resolved/resolved.test.ts"],
+        "{plan:#?}"
+    );
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan.fallback_reason.as_deref().is_some_and(
+        |reason| reason.contains("transitive dependency of a resolved setup was deleted")
+    ));
+}
+
+#[test]
+fn imported_literal_vitest_setup_values_create_owner_scoped_setup_edges() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
+        root.clone(),
+        vec![root.join("imported-values/setup/imported-value.ts")],
+    ))
+    .unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["imported-values/imported-values.test.ts"],
+        "{plan:#?}"
+    );
+    assert!(!plan.fallback_triggered, "{plan:#?}");
 }
 
 #[test]

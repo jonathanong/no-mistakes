@@ -1,6 +1,13 @@
 import { defineConfig } from 'vitest/config'
 import { dynamicSetup } from './config/setup-selector'
 import { importedDynamicSetup } from './config/dynamic-wrapper'
+import { importedSetupFiles } from './config/imported-setup-values'
+import defaultImportedSetups from './config/default-imported-setups'
+import defaultNamedImportedSetups from './config/default-named-setup-reexport'
+import { sourceReexportedSetupFiles } from './config/source-setup-reexport'
+import { importedReexportedSetupFiles } from './config/imported-setup-reexport'
+import { barrelSetupFiles } from './config/setup-barrel'
+import templateImportedSetup from './config/template-imported-setup'
 import importedProject from './vitest.setup-imported'
 
 const localDynamicSetup = () => importedDynamicSetup()
@@ -30,6 +37,25 @@ export default defineConfig({
           name: 'override',
           include: ['override/**/*.test.ts'],
           setupFiles: './setup/override.js',
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'imported-values',
+          root: './imported-values',
+          include: ['**/*.test.ts'],
+          // Imported literal arrays may pass through normal runtime re-export
+          // forms without becoming an unsafe dynamic setup declaration.
+          setupFiles: [
+            importedSetupFiles,
+            defaultImportedSetups,
+            defaultNamedImportedSetups,
+            sourceReexportedSetupFiles,
+            importedReexportedSetupFiles,
+            barrelSetupFiles,
+            templateImportedSetup,
+          ],
           globalSetup: [],
         },
       },

@@ -128,9 +128,9 @@ framework set when ownership cannot be determined) and sets
 `--global-config-fallback`.
 
 Resolved paths use `via: ["vitest-setup"]`. JSON may also contain the optional
-aligned `via_details` array; its `"setupFiles"` or `"globalSetup"` entry names
-the setup field responsible for that edge. `tests why` and `tests graph` expose
-the same detail.
+aligned `via_details` array; its `{ "type": "vitest-setup", "field":
+"setupFiles" | "globalSetup" }` entry names the setup field responsible for
+that edge. `tests why` and `tests graph` expose the same structured `detail`.
 
 `dotnet` plans require configured `.csproj` or `.sln` paths. They select
 changed C# test files directly and select dependent C# tests through namespace

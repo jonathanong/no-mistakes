@@ -156,10 +156,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
         push_resource_diagnostics(graph, root, changed, &mut warnings, &mut warnings_seen);
     }
     warnings.extend(vitest_setup_warnings);
-    let mut warnings_seen: HashSet<(String, String)> = warnings
-        .iter()
-        .map(|warning| (warning.r#type.clone(), warning.file.clone()))
-        .collect();
+    let mut warnings_seen: HashSet<WarningKey> = warnings.iter().map(warning_key).collect();
     let native_traceable_changed_files = native_traceable_changed_files(
         framework,
         root,

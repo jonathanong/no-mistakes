@@ -170,7 +170,6 @@ fn native_fallback_does_not_trigger_when_every_candidate_is_already_used() {
                 path: vec!["Package.swift".to_string(), relative_path(root, &test)],
                 via: vec!["direct".to_string()],
                 via_details: Vec::new(),
-                via_details: None,
             }],
             targets: Vec::new(),
         },

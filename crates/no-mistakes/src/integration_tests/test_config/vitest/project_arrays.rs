@@ -14,7 +14,7 @@ mod exports;
 mod expression_options;
 mod function_returns;
 mod functions;
-mod imports;
+pub(in crate::integration_tests::test_config::vitest) mod imports;
 mod member_helpers;
 mod members;
 mod objects;
@@ -29,7 +29,9 @@ use expression_options::{
 use function_returns::body_return_options;
 use functions::top_level_function_bodies;
 use imports::{import_bindings, ImportBinding};
-use project_entries::{flattened_project_elements, selected_string_project_paths};
+use project_entries::{
+    flattened_project_elements, global_excluded_string_project_paths, selected_string_project_paths,
+};
 pub(super) use root_options::root_options;
 use string_projects::{string_project_options_for_paths, string_project_paths};
 
@@ -93,12 +95,22 @@ pub(super) fn array_options(
     // negation order-independent without moving a positive config ahead of
     // adjacent inline entries in the final project list.
     let string_paths = selected_string_project_paths(&elements, ctx);
+    let mut excluded_paths = string_paths.excluded.clone();
+    excluded_paths.extend(global_excluded_string_project_paths(&elements, ctx));
     let mut parsed_string_paths = BTreeSet::new();
     let mut options = Vec::new();
     for element in elements {
         match element {
             ArrayExpressionElement::SpreadElement(spread) => {
-                options.extend(expression_options(&spread.argument, ctx)?);
+                for option in expression_options(&spread.argument, ctx)? {
+                    let Some(path) = option.standalone_config_path.as_ref() else {
+                        options.push(option);
+                        continue;
+                    };
+                    if !excluded_paths.contains(path) && parsed_string_paths.insert(path.clone()) {
+                        options.push(option);
+                    }
+                }
             }
             _ => {
                 if let Some(expression) = element.as_expression() {
@@ -106,7 +118,8 @@ pub(super) fn array_options(
                         unwrap_ts_wrappers(expression)
                     {
                         for path in string_project_paths(project_config.value.as_str(), ctx) {
-                            if string_paths.contains(&path)
+                            if string_paths.included.contains(&path)
+                                && !excluded_paths.contains(&path)
                                 && parsed_string_paths.insert(path.clone())
                             {
                                 options.extend(string_project_options_for_paths(

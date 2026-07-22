@@ -3,8 +3,8 @@ use crate::tests::plan::{
     symbol_aware_start_nodes,
 };
 use crate::tests::{
-    push_resource_diagnostics, via_details_from_edges, warning_key, Confidence, ImpactArgs,
-    ImpactReason, PlanFormat, SelectedTest, TestPlan, Warning, WarningKey,
+    push_resource_diagnostics, warning_key, Confidence, ImpactArgs, ImpactReason, PlanFormat,
+    SelectedTest, TestPlan, Warning, WarningKey,
 };
 use anyhow::{Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
@@ -126,7 +126,6 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 path: vec![rel_changed.clone()],
                 via: vec!["self".to_string()],
                 via_details: Vec::new(),
-                via_details: None,
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -195,7 +194,6 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                     path: node_chain,
                     via: via_strings,
                     via_details: reverse_details,
-                    via_details: via_details_from_edges(&edge_path),
                 };
 
                 let entry = selected_map

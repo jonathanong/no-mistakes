@@ -100,8 +100,9 @@ known owner scope (or the discovered Vitest framework set if no owner is known)
 and sets `fallback_triggered` without relying on `globalConfigFallback`.
 
 Resolved setup edges use `via: ["vitest-setup"]`; optional aligned
-`via_details` records `"setupFiles"` or `"globalSetup"`. `tests why` returns
-the same value in `via_detail`, and `tests graph` exposes `detail`.
+`via_details` records `{ type: "vitest-setup", field: "setupFiles" |
+"globalSetup" }`. `tests why` and `tests graph` expose the same structured
+`detail`.
 
 ## `tests why`
 
@@ -138,8 +139,9 @@ Node API: `testsImpact(options)`.
 Literal runtime filesystem resources (`fs` reads/directories and supported
 static glob calls) are part of ordinary test impact. A plan JSON reason with
 `via: ["resource"]` may carry edge-aligned `via_details` containing the
-consumer file and call-site line. Dynamic paths, patterns, or cwd values are
-warnings, not guessed dependencies or implicit fallback triggers.
+structured `{ type: "resource", consumer_file, call_sites: [{ call_kind,
+line }] }` detail. Dynamic paths, patterns, or cwd values are warnings, not
+guessed dependencies or implicit fallback triggers.
 
 ## `tests comment`
 

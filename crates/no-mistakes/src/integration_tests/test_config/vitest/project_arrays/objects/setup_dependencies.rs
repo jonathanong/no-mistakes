@@ -12,9 +12,18 @@ use std::path::{Path, PathBuf};
 pub(super) fn setup_dependencies(
     value: &Expression<'_>,
     field: VitestSetupField,
-    ctx: &Ctx<'_, '_>,
+    ctx: &mut Ctx<'_, '_>,
 ) -> Vec<VitestSetupDependency> {
     let value = shared::expression_value(value, &ctx.bindings);
+    if let Expression::Identifier(identifier) = unwrap_ts_wrappers(value) {
+        if let Some(import) = ctx.imports.get(identifier.name.as_str()).cloned() {
+            if let Some(dependencies) =
+                super::setup_imports::imported_setup_dependencies(&import, field, ctx)
+            {
+                return dependencies;
+            }
+        }
+    }
     match unwrap_ts_wrappers(value) {
         Expression::ArrayExpression(array) => array
             .elements
@@ -26,7 +35,7 @@ pub(super) fn setup_dependencies(
                 }
                 _ => element
                     .as_expression()
-                    .map(|expression| vec![setup_dependency(expression, field, ctx)])
+                    .map(|expression| setup_dependencies(expression, field, ctx))
                     .unwrap_or_default(),
             })
             .collect(),
@@ -60,6 +69,7 @@ fn setup_dependency(
         declaration_path: ctx.path.to_path_buf(),
         declaration_line,
         trigger_paths,
+        transitive_trigger_paths: BTreeSet::new(),
     }
 }
 
