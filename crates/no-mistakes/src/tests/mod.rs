@@ -1,7 +1,6 @@
 use anyhow::Result;
-use no_mistakes::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::test_discovery::TestExecutionTarget;
-use no_mistakes::codebase::ts_resolver::TsConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::Path;
@@ -17,6 +16,7 @@ pub(crate) mod diff_parser;
 pub(crate) mod git_diff;
 pub(crate) mod graph;
 pub(crate) mod impact;
+mod impact_graph;
 pub(crate) mod lockfile_changes;
 pub(crate) mod plan;
 pub(crate) mod plan_output;
@@ -212,18 +212,7 @@ pub fn run(args: TestsArgs) -> Result<ExitCode> {
 
 const _: fn(TestsArgs) -> Result<ExitCode> = run;
 
-/// Build the canonical graph shape shared by both test-impact entry points.
-pub(crate) fn build_test_impact_graph(
-    root: &Path,
-    tsconfig: &TsConfig,
-    include_symbols: bool,
-) -> Result<DepGraph> {
-    DepGraph::build_with_plan(
-        root,
-        tsconfig,
-        GraphBuildPlan::test_impact().with_symbols(include_symbols),
-    )
-}
+pub(crate) use impact_graph::build_test_impact_graph;
 
 #[cfg(test)]
 mod serde_tests {

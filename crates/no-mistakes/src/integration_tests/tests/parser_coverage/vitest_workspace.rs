@@ -66,10 +66,51 @@ fn vitest_setup_does_not_resolve_a_declaration_file_as_runtime() {
     }));
 }
 
-fn assert_workspace_project(name: &str, project: &str) {
+#[test]
+fn vitest_absolute_setup_paths_resolve_runtime_closures_but_not_declarations() {
+    let fixture = saved_fixture("vitest-absolute-setup");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path)
+        .unwrap()
+        .replace(
+            "__ABSOLUTE_RUNTIME_SETUP__",
+            &root.join("absolute-setup.ts").to_string_lossy(),
+        )
+        .replace(
+            "__ABSOLUTE_DECLARATION_SETUP__",
+            &root.join("absolute-declaration.d.ts").to_string_lossy(),
+        );
+    let project = &parse_vitest_fixture(&source, &path, &root).unwrap()[0];
+    let runtime = project
+        .vitest_setup
+        .iter()
+        .find(|setup| {
+            setup
+                .specifier
+                .as_deref()
+                .is_some_and(|specifier| Path::new(specifier).is_absolute())
+        })
+        .unwrap();
+    assert_eq!(
+        runtime.resolved_path.as_deref(),
+        Some(root.join("absolute-setup.ts").as_path())
+    );
+    assert!(runtime
+        .transitive_trigger_paths
+        .contains(&root.join("absolute-helper.ts")));
+    assert!(project
+        .vitest_setup
+        .iter()
+        .any(|setup| setup.specifier.as_deref().is_some_and(|specifier| {
+            specifier.ends_with("absolute-declaration.d.ts") && setup.resolved_path.is_none()
+        })));
+}
+
+fn assert_workspace_project(name: &str, extension: &str, project: &str) {
     let fixture = saved_fixture(name);
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
-    let path = root.join("vitest.workspace.ts");
+    let path = root.join(format!("vitest.workspace.{extension}"));
     let source = std::fs::read_to_string(&path).unwrap();
     let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
     assert_eq!(projects[0].policy_name.as_deref(), Some(project));
@@ -81,17 +122,39 @@ fn assert_workspace_project(name: &str, project: &str) {
 
 #[test]
 fn vitest_workspace_default_array_keeps_project_setup_ownership() {
-    assert_workspace_project("vitest-workspace-default", "workspace-project");
+    assert_workspace_project("vitest-workspace-default", "ts", "workspace-project");
 }
 
 #[test]
 fn vitest_workspace_direct_default_array_is_parsed() {
-    assert_workspace_project("vitest-workspace-direct-array", "direct-array-project");
+    assert_workspace_project(
+        "vitest-workspace-direct-array",
+        "ts",
+        "direct-array-project",
+    );
 }
 
 #[test]
 fn vitest_workspace_named_export_reexported_as_default_is_parsed() {
-    assert_workspace_project("vitest-workspace-named-reexport", "named-reexport-project");
+    assert_workspace_project(
+        "vitest-workspace-named-reexport",
+        "ts",
+        "named-reexport-project",
+    );
+}
+
+#[test]
+fn vitest_workspace_commonjs_exports_keep_workspace_setup_ownership() {
+    assert_workspace_project(
+        "vitest-workspace-commonjs-array",
+        "cjs",
+        "commonjs-array-project",
+    );
+    assert_workspace_project(
+        "vitest-workspace-commonjs-define",
+        "cts",
+        "commonjs-define-project",
+    );
 }
 
 #[test]
@@ -126,5 +189,28 @@ fn vitest_project_glob_accepts_config_suffixes() {
             .filter_map(|project| project.policy_name.as_deref())
             .collect::<Vec<_>>(),
         ["e2e-suffix", "unit-suffix"]
+    );
+}
+
+#[test]
+fn vitest_parent_relative_project_strings_and_globs_stay_in_visible_universe() {
+    let fixture = saved_fixture("vitest-parent-projects");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("configs/vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let projects =
+        test_support::parse_vitest_from_visible(&source, &path, &root, &root, &tsconfig, &visible)
+            .unwrap();
+
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["parent-e2e", "parent-unit"]
     );
 }

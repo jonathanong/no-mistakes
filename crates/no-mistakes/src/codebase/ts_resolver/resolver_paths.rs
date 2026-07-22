@@ -1,5 +1,9 @@
 impl<'a> ImportResolver<'a> {
     fn resolve_uncached(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
+        let specifier_path = Path::new(specifier);
+        if specifier_path.is_absolute() {
+            return self.try_path(specifier_path);
+        }
         let is_relative = match self.policy {
             ImportResolutionPolicy::Standard => {
                 specifier.starts_with("./") || specifier.starts_with("../")

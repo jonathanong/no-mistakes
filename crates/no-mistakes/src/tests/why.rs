@@ -222,35 +222,6 @@ fn relative_path_str(root: &Path, path: &Path) -> String {
     no_mistakes::codebase::ts_source::relative_slash_path(root, &absolute_normalized)
 }
 
-pub(crate) fn resolve_tsconfig(
-    tsconfig_arg: Option<&Path>,
-    root: &Path,
-) -> Result<no_mistakes::codebase::ts_resolver::TsConfig> {
-    match tsconfig_arg {
-        Some(path) => {
-            let path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                root.join(path)
-            };
-            no_mistakes::codebase::ts_resolver::load_tsconfig(&path)
-                .with_context(|| format!("loading tsconfig {}", path.display()))
-        }
-        None => match no_mistakes::codebase::ts_resolver::find_tsconfig_from_visible(
-            root,
-            &no_mistakes::codebase::ts_source::discover_visible_paths(root),
-        ) {
-            Some(path) => no_mistakes::codebase::ts_resolver::load_tsconfig(&path),
-            None => Ok(no_mistakes::codebase::ts_resolver::TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

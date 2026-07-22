@@ -20,6 +20,59 @@ fn tests_impact_json_returns_plan_for_file_entrypoint() {
 }
 
 #[test]
+fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
+    );
+    let options = json!({
+        "root": root,
+        "config": root.join("resolved.no-mistakes.yml"),
+        "entrypoints": ["setup/resolved-helper.ts"]
+    })
+    .to_string();
+    let output = tests_impact_json_impl(options).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert!(
+        selected.iter().any(|test| test["test_file"] == "resolved/resolved.test.ts"),
+        "prepared Vitest setup edge should reach its owner: {selected:?}"
+    );
+}
+
+#[test]
+fn tests_impact_json_forces_explicit_ignored_tsconfig_for_vitest_setups_once() {
+    let fixture = crate::test_support::materialize_gitignore_fixture(
+        "tests-impact-forced-tsconfig",
+    );
+    let root = fixture.path().canonicalize().unwrap();
+    crate::ast::begin_parse_count(&root);
+    let output = crate::ast::with_request_parse_cache(|| {
+        tests_impact_json_impl(
+            json!({
+                "root": root,
+                "tsconfig": "tsconfig.custom.json",
+                "entrypoints": ["setup/helper.ts"]
+            })
+            .to_string(),
+        )
+    })
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert!(plan["selected_tests"].as_array().unwrap().iter().any(|test| {
+        test["test_file"] == "tests/custom.test.ts"
+    }), "{plan:#?}");
+    for path in [
+        root.join("vitest.config.ts"),
+        root.join("setup/custom.ts"),
+        root.join("setup/helper.ts"),
+    ] {
+        assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
+    }
+}
+
+#[test]
 fn tests_impact_json_accepts_structured_symbol_entrypoint() {
     let root = fixture_root("tests-impact-symbol");
     let options = json!({

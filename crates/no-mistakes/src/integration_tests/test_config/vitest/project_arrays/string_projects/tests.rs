@@ -1,4 +1,4 @@
-use super::is_vitest_project_config;
+use super::{is_vitest_project_config, slash_path, visible_config_glob};
 use std::path::Path;
 
 #[test]
@@ -26,4 +26,17 @@ fn project_config_suffixes_are_executable_vitest_configs() {
     ] {
         assert!(!is_vitest_project_config(Path::new(path)), "{path}");
     }
+}
+
+#[test]
+fn absolute_project_globs_use_slashes_for_windows_paths() {
+    let pattern = slash_path(Path::new(r"C:\repo\configs\..\packages\*\vitest.config.ts"));
+    let candidate = slash_path(Path::new(r"C:\repo\packages\e2e\vitest.config.ts"));
+    assert!(!pattern.contains('\\'));
+    assert!(!candidate.contains('\\'));
+
+    let normalized_pattern = pattern.replace("configs/../", "");
+    assert!(visible_config_glob(&normalized_pattern)
+        .unwrap()
+        .is_match(candidate));
 }

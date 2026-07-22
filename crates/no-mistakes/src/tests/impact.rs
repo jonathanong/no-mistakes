@@ -10,7 +10,6 @@ use anyhow::{Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::dependencies::parse_entrypoint;
-use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::load_v2_config;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -40,10 +39,13 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     let root = root.canonicalize().unwrap_or(root);
 
     let config = load_v2_config(&root, args.config.as_deref())?;
-    let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
-    let graph =
-        crate::tests::build_test_impact_graph(root.as_path(), &tsconfig, args.include_symbols)?;
-    let test_filter = TestFileFilter::for_impact(root.as_path(), &config);
+    let (graph, test_filter) = crate::tests::build_test_impact_graph(
+        root.as_path(),
+        args.tsconfig.as_deref(),
+        &config,
+        args.config.as_deref(),
+        args.include_symbols,
+    )?;
     let registry_set = compile_registry_globset(&config.tests.impact.registries);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();

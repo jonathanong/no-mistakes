@@ -28,19 +28,28 @@ pub(super) fn string_project_paths(specifier: &str, ctx: &Ctx<'_, '_>) -> Vec<Pa
     let base = ctx.path.parent().unwrap_or_else(|| Path::new("."));
     let visible_specifier = specifier.trim_start_matches("./");
     let has_glob = visible_specifier.contains(['*', '?', '[', '{']);
-    let glob = has_glob.then(|| visible_config_glob(visible_specifier));
+    let glob = has_glob.then(|| {
+        visible_config_glob(&slash_path(&crate::codebase::ts_resolver::normalize_path(
+            &base.join(visible_specifier),
+        )))
+    });
     for path in visible.iter().filter(|path| is_vitest_project_config(path)) {
-        let relative = crate::codebase::ts_source::relative_slash_path(base, path);
         let matches = match &glob {
-            Some(Ok(glob)) => glob.is_match(&relative),
+            Some(Ok(glob)) => glob.is_match(slash_path(path)),
             Some(Err(_)) => false,
-            None => path.starts_with(base.join(visible_specifier)),
+            None => path.starts_with(crate::codebase::ts_resolver::normalize_path(
+                &base.join(visible_specifier),
+            )),
         };
         if matches {
             paths.insert(path.clone());
         }
     }
     paths.into_iter().collect()
+}
+
+fn slash_path(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
 }
 
 fn visible_config_glob(specifier: &str) -> Result<globset::GlobSet, globset::Error> {

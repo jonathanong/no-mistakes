@@ -2,7 +2,10 @@ use super::super::ImportBinding;
 use super::{Ctx, Options};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
+use commonjs::commonjs_workspace_expression;
 use oxc_ast::ast::{BindingPattern, Declaration, Expression, Program, Statement};
+
+mod commonjs;
 
 pub(crate) fn workspace_default_options(
     program: &Program<'_>,
@@ -16,6 +19,11 @@ fn workspace_exported_options(
     ctx: &mut Ctx<'_, '_>,
     exported: &str,
 ) -> Result<Vec<Options>> {
+    if exported == "default" {
+        if let Some(expression) = commonjs_workspace_expression(program) {
+            return workspace_expression_options(expression, ctx);
+        }
+    }
     let mut star_sources = Vec::new();
     for statement in &program.body {
         match statement {
