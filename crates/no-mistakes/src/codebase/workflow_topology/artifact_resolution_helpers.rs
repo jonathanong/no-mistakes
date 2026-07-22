@@ -175,7 +175,12 @@ pub fn artifact_instance_count(value: &ArtifactValue, name: &str) -> Option<u32>
 pub fn candidate_instance_count(candidate: &ArtifactCandidate, name: &str) -> Option<u32> {
     let upload_count = artifact_instance_count(&candidate.upload.name, name)?;
     let invocation_count = candidate.occurrence.invocation_count?;
-    Some(upload_count * invocation_count)
+    // `saturating_mul`, not `*`: the TS engine's `number` (f64) never wraps
+    // to a small value at these magnitudes, it just stays enormous — a
+    // wrapping u32 multiply could silently produce a deceptively small
+    // count (even 0) for a deeply matrix-nested reusable-workflow call,
+    // making an ambiguous producer look like a single exact match.
+    Some(upload_count.saturating_mul(invocation_count))
 }
 
 fn artifact_value_label(value: &ArtifactValue) -> String {

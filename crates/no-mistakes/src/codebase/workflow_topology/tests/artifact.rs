@@ -6,19 +6,24 @@
 
 use super::super::artifact_pattern_match::matches_artifact_pattern;
 use super::super::artifact_resolution_helpers::{
-    diagnostic_key, occurrence_reaches, symbolic_pattern_match,
+    candidate_instance_count, diagnostic_key, occurrence_reaches, symbolic_pattern_match,
 };
-use super::super::artifact_resolution_types::ArtifactRunContext;
+use super::super::artifact_resolution_types::{
+    ArtifactCandidate, ArtifactOccurrence, ArtifactRunContext,
+};
 use super::super::artifact_types::{
-    ArtifactDeclaration, ArtifactDownloadSelector, ArtifactDownloadSource,
+    ArtifactActionFlag, ArtifactDeclaration, ArtifactDownloadSelector, ArtifactDownloadSource,
+    ArtifactUploadDeclaration, ArtifactValue,
 };
 use super::super::artifact_values::{
     artifact_value, parse_artifact_declaration, static_matrix_instance_count,
 };
+use super::super::model::{JobKind, WorkflowJobNode};
 use super::super::value_primitives::{to_json, yaml_number_to_json, OrderedJson};
 use super::super::workflow_values::{key_name, parse_triggers};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 
 fn yaml(text: &str) -> serde_yaml::Value {
     serde_yaml::from_str(text).expect("valid YAML fixture literal")
@@ -114,11 +119,75 @@ fn loads_deep_sequential_braces_as_a_conservative_non_matching_pattern_without_h
     assert!(!matches_artifact_pattern("anything", &pattern));
 }
 
+#[test]
+fn treats_an_extglob_pattern_as_a_conservative_match() {
+    // `globset` has no extglob support (unlike minimatch, which the TS
+    // engine uses and which enables extglob by default): every operator
+    // form conservatively matches rather than silently dropping a real
+    // dataflow edge. A name that couldn't possibly satisfy even the
+    // literal surrounding text still matches — this is a deliberately
+    // coarse fallback, not full extglob evaluation.
+    assert!(matches_artifact_pattern(
+        "build-linux",
+        "build-@(linux|mac)"
+    ));
+    assert!(matches_artifact_pattern("anything", "+(a|b)"));
+    assert!(matches_artifact_pattern("anything", "*(a|b)"));
+    assert!(matches_artifact_pattern("anything", "?(a|b)"));
+    assert!(matches_artifact_pattern("anything", "!(a|b)"));
+}
+
 // ── artifact_resolution_helpers ──────────────────────────────────────────
 
 #[test]
 fn diagnostic_key_of_none_is_empty() {
     assert_eq!(diagnostic_key(None), "");
+}
+
+#[test]
+fn candidate_instance_count_saturates_instead_of_wrapping() {
+    // A deeply matrix-nested reusable-workflow call can legitimately reach
+    // u32::MAX-adjacent invocation counts; `left * right` would silently
+    // wrap (potentially to a small value, even 0, in release builds),
+    // making an ambiguous producer look like a single exact match.
+    let job = WorkflowJobNode {
+        id: "w.yml#build".to_string(),
+        workflow_id: "w.yml".to_string(),
+        key: "build".to_string(),
+        kind: JobKind::Job,
+        name: None,
+        condition: None,
+        matrix: None,
+        concurrency: None,
+        steps: Vec::new(),
+    };
+    let occurrence = ArtifactOccurrence {
+        id: "occurrence".to_string(),
+        job,
+        inherited_conditional: false,
+        opaque: false,
+        invocation_count: Some(u32::MAX),
+    };
+    let candidate = ArtifactCandidate {
+        occurrence: Rc::new(occurrence),
+        step_index: 0,
+        upload: ArtifactUploadDeclaration {
+            name: ArtifactValue::Static {
+                raw: "dist".to_string(),
+                value: "dist".to_string(),
+                instance_count: Some(u32::MAX),
+            },
+            archive: ArtifactActionFlag::Static {
+                raw: None,
+                effective: true,
+            },
+            overwrite: ArtifactActionFlag::Static {
+                raw: None,
+                effective: false,
+            },
+        },
+    };
+    assert_eq!(candidate_instance_count(&candidate, "dist"), Some(u32::MAX));
 }
 
 #[test]

@@ -76,7 +76,11 @@ pub(super) fn add_occurrence(
 
 pub(super) fn multiply_counts(left: Option<u32>, right: Option<u32>) -> Option<u32> {
     match (left, right) {
-        (Some(left), Some(right)) => Some(left * right),
+        // `saturating_mul`, not `*` — see `candidate_instance_count`'s doc
+        // comment on why an unbounded u32 multiply here is unsafe (this is
+        // the same invocation-count accumulator, multiplied once per
+        // nested reusable-workflow-call level).
+        (Some(left), Some(right)) => Some(left.saturating_mul(right)),
         _ => None,
     }
 }

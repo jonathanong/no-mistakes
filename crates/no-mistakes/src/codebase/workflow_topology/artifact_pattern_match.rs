@@ -40,12 +40,36 @@ pub fn matches_artifact_pattern(name: &str, pattern: &str) -> bool {
 /// single-entry group, or an unbalanced brace) and must be escaped to stop
 /// `globset` from expanding it a second time.
 fn glob_match(name: &str, pattern: &str) -> bool {
+    if has_extglob_operator(pattern) {
+        // `globset` has no extglob support at all, unlike minimatch (which
+        // the TS engine uses, and which enables extglob by default). It
+        // would compile `@(...)`/`+(...)`/etc. as literal parenthesis
+        // characters, which essentially never appear in a real upload
+        // name — silently dropping a dataflow edge that genuinely exists
+        // rather than matching it. A conservative match instead lets the
+        // caller's existing is_conditional/is_guaranteed_before checks
+        // downgrade the edge to `possible` when appropriate, rather than
+        // reporting no edge at all.
+        return true;
+    }
     let escaped = pattern.replace('{', "\\{").replace('}', "\\}");
     GlobBuilder::new(&escaped)
         .literal_separator(true)
         .backslash_escape(true)
         .build()
         .is_ok_and(|glob| glob.compile_matcher().is_match(name))
+}
+
+/// Whether `pattern` contains a minimatch/bash extglob operator (`@(`,
+/// `+(`, `*(`, `?(`, `!(`). Any of these five characters directly followed
+/// by `(` is unambiguously extglob syntax under minimatch's default
+/// (extglob-enabled) parsing — there is no glob dialect where e.g. `*(`
+/// instead means "a `*` wildcard, then a literal `(`".
+fn has_extglob_operator(pattern: &str) -> bool {
+    let chars: Vec<char> = pattern.chars().collect();
+    chars
+        .windows(2)
+        .any(|pair| matches!(pair[0], '@' | '+' | '*' | '?' | '!') && pair[1] == '(')
 }
 
 /// Bash-style brace expansion, capped at `max` results: generation stops as
