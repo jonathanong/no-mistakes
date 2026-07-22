@@ -5,7 +5,7 @@ fn collect_remaining_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     playwright_snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
     facts: Option<&dyn TsFactLookup>,
-    resolution: EdgeResolutionContext<'_, '_>,
+    resolution: EdgeResolutionContext<'_>,
     maps: EdgeMaps<'_>,
 ) -> Result<()> {
     let EdgeMaps {
@@ -39,11 +39,12 @@ fn collect_remaining_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.routes", || {
         if plan.routes {
-            let edges = collect_route_edges(
+            let edges = collect_route_edges_with_graph_files(
                 root,
                 edge_inputs.tsconfig,
+                edge_inputs.tsconfig_catalog,
                 resolver,
-                &graph_files.all,
+                graph_files,
                 facts,
                 config_options,
             );
@@ -56,7 +57,7 @@ fn collect_remaining_edges(
             let edges = collect_queue_edges(
                 root,
                 resolver,
-                &graph_files.indexable,
+                graph_files,
                 facts,
                 config_options,
             );

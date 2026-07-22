@@ -34,6 +34,7 @@ impl PreparedTestPlanRequest {
                     .unwrap_or_default()
                     .to_string_lossy()
                     .replace('\\', "/"),
+                line: None,
             })
             .collect()
     }
