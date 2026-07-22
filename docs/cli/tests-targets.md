@@ -11,7 +11,8 @@ no-mistakes tests targets playwright tests/e2e/login.spec.ts --format commands
 target. This is useful when another tool already selected test files and needs
 the same project, package, and environment command construction as
 `tests plan`. Vitest `vitest.workspace.*` and `vitest.projects.*` sources are
-rendered with `--workspace`; ordinary `vitest.config.*` sources use `--config`.
+rendered with `--workspace`, including explicitly configured `.json` project
+arrays; ordinary `vitest.config.*` sources use `--config`.
 
 Key options: `--root`, `--config`, `--framework`, `--format`, and `--json`.
 

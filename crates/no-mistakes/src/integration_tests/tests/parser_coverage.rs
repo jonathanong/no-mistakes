@@ -7,6 +7,9 @@ mod workspace;
 #[path = "parser_coverage/vitest_setup_branches.rs"]
 mod vitest_setup_branches;
 
+#[path = "parser_coverage/vitest_extends.rs"]
+mod vitest_extends;
+
 fn coverage_files(prefix: &str, suffix: &str) -> Vec<String> {
     let mut files: Vec<_> = std::fs::read_dir(fixture("coverage"))
         .unwrap()
@@ -448,75 +451,4 @@ fn vitest_project_string_entries_use_only_the_visible_config_universe() {
         .resolved_path
         .as_ref()
         .is_some_and(|path| path.ends_with("projects/direct-setup.ts")));
-}
-
-#[test]
-fn vitest_inline_setup_inheritance_requires_extends_true() {
-    let source =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/test-config/vitest-extends");
-    let fixture = crate::test_support::materialize_saved_fixture(&source);
-    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
-    let path = root.join("vitest.config.ts");
-    let source = std::fs::read_to_string(&path).unwrap();
-    let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
-
-    for name in ["default", "false", "nonboolean", "spread-false-last"] {
-        assert!(projects
-            .iter()
-            .find(|project| project.policy_name.as_deref() == Some(name))
-            .unwrap()
-            .vitest_setup
-            .is_empty());
-    }
-    for name in ["true", "spread-true-last"] {
-        let inherited = projects
-            .iter()
-            .find(|project| project.policy_name.as_deref() == Some(name))
-            .unwrap();
-        assert_eq!(inherited.vitest_setup.len(), 2, "{name}");
-        assert_eq!(
-            inherited
-                .vitest_setup
-                .iter()
-                .map(|setup| setup.field.as_str())
-                .collect::<Vec<_>>(),
-            vec!["setupFiles", "globalSetup"],
-            "{name}",
-        );
-    }
-    let merged = projects
-        .iter()
-        .find(|project| project.policy_name.as_deref() == Some("merged-setups"))
-        .unwrap();
-    assert_eq!(
-        merged
-            .vitest_setup
-            .iter()
-            .filter(|setup| setup.field.as_str() == "setupFiles")
-            .map(|setup| setup.specifier.as_deref().unwrap())
-            .collect::<Vec<_>>(),
-        vec!["./root-setup.ts", "./project-setup.ts"],
-    );
-    let root_setup = merged
-        .vitest_setup
-        .iter()
-        .find(|setup| setup.specifier.as_deref() == Some("./root-setup.ts"))
-        .unwrap();
-    assert!(root_setup
-        .trigger_paths
-        .iter()
-        .any(|path| path.ends_with("setup-values.ts")));
-    assert!(root_setup
-        .trigger_paths
-        .iter()
-        .any(|path| path.ends_with("vitest.config.ts")));
-    let standalone = projects
-        .iter()
-        .find(|project| project.policy_name.as_deref() == Some("standalone"))
-        .unwrap();
-    assert_eq!(standalone.vitest_setup.len(), 1);
-    assert_eq!(
-        standalone.vitest_setup[0].specifier.as_deref(),
-        Some("./standalone-setup.ts")
-    );
 }

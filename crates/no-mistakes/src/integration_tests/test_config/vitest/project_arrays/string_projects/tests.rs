@@ -31,6 +31,19 @@ fn project_config_suffixes_are_executable_vitest_configs() {
 }
 
 #[test]
+fn only_named_json_project_arrays_are_supported() {
+    assert!(crate::integration_tests::is_vitest_project_array_path(
+        Path::new("vitest.workspace.json")
+    ));
+    assert!(crate::integration_tests::is_vitest_project_array_path(
+        Path::new("vitest.projects.json")
+    ));
+    assert!(!crate::integration_tests::is_vitest_project_array_path(
+        Path::new("custom.json")
+    ));
+}
+
+#[test]
 fn absolute_project_globs_use_slashes_for_windows_paths() {
     let pattern = slash_path(Path::new(r"C:\repo\configs\..\packages\*\vitest.config.ts"));
     let candidate = slash_path(Path::new(r"C:\repo\packages\e2e\vitest.config.ts"));

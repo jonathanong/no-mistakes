@@ -1,0 +1,12 @@
+[
+  {
+    "name": "outer-name-is-ignored",
+    "setupFiles": "./outer-setup-is-ignored.ts",
+    "test": {
+      "name": "json-inline",
+      "root": "./inline",
+      "include": ["**/*.test.ts"],
+      "globalSetup": "./setup.ts"
+    }
+  }
+]

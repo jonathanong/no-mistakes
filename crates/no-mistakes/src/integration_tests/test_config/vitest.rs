@@ -6,6 +6,7 @@ use anyhow::Result;
 use oxc_ast::ast::Program;
 use std::path::{Path, PathBuf};
 
+mod json_projects;
 mod merge;
 mod project_arrays;
 pub(crate) mod setup_resolution;
@@ -83,7 +84,7 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
 }
 
 pub(crate) fn is_vitest_project_array_path(path: &Path) -> bool {
-    const EXTENSIONS: &[&str] = &["mts", "ts", "mjs", "js", "cjs", "cts"];
+    const EXTENSIONS: &[&str] = &["mts", "ts", "mjs", "js", "cjs", "cts", "json"];
     let Some(extension) = path.extension().and_then(|extension| extension.to_str()) else {
         return false;
     };
@@ -91,6 +92,16 @@ pub(crate) fn is_vitest_project_array_path(path: &Path) -> bool {
         && path.file_stem().is_some_and(|stem| {
             matches!(stem.to_str(), Some("vitest.workspace" | "vitest.projects"))
         })
+}
+
+pub(in crate::integration_tests) fn parse_json_with_resolver(
+    source: &str,
+    path: &Path,
+    config_dir: &Path,
+    root: &Path,
+    resolver: &dyn ImportResolution,
+) -> Result<Vec<ConfigProject>> {
+    json_projects::parse(source, path, config_dir, root, resolver)
 }
 
 fn to_project(
@@ -126,6 +137,9 @@ fn to_project(
     if let Some(setups) = options.setup_files.as_mut() {
         merge::dedupe_resolved_setups(setups);
     }
+    if let Some(setups) = options.global_setup.as_mut() {
+        merge::dedupe_resolved_setups(setups);
+    }
     ConfigProject {
         config: None,
         workspace: false,
@@ -158,11 +172,12 @@ fn merge_options(root: &Options, project: Options) -> Options {
                 .flatten(),
             project.setup_files,
         ),
-        global_setup: project.global_setup.or_else(|| {
+        global_setup: merge::inherit_setup_files(
             (project.extends == Some(true))
                 .then(|| root.global_setup.clone())
-                .flatten()
-        }),
+                .flatten(),
+            project.global_setup,
+        ),
         extends: project.extends,
         standalone_config: project.standalone_config,
         standalone_config_path: project.standalone_config_path,

@@ -1,6 +1,6 @@
 use super::{import_bindings, objects, shared, top_level_function_bodies, Ctx, Options};
 use anyhow::Result;
-use globset::{Glob, GlobSetBuilder};
+use globset::{GlobBuilder, GlobSetBuilder};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -18,14 +18,22 @@ pub(super) fn string_project_options_for_paths(
 }
 
 pub(super) fn string_project_paths(specifier: &str, ctx: &Ctx<'_, '_>) -> Vec<PathBuf> {
+    string_project_paths_with_resolver(specifier, ctx.path, ctx.resolver)
+}
+
+pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_with_resolver(
+    specifier: &str,
+    declaration_path: &Path,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
+) -> Vec<PathBuf> {
     let mut paths = BTreeSet::new();
-    if let Some(path) = ctx.resolver.resolve(specifier, ctx.path) {
+    if let Some(path) = resolver.resolve(specifier, declaration_path) {
         paths.insert(path);
     }
-    let Some(visible) = ctx.resolver.visible_files() else {
+    let Some(visible) = resolver.visible_files() else {
         return paths.into_iter().collect();
     };
-    let base = ctx.path.parent().unwrap_or_else(|| Path::new("."));
+    let base = declaration_path.parent().unwrap_or_else(|| Path::new("."));
     let visible_specifier = specifier.trim_start_matches("./");
     let has_glob = visible_specifier.contains(['*', '?', '[', '{']);
     let glob = has_glob.then(|| {
@@ -54,11 +62,19 @@ fn slash_path(path: &Path) -> String {
 
 fn visible_config_glob(specifier: &str) -> Result<globset::GlobSet, globset::Error> {
     let mut builder = GlobSetBuilder::new();
-    builder.add(Glob::new(specifier)?);
-    builder.add(Glob::new(&format!(
-        "{}/**",
-        specifier.trim_end_matches('/')
-    ))?);
+    builder.add(
+        GlobBuilder::new(specifier)
+            .literal_separator(true)
+            .build()?,
+    );
+    // A folder glob selects concrete project roots. Only config files directly
+    // inside each matched root belong to that entry; descendants require a
+    // separate explicit folder glob (for example `packages/business/*`).
+    builder.add(
+        GlobBuilder::new(&format!("{}/*", specifier.trim_end_matches('/')))
+            .literal_separator(true)
+            .build()?,
+    );
     builder.build()
 }
 
@@ -110,7 +126,15 @@ fn named_config_stem(stem: &str, runner: &str) -> bool {
 }
 
 fn parse_string_project(path: &Path, ctx: &mut Ctx<'_, '_>) -> Result<Option<Options>> {
-    if !ctx.seen.insert(path.to_path_buf()) {
+    parse_string_project_with_resolver(path, ctx.resolver, ctx.seen)
+}
+
+pub(in crate::integration_tests::test_config::vitest) fn parse_string_project_with_resolver(
+    path: &Path,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
+    seen: &mut BTreeSet<PathBuf>,
+) -> Result<Option<Options>> {
+    if !seen.insert(path.to_path_buf()) {
         return Ok(None);
     }
     let result = match crate::integration_tests::runner_config::read_request_source(path) {
@@ -130,9 +154,9 @@ fn parse_string_project(path: &Path, ctx: &mut Ctx<'_, '_>) -> Result<Option<Opt
                     bindings,
                     functions: top_level_function_bodies(program),
                     imports: import_bindings(program),
-                    resolver: ctx.resolver,
+                    resolver,
                     path,
-                    seen: ctx.seen,
+                    seen,
                     local_seen: &mut local_seen,
                     object_seen: &mut object_seen,
                 };
@@ -145,7 +169,7 @@ fn parse_string_project(path: &Path, ctx: &mut Ctx<'_, '_>) -> Result<Option<Opt
         )
         .and_then(|options| options),
     };
-    ctx.seen.remove(path);
+    seen.remove(path);
     result
 }
 

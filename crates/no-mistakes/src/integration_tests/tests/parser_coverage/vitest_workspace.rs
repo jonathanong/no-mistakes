@@ -1,4 +1,5 @@
 use super::*;
+use crate::integration_tests::types::Framework;
 use std::collections::BTreeSet;
 
 #[test]
@@ -48,6 +49,64 @@ fn saved_fixture(name: &str) -> tempfile::TempDir {
         .join("../../fixtures/test-config")
         .join(name);
     crate::test_support::materialize_saved_fixture(&source)
+}
+
+#[test]
+fn explicitly_configured_json_workspaces_parse_objects_and_string_projects() {
+    let fixture = saved_fixture("vitest-workspace-json");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root);
+    let config = crate::config::v2::load_v2_config_from_visible(&root, None, &visible).unwrap();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    crate::ast::begin_parse_count(&root);
+    let projects = crate::integration_tests::project_config::load_projects_from_visible(
+        &root,
+        Framework::Vitest,
+        config.tests.vitest.configs.as_ref(),
+        &visible,
+        &tsconfig,
+    )
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["json-inline", "json-string"]
+    );
+    assert!(projects.iter().all(|project| project.workspace));
+    assert!(projects.iter().all(|project| {
+        project.vitest_setup.len() == 1 && project.vitest_setup[0].resolved_path.is_some()
+    }));
+    let inline = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("json-inline"))
+        .unwrap();
+    assert_eq!(inline.vitest_setup[0].field.as_str(), "globalSetup");
+    assert_eq!(
+        inline.vitest_setup[0].specifier.as_deref(),
+        Some("./setup.ts")
+    );
+    assert_eq!(counts.get(&root.join("vitest.workspace.json")), None);
+    assert_eq!(counts.get(&root.join("vitest.projects.json")), None);
+    assert_eq!(
+        counts.get(&root.join("string-project/vitest.config.ts")),
+        Some(&1)
+    );
+    assert!(
+        crate::integration_tests::project_config::load_projects_from_visible(
+            &root,
+            Framework::Vitest,
+            None,
+            &visible,
+            &tsconfig,
+        )
+        .unwrap()
+        .is_empty(),
+        "JSON project arrays remain explicit-only"
+    );
 }
 
 #[test]
@@ -210,6 +269,39 @@ fn vitest_project_glob_accepts_config_suffixes() {
             .filter_map(|project| project.policy_name.as_deref())
             .collect::<Vec<_>>(),
         ["e2e-suffix", "unit-suffix"]
+    );
+}
+
+#[test]
+fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
+    let fixture = saved_fixture("vitest-project-folder-glob");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let parse = |config: &str| {
+        let path = root.join(config);
+        let source = std::fs::read_to_string(&path).unwrap();
+        test_support::parse_vitest_from_visible(&source, &path, &root, &root, &tsconfig, &visible)
+            .unwrap()
+    };
+
+    let broad = parse("vitest.config.ts");
+    assert_eq!(
+        broad
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["direct-project"]
+    );
+    let nested = parse("vitest.business.config.ts");
+    assert_eq!(
+        nested
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["nested-business-project"]
     );
 }
 

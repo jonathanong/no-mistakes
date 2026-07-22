@@ -1,6 +1,6 @@
 const extendsTrue = { extends: true }
 const extendsFalse = { extends: false }
-import { duplicateRootSetup } from './setup-values'
+import { duplicateRootGlobal, duplicateRootSetup } from './setup-values'
 
 export default {
   test: {
@@ -17,6 +17,7 @@ export default {
           name: 'merged-setups',
           include: ['merged/**/*.test.ts'],
           setupFiles: [duplicateRootSetup, './dir/../root-setup.ts', './project-setup.ts'],
+          globalSetup: [duplicateRootGlobal, './root-global.ts', './project-global.ts'],
         },
       },
       {

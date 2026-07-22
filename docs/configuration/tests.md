@@ -36,9 +36,11 @@ files are still applied. Explicit config paths remain authoritative and may
 refer to ignored files.
 
 `tests.vitest.configs` explicitly accepts `vitest.workspace.*` and
-`vitest.projects.*` for the runtime extensions `ts`, `mts`, `cts`, `js`, `mjs`,
-and `cjs`. These project-array filenames are not auto-discovered; when
-configured, they export project arrays directly.
+`vitest.projects.*` for the extensions `ts`, `mts`, `cts`, `js`, `mjs`, `cjs`,
+and `json`. These project-array filenames are not auto-discovered; when
+configured, they export project arrays directly. JSON arrays support static
+inline project objects and string project paths/globs and are parsed as JSON,
+not JavaScript.
 
 Dotnet and Swift test plans use explicit config for source-graph targeting.
 `tests.dotnet.projects` or `tests.dotnet.solutions`, and

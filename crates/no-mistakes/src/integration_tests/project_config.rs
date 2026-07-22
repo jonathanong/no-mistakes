@@ -8,8 +8,10 @@ use std::path::Path;
 
 mod discovery;
 mod globs;
+mod json;
 pub(crate) use discovery::discovered_config_paths;
 pub(crate) use globs::{build_globset, prefix_globs};
+pub(super) use json::load_vitest_json_projects;
 
 pub(crate) fn load_projects(
     root: &Path,
@@ -129,6 +131,16 @@ pub(super) fn load_config_projects_inner(
     } = input;
     if matches!(framework, Framework::Dotnet | Framework::Swift) {
         return Ok(Vec::new());
+    }
+    if framework == Framework::Vitest
+        && path.extension().and_then(|value| value.to_str()) == Some("json")
+    {
+        anyhow::ensure!(
+            test_config::vitest::is_vitest_project_array_path(path),
+            "unsupported Vitest JSON config filename: {}; use vitest.workspace.json or vitest.projects.json",
+            path.display()
+        );
+        return json::load_vitest_json_projects(input);
     }
     crate::integration_tests::runner_config::with_program(path, source, |program, _| {
         load_config_projects_from_program(

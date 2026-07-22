@@ -33,6 +33,9 @@ use project_entries::{
     flattened_project_elements, global_excluded_string_project_paths, selected_string_project_paths,
 };
 pub(super) use root_options::root_options;
+pub(in crate::integration_tests::test_config::vitest) use string_projects::{
+    parse_string_project_with_resolver, string_project_paths_with_resolver,
+};
 use string_projects::{string_project_options_for_paths, string_project_paths};
 
 type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
