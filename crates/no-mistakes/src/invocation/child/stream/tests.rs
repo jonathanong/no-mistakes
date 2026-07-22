@@ -81,6 +81,30 @@ fn rejects_a_line_exceeding_the_configured_cap() {
     );
 }
 
+// Regression for a review finding on #587: the terminated-line check used
+// to compare `pos + 1` (the line plus its newline) against `max_line_bytes`,
+// while the still-accumulating check compared the newline-free `pending.len()`
+// — a one-byte inconsistency at the boundary. A line whose content is
+// *exactly* `max_line_bytes` long must be accepted in both shapes, since
+// `max_line_bytes` bounds the line "without a newline" per its own doc
+// comment.
+#[test]
+fn accepts_a_line_exactly_at_the_cap_whether_or_not_it_is_newline_terminated() {
+    let cap = 64;
+
+    let mut terminated = Command::new("sh");
+    terminated.args(["-c", &format!("printf '%{cap}d\\n' 0")]);
+    let (lines, outcome) = collect_lines(&mut terminated, cap).unwrap();
+    assert!(outcome.status.success());
+    assert_eq!(lines[0].len(), cap);
+
+    let mut unterminated = Command::new("printf");
+    unterminated.arg("x".repeat(cap));
+    let (lines, outcome) = collect_lines(&mut unterminated, cap).unwrap();
+    assert!(outcome.status.success());
+    assert_eq!(lines[0].len(), cap);
+}
+
 #[test]
 fn terminates_the_child_when_a_line_is_rejected() {
     // A long-running child whose output immediately exceeds the cap must be

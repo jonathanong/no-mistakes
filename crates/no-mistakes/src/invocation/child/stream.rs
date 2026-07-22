@@ -178,7 +178,9 @@ fn drain_lines(
                 // the same chunk (pending briefly holds the full oversized
                 // line, but this loop drains and clears it before that
                 // after-the-fact check ever runs).
-                Some(pos) if pos + 1 > max_line_bytes => return Err(line_too_long(max_line_bytes)),
+                // Apply the cap to the line content without its terminating
+                // newline, matching the `max_line_bytes` doc comment.
+                Some(pos) if pos > max_line_bytes => return Err(line_too_long(max_line_bytes)),
                 Some(pos) => {
                     let line: Vec<u8> = pending.drain(..=pos).collect();
                     on_line(&decode_line(&line[..line.len() - 1]))?;
