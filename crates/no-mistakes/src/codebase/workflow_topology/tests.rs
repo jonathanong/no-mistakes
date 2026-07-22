@@ -203,6 +203,28 @@ fn workflow_filter_resolves_against_a_dot_slash_prefixed_configured_dir() {
     assert_eq!(explicit.workflows.len(), 1);
 }
 
+/// A bare basename is documented to select "this workflow", not "this
+/// workflow, but only in whichever configured directory happens to be
+/// listed first" — when the same basename exists under more than one
+/// `ci.workflowDirs` entry, the filter must select every one of them
+/// rather than silently dropping the rest.
+#[test]
+fn workflow_filter_bare_basename_selects_every_matching_configured_dir() {
+    let root = fixture("custom-workflow-dir");
+    let config = CiConfig {
+        workflow_dirs: vec!["ci-pipelines".to_string(), "ci-pipelines-2".to_string()],
+        ..CiConfig::default()
+    };
+    let topology = load_workflow_topology(&root, &config, &["build.yml".to_string()]);
+    assert!(topology.diagnostics.is_empty());
+    let mut paths: Vec<&String> = topology.workflows.iter().map(|w| &w.path).collect();
+    paths.sort();
+    assert_eq!(
+        paths,
+        vec!["ci-pipelines-2/build.yml", "ci-pipelines/build.yml"]
+    );
+}
+
 /// `serde_yaml`'s and `js-yaml`'s parse-error messages are different
 /// libraries' wording for the same malformed-YAML failure, so
 /// `malformed-workflow`'s `message` text can never byte-match the TS

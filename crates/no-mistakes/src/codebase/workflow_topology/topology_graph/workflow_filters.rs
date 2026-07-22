@@ -30,7 +30,7 @@ pub fn select_workflow_paths(
     }
     let mut selected: HashSet<String> = requested
         .iter()
-        .filter_map(|path| normalize_workflow_filter(path, workflow_dirs, workflows))
+        .flat_map(|path| normalize_workflow_filter(path, workflow_dirs, workflows))
         .collect();
     let initially_selected: Vec<String> = selected.iter().cloned().collect();
 
@@ -85,7 +85,8 @@ pub fn diagnose_workflow_filters(
     workflow_dirs: &[String],
 ) {
     for requested_path in requested {
-        let Some(path) = normalize_workflow_filter(requested_path, workflow_dirs, workflows) else {
+        let paths = normalize_workflow_filter(requested_path, workflow_dirs, workflows);
+        if paths.is_empty() {
             diagnostics.push(model::WorkflowTopologyDiagnostic::new(
                 model::DiagnosticCode::InvalidWorkflowFilter,
                 format!(
@@ -95,15 +96,17 @@ pub fn diagnose_workflow_filters(
                 requested_path.clone(),
             ));
             continue;
-        };
-        if workflows.contains_key(&path) {
-            continue;
         }
-        diagnostics.push(model::WorkflowTopologyDiagnostic::new(
-            model::DiagnosticCode::UnknownWorkflowFilter,
-            format!("workflow filter does not match a repository workflow: {requested_path}"),
-            path,
-        ));
+        for path in paths {
+            if workflows.contains_key(&path) {
+                continue;
+            }
+            diagnostics.push(model::WorkflowTopologyDiagnostic::new(
+                model::DiagnosticCode::UnknownWorkflowFilter,
+                format!("workflow filter does not match a repository workflow: {requested_path}"),
+                path,
+            ));
+        }
     }
 }
 
@@ -119,42 +122,53 @@ fn configured_dirs(workflow_dirs: &[String]) -> Vec<&str> {
     }
 }
 
-/// Normalizes a `--workflow` filter to a `<workflow-dir>/<file>` path, or
-/// `None` when it's absolute, escapes every configured workflow directory
-/// via `..`, or (once it contains a `/`) doesn't resolve to a direct child
-/// of any of them. A bare basename is resolved against whichever
-/// configured directory actually holds a matching discovered workflow,
-/// falling back to the first configured directory when none do (so an
-/// unresolvable filter still gets a deterministic path for the
-/// `unknown-workflow-filter` diagnostic).
+/// Normalizes a `--workflow` filter to every `<workflow-dir>/<file>` path
+/// it could plausibly mean, or an empty `Vec` when it's absolute, escapes
+/// every configured workflow directory via `..`, or (once it contains a
+/// `/`) doesn't resolve to a direct child of any of them. A bare basename
+/// resolves against **every** configured directory holding a matching
+/// discovered workflow — `ci.workflowDirs` can list more than one, and a
+/// basename filter is documented to select "this workflow" wherever it
+/// lives, not just the first configured directory that happens to have
+/// it — falling back to a single first-configured-directory path when
+/// none do, so an unresolvable filter still gets a deterministic path for
+/// the `unknown-workflow-filter` diagnostic.
 fn normalize_workflow_filter(
     path: &str,
     workflow_dirs: &[String],
     workflows: &HashMap<String, model::WorkflowNode>,
-) -> Option<String> {
+) -> Vec<String> {
     let slashed = path.replace('\\', "/");
     let candidate = strip_leading_dot_slashes(&slashed);
     if candidate.is_empty()
         || candidate.starts_with('/')
         || candidate.split('/').any(|segment| segment == "..")
     {
-        return None;
+        return Vec::new();
     }
     let dirs = configured_dirs(workflow_dirs);
     if !candidate.contains('/') {
         if candidate == "." || candidate == ".." {
-            return None;
+            return Vec::new();
         }
-        return Some(
-            dirs.iter()
-                .map(|dir| format!("{dir}/{candidate}"))
-                .find(|joined| workflows.contains_key(joined))
-                .unwrap_or_else(|| format!("{}/{candidate}", dirs[0])),
-        );
+        let matches: Vec<String> = dirs
+            .iter()
+            .map(|dir| format!("{dir}/{candidate}"))
+            .filter(|joined| workflows.contains_key(joined))
+            .collect();
+        return if matches.is_empty() {
+            vec![format!("{}/{candidate}", dirs[0])]
+        } else {
+            matches
+        };
     }
     let normalized = posix_path::normalize(candidate);
     let dirname = posix_path::dirname(&normalized);
-    dirs.iter().any(|dir| *dir == dirname).then_some(normalized)
+    if dirs.iter().any(|dir| *dir == dirname) {
+        vec![normalized]
+    } else {
+        Vec::new()
+    }
 }
 
 fn strip_leading_dot_slashes(path: &str) -> &str {
