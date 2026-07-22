@@ -1,7 +1,10 @@
 use super::configured_plan_candidates::{group_candidates, merge_selected};
 use super::diff_parser::DiffFile;
 use super::plan::relative_path;
-use super::{PlanArgs, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult, Warning};
+use super::{
+    push_resource_diagnostics, warning_key, PlanArgs, SelectedTest, TestFramework, TestPlan,
+    TestPlanGroupResult, Warning, WarningKey,
+};
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
@@ -140,10 +143,10 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let mut group_results = Vec::new();
     let mut remaining_global = global_limit;
     let mut warnings: Vec<Warning> = prepared.tsconfig_warnings();
-    let mut warnings_seen: HashSet<(String, String)> = warnings
-        .iter()
-        .map(|warning| (warning.r#type.clone(), warning.file.clone()))
-        .collect();
+    let mut warnings_seen: HashSet<WarningKey> = warnings.iter().map(warning_key).collect();
+    for changed in changed_files {
+        push_resource_diagnostics(graph, root, changed, &mut warnings, &mut warnings_seen);
+    }
     let native_traceable_changed_files = native_traceable_changed_files(
         framework,
         root,

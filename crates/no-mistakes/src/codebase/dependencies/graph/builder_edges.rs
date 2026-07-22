@@ -6,6 +6,8 @@
 struct EdgeMaps<'a> {
     forward: &'a mut EdgeMap,
     reverse: &'a mut EdgeMap,
+    resource_edge_details: &'a mut ResourceEdgeDetails,
+    resource_diagnostics: &'a mut Vec<ResourceGraphDiagnostic>,
 }
 
 struct EdgeResolutionContext<'a> {
@@ -22,7 +24,12 @@ fn collect_and_merge_all_edges(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     maps: EdgeMaps<'_>,
 ) -> Result<()> {
-    let EdgeMaps { forward, reverse } = maps;
+    let EdgeMaps {
+        forward,
+        reverse,
+        resource_edge_details,
+        resource_diagnostics,
+    } = maps;
     let resolver = resolution.resolver;
     let session = resolution.session;
     let root = edge_inputs.root;
@@ -199,6 +206,27 @@ fn collect_and_merge_all_edges(
             merge_edges(forward, reverse, react_edges);
         }
     });
+
+    crate::invocation::check_timeout()?;
+    crate::perf_trace::trace("graph.resources", || -> Result<()> {
+        if plan.resources {
+            let Some(facts) = facts else {
+                anyhow::bail!("TS resource facts are required when resource edges are requested");
+            };
+            let (edges, details, diagnostics) = collect_resource_edges(
+                root,
+                graph_files.indexable(),
+                facts,
+                graph_files.resource_candidates(),
+            );
+            merge_edges(forward, reverse, edges);
+            merge_resource_edge_details(resource_edge_details, details);
+            resource_diagnostics.extend(diagnostics);
+            resource_diagnostics.sort();
+            resource_diagnostics.dedup();
+        }
+        Ok(())
+    })?;
 
     crate::perf_trace::trace("graph.dotnet", || {
         merge_dotnet_edges(edge_inputs, forward, reverse);

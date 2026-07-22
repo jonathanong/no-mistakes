@@ -5,7 +5,7 @@ pub(crate) fn trace_deleted_files(
     root: &Path,
     selected_map: &mut HashMap<PathBuf, SelectedTest>,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) {
     for deleted in deleted_files {
         let start_node = NodeId::File(deleted.clone());
@@ -38,8 +38,9 @@ pub(crate) fn trace_deleted_files(
             r#type: "deleted-file".to_string(),
             message: format!("File `{}` was deleted.", rel_deleted),
             file: rel_deleted,
+            line: None,
         };
-        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+        if warnings_seen.insert(warning_key(&warn)) {
             warnings.push(warn);
         }
     }
@@ -87,6 +88,7 @@ fn add_deleted_direct(
         changed_file: rel_deleted.to_string(),
         path: vec![rel_deleted.to_string(), rel_test.clone()],
         via: vec!["deleted-dependency".to_string()],
+        via_details: Vec::new(),
     };
     let entry = selected_map
         .entry(neighbor_path.to_path_buf())
@@ -140,6 +142,7 @@ fn add_deleted_transitive(
             changed_file: rel_deleted.to_string(),
             path: node_chain,
             via: via_strings,
+            via_details: Vec::new(),
         };
         let entry = selected_map
             .entry(test_path.clone())
@@ -218,6 +221,7 @@ pub(crate) fn trace_entrypoints(
                 changed_file: rel_changed,
                 path: vec![slash_node_name(&display_start_node, root)],
                 via: vec!["self".to_string()],
+                via_details: Vec::new(),
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -252,6 +256,7 @@ pub(crate) fn trace_entrypoints(
                     changed_file: rel_changed.clone(),
                     path: node_chain,
                     via: via_strings,
+                    via_details: Vec::new(),
                 };
                 let entry = selected_map
                     .entry(test_path)

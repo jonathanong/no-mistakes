@@ -16,7 +16,9 @@ pub(super) fn sorted_selected_tests(
 }
 
 pub(super) fn sorted_warnings(mut warnings: Vec<Warning>) -> Vec<Warning> {
-    warnings.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
+    warnings.sort_by(|a, b| {
+        (&a.file, a.line, &a.r#type, &a.message).cmp(&(&b.file, b.line, &b.r#type, &b.message))
+    });
     warnings
 }
 

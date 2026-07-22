@@ -17,6 +17,7 @@ fn lazy_import_facts_memoize_parse_errors() {
         indexable: vec![malformed.clone()],
         visible: [malformed.clone()].into(),
         canonical_visible: HashMap::new(),
+        resource_candidates: vec![],
     };
     let context = TsFactContext::new(&root);
     let observer = crate::diagnostics::InvocationObserver::new(true);

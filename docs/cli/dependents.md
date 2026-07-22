@@ -17,6 +17,10 @@ including imports inside functions whose call reachability is unknown. It
 excludes type-only imports and `require()` and is distinct from the URL-routing
 edges selected by `--relationship route`.
 
+Use `--relationship resource` to find runtime consumers of a tracked resource.
+Only literal supported filesystem and static glob calls become resource edges;
+dynamic paths are reported by test-impact diagnostics rather than guessed here.
+
 Key options match [`dependencies`](dependencies.md): `--root`, `--tsconfig`,
 `--depth`, `--filter`, `--target-module`, `--relationship`, `--test`,
 `--format`, `--json`, and `--timings`.

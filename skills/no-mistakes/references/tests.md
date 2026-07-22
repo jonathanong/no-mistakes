@@ -117,6 +117,12 @@ changed file is imported by a registry file (e.g. `auth-gated-code-splitting.mts
 
 Node API: `testsImpact(options)`.
 
+Literal runtime filesystem resources (`fs` reads/directories and supported
+static glob calls) are part of ordinary test impact. A plan JSON reason with
+`via: ["resource"]` may carry edge-aligned `via_details` containing the
+consumer file and call-site line. Dynamic paths, patterns, or cwd values are
+warnings, not guessed dependencies or implicit fallback triggers.
+
 ## `tests comment`
 
 Render a plan JSON as a Markdown PR comment.

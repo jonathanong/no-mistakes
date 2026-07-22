@@ -63,6 +63,9 @@ pub struct ImportFacts {
     pub function_calls: Vec<FunctionCall>,
     pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
+    /// Exported object/class roots whose member scopes may be reached by an
+    /// importer. This is collected by the import pass without full symbols.
+    pub exported_resource_roots: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
 }
@@ -128,6 +131,9 @@ pub fn extract_import_facts_from_program_with_source<'a>(
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
+    let mut exported_resource_roots: Vec<_> =
+        collector.exported_resource_roots.into_iter().collect();
+    exported_resource_roots.sort();
     let callable_scopes = collector.callable_scopes;
     let exported_type_scopes = collector.exported_type_scopes;
     let mut exported_functions: Vec<_> = collector
@@ -141,6 +147,7 @@ pub fn extract_import_facts_from_program_with_source<'a>(
         function_calls: collector.function_calls,
         symbol_references: collector.symbol_references,
         exported_functions,
+        exported_resource_roots,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }

@@ -2,6 +2,7 @@
 struct GraphFileUniverseKey {
     generation: u64,
     paths: std::sync::Arc<[PathBuf]>,
+    resource_candidates: std::sync::Arc<[PathBuf]>,
 }
 
 impl GraphFileUniverseKey {
@@ -12,6 +13,7 @@ impl GraphFileUniverseKey {
         Self {
             generation,
             paths: paths.into(),
+            resource_candidates: files.resource_candidates().to_vec().into(),
         }
     }
 }

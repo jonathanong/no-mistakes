@@ -11,6 +11,7 @@ struct ImportCollector {
     type_parameter_stack: Vec<HashSet<String>>,
     function_scope_stack: Vec<usize>,
     exported_functions: HashSet<String>,
+    exported_resource_roots: HashSet<String>,
     exported_type_scopes: HashSet<String>,
     callable_scopes: HashSet<String>,
     class_scopes: HashSet<String>,

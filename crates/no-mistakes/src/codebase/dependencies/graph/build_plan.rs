@@ -16,6 +16,8 @@ pub struct GraphBuildPlan {
     pub http: bool,
     pub process: bool,
     pub assets: bool,
+    /// Runtime filesystem resource reads and static glob calls in TS/JS.
+    pub resources: bool,
     pub react: bool,
     pub symbols: bool,
     pub dotnet: bool,
@@ -43,6 +45,7 @@ impl GraphBuildPlan {
             http: true,
             process: true,
             assets: true,
+            resources: true,
             react: true,
             symbols: false,
             dotnet: true,
@@ -96,6 +99,7 @@ impl GraphBuildPlan {
             http: allowed.contains(&EdgeKind::HttpCall),
             process: allowed.contains(&EdgeKind::ProcessSpawn),
             assets: allowed.contains(&EdgeKind::AssetImport),
+            resources: allowed.contains(&EdgeKind::Resource),
             react: allowed.contains(&EdgeKind::ReactRender),
             symbols: false,
             dotnet: allowed.contains(&EdgeKind::DotnetUsing)
@@ -125,6 +129,7 @@ impl GraphBuildPlan {
         self.http |= other.http;
         self.process |= other.process;
         self.assets |= other.assets;
+        self.resources |= other.resources;
         self.react |= other.react;
         self.symbols |= other.symbols;
         self.dotnet |= other.dotnet;
@@ -140,7 +145,8 @@ impl GraphBuildPlan {
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
-            function_calls: self.imports || self.workspace || self.assets || self.symbols,
+            function_calls: self.imports || self.workspace || self.assets || self.symbols || self.resources,
+            resources: self.resources,
             symbols: self.symbols || self.queues,
             react: self.react,
             route_refs: self.routes,

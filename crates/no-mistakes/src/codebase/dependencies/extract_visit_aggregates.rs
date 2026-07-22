@@ -70,6 +70,9 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
     if collector.current_function().is_none() {
         if let Some(name) = class.id.as_ref().map(|id| id.name.as_str()) {
             record_class_member_calls(collector, name, class);
+            if collector.is_exported_top_level_name(name) {
+                collector.exported_resource_roots.insert(name.to_string());
+            }
             collector.push_function_scope(Some(name.to_string()));
             if collector.export_depth > 0 {
                 collector.exported_functions.insert(name.to_string());
@@ -121,6 +124,7 @@ fn visit_export_default_declaration_with_scope<'a>(
                 .as_ref()
                 .map_or_else(|| "default".to_string(), |id| id.name.to_string());
             record_class_member_calls(collector, &scope, class);
+            collector.exported_resource_roots.insert(scope.clone());
             collector.push_function_scope(Some(scope.clone()));
             collector.exported_functions.insert(scope.clone());
             collector.callable_scopes.insert(scope);

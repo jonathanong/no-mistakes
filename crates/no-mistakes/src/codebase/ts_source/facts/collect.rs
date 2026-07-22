@@ -126,6 +126,11 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         Default::default()
     };
+    let resources = if plan.resources {
+        crate::codebase::ts_resources::extract(program, source)
+    } else {
+        Default::default()
+    };
     let symbols = plan
         .symbols
         .then(|| std::sync::Arc::new(extract_symbols_from_program(program, source)));
@@ -159,8 +164,11 @@ pub(crate) fn collect_file_facts_from_program(
         source: plan.source.then(|| source.to_owned()),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
+        resource_calls: resources.calls,
+        resource_diagnostics: resources.diagnostics,
         symbol_references: import_facts.symbol_references,
         exported_functions: import_facts.exported_functions,
+        exported_resource_roots: import_facts.exported_resource_roots,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols: symbols.as_deref().cloned(),

@@ -1,5 +1,6 @@
 use crate::tests::{
-    Confidence, ImpactReason, PlanArgs, PlanFormat, SelectedTest, TestPlan, Warning,
+    push_resource_diagnostics, warning_key, Confidence, ImpactEdgeDetail, ImpactReason, PlanArgs,
+    PlanFormat, ResourceCallSite, SelectedTest, TestPlan, Warning, WarningKey,
 };
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
@@ -117,6 +118,7 @@ pub(crate) fn generate_plan_with_prepared(
                     changed_file: relative_changed.clone(),
                     path: vec![relative_changed.clone(), rel_test],
                     via: vec!["global configuration".to_string()],
+                    via_details: Vec::new(),
                 }],
             });
         }
@@ -141,7 +143,7 @@ pub(crate) fn generate_plan_with_prepared(
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
     let mut warnings = prepared.tsconfig_warnings();
-    let mut warnings_seen = HashSet::new();
+    let mut warnings_seen: HashSet<WarningKey> = warnings.iter().map(warning_key).collect();
 
     // 4. Trace each changed file
     for changed in changed_files {
@@ -153,6 +155,10 @@ pub(crate) fn generate_plan_with_prepared(
         }
 
         let rel_changed = relative_path(root, changed);
+
+        // Dynamic resource calls are intentionally edge-less. A changed
+        // consumer remains relevant even when no static path reaches a test.
+        push_resource_diagnostics(graph, root, changed, &mut warnings, &mut warnings_seen);
 
         // If the changed file is a test file itself, select it directly
         if test_filter.is_match(root, changed) {
@@ -169,6 +175,7 @@ pub(crate) fn generate_plan_with_prepared(
                 changed_file: rel_changed.clone(),
                 path: vec![rel_changed.clone()],
                 via: vec!["self".to_string()],
+                via_details: Vec::new(),
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -195,11 +202,22 @@ pub(crate) fn generate_plan_with_prepared(
 
                 // Reconstruct path node chain and collect warnings in a single pass
                 let mut node_chain = Vec::new();
+                let mut reverse_details = Vec::new();
                 let mut curr = test_node.clone();
                 node_chain.push(slash_node_name(&curr, root));
 
                 while let Some((parent, kind)) = path_parents.get(&curr) {
+                    if let Some(file) = curr.as_file() {
+                        push_resource_diagnostics(
+                            graph,
+                            root,
+                            file,
+                            &mut warnings,
+                            &mut warnings_seen,
+                        );
+                    }
                     node_chain.push(slash_node_name(parent, root));
+                    reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, root));
 
                     match kind {
                         EdgeKind::DynamicImport => {
@@ -210,8 +228,9 @@ pub(crate) fn generate_plan_with_prepared(
                                     slash_node_name(&curr, root)
                                 ),
                                 file: slash_node_name(&curr, root),
+                                line: None,
                             };
-                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                            if warnings_seen.insert(warning_key(&warn)) {
                                 warnings.push(warn);
                             }
                         }
@@ -224,8 +243,9 @@ pub(crate) fn generate_plan_with_prepared(
                                     slash_node_name(parent, root)
                                 ),
                                 file: slash_node_name(&curr, root),
+                                line: None,
                             };
-                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                            if warnings_seen.insert(warning_key(&warn)) {
                                 warnings.push(warn);
                             }
                         }
@@ -237,8 +257,9 @@ pub(crate) fn generate_plan_with_prepared(
                                     slash_node_name(&curr, root)
                                 ),
                                 file: slash_node_name(&curr, root),
+                                line: None,
                             };
-                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                            if warnings_seen.insert(warning_key(&warn)) {
                                 warnings.push(warn);
                             }
                         }
@@ -246,7 +267,11 @@ pub(crate) fn generate_plan_with_prepared(
                     }
                     curr = parent.clone();
                 }
+                if let Some(file) = curr.as_file() {
+                    push_resource_diagnostics(graph, root, file, &mut warnings, &mut warnings_seen);
+                }
                 node_chain.reverse();
+                reverse_details.reverse();
 
                 let via_strings: Vec<String> = edge_path
                     .iter()
@@ -257,6 +282,7 @@ pub(crate) fn generate_plan_with_prepared(
                     changed_file: rel_changed.clone(),
                     path: node_chain,
                     via: via_strings,
+                    via_details: reverse_details,
                 };
 
                 let entry = selected_map
@@ -339,6 +365,7 @@ pub(crate) fn generate_plan_with_prepared(
                 changed_file: lockfile_rel.clone(),
                 path: node_chain,
                 via: via_strings,
+                via_details: Vec::new(),
             };
 
             let entry = selected_map
@@ -380,6 +407,7 @@ pub(crate) fn generate_plan_with_prepared(
                         changed_file: file.clone(),
                         path: vec![file.clone(), rel_test],
                         via: vec!["transitive dependency".to_string()],
+                        via_details: Vec::new(),
                     }],
                 }
             })
@@ -396,7 +424,7 @@ pub(crate) fn generate_plan_with_prepared(
 
     // Merge lockfile analysis warnings
     for warn in lockfile_analysis.warnings.iter().cloned() {
-        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+        if warnings_seen.insert(warning_key(&warn)) {
             warnings.push(warn);
         }
     }
@@ -429,7 +457,9 @@ pub(crate) fn generate_plan_with_prepared(
             .sort_by(|a, b| a.changed_file.cmp(&b.changed_file));
     }
     selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
-    warnings.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
+    warnings.sort_by(|a, b| {
+        (&a.file, a.line, &a.r#type, &a.message).cmp(&(&b.file, b.line, &b.r#type, &b.message))
+    });
 
     Ok(TestPlan {
         selected_tests,
@@ -437,6 +467,35 @@ pub(crate) fn generate_plan_with_prepared(
         warnings,
         fallback_triggered: false,
         fallback_reason: None,
+    })
+}
+
+/// The impact BFS runs in the reverse direction, while resource provenance is
+/// keyed by its canonical `consumer → resource` graph edge.
+pub(crate) fn resource_edge_detail(
+    graph: &DepGraph,
+    reverse_from: &NodeId,
+    reverse_to: &NodeId,
+    kind: EdgeKind,
+    root: &Path,
+) -> Option<ImpactEdgeDetail> {
+    if kind != EdgeKind::Resource {
+        return None;
+    }
+    let (NodeId::File(consumer), NodeId::File(resource)) = (reverse_from, reverse_to) else {
+        return None;
+    };
+    let call_sites = graph
+        .resource_edge_details(consumer, resource)?
+        .iter()
+        .map(|site| ResourceCallSite {
+            call_kind: site.call_kind.clone(),
+            line: u32::try_from(site.line).unwrap_or(u32::MAX),
+        })
+        .collect();
+    Some(ImpactEdgeDetail::Resource {
+        consumer_file: relative_path(root, consumer),
+        call_sites,
     })
 }
 
@@ -544,3 +603,5 @@ fn discover_all_tests_from_prepared(
 }
 
 include!("plan_bfs.rs");
+#[cfg(test)]
+include!("plan_resources_tests.rs");

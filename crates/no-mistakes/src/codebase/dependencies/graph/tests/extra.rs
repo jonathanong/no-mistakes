@@ -34,6 +34,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         indexable: vec![a.clone(), b.clone(), c.clone(), hidden],
         visible: [a.clone(), b.clone(), c.clone()].into(),
         canonical_visible: HashMap::new(),
+        resource_candidates: vec![],
     };
 
     let roots = vec![
@@ -114,6 +115,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         indexable: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
         visible: [hidden_root.join("a.mts")].into(),
         canonical_visible: HashMap::new(),
+        resource_candidates: vec![],
     };
     assert!(lazy_import_deps_of_with_files(
         &[NodeId::File(hidden_root.join("a.mts"))],
@@ -140,6 +142,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         indexable: vec![web_entry.clone()],
         visible: [package.clone(), web_entry.clone()].into(),
         canonical_visible: HashMap::new(),
+        resource_candidates: vec![],
     };
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
             crate::codebase::workspaces::WorkspacePackage {
@@ -406,6 +409,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         indexable: vec![],
         visible: HashSet::new(),
         canonical_visible: HashMap::new(),
+        resource_candidates: vec![],
     };
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let fact_context = TsFactContext::default();
@@ -497,6 +501,7 @@ fn lazy_import_facts_memoize_parse_errors() {
         indexable: vec![malformed.clone()],
         visible: [malformed.clone()].into(),
         canonical_visible: HashMap::new(),
+        resource_candidates: vec![],
     };
     let context = TsFactContext::new(&root);
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();

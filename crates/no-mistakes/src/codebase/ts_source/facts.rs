@@ -2,6 +2,7 @@ use crate::codebase::dependencies::extract::{ExtractedImport, FunctionCall};
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_queues::usage::QueueUsage;
+use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
@@ -28,6 +29,7 @@ pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactCon
 pub struct TsFactPlan {
     pub imports: bool,
     pub function_calls: bool,
+    pub resources: bool,
     pub symbols: bool,
     pub source: bool,
     pub route_refs: bool,
@@ -51,8 +53,11 @@ pub struct TsFileFacts {
     pub source: Option<String>,
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
+    pub resource_calls: Vec<ResourceCall>,
+    pub resource_diagnostics: Vec<ResourceDiagnostic>,
     pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
+    pub exported_resource_roots: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
     pub symbols: Option<FileSymbols>,

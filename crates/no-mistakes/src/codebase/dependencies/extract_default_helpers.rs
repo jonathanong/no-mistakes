@@ -14,6 +14,7 @@ fn walk_default_expression<'a>(
         walk::walk_export_default_declaration(collector, export);
         return;
     }
+    collector.exported_resource_roots.insert("default".to_string());
     if let Some(object) = default_object_expression(&export.declaration) {
         record_object_member_calls(collector, "default", object);
     }

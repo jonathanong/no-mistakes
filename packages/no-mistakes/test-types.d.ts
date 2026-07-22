@@ -75,7 +75,31 @@ export interface ImpactReason {
   changed_file: string;
   path: string[];
   via: string[];
+  /** When present, aligns index-for-index with `via`. */
+  via_details?: Array<ImpactEdgeDetail | null>;
 }
+
+export type ImpactEdgeDetail = ResourceImpactEdgeDetail;
+
+export interface ResourceImpactEdgeDetail {
+  type: "resource";
+  consumer_file: string;
+  call_sites: ResourceCallSite[];
+}
+
+export interface ResourceCallSite {
+  call_kind: ResourceCallKind;
+  line: number;
+}
+
+/** Static runtime filesystem API that created a resource dependency edge. */
+export type ResourceCallKind =
+  | "read-file"
+  | "read-file-sync"
+  | "read-directory"
+  | "read-directory-sync"
+  | "glob"
+  | "glob-sync";
 
 export interface TestPlanGroup {
   type: string;
@@ -88,6 +112,7 @@ export interface TestPlanWarning {
   type: string;
   message: string;
   file: string;
+  line?: number;
 }
 
 export interface TestsTargetsReport {
@@ -122,6 +147,7 @@ export interface TestsWhyOptions {
 export interface WhyStep {
   node: string;
   via?: string | null;
+  detail?: ImpactEdgeDetail | null;
 }
 
 export interface TestsPlanDocumentOptions {
@@ -131,7 +157,7 @@ export interface TestsPlanDocumentOptions {
 
 export interface TestGraph {
   nodes: Array<{ name: string; type: "changed" | "test" | "intermediate" }>;
-  edges: Array<{ from: string; to: string; via: string }>;
+  edges: Array<{ from: string; to: string; via: string; detail?: ImpactEdgeDetail }>;
 }
 
 export interface LockfileDiffOptions {

@@ -32,6 +32,7 @@ include!("builder_parse_errors.rs");
 include!("builder_core_resolution.rs");
 include!("builder_core.rs");
 include!("builder_edges.rs");
+include!("builder_remaining_edges.rs");
 include!("builder_helpers.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy.rs");
@@ -74,6 +75,10 @@ include!("edge_playwright_routes.rs");
 include!("edge_playwright_selectors.rs");
 include!("edge_playwright_http_process.rs");
 include!("edge_react.rs");
+include!("edge_resources.rs");
+include!("edge_resource_resolution.rs");
+#[cfg(test)]
+mod edge_resources_tests;
 include!("edge_dotnet.rs");
 include!("edge_swift.rs");
 include!("edge_terraform.rs");

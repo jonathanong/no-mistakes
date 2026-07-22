@@ -28,6 +28,7 @@ pub mod ts_http_calls;
 pub mod ts_process_spawn;
 pub mod ts_queues;
 pub mod ts_resolver;
+pub mod ts_resources;
 pub mod ts_routes;
 pub mod ts_source;
 pub mod ts_symbols;

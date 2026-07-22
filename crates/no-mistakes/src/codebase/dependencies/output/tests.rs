@@ -448,6 +448,7 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::HttpCall,
         EdgeKind::ProcessSpawn,
         EdgeKind::AssetImport,
+        EdgeKind::Resource,
         EdgeKind::ReactRender,
         EdgeKind::Selector,
         EdgeKind::DotnetUsing,
@@ -479,6 +480,7 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::HttpCall => {}
             EdgeKind::ProcessSpawn => {}
             EdgeKind::AssetImport => {}
+            EdgeKind::Resource => {}
             EdgeKind::ReactRender => {}
             EdgeKind::Selector => {}
             EdgeKind::DotnetUsing => {}
