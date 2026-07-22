@@ -3,7 +3,7 @@ include!("impact_collect_entry.rs");
 struct PreparedReportContext<'a> {
     args: &'a SymbolsArgs,
     root: &'a Path,
-    tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
+    tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     session: &'a crate::codebase::analysis_session::AnalysisSession,
     graph_files: &'a GraphFiles,
     test_filter: &'a TestFileFilter,
@@ -20,7 +20,7 @@ fn build_report_from_prepared(
     let PreparedReportContext {
         args,
         root,
-        tsconfig,
+        tsconfig_catalog,
         session,
         graph_files,
         test_filter,
@@ -28,6 +28,9 @@ fn build_report_from_prepared(
         graph,
         facts,
     } = context;
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        graph_files.visible().iter().cloned(),
+    );
     let visible_files = graph_files.visible().clone();
     let target = NodeId::Symbol {
         file: target_file.to_path_buf(),
@@ -101,10 +104,11 @@ fn build_report_from_prepared(
         }
         entries.extend(file_entries);
     }
-    let local_caller_context = prepare_local_caller_context(facts, workspace, &visible_files);
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
-        tsconfig,
-        Some(local_caller_context.visible_files),
+    let local_caller_context =
+        prepare_local_caller_context(facts, workspace, &visible_files, &remapper);
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+        tsconfig_catalog,
+        local_caller_context.visible_files,
         session,
     );
     let production_extra_callers = local_caller_entries(
@@ -170,6 +174,7 @@ struct LocalCallerContext<'a> {
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
+    remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 }
 
 /// Resolves the workspace map once and pairs it with the already-collected import/symbol
@@ -184,11 +189,13 @@ fn prepare_local_caller_context<'a>(
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
+    remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 ) -> LocalCallerContext<'a> {
     LocalCallerContext {
         facts,
         workspace,
         visible_files,
+        remapper,
     }
 }
 

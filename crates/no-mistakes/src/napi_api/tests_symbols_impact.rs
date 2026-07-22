@@ -25,6 +25,32 @@ fn symbols_json_returns_signature_impact_report() {
 }
 
 #[test]
+fn signature_impact_uses_the_importing_packages_tsconfig_alias_for_dependents() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/monorepo-tsconfig-catalog");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let output = symbols_json_impl(
+        json!({
+            "root": root,
+            "files": ["packages/lib/src/forbidden.ts"],
+            "mode": "signature-impact",
+            "symbol": "forbidden"
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(report["productionCallers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| entry["file"] == "packages/app/src/api.ts"), "{report:#?}");
+}
+
+#[test]
 fn signature_impact_napi_parses_each_source_file_once() {
     let source = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -116,3 +142,5 @@ fn pass4b_signature_impact_cli_and_napi_reports_share_gitignore_visibility() {
                 && entry["symbol"] == "namespaceCaller"
         }));
 }
+
+include!("tests_symbols_impact_framework.rs");

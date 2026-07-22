@@ -82,6 +82,9 @@ pub fn analyze_contracts_with_prepared(
         prepared.facts.plan(),
     );
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        visible.iter().cloned().collect(),
+    );
     let resolver =
         ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
 
@@ -105,7 +108,11 @@ pub fn analyze_contracts_with_prepared(
             }
             for (line, pattern) in
                 crate::codebase::dependencies::graph::route_helper_ref_patterns_with_lines(
-                    path, file_facts, &facts, &resolver,
+                    path,
+                    file_facts,
+                    &facts,
+                    &resolver,
+                    &graph_files,
                 )
             {
                 collector.push(path, line, &pattern, Some("GET"));

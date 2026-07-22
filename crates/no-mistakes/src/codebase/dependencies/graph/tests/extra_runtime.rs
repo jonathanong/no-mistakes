@@ -34,7 +34,7 @@ fn queue_edges_use_precomputed_shared_facts() {
     let relationships = collect_dashboard_queue_relationships(
         &root,
         &resolver,
-        graph_files.indexable(),
+        &graph_files,
         Some(&facts),
         config_options.as_ref(),
     );
@@ -190,4 +190,57 @@ fn queue_edges_skip_files_missing_shared_queue_facts() {
         &mut reverse,
     );
     assert!(forward.is_empty());
+}
+
+#[cfg(unix)]
+#[test]
+fn scoped_queue_edges_keep_symlink_root_targets_in_visible_namespace() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let graph_files = GraphFiles::discover(&root);
+    let mut catalog_visible = graph_files.all().to_vec();
+    catalog_visible.push(root.join("tsconfig.json"));
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &catalog_visible,
+    );
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new(
+        &catalog,
+        graph_files.visible(),
+    );
+    let plan = GraphBuildPlan {
+        queues: true,
+        ..GraphBuildPlan::default()
+    };
+    let options = graph_config_options(&root).expect("symlink fixture queue configuration loads");
+    let facts = collect_ts_facts_with_context(
+        graph_files.indexable(),
+        effective_ts_fact_plan(plan, Some(&options)),
+        &ts_fact_context_for_plan(&root, plan),
+    );
+
+    let relationships = collect_dashboard_queue_relationships(
+        &root,
+        &resolver,
+        &graph_files,
+        Some(&facts),
+        Some(&options),
+    );
+    let queue_job = NodeId::QueueJob {
+        queue_file: root.join("src/queues.ts"),
+        job: "sendEmail".to_string(),
+    };
+    assert!(relationships.iter().any(|edge| {
+        edge.from == NodeId::File(root.join("src/producer.ts"))
+            && edge.to == queue_job
+            && edge.kind == EdgeKind::QueueEnqueue
+    }));
+    assert!(relationships.iter().any(|edge| {
+        edge.from == queue_job
+            && edge.to == NodeId::File(root.join("src/processors.ts"))
+            && edge.kind == EdgeKind::QueueWorker
+    }));
 }

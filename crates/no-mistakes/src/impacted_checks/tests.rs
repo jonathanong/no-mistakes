@@ -448,7 +448,10 @@ fn impacted_checks_napi_matches_the_cli_engine_for_multi_framework_fanout() {
 fn impacted_fanout_prepares_and_builds_the_graph_once() {
     let generate = include_str!("generate.rs");
     let impacted_prepare = include_str!("generate/prepare.rs");
-    let prepared = include_str!("../tests/prepared_plan.rs");
+    let prepared = concat!(
+        include_str!("../tests/prepared_plan.rs"),
+        include_str!("../tests/prepared_plan_discovery.rs"),
+    );
     let plan = include_str!("../tests/plan.rs");
 
     assert_eq!(

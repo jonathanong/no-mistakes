@@ -7,7 +7,9 @@ use crate::queue::resolver::{load_tsconfig_from_visible, queue_import_resolver};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+mod catalog;
 mod fact_sources;
+mod standalone;
 use fact_sources::{queue_project_facts_from_shared, queue_project_facts_from_ts};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -24,7 +26,7 @@ pub fn analyze_project(
 ) -> anyhow::Result<ProjectReport> {
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    analyze_project_inner(&root, tsconfig_path, filters, snapshot, build_report)
+    standalone::analyze_project(&root, tsconfig_path, filters, snapshot)
 }
 
 #[doc(hidden)]
@@ -35,69 +37,7 @@ pub fn analyze_project_indexed(
 ) -> anyhow::Result<PreparedProjectReport> {
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    analyze_project_inner(
-        &root,
-        tsconfig_path,
-        filters,
-        snapshot,
-        build_prepared_report,
-    )
-}
-
-fn analyze_project_inner<T>(
-    root: &Path,
-    tsconfig_path: Option<&Path>,
-    filters: &[String],
-    snapshot: crate::codebase::ts_source::VisiblePathSnapshot,
-    builder: impl FnOnce(
-        &Path,
-        Vec<InternalProducer>,
-        Vec<InternalWorker>,
-        &HashMap<PathBuf, FileFacts>,
-    ) -> T,
-) -> anyhow::Result<T> {
-    let visible_paths = snapshot.paths_for(root);
-    let visible_files =
-        crate::codebase::ts_source::discover_files_from_visible(root, &[], &visible_paths);
-    let visible_set = visible_files.iter().cloned().collect();
-    let tsconfig = load_tsconfig_from_visible(root, tsconfig_path, &visible_files)?;
-    let filter = build_filter(filters)?;
-    let factory_names = crate::config::v2::load_v2_config_from_visible(root, None, &visible_paths)
-        .map(|config| config.queues.factories)
-        .unwrap_or_default();
-    let files = visible_files
-        .into_iter()
-        .filter(|path| {
-            path.extension()
-                .and_then(|extension| extension.to_str())
-                .is_some_and(|extension| {
-                    crate::codebase::ts_source::TS_JS_EXTENSIONS.contains(&extension)
-                })
-        })
-        .filter(|path| {
-            filter
-                .as_ref()
-                .is_none_or(|f| f.is_match(path.strip_prefix(root).unwrap_or(path)))
-        })
-        .collect::<Vec<_>>();
-    let mut context = crate::codebase::ts_source::facts::TsFactContext::new(root);
-    context.queue_project_factory_names = factory_names;
-    let ts_facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
-        &files,
-        crate::codebase::ts_source::facts::TsFactPlan {
-            queue_project: true,
-            ..Default::default()
-        },
-        &context,
-    );
-    crate::invocation::check_timeout()?;
-    let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
-
-    let queue_defs = queue_definitions(&facts);
-    let resolver = queue_import_resolver(&tsconfig, root, &visible_set);
-    let producers = resolve_producers(&facts, &queue_defs, &resolver);
-    let workers = resolve_workers(&facts, &queue_defs, &resolver);
-    Ok(builder(root, producers, workers, &facts))
+    standalone::analyze_project_indexed(&root, tsconfig_path, filters, snapshot)
 }
 
 pub fn analyze_project_with_facts(
@@ -136,9 +76,9 @@ fn analyze_project_with_facts_inner<T>(
 
 /// Analyze shared queue facts with a TypeScript config already prepared by the caller.
 ///
-/// The aggregate check uses this entrypoint so every domain shares the request's
-/// gitignore-aware config selection. Standalone queue commands continue to use
-/// [`analyze_project_with_facts`] and retain their existing config discovery behavior.
+/// Legacy callers use this entrypoint with one caller-selected config. Aggregate
+/// checks use the catalog-aware entrypoint below so each importer selects its
+/// visible workspace config.
 #[doc(hidden)]
 pub fn analyze_project_with_prepared_facts(
     root: &Path,
@@ -147,6 +87,39 @@ pub fn analyze_project_with_prepared_facts(
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> anyhow::Result<ProjectReport> {
     analyze_project_with_prepared_facts_inner(root, tsconfig, filters, shared, build_report)
+}
+
+/// Analyze aggregate queue facts with per-importer workspace TypeScript resolution.
+///
+/// This keeps the legacy prepared-config API deterministic for explicit callers,
+/// while aggregate checks select aliases from the importing package's catalog entry.
+#[doc(hidden)]
+pub fn analyze_project_with_prepared_facts_and_catalog_and_session(
+    root: &Path,
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    filters: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> anyhow::Result<ProjectReport> {
+    catalog::analyze(root, tsconfig_catalog, filters, shared, session)
+}
+
+#[doc(hidden)]
+pub fn analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
+    root: &Path,
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    filters: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> anyhow::Result<PreparedProjectReport> {
+    catalog::analyze_with(
+        root,
+        tsconfig_catalog,
+        filters,
+        shared,
+        session,
+        build_prepared_report,
+    )
 }
 
 #[doc(hidden)]
@@ -203,9 +176,28 @@ fn resolve_queue_relationships<T>(
 ) -> T {
     let facts = queue_project_facts_from_shared(shared, filter, root);
     let visible_files = shared.files().iter().cloned().collect();
-    let queue_defs = queue_definitions(&facts);
     let resolver = queue_import_resolver(tsconfig, root, &visible_files);
-    let producers = resolve_producers(&facts, &queue_defs, &resolver);
-    let workers = resolve_workers(&facts, &queue_defs, &resolver);
-    builder(root, producers, workers, &facts)
+    resolve_queue_relationships_with_resolver(root, &facts, &resolver, builder)
+}
+
+pub(super) fn resolve_queue_relationships_with_resolver<
+    T,
+    R: crate::codebase::ts_resolver::ImportResolverFacade,
+>(
+    root: &Path,
+    facts: &HashMap<PathBuf, FileFacts>,
+    resolver: &R,
+    builder: impl FnOnce(
+        &Path,
+        Vec<InternalProducer>,
+        Vec<InternalWorker>,
+        &HashMap<PathBuf, FileFacts>,
+    ) -> T,
+) -> T {
+    let queue_defs = queue_definitions(facts);
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(facts.keys().cloned());
+    let producers = resolve_producers(facts, &queue_defs, resolver, &remapper);
+    let workers = resolve_workers(facts, &queue_defs, resolver, &remapper);
+    builder(root, producers, workers, facts)
 }

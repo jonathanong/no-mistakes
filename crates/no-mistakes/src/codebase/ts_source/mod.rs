@@ -9,11 +9,13 @@ pub mod jsx;
 
 mod file_inventory;
 mod parser_diagnostic;
+mod path_remapper;
 mod source_store;
 pub(crate) use file_inventory::ClassifiedPath;
 #[doc(hidden)]
 pub use file_inventory::{FileClassification, FileId, FileInventory};
 pub(crate) use parser_diagnostic::format_parse_diagnostic;
+pub(crate) use path_remapper::FrozenPathRemapper;
 #[doc(hidden)]
 pub use source_store::{JsonLoadError, SourceReadOutcome, SourceStore};
 

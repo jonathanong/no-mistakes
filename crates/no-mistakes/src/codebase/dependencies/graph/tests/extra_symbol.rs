@@ -181,6 +181,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
             indexable: &[p("/repo/src/missing.mts"), no_symbols, current.clone()],
             all: std::slice::from_ref(&current),
             visible: &visible,
+            graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
         },
         &facts,
         &resolver,
@@ -458,82 +459,4 @@ fn symbol_bfs_widens_reached_symbols_to_owner_files() {
     assert!(nodes.contains(&NodeId::File(unrelated_consumer)));
 }
 
-// ── add_test_edges ───────────────────────────────────────────────────────
-
-#[test]
-fn test_edges_source_finds_test_file() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis")
-        .join("test-framework")
-        .join("fixture");
-    let root = crate::codebase::ts_resolver::normalize_path(&root);
-    let tsconfig = TsConfig {
-        dir: root.clone(),
-        paths: vec![],
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let graph = build_graph(&root, &tsconfig);
-
-    let index_mts = root.join("src/index.mts");
-    let index_test = root.join("src/index.test.mts");
-    let testof_filter: HashSet<EdgeKind> = [EdgeKind::TestOf].into();
-
-    // dependents_of (reverse walk): test file is a dependent of its source.
-    let dependents = graph.dependents_of(
-        &[NodeId::File(index_mts.clone())],
-        None,
-        Some(&testof_filter),
-    );
-    assert!(
-        dependents
-            .iter()
-            .any(|e| e.node.as_file() == Some(index_test.as_path())),
-        "index.test.mts should appear as a dependent of index.mts"
-    );
-
-    // deps_of (forward walk): source file must NOT forward-depend on its test.
-    let deps = graph.deps_of(&[NodeId::File(index_mts)], None, Some(&testof_filter));
-    assert!(
-        !deps
-            .iter()
-            .any(|e| e.node.as_file() == Some(index_test.as_path())),
-        "index.mts must NOT forward-depend on index.test.mts"
-    );
-}
-
-// ── add_md_edges ─────────────────────────────────────────────────────────
-
-#[test]
-fn md_edges_added_for_codebase_intel_fixture() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis")
-        .join("codebase-intel")
-        .join("fixture");
-    let root = crate::codebase::ts_resolver::normalize_path(&root);
-    let tsconfig = TsConfig {
-        dir: root.clone(),
-        paths: vec![],
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let graph = build_graph(&root, &tsconfig);
-
-    let readme = root.join("README.md");
-    let deps = graph.deps_of(
-        &[NodeId::File(readme)],
-        None,
-        Some(&[EdgeKind::MarkdownLink].into()),
-    );
-    // README.md links to packages/api/src/index.mts
-    let linked_file = root
-        .join("packages")
-        .join("api")
-        .join("src")
-        .join("index.mts");
-    assert!(
-        deps.iter()
-            .any(|e| e.node.as_file() == Some(linked_file.as_path())),
-        "README.md should have MarkdownLink edge to packages/api/src/index.mts"
-    );
-}
+include!("extra_symbol_graph_edges.rs");

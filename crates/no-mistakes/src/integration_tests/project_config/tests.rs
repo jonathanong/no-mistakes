@@ -9,6 +9,7 @@ fn load_config_projects(
     config_dir: &Path,
     tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(tsconfig);
     load_config_projects_inner(
         ConfigProjectInput {
             root,
@@ -17,7 +18,7 @@ fn load_config_projects(
             path,
             source,
             config_dir,
-            tsconfig,
+            resolver: &resolver,
         },
         None,
     )

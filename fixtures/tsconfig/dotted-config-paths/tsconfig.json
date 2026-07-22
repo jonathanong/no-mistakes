@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.base",
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "./packages/referenced/tsconfig.build" }]
+}

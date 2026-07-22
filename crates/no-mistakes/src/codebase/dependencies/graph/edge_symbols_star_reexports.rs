@@ -174,12 +174,15 @@ fn resolve_star_source(
     is_type_only: bool,
 ) -> Option<(PathBuf, EdgeKind)> {
     if let Some(target) = inputs.resolver.resolve(source, from) {
-        Some((target, symbol_edge_kind(is_type_only)))
+        inputs
+            .graph_files
+            .visible_path(&target)
+            .map(|target| (target.to_path_buf(), symbol_edge_kind(is_type_only)))
     } else {
         inputs
             .workspace
             .resolve_specifier_from_file_visible(source, from, inputs.visible_files)
-            .filter(|target| inputs.visible_files.contains(target))
+            .and_then(|target| inputs.graph_files.visible_path(&target).map(Path::to_path_buf))
             .map(|target| (target, EdgeKind::WorkspaceImport))
     }
 }

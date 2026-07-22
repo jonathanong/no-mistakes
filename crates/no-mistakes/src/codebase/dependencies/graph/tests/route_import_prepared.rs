@@ -153,6 +153,7 @@ fn route_import_resolution_tolerates_missing_source_directories() {
         std::slice::from_ref(&source),
         &facts,
         &tsconfig,
+        None,
         &graph_files,
         &session,
     )

@@ -59,6 +59,7 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
             indexable: std::slice::from_ref(&file),
             all: std::slice::from_ref(&file),
             visible: &visible,
+            graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
         },
         &facts,
         &resolver,

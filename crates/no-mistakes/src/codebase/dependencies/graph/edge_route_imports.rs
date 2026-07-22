@@ -6,13 +6,26 @@ fn collect_route_import_edges(
     files: &[PathBuf],
     facts: &dyn TsFactLookup,
     tsconfig: &TsConfig,
+    tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
     graph_files: &GraphFiles,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Vec<Edge> {
     // Route imports intentionally resolve through the real filesystem before
     // mapping symlink targets back to the visible universe. Keep that `None`
     // scope distinct from ordinary graph resolution.
-    let resolver = ImportResolver::new_in_session(tsconfig, None, session);
+    let scoped_resolver = tsconfig_catalog.map(crate::codebase::ts_resolver::ScopedImportResolver::unbounded);
+    let legacy_resolver = tsconfig_catalog
+        .is_none()
+        .then(|| ImportResolver::new_in_session(tsconfig, None, session));
+    let resolver: &dyn ImportResolution = scoped_resolver
+        .as_ref()
+        .map(|resolver| resolver as &dyn ImportResolution)
+        .or_else(|| {
+            legacy_resolver
+                .as_ref()
+                .map(|resolver| resolver as &dyn ImportResolution)
+        })
+        .expect("a scoped or legacy route-import resolver is initialized");
     let import_files = files
         .par_iter()
         .filter_map(|path| facts.get_ts_facts(path).map(|file_facts| (path, file_facts)))
@@ -113,8 +126,8 @@ fn route_import_visible_target(
     graph_files: &GraphFiles,
     visible_by_name: &std::collections::BTreeMap<std::ffi::OsString, Vec<PathBuf>>,
 ) -> Option<PathBuf> {
-    if graph_files.is_visible(&target) {
-        return Some(target);
+    if let Some(target) = graph_files.visible_path(&target) {
+        return Some(target.to_path_buf());
     }
     let canonical_target = target.canonicalize().ok()?;
     let candidates = visible_by_name.get(target.file_name()?)?;

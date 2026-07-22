@@ -160,7 +160,8 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
     let shared = concat!(
         include_str!("../shared_traversal.rs"),
         include_str!("../shared_traversal_prepare.rs"),
-        include_str!("../shared_traversal_prepare_core.rs")
+        include_str!("../shared_traversal_prepare_core.rs"),
+        include_str!("../shared_traversal_prepare_catalog.rs")
     );
     let shared_graph = concat!(
         include_str!("../shared_traversal_graph.rs"),
@@ -178,7 +179,7 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
     );
     assert_eq!(
         shared
-            .matches("session.tsconfig(&root, tsconfig_path)?")
+            .matches(".tsconfig(&root, tsconfig_path)")
             .count(),
         1
     );

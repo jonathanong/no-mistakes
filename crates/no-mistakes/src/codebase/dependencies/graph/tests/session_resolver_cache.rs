@@ -7,6 +7,11 @@ fn complete_check_fact_graph_adapter_reuses_exact_session_resolver_scope() {
         paths_dir: root.clone(),
         ..TsConfig::default()
     };
+    let tsconfig_catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(
+        &root,
+        tsconfig.clone(),
+        None,
+    );
     let plan = GraphBuildPlan::imports_and_workspace();
     let (fact_plan, fact_context) = ts_fact_plan_and_context_for_plan(&root, plan);
     let facts = crate::codebase::check_facts::collect_check_facts(
@@ -25,6 +30,7 @@ fn complete_check_fact_graph_adapter_reuses_exact_session_resolver_scope() {
             CompleteCheckFactGraphBuildRequest {
                 root: &root,
                 tsconfig: &tsconfig,
+                tsconfig_catalog: &tsconfig_catalog,
                 plan,
                 files: files.clone(),
                 config_path: None,

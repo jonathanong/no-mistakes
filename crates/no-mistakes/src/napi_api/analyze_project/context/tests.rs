@@ -132,7 +132,7 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
 }
 
 #[test]
-fn omitted_and_explicit_automatic_paths_share_one_scope() {
+fn omitted_automatic_and_explicit_tsconfig_use_separate_scopes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis/forbidden-dependencies-passes/fixture"),
@@ -151,6 +151,13 @@ fn omitted_and_explicit_automatic_paths_share_one_scope() {
     .unwrap();
 
     let context = super::AnalyzeProjectContext::prepare(&options).unwrap();
-    assert_eq!(context.scopes.len(), 1);
+    assert_eq!(context.scopes.len(), 2);
     assert_eq!(context.scope_aliases.len(), 2);
+    let mut automatic_modes = context
+        .scopes
+        .keys()
+        .map(|scope| scope.automatic_tsconfig)
+        .collect::<Vec<_>>();
+    automatic_modes.sort();
+    assert_eq!(automatic_modes, vec![false, true]);
 }

@@ -79,6 +79,7 @@ impl SharedCheckContext {
                 prepared_graph: self.prepared_graph.as_ref(),
                 dependency_graph: dependency_graph.cloned(),
                 prepared_tsconfig: &self.prepared.tsconfig,
+                prepared_tsconfig_catalog: &self.prepared.tsconfig_catalog,
                 visible_paths: self.prepared.visible_paths.as_ref(),
                 sources: std::sync::Arc::clone(&sources),
                 inferred_roots: &self.prepared.inferred_roots,

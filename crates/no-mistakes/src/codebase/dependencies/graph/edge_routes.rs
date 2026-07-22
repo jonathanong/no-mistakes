@@ -1,8 +1,9 @@
-fn collect_route_edges(
+fn collect_route_edges_with_graph_files(
     root: &Path,
     tsconfig: &TsConfig,
-    resolver: &ImportResolver<'_>,
-    all_files: &[PathBuf],
+    tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
+    resolver: &dyn ImportResolution,
+    graph_files: &GraphFiles,
     facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
@@ -38,7 +39,7 @@ fn collect_route_edges(
                         .expect("globset with one validated backend route glob should build");
                     collect_backend_routes_from_graph_inputs(
                         root,
-                        all_files,
+                        graph_files.all(),
                         &opts.backend_register_object,
                         &gs,
                         facts,
@@ -54,8 +55,9 @@ fn collect_route_edges(
     if has_project_routes {
         all_defs.extend(collect_project_server_route_defs(
             root,
-            all_files,
+            graph_files.all(),
             tsconfig,
+            tsconfig_catalog,
             project_route_globset.expect("project route globset checked above"),
             facts,
             config_options.test_filter.as_ref(),
@@ -65,7 +67,7 @@ fn collect_route_edges(
         let frontend_abs = root.join(&opts.frontend_root);
         all_defs.extend(defs_frontend::collect_frontend_routes_from_files(
             &frontend_abs,
-            all_files,
+            graph_files.all(),
         ));
     }
     all_defs.sort();
@@ -109,7 +111,8 @@ fn collect_route_edges(
         .build()
         .expect("globset with individually validated scan globs should build");
 
-    let scan_files: Vec<PathBuf> = all_files
+    let scan_files: Vec<PathBuf> = graph_files
+        .all()
         .iter()
         .filter(|p| {
             p.strip_prefix(root)
@@ -156,6 +159,7 @@ fn collect_route_edges(
                     file_facts,
                     facts.expect("route facts are available when file facts were found"),
                     resolver,
+                    graph_files,
                 );
                 push_edges_for_refs(helper_patterns.iter().map(String::as_str).collect());
             }

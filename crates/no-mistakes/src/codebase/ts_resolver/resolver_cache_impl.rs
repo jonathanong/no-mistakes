@@ -20,7 +20,7 @@ impl<'a> ImportResolver<'a> {
             let workspace_recognized = workspace_target.is_some()
                 || workspace.recognizes_specifier_from(specifier, importing_file);
             ImportClassification {
-                resolver_target,
+            resolver_target,
                 workspace_target,
                 workspace_recognized,
             }

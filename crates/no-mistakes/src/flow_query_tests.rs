@@ -203,7 +203,7 @@ fn flow_prepared_graph_honors_explicit_config_without_nested_discovery() {
     assert_eq!(run_body.matches("prepare_graph_config(").count(), 1);
     assert_eq!(
         run_body
-            .matches("build_with_plan_files_prepared_config(")
+            .matches("build_with_plan_files_prepared_config_facts_and_resolution_cache(")
             .count(),
         1
     );

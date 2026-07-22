@@ -32,6 +32,39 @@ fn selector_wrapper_module_resolution() -> super::PlaywrightModuleResolution {
     )
 }
 
+fn catalog_module_resolution(root: &Path) -> super::PlaywrightModuleResolution {
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let paths = snapshot.paths_for(root);
+    let sources = snapshot.source_store_for(root);
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+        root,
+        &[root.to_path_buf()],
+        &paths,
+        &sources,
+    );
+    let workspace =
+        crate::codebase::workspaces::load_indexed_from_source_store(root, &sources).unwrap();
+    super::PlaywrightModuleResolution::with_catalog(
+        Arc::new(catalog),
+        Arc::new(workspace),
+        Arc::new(paths.iter().cloned().collect()),
+    )
+}
+
+fn symlinked_catalog_resolution_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    )
+}
+
+fn workspace_catalog_resolution_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/workspace-resolution"),
+    )
+}
+
 #[test]
 fn wrapper_module_resolution_matches_aliases_and_nodenext_sources() {
     let root = selector_wrapper_resolution_fixture();
@@ -68,6 +101,37 @@ fn wrapper_module_resolution_keeps_external_packages_as_terminal_identities() {
         "external-locators",
         "other-external-locators",
         &importing_file,
+    ));
+}
+
+#[test]
+fn catalog_wrapper_resolution_preserves_symlinked_alias_identity_without_rebuilding_scopes() {
+    let root = symlinked_catalog_resolution_fixture();
+    let importer = root.join("tests/dynamic-manual-mock.test.ts");
+    let resolution = catalog_module_resolution(&root);
+
+    for _ in 0..16 {
+        assert!(resolution.modules_match("@linked/value", "../src/value", &importer));
+    }
+
+    // The facade shares the outer remapping universe. Repeated wrapper
+    // comparisons only reuse its importer selection and owned scope resolver.
+    assert_eq!(resolution.catalog_instrumentation(), Some((true, 1, 1, 2)));
+}
+
+#[test]
+fn catalog_wrapper_resolution_does_not_treat_unresolved_workspace_packages_as_external() {
+    let root = workspace_catalog_resolution_fixture();
+    let importer = root.join("apps/web/src/entry.ts");
+    let resolution = catalog_module_resolution(&root);
+
+    // `@fixture/shared` is a known workspace package but this subpath is not
+    // exported. It must not become a terminal external identity merely
+    // because both configured and imported spellings are equal.
+    assert!(!resolution.modules_match(
+        "@fixture/shared/not-exported",
+        "@fixture/shared/not-exported",
+        &importer,
     ));
 }
 

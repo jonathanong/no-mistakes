@@ -2,6 +2,7 @@ struct SymbolGraphFiles<'a> {
     indexable: &'a [PathBuf],
     all: &'a [PathBuf],
     visible: &'a HashSet<PathBuf>,
+    graph_files: &'a GraphFiles,
 }
 
 fn namespace_import_member_reference_exists(

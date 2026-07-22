@@ -13,6 +13,7 @@ enum SuppliedFactPolicy {
 pub(crate) struct PreparedGraphBuild<'a> {
     pub(crate) root: &'a Path,
     pub(crate) tsconfig: &'a TsConfig,
+    pub(crate) tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) plan: GraphBuildPlan,
     pub(crate) graph_files: &'a GraphFiles,
     pub(crate) config_path: Option<&'a Path>,
@@ -26,27 +27,7 @@ pub(crate) struct PreparedGraphBuild<'a> {
 }
 
 impl DepGraph {
-    /// Build from request-scoped files and config that the caller prepared
-    /// before entering a multi-consumer analysis fanout.
-    pub(crate) fn build_with_plan_files_prepared_config(
-        root: &Path,
-        tsconfig: &TsConfig,
-        plan: GraphBuildPlan,
-        graph_files: &GraphFiles,
-        config_path: Option<&Path>,
-        prepared: &PreparedGraphConfig,
-    ) -> Result<Self> {
-        Self::build_with_plan_files_prepared_config_and_facts(
-            root,
-            tsconfig,
-            plan,
-            graph_files,
-            config_path,
-            prepared,
-            None,
-        )
-    }
-
+    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn build_with_plan_files_prepared_config_and_facts(
         root: &Path,
         tsconfig: &TsConfig,
@@ -86,6 +67,7 @@ impl DepGraph {
         let PreparedGraphBuild {
             root,
             tsconfig,
+            tsconfig_catalog,
             plan,
             graph_files,
             config_path,
@@ -100,6 +82,7 @@ impl DepGraph {
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog,
                 plan,
                 graph_files,
                 workspace: Some(prepared.workspace()),
@@ -130,6 +113,7 @@ impl DepGraph {
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog: None,
                 plan,
                 graph_files,
                 workspace: Some(prepared.workspace()),
@@ -160,6 +144,7 @@ impl DepGraph {
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog: None,
                 plan,
                 graph_files,
                 workspace: None,

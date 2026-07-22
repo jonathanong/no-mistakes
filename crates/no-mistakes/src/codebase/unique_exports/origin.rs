@@ -1,37 +1,40 @@
 use super::{ExportBucket, ExportOrigin, SourceFile};
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn find_target_export_origin(
+pub(super) fn find_target_export_origin<R: ImportResolverFacade>(
     target: &Path,
     imported: &str,
     files: &HashMap<PathBuf, SourceFile>,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
     workspace: &WorkspaceMap,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
     visiting: &mut HashSet<PathBuf>,
 ) -> Option<ExportOrigin> {
     OriginSearch {
         files,
         resolver,
         workspace,
+        remapper,
         visiting,
     }
     .find(target, imported)
 }
 
-struct OriginSearch<'a, 'b> {
+struct OriginSearch<'a, R: ImportResolverFacade> {
     files: &'a HashMap<PathBuf, SourceFile>,
-    resolver: &'a ImportResolver<'b>,
+    resolver: &'a R,
     workspace: &'a WorkspaceMap,
+    remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
     visiting: &'a mut HashSet<PathBuf>,
 }
 
-impl OriginSearch<'_, '_> {
+impl<R: ImportResolverFacade> OriginSearch<'_, R> {
     fn find(&mut self, target: &Path, imported: &str) -> Option<ExportOrigin> {
-        let target = normalize_path(target);
+        let target = self.remapper.remap(target);
         if !self.visiting.insert(target.clone()) {
             return None;
         }
@@ -75,10 +78,14 @@ impl OriginSearch<'_, '_> {
             ExportKind::ReExport {
                 source,
                 imported: reimported,
-            } if export.name == "*" && reimported == "*" => {
-                resolve_export_source(source, &file.path, self.resolver, self.workspace)
-                    .and_then(|resolved| self.find(&resolved, imported))
-            }
+            } if export.name == "*" && reimported == "*" => resolve_export_source(
+                source,
+                &file.path,
+                self.resolver,
+                self.workspace,
+                self.remapper,
+            )
+            .and_then(|resolved| self.find(&resolved, imported)),
             _ if export.name == imported => Some(origin_for_export(
                 file,
                 export,
@@ -95,11 +102,16 @@ impl OriginSearch<'_, '_> {
         source: &str,
         reimported: &str,
     ) -> Option<ExportOrigin> {
-        let resolved_origin =
-            match resolve_export_source(source, &file.path, self.resolver, self.workspace) {
-                Some(resolved) => self.find(&resolved, reimported),
-                None => None,
-            };
+        let resolved_origin = match resolve_export_source(
+            source,
+            &file.path,
+            self.resolver,
+            self.workspace,
+            self.remapper,
+        ) {
+            Some(resolved) => self.find(&resolved, reimported),
+            None => None,
+        };
         if export.is_type_only {
             if let Some(origin) = resolved_origin {
                 Some(ExportOrigin {
@@ -132,14 +144,15 @@ pub(super) fn origin_for_export(
     }
 }
 
-pub(super) fn resolve_export_source(
+pub(super) fn resolve_export_source<R: ImportResolverFacade>(
     source: &str,
     importing_file: &Path,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
     workspace: &WorkspaceMap,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Option<PathBuf> {
     if let Some(path) = resolver.resolve(source, importing_file) {
-        return Some(normalize_path(&path));
+        return Some(remapper.remap(&path));
     }
     let workspace_path = match resolver.visible_files() {
         Some(visible) => {
@@ -148,7 +161,7 @@ pub(super) fn resolve_export_source(
         None => workspace.resolve_specifier(source),
     };
     if let Some(path) = workspace_path {
-        return Some(normalize_path(&path));
+        return Some(remapper.remap(&path));
     }
     None
 }

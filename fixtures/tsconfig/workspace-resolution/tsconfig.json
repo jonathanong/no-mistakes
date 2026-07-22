@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "apps/web" },
+    { "path": "services/worker/tsconfig.worker.json" },
+    { "path": "packages/shared" },
+    { "path": "apps/ambiguous/tsconfig.a.json" },
+    { "path": "apps/ambiguous/tsconfig.b.json" },
+    { "path": "../outside-reference" },
+    { "path": "invalid-extends" }
+  ]
+}

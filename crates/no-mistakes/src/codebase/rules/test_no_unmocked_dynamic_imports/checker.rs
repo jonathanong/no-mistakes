@@ -1,7 +1,7 @@
-use super::{ast, runtime_deps, RULE_ID};
-use crate::codebase::dependencies::graph::DepGraph;
+use super::{ast, remap_resolved_path, runtime_deps, RULE_ID};
+use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::ts_resolver::ImportResolver;
+use crate::codebase::ts_resolver::ImportResolution;
 use dashmap::DashMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -23,8 +23,9 @@ pub(super) struct DynamicImportOutcome {
 pub(super) struct DynamicCheckContext<'a> {
     pub(super) root: &'a Path,
     pub(super) file: &'a Path,
-    pub(super) resolver: &'a ImportResolver<'a>,
+    pub(super) resolver: &'a dyn ImportResolution,
     pub(super) graph: &'a DepGraph,
+    pub(super) graph_files: Option<&'a GraphFiles>,
     pub(super) file_universe: Option<&'a HashSet<PathBuf>>,
     pub(super) mocks: &'a HashSet<PathBuf>,
     pub(super) dependency_cache: &'a DashMap<PathBuf, Arc<Vec<PathBuf>>>,
@@ -52,7 +53,11 @@ pub(super) fn evaluate_dynamic_import(
             findings: vec![build_finding(ctx.root, ctx.file, import.line, None, None)],
         };
     };
-    let Some(target) = ctx.resolver.resolve(&specifier, ctx.file) else {
+    let Some(target) = ctx
+        .resolver
+        .resolve(&specifier, ctx.file)
+        .map(|path| remap_resolved_path(ctx.graph_files, path))
+    else {
         if ctx.mocks.contains(&PathBuf::from(&specifier)) {
             return DynamicImportOutcome {
                 key,

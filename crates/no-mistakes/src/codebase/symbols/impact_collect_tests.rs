@@ -66,6 +66,9 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
     let mut target_symbols = BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
     let workspace = crate::codebase::workspaces::WorkspaceMap::default();
     let visible = HashSet::new();
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        visible.iter().cloned(),
+    );
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,
@@ -79,6 +82,7 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
         &target_symbols,
         &resolver,
         &workspace,
+        &remapper,
     )
     .is_empty());
 
@@ -91,6 +95,7 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
         &target_symbols,
         &resolver,
         &workspace,
+        &remapper,
     )
     .is_empty());
 }
@@ -152,6 +157,9 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
         base_url: None,
     };
     let workspace = crate::codebase::workspaces::load_from_files(&root, &visible_paths).unwrap();
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        visible.iter().cloned(),
+    );
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,
@@ -166,6 +174,7 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
             &target_symbols,
             &resolver,
             &workspace,
+            &remapper,
         ),
         BTreeSet::from(["feature".to_string()])
     );

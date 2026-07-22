@@ -102,7 +102,16 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
 
     let mut edges = Vec::new();
     collect_swift_http_edges(
-        &root, &tsconfig, &all_files, &options, None, &facts, &mut edges,
+        SwiftRouteDefInputs {
+            root: &root,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: None,
+            all_files: &all_files,
+            config_options: &options,
+            ts_facts: None,
+        },
+        &facts,
+        &mut edges,
     );
     assert!(edges.iter().all(|(_, _, kind)| *kind == EdgeKind::HttpCall));
 }
@@ -129,7 +138,16 @@ fn swift_http_edges_include_backend_route_defs() {
 
     let mut edges = Vec::new();
     collect_swift_http_edges(
-        &root, &tsconfig, &all_files, &options, None, &facts, &mut edges,
+        SwiftRouteDefInputs {
+            root: &root,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: None,
+            all_files: &all_files,
+            config_options: &options,
+            ts_facts: None,
+        },
+        &facts,
+        &mut edges,
     );
 
     assert!(edges.iter().all(|(_, _, kind)| *kind == EdgeKind::HttpCall));
@@ -186,6 +204,7 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     let standalone = collect_swift_edges_with_facts(
         &root,
         &tsconfig,
+        None,
         &all_files,
         Some(&options),
         None,
@@ -194,6 +213,7 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     let reused = collect_swift_edges_with_facts(
         &root,
         &tsconfig,
+        None,
         &all_files,
         Some(&options),
         Some(&ts_facts),

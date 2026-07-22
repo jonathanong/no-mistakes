@@ -1,9 +1,3 @@
-pub(crate) struct PreparedGraphFacts<'a> {
-    pub(crate) ts: Option<&'a dyn TsFactLookup>,
-    pub(crate) dotnet: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
-    pub(crate) swift: Option<&'a crate::codebase::swift::SwiftFactMap>,
-}
-
 pub(crate) struct PreparedGraphBuildRequest<'a> {
     pub(crate) root: &'a Path,
     pub(crate) tsconfig: &'a TsConfig,
@@ -17,6 +11,7 @@ pub(crate) struct PreparedGraphBuildRequest<'a> {
 pub(crate) struct PreparedCheckFactGraphBuildRequest<'a> {
     pub(crate) root: &'a Path,
     pub(crate) tsconfig: &'a TsConfig,
+    pub(crate) tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub(crate) plan: GraphBuildPlan,
     pub(crate) files: Vec<PathBuf>,
     pub(crate) config_path: Option<&'a Path>,
@@ -27,6 +22,7 @@ pub(crate) struct PreparedCheckFactGraphBuildRequest<'a> {
 pub(crate) struct CompleteCheckFactGraphBuildRequest<'a> {
     pub(crate) root: &'a Path,
     pub(crate) tsconfig: &'a TsConfig,
+    pub(crate) tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub(crate) plan: GraphBuildPlan,
     pub(crate) files: Vec<PathBuf>,
     pub(crate) config_path: Option<&'a Path>,
@@ -51,6 +47,7 @@ impl DepGraph {
             PreparedGraphBuild {
                 root,
                 tsconfig,
+                tsconfig_catalog: None,
                 plan,
                 graph_files,
                 config_path,
@@ -66,27 +63,9 @@ impl DepGraph {
     }
 
     pub(crate) fn build_with_plan_files_prepared_config_and_all_facts(
-        root: &Path,
-        tsconfig: &TsConfig,
-        plan: GraphBuildPlan,
-        graph_files: &GraphFiles,
-        config_path: Option<&Path>,
-        prepared: &PreparedGraphConfig,
-        facts: PreparedGraphFacts<'_>,
+        input: PreparedGraphBuild<'_>,
     ) -> Result<Self> {
-        Self::build_with_plan_files_prepared_config_facts_and_resolution_cache(PreparedGraphBuild {
-            root,
-            tsconfig,
-            plan,
-            graph_files,
-            config_path,
-            prepared,
-            facts: facts.ts,
-            import_resolution_cache: None,
-            dotnet_facts: facts.dotnet,
-            swift_facts: facts.swift,
-            visible_paths: None,
-        })
+        Self::build_with_plan_files_prepared_config_facts_and_resolution_cache(input)
     }
 
     pub(crate) fn build_with_prepared_check_facts_and_session(
@@ -96,6 +75,7 @@ impl DepGraph {
         let PreparedCheckFactGraphBuildRequest {
             root,
             tsconfig,
+            tsconfig_catalog,
             plan,
             files,
             config_path,
@@ -107,6 +87,7 @@ impl DepGraph {
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog: Some(tsconfig_catalog),
                 plan,
                 graph_files: &graph_files,
                 workspace: Some(prepared.workspace()),
@@ -131,6 +112,7 @@ impl DepGraph {
         let CompleteCheckFactGraphBuildRequest {
             root,
             tsconfig,
+            tsconfig_catalog,
             plan,
             files,
             config_path,
@@ -142,6 +124,7 @@ impl DepGraph {
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog: Some(tsconfig_catalog),
                 plan,
                 graph_files: &graph_files,
                 workspace: None,

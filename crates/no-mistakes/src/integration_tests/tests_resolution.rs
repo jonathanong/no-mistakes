@@ -102,10 +102,13 @@ fn direct_resolution_covers_cycles_and_import_shapes() {
         Some(&visible_files),
         &session,
     );
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(analyses.keys().cloned());
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
         resolver: &import_resolver,
+        remapper: &remapper,
     };
 
     assert_eq!(
@@ -142,10 +145,13 @@ fn pass4b_call_tracing_skips_ignored_helper_for_visible_fallback() {
         Some(&visible_files),
         &session,
     );
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(analyses.keys().cloned());
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
         resolver: &import_resolver,
+        remapper: &remapper,
     };
 
     let integrations = resolve::resolved_integrations(

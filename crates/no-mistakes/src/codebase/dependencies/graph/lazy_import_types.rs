@@ -39,6 +39,7 @@ impl<'a> LazyImportFacts<'a> {
 pub(crate) struct LazyImportBuild<'a> {
     pub(crate) roots: &'a [NodeId],
     pub(crate) tsconfig: &'a TsConfig,
+    pub(crate) tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) max_depth: Option<usize>,
     pub(crate) graph_files: &'a GraphFiles,
     pub(crate) allowed: Option<&'a HashSet<EdgeKind>>,

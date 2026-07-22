@@ -82,6 +82,7 @@ impl<K: Eq + std::hash::Hash, V> SharedBuildCache<K, V> {
 struct CanonicalGraphBuild<'a> {
     root: &'a Path,
     tsconfig: &'a TsConfig,
+    tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     plan: graph::GraphBuildPlan,
     graph_files: &'a graph::GraphFiles,
     config_path: Option<&'a Path>,
@@ -99,6 +100,7 @@ fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGra
         graph::PreparedGraphBuild {
             root: input.root,
             tsconfig: input.tsconfig,
+            tsconfig_catalog: Some(input.tsconfig_catalog),
             plan: input.plan,
             graph_files: input.graph_files,
             config_path: input.config_path,

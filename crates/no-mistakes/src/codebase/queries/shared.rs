@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 pub(crate) struct Target {
     pub root: PathBuf,
     pub tsconfig: TsConfig,
+    pub tsconfig_catalog: crate::codebase::ts_resolver::TsConfigCatalog,
     pub abs_file: PathBuf,
     pub visible_files: HashSet<PathBuf>,
 }
@@ -27,22 +28,55 @@ pub(crate) fn resolve_target(
         &cwd,
     ));
     let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+    let fallback_tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
         tsconfig,
         &root,
         &visible_paths,
-    )?;
-    let visible_files = visible_paths
-        .into_iter()
-        .map(|path| normalize_path(&path))
-        .collect();
+    )
+    .or_else(|error| {
+        if tsconfig.is_some() {
+            Err(error)
+        } else {
+            Ok(TsConfig {
+                dir: root.clone(),
+                paths: Vec::new(),
+                paths_dir: root.clone(),
+                base_url: None,
+            })
+        }
+    })?;
     let abs_file = resolve_input_file(file, &root, &cwd);
     // Reject a missing target or a directory up front so a typo or stale path
     // is an explicit error rather than an empty (and misleading) result.
     anyhow::ensure!(abs_file.is_file(), "not a file: {}", file.display());
+    let tsconfig_catalog = match tsconfig {
+        None => crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+            &root,
+            std::slice::from_ref(&root),
+            &visible_paths,
+        ),
+        Some(path) => {
+            let path = if path.is_absolute() {
+                path.to_path_buf()
+            } else {
+                root.join(path)
+            };
+            crate::codebase::ts_resolver::TsConfigCatalog::forced(
+                &root,
+                fallback_tsconfig.clone(),
+                Some(normalize_path(&path)),
+            )
+        }
+    };
+    let tsconfig = tsconfig_catalog.config_for(&abs_file).clone();
+    let visible_files = visible_paths
+        .into_iter()
+        .map(|path| normalize_path(&path))
+        .collect();
     Ok(Target {
         root,
         tsconfig,
+        tsconfig_catalog,
         abs_file,
         visible_files,
     })

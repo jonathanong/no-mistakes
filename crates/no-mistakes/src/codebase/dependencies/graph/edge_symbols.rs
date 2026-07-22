@@ -2,7 +2,7 @@ fn collect_symbol_edges(
     root: &Path,
     graph_files: SymbolGraphFiles<'_>,
     facts: &dyn TsFactLookup,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
@@ -10,6 +10,7 @@ fn collect_symbol_edges(
         indexable: files,
         all: all_files,
         visible: visible_files,
+        graph_files,
     } = graph_files;
     let mut edges = Vec::new();
     let http_route_defs = collect_symbol_http_route_defs(root, all_files, facts, config_options);
@@ -31,16 +32,15 @@ fn collect_symbol_edges(
                 resolver,
                 workspace,
                 visible_files,
+                graph_files,
             },
             &mut exported_values,
             &mut caller_to_export,
             &mut edges,
         );
 
-        let imported_symbols =
-            imported_symbol_map(path, symbols, resolver, workspace, visible_files);
-        let namespace_imports =
-            namespace_import_map(path, symbols, resolver, workspace, visible_files);
+        let imported_symbols = imported_symbol_map(path, symbols, resolver, workspace, visible_files, graph_files);
+        let namespace_imports = namespace_import_map(path, symbols, resolver, workspace, visible_files, graph_files);
         for imported in fallback_imported_symbols(
             symbols.exports.is_empty(),
             &file_facts.function_calls,
@@ -65,6 +65,7 @@ fn collect_symbol_edges(
                 resolver,
                 workspace,
                 visible_files,
+                graph_files,
             },
             &imported_symbols,
             &namespace_imports,
@@ -75,13 +76,7 @@ fn collect_symbol_edges(
         let call_records_by_caller = local_call_records(&file_facts.function_calls);
         let refs_by_caller = local_call_graph(&file_facts.symbol_references);
         let ordered_refs_by_caller = local_ordered_call_graph(&file_facts.symbol_references);
-        let scoped_imports = scoped_import_map(
-            &file_facts.imports,
-            path,
-            resolver,
-            workspace,
-            visible_files,
-        );
+        let scoped_imports = scoped_import_map_with_graph_files(&file_facts.imports, path, resolver, workspace, visible_files, graph_files);
         let local_scopes = local_scope_names(&calls_by_caller, &refs_by_caller, &scoped_imports);
         exported_values.sort();
         exported_values.dedup();
@@ -157,14 +152,17 @@ fn collect_symbol_edges(
                         ) {
                             continue;
                         }
-                        if let Some((target, kind)) = resolve_imported_callee(
+                        if let Some((target, kind)) = resolve_imported_callee_with_graph_files(
                             symbol_ref,
                             &imported_symbols,
                             &namespace_imports,
-                            facts,
-                            resolver,
-                            workspace,
-                            visible_files,
+                            ReexportResolutionInputs {
+                                facts,
+                                resolver,
+                                workspace,
+                                visible_files,
+                                graph_files,
+                            },
                         ) {
                             for caller_export in &caller_exports {
                                 edges.push((

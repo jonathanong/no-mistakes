@@ -58,6 +58,8 @@ fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
     };
     let resolver = ImportResolver::new(&tsconfig);
     let workspace = WorkspaceMap::default();
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(files.keys().cloned());
     let mut visiting = HashSet::new();
     let mut memo = HashMap::new();
     assert!(collector::collect_file_exports(
@@ -65,6 +67,7 @@ fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
         &files,
         &resolver,
         &workspace,
+        &remapper,
         &mut visiting,
         &mut memo,
     )
@@ -77,6 +80,7 @@ fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
             &files,
             &resolver,
             &workspace,
+            &remapper,
             &mut visiting,
         ),
         None
@@ -89,6 +93,7 @@ fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
             &files,
             &resolver,
             &workspace,
+            &remapper,
             &mut visiting,
         ),
         None

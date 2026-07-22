@@ -32,6 +32,7 @@ fn collect_uncached_entries(
                 graph::LazyImportBuild {
                     roots,
                     tsconfig: &shared.tsconfig,
+                    tsconfig_catalog: Some(&shared.tsconfig_catalog),
                     max_depth: args.depth,
                     graph_files: &shared.graph_files,
                     allowed,

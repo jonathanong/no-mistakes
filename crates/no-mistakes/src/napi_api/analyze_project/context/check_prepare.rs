@@ -43,6 +43,7 @@ impl SharedCheckContext {
         let prepared = crate::check_runner::prepared::prepare_from_shared(
             &root,
             config_path,
+            tsconfig_path,
             visible_paths,
             config.clone(),
             tsconfig.clone(),
@@ -79,11 +80,12 @@ impl SharedCheckContext {
         });
         if integration_enabled {
             plan.integration_runner_configs = Some(std::sync::Arc::new(
-                crate::integration_tests::prepare_runner_configs(
+                crate::integration_tests::prepare_runner_configs_with_catalog(
                     &root,
                     config,
                     prepared.visible_paths.paths_for(&root).as_ref(),
-                    &prepared.tsconfig,
+                    std::sync::Arc::clone(&prepared.tsconfig_catalog),
+                    prepared.visible_paths.source_store_for(&root),
                 ),
             ));
         }

@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": "${configDir}",
+    "paths": {
+      "@project/*": ["src/*"]
+    }
+  },
+  "include": ["${configDir}/src"]
+}

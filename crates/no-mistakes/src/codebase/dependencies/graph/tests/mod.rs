@@ -43,6 +43,7 @@ fn playwright_graph_build_has_one_snapshot_construction_site() {
 }
 
 include!("build_check_fact_adapters.rs");
+include!("compatibility_adapters.rs");
 include!("core.rs");
 include!("scoped_universe.rs");
 include!("legacy_symbol_channel.rs");
@@ -59,6 +60,7 @@ include!("extra_symbol_helpers.rs");
 include!("extra_symbol_visibility.rs");
 include!("extra_symbol.rs");
 include!("extra_symbol_gitignore.rs");
+include!("extra_symlink_visible_paths.rs");
 include!("extra_gitignore_pass3.rs");
 include!("types.rs");
 

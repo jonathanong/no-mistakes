@@ -1,14 +1,15 @@
 use super::types::{
     CallTarget, FileAnalysis, FunctionInfo, FunctionKey, ImportBinding, ImportedName,
 };
-use crate::codebase::ts_resolver::ImportResolver;
+use crate::codebase::ts_resolver::ImportResolverFacade;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) struct ImportResolution<'a> {
+pub(super) struct ImportResolution<'a, R: ImportResolverFacade> {
     pub analyses: &'a BTreeMap<PathBuf, FileAnalysis>,
     pub export_index: &'a HashMap<(PathBuf, String), FunctionKey>,
-    pub resolver: &'a ImportResolver<'a>,
+    pub resolver: &'a R,
+    pub remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 }
 
 pub(super) fn build_function_index(
@@ -47,10 +48,10 @@ pub(super) fn build_export_index(
     index
 }
 
-pub(super) fn resolved_integrations(
+pub(super) fn resolved_integrations<R: ImportResolverFacade>(
     root: &FunctionKey,
     function_index: &HashMap<FunctionKey, FunctionInfo>,
-    resolver: &ImportResolution<'_>,
+    resolver: &ImportResolution<'_, R>,
 ) -> Vec<String> {
     let mut seen = HashSet::new();
     let mut integrations = Vec::new();
@@ -60,10 +61,10 @@ pub(super) fn resolved_integrations(
     integrations
 }
 
-fn resolved_integrations_inner(
+fn resolved_integrations_inner<R: ImportResolverFacade>(
     key: &FunctionKey,
     function_index: &HashMap<FunctionKey, FunctionInfo>,
-    resolver: &ImportResolution<'_>,
+    resolver: &ImportResolution<'_, R>,
     seen: &mut HashSet<FunctionKey>,
     integrations: &mut Vec<String>,
 ) {
@@ -84,10 +85,10 @@ fn resolved_integrations_inner(
     }
 }
 
-fn resolve_call(
+fn resolve_call<R: ImportResolverFacade>(
     caller: &FunctionKey,
     call: &CallTarget,
-    resolver: &ImportResolution<'_>,
+    resolver: &ImportResolution<'_, R>,
 ) -> Option<FunctionKey> {
     match call {
         CallTarget::Local(name) => {
@@ -120,10 +121,10 @@ fn resolve_call(
     }
 }
 
-fn resolve_import_binding(
+fn resolve_import_binding<R: ImportResolverFacade>(
     caller_file: &Path,
     binding: &ImportBinding,
-    resolver: &ImportResolution<'_>,
+    resolver: &ImportResolution<'_, R>,
 ) -> Option<FunctionKey> {
     let resolved_file = resolve_visible_import(&binding.source, caller_file, resolver)?;
     let imported_name = match &binding.imported {
@@ -137,10 +138,13 @@ fn resolve_import_binding(
         .cloned()
 }
 
-fn resolve_visible_import(
+fn resolve_visible_import<R: ImportResolverFacade>(
     source: &str,
     caller_file: &Path,
-    resolution: &ImportResolution<'_>,
+    resolution: &ImportResolution<'_, R>,
 ) -> Option<PathBuf> {
-    resolution.resolver.resolve(source, caller_file)
+    resolution
+        .resolver
+        .resolve(source, caller_file)
+        .map(|path| resolution.remapper.remap(&path))
 }

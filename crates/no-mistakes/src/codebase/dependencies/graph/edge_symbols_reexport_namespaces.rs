@@ -1,8 +1,9 @@
-struct ReexportNamespaceInputs<'a, 'b> {
+struct ReexportNamespaceInputs<'a> {
     facts: &'a dyn TsFactLookup,
-    resolver: &'a ImportResolver<'b>,
+    resolver: &'a dyn ImportResolution,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
+    graph_files: &'a GraphFiles,
 }
 
 fn resolve_reexported_namespace_member(
@@ -10,13 +11,14 @@ fn resolve_reexported_namespace_member(
     imported: &str,
     member: &str,
     kind: EdgeKind,
-    inputs: ReexportNamespaceInputs<'_, '_>,
+    inputs: ReexportNamespaceInputs<'_>,
 ) -> Option<(NodeId, EdgeKind)> {
     let ReexportNamespaceInputs {
         facts,
         resolver,
         workspace,
         visible_files,
+        graph_files,
     } = inputs;
     ReexportNamespaceResolver {
         member,
@@ -24,21 +26,23 @@ fn resolve_reexported_namespace_member(
         resolver,
         workspace,
         visible_files,
+        graph_files,
         visited: HashSet::new(),
     }
     .resolve(barrel, imported, kind)
 }
 
-struct ReexportNamespaceResolver<'a, 'b> {
+struct ReexportNamespaceResolver<'a> {
     member: &'a str,
     facts: &'a dyn TsFactLookup,
-    resolver: &'a ImportResolver<'b>,
+    resolver: &'a dyn ImportResolution,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
+    graph_files: &'a GraphFiles,
     visited: HashSet<(PathBuf, String)>,
 }
 
-impl ReexportNamespaceResolver<'_, '_> {
+impl ReexportNamespaceResolver<'_> {
     fn resolve(
         &mut self,
         barrel: &Path,
@@ -68,28 +72,23 @@ impl ReexportNamespaceResolver<'_, '_> {
                     self.resolver,
                     self.workspace,
                     self.visible_files,
+                    self.graph_files,
                 );
                 if let Some(target) = namespace_imports.get(&local) {
                     return Some(namespace_target_node(target, self.member));
                 }
                 continue;
             };
-            let (target, source_kind) = if let Some(target) = self.resolver.resolve(source, barrel)
-            {
-                (target, kind)
+            let (target, source_kind) = if let Some(target) = self.resolver.resolve(source, barrel) {
+                (self.graph_files.visible_path(&target)?.to_path_buf(), kind)
             } else {
                 (
-                    self.workspace.resolve_specifier_from_file_visible(
-                        source,
-                        barrel,
-                        self.visible_files,
-                    )?,
+                    self.graph_files.visible_path(&self.workspace.resolve_specifier_from_file_visible(
+                        source, barrel, self.visible_files,
+                    )?)?.to_path_buf(),
                     EdgeKind::WorkspaceImport,
                 )
             };
-            if !self.visible_files.contains(&target) {
-                return None;
-            }
             let edge_kind = if kind == EdgeKind::TypeImport || export.is_type_only {
                 EdgeKind::TypeImport
             } else {

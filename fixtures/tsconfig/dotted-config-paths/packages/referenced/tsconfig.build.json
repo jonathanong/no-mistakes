@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@referenced/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

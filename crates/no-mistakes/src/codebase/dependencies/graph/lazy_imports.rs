@@ -14,6 +14,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     let LazyImportBuild {
         roots,
         tsconfig,
+        tsconfig_catalog,
         max_depth,
         graph_files,
         allowed,
@@ -21,12 +22,34 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
         workspace,
         import_resolution_cache,
     } = input;
-    let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
-        .with_visible(&graph_files.visible);
-    let resolver = match import_resolution_cache {
-        Some(cache) => resolver.with_shared_cache(cache),
-        None => resolver,
-    };
+    let scoped_resolver = tsconfig_catalog.map(|catalog| {
+        let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+            catalog,
+            graph_files.visible(),
+            session,
+        );
+        match import_resolution_cache {
+            Some(cache) => resolver.with_shared_cache(cache),
+            None => resolver,
+        }
+    });
+    let legacy_resolver = tsconfig_catalog.is_none().then(|| {
+        let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
+            .with_visible(&graph_files.visible);
+        match import_resolution_cache {
+            Some(cache) => resolver.with_shared_cache(cache),
+            None => resolver,
+        }
+    });
+    let resolver: &dyn ImportResolution = scoped_resolver
+        .as_ref()
+        .map(|resolver| resolver as &dyn ImportResolution)
+        .or_else(|| {
+            legacy_resolver
+                .as_ref()
+                .map(|resolver| resolver as &dyn ImportResolution)
+        })
+        .expect("a scoped or legacy lazy import resolver is initialized");
     let fact_plan = facts.collect_plan;
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut frontier: Vec<NodeId> = Vec::new();
@@ -68,7 +91,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
                 }
                 let (neighbors, collected) = import_neighbors(
                     path,
-                    &resolver,
+                    resolver,
                     workspace,
                     graph_files,
                     allowed,

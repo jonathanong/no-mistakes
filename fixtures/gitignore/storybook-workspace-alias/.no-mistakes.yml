@@ -1,0 +1,10 @@
+projects:
+  workspace:
+    type: library
+    root: .
+rules:
+  - rule: require-storybook-stories
+    projects: [workspace]
+    options:
+      stories: ["packages/ui/stories/**/*.stories.tsx"]
+      include_all_react_named_exports: true

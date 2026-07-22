@@ -17,6 +17,18 @@ pub(super) fn runner_projects_from_visible(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<Vec<ConfigProject>> {
+    let catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(root, tsconfig.clone(), None);
+    runner_projects_from_visible_with_catalog(root, config, runner, visible_paths, &catalog)
+}
+
+pub(super) fn runner_projects_from_visible_with_catalog(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+    visible_paths: &[PathBuf],
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+) -> Result<Vec<ConfigProject>> {
     if runner == TestRunner::Dotnet {
         return super::dotnet_projects::dotnet_projects_from_visible(root, config, visible_paths);
     }
@@ -28,13 +40,14 @@ pub(super) fn runner_projects_from_visible(
         ));
     }
     let (configs, policies) = runner_config(config, runner);
-    let mut projects = crate::integration_tests::project_config::load_projects_from_visible(
-        root,
-        runner.framework(),
-        configs,
-        visible_paths,
-        tsconfig,
-    )?;
+    let mut projects =
+        crate::integration_tests::project_config::load_projects_from_visible_with_catalog(
+            root,
+            runner.framework(),
+            configs,
+            visible_paths,
+            tsconfig_catalog,
+        )?;
     apply_explicit_policy_projects(root, configs, policies, &mut projects);
     Ok(projects)
 }
@@ -45,6 +58,18 @@ pub(super) fn runner_projects_lossy_from_visible(
     runner: TestRunner,
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
+) -> Vec<ConfigProject> {
+    let catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(root, tsconfig.clone(), None);
+    runner_projects_lossy_from_visible_with_catalog(root, config, runner, visible_paths, &catalog)
+}
+
+pub(super) fn runner_projects_lossy_from_visible_with_catalog(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+    visible_paths: &[PathBuf],
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
 ) -> Vec<ConfigProject> {
     if runner == TestRunner::Dotnet {
         return super::dotnet_projects::dotnet_projects_lossy_from_visible(
@@ -57,14 +82,15 @@ pub(super) fn runner_projects_lossy_from_visible(
         return super::swift_projects::swift_projects_from_visible(root, config, visible_paths);
     }
     let (configs, policies) = runner_config(config, runner);
-    let mut projects = crate::integration_tests::project_config::load_projects_from_visible(
-        root,
-        runner.framework(),
-        configs,
-        visible_paths,
-        tsconfig,
-    )
-    .unwrap_or_default();
+    let mut projects =
+        crate::integration_tests::project_config::load_projects_from_visible_with_catalog(
+            root,
+            runner.framework(),
+            configs,
+            visible_paths,
+            tsconfig_catalog,
+        )
+        .unwrap_or_default();
     apply_explicit_policy_projects(root, configs, policies, &mut projects);
     projects
 }

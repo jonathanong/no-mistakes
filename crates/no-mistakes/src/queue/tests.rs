@@ -1,4 +1,5 @@
 mod collisions;
+mod prepared;
 mod resolver;
 use super::*;
 use crate::queue::extract_model::FileFacts;
@@ -13,20 +14,6 @@ fn fixture(name: &str) -> PathBuf {
         .join("../../test-cases/queue-ast-hop")
         .join(name)
         .join("fixture")
-}
-
-#[test]
-fn basic_project_reports_queue_edges() {
-    let report = analyze_project(&fixture("basic"), None, &[]).unwrap();
-    assert_eq!(report.check, vec![]);
-    assert!(report
-        .edges
-        .iter()
-        .any(|edge| edge.from == "enqueue.ts" && edge.to == "queues.ts#sendWelcome"));
-    assert!(report
-        .edges
-        .iter()
-        .any(|edge| edge.from == "queues.ts#sendWelcome" && edge.to == "worker.ts"));
 }
 
 #[test]
@@ -114,6 +101,128 @@ fn tsconfig_paths_resolve_queue_imports() {
         .producers
         .iter()
         .any(|producer| producer.queue_name.as_deref() == Some("email-paths")));
+}
+
+#[test]
+fn prepared_catalog_keeps_symlinked_queue_producers_and_workers_in_one_namespace() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/tsconfig/symlink-workspace/link");
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let files = crate::codebase::ts_source::discover_files_from_visible(&root, &[], &visible_paths);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            queue: true,
+            queue_factory_names: vec!["createQueue".to_string()],
+            ..Default::default()
+        },
+    );
+    let catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::from_visible(&root, &[], &visible_paths);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let report = analyze_project_with_prepared_facts_and_catalog_and_session(
+        &root,
+        &catalog,
+        &[],
+        &facts,
+        &session,
+    )
+    .unwrap();
+
+    assert!(
+        report.producers.iter().any(|producer| {
+            producer.file.ends_with("/src/producer.ts")
+                && producer
+                    .queue_file
+                    .as_deref()
+                    .is_some_and(|path| path.ends_with("/src/queues.ts"))
+                && producer.queue_name.as_deref() == Some("emails")
+        }),
+        "{report:#?}"
+    );
+    assert!(
+        report.workers.iter().any(|worker| {
+            worker.file.ends_with("/src/worker.ts")
+                && worker
+                    .queue_file
+                    .as_deref()
+                    .is_some_and(|path| path.ends_with("/src/queues.ts"))
+                && worker
+                    .processor_file
+                    .as_deref()
+                    .is_some_and(|path| path.ends_with("/src/processors.ts"))
+        }),
+        "{report:#?}"
+    );
+}
+
+#[test]
+fn prepared_catalog_indexed_queue_report_matches_plain_report_for_package_aliases() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-tsconfig-catalog");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let files = crate::codebase::ts_source::discover_files_from_visible(&root, &[], &visible_paths);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            queue: true,
+            ..Default::default()
+        },
+    );
+    let catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::from_visible(&root, &[], &visible_paths);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+
+    let plain = analyze_project_with_prepared_facts_and_catalog_and_session(
+        &root,
+        &catalog,
+        &[],
+        &facts,
+        &session,
+    )
+    .unwrap();
+    let indexed = analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
+        &root,
+        &catalog,
+        &[],
+        &facts,
+        &session,
+    )
+    .unwrap();
+
+    let mut plain_producers = plain.producers.clone();
+    let mut indexed_producers = indexed.report().producers.clone();
+    plain_producers.sort();
+    indexed_producers.sort();
+    assert_eq!(indexed_producers, plain_producers);
+    let mut plain_workers = plain.workers.clone();
+    let mut indexed_workers = indexed.report().workers.clone();
+    plain_workers.sort();
+    indexed_workers.sort();
+    assert_eq!(indexed_workers, plain_workers);
+    assert_eq!(indexed.report().jobs, plain.jobs);
+    assert_eq!(indexed.report().edges, plain.edges);
+    assert_eq!(indexed.report().diagnostics, plain.diagnostics);
+    assert_eq!(indexed.report().check, plain.check);
+    assert!(plain.check.is_empty(), "{plain:#?}");
+    for (package, queue) in [("a", "a-queue"), ("b", "b-queue")] {
+        let file = format!("packages/{package}/src/enqueue.ts");
+        let queue_file = format!("packages/{package}/src/queues/email.ts");
+        assert!(
+            plain.producers.iter().any(|producer| {
+                producer.file == file
+                    && producer.queue_file.as_deref() == Some(&queue_file)
+                    && producer.queue_name.as_deref() == Some(queue)
+            }),
+            "{plain:#?}"
+        );
+    }
 }
 
 #[test]
@@ -422,71 +531,4 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
     );
 }
 
-#[test]
-fn typed_index_preserves_colliding_file_and_job_nodes() {
-    use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
-    use crate::queue::graph_model::PreparedProjectReport;
-    use crate::queue::types::{JobKey, RelationshipNode};
-
-    let root = PathBuf::from("/repo");
-    let file = RelationshipNode::File(root.join("queues.ts#send"));
-    let job = RelationshipNode::Job(JobKey {
-        queue_file: root.join("queues.ts"),
-        queue_name: "queue".into(),
-        job: "send".into(),
-    });
-    let worker = RelationshipNode::File(root.join("worker.ts"));
-    let report = PreparedProjectReport {
-        root,
-        report: ProjectReport {
-            producers: vec![],
-            workers: vec![],
-            jobs: vec![],
-            edges: vec![],
-            diagnostics: vec![],
-            check: vec![],
-        },
-        index: EdgeIndex::from_edges([
-            CanonicalEdge::new(file.clone(), job.clone(), EdgeKind::QueueEnqueue),
-            CanonicalEdge::new(job.clone(), worker.clone(), EdgeKind::QueueWorker),
-        ]),
-        nodes_by_name: HashMap::from([
-            ("queues.ts#send".into(), vec![file.clone(), job.clone()]),
-            ("worker.ts".into(), vec![worker]),
-        ]),
-        aliases: NodeAliases::from_groups([vec![file, job]]),
-    };
-
-    assert_eq!(
-        report.edge_view(&["queues.ts#send".into()], Some(1)),
-        vec![
-            Edge {
-                from: "queues.ts#send".into(),
-                to: "queues.ts#send".into(),
-                kind: EdgeKind::QueueEnqueue
-            },
-            Edge {
-                from: "queues.ts#send".into(),
-                to: "worker.ts".into(),
-                kind: EdgeKind::QueueWorker
-            },
-        ]
-    );
-}
-
-#[test]
-fn indexed_queue_projection_matches_compatibility_projection() {
-    let root = fixture("basic");
-    let plain = analyze_project(&root, None, &[]).unwrap();
-    let indexed = analyze_project_indexed(&root, None, &[]).unwrap();
-    assert_eq!(indexed.report().edges, plain.edges);
-    let roots = vec!["enqueue.ts".to_string()];
-    assert_eq!(
-        indexed.edge_view(&roots, None),
-        crate::cli::edge_view(&plain.edges, &roots, None)
-    );
-    assert_eq!(
-        indexed.related(&roots, RelatedDirection::Both),
-        related(&plain, &roots, RelatedDirection::Both)
-    );
-}
+mod projection;

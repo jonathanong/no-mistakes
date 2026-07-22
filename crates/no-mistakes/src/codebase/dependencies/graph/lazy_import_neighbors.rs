@@ -1,6 +1,6 @@
 fn import_neighbors(
     path: &Path,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
@@ -77,7 +77,7 @@ fn import_neighbors(
 fn import_neighbors_from_facts(
     path: &Path,
     file_facts: &TsFileFacts,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
@@ -96,7 +96,8 @@ fn import_neighbors_from_facts(
                 graph_files.visible(),
             );
             if let Some(target) = classification.preferred_path() {
-                return (graph_files.is_visible(target) && is_indexable(target))
+                let target = graph_files.visible_path(target)?;
+                return is_indexable(target)
                     .then(|| (NodeId::File(target.to_path_buf()), kind));
             }
             if classification.is_unresolved_external() {

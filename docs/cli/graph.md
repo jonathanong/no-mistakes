@@ -4,8 +4,11 @@
 graph. They share root, tsconfig, depth, relationship, test, module, and output
 filters.
 
-Use explicit `--tsconfig` in monorepos when aliases depend on package-local
-config.
+When `--tsconfig` is omitted, graph commands select the TypeScript config that
+owns each importing file. This lets package-local aliases remain isolated while
+a traversal crosses workspace projects. Pass `--tsconfig <FILE>` only to force
+that one config for the entire request, for debugging or compatibility with an
+existing single-config workflow.
 
 | Need | Command |
 | --- | --- |

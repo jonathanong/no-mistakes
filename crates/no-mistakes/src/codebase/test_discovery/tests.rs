@@ -445,7 +445,11 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         &root,
         &config,
         &visible_paths,
-        &tsconfig,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root,
+            tsconfig.clone(),
+            None,
+        )),
         PreparedTestProjectRequest {
             graph: (&[], graph_plan, graph_context.clone()),
             sources: std::sync::Arc::clone(&sources),
@@ -468,7 +472,11 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         &root,
         &config,
         &visible_paths,
-        &tsconfig,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root,
+            tsconfig.clone(),
+            None,
+        )),
         PreparedTestProjectRequest {
             graph: (&[], graph_plan, graph_context),
             sources,

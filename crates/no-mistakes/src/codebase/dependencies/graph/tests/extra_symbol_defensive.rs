@@ -54,6 +54,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         .symbols
         .as_ref()
         .unwrap();
+    let graph_files = GraphFiles::from_files(visible.iter().cloned().collect());
     let inputs = ExportEdgeInputs {
         path: &current,
         symbols: current_symbols,
@@ -61,6 +62,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         resolver: &resolver,
         workspace: &workspace,
         visible_files: &visible,
+        graph_files: &graph_files,
     };
     let mut candidates = Vec::new();
     let mut visited = HashSet::new();
@@ -89,6 +91,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         resolver: &resolver,
         workspace: &workspace,
         visible_files: &visible,
+        graph_files: &graph_files,
     };
     let star_self = Export {
         name: "*".to_string(),
@@ -153,6 +156,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                 resolver: &resolver,
                 workspace: &workspace,
                 visible_files: &visible,
+                graph_files: &graph_files,
             },
         ),
         Some((
@@ -166,6 +170,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
 
     let cycle = p("/repo/src/cycle.mts");
     visible.insert(cycle.clone());
+    let cycle_graph_files = GraphFiles::from_files(visible.iter().cloned().collect());
     let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
     facts.insert(
         cycle.clone(),
@@ -212,6 +217,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                 resolver: &resolver,
                 workspace: &workspace,
                 visible_files: &visible,
+                graph_files: &cycle_graph_files,
             },
         ),
         None

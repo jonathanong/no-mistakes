@@ -4,22 +4,19 @@ pub(crate) mod config;
 mod manual_mocks;
 mod reachable;
 mod runtime;
+mod standalone;
 mod with_facts;
 
 use super::RuleFinding;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
-use crate::codebase::rules::test_no_unmocked_dynamic_imports::checker::{
-    check_dynamic_import, DynamicCheckContext,
-};
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
-use crate::codebase::ts_source::{discover_files, has_disable_comment, has_disable_file_comment};
+use crate::codebase::ts_source::discover_files;
 use crate::config::v2::NoMistakesConfig;
-use anyhow::{Context, Result};
-use dashmap::DashMap;
-use runtime::runtime_deps;
-use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use anyhow::Result;
+pub(crate) use runtime::runtime_deps;
+pub(crate) use standalone::{
+    check_inner, matching_test_files_with_filter, remap_resolved_path, resolve_mock_specifiers,
+};
+use std::path::Path;
 pub(crate) use with_facts::check_with_prepared_facts_graph_and_session;
 pub use with_facts::{check_with_facts, check_with_prepared_facts};
 
@@ -42,165 +39,6 @@ pub fn check(
     )?;
     let manual_mocks = manual_mocks::discover_from_files(root, &files);
     check_inner(root, config, &files, &tsconfig, &graph, &manual_mocks)
-}
-
-pub(super) fn check_inner(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    tsconfig: &TsConfig,
-    graph: &DepGraph,
-    manual_mocks: &HashSet<PathBuf>,
-) -> Result<Vec<RuleFinding>> {
-    let visible_files = files.iter().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
-    let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
-    let file_cache: DashMap<PathBuf, Arc<reachable::CachedFileFacts>> = DashMap::new();
-    let mut findings = Vec::new();
-    let setup_data = config::precompute_setup_data(root, config)?;
-    let test_files = matching_test_files(root, files, config)?;
-    let setup_mock_map = precompute_setup_mock_map(root, &test_files, &setup_data, &resolver)?;
-    let mut reachable_findings = Vec::new();
-    let mut covered_reachable_imports = HashSet::new();
-
-    for file in test_files {
-        let source = std::fs::read_to_string(&file)
-            .context(format!("failed to read test file {}", file.display()))?;
-        if has_disable_file_comment(&source, RULE_ID) {
-            continue;
-        }
-        let facts = ast::extract(&file, &source)?;
-        let mut mocks = manual_mocks.clone();
-        mocks.extend(setup_mocks(root, &setup_data, &file, &setup_mock_map));
-        mocks.extend(resolve_mock_specifiers(
-            &facts.mock_specifiers,
-            &file,
-            &resolver,
-        ));
-        let mut check_context = DynamicCheckContext {
-            root,
-            file: &file,
-            resolver: &resolver,
-            graph,
-            file_universe: Some(&visible_files),
-            mocks: &mocks,
-            dependency_cache: &dependency_cache,
-            findings: &mut findings,
-        };
-        for import in facts.dynamic_imports {
-            if has_disable_comment(&source, import.line as u32, RULE_ID) {
-                continue;
-            }
-            check_dynamic_import(&mut check_context, import);
-        }
-        let reachable = reachable::collect(
-            reachable::ReachableContext {
-                root,
-                config,
-                resolver: &resolver,
-                graph,
-                file_universe: Some(&visible_files),
-                shared: None,
-                file_cache: Some(&file_cache),
-            },
-            &file,
-            &mocks,
-            &dependency_cache,
-        )?;
-        reachable_findings.extend(reachable.findings);
-        covered_reachable_imports.extend(reachable.covered);
-    }
-
-    findings.extend(
-        reachable_findings
-            .into_iter()
-            .filter(|entry| !covered_reachable_imports.contains(&entry.key))
-            .map(|entry| entry.finding),
-    );
-    findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
-    Ok(findings)
-}
-
-fn resolve_mock_specifiers(
-    specifiers: &[String],
-    file: &Path,
-    resolver: &ImportResolver<'_>,
-) -> HashSet<PathBuf> {
-    specifiers
-        .iter()
-        .map(|specifier| {
-            resolver
-                .resolve(specifier, file)
-                .unwrap_or_else(|| PathBuf::from(specifier))
-        })
-        .collect()
-}
-
-fn precompute_setup_mock_map(
-    root: &Path,
-    test_files: &[PathBuf],
-    setup_data: &[config::ConfigSetupData],
-    resolver: &ImportResolver<'_>,
-) -> Result<HashMap<PathBuf, HashSet<PathBuf>>> {
-    let unique_setups: HashSet<PathBuf> = test_files
-        .iter()
-        .flat_map(|f| {
-            let rel = crate::codebase::ts_source::relative_slash_path(root, f);
-            config::setup_files_for_test_precomputed(&rel, setup_data)
-        })
-        .collect();
-    unique_setups
-        .into_iter()
-        .map(|setup| {
-            let source = std::fs::read_to_string(&setup)
-                .context(format!("failed to read setup file {}", setup.display()))?;
-            let facts = ast::extract(&setup, &source)?;
-            Ok((
-                setup.clone(),
-                resolve_mock_specifiers(&facts.mock_specifiers, &setup, resolver),
-            ))
-        })
-        .collect()
-}
-
-fn setup_mocks(
-    root: &Path,
-    setup_data: &[config::ConfigSetupData],
-    test_file: &Path,
-    mock_map: &HashMap<PathBuf, HashSet<PathBuf>>,
-) -> HashSet<PathBuf> {
-    let rel_path = crate::codebase::ts_source::relative_slash_path(root, test_file);
-    let mut mocks = HashSet::new();
-    for setup in config::setup_files_for_test_precomputed(&rel_path, setup_data) {
-        if let Some(m) = mock_map.get(&setup) {
-            mocks.extend(m.iter().cloned());
-        }
-    }
-    mocks
-}
-
-fn matching_test_files(
-    root: &Path,
-    files: &[PathBuf],
-    config: &NoMistakesConfig,
-) -> Result<Vec<PathBuf>> {
-    let filter = config::test_filter(root, config)?;
-    Ok(matching_test_files_with_filter(root, files, &filter))
-}
-
-fn matching_test_files_with_filter(
-    root: &Path,
-    files: &[PathBuf],
-    filter: &config::TestFilter,
-) -> Vec<PathBuf> {
-    files
-        .iter()
-        .filter(|file| crate::codebase::dependencies::extract::is_indexable(file))
-        .filter(|file| {
-            filter.is_match(&crate::codebase::ts_source::relative_slash_path(root, file))
-        })
-        .map(|file| normalize_path(file))
-        .collect()
 }
 
 #[cfg(test)]

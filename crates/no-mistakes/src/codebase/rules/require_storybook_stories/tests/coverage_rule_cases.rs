@@ -97,6 +97,31 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn standalone_check_uses_package_local_aliases_for_stories_and_reexports() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("storybook-workspace-alias");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let config = crate::config::v2::load_v2_config(fixture.path(), None).unwrap();
+
+    let findings = check(fixture.path(), &config, None).unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn standalone_check_seeds_configured_project_roots_outside_workspaces() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("storybook-project-tsconfigs");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let config = crate::config::v2::load_v2_config(fixture.path(), None).unwrap();
+
+    let findings = check(fixture.path(), &config, None).unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "packages/ignored/src/Button.tsx");
+}
+
+#[test]
 fn project_without_root_uses_repository_root() {
     let root = fixture("covered");
     let mut cfg = config(

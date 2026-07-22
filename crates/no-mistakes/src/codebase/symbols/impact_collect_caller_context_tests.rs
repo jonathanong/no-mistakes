@@ -54,7 +54,10 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
     .expect("shared-facts graph builds");
     assert!(graph.all_files().count() > 0);
     let workspace = crate::codebase::workspaces::load_from_files(&root, &files).unwrap();
-    let context = prepare_local_caller_context(&facts, &workspace, &visible_files);
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        visible_files.iter().cloned(),
+    );
+    let context = prepare_local_caller_context(&facts, &workspace, &visible_files, &remapper);
 
     assert!(
         !context.workspace.packages.is_empty(),
@@ -113,8 +116,15 @@ fn prepare_local_caller_context_never_rederives_its_supplied_inputs() {
     let empty_facts = crate::codebase::ts_source::facts::TsFactMap::default();
     let empty_workspace = crate::codebase::workspaces::load_from_files(&root, &[]).unwrap();
     let visible_files = HashSet::new();
-    let context =
-        prepare_local_caller_context(&empty_facts, &empty_workspace, &visible_files);
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        visible_files.iter().cloned(),
+    );
+    let context = prepare_local_caller_context(
+        &empty_facts,
+        &empty_workspace,
+        &visible_files,
+        &remapper,
+    );
 
     assert!(
         context.facts.is_empty(),

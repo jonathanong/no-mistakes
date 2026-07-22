@@ -1,0 +1,13 @@
+projects:
+  queue-a:
+    type: library
+    root: packages/a
+    queues:
+      enqueues: [src/enqueue.ts]
+      workers: [src/worker.ts]
+  queue-b:
+    type: library
+    root: packages/b
+    queues:
+      enqueues: [src/enqueue.ts]
+      workers: [src/worker.ts]

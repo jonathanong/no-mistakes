@@ -1,0 +1,5 @@
+{
+  "name": "auxiliary-ownership",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

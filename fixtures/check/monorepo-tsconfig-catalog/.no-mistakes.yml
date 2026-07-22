@@ -1,0 +1,10 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - packages/app/src/api.ts
+      forbiddenModules:
+        - sharp
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

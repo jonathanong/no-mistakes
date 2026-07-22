@@ -136,9 +136,13 @@ impl AnalysisDataset {
     pub(crate) fn workspace(&self) -> Arc<super::workspaces::IndexedWorkspaceMap> {
         self.workspace
             .get_or_init(|| {
-                super::workspaces::load_indexed_from_source_store(&self.root, &self.root_sources)
-                    .map(Arc::new)
-                    .unwrap_or_else(|_| Arc::new(super::workspaces::IndexedWorkspaceMap::default()))
+                match super::workspaces::load_indexed_from_source_store(
+                    &self.root,
+                    &self.root_sources,
+                ) {
+                    Ok(workspace) => Arc::new(workspace),
+                    Err(_) => Arc::new(super::workspaces::IndexedWorkspaceMap::default()),
+                }
             })
             .clone()
     }

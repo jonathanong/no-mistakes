@@ -64,6 +64,12 @@ and vice versa. Inputs that provide only a changed filename, or whose historical
 configuration cannot be reconstructed and parsed, conservatively retain the
 configured global fallback.
 
+For TypeScript and JavaScript workspaces, omitting `--tsconfig` resolves each
+import with the config that owns its importing file. A shared project change can
+therefore select tests from every workspace that actually imports it, even when
+their path aliases conflict. Supplying `--tsconfig <FILE>` forces one config for
+the whole plan and is intended as a debugging or compatibility override.
+
 Dotnet and Swift plans require explicit config to build the native source graph
 that maps changed source files to test projects or targets. `tests.dotnet.projects`
 or `tests.dotnet.solutions`, and `tests.swift.packages`, are the source-graph

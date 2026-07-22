@@ -1,4 +1,7 @@
-use crate::codebase::ts_resolver::{find_tsconfig_from_visible, ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::{
+    find_tsconfig_from_visible, ImportResolution, ImportResolver, ScopedImportResolver, TsConfig,
+    TsConfigCatalog,
+};
 use crate::config::v2::ConfigView;
 use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
 use crate::server_routes::model::{FileFacts, PreparedProjectReport, ProjectReport, RouteSite};
@@ -116,32 +119,42 @@ fn analyze_project_with_prepared_inner<T>(
     Ok(builder(root, &facts, &prepared.tsconfig, &prepared.session))
 }
 
-pub(crate) fn route_defs_from_files(
+pub(crate) fn route_defs_from_files_with_catalog(
     root: &Path,
     files: &[PathBuf],
     tsconfig: &TsConfig,
+    tsconfig_catalog: Option<&TsConfigCatalog>,
 ) -> Vec<(PathBuf, String)> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let facts = collect_file_facts(files, &root);
-    build_route_defs(&root, &facts, tsconfig)
+    build_route_defs(&root, &facts, tsconfig, tsconfig_catalog)
 }
 
-pub(crate) fn route_defs_from_prepared_facts(
+pub(crate) fn route_defs_from_prepared_facts_with_catalog(
     root: &Path,
     tsconfig: &TsConfig,
+    tsconfig_catalog: Option<&TsConfigCatalog>,
     prepared: impl IntoIterator<Item = (PathBuf, FileFacts)>,
 ) -> Vec<(PathBuf, String)> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let facts = prepared.into_iter().collect();
-    build_route_defs(&root, &facts, tsconfig)
+    build_route_defs(&root, &facts, tsconfig, tsconfig_catalog)
 }
 
 fn build_route_defs(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
     tsconfig: &TsConfig,
+    tsconfig_catalog: Option<&TsConfigCatalog>,
 ) -> Vec<(PathBuf, String)> {
-    build_report(root, facts, tsconfig)
+    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let report = if let Some(catalog) = tsconfig_catalog {
+        let resolver = ScopedImportResolver::from_visible(catalog, &visible);
+        build_report_with_resolver(root, facts, &resolver)
+    } else {
+        build_report(root, facts, tsconfig)
+    };
+    report
         .routes
         .into_iter()
         .map(|route| (root.join(route.file), route.route))

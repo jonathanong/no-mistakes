@@ -50,6 +50,30 @@ struct Output {
     files: Vec<OutputNode>,
 }
 
+#[derive(Serialize)]
+struct OutputWithDiagnostics<'a> {
+    roots: Vec<String>,
+    files: Vec<OutputNode>,
+    diagnostics: &'a [crate::codebase::ts_resolver::TsConfigDiagnostic],
+    tsconfig_provenance: &'a [crate::codebase::ts_resolver::TsConfigProvenance],
+}
+
+fn build_output_with_diagnostics<'a>(
+    roots: &[String],
+    entries: &[NodeEntry],
+    root_dir: &Path,
+    diagnostics: &'a [crate::codebase::ts_resolver::TsConfigDiagnostic],
+    provenance: &'a [crate::codebase::ts_resolver::TsConfigProvenance],
+) -> OutputWithDiagnostics<'a> {
+    let Output { roots, files } = build_output(roots, entries, root_dir);
+    OutputWithDiagnostics {
+        roots,
+        files,
+        diagnostics,
+        tsconfig_provenance: provenance,
+    }
+}
+
 fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Output {
     Output {
         roots: roots.to_vec(),

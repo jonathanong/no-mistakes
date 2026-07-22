@@ -1,5 +1,5 @@
 use super::extract::{is_indexable, ExtractedImport, FunctionCall, ImportKind};
-use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::{ImportResolution, ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_session_and_context, TsFactContext, TsFactMap,
     TsFactPlan, TsFileFacts,
@@ -29,6 +29,7 @@ include!("builder.rs");
 include!("builder_check_facts.rs");
 include!("builder_observability.rs");
 include!("builder_parse_errors.rs");
+include!("builder_core_resolution.rs");
 include!("builder_core.rs");
 include!("builder_edges.rs");
 include!("builder_helpers.rs");

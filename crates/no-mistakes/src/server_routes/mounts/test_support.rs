@@ -1,4 +1,5 @@
-use super::{resolve_mounts_with_resolver, FileFacts, ImportResolver, ResolvedMount};
+use super::{resolve_mounts_with_resolver, FileFacts, ResolvedMount};
+use crate::codebase::ts_resolver::ImportResolver;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 

@@ -14,7 +14,11 @@ pub(super) fn prepare_test_projects_from_visible(
         root,
         config,
         visible_paths,
-        tsconfig,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            root,
+            tsconfig.clone(),
+            None,
+        )),
         PreparedTestProjectRequest {
             graph: (graph_indexable_files, graph_plan, graph_context),
             sources: snapshot.source_store_for(root),

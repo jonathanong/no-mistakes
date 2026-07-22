@@ -1,5 +1,5 @@
 use crate::codebase::config::load_codebase_config_with_path;
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolver, ImportResolverFacade};
 use crate::codebase::ts_source::discover_files;
 use crate::codebase::workspaces;
 use anyhow::Result;
@@ -19,10 +19,13 @@ use findings::unique_export_findings;
 use scan::{filter_source_files, sorted_paths};
 use types::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile};
 pub use types::{UniqueExportFinding, UniqueExportsOptions};
-pub use with_facts::analyze_project_with_prepared_facts_and_inferred_and_session;
 pub use with_facts::{
     analyze_project_with_config_and_facts, analyze_project_with_facts,
     analyze_project_with_prepared_facts, analyze_project_with_prepared_facts_and_inferred,
+};
+pub use with_facts::{
+    analyze_project_with_prepared_facts_and_inferred_and_session,
+    analyze_project_with_prepared_facts_catalog_and_inferred_and_session,
 };
 
 pub const RULE_ID: &str = "unique-exports";
@@ -56,18 +59,20 @@ pub fn analyze_project(
     with_facts::analyze_project_with_facts(root, config_path, tsconfig_path, &facts)
 }
 
-fn analyze_unique_exports(
+fn analyze_unique_exports<R: ImportResolverFacade>(
     _root: &Path,
     analysis_files: Vec<PathBuf>,
     source_files: Vec<SourceFile>,
     options: UniqueExportsOptions,
-    resolver: ImportResolver<'_>,
+    resolver: R,
     workspace: crate::codebase::workspaces::WorkspaceMap,
 ) -> Result<Vec<UniqueExportFinding>> {
     let by_path: HashMap<PathBuf, SourceFile> = source_files
         .into_iter()
         .map(|file| (file.path.clone(), file))
         .collect();
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(by_path.keys().cloned());
 
     let mut occurrences = Vec::new();
     let mut export_memo = HashMap::new();
@@ -78,6 +83,7 @@ fn analyze_unique_exports(
             &by_path,
             &resolver,
             &workspace,
+            &remapper,
             &mut visiting,
             &mut export_memo,
         ));

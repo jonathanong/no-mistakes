@@ -1,6 +1,16 @@
+struct SwiftRouteDefInputs<'a> {
+    root: &'a Path,
+    tsconfig: &'a TsConfig,
+    tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
+    all_files: &'a [PathBuf],
+    config_options: &'a GraphConfigOptions,
+    ts_facts: Option<&'a dyn TsFactLookup>,
+}
+
 fn collect_swift_edges_with_facts(
     root: &Path,
     tsconfig: &TsConfig,
+    tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
     ts_facts: Option<&dyn TsFactLookup>,
@@ -27,11 +37,14 @@ fn collect_swift_edges_with_facts(
     collect_swift_reference_edges(facts, &mut edges);
     collect_swift_package_edges(facts, &mut edges);
     collect_swift_http_edges(
-        root,
-        tsconfig,
-        all_files,
-        config_options,
-        ts_facts,
+        SwiftRouteDefInputs {
+            root,
+            tsconfig,
+            tsconfig_catalog,
+            all_files,
+            config_options,
+            ts_facts,
+        },
         facts,
         &mut edges,
     );
@@ -87,15 +100,11 @@ fn collect_swift_package_edges(
 }
 
 fn collect_swift_http_edges(
-    root: &Path,
-    tsconfig: &TsConfig,
-    all_files: &[PathBuf],
-    config_options: &GraphConfigOptions,
-    ts_facts: Option<&dyn TsFactLookup>,
+    route_def_inputs: SwiftRouteDefInputs<'_>,
     facts: &crate::codebase::swift::SwiftFactMap,
     edges: &mut Vec<Edge>,
 ) {
-    let route_defs = swift_route_defs(root, tsconfig, all_files, config_options, ts_facts);
+    let route_defs = swift_route_defs(&route_def_inputs);
     if route_defs.is_empty() {
         return;
     }
@@ -116,13 +125,13 @@ fn collect_swift_http_edges(
     }
 }
 
-fn swift_route_defs(
-    root: &Path,
-    tsconfig: &TsConfig,
-    all_files: &[PathBuf],
-    config_options: &GraphConfigOptions,
-    facts: Option<&dyn TsFactLookup>,
-) -> Vec<(PathBuf, String)> {
+fn swift_route_defs(inputs: &SwiftRouteDefInputs<'_>) -> Vec<(PathBuf, String)> {
+    let root = inputs.root;
+    let tsconfig = inputs.tsconfig;
+    let tsconfig_catalog = inputs.tsconfig_catalog;
+    let all_files = inputs.all_files;
+    let config_options = inputs.config_options;
+    let facts = inputs.ts_facts;
     let mut route_defs = Vec::new();
     if let (Some(backend_pattern), Some(register_object)) = (
         resolved_backend_pattern(config_options),
@@ -144,6 +153,7 @@ fn swift_route_defs(
             root,
             all_files,
             tsconfig,
+            tsconfig_catalog,
             route_globset,
             facts,
             config_options.test_filter.as_ref(),

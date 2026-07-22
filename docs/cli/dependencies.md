@@ -21,6 +21,15 @@ Key options: `--tsconfig`, `--depth`/`--max-depth`, repeatable `--filter`,
 repeatable `--target-module`, repeatable `--relationship`, repeatable `--test`,
 `--format`, `--json`, and `--timings`.
 
+Without `--tsconfig`, the resolver automatically uses the config owning each
+importing file, including referenced workspace projects. `--tsconfig <FILE>`
+instead forces one config across the request; use it to reproduce a legacy
+single-config result or to debug an alias.
+
+JSON and YAML reports include stable `diagnostics` plus `tsconfig_provenance`
+for requested entry files. Invalid automatic configs warn and fall back
+conservatively; an invalid explicit `--tsconfig` remains an error.
+
 `FILE#SYMBOL` is not meaningful for dependencies; symbol filtering is for
 [`dependents`](dependents.md) and [`related`](related.md).
 

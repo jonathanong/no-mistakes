@@ -11,12 +11,13 @@ pub(super) fn run(
         session,
         root,
         config_path,
-        tsconfig_path,
+        tsconfig_path: _,
         shared,
         prepared_playwright,
         config,
         prepared_graph,
         prepared_tsconfig,
+        prepared_tsconfig_catalog,
         inferred_roots,
         sources,
     } = inputs;
@@ -48,6 +49,7 @@ pub(super) fn run(
                         crate::codebase::dependencies::graph::PreparedCheckFactGraphBuildRequest {
                             root,
                             tsconfig: prepared_tsconfig,
+                            tsconfig_catalog: prepared_tsconfig_catalog,
                             plan,
                             files: shared.graph_file_universe().to_vec(),
                             config_path,
@@ -60,6 +62,7 @@ pub(super) fn run(
                         crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
                             root,
                             tsconfig: prepared_tsconfig,
+                            tsconfig_catalog: prepared_tsconfig_catalog,
                             plan,
                             files: shared.graph_file_universe().to_vec(),
                             config_path,
@@ -82,6 +85,7 @@ pub(super) fn run(
                     root,
                     config,
                     prepared_tsconfig,
+                    prepared_tsconfig_catalog,
                     shared,
                     dependency_graph.expect("dynamic-import rule requires canonical graph"),
                     &session,
@@ -128,8 +132,7 @@ pub(super) fn run(
         findings.extend(storybook_findings(
             root,
             config,
-            tsconfig_path,
-            prepared_tsconfig,
+            prepared_tsconfig_catalog,
             shared,
             inferred_roots,
             &session,
