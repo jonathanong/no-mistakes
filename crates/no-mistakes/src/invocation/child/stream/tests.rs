@@ -179,6 +179,28 @@ fn respects_expired_invocation_deadline() {
     assert!(result.is_err());
 }
 
+// Distinct from `respects_expired_invocation_deadline`'s zero deadline
+// (which expires before `drain_lines`'s first `remaining_timeout()` call,
+// at the top of its loop): this deadline is still positive when `drain_lines`
+// starts, so it reaches `rx.recv_timeout(remaining)` and must time out
+// there, while blocked waiting for a chunk that never arrives.
+#[test]
+fn drain_lines_times_out_waiting_for_a_chunk() {
+    let _deadline =
+        crate::invocation::install_test_deadline(std::time::Duration::from_millis(200)).unwrap();
+    let mut command = Command::new("sh");
+    command.args(["-c", "sleep 5"]);
+    let start = std::time::Instant::now();
+    let result = collect_lines(&mut command, 1024);
+    let error = result.expect_err("deadline elapsing while waiting for a chunk must error");
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(60),
+        "child should have been terminated well before its 5s sleep completed, took {:?}",
+        start.elapsed()
+    );
+}
+
 // Regression for a review finding on #587: the deadline must be checked
 // *before* spawning the child, matching `command_output`. Proven with a
 // nonexistent binary — if the pre-spawn check were missing, `spawn()` would
