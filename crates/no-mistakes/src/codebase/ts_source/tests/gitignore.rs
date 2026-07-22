@@ -182,7 +182,6 @@ fn pass5a_prepared_bodies_do_not_restart_discovery_or_config_loading() {
 fn pass5a_graph_queries_reuse_one_graph_file_discovery() {
     for (source, signature) in [
         (include_str!("../../../effects_query.rs"), "pub fn run("),
-        (include_str!("../../../flow_query.rs"), "pub fn run("),
         (
             concat!(
                 include_str!("../../../rsc_callers_query.rs"),
@@ -210,6 +209,83 @@ fn pass5a_graph_queries_reuse_one_graph_file_discovery() {
         assert!(!body.contains("load_v2_config("), "{signature}");
         assert!(!body.contains("discover_visible_paths("), "{signature}");
     }
+
+    assert_flow_query_uses_one_shared_graph_file_discovery();
+}
+
+fn assert_flow_query_uses_one_shared_graph_file_discovery() {
+    let run = function_body(include_str!("../../../flow_query.rs"), "pub fn run(");
+    assert_eq!(
+        run.matches("SharedTraversalContext::prepare_with_framework_plan")
+            .count(),
+        1,
+    );
+    for forbidden in [
+        "VisiblePathSnapshot::new",
+        "discover_files_from_visible",
+        "GraphFiles::from_files",
+        "load_v2_config(",
+        "discover_visible_paths(",
+    ] {
+        assert!(
+            !run.contains(forbidden),
+            "flow query must delegate {forbidden}"
+        );
+    }
+
+    let prepare_source = include_str!("../../dependencies/shared_traversal_prepare.rs");
+    let prepare = function_body(prepare_source, "pub(crate) fn prepare_with_framework_plan(");
+    assert_eq!(
+        prepare
+            .matches("Self::prepare_with_session_and_framework_plan")
+            .count(),
+        1,
+    );
+    let session_prepare = function_body(
+        prepare_source,
+        "fn prepare_with_session_and_framework_plan(",
+    );
+    assert_eq!(
+        session_prepare
+            .matches("Self::prepare_with_dataset_session_and_framework_plan")
+            .count(),
+        1,
+    );
+
+    let shared_prepare = function_body(
+        include_str!("../../dependencies/shared_traversal_prepare_core.rs"),
+        "fn prepare_with_dataset_session_and_framework_plan(",
+    );
+    assert_eq!(
+        shared_prepare
+            .matches("discover_files_from_visible")
+            .count(),
+        1,
+    );
+    assert_eq!(
+        shared_prepare
+            .matches("GraphFiles::from_files_with_resource_candidates_excluding_indexable")
+            .count(),
+        1,
+    );
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/simple/fixture"),
+    );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+    crate::flow_query::run(&crate::flow_query::FlowOptions {
+        target: "a.mts".to_string(),
+        root,
+        tsconfig: None,
+        config: None,
+        direction: crate::flow_query::FlowDirection::Deps,
+        depth: 1,
+        relationships: vec![crate::codebase::dependencies::RelationshipArg::Import],
+    })
+    .unwrap();
+    assert_eq!(observer.snapshot().work["discovery.roots"], 1);
 }
 
 fn function_body<'a>(source: &'a str, signature: &str) -> &'a str {
