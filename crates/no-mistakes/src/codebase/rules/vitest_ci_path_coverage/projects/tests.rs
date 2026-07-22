@@ -38,6 +38,7 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
 
     let project = ConfigProject {
         config: None,
+        workspace: false,
         policy_name: None,
         runner_project_arg: None,
         scope: None,

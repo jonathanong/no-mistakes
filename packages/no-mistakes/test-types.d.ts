@@ -66,6 +66,8 @@ export interface SelectedTest {
 export interface TestExecutionTarget {
   runner: "vitest" | "playwright" | "dotnet" | "swift";
   config?: string | null;
+  /** True when config is a Vitest workspace/project-array source rendered with --workspace. */
+  workspace?: boolean;
   project?: string | null;
   base_command: string[];
   runner_args: string[];

@@ -132,6 +132,7 @@ fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
     let config = NoMistakesConfig::default();
     let projects = vec![ConfigProject {
         config: Some("vitest.config.mts".to_string()),
+        workspace: false,
         policy_name: Some("all-specs".to_string()),
         runner_project_arg: Some("all-specs".to_string()),
         scope: None,

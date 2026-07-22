@@ -62,6 +62,7 @@ impl ParsedPlaywrightConfig {
                 let test_dir = project.test_dir(root);
                 ConfigProject {
                     config: Some(config.to_string()),
+                    workspace: false,
                     policy_name: project.policy_name,
                     runner_project_arg: project.runner_project_arg,
                     scope: Some(crate::codebase::ts_source::relative_slash_path(

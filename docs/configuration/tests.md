@@ -35,6 +35,11 @@ directly under `--root`. Outside a Git checkout, `.gitignore` and `.ignore`
 files are still applied. Explicit config paths remain authoritative and may
 refer to ignored files.
 
+`tests.vitest.configs` explicitly accepts `vitest.workspace.*` and
+`vitest.projects.*` for the runtime extensions `ts`, `mts`, `cts`, `js`, `mjs`,
+and `cjs`. These project-array filenames are not auto-discovered; when
+configured, they export project arrays directly.
+
 Dotnet and Swift test plans use explicit config for source-graph targeting.
 `tests.dotnet.projects` or `tests.dotnet.solutions`, and
 `tests.swift.packages`, are the explicit inputs; `no-mistakes` does not infer

@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 fn project(scope: Option<&str>, setup: VitestSetupDependency) -> ConfigProject {
     ConfigProject {
         config: Some("vitest.config.ts".to_string()),
+        workspace: false,
         policy_name: None,
         runner_project_arg: Some("unit".to_string()),
         scope: scope.map(str::to_string),
@@ -41,6 +42,7 @@ fn discovered() -> DiscoveredTests {
     let target = |project: Option<&str>| TestExecutionTarget {
         runner: "vitest".to_string(),
         config: Some("vitest.config.ts".to_string()),
+        workspace: false,
         project: project.map(str::to_string),
         base_command: Vec::new(),
         runner_args: Vec::new(),

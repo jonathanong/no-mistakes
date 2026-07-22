@@ -17,6 +17,7 @@ fn vitest_setup_edges_are_lazy_and_connect_setup_dependencies_to_tests() {
         filter: crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(
             &crate::integration_tests::types::ConfigProject {
                 config: Some("vitest.config.ts".to_string()),
+                workspace: false,
                 policy_name: None,
                 runner_project_arg: None,
                 scope: Some(".".to_string()),
@@ -187,6 +188,7 @@ fn vitest_project(
 ) -> VitestSetupProject {
     let project = crate::integration_tests::types::ConfigProject {
         config: Some(format!("{config}.config.ts")),
+        workspace: false,
         policy_name: None,
         runner_project_arg: None,
         scope: scope.map(str::to_string),

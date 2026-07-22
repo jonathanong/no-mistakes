@@ -66,6 +66,7 @@ fn vitest_explicit_project_matches_playwright_owned_file() {
     );
     let projects = vec![ConfigProject {
         config: Some("vitest.config.mts".to_string()),
+        workspace: false,
         policy_name: Some("browser".to_string()),
         runner_project_arg: Some("browser".to_string()),
         scope: None,
@@ -90,6 +91,7 @@ fn target_metadata_uses_executable_project_name_only() {
     let config = NoMistakesConfig::default();
     let projects = vec![ConfigProject {
         config: Some("playwright.config.ts".to_string()),
+        workspace: false,
         policy_name: Some("top-level-config-name".to_string()),
         runner_project_arg: None,
         scope: None,
@@ -138,6 +140,7 @@ fn policy_only_project_inherits_single_explicit_runner_config() {
         project.config.as_deref(),
         Some("configs/vitest.workspace.mts")
     );
+    assert!(project.workspace);
 }
 
 #[test]

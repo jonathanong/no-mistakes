@@ -65,6 +65,10 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 | `ci topology` | `ciTopology(options)` |
 | `impacted-checks` | `impactedChecks(options)` |
 
+`testsTargets()` and test-plan targets set `workspace: true` when a Vitest
+workspace/project-array source must be passed with `--workspace`; the emitted
+`runner_args` already contain the correct flag.
+
 The Playwright APIs load the same selector-wrapper configuration as the CLI.
 Configured wrapper calls therefore appear in `playwrightEdges()` and
 `analyzeProject()` through the existing selector-edge JSON shape; no separate

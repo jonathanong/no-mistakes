@@ -153,6 +153,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
     let omitted_analysis = root.join("helpers/omitted.ts");
     let project = ConfigProject {
         config: Some("vitest.config.ts".to_string()),
+        workspace: false,
         policy_name: Some("unit".to_string()),
         runner_project_arg: Some("unit".to_string()),
         scope: Some("tests".to_string()),

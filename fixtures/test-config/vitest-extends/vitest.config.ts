@@ -1,5 +1,6 @@
 const extendsTrue = { extends: true }
 const extendsFalse = { extends: false }
+import { duplicateRootSetup } from './setup-values'
 
 export default {
   test: {
@@ -10,6 +11,14 @@ export default {
       { extends: false, test: { name: 'false', include: ['false/**/*.test.ts'] } },
       { extends: 'not-boolean', test: { name: 'nonboolean', include: ['nonboolean/**/*.test.ts'] } },
       { extends: true, test: { name: 'true', include: ['true/**/*.test.ts'] } },
+      {
+        extends: true,
+        test: {
+          name: 'merged-setups',
+          include: ['merged/**/*.test.ts'],
+          setupFiles: [duplicateRootSetup, './dir/../root-setup.ts', './project-setup.ts'],
+        },
+      },
       {
         ...extendsTrue,
         ...extendsFalse,

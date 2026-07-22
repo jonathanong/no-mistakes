@@ -23,6 +23,7 @@ mod tests_resolution;
 #[cfg(test)]
 mod tests_review;
 pub(crate) mod types;
+pub(crate) use test_config::vitest::is_vitest_project_array_path;
 pub(crate) use test_config::vitest::setup_resolution::resolve_setup_dependencies;
 
 #[doc(hidden)]

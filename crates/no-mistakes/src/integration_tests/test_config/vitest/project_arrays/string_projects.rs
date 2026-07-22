@@ -86,6 +86,7 @@ fn is_vitest_project_config(path: &Path) -> bool {
         .map(|stem| stem.to_string_lossy())
         .unwrap_or_default();
     stem == "vitest.workspace"
+        || stem == "vitest.projects"
         || stem == "vitest.config"
         || stem.starts_with("vitest.config.")
         || stem == "vite.config"

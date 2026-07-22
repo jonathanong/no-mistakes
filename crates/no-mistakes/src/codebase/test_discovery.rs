@@ -80,6 +80,7 @@ fn discover_from_projects_from_visible(
                 targets::target_for(
                     runner,
                     project.config.as_deref(),
+                    project.workspace,
                     project.runner_project_arg.as_deref(),
                     &rel,
                 )
@@ -169,7 +170,7 @@ fn discover_with_fallback(
             targets_by_path
                 .entry(path)
                 .or_default()
-                .insert(targets::target_for(runner, None, None, &rel));
+                .insert(targets::target_for(runner, None, false, None, &rel));
         }
     }
     to_discovered(tests, targets_by_path, used_fallback)

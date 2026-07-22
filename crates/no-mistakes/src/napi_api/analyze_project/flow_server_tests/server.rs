@@ -131,6 +131,36 @@ fn tests_targets_napi_reports_project_commands() {
 }
 
 #[test]
+fn tests_targets_napi_preserves_vitest_workspace_source() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config/vitest-projects-target");
+    let output = crate::napi_api::cli_parity::tests_targets_json_impl(
+        json!({
+            "root": root,
+            "framework": "vitest",
+            "files": ["tests/unit.test.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let target = &value["tests"][0]["targets"][0];
+
+    assert_eq!(target["workspace"], true);
+    assert_eq!(target["config"], "vitest.projects.ts");
+    assert_eq!(
+        target["runner_args"],
+        json!([
+            "--workspace",
+            "vitest.projects.ts",
+            "--project",
+            "unit",
+            "tests/unit.test.ts"
+        ])
+    );
+}
+
+#[test]
 fn tests_targets_napi_rejects_missing_files() {
     for options in [
         json!({

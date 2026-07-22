@@ -10,6 +10,7 @@ fn project(
 ) -> ConfigProject {
     ConfigProject {
         config: config.map(str::to_string),
+        workspace: false,
         policy_name: Some(name.to_string()),
         runner_project_arg: runner.map(str::to_string),
         scope: scope.map(str::to_string),

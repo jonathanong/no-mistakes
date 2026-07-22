@@ -72,6 +72,7 @@ fn collect_projects(
         }
         projects.push(ConfigProject {
             config: Some(configured_project.project.clone()),
+            workspace: false,
             policy_name: Some(configured_project.name.clone()),
             runner_project_arg: Some(project_facts.root_namespace.clone()),
             scope: project_scope(root, &project_path),

@@ -31,6 +31,7 @@ fn runner_projects_lossy(
 fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProject {
     ConfigProject {
         config: Some(config.to_string()),
+        workspace: false,
         policy_name: Some(policy_name.to_string()),
         runner_project_arg: Some(policy_name.to_string()),
         scope: None,
@@ -53,6 +54,7 @@ fn explicit_policy_replaces_each_matching_config_project() {
         config_project("vitest.browser.ts", "shared", "browser/**/*.test.ts"),
         config_project("vitest.other.ts", "other", "other/**/*.test.ts"),
     ];
+    projects[0].workspace = true;
 
     apply_explicit_policy_projects(
         root,
@@ -72,6 +74,7 @@ fn explicit_policy_replaces_each_matching_config_project() {
     assert!(shared
         .iter()
         .any(|project| project.config.as_deref() == Some("vitest.browser.ts")));
+    assert!(shared.iter().any(|project| project.workspace));
     assert_eq!(projects.len(), 3);
 }
 

@@ -112,6 +112,7 @@ pub(crate) fn configured_project(
     }
     Some(ConfigProject {
         config: None,
+        workspace: false,
         policy_name: Some(project_name.to_string()),
         runner_project_arg: Some(project_name.to_string()),
         scope: None,

@@ -481,6 +481,32 @@ fn vitest_inline_setup_inheritance_requires_extends_true() {
             "{name}",
         );
     }
+    let merged = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("merged-setups"))
+        .unwrap();
+    assert_eq!(
+        merged
+            .vitest_setup
+            .iter()
+            .filter(|setup| setup.field.as_str() == "setupFiles")
+            .map(|setup| setup.specifier.as_deref().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["./root-setup.ts", "./project-setup.ts"],
+    );
+    let root_setup = merged
+        .vitest_setup
+        .iter()
+        .find(|setup| setup.specifier.as_deref() == Some("./root-setup.ts"))
+        .unwrap();
+    assert!(root_setup
+        .trigger_paths
+        .iter()
+        .any(|path| path.ends_with("setup-values.ts")));
+    assert!(root_setup
+        .trigger_paths
+        .iter()
+        .any(|path| path.ends_with("vitest.config.ts")));
     let standalone = projects
         .iter()
         .find(|project| project.policy_name.as_deref() == Some("standalone"))

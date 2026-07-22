@@ -9,6 +9,7 @@ fn project_config_suffixes_are_executable_vitest_configs() {
         "vitest.unit.config.ts",
         "vite.e2e.config.js",
         "vitest.workspace.mts",
+        "vitest.projects.cjs",
     ] {
         assert!(is_vitest_project_config(Path::new(path)), "{path}");
     }
@@ -23,6 +24,7 @@ fn project_config_suffixes_are_executable_vitest_configs() {
         "vitest.config.tsx",
         "vitest.unit.config.jsx",
         "vitest.workspace.tsx",
+        "vitest.projects.tsx",
     ] {
         assert!(!is_vitest_project_config(Path::new(path)), "{path}");
     }

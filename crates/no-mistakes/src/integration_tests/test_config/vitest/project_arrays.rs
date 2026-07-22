@@ -61,7 +61,7 @@ pub(super) fn project_options(
     project_options_inner(program, object, source, path, _root, resolver)
 }
 
-/// A `vitest.workspace.*` file exports projects directly, rather than nesting
+/// A `vitest.workspace.*` or `vitest.projects.*` file exports projects directly, rather than nesting
 /// them below `test.projects`. Reuse the ordinary project-array interpreter so
 /// imports, cycles, visible-universe filtering, and ordering remain identical.
 pub(super) fn workspace_options(

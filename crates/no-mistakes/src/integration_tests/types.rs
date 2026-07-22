@@ -102,6 +102,9 @@ pub(crate) struct FileAnalysis {
 #[derive(Debug, Clone)]
 pub(crate) struct ConfigProject {
     pub(crate) config: Option<String>,
+    /// The Vitest runner source is a workspace/project-array file and must be
+    /// passed with `--workspace` rather than `--config`.
+    pub(crate) workspace: bool,
     pub(crate) policy_name: Option<String>,
     pub(crate) runner_project_arg: Option<String>,
     /// Relative-to-root directory this project globs (its testDir / project

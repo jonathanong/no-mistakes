@@ -44,6 +44,7 @@ pub(super) fn swift_projects_from_facts(
                     .filter(|target| target.is_test)
                     .map(|target| ConfigProject {
                         config: Some(package_slash.to_string()),
+                        workspace: false,
                         policy_name: Some(target.name.clone()),
                         runner_project_arg: Some(target.name.clone()),
                         scope: Some(format!("{package_slash}/Tests")),
@@ -61,6 +62,7 @@ pub(super) fn swift_projects_from_facts(
         if package_projects.is_empty() {
             projects.push(ConfigProject {
                 config: Some(package_slash.to_string()),
+                workspace: false,
                 policy_name: Some(package_slash.to_string()),
                 runner_project_arg: None,
                 scope: Some(package_slash.to_string()),
@@ -102,6 +104,7 @@ fn configured_swift_project(
     }
     Some(ConfigProject {
         config: swift_package_for_policy(project_name, policy, packages),
+        workspace: false,
         policy_name: Some(project_name.to_string()),
         runner_project_arg: None,
         scope: None,

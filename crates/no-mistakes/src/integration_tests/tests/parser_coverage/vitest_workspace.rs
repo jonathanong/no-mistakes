@@ -158,6 +158,27 @@ fn vitest_workspace_commonjs_exports_keep_workspace_setup_ownership() {
 }
 
 #[test]
+fn vitest_projects_files_are_project_array_sources_for_all_runtime_extensions() {
+    let fixture = saved_fixture("vitest-projects-extensions");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    for extension in ["ts", "mts", "cts", "js", "mjs", "cjs"] {
+        let path = root.join(format!("vitest.projects.{extension}"));
+        let source = std::fs::read_to_string(&path).unwrap();
+        let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+        assert_eq!(
+            projects[0].policy_name.as_deref(),
+            Some(format!("projects-{extension}").as_str()),
+            "{extension}",
+        );
+        assert_eq!(
+            projects[0].vitest_setup[0].resolved_path.as_deref(),
+            Some(root.join("setup.ts").as_path()),
+            "{extension}",
+        );
+    }
+}
+
+#[test]
 fn arbitrary_default_call_is_not_a_workspace_config() {
     let fixture = saved_fixture("vitest-workspace-default");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());

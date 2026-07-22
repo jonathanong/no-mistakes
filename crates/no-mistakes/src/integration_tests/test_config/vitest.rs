@@ -6,6 +6,7 @@ use anyhow::Result;
 use oxc_ast::ast::Program;
 use std::path::{Path, PathBuf};
 
+mod merge;
 mod project_arrays;
 pub(crate) mod setup_resolution;
 #[cfg(test)]
@@ -50,7 +51,7 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
 ) -> Result<Vec<ConfigProject>> {
     let bindings = shared::top_level_object_bindings(program);
     let root_object = shared::default_export_object(program, &bindings);
-    let workspace_options = (root_object.is_none() && is_vitest_workspace_path(path))
+    let workspace_options = (root_object.is_none() && is_vitest_project_array_path(path))
         .then(|| project_arrays::workspace_options(program, source, path, resolver))
         .transpose()?
         .unwrap_or_default();
@@ -81,15 +82,15 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
     Ok(projects)
 }
 
-fn is_vitest_workspace_path(path: &Path) -> bool {
+pub(crate) fn is_vitest_project_array_path(path: &Path) -> bool {
     const EXTENSIONS: &[&str] = &["mts", "ts", "mjs", "js", "cjs", "cts"];
     let Some(extension) = path.extension().and_then(|extension| extension.to_str()) else {
         return false;
     };
     EXTENSIONS.contains(&extension)
-        && path
-            .file_stem()
-            .is_some_and(|stem| stem == "vitest.workspace")
+        && path.file_stem().is_some_and(|stem| {
+            matches!(stem.to_str(), Some("vitest.workspace" | "vitest.projects"))
+        })
 }
 
 fn to_project(
@@ -122,8 +123,12 @@ fn to_project(
         &project_root,
         resolver,
     );
+    if let Some(setups) = options.setup_files.as_mut() {
+        merge::dedupe_resolved_setups(setups);
+    }
     ConfigProject {
         config: None,
+        workspace: false,
         policy_name: options.name.clone(),
         runner_project_arg: options.name,
         scope: Some(crate::codebase::ts_source::relative_slash_path(
@@ -147,11 +152,12 @@ fn merge_options(root: &Options, project: Options) -> Options {
         root: project.root.or_else(|| root.root.clone()),
         include: project.include.or_else(|| root.include.clone()),
         exclude: combine(root.exclude.clone(), project.exclude),
-        setup_files: project.setup_files.or_else(|| {
+        setup_files: merge::inherit_setup_files(
             (project.extends == Some(true))
                 .then(|| root.setup_files.clone())
-                .flatten()
-        }),
+                .flatten(),
+            project.setup_files,
+        ),
         global_setup: project.global_setup.or_else(|| {
             (project.extends == Some(true))
                 .then(|| root.global_setup.clone())
