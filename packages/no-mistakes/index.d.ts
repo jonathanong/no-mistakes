@@ -2,33 +2,16 @@ import type {
   CheckReport,
   AnalyzeProjectOptions,
   AnalyzeProjectResult,
-  CiEnvOptions,
-  CiEnvReport,
-  CiImpactOptions,
-  CiImpactReport,
-  CiTopologyOptions,
-  WorkflowTopology,
-  WorkflowTopologyIndex,
   CallSitesOptions,
   CallSitesResult,
-  DataPwOptions,
-  DataPwReport,
   DeadExportsOptions,
   DeadExportsResult,
-  EffectsOptions,
-  EffectsReport,
-  RscCallersOptions,
-  RscCallersReport,
-  RegistryExtensionOptions,
-  RegistryExtensionReport,
   DependencyResult,
   ExportsOfOptions,
   ExportsOfResult,
   FetchesOptions,
   FlowOptions,
   FlowReport,
-  ImpactedChecksOptions,
-  ImpactedChecksReport,
   ImportUsagesOptions,
   ImportUsagesResult,
   ImportersOptions,
@@ -36,10 +19,6 @@ import type {
   ResolveCheckOptions,
   ResolveCheckResult,
   GraphEdge,
-  InfraOptions,
-  LockfileDiffEntry,
-  LockfileDiffOptions,
-  ModuleOutputsResult,
   PlaywrightOptions,
   PlaywrightRelatedOptions,
   ProjectOptions,
@@ -47,14 +26,9 @@ import type {
   ReactComponentFacts,
   ReactUsagesReport,
   ReactViolation,
-  ResourceRefRow,
   ServerRoutesReport,
   ServerContractsReport,
   SignatureImpactResult,
-  SwiftImporterRow,
-  SwiftOptions,
-  SwiftTestTargetRow,
-  TestForRow,
   SymbolsListOptions,
   SymbolsOptions,
   SymbolsResult,
@@ -73,6 +47,7 @@ import type {
 } from "./types";
 
 export * from "./types";
+export * from "./index-ci-infra";
 
 export function dependencies(
   options: WithInvocationOptions<TraverseOptions>,
@@ -169,40 +144,3 @@ export function reactCheck(
 export function reactUsages(
   options: WithInvocationOptions<ProjectOptions & { target: string }>,
 ): Promise<ReactUsagesReport>;
-export function lockfileDiff(
-  options: WithInvocationOptions<LockfileDiffOptions>,
-): Promise<LockfileDiffEntry[]>;
-export function ciImpact(options: WithInvocationOptions<CiImpactOptions>): Promise<CiImpactReport>;
-export function ciEnv(options: WithInvocationOptions<CiEnvOptions>): Promise<CiEnvReport>;
-export function ciTopology(
-  options?: WithInvocationOptions<CiTopologyOptions>,
-): Promise<WorkflowTopology>;
-/** Builds a query index over a `ciTopology()` result. Pure JS — never crosses the N-API boundary. */
-export function createWorkflowTopologyIndex(topology: WorkflowTopology): WorkflowTopologyIndex;
-export function impactedChecks(
-  options: WithInvocationOptions<ImpactedChecksOptions>,
-): Promise<ImpactedChecksReport>;
-export function dataPw(options: WithInvocationOptions<DataPwOptions>): Promise<DataPwReport>;
-export function effects(options: WithInvocationOptions<EffectsOptions>): Promise<EffectsReport>;
-export function rscCallers(
-  options: WithInvocationOptions<RscCallersOptions>,
-): Promise<RscCallersReport>;
-export function registryExtension(
-  options: WithInvocationOptions<RegistryExtensionOptions>,
-): Promise<RegistryExtensionReport>;
-export function infraResourceRefs(
-  options: WithInvocationOptions<InfraOptions & { address: string }>,
-): Promise<ResourceRefRow[]>;
-export function infraOutputs(
-  options: WithInvocationOptions<InfraOptions & { moduleDir: string }>,
-): Promise<ModuleOutputsResult>;
-export function infraTestFor(
-  options: WithInvocationOptions<InfraOptions & { tfFile: string }>,
-): Promise<TestForRow[]>;
-export function swiftImporters(
-  options: WithInvocationOptions<SwiftOptions & { file: string }>,
-): Promise<SwiftImporterRow[]>;
-export function swiftTestTargets(
-  options: WithInvocationOptions<SwiftOptions & { file: string }>,
-): Promise<SwiftTestTargetRow[]>;
-export function version(): Promise<string>;

@@ -5,6 +5,11 @@
 // see `docs/node-api.md` for the stability guarantees (field order and
 // array/diagnostic sort order are part of the contract).
 
+import type { ArtifactDeclaration, ArtifactEdge } from "./workflow-topology-artifact-types";
+
+export * from "./workflow-topology-artifact-types";
+export * from "./workflow-topology-index-types";
+
 export interface CiTopologyOptions {
   /** Project root. Defaults to the current working directory. */
   root?: string;
@@ -60,58 +65,6 @@ export interface WorkflowCallContract {
   inputs: Record<string, WorkflowCallInput>;
   secrets: Record<string, WorkflowCallSecret>;
   outputs: Record<string, WorkflowCallOutput>;
-}
-
-export type ArtifactValue =
-  | { kind: "static"; raw: string; value: string; instanceCount?: number }
-  | { kind: "finite"; raw: string; values: string[]; instanceCounts: Record<string, number> }
-  | { kind: "dynamic"; raw: string }
-  | { kind: "path-derived"; reason: "archive-disabled" };
-
-export type ArtifactActionFlag =
-  | { kind: "static"; raw?: string; effective: boolean }
-  | { kind: "dynamic"; raw: string };
-
-export interface ArtifactUploadDeclaration {
-  kind: "upload";
-  name: ArtifactValue;
-  archive: ArtifactActionFlag;
-  overwrite: ArtifactActionFlag;
-}
-
-export type ArtifactDownloadSelector =
-  | { kind: "name"; name: ArtifactValue }
-  | { kind: "pattern"; pattern: ArtifactValue }
-  | { kind: "all" }
-  | { kind: "artifact-ids"; artifactIds: ArtifactValue }
-  | {
-      kind: "unresolved";
-      reason: "name-with-artifact-ids";
-      name: ArtifactValue;
-      artifactIds: ArtifactValue;
-    };
-
-export type ArtifactDownloadSource =
-  | { kind: "current-run"; repository?: ArtifactValue; runId?: ArtifactValue }
-  | { kind: "external"; repository?: ArtifactValue; runId?: ArtifactValue }
-  | { kind: "dynamic"; repository?: ArtifactValue; runId?: ArtifactValue };
-
-export interface ArtifactDownloadDeclaration {
-  kind: "download";
-  selector: ArtifactDownloadSelector;
-  source: ArtifactDownloadSource;
-}
-
-export type ArtifactDeclaration = ArtifactUploadDeclaration | ArtifactDownloadDeclaration;
-
-export interface ArtifactEdge {
-  kind: "artifact";
-  from: string;
-  to: string;
-  name: string;
-  producerStep: number;
-  consumerStep: number;
-  match: "exact" | "pattern" | "all" | "possible";
 }
 
 export type WorkflowNode = {
@@ -223,33 +176,4 @@ export interface WorkflowTopology {
   jobs: WorkflowJobNode[];
   edges: WorkflowTopologyEdge[];
   diagnostics: WorkflowTopologyDiagnostic[];
-}
-
-/**
- * A frozen, sorted query index over a {@link WorkflowTopology}, built
- * entirely in JS from `ciTopology()`'s output via
- * {@link createWorkflowTopologyIndex}. Every array-returning method throws
- * `Error("unknown workflow job: <id>")` / `Error("unknown workflow: <path>")`
- * for an id not present in the topology.
- */
-export interface WorkflowTopologyIndex {
-  readonly workflowsByPath: ReadonlyMap<string, Readonly<WorkflowNode>>;
-  readonly jobsById: ReadonlyMap<string, Readonly<WorkflowJobNode>>;
-  directUpstreamJobIds(jobId: string): readonly string[];
-  transitiveUpstreamJobIds(jobId: string): readonly string[];
-  directDownstreamJobIds(jobId: string): readonly string[];
-  transitiveDownstreamJobIds(jobId: string): readonly string[];
-  directCallerJobIds(workflowPath: string): readonly string[];
-  directCallerWorkflowPaths(workflowPath: string): readonly string[];
-  transitiveCallerWorkflowPaths(workflowPath: string): readonly string[];
-  directCalleeWorkflowPaths(workflowPath: string): readonly string[];
-  transitiveCalleeWorkflowPaths(workflowPath: string): readonly string[];
-  incomingWorkflowRunEdges(workflowPath: string): readonly Readonly<WorkflowRunEdge>[];
-  outgoingWorkflowRunEdges(workflowPath: string): readonly Readonly<WorkflowRunEdge>[];
-  directWorkflowRunSourcePaths(workflowPath: string): readonly string[];
-  transitiveWorkflowRunSourcePaths(workflowPath: string): readonly string[];
-  directWorkflowRunSubscriberPaths(workflowPath: string): readonly string[];
-  transitiveWorkflowRunSubscriberPaths(workflowPath: string): readonly string[];
-  artifactProducersForConsumerJob(jobId: string): readonly Readonly<ArtifactEdge>[];
-  artifactConsumersForProducerJob(jobId: string): readonly Readonly<ArtifactEdge>[];
 }
