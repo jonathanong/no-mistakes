@@ -101,6 +101,8 @@ impl DepGraph {
 
         let mut forward: EdgeMap = HashMap::new();
         let mut reverse: EdgeMap = HashMap::new();
+        let mut resource_edge_details: ResourceEdgeDetails = HashMap::new();
+        let mut resource_diagnostics = Vec::new();
         let files = &graph_files.indexable;
 
         for file in files {
@@ -147,6 +149,8 @@ impl DepGraph {
             EdgeMaps {
                 forward: &mut forward,
                 reverse: &mut reverse,
+                resource_edge_details: &mut resource_edge_details,
+                resource_diagnostics: &mut resource_diagnostics,
             },
         )?;
         crate::invocation::check_timeout()?;
@@ -154,6 +158,8 @@ impl DepGraph {
             root: root.to_path_buf(),
             edges: edge_index_from_maps(forward, reverse),
             parse_errors,
+            resource_edge_details,
+            resource_diagnostics,
         };
         if plan.playwright_selectors {
             let snapshot = playwright_snapshot

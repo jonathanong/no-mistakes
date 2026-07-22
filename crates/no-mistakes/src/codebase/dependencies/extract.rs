@@ -63,6 +63,13 @@ pub struct ImportFacts {
     pub function_calls: Vec<FunctionCall>,
     pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
+    /// Exported object/class roots whose member scopes may be reached by an
+    /// importer. This is collected by the import pass without full symbols.
+    pub exported_resource_roots: Vec<String>,
+    /// Exact callable scopes belonging to exported object/class aggregates.
+    /// Unlike lexical helpers nested inside a member, these scopes are reachable
+    /// when the aggregate is imported even without a local static call.
+    pub exported_resource_scopes: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
 }
@@ -97,55 +104,18 @@ impl ImportExtractor {
         };
         let ret = crate::ast::parse(Path::new(sentinel), &allocator, source, source_type);
 
-        Ok(extract_import_facts_from_program_with_source(&ret.program, source).imports)
+        Ok(
+            extract_import_facts_from_program_with_source_and_resource_roots(
+                &ret.program,
+                source,
+                false,
+            )
+            .imports,
+        )
     }
 }
 
-pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedImport> {
-    extract_import_facts_from_program(program).imports
-}
-
-pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
-    extract_import_facts_from_program_with_source(program, "")
-}
-
-pub fn extract_import_facts_from_program_with_source<'a>(
-    program: &Program<'a>,
-    source: &str,
-) -> ImportFacts {
-    let mut collector = ImportCollector {
-        source: source.to_string(),
-        ..ImportCollector::default()
-    };
-    let local_type_names = local_type_declaration_names(program);
-    collector
-        .exported_functions
-        .extend(later_named_value_exports(program, &local_type_names));
-    collector
-        .exported_functions
-        .extend(later_default_export_value_names(program));
-    collector
-        .later_exported_type_names
-        .extend(later_named_type_exports(program, &local_type_names));
-    collector.visit_program(program);
-    let callable_scopes = collector.callable_scopes;
-    let exported_type_scopes = collector.exported_type_scopes;
-    let mut exported_functions: Vec<_> = collector
-        .exported_functions
-        .into_iter()
-        .filter(|scope| callable_scopes.contains(scope) || exported_type_scopes.contains(scope))
-        .collect();
-    exported_functions.sort();
-    ImportFacts {
-        imports: collector.imports,
-        function_calls: collector.function_calls,
-        symbol_references: collector.symbol_references,
-        exported_functions,
-        unknown_callers: collector.unknown_callers,
-        has_unknown_top_level_call: collector.has_unknown_top_level_call,
-    }
-}
-
+include!("extract_entrypoints.rs");
 include!("extract_export_names.rs");
 include!("extract_visit.rs");
 include!("extract_collector_methods.rs");
@@ -154,6 +124,7 @@ include!("extract_visit_object_references.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");
+include!("extract_resource_scopes.rs");
 include!("extract_type_scope_helpers.rs");
 include!("extract_visit_hoist.rs");
 include!("extract_visit_types.rs");

@@ -105,6 +105,12 @@ structured plan.
 
 Node API: `testsPlan(options)`.
 
+Plans also trace supported literal filesystem resources through `resource`
+edges. JSON reasons expose call-site provenance in optional `via_details`,
+aligned with `via`; non-JSON formats remain test-only. Dynamic paths, glob
+patterns, and cwd values are reported as warnings rather than treated as a
+global fallback.
+
 `dotnet` plans require configured `.csproj` or `.sln` paths. They select
 changed C# test files directly and select dependent C# tests through namespace
 imports, type references, and `.csproj` `ProjectReference` edges. When native

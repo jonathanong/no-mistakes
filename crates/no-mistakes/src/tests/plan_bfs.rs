@@ -173,6 +173,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::HttpCall => "http",
         EdgeKind::ProcessSpawn => "process",
         EdgeKind::AssetImport => "asset",
+        EdgeKind::Resource => "resource",
         EdgeKind::ReactRender => "react-render",
         EdgeKind::Selector => "selector",
             EdgeKind::SwiftImport | EdgeKind::SwiftReference => "swift",

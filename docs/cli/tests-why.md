@@ -14,3 +14,7 @@ Key options: `--root`, `--config`, `--tsconfig`, `--changed`, `--plan`, and
 `--format text|json`.
 
 Node API: `testsWhy(options)`.
+
+For a resource edge, JSON steps include optional `detail` provenance with the
+consumer file and sorted literal call sites. This is the same data preserved in
+a plan's `via_details` field.

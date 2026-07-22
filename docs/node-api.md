@@ -88,6 +88,12 @@ projects, emits `configured-trigger` reasons and execution targets, and leaves
 `fallback_triggered` false. Semantic `.no-mistakes.yml`/`.yaml` invalidation is
 also identical for revision and inline-diff inputs.
 
+`testsPlan`, `testsImpact`, `testsWhy`, and `testsGraph` expose resource-edge
+provenance without a separate API: plan reasons use optional edge-aligned
+`via_details`, why steps use optional `detail`, and graph JSON edges use
+optional `detail`. All include `{ type: "resource", consumer_file,
+call_sites: [{ call_kind, line }] }` only for literal runtime filesystem edges.
+
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 

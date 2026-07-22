@@ -35,6 +35,7 @@ pub(crate) fn analyze_lockfile_changes(
                     rel
                 ),
                 file: rel,
+                line: None,
             });
             fallback_triggered = true;
             continue;
@@ -63,6 +64,7 @@ pub(crate) fn analyze_lockfile_changes(
                                 rel, head
                             ),
                             file: rel,
+                            line: None,
                         });
                         fallback_triggered = true;
                         continue;
@@ -83,6 +85,7 @@ pub(crate) fn analyze_lockfile_changes(
                     rel
                 ),
                 file: rel,
+                line: None,
             });
             fallback_triggered = true;
             continue;
@@ -111,6 +114,7 @@ pub(crate) fn analyze_lockfile_changes(
                                 rel, base
                             ),
                             file: rel,
+                            line: None,
                         });
                         fallback_triggered = true;
                     } else {
@@ -133,6 +137,7 @@ pub(crate) fn analyze_lockfile_changes(
                         rel
                     ),
                     file: rel,
+                    line: None,
                 });
                 fallback_triggered = true;
             }

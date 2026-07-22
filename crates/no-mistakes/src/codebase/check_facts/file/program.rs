@@ -1,6 +1,6 @@
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use super::should_store_source;
-use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source;
+use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_resource_roots;
 use crate::codebase::ts_source::facts::{self, TsFileFacts};
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
@@ -18,7 +18,16 @@ pub(crate) fn collect_file_facts_from_program(
         || plan.graph.function_calls
         || playwright.is_some_and(|plan| plan.file(path).is_some());
     let import_facts = if needs_import_facts {
-        extract_import_facts_from_program_with_source(program, source)
+        extract_import_facts_from_program_with_source_and_resource_roots(
+            program,
+            source,
+            plan.graph.resources,
+        )
+    } else {
+        Default::default()
+    };
+    let resources = if plan.graph.resources {
+        crate::codebase::ts_resources::extract(program, source)
     } else {
         Default::default()
     };
@@ -114,8 +123,12 @@ pub(crate) fn collect_file_facts_from_program(
         parse_error: None,
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
+        resource_calls: resources.calls,
+        resource_diagnostics: resources.diagnostics,
         symbol_references: import_facts.symbol_references,
         exported_functions: import_facts.exported_functions,
+        exported_resource_roots: import_facts.exported_resource_roots,
+        exported_resource_scopes: import_facts.exported_resource_scopes,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols: symbols.as_deref().cloned(),

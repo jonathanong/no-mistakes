@@ -6,6 +6,8 @@
 struct EdgeMaps<'a> {
     forward: &'a mut EdgeMap,
     reverse: &'a mut EdgeMap,
+    resource_edge_details: &'a mut ResourceEdgeDetails,
+    resource_diagnostics: &'a mut Vec<ResourceGraphDiagnostic>,
 }
 
 struct EdgeResolutionContext<'a> {
@@ -22,7 +24,12 @@ fn collect_and_merge_all_edges(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     maps: EdgeMaps<'_>,
 ) -> Result<()> {
-    let EdgeMaps { forward, reverse } = maps;
+    let EdgeMaps {
+        forward,
+        reverse,
+        resource_edge_details,
+        resource_diagnostics,
+    } = maps;
     let resolver = resolution.resolver;
     let session = resolution.session;
     let root = edge_inputs.root;
@@ -30,8 +37,6 @@ fn collect_and_merge_all_edges(
     let plan = edge_inputs.plan;
     let graph_files = edge_inputs.graph_files;
     let config_options = edge_inputs.config_options;
-    let playwright_settings = edge_inputs.playwright_settings;
-    let config_path = edge_inputs.config_path;
     let files = &graph_files.indexable;
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.imports", || {
@@ -126,89 +131,16 @@ fn collect_and_merge_all_edges(
         }
     });
 
-    crate::invocation::check_timeout()?;
-    crate::perf_trace::trace("graph.markdown", || {
-        if plan.markdown {
-            let md_edges = collect_md_edges(&graph_files.all, graph_files);
-            merge_edges(forward, reverse, md_edges);
-        }
-    });
-
-    crate::invocation::check_timeout()?;
-    crate::perf_trace::trace("graph.ci", || {
-        if plan.ci {
-            add_ci_edges(root, &graph_files.all, forward, reverse);
-        }
-    });
-
-    crate::invocation::check_timeout()?;
-    crate::perf_trace::trace("graph.routes", || {
-        if plan.routes {
-            let route_edges = collect_route_edges_with_graph_files(
-                root,
-                tsconfig,
-                edge_inputs.tsconfig_catalog,
-                resolver,
-                graph_files,
-                facts,
-                config_options,
-            );
-            merge_edges(forward, reverse, route_edges);
-        }
-    });
-
-    crate::invocation::check_timeout()?;
-    crate::perf_trace::trace("graph.queues", || {
-        if plan.queues {
-            merge_edges(
-                forward,
-                reverse,
-                collect_queue_edges(root, resolver, graph_files, facts, config_options),
-            );
-        }
-    });
-
-    crate::invocation::check_timeout()?;
-    crate::perf_trace::trace("graph.playwright_routes", || -> Result<()> {
-        if plan.playwright_routes {
-            let Some(snapshot) = playwright_snapshot else {
-                anyhow::bail!("Playwright graph plan requires a visible-path snapshot");
-            };
-            let playwright_edges = collect_playwright_route_edges_from_snapshot(
-                root,
-                config_path,
-                &graph_files.all,
-                facts,
-                snapshot,
-                playwright_settings,
-            );
-            merge_edges(forward, reverse, playwright_edges);
-        }
-        Ok(())
-    })?;
-
-    crate::invocation::check_timeout()?;
-    crate::perf_trace::trace("graph.http_process", || {
-        merge_http_process_edges(edge_inputs, facts, forward, reverse);
-    });
-
-    crate::invocation::check_timeout()?;
-    crate::perf_trace::trace("graph.react", || {
-        if plan.react {
-            let react_edges = collect_react_render_edges(root, facts, graph_files.indexable());
-            merge_edges(forward, reverse, react_edges);
-        }
-    });
-
-    crate::perf_trace::trace("graph.dotnet", || {
-        merge_dotnet_edges(edge_inputs, forward, reverse);
-    });
-    crate::perf_trace::trace("graph.swift", || {
-        merge_swift_edges(edge_inputs, facts, forward, reverse);
-    });
-    crate::perf_trace::trace("graph.terraform", || {
-        merge_terraform_edges(edge_inputs, forward, reverse);
-    });
-    crate::invocation::check_timeout()?;
-    Ok(())
+    collect_remaining_edges(
+        edge_inputs,
+        playwright_snapshot,
+        facts,
+        resolution,
+        EdgeMaps {
+            forward,
+            reverse,
+            resource_edge_details,
+            resource_diagnostics,
+        },
+    )
 }

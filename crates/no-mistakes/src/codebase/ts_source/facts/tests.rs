@@ -430,6 +430,40 @@ fn collect_ts_facts_uses_tsx_parser_and_symbols_when_requested() {
 }
 
 #[test]
+fn exported_resource_roots_are_collected_only_for_resource_plans() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/resource-impact/exported-member-consumer.ts");
+    let imports_and_symbols = collect_ts_facts(
+        std::slice::from_ref(&source),
+        TsFactPlan::imports_and_symbols(),
+    );
+    assert!(imports_and_symbols[&source]
+        .exported_resource_roots
+        .is_empty());
+    assert!(imports_and_symbols[&source]
+        .exported_resource_scopes
+        .is_empty());
+
+    let resources = collect_ts_facts(
+        std::slice::from_ref(&source),
+        TsFactPlan {
+            imports: true,
+            function_calls: true,
+            resources: true,
+            ..TsFactPlan::default()
+        },
+    );
+    assert_eq!(
+        resources[&source].exported_resource_roots,
+        ["NamedService", "Service", "api", "default", "eagerApi"]
+    );
+    assert!(resources[&source]
+        .exported_resource_scopes
+        .iter()
+        .any(|scope| scope == "api/nested/load"));
+}
+
+#[test]
 fn collect_ts_facts_can_skip_import_collection() {
     let ts = fixture("imports.ts");
     let facts = collect_ts_facts(

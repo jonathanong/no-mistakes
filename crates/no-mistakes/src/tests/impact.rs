@@ -1,8 +1,10 @@
 use crate::tests::plan::{
-    bfs_path_find, path_confidence, relative_path, slash_node_name, symbol_aware_start_nodes,
+    bfs_path_find, path_confidence, relative_path, resource_edge_detail, slash_node_name,
+    symbol_aware_start_nodes,
 };
 use crate::tests::{
-    Confidence, ImpactArgs, ImpactReason, PlanFormat, SelectedTest, TestPlan, Warning,
+    push_resource_diagnostics, warning_key, Confidence, ImpactArgs, ImpactReason, PlanFormat,
+    SelectedTest, TestPlan, Warning, WarningKey,
 };
 use anyhow::{Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
@@ -46,7 +48,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
     let mut warnings = Vec::new();
-    let mut warnings_seen = HashSet::new();
+    let mut warnings_seen: HashSet<WarningKey> = HashSet::new();
     let mut registry_seen: HashSet<(String, String)> = HashSet::new();
 
     for (index, raw) in args.entrypoints.iter().enumerate() {
@@ -82,6 +84,16 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 |symbol| format!("{}#{}", relative_path(&root, &normalized), symbol),
             );
 
+        // A dynamic resource call has no edge to traverse, but a directly
+        // changed consumer is still relevant to this impact query.
+        push_resource_diagnostics(
+            &graph,
+            &root,
+            &normalized,
+            &mut warnings,
+            &mut warnings_seen,
+        );
+
         // Registry hints are file-level ("this file is registered in X"); a
         // symbol-scoped entrypoint asks about one export, so a file-level hint
         // could be unrelated. Only emit for whole-file entrypoints.
@@ -113,6 +125,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 changed_file: rel_changed.clone(),
                 path: vec![rel_changed.clone()],
                 via: vec!["self".to_string()],
+                via_details: Vec::new(),
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -133,11 +146,22 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 let path_conf = path_confidence(&edge_path);
 
                 let mut node_chain = Vec::new();
+                let mut reverse_details = Vec::new();
                 let mut curr = test_node.clone();
                 node_chain.push(slash_node_name(&curr, &root));
 
                 while let Some((parent, kind)) = path_parents.get(&curr) {
+                    if let Some(file) = curr.as_file() {
+                        push_resource_diagnostics(
+                            &graph,
+                            &root,
+                            file,
+                            &mut warnings,
+                            &mut warnings_seen,
+                        );
+                    }
                     node_chain.push(slash_node_name(parent, &root));
+                    reverse_details.push(resource_edge_detail(&graph, &curr, parent, *kind, &root));
                     push_warning(
                         &root,
                         &curr,
@@ -148,7 +172,17 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                     );
                     curr = parent.clone();
                 }
+                if let Some(file) = curr.as_file() {
+                    push_resource_diagnostics(
+                        &graph,
+                        &root,
+                        file,
+                        &mut warnings,
+                        &mut warnings_seen,
+                    );
+                }
                 node_chain.reverse();
+                reverse_details.reverse();
 
                 let via_strings: Vec<String> = edge_path
                     .iter()
@@ -159,6 +193,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                     changed_file: rel_changed.clone(),
                     path: node_chain,
                     via: via_strings,
+                    via_details: reverse_details,
                 };
 
                 let entry = selected_map
@@ -186,7 +221,9 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
             .sort_by(|a, b| a.changed_file.cmp(&b.changed_file));
     }
     selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
-    warnings.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
+    warnings.sort_by(|a, b| {
+        (&a.file, a.line, &a.r#type, &a.message).cmp(&(&b.file, b.line, &b.r#type, &b.message))
+    });
 
     Ok(TestPlan {
         selected_tests,
@@ -249,6 +286,7 @@ fn push_registry_hints(
                         target_rel, registry_rel
                     ),
                     file: registry_rel,
+                    line: None,
                 });
             }
         }
@@ -261,7 +299,7 @@ fn push_warning(
     parent: &NodeId,
     kind: EdgeKind,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) {
     let (warn_type, message, file) = match kind {
         EdgeKind::DynamicImport => {
@@ -298,8 +336,9 @@ fn push_warning(
         r#type: warn_type.to_string(),
         message,
         file,
+        line: None,
     };
-    if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+    if warnings_seen.insert(warning_key(&warn)) {
         warnings.push(warn);
     }
 }

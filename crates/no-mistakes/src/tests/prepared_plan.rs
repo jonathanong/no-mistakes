@@ -168,12 +168,21 @@ impl PreparedTestPlanInputs {
         );
         let excluded_configs =
             framework_plan.excluded_config_paths(&root, &config, &root_visible_paths);
-        let mut graph_files = GraphFiles::from_files_excluding_indexable(
-            no_mistakes::codebase::ts_source::discover_files_from_visible(
-                &root,
-                &[],
-                &root_visible_paths,
-            ),
+        let graph_all_files = no_mistakes::codebase::ts_source::discover_files_from_visible(
+            &root,
+            &[],
+            &root_visible_paths,
+        );
+        let mut resource_candidates = visible_paths.tracked_paths_for(&root).as_ref().clone();
+        // The post-change snapshot cannot contain deleted tracked resources,
+        // but reverse impact still needs their phantom nodes. Reuse the diff
+        // inventory collected for this request; do not perform another walk.
+        resource_candidates.extend(collected.deleted.iter().cloned());
+        let mut graph_files = GraphFiles::from_files_with_resource_candidates_excluding_indexable(
+            graph_all_files.clone(),
+            // Preserve tracked runtime inputs under source-skipped directories
+            // such as `fixtures/`; they are resource targets, not parse roots.
+            resource_candidates,
             &excluded_configs,
         );
         for path in &collected.authoritative_files {

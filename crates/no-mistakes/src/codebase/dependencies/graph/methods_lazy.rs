@@ -1,4 +1,23 @@
 impl DepGraph {
+    /// Return dynamic resource calls that intentionally produced no graph edge.
+    pub fn resource_diagnostics(&self) -> &[ResourceGraphDiagnostic] {
+        &self.resource_diagnostics
+    }
+
+    /// Return every static call site that created the `consumer → resource`
+    /// edge, in deterministic call-site order.
+    pub fn resource_edge_details(
+        &self,
+        consumer: &Path,
+        resource: &Path,
+    ) -> Option<&[ResourceCallSite]> {
+        let key = (
+            crate::codebase::ts_resolver::normalize_path(consumer),
+            crate::codebase::ts_resolver::normalize_path(resource),
+        );
+        self.resource_edge_details.get(&key).map(Vec::as_slice)
+    }
+
     pub(crate) fn parse_error(&self, path: &Path) -> Option<&str> {
         self.parse_errors.get(path).map(String::as_str)
     }

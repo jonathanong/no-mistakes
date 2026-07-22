@@ -1,6 +1,6 @@
 use super::{domain, TsFactContext, TsFactMap, TsFactPlan, TsFileFacts};
 use crate::codebase::dependencies::extract::{
-    extract_import_facts_from_program_with_source, is_indexable,
+    extract_import_facts_from_program_with_source_and_resource_roots, is_indexable,
 };
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use rayon::prelude::*;
@@ -122,7 +122,16 @@ pub(crate) fn collect_file_facts_from_program(
     parse_error: Option<String>,
 ) -> TsFileFacts {
     let import_facts = if plan.imports || plan.function_calls {
-        extract_import_facts_from_program_with_source(program, source)
+        extract_import_facts_from_program_with_source_and_resource_roots(
+            program,
+            source,
+            plan.resources,
+        )
+    } else {
+        Default::default()
+    };
+    let resources = if plan.resources {
+        crate::codebase::ts_resources::extract(program, source)
     } else {
         Default::default()
     };
@@ -159,8 +168,12 @@ pub(crate) fn collect_file_facts_from_program(
         source: plan.source.then(|| source.to_owned()),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
+        resource_calls: resources.calls,
+        resource_diagnostics: resources.diagnostics,
         symbol_references: import_facts.symbol_references,
         exported_functions: import_facts.exported_functions,
+        exported_resource_roots: import_facts.exported_resource_roots,
+        exported_resource_scopes: import_facts.exported_resource_scopes,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols: symbols.as_deref().cloned(),

@@ -196,6 +196,7 @@ fn renders_empty_warnings_and_fallback() {
             r#type: "dynamic-import".to_string(),
             message: "uncertain".to_string(),
             file: "a.ts".to_string(),
+            line: None,
         }],
         fallback_triggered: true,
     };
@@ -387,6 +388,7 @@ fn dedupe_warnings_collapses_and_sorts() {
         r#type: "dynamic-import".to_string(),
         message: "x".to_string(),
         file: file.to_string(),
+        line: None,
     };
     // Two distinct warnings (out of order) plus a duplicate: the dup collapses
     // and the remainder is sorted, exercising the comparator.

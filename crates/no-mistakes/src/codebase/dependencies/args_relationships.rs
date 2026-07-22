@@ -29,6 +29,7 @@ pub enum RelationshipArg {
     Dotnet,
     Swift,
     Terraform,
+    Resource,
     All,
 }
 
@@ -55,6 +56,7 @@ impl RelationshipArg {
             RelationshipArg::Dotnet => "dotnet",
             RelationshipArg::Swift => "swift",
             RelationshipArg::Terraform => "terraform",
+            RelationshipArg::Resource => "resource",
             RelationshipArg::All => "all",
         }
     }
@@ -118,6 +120,7 @@ pub(crate) fn relationship_filter(
                 EdgeKind::TerraformModuleRef,
                 EdgeKind::TerraformOutputRef,
             ],
+            RelationshipArg::Resource => &[EdgeKind::Resource],
             RelationshipArg::All => {
                 set.extend(standard_relationship_edges());
                 &[]
@@ -163,6 +166,7 @@ fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
         EdgeKind::TerraformReference,
         EdgeKind::TerraformModuleRef,
         EdgeKind::TerraformOutputRef,
+        EdgeKind::Resource,
     ]
     .into_iter()
     .collect()

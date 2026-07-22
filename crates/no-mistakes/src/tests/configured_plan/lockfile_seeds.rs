@@ -95,6 +95,7 @@ pub(super) fn lockfile_seed_candidates(
                 changed_file: lockfile_rel.clone(),
                 path: node_chain,
                 via: via_strings,
+                via_details: Vec::new(),
             };
 
             let entry = candidates_map

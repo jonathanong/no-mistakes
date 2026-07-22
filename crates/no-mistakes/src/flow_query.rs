@@ -68,8 +68,14 @@ pub fn run(options: &FlowOptions) -> Result<FlowReport> {
     let root = root.canonicalize().unwrap_or(root);
     let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let root_visible_paths = visible_paths.paths_for(&root);
-    let graph_files = GraphFiles::from_files(
-        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths),
+    let graph_all_files =
+        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths);
+    let graph_files = GraphFiles::from_files_with_resource_candidates(
+        graph_all_files,
+        // Runtime resources may intentionally live under source-skipped
+        // directories such as `fixtures/`. Reuse the request snapshot's
+        // tracked inventory without another walk.
+        visible_paths.tracked_paths_for(&root).as_ref().clone(),
     );
     let tsconfig =
         resolve_tsconfig_from_visible(&root, options.tsconfig.as_deref(), &root_visible_paths)?;
@@ -172,6 +178,10 @@ include!("flow_query_traverse.rs");
 #[cfg(test)]
 #[path = "flow_query_tests.rs"]
 mod flow_query_tests;
+
+#[cfg(test)]
+#[path = "flow_query_resource_tests.rs"]
+mod flow_query_resource_tests;
 
 #[cfg(test)]
 #[path = "flow_query_timeout_tests.rs"]

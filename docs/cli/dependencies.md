@@ -8,7 +8,9 @@ no-mistakes dependencies src/api.mts --root . --format json
 
 Use this when an agent needs upstream context before editing: imports,
 workspace/package edges, routes, queues, tests, markdown links, CI, HTTP,
-process, asset, and React edges can all be included.
+process, asset, resource, and React edges can all be included. Use
+`--relationship resource` to restrict output to literal runtime filesystem
+reads, directory reads, and supported static glob matches.
 
 Use `--relationship route-import` when you need the conservative runtime module
 closure used by Playwright route analysis. It follows runtime static

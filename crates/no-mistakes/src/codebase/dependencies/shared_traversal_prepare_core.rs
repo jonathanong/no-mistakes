@@ -26,12 +26,22 @@ impl SharedTraversalContext {
         );
         let excluded_configs =
             framework_plan.excluded_config_paths(&root, &config, &root_visible_paths);
-        let graph_files = graph::GraphFiles::from_files_excluding_indexable(
-            crate::codebase::ts_source::discover_files_from_visible(
-                &root,
-                &[],
-                &root_visible_paths,
-            ),
+        let graph_all_files = crate::codebase::ts_source::discover_files_from_visible(
+            &root,
+            &[],
+            &root_visible_paths,
+        );
+        // Keep tracked runtime inputs that source discovery intentionally
+        // skips (for example `fixtures/schema.sql`). They are not added to
+        // the parse/import universe, only to resource-edge resolution.
+        let graph_resource_candidates = dataset
+            .visible_paths()
+            .tracked_paths_for(&root)
+            .as_ref()
+            .clone();
+        let graph_files = graph::GraphFiles::from_files_with_resource_candidates_excluding_indexable(
+            graph_all_files,
+            graph_resource_candidates,
             &excluded_configs,
         );
         let tsconfig = session

@@ -40,6 +40,8 @@ pub(crate) fn from_raw_maps(
         root,
         edges: edge_index_from_test_maps(typed_fwd, typed_rev),
         parse_errors: HashMap::new(),
+        resource_edge_details: HashMap::new(),
+        resource_diagnostics: Vec::new(),
     }
 }
 
@@ -49,6 +51,8 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
         root,
         edges: edge_index_from_test_maps(forward, reverse),
         parse_errors: HashMap::new(),
+        resource_edge_details: HashMap::new(),
+        resource_diagnostics: Vec::new(),
     }
 }
 

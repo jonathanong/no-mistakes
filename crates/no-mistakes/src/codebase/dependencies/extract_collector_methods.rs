@@ -1,4 +1,16 @@
 impl ImportCollector {
+    fn record_exported_resource_root(&mut self, name: &str) {
+        if self.collect_resource_roots {
+            self.exported_resource_roots.insert(name.to_string());
+        }
+    }
+
+    fn record_exported_resource_scope(&mut self, scope: String) {
+        if self.collect_resource_roots {
+            self.exported_resource_scopes.insert(scope);
+        }
+    }
+
     fn push(&mut self, specifier: &str, kind: ImportKind, byte_offset: usize) {
         self.push_with_side_effect(specifier, kind, byte_offset, false, false);
     }

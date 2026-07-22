@@ -2,6 +2,8 @@ pub struct DepGraph {
     root: PathBuf,
     edges: EdgeIndex<NodeId, EdgeKind>,
     parse_errors: HashMap<PathBuf, String>,
+    resource_edge_details: ResourceEdgeDetails,
+    resource_diagnostics: Vec<ResourceGraphDiagnostic>,
 }
 
 #[derive(Clone, Copy)]

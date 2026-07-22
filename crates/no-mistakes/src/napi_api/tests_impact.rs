@@ -1,3 +1,5 @@
+include!("tests_impact/resources.rs");
+
 #[test]
 fn tests_impact_json_returns_plan_for_file_entrypoint() {
     let root = fixture_root("tests-impact-symbol");
@@ -64,9 +66,7 @@ fn dependents_json_accepts_structured_symbol_file() {
     assert!(files
         .iter()
         .any(|file| file["file"] == "other.mts" && file["symbol"] == "parse"));
-    assert!(!files
-        .iter()
-        .any(|file| file["path"] == "service.test.mts"));
+    assert!(!files.iter().any(|file| file["path"] == "service.test.mts"));
 }
 
 #[test]

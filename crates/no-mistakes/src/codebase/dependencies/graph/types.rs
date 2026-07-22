@@ -95,6 +95,8 @@ pub enum EdgeKind {
     ProcessSpawn,
     /// Explicit relative import of a non-code asset such as CSS, JSON, image, or wasm.
     AssetImport,
+    /// Statically resolved runtime filesystem resource consumed by a TS/JS file.
+    Resource,
     /// React component render relationship: parent component file → rendered child component file.
     ReactRender,
     /// Playwright selector coverage: test file → app/component file matched by
@@ -127,25 +129,36 @@ pub enum EdgeKind {
 
 impl EdgeKind {
     pub fn as_str(&self) -> &'static str {
+        self.as_core_str().unwrap_or_else(|| self.as_domain_str())
+    }
+
+    fn as_core_str(&self) -> Option<&'static str> {
         match self {
-            EdgeKind::Import => "import",
-            EdgeKind::TypeImport => "type-import",
-            EdgeKind::DynamicImport => "dynamic-import",
-            EdgeKind::RouteImport => "route-import",
-            EdgeKind::Require => "require",
-            EdgeKind::TestOf => "test",
-            EdgeKind::RouteRef => "route",
-            EdgeKind::QueueEnqueue => "queue-enqueue",
-            EdgeKind::QueueWorker => "queue-worker",
-            EdgeKind::RouteTest => "route-test",
-            EdgeKind::Layout => "layout",
-            EdgeKind::MarkdownLink => "md",
-            EdgeKind::WorkspaceImport => "workspace",
-            EdgeKind::PackageDependency => "package",
-            EdgeKind::CiInvocation => "ci",
+            EdgeKind::Import => Some("import"),
+            EdgeKind::TypeImport => Some("type-import"),
+            EdgeKind::DynamicImport => Some("dynamic-import"),
+            EdgeKind::RouteImport => Some("route-import"),
+            EdgeKind::Require => Some("require"),
+            EdgeKind::TestOf => Some("test"),
+            EdgeKind::RouteRef => Some("route"),
+            EdgeKind::QueueEnqueue => Some("queue-enqueue"),
+            EdgeKind::QueueWorker => Some("queue-worker"),
+            EdgeKind::RouteTest => Some("route-test"),
+            EdgeKind::Layout => Some("layout"),
+            EdgeKind::MarkdownLink => Some("md"),
+            EdgeKind::WorkspaceImport => Some("workspace"),
+            EdgeKind::PackageDependency => Some("package"),
+            EdgeKind::CiInvocation => Some("ci"),
+            _ => None,
+        }
+    }
+
+    fn as_domain_str(&self) -> &'static str {
+        match self {
             EdgeKind::HttpCall => "http",
             EdgeKind::ProcessSpawn => "process",
             EdgeKind::AssetImport => "asset",
+            EdgeKind::Resource => "resource",
             EdgeKind::ReactRender => "react-render",
             EdgeKind::Selector => "selector",
             EdgeKind::SwiftImport => "swift-import",
@@ -157,6 +170,7 @@ impl EdgeKind {
             EdgeKind::TerraformReference => "terraform-ref",
             EdgeKind::TerraformModuleRef => "terraform-module",
             EdgeKind::TerraformOutputRef => "terraform-output",
+            _ => unreachable!("core edge kinds are handled before domain rendering"),
         }
     }
 }
@@ -176,6 +190,43 @@ type EdgeMap = HashMap<NodeId, Vec<(NodeId, EdgeKind)>>;
 
 // An edge in both directions: (from, to, kind).
 type Edge = (NodeId, NodeId, EdgeKind);
+
+/// Provenance for one statically resolved runtime-resource call.
+///
+/// The graph deliberately keeps this outside the generic adjacency index: the
+/// relationship remains a normal typed edge while callers that need debug or
+/// test-impact explanations can retrieve every call site that produced it.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ResourceCallSite {
+    pub call_kind: String,
+    /// One-based source line containing the call expression.
+    pub line: usize,
+}
+
+impl PartialOrd for ResourceCallSite {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for ResourceCallSite {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (self.line, &self.call_kind).cmp(&(other.line, &other.call_kind))
+    }
+}
+
+type ResourceEdgeDetails = HashMap<(PathBuf, PathBuf), Vec<ResourceCallSite>>;
+
+/// A dynamic runtime-resource call that deliberately did not create an edge.
+/// Kept alongside the canonical graph so impact rendering can surface only
+/// diagnostics that are relevant to a selected path.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ResourceGraphDiagnostic {
+    pub consumer: PathBuf,
+    pub kind: crate::codebase::ts_resources::ResourceDiagnosticKind,
+    /// One-based source line containing the dynamic call expression.
+    pub line: usize,
+}
 
 type ParsedImports<'a> = Vec<(
     &'a PathBuf,

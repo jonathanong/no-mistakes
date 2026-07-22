@@ -3,28 +3,75 @@ pub(crate) struct GraphFiles {
     indexable: Vec<PathBuf>,
     visible: HashSet<PathBuf>,
     canonical_visible: HashMap<PathBuf, PathBuf>,
+    /// The tracked (or non-Git fallback) files eligible for runtime resource
+    /// edges. This intentionally excludes explicit request roots and merely
+    /// visible ignored files.
+    resource_candidates: Vec<PathBuf>,
 }
 
 impl GraphFiles {
     pub(crate) fn discover(root: &Path) -> Self {
-        Self::from_files(crate::codebase::ts_source::discover_files(root, &[]))
+        // Keep the visible and tracked inventories from one discovery. In a
+        // Git worktree visible untracked files may participate in import
+        // resolution, but must not become implicit runtime-resource targets.
+        let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+        let all = crate::codebase::ts_source::discover_files_from_visible(
+            root,
+            &[],
+            &snapshot.paths_for(root),
+        );
+        Self::from_files_with_resource_candidates(
+            all.clone(),
+            // Resource candidates are deliberately derived before source
+            // discovery filters `fixtures`, `dist`, and similar directories.
+            // They are runtime inputs, not files to parse or resolve imports
+            // from, and remain subject to resource-target safety checks.
+            snapshot.tracked_paths_for(root).as_ref().clone(),
+        )
     }
 
     pub(crate) fn from_files(all: Vec<PathBuf>) -> Self {
-        Self::from_files_excluding_indexable(all, &HashSet::new())
+        let resource_candidates = all.clone();
+        Self::from_files_with_resource_candidates_excluding_indexable(
+            all,
+            resource_candidates,
+            &HashSet::new(),
+        )
     }
 
-    pub(crate) fn from_files_excluding_indexable(
+    /// Construct a graph universe with an explicit tracked-resource subset.
+    /// Callers that already hold a `VisiblePathSnapshot` must use this rather
+    /// than treating every visible path as tracked.
+    pub(crate) fn from_files_with_resource_candidates(
         all: Vec<PathBuf>,
+        resource_candidates: Vec<PathBuf>,
+    ) -> Self {
+        Self::from_files_with_resource_candidates_excluding_indexable(
+            all,
+            resource_candidates,
+            &HashSet::new(),
+        )
+    }
+
+    pub(crate) fn from_files_with_resource_candidates_excluding_indexable(
+        mut all: Vec<PathBuf>,
+        mut resource_candidates: Vec<PathBuf>,
         excluded_indexable: &HashSet<PathBuf>,
     ) -> Self {
-        let visible = all.iter().cloned().collect();
+        all.sort();
+        all.dedup();
+        let visible: HashSet<PathBuf> = all.iter().cloned().collect();
+        resource_candidates.sort();
+        resource_candidates.dedup();
         let canonical_visible = all
             .iter()
             .filter_map(|path| {
-                path.canonicalize()
-                    .ok()
-                    .map(|canonical| (crate::codebase::ts_resolver::normalize_path(&canonical), path.clone()))
+                path.canonicalize().ok().map(|canonical| {
+                    (
+                        crate::codebase::ts_resolver::normalize_path(&canonical),
+                        path.clone(),
+                    )
+                })
             })
             .collect();
         let indexable = all
@@ -37,6 +84,7 @@ impl GraphFiles {
             indexable,
             visible,
             canonical_visible,
+            resource_candidates,
         }
     }
 
@@ -94,4 +142,7 @@ impl GraphFiles {
         &self.visible
     }
 
+    pub(crate) fn resource_candidates(&self) -> &[PathBuf] {
+        &self.resource_candidates
+    }
 }

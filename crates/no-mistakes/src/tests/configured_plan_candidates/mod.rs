@@ -1,5 +1,8 @@
 use super::plan::{impact_reason_label, path_confidence, relative_path, slash_node_name};
-use super::{Confidence, ImpactReason, SelectedTest, Warning};
+use super::{
+    push_resource_diagnostics, warning_key, Confidence, ImpactReason, SelectedTest, Warning,
+    WarningKey,
+};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::schema::TestPlanGroupType;
@@ -74,7 +77,7 @@ pub(super) fn group_candidates(
     used: &HashSet<String>,
     hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
     match group {
         TestPlanGroupType::Direct => direct_candidates(root, changed_files, all_test_set, used),
@@ -113,6 +116,7 @@ fn direct_candidates(
                     changed_file: rel.clone(),
                     path: vec![rel],
                     via: vec!["self".to_string()],
+                    via_details: Vec::new(),
                 }],
             })
         })
@@ -130,7 +134,7 @@ fn graph_candidates(
     used: &HashSet<String>,
     hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
     let mut selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
     for changed in changed_files {
@@ -158,13 +162,16 @@ fn graph_candidates(
                 continue;
             }
             let reason = reason_from_path(
-                root,
                 &rel_changed,
                 &test_node,
                 &path_parents,
                 &edge_path,
-                warnings,
-                warnings_seen,
+                &mut ReasonContext {
+                    root,
+                    graph,
+                    warnings,
+                    warnings_seen,
+                },
             );
             let entry = selected
                 .entry(rel_test.clone())
@@ -243,6 +250,7 @@ fn sample_candidates(
                     changed_file: "*sample*".to_string(),
                     path: vec![rel],
                     via: vec!["sample".to_string()],
+                    via_details: Vec::new(),
                 }],
             })
         })
@@ -291,6 +299,7 @@ pub(super) fn selected_from_paths(
                     changed_file: changed.clone(),
                     path: vec![changed.clone(), rel],
                     via: vec![via.to_string()],
+                    via_details: Vec::new(),
                 }],
             }
         })
@@ -314,25 +323,47 @@ pub(super) fn merge_selected(existing: &mut SelectedTest, next: &SelectedTest) {
     existing.targets.sort();
 }
 
+struct ReasonContext<'a> {
+    root: &'a Path,
+    graph: &'a DepGraph,
+    warnings: &'a mut Vec<Warning>,
+    warnings_seen: &'a mut HashSet<WarningKey>,
+}
+
 fn reason_from_path(
-    root: &Path,
     rel_changed: &str,
     test_node: &NodeId,
     path_parents: &HashMap<NodeId, (NodeId, EdgeKind)>,
     edge_path: &[EdgeKind],
-    warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    context: &mut ReasonContext<'_>,
 ) -> ImpactReason {
+    let ReasonContext {
+        root,
+        graph,
+        warnings,
+        warnings_seen,
+    } = context;
     let mut node_chain = Vec::new();
+    let mut reverse_details = Vec::new();
     let mut curr = test_node.clone();
     node_chain.push(slash_node_name(&curr, root));
 
     while let Some((parent, kind)) = path_parents.get(&curr) {
+        if let Some(file) = curr.as_file() {
+            push_resource_diagnostics(graph, root, file, warnings, warnings_seen);
+        }
         node_chain.push(slash_node_name(parent, root));
+        reverse_details.push(crate::tests::plan::resource_edge_detail(
+            graph, &curr, parent, *kind, root,
+        ));
         push_edge_warning(root, &curr, parent, *kind, warnings, warnings_seen);
         curr = parent.clone();
     }
+    if let Some(file) = curr.as_file() {
+        push_resource_diagnostics(graph, root, file, warnings, warnings_seen);
+    }
     node_chain.reverse();
+    reverse_details.reverse();
 
     ImpactReason {
         changed_file: rel_changed.to_string(),
@@ -341,6 +372,7 @@ fn reason_from_path(
             .iter()
             .map(|kind| impact_reason_label(*kind).to_string())
             .collect(),
+        via_details: reverse_details,
     }
 }
 
@@ -350,7 +382,7 @@ fn push_edge_warning(
     parent: &NodeId,
     kind: EdgeKind,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) {
     let (r#type, message, file) = match kind {
         EdgeKind::DynamicImport => {
@@ -387,8 +419,9 @@ fn push_edge_warning(
         r#type: r#type.to_string(),
         message,
         file,
+        line: None,
     };
-    if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+    if warnings_seen.insert(warning_key(&warn)) {
         warnings.push(warn);
     }
 }

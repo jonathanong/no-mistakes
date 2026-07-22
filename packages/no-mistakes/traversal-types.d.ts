@@ -19,6 +19,7 @@ export type Relationship =
   | "dotnet"
   | "swift"
   | "terraform"
+  | "resource"
   | "all";
 
 export interface TraverseOptions {

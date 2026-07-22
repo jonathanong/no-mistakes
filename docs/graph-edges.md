@@ -24,6 +24,7 @@ all` output.
 | `workspace` | `WorkspaceImport` | `workspace` | TS/JS file -> workspace package entry/export/import target | [`cross-boundary-monorepo`](../test-cases/codebase-analysis/cross-boundary-monorepo), [`graph-missing-edges`](../test-cases/codebase-analysis/graph-missing-edges) |
 | `package` | `PackageDependency` | `package` | `package.json` -> declared workspace package entry or external module node | [`graph-modules`](../test-cases/codebase-analysis/graph-modules) |
 | `asset` | `AssetImport` | `asset` | TS/JS file -> explicit relative non-code asset import | [`graph-missing-edges/packages/app/src/entry.mts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/app/src/entry.mts) |
+| `resource` | `Resource` | `resource` | TS/JS consumer -> tracked runtime filesystem resource | fixture-backed resource-impact tests |
 | `test` | `TestOf` | `test` | test file -> corresponding source file | [`codebase-intel/packages/api/src/index.test.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/index.test.mts) |
 | `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx) |
 | `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts) |
@@ -68,6 +69,7 @@ all` output.
 | `http` | `http` |
 | `process` | `process` |
 | `asset` | `asset` |
+| `resource` | `resource` |
 | `react` | `react-render` |
 | `dotnet` | `dotnet-using`, `dotnet-ref`, `dotnet-project` |
 | `swift` | `swift-import`, `swift-ref`, `swift-package` |
@@ -144,6 +146,24 @@ await queue.add(jobName, payload);
 new Worker(prefix + queueName, processor);
 ```
 
+Literal runtime filesystem access produces `resource` edges. Plain relative
+paths resolve from the analysis root, while `new URL("./schema.sql",
+import.meta.url)` resolves from the calling module. `readFile`, `readdir`, and
+supported `glob` package calls only connect files already tracked by the
+prepared repository inventory; the analyzer never executes application code or
+walks a directory for each call.
+
+```ts
+import { readFileSync } from "node:fs";
+const schema = readFileSync("db/schema.sql", "utf8");
+```
+
+Computed paths, patterns, or cwd values intentionally produce no edge. Test
+planning reports a source-location warning (`dynamic-resource-path`,
+`dynamic-resource-pattern`, or `dynamic-resource-cwd`) when that call is on a
+selected impact path; configured triggers remain the explicit way to widen
+dynamic cases.
+
 Playwright navigation paths are an exception. An unresolved interpolation in a
 navigated path stands in for "any single value", so it is treated as a wildcard
 matching one dynamic route segment and still produces a `route-test` edge:
@@ -180,6 +200,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
 - `route-import` deliberately does not apply that function-reachability pruning.
   It remains literal-only, so computed dynamic imports still require an `rg`
   fallback.
+- `resource` edges are literal-only. Files outside the tracked inventory,
+  untracked/ignored files, and symlinks resolving outside the analysis root are
+  excluded. `readdir` covers immediate tracked children; glob support is a
+  static-pattern heuristic and does not execute glob libraries.
 
 
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse
