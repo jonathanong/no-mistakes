@@ -1,6 +1,7 @@
 use crate::tests::{
-    push_resource_diagnostics, warning_key, Confidence, ImpactEdgeDetail, ImpactReason, PlanArgs,
-    PlanFormat, ResourceCallSite, SelectedTest, TestPlan, Warning, WarningKey,
+    push_resource_diagnostics, via_details_from_edges, warning_key, Confidence, ImpactEdgeDetail,
+    ImpactReason, PlanArgs, PlanFormat, ResourceCallSite, SelectedTest, TestPlan, Warning,
+    WarningKey,
 };
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
@@ -119,6 +120,7 @@ pub(crate) fn generate_plan_with_prepared(
                     path: vec![relative_changed.clone(), rel_test],
                     via: vec!["global configuration".to_string()],
                     via_details: Vec::new(),
+                    via_details: None,
                 }],
             });
         }
@@ -176,6 +178,7 @@ pub(crate) fn generate_plan_with_prepared(
                 path: vec![rel_changed.clone()],
                 via: vec!["self".to_string()],
                 via_details: Vec::new(),
+                via_details: None,
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -283,6 +286,7 @@ pub(crate) fn generate_plan_with_prepared(
                     path: node_chain,
                     via: via_strings,
                     via_details: reverse_details,
+                    via_details: via_details_from_edges(&edge_path),
                 };
 
                 let entry = selected_map
@@ -366,6 +370,7 @@ pub(crate) fn generate_plan_with_prepared(
                 path: node_chain,
                 via: via_strings,
                 via_details: Vec::new(),
+                via_details: via_details_from_edges(&edge_path),
             };
 
             let entry = selected_map
@@ -408,6 +413,7 @@ pub(crate) fn generate_plan_with_prepared(
                         path: vec![file.clone(), rel_test],
                         via: vec!["transitive dependency".to_string()],
                         via_details: Vec::new(),
+                        via_details: None,
                     }],
                 }
             })

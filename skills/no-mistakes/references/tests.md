@@ -84,6 +84,22 @@ Node API: `testsPlan(options)`.
 In a TypeScript/JavaScript workspace, omit `tsconfig` so test impact follows
 the config owning each importing file. Passing `tsconfig` deliberately forces a
 single config for the whole plan.
+### Vitest setup dependency tracing
+
+`tests plan vitest` and `testsPlan()` statically trace each project's effective
+`setupFiles` and `globalSetup`, including their ordinary import/re-export
+closure. A changed setup dependency selects only tests owned by that Vitest
+project. Project fields inherit a root field when absent; explicit values
+replace it and `[]` clears it.
+
+Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
+`vitest-setup-unresolved` warnings. If relevant, planning safely selects the
+known owner scope (or the discovered Vitest framework set if no owner is known)
+and sets `fallback_triggered` without relying on `globalConfigFallback`.
+
+Resolved setup edges use `via: ["vitest-setup"]`; optional aligned
+`via_details` records `"setupFiles"` or `"globalSetup"`. `tests why` returns
+the same value in `via_detail`, and `tests graph` exposes `detail`.
 
 ## `tests why`
 

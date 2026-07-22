@@ -1,0 +1,65 @@
+import { defineConfig } from 'vitest/config'
+import { dynamicSetup } from './config/setup-selector'
+import { importedDynamicSetup } from './config/dynamic-wrapper'
+import importedProject from './vitest.setup-imported'
+
+const localDynamicSetup = () => importedDynamicSetup()
+
+export default defineConfig({
+  test: {
+    setupFiles: './setup/root.ts',
+    globalSetup: './setup/global.mts',
+    projects: [
+      {
+        test: {
+          name: 'inherits',
+          root: './inherits',
+          include: ['**/*.test.ts'],
+          // Keep unsafe setup declarations project-scoped so resolved setup
+          // changes can prove exact ownership without triggering this fallback.
+          setupFiles: ['./setup/root.ts', dynamicSetup, './setup/missing.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'override',
+          include: ['override/**/*.test.ts'],
+          setupFiles: './setup/override.js',
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'cleared',
+          include: ['cleared/**/*.test.ts'],
+          setupFiles: [],
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          // This project intentionally has no matching test. Its known owner
+          // must not widen an unsafe setup fallback to unrelated projects.
+          name: 'empty-owner',
+          root: './empty-owner',
+          include: ['**/*.test.ts'],
+          setupFiles: dynamicSetup,
+        },
+      },
+      {
+        test: {
+          name: 'dynamic-closure',
+          root: './closure-owner',
+          include: ['**/*.test.ts'],
+          // The transitive helper is outside this project root. Keep this
+          // dynamic declaration so impact fallback must follow its closure.
+          setupFiles: localDynamicSetup,
+          globalSetup: [],
+        },
+      },
+      importedProject,
+      './vitest.string-project.ts',
+      './packages/foo/vitest.project.ts',
+    ],
+  },
+})

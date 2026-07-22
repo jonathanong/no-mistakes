@@ -158,6 +158,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
         scope: Some("tests".to_string()),
         include: vec!["tests/**/*.test.ts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     };
     let parsed = ParsedRunnerConfigs::with_files(BTreeMap::from([(
         config_path.clone(),

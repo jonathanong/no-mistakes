@@ -178,6 +178,18 @@ pub(crate) fn push_resource_diagnostics(
     }
 }
 
+/// Keep optional edge provenance aligned with the public `via` path.  Omit
+/// the field completely for ordinary paths so saved plan JSON remains stable.
+pub(crate) fn via_details_from_edges(
+    edges: &[no_mistakes::codebase::dependencies::graph::EdgeKind],
+) -> Option<Vec<Option<String>>> {
+    let details: Vec<Option<String>> = edges
+        .iter()
+        .map(|edge| edge.detail().map(str::to_owned))
+        .collect();
+    details.iter().any(Option::is_some).then_some(details)
+}
+
 pub fn run(args: TestsArgs) -> Result<ExitCode> {
     match args.command {
         TestsCommand::Plan(sub_args) => plan::run(*sub_args),

@@ -71,6 +71,7 @@ fn vitest_explicit_project_matches_playwright_owned_file() {
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
 
     let discovered = discover_from_projects(&root, &config, TestRunner::Vitest, projects).unwrap();
@@ -94,6 +95,7 @@ fn target_metadata_uses_executable_project_name_only() {
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
 
     let discovered =

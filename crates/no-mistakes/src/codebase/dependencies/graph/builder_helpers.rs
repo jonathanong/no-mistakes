@@ -133,7 +133,7 @@ fn merge_terraform_edges(
 fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
     // Sort adjacency lists for deterministic BFS output.
     for adj in forward.values_mut().chain(reverse.values_mut()) {
-        adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), edge_kind_rank(*k)));
+        adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), k.sort_key()));
         adj.dedup();
     }
 }

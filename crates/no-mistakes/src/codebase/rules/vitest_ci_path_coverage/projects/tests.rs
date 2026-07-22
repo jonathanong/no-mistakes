@@ -43,6 +43,7 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
         scope: None,
         include: vec!["./src/**/*.test.ts".to_string()],
         exclude: vec!["./src/generated/**".to_string()],
+        vitest_setup: Vec::new(),
     };
     assert_eq!(project_name(&project), "default");
     assert_eq!(

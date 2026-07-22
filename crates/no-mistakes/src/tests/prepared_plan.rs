@@ -359,7 +359,7 @@ impl PreparedTestPlanRequest {
                     ));
                     Box::new(facts)
                 };
-            DepGraph::build_with_plan_files_prepared_config_and_all_facts(
+            let graph = DepGraph::build_with_plan_files_prepared_config_and_all_facts(
                 PreparedGraphBuild {
                     root: &self.root,
                     tsconfig: &self.tsconfig,
@@ -375,7 +375,11 @@ impl PreparedTestPlanRequest {
                     visible_paths: None,
                 },
             )
-            .map_err(|error| format!("{error:#}"))
+            .map_err(|error| format!("{error:#}"))?;
+            let graph = graph.with_vitest_setup_projects(
+                self.prepared_test_projects.vitest_setup_projects(),
+            );
+            Ok(graph)
         })
             .as_ref()
             .map_err(|error| anyhow::Error::msg(error.clone()))
@@ -387,6 +391,16 @@ impl PreparedTestPlanRequest {
 
     pub(crate) fn graph_build_count(&self) -> usize {
         self.graph_builds.load(Ordering::Relaxed)
+    }
+
+    /// Parsed Vitest project metadata from the request's single runner-config
+    /// pass. Callers use this for conservative setup diagnostics and must not
+    /// reparse configuration when Vitest was not requested.
+    pub(crate) fn vitest_projects(
+        &self,
+    ) -> Option<&[no_mistakes::integration_tests::types::ConfigProject]> {
+        self.prepared_test_projects
+            .prepared_projects(TestRunner::Vitest)
     }
 }
 

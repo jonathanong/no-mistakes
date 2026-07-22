@@ -1,10 +1,10 @@
 use super::shared;
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::integration_tests::project_config::prefix_globs;
-use crate::integration_tests::types::ConfigProject;
+use crate::integration_tests::types::{ConfigProject, VitestSetupDependency};
 use anyhow::Result;
 use oxc_ast::ast::Program;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod project_arrays;
 #[cfg(test)]
@@ -20,6 +20,12 @@ pub(super) struct Options {
     pub(super) root: Option<String>,
     pub(super) include: Option<Vec<String>>,
     pub(super) exclude: Option<Vec<String>>,
+    pub(super) setup_files: Option<Vec<VitestSetupDependency>>,
+    pub(super) global_setup: Option<Vec<VitestSetupDependency>>,
+    /// A project config named by `test.projects` is a standalone config file.
+    /// Its relative settings are therefore based on that file, not the
+    /// aggregate config that happened to reference it.
+    pub(super) config_base: Option<PathBuf>,
 }
 
 pub(in crate::integration_tests) fn parse_program_with_resolver(
@@ -39,7 +45,7 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
         project_arrays::project_options(program, root_object, source, path, root, resolver)?;
     let mut projects = Vec::new();
     if project_options.is_empty() {
-        projects.push(to_project(config_dir, root, root_options));
+        projects.push(to_project(config_dir, root, root_options, resolver));
         return Ok(projects);
     }
 
@@ -48,14 +54,21 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
             config_dir,
             root,
             merge_options(&root_options, project_options),
+            resolver,
         ));
     }
     Ok(projects)
 }
 
-fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject {
+fn to_project(
+    config_dir: &Path,
+    root: &Path,
+    mut options: Options,
+    resolver: &dyn ImportResolution,
+) -> ConfigProject {
+    let config_dir = options.config_base.as_deref().unwrap_or(config_dir);
     let include = options.include.unwrap_or_else(default_include);
-    let config_dir = options
+    let project_root = options
         .root
         .as_deref()
         .map(|project_root| {
@@ -67,16 +80,50 @@ fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject
             }
         })
         .unwrap_or_else(|| config_dir.to_path_buf());
+    let project_root = crate::codebase::ts_resolver::normalize_path(&project_root);
+    resolve_setup_dependencies(
+        options
+            .setup_files
+            .iter_mut()
+            .chain(options.global_setup.iter_mut())
+            .flatten(),
+        &project_root,
+        resolver,
+    );
     ConfigProject {
         config: None,
         policy_name: options.name.clone(),
         runner_project_arg: options.name,
         scope: Some(crate::codebase::ts_source::relative_slash_path(
             root,
-            &config_dir,
+            &project_root,
         )),
-        include: prefix_globs(root, &config_dir, &include),
-        exclude: prefix_globs(root, &config_dir, &options.exclude.unwrap_or_default()),
+        include: prefix_globs(root, &project_root, &include),
+        exclude: prefix_globs(root, &project_root, &options.exclude.unwrap_or_default()),
+        vitest_setup: options
+            .setup_files
+            .into_iter()
+            .flatten()
+            .chain(options.global_setup.into_iter().flatten())
+            .collect(),
+    }
+}
+
+fn resolve_setup_dependencies<'a>(
+    dependencies: impl Iterator<Item = &'a mut VitestSetupDependency>,
+    project_root: &Path,
+    resolver: &dyn ImportResolution,
+) {
+    // `ImportResolver` takes an importing file, while Vitest resolves these
+    // fields from the effective project root. A stable synthetic filename
+    // makes its parent exactly that root without reading or executing config.
+    let resolution_source = project_root.join(".no-mistakes-vitest-setup.ts");
+    for dependency in dependencies {
+        dependency.resolution_base = project_root.to_path_buf();
+        dependency.resolved_path = dependency
+            .specifier
+            .as_deref()
+            .and_then(|specifier| resolver.resolve(specifier, &resolution_source));
     }
 }
 
@@ -86,6 +133,9 @@ fn merge_options(root: &Options, project: Options) -> Options {
         root: project.root.or_else(|| root.root.clone()),
         include: project.include.or_else(|| root.include.clone()),
         exclude: combine(root.exclude.clone(), project.exclude),
+        setup_files: project.setup_files.or_else(|| root.setup_files.clone()),
+        global_setup: project.global_setup.or_else(|| root.global_setup.clone()),
+        config_base: project.config_base.or_else(|| root.config_base.clone()),
     }
 }
 

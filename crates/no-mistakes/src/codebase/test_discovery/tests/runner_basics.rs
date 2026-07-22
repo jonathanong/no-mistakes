@@ -137,6 +137,7 @@ fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
     let discovered = discover_from_projects(&root, &config, TestRunner::Vitest, projects).unwrap();
     let rel_tests: Vec<String> = discovered

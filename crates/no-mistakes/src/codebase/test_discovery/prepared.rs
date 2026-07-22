@@ -204,6 +204,17 @@ impl PreparedTestProjects {
         &self.graph_facts
     }
 
+    /// Parsed runner projects retained for request-scoped graph features.
+    /// Callers must not fall back to reparsing configuration when this returns
+    /// `None`; the runner was simply not requested for this invocation.
+    #[doc(hidden)]
+    pub(crate) fn prepared_projects(&self, runner: TestRunner) -> Option<&[ConfigProject]> {
+        self.projects
+            .get(&runner)
+            .and_then(|projects| projects.as_ref().ok())
+            .map(Vec::as_slice)
+    }
+
     pub(crate) fn dotnet_facts(&self) -> Option<&crate::codebase::dotnet::DotnetFactMap> {
         self.dotnet_facts.as_ref()
     }

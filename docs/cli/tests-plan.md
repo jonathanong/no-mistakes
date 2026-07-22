@@ -110,6 +110,25 @@ edges. JSON reasons expose call-site provenance in optional `via_details`,
 aligned with `via`; non-JSON formats remain test-only. Dynamic paths, glob
 patterns, and cwd values are reported as warnings rather than treated as a
 global fallback.
+Vitest `setupFiles` and `globalSetup` are included in the test dependency
+graph automatically. A change to either configured module, or to a static
+import/re-export reachable from one, selects only the tests owned by that
+Vitest project. Root setup fields apply to projects that do not explicitly set
+that field; an explicit project value replaces the root value and `[]` clears
+it.
+
+Setup values are extracted statically from string and array forms. Dynamic
+expressions and unresolved literal modules produce a JSON warning with the
+declaring config, field, and project. When such a declaration is relevant, the
+plan conservatively selects the affected owner scope (or the discovered Vitest
+framework set when ownership cannot be determined) and sets
+`fallback_triggered`; this safety fallback does not require
+`--global-config-fallback`.
+
+Resolved paths use `via: ["vitest-setup"]`. JSON may also contain the optional
+aligned `via_details` array; its `"setupFiles"` or `"globalSetup"` entry names
+the setup field responsible for that edge. `tests why` and `tests graph` expose
+the same detail.
 
 `dotnet` plans require configured `.csproj` or `.sln` paths. They select
 changed C# test files directly and select dependent C# tests through namespace

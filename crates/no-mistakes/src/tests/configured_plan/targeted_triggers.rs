@@ -142,6 +142,7 @@ pub(super) fn targeted_dependency_candidates(
                     path: vec![changed_file, relative_path(root, test_path)],
                     via: vec!["configured-trigger".to_string()],
                     via_details: Vec::new(),
+                    via_details: Some(vec![None]),
                 }
             })
             .collect();

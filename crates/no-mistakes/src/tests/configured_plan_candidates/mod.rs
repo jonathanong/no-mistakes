@@ -3,6 +3,7 @@ use super::{
     push_resource_diagnostics, warning_key, Confidence, ImpactReason, SelectedTest, Warning,
     WarningKey,
 };
+use super::{via_details_from_edges, Confidence, ImpactReason, SelectedTest, Warning};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::schema::TestPlanGroupType;
@@ -117,6 +118,7 @@ fn direct_candidates(
                     path: vec![rel],
                     via: vec!["self".to_string()],
                     via_details: Vec::new(),
+                    via_details: None,
                 }],
             })
         })
@@ -251,6 +253,7 @@ fn sample_candidates(
                     path: vec![rel],
                     via: vec!["sample".to_string()],
                     via_details: Vec::new(),
+                    via_details: None,
                 }],
             })
         })
@@ -300,6 +303,7 @@ pub(super) fn selected_from_paths(
                     path: vec![changed.clone(), rel],
                     via: vec![via.to_string()],
                     via_details: Vec::new(),
+                    via_details: None,
                 }],
             }
         })
@@ -373,6 +377,7 @@ fn reason_from_path(
             .map(|kind| impact_reason_label(*kind).to_string())
             .collect(),
         via_details: reverse_details,
+        via_details: via_details_from_edges(edge_path),
     }
 }
 

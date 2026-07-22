@@ -4,6 +4,205 @@ use no_mistakes::config::v2::schema::{
     TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 
+fn vitest_setup_args(root: PathBuf, changed_file: Vec<PathBuf>) -> PlanArgs {
+    PlanArgs {
+        framework: Some(TestFramework::Vitest),
+        root,
+        config: None,
+        tsconfig: None,
+        base: None,
+        head: None,
+        from_git_diff: None,
+        changed_file,
+        changed_files: None,
+        diff: None,
+        diff_stdin: false,
+        diff_command: None,
+        entrypoints: Vec::new(),
+        entrypoint_symbols: Vec::new(),
+        include_symbols: false,
+        diff_content: None,
+        environment: "pre-push".to_string(),
+        limit_percent: None,
+        limit_files: None,
+        global_config_fallback: Some(false),
+        format: None,
+        json: false,
+    }
+}
+
+fn vitest_setup_fixture() -> (tempfile::TempDir, PathBuf) {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    (fixture, root)
+}
+
+#[test]
+fn vitest_setup_transitive_dependency_selects_only_the_owning_project() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut args = vitest_setup_args(root.clone(), vec![root.join("setup/resolved-helper.ts")]);
+    args.config = Some(root.join("resolved.no-mistakes.yml"));
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["resolved/resolved.test.ts"]
+    );
+    assert!(!plan.fallback_triggered, "{plan:#?}");
+    let reason = &plan.selected_tests[0].reasons[0];
+    assert_eq!(reason.via, ["dependency", "vitest-setup"]);
+    assert_eq!(
+        reason.via_details,
+        Some(vec![None, Some("setupFiles".to_string())])
+    );
+}
+
+#[test]
+fn dynamic_vitest_setup_uses_owner_scoped_fallback_without_global_opt_in() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
+        root.clone(),
+        vec![root.join("inherits/dynamic-only.ts")],
+    ))
+    .unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["inherits/inherited.test.ts"]
+    );
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan
+        .fallback_reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("owning project")));
+    assert!(plan
+        .warnings
+        .iter()
+        .any(|warning| warning.r#type == "vitest-setup-dynamic"));
+    assert!(plan
+        .warnings
+        .iter()
+        .any(|warning| warning.r#type == "vitest-setup-unresolved"));
+}
+
+#[test]
+fn dynamic_vitest_setup_import_helper_outside_owner_scope_uses_owner_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
+        root.clone(),
+        vec![root.join("config/setup-selector.ts")],
+    ))
+    .unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["inherits/inherited.test.ts"]
+    );
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan
+        .fallback_reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("owning project")));
+}
+
+#[test]
+fn dynamic_vitest_setup_transitive_helper_changes_and_deletions_use_owner_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let helper = root.join("config/transitive-dynamic-helper.ts");
+    let changed =
+        crate::tests::plan::generate_plan(&vitest_setup_args(root.clone(), vec![helper.clone()]))
+            .unwrap();
+
+    let mut deleted_args = vitest_setup_args(root.clone(), Vec::new());
+    deleted_args.diff_content = Some(
+        "diff --git a/config/transitive-dynamic-helper.ts b/config/transitive-dynamic-helper.ts\n\
+--- a/config/transitive-dynamic-helper.ts\n\
++++ /dev/null\n\
+@@ -1 +0,0 @@\n\
+-export const transitiveDynamicSetup = () => process.env.SETUP_FILE\n"
+            .to_string(),
+    );
+    let deleted = crate::tests::plan::generate_plan(&deleted_args).unwrap();
+
+    for plan in [changed, deleted] {
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            ["closure-owner/closure.test.ts"],
+            "{plan:#?}"
+        );
+        assert!(plan.fallback_triggered, "{plan:#?}");
+        assert!(plan
+            .fallback_reason
+            .as_deref()
+            .is_some_and(|reason| reason.contains("owning project")));
+    }
+}
+
+#[test]
+fn dynamic_vitest_setup_with_known_empty_owner_never_widens_to_framework() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
+        root.clone(),
+        vec![root.join("empty-owner/source.ts")],
+    ))
+    .unwrap();
+
+    assert!(plan.selected_tests.is_empty(), "{plan:#?}");
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan
+        .fallback_reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("owning project")));
+    assert!(!plan
+        .fallback_reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("discovered Vitest tests")));
+}
+
+#[test]
+fn unresolved_vitest_setup_deleted_candidate_uses_owner_scoped_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut args = vitest_setup_args(root.clone(), Vec::new());
+    args.diff_content = Some(
+        "diff --git a/inherits/setup/missing.ts b/inherits/setup/missing.ts\n\
+--- a/inherits/setup/missing.ts\n\
++++ /dev/null\n\
+@@ -1 +0,0 @@\n\
+-export const removed = true\n"
+            .to_string(),
+    );
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["inherits/inherited.test.ts"]
+    );
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan.warnings.iter().any(|warning| {
+        warning.r#type == "vitest-setup-unresolved"
+            && warning.message.contains("`./setup/missing.ts`")
+    }));
+}
+
 #[test]
 fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

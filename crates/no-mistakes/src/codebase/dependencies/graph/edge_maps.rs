@@ -50,24 +50,24 @@ fn edge_index_from_maps(mut forward: EdgeMap, mut reverse: EdgeMap) -> EdgeIndex
             &left.from,
             node_sort_key(&left.to),
             &left.to,
-            edge_kind_rank(left.kind),
+            left.kind.sort_key(),
         )
             .cmp(&(
                 node_sort_key(&right.from),
                 &right.from,
                 node_sort_key(&right.to),
                 &right.to,
-                edge_kind_rank(right.kind),
+                right.kind.sort_key(),
             ))
     })
 }
 
 fn sort_edge_index_adjacency(index: &mut EdgeIndex<NodeId, EdgeKind>) {
     index.sort_adjacency_by(|(left_node, left_kind), (right_node, right_kind)| {
-        (node_sort_key(left_node), left_node, edge_kind_rank(*left_kind)).cmp(&(
+        (node_sort_key(left_node), left_node, left_kind.sort_key()).cmp(&(
             node_sort_key(right_node),
             right_node,
-            edge_kind_rank(*right_kind),
+            right_kind.sort_key(),
         ))
     });
 }

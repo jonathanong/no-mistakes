@@ -25,6 +25,8 @@ pub struct GraphEdgeJson {
     pub via: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<ImpactEdgeDetail>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
 }
 
 pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
@@ -100,6 +102,7 @@ pub(crate) fn graph_mermaid(plan: &TestPlan) -> Result<String> {
 struct GraphParts {
     sorted_nodes: Vec<String>,
     sorted_edges: Vec<(String, String, String, Option<ImpactEdgeDetail>)>,
+    sorted_edges: Vec<(String, String, String, Option<String>)>,
     changed_files: HashSet<String>,
     test_files: HashSet<String>,
 }
@@ -110,6 +113,7 @@ fn graph_parts(plan: &TestPlan) -> GraphParts {
     let mut test_files = HashSet::new();
     let mut all_nodes = HashSet::new();
     let mut all_edges = BTreeMap::new(); // (from, to, via) -> debug provenance
+    let mut all_edges = HashSet::new(); // (from, to, via, detail)
 
     for test in &plan.selected_tests {
         test_files.insert(test.test_file.clone());
@@ -132,6 +136,13 @@ fn graph_parts(plan: &TestPlan) -> GraphParts {
                         .entry((from, to, via))
                         .and_modify(|existing| merge_edge_detail(existing, &detail))
                         .or_insert(detail);
+                    let detail = reason
+                        .via_details
+                        .as_ref()
+                        .and_then(|details| details.get(i))
+                        .cloned()
+                        .flatten();
+                    all_edges.insert((from, to, via, detail));
                 }
             }
         }
@@ -144,6 +155,9 @@ fn graph_parts(plan: &TestPlan) -> GraphParts {
         .into_iter()
         .map(|((from, to, via), detail)| (from, to, via, detail))
         .collect();
+    let mut sorted_edges: Vec<(String, String, String, Option<String>)> =
+        all_edges.into_iter().collect();
+    sorted_edges.sort_by(|a, b| (&a.0, &a.1, &a.2, &a.3).cmp(&(&b.0, &b.1, &b.2, &b.3)));
     GraphParts {
         sorted_nodes,
         sorted_edges,
@@ -191,7 +205,7 @@ fn escape_mermaid_label(s: &str) -> String {
 
 fn render_mermaid(
     nodes: &[String],
-    edges: &[(String, String, String)],
+    edges: &[(String, String, String, Option<String>)],
     changed: &HashSet<String>,
     tests: &HashSet<String>,
 ) -> String {
@@ -221,19 +235,26 @@ fn render_mermaid(
 
     if !edges.is_empty() {
         out.push('\n');
-        for (from, to, via) in edges {
+        for (from, to, via, detail) in edges {
             let from_id = node_ids.get(from).cloned().unwrap_or_else(|| from.clone());
             let to_id = node_ids.get(to).cloned().unwrap_or_else(|| to.clone());
             out.push_str(&format!(
                 "    {} -->|{}| {}\n",
                 from_id,
-                escape_mermaid_label(via),
+                escape_mermaid_label(&edge_label(via, detail.as_deref())),
                 to_id
             ));
         }
     }
 
     out
+}
+
+fn edge_label(via: &str, detail: Option<&str>) -> String {
+    match detail {
+        Some(detail) => format!("{} ({})", via, detail),
+        None => via.to_string(),
+    }
 }
 
 #[cfg(test)]

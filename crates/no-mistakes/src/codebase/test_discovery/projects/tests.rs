@@ -36,6 +36,7 @@ fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProje
         scope: None,
         include: vec![include.to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }
 }
 

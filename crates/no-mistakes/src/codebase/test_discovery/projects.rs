@@ -108,7 +108,9 @@ pub(super) fn explicit_policy_projects(
     let (configs, policies) = runner_config(config, runner);
     policies
         .iter()
-        .filter_map(|(name, policy)| configured_project(root, name, policy, single_config(configs)))
+        .filter_map(|(name, policy)| {
+            configured_project(root, name, policy, single_config(configs), Vec::new())
+        })
         .collect()
 }
 
@@ -122,16 +124,18 @@ fn apply_explicit_policy_projects(
         let matching_configs = projects
             .iter()
             .filter(|candidate| candidate.policy_name.as_deref() == Some(name))
-            .map(|candidate| candidate.config.clone())
+            .map(|candidate| (candidate.config.clone(), candidate.vitest_setup.clone()))
             .collect::<Vec<_>>();
         let configs = if matching_configs.is_empty() {
-            vec![single_config(configs)]
+            vec![(single_config(configs), Vec::new())]
         } else {
             matching_configs
         };
         let configured_projects = configs
             .into_iter()
-            .filter_map(|config| configured_project(root, name, policy, config))
+            .filter_map(|(config, vitest_setup)| {
+                configured_project(root, name, policy, config, vitest_setup)
+            })
             .collect::<Vec<_>>();
         if !configured_projects.is_empty() {
             projects.retain(|candidate| candidate.policy_name.as_deref() != Some(name));
@@ -173,6 +177,7 @@ fn configured_project(
     project_name: &str,
     policy: &TestProjectPolicy,
     config: Option<String>,
+    vitest_setup: Vec<crate::integration_tests::types::VitestSetupDependency>,
 ) -> Option<ConfigProject> {
     if policy.include.is_empty() {
         return None;
@@ -184,5 +189,6 @@ fn configured_project(
         scope: None,
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
+        vitest_setup,
     })
 }

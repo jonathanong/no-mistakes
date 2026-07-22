@@ -1,5 +1,5 @@
 use oxc_ast::ast::{ImportDeclarationSpecifier, Program, Statement};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone)]
 pub(super) struct ImportBinding {
@@ -44,4 +44,19 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
         }
     }
     bindings
+}
+
+/// Runtime import sources, including side-effect imports. Dynamic Vitest setup
+/// values use this for a bounded helper-module closure.
+pub(super) fn import_sources(program: &Program<'_>) -> BTreeSet<String> {
+    program
+        .body
+        .iter()
+        .filter_map(|statement| {
+            let Statement::ImportDeclaration(import) = statement else {
+                return None;
+            };
+            (!import.import_kind.is_type()).then(|| import.source.value.to_string())
+        })
+        .collect()
 }

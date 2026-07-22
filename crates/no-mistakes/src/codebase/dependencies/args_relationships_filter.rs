@@ -40,6 +40,12 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
         RelationshipArg::Package => &[EdgeKind::PackageDependency],
         RelationshipArg::Test => &[
                 EdgeKind::TestOf,
+                EdgeKind::VitestSetup(
+                    crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+                ),
+                EdgeKind::VitestSetup(
+                    crate::codebase::dependencies::graph::VitestSetupField::GlobalSetup,
+                ),
                 EdgeKind::RouteTest,
                 EdgeKind::Layout,
                 EdgeKind::Selector,
@@ -89,6 +95,12 @@ fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
         EdgeKind::DynamicImport,
         EdgeKind::Require,
         EdgeKind::TestOf,
+        EdgeKind::VitestSetup(
+            crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+        ),
+        EdgeKind::VitestSetup(
+            crate::codebase::dependencies::graph::VitestSetupField::GlobalSetup,
+        ),
         EdgeKind::RouteRef,
         EdgeKind::QueueEnqueue,
         EdgeKind::QueueWorker,

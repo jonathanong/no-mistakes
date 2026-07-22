@@ -117,6 +117,7 @@ pub(crate) fn configured_project(
         scope: None,
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
+        vitest_setup: Vec::new(),
     })
 }
 

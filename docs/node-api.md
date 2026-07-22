@@ -90,7 +90,16 @@ targets outside the tracked graph universe. `ci` remains the separate legacy
 
 `testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
-framework-scoped discovered tests.
+framework-scoped discovered tests. Vitest plans also use this surface for a
+dynamic or unresolved `setupFiles`/`globalSetup` declaration: the result is
+bounded to its known project owner when possible. Resolved setup paths use
+`via: ["vitest-setup"]` and may add `via_details`, an optional array aligned
+with `via` whose setup edge detail is `"setupFiles"` or `"globalSetup"`.
+
+`testsWhy()` returns that detail as optional `via_detail`; `testsGraph()` adds
+it as optional edge `detail`, and the Mermaid graph renders it in the edge
+label. The optional fields preserve compatibility with previously saved plan
+JSON and are absent for ordinary edges.
 
 `testsPlan(options)` rejects (rather than resolving to an empty plan) when
 `base`/`head`/`fromGitDiff` can't be resolved by Git — an invalid ref, a

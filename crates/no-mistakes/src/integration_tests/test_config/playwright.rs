@@ -69,6 +69,7 @@ impl ParsedPlaywrightConfig {
                     )),
                     include: prefix_globs(root, &test_dir, &project.test_match),
                     exclude: prefix_globs(root, &test_dir, &project.test_ignore),
+                    vitest_setup: Vec::new(),
                 }
             })
             .collect()

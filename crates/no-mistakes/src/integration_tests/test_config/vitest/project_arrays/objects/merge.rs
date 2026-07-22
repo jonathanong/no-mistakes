@@ -13,4 +13,13 @@ pub(super) fn merge_options(base: &mut Options, next: Options) {
     if next.exclude.is_some() {
         base.exclude = next.exclude;
     }
+    if next.setup_files.is_some() {
+        base.setup_files = next.setup_files;
+    }
+    if next.global_setup.is_some() {
+        base.global_setup = next.global_setup;
+    }
+    if next.config_base.is_some() {
+        base.config_base = next.config_base;
+    }
 }

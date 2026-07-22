@@ -21,6 +21,7 @@ fn post_loop_seed_merges_into_used_targeted_test_at_zero_budget() {
         path: vec!["src/shared.test.ts".to_string()],
         via: vec!["self".to_string()],
         via_details: Vec::new(),
+        via_details: None,
     };
     let targeted_reason = ImpactReason {
         changed_file: "migrations/001.sql".to_string(),
@@ -30,12 +31,14 @@ fn post_loop_seed_merges_into_used_targeted_test_at_zero_budget() {
         ],
         via: vec!["configured-trigger".to_string()],
         via_details: Vec::new(),
+        via_details: None,
     };
     let lockfile_reason = ImpactReason {
         changed_file: "pnpm-lock.yaml".to_string(),
         path: vec!["lodash".to_string(), "src/shared.test.ts".to_string()],
         via: vec!["import".to_string()],
         via_details: Vec::new(),
+        via_details: None,
     };
     let mut selected = BTreeMap::from([(
         test_path,

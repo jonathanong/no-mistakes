@@ -1,7 +1,5 @@
-use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
-use tempfile::tempdir;
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
@@ -434,101 +432,6 @@ fn tests_why_displays_dependency_path() {
     assert!(text.contains("b.mts"));
     assert!(text.contains("a.mts"));
     assert!(text.contains("a.test.mts"));
-}
-
-#[test]
-fn tests_comment_formats_markdown() {
-    let tmp = tempdir().unwrap();
-    let plan_file = tmp.path().join("plan.json");
-
-    let sample_plan = serde_json::json!({
-        "selected_tests": [
-            {
-                "test_file": "a.test.mts",
-                "confidence": "high",
-                "reasons": [
-                    {
-                        "changed_file": "c.mts",
-                        "path": ["c.mts", "b.mts", "a.mts", "a.test.mts"],
-                        "via": ["Import", "Import", "Import"]
-                    }
-                ]
-            }
-        ],
-        "warnings": [],
-        "fallback_triggered": false,
-        "fallback_reason": null
-    });
-
-    fs::write(&plan_file, serde_json::to_string(&sample_plan).unwrap()).unwrap();
-
-    let output = run(&["tests", "comment", plan_file.to_str().unwrap()]);
-
-    assert!(output.status.success());
-    let md = stdout(&output);
-    assert!(md.contains("# 🧪 Test Impact Analysis"));
-    assert!(md.contains("a.test.mts"));
-    assert!(md.contains("🟢 High"));
-}
-
-#[test]
-fn tests_graph_mermaid_outputs_flowchart() {
-    let tmp = tempdir().unwrap();
-    let plan_file = tmp.path().join("plan.json");
-
-    let sample_plan = serde_json::json!({
-        "selected_tests": [
-            {
-                "test_file": "a.test.mts",
-                "confidence": "high",
-                "reasons": [
-                    {
-                        "changed_file": "c.mts",
-                        "path": ["c.mts", "b.mts", "a.mts", "a.test.mts"],
-                        "via": ["Import", "Import", "Import"]
-                    }
-                ]
-            }
-        ],
-        "warnings": [],
-        "fallback_triggered": false,
-        "fallback_reason": null
-    });
-
-    fs::write(&plan_file, serde_json::to_string(&sample_plan).unwrap()).unwrap();
-
-    // 1. Mermaid
-    let output_mermaid = run(&[
-        "tests",
-        "graph",
-        plan_file.to_str().unwrap(),
-        "--format",
-        "mermaid",
-    ]);
-
-    assert!(output_mermaid.status.success());
-    let mermaid = stdout(&output_mermaid);
-    assert!(mermaid.contains("graph TD"));
-    assert!(mermaid.contains("classDef changed"));
-    assert!(mermaid.contains("classDef test"));
-    assert!(mermaid.contains("c.mts"));
-    assert!(mermaid.contains("a.test.mts"));
-
-    // 2. JSON
-    let output_json = run(&[
-        "tests",
-        "graph",
-        plan_file.to_str().unwrap(),
-        "--format",
-        "json",
-    ]);
-
-    assert!(output_json.status.success());
-    let json_str = stdout(&output_json);
-    let graph: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-    assert!(graph["nodes"].as_array().unwrap().len() >= 4);
-    let edges = graph["edges"].as_array().unwrap();
-    assert!(edges.iter().any(|e| e["via"] == "Import"));
 }
 
 #[test]

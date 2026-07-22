@@ -90,7 +90,9 @@ impl GraphBuildPlan {
             route_imports: allowed.contains(&EdgeKind::RouteImport),
             workspace: allowed.contains(&EdgeKind::WorkspaceImport),
             package: allowed.contains(&EdgeKind::PackageDependency),
-            tests: allowed.contains(&EdgeKind::TestOf),
+            tests: allowed.contains(&EdgeKind::TestOf)
+                || allowed.contains(&EdgeKind::VitestSetup(VitestSetupField::SetupFiles))
+                || allowed.contains(&EdgeKind::VitestSetup(VitestSetupField::GlobalSetup)),
             markdown: allowed.contains(&EdgeKind::MarkdownLink),
             ci: allowed.contains(&EdgeKind::CiInvocation),
             workflow_topology: allowed.contains(&EdgeKind::WorkflowJob)

@@ -195,6 +195,7 @@ fn emit_hint_reasons(
             path: vec![rel_changed.to_string(), rel_test.clone()],
             via: vec![via_label.to_string()],
             via_details: Vec::new(),
+            via_details: None,
         };
         let entry = selected
             .entry(rel_test.clone())

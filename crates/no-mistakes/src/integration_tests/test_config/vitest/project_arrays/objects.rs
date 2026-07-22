@@ -1,20 +1,20 @@
-use super::{
-    import_bindings, root_spreads, shared, top_level_function_bodies, Ctx, ExprMap, ImportBinding,
-    Options,
-};
-use crate::codebase::ts_source::unwrap_ts_wrappers;
+use super::{shared, Ctx, ExprMap, ImportBinding, Options};
+use crate::integration_tests::types::VitestSetupField;
 use anyhow::Result;
-use exports::exported_star_options;
-use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, Program};
+use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use std::collections::BTreeSet;
-use std::path::Path;
 
 mod calls;
 mod exports;
 mod members;
 mod merge;
+mod object_expressions;
+mod setup_dependencies;
 
 use merge::merge_options;
+pub(super) use object_expressions::expression_object_options;
+use object_expressions::{imported_options, spread_options};
+use setup_dependencies::setup_dependencies;
 
 pub(super) fn project_options(
     object: &ObjectExpression<'_>,
@@ -45,6 +45,8 @@ fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result
                         options.name = None;
                         options.include = None;
                         options.exclude = None;
+                        options.setup_files = None;
+                        options.global_setup = None;
                         merge_options(&mut options, test_options);
                     }
                     continue;
@@ -83,120 +85,18 @@ fn merge_property(
                 value, ctx.source, "exclude",
             )?);
         }
+        Some("setupFiles") => {
+            options.setup_files =
+                Some(setup_dependencies(value, VitestSetupField::SetupFiles, ctx));
+        }
+        Some("globalSetup") => {
+            options.global_setup = Some(setup_dependencies(
+                value,
+                VitestSetupField::GlobalSetup,
+                ctx,
+            ));
+        }
         _ => {}
     }
     Ok(())
-}
-
-fn spread_options(expression: &Expression<'_>, ctx: &mut Ctx<'_, '_>) -> Result<Option<Options>> {
-    expression_object_options(expression, ctx)
-}
-
-pub(super) fn expression_object_options(
-    expression: &Expression<'_>,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<Option<Options>> {
-    match unwrap_ts_wrappers(expression) {
-        Expression::Identifier(identifier) => {
-            let name = identifier.name.as_str();
-            if let Some(import) = ctx.imports.get(name).cloned() {
-                return imported_options(&import, ctx);
-            }
-            if !ctx.object_seen.insert(name.to_string()) {
-                return Ok(None);
-            }
-            let result = match ctx
-                .bindings
-                .get(name)
-                .and_then(|expression| expression_object(expression, &ctx.bindings))
-            {
-                Some(object) => project_options(object, ctx).map(Some),
-                None => Ok(None),
-            };
-            ctx.object_seen.remove(name);
-            result
-        }
-        Expression::StaticMemberExpression(member) => {
-            members::namespace_member_options(member, ctx)
-        }
-        Expression::CallExpression(call) if call.arguments.is_empty() => {
-            calls::call_object_options(&call.callee, ctx)
-        }
-        Expression::CallExpression(_) => Ok(None),
-        _ => {
-            let Some(object) = expression_object(expression, &ctx.bindings) else {
-                return Ok(None);
-            };
-            project_options(object, ctx).map(Some)
-        }
-    }
-}
-
-fn imported_options(import: &ImportBinding, ctx: &mut Ctx<'_, '_>) -> Result<Option<Options>> {
-    imported_options_from(import, ctx.path, ctx)
-}
-
-fn imported_options_from(
-    import: &ImportBinding,
-    base_path: &Path,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<Option<Options>> {
-    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
-        return Ok(None);
-    };
-    if !ctx.seen.insert(path.clone()) {
-        return Ok(None);
-    }
-    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
-        Err(_) => Ok(None),
-        Ok(source) => crate::integration_tests::runner_config::with_program(
-            &path,
-            &source,
-            |program, source| {
-                exported_options(program, source, import.imported.as_str(), &path, ctx)
-            },
-        )
-        .and_then(|options| options),
-    };
-    ctx.seen.remove(&path);
-    result
-}
-
-fn exported_options(
-    program: &Program<'_>,
-    source: &str,
-    exported: &str,
-    path: &Path,
-    parent: &mut Ctx<'_, '_>,
-) -> Result<Option<Options>> {
-    let bindings = shared::top_level_object_bindings(program);
-    let object = if exported == "default" {
-        shared::default_export_object(program, &bindings)
-            .or_else(|| root_spreads::named_export_object(program, exported, &bindings))
-    } else {
-        root_spreads::named_export_object(program, exported, &bindings)
-    };
-    let Some(object) = object else {
-        if let Some(import) = root_spreads::sourced_reexport(program, exported) {
-            return imported_options_from(&import, path, parent);
-        }
-        if let Some(import) = root_spreads::imported_reexport(program, exported) {
-            return imported_options_from(&import, path, parent);
-        }
-        return exported_star_options(program, exported, parent);
-    };
-    let mut local_seen = BTreeSet::new();
-    let mut object_seen = BTreeSet::new();
-    let mut ctx = Ctx {
-        source,
-        bindings,
-        functions: top_level_function_bodies(program),
-        imports: import_bindings(program),
-        resolver: parent.resolver,
-        path,
-        seen: parent.seen,
-        local_seen: &mut local_seen,
-        object_seen: &mut object_seen,
-    };
-    project_options(object, &mut ctx).map(Some)
 }

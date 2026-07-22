@@ -18,7 +18,7 @@ impl ProjectTestFilter {
         Self::from_project_ref(&project).ok()
     }
 
-    pub(super) fn from_project_ref(project: &ConfigProject) -> Result<Self> {
+    pub(crate) fn from_project_ref(project: &ConfigProject) -> Result<Self> {
         Ok(Self {
             include: compile_globset(&project.include)?,
             exclude: compile_optional_globset(&project.exclude)?,

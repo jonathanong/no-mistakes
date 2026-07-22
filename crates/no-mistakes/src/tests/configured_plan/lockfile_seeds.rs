@@ -4,7 +4,9 @@
 
 use super::super::configured_plan_candidates::{bfs_path_find_set, merge_selected};
 use super::super::plan::{impact_reason_label, path_confidence, relative_path, slash_node_name};
-use super::super::{ImpactReason, SelectedTest, TestPlan, TestPlanGroupResult};
+use super::super::{
+    via_details_from_edges, ImpactReason, SelectedTest, TestPlan, TestPlanGroupResult,
+};
 use super::fallback::{fallback_plan, FallbackRequest};
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, NodeId};
@@ -96,6 +98,7 @@ pub(super) fn lockfile_seed_candidates(
                 path: node_chain,
                 via: via_strings,
                 via_details: Vec::new(),
+                via_details: via_details_from_edges(&edge_path),
             };
 
             let entry = candidates_map

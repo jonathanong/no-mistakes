@@ -1,7 +1,7 @@
 fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
     if !entry.via.contains(&kind) {
         entry.via.push(kind);
-        entry.via.sort_by_key(|k| edge_kind_rank(*k));
+        entry.via.sort_by_key(|k| k.sort_key());
     }
 }
 

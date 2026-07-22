@@ -70,7 +70,7 @@ fn merge_node_entries(
         if let Some(existing) = merged.get_mut(&entry.node) {
             existing.depth = existing.depth.min(entry.depth);
             existing.via.extend(entry.via.iter().copied());
-            existing.via.sort_by_key(|kind| graph::edge_kind_rank(*kind));
+            existing.via.sort_by_key(|kind| kind.sort_key());
             existing.via.dedup();
         } else {
             merged.insert(entry.node.clone(), entry);

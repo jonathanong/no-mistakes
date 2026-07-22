@@ -15,6 +15,7 @@ pub struct WhyStep {
     pub via: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<ImpactEdgeDetail>,
+    pub via_detail: Option<String>,
 }
 
 type WhyStepsByChangedFile = BTreeMap<String, Vec<WhyStep>>;
@@ -41,6 +42,10 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
                 .iter()
                 .map(|step| {
                     if let Some(ref via) = step.via {
+                        let via = match &step.via_detail {
+                            Some(detail) => format!("{} ({})", via, detail),
+                            None => via.clone(),
+                        };
                         format!("`{}` ➔ [{}]", step.node, via)
                     } else {
                         format!("`{}`", step.node)
@@ -139,6 +144,17 @@ fn steps_from_plan(
                 };
                 let detail = reason.via_details.get(i).cloned().flatten();
                 steps.push(WhyStep { node, via, detail });
+                let via_detail = reason
+                    .via_details
+                    .as_ref()
+                    .and_then(|details| details.get(i))
+                    .cloned()
+                    .flatten();
+                steps.push(WhyStep {
+                    node,
+                    via,
+                    via_detail,
+                });
             }
             result.insert(reason.changed_file.clone(), steps);
         }
@@ -193,6 +209,17 @@ fn run_live_analysis(
                 };
                 let detail = reason.via_details.get(i).cloned().flatten();
                 steps.push(WhyStep { node, via, detail });
+                let via_detail = reason
+                    .via_details
+                    .as_ref()
+                    .and_then(|details| details.get(i))
+                    .cloned()
+                    .flatten();
+                steps.push(WhyStep {
+                    node,
+                    via,
+                    via_detail,
+                });
             }
             result.insert(reason.changed_file.clone(), steps);
         }

@@ -25,6 +25,7 @@ mod native_fallback;
 mod targeted_triggers;
 #[cfg(test)]
 mod tests;
+mod vitest_setup_fallback;
 use dep_triggers::dependency_triggers;
 use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
@@ -38,6 +39,9 @@ use native_fallback::{native_fallback_selection, native_traceable_changed_files}
 use targeted_triggers::{
     insert_synthesized_dependency_group, merge_targeted_candidates, targeted_dependency_candidates,
     TargetedOverlapRecovery,
+};
+use vitest_setup_fallback::{
+    selection as vitest_setup_fallback_selection, warnings as vitest_setup_warnings,
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -58,6 +62,11 @@ pub(crate) fn generate_configured_plan_with_prepared(
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
     let all_tests = discovered_tests.tests.clone();
+    let vitest_setup_warnings = if framework == TestFramework::Vitest {
+        vitest_setup_warnings(root, prepared.vitest_projects())
+    } else {
+        Vec::new()
+    };
     let all_test_set: HashSet<PathBuf> = all_tests.iter().cloned().collect();
     let effective_limit = override_limit(env.limit.as_ref(), args);
     let has_global_limit = effective_limit.is_some();
@@ -82,6 +91,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                     reason: reason.clone(),
                 },
             );
+            plan.warnings.extend(vitest_setup_warnings);
             attach_targets(&mut plan, root, &discovered_tests);
             plan.warnings.extend(prepared.tsconfig_warnings());
             return Ok(plan);
@@ -105,6 +115,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 ),
             },
         );
+        plan.warnings.extend(vitest_setup_warnings);
         attach_targets(&mut plan, root, &discovered_tests);
         plan.warnings.extend(prepared.tsconfig_warnings());
         return Ok(plan);
@@ -123,6 +134,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 reason,
             },
         );
+        plan.warnings.extend(vitest_setup_warnings);
         attach_targets(&mut plan, root, &discovered_tests);
         plan.warnings.extend(prepared.tsconfig_warnings());
         return Ok(plan);
@@ -147,6 +159,11 @@ pub(crate) fn generate_configured_plan_with_prepared(
     for changed in changed_files {
         push_resource_diagnostics(graph, root, changed, &mut warnings, &mut warnings_seen);
     }
+    warnings.extend(vitest_setup_warnings);
+    let mut warnings_seen: HashSet<(String, String)> = warnings
+        .iter()
+        .map(|warning| (warning.r#type.clone(), warning.file.clone()))
+        .collect();
     let native_traceable_changed_files = native_traceable_changed_files(
         framework,
         root,
@@ -302,12 +319,15 @@ pub(crate) fn generate_configured_plan_with_prepared(
                         reason: msg,
                     },
                 );
+                // This return occurs after normal warning initialization, so
+                // retain diagnostics for unsafe Vitest setup declarations.
+                plan.warnings.extend(warnings);
                 attach_targets(&mut plan, root, &discovered_tests);
                 return Ok(plan);
             }
         } else {
             // Custom config without a dependencies group: fall back to post-loop injection.
-            if let Some(fallback) = apply_lockfile_seeds(
+            if let Some(mut fallback) = apply_lockfile_seeds(
                 root,
                 seed_result,
                 effective_global_config_fallback(&env, args),
@@ -319,12 +339,15 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 &mut group_results,
                 &discovered_tests,
             )? {
+                // `apply_lockfile_seeds` owns its fallback plan; attach the
+                // request-scoped setup diagnostics before its early return.
+                fallback.warnings.extend(warnings);
                 return Ok(fallback);
             }
         }
     }
 
-    let mut native_fallback_reason = None;
+    let mut fallback_reasons = Vec::new();
     if !all_tests.is_empty() {
         if let Some((reason, picked)) = native_fallback_selection(
             framework,
@@ -356,7 +379,37 @@ pub(crate) fn generate_configured_plan_with_prepared(
                     limit: has_global_limit.then_some(remaining_global),
                 });
             }
-            native_fallback_reason = Some(reason);
+            fallback_reasons.push(reason);
+        }
+    }
+
+    if framework == TestFramework::Vitest && !all_tests.is_empty() {
+        let fallback_remaining = global_limit.saturating_sub(used.len());
+        if let Some((reason, picked)) = vitest_setup_fallback_selection(
+            root,
+            changed_files,
+            deleted_files,
+            prepared.vitest_projects(),
+            &discovered_tests,
+            &used,
+            fallback_remaining,
+        ) {
+            for test in &picked {
+                used.insert(test.test_file.clone());
+                selected_map
+                    .entry(root.join(&test.test_file))
+                    .and_modify(|entry| merge_selected(entry, test))
+                    .or_insert_with(|| test.clone());
+            }
+            if !picked.is_empty() {
+                group_results.push(TestPlanGroupResult {
+                    r#type: "dependencies".to_string(),
+                    selected: picked.iter().map(|test| test.test_file.clone()).collect(),
+                    remaining: all_tests.len().saturating_sub(used.len()),
+                    limit: has_global_limit.then_some(fallback_remaining),
+                });
+            }
+            fallback_reasons.push(reason);
         }
     }
 
@@ -364,8 +417,8 @@ pub(crate) fn generate_configured_plan_with_prepared(
         selected_tests: sorted_selected_tests(selected_map),
         groups: group_results,
         warnings: sorted_warnings(warnings),
-        fallback_triggered: native_fallback_reason.is_some(),
-        fallback_reason: native_fallback_reason,
+        fallback_triggered: !fallback_reasons.is_empty(),
+        fallback_reason: (!fallback_reasons.is_empty()).then(|| fallback_reasons.join("; ")),
     };
     attach_targets(&mut plan, root, &discovered_tests);
     Ok(plan)

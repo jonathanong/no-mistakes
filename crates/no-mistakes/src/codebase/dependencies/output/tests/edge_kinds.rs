@@ -5,6 +5,13 @@ fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::DynamicImport.as_str(), "dynamic-import");
     assert_eq!(EdgeKind::Require.as_str(), "require");
     assert_eq!(EdgeKind::TestOf.as_str(), "test");
+    assert_eq!(
+        EdgeKind::VitestSetup(
+            crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+        )
+        .as_str(),
+        "vitest-setup"
+    );
     assert_eq!(EdgeKind::RouteRef.as_str(), "route");
     assert_eq!(EdgeKind::QueueEnqueue.as_str(), "queue-enqueue");
     assert_eq!(EdgeKind::QueueWorker.as_str(), "queue-worker");
@@ -37,6 +44,12 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::RouteImport,
         EdgeKind::Require,
         EdgeKind::TestOf,
+        EdgeKind::VitestSetup(
+            crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+        ),
+        EdgeKind::VitestSetup(
+            crate::codebase::dependencies::graph::VitestSetupField::GlobalSetup,
+        ),
         EdgeKind::RouteRef,
         EdgeKind::QueueEnqueue,
         EdgeKind::QueueWorker,
@@ -75,6 +88,7 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::RouteImport => {}
             EdgeKind::Require => {}
             EdgeKind::TestOf => {}
+            EdgeKind::VitestSetup(_) => {}
             EdgeKind::RouteRef => {}
             EdgeKind::QueueEnqueue => {}
             EdgeKind::QueueWorker => {}

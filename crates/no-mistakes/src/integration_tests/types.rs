@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -110,4 +110,43 @@ pub(crate) struct ConfigProject {
     pub(crate) scope: Option<String>,
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
+    /// Vitest setup modules statically declared for this effective project.
+    /// Other runners always leave this empty.
+    pub(crate) vitest_setup: Vec<VitestSetupDependency>,
+}
+
+/// The Vitest config field that declared a setup module.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub(crate) enum VitestSetupField {
+    SetupFiles,
+    GlobalSetup,
+}
+
+impl VitestSetupField {
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::SetupFiles => "setupFiles",
+            Self::GlobalSetup => "globalSetup",
+        }
+    }
+}
+
+/// A single statically declared (or conservatively dynamic) Vitest setup
+/// dependency. `specifier` is absent only for a dynamic expression; a literal
+/// with no `resolved_path` is an unresolved candidate and must remain visible
+/// to impact planning.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub(crate) struct VitestSetupDependency {
+    pub(crate) field: VitestSetupField,
+    pub(crate) specifier: Option<String>,
+    pub(crate) resolved_path: Option<PathBuf>,
+    /// Effective Vitest project root used to resolve a relative setup
+    /// specifier. This deliberately differs from `declaration_path` for
+    /// imported config objects and projects with an explicit `root`.
+    pub(crate) resolution_base: PathBuf,
+    pub(crate) declaration_path: PathBuf,
+    pub(crate) declaration_line: u32,
+    /// Config and helper modules that contributed this declaration. Dynamic
+    /// setup expressions use these paths as conservative impact triggers.
+    pub(crate) trigger_paths: BTreeSet<PathBuf>,
 }
