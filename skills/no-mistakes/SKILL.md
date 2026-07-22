@@ -132,6 +132,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Which packages changed between two lockfile refs? | `no-mistakes lockfile diff --base <ref>` |
 | Which CI workflows/jobs does this changed file trigger, and with what permissions? | `no-mistakes ci impact <file> --format json` |
 | Which workflows define or reference this env var? | `no-mistakes ci env <VAR> --format json` |
+| What are the `needs`/reusable-call/`workflow_run` edges of these workflows, or does one have a dangling/cyclic/contract-violating definition? | `no-mistakes ci topology --format json` |
 | What local validation commands should I run for these changed files? | `no-mistakes impacted-checks <file...> --format paths` |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |

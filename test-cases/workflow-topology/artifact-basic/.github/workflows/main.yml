@@ -1,0 +1,44 @@
+on: push
+jobs:
+  first:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: build-linux}
+  second:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: docs}
+  exact:
+    needs: [first, second]
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: build-linux}
+  pattern:
+    needs: [first, second]
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {pattern: build-*}
+  all:
+    needs: [first, second]
+    steps:
+      - uses: actions/download-artifact@v8
+  same-job-limits-to-prior-step:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: one}
+      - uses: actions/download-artifact@v8
+        with: {name: one}
+      - uses: actions/upload-artifact@v7
+        with: {name: one, overwrite: true}
+  # artifact-ids and non-current-run sources are never resolved or
+  # diagnosed — both downloads below are intentionally left dangling.
+  skip-artifact-ids-and-remote-source:
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {artifact-ids: "12"}
+      - uses: actions/download-artifact@v8
+        with:
+          name: absent
+          github-token: token
+          repository: other/repo
+          run-id: "12"

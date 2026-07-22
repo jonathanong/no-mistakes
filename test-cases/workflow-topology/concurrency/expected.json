@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/pipeline.yml",
+      "path": ".github/workflows/pipeline.yml",
+      "name": "Concurrency",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/pipeline.yml#build",
+        ".github/workflows/pipeline.yml#test"
+      ],
+      "concurrency": {
+        "raw": {
+          "group": "ci-${{ github.ref }}",
+          "cancelInProgress": true
+        },
+        "effective": {
+          "group": "ci-${{ github.ref }}",
+          "cancelInProgress": true,
+          "queue": "single"
+        }
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/pipeline.yml#build",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "build",
+      "kind": "job",
+      "concurrency": {
+        "raw": {
+          "group": "shared-lock"
+        },
+        "effective": {
+          "group": "shared-lock",
+          "cancelInProgress": false,
+          "queue": "single"
+        }
+      },
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/pipeline.yml#test",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "test",
+      "kind": "job",
+      "concurrency": {
+        "raw": {
+          "group": "SHARED-LOCK"
+        },
+        "effective": {
+          "group": "SHARED-LOCK",
+          "cancelInProgress": false,
+          "queue": "single"
+        }
+      },
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "diagnostics": []
+}

@@ -1,0 +1,16 @@
+name: Concurrency
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+on: push
+jobs:
+  build:
+    concurrency: shared-lock
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
+  test:
+    concurrency: SHARED-LOCK
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test

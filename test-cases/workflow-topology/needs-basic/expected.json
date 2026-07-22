@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/pipeline.yml",
+      "path": ".github/workflows/pipeline.yml",
+      "name": "Needs Basic",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/pipeline.yml#build",
+        ".github/workflows/pipeline.yml#deploy",
+        ".github/workflows/pipeline.yml#test"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/pipeline.yml#build",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "build",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/pipeline.yml#deploy",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "deploy",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/pipeline.yml#test",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "test",
+      "kind": "job",
+      "condition": "needs.build.result == 'success'",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "needs",
+      "from": ".github/workflows/pipeline.yml#build",
+      "to": ".github/workflows/pipeline.yml#test"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/pipeline.yml#test",
+      "to": ".github/workflows/pipeline.yml#deploy"
+    }
+  ],
+  "diagnostics": []
+}

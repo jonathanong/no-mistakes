@@ -62,6 +62,7 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 | `lockfile diff` | `lockfileDiff(options)` |
 | `ci impact` | `ciImpact(options)` |
 | `ci env` | `ciEnv(options)` |
+| `ci topology` | `ciTopology(options)` |
 | `impacted-checks` | `impactedChecks(options)` |
 
 The Playwright APIs load the same selector-wrapper configuration as the CLI.
@@ -97,6 +98,23 @@ reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts
 one request-scoped in-memory dataset. Sources, parsed metadata, and compact file
 facts are reused; each normalized graph or symbol-index plan is built at most
 once for its file universe. Distinct effective scopes are prepared independently.
+
+`ciTopology(options)` returns the same schema-v1 `WorkflowTopology` JSON as
+`ci topology --format json` — it never throws on diagnostics (unlike the CLI,
+which exits non-zero and prints nothing when any diagnostic is an error);
+callers inspect the returned `diagnostics` array themselves.
+`createWorkflowTopologyIndex(topology)` builds a frozen, sorted query index
+(`directUpstreamJobIds`, `transitiveCalleeWorkflowPaths`,
+`artifactConsumersForProducerJob`, etc.) over that result — it is pure JS,
+runs entirely client-side, and never crosses the N-API boundary itself:
+
+```js
+const { ciTopology, createWorkflowTopologyIndex } = require("no-mistakes");
+
+const topology = await ciTopology({ root: process.cwd() });
+const index = createWorkflowTopologyIndex(topology);
+index.transitiveDownstreamJobIds(".github/workflows/ci.yml#build");
+```
 
 `impactedChecks(options)` shares one in-memory analysis pass across configured
 test frameworks. Pass `timings: true` to include an ordered `timings` array in

@@ -1,0 +1,26 @@
+flowchart LR
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLWR1cC1hLnltbA["Dup Source"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLWR1cC1hLnltbA([".github/workflows/source-dup-a.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLWR1cC1hLnltbCNub29w["noop"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLWR1cC1iLnltbA["Dup Source"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLWR1cC1iLnltbA([".github/workflows/source-dup-b.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLWR1cC1iLnltbCNub29w["noop"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLnltbA["Source"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLnltbA([".github/workflows/source.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLnltbCNub29w["noop"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1hbWJpZ3VvdXMueW1s["Subscriber Ambiguous"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1hbWJpZ3VvdXMueW1s([".github/workflows/subscriber-ambiguous.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1hbWJpZ3VvdXMueW1sI3JlcG9ydA["report"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1taXNzaW5nLnltbA["Subscriber Missing"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1taXNzaW5nLnltbA([".github/workflows/subscriber-missing.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1taXNzaW5nLnltbCNyZXBvcnQ["report"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1vay55bWw["Subscriber OK"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1vay55bWw([".github/workflows/subscriber-ok.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1vay55bWwjcmVwb3J0["report"]
+  end
+  workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc291cmNlLnltbA == workflow_run ==> workflow_LmdpdGh1Yi93b3JrZmxvd3Mvc3Vic2NyaWJlci1vay55bWw

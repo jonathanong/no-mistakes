@@ -1,0 +1,9 @@
+name: Subscriber Missing
+on:
+  workflow_run:
+    workflows: ["Does Not Exist"]
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo report

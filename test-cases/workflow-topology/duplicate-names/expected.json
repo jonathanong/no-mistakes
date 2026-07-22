@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/ci-one.yml",
+      "path": ".github/workflows/ci-one.yml",
+      "name": "CI",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/ci-one.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/ci-two.yml",
+      "path": ".github/workflows/ci-two.yml",
+      "name": "ci",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/ci-two.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/solo.yml",
+      "path": ".github/workflows/solo.yml",
+      "name": "Solo",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/solo.yml#noop"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/ci-one.yml#noop",
+      "workflowId": ".github/workflows/ci-one.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/ci-two.yml#noop",
+      "workflowId": ".github/workflows/ci-two.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/solo.yml#noop",
+      "workflowId": ".github/workflows/solo.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "duplicate-workflow-name",
+      "message": "workflow name \"CI\" conflicts across .github/workflows/ci-one.yml, .github/workflows/ci-two.yml",
+      "workflowPath": ".github/workflows/ci-one.yml"
+    },
+    {
+      "severity": "error",
+      "code": "duplicate-workflow-name",
+      "message": "workflow name \"ci\" conflicts across .github/workflows/ci-one.yml, .github/workflows/ci-two.yml",
+      "workflowPath": ".github/workflows/ci-two.yml"
+    }
+  ]
+}

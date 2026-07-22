@@ -65,6 +65,7 @@ fn cli_leaf_commands_have_docs() {
         "server-contracts",
         "ci-impact",
         "ci-env",
+        "ci-topology",
         "impacted-checks",
         "infra-resource-refs",
         "infra-outputs",

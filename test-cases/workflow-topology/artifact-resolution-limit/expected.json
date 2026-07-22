@@ -1,0 +1,904 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/level-1.yml",
+      "path": ".github/workflows/level-1.yml",
+      "name": "level-1.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-1.yml#left",
+        ".github/workflows/level-1.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-10.yml",
+      "path": ".github/workflows/level-10.yml",
+      "name": "level-10.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-10.yml#left",
+        ".github/workflows/level-10.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-11.yml",
+      "path": ".github/workflows/level-11.yml",
+      "name": "level-11.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-11.yml#left",
+        ".github/workflows/level-11.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-12.yml",
+      "path": ".github/workflows/level-12.yml",
+      "name": "level-12.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-12.yml#left",
+        ".github/workflows/level-12.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-13.yml",
+      "path": ".github/workflows/level-13.yml",
+      "name": "level-13.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-13.yml#upload"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-2.yml",
+      "path": ".github/workflows/level-2.yml",
+      "name": "level-2.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-2.yml#left",
+        ".github/workflows/level-2.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-3.yml",
+      "path": ".github/workflows/level-3.yml",
+      "name": "level-3.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-3.yml#left",
+        ".github/workflows/level-3.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-4.yml",
+      "path": ".github/workflows/level-4.yml",
+      "name": "level-4.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-4.yml#left",
+        ".github/workflows/level-4.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-5.yml",
+      "path": ".github/workflows/level-5.yml",
+      "name": "level-5.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-5.yml#left",
+        ".github/workflows/level-5.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-6.yml",
+      "path": ".github/workflows/level-6.yml",
+      "name": "level-6.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-6.yml#left",
+        ".github/workflows/level-6.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-7.yml",
+      "path": ".github/workflows/level-7.yml",
+      "name": "level-7.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-7.yml#left",
+        ".github/workflows/level-7.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-8.yml",
+      "path": ".github/workflows/level-8.yml",
+      "name": "level-8.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-8.yml#left",
+        ".github/workflows/level-8.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/level-9.yml",
+      "path": ".github/workflows/level-9.yml",
+      "name": "level-9.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/level-9.yml#left",
+        ".github/workflows/level-9.yml#right"
+      ]
+    },
+    {
+      "id": ".github/workflows/root.yml",
+      "path": ".github/workflows/root.yml",
+      "name": "root.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/root.yml#consume",
+        ".github/workflows/root.yml#left",
+        ".github/workflows/root.yml#right"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/level-1.yml#left",
+      "workflowId": ".github/workflows/level-1.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-1.yml#right",
+      "workflowId": ".github/workflows/level-1.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-10.yml#left",
+      "workflowId": ".github/workflows/level-10.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-10.yml#right",
+      "workflowId": ".github/workflows/level-10.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-11.yml#left",
+      "workflowId": ".github/workflows/level-11.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-11.yml#right",
+      "workflowId": ".github/workflows/level-11.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-12.yml#left",
+      "workflowId": ".github/workflows/level-12.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-12.yml#right",
+      "workflowId": ".github/workflows/level-12.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-13.yml#upload",
+      "workflowId": ".github/workflows/level-13.yml",
+      "key": "upload",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "shared",
+              "value": "shared"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/level-2.yml#left",
+      "workflowId": ".github/workflows/level-2.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-2.yml#right",
+      "workflowId": ".github/workflows/level-2.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-3.yml#left",
+      "workflowId": ".github/workflows/level-3.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-3.yml#right",
+      "workflowId": ".github/workflows/level-3.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-4.yml#left",
+      "workflowId": ".github/workflows/level-4.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-4.yml#right",
+      "workflowId": ".github/workflows/level-4.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-5.yml#left",
+      "workflowId": ".github/workflows/level-5.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-5.yml#right",
+      "workflowId": ".github/workflows/level-5.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-6.yml#left",
+      "workflowId": ".github/workflows/level-6.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-6.yml#right",
+      "workflowId": ".github/workflows/level-6.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-7.yml#left",
+      "workflowId": ".github/workflows/level-7.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-7.yml#right",
+      "workflowId": ".github/workflows/level-7.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-8.yml#left",
+      "workflowId": ".github/workflows/level-8.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-8.yml#right",
+      "workflowId": ".github/workflows/level-8.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-9.yml#left",
+      "workflowId": ".github/workflows/level-9.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/level-9.yml#right",
+      "workflowId": ".github/workflows/level-9.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/root.yml#consume",
+      "workflowId": ".github/workflows/root.yml",
+      "key": "consume",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "shared",
+                "value": "shared"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/root.yml#left",
+      "workflowId": ".github/workflows/root.yml",
+      "key": "left",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/root.yml#right",
+      "workflowId": ".github/workflows/root.yml",
+      "key": "right",
+      "kind": "job",
+      "steps": []
+    }
+  ],
+  "edges": [
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-1.yml#left",
+      "target": "./.github/workflows/level-2.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-2.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-1.yml#right",
+      "target": "./.github/workflows/level-2.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-2.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-10.yml#left",
+      "target": "./.github/workflows/level-11.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-11.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-10.yml#right",
+      "target": "./.github/workflows/level-11.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-11.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-11.yml#left",
+      "target": "./.github/workflows/level-12.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-12.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-11.yml#right",
+      "target": "./.github/workflows/level-12.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-12.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-12.yml#left",
+      "target": "./.github/workflows/level-13.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-13.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-12.yml#right",
+      "target": "./.github/workflows/level-13.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-13.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-2.yml#left",
+      "target": "./.github/workflows/level-3.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-3.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-2.yml#right",
+      "target": "./.github/workflows/level-3.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-3.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-3.yml#left",
+      "target": "./.github/workflows/level-4.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-4.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-3.yml#right",
+      "target": "./.github/workflows/level-4.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-4.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-4.yml#left",
+      "target": "./.github/workflows/level-5.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-5.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-4.yml#right",
+      "target": "./.github/workflows/level-5.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-5.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-5.yml#left",
+      "target": "./.github/workflows/level-6.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-6.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-5.yml#right",
+      "target": "./.github/workflows/level-6.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-6.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-6.yml#left",
+      "target": "./.github/workflows/level-7.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-7.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-6.yml#right",
+      "target": "./.github/workflows/level-7.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-7.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-7.yml#left",
+      "target": "./.github/workflows/level-8.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-8.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-7.yml#right",
+      "target": "./.github/workflows/level-8.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-8.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-8.yml#left",
+      "target": "./.github/workflows/level-9.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-9.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-8.yml#right",
+      "target": "./.github/workflows/level-9.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-9.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-9.yml#left",
+      "target": "./.github/workflows/level-10.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-10.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/level-9.yml#right",
+      "target": "./.github/workflows/level-10.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-10.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/root.yml#left",
+      "target": "./.github/workflows/level-1.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-1.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/root.yml#right",
+      "target": "./.github/workflows/level-1.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/level-1.yml"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/root.yml#left",
+      "to": ".github/workflows/root.yml#consume"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/root.yml#right",
+      "to": ".github/workflows/root.yml#consume"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "artifact-resolution-limit",
+      "message": ".github/workflows/root.yml exceeds the 4096-occurrence local reusable-workflow artifact resolution limit",
+      "workflowPath": ".github/workflows/root.yml"
+    }
+  ]
+}

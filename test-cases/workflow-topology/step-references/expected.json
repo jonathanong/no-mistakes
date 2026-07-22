@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/pipeline.yml",
+      "path": ".github/workflows/pipeline.yml",
+      "name": "Step References",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/pipeline.yml#build"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/pipeline.yml#build",
+      "workflowId": ".github/workflows/pipeline.yml",
+      "key": "build",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run",
+          "id": "setup"
+        },
+        {
+          "index": 1,
+          "kind": "run",
+          "id": "setup"
+        },
+        {
+          "index": 2,
+          "kind": "run",
+          "condition": "steps.setup.outcome == 'success'"
+        },
+        {
+          "index": 3,
+          "kind": "run",
+          "condition": "steps.missing.outcome == 'success'"
+        },
+        {
+          "index": 4,
+          "kind": "run",
+          "condition": "steps.later.outcome == 'success'"
+        },
+        {
+          "index": 5,
+          "kind": "run",
+          "id": "later"
+        }
+      ]
+    }
+  ],
+  "edges": [],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "duplicate-step-id",
+      "message": ".github/workflows/pipeline.yml#build declares duplicate step id setup",
+      "workflowPath": ".github/workflows/pipeline.yml",
+      "jobId": ".github/workflows/pipeline.yml#build"
+    },
+    {
+      "severity": "error",
+      "code": "non-prior-step-reference",
+      "message": ".github/workflows/pipeline.yml#build references step later before it has executed",
+      "workflowPath": ".github/workflows/pipeline.yml",
+      "jobId": ".github/workflows/pipeline.yml#build"
+    },
+    {
+      "severity": "error",
+      "code": "unknown-step-reference",
+      "message": ".github/workflows/pipeline.yml#build references unknown step missing",
+      "workflowPath": ".github/workflows/pipeline.yml",
+      "jobId": ".github/workflows/pipeline.yml#build"
+    }
+  ]
+}

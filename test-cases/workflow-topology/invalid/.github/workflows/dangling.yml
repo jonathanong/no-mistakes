@@ -1,0 +1,10 @@
+name: Dangling
+
+on: [push]
+
+jobs:
+  test:
+    needs: missing
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo unreachable

@@ -1,0 +1,1 @@
+[workflow-run-chain-limit] .github/workflows/w5.yml: workflow_run chain exceeds 3 levels: .github/workflows/w1.yml -> .github/workflows/w2.yml -> .github/workflows/w3.yml -> .github/workflows/w4.yml -> .github/workflows/w5.yml

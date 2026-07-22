@@ -1,0 +1,10 @@
+on:
+  workflow_run:
+    workflows: [Source]
+jobs:
+  # A workflow_run subscriber is a wholly separate run: it never shares an
+  # artifact run context with the workflow that triggered it.
+  consume:
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: cross-run}

@@ -1,0 +1,18 @@
+name: Step References
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: setup
+        run: echo setup
+      - id: setup
+        run: echo setup again
+      - if: steps.setup.outcome == 'success'
+        run: echo ok
+      - if: steps.missing.outcome == 'success'
+        run: echo missing
+      - if: steps.later.outcome == 'success'
+        run: echo too early
+      - id: later
+        run: echo later
