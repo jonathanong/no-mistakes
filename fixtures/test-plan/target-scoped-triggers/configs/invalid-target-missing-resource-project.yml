@@ -1,10 +1,7 @@
-projects:
-  app:
-    root: .
 testPlan:
   vitest:
     fullSuiteTriggers:
       projects:
-        app:
+        missing-resource:
           paths: [migrations/**]
-          targets: [database, database]
+          targets: [database]

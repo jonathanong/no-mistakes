@@ -74,6 +74,9 @@ fn targeted_full_suite_trigger_validates_paths_and_targets() {
     ];
     for (paths, targets, expected) in cases {
         let mut config = NoMistakesConfig::default();
+        config
+            .projects
+            .insert("app".to_string(), Project::default());
         config.test_plan.vitest.full_suite_triggers.projects.insert(
             "app".to_string(),
             TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
@@ -87,6 +90,30 @@ fn targeted_full_suite_trigger_validates_paths_and_targets() {
         assert!(error.contains(expected), "{error}");
         assert!(error.contains("config.yml.testPlan.vitest.fullSuiteTriggers.projects.app"));
     }
+
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "missing".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["src/**".to_string()],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.vitest.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+    ));
+
+    let mut legacy = NoMistakesConfig::default();
+    legacy
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .projects
+        .insert("missing".to_string(), TestPlanProjectDependency::All(true));
+    validate_v2_config(&legacy, Path::new("config.yml")).unwrap();
 }
 
 #[test]

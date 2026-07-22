@@ -19,6 +19,9 @@ pub(super) fn validate(config: &NoMistakesConfig, path: &Path) -> Result<()> {
                 "{}.testPlan.{framework}.fullSuiteTriggers.projects.{project}",
                 path.display()
             );
+            if !config.projects.contains_key(project) {
+                anyhow::bail!("{base} references missing top-level projects.{project}");
+            }
             if targeted.paths.is_empty() {
                 anyhow::bail!("{base}.paths must not be empty");
             }

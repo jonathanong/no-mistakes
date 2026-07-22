@@ -1,3 +1,6 @@
+projects:
+  app:
+    root: .
 testPlan:
   vitest:
     fullSuiteTriggers:
