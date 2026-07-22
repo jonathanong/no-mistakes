@@ -1,0 +1,4 @@
+{
+  "compilerOptions": { "baseUrl": ".", "paths": { "@ambiguous": ["src/value.ts"] } },
+  "include": ["src/**/*.ts"]
+}

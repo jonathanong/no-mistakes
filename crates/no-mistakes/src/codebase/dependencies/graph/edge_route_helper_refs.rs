@@ -36,9 +36,16 @@ fn route_helper_ref_patterns(
     path: &Path,
     file_facts: &crate::codebase::ts_source::facts::TsFileFacts,
     facts: &dyn TsFactLookup,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
+    graph_files: &GraphFiles,
 ) -> Vec<String> {
-    let mut patterns: Vec<_> = route_helper_ref_patterns_with_lines(path, file_facts, facts, resolver)
+    let mut patterns: Vec<_> = route_helper_ref_patterns_with_lines(
+        path,
+        file_facts,
+        facts,
+        resolver,
+        graph_files,
+    )
         .into_iter()
         .map(|(_, pattern)| pattern)
         .collect();
@@ -51,8 +58,14 @@ pub(crate) fn route_helper_ref_patterns_with_lines(
     path: &Path,
     file_facts: &crate::codebase::ts_source::facts::TsFileFacts,
     facts: &dyn TsFactLookup,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
+    graph_files: &GraphFiles,
 ) -> Vec<(u32, String)> {
+    let inputs = RouteHelperResolutionInputs {
+        facts,
+        resolver,
+        graph_files,
+    };
     let mut patterns = Vec::new();
     for helper_ref in &file_facts.route_helper_refs {
         let mut helper_patterns = local_route_helper_patterns(
@@ -63,8 +76,7 @@ pub(crate) fn route_helper_ref_patterns_with_lines(
             path,
             &helper_ref.callee,
             &file_facts.route_helper_imports,
-            facts,
-            resolver,
+            inputs,
         ));
         patterns.extend(
             route_helper_ref_wrapped_patterns(helper_ref, helper_patterns)
@@ -75,6 +87,13 @@ pub(crate) fn route_helper_ref_patterns_with_lines(
     patterns.sort();
     patterns.dedup();
     patterns
+}
+
+#[derive(Clone, Copy)]
+struct RouteHelperResolutionInputs<'a> {
+    facts: &'a dyn TsFactLookup,
+    resolver: &'a dyn crate::codebase::ts_resolver::ImportResolution,
+    graph_files: &'a GraphFiles,
 }
 
 fn local_route_helper_patterns(
@@ -88,119 +107,4 @@ fn local_route_helper_patterns(
         .unwrap_or_default()
 }
 
-fn imported_route_helper_patterns(
-    path: &Path,
-    callee: &str,
-    imports: &[crate::codebase::ts_routes::refs::RouteHelperImport],
-    facts: &dyn TsFactLookup,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-) -> Vec<String> {
-    if let Some((namespace, member)) = callee.split_once('.') {
-        return imports
-            .iter()
-            .filter(|import| import.local == namespace)
-            .find_map(|import| {
-                if import.imported == "*" {
-                    route_helper_patterns_from_import(path, member, import, facts, resolver, 0)
-                } else {
-                    route_helper_namespace_member_patterns(
-                        path,
-                        &import.imported,
-                        member,
-                        import,
-                        facts,
-                        resolver,
-                        0,
-                    )
-                }
-            })
-            .unwrap_or_default();
-    }
-
-    imports
-        .iter()
-        .find(|import| import.local == callee && import.imported != "*")
-        .and_then(|import| {
-            route_helper_patterns_from_import(path, &import.imported, import, facts, resolver, 0)
-        })
-        .unwrap_or_default()
-}
-
-fn route_helper_patterns_from_import(
-    path: &Path,
-    helper_name: &str,
-    import: &crate::codebase::ts_routes::refs::RouteHelperImport,
-    facts: &dyn TsFactLookup,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    depth: usize,
-) -> Option<Vec<String>> {
-    if depth > 4 {
-        return None;
-    }
-    let target = resolver.resolve(&import.source, path)?;
-    let target_facts = facts.get_ts_facts(&target)?;
-    if let Some(patterns) = target_facts
-        .route_helpers
-        .iter()
-        .find(|helper| helper.name == helper_name)
-        .map(|helper| helper.patterns.clone())
-    {
-        return Some(patterns);
-    }
-    for reexport in target_facts
-        .route_helper_imports
-        .iter()
-        .filter(|candidate| candidate.local == helper_name && candidate.imported != "*")
-    {
-        if let Some(patterns) = route_helper_patterns_from_import(
-            &target,
-            &reexport.imported,
-            reexport,
-            facts,
-            resolver,
-            depth + 1,
-        ) {
-            return Some(patterns);
-        }
-    }
-    for reexport in target_facts
-        .route_helper_imports
-        .iter()
-        .filter(|candidate| candidate.local == "*" && candidate.imported == "*")
-    {
-        if let Some(patterns) =
-            route_helper_patterns_from_import(&target, helper_name, reexport, facts, resolver, depth + 1)
-        {
-            return Some(patterns);
-        }
-    }
-    None
-}
-
-fn route_helper_namespace_member_patterns(
-    path: &Path,
-    namespace: &str,
-    member: &str,
-    import: &crate::codebase::ts_routes::refs::RouteHelperImport,
-    facts: &dyn TsFactLookup,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    depth: usize,
-) -> Option<Vec<String>> {
-    if depth > 4 {
-        return None;
-    }
-    let target = resolver.resolve(&import.source, path)?;
-    let target_facts = facts.get_ts_facts(&target)?;
-    for reexport in target_facts
-        .route_helper_imports
-        .iter()
-        .filter(|candidate| candidate.local == namespace && candidate.imported == "*")
-    {
-        if let Some(patterns) =
-            route_helper_patterns_from_import(&target, member, reexport, facts, resolver, depth + 1)
-        {
-            return Some(patterns);
-        }
-    }
-    None
-}
+include!("edge_route_helper_refs_imports.rs");

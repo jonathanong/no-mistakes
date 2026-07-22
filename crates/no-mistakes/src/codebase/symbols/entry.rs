@@ -1,7 +1,8 @@
 fn build_entry_from_symbols(
     abs_path: &Path,
     root: &Path,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
     symbols: FileSymbols,
     include: Include,
     kind_filter: Option<&KindFilter>,
@@ -17,7 +18,7 @@ fn build_entry_from_symbols(
                 Some(kf) => kf.matches_export(&e.kind),
                 None => true,
             })
-            .map(|e| resolve_export(e, abs_path, root, resolver))
+            .map(|e| resolve_export(e, abs_path, root, resolver, remapper))
             .collect()
     } else {
         Vec::new()
@@ -27,7 +28,7 @@ fn build_entry_from_symbols(
         symbols
             .imports
             .into_iter()
-            .map(|i| resolve_named_import(i, abs_path, root, resolver))
+            .map(|i| resolve_named_import(i, abs_path, root, resolver, remapper))
             .collect()
     } else {
         Vec::new()
@@ -46,12 +47,13 @@ fn resolve_export(
     e: Export,
     abs_path: &Path,
     root: &Path,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> ResolvedExport {
     let resolved = if let ExportKind::ReExport { source, .. } = &e.kind {
         resolver
             .resolve(source, abs_path)
-            .map(|abs| make_relative(&abs, root))
+            .map(|abs| make_relative(&remapper.remap(&abs), root))
     } else {
         None
     };
@@ -67,11 +69,12 @@ fn resolve_named_import(
     i: NamedImport,
     abs_path: &Path,
     root: &Path,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> ResolvedImport {
     let resolved = resolver
         .resolve(&i.source, abs_path)
-        .map(|abs| make_relative(&abs, root));
+        .map(|abs| make_relative(&remapper.remap(&abs), root));
     ResolvedImport {
         source: i.source,
         imported: i.imported,

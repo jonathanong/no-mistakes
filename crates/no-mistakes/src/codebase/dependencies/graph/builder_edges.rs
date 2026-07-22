@@ -8,8 +8,8 @@ struct EdgeMaps<'a> {
     reverse: &'a mut EdgeMap,
 }
 
-struct EdgeResolutionContext<'a, 'config> {
-    resolver: &'a ImportResolver<'config>,
+struct EdgeResolutionContext<'a> {
+    resolver: &'a dyn ImportResolution,
     session: &'a crate::codebase::analysis_session::AnalysisSession,
 }
 
@@ -17,7 +17,7 @@ fn collect_and_merge_all_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     playwright_snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
     facts: Option<&dyn TsFactLookup>,
-    resolution: EdgeResolutionContext<'_, '_>,
+    resolution: EdgeResolutionContext<'_>,
     parsed_imports: &ParsedImports<'_>,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     maps: EdgeMaps<'_>,
@@ -48,8 +48,14 @@ fn collect_and_merge_all_edges(
             let Some(facts) = facts else {
                 anyhow::bail!("TS import facts are required for route-import edges");
             };
-            let route_import_edges =
-                collect_route_import_edges(files, facts, tsconfig, graph_files, session);
+            let route_import_edges = collect_route_import_edges(
+                files,
+                facts,
+                tsconfig,
+                edge_inputs.tsconfig_catalog,
+                graph_files,
+                session,
+            );
             merge_edges(forward, reverse, route_import_edges);
         }
         Ok(())
@@ -96,6 +102,7 @@ fn collect_and_merge_all_edges(
                     indexable: files,
                     all: &graph_files.all,
                     visible: graph_files.visible(),
+                    graph_files,
                 },
                 facts,
                 resolver,
@@ -137,11 +144,12 @@ fn collect_and_merge_all_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.routes", || {
         if plan.routes {
-            let route_edges = collect_route_edges(
+            let route_edges = collect_route_edges_with_graph_files(
                 root,
                 tsconfig,
+                edge_inputs.tsconfig_catalog,
                 resolver,
-                &graph_files.all,
+                graph_files,
                 facts,
                 config_options,
             );
@@ -155,7 +163,7 @@ fn collect_and_merge_all_edges(
             merge_edges(
                 forward,
                 reverse,
-                collect_queue_edges(root, resolver, files, facts, config_options),
+                collect_queue_edges(root, resolver, graph_files, facts, config_options),
             );
         }
     });

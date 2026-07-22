@@ -4,7 +4,7 @@ use super::{
     git_visible_files, has_disable_comment, has_disable_file_comment, has_disable_line_comment,
     is_skipped_dir, is_test_file, line_number, normalize_discovery_path, parse_git_tagged_paths,
     relative_slash_path, starts_with_use_client, static_property_key_name, unwrap_ts_wrappers,
-    walk_files,
+    walk_files, FrozenPathRemapper,
 };
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, ObjectPropertyKind, Statement};
@@ -17,6 +17,32 @@ use tempfile::TempDir;
 mod discovery_preserve;
 mod gitignore;
 mod source_and_discovery;
+
+#[test]
+fn frozen_path_remapper_keeps_symlink_namespace_deterministic() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/symlink-workspace");
+    let lexical = root.join("link/src/value.ts");
+    let real = root.join("real/src/value.ts");
+    let normalized_real = root.join("real/../real/src/value.ts");
+    let noncanonical_link = root.join("link/../link/src/value.ts");
+    let missing_member = PathBuf::from("/definitely/missing-member.ts");
+    let missing = PathBuf::from("/definitely/missing.ts");
+    let first = FrozenPathRemapper::from_paths(vec![real.clone(), lexical.clone(), missing_member]);
+    let reversed = FrozenPathRemapper::from_paths(vec![lexical.clone(), real]);
+
+    // The remapper prefers the deterministic lexical path even if the source
+    // map arrives in reverse HashMap iteration order.
+    assert_eq!(first.remap(&lexical), lexical);
+    // This is already the real target after lexical normalization, so it
+    // exercises the canonical-map fast path without another stat call.
+    assert_eq!(first.remap(&normalized_real), lexical);
+    // The lexical symlink spelling is not a canonical map key; canonicalize
+    // falls back to the same frozen graph identity.
+    assert_eq!(first.remap(&noncanonical_link), lexical);
+    assert_eq!(reversed.remap(&noncanonical_link), lexical);
+    assert_eq!(first.remap(&missing), missing);
+}
 
 #[test]
 fn deadline_checked_paths_preserves_success_and_maps_timeout() {

@@ -2,7 +2,7 @@ use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(super) fn runtime_deps(
+pub(crate) fn runtime_deps(
     graph: &DepGraph,
     target: PathBuf,
     file_universe: Option<&HashSet<PathBuf>>,

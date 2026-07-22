@@ -23,17 +23,48 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     }
     let graph_files = GraphFiles::from_files(graph_file_paths);
     let config = session.config(&root, args.config.as_deref())?;
-    let test_filter = TestFileFilter::new(&root, &config);
     let graph_plan = signature_impact_graph_plan();
     let codebase_config =
         crate::codebase::config::config_from_loaded_v2(&root, args.config.as_deref(), &config);
-    let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(
-        &root,
+    let dataset = session.dataset(&root);
+    let workspace = dataset.workspace();
+    let framework_plan = crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(
         graph_plan,
-        &codebase_config,
+    );
+    let (tsconfig_catalog, prepared_test_projects) =
+        crate::codebase::dependencies::prepare_tsconfig_catalog_with_framework_projects(
+            crate::codebase::dependencies::FrameworkCatalogPreparation {
+                root: &root,
+                tsconfig_path: args.tsconfig.as_deref(),
+                tsconfig: &tsconfig,
+                config: &config,
+                codebase_config: &codebase_config,
+                workspace: &workspace,
+                root_visible_paths: &root_visible_paths,
+                visible_paths: &visible_paths,
+                sources: dataset.sources_for(&root),
+                build_plan: graph_plan,
+                graph_files: &graph_files,
+                collect_graph_facts: false,
+                framework_plan: &framework_plan,
+            },
+        )?;
+    let test_filter = crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
+        &root,
         &config,
-        &visible_paths,
-    )?;
+        &root_visible_paths,
+        prepared_test_projects.project_filters(),
+    );
+    let prepared_graph =
+        crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter_and_workspace(
+            &root,
+            graph_plan,
+            &codebase_config,
+            &config,
+            &visible_paths,
+            test_filter.clone(),
+            workspace,
+        )?;
     let (mut fact_plan, mut fact_context) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
             &root,
@@ -52,15 +83,20 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         &fact_context,
     );
     crate::invocation::check_timeout()?;
-    let graph = DepGraph::build_with_plan_files_prepared_config_facts_and_session(
-        crate::codebase::dependencies::graph::PreparedGraphBuildRequest {
+    let graph = DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
+        crate::codebase::dependencies::graph::PreparedGraphBuild {
             root: &root,
             tsconfig: &tsconfig,
+            tsconfig_catalog: Some(&tsconfig_catalog),
             plan: graph_plan,
             graph_files: &graph_files,
             config_path: args.config.as_deref(),
             prepared: &prepared_graph,
             facts: Some(&facts),
+            import_resolution_cache: None,
+            dotnet_facts: None,
+            swift_facts: None,
+            visible_paths: Some(&visible_paths),
         },
         std::sync::Arc::clone(&session),
     )?;
@@ -68,7 +104,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         &PreparedReportContext {
             args,
             root: &root,
-            tsconfig: &tsconfig,
+            tsconfig_catalog: &tsconfig_catalog,
             session: &session,
             graph_files: &graph_files,
             test_filter: &test_filter,
@@ -84,7 +120,6 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
 pub(super) fn collect_report_with_prepared(
     args: &SymbolsArgs,
     root: &Path,
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
     prepared: PreparedSignatureImpact<'_>,
 ) -> Result<SignatureImpactReport> {
     if args.files.len() != 1 {
@@ -95,6 +130,7 @@ pub(super) fn collect_report_with_prepared(
     };
     let PreparedSignatureImpact {
         session,
+        tsconfig_catalog,
         graph_files,
         test_filter,
         workspace,
@@ -109,7 +145,7 @@ pub(super) fn collect_report_with_prepared(
         &PreparedReportContext {
             args,
             root,
-            tsconfig,
+            tsconfig_catalog,
             session,
             graph_files,
             test_filter,

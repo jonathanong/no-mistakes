@@ -39,8 +39,8 @@ fn prepare_playwright_views(
                     playwright_unique_policy(&parsed),
                     traversal.visible_paths(),
                 )?;
-                fact_plan.configure_module_resolution(
-                    std::sync::Arc::new(traversal.tsconfig().clone()),
+                fact_plan.configure_module_resolution_with_catalog(
+                    traversal.tsconfig_catalog_arc(),
                     std::sync::Arc::new(traversal.workspace().clone()),
                     traversal.visible_paths(),
                     root,

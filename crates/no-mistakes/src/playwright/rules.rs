@@ -20,10 +20,14 @@ mod fact_plan;
 mod filter;
 mod policy;
 mod prepared;
+mod prepared_entrypoints;
 mod selection;
 
 pub use fact_plan::{fact_plan_for_consumers, PlaywrightFactConsumers};
-pub use prepared::{fact_plan, prepare, prepare_from_snapshot, PreparedPlaywrightRules};
+pub use prepared::PreparedPlaywrightRules;
+pub use prepared_entrypoints::{
+    fact_plan, prepare, prepare_from_snapshot, prepare_from_snapshot_with_catalog,
+};
 
 pub const PLAYWRIGHT_COVERAGE: &str = "playwright-coverage";
 pub const PLAYWRIGHT_UNIQUE_TEST_IDS: &str = "playwright-unique-test-ids";

@@ -77,6 +77,14 @@ pub(super) fn run_check(
         .as_ref()
         .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
     let sources = snapshot.source_store_for(root);
+    let prepared_tsconfig_catalog = super::prepared_tsconfig_catalog(
+        root,
+        tsconfig_path,
+        &prepared_tsconfig,
+        &visible_paths,
+        &sources,
+        Some(&config),
+    );
     let shared = collect_check_facts_with_graph_files_playwright_and_sources(
         root,
         files,
@@ -98,6 +106,7 @@ pub(super) fn run_check(
         config: &config,
         prepared_graph: prepared_graph.as_ref(),
         prepared_tsconfig: &prepared_tsconfig,
+        prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
         inferred_roots: Some(&inferred_roots),
         sources: Some(&sources),
     })

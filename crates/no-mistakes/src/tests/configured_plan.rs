@@ -80,6 +80,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 },
             );
             attach_targets(&mut plan, root, &discovered_tests);
+            plan.warnings.extend(prepared.tsconfig_warnings());
             return Ok(plan);
         }
     }
@@ -102,6 +103,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
             },
         );
         attach_targets(&mut plan, root, &discovered_tests);
+        plan.warnings.extend(prepared.tsconfig_warnings());
         return Ok(plan);
     }
 
@@ -119,6 +121,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
             },
         );
         attach_targets(&mut plan, root, &discovered_tests);
+        plan.warnings.extend(prepared.tsconfig_warnings());
         return Ok(plan);
     }
 
@@ -136,7 +139,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let mut used = HashSet::new();
     let mut group_results = Vec::new();
     let mut remaining_global = global_limit;
-    let mut warnings: Vec<Warning> = Vec::new();
+    let mut warnings: Vec<Warning> = prepared.tsconfig_warnings();
     let mut warnings_seen: HashSet<(String, String)> = warnings
         .iter()
         .map(|warning| (warning.r#type.clone(), warning.file.clone()))

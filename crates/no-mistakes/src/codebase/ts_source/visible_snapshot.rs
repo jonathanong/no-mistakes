@@ -81,17 +81,24 @@ impl VisiblePathSnapshot {
             .scoped_views
             .lock()
             .expect("visible-path snapshot mutex poisoned");
-        candidates
-            .iter()
-            .map(|path| normalize_discovery_path(path))
-            .filter(|path| {
-                contains_path(&self.request_view.tracked_paths, path)
-                    || scoped_views
-                        .values()
-                        .filter_map(|view| view.get())
-                        .any(|view| contains_path(&view.tracked_paths, path))
-            })
-            .collect()
+        let mut tracked = Vec::new();
+        for candidate in candidates {
+            let path = normalize_discovery_path(candidate);
+            if contains_path(&self.request_view.tracked_paths, &path) {
+                tracked.push(path);
+                continue;
+            }
+            for view in scoped_views.values() {
+                let Some(view) = view.get() else {
+                    continue;
+                };
+                if contains_path(&view.tracked_paths, &path) {
+                    tracked.push(path);
+                    break;
+                }
+            }
+        }
+        tracked
     }
 
     #[doc(hidden)]

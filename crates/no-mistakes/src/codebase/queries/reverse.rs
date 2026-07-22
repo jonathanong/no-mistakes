@@ -26,7 +26,27 @@ pub(crate) fn find_export<'a>(symbols: &'a FileSymbols, name: &str) -> Option<&'
 /// Build the reverse import index for the whole project in one parallel scan.
 /// Cheaper than a full `DepGraph` — it only resolves import/re-export edges.
 pub(crate) fn build_index(target: &Target) -> Result<SymbolIndex> {
-    SymbolIndex::build_from_root(&target.root, &target.tsconfig)
+    let graph_files = crate::codebase::dependencies::graph::GraphFiles::discover(&target.root);
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
+        graph_files.indexable(),
+        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
+    );
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let workspace =
+        crate::codebase::workspaces::load_indexed_from_files(&target.root, graph_files.all())
+            .unwrap_or_default();
+    Ok(
+        SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
+            &target.tsconfig,
+            Some(&target.tsconfig_catalog),
+            &graph_files,
+            &facts,
+            &workspace,
+            None,
+            &session,
+        ),
+    )
 }
 
 /// The symbol name a concrete export is indexed under. Default exports are

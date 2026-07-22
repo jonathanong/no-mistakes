@@ -46,13 +46,24 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
     let deep_import = route_helper_import("entityHref", "entityHref", "./depth1");
     let boundary_import = route_helper_import("entityHref", "entityHref", "./depth6");
     let namespace_import = route_helper_import("links", "links", "./namespace-depth6");
+    let graph_files = GraphFiles::from_files(
+        facts
+            .keys()
+            .cloned()
+            .chain(std::iter::once(client.clone()))
+            .collect(),
+    );
+    let inputs = RouteHelperResolutionInputs {
+        facts: &facts,
+        resolver: &resolver,
+        graph_files: &graph_files,
+    };
 
     assert!(route_helper_patterns_from_import(
         &client,
         "entityHref",
         &deep_import,
-        &facts,
-        &resolver,
+        inputs,
         0
     )
     .is_none());
@@ -60,8 +71,7 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
         &client,
         "entityHref",
         &boundary_import,
-        &facts,
-        &resolver,
+        inputs,
         4,
     )
     .is_none());
@@ -70,8 +80,7 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
             &client,
             "entityHref",
             &boundary_import,
-            &facts,
-            &resolver,
+            inputs,
             3,
         ),
         Some(vec!["/prefix/*/suffix/*".to_string()])
@@ -81,8 +90,7 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
         "links",
         "entityHref",
         &namespace_import,
-        &facts,
-        &resolver,
+        inputs,
         4,
     )
     .is_none());
@@ -91,8 +99,7 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
         "links",
         "entityHref",
         &namespace_import,
-        &facts,
-        &resolver,
+        inputs,
         5,
     )
     .is_none());
@@ -102,8 +109,7 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
             "links",
             "entityHref",
             &namespace_import,
-            &facts,
-            &resolver,
+            inputs,
             3,
         ),
         Some(vec!["/prefix/*/suffix/*".to_string()])

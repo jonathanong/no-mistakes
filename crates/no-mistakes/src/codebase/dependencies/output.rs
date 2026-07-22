@@ -18,6 +18,20 @@ pub fn write_json(
     Ok(())
 }
 
+pub(crate) fn write_json_with_diagnostics(
+    roots: &[String],
+    entries: &[NodeEntry],
+    root_dir: &Path,
+    diagnostics: &[crate::codebase::ts_resolver::TsConfigDiagnostic],
+    provenance: &[crate::codebase::ts_resolver::TsConfigProvenance],
+    w: &mut dyn Write,
+) -> Result<()> {
+    let out = build_output_with_diagnostics(roots, entries, root_dir, diagnostics, provenance);
+    serde_json::to_writer_pretty(&mut *w, &out)?;
+    writeln!(w)?;
+    Ok(())
+}
+
 /// Write one relative path per line — suitable for shell `$()` substitution.
 /// QueueJob virtual nodes are rendered as `queueFile#job`.
 pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) -> Result<()> {
@@ -113,6 +127,19 @@ pub fn write_yml(
     let out = build_output(roots, entries, root_dir);
     let s = serde_yaml::to_string(&out)?;
     w.write_all(s.as_bytes())?;
+    Ok(())
+}
+
+pub(crate) fn write_yml_with_diagnostics(
+    roots: &[String],
+    entries: &[NodeEntry],
+    root_dir: &Path,
+    diagnostics: &[crate::codebase::ts_resolver::TsConfigDiagnostic],
+    provenance: &[crate::codebase::ts_resolver::TsConfigProvenance],
+    w: &mut dyn Write,
+) -> Result<()> {
+    let out = build_output_with_diagnostics(roots, entries, root_dir, diagnostics, provenance);
+    w.write_all(serde_yaml::to_string(&out)?.as_bytes())?;
     Ok(())
 }
 

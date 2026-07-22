@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@primary/*": ["src/primary/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "../referenced/tsconfig.build.json" }]
+}

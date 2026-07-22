@@ -2,6 +2,7 @@ pub(crate) struct GraphFiles {
     all: Vec<PathBuf>,
     indexable: Vec<PathBuf>,
     visible: HashSet<PathBuf>,
+    canonical_visible: HashMap<PathBuf, PathBuf>,
 }
 
 impl GraphFiles {
@@ -18,6 +19,14 @@ impl GraphFiles {
         excluded_indexable: &HashSet<PathBuf>,
     ) -> Self {
         let visible = all.iter().cloned().collect();
+        let canonical_visible = all
+            .iter()
+            .filter_map(|path| {
+                path.canonicalize()
+                    .ok()
+                    .map(|canonical| (crate::codebase::ts_resolver::normalize_path(&canonical), path.clone()))
+            })
+            .collect();
         let indexable = all
             .iter()
             .filter(|path| is_indexable(path) && !excluded_indexable.contains(*path))
@@ -27,6 +36,7 @@ impl GraphFiles {
             all,
             indexable,
             visible,
+            canonical_visible,
         }
     }
 
@@ -43,6 +53,10 @@ impl GraphFiles {
         if self.visible.insert(path.clone()) {
             self.all.push(path.clone());
             self.all.sort();
+            if let Ok(canonical) = path.canonicalize() {
+                self.canonical_visible
+                    .insert(crate::codebase::ts_resolver::normalize_path(&canonical), path.clone());
+            }
             changed = true;
         }
         // A demand plan may leave an unrequested runner config visible for import resolution
@@ -57,7 +71,15 @@ impl GraphFiles {
     }
 
     fn is_visible(&self, path: &Path) -> bool {
-        self.visible.contains(path)
+        self.visible_path(path).is_some()
+    }
+
+    pub(crate) fn visible_path(&self, path: &Path) -> Option<&Path> {
+        if let Some(path) = self.visible.get(path) {
+            return Some(path);
+        }
+        let canonical = crate::codebase::ts_resolver::normalize_path(&path.canonicalize().ok()?);
+        self.canonical_visible.get(&canonical).map(PathBuf::as_path)
     }
 
     pub(crate) fn indexable(&self) -> &[PathBuf] {
@@ -71,4 +93,5 @@ impl GraphFiles {
     pub(crate) fn visible(&self) -> &HashSet<PathBuf> {
         &self.visible
     }
+
 }

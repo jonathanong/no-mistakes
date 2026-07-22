@@ -1,6 +1,6 @@
 use crate::check_tasks::{
-    run_codebase_check, run_filesystem_rules_check, run_integration_check, run_queue_check,
-    run_react_check, run_rules_check, CheckTask,
+    run_codebase_check_with_catalog, run_filesystem_rules_check, run_integration_check,
+    run_queue_check, run_react_check, run_rules_check, CheckTask,
 };
 use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::codebase::rules::RuleFinding;
@@ -38,6 +38,8 @@ pub(crate) struct DomainCheckInputs<'a> {
     pub(crate) dependency_graph:
         Option<std::sync::Arc<no_mistakes::codebase::dependencies::graph::DepGraph>>,
     pub(crate) prepared_tsconfig: &'a no_mistakes::codebase::ts_resolver::TsConfig,
+    pub(crate) prepared_tsconfig_catalog:
+        &'a std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) visible_paths: &'a no_mistakes::codebase::ts_source::VisiblePathSnapshot,
     pub(crate) sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
     pub(crate) inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
@@ -64,6 +66,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let prepared_graph = inputs.prepared_graph;
     let dependency_graph = inputs.dependency_graph;
     let prepared_tsconfig = inputs.prepared_tsconfig;
+    let prepared_tsconfig_catalog = inputs.prepared_tsconfig_catalog;
     let visible_paths = inputs.visible_paths;
     let sources = inputs.sources;
     let rule_sources = std::sync::Arc::clone(&sources);
@@ -82,7 +85,13 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                 },
                 || {
                     no_mistakes::diagnostics::with_observer(observer.clone(), || {
-                        run_queue_check(root, prepared_tsconfig, queues_enabled, facts)
+                        run_queue_check(
+                            root,
+                            prepared_tsconfig_catalog,
+                            queues_enabled,
+                            facts,
+                            &session,
+                        )
                     })
                 },
             )
@@ -102,6 +111,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 config,
                                 prepared_graph,
                                 prepared_tsconfig,
+                                prepared_tsconfig_catalog,
                                 inferred_roots: Some(inferred_roots),
                                 sources: Some(&rule_sources),
                             },
@@ -118,7 +128,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                     root,
                                     config,
                                     facts,
-                                    prepared_tsconfig,
+                                    prepared_tsconfig_catalog,
                                     visible_paths,
                                 )
                             })
@@ -129,11 +139,11 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                     no_mistakes::diagnostics::with_observer(
                                         observer.clone(),
                                         || {
-                                            run_codebase_check(
+                                            run_codebase_check_with_catalog(
                                                 &session,
                                                 root,
                                                 codebase_config,
-                                                prepared_tsconfig,
+                                                prepared_tsconfig_catalog,
                                                 unique_exports_enabled,
                                                 facts,
                                                 inferred_roots,

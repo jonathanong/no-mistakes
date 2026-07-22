@@ -4,6 +4,7 @@ use std::path::Path;
 
 pub(crate) mod analysis;
 mod calls;
+mod checks;
 pub(crate) mod config;
 mod enforce;
 pub(crate) mod project_config;
@@ -36,6 +37,11 @@ pub fn prepare_runner_configs(
 ) -> PreparedIntegrationRunnerConfigs {
     runner_config::prepare(root, config, visible_paths, tsconfig)
 }
+
+pub(crate) use checks::sort_findings;
+use checks::{check_suites, check_suites_with_resolver, fail_on_dropped_files};
+pub use runner_config::configured_runner_config_dirs;
+pub use runner_config::prepare_runner_configs_with_catalog;
 
 pub fn check(root: &Path, config_path: Option<&Path>) -> Result<Vec<IntegrationFinding>> {
     standalone::check(root, config_path)
@@ -116,7 +122,7 @@ pub fn check_with_prepared_facts_and_session(
     }
 
     fail_on_dropped_files(shared)?;
-    let analyses = shared
+    let analyses: std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis> = shared
         .ts
         .iter()
         .filter_map(|(path, facts)| {
@@ -129,72 +135,60 @@ pub fn check_with_prepared_facts_and_session(
     check_suites(root, &suites, tsconfig, &analyses, session)
 }
 
-fn fail_on_dropped_files(shared: &crate::codebase::check_facts::CheckFactMap) -> Result<()> {
-    for (file, facts) in &shared.ts {
-        if let Some(error) = &facts.parse_error {
-            anyhow::bail!(
-                "failed to parse integration file {}: {error}",
-                file.display()
-            );
-        }
-    }
-    Ok(())
-}
-
-fn check_suites(
+/// Request-scoped aggregate entry point with per-importer TypeScript resolution.
+#[doc(hidden)]
+pub fn check_with_prepared_facts_catalog_and_session(
     root: &Path,
-    suites: &[types::Suite],
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
-    analyses: &std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis>,
+    config: &crate::config::v2::NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<Vec<IntegrationFinding>> {
-    let function_index = resolve::build_function_index(analyses);
-    let export_index = resolve::build_export_index(analyses);
+    config::validate_config(config)?;
+
+    let root_paths = visible_paths.paths_for(root);
+    let runner_configs = runner_config::prepare_with_catalog_and_sources(
+        root,
+        config,
+        &root_paths,
+        std::sync::Arc::clone(&tsconfig_catalog),
+        visible_paths.source_store_for(root),
+    );
+    let prepared_runner_configs =
+        runner_config::ParsedRunnerConfigs::with_files(shared.integration_runner_configs.clone());
+    if !prepared_runner_configs.covers(&runner_configs) {
+        anyhow::bail!(
+            "prepared integration runner facts are incomplete; collect shared facts with \
+             CheckFactPlan.integration_runner_configs from prepare_runner_configs()"
+        );
+    }
+    let suites = config::configured_suites_from_runner_configs(
+        root,
+        config,
+        &runner_configs,
+        &prepared_runner_configs,
+    )?;
+    if suites.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    fail_on_dropped_files(shared)?;
+    let analyses: std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis> = shared
+        .ts
+        .iter()
+        .filter_map(|(path, facts)| {
+            facts
+                .integration
+                .as_ref()
+                .map(|analysis| (path.clone(), analysis.clone()))
+        })
+        .collect();
     let visible_files = analyses.keys().cloned().collect();
-    let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
-        tsconfig,
-        Some(&visible_files),
+    let import_resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+        &tsconfig_catalog,
+        &visible_files,
         session,
     );
-    let resolver = resolve::ImportResolution {
-        analyses,
-        export_index: &export_index,
-        resolver: &import_resolver,
-    };
-
-    let mut findings = Vec::new();
-    for suite in suites {
-        let include = project_config::build_globset(&suite.include)?;
-        let exclude = project_config::build_globset(&suite.exclude)?;
-        for (file, file_analysis) in analyses {
-            let rel = crate::codebase::ts_source::relative_slash_path(root, file);
-            if !include.is_match(&rel) || exclude.is_match(&rel) {
-                continue;
-            }
-            for test in &file_analysis.tests {
-                let integrations =
-                    resolve::resolved_integrations(&test.function_key, &function_index, &resolver);
-                findings.extend(enforce::enforce_policy(root, suite, test, &integrations));
-            }
-        }
-    }
-    sort_findings(&mut findings);
-    Ok(findings)
-}
-
-fn sort_findings(findings: &mut Vec<IntegrationFinding>) {
-    findings.sort_by(|a, b| {
-        a.file
-            .cmp(&b.file)
-            .then(a.line.cmp(&b.line))
-            .then(a.framework.cmp(&b.framework))
-            .then(a.suite.cmp(&b.suite))
-    });
-    findings.dedup_by(|a, b| {
-        a.framework == b.framework
-            && a.suite == b.suite
-            && a.file == b.file
-            && a.line == b.line
-            && a.message == b.message
-    });
+    check_suites_with_resolver(root, &suites, &analyses, &import_resolver)
 }

@@ -1,4 +1,4 @@
-use crate::codebase::ts_resolver::ImportResolver;
+use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_model::{InternalProducer, InternalWorker};
 use crate::queue::types::QueueKey;
@@ -14,14 +14,15 @@ pub(super) fn queue_definitions(
         .collect()
 }
 
-pub(super) fn resolve_producers(
+pub(super) fn resolve_producers<R: ImportResolverFacade>(
     facts: &HashMap<PathBuf, FileFacts>,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalProducer> {
     let mut out = Vec::new();
     for (path, facts) in facts {
-        let local = local_queues(path, facts, queue_defs, resolver);
+        let local = local_queues(path, facts, queue_defs, resolver, remapper);
         for site in &facts.producers {
             let queue = local.get(&site.binding).cloned();
             out.push(InternalProducer {
@@ -33,10 +34,11 @@ pub(super) fn resolve_producers(
     out
 }
 
-pub(super) fn resolve_workers(
+pub(super) fn resolve_workers<R: ImportResolverFacade>(
     facts: &HashMap<PathBuf, FileFacts>,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<InternalWorker> {
     let by_name = queue_defs
         .iter()
@@ -55,18 +57,20 @@ pub(super) fn resolve_workers(
             site.processor_file = site
                 .processor_specifier
                 .as_ref()
-                .and_then(|spec| resolver.resolve(spec, path));
+                .and_then(|spec| resolver.resolve(spec, path))
+                .map(|path| remapper.remap(&path));
             out.push(InternalWorker { site, queue });
         }
     }
     out
 }
 
-fn local_queues(
+fn local_queues<R: ImportResolverFacade>(
     path: &Path,
     facts: &FileFacts,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> HashMap<String, QueueKey> {
     let mut map = facts
         .queue_bindings
@@ -85,6 +89,7 @@ fn local_queues(
         let Some(resolved) = resolver.resolve(&import.source, path) else {
             continue;
         };
+        let resolved = remapper.remap(&resolved);
         if let Some(exports) = queue_defs.get(&resolved) {
             if let Some(queue_name) = exports.get(&import.imported) {
                 map.insert(

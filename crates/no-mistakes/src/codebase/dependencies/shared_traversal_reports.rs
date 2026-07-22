@@ -17,9 +17,9 @@ impl SharedTraversalContext {
         crate::codebase::symbols::signature_impact_json_with_prepared(
             args,
             &self.root,
-            &self.tsconfig,
             crate::codebase::symbols::PreparedSignatureImpact {
                 session: &session,
+                tsconfig_catalog: &self.tsconfig_catalog,
                 graph_files: &self.graph_files,
                 test_filter: &test_filter,
                 workspace: self.prepared_graph.workspace(),

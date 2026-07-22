@@ -1,6 +1,7 @@
 struct GraphEdgeBuildInputs<'a> {
     root: &'a Path,
     tsconfig: &'a TsConfig,
+    tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     plan: GraphBuildPlan,
     workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
     graph_files: &'a GraphFiles,
@@ -76,6 +77,7 @@ fn merge_swift_edges(
     let swift_edges = collect_swift_edges_with_facts(
         inputs.root,
         inputs.tsconfig,
+        inputs.tsconfig_catalog,
         &inputs.graph_files.all,
         inputs.config_options,
         ts_facts,

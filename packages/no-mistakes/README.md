@@ -119,6 +119,13 @@ CLI and Node analyses share a per-user machine-wide lock. CLI flags
 Waiting does not alter successful output, and Node lock/timeout failures reject
 the returned Promise.
 
+Dependency graph, query, and test-planning resolution is per workspace by
+default: when `tsconfig` is omitted, each import uses the config that owns its
+importing file, including referenced projects. This keeps conflicting package
+aliases isolated while shared code can still select all importing tests. Pass
+`tsconfig` explicitly to force one config for a whole invocation when debugging
+or preserving a legacy single-config workflow.
+
 External `no-mistakes-*` executables on `PATH` can be invoked as subcommands.
 For example, after installing `no-mistakes-scripts`:
 

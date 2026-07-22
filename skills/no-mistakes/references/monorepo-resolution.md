@@ -17,13 +17,22 @@ When a `tsconfig.json` is present, the binaries load `compilerOptions.paths` and
 }
 ```
 
-**Auto-discovery:** walks upward from `--root` until a `tsconfig.json` is found. In a monorepo with one tsconfig per package and no root tsconfig, auto-discovery often picks the wrong one — specify explicitly:
+**Automatic workspace resolution:** when `--tsconfig` is omitted, no-mistakes
+discovers visible workspace configs and selects the config that owns each
+importing source file. Referenced projects participate in ownership, and an
+import crossing a project boundary continues with the target file's own config.
+Conflicting aliases therefore do not leak between packages.
 
 ```bash
-no-mistakes dependents backend/services/auth.mts --root /project --tsconfig backend/tsconfig.json
+no-mistakes dependents backend/services/auth.mts --root /project
 ```
 
-**`tsconfig.extends` is followed:** if a workspace tsconfig extends a base config that defines `paths`, the inherited aliases resolve correctly. Pass `--tsconfig` to whichever config in the extends chain contains the relevant `paths` entries, or let auto-discovery find the nearest one.
+**Explicit override:** `--tsconfig <FILE>` forces that one config for every
+source in the request. Use it to debug an alias or preserve a legacy
+single-config workflow. An explicit config can remain outside the analysis root.
+
+**`tsconfig.extends` is followed:** if a workspace tsconfig extends a base config
+that defines `paths`, inherited aliases resolve correctly.
 
 ## 2. npm workspace packages
 
@@ -60,14 +69,16 @@ For directory imports (no file suffix), it appends `/index.<ext>` in the same or
 
 **Per-package tsconfig with aliases:**
 ```bash
-# Use the package's own tsconfig so its aliases resolve
+# Force the package config to debug this package in single-config mode
 no-mistakes dependents backend/services/auth.mts \
   --root /project \
   --tsconfig backend/tsconfig.json
 ```
 
-**Multiple tsconfigs, single traversal:**
-The tool only loads one tsconfig per run. If your traversal crosses packages with different `paths`, aliases from the secondary package won't resolve. Run separate invocations per package, or use the workspace mechanism for cross-package imports.
+**Multiple tsconfigs, one traversal:**
+The automatic resolver uses each package's own config while one traversal crosses
+packages. Use explicit `--tsconfig` only when you intentionally want the old
+single-config behavior.
 
 **Workspace entrypoints:**
 ```bash

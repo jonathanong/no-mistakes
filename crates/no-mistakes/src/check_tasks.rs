@@ -9,6 +9,8 @@ use no_mistakes::react_traits;
 use std::time::Duration;
 
 mod filesystem;
+#[cfg(test)]
+mod tests;
 
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check};
 
@@ -50,20 +52,22 @@ pub(crate) fn run_react_check(
 
 pub(crate) fn run_queue_check(
     root: &std::path::Path,
-    prepared_tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
+    prepared_tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     enabled: bool,
     facts: &CheckFactMap,
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
 ) -> Result<CheckTask<Vec<CheckFinding>>> {
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.queues",
         no_mistakes::diagnostics::TimingKind::Parallel,
         || -> Result<_> {
             Ok(if enabled {
-                no_mistakes::queue::analyze_project_with_prepared_facts(
+                no_mistakes::queue::analyze_project_with_prepared_facts_and_catalog_and_session(
                     root,
-                    prepared_tsconfig,
+                    prepared_tsconfig_catalog,
                     &[],
                     facts,
+                    session,
                 )?
                 .check
             } else {
@@ -106,18 +110,18 @@ pub(crate) fn run_integration_check(
     root: &std::path::Path,
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
-    tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
+    tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     visible_paths: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<CheckTask<Vec<IntegrationFinding>>> {
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.integration",
         no_mistakes::diagnostics::TimingKind::Parallel,
         || {
-            integration_tests::check_with_prepared_facts_and_session(
+            integration_tests::check_with_prepared_facts_catalog_and_session(
                 root,
                 config,
                 facts,
-                tsconfig,
+                std::sync::Arc::clone(tsconfig_catalog),
                 visible_paths,
                 session,
             )
@@ -131,11 +135,11 @@ pub(crate) fn run_integration_check(
     })
 }
 
-pub(crate) fn run_codebase_check(
+pub(crate) fn run_codebase_check_with_catalog(
     session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     root: &std::path::Path,
     config: &no_mistakes::codebase::config::Config,
-    prepared_tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
+    prepared_tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     enabled: bool,
     facts: &CheckFactMap,
     inferred_roots: &no_mistakes::codebase::config::InferredRoots,
@@ -145,10 +149,10 @@ pub(crate) fn run_codebase_check(
         no_mistakes::diagnostics::TimingKind::Parallel,
         || -> Result<_> {
             Ok(if enabled {
-                unique_exports::analyze_project_with_prepared_facts_and_inferred_and_session(
+                unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session(
                     root,
                     config,
-                    prepared_tsconfig,
+                    prepared_tsconfig_catalog,
                     facts,
                     inferred_roots,
                     session,

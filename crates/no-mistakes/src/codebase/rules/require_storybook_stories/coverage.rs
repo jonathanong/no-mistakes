@@ -1,6 +1,6 @@
 use super::types::{component_key, GlobMatcher};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::ts_symbols::ExportKind;
 use std::collections::{BTreeSet, HashSet, VecDeque};
@@ -10,7 +10,7 @@ pub(super) fn reachable_story_files(
     project_root: &Path,
     shared: &CheckFactMap,
     stories: &GlobMatcher,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     _all_component_keys: &HashSet<String>,
 ) -> BTreeSet<PathBuf> {
     let mut queue: VecDeque<PathBuf> = story_files_matching(project_root, shared, stories)
@@ -85,7 +85,7 @@ pub(super) fn directly_covered_components(
     project_root: &Path,
     shared: &CheckFactMap,
     story_files: &BTreeSet<PathBuf>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     component_keys: &HashSet<String>,
 ) -> BTreeSet<String> {
     let mut covered = BTreeSet::new();
@@ -149,7 +149,7 @@ fn resolve_component_key(
     file: &Path,
     export_name: &str,
     component_keys: &HashSet<String>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     visiting: &mut HashSet<(PathBuf, String)>,
 ) -> Option<String> {
     if !file.starts_with(project_root) {

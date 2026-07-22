@@ -78,6 +78,52 @@ fn tests_plan_json_resolves_explicit_relative_tsconfig_under_request_root() {
     tests_plan_json_impl(options).unwrap();
 }
 
+#[test]
+fn tests_plan_json_workspace_shared_change_selects_all_importing_projects() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/workspace-resolution"),
+    );
+    let output = tests_plan_json_impl(
+        json!({
+            "root": root,
+            "framework": "vitest",
+            "changedFiles": ["packages/shared/src/message.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let selected = plan["selected_tests"].as_array().unwrap();
+
+    assert!(selected
+        .iter()
+        .any(|test| test["test_file"] == "apps/web/tests/entry.test.ts"), "{plan:#?}");
+    assert!(selected
+        .iter()
+        .any(|test| test["test_file"] == "services/worker/tests/entry.test.ts"), "{plan:#?}");
+}
+
+#[test]
+fn tests_plan_json_discovers_framework_config_aliases_from_configured_nested_runner() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/framework-project-alias"),
+    );
+    let output = tests_plan_json_impl(
+        json!({
+            "root": root,
+            "framework": "vitest",
+            "changedFiles": ["apps/web/src/value.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert!(plan["selected_tests"].as_array().unwrap().iter().any(|test| {
+        test["test_file"] == "apps/web/tests/value.impact.ts"
+    }), "{plan:#?}");
+}
+
 // Regression for a review finding on #508: the CLI rejects --from-git-diff
 // combined with --base/--head via clap's conflicts_with_all, but the N-API
 // options struct isn't bound by clap. Without a matching guard in

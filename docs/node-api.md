@@ -91,6 +91,12 @@ one request-scoped in-memory dataset. Sources, parsed metadata, and compact file
 facts are reused; each normalized graph or symbol-index plan is built at most
 once for its file universe. Distinct effective scopes are prepared independently.
 
+When a request omits `tsconfig`, TypeScript/JavaScript imports are resolved with
+the config that owns each importing file. Dependency graph and query APIs plus
+test planning use this behavior across referenced workspace projects. Set
+`tsconfig` only to force that one config for the entire request; this preserves
+the previous single-config behavior for debugging and compatibility.
+
 `ciTopology(options)` returns the same schema-v1 `WorkflowTopology` JSON as
 `ci topology --format json` — it never throws on diagnostics (unlike the CLI,
 which exits non-zero and prints nothing when any diagnostic is an error);
@@ -165,6 +171,7 @@ const report = await analyzeProject({
 ## Agent Defaults
 
 - Pass `root` explicitly.
-- Pass `tsconfig` explicitly in monorepos with package-local aliases.
+- Omit `tsconfig` to use automatic per-workspace resolution; pass it explicitly
+  only to force one config for debugging or compatibility.
 - Use `analyzeProject()` when several reports share the same root/config.
 - Prefer structured API results over parsing human CLI output.

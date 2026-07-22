@@ -7,7 +7,7 @@ use super::{
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::rules::{path_filter::RulePathFilter, sort_findings};
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 use anyhow::{bail, Result};
 use std::collections::HashSet;
@@ -19,17 +19,15 @@ struct RuleCheck<'a> {
     config: &'a NoMistakesConfig,
     rule: &'a RuleDef,
     shared: &'a CheckFactMap,
-    tsconfig: &'a TsConfig,
+    resolver: &'a dyn ImportResolution,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    session: &'a crate::codebase::analysis_session::AnalysisSession,
 }
 
-pub(super) fn check_with_tsconfig(
+pub(super) fn check_with_resolver(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &CheckFactMap,
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    mut resolve: impl FnMut(&Path) -> Result<TsConfig>,
+    resolver: &dyn ImportResolution,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<RuleFinding>> {
     let root = normalize_path(root);
@@ -47,16 +45,14 @@ pub(super) fn check_with_tsconfig(
             .map(|path| root.join(path))
             .unwrap_or_else(|| root.to_path_buf());
         let project_root = normalize_path(&project_root);
-        let tsconfig = resolve(&project_root)?;
         findings.extend(check_rule(RuleCheck {
             root: &root,
             project_root: &project_root,
             config,
             rule,
             shared,
-            tsconfig: &tsconfig,
+            resolver,
             inferred_roots,
-            session,
         })?);
     }
     sort_findings(&mut findings);
@@ -70,16 +66,9 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         config,
         rule,
         shared,
-        tsconfig,
+        resolver,
         inferred_roots,
-        session,
     } = inputs;
-    let visible_files = shared
-        .files()
-        .iter()
-        .map(|path| normalize_path(path))
-        .collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
     let opts: Options = rule.rule_options();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;
@@ -108,16 +97,16 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         project_root,
         shared,
         &stories,
-        &resolver,
+        resolver,
         &all_component_keys,
     );
     let mut namespace_findings =
-        namespace_import_findings(root, project_root, shared, &story_files, &resolver);
+        namespace_import_findings(root, project_root, shared, &story_files, resolver);
     let direct = directly_covered_components(
         project_root,
         shared,
         &story_files,
-        &resolver,
+        resolver,
         &all_component_keys,
     );
     let covered =
@@ -127,7 +116,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
     } else {
         Default::default()
     };
-    let boundary_files = dynamic_or_mock_boundary_files(project_root, shared, &resolver);
+    let boundary_files = dynamic_or_mock_boundary_files(project_root, shared, resolver);
 
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);

@@ -17,6 +17,7 @@ mod integration_gitignore;
 #[cfg(feature = "test-instrumentation")]
 mod prepared_parser_cache;
 mod prepared_tsconfig;
+mod tsconfig_catalog;
 
 fn aggregate_html_id_rule_composition(name: &str) -> Vec<RuleFinding> {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -240,44 +241,6 @@ fn run_all_includes_filesystem_rule_advisories() {
             && finding.file == "CLAUDE.md"
             && finding.message.contains("8 remaining")
     }));
-}
-
-#[test]
-fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");
-    let config = root.join(".no-mistakes.yml");
-    let files = no_mistakes::codebase::ts_source::discover_files(&root, &[]);
-    let facts = no_mistakes::codebase::check_facts::collect_check_facts(
-        &root,
-        files,
-        no_mistakes::codebase::check_facts::CheckFactPlan {
-            source: true,
-            symbols: true,
-            ..Default::default()
-        },
-    );
-
-    let tsconfig = root.join("tsconfig.json");
-    let prepared_tsconfig = no_mistakes::codebase::ts_resolver::load_tsconfig(&tsconfig).unwrap();
-    let loaded_config = no_mistakes::codebase::config::load_codebase_config_with_path(
-        &root,
-        Some(config.as_path()),
-    )
-    .unwrap();
-    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(None);
-    let results = crate::check_tasks::run_codebase_check(
-        &session,
-        &root,
-        &loaded_config,
-        &prepared_tsconfig,
-        true,
-        &facts,
-        &no_mistakes::codebase::config::InferredRoots::default(),
-    )
-    .unwrap();
-
-    assert!(!results.findings.is_empty());
 }
 
 #[test]

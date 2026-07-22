@@ -212,7 +212,9 @@ reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 `dependencies`, `dependents`, and `related` support:
 
 - `--root <PATH>` for the project root.
-- `--tsconfig <FILE>` for path aliases; pass this explicitly in monorepos.
+- `--tsconfig <FILE>` to force one config for an entire request. Omit it to use
+  automatic per-workspace ownership resolution, including package-local aliases
+  and referenced projects.
 - `--depth <N>` to limit traversal depth.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).

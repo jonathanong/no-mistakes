@@ -14,6 +14,33 @@ fn gitignore_tsconfig_fixture() -> tempfile::TempDir {
     fixture
 }
 
+fn workspace_tsconfig_fixture_root() -> String {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/workspace-resolution"),
+    )
+    .display()
+    .to_string()
+}
+
+fn workspace_dependency_paths(file: &str, tsconfig: Option<&str>) -> Vec<String> {
+    let mut options = serde_json::json!({
+        "root": workspace_tsconfig_fixture_root(),
+        "files": [file],
+        "relationships": ["import"]
+    });
+    if let Some(tsconfig) = tsconfig {
+        options["tsconfig"] = serde_json::Value::String(tsconfig.to_string());
+    }
+    let output = dependencies_json_impl(options.to_string()).unwrap();
+    serde_json::from_str::<serde_json::Value>(&output).unwrap()["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|row| row["path"].as_str().map(str::to_owned))
+        .collect()
+}
+
 fn dependency_rows(root: &std::path::Path, tsconfig: Option<&str>) -> Vec<serde_json::Value> {
     let mut options = serde_json::json!({
         "root": root,
@@ -63,6 +90,39 @@ fn dependencies_napi_ignores_automatic_tsconfig_but_honors_explicit_ignored_conf
     let explicit = dependency_rows(fixture.path(), Some("tsconfig.json"));
     assert!(explicit.iter().any(|row| row["path"] == "src/forbidden.ts"));
     assert!(!explicit.iter().any(|row| row["module"] == "@lib/forbidden"));
+}
+
+#[test]
+fn dependencies_napi_uses_each_workspace_file_owning_tsconfig_by_default() {
+    let web = workspace_dependency_paths("apps/web/src/entry.ts", None);
+    let worker = workspace_dependency_paths("services/worker/src/entry.ts", None);
+
+    assert!(
+        web.contains(&"apps/web/src/runtime/value.ts".to_string()),
+        "{web:#?}"
+    );
+    assert!(!web.contains(&"services/worker/src/runtime/value.ts".to_string()));
+    assert!(
+        worker.contains(&"services/worker/src/runtime/value.ts".to_string()),
+        "{worker:#?}"
+    );
+    assert!(!worker.contains(&"apps/web/src/runtime/value.ts".to_string()));
+    assert!(web.contains(&"packages/shared/src/message.ts".to_string()));
+    assert!(worker.contains(&"packages/shared/src/message.ts".to_string()));
+}
+
+#[test]
+fn dependencies_napi_explicit_workspace_tsconfig_forces_one_config() {
+    let forced = workspace_dependency_paths(
+        "services/worker/src/entry.ts",
+        Some("apps/web/tsconfig.json"),
+    );
+
+    assert!(
+        forced.contains(&"apps/web/src/runtime/value.ts".to_string()),
+        "{forced:#?}"
+    );
+    assert!(!forced.contains(&"services/worker/src/runtime/value.ts".to_string()));
 }
 
 #[test]
@@ -119,4 +179,44 @@ fn queues_napi_ignores_automatic_tsconfig_but_honors_explicit_ignored_config() {
         .any(|producer| {
             producer["file"] == "enqueue.ts" && producer["queueFile"] == "src/queues/emails.ts"
         }));
+}
+
+#[test]
+fn queues_napi_uses_package_tsconfig_aliases_automatically() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/queue-tsconfig-catalog");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root_path = fixture.path().canonicalize().unwrap();
+    let root = root_path.display().to_string();
+
+    crate::ast::begin_parse_count(&root_path);
+    let output =
+        crate::napi_api::queues_json_impl(serde_json::json!({ "root": root }).to_string()).unwrap();
+    let parse_counts = crate::ast::finish_parse_count(&root_path);
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    for (package, queue) in [("a", "a-queue"), ("b", "b-queue")] {
+        let enqueue = format!("packages/{package}/src/enqueue.ts");
+        let queue_file = format!("packages/{package}/src/queues/email.ts");
+        assert!(
+            report["producers"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|producer| {
+                    producer["file"] == enqueue
+                        && producer["queueFile"] == queue_file
+                        && producer["queueName"] == queue
+                }),
+            "{report:#?}"
+        );
+    }
+    assert!(
+        report["check"].as_array().unwrap().is_empty(),
+        "{report:#?}"
+    );
+    assert!(
+        parse_counts.values().all(|count| *count == 1),
+        "automatic queue analysis must parse each TypeScript source once: {parse_counts:#?}"
+    );
 }

@@ -101,6 +101,30 @@ fn signature_impact_recovers_private_callers_imported_through_barrels() {
     }));
 }
 
+#[cfg(unix)]
+#[test]
+fn signature_impact_remaps_scoped_alias_callers_to_the_symlink_namespace() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let mut args = args_for(&root, vec!["src/symbol-target.ts"], Format::Json);
+    args.mode = SymbolsMode::SignatureImpact;
+    args.symbol = Some("linkedSymbol".to_string());
+
+    let output = run_capture(args);
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(report["productionCallers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| {
+            entry["file"] == "src/symbol-hidden-client.ts"
+                && entry["symbol"] == "executeWithoutVisibleTarget"
+        }), "{report:#?}");
+}
+
 #[test]
 fn signature_impact_recovers_private_callers_imported_through_aliased_barrels() {
     let out = run_capture(impact_args("parseDate", Format::Json));

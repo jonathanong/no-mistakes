@@ -1,8 +1,5 @@
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
-use crate::check_tasks::{
-    filesystem_rules_configured, forbidden_dependencies_configured, queues_configured,
-    unique_exports_configured,
-};
+use crate::check_tasks;
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
 use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_playwright_sources_and_session;
@@ -31,11 +28,11 @@ pub(crate) fn run_all(
         tsconfig_path.as_deref(),
     )?;
     let config = &prepared.config;
-    let queues_enabled = queues_configured(config);
-    let unique_exports_enabled = unique_exports_configured(config);
+    let queues_enabled = check_tasks::queues_configured(config);
+    let unique_exports_enabled = check_tasks::unique_exports_configured(config);
     let enabled = enabled::ConfiguredChecks::from_config(config);
-    let filesystem_rules_enabled = filesystem_rules_configured(config);
-    let forbidden_deps_enabled = forbidden_dependencies_configured(config);
+    let filesystem_rules_enabled = check_tasks::filesystem_rules_configured(config);
+    let forbidden_deps_enabled = check_tasks::forbidden_dependencies_configured(config);
     let forbidden_graph_plan = if forbidden_deps_enabled {
         no_mistakes::codebase::rules::forbidden_dependencies::graph_plan(config)
     } else {
@@ -75,11 +72,12 @@ pub(crate) fn run_all(
     });
     if integration_enabled {
         plan.integration_runner_configs = Some(std::sync::Arc::new(
-            no_mistakes::integration_tests::prepare_runner_configs(
+            no_mistakes::integration_tests::prepare_runner_configs_with_catalog(
                 &root,
                 config,
                 prepared.visible_paths.paths_for(&root).as_ref(),
-                &prepared.tsconfig,
+                std::sync::Arc::clone(&prepared.tsconfig_catalog),
+                prepared.visible_paths.source_store_for(&root),
             ),
         ));
     }
@@ -96,11 +94,10 @@ pub(crate) fn run_all(
         &mut plan,
     )?;
     let needs_shared_facts =
-        plan_requests_facts(&plan) || playwright_fact_plan.is_some() || forbidden_deps_enabled;
+        forbidden_deps_enabled || playwright_fact_plan.is_some() || plan_requests_facts(&plan);
     if !needs_shared_facts
         && !filesystem_rules_enabled
         && !no_mistakes::playwright::rules::configured(config)
-        && !forbidden_deps_enabled
     {
         return Ok(empty_results([None]));
     }
@@ -179,6 +176,7 @@ pub(crate) fn run_all(
             prepared_graph: prepared_graph.as_ref(),
             dependency_graph: None,
             prepared_tsconfig: &prepared.tsconfig,
+            prepared_tsconfig_catalog: &prepared.tsconfig_catalog,
             visible_paths: prepared.visible_paths.as_ref(),
             sources: std::sync::Arc::clone(&sources),
             inferred_roots: &prepared.inferred_roots,

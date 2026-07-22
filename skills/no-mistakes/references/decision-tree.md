@@ -146,7 +146,9 @@ no-mistakes dependents src/auth.mts --filter 'backend/**' --filter 'integration-
   `no-mistakes dependents <file>`.
 
 **When to pass --tsconfig explicitly:**
-In a monorepo with per-package tsconfigs and no root `tsconfig.json`, auto-discovery may pick the wrong one. Pass `--tsconfig <pkg>/tsconfig.json` whenever you get empty or wrong results from a file inside a specific package.
+Use `--tsconfig <pkg>/tsconfig.json` to force a single config while debugging an
+alias or reproducing a legacy result. Omit it for normal monorepo analysis so
+each source uses its owning package config.
 
 **When no-mistakes dependents returns fewer results than expected:**
 Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()`, or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.

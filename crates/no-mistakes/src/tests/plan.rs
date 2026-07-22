@@ -124,7 +124,11 @@ pub(crate) fn generate_plan_with_prepared(
         return Ok(TestPlan {
             selected_tests,
             groups: Vec::new(),
-            warnings: lockfile_analysis.warnings.clone(),
+            warnings: {
+                let mut warnings = lockfile_analysis.warnings.clone();
+                warnings.extend(prepared.tsconfig_warnings());
+                warnings
+            },
             fallback_triggered: true,
             fallback_reason: Some(reason),
         });
@@ -136,7 +140,7 @@ pub(crate) fn generate_plan_with_prepared(
     let test_filter = prepared.test_filter().clone();
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
-    let mut warnings = Vec::new();
+    let mut warnings = prepared.tsconfig_warnings();
     let mut warnings_seen = HashSet::new();
 
     // 4. Trace each changed file
@@ -384,7 +388,7 @@ pub(crate) fn generate_plan_with_prepared(
         return Ok(TestPlan {
             selected_tests,
             groups: Vec::new(),
-            warnings: Vec::new(),
+            warnings: prepared.tsconfig_warnings(),
             fallback_triggered: true,
             fallback_reason: Some(msg),
         });

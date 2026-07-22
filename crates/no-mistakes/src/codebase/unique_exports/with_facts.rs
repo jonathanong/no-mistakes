@@ -7,11 +7,16 @@ use anyhow::Result;
 use std::collections::HashSet;
 use std::path::Path;
 
+mod helpers;
 mod prepared;
-pub use prepared::analyze_project_with_prepared_facts_and_inferred_and_session;
+use helpers::{relative, shared_symbol_files};
 pub use prepared::{
     analyze_project_with_config_and_facts, analyze_project_with_prepared_facts,
     analyze_project_with_prepared_facts_and_inferred,
+};
+pub use prepared::{
+    analyze_project_with_prepared_facts_and_inferred_and_session,
+    analyze_project_with_prepared_facts_catalog_and_inferred_and_session,
 };
 
 pub fn analyze_project_with_facts(
@@ -33,8 +38,7 @@ struct ProjectRootsAnalysis<'a> {
         &'a crate::codebase::config::Config,
         &'a crate::codebase::config::RuleApplicationConfig,
     )>,
-    tsconfig_path: Option<&'a Path>,
-    prepared_tsconfig: Option<&'a crate::codebase::ts_resolver::TsConfig>,
+    resolution: prepared::PreparedResolution<'a>,
     shared: &'a CheckFactMap,
     project_roots: Vec<std::path::PathBuf>,
     options: UniqueExportsOptions,
@@ -48,8 +52,7 @@ fn analyze_project_roots_with_facts(
         session,
         root,
         application_filter,
-        tsconfig_path,
-        prepared_tsconfig,
+        resolution,
         shared,
         project_roots,
         options,
@@ -76,35 +79,51 @@ fn analyze_project_roots_with_facts(
     analysis_files.dedup();
     let analysis_files = filter_source_files(&analysis_files);
     let symbol_files = shared_symbol_files(&workspace_files, &analysis_files);
-    let loaded_tsconfig = prepared_tsconfig
-        .is_none()
+    let loaded_tsconfig = (resolution.tsconfig.is_none() && resolution.catalog.is_none())
         .then(|| {
             crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-                tsconfig_path,
+                resolution.tsconfig_path,
                 root,
                 shared.files(),
             )
         })
         .transpose()?;
-    let tsconfig = prepared_tsconfig
-        .or(loaded_tsconfig.as_ref())
-        .expect("prepared or locally resolved tsconfig");
     let visible_files = workspace_files
         .iter()
         .map(|path| normalize_path(path))
         .collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
     let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
         .unwrap_or_default();
     let source_files = super::scan::collect_source_files_from_facts(root, &symbol_files, shared)?;
-    analyze_unique_exports(
-        root,
-        analysis_files,
-        source_files,
-        options,
-        resolver,
-        workspace,
-    )
+    if let Some(catalog) = resolution.catalog {
+        let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+            catalog,
+            &visible_files,
+            session,
+        );
+        analyze_unique_exports(
+            root,
+            analysis_files,
+            source_files,
+            options,
+            resolver,
+            workspace,
+        )
+    } else {
+        let tsconfig = resolution
+            .tsconfig
+            .or(loaded_tsconfig.as_ref())
+            .expect("prepared or locally resolved tsconfig");
+        let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
+        analyze_unique_exports(
+            root,
+            analysis_files,
+            source_files,
+            options,
+            resolver,
+            workspace,
+        )
+    }
 }
 
 fn filter_application_files(
@@ -174,23 +193,5 @@ struct ApplicationProjectFilter {
     exclude: crate::codebase::rules::path_filter::GlobMatcher,
 }
 
-fn relative(root: &Path, path: &Path) -> String {
-    path.strip_prefix(root)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .replace('\\', "/")
-}
-
 #[cfg(test)]
 mod tests;
-
-fn shared_symbol_files(
-    workspace_files: &[std::path::PathBuf],
-    analysis_files: &[std::path::PathBuf],
-) -> Vec<std::path::PathBuf> {
-    let mut symbol_files = workspace_files.to_vec();
-    symbol_files.extend(analysis_files.iter().cloned());
-    symbol_files.sort();
-    symbol_files.dedup();
-    filter_source_files(&symbol_files)
-}

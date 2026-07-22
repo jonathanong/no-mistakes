@@ -2,6 +2,7 @@ fn collect_project_server_route_defs(
     root: &Path,
     all_files: &[PathBuf],
     tsconfig: &TsConfig,
+    tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
     route_globset: &GlobSet,
     facts: Option<&dyn TsFactLookup>,
     test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
@@ -22,9 +23,10 @@ fn collect_project_server_route_defs(
         ..TsFactPlan::default()
     };
     if let Some(facts) = facts.filter(|facts| facts.covers_ts_fact_plan(server_route_plan)) {
-        return crate::server_routes::route_defs_from_prepared_facts(
+        return crate::server_routes::route_defs_from_prepared_facts_with_catalog(
             root,
             tsconfig,
+            tsconfig_catalog,
             route_files.iter().filter_map(|path| {
                 facts
                     .get_ts_facts(path)
@@ -35,7 +37,12 @@ fn collect_project_server_route_defs(
         );
     }
 
-    crate::server_routes::route_defs_from_files(root, &route_files, tsconfig)
+    crate::server_routes::route_defs_from_files_with_catalog(
+        root,
+        &route_files,
+        tsconfig,
+        tsconfig_catalog,
+    )
 }
 
 fn compile_project_route_globset(project_route_globs: &[String]) -> Option<GlobSet> {

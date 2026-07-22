@@ -75,6 +75,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_and_workspace(
     lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(LazyImportBuild {
         roots,
         tsconfig,
+        tsconfig_catalog: None,
         max_depth,
         graph_files,
         allowed,

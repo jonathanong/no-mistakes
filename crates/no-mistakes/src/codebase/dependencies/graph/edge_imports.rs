@@ -15,7 +15,7 @@ fn collect_parsed_imports_from_facts<'a>(
 
 fn collect_import_edges(
     parsed_imports: &ParsedImports<'_>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
@@ -35,7 +35,8 @@ fn collect_import_edges(
                         graph_files.visible(),
                     );
                     if let Some(target) = classification.resolver_path() {
-                        return (graph_files.is_visible(target) && is_indexable(target)).then(|| {
+                        let target = graph_files.visible_path(target)?;
+                        return is_indexable(target).then(|| {
                             (
                                 NodeId::File((*path).clone()),
                                 NodeId::File(target.to_path_buf()),
@@ -56,7 +57,7 @@ fn collect_import_edges(
 
 fn collect_asset_edges(
     parsed_imports: &ParsedImports<'_>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
     parsed_imports
@@ -69,12 +70,13 @@ fn collect_asset_edges(
                 .filter(|imp| imp.specifier.starts_with('.') || imp.specifier.starts_with('/'))
                 .filter_map(|imp| {
                     resolver.resolve(&imp.specifier, path).and_then(|target| {
-                        if !graph_files.is_visible(&target) || is_indexable(&target) {
+                        let target = graph_files.visible_path(&target)?;
+                        if is_indexable(target) {
                             return None;
                         }
                         Some((
                             NodeId::File((*path).clone()),
-                            NodeId::File(target),
+                            NodeId::File(target.to_path_buf()),
                             EdgeKind::AssetImport,
                         ))
                     })
@@ -86,7 +88,7 @@ fn collect_asset_edges(
 
 fn collect_workspace_edges(
     parsed_imports: &ParsedImports<'_>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
@@ -109,7 +111,7 @@ fn collect_workspace_edges(
                     resolver
                         .classify_import(spec, path, workspace, graph_files.visible())
                         .workspace_path()
-                        .filter(|entry| graph_files.is_visible(entry))
+                        .and_then(|entry| graph_files.visible_path(entry))
                         .map(|entry| {
                             (
                                 NodeId::File((*path).clone()),

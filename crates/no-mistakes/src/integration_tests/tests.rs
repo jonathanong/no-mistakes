@@ -126,11 +126,15 @@ fn runner_configs_share_one_parse_with_standalone_and_aggregate_source_analysis(
     let standalone = check(&root, None).unwrap();
     let standalone_counts = crate::ast::finish_parse_count(&root);
 
-    let runner_configs = runner_config::prepare_with_sources(
+    let runner_configs = runner_config::prepare_with_catalog_and_sources(
         &root,
         &config,
         &visible_paths,
-        &tsconfig,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root,
+            tsconfig.clone(),
+            None,
+        )),
         std::sync::Arc::clone(&sources),
     );
     let playwright_settings =

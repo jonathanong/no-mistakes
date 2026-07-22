@@ -51,9 +51,25 @@ export interface SymbolEntrypoint {
   symbol?: string;
 }
 
+export interface TsConfigDiagnostic {
+  kind: "ambiguous-ownership" | "invalid-config" | "invalid-extends" | "invalid-reference";
+  config: string | null;
+  file: string | null;
+  detail: string;
+  candidates: string[];
+}
+
+export interface TsConfigProvenance {
+  importer: string;
+  config: string | null;
+  forced: boolean;
+}
+
 export interface DependencyResult {
   roots: string[];
   files: DependencyFile[];
+  diagnostics: TsConfigDiagnostic[];
+  tsconfig_provenance: TsConfigProvenance[];
 }
 
 export type ExportKind =

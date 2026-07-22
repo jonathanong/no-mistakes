@@ -142,7 +142,7 @@ pub(super) fn collect_swift_edges(
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
-    collect_swift_edges_with_facts(root, tsconfig, all_files, config_options, None, None)
+    collect_swift_edges_with_facts(root, tsconfig, None, all_files, config_options, None, None)
 }
 
 pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {

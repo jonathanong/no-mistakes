@@ -41,12 +41,15 @@ fn find_origin(
     workspace: &WorkspaceMap,
 ) -> ExportOrigin {
     let mut visiting = HashSet::new();
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(files.keys().cloned());
     collector::find_target_export_origin(
         target,
         imported,
         files,
         resolver,
         workspace,
+        &remapper,
         &mut visiting,
     )
     .unwrap()

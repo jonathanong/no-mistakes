@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": { "@hidden/*": ["src/*"] }
+  },
+  "include": ["../src/**/*.ts"]
+}

@@ -3,8 +3,7 @@ use super::*;
 pub(super) fn storybook_findings(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
-    tsconfig_path: Option<&Path>,
-    prepared_tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    prepared_tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
@@ -14,8 +13,7 @@ pub(super) fn storybook_findings(
             require_storybook_stories::check_with_prepared_facts_and_inferred_and_session(
                 root,
                 config,
-                tsconfig_path,
-                prepared_tsconfig,
+                prepared_tsconfig_catalog,
                 shared,
                 inferred_roots,
                 session,
@@ -24,8 +22,7 @@ pub(super) fn storybook_findings(
         None => require_storybook_stories::check_with_prepared_facts_and_session(
             root,
             config,
-            tsconfig_path,
-            prepared_tsconfig,
+            prepared_tsconfig_catalog,
             shared,
             session,
         ),

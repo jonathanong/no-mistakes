@@ -1,6 +1,6 @@
 use super::test_config;
 use super::types::{ConfigProject, Framework};
-use crate::codebase::ts_resolver::TsConfig;
+use crate::codebase::ts_resolver::{ImportResolution, TsConfig};
 use crate::config::v2::schema::StringOrList;
 use anyhow::{Context, Result};
 use std::collections::HashSet;
@@ -30,6 +30,18 @@ pub(crate) fn load_projects_from_visible(
     visible_paths: &[std::path::PathBuf],
     tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
+    let catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(root, tsconfig.clone(), None);
+    load_projects_from_visible_with_catalog(root, framework, configs, visible_paths, &catalog)
+}
+
+pub(crate) fn load_projects_from_visible_with_catalog(
+    root: &Path,
+    framework: Framework,
+    configs: Option<&StringOrList>,
+    visible_paths: &[std::path::PathBuf],
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+) -> Result<Vec<ConfigProject>> {
     // Keep every path used for config-relative glob prefixing in the same
     // lexical form. Callers may pass roots containing `..`, while the frozen
     // visible inventory is canonicalized during discovery.
@@ -54,6 +66,10 @@ pub(crate) fn load_projects_from_visible(
         discovered_config_paths(root, framework, visible_paths)
     };
     let mut projects = Vec::new();
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
+        tsconfig_catalog,
+        &visible_files,
+    );
     for raw in config_values {
         let path = crate::codebase::ts_resolver::normalize_path(&root.join(&raw));
         if !visible_files.contains(&path) {
@@ -80,7 +96,7 @@ pub(crate) fn load_projects_from_visible(
                 path: &path,
                 source: &source,
                 config_dir,
-                tsconfig,
+                resolver: &resolver,
             },
             Some(&visible_files),
         )?);
@@ -95,7 +111,7 @@ pub(super) struct ConfigProjectInput<'a> {
     pub(super) path: &'a Path,
     pub(super) source: &'a str,
     pub(super) config_dir: &'a Path,
-    pub(super) tsconfig: &'a TsConfig,
+    pub(super) resolver: &'a dyn ImportResolution,
 }
 
 pub(super) fn load_config_projects_inner(
@@ -109,7 +125,7 @@ pub(super) fn load_config_projects_inner(
         path,
         source,
         config_dir,
-        tsconfig,
+        resolver,
     } = input;
     if matches!(framework, Framework::Dotnet | Framework::Swift) {
         return Ok(Vec::new());
@@ -123,7 +139,7 @@ pub(super) fn load_config_projects_inner(
                 path,
                 source,
                 config_dir,
-                tsconfig,
+                resolver,
             },
             program,
             visible_files,
@@ -134,7 +150,7 @@ pub(super) fn load_config_projects_inner(
 pub(super) fn load_config_projects_from_program(
     input: ConfigProjectInput<'_>,
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&HashSet<std::path::PathBuf>>,
+    _visible_files: Option<&HashSet<std::path::PathBuf>>,
 ) -> Result<Vec<ConfigProject>> {
     let ConfigProjectInput {
         root,
@@ -143,30 +159,19 @@ pub(super) fn load_config_projects_from_program(
         path,
         source,
         config_dir,
-        tsconfig,
+        resolver,
     } = input;
     match framework {
         Framework::Dotnet => Ok(Vec::new()),
         Framework::Playwright => {
-            let parsed = test_config::playwright::parse_program(
-                program,
-                source,
-                path,
-                config_dir,
-                tsconfig,
-                visible_files,
+            let parsed = test_config::playwright::parse_program_with_resolver(
+                program, source, path, config_dir, resolver,
             )?;
             Ok(parsed.into_projects(root, raw))
         }
         Framework::Vitest => {
-            let parsed = test_config::vitest::parse_program(
-                program,
-                source,
-                path,
-                config_dir,
-                root,
-                tsconfig,
-                visible_files,
+            let parsed = test_config::vitest::parse_program_with_resolver(
+                program, source, path, config_dir, root, resolver,
             )?;
             Ok(parsed
                 .into_iter()

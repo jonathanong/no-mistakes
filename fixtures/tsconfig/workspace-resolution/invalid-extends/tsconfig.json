@@ -1,0 +1,4 @@
+{
+  "extends": "./missing-base.json",
+  "include": ["src/**/*.ts"]
+}

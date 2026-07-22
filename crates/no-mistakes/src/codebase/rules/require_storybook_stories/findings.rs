@@ -1,7 +1,7 @@
 use super::types::{GlobMatcher, Options};
 use super::{RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
 use crate::codebase::ts_source::relative_slash_path;
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
@@ -11,7 +11,7 @@ pub(super) fn namespace_import_findings(
     project_root: &Path,
     shared: &CheckFactMap,
     story_files: &BTreeSet<PathBuf>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for file in story_files {

@@ -2,18 +2,19 @@ pub(super) use super::origin::find_target_export_origin;
 use super::origin::{origin_for_export, resolve_export_source};
 use super::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile, RULE_ID};
 use crate::codebase::symbols::export_kind_str;
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolverFacade};
 use crate::codebase::ts_source::has_disable_comment;
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn collect_file_exports(
+pub(super) fn collect_file_exports<R: ImportResolverFacade>(
     path: &Path,
     files: &HashMap<PathBuf, SourceFile>,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
     workspace: &WorkspaceMap,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
     visiting: &mut HashSet<PathBuf>,
     memo: &mut HashMap<PathBuf, Vec<ExportOccurrence>>,
 ) -> Vec<ExportOccurrence> {
@@ -45,13 +46,14 @@ pub(super) fn collect_file_exports(
         match &export.kind {
             ExportKind::Default => {}
             ExportKind::ReExport { source, imported } if export.name == "*" && imported == "*" => {
-                let Some(target) = resolve_export_source(source, &file.path, resolver, workspace)
+                let Some(target) =
+                    resolve_export_source(source, &file.path, resolver, workspace, remapper)
                 else {
                     continue;
                 };
-                for mut occurrence in
-                    collect_file_exports(&target, files, resolver, workspace, visiting, memo)
-                {
+                for mut occurrence in collect_file_exports(
+                    &target, files, resolver, workspace, remapper, visiting, memo,
+                ) {
                     if export.is_type_only {
                         if occurrence.bucket == ExportBucket::Value {
                             continue;
@@ -71,10 +73,11 @@ pub(super) fn collect_file_exports(
                 }
             }
             ExportKind::ReExport { source, imported } => {
-                let resolved = resolve_export_source(source, &file.path, resolver, workspace);
+                let resolved =
+                    resolve_export_source(source, &file.path, resolver, workspace, remapper);
                 let resolved_origin = resolved.as_ref().and_then(|target| {
                     find_target_export_origin(
-                        target, imported, files, resolver, workspace, visiting,
+                        target, imported, files, resolver, workspace, remapper, visiting,
                     )
                 });
                 let bucket = if export.is_type_only {

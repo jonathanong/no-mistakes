@@ -28,7 +28,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
     root: &Path,
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     request: PreparedTestProjectRequest<'_>,
 ) -> PreparedTestProjects {
     let PreparedTestProjectRequest {
@@ -63,11 +63,11 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
                 &config.tests.swift.packages,
             )
         });
-    let runner_configs = crate::integration_tests::runner_config::prepare_with_sources(
+    let runner_configs = crate::integration_tests::runner_config::prepare_with_catalog_and_sources(
         root,
         config,
         visible_paths,
-        tsconfig,
+        std::sync::Arc::clone(&tsconfig_catalog),
         sources,
     );
     let runner_fact_plan = crate::integration_tests::runner_config::RunnerConfigFactPlan {
@@ -102,12 +102,12 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
                                 .expect("requested Swift projects are prepared"),
                         ))
                     } else {
-                        projects::runner_projects_from_visible(
+                        projects::runner_projects_from_visible_with_catalog(
                             root,
                             config,
                             runner,
                             visible_paths,
-                            tsconfig,
+                            &tsconfig_catalog,
                         )
                         .map_err(|error| format!("{error:#}"))
                     };
@@ -129,6 +129,28 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
 }
 
 impl PreparedTestProjects {
+    #[doc(hidden)]
+    pub fn tsconfig_candidate_roots(&self, root: &Path) -> Vec<PathBuf> {
+        let mut roots = self
+            .projects
+            .values()
+            .filter_map(|projects| projects.as_ref().ok())
+            .flat_map(|projects| projects.iter())
+            .flat_map(|project| {
+                let scope = project.scope.as_deref().map(|scope| root.join(scope));
+                let config_dir = project
+                    .config
+                    .as_deref()
+                    .map(|config| root.join(config))
+                    .and_then(|config| config.parent().map(Path::to_path_buf));
+                scope.into_iter().chain(config_dir)
+            })
+            .collect::<Vec<_>>();
+        roots.sort();
+        roots.dedup();
+        roots
+    }
+
     fn requested_projects(&self, runner: TestRunner) -> Option<Result<Vec<ConfigProject>>> {
         self.projects
             .get(&runner)

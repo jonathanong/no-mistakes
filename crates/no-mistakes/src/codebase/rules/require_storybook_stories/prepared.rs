@@ -1,23 +1,21 @@
-use super::{runner::check_with_tsconfig, CheckFactMap, NoMistakesConfig, RuleFinding};
+use super::{runner::check_with_resolver, CheckFactMap, NoMistakesConfig, RuleFinding};
 use crate::codebase::analysis_session::AnalysisSession;
-use crate::codebase::ts_resolver::TsConfig;
+use crate::codebase::ts_resolver::{normalize_path, ScopedImportResolver, TsConfigCatalog};
 use anyhow::Result;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::collections::HashSet;
+use std::path::Path;
 
 pub(crate) fn check_with_prepared_facts_and_session(
     root: &Path,
     config: &NoMistakesConfig,
-    explicit_tsconfig_path: Option<&Path>,
-    prepared_tsconfig: &TsConfig,
+    prepared_tsconfig_catalog: &TsConfigCatalog,
     shared: &CheckFactMap,
     session: &AnalysisSession,
 ) -> Result<Vec<RuleFinding>> {
     check_with_optional_inferred(
         root,
         config,
-        explicit_tsconfig_path,
-        prepared_tsconfig,
+        prepared_tsconfig_catalog,
         shared,
         None,
         session,
@@ -27,8 +25,7 @@ pub(crate) fn check_with_prepared_facts_and_session(
 pub(crate) fn check_with_prepared_facts_and_inferred_and_session(
     root: &Path,
     config: &NoMistakesConfig,
-    explicit_tsconfig_path: Option<&Path>,
-    prepared_tsconfig: &TsConfig,
+    prepared_tsconfig_catalog: &TsConfigCatalog,
     shared: &CheckFactMap,
     inferred_roots: &crate::codebase::config::InferredRoots,
     session: &AnalysisSession,
@@ -36,8 +33,7 @@ pub(crate) fn check_with_prepared_facts_and_inferred_and_session(
     check_with_optional_inferred(
         root,
         config,
-        explicit_tsconfig_path,
-        prepared_tsconfig,
+        prepared_tsconfig_catalog,
         shared,
         Some(inferred_roots),
         session,
@@ -47,33 +43,17 @@ pub(crate) fn check_with_prepared_facts_and_inferred_and_session(
 fn check_with_optional_inferred(
     root: &Path,
     config: &NoMistakesConfig,
-    explicit_tsconfig_path: Option<&Path>,
-    prepared_tsconfig: &TsConfig,
+    prepared_tsconfig_catalog: &TsConfigCatalog,
     shared: &CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     session: &AnalysisSession,
 ) -> Result<Vec<RuleFinding>> {
-    let mut automatic_tsconfigs: HashMap<PathBuf, TsConfig> = HashMap::new();
-    check_with_tsconfig(
-        root,
-        config,
-        shared,
-        session,
-        |project_root| {
-            if explicit_tsconfig_path.is_some() {
-                return Ok(prepared_tsconfig.clone());
-            }
-            if let Some(tsconfig) = automatic_tsconfigs.get(project_root) {
-                return Ok(tsconfig.clone());
-            }
-            let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-                None,
-                project_root,
-                shared.files(),
-            )?;
-            automatic_tsconfigs.insert(project_root.to_path_buf(), tsconfig.clone());
-            Ok(tsconfig)
-        },
-        inferred_roots,
-    )
+    let visible_files = shared
+        .files()
+        .iter()
+        .map(|path| normalize_path(path))
+        .collect::<HashSet<_>>();
+    let resolver =
+        ScopedImportResolver::new_in_session(prepared_tsconfig_catalog, &visible_files, session);
+    check_with_resolver(root, config, shared, &resolver, inferred_roots)
 }

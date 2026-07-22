@@ -70,10 +70,12 @@ impl AnalyzeProjectContext {
                 .expect("effective scope snapshot is prepared");
             let scoped_options = AnalyzeProjectOptions {
                 root: Some(effective.root.display().to_string()),
-                tsconfig: effective
+                tsconfig: (!effective.automatic_tsconfig)
+                    .then(|| effective
                     .tsconfig
                     .as_ref()
-                    .map(|path| path.display().to_string()),
+                    .map(|path| path.display().to_string()))
+                    .flatten(),
                 config: effective
                     .config
                     .as_ref()

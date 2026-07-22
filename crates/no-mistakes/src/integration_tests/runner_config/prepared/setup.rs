@@ -4,26 +4,36 @@ pub(crate) fn prepare(
     root: &Path,
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
-    tsconfig: &TsConfig,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> PreparedIntegrationRunnerConfigs {
-    prepare_inner(root, config, visible_paths, tsconfig, None)
+    prepare_inner(
+        root,
+        config,
+        visible_paths,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            root,
+            tsconfig.clone(),
+            None,
+        )),
+        None,
+    )
 }
 
-pub(crate) fn prepare_with_sources(
+pub(crate) fn prepare_with_catalog_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
-    tsconfig: &TsConfig,
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> PreparedIntegrationRunnerConfigs {
-    prepare_inner(root, config, visible_paths, tsconfig, Some(sources))
+    prepare_inner(root, config, visible_paths, tsconfig_catalog, Some(sources))
 }
 
 fn prepare_inner(
     root: &Path,
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
-    tsconfig: &TsConfig,
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
 ) -> PreparedIntegrationRunnerConfigs {
     let mut specs = Vec::new();
@@ -55,7 +65,7 @@ fn prepare_inner(
     PreparedIntegrationRunnerConfigs {
         root: root.to_path_buf(),
         specs,
-        tsconfig: tsconfig.clone(),
+        tsconfig_catalog,
         visible_files,
         sources,
     }

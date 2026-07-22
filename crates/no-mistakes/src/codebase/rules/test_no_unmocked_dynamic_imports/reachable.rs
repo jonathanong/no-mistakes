@@ -1,9 +1,9 @@
 use super::checker::{evaluate_dynamic_import, DynamicCheckContext, DynamicImportKey};
 use super::{ast, runtime_deps, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::graph::DepGraph;
+use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::ts_resolver::ImportResolver;
+use crate::codebase::ts_resolver::ImportResolution;
 use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
@@ -83,6 +83,7 @@ pub(super) fn collect(
                     file,
                     resolver: ctx.resolver,
                     graph: ctx.graph,
+                    graph_files: ctx.graph_files,
                     file_universe: ctx.file_universe,
                     mocks,
                     dependency_cache,
@@ -109,6 +110,7 @@ pub(super) fn collect(
             file,
             resolver: ctx.resolver,
             graph: ctx.graph,
+            graph_files: ctx.graph_files,
             file_universe: ctx.file_universe,
             mocks,
             dependency_cache,
@@ -146,8 +148,9 @@ fn collect_outcome(result: &mut ReachableResult, outcome: super::checker::Dynami
 pub(super) struct ReachableContext<'a> {
     pub(super) root: &'a Path,
     pub(super) config: &'a NoMistakesConfig,
-    pub(super) resolver: &'a ImportResolver<'a>,
+    pub(super) resolver: &'a dyn ImportResolution,
     pub(super) graph: &'a DepGraph,
+    pub(super) graph_files: Option<&'a GraphFiles>,
     pub(super) file_universe: Option<&'a HashSet<PathBuf>>,
     pub(super) shared: Option<&'a CheckFactMap>,
     pub(super) file_cache: Option<&'a DashMap<PathBuf, Arc<CachedFileFacts>>>,

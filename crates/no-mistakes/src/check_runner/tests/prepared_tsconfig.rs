@@ -107,3 +107,34 @@ fn aggregate_storybook_resolves_visible_package_tsconfigs_independently() {
         Some("src/Button.tsx#Button")
     );
 }
+
+#[test]
+fn aggregate_storybook_resolves_package_local_story_and_reexport_aliases() {
+    let dir = crate::test_support::materialize_gitignore_fixture("storybook-workspace-alias");
+    initialize_git(dir.path());
+
+    let results = run_all(dir.path().to_path_buf(), None, None).unwrap();
+    let storybook = results
+        .rules
+        .iter()
+        .filter(|finding| finding.rule == no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES)
+        .collect::<Vec<_>>();
+
+    assert!(storybook.is_empty(), "{storybook:#?}");
+}
+
+#[test]
+fn aggregate_integration_resolves_a_configured_package_runner_alias() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/tsconfig/framework-project-alias");
+
+    let results = run_all(root, None, None).unwrap();
+
+    assert!(
+        results.integration.iter().any(|finding| {
+            finding.file == "apps/web/tests/value.impact.ts" && finding.framework == "vitest"
+        }),
+        "{:#?}",
+        results.integration
+    );
+}

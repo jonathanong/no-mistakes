@@ -14,7 +14,9 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, Result};
 use serde::Serialize;
 
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, GraphFiles};
+use crate::codebase::dependencies::graph::{
+    DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphBuild,
+};
 use crate::codebase::dependencies::{EdgeKind, NodeId};
 use crate::codebase::ts_resolver::{
     find_tsconfig_from_visible, load_tsconfig, normalize_path, TsConfig,
@@ -86,7 +88,15 @@ fn resolve_tsconfig_from_visible(
         Some(path) if path.is_absolute() => load_tsconfig(path),
         Some(path) => load_tsconfig(&root.join(path)),
         None => match find_tsconfig_from_visible(root, visible_paths) {
-            Some(path) => load_tsconfig(&path),
+            Some(path) => match load_tsconfig(&path) {
+                Ok(config) => Ok(config),
+                Err(_) => Ok(TsConfig {
+                    dir: root.to_path_buf(),
+                    paths: vec![],
+                    paths_dir: root.to_path_buf(),
+                    base_url: None,
+                }),
+            },
             None => Ok(TsConfig {
                 dir: root.to_path_buf(),
                 paths: vec![],
@@ -126,7 +136,14 @@ pub fn run(
         bail!("entry file not found: {}", entry_abs.display());
     }
     graph_files.add_explicit_root(&entry_abs);
-    let tsconfig = resolve_tsconfig_from_visible(&root, tsconfig, graph_files.all())?;
+    let explicit_tsconfig = tsconfig;
+    let tsconfig = resolve_tsconfig_from_visible(&root, explicit_tsconfig, graph_files.all())?;
+    let tsconfig_catalog = scoped_tsconfig_catalog(
+        &root,
+        tsconfig.clone(),
+        explicit_tsconfig,
+        &root_visible_paths,
+    );
     let allowed = runtime_edges();
     // Build only the runtime-import edges we traverse, not every edge producer
     // (routes, queues, React, Swift, …), which an `effects` query discards.
@@ -154,17 +171,53 @@ pub fn run(
         &config,
         &visible_paths,
     )?;
-    let graph = DepGraph::build_with_plan_files_prepared_config_and_facts(
-        &root,
-        &tsconfig,
-        plan,
-        &graph_files,
-        config_path,
-        &prepared_graph,
-        Some(&facts),
+    let graph = DepGraph::build_with_plan_files_prepared_config_facts_and_resolution_cache(
+        PreparedGraphBuild {
+            root: &root,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: Some(&tsconfig_catalog),
+            plan,
+            graph_files: &graph_files,
+            config_path,
+            prepared: &prepared_graph,
+            facts: Some(&facts),
+            import_resolution_cache: None,
+            dotnet_facts: None,
+            swift_facts: None,
+            visible_paths: Some(&visible_paths),
+        },
     )?;
 
     run_with_prepared(&root, &selection, entry, depth, &graph, &facts)
+}
+
+fn scoped_tsconfig_catalog(
+    root: &Path,
+    config: TsConfig,
+    explicit: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> crate::codebase::ts_resolver::TsConfigCatalog {
+    explicit.map_or_else(
+        || {
+            crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+                root,
+                &[root.to_path_buf()],
+                visible_paths,
+            )
+        },
+        |path| {
+            let path = if path.is_absolute() {
+                path.to_path_buf()
+            } else {
+                root.join(path)
+            };
+            crate::codebase::ts_resolver::TsConfigCatalog::forced(
+                root,
+                config,
+                Some(normalize_path(&path)),
+            )
+        },
+    )
 }
 
 include!("effects_query/prepared.rs");

@@ -41,13 +41,28 @@ pub fn run_check_with_facts_and_playwright(
     prepared_playwright: Option<&crate::playwright::rules::PreparedPlaywrightRules>,
 ) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
-    let prepared_tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        tsconfig_path,
-        root,
-        shared.files(),
-    )?;
+    // Prepared facts are the caller's immutable request universe. Rebuilding a
+    // snapshot here could discover a different set of package tsconfigs than
+    // the graph facts were collected from.
+    let visible = shared.files();
+    let sources = crate::codebase::rules::source_store_for_files(visible);
+    let prepared_tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+            tsconfig_path,
+            root,
+            visible,
+            &sources,
+        )?;
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let prepared_tsconfig_catalog = prepared_tsconfig_catalog(
+        root,
+        tsconfig_path,
+        &prepared_tsconfig,
+        visible,
+        &sources,
+        Some(&config),
+    );
     run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
         session,
         root,
@@ -58,9 +73,45 @@ pub fn run_check_with_facts_and_playwright(
         config: &config,
         prepared_graph: None,
         prepared_tsconfig: &prepared_tsconfig,
+        prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
         inferred_roots: None,
-        sources: None,
+        sources: Some(&sources),
     })
+}
+
+pub(crate) fn prepared_tsconfig_catalog(
+    root: &Path,
+    tsconfig_path: Option<&Path>,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    visible_paths: &[std::path::PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    config: Option<&crate::config::v2::NoMistakesConfig>,
+) -> crate::codebase::ts_resolver::TsConfigCatalog {
+    if let Some(path) = tsconfig_path {
+        let path = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            root.join(path)
+        };
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            root,
+            tsconfig.clone(),
+            Some(crate::codebase::ts_resolver::normalize_path(&path)),
+        )
+    } else {
+        let mut candidate_roots = vec![root.to_path_buf()];
+        if let Some(config) = config {
+            candidate_roots.extend(require_storybook_stories::configured_project_roots(
+                root, config,
+            ));
+        }
+        crate::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+            root,
+            &candidate_roots,
+            visible_paths,
+            sources,
+        )
+    }
 }
 
 fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bool {

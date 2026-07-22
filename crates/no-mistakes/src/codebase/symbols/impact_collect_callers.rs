@@ -2,7 +2,7 @@ fn local_caller_entries(
     context: &LocalCallerContext,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     root: &Path,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
     test_filter: &TestFileFilter,
     want_tests: bool,
 ) -> Vec<CallerEntry> {
@@ -27,6 +27,7 @@ fn local_caller_entries(
             target_symbols,
             resolver,
             workspace,
+            context.remapper,
         );
         if local_names.is_empty() {
             continue;

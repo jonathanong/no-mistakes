@@ -2,6 +2,7 @@
 struct EffectiveScopeKey {
     root: PathBuf,
     tsconfig: Option<PathBuf>,
+    automatic_tsconfig: bool,
     config: Option<PathBuf>,
 }
 
@@ -9,6 +10,7 @@ struct EffectiveScope {
     key: EffectiveScopeKey,
     root: PathBuf,
     tsconfig: Option<PathBuf>,
+    automatic_tsconfig: bool,
     config: Option<PathBuf>,
 }
 
@@ -32,6 +34,7 @@ impl EffectiveScope {
         self.key = EffectiveScopeKey {
             root: self.root.clone(),
             tsconfig: self.tsconfig.clone(),
+            automatic_tsconfig: self.automatic_tsconfig,
             config: self.config.clone(),
         };
         Ok(self)
@@ -46,7 +49,9 @@ fn effective_scope(
         string_option(request, "root")?.or(options.root.as_deref()),
     )?;
     let inherited_root = super::options::resolve_root(options.root.as_deref())?;
-    let tsconfig = match string_option(request, "tsconfig")? {
+    let request_tsconfig = string_option(request, "tsconfig")?;
+    let automatic_tsconfig = request_tsconfig.is_none() && options.tsconfig.is_none();
+    let tsconfig = match request_tsconfig {
         Some(path) => effective_path(&root, Some(path)),
         None => effective_path(&inherited_root, options.tsconfig.as_deref()),
     };
@@ -57,12 +62,14 @@ fn effective_scope(
     let key = EffectiveScopeKey {
         root: root.clone(),
         tsconfig: tsconfig.clone(),
+        automatic_tsconfig,
         config: config.clone(),
     };
     Ok(EffectiveScope {
         key,
         root,
         tsconfig,
+        automatic_tsconfig,
         config,
     })
 }

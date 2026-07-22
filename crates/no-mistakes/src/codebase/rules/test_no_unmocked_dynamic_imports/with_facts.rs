@@ -4,9 +4,9 @@ use super::{
 };
 use super::{RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::runtime::runtime_deps;
-use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfig};
 use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -16,7 +16,11 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod graph;
 mod setup_mocks;
+mod tsconfig_catalog;
+
+pub(crate) use graph::check_with_prepared_facts_and_session;
 
 struct PerTestResult {
     direct_findings: Vec<RuleFinding>,
@@ -30,12 +34,10 @@ pub fn check_with_facts(
     tsconfig_path: Option<&Path>,
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        tsconfig_path,
-        root,
-        shared.files(),
-    )?;
-    check_with_prepared_facts(root, config, &tsconfig, shared)
+    let (tsconfig, catalog) = tsconfig_catalog::for_request(root, tsconfig_path, shared)?;
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    check_with_prepared_facts_and_session(root, config, &tsconfig, &catalog, shared, &session)
 }
 
 #[doc(hidden)]
@@ -45,38 +47,17 @@ pub fn check_with_prepared_facts(
     tsconfig: &TsConfig,
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    let catalog = tsconfig_catalog::forced(root, tsconfig);
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    check_with_prepared_facts_and_session(root, config, tsconfig, shared, &session)
-}
-
-pub(crate) fn check_with_prepared_facts_and_session(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig: &TsConfig,
-    shared: &CheckFactMap,
-    session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
-) -> Result<Vec<RuleFinding>> {
-    let graph = crate::perf_trace::trace("test_no_unmocked_dynamic_imports.graph_build", || {
-        DepGraph::build_with_complete_check_facts_and_session(
-            crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
-                root,
-                tsconfig,
-                plan: GraphBuildPlan::imports_and_workspace(),
-                files: shared.graph_file_universe().to_vec(),
-                config_path: None,
-                facts: shared,
-            },
-            session.clone(),
-        )
-    })?;
-    check_with_prepared_facts_graph_and_session(root, config, tsconfig, shared, &graph, session)
+    check_with_prepared_facts_and_session(root, config, tsconfig, &catalog, shared, &session)
 }
 
 pub(crate) fn check_with_prepared_facts_graph_and_session(
     root: &Path,
     config: &NoMistakesConfig,
-    tsconfig: &TsConfig,
+    _tsconfig: &TsConfig,
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
     shared: &CheckFactMap,
     graph: &DepGraph,
     session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
@@ -87,7 +68,11 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
         .iter()
         .cloned()
         .collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
+    // This is the graph's canonical lexical namespace for the complete
+    // prepared universe. Reuse it for every scoped resolver result rather
+    // than rebuilding symlink mappings per import.
+    let graph_files = GraphFiles::from_files(shared.graph_file_universe().to_vec());
+    let resolver = ScopedImportResolver::new_in_session(tsconfig_catalog, &visible_files, session);
     let manual_mocks =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.manual_mocks", || {
             manual_mocks::discover_from_files(root, &files)
@@ -137,12 +122,18 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                     };
                     let mut mocks = manual_mocks.clone();
                     mocks.extend(setup_mocks::with_facts(
-                        root, setup_data, &file, &resolver, shared,
+                        root,
+                        setup_data,
+                        &file,
+                        &resolver,
+                        &graph_files,
+                        shared,
                     )?);
                     mocks.extend(resolve_mock_specifiers(
                         &facts.mock_specifiers,
                         &file,
                         &resolver,
+                        Some(&graph_files),
                     ));
                     let mut local_findings = Vec::new();
                     {
@@ -151,6 +142,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                             file: &file,
                             resolver: &resolver,
                             graph,
+                            graph_files: Some(&graph_files),
                             file_universe: Some(&visible_files),
                             mocks: &mocks,
                             dependency_cache: &dependency_cache,
@@ -168,6 +160,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                             config,
                             resolver: &resolver,
                             graph,
+                            graph_files: Some(&graph_files),
                             file_universe: Some(&visible_files),
                             shared: Some(shared),
                             file_cache: None,

@@ -1,5 +1,4 @@
 use super::types::{ConfigProject, FileAnalysis, Framework};
-use crate::codebase::ts_resolver::TsConfig;
 use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -9,7 +8,9 @@ mod prepared;
 #[cfg(test)]
 mod tests;
 pub(in crate::integration_tests) use cache::{read_request_source, with_program};
-pub(crate) use prepared::{prepare, prepare_with_sources};
+pub use prepared::configured_runner_config_dirs;
+pub use prepared::prepare_runner_configs_with_catalog;
+pub(crate) use prepared::{prepare, prepare_with_catalog_and_sources};
 
 #[derive(Clone)]
 pub(crate) struct RunnerConfigFactPlan {
@@ -32,7 +33,7 @@ struct RunnerConfigSpec {
 pub struct PreparedIntegrationRunnerConfigs {
     root: PathBuf,
     specs: Vec<RunnerConfigSpec>,
-    tsconfig: TsConfig,
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     visible_files: HashSet<PathBuf>,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
 }
@@ -80,11 +81,13 @@ impl ParsedRunnerConfigs {
 
     pub(crate) fn analyses_for(&self, source_files: &[PathBuf]) -> BTreeMap<PathBuf, FileAnalysis> {
         let source_files = source_files.iter().collect::<HashSet<_>>();
-        self.analyses
-            .iter()
-            .filter(|(path, _)| source_files.contains(path))
-            .map(|(path, analysis)| (path.clone(), analysis.clone()))
-            .collect()
+        let mut analyses = BTreeMap::new();
+        for (path, analysis) in &self.analyses {
+            if source_files.contains(path) {
+                analyses.insert(path.clone(), analysis.clone());
+            }
+        }
+        analyses
     }
 
     pub(crate) fn projects_for(
@@ -101,13 +104,13 @@ impl ParsedRunnerConfigs {
                     spec.path.display()
                 );
             }
-            let file = self.files.get(&spec.path).ok_or_else(|| {
-                anyhow::anyhow!(
+            let Some(file) = self.files.get(&spec.path) else {
+                return Err(anyhow::anyhow!(
                     "missing prepared {} config: {}",
                     framework.as_str(),
                     spec.raw
-                )
-            })?;
+                ));
+            };
             let result = file
                 .results
                 .iter()

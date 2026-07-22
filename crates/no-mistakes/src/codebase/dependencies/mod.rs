@@ -25,10 +25,13 @@ include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
 include!("shared_traversal_prepare.rs");
 include!("shared_traversal_facts.rs");
+include!("shared_traversal_prepare_catalog.rs");
 include!("shared_traversal_reports.rs");
+include!("output_results.rs");
 include!("shared_graph_cache.rs");
 include!("shared_traversal_graph.rs");
 include!("shared_traversal_collect.rs");
+include!("shared_traversal_provenance.rs");
 include!("shared_traversal_uncached.rs");
 include!("output_args.rs");
 include!("run.rs");
@@ -45,18 +48,11 @@ mod tests;
 #[cfg(test)]
 mod traversal_entrypoint_test_helpers;
 
-fn write_output_results(
-    format: Format,
-    root_strs: &[String],
-    result: &TraversalResult,
-    out: &mut dyn Write,
-) -> Result<()> {
-    write_entries(format, root_strs, &result.entries, &result.root, out)
-}
-
 pub(crate) struct TraversalResult {
     entries: Vec<graph::NodeEntry>,
     root: PathBuf,
+    diagnostics: Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>,
+    tsconfig_provenance: Vec<crate::codebase::ts_resolver::TsConfigProvenance>,
 }
 
 pub(crate) fn collect_and_filter_entries(

@@ -144,3 +144,79 @@ fn runner_config_request_cache_does_not_recollect_prepared_config_facts() {
 
     assert!(helper_facts.is_empty());
 }
+
+#[test]
+fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
+    let root = PathBuf::from("fixture");
+    let config_path = root.join("vitest.config.ts");
+    let retained_analysis = root.join("helpers/retained.ts");
+    let omitted_analysis = root.join("helpers/omitted.ts");
+    let project = ConfigProject {
+        config: Some("vitest.config.ts".to_string()),
+        policy_name: Some("unit".to_string()),
+        runner_project_arg: Some("unit".to_string()),
+        scope: Some("tests".to_string()),
+        include: vec!["tests/**/*.test.ts".to_string()],
+        exclude: Vec::new(),
+    };
+    let parsed = ParsedRunnerConfigs::with_files(BTreeMap::from([(
+        config_path.clone(),
+        RunnerConfigFileFacts {
+            results: vec![ProjectResult {
+                framework: Framework::Vitest,
+                raw: "vitest.config.ts".to_string(),
+                projects: Ok(vec![project.clone()]),
+            }],
+            analyses: BTreeMap::from([
+                (retained_analysis.clone(), FileAnalysis::default()),
+                (omitted_analysis, FileAnalysis::default()),
+            ]),
+        },
+    )]));
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+        &root,
+        crate::codebase::ts_resolver::TsConfig {
+            dir: root.clone(),
+            paths: Vec::new(),
+            paths_dir: root.clone(),
+            base_url: None,
+        },
+        None,
+    ));
+    let plan = PreparedIntegrationRunnerConfigs {
+        root: root.clone(),
+        specs: vec![RunnerConfigSpec {
+            framework: Framework::Vitest,
+            raw: "vitest.config.ts".to_string(),
+            path: config_path,
+        }],
+        tsconfig_catalog,
+        visible_files: [root.join("vitest.config.ts")].into(),
+        sources: None,
+    };
+
+    let analyses = parsed.analyses_for(std::slice::from_ref(&retained_analysis));
+    assert_eq!(analyses.len(), 1);
+    assert!(analyses.contains_key(&retained_analysis));
+    assert_eq!(
+        parsed.projects_for(&plan, Framework::Vitest).unwrap().len(),
+        1
+    );
+    assert!(parsed.covers(&plan));
+
+    let missing_path = root.join("missing.vitest.config.ts");
+    let missing_plan = PreparedIntegrationRunnerConfigs {
+        specs: vec![RunnerConfigSpec {
+            framework: Framework::Vitest,
+            raw: "missing.vitest.config.ts".to_string(),
+            path: missing_path.clone(),
+        }],
+        visible_files: [missing_path].into(),
+        ..plan
+    };
+    assert!(parsed
+        .projects_for(&missing_plan, Framework::Vitest)
+        .unwrap_err()
+        .to_string()
+        .contains("missing prepared vitest config"));
+}

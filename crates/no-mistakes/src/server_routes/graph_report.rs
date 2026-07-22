@@ -13,7 +13,17 @@ fn build_report_with_session(
     tsconfig: &TsConfig,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> ProjectReport {
-    build_report_and_relationships(root, facts, tsconfig, session).0
+    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
+    build_report_with_resolver(root, facts, &resolver)
+}
+
+fn build_report_with_resolver(
+    root: &Path,
+    facts: &HashMap<PathBuf, FileFacts>,
+    resolver: &dyn ImportResolution,
+) -> ProjectReport {
+    build_report_and_relationships(root, facts, resolver).0
 }
 
 pub(super) fn build_prepared_report(
@@ -22,8 +32,9 @@ pub(super) fn build_prepared_report(
     tsconfig: &TsConfig,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> PreparedProjectReport {
-    let (report, mut relationships) =
-        build_report_and_relationships(root, facts, tsconfig, session);
+    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
+    let (report, mut relationships) = build_report_and_relationships(root, facts, &resolver);
     relationships.sort_by_key(|edge| {
         (
             public_node(root, &edge.from),
@@ -63,16 +74,13 @@ pub(super) fn build_prepared_report(
 fn build_report_and_relationships(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    resolver: &dyn ImportResolution,
 ) -> (ProjectReport, Vec<RelationshipEdge>) {
     let mut routes = Vec::new();
     let mut edges = Vec::new();
     let mut relationships = Vec::new();
     let mut diagnostics = Vec::new();
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
-    let mounts = resolve_mounts_with_resolver(facts, &resolver);
+    let mounts = resolve_mounts_with_resolver(facts, resolver);
     for (path, file_facts) in facts {
         diagnostics.extend(
             file_facts

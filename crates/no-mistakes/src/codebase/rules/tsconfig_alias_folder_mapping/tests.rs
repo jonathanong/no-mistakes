@@ -66,6 +66,21 @@ fn missing_tsconfig_is_skipped() {
 }
 
 #[test]
+fn missing_tsconfig_skips_invalid_rule_path_filters() {
+    let root = fixture("pass");
+    let mut config = config_from_yaml(
+        "tsconfig: nonexistent.json\nbaseDir: backend\nmappings:\n  - prefix: \"@a\"\n    root: a\n",
+    );
+    // `check_tsconfig` historically decides this rule is a no-op before path
+    // filters are compiled, so a malformed programmatic filter must not alter
+    // the missing-tsconfig result.
+    config.rules[0].include = vec!["[".to_string()];
+
+    let findings = check(&root, &config).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn check_with_files_delegates_to_tsconfig() {
     let root = fixture("fail");
     let config = config_from_yaml(agents_config());

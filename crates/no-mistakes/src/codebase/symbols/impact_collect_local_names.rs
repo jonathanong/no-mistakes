@@ -2,8 +2,9 @@ fn target_local_names(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     file: &Path,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> BTreeSet<String> {
     let mut names = BTreeSet::new();
     if let Some(exported_symbols) = target_symbols.get(file) {
@@ -32,6 +33,7 @@ fn target_local_names(
         target_symbols,
         resolver,
         workspace,
+        remapper,
     ));
     names
 }
@@ -40,8 +42,9 @@ fn imported_target_local_names(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     file: &Path,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> BTreeSet<String> {
     symbols
         .imports
@@ -59,6 +62,7 @@ fn imported_target_local_names(
                         resolver.visible_files()?,
                     )
                 })
+                .map(|resolved| remapper.remap(&resolved))
                 .and_then(|resolved| target_symbols.get(&resolved))?;
             if exported_symbols.is_empty() {
                 return None;

@@ -81,6 +81,10 @@ specs whose navigation path interpolates an unresolvable value (e.g.
 
 Node API: `testsPlan(options)`.
 
+In a TypeScript/JavaScript workspace, omit `tsconfig` so test impact follows
+the config owning each importing file. Passing `tsconfig` deliberately forces a
+single config for the whole plan.
+
 ## `tests why`
 
 Explain the dependency path from a changed file to a selected test.

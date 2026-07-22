@@ -1,5 +1,5 @@
 use crate::codebase::ts_resolver::{
-    normalize_path, ResolverResultCache, ResolverScopeKey, TsConfig,
+    normalize_path, ResolverCacheScopeKey, ResolverResultCache, TsConfig,
 };
 use crate::codebase::ts_source::{FileInventory, SourceStore, VisiblePathSnapshot};
 use crate::diagnostics::InvocationObserver;
@@ -24,7 +24,7 @@ pub struct AnalysisSession {
     observer: Option<Arc<InvocationObserver>>,
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
-    resolver_caches: DashMap<ResolverScopeKey, Arc<ResolverResultCache>>,
+    resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
 }
 
@@ -84,7 +84,13 @@ impl AnalysisSession {
         tsconfig: &TsConfig,
         visible: Option<&std::collections::HashSet<PathBuf>>,
     ) -> Arc<ResolverResultCache> {
-        let scope = ResolverScopeKey::new(tsconfig, visible);
+        self.resolver_cache_for_scope(ResolverCacheScopeKey::new(tsconfig, visible, None, &[]))
+    }
+
+    pub(crate) fn resolver_cache_for_scope(
+        &self,
+        scope: ResolverCacheScopeKey,
+    ) -> Arc<ResolverResultCache> {
         match self.resolver_caches.entry(scope) {
             Entry::Occupied(entry) => Arc::clone(entry.get()),
             Entry::Vacant(entry) => {

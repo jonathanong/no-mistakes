@@ -16,7 +16,8 @@ pub use graph::{
     prepare_analysis_with_shared_facts_and_session, PreparedServerAnalysis, RelatedDirection,
 };
 pub(crate) use graph::{
-    configure_fact_context, route_defs_from_files, route_defs_from_prepared_facts,
+    configure_fact_context, route_defs_from_files_with_catalog,
+    route_defs_from_prepared_facts_with_catalog,
 };
 pub use model::{PreparedProjectReport, ProjectReport};
 pub use related::related;

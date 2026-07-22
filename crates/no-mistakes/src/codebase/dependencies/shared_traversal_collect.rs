@@ -5,6 +5,7 @@ pub(crate) fn collect_and_filter_entries_shared(
     shared: &mut SharedTraversalContext,
 ) -> Result<TraversalResult> {
     shared.session.record_work("traversal.requests", 1);
+    shared.tsconfig_catalog.clear_runtime_diagnostics();
     let explicit_roots = explicit_existing_entry_files(args, &shared.root, cwd_early);
     shared.add_explicit_roots(&explicit_roots);
     let workspace = shared.dataset.workspace();
@@ -56,10 +57,14 @@ pub(crate) fn collect_and_filter_entries_shared(
         .traversal_results
         .iter()
         .find(|(cached_key, _)| cached_key == &traversal_key)
-        .map(|(_, entries)| entries.clone());
-    let entries = if let Some(entries) = cached_entries {
+        .map(|(_, traversal)| traversal.clone());
+    let cache_hit = cached_entries.is_some();
+    let entries = if let Some(cached) = cached_entries {
         shared.session.record_work("traversal.reuses", 1);
-        entries
+        shared
+            .tsconfig_catalog
+            .replay_runtime_diagnostics(&cached.runtime_diagnostics);
+        cached.entries
     } else {
         let symbol_index = if matches!(direction, Direction::Dependents)
             && any_symbol
@@ -83,12 +88,33 @@ pub(crate) fn collect_and_filter_entries_shared(
             shared,
         )?;
         shared.session.record_work("traversal.computations", 1);
-        shared
-            .traversal_results
-            .push((traversal_key, entries.clone()));
         entries
     };
     crate::invocation::check_timeout()?;
+    let tsconfig_provenance = entrypoints
+        .iter()
+        .filter_map(|entrypoint| entrypoint.node.as_file())
+        .map(|file| shared.tsconfig_catalog.provenance_for(file))
+        .map(|mut provenance| {
+            provenance.importer = provenance
+                .importer
+                .strip_prefix(&shared.root)
+                .unwrap_or(&provenance.importer)
+                .to_path_buf();
+            provenance.config = provenance.config.map(|config| visible_provenance_path(shared, config));
+            provenance
+        })
+        .collect();
+    let runtime_diagnostics = shared.tsconfig_catalog.runtime_diagnostics();
+    if !cache_hit {
+        shared.traversal_results.push((
+            traversal_key,
+            CachedTraversal {
+                entries: entries.clone(),
+                runtime_diagnostics: runtime_diagnostics.clone(),
+            },
+        ));
+    }
     let entries = apply_filters(
         entries,
         args,
@@ -101,10 +127,45 @@ pub(crate) fn collect_and_filter_entries_shared(
     shared
         .session
         .record_work("traversal.nodes", entries.len() as u64);
-
+    let diagnostics = shared
+        .tsconfig_build_diagnostics
+        .iter()
+        .cloned()
+        .chain(runtime_diagnostics)
+        .map(|mut diagnostic| {
+            let root_text = shared.root.to_string_lossy();
+            diagnostic.detail = diagnostic
+                .detail
+                .replace(&format!("{root_text}/"), "");
+            diagnostic.config = diagnostic.config.map(|config| {
+                config
+                    .strip_prefix(&shared.root)
+                    .unwrap_or(&config)
+                    .to_path_buf()
+            });
+            diagnostic.file = diagnostic.file.map(|file| {
+                file.strip_prefix(&shared.root)
+                    .unwrap_or(&file)
+                    .to_path_buf()
+            });
+            diagnostic.candidates = diagnostic
+                .candidates
+                .into_iter()
+                .map(|candidate| {
+                    candidate
+                        .strip_prefix(&shared.root)
+                        .unwrap_or(&candidate)
+                        .to_path_buf()
+                })
+                .collect();
+            diagnostic
+        })
+        .collect();
     Ok(TraversalResult {
         entries,
         root: shared.root.clone(),
+        diagnostics,
+        tsconfig_provenance,
     })
 }
 

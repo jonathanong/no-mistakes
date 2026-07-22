@@ -26,6 +26,7 @@ pub struct PreparedRulesCheck<'a> {
     pub config: &'a crate::config::v2::NoMistakesConfig,
     pub prepared_graph: Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
     pub prepared_tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
+    pub prepared_tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }

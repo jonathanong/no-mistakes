@@ -35,7 +35,7 @@ pub(super) fn parse_playwright(
     tsconfig: &TsConfig,
 ) -> Result<super::test_config::playwright::ParsedPlaywrightConfig> {
     crate::integration_tests::runner_config::with_program(path, source, |program, source| {
-        super::test_config::playwright::parse_program(
+        super::test_config::playwright::tests::parse_program(
             program, source, path, config_dir, tsconfig, None,
         )
     })?
@@ -49,7 +49,7 @@ pub(super) fn parse_playwright_from_visible(
     visible_files: &HashSet<PathBuf>,
 ) -> Result<super::test_config::playwright::ParsedPlaywrightConfig> {
     crate::integration_tests::runner_config::with_program(path, source, |program, source| {
-        super::test_config::playwright::parse_program(
+        super::test_config::playwright::tests::parse_program(
             program,
             source,
             path,
@@ -68,7 +68,7 @@ pub(super) fn parse_vitest(
     tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
     crate::integration_tests::runner_config::with_program(path, source, |program, source| {
-        super::test_config::vitest::parse_program(
+        super::test_config::vitest::tests::parse_program(
             program, source, path, config_dir, root, tsconfig, None,
         )
     })?
@@ -83,7 +83,7 @@ pub(super) fn parse_vitest_from_visible(
     visible_files: &HashSet<PathBuf>,
 ) -> Result<Vec<ConfigProject>> {
     crate::integration_tests::runner_config::with_program(path, source, |program, source| {
-        super::test_config::vitest::parse_program(
+        super::test_config::vitest::tests::parse_program(
             program,
             source,
             path,

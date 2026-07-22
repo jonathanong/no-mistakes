@@ -37,9 +37,10 @@ enum ImportedSymbolTarget {
 fn imported_symbol_map(
     path: &Path,
     symbols: &crate::codebase::ts_symbols::FileSymbols,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
+    graph_files: &GraphFiles,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
     for import in &symbols.imports {
@@ -48,15 +49,18 @@ fn imported_symbol_map(
         }
         let kind = symbol_edge_kind(import.is_type_only);
         let target = if let Some(target) = resolver.resolve(&import.source, path) {
-            if is_indexable(&target) {
+            let Some(target) = graph_files.visible_path(&target) else {
+                continue;
+            };
+            if is_indexable(target) {
                 ImportedSymbolTarget::Symbol {
-                    file: target,
+                    file: target.to_path_buf(),
                     symbol: import.imported.clone(),
                     kind,
                 }
             } else {
                 ImportedSymbolTarget::Node {
-                    node: NodeId::File(target),
+                    node: NodeId::File(target.to_path_buf()),
                     kind: EdgeKind::AssetImport,
                 }
             }
@@ -88,9 +92,10 @@ fn imported_symbol_map(
 fn namespace_import_map(
     path: &Path,
     symbols: &crate::codebase::ts_symbols::FileSymbols,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
+    graph_files: &GraphFiles,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
     for import in &symbols.imports {
@@ -99,15 +104,18 @@ fn namespace_import_map(
         }
         let kind = symbol_edge_kind(import.is_type_only);
         let target = if let Some(file) = resolver.resolve(&import.source, path) {
-            if is_indexable(&file) {
+            let Some(file) = graph_files.visible_path(&file) else {
+                continue;
+            };
+            if is_indexable(file) {
                 ImportedSymbolTarget::Symbol {
-                    file,
+                    file: file.to_path_buf(),
                     symbol: "*".to_string(),
                     kind,
                 }
             } else {
                 ImportedSymbolTarget::Node {
-                    node: NodeId::File(file),
+                    node: NodeId::File(file.to_path_buf()),
                     kind: EdgeKind::AssetImport,
                 }
             }
@@ -136,46 +144,7 @@ fn namespace_import_map(
     map
 }
 
-fn resolve_imported_callee(
-    callee: &str,
-    imported_symbols: &HashMap<String, ImportedSymbolTarget>,
-    namespace_imports: &HashMap<String, ImportedSymbolTarget>,
-    facts: &dyn TsFactLookup,
-    resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
-) -> Option<(NodeId, EdgeKind)> {
-    if let Some(target) = imported_symbols.get(callee) {
-        return Some(target_node(target));
-    }
-    if let Some(target) = namespace_imports.get(callee) {
-        return Some(namespace_file_node(target));
-    }
-    let (namespace, member) = callee.split_once('.')?;
-    if let Some(target) = namespace_imports.get(namespace) {
-        return Some(namespace_target_node(target, member));
-    }
-    let ImportedSymbolTarget::Symbol {
-        file: barrel,
-        symbol: imported,
-        kind,
-    } = imported_symbols.get(namespace)?
-    else {
-        return None;
-    };
-    resolve_reexported_namespace_member(
-        barrel,
-        imported,
-        member,
-        *kind,
-        ReexportNamespaceInputs {
-            facts,
-            resolver,
-            workspace,
-            visible_files,
-        },
-    )
-}
+include!("edge_symbols_helpers_reexports.rs");
 
 fn target_export_is_type(target: &Path, symbol: &str, facts: &dyn TsFactLookup) -> bool {
     let Some(symbols) = facts

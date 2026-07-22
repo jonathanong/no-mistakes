@@ -60,16 +60,17 @@ pub(crate) fn add_distinct_worker_file_edges(
 
 pub(in super::super) fn add_queue_edges(
     root: &Path,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
+    let graph_files = super::super::GraphFiles::from_files(files.to_vec());
     super::super::merge_edges(
         forward,
         reverse,
-        super::super::collect_queue_edges(root, resolver, files, facts, config_options),
+        super::super::collect_queue_edges(root, resolver, &graph_files, facts, config_options),
     );
 }

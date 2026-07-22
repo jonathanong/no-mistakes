@@ -3,7 +3,7 @@ use crate::config::v2::schema::{
     NoMistakesConfig, PlaywrightSelectorWrapper, Project, RuleDef, TestPlanProjectDependency,
     TestPlanTargetedProjectDependency,
 };
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn wrapper(module: &str, export: &str, test_id_argument: usize) -> PlaywrightSelectorWrapper {
     PlaywrightSelectorWrapper {
@@ -147,4 +147,26 @@ fn project_and_rule_globs_surface_validation_context() {
         rule_error.contains("rules[0].exclude contains invalid glob `[`"),
         "{rule_error}"
     );
+}
+
+#[test]
+fn source_store_config_loading_uses_the_request_snapshot_and_validates_globs() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.join("../../fixtures/napi/analyze-project-dynamic-import-reachability");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
+
+    let config = super::load_v2_config_from_source_store(&root, None, &visible_paths, &sources)
+        .expect("fixture config should load from the canonical source store");
+    assert_eq!(config.rules.len(), 1);
+    assert_eq!(sources.physical_read_count(), 1);
+
+    let invalid_root =
+        manifest_dir.join("../../test-cases/config-v2/invalid-rule-path-filter/fixture");
+    let error = super::load_v2_config(&invalid_root, None)
+        .expect_err("an invalid path glob must be rejected during config validation");
+    assert!(error
+        .to_string()
+        .contains("rules[0].exclude contains invalid glob `[`"));
 }

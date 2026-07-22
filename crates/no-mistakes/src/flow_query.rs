@@ -1,5 +1,5 @@
 use crate::codebase::dependencies::graph::{
-    DepGraph, EdgeKind, GraphBuildPlan, GraphFiles, NodeId,
+    DepGraph, EdgeKind, GraphBuildPlan, GraphFiles, NodeId, PreparedGraphBuild,
 };
 use crate::codebase::dependencies::{parse_entrypoint, relationship_filter, RelationshipArg};
 use crate::codebase::ts_resolver::{
@@ -73,6 +73,27 @@ pub fn run(options: &FlowOptions) -> Result<FlowReport> {
     );
     let tsconfig =
         resolve_tsconfig_from_visible(&root, options.tsconfig.as_deref(), &root_visible_paths)?;
+    let tsconfig_catalog = options.tsconfig.as_deref().map_or_else(
+        || {
+            crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+                &root,
+                std::slice::from_ref(&root),
+                &root_visible_paths,
+            )
+        },
+        |path| {
+            let path = if path.is_absolute() {
+                path.to_path_buf()
+            } else {
+                root.join(path)
+            };
+            crate::codebase::ts_resolver::TsConfigCatalog::forced(
+                &root,
+                tsconfig.clone(),
+                Some(normalize_path(&path)),
+            )
+        },
+    );
     let allowed = relationship_filter(&options.relationships);
     let plan = GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(true);
     let config = crate::config::v2::load_v2_config_from_visible(
@@ -89,13 +110,21 @@ pub fn run(options: &FlowOptions) -> Result<FlowReport> {
         &config,
         &visible_paths,
     )?;
-    let graph = DepGraph::build_with_plan_files_prepared_config(
-        &root,
-        &tsconfig,
-        plan,
-        &graph_files,
-        options.config.as_deref(),
-        &prepared_graph,
+    let graph = DepGraph::build_with_plan_files_prepared_config_facts_and_resolution_cache(
+        PreparedGraphBuild {
+            root: &root,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: Some(&tsconfig_catalog),
+            plan,
+            graph_files: &graph_files,
+            config_path: options.config.as_deref(),
+            prepared: &prepared_graph,
+            facts: None,
+            import_resolution_cache: None,
+            dotnet_facts: None,
+            swift_facts: None,
+            visible_paths: Some(&visible_paths),
+        },
     )?;
     run_with_prepared_graph(options, &root, &graph)
 }

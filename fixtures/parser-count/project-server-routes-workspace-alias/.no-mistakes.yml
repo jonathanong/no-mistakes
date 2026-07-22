@@ -1,0 +1,13 @@
+projects:
+  api:
+    type: server
+    root: packages/api
+    routes:
+      - src/**/*.ts
+  swift-client:
+    type: tests
+    root: swift-client
+tests:
+  swift:
+    packages:
+      - swift-client

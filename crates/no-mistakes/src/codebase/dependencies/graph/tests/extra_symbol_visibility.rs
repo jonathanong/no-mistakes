@@ -113,6 +113,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
             indexable: std::slice::from_ref(&current),
             all: std::slice::from_ref(&current),
             visible: &visible,
+            graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
         },
         &facts,
         &resolver,
@@ -149,6 +150,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
                 resolver: &resolver,
                 workspace: &workspace,
                 visible_files: &visible,
+                graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
             },
         ),
         None

@@ -2,9 +2,10 @@ struct ExportEdgeInputs<'a> {
     path: &'a Path,
     symbols: &'a crate::codebase::ts_symbols::FileSymbols,
     facts: &'a dyn TsFactLookup,
-    resolver: &'a ImportResolver<'a>,
+    resolver: &'a dyn ImportResolution,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
+    graph_files: &'a GraphFiles,
 }
 
 fn collect_export_edges(
@@ -56,25 +57,28 @@ fn collect_direct_reexport_edge(
         symbol: export_symbol.to_string(),
     };
     if let Some(target) = inputs.resolver.resolve(source, inputs.path) {
-        if !is_indexable(&target) {
-            edges.push((from, NodeId::File(target), EdgeKind::AssetImport));
+        let Some(target) = inputs.graph_files.visible_path(&target) else {
+            return;
+        };
+        if !is_indexable(target) {
+            edges.push((from, NodeId::File(target.to_path_buf()), EdgeKind::AssetImport));
             return;
         }
         if imported == "*" {
             edges.push((
                 from,
-                NodeId::File(target),
+                NodeId::File(target.to_path_buf()),
                 symbol_edge_kind(export.is_type_only),
             ));
             return;
         }
         let kind = symbol_edge_kind(
-            export.is_type_only || target_export_is_type(&target, imported, inputs.facts),
+            export.is_type_only || target_export_is_type(target, imported, inputs.facts),
         );
         edges.push((
             from,
             NodeId::Symbol {
-                file: target,
+                file: target.to_path_buf(),
                 symbol: imported.clone(),
             },
             kind,
@@ -84,17 +88,15 @@ fn collect_direct_reexport_edge(
         inputs.path,
         inputs.visible_files,
     ) {
-        if !inputs.visible_files.contains(&target) {
-            return;
-        }
+        let Some(target) = inputs.graph_files.visible_path(&target) else { return; };
         if imported == "*" {
-            edges.push((from, NodeId::File(target), EdgeKind::WorkspaceImport));
+            edges.push((from, NodeId::File(target.to_path_buf()), EdgeKind::WorkspaceImport));
             return;
         }
         edges.push((
             from,
             NodeId::Symbol {
-                file: target,
+                file: target.to_path_buf(),
                 symbol: imported.clone(),
             },
             EdgeKind::WorkspaceImport,
@@ -124,14 +126,17 @@ fn collect_export_reference_edges(
             .get(&local_symbol)
             .map(namespace_file_node)
             .or_else(|| {
-                resolve_imported_callee(
+                resolve_imported_callee_with_graph_files(
                     &local_symbol,
                     imported_symbols,
                     namespace_imports,
-                    inputs.facts,
-                    inputs.resolver,
-                    inputs.workspace,
-                    inputs.visible_files,
+                    ReexportResolutionInputs {
+                        facts: inputs.facts,
+                        resolver: inputs.resolver,
+                        workspace: inputs.workspace,
+                        visible_files: inputs.visible_files,
+                        graph_files: inputs.graph_files,
+                    },
                 )
             });
         if let Some((target, kind)) = resolved {

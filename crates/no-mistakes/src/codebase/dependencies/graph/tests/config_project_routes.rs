@@ -104,6 +104,7 @@ fn configured_project_routes_reuse_prepared_server_facts() {
         &root,
         &all_files,
         &tsconfig,
+        None,
         route_globset,
         None,
         options.test_filter.as_ref(),
@@ -112,6 +113,7 @@ fn configured_project_routes_reuse_prepared_server_facts() {
         &root,
         &all_files,
         &tsconfig,
+        None,
         route_globset,
         Some(&facts),
         options.test_filter.as_ref(),
@@ -161,6 +163,7 @@ fn prepared_project_route_facts_preserve_imported_mounts_and_test_exclusions() {
         &root,
         &all_files,
         &tsconfig,
+        None,
         route_globset,
         None,
         options.test_filter.as_ref(),
@@ -169,6 +172,7 @@ fn prepared_project_route_facts_preserve_imported_mounts_and_test_exclusions() {
         &root,
         &all_files,
         &tsconfig,
+        None,
         route_globset,
         Some(&facts),
         options.test_filter.as_ref(),
@@ -179,4 +183,67 @@ fn prepared_project_route_facts_preserve_imported_mounts_and_test_exclusions() {
     assert!(reused.iter().all(|(file, route)| {
         file != &root.join("backend/api/ignored.test.ts") && route != "/api/test-only"
     }));
+}
+
+#[test]
+fn workspace_project_routes_resolve_mount_aliases_with_the_owning_tsconfig() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/project-server-routes-workspace-alias"),
+    );
+    let plan = GraphBuildPlan {
+        routes: true,
+        swift: true,
+        ..GraphBuildPlan::default()
+    };
+    let framework_plan = crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(plan);
+    let mut shared = crate::codebase::dependencies::SharedTraversalContext::prepare_with_framework_plan(
+        root.clone(),
+        None,
+        None,
+        plan,
+        framework_plan,
+    )
+    .unwrap();
+    let app = root.join("packages/api/src/app.ts");
+    let admin_router = root.join("packages/api/src/routers/admin-router.ts");
+    let client = root.join("packages/web/src/client.ts");
+    let swift_client = root.join("swift-client/Sources/Client/Endpoint.swift");
+
+    assert_eq!(
+        shared
+            .tsconfig_catalog()
+            .provenance_for(&app)
+            .config
+            .as_deref(),
+        Some(root.join("packages/api/tsconfig.json").as_path())
+    );
+
+    let options = graph_config_options(&root).unwrap();
+    let all_files = shared.graph_files().all.clone();
+    let tsconfig = shared.tsconfig().clone();
+    let tsconfig_catalog = shared.tsconfig_catalog_arc();
+    let facts = shared.facts();
+    let route_defs = collect_project_server_route_defs(
+        &root,
+        &all_files,
+        &tsconfig,
+        Some(&tsconfig_catalog),
+        options.project_route_globset.as_ref().unwrap(),
+        Some(facts),
+        options.test_filter.as_ref(),
+    );
+    assert!(route_defs.contains(&(admin_router.clone(), "/api/admin/*".into())));
+
+    let graph = shared.canonical_graph().unwrap();
+    assert!(graph
+        .dependencies_of_node(&NodeId::File(client))
+        .is_some_and(|edges| edges.iter().any(|(to, kind)| {
+            *kind == EdgeKind::RouteRef && to.as_file() == Some(admin_router.as_path())
+        })));
+    assert!(graph
+        .dependencies_of_node(&NodeId::File(swift_client))
+        .is_some_and(|edges| edges.iter().any(|(to, kind)| {
+            *kind == EdgeKind::HttpCall && to.as_file() == Some(admin_router.as_path())
+        })));
 }

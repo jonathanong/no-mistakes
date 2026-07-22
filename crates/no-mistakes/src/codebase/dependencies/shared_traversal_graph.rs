@@ -71,6 +71,7 @@ impl SharedTraversalContext {
             build_canonical_graph(CanonicalGraphBuild {
                 root: &self.root,
                 tsconfig: &self.tsconfig,
+                tsconfig_catalog: &self.tsconfig_catalog,
                 plan,
                 graph_files: &self.graph_files,
                 config_path: self.config_path.as_deref(),
@@ -112,6 +113,7 @@ impl SharedTraversalContext {
             build_canonical_graph(CanonicalGraphBuild {
                 root: &self.root,
                 tsconfig: &self.tsconfig,
+                tsconfig_catalog: &self.tsconfig_catalog,
                 plan: self.build_plan,
                 graph_files: &self.graph_files,
                 config_path: self.config_path.as_deref(),
@@ -144,6 +146,7 @@ impl SharedTraversalContext {
             Ok(
                 graph::SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
                     &self.tsconfig,
+                    Some(&self.tsconfig_catalog),
                     &self.graph_files,
                     self.facts.as_ref().expect("TS facts are initialized"),
                     &workspace,

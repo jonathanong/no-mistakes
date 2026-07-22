@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
 
@@ -17,15 +17,6 @@ pub(crate) fn filter_rule_files(
         .filter(|path| filter.is_match(path))
         .cloned()
         .collect())
-}
-
-pub(crate) fn rule_matches_file(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule: &RuleDef,
-    path: &Path,
-) -> Result<bool> {
-    Ok(RulePathFilter::new(root, config, rule)?.is_match(path))
 }
 
 pub(crate) fn filter_findings(
@@ -132,11 +123,17 @@ impl RulePathFilter {
     }
 
     fn matches_rule(&self, repo_rel: &str, project_rel: Option<&str>) -> bool {
-        (self.include.is_empty()
-            || self.include.is_match(repo_rel)
-            || project_rel.is_some_and(|rel| self.include.is_match(rel)))
+        let include_project_rel = match project_rel {
+            Some(rel) => self.include.is_match(rel),
+            None => false,
+        };
+        let exclude_project_rel = match project_rel {
+            Some(rel) => self.exclude.is_match(rel),
+            None => false,
+        };
+        (self.include.is_empty() || self.include.is_match(repo_rel) || include_project_rel)
             && !self.exclude.is_match(repo_rel)
-            && !project_rel.is_some_and(|rel| self.exclude.is_match(rel))
+            && !exclude_project_rel
     }
 }
 
@@ -164,17 +161,32 @@ impl GlobMatcher {
         let mut count = 0usize;
         for pattern in patterns {
             let normalized = pattern.trim_start_matches("./");
-            let glob = GlobBuilder::new(normalized)
+            let glob_result = GlobBuilder::new(normalized)
                 .literal_separator(false)
-                .build()
-                .with_context(|| format!("{context} contains invalid glob `{pattern}`"))?;
+                .build();
+            let glob = match glob_result {
+                Ok(glob) => glob,
+                Err(error) => {
+                    return Err(anyhow::Error::new(error)
+                        .context(format!("{context} contains invalid glob `{pattern}`")));
+                }
+            };
             builder.add(glob);
             count += 1;
         }
-        let globset = (count > 0)
-            .then(|| builder.build())
-            .transpose()
-            .with_context(|| format!("failed to build {context} glob set"))?;
+        let globset = if count == 0 {
+            None
+        } else {
+            let result = builder.build();
+            let globset = match result {
+                Ok(globset) => globset,
+                Err(error) => {
+                    return Err(anyhow::Error::new(error)
+                        .context(format!("failed to build {context} glob set")));
+                }
+            };
+            Some(globset)
+        };
         Ok(Self { globset })
     }
 

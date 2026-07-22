@@ -8,10 +8,28 @@ impl<'a> ImportResolver<'a> {
         tsconfig: &'a TsConfig,
         observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
     ) -> Self {
-        let mut alias_order: Vec<usize> = (0..tsconfig.paths.len()).collect();
+        Self::from_config(ResolverTsConfig::Borrowed(tsconfig), observer)
+    }
+
+    /// Build a persistent resolver that owns its configuration. This is for
+    /// request-scoped facades that select a catalog config per importer; the
+    /// regular borrowed constructors retain their allocation-free fast path.
+    pub(crate) fn new_owned(tsconfig: std::sync::Arc<TsConfig>) -> ImportResolver<'static> {
+        ImportResolver::from_config(
+            ResolverTsConfig::Owned(tsconfig),
+            crate::diagnostics::current(),
+        )
+    }
+
+    fn from_config(
+        tsconfig: ResolverTsConfig<'a>,
+        observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
+    ) -> Self {
+        let config = tsconfig.get();
+        let mut alias_order: Vec<usize> = (0..config.paths.len()).collect();
         alias_order.sort_by(|&a, &b| {
-            let la = tsconfig.paths[a].0.len();
-            let lb = tsconfig.paths[b].0.len();
+            let la = config.paths[a].0.len();
+            let lb = config.paths[b].0.len();
             lb.cmp(&la).then(a.cmp(&b))
         });
 
@@ -32,7 +50,7 @@ impl<'a> ImportResolver<'a> {
     pub(crate) fn with_queue_compatibility(mut self, root: &'a Path) -> Self {
         self.cache.clear();
         self.shared_cache = None;
-        self.alias_order = (0..self.tsconfig.paths.len()).collect();
+        self.alias_order = (0..self.tsconfig().paths.len()).collect();
         self.policy = ImportResolutionPolicy::QueueCompatibility { root };
         self
     }
@@ -44,7 +62,7 @@ impl<'a> ImportResolver<'a> {
     ) -> Self {
         let mut resolver = Self::new_observed(tsconfig, session.observer().cloned());
         resolver.cache = session.resolver_cache(tsconfig, visible);
-        resolver.visible = visible;
+        resolver.visible = visible.map(ResolverVisible::Borrowed);
         resolver.session_scoped = true;
         resolver
     }
@@ -55,7 +73,17 @@ impl<'a> ImportResolver<'a> {
         // otherwise leak stale answers into the new scope.
         self.cache.clear();
         self.shared_cache = None;
-        self.visible = Some(visible);
+        self.visible = Some(ResolverVisible::Borrowed(visible));
+        self
+    }
+
+    /// Keep an owned frozen visibility universe with an owned resolver.
+    /// This is intentionally separate from `with_visible` so common borrowed
+    /// consumers retain their no-Arc fast path.
+    pub(crate) fn with_owned_visible(mut self, visible: std::sync::Arc<HashSet<PathBuf>>) -> Self {
+        self.cache.clear();
+        self.shared_cache = None;
+        self.visible = Some(ResolverVisible::Owned(visible));
         self
     }
 
@@ -71,7 +99,7 @@ impl<'a> ImportResolver<'a> {
     }
 
     pub(crate) fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
-        self.visible
+        self.visible.as_ref().map(ResolverVisible::files)
     }
 
     /// Returns `true` if `specifier` matches any configured tsconfig path
@@ -79,9 +107,13 @@ impl<'a> ImportResolver<'a> {
     /// `resolve-check` to flag a configured alias whose target is missing as a
     /// real error rather than an external/bare specifier.
     pub fn matches_alias(&self, specifier: &str) -> bool {
-        self.tsconfig
+        self.tsconfig()
             .paths
             .iter()
             .any(|(pattern, _)| match_alias(pattern, specifier).is_some())
+    }
+
+    fn tsconfig(&self) -> &TsConfig {
+        self.tsconfig.get()
     }
 }

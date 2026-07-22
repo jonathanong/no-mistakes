@@ -41,6 +41,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     visible.insert(asset.clone());
     visible.insert(barrel.clone());
     visible.insert(workspace_target.clone());
+    let graph_files = GraphFiles::from_files(visible.iter().cloned().collect());
     let tsconfig = TsConfig {
         dir: p("/repo/packages/app"),
         paths: vec![],
@@ -113,7 +114,14 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         ],
     };
 
-    let imported = imported_symbol_map(&current, &symbols, &resolver, &workspace, &visible);
+    let imported = imported_symbol_map(
+        &current,
+        &symbols,
+        &resolver,
+        &workspace,
+        &visible,
+        &graph_files,
+    );
     assert_eq!(
         target_node(imported.get("workspaceValue").unwrap()),
         (
@@ -134,7 +142,14 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     );
     assert!(!imported.contains_key("missing"));
 
-    let namespaces = namespace_import_map(&current, &symbols, &resolver, &workspace, &visible);
+    let namespaces = namespace_import_map(
+        &current,
+        &symbols,
+        &resolver,
+        &workspace,
+        &visible,
+        &graph_files,
+    );
     assert_eq!(
         namespace_target_node(namespaces.get("core").unwrap(), "parse"),
         (
@@ -331,6 +346,7 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
             indexable: std::slice::from_ref(&current),
             all: &[current.clone(), target.clone()],
             visible: &visible,
+            graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
         },
         &facts,
         &resolver,
@@ -417,6 +433,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
         resolver: &resolver,
         workspace: &workspace,
         visible_files: &visible,
+        graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
     };
     let mut edges = Vec::new();
     collect_star_reexport_edges(&inputs, &mut edges);
