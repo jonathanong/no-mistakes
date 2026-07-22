@@ -133,7 +133,7 @@ export interface WorkflowStep {
   name?: string;
   condition?: string;
   uses?: string;
-  /** Always absent until the artifact-dataflow resolver lands (a later port wave). */
+  /** Present when this step is an `actions/{upload,download}-artifact` action. */
   artifact?: ArtifactDeclaration;
 }
 

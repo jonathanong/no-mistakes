@@ -4,12 +4,10 @@
 //!
 //! These are pure data shapes ported from a TypeScript engine's
 //! `artifact-types.mts`. Field order matches that source's type
-//! declarations; unlike [`super::model`], no construction site currently
-//! exists to diverge from it (artifact resolution itself is not yet
-//! ported — see the `resolve_artifact_graph_stub` seam in
-//! `super::load_workflow_topology`). A later port wave adding the resolver
-//! must re-verify field order against the resolver's real construction
-//! sites, the same way `model.rs` was verified against `parse-workflow.mts`.
+//! declarations; see [`super::artifact_values`] and
+//! [`super::artifact_resolver`] for the real construction sites these
+//! shapes must stay byte-for-byte compatible with, the same way `model.rs`
+//! is verified against `parse-workflow.mts`.
 
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -17,12 +15,14 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum ArtifactValue {
+    #[serde(rename_all = "camelCase")]
     Static {
         raw: String,
         value: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         instance_count: Option<u32>,
     },
+    #[serde(rename_all = "camelCase")]
     Finite {
         raw: String,
         values: Vec<String>,

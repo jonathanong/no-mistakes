@@ -74,6 +74,7 @@ pub fn parse_workflow_file(root_dir: &Path, path: &str) -> ParsedWorkflow {
         let job_id = format!("{path}#{key}");
         let matrix = workflow_values::matrix_from_job(unknown_job);
         let concurrency = workflow_values::parse_concurrency(unknown_job.get("concurrency"));
+        let steps = workflow_values::parse_steps(unknown_job.get("steps"), matrix.as_ref());
         jobs.push(model::WorkflowJobNode {
             id: job_id.clone(),
             workflow_id: path.to_string(),
@@ -87,7 +88,7 @@ pub fn parse_workflow_file(root_dir: &Path, path: &str) -> ParsedWorkflow {
             condition: value_primitives::string_value(unknown_job.get("if")),
             matrix,
             concurrency,
-            steps: workflow_values::parse_steps(unknown_job.get("steps")),
+            steps,
         });
         for reference in expression_references::workflow_output_references(unknown_job) {
             output_references.push(ParsedWorkflowOutputReference {

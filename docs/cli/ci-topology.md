@@ -1,8 +1,9 @@
 # `no-mistakes ci topology`
 
 Parse `.github/workflows` into a typed graph — workflows, jobs, and edges for
-`needs` control flow, reusable-workflow calls, and `workflow_run`
-subscriptions — with diagnostics for malformed, dangling, cyclic, or
+`needs` control flow, reusable-workflow calls, `workflow_run` subscriptions,
+and same-run `actions/upload-artifact` / `actions/download-artifact`
+dataflow — with diagnostics for malformed, dangling, cyclic, or
 contract-violating definitions.
 
 ```sh
@@ -38,20 +39,47 @@ and the command exits `1`. Output is only printed once the (possibly
 - **Edges** are one of four kinds: `needs` (job control flow), `calls`
   (reusable-workflow calls — `to` is present only for local `./` targets;
   remote calls are opaque), `workflow-run` (resolved `workflow_run`
-  subscriptions, matched case-insensitively by workflow `name`).
+  subscriptions, matched case-insensitively by workflow `name`), and
+  `artifact` (a same-run `upload-artifact` step feeding a `download-artifact`
+  step, tagged `match: exact | pattern | all | possible`).
 - **Diagnostics** cover dangling `needs`, job/`workflow_run`/reusable-call
   cycles, duplicate step ids, unknown or non-prior step references,
   duplicate workflow names, missing or non-callable local reusable-workflow
   targets, `workflow_call` contract violations (missing/unknown/mistyped
   inputs, missing/unknown secrets, unknown output references), missing or
   ambiguous `workflow_run` sources, `workflow_run` chains deeper than 3
-  levels, and malformed YAML.
+  levels, malformed YAML, and missing/ambiguous same-run artifact producers
+  or an over-limit reusable-workflow expansion (see below).
 
-Same-run artifact dataflow (`actions/upload-artifact` /
-`actions/download-artifact` producer→consumer edges) is not yet resolved —
-every step's `artifact` field is always absent, and no `artifact` edges or
-`missing-artifact-producer` / `ambiguous-artifact-producer` /
-`artifact-resolution-limit` diagnostics are produced.
+### Same-run artifact dataflow
+
+A step using `actions/upload-artifact@*` / `actions/download-artifact@*` is
+parsed into a `WorkflowStep.artifact` declaration; `download-artifact` steps
+with a `current-run` source (the default — no `github-token`/`repository`/
+`run-id` override) are resolved against every upload reachable within the
+same root workflow's run, following local (`./`) reusable-workflow calls
+into the caller's run rather than treating them as separate roots. Each
+resolution reports one of four match certainties:
+
+- `exact` / `pattern` / `all` — a single producer is guaranteed to run
+  before the consumer (via `needs`, unconditionally, with a single matching
+  matrix instance).
+- `possible` — a producer *could* supply the artifact but isn't guaranteed
+  to (no ordering constraint, a conditional job, more than one candidate, or
+  a matrix-multiplied upload), or a dynamic (`${{ ... }}`), path-derived
+  (`archive: false`), or remote-call producer might supply it.
+
+When no candidate can possibly satisfy an exact name request, the graph
+carries a `missing-artifact-producer` diagnostic instead of an edge; when
+multiple unordered or matrix-multiplied candidates compete for the same
+exact name, it's `ambiguous-artifact-producer` instead. A local
+reusable-workflow call DAG that would expand past 4096 same-run job
+occurrences is truncated entirely (`artifact-resolution-limit`) rather than
+reporting a partial answer. `artifact-ids` downloads and non-`current-run`
+sources are never resolved or diagnosed. A job reachable from more than one
+root that would resolve differently per invocation reports neither an edge
+nor a diagnostic for that download — an answer that isn't true for every
+invocation isn't reported as true at all.
 
 ## Output (json)
 
@@ -78,7 +106,16 @@ every step's `artifact` field is always absent, and no `artifact` edges or
     }
   ],
   "edges": [
-    { "kind": "needs", "from": ".github/workflows/ci.yml#build", "to": ".github/workflows/ci.yml#test" }
+    { "kind": "needs", "from": ".github/workflows/ci.yml#build", "to": ".github/workflows/ci.yml#test" },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/ci.yml#build",
+      "to": ".github/workflows/ci.yml#test",
+      "name": "dist",
+      "producerStep": 2,
+      "consumerStep": 0,
+      "match": "exact"
+    }
   ],
   "diagnostics": []
 }

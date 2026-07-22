@@ -1,0 +1,22 @@
+on: push
+jobs:
+  missing-consumer:
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: absent}
+  # Two unordered producers of the same name coexist without any needs
+  # edge between them and the consumer — the download can't tell which one
+  # it would get, so this is ambiguous rather than emitting either edge.
+  a:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: shared}
+  b:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: shared}
+  ambiguous-consumer:
+    needs: [a, b]
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: shared}

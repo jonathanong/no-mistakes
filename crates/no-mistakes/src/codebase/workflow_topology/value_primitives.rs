@@ -91,13 +91,6 @@ impl OrderedJson {
             _ => None,
         }
     }
-
-    pub fn as_array(&self) -> Option<&[OrderedJson]> {
-        match self {
-            Self::Array(items) => Some(items.as_slice()),
-            _ => None,
-        }
-    }
 }
 
 impl Serialize for OrderedJson {

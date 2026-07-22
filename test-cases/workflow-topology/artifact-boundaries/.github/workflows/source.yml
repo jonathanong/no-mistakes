@@ -1,0 +1,7 @@
+name: Source
+on: push
+jobs:
+  produce:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: cross-run}

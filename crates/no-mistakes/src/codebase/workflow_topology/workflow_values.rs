@@ -1,16 +1,15 @@
 //! Hand-walks parsed workflow YAML into typed model fragments, ported from
 //! `workflow-values.mts`. Reused by [`super::parse`] for every workflow
 //! file and job entry.
-//!
-//! Artifact declaration parsing (`step.with` → an `ArtifactDeclaration`) is
-//! intentionally not ported yet — [`parse_steps`] always leaves
-//! `WorkflowStep::artifact` as `None`. A later port wave adds it alongside
-//! the artifact-dataflow resolver.
 
 use super::model;
 use super::value_primitives;
+use call_contract::scalar_record;
 use serde_yaml::Value;
-use std::collections::BTreeMap;
+
+mod call_contract;
+
+pub use call_contract::parse_workflow_call;
 
 /// A mapping key coerced to a string the way a JS object property name
 /// would be (YAML mapping keys are practically always strings already;
@@ -90,7 +89,14 @@ pub fn parse_concurrency(value: Option<&Value>) -> Option<model::WorkflowConcurr
     })
 }
 
-pub fn parse_steps(value: Option<&Value>) -> Vec<model::WorkflowStep> {
+/// `matrix` is the job's already-[`OrderedJson`](value_primitives::OrderedJson)-converted
+/// `strategy.matrix` snapshot (see [`matrix_from_job`]) — passed through
+/// unchanged to [`super::artifact_values::parse_artifact_declaration`] for
+/// matrix-aware artifact name expansion.
+pub fn parse_steps(
+    value: Option<&Value>,
+    matrix: Option<&value_primitives::OrderedJson>,
+) -> Vec<model::WorkflowStep> {
     let Some(Value::Sequence(items)) = value else {
         return Vec::new();
     };
@@ -110,6 +116,9 @@ pub fn parse_steps(value: Option<&Value>) -> Vec<model::WorkflowStep> {
             } else {
                 model::StepKind::Other
             };
+            let artifact = uses.as_deref().and_then(|uses| {
+                super::artifact_values::parse_artifact_declaration(uses, step.get("with"), matrix)
+            });
             Some(model::WorkflowStep {
                 index: position as u32,
                 kind,
@@ -117,7 +126,7 @@ pub fn parse_steps(value: Option<&Value>) -> Vec<model::WorkflowStep> {
                 name: value_primitives::string_value(step.get("name")),
                 condition: value_primitives::string_value(step.get("if")),
                 uses,
-                artifact: None,
+                artifact,
             })
         })
         .collect()
@@ -130,41 +139,6 @@ pub fn matrix_from_job(job: &Value) -> Option<value_primitives::OrderedJson> {
     }
     let matrix = strategy.get("matrix")?;
     Some(value_primitives::to_json(matrix))
-}
-
-pub fn parse_workflow_call(value: Option<&Value>) -> Option<model::WorkflowCallContract> {
-    let is_callable = match value {
-        Some(Value::String(text)) => text == "workflow_call",
-        Some(Value::Sequence(items)) => items
-            .iter()
-            .any(|item| item.as_str() == Some("workflow_call")),
-        Some(v) if value_primitives::is_record(Some(v)) => v.get("workflow_call").is_some(),
-        _ => false,
-    };
-    if !is_callable {
-        return None;
-    }
-    // The string/array forms set `config = null` in the TS engine; only the
-    // mapping form (`on: { workflow_call: {...} }`) carries a real config.
-    let config = match value {
-        Some(v) if value_primitives::is_record(Some(v)) => v.get("workflow_call"),
-        _ => None,
-    };
-    let mapping = config.filter(|c| value_primitives::is_record(Some(c)));
-    Some(model::WorkflowCallContract {
-        inputs: parse_declarations(
-            mapping.and_then(|m| m.get("inputs")),
-            parse_workflow_call_input,
-        ),
-        secrets: parse_declarations(
-            mapping.and_then(|m| m.get("secrets")),
-            parse_workflow_call_secret,
-        ),
-        outputs: parse_declarations(
-            mapping.and_then(|m| m.get("outputs")),
-            parse_workflow_call_output,
-        ),
-    })
 }
 
 /// Builds a `uses:` reusable-workflow call edge. `to` is populated only for
@@ -201,91 +175,4 @@ fn normalize_local_call_target(target: &str) -> String {
     let slashed = target.replace('\\', "/");
     let stripped = slashed.strip_prefix("./").unwrap_or(&slashed);
     super::posix_path::normalize(stripped)
-}
-
-fn parse_declarations<T>(
-    value: Option<&Value>,
-    parse: impl Fn(Option<&Value>) -> T,
-) -> BTreeMap<String, T> {
-    let Some(Value::Mapping(mapping)) = value else {
-        return BTreeMap::new();
-    };
-    mapping
-        .iter()
-        .filter_map(|(key, declaration)| Some((key_name(key)?, parse(Some(declaration)))))
-        .collect()
-}
-
-fn parse_workflow_call_input(value: Option<&Value>) -> model::WorkflowCallInput {
-    let input_type = value
-        .and_then(|v| v.get("type"))
-        .and_then(Value::as_str)
-        .and_then(|text| match text {
-            "boolean" => Some(model::WorkflowCallInputType::Boolean),
-            "number" => Some(model::WorkflowCallInputType::Number),
-            "string" => Some(model::WorkflowCallInputType::String),
-            _ => None,
-        });
-    let required = value
-        .and_then(|v| v.get("required"))
-        .and_then(Value::as_bool)
-        == Some(true);
-    let default = value.and_then(|v| v.get("default")).and_then(scalar_value);
-    let description = value
-        .and_then(|v| v.get("description"))
-        .and_then(Value::as_str)
-        .map(str::to_string);
-    model::WorkflowCallInput {
-        input_type,
-        required,
-        default,
-        description,
-    }
-}
-
-fn parse_workflow_call_secret(value: Option<&Value>) -> model::WorkflowCallSecret {
-    model::WorkflowCallSecret {
-        required: value
-            .and_then(|v| v.get("required"))
-            .and_then(Value::as_bool)
-            == Some(true),
-        description: value
-            .and_then(|v| v.get("description"))
-            .and_then(Value::as_str)
-            .map(str::to_string),
-    }
-}
-
-fn parse_workflow_call_output(value: Option<&Value>) -> model::WorkflowCallOutput {
-    model::WorkflowCallOutput {
-        value: value
-            .and_then(|v| v.get("value"))
-            .and_then(Value::as_str)
-            .map(str::to_string),
-        description: value
-            .and_then(|v| v.get("description"))
-            .and_then(Value::as_str)
-            .map(str::to_string),
-    }
-}
-
-fn scalar_record(value: Option<&Value>) -> BTreeMap<String, model::JsonScalar> {
-    let Some(Value::Mapping(mapping)) = value else {
-        return BTreeMap::new();
-    };
-    mapping
-        .iter()
-        .filter_map(|(key, item)| Some((key_name(key)?, scalar_value(item)?)))
-        .collect()
-}
-
-fn scalar_value(value: &Value) -> Option<model::JsonScalar> {
-    match value {
-        Value::String(text) => Some(model::JsonScalar::Text(text.clone())),
-        Value::Bool(flag) => Some(model::JsonScalar::Bool(*flag)),
-        Value::Number(number) => {
-            value_primitives::yaml_number_to_json(number).map(model::JsonScalar::Number)
-        }
-        _ => None,
-    }
 }

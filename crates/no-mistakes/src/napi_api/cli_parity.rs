@@ -2,13 +2,19 @@ use std::path::{Path, PathBuf};
 
 use super::options::{
     parse_options, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
-    CiTopologyOptions, FetchesOptions, ImpactedChecksOptions, PlaywrightOptions, ProjectOptions,
-    TestsImpactOptions, TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions,
-    TestsWhyOptions,
+    CiTopologyOptions, FetchesOptions, ImpactedChecksOptions, ProjectOptions, TestsImpactOptions,
+    TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
 include!("cli_parity_builders.rs");
+
+mod playwright_wrappers;
+
+pub(crate) use playwright_wrappers::{
+    playwright_check_json_impl, playwright_edges_json_impl, playwright_related_json_impl,
+    playwright_tests_json_impl,
+};
 
 pub(crate) fn fetches_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<FetchesOptions>(&options_json)?;
@@ -167,47 +173,6 @@ pub(crate) fn tests_graph_mermaid_impl(options_json: String) -> napi::Result<Str
     let options = parse_options::<TestsPlanDocumentOptions>(&options_json)?;
     let plan = load_plan_document(options).map_err(to_napi_error)?;
     crate::tests::graph::graph_mermaid(&plan).map_err(to_napi_error)
-}
-
-pub(crate) fn playwright_check_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Check)
-}
-
-pub(crate) fn playwright_edges_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Edges)
-}
-
-pub(crate) fn playwright_related_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(
-        options_json,
-        crate::playwright::PlaywrightReportKind::Related,
-    )
-}
-
-pub(crate) fn playwright_tests_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Tests)
-}
-
-fn playwright_json(
-    options_json: String,
-    kind: crate::playwright::PlaywrightReportKind,
-) -> napi::Result<String> {
-    let options = parse_options::<PlaywrightOptions>(&options_json)?;
-    let report_options = crate::playwright::PlaywrightReportOptions {
-        root: options
-            .root
-            .map(PathBuf::from)
-            .unwrap_or(PathBuf::from(".")),
-        config: options.config.map(PathBuf::from),
-        playwright_config: strings_to_paths(options.playwright_config),
-        project: options.project,
-        files: strings_to_paths(options.files),
-        assert_conditional_tests: options.assert_conditional_tests,
-        allow_skipped_tests: options.allow_skipped_tests,
-        assert_unique_test_ids: options.assert_unique_test_ids,
-        assert_unique_html_ids: options.assert_unique_html_ids,
-    };
-    crate::playwright::report_json(kind, report_options).map_err(to_napi_error)
 }
 
 fn load_plan_document(options: TestsPlanDocumentOptions) -> AnyhowResult<crate::tests::TestPlan> {

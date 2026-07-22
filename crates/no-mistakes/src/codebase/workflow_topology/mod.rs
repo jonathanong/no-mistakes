@@ -2,9 +2,9 @@
 //!
 //! Parses `.github/workflows/*.{yml,yaml}` into a typed graph — workflows,
 //! jobs, and edges for `needs` control flow, reusable-workflow calls,
-//! `workflow_run` subscriptions, and (once a later port wave lands) same-run
-//! artifact dataflow — plus structured diagnostics for malformed, dangling,
-//! cyclic, or contract-violating workflow definitions.
+//! `workflow_run` subscriptions, and same-run artifact dataflow — plus
+//! structured diagnostics for malformed, dangling, cyclic, or
+//! contract-violating workflow definitions.
 //!
 //! This is a faithful Rust port of a standalone TypeScript engine's
 //! schema-v1 model. The serialized [`model::WorkflowTopology`] JSON shape
@@ -27,7 +27,15 @@
 //! traversal (`--workflow` filter transitive-callee closure) this module
 //! itself needs from that index.
 
+pub mod artifact_download_resolver;
+pub mod artifact_pattern_match;
+pub mod artifact_resolution_diagnostics;
+pub mod artifact_resolution_helpers;
+pub mod artifact_resolution_types;
+pub mod artifact_resolver;
+pub mod artifact_run_context;
 pub mod artifact_types;
+pub mod artifact_values;
 pub mod call_contract_diagnostics;
 pub mod case_insensitive_lookup;
 pub mod expression_references;
@@ -124,14 +132,13 @@ pub fn load_workflow_topology_from_snapshot(
     );
     topology_graph::diagnose_call_cycles(&workflows, &edges, &mut diagnostics);
 
-    // TODO(workflow-topology-artifacts): replace with the real
-    // artifact-dataflow resolver (upload/download-artifact edges plus
-    // missing/ambiguous/resolution-limit diagnostics). Until then this
-    // contributes nothing, and every `WorkflowStep::artifact` is `None`.
-    let (artifact_edges, artifact_diagnostics) =
-        resolve_artifact_graph_stub(&workflows, &jobs, &edges, &diagnostics);
-    edges.extend(artifact_edges);
-    diagnostics.extend(artifact_diagnostics);
+    let artifact_edges =
+        artifact_resolver::resolve_artifact_graph(&workflows, &jobs, &edges, &mut diagnostics);
+    edges.extend(
+        artifact_edges
+            .into_iter()
+            .map(model::WorkflowTopologyEdge::Artifact),
+    );
 
     graph_diagnostics::diagnose_job_graph(&jobs, &edges, &mut diagnostics);
     graph_diagnostics::diagnose_duplicate_workflow_names(&workflows, &mut diagnostics);
@@ -172,20 +179,4 @@ pub fn load_workflow_topology_from_snapshot(
     };
 
     topology_graph::sort_topology(topology)
-}
-
-/// Seam for the artifact-dataflow resolver (a later port wave), mirroring
-/// the TS engine's `resolveArtifactGraph(workflows, jobs, edges,
-/// diagnostics)` call site so wiring in the real resolver only touches
-/// this one function.
-fn resolve_artifact_graph_stub(
-    _workflows: &[model::WorkflowNode],
-    _jobs: &[model::WorkflowJobNode],
-    _edges: &[model::WorkflowTopologyEdge],
-    _diagnostics: &[model::WorkflowTopologyDiagnostic],
-) -> (
-    Vec<model::WorkflowTopologyEdge>,
-    Vec<model::WorkflowTopologyDiagnostic>,
-) {
-    (Vec::new(), Vec::new())
 }

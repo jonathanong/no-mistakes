@@ -176,6 +176,22 @@ fn ci_topology_json_returns_the_parsed_graph() {
 }
 
 #[test]
+fn ci_topology_json_includes_same_run_artifact_dataflow_edges() {
+    let options = json!({ "root": workflow_topology_fixture("artifact-basic") }).to_string();
+    let output = ci_topology_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let artifact_edges: Vec<&serde_json::Value> = value["edges"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|edge| edge["kind"] == "artifact")
+        .collect();
+    assert!(artifact_edges
+        .iter()
+        .any(|edge| edge["match"] == "exact" && edge["name"] == "build-linux"));
+}
+
+#[test]
 fn ci_topology_json_reports_diagnostics_without_failing() {
     // Unlike the CLI (which exits non-zero and prints nothing on error
     // diagnostics), the N-API entry point always returns the full graph —

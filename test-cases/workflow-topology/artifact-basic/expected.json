@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/main.yml",
+      "path": ".github/workflows/main.yml",
+      "name": "main.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/main.yml#all",
+        ".github/workflows/main.yml#exact",
+        ".github/workflows/main.yml#first",
+        ".github/workflows/main.yml#pattern",
+        ".github/workflows/main.yml#same-job-limits-to-prior-step",
+        ".github/workflows/main.yml#second",
+        ".github/workflows/main.yml#skip-artifact-ids-and-remote-source"
+      ]
+    },
+    {
+      "id": ".github/workflows/symbolic.yml",
+      "path": ".github/workflows/symbolic.yml",
+      "name": "symbolic.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/symbolic.yml#symbolic-match",
+        ".github/workflows/symbolic.yml#symbolic-no-match",
+        ".github/workflows/symbolic.yml#symbolic-producer"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/main.yml#all",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "all",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "all"
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#exact",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "exact",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "build-linux",
+                "value": "build-linux"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#first",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "first",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "build-linux",
+              "value": "build-linux"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#pattern",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "pattern",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "pattern",
+              "pattern": {
+                "kind": "static",
+                "raw": "build-*",
+                "value": "build-*"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#same-job-limits-to-prior-step",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "same-job-limits-to-prior-step",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "one",
+              "value": "one"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        },
+        {
+          "index": 1,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "one",
+                "value": "one"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        },
+        {
+          "index": 2,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "one",
+              "value": "one"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "raw": "true",
+              "effective": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#second",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "second",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "docs",
+              "value": "docs"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#skip-artifact-ids-and-remote-source",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "skip-artifact-ids-and-remote-source",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "artifact-ids",
+              "artifactIds": {
+                "kind": "static",
+                "raw": "12",
+                "value": "12"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        },
+        {
+          "index": 1,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "absent",
+                "value": "absent"
+              }
+            },
+            "source": {
+              "kind": "external",
+              "repository": {
+                "kind": "static",
+                "raw": "other/repo",
+                "value": "other/repo"
+              },
+              "runId": {
+                "kind": "static",
+                "raw": "12",
+                "value": "12"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/symbolic.yml#symbolic-match",
+      "workflowId": ".github/workflows/symbolic.yml",
+      "key": "symbolic-match",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "pattern",
+              "pattern": {
+                "kind": "static",
+                "raw": "report-*",
+                "value": "report-*"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/symbolic.yml#symbolic-no-match",
+      "workflowId": ".github/workflows/symbolic.yml",
+      "key": "symbolic-no-match",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "pattern",
+              "pattern": {
+                "kind": "static",
+                "raw": "report-a*",
+                "value": "report-a*"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/symbolic.yml#symbolic-producer",
+      "workflowId": ".github/workflows/symbolic.yml",
+      "key": "symbolic-producer",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "dynamic",
+              "raw": "report-${{ inputs.suffix }}"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#first",
+      "to": ".github/workflows/main.yml#all",
+      "name": "build-linux",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "all"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#first",
+      "to": ".github/workflows/main.yml#exact",
+      "name": "build-linux",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "exact"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#first",
+      "to": ".github/workflows/main.yml#pattern",
+      "name": "build-linux",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "pattern"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#same-job-limits-to-prior-step",
+      "to": ".github/workflows/main.yml#all",
+      "name": "one",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#same-job-limits-to-prior-step",
+      "to": ".github/workflows/main.yml#same-job-limits-to-prior-step",
+      "name": "one",
+      "producerStep": 0,
+      "consumerStep": 1,
+      "match": "exact"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#same-job-limits-to-prior-step",
+      "to": ".github/workflows/main.yml#all",
+      "name": "one",
+      "producerStep": 2,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#second",
+      "to": ".github/workflows/main.yml#all",
+      "name": "docs",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "all"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/symbolic.yml#symbolic-producer",
+      "to": ".github/workflows/symbolic.yml#symbolic-match",
+      "name": "report-${{ inputs.suffix }}",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#first",
+      "to": ".github/workflows/main.yml#all"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#first",
+      "to": ".github/workflows/main.yml#exact"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#first",
+      "to": ".github/workflows/main.yml#pattern"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#second",
+      "to": ".github/workflows/main.yml#all"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#second",
+      "to": ".github/workflows/main.yml#exact"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#second",
+      "to": ".github/workflows/main.yml#pattern"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/symbolic.yml#symbolic-producer",
+      "to": ".github/workflows/symbolic.yml#symbolic-match"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/symbolic.yml#symbolic-producer",
+      "to": ".github/workflows/symbolic.yml#symbolic-no-match"
+    }
+  ],
+  "diagnostics": []
+}

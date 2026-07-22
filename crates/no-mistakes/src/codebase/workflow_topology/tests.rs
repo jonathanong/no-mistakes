@@ -12,6 +12,8 @@
 //! the vendored TS source, which is not part of this repository; see the
 //! PR/issue history for how it was produced.
 
+mod artifact;
+
 use super::case_insensitive_lookup::{CaseInsensitiveLookup, Resolution};
 use super::expression_references::{
     static_references, static_workflow_output_references, workflow_output_references,
@@ -105,6 +107,22 @@ golden_test!(
     "workflow-run-chain-limit"
 );
 
+// ── artifact-dataflow golden parity ─────────────────────────────────────
+
+golden_test!(artifact_basic_matches_ts_engine, "artifact-basic");
+golden_test!(artifact_matrix_matches_ts_engine, "artifact-matrix");
+golden_test!(artifact_certainty_matches_ts_engine, "artifact-certainty");
+golden_test!(artifact_unresolved_matches_ts_engine, "artifact-unresolved");
+golden_test!(
+    artifact_diagnostics_matches_ts_engine,
+    "artifact-diagnostics"
+);
+golden_test!(artifact_boundaries_matches_ts_engine, "artifact-boundaries");
+golden_test!(
+    artifact_resolution_limit_matches_ts_engine,
+    "artifact-resolution-limit"
+);
+
 #[test]
 fn workflow_filter_selects_transitive_local_callees() {
     let root = fixture("workflow-filters");
@@ -161,66 +179,12 @@ fn strip_malformed_messages(mut value: serde_json::Value) -> serde_json::Value {
     value
 }
 
-/// `ci.yml` in this fixture uses `actions/upload-artifact` /
-/// `actions/download-artifact`, which the artifact-dataflow resolver (a
-/// later port wave — see `resolve_artifact_graph_stub` in `super`) doesn't
-/// implement yet. This asserts everything the current wave DOES cover —
-/// every workflow, job, needs/calls/workflow-run edge, and every
-/// non-artifact diagnostic — matches the TS engine exactly, by stripping
-/// artifact edges, artifact-coded diagnostics, and the (not-yet-populated)
-/// step `artifact` field from both sides before comparing. Once the
-/// artifact resolver lands, replace this with a plain `golden_test!`.
-#[test]
-fn repository_matches_ts_engine_ignoring_unimplemented_artifact_dataflow() {
-    let root = fixture("repository");
-    let actual = strip_artifacts(json(&render(&root, &[])));
-    let expected = strip_artifacts(json(&golden(&root, "expected.json")));
-    assert_eq!(actual, expected);
-}
-
-fn strip_artifacts(mut value: serde_json::Value) -> serde_json::Value {
-    if let Some(edges) = value
-        .get_mut("edges")
-        .and_then(serde_json::Value::as_array_mut)
-    {
-        edges.retain(|edge| {
-            edge.get("kind").and_then(serde_json::Value::as_str) != Some("artifact")
-        });
-    }
-    if let Some(diagnostics) = value
-        .get_mut("diagnostics")
-        .and_then(serde_json::Value::as_array_mut)
-    {
-        diagnostics.retain(|diagnostic| {
-            !matches!(
-                diagnostic.get("code").and_then(serde_json::Value::as_str),
-                Some(
-                    "missing-artifact-producer"
-                        | "ambiguous-artifact-producer"
-                        | "artifact-resolution-limit"
-                )
-            )
-        });
-    }
-    if let Some(jobs) = value
-        .get_mut("jobs")
-        .and_then(serde_json::Value::as_array_mut)
-    {
-        for job in jobs {
-            if let Some(steps) = job
-                .get_mut("steps")
-                .and_then(serde_json::Value::as_array_mut)
-            {
-                for step in steps {
-                    if let Some(map) = step.as_object_mut() {
-                        map.remove("artifact");
-                    }
-                }
-            }
-        }
-    }
-    value
-}
+// `ci.yml` in this fixture uses `actions/upload-artifact` /
+// `actions/download-artifact` — this is the one golden fixture exercising
+// the full pipeline end to end (needs/calls/workflow-run edges, every
+// diagnostic kind, and same-run artifact dataflow) against the vendored
+// TS engine's real output, byte for byte.
+golden_test!(repository_matches_ts_engine, "repository");
 
 // ── unit tests for pure logic (id helpers) ──────────────────────────────
 
