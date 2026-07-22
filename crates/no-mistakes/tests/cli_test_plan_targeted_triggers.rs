@@ -1,3 +1,5 @@
+#[path = "cli_test_plan_targeted_triggers/group_order.rs"]
+mod group_order;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 

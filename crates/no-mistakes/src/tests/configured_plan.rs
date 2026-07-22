@@ -30,7 +30,9 @@ use finalize::{
 use hints::build_coverage_hints_from_prepared;
 use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
-use targeted_triggers::{merge_targeted_candidates, targeted_dependency_candidates};
+use targeted_triggers::{
+    merge_targeted_candidates, targeted_dependency_candidates, TargetedOverlapRecovery,
+};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan_with_prepared(
@@ -179,9 +181,13 @@ pub(crate) fn generate_configured_plan_with_prepared(
             ..TestPlanGroup::default()
         });
     }
+    let mut targeted_overlaps = TargetedOverlapRecovery::new(&targeted_candidates);
 
     for (group_index, group) in groups.iter().enumerate() {
-        if remaining_global == 0 {
+        let recover_targeted_overlaps = targeted_overlaps.should_recover(framework, group.type_);
+        let merge_zero_budget_targeted =
+            group.type_ == TestPlanGroupType::Dependencies && !targeted_candidates.is_empty();
+        if remaining_global == 0 && !recover_targeted_overlaps && !merge_zero_budget_targeted {
             group_results.push(empty_group_result(
                 group_type_name(group.type_),
                 all_tests.len().saturating_sub(used.len()),
@@ -200,6 +206,8 @@ pub(crate) fn generate_configured_plan_with_prepared(
             );
         }
         let target_only_group = needs_target_only_group && group_index == configured_group_count;
+        let candidate_used =
+            targeted_overlaps.candidate_used_override(&used, recover_targeted_overlaps);
         let mut candidates = if target_only_group {
             Vec::new()
         } else {
@@ -211,12 +219,15 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 &all_tests,
                 &all_test_set,
                 &test_filter,
-                &used,
+                candidate_used.as_ref().unwrap_or(&used),
                 &coverage_hints,
                 &mut warnings,
                 &mut warnings_seen,
             )
         };
+        if recover_targeted_overlaps {
+            targeted_overlaps.merge_existing(root, &mut candidates, &used, &mut selected_map);
+        }
         // Inject lockfile-seeded candidates during the dependencies group turn so they
         // compete for budget before later groups (e.g. sample) can consume it.
         if group.type_ == TestPlanGroupType::Dependencies {
@@ -264,6 +275,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 .then_some(group_limit)
                 .or_else(|| has_global_limit.then_some(group_limit)),
         });
+        targeted_overlaps.finish_group(group.type_);
     }
 
     if let Some(seed_result) = lockfile_seed_result {

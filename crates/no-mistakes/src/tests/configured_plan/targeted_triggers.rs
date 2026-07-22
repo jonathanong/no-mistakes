@@ -1,9 +1,79 @@
 use super::super::configured_plan_candidates::merge_selected;
 use super::super::plan::relative_path;
 use super::super::{Confidence, ImpactReason, SelectedTest};
+use super::TestFramework;
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
+use no_mistakes::config::v2::schema::TestPlanGroupType;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
+
+pub(super) struct TargetedOverlapRecovery {
+    test_files: HashSet<String>,
+    dependencies_have_run: bool,
+}
+
+impl TargetedOverlapRecovery {
+    pub(super) fn new(targeted: &[SelectedTest]) -> Self {
+        Self {
+            test_files: targeted
+                .iter()
+                .map(|candidate| candidate.test_file.clone())
+                .collect(),
+            dependencies_have_run: false,
+        }
+    }
+
+    pub(super) fn should_recover(
+        &self,
+        framework: TestFramework,
+        group: TestPlanGroupType,
+    ) -> bool {
+        self.dependencies_have_run
+            && (group == TestPlanGroupType::Direct
+                || (framework == TestFramework::Playwright && group == TestPlanGroupType::Coverage))
+    }
+
+    pub(super) fn candidate_used_override(
+        &self,
+        used: &HashSet<String>,
+        recover: bool,
+    ) -> Option<HashSet<String>> {
+        if !recover {
+            return None;
+        }
+        Some(
+            used.iter()
+                .filter(|test_file| !self.test_files.contains(*test_file))
+                .cloned()
+                .collect(),
+        )
+    }
+
+    pub(super) fn merge_existing(
+        &self,
+        root: &Path,
+        candidates: &mut Vec<SelectedTest>,
+        used: &HashSet<String>,
+        selected: &mut BTreeMap<PathBuf, SelectedTest>,
+    ) {
+        for candidate in candidates
+            .iter()
+            .filter(|candidate| used.contains(&candidate.test_file))
+        {
+            if let Some(existing) = selected.get_mut(&root.join(&candidate.test_file)) {
+                merge_selected(existing, candidate);
+                // An independent later group owns this test too, so keep
+                // every discovered runner target when finalizing it.
+                existing.targets.clear();
+            }
+        }
+        candidates.retain(|candidate| !used.contains(&candidate.test_file));
+    }
+
+    pub(super) fn finish_group(&mut self, group: TestPlanGroupType) {
+        self.dependencies_have_run |= group == TestPlanGroupType::Dependencies;
+    }
+}
 
 pub(super) fn targeted_dependency_candidates(
     root: &Path,

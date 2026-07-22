@@ -1,0 +1,69 @@
+use super::*;
+
+fn assert_shared_has_all_owners_and_reasons(report: &serde_json::Value) {
+    let shared = report["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|test| test["test_file"] == "src/shared.test.ts")
+        .unwrap();
+    assert_eq!(
+        shared["targets"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|target| target["project"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["database", "web"]
+    );
+    assert_eq!(
+        shared["reasons"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .flat_map(|reason| reason["via"].as_array().unwrap())
+            .map(|via| via.as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["configured-trigger", "self"]
+    );
+}
+
+#[test]
+fn dependencies_before_direct_preserves_all_owners_and_reasons() {
+    let fixture = fixture();
+    copy_config(fixture.path(), "dependencies-first.yml");
+    let report = json(&plan(
+        fixture.path(),
+        "vitest",
+        &[
+            "--changed-file",
+            "migrations/001.sql",
+            "--changed-file",
+            "src/shared.test.ts",
+            "--environment",
+            "dependencies-first",
+            "--json",
+        ],
+    ));
+    assert_shared_has_all_owners_and_reasons(&report);
+}
+
+#[test]
+fn zero_budget_dependencies_merges_targeted_reason_into_direct_selection() {
+    let fixture = fixture();
+    copy_config(fixture.path(), "direct-first.yml");
+    let report = json(&plan(
+        fixture.path(),
+        "vitest",
+        &[
+            "--changed-file",
+            "migrations/001.sql",
+            "--changed-file",
+            "src/shared.test.ts",
+            "--environment",
+            "direct-first",
+            "--json",
+        ],
+    ));
+    assert_shared_has_all_owners_and_reasons(&report);
+}
