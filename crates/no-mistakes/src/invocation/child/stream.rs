@@ -7,7 +7,7 @@
 //! buffer is ever held on either side.
 
 use super::process_tree::{configure_process_group, ProcessTree};
-use super::CLEANUP_TIMEOUT;
+use super::{fold_cleanup_error, CLEANUP_TIMEOUT};
 use crate::invocation::deadline::remaining_timeout;
 use std::io::Read;
 use std::process::{Command, ExitStatus, Stdio};
@@ -80,13 +80,7 @@ pub(crate) fn stream_command_lines(
         // thread can observe disconnection and exit rather than hang.
         drop(chunk_rx);
         let _ = stderr_reader.join();
-        return match cleanup_error {
-            Some(cleanup_error) => Err(std::io::Error::new(
-                error.kind(),
-                format!("{error}; terminating the child process tree failed: {cleanup_error}"),
-            )),
-            None => Err(error),
-        };
+        return Err(fold_cleanup_error(error, cleanup_error));
     }
 
     let status = match wait_for_exit(&mut child, &process_tree) {
@@ -141,13 +135,7 @@ fn terminate_and_reap(
 ) -> std::io::Error {
     let cleanup_error = process_tree.terminate(child).err();
     let _ = child.wait_timeout(CLEANUP_TIMEOUT);
-    match cleanup_error {
-        Some(cleanup_error) => std::io::Error::new(
-            error.kind(),
-            format!("{error}; terminating the child process tree failed: {cleanup_error}"),
-        ),
-        None => error,
-    }
+    fold_cleanup_error(error, cleanup_error)
 }
 
 fn read_chunks(mut pipe: impl Read, tx: SyncSender<std::io::Result<Vec<u8>>>) {
