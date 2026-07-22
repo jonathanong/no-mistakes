@@ -36,7 +36,9 @@ export default defineConfig({
       {
         test: {
           name: 'dynamic-cycle',
-          include: ['closure-owner/**/*.test.ts'],
+          // Keep this recursion-guard fixture outside every real test owner.
+          root: './cycle-owner',
+          include: ['**/*.test.ts'],
           setupFiles: cyclicDynamicSetup,
           globalSetup: [],
         },

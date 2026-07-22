@@ -6,7 +6,6 @@ use super::{
     TestPlanGroupResult, Warning, WarningKey,
 };
 use anyhow::Result;
-use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::codebase::workspaces::WorkspaceMap;
 use no_mistakes::config::v2::schema::{
@@ -16,6 +15,7 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
 mod dep_triggers;
+mod discovery;
 mod fallback;
 mod finalize;
 mod hints;
@@ -27,6 +27,7 @@ mod targeted_triggers;
 mod tests;
 mod vitest_setup_fallback;
 use dep_triggers::dependency_triggers;
+pub(crate) use discovery::discover_framework_tests_from_prepared;
 use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
     attach_targets, empty_group_result, select_limited_group_candidates, sorted_selected_tests,
@@ -511,36 +512,4 @@ fn limit_count(limit: Option<&TestPlanLimit>, total: usize) -> Option<usize> {
         (None, Some(files)) => Some(files),
         (None, None) => None,
     }
-}
-
-pub(crate) fn discover_framework_tests_from_prepared(
-    args: &PlanArgs,
-    framework: TestFramework,
-    prepared: &super::prepared_plan::PreparedTestPlanRequest,
-) -> Result<DiscoveredTests> {
-    let env = configured_environment(args, framework, &prepared.config)?;
-    let mut discovered = prepared.discover_tests(framework)?;
-    let include = compile_globset(&env.include)?;
-    let exclude = compile_globset(&env.exclude)?;
-    discovered.tests.retain(|path| {
-        let rel = relative_path(&prepared.root, path);
-        include.as_ref().is_none_or(|set| set.is_match(&rel))
-            && exclude.as_ref().is_none_or(|set| !set.is_match(&rel))
-    });
-    let allowed: HashSet<PathBuf> = discovered.tests.iter().cloned().collect();
-    discovered
-        .targets_by_path
-        .retain(|path, _| allowed.contains(path));
-    Ok(discovered)
-}
-
-pub(super) fn compile_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
-    if patterns.is_empty() {
-        return Ok(None);
-    }
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
-    }
-    Ok(Some(builder.build()?))
 }

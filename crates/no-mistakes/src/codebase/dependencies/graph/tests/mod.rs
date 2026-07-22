@@ -61,6 +61,7 @@ fn playwright_graph_build_has_one_snapshot_construction_site() {
 
 include!("build_check_fact_adapters.rs");
 include!("compatibility_adapters.rs");
+include!("core_resolution.rs");
 include!("core.rs");
 include!("scoped_universe.rs");
 include!("legacy_symbol_channel.rs");
