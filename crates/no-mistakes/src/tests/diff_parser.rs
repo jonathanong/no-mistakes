@@ -16,6 +16,18 @@ pub(crate) enum HunkLineKind {
     Context,
 }
 
+/// One positioned unified-diff hunk. Keeping the ranges lets consumers
+/// reconstruct a complete before/after file from the on-disk side without
+/// guessing where repeated hunk text belongs.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DiffHunk {
+    pub old_start: usize,
+    pub old_count: usize,
+    pub new_start: usize,
+    pub new_count: usize,
+    pub lines: Vec<(HunkLineKind, String)>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DiffFile {
     pub path: PathBuf,
@@ -34,6 +46,9 @@ pub(crate) struct DiffFile {
     /// `router.push(` on a context line *before* a removed `"/old"`), which
     /// the per-kind vectors above can't reconstruct on their own.
     pub hunk_lines: Vec<(HunkLineKind, String)>,
+    /// Positioned hunks in source order. Unlike `hunk_lines`, this preserves
+    /// the exact coordinates needed to apply the patch in either direction.
+    pub hunks: Vec<DiffHunk>,
 }
 
 impl DiffFile {
@@ -78,6 +93,8 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
         let mut added_lines: Vec<String> = Vec::new();
         let mut context_lines: Vec<String> = Vec::new();
         let mut hunk_lines: Vec<(HunkLineKind, String)> = Vec::new();
+        let mut hunks: Vec<DiffHunk> = Vec::new();
+        let mut current_hunk: Option<DiffHunk> = None;
         let mut in_hunk = false;
 
         while let Some(&next) = lines.peek() {
@@ -94,14 +111,26 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 if let Some(rest) = next.strip_prefix('-') {
                     removed_lines.push(rest.to_string());
                     hunk_lines.push((HunkLineKind::Removed, rest.to_string()));
+                    if let Some(hunk) = current_hunk.as_mut() {
+                        hunk.lines.push((HunkLineKind::Removed, rest.to_string()));
+                    }
                 } else if let Some(rest) = next.strip_prefix('+') {
                     added_lines.push(rest.to_string());
                     hunk_lines.push((HunkLineKind::Added, rest.to_string()));
+                    if let Some(hunk) = current_hunk.as_mut() {
+                        hunk.lines.push((HunkLineKind::Added, rest.to_string()));
+                    }
                 } else if let Some(rest) = next.strip_prefix(' ') {
                     context_lines.push(rest.to_string());
                     hunk_lines.push((HunkLineKind::Context, rest.to_string()));
+                    if let Some(hunk) = current_hunk.as_mut() {
+                        hunk.lines.push((HunkLineKind::Context, rest.to_string()));
+                    }
                 } else if next.starts_with("@@") {
-                    // a follow-up hunk header: stay in_hunk
+                    if let Some(hunk) = current_hunk.take() {
+                        hunks.push(hunk);
+                    }
+                    current_hunk = parse_hunk_header(next);
                 }
                 continue;
             }
@@ -115,7 +144,12 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 plus_path = Some(rest);
             } else if next.starts_with("@@") {
                 in_hunk = true;
+                current_hunk = parse_hunk_header(next);
             }
+        }
+
+        if let Some(hunk) = current_hunk.take() {
+            hunks.push(hunk);
         }
 
         if let (Some(from), Some(to)) = (rename_from, rename_to) {
@@ -127,6 +161,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 added_lines,
                 context_lines,
                 hunk_lines,
+                hunks,
             });
             continue;
         }
@@ -150,10 +185,38 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
             added_lines,
             context_lines,
             hunk_lines,
+            hunks,
         });
     }
 
     dedup_diff_files(results)
+}
+
+fn parse_hunk_header(line: &str) -> Option<DiffHunk> {
+    // @@ -old_start,old_count +new_start,new_count @@ optional section
+    let mut parts = line.split_whitespace();
+    let old = parts.next()?;
+    let old_range = parts.next()?;
+    let new_range = parts.next()?;
+    if old != "@@" || parts.next()? != "@@" {
+        return None;
+    }
+    let (old_start, old_count) = parse_hunk_range(old_range.strip_prefix('-')?)?;
+    let (new_start, new_count) = parse_hunk_range(new_range.strip_prefix('+')?)?;
+    Some(DiffHunk {
+        old_start,
+        old_count,
+        new_start,
+        new_count,
+        lines: Vec::new(),
+    })
+}
+
+fn parse_hunk_range(range: &str) -> Option<(usize, usize)> {
+    let (start, count) = range
+        .split_once(',')
+        .map_or((range, "1"), |(start, count)| (start, count));
+    Some((start.parse().ok()?, count.parse().ok()?))
 }
 
 fn parse_diff_header(line: &str) -> (Option<PathBuf>, PathBuf) {
@@ -174,6 +237,7 @@ fn dedup_diff_files(files: Vec<DiffFile>) -> Vec<DiffFile> {
             out[i].added_lines.extend(f.added_lines);
             out[i].context_lines.extend(f.context_lines);
             out[i].hunk_lines.extend(f.hunk_lines);
+            out[i].hunks.extend(f.hunks);
         } else {
             index.insert(f.path.clone(), out.len());
             out.push(f);

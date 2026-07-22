@@ -1,7 +1,7 @@
 pub use super::test_plan::{
     TestPlanConfig, TestPlanDependencies, TestPlanEnvironment, TestPlanFrameworkConfig,
     TestPlanGroup, TestPlanGroupType, TestPlanIgnoredChangedTestsFramework, TestPlanLimit,
-    TestPlanPercent, TestPlanProjectDependency,
+    TestPlanPercent, TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 
 use serde::{Deserialize, Serialize};

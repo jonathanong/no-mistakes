@@ -51,6 +51,29 @@ Key flags:
   to have no test dependents.
 - `--format paths|json` — `paths` for shell substitution, `json` for agents.
 
+`fullSuiteTriggers.projects` can scope a configured trigger to runner projects:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths: ["migrations/**/*.sql", "!migrations/archive/**"]
+          targets: [database]
+```
+
+Here `database` is a Vitest project name. A match selects only tests owned by
+that target, reports `configured-trigger`, and does not mark the plan as a
+fallback. Environment filters and limits run afterward. Legacy `true` and path
+list entries remain broad fallbacks. Trigger paths are ordered: later `!`
+patterns exclude earlier matches and later positive patterns can re-include.
+
+Revision and inline-diff plans compare `.no-mistakes.yml`/`.yaml` semantically
+per framework, so formatting-only edits and unrelated framework changes do not
+invalidate the selected framework. Changed-file-only input and unreadable old
+configuration fail open to the normal global-config fallback.
+
 For Playwright, a changed Next.js page selects specs that navigate to it — including
 specs whose navigation path interpolates an unresolvable value (e.g.
 `` `/user/${userId}` `` or `'/user/' + id`), which matches the page's dynamic

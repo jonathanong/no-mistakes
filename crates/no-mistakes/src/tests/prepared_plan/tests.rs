@@ -93,6 +93,28 @@ fn framework_plan_leaves_invalid_unrequested_runner_untouched() {
 }
 
 #[test]
+fn requested_runner_projects_reuses_the_prepared_vitest_catalog() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/framework-demand-invalid-unrequested"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let args = framework_args(&root, TestFramework::Vitest);
+    let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
+
+    let projects = prepared
+        .requested_runner_projects(TestRunner::Vitest)
+        .unwrap();
+
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].config.as_deref(), Some("vitest.config.ts"));
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Playwright)
+        .is_err());
+}
+
+#[test]
 fn requested_runner_failure_is_memoized() {
     let source = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

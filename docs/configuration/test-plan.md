@@ -22,6 +22,58 @@ where supported by the parser.
 Global full-suite fallback is explicit opt-in through config or
 `--global-config-fallback true`.
 
+## Project triggers
+
+`fullSuiteTriggers.projects` accepts legacy broad triggers and target-scoped
+triggers. A target-scoped trigger selects only tests owned by the named runner
+projects:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths:
+            - migrations/**/*.sql
+            - "!migrations/archive/**"
+          targets:
+            - database
+```
+
+`targets` are Vitest or Playwright runner project names, not top-level
+`.no-mistakes.yml` project names. Every target must resolve to exactly one
+discovered project for the selected framework. Unknown and ambiguous names are
+configuration errors and include the config path in the diagnostic. Target
+names use exact matching and each `targets` list must not repeat an exact name.
+A matched target-scoped trigger reports reason `configured-trigger` and does not set
+`fallback_triggered`. Environment include/exclude filters and limits are
+applied after target expansion.
+
+Legacy boolean and path-list forms remain broad full-suite fallbacks:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        shared: true
+        generated:
+          - generated/**
+          - "!generated/fixtures/**"
+```
+
+Legacy path lists and target-scoped `paths` use ordered gitignore-style
+matching: a later `!` pattern excludes an earlier match, and a still-later
+positive pattern can include it again.
+
+Changes to `.no-mistakes.yml` or `.no-mistakes.yaml` invalidate only frameworks
+whose effective `testPlan` or `tests` configuration changed. Formatting-only
+edits do not trigger a suite. Revision and inline-diff inputs compare the old
+and new semantic configuration when both versions can be read; changed-file-only
+inputs and unreadable or malformed historical versions fail open to the normal
+global-config fallback behavior.
+
 Dotnet and Swift plans use explicit config for source-graph targeting. When
 `tests plan dotnet` or `tests plan swift` can discover native tests but cannot
 trace the native source/project change, the plan falls back to framework-scoped

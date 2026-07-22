@@ -1,0 +1,14 @@
+projects:
+  database-resources: { root: . }
+  union-resources: { root: . }
+rules:
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+tests:
+  vitest: { configs: vitest.config.mts }
+  playwright: { configs: playwright.config.mts }
+testPlan:
+  vitest:
+    environments: { pre-push: { globalConfigFallback: true } }
+  playwright:
+    environments: { pre-push: { globalConfigFallback: true } }

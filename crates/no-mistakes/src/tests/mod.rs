@@ -9,6 +9,7 @@ use std::process::ExitCode;
 pub(crate) mod args;
 pub(crate) mod changed_files;
 pub(crate) mod comment;
+pub(crate) mod config_invalidation;
 pub(crate) mod configured_plan;
 pub(crate) mod configured_plan_candidates;
 pub(crate) mod diff_parser;
