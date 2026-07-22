@@ -93,6 +93,14 @@ struct PendingDiffFile {
     rename_to: Option<PathBuf>,
     minus_path: Option<String>,
     plus_path: Option<String>,
+    /// Set on a header-phase `deleted file mode` line. Git omits `--- `/
+    /// `+++ ` entirely for a hunkless deletion (an empty or binary file), so
+    /// this is the only signal available for those cases.
+    deleted_file_mode: bool,
+    /// Set on a header-phase `new file mode` line, the additive counterpart
+    /// to `deleted_file_mode` (distinct from a pure `new mode` line, which
+    /// marks a mode-only change on an existing file).
+    new_file_mode: bool,
     removed_lines: Vec<String>,
     added_lines: Vec<String>,
     context_lines: Vec<String>,
@@ -147,6 +155,8 @@ impl PendingDiffFile {
             rename_to: None,
             minus_path: None,
             plus_path: None,
+            deleted_file_mode: false,
+            new_file_mode: false,
             removed_lines: Vec::new(),
             added_lines: Vec::new(),
             context_lines: Vec::new(),
@@ -187,6 +197,10 @@ impl PendingDiffFile {
             self.minus_path = Some(rest.to_string());
         } else if let Some(rest) = line.strip_prefix("+++ ") {
             self.plus_path = Some(rest.to_string());
+        } else if line.starts_with("deleted file mode") {
+            self.deleted_file_mode = true;
+        } else if line.starts_with("new file mode") {
+            self.new_file_mode = true;
         } else if line.starts_with("@@") {
             self.in_hunk = true;
         }
@@ -208,12 +222,33 @@ impl PendingDiffFile {
         let status = match (self.minus_path.as_deref(), self.plus_path.as_deref()) {
             (Some("/dev/null"), _) => DiffFileStatus::Added,
             (_, Some("/dev/null")) => DiffFileStatus::Deleted,
+            // A hunkless deletion/addition (an empty or binary file) has no
+            // `--- `/`+++ ` lines at all — git relies on the mode-change
+            // header lines instead, so they're the only signal left.
+            (None, None) if self.deleted_file_mode => DiffFileStatus::Deleted,
+            (None, None) if self.new_file_mode => DiffFileStatus::Added,
             _ => DiffFileStatus::Modified,
         };
 
+        // Prefer the unambiguous `---`/`+++` path over the header-derived
+        // `old_path`/`new_path`: `diff --git a/X b/Y` is split on the first
+        // literal " b/", which misparses a path that itself contains that
+        // substring (e.g. `a b/file.ts`), while a `--- `/`+++ ` line is a
+        // single path with no such split needed. Fall back to the header
+        // only when there is no hunk at all to read a path from.
         let path = match status {
-            DiffFileStatus::Deleted => self.old_path.unwrap_or(self.new_path),
-            _ => self.new_path,
+            DiffFileStatus::Deleted => self
+                .minus_path
+                .as_deref()
+                .filter(|p| *p != "/dev/null")
+                .map(strip_ab_prefix)
+                .unwrap_or_else(|| self.old_path.unwrap_or(self.new_path)),
+            _ => self
+                .plus_path
+                .as_deref()
+                .filter(|p| *p != "/dev/null")
+                .map(strip_ab_prefix)
+                .unwrap_or(self.new_path),
         };
 
         DiffFile {
@@ -226,6 +261,20 @@ impl PendingDiffFile {
             hunk_lines: self.hunk_lines,
         }
     }
+}
+
+/// Strip a `--- `/`+++ ` line's leading `a/`/`b/` prefix (forced by
+/// `stream_git_diff`'s `--src-prefix=a/ --dst-prefix=b/`) and git's trailing
+/// tab disambiguator, appended only when the path itself contains
+/// whitespace (e.g. `--- a/a b/file.ts\t`), so it doesn't become part of the
+/// path.
+fn strip_ab_prefix(raw: &str) -> PathBuf {
+    let raw = raw.strip_suffix('\t').unwrap_or(raw);
+    PathBuf::from(
+        raw.strip_prefix("a/")
+            .or_else(|| raw.strip_prefix("b/"))
+            .unwrap_or(raw),
+    )
 }
 
 fn parse_diff_header(line: &str) -> (Option<PathBuf>, PathBuf) {

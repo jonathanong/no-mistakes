@@ -297,6 +297,91 @@ diff --git a/src/multi.ts b/src/multi.ts
     assert_eq!(streamed.len(), 3);
 }
 
+// A hunkless deletion (an empty or binary file) has no `--- `/`+++ ` lines
+// at all — git relies on `deleted file mode` instead. Regression for a
+// review finding on #587: these used to silently fall through to
+// `Modified` and never reach `collected.deleted`.
+#[test]
+fn parse_hunkless_deletion_uses_deleted_file_mode_header() {
+    let diff = "\
+diff --git a/empty.txt b/empty.txt
+deleted file mode 100644
+index e69de29..0000000
+";
+    let files = parse_unified_diff(diff);
+    assert_eq!(files.len(), 1);
+    assert_eq!(files[0].path, PathBuf::from("empty.txt"));
+    assert_eq!(files[0].status, DiffFileStatus::Deleted);
+}
+
+// Additive counterpart: a hunkless new file (empty or binary) relies on
+// `new file mode` instead of a `--- /dev/null` line.
+#[test]
+fn parse_hunkless_addition_uses_new_file_mode_header() {
+    let diff = "\
+diff --git a/empty.txt b/empty.txt
+new file mode 100644
+index 0000000..e69de29
+";
+    let files = parse_unified_diff(diff);
+    assert_eq!(files.len(), 1);
+    assert_eq!(files[0].path, PathBuf::from("empty.txt"));
+    assert_eq!(files[0].status, DiffFileStatus::Added);
+}
+
+#[test]
+fn parse_binary_deletion_uses_deleted_file_mode_header() {
+    let diff = "\
+diff --git a/bin.dat b/bin.dat
+deleted file mode 100644
+index f971a5e..0000000
+Binary files a/bin.dat and /dev/null differ
+";
+    let files = parse_unified_diff(diff);
+    assert_eq!(files.len(), 1);
+    assert_eq!(files[0].path, PathBuf::from("bin.dat"));
+    assert_eq!(files[0].status, DiffFileStatus::Deleted);
+}
+
+// Regression for a review finding on #587: `diff --git a/X b/Y` is split on
+// the first literal " b/", which misparses a path that itself contains that
+// substring. The `--- `/`+++ ` lines are single, unambiguous paths and must
+// be preferred whenever a hunk is present.
+#[test]
+fn parse_prefers_unambiguous_hunk_path_over_ambiguous_header_split() {
+    let diff = "\
+diff --git a/a b/file.ts b/a b/file.ts
+index 111..222 100644
+--- a/a b/file.ts
++++ b/a b/file.ts
+@@ -1 +1 @@
+-one
++two
+";
+    let files = parse_unified_diff(diff);
+    assert_eq!(files.len(), 1);
+    assert_eq!(files[0].path, PathBuf::from("a b/file.ts"));
+}
+
+// Git appends a bare trailing tab to `--- `/`+++ ` lines when the path
+// contains whitespace, to mark where the path ends; it must not become part
+// of the parsed path.
+#[test]
+fn parse_strips_trailing_tab_disambiguator_from_space_containing_paths() {
+    let diff = "\
+diff --git a/a b/file.ts b/a b/file.ts
+index 111..222 100644
+--- a/a b/file.ts\t
++++ b/a b/file.ts\t
+@@ -1 +1 @@
+-one
++two
+";
+    let files = parse_unified_diff(diff);
+    assert_eq!(files.len(), 1);
+    assert_eq!(files[0].path, PathBuf::from("a b/file.ts"));
+}
+
 // Lines before the first `diff --git ` header (e.g. a `git format-patch`
 // preamble, or the `commit <sha>` line some diff commands prefix) must be
 // silently ignored rather than panicking on a `None` current-file state.

@@ -263,6 +263,75 @@ fn stream_git_diff_handles_mode_only_changes() {
 // flag. `stream_git_diff` never passes per-file paths to git (it diffs the
 // whole `<base>...<head>` range), but the *parser* must still correctly
 // read a `diff --git a/-weird.ts b/-weird.ts` header line.
+// Regression for a review finding on #587: `diff.noprefix`/`diff.mnemonicPrefix`
+// config would otherwise drop or rename the `a/`/`b/` prefixes the header
+// split and `---`/`+++` path stripping both assume. `--src-prefix=a/
+// --dst-prefix=b/` on the invocation must win over repo config.
+#[test]
+fn stream_git_diff_ignores_diff_noprefix_config() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    git(&["config", "diff.noprefix", "true"], root);
+    std::fs::write(root.join("x.txt"), "one\n").unwrap();
+    commit_all(root, "base");
+    std::fs::write(root.join("x.txt"), "two\n").unwrap();
+    commit_all(root, "head");
+
+    let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
+    assert_eq!(diff.len(), 1);
+    assert_eq!(diff[0].path, Path::new("x.txt"));
+    assert_eq!(diff[0].status, DiffFileStatus::Modified);
+}
+
+// Regression for a review finding on #587: hunkless deletions (empty or
+// binary files) have no `--- `/`+++ ` lines at all — only `deleted file
+// mode` — and must still be reported as `Deleted`, not silently dropped to
+// `Modified`.
+#[test]
+fn stream_git_diff_reports_hunkless_empty_and_binary_deletions() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    std::fs::write(root.join("empty.txt"), "").unwrap();
+    std::fs::write(root.join("bin.dat"), [0u8, 1, 2, 255]).unwrap();
+    commit_all(root, "base");
+    std::fs::remove_file(root.join("empty.txt")).unwrap();
+    std::fs::remove_file(root.join("bin.dat")).unwrap();
+    commit_all(root, "head");
+
+    let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
+    assert_eq!(diff.len(), 2);
+    for path in ["empty.txt", "bin.dat"] {
+        let file = diff
+            .iter()
+            .find(|f| f.path == Path::new(path))
+            .unwrap_or_else(|| panic!("{path} should be present"));
+        assert_eq!(file.status, DiffFileStatus::Deleted);
+    }
+}
+
+// Regression for a review finding on #587: a path that itself contains the
+// literal substring " b/" must not be corrupted by the header line's
+// ambiguous split — the `--- `/`+++ ` lines (which git also disambiguates
+// with a trailing tab, since the path contains whitespace) must win.
+#[test]
+fn stream_git_diff_handles_a_path_containing_the_header_split_delimiter() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    std::fs::create_dir_all(root.join("a b")).unwrap();
+    let path = "a b/file.ts";
+    std::fs::write(root.join(path), "one\n").unwrap();
+    commit_all(root, "base");
+    std::fs::write(root.join(path), "two\n").unwrap();
+    commit_all(root, "head");
+
+    let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
+    assert_eq!(diff.len(), 1);
+    assert_eq!(diff[0].path, Path::new(path));
+}
+
 #[test]
 fn stream_git_diff_handles_a_path_starting_with_a_dash() {
     let dir = tempfile::tempdir().unwrap();

@@ -61,6 +61,18 @@ pub(crate) fn stream_git_diff(
             "-M",
             "--unified=3",
             "--no-color",
+            // A repo-local `diff.external`/`GIT_EXTERNAL_DIFF` or a
+            // `.gitattributes` textconv driver can otherwise replace the
+            // parseable unified-diff body with arbitrary output the parser
+            // can't read, silently dropping real changed files.
+            "--no-ext-diff",
+            "--no-textconv",
+            // Force git's own default prefixes so `diff.noprefix`/
+            // `diff.mnemonicPrefix` config can't strip or rename them —
+            // both the header split and the `---`/`+++` path stripping
+            // below assume `a/`/`b/`.
+            "--src-prefix=a/",
+            "--dst-prefix=b/",
             &format!("{base}...{head}"),
         ])
         .current_dir(root);
@@ -96,8 +108,16 @@ pub(crate) fn stream_git_diff(
 
 /// Classifies a failed `git diff <base>...<head>` by re-running small,
 /// cheap Git probes — only reached on failure, so the common (successful)
-/// path pays for nothing beyond the one streamed `git diff`.
-fn classify_git_diff_failure(root: &Path, base: &str, head: &str, stderr: &[u8]) -> GitDiffError {
+/// path pays for nothing beyond the one streamed `git diff`. Also reused by
+/// `changed_files::get_git_changed_files`'s name-status lookup (the
+/// "combined" `--diff-stdin --base --head` mode) so both base/head paths
+/// classify a Git failure into the same stable codes.
+pub(super) fn classify_git_diff_failure(
+    root: &Path,
+    base: &str,
+    head: &str,
+    stderr: &[u8],
+) -> GitDiffError {
     let stderr_text = String::from_utf8_lossy(stderr).trim().to_string();
 
     if super::lockfile_changes::find_git_root(root).is_none() {

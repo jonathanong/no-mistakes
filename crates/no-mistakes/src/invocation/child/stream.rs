@@ -44,6 +44,10 @@ pub(crate) fn stream_command_lines(
     max_line_bytes: usize,
     mut on_line: impl FnMut(&str) -> std::io::Result<()>,
 ) -> std::io::Result<StreamOutcome> {
+    // Fail fast, matching `command_output`, if the invocation deadline has
+    // already elapsed — never spawn a child with no time budget left.
+    remaining_timeout()?;
+
     command
         .stdin(Stdio::null())
         .stdout(Stdio::piped())

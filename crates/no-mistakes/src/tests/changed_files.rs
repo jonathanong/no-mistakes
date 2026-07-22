@@ -269,6 +269,7 @@ fn file_is_present(path: &Path) -> bool {
     }
 }
 
+#[derive(Debug)]
 struct GitChangedFiles {
     files: Vec<PathBuf>,
     deleted: Vec<PathBuf>,
@@ -323,18 +324,34 @@ pub(crate) fn parse_git_diff_refspec(spec: &str) -> Result<(String, Option<Strin
 /// caller *also* supplied an explicit `--diff*` input (hunks already come
 /// from that source in `collect_changed_files`); the streaming hunk producer
 /// in `git_diff::stream_git_diff` is the primary base/head path otherwise.
+///
+/// On a nonzero exit this classifies the failure the same way
+/// `stream_git_diff` does (see `git_diff::classify_git_diff_failure`) so
+/// combined mode (`--diff-stdin --base --head`) surfaces the same stable
+/// diagnostic codes as the primary streaming path, instead of a generic
+/// `git command failed` message.
 fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<GitChangedFiles> {
     let head_commit = head.unwrap_or("HEAD");
-    let output = run_git(
-        &[
+    let mut command = std::process::Command::new("git");
+    command
+        .args([
             "diff",
             "--relative",
             "--name-status",
-            &format!("{}...{}", base, head_commit),
-        ],
-        root,
-    )?;
-    Ok(parse_git_name_status(&output))
+            &format!("{base}...{head_commit}"),
+        ])
+        .current_dir(root);
+    let output = crate::invocation::command_output(&mut command)?;
+    if !output.status.success() {
+        return Err(super::git_diff::classify_git_diff_failure(
+            root,
+            base,
+            head_commit,
+            &output.stderr,
+        )
+        .into());
+    }
+    Ok(parse_git_name_status(&String::from_utf8(output.stdout)?))
 }
 
 fn parse_git_name_status(output: &str) -> GitChangedFiles {
@@ -370,19 +387,6 @@ fn parse_git_name_status(output: &str) -> GitChangedFiles {
     let mut deleted: Vec<_> = deleted.into_iter().collect();
     deleted.sort();
     GitChangedFiles { files, deleted }
-}
-
-fn run_git(args: &[&str], root: &Path) -> Result<String> {
-    let mut command = std::process::Command::new("git");
-    command.args(args).current_dir(root);
-    let output = crate::invocation::command_output(&mut command)?;
-    if !output.status.success() {
-        anyhow::bail!(
-            "git command failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-    Ok(String::from_utf8(output.stdout)?)
 }
 
 #[cfg(test)]
@@ -462,5 +466,24 @@ mod tests {
             err.to_string().contains("missing a base"),
             "unexpected error: {err}"
         );
+    }
+
+    // Regression for a review finding on #587: combined mode (an explicit
+    // `--diff*` input alongside `--base`/`--head`) used to surface a
+    // generic `git command failed` message on an invalid ref instead of the
+    // same stable diagnostic code the primary streaming path reports.
+    #[test]
+    fn combined_mode_git_failure_reports_a_stable_diagnostic_code() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        crate::test_support::git_init(root);
+        fs::write(root.join("f.txt"), "one\n").unwrap();
+        crate::test_support::git_commit_all(root, "base");
+
+        let error = get_git_changed_files(root, "not-a-real-ref", Some("HEAD")).unwrap_err();
+        let git_diff_error = error
+            .downcast_ref::<crate::tests::git_diff::GitDiffError>()
+            .expect("expected a GitDiffError");
+        assert_eq!(git_diff_error.code(), "git-merge-base-unavailable");
     }
 }

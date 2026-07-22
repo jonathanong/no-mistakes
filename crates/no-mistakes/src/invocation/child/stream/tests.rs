@@ -156,6 +156,18 @@ fn respects_expired_invocation_deadline() {
     assert!(result.is_err());
 }
 
+// Regression for a review finding on #587: the deadline must be checked
+// *before* spawning the child, matching `command_output`. Proven with a
+// nonexistent binary — if the pre-spawn check were missing, `spawn()` would
+// run first and fail with `NotFound`, not `TimedOut`.
+#[test]
+fn expired_deadline_prevents_child_spawn() {
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
+    let mut command = Command::new("definitely-not-a-real-no-mistakes-command");
+    let error = collect_lines(&mut command, 1024).unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+}
+
 #[test]
 fn propagates_spawn_failure_for_a_missing_binary() {
     let mut command = Command::new("no-mistakes-definitely-not-a-real-binary");
