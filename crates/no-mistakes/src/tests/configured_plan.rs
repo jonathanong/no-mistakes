@@ -19,16 +19,23 @@ mod hints;
 mod hints_domains;
 mod lockfile_seeds;
 mod native_fallback;
+mod targeted_triggers;
 #[cfg(test)]
 mod tests;
-use dep_triggers::dependency_trigger;
+use dep_triggers::dependency_triggers;
 use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
     empty_group_result, select_limited_group_candidates, sorted_selected_tests, sorted_warnings,
 };
 use hints::build_coverage_hints_from_prepared;
-use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
+use lockfile_seeds::{
+    apply_lockfile_seeds, lockfile_seed_candidates, merge_lockfile_seed_candidates,
+};
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
+use targeted_triggers::{
+    insert_synthesized_dependency_group, merge_targeted_candidates, targeted_dependency_candidates,
+    TargetedOverlapRecovery,
+};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan_with_prepared(
@@ -53,6 +60,10 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let has_global_limit = effective_limit.is_some();
     let global_limit =
         limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
+    // Validate every structured target before any fallback or `all` environment
+    // can return a plan successfully.
+    let dependency_triggers =
+        dependency_triggers(root, config, framework, changed_files, prepared)?;
 
     if effective_global_config_fallback(&env, args) {
         if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
@@ -94,9 +105,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
         return Ok(plan);
     }
 
-    if let Some((reason, trigger_file)) =
-        dependency_trigger(root, config, framework, changed_files, prepared)?
-    {
+    if let Some((reason, trigger_file)) = dependency_triggers.fallback {
         let mut plan = fallback_plan(
             root,
             &all_tests,
@@ -157,11 +166,22 @@ pub(crate) fn generate_configured_plan_with_prepared(
         ))
     };
     let mut lockfile_seeds_injected = false;
+    let targeted_candidates = targeted_dependency_candidates(
+        root,
+        &all_tests,
+        &discovered_tests,
+        &dependency_triggers.targeted,
+    );
+    let mut groups = configured_groups(&env, framework);
+    let target_only_group_index =
+        insert_synthesized_dependency_group(&mut groups, !targeted_candidates.is_empty());
+    let mut targeted_overlaps = TargetedOverlapRecovery::new(&targeted_candidates);
 
-    let groups = configured_groups(&env, framework);
-
-    for group in &groups {
-        if remaining_global == 0 {
+    for (group_index, group) in groups.iter().enumerate() {
+        let recover_targeted_overlaps = targeted_overlaps.should_recover(framework, group.type_);
+        let merge_zero_budget_targeted =
+            group.type_ == TestPlanGroupType::Dependencies && !targeted_candidates.is_empty();
+        if remaining_global == 0 && !recover_targeted_overlaps && !merge_zero_budget_targeted {
             group_results.push(empty_group_result(
                 group_type_name(group.type_),
                 all_tests.len().saturating_sub(used.len()),
@@ -179,31 +199,48 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 framework_name(framework)
             );
         }
-        let mut candidates = group_candidates(
-            group.type_,
-            root,
-            changed_files,
-            graph,
-            &all_tests,
-            &all_test_set,
-            &test_filter,
-            &used,
-            &coverage_hints,
-            &mut warnings,
-            &mut warnings_seen,
-        );
+        let target_only_group = target_only_group_index == Some(group_index);
+        let candidate_used =
+            targeted_overlaps.candidate_used_override(&used, recover_targeted_overlaps);
+        let mut candidates = if target_only_group {
+            Vec::new()
+        } else {
+            group_candidates(
+                group.type_,
+                root,
+                changed_files,
+                graph,
+                &all_tests,
+                &all_test_set,
+                &test_filter,
+                candidate_used.as_ref().unwrap_or(&used),
+                &coverage_hints,
+                &mut warnings,
+                &mut warnings_seen,
+            )
+        };
+        if recover_targeted_overlaps {
+            targeted_overlaps.merge_existing(root, &mut candidates, &used, &mut selected_map);
+        }
         // Inject lockfile-seeded candidates during the dependencies group turn so they
         // compete for budget before later groups (e.g. sample) can consume it.
         if group.type_ == TestPlanGroupType::Dependencies {
+            merge_targeted_candidates(
+                root,
+                &mut candidates,
+                &targeted_candidates,
+                &used,
+                &mut selected_map,
+            );
             if let Some(ref seed_result) = lockfile_seed_result {
                 lockfile_seeds_injected = true;
-                let in_candidates: HashSet<String> =
-                    candidates.iter().map(|c| c.test_file.clone()).collect();
-                for seed in &seed_result.candidates {
-                    if !used.contains(&seed.test_file) && !in_candidates.contains(&seed.test_file) {
-                        candidates.push(seed.clone());
-                    }
-                }
+                merge_lockfile_seed_candidates(
+                    root,
+                    &seed_result.candidates,
+                    &mut candidates,
+                    &used,
+                    &mut selected_map,
+                );
             }
         }
         let group_limit = group
@@ -232,6 +269,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 .then_some(group_limit)
                 .or_else(|| has_global_limit.then_some(group_limit)),
         });
+        targeted_overlaps.finish_group(group.type_);
     }
 
     if let Some(seed_result) = lockfile_seed_result {
@@ -458,6 +496,9 @@ pub(crate) fn discover_framework_tests_from_prepared(
 
 fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests) {
     for test in &mut plan.selected_tests {
+        if !test.targets.is_empty() {
+            continue;
+        }
         let path = root.join(&test.test_file);
         if let Some(targets) = discovered.targets_by_path.get(&path) {
             test.targets = targets.clone();

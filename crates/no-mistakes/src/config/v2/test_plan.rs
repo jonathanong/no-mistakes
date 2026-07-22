@@ -79,6 +79,19 @@ pub enum TestPlanIgnoredChangedTestsFramework {
 pub enum TestPlanProjectDependency {
     All(bool),
     Patterns(Vec<String>),
+    Targeted(TestPlanTargetedProjectDependency),
+}
+
+/// A path trigger that selects tests for only the named runner projects.
+///
+/// The map key that contains this value still identifies a no-mistakes
+/// resource project. `targets` deliberately contains runner project names
+/// (for example Vitest `--project` names), not resource-project names.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TestPlanTargetedProjectDependency {
+    pub paths: Vec<String>,
+    pub targets: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

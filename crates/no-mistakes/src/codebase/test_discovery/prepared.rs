@@ -143,6 +143,24 @@ impl PreparedTestProjects {
             .cloned()
     }
 
+    /// Return the runner projects already parsed for this request. This is a
+    /// catalog view only: callers must not cause a second runner-config parse.
+    #[doc(hidden)]
+    pub fn requested_runner_projects(&self, runner: TestRunner) -> Result<Vec<crate::codebase::test_discovery::PreparedRunnerProject>> {
+        self.requested_projects(runner)
+            .transpose()?
+            .ok_or_else(|| anyhow::anyhow!("{} runner projects were not prepared", runner.as_str()))
+            .map(|projects| {
+                projects
+                    .into_iter()
+                    .map(|project| crate::codebase::test_discovery::PreparedRunnerProject {
+                        config: project.config,
+                        runner_project_arg: project.runner_project_arg,
+                    })
+                    .collect()
+            })
+    }
+
     #[doc(hidden)]
     pub fn project_filters(&self) -> Vec<(TestRunner, ProjectTestFilter)> {
         self.projects

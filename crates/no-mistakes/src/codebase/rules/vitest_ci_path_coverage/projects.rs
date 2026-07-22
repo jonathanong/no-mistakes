@@ -63,11 +63,25 @@ pub(super) fn coverage_units_with_catalog(
             let Some(project) = config.projects.get(project_name) else {
                 continue;
             };
-            units.push(CoverageUnit {
-                project: project_name.clone(),
-                source: CoverageSource::FullSuiteTrigger,
-                patterns: project_dependency_patterns(project_name, project, trigger),
-            });
+            let patterns = project_dependency_patterns(project_name, project, trigger);
+            match trigger {
+                TestPlanProjectDependency::Targeted(targeted) => {
+                    for target in &targeted.targets {
+                        units.push(CoverageUnit {
+                            project: target.clone(),
+                            source: CoverageSource::FullSuiteTrigger,
+                            patterns: patterns.clone(),
+                        });
+                    }
+                }
+                TestPlanProjectDependency::All(_) | TestPlanProjectDependency::Patterns(_) => {
+                    units.push(CoverageUnit {
+                        project: project_name.clone(),
+                        source: CoverageSource::FullSuiteTrigger,
+                        patterns,
+                    });
+                }
+            }
         }
     }
     for (project, patterns) in &opts.source_globs_by_project {
@@ -175,6 +189,16 @@ fn project_dependency_patterns(
         TestPlanProjectDependency::Patterns(patterns) => {
             let root = project.root.as_deref().unwrap_or(project_name);
             patterns
+                .iter()
+                .map(|pattern| project_relative_pattern(root, pattern))
+                .collect()
+        }
+        // Structured triggers are still source-path coverage requirements;
+        // their runner-target restriction is irrelevant to CI path filters.
+        TestPlanProjectDependency::Targeted(targeted) => {
+            let root = project.root.as_deref().unwrap_or(project_name);
+            targeted
+                .paths
                 .iter()
                 .map(|pattern| project_relative_pattern(root, pattern))
                 .collect()

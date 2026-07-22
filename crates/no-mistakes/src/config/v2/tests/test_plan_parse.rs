@@ -1,5 +1,6 @@
 use crate::config::v2::schema::{
     NoMistakesConfig, TestPlanFrameworkConfig, TestPlanIgnoredChangedTestsFramework,
+    TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 
 #[test]
@@ -138,6 +139,40 @@ fn test_plan_framework_config_deserializes_from_json() {
     let cfg: TestPlanFrameworkConfig = serde_json::from_value(json).unwrap();
     assert!(cfg.full_suite_triggers.projects.contains_key("web"));
     assert!(!cfg.deprecated_dependencies_key);
+}
+
+#[test]
+fn target_scoped_trigger_round_trips_and_rejects_unknown_fields() {
+    let cfg: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        app:
+          paths: [src/**, '!src/generated/**']
+          targets: [unit]
+"#,
+    )
+    .unwrap();
+    assert!(matches!(
+        cfg.test_plan.vitest.full_suite_triggers.projects["app"],
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency { .. })
+    ));
+    let encoded = serde_json::to_value(&cfg).unwrap();
+    let decoded: NoMistakesConfig = serde_json::from_value(encoded).unwrap();
+    assert_eq!(decoded, cfg);
+
+    let result = serde_yaml::from_str::<NoMistakesConfig>(
+        r#"
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        app: { paths: [src/**], targets: [unit], unknown: true }
+"#,
+    );
+    assert!(result.is_err());
 }
 
 #[test]

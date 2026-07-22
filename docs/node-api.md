@@ -81,6 +81,12 @@ failure. The rejection message embeds a stable, greppable diagnostic code
 `git-exit-failure`, `git-malformed-output`) matching the CLI's stderr —
 see `docs/cli/tests-plan.md`.
 
+The API uses the same target-scoped `fullSuiteTriggers.projects` behavior as the
+CLI. A `{ paths, targets }` match selects only tests owned by those runner
+projects, emits `configured-trigger` reasons and execution targets, and leaves
+`fallback_triggered` false. Semantic `.no-mistakes.yml`/`.yaml` invalidation is
+also identical for revision and inline-diff inputs.
+
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 

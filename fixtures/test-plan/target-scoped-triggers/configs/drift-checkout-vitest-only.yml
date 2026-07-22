@@ -1,0 +1,3 @@
+tests:
+  vitest:
+    configs: vitest.database-a.mts

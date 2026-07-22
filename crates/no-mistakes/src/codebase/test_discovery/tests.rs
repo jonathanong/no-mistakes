@@ -454,6 +454,12 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         },
     );
     assert!(unrequested.project_filters().is_empty());
+    let error = unrequested
+        .requested_runner_projects(TestRunner::Vitest)
+        .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("vitest runner projects were not prepared"));
     assert_eq!(sources.physical_read_count(), reads_before);
 
     let mut requested = FrameworkPreparationPlan::default();
@@ -474,6 +480,9 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         .project_filters()
         .iter()
         .all(|(runner, _)| *runner == TestRunner::Vitest));
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Vitest)
+        .is_ok());
     let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
     assert_eq!(counts.get(&root.join("vitest.projects.ts")), Some(&1));

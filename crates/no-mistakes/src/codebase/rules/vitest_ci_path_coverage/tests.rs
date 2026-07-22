@@ -412,7 +412,7 @@ fn double_star_inside_path_segments_compiles() {
 }
 
 #[test]
-fn full_suite_trigger_negations_do_not_exclude_broad_triggers() {
+fn full_suite_trigger_negations_exclude_earlier_broad_triggers() {
     let root = fixture_root("fixture");
     let mut config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     config.test_plan.vitest.full_suite_triggers.projects.insert(
@@ -428,6 +428,5 @@ fn full_suite_trigger_negations_do_not_exclude_broad_triggers() {
 
     let findings = check_with_files(&root, &config, &files(&root)).unwrap();
 
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert!(findings[0].message.contains("ts-shared/utils/index.mts"));
+    assert!(findings.is_empty(), "{findings:#?}");
 }

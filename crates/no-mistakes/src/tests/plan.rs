@@ -52,16 +52,19 @@ pub(crate) fn generate_plan_with_prepared(
         // the configured-plan dependencies group instead.
         // fallback_triggered means binary / invalid-ref / diff-only — no parseable diff available.
         // Full-suite selection still requires the effective global fallback opt-in.
-        let forced_fallback = global_config_trigger(root, changed_files).or_else(|| {
-            if lockfile_analysis.fallback_triggered {
-                lockfile_analysis
-                    .warnings
-                    .first()
-                    .map(|w| (w.message.clone(), root.join(&w.file)))
-            } else {
-                None
-            }
-        });
+        let forced_fallback = prepared
+            .framework_config_trigger(framework)
+            .or_else(|| global_config_trigger_excluding_v2_config(root, &collected.files))
+            .or_else(|| {
+                if lockfile_analysis.fallback_triggered {
+                    lockfile_analysis
+                        .warnings
+                        .first()
+                        .map(|w| (w.message.clone(), root.join(&w.file)))
+                } else {
+                    None
+                }
+            });
         let discovered_tests = super::configured_plan::discover_framework_tests_from_prepared(
             args, framework, prepared,
         )?;
@@ -446,6 +449,29 @@ pub(crate) fn global_config_trigger(
         is_global_config_path(root, file, &relative_changed).then(|| {
             (
                 format!("Global configuration file changed: {}", relative_changed),
+                file.clone(),
+            )
+        })
+    })
+}
+
+/// Framework plans compare `.no-mistakes.yml`/`.yaml` at both endpoints, so
+/// an unrelated framework's formatting-only edit does not invalidate them.
+/// All other historical global configuration triggers retain their existing
+/// unconditional behavior.
+fn global_config_trigger_excluding_v2_config(
+    root: &Path,
+    changed_files: &[PathBuf],
+) -> Option<(String, PathBuf)> {
+    changed_files.iter().find_map(|file| {
+        let relative_changed = relative_path(root, file);
+        (!matches!(
+            relative_changed.as_str(),
+            ".no-mistakes.yml" | ".no-mistakes.yaml"
+        ) && is_global_config_path(root, file, &relative_changed))
+        .then(|| {
+            (
+                format!("Global configuration file changed: {relative_changed}"),
                 file.clone(),
             )
         })

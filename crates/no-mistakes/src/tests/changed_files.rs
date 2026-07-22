@@ -9,6 +9,14 @@ use std::path::{Path, PathBuf};
 pub(crate) struct ChangedFiles {
     pub files: Vec<PathBuf>,
     pub deleted: Vec<PathBuf>,
+    /// Paths reported specifically by the automatic `--base`/`--head` Git
+    /// comparison. Kept separate so other input sources cannot borrow Git's
+    /// endpoint provenance. This includes deleted paths and both sides of a
+    /// rename, preserving semantic deletion and rename comparisons.
+    pub git_files: Vec<PathBuf>,
+    /// Paths supplied directly through `--changed-file` or `--changed-files`.
+    /// These do not provide either endpoint of a configuration comparison.
+    pub manual_files: Vec<PathBuf>,
     /// Existing-file candidates named by caller-controlled file/diff inputs. These paths may
     /// be authoritative graph roots even when ignored by automatic repository discovery.
     /// Automatic `--base`/`--head` git-diff results are intentionally excluded.
@@ -25,13 +33,16 @@ pub(crate) struct ChangedFiles {
 pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<ChangedFiles> {
     let mut files = Vec::new();
     let mut deleted = Vec::new();
+    let mut git_provenance_files = Vec::new();
+    let mut manual_files = Vec::new();
     let mut authoritative_files = Vec::new();
     let mut diff_files: Vec<DiffFile> = Vec::new();
 
     for f in &args.changed_file {
         let path = resolve_path(f, root);
         files.push(path.clone());
-        authoritative_files.push(path);
+        authoritative_files.push(path.clone());
+        manual_files.push(path);
     }
 
     if let Some(ref path) = args.changed_files {
@@ -43,7 +54,8 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
             if !line.is_empty() {
                 let path = resolve_path(&PathBuf::from(line), root);
                 files.push(path.clone());
-                authoritative_files.push(path);
+                authoritative_files.push(path.clone());
+                manual_files.push(path);
             }
         }
     }
@@ -72,7 +84,9 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
             match get_git_changed_files(root, base, args.head.as_deref()) {
                 Ok(git_files) => {
                     for f in git_files.files {
-                        files.push(root.join(f));
+                        let path = root.join(f);
+                        files.push(path.clone());
+                        git_provenance_files.push(path);
                     }
                     for f in git_files.deleted {
                         deleted.push(root.join(f));
@@ -86,7 +100,9 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         } else {
             match super::git_diff::stream_git_diff(root, base, head) {
                 Ok(diff) => {
+                    let git_start = files.len();
                     apply_diff_files(&diff, root, &mut files, &mut deleted);
+                    git_provenance_files.extend(files[git_start..].iter().cloned());
                     diff_files.extend(diff);
                 }
                 Err(e) if has_explicit_files => {
@@ -104,6 +120,8 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     authoritative_files.extend(files[explicit_diff_start..].iter().cloned());
 
     let result = normalize_unique(files);
+    let git_files = normalize_unique(git_provenance_files);
+    let manual_files = normalize_unique(manual_files);
     let authoritative_files = normalize_unique(authoritative_files);
 
     let mut unique_deleted = HashSet::new();
@@ -124,6 +142,16 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
                 root.join(&df.path)
             };
             df.path = no_mistakes::codebase::ts_resolver::normalize_path(&absolute);
+            if let Some(old_path) = df.old_path.take() {
+                let absolute = if old_path.is_absolute() {
+                    old_path
+                } else {
+                    root.join(old_path)
+                };
+                df.old_path = Some(no_mistakes::codebase::ts_resolver::normalize_path(
+                    &absolute,
+                ));
+            }
             df
         })
         .collect();
@@ -131,6 +159,8 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     Ok(ChangedFiles {
         files: result,
         deleted: deleted_result,
+        git_files,
+        manual_files,
         authoritative_files,
         diff_files,
     })

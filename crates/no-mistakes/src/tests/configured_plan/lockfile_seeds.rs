@@ -13,6 +13,9 @@ use no_mistakes::codebase::workspaces::WorkspaceMap;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
+#[cfg(test)]
+mod tests;
+
 pub(super) struct LockfileSeedResult {
     pub(super) candidates: Vec<SelectedTest>,
     /// Relative lockfile paths that had no import-graph path to any test
@@ -117,6 +120,35 @@ pub(super) fn lockfile_seed_candidates(
     }
 }
 
+pub(super) fn merge_lockfile_seed_candidates(
+    root: &Path,
+    seeds: &[SelectedTest],
+    candidates: &mut Vec<SelectedTest>,
+    used: &HashSet<String>,
+    selected: &mut BTreeMap<PathBuf, SelectedTest>,
+) {
+    for seed in seeds {
+        if used.contains(&seed.test_file) {
+            if let Some(existing) = selected.get_mut(&root.join(&seed.test_file)) {
+                merge_selected(existing, seed);
+                existing.targets.clear();
+            }
+            continue;
+        }
+        if let Some(existing) = candidates
+            .iter_mut()
+            .find(|candidate| candidate.test_file == seed.test_file)
+        {
+            // Lockfile tracing independently selected this test, so retain
+            // every owning runner target while merging its reason.
+            merge_selected(existing, seed);
+            existing.targets.clear();
+        } else {
+            candidates.push(seed.clone());
+        }
+    }
+}
+
 /// Merge lockfile-seeded candidates into `selected_map` and `group_results`, or return
 /// a full-suite fallback plan when `global_config_fallback` is set and there are
 /// genuinely untraceable tooling deps.
@@ -174,8 +206,19 @@ pub(super) fn apply_lockfile_seeds(
     // Merge traceable seeds into selected_map and the dependencies group result.
     let mut added: Vec<String> = Vec::new();
     for test in &seed_result.candidates {
+        if used.contains(&test.test_file) {
+            if let Some(existing) = selected_map.get_mut(&root.join(&test.test_file)) {
+                merge_selected(existing, test);
+                // Lockfile tracing selected this test independently, so its
+                // execution is no longer restricted to a targeted subset.
+                existing.targets.clear();
+            }
+            continue;
+        }
         if added.len() >= max_to_add {
-            break;
+            // Keep scanning: later seeds may already be selected and still
+            // need their independent lockfile reasons merged at zero budget.
+            continue;
         }
         if used.insert(test.test_file.clone()) {
             selected_map

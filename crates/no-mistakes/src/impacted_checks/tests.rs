@@ -496,7 +496,18 @@ fn impacted_fanout_prepares_and_builds_the_graph_once() {
             .count(),
         1
     );
-    assert_eq!(prepared.matches(".get_or_init(|| {").count(), 1);
+    let graph_method = prepared
+        .split("pub(crate) fn graph(&self)")
+        .nth(1)
+        .and_then(|source| source.split("pub(crate) fn graph_is_initialized").next())
+        .expect("prepared graph method");
+    assert_eq!(graph_method.matches(".get_or_init(|| {").count(), 1);
+    assert_eq!(
+        prepared
+            .matches("self.config_invalidation.get_or_init(|| {")
+            .count(),
+        1
+    );
 
     let public_wrapper = plan
         .split("pub fn generate_plan(args: &PlanArgs)")

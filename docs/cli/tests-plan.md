@@ -50,6 +50,20 @@ Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and
 `--json`.
 
+Configured `fullSuiteTriggers.projects` entries may use `{ paths, targets }` to
+select only the named Vitest or Playwright runner projects. These selections
+report `configured-trigger`, keep `fallback_triggered` false, and are filtered
+by the selected environment before limits are applied. Legacy boolean and path
+list entries still request the framework-wide fallback. Trigger paths support
+ordered `!` exclusions and later re-inclusions.
+
+For revision and inline-diff inputs, `.no-mistakes.yml`/`.yaml` changes are
+compared semantically per framework. Formatting-only changes do not invalidate
+tests, while a change to Vitest configuration does not invalidate Playwright
+and vice versa. Inputs that provide only a changed filename, or whose historical
+configuration cannot be reconstructed and parsed, conservatively retain the
+configured global fallback.
+
 Dotnet and Swift plans require explicit config to build the native source graph
 that maps changed source files to test projects or targets. `tests.dotnet.projects`
 or `tests.dotnet.solutions`, and `tests.swift.packages`, are the source-graph
