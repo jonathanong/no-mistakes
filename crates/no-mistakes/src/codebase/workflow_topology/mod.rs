@@ -146,10 +146,15 @@ pub fn load_workflow_topology_from_snapshot(
         workflow_filters,
         &workflow_by_path,
         &mut diagnostics,
+        &ci.workflow_dirs,
     );
 
-    let selected =
-        topology_graph::select_workflow_paths(workflow_filters, &workflow_by_path, &edges);
+    let selected = topology_graph::select_workflow_paths(
+        workflow_filters,
+        &workflow_by_path,
+        &edges,
+        &ci.workflow_dirs,
+    );
 
     let topology = model::WorkflowTopology {
         schema_version: model::WORKFLOW_TOPOLOGY_SCHEMA_VERSION,

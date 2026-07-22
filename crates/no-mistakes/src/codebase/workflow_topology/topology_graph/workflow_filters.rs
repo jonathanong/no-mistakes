@@ -13,17 +13,24 @@ pub const WORKFLOWS_DIRECTORY: &str = ".github/workflows";
 /// Every workflow when `requested` is empty; otherwise the normalized
 /// requested set plus, for each requested workflow that exists, its
 /// transitive local reusable-workflow callees.
+///
+/// `workflow_dirs` is the repository's configured `ci.workflowDirs` (the
+/// same list [`super::super::mod`]'s discovery pass uses) — a bare
+/// basename filter is resolved against it rather than the vendored
+/// engine's hardcoded default, so `--workflow` stays correct when a repo
+/// configures a non-default workflow directory.
 pub fn select_workflow_paths(
     requested: &[String],
     workflows: &HashMap<String, model::WorkflowNode>,
     edges: &[model::WorkflowTopologyEdge],
+    workflow_dirs: &[String],
 ) -> HashSet<String> {
     if requested.is_empty() {
         return workflows.keys().cloned().collect();
     }
     let mut selected: HashSet<String> = requested
         .iter()
-        .filter_map(|path| normalize_workflow_filter(path))
+        .filter_map(|path| normalize_workflow_filter(path, workflow_dirs, workflows))
         .collect();
     let initially_selected: Vec<String> = selected.iter().cloned().collect();
 
@@ -75,13 +82,15 @@ pub fn diagnose_workflow_filters(
     requested: &[String],
     workflows: &HashMap<String, model::WorkflowNode>,
     diagnostics: &mut Vec<model::WorkflowTopologyDiagnostic>,
+    workflow_dirs: &[String],
 ) {
     for requested_path in requested {
-        let Some(path) = normalize_workflow_filter(requested_path) else {
+        let Some(path) = normalize_workflow_filter(requested_path, workflow_dirs, workflows) else {
             diagnostics.push(model::WorkflowTopologyDiagnostic::new(
                 model::DiagnosticCode::InvalidWorkflowFilter,
                 format!(
-                    "workflow filter must be a basename or a path inside {WORKFLOWS_DIRECTORY}: {requested_path}"
+                    "workflow filter must be a basename or a path inside {}: {requested_path}",
+                    configured_dirs(workflow_dirs).join(", ")
                 ),
                 requested_path.clone(),
             ));
@@ -98,12 +107,31 @@ pub fn diagnose_workflow_filters(
     }
 }
 
-/// Normalizes a `--workflow` filter to a `.github/workflows/<file>` path,
-/// or `None` when it's absolute, escapes the workflows directory via `..`,
-/// or (once it contains a `/`) doesn't resolve to a direct child of
-/// `.github/workflows`. A bare basename is joined onto the workflows
-/// directory.
-fn normalize_workflow_filter(path: &str) -> Option<String> {
+/// The repo's configured workflow directories, falling back to the
+/// vendored engine's single hardcoded default when none are configured
+/// (an explicit empty `ci.workflowDirs: []` override — `CiConfig`'s own
+/// default is always non-empty).
+fn configured_dirs(workflow_dirs: &[String]) -> Vec<&str> {
+    if workflow_dirs.is_empty() {
+        vec![WORKFLOWS_DIRECTORY]
+    } else {
+        workflow_dirs.iter().map(String::as_str).collect()
+    }
+}
+
+/// Normalizes a `--workflow` filter to a `<workflow-dir>/<file>` path, or
+/// `None` when it's absolute, escapes every configured workflow directory
+/// via `..`, or (once it contains a `/`) doesn't resolve to a direct child
+/// of any of them. A bare basename is resolved against whichever
+/// configured directory actually holds a matching discovered workflow,
+/// falling back to the first configured directory when none do (so an
+/// unresolvable filter still gets a deterministic path for the
+/// `unknown-workflow-filter` diagnostic).
+fn normalize_workflow_filter(
+    path: &str,
+    workflow_dirs: &[String],
+    workflows: &HashMap<String, model::WorkflowNode>,
+) -> Option<String> {
     let slashed = path.replace('\\', "/");
     let candidate = strip_leading_dot_slashes(&slashed);
     if candidate.is_empty()
@@ -112,15 +140,21 @@ fn normalize_workflow_filter(path: &str) -> Option<String> {
     {
         return None;
     }
+    let dirs = configured_dirs(workflow_dirs);
     if !candidate.contains('/') {
-        return if candidate == "." || candidate == ".." {
-            None
-        } else {
-            Some(format!("{WORKFLOWS_DIRECTORY}/{candidate}"))
-        };
+        if candidate == "." || candidate == ".." {
+            return None;
+        }
+        return Some(
+            dirs.iter()
+                .map(|dir| format!("{dir}/{candidate}"))
+                .find(|joined| workflows.contains_key(joined))
+                .unwrap_or_else(|| format!("{}/{candidate}", dirs[0])),
+        );
     }
     let normalized = posix_path::normalize(candidate);
-    (posix_path::dirname(&normalized) == WORKFLOWS_DIRECTORY).then_some(normalized)
+    let dirname = posix_path::dirname(&normalized);
+    dirs.iter().any(|dir| *dir == dirname).then_some(normalized)
 }
 
 fn strip_leading_dot_slashes(path: &str) -> &str {

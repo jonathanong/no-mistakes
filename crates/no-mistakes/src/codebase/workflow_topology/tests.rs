@@ -150,6 +150,31 @@ fn workflow_filter_invalid_is_diagnosed() {
     );
 }
 
+/// The vendored TS engine hardcodes `.github/workflows` — it has no
+/// concept of `no-mistakes`'s repo-level `ci.workflowDirs` config, so this
+/// has no golden-JSON oracle to compare against. A `--workflow` filter
+/// must still resolve against the *configured* directory, not the
+/// engine's hardcoded default, or every filter on a repo with a
+/// non-default `workflowDirs` would wrongly report as invalid/unknown.
+#[test]
+fn workflow_filter_resolves_a_bare_basename_against_a_configured_workflow_dir() {
+    let root = fixture("custom-workflow-dir");
+    let config = CiConfig {
+        workflow_dirs: vec!["ci-pipelines".to_string()],
+        ..CiConfig::default()
+    };
+    let topology = load_workflow_topology(&root, &config, &["build.yml".to_string()]);
+    assert!(topology.diagnostics.is_empty());
+    assert_eq!(
+        topology
+            .workflows
+            .iter()
+            .map(|w| &w.path)
+            .collect::<Vec<_>>(),
+        vec!["ci-pipelines/build.yml"]
+    );
+}
+
 /// `serde_yaml`'s and `js-yaml`'s parse-error messages are different
 /// libraries' wording for the same malformed-YAML failure, so
 /// `malformed-workflow`'s `message` text can never byte-match the TS
