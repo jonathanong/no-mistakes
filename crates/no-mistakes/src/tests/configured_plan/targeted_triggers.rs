@@ -3,9 +3,34 @@ use super::super::plan::relative_path;
 use super::super::{Confidence, ImpactReason, SelectedTest};
 use super::TestFramework;
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
-use no_mistakes::config::v2::schema::TestPlanGroupType;
+use no_mistakes::config::v2::schema::{TestPlanGroup, TestPlanGroupType};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
+
+pub(super) fn insert_synthesized_dependency_group(
+    groups: &mut Vec<TestPlanGroup>,
+    has_targeted_candidates: bool,
+) -> Option<usize> {
+    if !has_targeted_candidates
+        || groups
+            .iter()
+            .any(|group| group.type_ == TestPlanGroupType::Dependencies)
+    {
+        return None;
+    }
+    let index = groups
+        .iter()
+        .position(|group| group.type_ == TestPlanGroupType::Sample)
+        .unwrap_or(groups.len());
+    groups.insert(
+        index,
+        TestPlanGroup {
+            type_: TestPlanGroupType::Dependencies,
+            ..TestPlanGroup::default()
+        },
+    );
+    Some(index)
+}
 
 pub(super) struct TargetedOverlapRecovery {
     test_files: HashSet<String>,

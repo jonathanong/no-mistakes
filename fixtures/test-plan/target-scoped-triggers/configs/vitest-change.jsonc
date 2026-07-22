@@ -1,0 +1,15 @@
+{
+  // Keep comments and trailing commas while changing only Vitest semantics.
+  "tests": {
+    "vitest": { "configs": "vitest.database-a.mts" },
+    "playwright": { "configs": "playwright.config.mts" },
+  },
+  "testPlan": {
+    "vitest": {
+      "environments": { "pre-push": { "globalConfigFallback": true } },
+    },
+    "playwright": {
+      "environments": { "pre-push": { "globalConfigFallback": true } },
+    },
+  },
+}

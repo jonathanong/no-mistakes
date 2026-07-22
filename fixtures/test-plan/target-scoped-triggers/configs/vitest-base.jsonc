@@ -1,0 +1,15 @@
+{
+  // JSONC discovery uses the same canonical automatic config candidates.
+  "tests": {
+    "vitest": { "configs": "vitest.config.mts" },
+    "playwright": { "configs": "playwright.config.mts" },
+  },
+  "testPlan": {
+    "vitest": {
+      "environments": { "pre-push": { "globalConfigFallback": true } },
+    },
+    "playwright": {
+      "environments": { "pre-push": { "globalConfigFallback": true } },
+    },
+  },
+}

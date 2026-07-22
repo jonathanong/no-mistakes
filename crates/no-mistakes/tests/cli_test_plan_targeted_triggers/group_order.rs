@@ -118,3 +118,44 @@ fn lockfile_seed_merges_with_targeted_shared_test() {
         .iter()
         .any(|reason| reason["via"] == serde_json::json!(["configured-trigger"])));
 }
+
+#[test]
+fn synthesized_dependencies_precedes_budget_consuming_sample() {
+    let fixture = fixture();
+    copy_config(fixture.path(), "sample-before-synthetic.yml");
+    let report = json(&plan(
+        fixture.path(),
+        "vitest",
+        &[
+            "--changed-file",
+            "migrations/001.sql",
+            "--environment",
+            "sample-first",
+            "--json",
+        ],
+    ));
+    assert_eq!(selected_files(&report), vec!["src/db/db.test.ts"]);
+    assert_eq!(
+        report["groups"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|group| group["type"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["dependencies", "sample"]
+    );
+    assert_eq!(
+        report["groups"][0]["selected"],
+        serde_json::json!(["src/db/db.test.ts"])
+    );
+    assert_eq!(report["groups"][1]["selected"], serde_json::json!([]));
+    assert_eq!(
+        report["selected_tests"][0]["reasons"][0]["via"],
+        serde_json::json!(["configured-trigger"])
+    );
+    assert_eq!(
+        report["selected_tests"][0]["targets"][0]["project"],
+        "database"
+    );
+    assert_eq!(report["fallback_triggered"], false);
+}

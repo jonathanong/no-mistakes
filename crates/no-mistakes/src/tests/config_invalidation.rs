@@ -1,18 +1,23 @@
-//! Request-scoped comparison for `.no-mistakes.yml` changes.
+//! Request-scoped comparison for automatic and explicit v2 config changes.
 //!
 //! A changed configuration must remain a conservative full-suite trigger when
 //! we cannot read both complete revisions. When both revisions are available,
 //! however, only the requested framework is invalidated.
 
 use super::changed_files::ChangedFiles;
-use super::diff_parser::{DiffFile, DiffFileStatus, HunkLineKind};
+use super::diff_parser::{DiffFile, DiffFileStatus};
 use super::{PlanArgs, TestFramework};
 use anyhow::{Context, Result};
 use no_mistakes::config::v2::schema::NoMistakesConfig;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod reconstruction;
 mod semantics;
+
+#[cfg(test)]
+use reconstruction::apply_unified_hunks;
+use reconstruction::reconstruct_diff_sources;
 
 pub(crate) struct ConfigInvalidation {
     comparisons: Vec<ConfigComparison>,
@@ -107,9 +112,13 @@ fn config_candidates(args: &PlanArgs, root: &Path) -> Vec<PathBuf> {
     if let Some(config) = args.config.as_deref() {
         return vec![normalize(root, config)];
     }
-    [".no-mistakes.yml", ".no-mistakes.yaml"]
+    automatic_config_candidates(root)
+}
+
+fn automatic_config_candidates(root: &Path) -> Vec<PathBuf> {
+    crate::config::v2::discover::automatic_v2_config_paths(root)
         .into_iter()
-        .map(|name| normalize(root, Path::new(name)))
+        .map(|path| normalize(root, &path))
         .collect()
 }
 
@@ -208,12 +217,7 @@ fn sources_from_diff(
 
 fn endpoint_candidates(root: &Path, explicit: Option<&Path>) -> Vec<PathBuf> {
     explicit.map_or_else(
-        || {
-            [".no-mistakes.yml", ".no-mistakes.yaml"]
-                .into_iter()
-                .map(|name| normalize(root, Path::new(name)))
-                .collect()
-        },
+        || automatic_config_candidates(root),
         |path| vec![normalize(root, path)],
     )
 }
@@ -268,132 +272,30 @@ fn diff_side_source(
     };
 
     let is_new_path = same_path(&diff.path, candidate);
-    match (diff.status.clone(), side, is_new_path) {
-        (DiffFileStatus::Added, DiffSide::After, true) => {
-            let source = read_post_diff_file(&diff.path, diff.status == DiffFileStatus::Deleted)?;
-            Ok(Some(ConfigSource {
-                path: candidate.to_path_buf(),
-                source,
-            }))
-        }
-        (DiffFileStatus::Added, DiffSide::Before, true) => Ok(None),
-        (DiffFileStatus::Added, _, false) => Ok(None),
-        (DiffFileStatus::Deleted, DiffSide::Before, _) => {
-            let after = read_post_diff_file(&diff.path, diff.status == DiffFileStatus::Deleted)?;
-            let source = apply_unified_hunks(&after, diff, true)?;
-            Ok(Some(ConfigSource {
-                path: candidate.to_path_buf(),
-                source,
-            }))
-        }
-        (DiffFileStatus::Deleted, DiffSide::After, _) => Ok(None),
-        (DiffFileStatus::Renamed, DiffSide::After, true) => {
-            let source = read_post_diff_file(&diff.path, false)?;
-            Ok(Some(ConfigSource {
-                path: candidate.to_path_buf(),
-                source,
-            }))
-        }
-        (DiffFileStatus::Renamed, DiffSide::Before, false) => {
-            let after = read_post_diff_file(&diff.path, diff.status == DiffFileStatus::Deleted)?;
-            let source = apply_unified_hunks(&after, diff, true)?;
-            Ok(Some(ConfigSource {
-                path: candidate.to_path_buf(),
-                source,
-            }))
-        }
-        (DiffFileStatus::Renamed, _, _) => Ok(None),
-        (DiffFileStatus::Modified, DiffSide::After, true) => {
-            let source = read_post_diff_file(&diff.path, false)?;
-            Ok(Some(ConfigSource {
-                path: candidate.to_path_buf(),
-                source,
-            }))
-        }
-        (DiffFileStatus::Modified, DiffSide::Before, true) => {
-            let after = read_post_diff_file(&diff.path, false)?;
-            let source = apply_unified_hunks(&after, diff, true)?;
-            Ok(Some(ConfigSource {
-                path: candidate.to_path_buf(),
-                source,
-            }))
-        }
-        (DiffFileStatus::Modified, _, false) => Ok(None),
+    let is_old_path = diff
+        .old_path
+        .as_ref()
+        .is_some_and(|old| same_path(old, candidate));
+    let endpoint_matches = match (&diff.status, side) {
+        (DiffFileStatus::Added, DiffSide::After) => is_new_path,
+        (DiffFileStatus::Deleted, DiffSide::Before) => is_new_path,
+        (DiffFileStatus::Modified, _) => is_new_path,
+        (DiffFileStatus::Renamed, DiffSide::Before) => is_old_path,
+        (DiffFileStatus::Renamed, DiffSide::After) => is_new_path,
+        _ => false,
+    };
+    if !endpoint_matches {
+        return Ok(None);
     }
-}
-
-fn read_post_diff_file(path: &Path, deleted: bool) -> Result<String> {
-    if deleted {
-        return Ok(String::new());
-    }
-    fs::read_to_string(path).with_context(|| format!("reading patched file {}", path.display()))
-}
-
-fn apply_unified_hunks(source: &str, diff: &DiffFile, reverse: bool) -> Result<String> {
-    if diff.hunks.is_empty() {
-        if diff.status == DiffFileStatus::Renamed {
-            // Git may represent a content-identical rename without hunks.
-            return Ok(source.to_string());
-        }
-        anyhow::bail!(
-            "unified diff for {} has no reconstructable hunks",
-            diff.path.display()
-        )
-    }
-    let trailing_newline = source.ends_with('\n');
-    let mut lines = source
-        .strip_suffix('\n')
-        .unwrap_or(source)
-        .split('\n')
-        .filter(|line| !(source.is_empty() && line.is_empty()))
-        .map(str::to_string)
-        .collect::<Vec<_>>();
-    let mut offset: isize = 0;
-    for hunk in &diff.hunks {
-        let (start, expected_count, replacement_count) = if reverse {
-            (hunk.new_start, hunk.new_count, hunk.old_count)
-        } else {
-            (hunk.old_start, hunk.old_count, hunk.new_count)
-        };
-        let start = start.saturating_sub(1) as isize + offset;
-        let start = usize::try_from(start).context("unified diff hunk starts before file")?;
-        let expected = hunk
-            .lines
-            .iter()
-            .filter(|(kind, _)| {
-                matches!(kind, HunkLineKind::Context)
-                    || (!reverse && matches!(kind, HunkLineKind::Removed))
-                    || (reverse && matches!(kind, HunkLineKind::Added))
-            })
-            .map(|(_, line)| line.clone())
-            .collect::<Vec<_>>();
-        let replacement = hunk
-            .lines
-            .iter()
-            .filter(|(kind, _)| {
-                matches!(kind, HunkLineKind::Context)
-                    || (!reverse && matches!(kind, HunkLineKind::Added))
-                    || (reverse && matches!(kind, HunkLineKind::Removed))
-            })
-            .map(|(_, line)| line.clone())
-            .collect::<Vec<_>>();
-        if expected.len() != expected_count || replacement.len() != replacement_count {
-            anyhow::bail!("unified diff hunk counts do not match its body")
-        }
-        let end = start
-            .checked_add(expected.len())
-            .context("unified diff hunk overflows")?;
-        if lines.get(start..end) != Some(expected.as_slice()) {
-            anyhow::bail!("unified diff hunk does not apply exactly")
-        }
-        lines.splice(start..end, replacement);
-        offset += replacement_count as isize - expected_count as isize;
-    }
-    let mut result = lines.join("\n");
-    if trailing_newline {
-        result.push('\n');
-    }
-    Ok(result)
+    let (before, after) = reconstruct_diff_sources(diff)?;
+    let source = match side {
+        DiffSide::Before => before,
+        DiffSide::After => after,
+    };
+    Ok(source.map(|source| ConfigSource {
+        path: candidate.to_path_buf(),
+        source,
+    }))
 }
 
 fn parse_endpoint(source: Option<ConfigSource>) -> Result<NoMistakesConfig> {

@@ -10,6 +10,17 @@ use crate::config::{
 
 const V2_STEMS: &[&str] = &[".no-mistakes"];
 
+pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
+    V2_STEMS
+        .iter()
+        .flat_map(|stem| {
+            crate::config::CONFIG_EXTENSIONS
+                .iter()
+                .map(move |extension| root.join(format!("{stem}.{extension}")))
+        })
+        .collect()
+}
+
 mod targeted_triggers;
 
 /// Load the unified `.no-mistakes.yml` (or a recognized legacy config) from

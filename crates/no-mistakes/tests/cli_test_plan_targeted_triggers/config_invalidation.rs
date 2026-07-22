@@ -50,6 +50,35 @@ fn revision_config_changes_invalidate_only_the_affected_framework() {
 }
 
 #[test]
+fn revision_json_and_jsonc_config_changes_invalidate_the_affected_framework() {
+    for (extension, base, change) in [
+        ("json", "vitest-base.json", "vitest-change.json"),
+        ("jsonc", "vitest-base.jsonc", "vitest-change.jsonc"),
+    ] {
+        let fixture = fixture();
+        let root = fixture.path();
+        std::fs::remove_file(root.join(".no-mistakes.yml")).unwrap();
+        let config_path = root.join(format!(".no-mistakes.{extension}"));
+        std::fs::copy(root.join("configs").join(base), &config_path).unwrap();
+        git_init(root);
+        std::fs::copy(root.join("configs").join(change), &config_path).unwrap();
+        git_commit(root, change);
+
+        let args = ["--base", "HEAD~1", "--head", "HEAD", "--json"];
+        assert_eq!(
+            json(&plan(root, "vitest", &args))["fallback_triggered"],
+            true,
+            "{extension}"
+        );
+        assert_eq!(
+            json(&plan(root, "playwright", &args))["fallback_triggered"],
+            false,
+            "{extension}"
+        );
+    }
+}
+
+#[test]
 fn routed_project_root_changes_invalidate_the_shared_graph() {
     let fixture = fixture();
     let root = fixture.path();
@@ -207,6 +236,60 @@ fn inline_diff_compares_complete_framework_configuration() {
 }
 
 #[test]
+fn inline_diff_reconstructs_modified_and_renamed_from_an_unpatched_checkout() {
+    let modified_fixture = fixture();
+    let root = modified_fixture.path();
+    git_init(root);
+    copy_config(root, "vitest-change.yml");
+    git_commit(root, "vitest config change");
+    git(root, &["switch", "--detach", "HEAD~1"]);
+
+    let args = [
+        "--diff-command",
+        "git diff HEAD main -- .no-mistakes.yml",
+        "--json",
+    ];
+    assert_eq!(
+        json(&plan(root, "vitest", &args))["fallback_triggered"],
+        true
+    );
+    assert_eq!(
+        json(&plan(root, "playwright", &args))["fallback_triggered"],
+        false
+    );
+
+    let renamed_fixture = fixture();
+    let renamed_root = renamed_fixture.path();
+    git_init(renamed_root);
+    std::fs::rename(
+        renamed_root.join(".no-mistakes.yml"),
+        renamed_root.join(".no-mistakes.yaml"),
+    )
+    .unwrap();
+    std::fs::copy(
+        renamed_root.join("configs/vitest-change.yml"),
+        renamed_root.join(".no-mistakes.yaml"),
+    )
+    .unwrap();
+    git_commit(renamed_root, "rename and change config");
+    git(renamed_root, &["switch", "--detach", "HEAD~1"]);
+
+    let renamed_args = [
+        "--diff-command",
+        "git diff --find-renames HEAD main -- .no-mistakes.yml .no-mistakes.yaml",
+        "--json",
+    ];
+    assert_eq!(
+        json(&plan(renamed_root, "vitest", &renamed_args))["fallback_triggered"],
+        true
+    );
+    assert_eq!(
+        json(&plan(renamed_root, "playwright", &renamed_args))["fallback_triggered"],
+        false
+    );
+}
+
+#[test]
 fn inline_diff_handles_added_deleted_and_modified_renamed_configs() {
     let added_fixture = fixture();
     let added_root = added_fixture.path();
@@ -272,6 +355,40 @@ fn inline_diff_handles_added_deleted_and_modified_renamed_configs() {
             &["--diff-command", command, "--json"]
         ))["fallback_triggered"],
         false
+    );
+}
+
+#[test]
+fn drifted_added_and_deleted_config_checkouts_fail_open() {
+    let added_fixture = fixture();
+    let added_root = added_fixture.path();
+    std::fs::remove_file(added_root.join(".no-mistakes.yml")).unwrap();
+    git_init(added_root);
+    copy_config(added_root, "drift-expected-vitest-only.yml");
+    git(added_root, &["add", ".no-mistakes.yml"]);
+    copy_config(added_root, "drift-checkout-vitest-only.yml");
+    let args = [
+        "--diff-command",
+        "git diff --cached -- .no-mistakes.yml",
+        "--global-config-fallback",
+        "true",
+        "--json",
+    ];
+    assert_eq!(
+        json(&plan(added_root, "playwright", &args))["fallback_triggered"],
+        true
+    );
+
+    let deleted_fixture = fixture();
+    let deleted_root = deleted_fixture.path();
+    copy_config(deleted_root, "drift-expected-vitest-only.yml");
+    git_init(deleted_root);
+    std::fs::remove_file(deleted_root.join(".no-mistakes.yml")).unwrap();
+    git(deleted_root, &["add", "-A"]);
+    copy_config(deleted_root, "drift-checkout-vitest-only.yml");
+    assert_eq!(
+        json(&plan(deleted_root, "playwright", &args))["fallback_triggered"],
+        true
     );
 }
 

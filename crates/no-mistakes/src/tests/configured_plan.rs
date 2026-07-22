@@ -33,7 +33,8 @@ use lockfile_seeds::{
 };
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
 use targeted_triggers::{
-    merge_targeted_candidates, targeted_dependency_candidates, TargetedOverlapRecovery,
+    insert_synthesized_dependency_group, merge_targeted_candidates, targeted_dependency_candidates,
+    TargetedOverlapRecovery,
 };
 
 #[allow(clippy::too_many_arguments)]
@@ -172,17 +173,8 @@ pub(crate) fn generate_configured_plan_with_prepared(
         &dependency_triggers.targeted,
     );
     let mut groups = configured_groups(&env, framework);
-    let configured_group_count = groups.len();
-    let needs_target_only_group = !targeted_candidates.is_empty()
-        && !groups
-            .iter()
-            .any(|group| group.type_ == TestPlanGroupType::Dependencies);
-    if needs_target_only_group {
-        groups.push(TestPlanGroup {
-            type_: TestPlanGroupType::Dependencies,
-            ..TestPlanGroup::default()
-        });
-    }
+    let target_only_group_index =
+        insert_synthesized_dependency_group(&mut groups, !targeted_candidates.is_empty());
     let mut targeted_overlaps = TargetedOverlapRecovery::new(&targeted_candidates);
 
     for (group_index, group) in groups.iter().enumerate() {
@@ -207,7 +199,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 framework_name(framework)
             );
         }
-        let target_only_group = needs_target_only_group && group_index == configured_group_count;
+        let target_only_group = target_only_group_index == Some(group_index);
         let candidate_used =
             targeted_overlaps.candidate_used_override(&used, recover_targeted_overlaps);
         let mut candidates = if target_only_group {
