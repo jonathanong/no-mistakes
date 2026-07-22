@@ -242,3 +242,63 @@ fn vitest_setup_dependencies_preserve_effective_project_ownership() {
         .iter()
         .any(|include| include == "packages/foo/tests/**/*.test.ts"));
 }
+
+#[test]
+fn vitest_setup_config_fallbacks_are_fixture_backed() {
+    let source_fixture = &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config/vitest-parser-coverage");
+    let fixture = crate::test_support::materialize_saved_fixture(source_fixture);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let parsed = parse_vitest_fixture(&source, &path, &root).unwrap();
+    assert_eq!(
+        parsed
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        vec!["spread-setup", "named-dynamic", "directory-dynamic"],
+    );
+    assert!(parsed
+        .iter()
+        .all(|project| project.policy_name.as_deref() != Some("ignored-project")));
+    let spread = parsed
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("spread-setup"))
+        .unwrap();
+    assert_eq!(spread.vitest_setup.len(), 1);
+    assert_eq!(
+        spread.vitest_setup[0].specifier.as_deref(),
+        Some("./setup.ts")
+    );
+    let named = parsed
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("named-dynamic"))
+        .unwrap();
+    assert!(named.vitest_setup[0]
+        .trigger_paths
+        .contains(&root.join("dynamic.ts")));
+
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let visible = std::collections::HashSet::from([root.join("config")]);
+
+    let projects =
+        test_support::parse_vitest_from_visible(&source, &path, &root, &root, &tsconfig, &visible)
+            .expect("directory and unresolved config candidates should be ignored");
+
+    assert_eq!(projects.len(), 3);
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        vec!["spread-setup", "named-dynamic", "directory-dynamic"],
+    );
+    let directory_dynamic = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("directory-dynamic"))
+        .unwrap();
+    assert!(directory_dynamic.vitest_setup[0]
+        .trigger_paths
+        .contains(&root.join("config")));
+}
