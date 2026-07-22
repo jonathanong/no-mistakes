@@ -165,6 +165,16 @@ fn impacted_checks_json_defaults_root() {
 }
 
 #[test]
+fn build_impact_args_defaults_root_when_omitted() {
+    let options = crate::napi_api::options::parse_options::<
+        crate::napi_api::options::TestsImpactOptions,
+    >(&json!({ "entrypoints": ["x.ts"] }).to_string())
+    .unwrap();
+    let args = crate::napi_api::cli_parity::build_impact_args(options).unwrap();
+    assert_eq!(args.root, PathBuf::from("."));
+}
+
+#[test]
 fn ci_topology_json_returns_the_parsed_graph() {
     let options = json!({ "root": workflow_topology_fixture("needs-basic") }).to_string();
     let output = ci_topology_json_impl(options).unwrap();

@@ -173,6 +173,13 @@ fn workflow_filter_resolves_a_bare_basename_against_a_configured_workflow_dir() 
             .collect::<Vec<_>>(),
         vec!["ci-pipelines/build.yml"]
     );
+
+    // A filter that already spells out the configured directory (not just
+    // a bare basename) must resolve too — exercises the same configured
+    // set on the slash-containing path, not just the basename-join path.
+    let explicit = load_workflow_topology(&root, &config, &["ci-pipelines/build.yml".to_string()]);
+    assert!(explicit.diagnostics.is_empty());
+    assert_eq!(explicit.workflows.len(), 1);
 }
 
 /// `serde_yaml`'s and `js-yaml`'s parse-error messages are different
