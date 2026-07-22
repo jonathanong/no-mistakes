@@ -1,7 +1,11 @@
+# Two same-length-1 sources (W1, W1b) tie for W2's longest incoming path —
+# exercises the chain-limit witness's lexicographic tie-break (`path_key`),
+# which a single-source chain never reaches. W1 wins ("w1.yml" < "w1b.yml"),
+# so the W5 witness below is unaffected.
 name: W2
 on:
   workflow_run:
-    workflows: [W1]
+    workflows: [W1, W1b]
 jobs:
   noop:
     runs-on: ubuntu-latest

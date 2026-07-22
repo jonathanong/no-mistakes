@@ -9,12 +9,20 @@ use super::super::artifact_resolution_helpers::{
     diagnostic_key, occurrence_reaches, symbolic_pattern_match,
 };
 use super::super::artifact_resolution_types::ArtifactRunContext;
+use super::super::artifact_types::{
+    ArtifactDeclaration, ArtifactDownloadSelector, ArtifactDownloadSource,
+};
 use super::super::artifact_values::{
     artifact_value, parse_artifact_declaration, static_matrix_instance_count,
 };
 use super::super::value_primitives::{to_json, yaml_number_to_json, OrderedJson};
+use super::super::workflow_values::{key_name, parse_triggers};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+
+fn yaml(text: &str) -> serde_yaml::Value {
+    serde_yaml::from_str(text).expect("valid YAML fixture literal")
+}
 
 fn matrix(entries: &[(&str, OrderedJson)]) -> OrderedJson {
     OrderedJson::Object(
@@ -158,6 +166,99 @@ fn parse_artifact_declaration_ignores_a_non_artifact_action() {
 }
 
 #[test]
+fn parse_artifact_declaration_treats_a_dynamic_archive_flag_as_an_unresolved_upload_name() {
+    // `archive: ${{ ... }}` can't be evaluated statically, so the upload
+    // name is Dynamic regardless of what `name:` says — never `Static`.
+    let with = yaml("name: report\narchive: ${{ inputs.compress }}\n");
+    let declaration = parse_artifact_declaration("actions/upload-artifact@v4", Some(&with), None)
+        .expect("an upload declaration");
+    let ArtifactDeclaration::Upload(upload) = declaration else {
+        panic!("expected an upload declaration");
+    };
+    assert!(matches!(
+        upload.name,
+        super::super::artifact_types::ArtifactValue::Dynamic { .. }
+    ));
+}
+
+#[test]
+fn parse_artifact_declaration_upload_without_a_name_defaults_to_artifact() {
+    // `name:` is optional on `actions/upload-artifact` — GitHub Actions
+    // itself defaults to "artifact" when omitted.
+    let with = yaml("archive: true\n");
+    let declaration = parse_artifact_declaration("actions/upload-artifact@v4", Some(&with), None)
+        .expect("an upload declaration");
+    let ArtifactDeclaration::Upload(upload) = declaration else {
+        panic!("expected an upload declaration");
+    };
+    assert!(matches!(
+        upload.name,
+        super::super::artifact_types::ArtifactValue::Static { ref value, .. } if value == "artifact"
+    ));
+}
+
+#[test]
+fn parse_artifact_declaration_download_with_both_name_and_artifact_ids_is_unresolved() {
+    // Providing `name:` and `artifact-ids:` together is contradictory —
+    // GitHub Actions treats it as invalid, so the selector is `unresolved`
+    // rather than picking one over the other.
+    let with = yaml("name: report\nartifact-ids: 123,456\n");
+    let declaration = parse_artifact_declaration("actions/download-artifact@v4", Some(&with), None)
+        .expect("a download declaration");
+    let ArtifactDeclaration::Download(download) = declaration else {
+        panic!("expected a download declaration");
+    };
+    assert!(matches!(
+        download.selector,
+        ArtifactDownloadSelector::Unresolved { .. }
+    ));
+}
+
+#[test]
+fn artifact_download_source_is_external_for_an_explicit_mismatching_run_id() {
+    // A `github-token:` is only meaningful for a cross-repo/cross-run
+    // download, so the source is only ever `current-run` when either no
+    // token is set, or the token is set but `repository:`/`run-id:` both
+    // resolve to the literal `${{ github.* }}` self-references. `&&`
+    // short-circuits `is_current_run_id` unless `is_current_repository`
+    // passes first — omitting `repository:` (which defaults to "current")
+    // is the only way to reach `is_current_run_id` and see it fail.
+    let with = yaml("github-token: ${{ secrets.OTHER_REPO_TOKEN }}\nrun-id: \"999\"\n");
+    let declaration = parse_artifact_declaration("actions/download-artifact@v4", Some(&with), None)
+        .expect("a download declaration");
+    let ArtifactDeclaration::Download(download) = declaration else {
+        panic!("expected a download declaration");
+    };
+    assert!(matches!(
+        download.source,
+        ArtifactDownloadSource::External { .. }
+    ));
+}
+
+#[test]
+fn key_name_coerces_a_non_string_mapping_key() {
+    // `on:`/job-key mappings are practically always string-keyed, but YAML
+    // itself permits a scalar key of any type — `key_name` falls back to
+    // `string_value`'s coercion the same way a job or trigger name would.
+    let numeric_key = serde_yaml::Value::Number(serde_yaml::Number::from(42));
+    assert_eq!(key_name(&numeric_key), Some("42".to_string()));
+}
+
+#[test]
+fn parse_triggers_captures_a_mapping_form_triggers_non_null_config() {
+    // Two entries so the trailing `sort_by` actually needs its comparator
+    // (a one-element `Vec` never invokes it) — also proves the result is
+    // sorted by event name regardless of declaration order.
+    let on = yaml("push:\n  branches: [main]\npull_request:\n  branches: [main]\n");
+    let triggers = parse_triggers(Some(&on));
+    assert_eq!(triggers.len(), 2);
+    assert_eq!(triggers[0].event, "pull_request");
+    assert_eq!(triggers[1].event, "push");
+    assert!(triggers[0].config.is_some());
+    assert!(triggers[1].config.is_some());
+}
+
+#[test]
 fn simple_matrix_axes_reject_include_exclude_and_invalid_shapes() {
     // `include`/`exclude` make the real combination set impossible to
     // enumerate this way.
@@ -201,6 +302,48 @@ fn simple_matrix_axes_reject_include_exclude_and_invalid_shapes() {
         ),
     ]);
     assert_eq!(static_matrix_instance_count(Some(&valid)), Some(4));
+
+    // A matrix axis item may itself be a boolean.
+    let boolean_axis = matrix(&[(
+        "debug",
+        OrderedJson::Array(vec![OrderedJson::Bool(true), OrderedJson::Bool(false)]),
+    )]);
+    assert_eq!(static_matrix_instance_count(Some(&boolean_axis)), Some(2));
+
+    // `strategy.matrix` present but not a mapping at all (e.g. a bare
+    // string) — malformed, not merely an empty/invalid axis.
+    let non_object = OrderedJson::String("not-a-matrix".to_string());
+    assert_eq!(static_matrix_instance_count(Some(&non_object)), None);
+}
+
+#[test]
+fn artifact_value_multiplies_the_instance_count_by_an_omitted_axis() {
+    // The name references `os` but not `node`: each expanded value's
+    // instance count must account for every `node` combination it could
+    // still come from, since the name alone can't tell them apart.
+    let axes = matrix(&[
+        ("os", string_array(&["linux", "macos"])),
+        (
+            "node",
+            OrderedJson::Array(vec![
+                OrderedJson::Number(22.into()),
+                OrderedJson::Number(24.into()),
+            ]),
+        ),
+    ]);
+    let super::super::artifact_types::ArtifactValue::Finite {
+        values,
+        instance_counts,
+        ..
+    } = artifact_value("build-${{ matrix.os }}", Some(&axes))
+    else {
+        panic!("expected a finite artifact value");
+    };
+    let mut sorted_values = values.clone();
+    sorted_values.sort();
+    assert_eq!(sorted_values, vec!["build-linux", "build-macos"]);
+    assert_eq!(instance_counts["build-linux"], 2);
+    assert_eq!(instance_counts["build-macos"], 2);
 }
 
 #[test]
@@ -255,4 +398,22 @@ fn to_json_stringifies_a_non_string_mapping_key() {
 fn yaml_number_to_json_rejects_a_non_finite_float() {
     let nan = serde_yaml::Number::from(f64::NAN);
     assert_eq!(yaml_number_to_json(&nan), None);
+}
+
+#[test]
+fn to_json_stringifies_a_mapping_key_that_string_value_cannot_coerce_either() {
+    // A bool/number key (tested above) still coerces via `string_value`'s
+    // own scalar handling. A *sequence* key is neither a string scalar nor
+    // one `string_value` can coerce — the only way to reach `to_json`'s
+    // innermost `format!("{key:?}")` fallback.
+    let mut mapping = serde_yaml::Mapping::new();
+    let sequence_key =
+        serde_yaml::Value::Sequence(vec![serde_yaml::Value::String("unusual".to_string())]);
+    mapping.insert(sequence_key, serde_yaml::Value::String("v".to_string()));
+    let value = to_json(&serde_yaml::Value::Mapping(mapping));
+    let OrderedJson::Object(entries) = value else {
+        panic!("expected an object");
+    };
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].1, OrderedJson::String("v".to_string()));
 }

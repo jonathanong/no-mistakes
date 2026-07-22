@@ -1,0 +1,7 @@
+name: W1b
+on: push
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo w1b

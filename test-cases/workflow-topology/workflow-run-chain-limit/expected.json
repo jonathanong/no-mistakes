@@ -16,6 +16,20 @@
       ]
     },
     {
+      "id": ".github/workflows/w1b.yml",
+      "path": ".github/workflows/w1b.yml",
+      "name": "W1b",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/w1b.yml#noop"
+      ]
+    },
+    {
       "id": ".github/workflows/w2.yml",
       "path": ".github/workflows/w2.yml",
       "name": "W2",
@@ -25,7 +39,8 @@
           "event": "workflow_run",
           "config": {
             "workflows": [
-              "W1"
+              "W1",
+              "W1b"
             ]
           }
         }
@@ -106,6 +121,18 @@
       ]
     },
     {
+      "id": ".github/workflows/w1b.yml#noop",
+      "workflowId": ".github/workflows/w1b.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
       "id": ".github/workflows/w2.yml#noop",
       "workflowId": ".github/workflows/w2.yml",
       "key": "noop",
@@ -158,6 +185,11 @@
     {
       "kind": "workflow-run",
       "from": ".github/workflows/w1.yml",
+      "to": ".github/workflows/w2.yml"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/w1b.yml",
       "to": ".github/workflows/w2.yml"
     },
     {
