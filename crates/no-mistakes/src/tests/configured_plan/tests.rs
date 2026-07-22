@@ -41,6 +41,8 @@ fn vitest_setup_fixture() -> (tempfile::TempDir, PathBuf) {
     (fixture, root)
 }
 
+mod vitest_setup_scoped_resolution;
+
 #[test]
 fn vitest_setup_transitive_dependency_selects_only_the_owning_project() {
     let (_fixture, root) = vitest_setup_fixture();

@@ -69,6 +69,7 @@ fn setup_dependency(
         declaration_path: ctx.path.to_path_buf(),
         declaration_line,
         trigger_paths,
+        resolver_candidate_paths: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     }
 }

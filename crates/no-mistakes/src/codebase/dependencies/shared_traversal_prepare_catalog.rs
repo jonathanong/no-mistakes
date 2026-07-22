@@ -69,7 +69,7 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
     } else {
         &[]
     };
-    let projects = crate::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
+    let mut projects = crate::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
         root,
         config,
         root_visible_paths,
@@ -84,17 +84,16 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
     candidate_roots.extend(projects.tsconfig_candidate_roots(root));
     candidate_roots.sort();
     candidate_roots.dedup();
-    Ok((
-        std::sync::Arc::new(catalog_for_request(
+    let catalog = std::sync::Arc::new(catalog_for_request(
             root,
             tsconfig_path,
             tsconfig,
             &candidate_roots,
             root_visible_paths,
             &sources,
-        )),
-        projects,
-    ))
+        ));
+    projects.reresolve_vitest_setups(root, &catalog, root_visible_paths);
+    Ok((catalog, projects))
 }
 
 fn catalog_for_request(

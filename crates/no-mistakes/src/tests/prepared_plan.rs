@@ -214,7 +214,7 @@ impl PreparedTestPlanInputs {
                 graph_plan,
                 &preliminary_graph_config,
             );
-        let prepared_test_projects = Arc::new(
+        let mut prepared_test_projects =
             no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
                 &root,
                 &config,
@@ -226,8 +226,7 @@ impl PreparedTestPlanInputs {
                     collect_graph_facts: true,
                     preparation_plan: &framework_plan,
                 },
-            ),
-        );
+            );
         tsconfig_candidate_roots.extend(prepared_test_projects.tsconfig_candidate_roots(&root));
         tsconfig_candidate_roots.sort();
         tsconfig_candidate_roots.dedup();
@@ -249,6 +248,12 @@ impl PreparedTestPlanInputs {
                 &root_visible_paths,
             )
         };
+        prepared_test_projects.reresolve_vitest_setups(
+            &root,
+            &tsconfig_catalog,
+            &root_visible_paths,
+        );
+        let prepared_test_projects = Arc::new(prepared_test_projects);
         let test_filter =
             no_mistakes::codebase::test_filter::TestFileFilter::from_prepared_projects(
                 &root,

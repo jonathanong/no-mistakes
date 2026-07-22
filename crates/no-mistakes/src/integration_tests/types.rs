@@ -150,6 +150,10 @@ pub(crate) struct VitestSetupDependency {
     /// contributed this declaration. These paths are conservative impact
     /// triggers, including targets deleted before planning.
     pub(crate) trigger_paths: BTreeSet<PathBuf>,
+    /// Candidates derived from the import resolver. Keep these separate from
+    /// parser provenance so a later scoped re-resolution can replace only its
+    /// own facts without dropping config and helper triggers.
+    pub(crate) resolver_candidate_paths: BTreeSet<PathBuf>,
     /// Runtime candidates reached through a resolved setup module. These stay
     /// separate so a deletion can recover the missing graph edge without
     /// treating unrelated alternate candidates as unsafe fallbacks.

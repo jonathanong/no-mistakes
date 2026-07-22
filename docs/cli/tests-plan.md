@@ -119,6 +119,10 @@ own value applies, and `[]` clears it. A config referenced as a string in
 `test.projects` is parsed as an independent config and does not inherit the
 referencing config's setup fields.
 
+Vitest workspace configs may export a project array directly or through
+`defineWorkspace([...])`. Project globs recognize config suffixes such as
+`vitest.config.unit.ts` and `vite.config.e2e.js`.
+
 Setup values are extracted statically from string and array forms. Dynamic
 expressions and unresolved literal modules produce a JSON warning with the
 declaring config, field, and project. When such a declaration is relevant, the

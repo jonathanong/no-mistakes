@@ -129,7 +129,7 @@ pub(super) fn selection(
             } else {
                 deleted_resolved_triggered = true;
             }
-            let owner_tests = owner_tests(project, discovered);
+            let owner_tests = owner_tests(root, project, discovered);
             // An owner is established by the parsed project identity, not by
             // whether that owner happens to have an eligible test in this
             // environment. Reclassifying an empty, known owner as framework
@@ -273,11 +273,31 @@ fn trigger_paths(
     triggered.into_iter().collect()
 }
 
-fn owner_tests(project: &ConfigProject, discovered: &DiscoveredTests) -> Vec<PathBuf> {
+fn owner_tests(root: &Path, project: &ConfigProject, discovered: &DiscoveredTests) -> Vec<PathBuf> {
+    let scope_filter = project
+        .runner_project_arg
+        .is_none()
+        .then(|| {
+            no_mistakes::codebase::test_discovery::ProjectTestFilter::from_project_ref(project).ok()
+        })
+        .flatten();
     discovered
         .tests
         .iter()
         .filter(|test| {
+            if project.runner_project_arg.is_none() {
+                let Some(filter) = &scope_filter else {
+                    return false;
+                };
+                let relative = no_mistakes::codebase::ts_source::relative_slash_path(root, test);
+                if !filter.is_match(&relative) {
+                    return false;
+                }
+                return discovered
+                    .targets_by_path
+                    .get(*test)
+                    .is_none_or(|targets| unnamed_project_owns_target(project, targets));
+            }
             discovered
                 .targets_by_path
                 .get(*test)
@@ -291,6 +311,28 @@ fn owner_tests(project: &ConfigProject, discovered: &DiscoveredTests) -> Vec<Pat
         })
         .cloned()
         .collect()
+}
+
+fn unnamed_project_owns_target(
+    project: &ConfigProject,
+    targets: &[no_mistakes::codebase::test_discovery::TestExecutionTarget],
+) -> bool {
+    let targets = targets
+        .iter()
+        .filter(|target| target.runner == "vitest")
+        .collect::<Vec<_>>();
+    if targets.is_empty() {
+        return false;
+    }
+    if !targets
+        .iter()
+        .any(|target| target.config.is_some() || target.project.is_some())
+    {
+        return true;
+    }
+    targets
+        .iter()
+        .any(|target| target.config == project.config && target.project.is_none())
 }
 
 fn owner_is_known(project: &ConfigProject) -> bool {

@@ -13,7 +13,9 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 mod declarations;
+mod workspace;
 use declarations::{default_function_options, named_export_options};
+pub(super) use workspace::workspace_default_options;
 
 pub(super) fn exported_options(
     program: &Program<'_>,

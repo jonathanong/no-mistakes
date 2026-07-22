@@ -56,7 +56,16 @@ fn visible_config_glob(specifier: &str) -> Result<globset::GlobSet, globset::Err
 fn is_vitest_project_config(path: &Path) -> bool {
     // Keep config discovery aligned with the resolver's executable TS/JS
     // extensions. Declaration files are intentionally not Vitest configs.
-    const EXTENSIONS: &[&str] = &["mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts"];
+    const EXTENSIONS: &[&str] = &["mts", "ts", "mjs", "js", "cjs", "cts"];
+    if path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| {
+            name.ends_with(".d.ts") || name.ends_with(".d.mts") || name.ends_with(".d.cts")
+        })
+    {
+        return false;
+    }
     let Some(extension) = path.extension().and_then(|extension| extension.to_str()) else {
         return false;
     };
@@ -67,8 +76,27 @@ fn is_vitest_project_config(path: &Path) -> bool {
         .file_stem()
         .map(|stem| stem.to_string_lossy())
         .unwrap_or_default();
-    (stem.starts_with("vitest.") || stem.starts_with("vite.")) && stem.ends_with(".config")
-        || stem == "vitest.workspace"
+    stem == "vitest.workspace"
+        || stem == "vitest.config"
+        || stem.starts_with("vitest.config.")
+        || stem == "vite.config"
+        || stem.starts_with("vite.config.")
+        || named_config_stem(stem.as_ref(), "vitest")
+        || named_config_stem(stem.as_ref(), "vite")
+}
+
+fn named_config_stem(stem: &str, runner: &str) -> bool {
+    let Some(name) = stem
+        .strip_prefix(runner)
+        .and_then(|stem| stem.strip_prefix('.'))
+        .and_then(|stem| stem.strip_suffix(".config"))
+    else {
+        return false;
+    };
+    !name.is_empty()
+        && name
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
 }
 
 fn parse_string_project(path: &Path, ctx: &mut Ctx<'_, '_>) -> Result<Option<Options>> {
@@ -110,3 +138,6 @@ fn parse_string_project(path: &Path, ctx: &mut Ctx<'_, '_>) -> Result<Option<Opt
     ctx.seen.remove(path);
     result
 }
+
+#[cfg(test)]
+mod tests;

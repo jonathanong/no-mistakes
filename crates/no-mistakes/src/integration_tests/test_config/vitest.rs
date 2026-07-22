@@ -7,7 +7,7 @@ use oxc_ast::ast::Program;
 use std::path::{Path, PathBuf};
 
 mod project_arrays;
-mod setup_resolution;
+pub(crate) mod setup_resolution;
 #[cfg(test)]
 pub(in crate::integration_tests) mod tests;
 
@@ -49,9 +49,18 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
     resolver: &dyn ImportResolution,
 ) -> Result<Vec<ConfigProject>> {
     let bindings = shared::top_level_object_bindings(program);
-    let Some(root_object) = shared::default_export_object(program, &bindings) else {
-        return Ok(Vec::new());
-    };
+    let root_object = shared::default_export_object(program, &bindings);
+    let workspace_options = (root_object.is_none() && is_vitest_workspace_path(path))
+        .then(|| project_arrays::workspace_options(program, source, path, resolver))
+        .transpose()?
+        .unwrap_or_default();
+    if root_object.is_none() {
+        return Ok(workspace_options
+            .into_iter()
+            .map(|options| to_project(config_dir, root, options, resolver))
+            .collect());
+    }
+    let root_object = root_object.expect("workspace branch returns when config object is absent");
     let root_options = project_arrays::root_options(program, root_object, source, path, resolver)?;
     let project_options =
         project_arrays::project_options(program, root_object, source, path, root, resolver)?;
@@ -70,6 +79,17 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
         projects.push(to_project(config_dir, root, options, resolver));
     }
     Ok(projects)
+}
+
+fn is_vitest_workspace_path(path: &Path) -> bool {
+    const EXTENSIONS: &[&str] = &["mts", "ts", "mjs", "js", "cjs", "cts"];
+    let Some(extension) = path.extension().and_then(|extension| extension.to_str()) else {
+        return false;
+    };
+    EXTENSIONS.contains(&extension)
+        && path
+            .file_stem()
+            .is_some_and(|stem| stem == "vitest.workspace")
 }
 
 fn to_project(

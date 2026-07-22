@@ -1,6 +1,9 @@
 use super::*;
 use std::collections::BTreeSet;
 
+#[path = "parser_coverage/vitest_workspace.rs"]
+mod workspace;
+
 fn coverage_files(prefix: &str, suffix: &str) -> Vec<String> {
     let mut files: Vec<_> = std::fs::read_dir(fixture("coverage"))
         .unwrap()
@@ -58,49 +61,6 @@ fn playwright_config_parser_covers_project_defaults() {
         );
     }
     assert!(!policy_names.contains("root-spread-missing"));
-}
-
-#[test]
-fn vitest_config_parser_covers_root_and_nested_projects() {
-    let root = fixture("coverage");
-    let expected_errors = BTreeSet::from([
-        "vitest.empty-array-invalid.mts",
-        "vitest.invalid.mts",
-        "vitest.invalid-project.mts",
-        "vitest.project-exclude-invalid.mts",
-    ]);
-    let mut policy_names = BTreeSet::new();
-
-    for file in coverage_files("vitest.", ".mts") {
-        let path = root.join(&file);
-        let source = std::fs::read_to_string(&path).unwrap();
-        let result = parse_vitest_fixture(&source, &path, &root);
-        if expected_errors.contains(file.as_str()) {
-            assert!(result.is_err(), "expected {file} to be rejected");
-            continue;
-        }
-        let projects = result.unwrap_or_else(|error| panic!("{file} should parse: {error:#}"));
-        for project in projects {
-            if let Some(policy_name) = project.policy_name {
-                policy_names.insert(policy_name);
-            }
-        }
-    }
-
-    for expected in [
-        "root-vitest",
-        "nested",
-        "vitest-root-call-import",
-        "vitest-object-call-destructure-body",
-        "vitest-member-spread-named",
-        "vitest-test-sourced-reexport",
-    ] {
-        assert!(
-            policy_names.contains(expected),
-            "missing Vitest policy {expected}"
-        );
-    }
-    assert!(!policy_names.contains("vitest-root-spread-missing"));
 }
 
 #[test]
@@ -179,6 +139,20 @@ fn vitest_setup_dependencies_preserve_effective_project_ownership() {
             .contains(&root.join("config/type-only-helper.ts")),
         "dynamic setup closures follow runtime re-exports but exclude type-only sources"
     );
+    let mut reresolved = closure[0].clone();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    crate::integration_tests::resolve_setup_dependencies(
+        std::iter::once(&mut reresolved),
+        &root.join("dynamic-closure"),
+        &resolver,
+    );
+    assert!(reresolved
+        .trigger_paths
+        .contains(&root.join("config/dynamic-wrapper.ts")));
+    assert!(reresolved
+        .trigger_paths
+        .contains(&root.join("config/runtime-star-helper.ts")));
 
     let cycle = setup("dynamic-cycle");
     assert_eq!(cycle.len(), 1, "{cycle:#?}");

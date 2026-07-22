@@ -61,6 +61,32 @@ pub(super) fn project_options(
     project_options_inner(program, object, source, path, _root, resolver)
 }
 
+/// A `vitest.workspace.*` file exports projects directly, rather than nesting
+/// them below `test.projects`. Reuse the ordinary project-array interpreter so
+/// imports, cycles, visible-universe filtering, and ordering remain identical.
+pub(super) fn workspace_options(
+    program: &Program<'_>,
+    source: &str,
+    path: &Path,
+    resolver: &dyn ImportResolution,
+) -> Result<Vec<Options>> {
+    let mut seen = BTreeSet::new();
+    let mut local_seen = BTreeSet::new();
+    let mut object_seen = BTreeSet::new();
+    let mut ctx = Ctx {
+        source,
+        bindings: shared::top_level_object_bindings(program),
+        functions: top_level_function_bodies(program),
+        imports: import_bindings(program),
+        resolver,
+        path,
+        seen: &mut seen,
+        local_seen: &mut local_seen,
+        object_seen: &mut object_seen,
+    };
+    exports::workspace_default_options(program, &mut ctx)
+}
+
 fn project_options_inner(
     program: &Program<'_>,
     object: &ObjectExpression<'_>,

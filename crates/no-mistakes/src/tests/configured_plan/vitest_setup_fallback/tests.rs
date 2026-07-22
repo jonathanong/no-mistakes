@@ -30,6 +30,7 @@ fn setup(specifier: Option<&str>) -> VitestSetupDependency {
         declaration_path: PathBuf::from("/repo/config/setup.ts"),
         declaration_line: 7,
         trigger_paths,
+        resolver_candidate_paths: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     }
 }
@@ -195,6 +196,66 @@ fn missing_owner_identity_uses_framework_fallback() {
     .expect("unknown ownership should use framework fallback");
     assert!(result.0.contains("discovered Vitest tests"));
     assert_eq!(result.1.len(), 2);
+}
+
+#[test]
+fn unnamed_vitest_owner_uses_its_include_scope() {
+    let root = Path::new("/repo");
+    let mut unnamed = project(Some("unit"), setup(None));
+    unnamed.runner_project_arg = None;
+    unnamed.include = vec!["unit/**/*.test.ts".to_string()];
+    let mut discovered = discovered();
+    for targets in discovered.targets_by_path.values_mut() {
+        targets[0].project = None;
+    }
+
+    let result = selection(
+        root,
+        &[root.join("config/setup.ts")],
+        &[],
+        Some(&[unnamed]),
+        &discovered,
+        &HashSet::new(),
+        10,
+    )
+    .expect("an unnamed owner still has a project filter");
+    assert_eq!(
+        result
+            .1
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["unit/a.test.ts"]
+    );
+}
+
+#[test]
+fn unnamed_vitest_owner_does_not_cross_select_an_overlapping_config() {
+    let root = Path::new("/repo");
+    let mut unnamed = project(Some("unit"), setup(None));
+    unnamed.config = Some("vitest.unit.config.ts".to_string());
+    unnamed.runner_project_arg = None;
+    unnamed.include = vec!["unit/**/*.test.ts".to_string()];
+    let mut discovered = discovered();
+    for targets in discovered.targets_by_path.values_mut() {
+        targets[0].project = None;
+        targets[0].config = Some("vitest.other.config.ts".to_string());
+    }
+
+    let result = selection(
+        root,
+        &[root.join("config/setup.ts")],
+        &[],
+        Some(&[unnamed]),
+        &discovered,
+        &HashSet::new(),
+        10,
+    )
+    .expect("the setup still has a known owner");
+    assert!(
+        result.1.is_empty(),
+        "wrong config target must not be selected"
+    );
 }
 
 #[test]
