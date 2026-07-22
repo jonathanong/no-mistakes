@@ -147,6 +147,29 @@ fn stderr_beyond_the_cap_is_dropped_without_deadlocking() {
     assert!(outcome.stderr.len() <= STDERR_CAP_BYTES);
 }
 
+// Regression for a review finding on #587: the child must be terminated and
+// reaped when the deadline elapses *while waiting for it to exit* (as
+// opposed to already having elapsed before the wait, which the pre-spawn
+// and pre-drain checks handle). The child closes stdout (so `drain_lines`
+// completes successfully) but keeps running well past a short deadline.
+#[test]
+fn terminates_the_child_when_the_deadline_elapses_during_the_post_drain_wait() {
+    let mut command = Command::new("sh");
+    command.args(["-c", "printf 'x\\n'; exec 1>&-; sleep 120"]);
+    let _deadline =
+        crate::invocation::install_test_deadline(std::time::Duration::from_millis(200)).unwrap();
+    let start = std::time::Instant::now();
+    let result = collect_lines(&mut command, 1024);
+    let error = result.expect_err("deadline elapsing during the post-drain wait must error");
+    assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(60),
+        "child should have been terminated well before its 120s sleep completed, \
+         took {:?}",
+        start.elapsed()
+    );
+}
+
 #[test]
 fn respects_expired_invocation_deadline() {
     let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();

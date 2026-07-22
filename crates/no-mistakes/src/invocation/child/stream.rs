@@ -89,23 +89,65 @@ pub(crate) fn stream_command_lines(
         };
     }
 
-    let status = match remaining_timeout()? {
-        Some(remaining) => match child.wait_timeout(remaining)? {
-            Some(status) => status,
-            None => {
-                let _ = process_tree.terminate(&mut child);
-                let _ = child.wait_timeout(CLEANUP_TIMEOUT);
-                let _ = stderr_reader.join();
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::TimedOut,
-                    "no-mistakes command deadline elapsed while waiting for a child process",
-                ));
-            }
-        },
-        None => child.wait()?,
+    let status = match wait_for_exit(&mut child, &process_tree) {
+        Ok(status) => status,
+        Err(error) => {
+            let _ = stderr_reader.join();
+            return Err(error);
+        }
     };
     let stderr = stderr_reader.join().unwrap_or_default();
     Ok(StreamOutcome { status, stderr })
+}
+
+/// Wait for the child to exit within the remaining invocation deadline (or
+/// indefinitely if there is none), terminating and reaping its process tree
+/// on *any* failure — a deadline timeout, an OS-level `wait` error, or a
+/// `remaining_timeout` error from the deadline elapsing while this call
+/// itself was waiting. Every one of those must route through the same
+/// cleanup as a normal timeout (matching `command_output`'s
+/// `cleanup_wait_error`), or the child tree is left unmanaged.
+fn wait_for_exit(
+    child: &mut std::process::Child,
+    process_tree: &ProcessTree,
+) -> std::io::Result<ExitStatus> {
+    let remaining = match remaining_timeout() {
+        Ok(remaining) => remaining,
+        Err(error) => return Err(terminate_and_reap(process_tree, child, error)),
+    };
+    match remaining {
+        Some(remaining) => match child.wait_timeout(remaining) {
+            Ok(Some(status)) => Ok(status),
+            Ok(None) => Err(terminate_and_reap(
+                process_tree,
+                child,
+                std::io::Error::new(
+                    std::io::ErrorKind::TimedOut,
+                    "no-mistakes command deadline elapsed while waiting for a child process",
+                ),
+            )),
+            Err(error) => Err(terminate_and_reap(process_tree, child, error)),
+        },
+        None => child
+            .wait()
+            .map_err(|error| terminate_and_reap(process_tree, child, error)),
+    }
+}
+
+fn terminate_and_reap(
+    process_tree: &ProcessTree,
+    child: &mut std::process::Child,
+    error: std::io::Error,
+) -> std::io::Error {
+    let cleanup_error = process_tree.terminate(child).err();
+    let _ = child.wait_timeout(CLEANUP_TIMEOUT);
+    match cleanup_error {
+        Some(cleanup_error) => std::io::Error::new(
+            error.kind(),
+            format!("{error}; terminating the child process tree failed: {cleanup_error}"),
+        ),
+        None => error,
+    }
 }
 
 fn read_chunks(mut pipe: impl Read, tx: SyncSender<std::io::Result<Vec<u8>>>) {
