@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 
 export const api = {
+  nested: {
+    load() {
+      return readFileSync('resources/exported-object-nested.txt', 'utf8');
+    },
+  },
   load() {
     function unused() {
       return readFileSync('resources/exported-object-unused.txt', 'utf8');

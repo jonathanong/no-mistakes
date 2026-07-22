@@ -128,6 +128,7 @@ pub(crate) fn collect_file_facts_from_program(
         symbol_references: import_facts.symbol_references,
         exported_functions: import_facts.exported_functions,
         exported_resource_roots: import_facts.exported_resource_roots,
+        exported_resource_scopes: import_facts.exported_resource_scopes,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols: symbols.as_deref().cloned(),

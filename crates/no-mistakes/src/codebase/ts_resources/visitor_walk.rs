@@ -31,6 +31,7 @@ impl<'a> ResourceVisitor<'a> {
     ) {
         self.push_function(name);
         self.shadow_parameters(&arrow.params);
+        self.predeclare_var_bindings_in_statements(&arrow.body.statements);
         walk::walk_arrow_function_expression(self, arrow);
         self.pop_function();
     }
@@ -161,6 +162,12 @@ impl<'a> ResourceVisitor<'a> {
             Expression::ArrowFunctionExpression(arrow) => {
                 walk::walk_property_key(self, &property.key);
                 self.visit_scoped_arrow(name, arrow);
+            }
+            Expression::ObjectExpression(_) if name.is_some() => {
+                walk::walk_property_key(self, &property.key);
+                self.push_function(name);
+                walk::walk_expression(self, &property.value);
+                self.pop_function();
             }
             _ => walk::walk_object_property(self, property),
         }

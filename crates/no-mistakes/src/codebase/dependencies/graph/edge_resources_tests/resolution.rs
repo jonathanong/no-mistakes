@@ -4,6 +4,24 @@ use crate::codebase::ts_resources::{
 };
 
 #[test]
+fn graph_files_keep_tracked_resources_from_source_skipped_directories() {
+    let source = fixture("resource-impact");
+    let materialized = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(materialized.path());
+    let skipped_resource = root.join("fixtures/schema.sql");
+    let files = GraphFiles::discover(&root);
+
+    assert!(
+        !files.all().contains(&skipped_resource),
+        "source discovery must not parse files below fixtures/"
+    );
+    assert!(
+        files.resource_candidates().contains(&skipped_resource),
+        "tracked runtime files below fixtures/ remain valid resource targets"
+    );
+}
+
+#[test]
 fn resource_edges_resolve_exact_directory_and_glob_with_sorted_provenance() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("resource-impact"));
     let consumer = root.join("consumer.ts");
@@ -120,4 +138,49 @@ fn resource_edges_exclude_untracked_candidates_and_unreachable_scopes() {
     assert!(edges.is_empty());
     assert!(details.is_empty());
     assert!(diagnostics.is_empty());
+}
+
+#[test]
+fn resource_edges_resolve_absolute_glob_patterns_inside_the_root() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("resource-impact"));
+    let consumer = root.join("glob-consumer.ts");
+    let page = root.join("resources/page.txt");
+    let facts = TsFactMap::from([(
+        consumer.clone(),
+        TsFileFacts {
+            resource_calls: vec![ResourceCall {
+                kind: ResourceCallKind::GlobSync,
+                path: ResourcePath {
+                    value: root.join("resources/*.txt").to_string_lossy().to_string(),
+                    base: ResourcePathBase::AnalysisRoot,
+                },
+                cwd: None,
+                line: 1,
+                function_scope: None,
+            }],
+            ..TsFileFacts::default()
+        },
+    )]);
+    let (edges, details, diagnostics) = collect_resource_edges(
+        &root,
+        std::slice::from_ref(&consumer),
+        &facts,
+        std::slice::from_ref(&page),
+    );
+    assert!(diagnostics.is_empty());
+    assert_eq!(
+        edges,
+        vec![(
+            NodeId::File(consumer.clone()),
+            NodeId::File(page.clone()),
+            EdgeKind::Resource,
+        )]
+    );
+    assert_eq!(
+        details.get(&(consumer, page)).unwrap(),
+        &[ResourceCallSite {
+            call_kind: "glob-sync".to_string(),
+            line: 1,
+        }]
+    );
 }

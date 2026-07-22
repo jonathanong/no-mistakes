@@ -65,6 +65,31 @@ fn symbol_mode_does_not_widen_exported_aggregate_resource_reachability() {
         .find(|call| call.function_scope.as_deref() == Some("api/load/unused"))
         .expect("fixture contains an uncalled nested helper resource");
     assert!(!resource_is_reachable(nested, file_facts, &reachable));
+
+    let nested_member = file_facts
+        .resource_calls
+        .iter()
+        .find(|call| call.function_scope.as_deref() == Some("api/nested/load"))
+        .expect("fixture contains a nested exported aggregate member resource");
+    assert!(resource_is_reachable(nested_member, file_facts, &reachable));
+
+    let nested_target = root.join("resources/exported-object-nested.txt");
+    let unused_target = root.join("resources/exported-object-unused.txt");
+    let (edges, _, diagnostics) = collect_resource_edges(
+        &root,
+        std::slice::from_ref(&consumer),
+        &facts,
+        &[nested_target.clone(), unused_target.clone()],
+    );
+    assert!(diagnostics.is_empty());
+    assert!(edges.contains(&(
+        NodeId::File(consumer.clone()),
+        NodeId::File(nested_target),
+        EdgeKind::Resource,
+    )));
+    assert!(!edges
+        .iter()
+        .any(|edge| matches!(&edge.1, NodeId::File(path) if path == &unused_target)));
 }
 
 #[test]

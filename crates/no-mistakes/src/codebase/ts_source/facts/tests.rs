@@ -440,6 +440,9 @@ fn exported_resource_roots_are_collected_only_for_resource_plans() {
     assert!(imports_and_symbols[&source]
         .exported_resource_roots
         .is_empty());
+    assert!(imports_and_symbols[&source]
+        .exported_resource_scopes
+        .is_empty());
 
     let resources = collect_ts_facts(
         std::slice::from_ref(&source),
@@ -454,6 +457,10 @@ fn exported_resource_roots_are_collected_only_for_resource_plans() {
         resources[&source].exported_resource_roots,
         ["NamedService", "Service", "api", "default", "eagerApi"]
     );
+    assert!(resources[&source]
+        .exported_resource_scopes
+        .iter()
+        .any(|scope| scope == "api/nested/load"));
 }
 
 #[test]

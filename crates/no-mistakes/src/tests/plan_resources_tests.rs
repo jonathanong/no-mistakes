@@ -71,6 +71,26 @@ fn literal_resource_change_selects_importing_test_with_provenance() {
 }
 
 #[test]
+fn tracked_resource_under_source_skipped_directory_selects_importing_test() {
+    let fixture = resource_fixture_root();
+    let root = fixture.path().canonicalize().unwrap();
+    let plan = generate_plan(&resource_plan_args(
+        &root,
+        root.join("fixtures/schema.sql"),
+    ))
+    .unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["skipped-resource-consumer.test.ts"]
+    );
+    assert_eq!(plan.selected_tests[0].reasons[0].via, ["resource", "dependency"]);
+}
+
+#[test]
 fn exported_member_resources_reach_the_importing_test_without_a_local_call() {
     let fixture = resource_fixture_root();
     let root = fixture.path().canonicalize().unwrap();

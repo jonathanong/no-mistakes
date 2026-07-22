@@ -1,10 +1,10 @@
+use super::assignment_targets::assignment_target_names;
 use super::ResourceVisitor;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, AssignmentExpression, AssignmentTarget, BlockStatement, CatchClause,
-    Class, ExportDefaultDeclaration, ForInStatement, ForOfStatement, ForStatement,
-    ForStatementInit, ForStatementLeft, Function, ImportDeclaration, MethodDefinition,
-    ObjectProperty, SwitchStatement, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    ArrowFunctionExpression, AssignmentExpression, BlockStatement, CatchClause, Class,
+    ExportDefaultDeclaration, ForInStatement, ForOfStatement, ForStatement, ForStatementInit,
+    ForStatementLeft, Function, ImportDeclaration, MethodDefinition, ObjectProperty,
+    SwitchStatement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 
@@ -125,8 +125,8 @@ impl<'a> Visit<'a> for ResourceVisitor<'a> {
     }
 
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
-        if let AssignmentTarget::AssignmentTargetIdentifier(identifier) = &assignment.left {
-            self.invalidate_binding(identifier.name.as_str());
+        for name in assignment_target_names(&assignment.left) {
+            self.invalidate_binding(&name);
         }
         walk::walk_assignment_expression(self, assignment);
     }

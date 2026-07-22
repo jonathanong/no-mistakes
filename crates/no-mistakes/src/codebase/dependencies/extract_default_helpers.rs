@@ -17,6 +17,7 @@ fn walk_default_expression<'a>(
     collector.record_exported_resource_root("default");
     if let Some(object) = default_object_expression(&export.declaration) {
         record_object_member_calls(collector, "default", object);
+        record_object_resource_scopes(collector, "default", object);
     }
     collector.push_function_scope(Some("default".to_string()));
     // Flag the runtime import in the callback directly forming the default value —

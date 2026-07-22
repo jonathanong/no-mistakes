@@ -55,6 +55,50 @@ fn resource_edges_keep_dynamic_diagnostics_but_never_invent_untracked_targets() 
 }
 
 #[test]
+fn resource_edges_keep_reachable_dynamic_diagnostics_without_literal_calls() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("resource-impact"));
+    let consumer = root.join("diagnostic-reachability.ts");
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&consumer),
+        TsFactPlan {
+            function_calls: true,
+            resources: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let file_facts = facts
+        .get(&consumer)
+        .expect("fixture source must produce TS facts");
+    assert!(file_facts.resource_calls.is_empty());
+    assert_eq!(
+        file_facts
+            .resource_diagnostics
+            .first()
+            .and_then(|diagnostic| diagnostic.function_scope.as_deref()),
+        Some("api/load")
+    );
+
+    let (edges, details, diagnostics) = collect_resource_edges(
+        &root,
+        std::slice::from_ref(&consumer),
+        &facts,
+        // No literal calls means this inventory must not be needed to preserve
+        // the reachable warning.
+        &[],
+    );
+    assert!(edges.is_empty());
+    assert!(details.is_empty());
+    assert_eq!(
+        diagnostics,
+        vec![ResourceGraphDiagnostic {
+            consumer,
+            kind: ResourceDiagnosticKind::DynamicPath,
+            line: 7,
+        }]
+    );
+}
+
+#[test]
 fn module_relative_resource_paths_resolve_against_the_consumer_directory() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("resource-impact"));
     let consumer = root.join("nested/consumer.ts");

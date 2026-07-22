@@ -77,12 +77,16 @@ fn glob_targets(candidates: &[PathBuf], cwd: &Path, pattern: &str) -> Vec<PathBu
         return Vec::new();
     };
     let matcher = glob.compile_matcher();
+    let matches_absolute_path = Path::new(pattern).is_absolute();
     candidates
         .iter()
         .filter(|candidate| {
-            candidate.strip_prefix(cwd).ok().is_some_and(|relative| {
-                matcher.is_match(relative.to_string_lossy().replace('\\', "/"))
-            })
+            let target = if matches_absolute_path {
+                Some(candidate.as_path())
+            } else {
+                candidate.strip_prefix(cwd).ok()
+            };
+            target.is_some_and(|path| matcher.is_match(path.to_string_lossy().replace('\\', "/")))
         })
         .cloned()
         .collect()
@@ -99,8 +103,7 @@ fn safe_resource_candidates(root: &Path, candidates: &[PathBuf]) -> Vec<PathBuf>
     let mut safe = candidates
         .par_iter()
         .filter(|candidate| {
-            std::fs::canonicalize(candidate)
-                .is_ok_and(|target| target.starts_with(&canonical_root))
+            std::fs::canonicalize(candidate).is_ok_and(|target| target.starts_with(&canonical_root))
         })
         .cloned()
         .collect::<Vec<_>>();

@@ -58,6 +58,7 @@ pub struct TsFileFacts {
     pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
     pub exported_resource_roots: Vec<String>,
+    pub exported_resource_scopes: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
     pub symbols: Option<FileSymbols>,

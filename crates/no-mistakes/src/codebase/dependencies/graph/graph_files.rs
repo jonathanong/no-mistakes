@@ -22,7 +22,11 @@ impl GraphFiles {
         );
         Self::from_files_with_resource_candidates(
             all.clone(),
-            snapshot.tracked_paths_from(&all),
+            // Resource candidates are deliberately derived before source
+            // discovery filters `fixtures`, `dist`, and similar directories.
+            // They are runtime inputs, not files to parse or resolve imports
+            // from, and remain subject to resource-target safety checks.
+            snapshot.tracked_paths_for(root).as_ref().clone(),
         )
     }
 
@@ -57,7 +61,6 @@ impl GraphFiles {
         all.sort();
         all.dedup();
         let visible: HashSet<PathBuf> = all.iter().cloned().collect();
-        resource_candidates.retain(|path| visible.contains(path));
         resource_candidates.sort();
         resource_candidates.dedup();
         let canonical_visible = all

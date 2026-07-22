@@ -175,7 +175,9 @@ impl PreparedTestPlanInputs {
         );
         let mut graph_files = GraphFiles::from_files_with_resource_candidates_excluding_indexable(
             graph_all_files.clone(),
-            visible_paths.tracked_paths_from(&graph_all_files),
+            // Preserve tracked runtime inputs under source-skipped directories
+            // such as `fixtures/`; they are resource targets, not parse roots.
+            visible_paths.tracked_paths_for(&root).as_ref().clone(),
             &excluded_configs,
         );
         for path in &collected.authoritative_files {

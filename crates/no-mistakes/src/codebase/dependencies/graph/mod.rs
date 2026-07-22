@@ -44,6 +44,7 @@ include!("lazy_import_symbols.rs");
 include!("lazy_import_neighbors.rs");
 include!("bfs.rs");
 include!("sort.rs");
+include!("edge_import_reachability_scopes.rs");
 include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
 include!("edge_route_imports.rs");

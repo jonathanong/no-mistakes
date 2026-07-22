@@ -3,6 +3,7 @@
 //! This intentionally consumes the already-parsed OXC program. It never
 //! evaluates JavaScript or loads a glob implementation.
 
+mod assignment_targets;
 mod bindings;
 mod bindings_calls;
 mod paths;

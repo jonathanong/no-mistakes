@@ -5,6 +5,7 @@ use std::path::Path;
 
 mod basic;
 mod coverage;
+mod review;
 mod semantics;
 
 fn facts(source: &str) -> ResourceFacts {

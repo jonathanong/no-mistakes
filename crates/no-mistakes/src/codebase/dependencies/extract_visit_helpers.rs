@@ -134,6 +134,7 @@ fn visit_variable_declarator_with_scope<'a>(
             if exported {
                 if let Some(name) = name.as_deref() {
                     collector.record_exported_resource_root(name);
+                    record_object_resource_scopes(collector, name, object);
                 }
                 visit_exported_variable_declarator_reference(collector, declarator, name);
             } else {
@@ -150,6 +151,7 @@ fn visit_variable_declarator_with_scope<'a>(
                 record_class_member_calls(collector, name, class);
                 if collector.is_exported_top_level_name(name) {
                     collector.record_exported_resource_root(name);
+                    record_class_resource_scopes(collector, name, class);
                 }
             }
             visit_exported_variable_declarator_reference(collector, declarator, name);

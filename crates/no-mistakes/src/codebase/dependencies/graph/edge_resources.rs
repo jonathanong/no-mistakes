@@ -1,4 +1,6 @@
-use crate::codebase::ts_resources::{ResourceCall, ResourceCallKind, ResourcePath, ResourcePathBase};
+use crate::codebase::ts_resources::{
+    ResourceCall, ResourceCallKind, ResourcePath, ResourcePathBase,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 enum ResourceResolutionKey {
@@ -23,8 +25,6 @@ fn collect_resource_edges(
     facts: &dyn TsFactLookup,
     resource_candidates: &[PathBuf],
 ) -> (Vec<Edge>, ResourceEdgeDetails, Vec<ResourceGraphDiagnostic>) {
-    let candidates = safe_resource_candidates(root, resource_candidates);
-    let candidate_set: HashSet<PathBuf> = candidates.iter().cloned().collect();
     // Parsing already happened when collecting TS facts.  Each consumer can be
     // filtered independently, so keep this collection parallel and sort below
     // before constructing the canonical graph output.
@@ -38,7 +38,9 @@ fn collect_resource_edges(
             let diagnostics = file_facts
                 .resource_diagnostics
                 .iter()
-                .filter(|diagnostic| resource_diagnostic_is_reachable(diagnostic, file_facts, &reachable))
+                .filter(|diagnostic| {
+                    resource_diagnostic_is_reachable(diagnostic, file_facts, &reachable)
+                })
                 .map(|diagnostic| ResourceGraphDiagnostic {
                     consumer: consumer.clone(),
                     kind: diagnostic.kind,
@@ -82,11 +84,24 @@ fn collect_resource_edges(
     calls.dedup_by(|left, right| {
         left.consumer == right.consumer && left.key == right.key && left.site == right.site
     });
+    diagnostics.sort();
+    diagnostics.dedup();
+    // Dynamic resource diagnostics do not need the tracked resource inventory.
+    // Avoid canonicalizing every tracked file when there are no literal calls to
+    // expand, which is the common case in projects that only use dynamic paths.
+    if calls.is_empty() {
+        return (Vec::new(), HashMap::new(), diagnostics);
+    }
+    let candidates = safe_resource_candidates(root, resource_candidates);
+    let candidate_set: HashSet<PathBuf> = candidates.iter().cloned().collect();
 
     // Expand each unique static resource once.  This is intentionally derived
     // from the prepared candidate list rather than walking the filesystem from
     // every call site, and independent matcher expansions run in parallel.
-    let mut unique_keys = calls.iter().map(|call| call.key.clone()).collect::<Vec<_>>();
+    let mut unique_keys = calls
+        .iter()
+        .map(|call| call.key.clone())
+        .collect::<Vec<_>>();
     unique_keys.sort();
     unique_keys.dedup();
     let expansion_cache: HashMap<ResourceResolutionKey, Vec<PathBuf>> = unique_keys
@@ -122,7 +137,5 @@ fn collect_resource_edges(
         (&left.0, &left.1, left.2 as u8).cmp(&(&right.0, &right.1, right.2 as u8))
     });
     edges.dedup();
-    diagnostics.sort();
-    diagnostics.dedup();
     (edges, details, diagnostics)
 }

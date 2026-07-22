@@ -72,6 +72,7 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
             record_class_member_calls(collector, name, class);
             if collector.is_exported_top_level_name(name) {
                 collector.record_exported_resource_root(name);
+                record_class_resource_scopes(collector, name, class);
             }
             collector.push_function_scope(Some(name.to_string()));
             if collector.export_depth > 0 {
@@ -125,6 +126,7 @@ fn visit_export_default_declaration_with_scope<'a>(
                 .map_or_else(|| "default".to_string(), |id| id.name.to_string());
             record_class_member_calls(collector, &scope, class);
             collector.record_exported_resource_root(&scope);
+            record_class_resource_scopes(collector, &scope, class);
             collector.push_function_scope(Some(scope.clone()));
             collector.exported_functions.insert(scope.clone());
             collector.callable_scopes.insert(scope);

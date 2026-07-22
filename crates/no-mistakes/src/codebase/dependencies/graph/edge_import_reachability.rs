@@ -66,10 +66,7 @@ fn has_reachable_unknown_call(
 ) -> bool {
     facts.unknown_callers.iter().any(|caller| match caller {
         None => true,
-        Some(caller) => {
-            reachable.contains(caller)
-                || exported_function_scope(facts, caller)
-        }
+        Some(caller) => reachable.contains(caller) || exported_function_scope(facts, caller),
     })
 }
 
@@ -77,10 +74,16 @@ fn exported_function_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     scope: &str,
 ) -> bool {
-    facts.exported_functions.iter().any(|exported| exported == scope)
+    facts
+        .exported_functions
+        .iter()
+        .any(|exported| exported == scope)
 }
 
-fn exported_symbol_scope(facts: &crate::codebase::ts_source::facts::TsFileFacts, scope: &str) -> bool {
+fn exported_symbol_scope(
+    facts: &crate::codebase::ts_source::facts::TsFileFacts,
+    scope: &str,
+) -> bool {
     facts.symbols.as_ref().is_some_and(|symbols| {
         symbols
             .exports
@@ -93,6 +96,13 @@ fn exported_resource_symbol_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     scope: &str,
 ) -> bool {
+    if facts
+        .exported_resource_scopes
+        .iter()
+        .any(|exported| exported == scope)
+    {
+        return true;
+    }
     for exported in &facts.exported_resource_roots {
         if scope == exported {
             return true;
@@ -146,24 +156,11 @@ fn reachable_function_scopes(
     reachable
 }
 
-fn known_function_scopes(facts: &crate::codebase::ts_source::facts::TsFileFacts) -> HashSet<String> {
-    let mut scopes: HashSet<String> = facts
-        .imports
-        .iter()
-        .filter_map(|import| import.function_scope.clone())
-        .collect();
-    scopes.extend(
-        facts
-            .resource_calls
-            .iter()
-            .filter_map(|call| call.function_scope.clone()),
-    );
-    scopes.extend(facts.exported_functions.iter().cloned());
-    scopes.extend(facts.function_calls.iter().filter_map(|call| call.caller.clone()));
-    scopes
-}
-
-fn resolve_callee_scope(caller: Option<&str>, callee: &str, known_scopes: &HashSet<String>) -> String {
+fn resolve_callee_scope(
+    caller: Option<&str>,
+    callee: &str,
+    known_scopes: &HashSet<String>,
+) -> String {
     if known_scopes.contains(callee) {
         return callee.to_string();
     }
