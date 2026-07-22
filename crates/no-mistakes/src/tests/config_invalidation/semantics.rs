@@ -39,10 +39,29 @@ fn framework_tests(config: &NoMistakesConfig, framework: TestFramework) -> serde
     match framework {
         TestFramework::Dotnet => serde_json::to_value(&config.tests.dotnet),
         TestFramework::Playwright => serde_json::to_value(&config.tests.playwright),
-        TestFramework::Vitest => serde_json::to_value(&config.tests.vitest),
+        // Vitest discovery reserves Playwright-owned paths before it applies
+        // fallback matching, so ownership config changes require a fresh plan.
+        TestFramework::Vitest => {
+            serde_json::to_value((&config.tests.vitest, playwright_discovery_ownership(config)))
+        }
         TestFramework::Swift => serde_json::to_value(&config.tests.swift),
     }
     .expect("test configuration must serialize")
+}
+
+fn playwright_discovery_ownership(config: &NoMistakesConfig) -> serde_json::Value {
+    serde_json::json!({
+        "configs": &config.tests.playwright.configs,
+        "projects": config.tests.playwright.projects.iter().filter(|(_, policy)| {
+            !policy.include.is_empty()
+        }).map(|(name, policy)| {
+            serde_json::json!({
+                "name": name,
+                "include": &policy.include,
+                "exclude": &policy.exclude,
+            })
+        }).collect::<Vec<_>>(),
+    })
 }
 
 fn framework_trigger_projects(

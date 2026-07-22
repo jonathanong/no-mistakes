@@ -20,6 +20,8 @@ fn revision_config_changes_invalidate_only_the_affected_framework() {
         ("format-only.yml", false, false),
         ("vitest-change.yml", true, false),
         ("playwright-change.yml", false, true),
+        ("playwright-ownership-change.yml", true, true),
+        ("playwright-inert-policy-change.yml", false, true),
         ("project-change.yml", true, false),
         ("graph-route-change.yml", true, true),
     ] {
