@@ -61,8 +61,17 @@ pub(crate) fn compare_changed_config(
         return Ok(None);
     };
 
+    let structured_diff_changes_config = diff_changes_config(args, root, &collected.diff_files);
+    if !manual_config_paths_are_reconstructed(args, root, collected) {
+        anyhow::bail!("manually listed configuration path has no matching structured diff endpoint")
+    }
+
     let mut comparisons = Vec::new();
-    if let Some(base) = args.base.as_deref() {
+    if let Some(base) = args
+        .base
+        .as_deref()
+        .filter(|_| paths_change_config(args, root, &collected.git_files))
+    {
         comparisons.push(parse_comparison(sources_from_git(
             root,
             base,
@@ -70,7 +79,7 @@ pub(crate) fn compare_changed_config(
             args.config.as_deref(),
         )?)?);
     }
-    if diff_changes_config(args, root, &collected.diff_files) {
+    if structured_diff_changes_config {
         comparisons.push(parse_comparison(sources_from_diff(
             root,
             args.config.as_deref(),
@@ -86,6 +95,37 @@ pub(crate) fn compare_changed_config(
     }))
 }
 
+fn paths_change_config(args: &PlanArgs, root: &Path, paths: &[PathBuf]) -> bool {
+    let candidates = config_candidates(args, root);
+    paths.iter().any(|path| {
+        candidates
+            .iter()
+            .any(|candidate| same_path(path, candidate))
+    })
+}
+
+fn manual_config_paths_are_reconstructed(
+    args: &PlanArgs,
+    root: &Path,
+    collected: &ChangedFiles,
+) -> bool {
+    let candidates = config_candidates(args, root);
+    collected
+        .manual_files
+        .iter()
+        .filter(|manual| {
+            candidates
+                .iter()
+                .any(|candidate| same_path(manual, candidate))
+        })
+        .all(|manual| {
+            collected
+                .diff_files
+                .iter()
+                .any(|diff| diff_mentions_path(diff, manual))
+        })
+}
+
 fn parse_comparison(
     (before, after): (Option<ConfigSource>, Option<ConfigSource>),
 ) -> Result<ConfigComparison> {
@@ -98,14 +138,18 @@ fn parse_comparison(
 fn diff_changes_config(args: &PlanArgs, root: &Path, diff_files: &[DiffFile]) -> bool {
     let candidates = config_candidates(args, root);
     diff_files.iter().any(|diff| {
-        candidates.iter().any(|candidate| {
-            same_path(&diff.path, candidate)
-                || diff
-                    .old_path
-                    .as_ref()
-                    .is_some_and(|old| same_path(old, candidate))
-        })
+        candidates
+            .iter()
+            .any(|candidate| diff_mentions_path(diff, candidate))
     })
+}
+
+fn diff_mentions_path(diff: &DiffFile, path: &Path) -> bool {
+    same_path(&diff.path, path)
+        || diff
+            .old_path
+            .as_ref()
+            .is_some_and(|old| same_path(old, path))
 }
 
 fn config_candidates(args: &PlanArgs, root: &Path) -> Vec<PathBuf> {
