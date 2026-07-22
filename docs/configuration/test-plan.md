@@ -44,24 +44,28 @@ testPlan:
 `targets` are Vitest or Playwright runner project names, not top-level
 `.no-mistakes.yml` project names. Every target must resolve to exactly one
 discovered project for the selected framework. Unknown and ambiguous names are
-configuration errors and include the config path in the diagnostic. A matched
-target-scoped trigger reports reason `configured-trigger` and does not set
+configuration errors and include the config path in the diagnostic. Target
+names use exact matching and each `targets` list must not repeat an exact name.
+A matched target-scoped trigger reports reason `configured-trigger` and does not set
 `fallback_triggered`. Environment include/exclude filters and limits are
 applied after target expansion.
 
 Legacy boolean and path-list forms remain broad full-suite fallbacks:
 
 ```yaml
-projects:
-  shared: true
-  generated:
-    - generated/**
-    - "!generated/fixtures/**"
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        shared: true
+        generated:
+          - generated/**
+          - "!generated/fixtures/**"
 ```
 
-Path lists in both forms use ordered gitignore-style matching: a later `!`
-pattern excludes an earlier match, and a still-later positive pattern can
-include it again.
+Legacy path lists and target-scoped `paths` use ordered gitignore-style
+matching: a later `!` pattern excludes an earlier match, and a still-later
+positive pattern can include it again.
 
 Changes to `.no-mistakes.yml` or `.no-mistakes.yaml` invalidate only frameworks
 whose effective `testPlan` or `tests` configuration changed. Formatting-only

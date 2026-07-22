@@ -4,10 +4,10 @@ use no_mistakes::codebase::test_discovery::{discover_tests, TestRunner};
 
 #[test]
 fn post_loop_seed_merges_into_used_targeted_test_at_zero_budget() {
-    let root = no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/test-plan/target-scoped-triggers"),
-    );
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/target-scoped-triggers");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(fixture.path());
     let config = no_mistakes::config::v2::load_v2_config(&root, None).unwrap();
     let discovered = discover_tests(&root, &config, TestRunner::Vitest).unwrap();
     let test_path = root.join("src/shared.test.ts");

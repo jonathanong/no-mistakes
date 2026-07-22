@@ -46,12 +46,13 @@ pub(super) fn dependency_triggers(
             continue;
         };
         let patterns = project_dependency_patterns(project_name, project, trigger);
+        let compiled_patterns = compile_ordered_patterns(&patterns)?;
         for changed in changed_files {
             if ignored_sets.iter().any(|set| set.contains(changed)) {
                 continue;
             }
             let rel = relative_path(root, changed);
-            if !matches_ordered(&patterns, &rel)? {
+            if !matches_ordered(&compiled_patterns, &rel) {
                 continue;
             }
             match trigger {
@@ -209,20 +210,36 @@ pub(super) fn project_dependency_patterns(
     }
 }
 
+pub(super) struct OrderedPattern {
+    negated: bool,
+    matcher: GlobMatcher,
+}
+
+pub(super) fn compile_ordered_patterns(patterns: &[String]) -> Result<Vec<OrderedPattern>> {
+    patterns
+        .iter()
+        .map(|pattern| {
+            let (negated, pattern) = pattern
+                .strip_prefix('!')
+                .map_or((false, pattern.as_str()), |pattern| (true, pattern));
+            let matcher = GlobBuilder::new(pattern)
+                .literal_separator(false)
+                .build()?
+                .compile_matcher();
+            Ok(OrderedPattern { negated, matcher })
+        })
+        .collect()
+}
+
 /// Apply every matching entry in order; the final matching entry decides.
-pub(super) fn matches_ordered(patterns: &[String], path: &str) -> Result<bool> {
+pub(super) fn matches_ordered(patterns: &[OrderedPattern], path: &str) -> bool {
     let mut matched = false;
     for pattern in patterns {
-        let (negated, pattern) = pattern
-            .strip_prefix('!')
-            .map_or((false, pattern.as_str()), |pattern| (true, pattern));
-        let glob = GlobBuilder::new(pattern).literal_separator(false).build()?;
-        let matcher: GlobMatcher = glob.compile_matcher();
-        if matcher.is_match(path) {
-            matched = !negated;
+        if pattern.matcher.is_match(path) {
+            matched = !pattern.negated;
         }
     }
-    Ok(matched)
+    matched
 }
 
 fn project_root_patterns(project_root: &str) -> Vec<String> {

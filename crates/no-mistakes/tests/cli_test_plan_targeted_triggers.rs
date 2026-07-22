@@ -381,6 +381,10 @@ fn structured_trigger_config_rejects_empty_and_invalid_target_fields() {
             "invalid-target-blank-target.yml",
             "targets[0] must not be blank",
         ),
+        (
+            "invalid-target-duplicate.yml",
+            "targets[1] duplicates targets[0] `database`",
+        ),
         ("invalid-target-glob.yml", "contains invalid glob"),
     ] {
         let fixture = fixture();

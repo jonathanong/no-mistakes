@@ -87,8 +87,16 @@ fn dependency_patterns_use_ordered_negation_and_reinclusion() {
         patterns,
         vec!["src/**/*.ts", "!src/generated/**", "src/generated/keep.ts"]
     );
-    assert!(super::dep_triggers::matches_ordered(&patterns, "src/generated/keep.ts").unwrap());
-    assert!(!super::dep_triggers::matches_ordered(&patterns, "src/generated/drop.ts").unwrap());
+    let patterns = super::dep_triggers::compile_ordered_patterns(&patterns).unwrap();
+    assert!(super::dep_triggers::matches_ordered(
+        &patterns,
+        "src/generated/keep.ts"
+    ));
+    assert!(!super::dep_triggers::matches_ordered(
+        &patterns,
+        "src/generated/drop.ts"
+    ));
+    assert!(super::dep_triggers::compile_ordered_patterns(&["[".to_string()]).is_err());
 }
 
 #[test]

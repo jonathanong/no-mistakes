@@ -3,12 +3,14 @@ use globset::GlobBuilder;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::schema::{NoMistakesConfig, TestPlanProjectDependency};
+use super::schema::NoMistakesConfig;
 use crate::config::{
     find_automatic_config_path, find_automatic_config_path_from_visible, parse_config, resolve,
 };
 
 const V2_STEMS: &[&str] = &[".no-mistakes"];
+
+mod targeted_triggers;
 
 /// Load the unified `.no-mistakes.yml` (or a recognized legacy config) from
 /// `root`, returning a [`NoMistakesConfig`].
@@ -131,48 +133,7 @@ fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         validate_globs(&rule.include, &format!("rules[{index}].include"))?;
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
-    for (framework, plan) in [
-        ("dotnet", &config.test_plan.dotnet),
-        ("playwright", &config.test_plan.playwright),
-        ("vitest", &config.test_plan.vitest),
-        ("swift", &config.test_plan.swift),
-    ] {
-        for (project, dependency) in &plan.full_suite_triggers.projects {
-            let TestPlanProjectDependency::Targeted(targeted) = dependency else {
-                continue;
-            };
-            let base = format!(
-                "{}.testPlan.{framework}.fullSuiteTriggers.projects.{project}",
-                path.display()
-            );
-            if targeted.paths.is_empty() {
-                anyhow::bail!("{base}.paths must not be empty");
-            }
-            if targeted.targets.is_empty() {
-                anyhow::bail!("{base}.targets must not be empty");
-            }
-            for (index, pattern) in targeted.paths.iter().enumerate() {
-                let normalized = pattern.trim();
-                let normalized = normalized.strip_prefix('!').unwrap_or(normalized).trim();
-                if normalized.is_empty() {
-                    anyhow::bail!("{base}.paths[{index}] must not be blank");
-                }
-                GlobBuilder::new(normalized.trim_start_matches("./"))
-                    .literal_separator(false)
-                    .build()
-                    .map_err(|err| {
-                        anyhow::anyhow!(
-                            "{base}.paths[{index}] contains invalid glob `{pattern}`: {err}"
-                        )
-                    })?;
-            }
-            for (index, target) in targeted.targets.iter().enumerate() {
-                if target.trim().is_empty() {
-                    anyhow::bail!("{base}.targets[{index}] must not be blank");
-                }
-            }
-        }
-    }
+    targeted_triggers::validate(config, path)?;
     validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())
 }
