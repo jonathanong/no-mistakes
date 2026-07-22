@@ -463,3 +463,88 @@ fn shallow_clone_missing_the_merge_base_reports_shallow_history_and_is_nonzero()
     );
     assert!(stdout(&output).trim().is_empty());
 }
+
+/// Three `.no-mistakes.yml` revisions: the initial fixture content, a `base`
+/// commit, and a `head` commit, ending with the working tree detached at the
+/// *pre-base* commit — matching neither `--base` nor `--head`'s config
+/// content, like a CI runner checked out at a synthetic merge commit.
+fn detached_config_change_repo() -> (tempfile::TempDir, String, String) {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    copy_dir_all(&fixture_dir("hunks/initial"), root);
+    setup_git_repo(root);
+    let root_sha = stdout(&git(&["rev-parse", "HEAD"], root))
+        .trim()
+        .to_string();
+
+    std::fs::copy(
+        fixture_dir("hunks/config-base.yml"),
+        root.join(".no-mistakes.yml"),
+    )
+    .unwrap();
+    git_commit_all(root, "config-base");
+    let base_sha = stdout(&git(&["rev-parse", "HEAD"], root))
+        .trim()
+        .to_string();
+
+    std::fs::copy(
+        fixture_dir("hunks/config-head.yml"),
+        root.join(".no-mistakes.yml"),
+    )
+    .unwrap();
+    git_commit_all(root, "config-head");
+    let head_sha = stdout(&git(&["rev-parse", "HEAD"], root))
+        .trim()
+        .to_string();
+
+    let checkout = git(&["checkout", "-q", &root_sha], root);
+    assert!(checkout.status.success());
+
+    (dir, base_sha, head_sha)
+}
+
+// Regression for a review finding on #587: automatic base/head streaming
+// populates `diff_files`, which used to make `compare_changed_config` also
+// run the diff-side hunk reconstruction (`sources_from_diff`) meant for
+// explicit `--diff*` inputs. That path reads whatever `.no-mistakes.yml` is
+// physically on disk and reconstructs the other side by applying hunks to
+// it, which fails whenever the checkout is not exactly the base or head
+// endpoint — even though `sources_from_git` (`git show <ref>:<path>`) already
+// gives a checkout-independent comparison for the automatic path. The
+// `sources_from_diff` failure is `?`-propagated out of `compare_changed_config`
+// entirely, discarding the already-successful `sources_from_git` comparison;
+// its caller (`framework_config_trigger`) then treats any error as "we could
+// not read both revisions" and conservatively force-triggers the global
+// config fallback for *every* framework, even one the config change never
+// touched. The fixture config change here is Playwright-only
+// (`testPlan.playwright.fullSuiteTriggers`), so a correct, precise comparison
+// must leave a Vitest plan's `fallback_triggered` false.
+#[test]
+fn base_head_config_change_succeeds_when_checkout_matches_neither_endpoint() {
+    let (dir, base_sha, head_sha) = detached_config_change_repo();
+    let root = dir.path();
+
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "vitest",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            &base_sha,
+            "--head",
+            &head_sha,
+            "--global-config-fallback",
+            "true",
+            "--json",
+        ])
+        .output()
+        .unwrap();
+    let plan = plan_json(&output);
+    assert_eq!(
+        plan["fallback_triggered"], false,
+        "a Playwright-only config change must not force a Vitest full-suite \
+         fallback, even when the checkout matches neither --base nor --head: {plan:?}"
+    );
+}

@@ -61,7 +61,22 @@ pub(crate) fn compare_changed_config(
         return Ok(None);
     };
 
-    let structured_diff_changes_config = diff_changes_config(args, root, &collected.diff_files);
+    // Base/head streaming populates `diff_files` too (see
+    // `changed_files::collect_changed_files`), but reconstructing config
+    // sources from those hunks assumes the on-disk checkout is exactly one
+    // diff endpoint. That is guaranteed for an explicit `--diff*` input, and
+    // deliberately checked for a manually listed config path (below, and via
+    // `manual_config_paths_are_reconstructed`) so a `--changed-file` claim
+    // that has since diverged from the checkout still fails open. Neither
+    // guarantee holds for a config path that only appears via automatic
+    // base/head streaming with no manual claim on it — that path already has
+    // a checkout-independent comparison via `sources_from_git` below, so
+    // forcing diff-side reconstruction there only adds a needless failure
+    // mode (checkout at neither endpoint, or a hunkless change) that would
+    // discard a comparison that already succeeded.
+    let structured_diff_changes_config = (super::changed_files::has_explicit_diff_source(args)
+        || paths_change_config(args, root, &collected.manual_files))
+        && diff_changes_config(args, root, &collected.diff_files);
     if !manual_config_paths_are_reconstructed(args, root, collected) {
         anyhow::bail!("manually listed configuration path has no matching structured diff endpoint")
     }
