@@ -19,9 +19,18 @@ impl<'a> ResourceVisitor<'a> {
         let Argument::NewExpression(new) = arg else {
             return None;
         };
-        (!self.is_shadowed("URL"))
-            .then(|| static_new_module_url(new))
-            .flatten()
+        self.static_new_module_url(new)
+    }
+
+    fn static_new_module_url(&self, new: &oxc_ast::ast::NewExpression<'_>) -> Option<ResourcePath> {
+        let Expression::Identifier(callee) = &new.callee else {
+            return None;
+        };
+        let name = callee.name.as_str();
+        (!self.is_shadowed(name)
+            && (name == "URL" || matches!(self.binding(name), Some(Binding::UrlConstructor))))
+        .then(|| static_new_module_url(new))
+        .flatten()
     }
 
     fn static_file_url_to_path(&self, arg: &Argument<'_>) -> Option<ResourcePath> {
@@ -80,9 +89,7 @@ impl<'a> ResourceVisitor<'a> {
                     base: ResourcePathBase::AnalysisRoot,
                 })
             }
-            Expression::NewExpression(new) if !self.is_shadowed("URL") => {
-                static_new_module_url(new)
-            }
+            Expression::NewExpression(new) => self.static_new_module_url(new),
             Expression::CallExpression(call) => self.static_file_url_call(call),
             Expression::StaticMemberExpression(member)
                 if member.property.name == "dirname"

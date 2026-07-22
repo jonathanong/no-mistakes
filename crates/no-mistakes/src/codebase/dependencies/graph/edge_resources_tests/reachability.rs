@@ -1,6 +1,45 @@
 use super::*;
 
 #[test]
+fn eager_aggregate_initializers_create_edges_while_callable_members_stay_pruned() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("resource-impact"));
+    let consumer = root.join("eager-aggregate-consumer.ts");
+    let eager_object = root.join("resources/eager-object.txt");
+    let eager_static = root.join("resources/eager-static-field.txt");
+    let deferred = root.join("resources/eager-deferred-method.txt");
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&consumer),
+        TsFactPlan {
+            function_calls: true,
+            resources: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let candidates = vec![
+        consumer.clone(),
+        eager_object.clone(),
+        eager_static.clone(),
+        deferred.clone(),
+    ];
+    let (edges, _, diagnostics) =
+        collect_resource_edges(&root, std::slice::from_ref(&consumer), &facts, &candidates);
+
+    assert!(diagnostics.is_empty());
+    for eager in [eager_object, eager_static] {
+        assert!(edges.contains(&(
+            NodeId::File(consumer.clone()),
+            NodeId::File(eager),
+            EdgeKind::Resource,
+        )));
+    }
+    assert!(!edges.contains(&(
+        NodeId::File(consumer),
+        NodeId::File(deferred),
+        EdgeKind::Resource,
+    )));
+}
+
+#[test]
 fn resource_reachability_keeps_exported_member_scopes_and_resolves_top_level_dots() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("resource-impact"));
     let consumer = root.join("extractor-final-semantics.ts");

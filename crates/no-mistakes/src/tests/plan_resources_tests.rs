@@ -1,7 +1,6 @@
 fn resource_fixture_root() -> tempfile::TempDir {
     let source = no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/test-plan/resource-impact"),
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/test-plan/resource-impact"),
     );
     crate::test_support::materialize_saved_fixture(&source)
 }
@@ -37,11 +36,7 @@ fn resource_plan_args(root: &Path, changed: PathBuf) -> PlanArgs {
 fn literal_resource_change_selects_importing_test_with_provenance() {
     let fixture = resource_fixture_root();
     let root = fixture.path().canonicalize().unwrap();
-    let plan = generate_plan(&resource_plan_args(
-        &root,
-        root.join("resources/page.txt"),
-    ))
-    .unwrap();
+    let plan = generate_plan(&resource_plan_args(&root, root.join("resources/page.txt"))).unwrap();
 
     assert_eq!(
         plan.selected_tests
@@ -71,14 +66,35 @@ fn literal_resource_change_selects_importing_test_with_provenance() {
 }
 
 #[test]
+fn require_promises_alias_and_named_url_resources_select_the_importing_test() {
+    let fixture = resource_fixture_root();
+    let root = fixture.path().canonicalize().unwrap();
+    for changed in [
+        "resources/require-promises-alias.txt",
+        "resources/named-url.txt",
+        "resources/named-file-url.txt",
+    ] {
+        let plan = generate_plan(&resource_plan_args(&root, root.join(changed))).unwrap();
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            ["binding-regressions-consumer.test.ts"],
+            "{changed} must resolve through its static resource binding"
+        );
+        assert_eq!(
+            plan.selected_tests[0].reasons[0].via,
+            ["resource", "dependency"]
+        );
+    }
+}
+
+#[test]
 fn tracked_resource_under_source_skipped_directory_selects_importing_test() {
     let fixture = resource_fixture_root();
     let root = fixture.path().canonicalize().unwrap();
-    let plan = generate_plan(&resource_plan_args(
-        &root,
-        root.join("fixtures/schema.sql"),
-    ))
-    .unwrap();
+    let plan = generate_plan(&resource_plan_args(&root, root.join("fixtures/schema.sql"))).unwrap();
 
     assert_eq!(
         plan.selected_tests
@@ -87,7 +103,10 @@ fn tracked_resource_under_source_skipped_directory_selects_importing_test() {
             .collect::<Vec<_>>(),
         ["skipped-resource-consumer.test.ts"]
     );
-    assert_eq!(plan.selected_tests[0].reasons[0].via, ["resource", "dependency"]);
+    assert_eq!(
+        plan.selected_tests[0].reasons[0].via,
+        ["resource", "dependency"]
+    );
 }
 
 #[test]
@@ -267,6 +286,63 @@ fn module_relative_file_url_resources_select_their_consumer() {
         ["url-consumer.test.ts"]
     );
     assert_eq!(plan.selected_tests[0].reasons[0].via[0], "resource");
+}
+
+#[test]
+fn module_relative_file_url_globs_match_only_beside_the_consumer() {
+    let fixture = resource_fixture_root();
+    let root = fixture.path().canonicalize().unwrap();
+    for (changed, expected) in [
+        (
+            "nested-glob/fixtures/module-glob.txt",
+            vec!["nested-glob/module-glob-consumer.test.ts"],
+        ),
+        ("fixtures/module-glob.txt", Vec::new()),
+    ] {
+        let plan = generate_plan(&resource_plan_args(&root, root.join(changed))).unwrap();
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            expected,
+            "{changed} must use the consumer module as the URL glob base"
+        );
+    }
+}
+
+#[test]
+fn deleted_tracked_resource_still_selects_its_consumer() {
+    let fixture = resource_fixture_root();
+    let root = fixture.path().canonicalize().unwrap();
+    crate::test_support::git_init(&root);
+    crate::test_support::git_commit_all(&root, "baseline");
+    std::fs::remove_file(root.join("fixtures/schema.sql")).unwrap();
+    std::fs::remove_file(root.join("fixtures/module-glob.txt")).unwrap();
+    std::fs::remove_dir(root.join("fixtures")).unwrap();
+    crate::test_support::git_commit_all(&root, "delete resource");
+
+    let mut args = resource_plan_args(&root, root.join("fixtures/schema.sql"));
+    args.changed_file.clear();
+    args.base = Some("HEAD~1".to_string());
+    args.head = Some("HEAD".to_string());
+    let plan = generate_plan(&args).unwrap();
+
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["skipped-resource-consumer.test.ts"]
+    );
+    assert_eq!(
+        plan.selected_tests[0].reasons[0].changed_file,
+        "fixtures/schema.sql"
+    );
+    assert!(plan
+        .warnings
+        .iter()
+        .any(|warning| warning.r#type == "deleted-file" && warning.file == "fixtures/schema.sql"));
 }
 
 #[test]

@@ -10,6 +10,7 @@ pub(super) enum Binding {
     GlobNamespace,
     GlobMethod(ResourceCallKind),
     UrlNamespace,
+    UrlConstructor,
     FileUrlToPath,
 }
 
@@ -31,6 +32,7 @@ pub(super) fn import_binding(module: &str, imported: &str) -> Option<Binding> {
         },
         "url" | "node:url" => match imported {
             "default" | "*" => Some(Binding::UrlNamespace),
+            "URL" => Some(Binding::UrlConstructor),
             "fileURLToPath" => Some(Binding::FileUrlToPath),
             _ => None,
         },
@@ -115,7 +117,7 @@ pub(super) fn require_member_binding(expr: &Expression<'_>) -> Option<Binding> {
         return None;
     };
     import_binding(
-        require_module(&member.object)?,
+        require_module_or_promises(&member.object)?,
         member.property.name.as_str(),
     )
 }

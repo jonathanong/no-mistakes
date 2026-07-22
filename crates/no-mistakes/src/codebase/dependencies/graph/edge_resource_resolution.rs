@@ -16,10 +16,13 @@ fn resource_resolution_key(
                 .as_ref()
                 .map(|cwd| resolve_resource_path(root, consumer, cwd))
                 .unwrap_or_else(|| root.to_path_buf());
-            ResourceResolutionKey::Glob {
-                cwd,
-                pattern: normalize_glob_pattern(&call.path.value),
-            }
+            let pattern = match call.path.base {
+                ResourcePathBase::AnalysisRoot => normalize_glob_pattern(&call.path.value),
+                ResourcePathBase::SourceModule => resolve_resource_path(root, consumer, &call.path)
+                    .to_string_lossy()
+                    .replace('\\', "/"),
+            };
+            ResourceResolutionKey::Glob { cwd, pattern }
         }
     }
 }
@@ -94,8 +97,9 @@ fn glob_targets(candidates: &[PathBuf], cwd: &Path, pattern: &str) -> Vec<PathBu
 
 /// Preserve the lexical path stored in the graph, but never permit a tracked
 /// path that resolves through a symlink outside the analysis root to become a
-/// resource target. Canonicalizing every candidate also covers descendants of
-/// a directory symlink; this bounded validation runs once per inventory.
+/// resource target. Deleted tracked paths have no canonical target, so their
+/// nearest existing ancestor establishes containment for the phantom node.
+/// This bounded validation runs once per inventory.
 fn safe_resource_candidates(root: &Path, candidates: &[PathBuf]) -> Vec<PathBuf> {
     let Some(canonical_root) = std::fs::canonicalize(root).ok() else {
         return Vec::new();
@@ -103,7 +107,15 @@ fn safe_resource_candidates(root: &Path, candidates: &[PathBuf]) -> Vec<PathBuf>
     let mut safe = candidates
         .par_iter()
         .filter(|candidate| {
-            std::fs::canonicalize(candidate).is_ok_and(|target| target.starts_with(&canonical_root))
+            std::fs::canonicalize(candidate)
+                .ok()
+                .or_else(|| {
+                    candidate
+                        .ancestors()
+                        .skip(1)
+                        .find_map(|ancestor| std::fs::canonicalize(ancestor).ok())
+                })
+                .is_some_and(|target| target.starts_with(&canonical_root))
         })
         .cloned()
         .collect::<Vec<_>>();

@@ -23,10 +23,7 @@ pub(super) fn static_string(arg: &Argument<'_>) -> Option<String> {
 }
 
 pub(super) fn static_new_module_url(new: &NewExpression<'_>) -> Option<ResourcePath> {
-    let Expression::Identifier(callee) = &new.callee else {
-        return None;
-    };
-    if callee.name != "URL" || new.arguments.len() != 2 || !is_import_meta_url(&new.arguments[1]) {
+    if new.arguments.len() != 2 || !is_import_meta_url(&new.arguments[1]) {
         return None;
     }
     static_string(&new.arguments[0])

@@ -38,6 +38,23 @@ impl<'a> ResourceVisitor<'a> {
         self.function_binding_scopes.pop();
     }
 
+    pub(super) fn push_aggregate(&mut self, name: String) {
+        self.aggregate_stack.push(name);
+    }
+
+    pub(super) fn pop_aggregate(&mut self) {
+        self.aggregate_stack.pop();
+    }
+
+    pub(super) fn aggregate_member_scope(&self, name: Option<String>) -> Option<String> {
+        let name = name?;
+        if self.function_stack.is_empty() && !self.aggregate_stack.is_empty() {
+            Some(format!("{}/{name}", self.aggregate_stack.join("/")))
+        } else {
+            Some(name)
+        }
+    }
+
     pub(super) fn push_lexical_scope(&mut self) {
         self.bindings.push(Default::default());
     }

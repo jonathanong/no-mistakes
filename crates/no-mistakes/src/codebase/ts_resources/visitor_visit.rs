@@ -4,7 +4,8 @@ use oxc_ast::ast::{
     ArrowFunctionExpression, AssignmentExpression, BlockStatement, CatchClause, Class,
     ExportDefaultDeclaration, ForInStatement, ForOfStatement, ForStatement, ForStatementInit,
     ForStatementLeft, Function, ImportDeclaration, MethodDefinition, ObjectProperty,
-    SwitchStatement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+    PropertyDefinition, SwitchStatement, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 
@@ -52,8 +53,16 @@ impl<'a> Visit<'a> for ResourceVisitor<'a> {
         self.visit_object_property_impl(property);
     }
 
+    fn visit_property_definition(&mut self, property: &PropertyDefinition<'a>) {
+        self.visit_property_definition_impl(property);
+    }
+
     fn visit_class(&mut self, class: &Class<'a>) {
-        if let Some(id) = class.id.as_ref().filter(|_| self.function_stack.is_empty()) {
+        if let Some(id) = class
+            .id
+            .as_ref()
+            .filter(|_| self.function_stack.is_empty() && self.aggregate_stack.is_empty())
+        {
             self.visit_default_class(id.name.to_string(), class);
         } else {
             walk::walk_class(self, class);

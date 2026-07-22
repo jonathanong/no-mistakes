@@ -33,3 +33,29 @@ export const api = {
     },
   },
 };
+
+// Data-property and static-field initializers execute eagerly when this module
+// loads, even though their containing aggregates are private.
+const privateCache = {
+  schema: activeRead("eager-object.txt"),
+  nested: {
+    schema: activeRead("eager-nested-object.txt"),
+  },
+};
+
+class PrivateCache {
+  static schema = activeRead("eager-static-field.txt");
+  instanceSchema = activeRead("deferred-instance-field.txt");
+
+  load() {
+    return activeRead("deferred-class-method.txt");
+  }
+
+  static loadLater = () => activeRead("deferred-static-arrow.txt");
+  static loadFunction = function () {
+    return activeRead("deferred-static-function.txt");
+  };
+}
+
+void privateCache;
+void PrivateCache;

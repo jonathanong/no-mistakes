@@ -8,6 +8,7 @@ mod bindings;
 mod bindings_calls;
 mod paths;
 mod visitor;
+mod visitor_aggregates;
 mod visitor_bindings;
 mod visitor_calls;
 mod visitor_paths;

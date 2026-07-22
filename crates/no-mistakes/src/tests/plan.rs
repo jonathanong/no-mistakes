@@ -576,4 +576,6 @@ fn discover_all_tests_from_prepared(
 include!("plan_bfs.rs");
 #[cfg(test)]
 include!("plan_resources_tests.rs");
+#[cfg(test)]
+include!("plan_resource_aggregate_tests.rs");
 include!("plan_resource_details.rs");

@@ -13,6 +13,10 @@ pub(super) struct ResourceVisitor<'a> {
     /// in the closest of these, whereas `let` and `const` live in the current
     /// lexical scope.
     pub(super) function_binding_scopes: Vec<usize>,
+    /// Structural names for top-level object/class aggregates. These qualify
+    /// callable members without making eager property initializers look like
+    /// deferred function bodies.
+    pub(super) aggregate_stack: Vec<String>,
     pub(super) anonymous_scopes: usize,
     pub(super) facts: ResourceFacts,
 }
@@ -24,6 +28,7 @@ impl Default for ResourceVisitor<'_> {
             bindings: vec![HashMap::new()],
             function_stack: Vec::new(),
             function_binding_scopes: Vec::new(),
+            aggregate_stack: Vec::new(),
             anonymous_scopes: 0,
             facts: ResourceFacts::default(),
         }
