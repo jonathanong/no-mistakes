@@ -28,7 +28,9 @@ use finalize::{
     empty_group_result, select_limited_group_candidates, sorted_selected_tests, sorted_warnings,
 };
 use hints::build_coverage_hints_from_prepared;
-use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
+use lockfile_seeds::{
+    apply_lockfile_seeds, lockfile_seed_candidates, merge_lockfile_seed_candidates,
+};
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
 use targeted_triggers::{
     merge_targeted_candidates, targeted_dependency_candidates, TargetedOverlapRecovery,
@@ -240,13 +242,13 @@ pub(crate) fn generate_configured_plan_with_prepared(
             );
             if let Some(ref seed_result) = lockfile_seed_result {
                 lockfile_seeds_injected = true;
-                let in_candidates: HashSet<String> =
-                    candidates.iter().map(|c| c.test_file.clone()).collect();
-                for seed in &seed_result.candidates {
-                    if !used.contains(&seed.test_file) && !in_candidates.contains(&seed.test_file) {
-                        candidates.push(seed.clone());
-                    }
-                }
+                merge_lockfile_seed_candidates(
+                    root,
+                    &seed_result.candidates,
+                    &mut candidates,
+                    &used,
+                    &mut selected_map,
+                );
             }
         }
         let group_limit = group

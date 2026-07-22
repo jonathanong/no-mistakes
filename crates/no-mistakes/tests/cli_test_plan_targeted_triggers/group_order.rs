@@ -67,3 +67,54 @@ fn zero_budget_dependencies_merges_targeted_reason_into_direct_selection() {
     ));
     assert_shared_has_all_owners_and_reasons(&report);
 }
+
+#[test]
+fn lockfile_seed_merges_with_targeted_shared_test() {
+    let fixture = fixture();
+    git_init(fixture.path());
+    std::fs::copy(
+        fixture.path().join("lockfiles/after-pnpm-lock.yaml"),
+        fixture.path().join("pnpm-lock.yaml"),
+    )
+    .unwrap();
+    let report = json(&plan(
+        fixture.path(),
+        "vitest",
+        &[
+            "--changed-file",
+            "migrations/001.sql",
+            "--changed-file",
+            "pnpm-lock.yaml",
+            "--base",
+            "HEAD",
+            "--environment",
+            "shared",
+            "--json",
+        ],
+    ));
+    let shared = report["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|test| test["test_file"] == "src/shared.test.ts")
+        .unwrap();
+    assert_eq!(
+        shared["targets"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|target| target["project"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["database", "web"]
+    );
+    assert!(shared["reasons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|reason| reason["changed_file"] == "pnpm-lock.yaml"));
+    assert!(shared["reasons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|reason| reason["via"] == serde_json::json!(["configured-trigger"])));
+}
