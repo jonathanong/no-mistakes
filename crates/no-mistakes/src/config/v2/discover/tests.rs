@@ -1,6 +1,6 @@
 use super::{validate_playwright_selector_wrappers, validate_v2_config};
 use crate::config::v2::schema::{
-    NoMistakesConfig, PlaywrightSelectorWrapper, TestPlanProjectDependency,
+    NoMistakesConfig, PlaywrightSelectorWrapper, Project, RuleDef, TestPlanProjectDependency,
     TestPlanTargetedProjectDependency,
 };
 use std::path::Path;
@@ -45,16 +45,79 @@ fn selector_wrapper_duplicate_arguments_must_not_conflict() {
 
 #[test]
 fn targeted_full_suite_trigger_validates_paths_and_targets() {
-    let mut config = NoMistakesConfig::default();
-    config.test_plan.vitest.full_suite_triggers.projects.insert(
+    let cases = [
+        (
+            Vec::new(),
+            vec!["unit".to_string()],
+            "paths must not be empty",
+        ),
+        (
+            vec!["src/**".to_string()],
+            Vec::new(),
+            "targets must not be empty",
+        ),
+        (
+            vec!["src/**".to_string()],
+            vec![" ".to_string()],
+            "targets[0] must not be blank",
+        ),
+        (
+            vec!["[".to_string()],
+            vec!["unit".to_string()],
+            "contains invalid glob",
+        ),
+        (
+            vec!["!".to_string()],
+            vec!["unit".to_string()],
+            "paths[0] must not be blank",
+        ),
+    ];
+    for (paths, targets, expected) in cases {
+        let mut config = NoMistakesConfig::default();
+        config.test_plan.vitest.full_suite_triggers.projects.insert(
+            "app".to_string(),
+            TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+                paths,
+                targets,
+            }),
+        );
+        let error = validate_v2_config(&config, Path::new("config.yml"))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(expected), "{error}");
+        assert!(error.contains("config.yml.testPlan.vitest.fullSuiteTriggers.projects.app"));
+    }
+}
+
+#[test]
+fn project_and_rule_globs_surface_validation_context() {
+    let mut project_config = NoMistakesConfig::default();
+    project_config.projects.insert(
         "app".to_string(),
-        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
-            paths: vec!["!".to_string()],
-            targets: vec![" ".to_string()],
-        }),
+        Project {
+            include: vec!["[".to_string()],
+            ..Default::default()
+        },
     );
-    let error = validate_v2_config(&config, Path::new("config.yml"))
+    let project_error = validate_v2_config(&project_config, Path::new("config.yml"))
         .unwrap_err()
         .to_string();
-    assert!(error.contains("config.yml.testPlan.vitest.fullSuiteTriggers.projects.app.paths[0]"));
+    assert!(
+        project_error.contains("projects.app.include contains invalid glob `[`"),
+        "{project_error}"
+    );
+
+    let mut rule_config = NoMistakesConfig::default();
+    rule_config.rules.push(RuleDef {
+        rule: "unrelated-rule".to_string(),
+        exclude: vec!["[".to_string()],
+        ..Default::default()
+    });
+    let rule_error = validate_v2_config(&rule_config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        rule_error.contains("rules[0].exclude contains invalid glob `[`"),
+        "{rule_error}"
+    );
 }

@@ -1,0 +1,5 @@
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        app: { paths: [migrations/**], targets: [] }
