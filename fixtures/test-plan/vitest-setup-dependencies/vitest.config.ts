@@ -4,6 +4,8 @@ import { importedDynamicSetup } from './config/dynamic-wrapper'
 import importedProject from './vitest.setup-imported'
 
 const localDynamicSetup = () => importedDynamicSetup()
+// This static reference cycle must stop after recording the config trigger.
+const cyclicDynamicSetup = () => cyclicDynamicSetup()
 
 export default defineConfig({
   test: {
@@ -28,6 +30,14 @@ export default defineConfig({
           name: 'override',
           include: ['override/**/*.test.ts'],
           setupFiles: './setup/override.js',
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'dynamic-cycle',
+          include: ['closure-owner/**/*.test.ts'],
+          setupFiles: cyclicDynamicSetup,
           globalSetup: [],
         },
       },

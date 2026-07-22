@@ -180,6 +180,11 @@ fn vitest_setup_dependencies_preserve_effective_project_ownership() {
         "dynamic setup closures follow runtime re-exports but exclude type-only sources"
     );
 
+    let cycle = setup("dynamic-cycle");
+    assert_eq!(cycle.len(), 1, "{cycle:#?}");
+    assert!(cycle[0].specifier.is_none());
+    assert_eq!(cycle[0].trigger_paths, BTreeSet::from([path.clone()]));
+
     let overridden = setup("override");
     assert_eq!(overridden.len(), 1, "{overridden:#?}");
     assert_eq!(
@@ -340,6 +345,8 @@ fn vitest_project_string_entries_use_only_the_visible_config_universe() {
             "inline-direct-spread",
             "a",
             "inline-a",
+            "function-expression",
+            "self",
             "direct",
             "glob",
             "named",

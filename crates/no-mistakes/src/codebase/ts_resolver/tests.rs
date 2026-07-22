@@ -67,6 +67,13 @@ fn workspace_tsconfig_fixture() -> PathBuf {
     )
 }
 
+fn scoped_resolution_candidates_fixture() -> PathBuf {
+    normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/scoped-resolution-candidates"),
+    )
+}
+
 fn fixed_root_tsconfig_fixture() -> PathBuf {
     normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -179,6 +186,26 @@ fn scoped_catalog_selects_and_resolves_workspace_aliases() {
         resolver.resolve("@shared/message", &importer),
         Some(root.join("packages/shared/src/message.ts"))
     );
+}
+
+#[test]
+fn scoped_resolution_candidates_use_importer_workspace_aliases_for_deleted_targets() {
+    let root = scoped_resolution_candidates_fixture();
+    let web = root.join("apps/web");
+    let importer = web.join("src/entry.ts");
+    let visible = [
+        root.join("tsconfig.json"),
+        web.join("tsconfig.json"),
+        importer.clone(),
+    ];
+    let catalog = TsConfigCatalog::from_visible(&root, &[root.clone(), web.clone()], &visible);
+    let visible = visible.into_iter().collect();
+    let resolver = ScopedImportResolver::new(&catalog, &visible);
+
+    let candidates = resolver.resolution_candidates("@fixture/deleted", &importer);
+
+    assert!(candidates.contains(&web.join("src/workspace/deleted.ts")));
+    assert!(!candidates.contains(&root.join("src/root/deleted.ts")));
 }
 
 #[test]
