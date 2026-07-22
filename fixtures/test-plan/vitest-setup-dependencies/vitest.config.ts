@@ -9,6 +9,12 @@ import { importedReexportedSetupFiles } from './config/imported-setup-reexport'
 import { barrelSetupFiles } from './config/setup-barrel'
 import templateImportedSetup from './config/template-imported-setup'
 import importedProject from './vitest.setup-imported'
+import * as namespaceSetups from './config/namespace-setups'
+import commonjsDefaultSetups, { namedSetups as commonjsNamedSetups } from './config/commonjs-setups.cjs'
+import { declarationOnlySetups } from './config/declaration-only-setups'
+import { missingBarrelSetups } from './config/missing-setup-barrel'
+
+const localSetups = { files: ['./setup/local-member.ts'] }
 
 const localDynamicSetup = () => importedDynamicSetup()
 // This static reference cycle must stop after recording the config trigger.
@@ -19,6 +25,22 @@ export default defineConfig({
     setupFiles: './setup/root.ts',
     globalSetup: './setup/global.mts',
     projects: [
+      {
+        test: {
+          name: 'local-member',
+          include: ['local-member/**/*.test.ts'],
+          setupFiles: localSetups.files,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'namespace-member',
+          include: ['namespace-member/**/*.test.ts'],
+          setupFiles: namespaceSetups.files,
+          globalSetup: [],
+        },
+      },
       {
         test: {
           name: 'inherits',
@@ -56,6 +78,45 @@ export default defineConfig({
             barrelSetupFiles,
             templateImportedSetup,
           ],
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'commonjs-values',
+          root: './commonjs-values',
+          include: ['**/*.test.ts'],
+          // CJS helpers can provide literal setup arrays without execution.
+          setupFiles: [commonjsDefaultSetups, commonjsNamedSetups],
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'runtime-loaders',
+          root: './runtime-owner',
+          include: ['**/*.test.ts'],
+          setupFiles: './setup/runtime-loaders.ts',
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'declaration-only',
+          root: './declaration-only',
+          include: ['**/*.test.ts'],
+          // A declaration file is not a runtime setup helper or fallback trigger.
+          setupFiles: declarationOnlySetups,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'missing-barrel',
+          root: './missing-barrel',
+          include: ['**/*.test.ts'],
+          // The barrel remains parseable while its runtime leaf is absent.
+          setupFiles: missingBarrelSetups,
           globalSetup: [],
         },
       },

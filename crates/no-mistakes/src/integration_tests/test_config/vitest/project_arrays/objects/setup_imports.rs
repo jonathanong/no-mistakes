@@ -4,8 +4,11 @@ use super::super::{
 use super::setup_dependencies;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::integration_tests::types::{VitestSetupDependency, VitestSetupField};
+use commonjs::commonjs_setup_expression;
 use oxc_ast::ast::{ArrayExpressionElement, Expression, Program, Statement};
 use std::collections::BTreeSet;
+
+mod commonjs;
 
 /// Resolve literal setup values exported by an imported helper module. This
 /// mirrors imported project parsing while keeping arbitrary code dynamic.
@@ -14,7 +17,16 @@ pub(super) fn imported_setup_dependencies(
     field: VitestSetupField,
     parent: &mut Ctx<'_, '_>,
 ) -> Option<Vec<VitestSetupDependency>> {
-    let path = parent.resolver.resolve(&import.source, parent.path)?;
+    let candidates = parent
+        .resolver
+        .resolution_candidates(&import.source, parent.path)
+        .into_iter()
+        .filter(|path| super::super::super::setup_resolution::is_runtime_module(path))
+        .collect::<BTreeSet<_>>();
+    let path = parent
+        .resolver
+        .resolve(&import.source, parent.path)
+        .filter(|path| super::super::super::setup_resolution::is_runtime_module(path))?;
     if !parent.seen.insert(path.clone()) {
         return None;
     }
@@ -55,7 +67,13 @@ pub(super) fn imported_setup_dependencies(
             .flatten()
         });
     parent.seen.remove(&path);
-    result
+    result.map(|mut dependencies| {
+        for dependency in &mut dependencies {
+            dependency.trigger_paths.insert(path.clone());
+            dependency.trigger_paths.extend(candidates.iter().cloned());
+        }
+        dependencies
+    })
 }
 
 fn exported_setup_dependencies<'a>(
@@ -155,8 +173,8 @@ fn exported_setup_expression<'a>(
             }
         }
     }
-    (exported == "default").then(|| {
-        program.body.iter().find_map(|statement| {
+    if exported == "default" {
+        let expression = program.body.iter().find_map(|statement| {
             let Statement::ExportDefaultDeclaration(export) = statement else {
                 return None;
             };
@@ -167,6 +185,10 @@ fn exported_setup_expression<'a>(
                 }
                 _ => Some(expression),
             }
-        })
-    })?
+        });
+        if expression.is_some() {
+            return expression;
+        }
+    }
+    commonjs_setup_expression(program, exported)
 }

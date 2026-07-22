@@ -158,6 +158,60 @@ fn mixed_unresolved_and_deleted_resolved_setup_reasons_are_truthful() {
 }
 
 #[test]
+fn resolved_config_trigger_mixes_truthfully_with_unsafe_and_deleted_setups() {
+    let root = Path::new("/repo");
+    for (unsafe_setup, deleted, expected) in [
+        (
+            true,
+            false,
+            "Vitest setup dependencies could not be resolved statically and setup configuration changed",
+        ),
+        (
+            false,
+            true,
+            "A transitive dependency of a resolved setup was deleted and setup configuration changed",
+        ),
+        (
+            true,
+            true,
+            "Vitest setup dependencies could not be resolved statically, a transitive dependency of a resolved setup was deleted, and setup configuration changed",
+        ),
+    ] {
+        let mut resolved = setup(Some("./resolved"));
+        resolved.resolved_path = Some(root.join("config/resolved.ts"));
+        resolved.trigger_paths.insert(root.join("config/helper.ts"));
+        resolved
+            .transitive_trigger_paths
+            .insert(root.join("config/deleted.ts"));
+        let mut project = project(Some("unit"), resolved);
+        if unsafe_setup {
+            project.vitest_setup.push(setup(None));
+        }
+        let changed = if unsafe_setup {
+            vec![root.join("config/helper.ts"), root.join("config/setup.ts")]
+        } else {
+            vec![root.join("config/helper.ts")]
+        };
+        let deleted = if deleted {
+            vec![root.join("config/deleted.ts")]
+        } else {
+            Vec::new()
+        };
+        let result = selection(
+            root,
+            &changed,
+            &deleted,
+            Some(&[project]),
+            &discovered(),
+            &HashSet::new(),
+            10,
+        )
+        .expect("mixed configuration fallback must be conservative");
+        assert!(result.0.contains(expected), "{result:#?}");
+    }
+}
+
+#[test]
 fn known_owner_without_eligible_tests_does_not_widen_to_framework() {
     let root = Path::new("/repo");
     let mut discovered = discovered();

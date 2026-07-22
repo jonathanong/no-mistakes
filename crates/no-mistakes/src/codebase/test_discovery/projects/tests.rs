@@ -76,6 +76,28 @@ fn explicit_policy_replaces_each_matching_config_project() {
 }
 
 #[test]
+fn explicit_policy_keeps_scope_empty_for_policy_dominance() {
+    let root = Path::new("");
+    let policy = TestProjectPolicy {
+        include: vec!["tests/**/*.test.ts".to_string()],
+        ..Default::default()
+    };
+    let mut projects = vec![config_project(
+        "vitest.config.ts",
+        "unit",
+        "unit/**/*.test.ts",
+    )];
+    projects[0].scope = Some("packages/unit".to_string());
+    apply_explicit_policy_projects(
+        root,
+        None,
+        &BTreeMap::from([("unit".to_string(), policy)]),
+        &mut projects,
+    );
+    assert!(projects[0].scope.is_none());
+}
+
+#[test]
 fn explicit_policy_projects_builds_config_free_runner_projects() {
     let mut config = NoMistakesConfig::default();
     config.tests.vitest.projects.insert(

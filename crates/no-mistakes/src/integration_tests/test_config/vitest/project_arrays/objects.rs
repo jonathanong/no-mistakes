@@ -5,12 +5,14 @@ use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use std::collections::BTreeSet;
 
 mod calls;
+mod dynamic_triggers;
 mod exports;
 mod members;
 mod merge;
 mod object_expressions;
 mod setup_dependencies;
 mod setup_imports;
+mod static_members;
 
 use merge::merge_options;
 pub(super) use object_expressions::expression_object_options;

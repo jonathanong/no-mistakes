@@ -111,14 +111,27 @@ pub(super) fn selection(
     let mut triggered = false;
     let mut unresolved_triggered = false;
     let mut deleted_resolved_triggered = false;
+    let mut resolved_config_triggered = false;
 
     for project in projects {
         for setup in &project.vitest_setup {
             let unsafe_setup = is_unsafe(setup);
-            let triggers = if unsafe_setup {
-                trigger_paths(root, project, setup, changed_files, deleted_files)
+            let (triggers, resolved_config, deleted_resolved) = if unsafe_setup {
+                (
+                    trigger_paths(root, project, setup, changed_files, deleted_files),
+                    false,
+                    false,
+                )
             } else {
-                deleted_transitive_trigger_paths(setup, deleted_files)
+                let config = resolved_config_trigger_paths(setup, changed_files, deleted_files);
+                let deleted = deleted_transitive_trigger_paths(setup, deleted_files);
+                let config_triggered = !config.is_empty();
+                let deleted_triggered = !deleted.is_empty();
+                (
+                    config.into_iter().chain(deleted).collect(),
+                    config_triggered,
+                    deleted_triggered,
+                )
             };
             if triggers.is_empty() {
                 continue;
@@ -127,8 +140,9 @@ pub(super) fn selection(
             if unsafe_setup {
                 unresolved_triggered = true;
             } else {
-                deleted_resolved_triggered = true;
+                deleted_resolved_triggered |= deleted_resolved;
             }
+            resolved_config_triggered |= resolved_config;
             let owner_tests = owner_tests(root, project, discovered);
             // An owner is established by the parsed project identity, not by
             // whether that owner happens to have an eligible test in this
@@ -171,22 +185,58 @@ pub(super) fn selection(
         (true, true) => "selected owning project and discovered Vitest tests",
         (false, false) => unreachable!("a relevant Vitest setup fallback has an owner decision"),
     };
-    let reason = match (unresolved_triggered, deleted_resolved_triggered) {
-        (true, false) => {
+    let reason = match (
+        unresolved_triggered,
+        deleted_resolved_triggered,
+        resolved_config_triggered,
+    ) {
+        (false, false, true) => format!("Vitest setup configuration changed; {scope}"),
+        (true, false, false) => {
             format!("Vitest setup dependencies could not be resolved statically; {scope}")
         }
-        (false, true) => {
+        (false, true, false) => {
             format!("A transitive dependency of a resolved setup was deleted; {scope}")
         }
-        (true, true) => format!(
+        (true, true, false) => format!(
             "Vitest setup dependencies could not be resolved statically and a transitive dependency of a resolved setup was deleted; {scope}"
         ),
-        (false, false) => unreachable!("a relevant Vitest setup fallback has a trigger type"),
+        (true, false, true) => format!(
+            "Vitest setup dependencies could not be resolved statically and setup configuration changed; {scope}"
+        ),
+        (false, true, true) => format!(
+            "A transitive dependency of a resolved setup was deleted and setup configuration changed; {scope}"
+        ),
+        (true, true, true) => format!(
+            "Vitest setup dependencies could not be resolved statically, a transitive dependency of a resolved setup was deleted, and setup configuration changed; {scope}"
+        ),
+        (false, false, false) => unreachable!("a relevant Vitest setup fallback has a trigger type"),
     };
     Some((
         reason,
         stable_take(candidates.into_values().collect(), limit),
     ))
+}
+
+fn resolved_config_trigger_paths(
+    setup: &VitestSetupDependency,
+    changed_files: &[PathBuf],
+    deleted_files: &[PathBuf],
+) -> Vec<PathBuf> {
+    changed_files
+        .iter()
+        .chain(deleted_files)
+        .map(|path| normalize(path))
+        .filter(|changed| {
+            setup.trigger_paths.iter().any(|trigger| {
+                changed == &normalize(trigger)
+                    && !setup.resolver_candidate_paths.contains(trigger)
+                    && setup
+                        .resolved_path
+                        .as_ref()
+                        .is_none_or(|resolved| normalize(resolved) != *changed)
+            })
+        })
+        .collect()
 }
 
 fn deleted_transitive_trigger_paths(
@@ -249,10 +299,13 @@ fn trigger_paths(
 ) -> Vec<PathBuf> {
     let config = config_absolute_path(root, project, setup);
     let declaration = normalize(&setup.declaration_path);
+    // A configured runner scope remains authoritative. Explicit policies
+    // deliberately clear it, so those retain the parsed setup root instead.
     let scope = project
         .scope
         .as_deref()
-        .map(|scope| normalize(&root.join(scope)));
+        .map(|scope| normalize(&root.join(scope)))
+        .unwrap_or_else(|| normalize(&setup.resolution_base));
     let mut triggered = BTreeSet::new();
     for changed in changed_files.iter().chain(deleted_files) {
         let changed = normalize(changed);
@@ -262,10 +315,8 @@ fn trigger_paths(
                 .trigger_paths
                 .iter()
                 .any(|trigger| changed == normalize(trigger));
-        let dynamic_owner_scope = setup.specifier.is_none()
-            && scope
-                .as_ref()
-                .is_some_and(|scope| changed == *scope || changed.starts_with(scope));
+        let dynamic_owner_scope =
+            setup.specifier.is_none() && (changed == scope || changed.starts_with(&scope));
         if config_or_helper || dynamic_owner_scope {
             triggered.insert(changed);
         }

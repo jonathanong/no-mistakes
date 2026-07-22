@@ -16,16 +16,26 @@ impl PreparedTestProjects {
             catalog, &visible,
         );
         for project in projects {
-            let project_root = project
+            let fallback_root = project
                 .scope
                 .as_deref()
                 .map(|scope| root.join(scope))
                 .unwrap_or_else(|| root.to_path_buf());
-            crate::integration_tests::resolve_setup_dependencies(
-                project.vitest_setup.iter_mut(),
-                &project_root,
-                &resolver,
-            );
+            for setup in &mut project.vitest_setup {
+                // Explicit policies intentionally clear the project scope.
+                // Parsed setup declarations retain their original effective
+                // root, which is the only sound base for a re-resolution.
+                let resolution_base = if setup.resolution_base.as_os_str().is_empty() {
+                    fallback_root.clone()
+                } else {
+                    setup.resolution_base.clone()
+                };
+                crate::integration_tests::resolve_setup_dependencies(
+                    std::iter::once(setup),
+                    &resolution_base,
+                    &resolver,
+                );
+            }
         }
     }
 }

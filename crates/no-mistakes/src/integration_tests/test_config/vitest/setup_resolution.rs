@@ -85,10 +85,33 @@ fn collect_runtime_setup_candidates(
                 collect_runtime_setup_candidates(&dependency, resolver, candidates, seen);
             }
         }
+        for import in crate::codebase::dependencies::extract::extract_imports_from_program(program)
+            .into_iter()
+            .filter(|import| {
+                matches!(
+                    import.kind,
+                    crate::codebase::dependencies::extract::ImportKind::Dynamic
+                        | crate::codebase::dependencies::extract::ImportKind::Require
+                )
+            })
+        {
+            candidates.extend(
+                resolver
+                    .resolution_candidates(&import.specifier, path)
+                    .into_iter()
+                    .filter(|candidate| is_runtime_module(candidate)),
+            );
+            if let Some(dependency) = resolver
+                .resolve(&import.specifier, path)
+                .filter(|path| is_runtime_module(path))
+            {
+                collect_runtime_setup_candidates(&dependency, resolver, candidates, seen);
+            }
+        }
     });
 }
 
-fn is_runtime_module(path: &Path) -> bool {
+pub(crate) fn is_runtime_module(path: &Path) -> bool {
     !path
         .file_name()
         .and_then(|name| name.to_str())

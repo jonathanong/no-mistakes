@@ -81,6 +81,18 @@ fn vitest_setup_dependencies_preserve_effective_project_ownership() {
     };
     let setup = |name: &str| &project(name).vitest_setup;
 
+    for (name, file) in [
+        ("local-member", "local-member.ts"),
+        ("namespace-member", "namespace-member.ts"),
+    ] {
+        assert_eq!(setup(name).len(), 1, "{name}");
+        assert_eq!(
+            setup(name)[0].resolved_path.as_deref(),
+            Some(root.join("setup").join(file).as_path()),
+            "{name}"
+        );
+    }
+
     let inherited = setup("inherits");
     assert_eq!(inherited.len(), 4);
     assert_eq!(
