@@ -129,22 +129,32 @@ pub enum EdgeKind {
 
 impl EdgeKind {
     pub fn as_str(&self) -> &'static str {
+        self.as_core_str().unwrap_or_else(|| self.as_domain_str())
+    }
+
+    fn as_core_str(&self) -> Option<&'static str> {
         match self {
-            EdgeKind::Import => "import",
-            EdgeKind::TypeImport => "type-import",
-            EdgeKind::DynamicImport => "dynamic-import",
-            EdgeKind::RouteImport => "route-import",
-            EdgeKind::Require => "require",
-            EdgeKind::TestOf => "test",
-            EdgeKind::RouteRef => "route",
-            EdgeKind::QueueEnqueue => "queue-enqueue",
-            EdgeKind::QueueWorker => "queue-worker",
-            EdgeKind::RouteTest => "route-test",
-            EdgeKind::Layout => "layout",
-            EdgeKind::MarkdownLink => "md",
-            EdgeKind::WorkspaceImport => "workspace",
-            EdgeKind::PackageDependency => "package",
-            EdgeKind::CiInvocation => "ci",
+            EdgeKind::Import => Some("import"),
+            EdgeKind::TypeImport => Some("type-import"),
+            EdgeKind::DynamicImport => Some("dynamic-import"),
+            EdgeKind::RouteImport => Some("route-import"),
+            EdgeKind::Require => Some("require"),
+            EdgeKind::TestOf => Some("test"),
+            EdgeKind::RouteRef => Some("route"),
+            EdgeKind::QueueEnqueue => Some("queue-enqueue"),
+            EdgeKind::QueueWorker => Some("queue-worker"),
+            EdgeKind::RouteTest => Some("route-test"),
+            EdgeKind::Layout => Some("layout"),
+            EdgeKind::MarkdownLink => Some("md"),
+            EdgeKind::WorkspaceImport => Some("workspace"),
+            EdgeKind::PackageDependency => Some("package"),
+            EdgeKind::CiInvocation => Some("ci"),
+            _ => None,
+        }
+    }
+
+    fn as_domain_str(&self) -> &'static str {
+        match self {
             EdgeKind::HttpCall => "http",
             EdgeKind::ProcessSpawn => "process",
             EdgeKind::AssetImport => "asset",
@@ -160,6 +170,7 @@ impl EdgeKind {
             EdgeKind::TerraformReference => "terraform-ref",
             EdgeKind::TerraformModuleRef => "terraform-module",
             EdgeKind::TerraformOutputRef => "terraform-output",
+            _ => unreachable!("core edge kinds are handled before domain rendering"),
         }
     }
 }

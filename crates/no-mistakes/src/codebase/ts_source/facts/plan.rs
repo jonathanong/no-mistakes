@@ -71,19 +71,31 @@ impl TsFactPlan {
     }
 
     pub fn covers(self, required: Self) -> bool {
+        self.covers_syntax_facts(required)
+            & self.covers_backend_facts(required)
+            & self.covers_runtime_facts(required)
+    }
+
+    fn covers_syntax_facts(self, required: Self) -> bool {
         (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
             && (!required.resources || self.resources)
             && (!required.symbols || self.symbols)
             && (!required.source || self.source)
-            && (!required.route_refs || self.route_refs)
+    }
+
+    fn covers_backend_facts(self, required: Self) -> bool {
+        (!required.route_refs || self.route_refs)
             && (!required.backend_routes || self.backend_routes)
             && (!required.queue_usage || self.queue_usage)
             && (!required.queue_factory || self.queue_factory)
             && (!required.queue_project || self.queue_project)
-            && (!required.http_calls || self.http_calls)
-            && (!required.process_spawns || self.process_spawns)
             && (!required.server_routes || self.server_routes)
+    }
+
+    fn covers_runtime_facts(self, required: Self) -> bool {
+        (!required.http_calls || self.http_calls)
+            && (!required.process_spawns || self.process_spawns)
             && (!required.react || self.react)
             && (!required.effect_calls || self.effect_calls)
             && (!required.rsc_environment || self.rsc_environment)
