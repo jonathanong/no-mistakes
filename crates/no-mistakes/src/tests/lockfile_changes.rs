@@ -18,7 +18,10 @@ pub(crate) fn analyze_lockfile_changes(
     let mut warnings = Vec::new();
     let mut fallback_triggered = false;
 
-    let git_root = find_git_root(root).unwrap_or_else(|| root.to_path_buf());
+    let git_root = find_git_root(root)
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| root.to_path_buf());
 
     for file in all_files {
         let basename = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
@@ -144,25 +147,31 @@ pub(crate) fn analyze_lockfile_changes(
 }
 
 fn is_diff_only_mode(args: &PlanArgs) -> bool {
-    args.head.is_none()
-        && (args.diff.is_some()
-            || args.diff_stdin
-            || args.diff_command.is_some()
-            || args.diff_content.is_some())
+    args.head.is_none() && super::changed_files::has_explicit_diff_source(args)
 }
 
-fn find_git_root(dir: &Path) -> Option<PathBuf> {
+/// `Ok(None)` reports that `dir` is not inside a Git repository (or the
+/// probe otherwise failed for a non-timeout reason); a deadline timeout
+/// propagates as `Err` instead, so a strict caller like
+/// `git_diff::classify_git_diff_failure` can tell the two apart. Callers
+/// that are infallible by design (`analyze_lockfile_changes`) collapse
+/// both back into their own fallback via `.ok().flatten()`.
+pub(super) fn find_git_root(dir: &Path) -> std::io::Result<Option<PathBuf>> {
     let mut command = std::process::Command::new("git");
     command
         .args(["rev-parse", "--show-toplevel"])
         .current_dir(dir);
-    let output = crate::invocation::command_output(&mut command).ok()?;
-    if output.status.success() {
-        let s = String::from_utf8(output.stdout).ok()?;
-        Some(PathBuf::from(s.trim()))
-    } else {
-        None
+    let output = match crate::invocation::command_output(&mut command) {
+        Ok(output) => output,
+        Err(error) if error.kind() == std::io::ErrorKind::TimedOut => return Err(error),
+        Err(_) => return Ok(None),
+    };
+    if !output.status.success() {
+        return Ok(None);
     }
+    Ok(String::from_utf8(output.stdout)
+        .ok()
+        .map(|s| PathBuf::from(s.trim())))
 }
 
 fn git_ref_exists(root: &Path, git_ref: &str) -> bool {

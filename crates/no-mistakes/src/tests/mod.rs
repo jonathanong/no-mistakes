@@ -13,6 +13,7 @@ pub(crate) mod config_invalidation;
 pub(crate) mod configured_plan;
 pub(crate) mod configured_plan_candidates;
 pub(crate) mod diff_parser;
+pub(crate) mod git_diff;
 pub(crate) mod graph;
 pub(crate) mod impact;
 pub(crate) mod lockfile_changes;

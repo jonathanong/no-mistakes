@@ -77,119 +77,242 @@ impl DiffFile {
 }
 
 pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
-    let mut results: Vec<DiffFile> = Vec::new();
-    let mut lines = diff_text.lines().peekable();
+    let mut parser = DiffStreamParser::new();
+    for line in diff_text.lines() {
+        parser.push_line(line);
+    }
+    parser.finish()
+}
 
-    while let Some(line) = lines.next() {
-        if !line.starts_with("diff --git ") {
-            continue;
+/// Incremental (push-based) unified-diff parser. Lets a streaming producer
+/// (e.g. `git diff` piped a chunk at a time, see `invocation::child::stream`)
+/// feed one line at a time without buffering the whole patch in memory, while
+/// producing the exact same [`DiffFile`] records as [`parse_unified_diff`].
+/// [`parse_unified_diff`] itself is just this parser fed every line of a
+/// fully-materialized `&str` — the state machine below is the single source
+/// of truth for both call shapes.
+pub(crate) struct DiffStreamParser {
+    results: Vec<DiffFile>,
+    current: Option<PendingDiffFile>,
+}
+
+/// Per-`diff --git` block accumulator. Mirrors the locals of the old
+/// pull-parser's outer-loop body, just carried across `push_line` calls
+/// instead of within one loop iteration. `minus_path`/`plus_path` are owned
+/// (not borrowed `&str`) because a streaming caller's line buffer may not
+/// outlive a single `push_line` call.
+struct PendingDiffFile {
+    old_path: Option<PathBuf>,
+    new_path: PathBuf,
+    rename_from: Option<PathBuf>,
+    rename_to: Option<PathBuf>,
+    minus_path: Option<String>,
+    plus_path: Option<String>,
+    /// Set on a header-phase `deleted file mode` line. Git omits `--- `/
+    /// `+++ ` entirely for a hunkless deletion (an empty or binary file), so
+    /// this is the only signal available for those cases.
+    deleted_file_mode: bool,
+    /// Set on a header-phase `new file mode` line, the additive counterpart
+    /// to `deleted_file_mode` (distinct from a pure `new mode` line, which
+    /// marks a mode-only change on an existing file).
+    new_file_mode: bool,
+    removed_lines: Vec<String>,
+    added_lines: Vec<String>,
+    context_lines: Vec<String>,
+    hunk_lines: Vec<(HunkLineKind, String)>,
+    hunks: Vec<DiffHunk>,
+    current_hunk: Option<DiffHunk>,
+    in_hunk: bool,
+}
+
+impl DiffStreamParser {
+    pub(crate) fn new() -> Self {
+        Self {
+            results: Vec::new(),
+            current: None,
         }
-        let (old_path, new_path) = parse_diff_header(line);
-        let mut rename_from: Option<PathBuf> = None;
-        let mut rename_to: Option<PathBuf> = None;
-        let mut minus_path: Option<&str> = None;
-        let mut plus_path: Option<&str> = None;
-        let mut removed_lines: Vec<String> = Vec::new();
-        let mut added_lines: Vec<String> = Vec::new();
-        let mut context_lines: Vec<String> = Vec::new();
-        let mut hunk_lines: Vec<(HunkLineKind, String)> = Vec::new();
-        let mut hunks: Vec<DiffHunk> = Vec::new();
-        let mut current_hunk: Option<DiffHunk> = None;
-        let mut in_hunk = false;
+    }
 
-        while let Some(&next) = lines.peek() {
-            if next.starts_with("diff --git ") {
-                break;
-            }
-            let next = lines.next().unwrap();
-            // Once inside a hunk, payload lines whose body happens to start
-            // with `--- ` or `+++ ` (e.g. an actual `--- foo` line in the
-            // file content) must NOT be re-classified as path headers, or
-            // we'd overwrite the captured paths and drop the line from
-            // removed/added accumulation.
-            if in_hunk {
-                if let Some(rest) = next.strip_prefix('-') {
-                    removed_lines.push(rest.to_string());
-                    hunk_lines.push((HunkLineKind::Removed, rest.to_string()));
-                    if let Some(hunk) = current_hunk.as_mut() {
-                        hunk.lines.push((HunkLineKind::Removed, rest.to_string()));
-                    }
-                } else if let Some(rest) = next.strip_prefix('+') {
-                    added_lines.push(rest.to_string());
-                    hunk_lines.push((HunkLineKind::Added, rest.to_string()));
-                    if let Some(hunk) = current_hunk.as_mut() {
-                        hunk.lines.push((HunkLineKind::Added, rest.to_string()));
-                    }
-                } else if let Some(rest) = next.strip_prefix(' ') {
-                    context_lines.push(rest.to_string());
-                    hunk_lines.push((HunkLineKind::Context, rest.to_string()));
-                    if let Some(hunk) = current_hunk.as_mut() {
-                        hunk.lines.push((HunkLineKind::Context, rest.to_string()));
-                    }
-                } else if next.starts_with("@@") {
-                    if let Some(hunk) = current_hunk.take() {
-                        hunks.push(hunk);
-                    }
-                    current_hunk = parse_hunk_header(next);
+    /// Feed one line of unified-diff text (without its trailing newline, same
+    /// convention as `str::lines()`).
+    pub(crate) fn push_line(&mut self, line: &str) {
+        if line.starts_with("diff --git ") {
+            self.finalize_current();
+            let (old_path, new_path) = parse_diff_header(line);
+            self.current = Some(PendingDiffFile::new(old_path, new_path));
+            return;
+        }
+        // Lines before the first `diff --git ` header are ignored, matching
+        // the old pull-parser's `if !line.starts_with(...) { continue }`.
+        if let Some(pending) = self.current.as_mut() {
+            pending.push_line(line);
+        }
+    }
+
+    fn finalize_current(&mut self) {
+        if let Some(pending) = self.current.take() {
+            self.results.push(pending.finish());
+        }
+    }
+
+    /// Finalize any in-progress block and return the parsed, deduplicated
+    /// diff files (same shape and ordering as [`parse_unified_diff`]).
+    pub(crate) fn finish(mut self) -> Vec<DiffFile> {
+        self.finalize_current();
+        dedup_diff_files(self.results)
+    }
+}
+
+impl PendingDiffFile {
+    fn new(old_path: Option<PathBuf>, new_path: PathBuf) -> Self {
+        Self {
+            old_path,
+            new_path,
+            rename_from: None,
+            rename_to: None,
+            minus_path: None,
+            plus_path: None,
+            deleted_file_mode: false,
+            new_file_mode: false,
+            removed_lines: Vec::new(),
+            added_lines: Vec::new(),
+            context_lines: Vec::new(),
+            hunk_lines: Vec::new(),
+            hunks: Vec::new(),
+            current_hunk: None,
+            in_hunk: false,
+        }
+    }
+
+    fn push_line(&mut self, line: &str) {
+        // Once inside a hunk, payload lines whose body happens to start
+        // with `--- ` or `+++ ` (e.g. an actual `--- foo` line in the file
+        // content) must NOT be re-classified as path headers, or we'd
+        // overwrite the captured paths and drop the line from
+        // removed/added accumulation.
+        if self.in_hunk {
+            if let Some(rest) = line.strip_prefix('-') {
+                self.removed_lines.push(rest.to_string());
+                self.hunk_lines
+                    .push((HunkLineKind::Removed, rest.to_string()));
+                if let Some(hunk) = self.current_hunk.as_mut() {
+                    hunk.lines.push((HunkLineKind::Removed, rest.to_string()));
                 }
-                continue;
+            } else if let Some(rest) = line.strip_prefix('+') {
+                self.added_lines.push(rest.to_string());
+                self.hunk_lines
+                    .push((HunkLineKind::Added, rest.to_string()));
+                if let Some(hunk) = self.current_hunk.as_mut() {
+                    hunk.lines.push((HunkLineKind::Added, rest.to_string()));
+                }
+            } else if let Some(rest) = line.strip_prefix(' ') {
+                self.context_lines.push(rest.to_string());
+                self.hunk_lines
+                    .push((HunkLineKind::Context, rest.to_string()));
+                if let Some(hunk) = self.current_hunk.as_mut() {
+                    hunk.lines.push((HunkLineKind::Context, rest.to_string()));
+                }
+            } else if line.starts_with("@@") {
+                if let Some(hunk) = self.current_hunk.take() {
+                    self.hunks.push(hunk);
+                }
+                self.current_hunk = parse_hunk_header(line);
             }
-            if let Some(rest) = next.strip_prefix("rename from ") {
-                rename_from = Some(PathBuf::from(rest));
-            } else if let Some(rest) = next.strip_prefix("rename to ") {
-                rename_to = Some(PathBuf::from(rest));
-            } else if let Some(rest) = next.strip_prefix("--- ") {
-                minus_path = Some(rest);
-            } else if let Some(rest) = next.strip_prefix("+++ ") {
-                plus_path = Some(rest);
-            } else if next.starts_with("@@") {
-                in_hunk = true;
-                current_hunk = parse_hunk_header(next);
-            }
+            return;
+        }
+        if let Some(rest) = line.strip_prefix("rename from ") {
+            self.rename_from = Some(PathBuf::from(rest));
+        } else if let Some(rest) = line.strip_prefix("rename to ") {
+            self.rename_to = Some(PathBuf::from(rest));
+        } else if let Some(rest) = line.strip_prefix("--- ") {
+            self.minus_path = Some(rest.to_string());
+        } else if let Some(rest) = line.strip_prefix("+++ ") {
+            self.plus_path = Some(rest.to_string());
+        } else if line.starts_with("deleted file mode") {
+            self.deleted_file_mode = true;
+        } else if line.starts_with("new file mode") {
+            self.new_file_mode = true;
+        } else if line.starts_with("@@") {
+            self.in_hunk = true;
+            self.current_hunk = parse_hunk_header(line);
+        }
+    }
+
+    fn finish(mut self) -> DiffFile {
+        if let Some(hunk) = self.current_hunk.take() {
+            self.hunks.push(hunk);
         }
 
-        if let Some(hunk) = current_hunk.take() {
-            hunks.push(hunk);
-        }
-
-        if let (Some(from), Some(to)) = (rename_from, rename_to) {
-            results.push(DiffFile {
+        if let (Some(from), Some(to)) = (self.rename_from, self.rename_to) {
+            return DiffFile {
                 path: to,
                 status: DiffFileStatus::Renamed,
                 old_path: Some(from),
-                removed_lines,
-                added_lines,
-                context_lines,
-                hunk_lines,
-                hunks,
-            });
-            continue;
+                removed_lines: self.removed_lines,
+                added_lines: self.added_lines,
+                context_lines: self.context_lines,
+                hunk_lines: self.hunk_lines,
+                hunks: self.hunks,
+            };
         }
 
-        let status = match (minus_path, plus_path) {
+        let status = match (self.minus_path.as_deref(), self.plus_path.as_deref()) {
             (Some("/dev/null"), _) => DiffFileStatus::Added,
             (_, Some("/dev/null")) => DiffFileStatus::Deleted,
+            // A hunkless deletion/addition (an empty or binary file) has no
+            // `--- `/`+++ ` lines at all — git relies on the mode-change
+            // header lines instead, so they're the only signal left.
+            (None, None) if self.deleted_file_mode => DiffFileStatus::Deleted,
+            (None, None) if self.new_file_mode => DiffFileStatus::Added,
             _ => DiffFileStatus::Modified,
         };
 
+        // Prefer the unambiguous `---`/`+++` path over the header-derived
+        // `old_path`/`new_path`: `diff --git a/X b/Y` is split on the first
+        // literal " b/", which misparses a path that itself contains that
+        // substring (e.g. `a b/file.ts`), while a `--- `/`+++ ` line is a
+        // single path with no such split needed. Fall back to the header
+        // only when there is no hunk at all to read a path from.
         let path = match status {
-            DiffFileStatus::Deleted => old_path.unwrap_or(new_path),
-            _ => new_path,
+            DiffFileStatus::Deleted => self
+                .minus_path
+                .as_deref()
+                .filter(|p| *p != "/dev/null")
+                .map(strip_ab_prefix)
+                .unwrap_or_else(|| self.old_path.unwrap_or(self.new_path)),
+            _ => self
+                .plus_path
+                .as_deref()
+                .filter(|p| *p != "/dev/null")
+                .map(strip_ab_prefix)
+                .unwrap_or(self.new_path),
         };
 
-        results.push(DiffFile {
+        DiffFile {
             path,
             status,
             old_path: None,
-            removed_lines,
-            added_lines,
-            context_lines,
-            hunk_lines,
-            hunks,
-        });
+            removed_lines: self.removed_lines,
+            added_lines: self.added_lines,
+            context_lines: self.context_lines,
+            hunk_lines: self.hunk_lines,
+            hunks: self.hunks,
+        }
     }
+}
 
-    dedup_diff_files(results)
+/// Strip a `--- `/`+++ ` line's leading `a/`/`b/` prefix (forced by
+/// `stream_git_diff`'s `--src-prefix=a/ --dst-prefix=b/`) and git's trailing
+/// tab disambiguator, appended only when the path itself contains
+/// whitespace (e.g. `--- a/a b/file.ts\t`), so it doesn't become part of the
+/// path.
+fn strip_ab_prefix(raw: &str) -> PathBuf {
+    let raw = raw.strip_suffix('\t').unwrap_or(raw);
+    PathBuf::from(
+        raw.strip_prefix("a/")
+            .or_else(|| raw.strip_prefix("b/"))
+            .unwrap_or(raw),
+    )
 }
 
 fn parse_hunk_header(line: &str) -> Option<DiffHunk> {
@@ -221,11 +344,44 @@ fn parse_hunk_range(range: &str) -> Option<(usize, usize)> {
 
 fn parse_diff_header(line: &str) -> (Option<PathBuf>, PathBuf) {
     let rest = line.strip_prefix("diff --git ").unwrap_or("");
+    // For anything but a rename, git shows the *same* path on both sides
+    // (`a/P b/P`), so the correct split is wherever the two halves match —
+    // not necessarily the first " b/" substring, which a path containing
+    // that literal text (e.g. `a b/file.ts`) would misparse. This is the
+    // only path source hunkless deletions/additions have (no `--- `/`+++ `
+    // lines to fall back on), so it must be resolved here rather than left
+    // to the `---`/`+++` preference in `PendingDiffFile::finish`.
+    if let Some(path) = split_matching_ab_halves(rest) {
+        return (Some(PathBuf::from(path)), PathBuf::from(path));
+    }
     let (a_part, b_part) = match rest.split_once(" b/") {
         Some((a, b)) => (a.strip_prefix("a/").unwrap_or(a), b),
         None => return (None, PathBuf::from(rest)),
     };
     (Some(PathBuf::from(a_part)), PathBuf::from(b_part))
+}
+
+/// Find the `" b/"` occurrence in a `diff --git a/X b/Y` header's `a/X b/Y`
+/// remainder where stripping the leading `a/` from the left half yields a
+/// string identical to the right half — i.e. `X == Y`, true for every
+/// non-rename diff. Tries every occurrence (not just the first), so a path
+/// containing the literal substring `" b/"` still resolves correctly. A
+/// genuine rename (`X != Y`) never matches here and falls through to the
+/// naive first-occurrence split, which is fine: a rename's real path comes
+/// from `rename from`/`rename to` lines, not this header.
+fn split_matching_ab_halves(rest: &str) -> Option<&str> {
+    let a_part = rest.strip_prefix("a/")?;
+    let mut search_from = 0;
+    while let Some(offset) = a_part[search_from..].find(" b/") {
+        let split_at = search_from + offset;
+        let candidate = &a_part[..split_at];
+        let remainder = &a_part[split_at + " b/".len()..];
+        if candidate == remainder {
+            return Some(candidate);
+        }
+        search_from = split_at + 1;
+    }
+    None
 }
 
 fn dedup_diff_files(files: Vec<DiffFile>) -> Vec<DiffFile> {
@@ -259,259 +415,5 @@ pub(crate) fn run_diff_command(command: &str, root: &Path) -> Result<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_simple_modified() {
-        let diff = "\
-diff --git a/src/main.rs b/src/main.rs
-index abc..def 100644
---- a/src/main.rs
-+++ b/src/main.rs
-@@ -1,3 +1,4 @@
- fn main() {}
-+// new line
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(files[0].path, PathBuf::from("src/main.rs"));
-        assert_eq!(files[0].status, DiffFileStatus::Modified);
-        assert_eq!(files[0].removed_lines, Vec::<String>::new());
-        assert_eq!(files[0].added_lines, vec!["// new line".to_string()]);
-    }
-
-    #[test]
-    fn parse_captures_rename_pair_in_hunk_body() {
-        let diff = "\
-diff --git a/web/components/search-bar.tsx b/web/components/search-bar.tsx
---- a/web/components/search-bar.tsx
-+++ b/web/components/search-bar.tsx
-@@ -1,3 +1,3 @@
- export function SearchBar() {
--  return <form data-pw=\"search-bar\" />;
-+  return <form data-pw=\"renamed-search-bar\" />;
- }
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(
-            files[0].removed_lines,
-            vec!["  return <form data-pw=\"search-bar\" />;".to_string()]
-        );
-        assert_eq!(
-            files[0].added_lines,
-            vec!["  return <form data-pw=\"renamed-search-bar\" />;".to_string()]
-        );
-    }
-
-    #[test]
-    fn parse_keeps_hunk_payload_lines_starting_with_dashes() {
-        // Payload lines whose body begins with `--- ` or `+++ ` must be
-        // captured as removed/added content, not misclassified as a new
-        // path header overwriting the diff header we already parsed.
-        let diff = "\
-diff --git a/changelog.md b/changelog.md
---- a/changelog.md
-+++ b/changelog.md
-@@ -1,4 +1,4 @@
- # Changelog
--- old bullet
-+- new bullet
--- divider removed
-++ divider added
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(files[0].path, PathBuf::from("changelog.md"));
-        assert_eq!(
-            files[0].removed_lines,
-            vec!["- old bullet".to_string(), "- divider removed".to_string()]
-        );
-        assert_eq!(
-            files[0].added_lines,
-            vec!["- new bullet".to_string(), "+ divider added".to_string()]
-        );
-    }
-
-    #[test]
-    fn parse_ignores_minus_plus_headers_in_hunk_capture() {
-        let diff = "\
-diff --git a/a.ts b/a.ts
---- a/a.ts
-+++ b/a.ts
-@@ -1 +1 @@
--old line
-+new line
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files[0].removed_lines, vec!["old line".to_string()]);
-        assert_eq!(files[0].added_lines, vec!["new line".to_string()]);
-    }
-
-    #[test]
-    fn parse_multi_hunk_accumulates() {
-        let diff = "\
-diff --git a/a.ts b/a.ts
---- a/a.ts
-+++ b/a.ts
-@@ -1,3 +1,3 @@
- ctx
--rm1
-+add1
-@@ -10,3 +10,3 @@
- ctx
--rm2
-+add2
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(
-            files[0].removed_lines,
-            vec!["rm1".to_string(), "rm2".to_string()]
-        );
-        assert_eq!(
-            files[0].added_lines,
-            vec!["add1".to_string(), "add2".to_string()]
-        );
-    }
-
-    #[test]
-    fn parse_new_file() {
-        let diff = "\
-diff --git a/new.ts b/new.ts
-new file mode 100644
---- /dev/null
-+++ b/new.ts
-@@ -0,0 +1 @@
-+export const x = 1;
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(files[0].path, PathBuf::from("new.ts"));
-        assert_eq!(files[0].status, DiffFileStatus::Added);
-    }
-
-    #[test]
-    fn parse_deleted_file() {
-        let diff = "\
-diff --git a/old.ts b/old.ts
-deleted file mode 100644
---- a/old.ts
-+++ /dev/null
-@@ -1 +0,0 @@
--export const x = 1;
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(files[0].path, PathBuf::from("old.ts"));
-        assert_eq!(files[0].status, DiffFileStatus::Deleted);
-    }
-
-    #[test]
-    fn parse_renamed_file() {
-        let diff = "\
-diff --git a/old-name.ts b/new-name.ts
-similarity index 100%
-rename from old-name.ts
-rename to new-name.ts
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(files[0].path, PathBuf::from("new-name.ts"));
-        assert_eq!(files[0].status, DiffFileStatus::Renamed);
-        assert_eq!(files[0].old_path, Some(PathBuf::from("old-name.ts")));
-    }
-
-    #[test]
-    fn parse_multi_file_diff() {
-        let diff = "\
-diff --git a/a.mts b/a.mts
---- a/a.mts
-+++ b/a.mts
-@@ -1 +1,2 @@
- export const a = 1;
-+export const a2 = 2;
-diff --git a/b.mts b/b.mts
---- a/b.mts
-+++ b/b.mts
-@@ -1 +1,2 @@
- export const b = 1;
-+export const b2 = 2;
-diff --git a/c.mts b/c.mts
-new file mode 100644
---- /dev/null
-+++ b/c.mts
-@@ -0,0 +1 @@
-+export const c = 1;
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 3);
-        assert_eq!(files[0].path, PathBuf::from("a.mts"));
-        assert_eq!(files[0].status, DiffFileStatus::Modified);
-        assert_eq!(files[1].path, PathBuf::from("b.mts"));
-        assert_eq!(files[1].status, DiffFileStatus::Modified);
-        assert_eq!(files[2].path, PathBuf::from("c.mts"));
-        assert_eq!(files[2].status, DiffFileStatus::Added);
-    }
-
-    #[test]
-    fn parse_empty_diff() {
-        let files = parse_unified_diff("");
-        assert!(files.is_empty());
-    }
-
-    #[test]
-    fn deduplicates_paths() {
-        let diff = "\
-diff --git a/x.ts b/x.ts
---- a/x.ts
-+++ b/x.ts
-@@ -1 +1 @@
--old
-+new
-diff --git a/x.ts b/x.ts
---- a/x.ts
-+++ b/x.ts
-@@ -2 +2 @@
--old2
-+new2
-";
-        let files = parse_unified_diff(diff);
-        assert_eq!(files.len(), 1);
-        assert_eq!(
-            files[0].removed_lines,
-            vec!["old".to_string(), "old2".to_string()]
-        );
-        assert_eq!(
-            files[0].added_lines,
-            vec!["new".to_string(), "new2".to_string()]
-        );
-    }
-
-    #[test]
-    fn run_diff_command_captures_stdout() {
-        let dir = tempfile::tempdir().unwrap();
-        let result = run_diff_command("echo 'hello world'", dir.path()).unwrap();
-        assert_eq!(result.trim(), "hello world");
-    }
-
-    #[test]
-    fn run_diff_command_fails_on_error() {
-        let dir = tempfile::tempdir().unwrap();
-        let result = run_diff_command("exit 1", dir.path());
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn run_diff_command_respects_expired_invocation_deadline() {
-        let dir = tempfile::tempdir().unwrap();
-        let _deadline =
-            crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
-
-        let result = run_diff_command("touch spawned", dir.path());
-
-        assert!(result.is_err());
-        assert!(!dir.path().join("spawned").exists());
-    }
-}
+#[path = "diff_parser/tests.rs"]
+mod tests;

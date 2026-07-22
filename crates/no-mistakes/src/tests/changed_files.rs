@@ -23,7 +23,10 @@ pub(crate) struct ChangedFiles {
     pub authoritative_files: Vec<PathBuf>,
     /// Per-file hunk bodies parsed from the provided unified diff (if any).
     /// Each entry's `path` is the same absolute path that appears in `files`,
-    /// so consumers can join on it. Empty when no `--diff*` flag was used.
+    /// so consumers can join on it. Populated by an explicit `--diff*` flag,
+    /// or — when none was given — by streaming `git diff <base>...<head>`
+    /// for `--base`/`--head`/`--from-git-diff` (see `git_diff::stream_git_diff`).
+    /// Empty only when neither input was supplied.
     pub diff_files: Vec<DiffFile>,
 }
 
@@ -69,21 +72,46 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     // an identical, already-desugared pair. By the time `args` reaches this
     // function, `args.from_git_diff` is always `None`.
     if let Some(ref base) = args.base {
-        match get_git_changed_files(root, base, args.head.as_deref()) {
-            Ok(git_files) => {
-                for f in git_files.files {
-                    let path = root.join(f);
-                    files.push(path.clone());
-                    git_provenance_files.push(path);
+        let head = args.head.as_deref().unwrap_or("HEAD");
+        // An explicit `--diff*` input already supplies hunks; streaming
+        // base/head as well would feed the same files through
+        // `DiffStreamParser` twice — `dedup_diff_files` *extends* (not
+        // replaces) hunk_lines for a repeated path, so every hunk would be
+        // double-counted. In that combined case, base/head contributes only
+        // file/deleted discovery (its pre-streaming behavior), matching
+        // today's `--diff-stdin --base X --head Y` combination.
+        if has_explicit_diff_source(args) {
+            match get_git_changed_files(root, base, args.head.as_deref()) {
+                Ok(git_files) => {
+                    for f in git_files.files {
+                        let path = root.join(f);
+                        files.push(path.clone());
+                        git_provenance_files.push(path);
+                    }
+                    for f in git_files.deleted {
+                        deleted.push(root.join(f));
+                    }
                 }
-                for f in git_files.deleted {
-                    deleted.push(root.join(f));
+                Err(e) if has_explicit_files => {
+                    eprintln!("warning: git diff failed ({e}); using explicit --changed-file list");
                 }
+                Err(e) => return Err(e),
             }
-            Err(e) if has_explicit_files => {
-                eprintln!("warning: git diff failed ({e}); using explicit --changed-file list");
+        } else {
+            match super::git_diff::stream_git_diff(root, base, head) {
+                Ok(diff) => {
+                    let git_start = files.len();
+                    apply_diff_files(&diff, root, &mut files, &mut deleted);
+                    git_provenance_files.extend(files[git_start..].iter().cloned());
+                    diff_files.extend(diff);
+                }
+                Err(e) if has_explicit_files => {
+                    eprintln!(
+                        "warning: git diff failed ({e:#}); using explicit --changed-file list"
+                    );
+                }
+                Err(e) => return Err(e),
             }
-            Err(e) => return Err(e),
         }
     }
 
@@ -136,6 +164,19 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         authoritative_files,
         diff_files,
     })
+}
+
+/// Whether the caller supplied an explicit unified-diff source
+/// (`--diff`/`--diff-stdin`/`--diff-command`/the programmatic inline
+/// `diff_content`). Shared with `lockfile_changes::is_diff_only_mode` and
+/// with the base/head streaming-vs-name-status branch above, so both
+/// consumers agree on exactly which inputs count as "an explicit diff was
+/// given."
+pub(super) fn has_explicit_diff_source(args: &PlanArgs) -> bool {
+    args.diff.is_some()
+        || args.diff_stdin
+        || args.diff_command.is_some()
+        || args.diff_content.is_some()
 }
 
 fn normalize_unique(files: Vec<PathBuf>) -> Vec<PathBuf> {
@@ -258,6 +299,7 @@ fn file_is_present(path: &Path) -> bool {
     }
 }
 
+#[derive(Debug)]
 struct GitChangedFiles {
     files: Vec<PathBuf>,
     deleted: Vec<PathBuf>,
@@ -308,18 +350,34 @@ pub(crate) fn parse_git_diff_refspec(spec: &str) -> Result<(String, Option<Strin
     Ok((trimmed.to_string(), None))
 }
 
+/// Name-status-only changed-file discovery for base/head. Used only when the
+/// caller *also* supplied an explicit `--diff*` input (hunks already come
+/// from that source in `collect_changed_files`); the streaming hunk producer
+/// in `git_diff::stream_git_diff` is the primary base/head path otherwise.
+///
+/// On a nonzero exit this classifies the failure the same way
+/// `stream_git_diff` does (see `git_diff::classify_git_diff_failure`) so
+/// combined mode (`--diff-stdin --base --head`) surfaces the same stable
+/// diagnostic codes as the primary streaming path, instead of a generic
+/// `git command failed` message.
 fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<GitChangedFiles> {
     let head_commit = head.unwrap_or("HEAD");
-    let output = run_git(
-        &[
+    let mut command = std::process::Command::new("git");
+    command
+        .args([
             "diff",
             "--relative",
             "--name-status",
-            &format!("{}...{}", base, head_commit),
-        ],
-        root,
-    )?;
-    Ok(parse_git_name_status(&output))
+            &format!("{base}...{head_commit}"),
+        ])
+        .current_dir(root);
+    let output = crate::invocation::command_output(&mut command)?;
+    if !output.status.success() {
+        let classification =
+            super::git_diff::classify_git_diff_failure(root, base, head_commit, &output.stderr)?;
+        return Err(classification.into());
+    }
+    Ok(parse_git_name_status(&String::from_utf8(output.stdout)?))
 }
 
 fn parse_git_name_status(output: &str) -> GitChangedFiles {
@@ -355,19 +413,6 @@ fn parse_git_name_status(output: &str) -> GitChangedFiles {
     let mut deleted: Vec<_> = deleted.into_iter().collect();
     deleted.sort();
     GitChangedFiles { files, deleted }
-}
-
-fn run_git(args: &[&str], root: &Path) -> Result<String> {
-    let mut command = std::process::Command::new("git");
-    command.args(args).current_dir(root);
-    let output = crate::invocation::command_output(&mut command)?;
-    if !output.status.success() {
-        anyhow::bail!(
-            "git command failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-    Ok(String::from_utf8(output.stdout)?)
 }
 
 #[cfg(test)]
@@ -447,5 +492,24 @@ mod tests {
             err.to_string().contains("missing a base"),
             "unexpected error: {err}"
         );
+    }
+
+    // Regression for a review finding on #587: combined mode (an explicit
+    // `--diff*` input alongside `--base`/`--head`) used to surface a
+    // generic `git command failed` message on an invalid ref instead of the
+    // same stable diagnostic code the primary streaming path reports.
+    #[test]
+    fn combined_mode_git_failure_reports_a_stable_diagnostic_code() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        crate::test_support::git_init(root);
+        fs::write(root.join("f.txt"), "one\n").unwrap();
+        crate::test_support::git_commit_all(root, "base");
+
+        let error = get_git_changed_files(root, "not-a-real-ref", Some("HEAD")).unwrap_err();
+        let git_diff_error = error
+            .downcast_ref::<crate::tests::git_diff::GitDiffError>()
+            .expect("expected a GitDiffError");
+        assert_eq!(git_diff_error.code(), "git-merge-base-unavailable");
     }
 }

@@ -19,11 +19,32 @@ come from `--base/--head`, `--from-git-diff`, `--changed-file`,
 
 `--from-git-diff <base...head>` is single-argument sugar over `--base`/`--head`
 (conflicts with both): it parses a three-dot refspec and runs the identical
-`git diff --relative --name-status <base>...<head>` lookup. A bare base or a
-trailing `<base>...` both default head to `HEAD`. Two-dot refspecs
-(`<base>..<head>`) are rejected — `git diff` gives `..` and `...` different
-comparison bases, so accepting `..` here would silently desugar to a different
-diff than the equivalent `--base`/`--head` flags.
+`git diff <base>...<head>` lookup. A bare base or a trailing `<base>...` both
+default head to `HEAD`. Two-dot refspecs (`<base>..<head>`) are rejected —
+`git diff` gives `..` and `...` different comparison bases, so accepting `..`
+here would silently desugar to a different diff than the equivalent
+`--base`/`--head` flags.
+
+`--base`/`--head` and `--from-git-diff` stream the full unified diff (not just
+file names) into the same parser `--diff-stdin` uses, so revision-backed plans
+carry identical hunks, rename/delete facts, and selector/route/queue/HTTP
+coverage hints (Playwright plans only) as an inline diff — memory is bounded
+regardless of patch size. If Git cannot resolve the request, the command
+exits nonzero with a stable diagnostic code in stderr rather than silently
+returning an empty plan:
+
+- `git-not-a-repository` — `--root` is not inside a Git repository.
+- `git-merge-base-unavailable` — `--base`/`--head` (or the equivalent
+  refspec) does not resolve to a commit.
+- `git-shallow-history` — both refs resolve, but the merge base was cut by a
+  shallow fetch (common in CI checkouts); fetch more history
+  (`git fetch --unshallow` or a deeper `--depth`).
+- `git-exit-failure` — Git failed for another reason; see the embedded stderr.
+- `git-malformed-output` — a single diff line exceeded the internal
+  pathological-line bound.
+
+Node's `testsPlan()` rejects with the same stable code and message instead of
+resolving to an empty plan.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and

@@ -27,6 +27,7 @@ words:
   - gitignore
   - glibc
   - globset
+  - greppable
   - guardrailsrc
   - invalidators
   - jsonc
