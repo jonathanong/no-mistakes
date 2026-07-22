@@ -25,7 +25,7 @@ mod native_fallback;
 mod targeted_triggers;
 #[cfg(test)]
 mod tests;
-mod vitest_setup_fallback;
+pub(super) mod vitest_setup_fallback;
 use dep_triggers::dependency_triggers;
 pub(crate) use discovery::discover_framework_tests_from_prepared;
 use fallback::{fallback_plan, FallbackRequest};

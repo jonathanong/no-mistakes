@@ -4,6 +4,9 @@ use std::collections::BTreeSet;
 #[path = "parser_coverage/vitest_workspace.rs"]
 mod workspace;
 
+#[path = "parser_coverage/vitest_setup_branches.rs"]
+mod vitest_setup_branches;
+
 fn coverage_files(prefix: &str, suffix: &str) -> Vec<String> {
     let mut files: Vec<_> = std::fs::read_dir(fixture("coverage"))
         .unwrap()

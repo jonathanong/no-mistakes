@@ -1,6 +1,133 @@
 use super::*;
 
 #[test]
+fn exhausted_setup_budget_tracks_changes_outside_the_owner() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-config/vitest-setup-bounds"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let mut args = vitest_setup_args(root.clone(), vec![root.join("shared/outside.ts")]);
+    args.framework = None;
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["packages/foo/bounded.test.ts"]
+    );
+}
+
+#[test]
+fn union_plan_applies_dynamic_setup_warnings_and_owner_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut args = vitest_setup_args(root.clone(), vec![root.join("config/setup-selector.ts")]);
+    args.framework = None;
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan
+        .warnings
+        .iter()
+        .any(|warning| warning.r#type == "vitest-setup-dynamic"));
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["inherits/inherited.test.ts"]
+    );
+}
+
+#[test]
+fn union_plan_applies_unresolved_setup_deletion_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut args = vitest_setup_args(root.clone(), Vec::new());
+    args.framework = None;
+    args.diff_content = Some(
+        "diff --git a/aliases/setup/missing.ts b/aliases/setup/missing.ts\n\
+--- a/aliases/setup/missing.ts\n\
++++ /dev/null\n\
+@@ -1 +0,0 @@\n\
+-export const missing = true\n"
+            .to_string(),
+    );
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan
+        .warnings
+        .iter()
+        .any(|warning| warning.r#type == "vitest-setup-unresolved"));
+    assert_eq!(
+        plan.selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["alias-owner/alias-owner.test.ts"]
+    );
+}
+
+#[test]
+fn conditional_setup_branches_and_selector_keep_owner_provenance() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut branch_args =
+        vitest_setup_args(root.clone(), vec![root.join("setup/conditional-a.ts")]);
+    branch_args.framework = None;
+    let branch = crate::tests::plan::generate_plan(&branch_args).unwrap();
+    assert_eq!(
+        branch
+            .selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["conditional-owner/conditional.test.ts"]
+    );
+    assert!(!branch.fallback_triggered, "{branch:#?}");
+
+    let mut selector_args =
+        vitest_setup_args(root.clone(), vec![root.join("config/branch-selector.ts")]);
+    selector_args.framework = None;
+    let selector = crate::tests::plan::generate_plan(&selector_args).unwrap();
+    assert_eq!(
+        selector
+            .selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["conditional-owner/conditional.test.ts"]
+    );
+    assert!(selector.fallback_triggered, "{selector:#?}");
+
+    let mut deleted_args = vitest_setup_args(root.clone(), Vec::new());
+    deleted_args.framework = None;
+    deleted_args.diff_content = Some(
+        "diff --git a/setup/conditional-b.ts b/setup/conditional-b.ts\n\
+--- a/setup/conditional-b.ts\n\
++++ /dev/null\n\
+@@ -1 +0,0 @@\n\
+-export const conditionalB = true\n"
+            .to_string(),
+    );
+    let deleted = crate::tests::plan::generate_plan(&deleted_args).unwrap();
+    assert_eq!(
+        deleted
+            .selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>(),
+        ["conditional-owner/conditional.test.ts"]
+    );
+    // Deleted setup targets remain authoritative phantom graph roots, so the
+    // exact setup edge wins without requiring a conservative fallback.
+    assert!(!deleted.fallback_triggered, "{deleted:#?}");
+}
+
+#[test]
 fn commonjs_literal_setup_exports_create_owner_scoped_setup_edges() {
     let (_fixture, root) = vitest_setup_fixture();
     for setup in [

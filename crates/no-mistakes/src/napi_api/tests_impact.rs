@@ -1,6 +1,32 @@
 include!("tests_impact/resources.rs");
 
 #[test]
+fn tests_impact_json_preserves_configured_native_test_projects() {
+    for (fixture, test) in [
+        (
+            "dotnet-test-plan",
+            "dotnet-clients/tests/App.Tests/FeedServiceTests.cs",
+        ),
+        (
+            "swift-test-plan",
+            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+        ),
+    ] {
+        let output = tests_impact_json_impl(
+            json!({
+                "root": fixture_root(fixture),
+                "entrypoints": [test]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(plan["selected_tests"][0]["test_file"], test, "{plan:#}");
+        assert_eq!(plan["selected_tests"][0]["reasons"][0]["via"][0], "self");
+    }
+}
+
+#[test]
 fn tests_impact_json_returns_plan_for_file_entrypoint() {
     let root = fixture_root("tests-impact-symbol");
     let options = json!({

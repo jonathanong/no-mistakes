@@ -1,6 +1,35 @@
 // Included into `napi_api::tests`; shares its fixture helpers and imports.
 
 #[test]
+fn tests_plan_json_union_applies_vitest_setup_fallback() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        json!({
+            "root": root,
+            "changedFiles": ["config/setup-selector.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["warnings"].as_array().unwrap().iter().any(|warning| {
+        warning["type"] == "vitest-setup-dynamic"
+    }));
+    assert_eq!(
+        plan["selected_tests"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|test| test["test_file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["inherits/inherited.test.ts"]
+    );
+}
+
+#[test]
 fn tests_plan_why_comment_and_graph_exports_return_reports() {
     let root = fixture_root("test-plan-config");
     let plan_options = json!({

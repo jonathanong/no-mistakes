@@ -12,6 +12,9 @@ use std::process::ExitCode;
 
 include!("plan_extra_inputs.rs");
 
+#[path = "plan_vitest_setup.rs"]
+mod plan_vitest_setup;
+
 pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     let plan = generate_plan(&args)?;
 
@@ -452,6 +455,16 @@ pub(crate) fn generate_plan_with_prepared(
         args.include_symbols,
     )?;
 
+    let vitest_fallback_reason = plan_vitest_setup::apply_union_fallback(
+        prepared,
+        root,
+        changed_files,
+        deleted_files,
+        &mut selected_map,
+        &mut warnings,
+        &mut warnings_seen,
+    )?;
+
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
     for test in &mut selected_tests {
         test.reasons
@@ -466,8 +479,8 @@ pub(crate) fn generate_plan_with_prepared(
         selected_tests,
         groups: Vec::new(),
         warnings,
-        fallback_triggered: false,
-        fallback_reason: None,
+        fallback_triggered: vitest_fallback_reason.is_some(),
+        fallback_reason: vitest_fallback_reason,
     })
 }
 

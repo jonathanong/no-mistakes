@@ -1,11 +1,26 @@
 use super::*;
 
-fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
-    resolve_tsconfig_from_visible(
-        root,
+fn resolve_tsconfig(
+    root: &Path,
+    explicit: Option<&Path>,
+) -> Result<crate::codebase::ts_resolver::TsConfig> {
+    crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
         explicit,
+        root,
         &crate::codebase::ts_source::discover_visible_paths(root),
     )
+    .or_else(|error| {
+        if explicit.is_some() {
+            Err(error)
+        } else {
+            Ok(crate::codebase::ts_resolver::TsConfig {
+                dir: root.to_path_buf(),
+                paths_dir: root.to_path_buf(),
+                paths: Vec::new(),
+                base_url: None,
+            })
+        }
+    })
 }
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -210,4 +225,38 @@ fn flow_query_explicit_missing_tsconfig_errors() {
     assert!(error.to_string().contains("missing.tsconfig.json"));
 }
 
-include!("flow_query_tests/prepared_config.rs");
+#[test]
+fn flow_prepared_graph_honors_explicit_config_without_nested_discovery() {
+    let root = fixture_root("graph-default-route-config");
+    let empty_config = fixture_root("graph-empty-route-config").join(".no-mistakes.yml");
+    let options = |config| FlowOptions {
+        target: "src/client.ts".to_string(),
+        root: root.clone(),
+        tsconfig: None,
+        config,
+        direction: FlowDirection::Deps,
+        depth: 1,
+        relationships: vec![RelationshipArg::Route],
+    };
+
+    let default = run(&options(None)).unwrap();
+    assert!(default
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
+    let explicit = run(&options(Some(empty_config))).unwrap();
+    assert!(!explicit
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
+
+    let source = include_str!("flow_query.rs");
+    let run_body = source
+        .split("pub fn run(options: &FlowOptions)")
+        .nth(1)
+        .and_then(|source| source.split("include!(\"flow_query_traverse.rs\")").next())
+        .expect("flow run body");
+    assert!(run_body.contains("SharedTraversalContext::prepare_with_framework_plan("));
+    assert!(!run_body.contains("VisiblePathSnapshot::new("));
+    assert!(!run_body.contains("DepGraph::build"));
+}

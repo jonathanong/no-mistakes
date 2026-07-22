@@ -13,6 +13,7 @@ import * as namespaceSetups from './config/namespace-setups'
 import commonjsDefaultSetups, { namedSetups as commonjsNamedSetups } from './config/commonjs-setups.cjs'
 import { declarationOnlySetups } from './config/declaration-only-setups'
 import { missingBarrelSetups } from './config/missing-setup-barrel'
+import { useAlternateSetup } from './config/branch-selector'
 
 const localSetups = { files: ['./setup/local-member.ts'] }
 
@@ -117,6 +118,19 @@ export default defineConfig({
           include: ['**/*.test.ts'],
           // The barrel remains parseable while its runtime leaf is absent.
           setupFiles: missingBarrelSetups,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'conditional-setup',
+          root: './conditional-owner',
+          include: ['**/*.test.ts'],
+          // Both literal branches are statically known. The selector lives
+          // outside the owner so its provenance must remain explicit.
+          setupFiles: useAlternateSetup
+            ? '../setup/conditional-a.ts'
+            : '../setup/conditional-b.ts',
           globalSetup: [],
         },
       },

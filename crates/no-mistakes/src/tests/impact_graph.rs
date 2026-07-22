@@ -2,9 +2,7 @@ use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{
     DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphBuild,
 };
-use no_mistakes::codebase::test_discovery::{
-    FrameworkPreparationPlan, PreparedTestProjectRequest, TestRunner,
-};
+use no_mistakes::codebase::test_discovery::{FrameworkPreparationPlan, PreparedTestProjectRequest};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::codebase::ts_resolver::{TsConfig, TsConfigCatalog};
 use no_mistakes::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
@@ -53,7 +51,10 @@ pub(crate) fn build_test_impact_graph(
         &visible_paths,
         &sources,
     );
-    let framework_plan = FrameworkPreparationPlan::for_runners([TestRunner::Vitest]);
+    // TestOf classification is the union of every configured suite. Prepare
+    // all runners in this same pass so native project filters remain
+    // authoritative while Vitest setup dependencies are attached below.
+    let framework_plan = FrameworkPreparationPlan::all();
     let excluded_configs = framework_plan.excluded_config_paths(root, config, &visible_paths);
     let graph_files = GraphFiles::from_files_with_resource_candidates_excluding_indexable(
         no_mistakes::codebase::ts_source::discover_files_from_visible(root, &[], &visible_paths),
@@ -150,8 +151,8 @@ pub(crate) fn build_test_impact_graph(
             prepared: &prepared_graph_config,
             facts: Some(&facts),
             import_resolution_cache: None,
-            dotnet_facts: None,
-            swift_facts: None,
+            dotnet_facts: projects.dotnet_facts(),
+            swift_facts: projects.swift_facts(),
             visible_paths: Some(&visible),
         })?;
     Ok((
@@ -182,4 +183,57 @@ fn catalog(
     } else {
         TsConfigCatalog::from_visible_and_sources(root, roots, visible, sources)
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fixture(name: &str) -> PathBuf {
+        no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../test-cases/codebase-analysis")
+                .join(name)
+                .join("fixture"),
+        )
+    }
+
+    fn filter(name: &str) -> TestFileFilter {
+        let root = fixture(name);
+        let visible = VisiblePathSnapshot::new(&root);
+        let config = no_mistakes::config::v2::load_v2_config_from_visible(
+            &root,
+            None,
+            &visible.paths_for(&root),
+        )
+        .unwrap();
+        build_test_impact_graph(&root, None, &config, None, false)
+            .unwrap()
+            .1
+    }
+
+    #[test]
+    fn impact_filter_preserves_configured_dotnet_test_projects() {
+        let root = fixture("dotnet-test-plan");
+        let filter = filter("dotnet-test-plan");
+        assert!(filter.is_match(
+            &root,
+            &root.join("dotnet-clients/tests/App.Tests/FeedServiceTests.cs")
+        ));
+        assert!(!filter.is_match(&root, &root.join("dotnet-clients/src/App/FeedService.cs")));
+    }
+
+    #[test]
+    fn impact_filter_preserves_configured_swift_test_projects() {
+        let root = fixture("swift-test-plan");
+        let filter = filter("swift-test-plan");
+        assert!(filter.is_match(
+            &root,
+            &root.join("swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift")
+        ));
+        assert!(!filter.is_match(
+            &root,
+            &root.join("swift-clients/core/Sources/VouchaCore/APIClient.swift")
+        ));
+    }
 }

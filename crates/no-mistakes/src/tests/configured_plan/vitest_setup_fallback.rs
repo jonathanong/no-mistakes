@@ -10,7 +10,7 @@ use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn warnings(root: &Path, projects: Option<&[ConfigProject]>) -> Vec<Warning> {
+pub(crate) fn warnings(root: &Path, projects: Option<&[ConfigProject]>) -> Vec<Warning> {
     let mut warnings = projects
         .unwrap_or_default()
         .iter()
@@ -95,7 +95,7 @@ pub(super) fn apply_selection(
 /// Select a conservative, project-bounded fallback only after an unsafe setup
 /// declaration is relevant to this change. `used` is applied before the global
 /// plan limit so ordinary candidates retain their established priority.
-pub(super) fn selection(
+pub(crate) fn selection(
     root: &Path,
     changed_files: &[PathBuf],
     deleted_files: &[PathBuf],
@@ -311,10 +311,13 @@ fn trigger_paths(
         let changed = normalize(changed);
         let config_or_helper = changed == config
             || changed == declaration
-            || setup
-                .trigger_paths
-                .iter()
-                .any(|trigger| changed == normalize(trigger));
+            || setup.trigger_paths.iter().any(|trigger| {
+                let trigger = normalize(trigger);
+                changed == trigger
+                    || (setup.specifier.is_none()
+                        && trigger.is_dir()
+                        && changed.starts_with(trigger))
+            });
         let dynamic_owner_scope =
             setup.specifier.is_none() && (changed == scope || changed.starts_with(&scope));
         if config_or_helper || dynamic_owner_scope {
