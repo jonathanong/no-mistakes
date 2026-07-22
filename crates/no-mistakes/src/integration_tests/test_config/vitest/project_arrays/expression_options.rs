@@ -51,12 +51,10 @@ pub(super) fn helper_expression_options(
             expression_statement_options(&arrow.body, ctx)
         }
         Expression::ArrowFunctionExpression(arrow) => body_return_options(&arrow.body, ctx),
-        Expression::FunctionExpression(function) => function
-            .body
-            .as_deref()
-            .map(|body| body_return_options(body, ctx))
-            .transpose()
-            .map(Option::unwrap_or_default),
+        Expression::FunctionExpression(function) => match function.body.as_deref() {
+            Some(body) => body_return_options(body, ctx),
+            None => Ok(Vec::new()),
+        },
         _ => expression_options(expression, ctx),
     }
 }

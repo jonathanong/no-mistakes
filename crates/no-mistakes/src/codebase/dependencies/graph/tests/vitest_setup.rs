@@ -57,7 +57,7 @@ fn vitest_setup_edge_detail_and_sort_key_are_stable() {
 
 #[test]
 fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
-    let test = p("/repo/src/widget.test.ts");
+    let test = p("/repo/src/nested/widget.test.ts");
     let root_setup = p("/repo/setup/root.ts");
     let nested_setup = p("/repo/setup/nested.ts");
     let unscoped_setup = p("/repo/setup/unscoped.ts");
@@ -70,9 +70,19 @@ fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
         EdgeMap::new(),
     )
     .with_vitest_setup_projects(vec![
-        vitest_project("root", Some("."), "**/*.test.ts", &root_setup),
-        vitest_project("nested", Some("src"), "src/**/*.test.ts", &nested_setup),
-        vitest_project("unscoped", None, "src/**/*.test.ts", &unscoped_setup),
+        vitest_project("root", Some("src"), "src/**/*.test.ts", &root_setup),
+        vitest_project(
+            "nested",
+            Some("src/nested"),
+            "src/nested/**/*.test.ts",
+            &nested_setup,
+        ),
+        vitest_project(
+            "unscoped",
+            None,
+            "src/nested/**/*.test.ts",
+            &unscoped_setup,
+        ),
     ]);
 
     assert_eq!(
