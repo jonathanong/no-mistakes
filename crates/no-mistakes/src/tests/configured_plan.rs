@@ -19,9 +19,10 @@ mod hints;
 mod hints_domains;
 mod lockfile_seeds;
 mod native_fallback;
+mod targeted_triggers;
 #[cfg(test)]
 mod tests;
-use dep_triggers::dependency_trigger;
+use dep_triggers::dependency_triggers;
 use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
     empty_group_result, select_limited_group_candidates, sorted_selected_tests, sorted_warnings,
@@ -29,6 +30,7 @@ use finalize::{
 use hints::build_coverage_hints_from_prepared;
 use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
+use targeted_triggers::{merge_targeted_candidates, targeted_dependency_candidates};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan_with_prepared(
@@ -53,6 +55,10 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let has_global_limit = effective_limit.is_some();
     let global_limit =
         limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
+    // Validate every structured target before any fallback or `all` environment
+    // can return a plan successfully.
+    let dependency_triggers =
+        dependency_triggers(root, config, framework, changed_files, prepared)?;
 
     if effective_global_config_fallback(&env, args) {
         if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
@@ -94,9 +100,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
         return Ok(plan);
     }
 
-    if let Some((reason, trigger_file)) =
-        dependency_trigger(root, config, framework, changed_files, prepared)?
-    {
+    if let Some((reason, trigger_file)) = dependency_triggers.fallback {
         let mut plan = fallback_plan(
             root,
             &all_tests,
@@ -157,10 +161,26 @@ pub(crate) fn generate_configured_plan_with_prepared(
         ))
     };
     let mut lockfile_seeds_injected = false;
+    let targeted_candidates = targeted_dependency_candidates(
+        root,
+        &all_tests,
+        &discovered_tests,
+        &dependency_triggers.targeted,
+    );
+    let mut groups = configured_groups(&env, framework);
+    let configured_group_count = groups.len();
+    let needs_target_only_group = !targeted_candidates.is_empty()
+        && !groups
+            .iter()
+            .any(|group| group.type_ == TestPlanGroupType::Dependencies);
+    if needs_target_only_group {
+        groups.push(TestPlanGroup {
+            type_: TestPlanGroupType::Dependencies,
+            ..TestPlanGroup::default()
+        });
+    }
 
-    let groups = configured_groups(&env, framework);
-
-    for group in &groups {
+    for (group_index, group) in groups.iter().enumerate() {
         if remaining_global == 0 {
             group_results.push(empty_group_result(
                 group_type_name(group.type_),
@@ -179,22 +199,34 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 framework_name(framework)
             );
         }
-        let mut candidates = group_candidates(
-            group.type_,
-            root,
-            changed_files,
-            graph,
-            &all_tests,
-            &all_test_set,
-            &test_filter,
-            &used,
-            &coverage_hints,
-            &mut warnings,
-            &mut warnings_seen,
-        );
+        let target_only_group = needs_target_only_group && group_index == configured_group_count;
+        let mut candidates = if target_only_group {
+            Vec::new()
+        } else {
+            group_candidates(
+                group.type_,
+                root,
+                changed_files,
+                graph,
+                &all_tests,
+                &all_test_set,
+                &test_filter,
+                &used,
+                &coverage_hints,
+                &mut warnings,
+                &mut warnings_seen,
+            )
+        };
         // Inject lockfile-seeded candidates during the dependencies group turn so they
         // compete for budget before later groups (e.g. sample) can consume it.
         if group.type_ == TestPlanGroupType::Dependencies {
+            merge_targeted_candidates(
+                root,
+                &mut candidates,
+                &targeted_candidates,
+                &used,
+                &mut selected_map,
+            );
             if let Some(ref seed_result) = lockfile_seed_result {
                 lockfile_seeds_injected = true;
                 let in_candidates: HashSet<String> =
@@ -458,6 +490,9 @@ pub(crate) fn discover_framework_tests_from_prepared(
 
 fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests) {
     for test in &mut plan.selected_tests {
+        if !test.targets.is_empty() {
+            continue;
+        }
         let path = root.join(&test.test_file);
         if let Some(targets) = discovered.targets_by_path.get(&path) {
             test.targets = targets.clone();

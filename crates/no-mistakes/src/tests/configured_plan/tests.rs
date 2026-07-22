@@ -1,7 +1,7 @@
 use super::*;
 use no_mistakes::config::v2::schema::{
     NoMistakesConfig, Project, StringOrList, TestPlanIgnoredChangedTestsFramework,
-    TestPlanProjectDependency,
+    TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 
 #[test]
@@ -56,7 +56,7 @@ fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes()
     let prepared = crate::tests::prepared_plan::PreparedTestPlanRequest::prepare(&plan_args)
         .expect("fixture request should prepare");
 
-    let trigger = dependency_trigger(
+    let trigger = dependency_triggers(
         &root,
         &config,
         TestFramework::Vitest,
@@ -65,7 +65,30 @@ fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes()
     )
     .unwrap();
 
-    assert!(trigger.is_some());
+    assert!(trigger.fallback.is_some());
+}
+
+#[test]
+fn dependency_patterns_use_ordered_negation_and_reinclusion() {
+    let project = Project {
+        root: Some("src".to_string()),
+        ..Project::default()
+    };
+    let trigger = TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+        paths: vec![
+            "**/*.ts".to_string(),
+            "!generated/**".to_string(),
+            "generated/keep.ts".to_string(),
+        ],
+        targets: vec!["unit".to_string()],
+    });
+    let patterns = super::dep_triggers::project_dependency_patterns("src", &project, &trigger);
+    assert_eq!(
+        patterns,
+        vec!["src/**/*.ts", "!src/generated/**", "src/generated/keep.ts"]
+    );
+    assert!(super::dep_triggers::matches_ordered(&patterns, "src/generated/keep.ts").unwrap());
+    assert!(!super::dep_triggers::matches_ordered(&patterns, "src/generated/drop.ts").unwrap());
 }
 
 #[test]

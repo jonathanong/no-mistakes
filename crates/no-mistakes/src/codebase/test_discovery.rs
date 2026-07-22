@@ -20,7 +20,7 @@ pub(crate) use filters::fallback_runner_match;
 pub use filters::{fallback_test_path, ProjectTestFilter};
 use ownership::owning_projects;
 pub use targets::TestExecutionTarget;
-pub use types::{DiscoveredTests, TestRunner};
+pub use types::{DiscoveredTests, PreparedRunnerProject, TestRunner};
 include!("test_discovery/preparation_plan.rs");
 include!("test_discovery/prepared.rs");
 include!("test_discovery/api.rs");

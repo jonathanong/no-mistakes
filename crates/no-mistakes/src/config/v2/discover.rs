@@ -3,7 +3,7 @@ use globset::GlobBuilder;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use super::schema::NoMistakesConfig;
+use super::schema::{NoMistakesConfig, TestPlanProjectDependency};
 use crate::config::{
     find_automatic_config_path, find_automatic_config_path_from_visible, parse_config, resolve,
 };
@@ -89,9 +89,17 @@ pub(crate) fn effective_v2_config_path_from_visible(
 }
 
 fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
-    let config = parse_config::<NoMistakesConfig>(source, path)?;
-    validate_v2_config(&config)?;
+    let config = parse_v2_config_quiet(source, path)?;
     emit_v2_deprecation_warnings(&config, path);
+    Ok(config)
+}
+
+/// Parse and validate v2 config without emitting compatibility warnings.
+/// Historical config comparisons use this so one request does not print a
+/// warning for a revision that is not its active configuration.
+pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
+    let config = parse_config::<NoMistakesConfig>(source, path)?;
+    validate_v2_config(&config, path)?;
     Ok(config)
 }
 
@@ -111,7 +119,7 @@ fn emit_v2_deprecation_warnings(config: &NoMistakesConfig, path: &Path) {
     }
 }
 
-fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {
+fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
     for (name, project) in &config.projects {
         validate_globs(&project.include, &format!("projects.{name}.include"))?;
         validate_globs(&project.exclude, &format!("projects.{name}.exclude"))?;
@@ -122,6 +130,48 @@ fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {
         }
         validate_globs(&rule.include, &format!("rules[{index}].include"))?;
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
+    }
+    for (framework, plan) in [
+        ("dotnet", &config.test_plan.dotnet),
+        ("playwright", &config.test_plan.playwright),
+        ("vitest", &config.test_plan.vitest),
+        ("swift", &config.test_plan.swift),
+    ] {
+        for (project, dependency) in &plan.full_suite_triggers.projects {
+            let TestPlanProjectDependency::Targeted(targeted) = dependency else {
+                continue;
+            };
+            let base = format!(
+                "{}.testPlan.{framework}.fullSuiteTriggers.projects.{project}",
+                path.display()
+            );
+            if targeted.paths.is_empty() {
+                anyhow::bail!("{base}.paths must not be empty");
+            }
+            if targeted.targets.is_empty() {
+                anyhow::bail!("{base}.targets must not be empty");
+            }
+            for (index, pattern) in targeted.paths.iter().enumerate() {
+                let normalized = pattern.trim();
+                let normalized = normalized.strip_prefix('!').unwrap_or(normalized).trim();
+                if normalized.is_empty() {
+                    anyhow::bail!("{base}.paths[{index}] must not be blank");
+                }
+                GlobBuilder::new(normalized.trim_start_matches("./"))
+                    .literal_separator(false)
+                    .build()
+                    .map_err(|err| {
+                        anyhow::anyhow!(
+                            "{base}.paths[{index}] contains invalid glob `{pattern}`: {err}"
+                        )
+                    })?;
+            }
+            for (index, target) in targeted.targets.iter().enumerate() {
+                if target.trim().is_empty() {
+                    anyhow::bail!("{base}.targets[{index}] must not be blank");
+                }
+            }
+        }
     }
     validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())

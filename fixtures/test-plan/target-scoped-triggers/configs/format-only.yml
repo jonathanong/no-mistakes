@@ -1,0 +1,20 @@
+# This file is semantically identical to the fixture's effective configuration.
+projects: { database-resources: { root: . }, union-resources: { root: . } }
+tests:
+  playwright: { configs: playwright.config.mts }
+  vitest: { configs: vitest.config.mts }
+testPlan:
+  playwright:
+    environments:
+      pre-push: { globalConfigFallback: true }
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths: [migrations/**/*.sql, "!migrations/ignored/**", migrations/ignored/reinclude.sql]
+          targets: [database]
+        union-resources: { paths: [migrations/union.sql], targets: [web] }
+    environments:
+      limited: { globalConfigFallback: true, limit: { files: 1 } }
+      pre-push: { globalConfigFallback: true, exclude: [src/shared.test.ts] }
+      shared: { globalConfigFallback: true }

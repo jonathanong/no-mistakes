@@ -48,3 +48,13 @@ pub struct DiscoveredTests {
     pub targets_by_path: BTreeMap<PathBuf, Vec<TestExecutionTarget>>,
     pub used_fallback: bool,
 }
+
+/// Read-only identity of a runner project prepared for the current request.
+/// It intentionally exposes only the values needed to validate target-scoped
+/// test-plan triggers, not the runner-config implementation type.
+#[doc(hidden)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PreparedRunnerProject {
+    pub config: Option<String>,
+    pub runner_project_arg: Option<String>,
+}

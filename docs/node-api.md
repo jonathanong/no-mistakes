@@ -73,6 +73,12 @@ Node option or result type is required.
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests.
 
+The API uses the same target-scoped `fullSuiteTriggers.projects` behavior as the
+CLI. A `{ paths, targets }` match selects only tests owned by those runner
+projects, emits `configured-trigger` reasons and execution targets, and leaves
+`fallback_triggered` false. Semantic `.no-mistakes.yml`/`.yaml` invalidation is
+also identical for revision and inline-diff inputs.
+
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 

@@ -31,6 +31,11 @@ The rule reads Vitest project `include` / `exclude` globs, plus
 by those globs against path-filter action `with.filters` maps in workflow
 steps.
 
+For target-scoped `{ paths, targets }` triggers, the rule attributes each
+positive trigger path to the named Vitest runner projects. Ordered `!` paths
+remove earlier matches and later positive paths may re-include them. Test-plan
+preparation validates target names against its prepared runner-project catalog.
+
 Counterexample: a Vitest project has a full-suite trigger for `ts-shared/**`,
 but the CI filter only contains `ts-shared/*/package.json`. Source changes such
 as `ts-shared/utils/index.mts` would not trigger CI.

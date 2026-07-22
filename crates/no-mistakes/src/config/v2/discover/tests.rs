@@ -1,5 +1,9 @@
-use super::validate_playwright_selector_wrappers;
-use crate::config::v2::schema::PlaywrightSelectorWrapper;
+use super::{validate_playwright_selector_wrappers, validate_v2_config};
+use crate::config::v2::schema::{
+    NoMistakesConfig, PlaywrightSelectorWrapper, TestPlanProjectDependency,
+    TestPlanTargetedProjectDependency,
+};
+use std::path::Path;
 
 fn wrapper(module: &str, export: &str, test_id_argument: usize) -> PlaywrightSelectorWrapper {
     PlaywrightSelectorWrapper {
@@ -37,4 +41,20 @@ fn selector_wrapper_duplicate_arguments_must_not_conflict() {
     .unwrap_err()
     .to_string();
     assert!(error.contains("conflicting testIdArgument values 0 and 1"));
+}
+
+#[test]
+fn targeted_full_suite_trigger_validates_paths_and_targets() {
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "app".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["!".to_string()],
+            targets: vec![" ".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("config.yml.testPlan.vitest.fullSuiteTriggers.projects.app.paths[0]"));
 }

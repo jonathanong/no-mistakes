@@ -98,6 +98,16 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
                 root.join(&df.path)
             };
             df.path = no_mistakes::codebase::ts_resolver::normalize_path(&absolute);
+            if let Some(old_path) = df.old_path.take() {
+                let absolute = if old_path.is_absolute() {
+                    old_path
+                } else {
+                    root.join(old_path)
+                };
+                df.old_path = Some(no_mistakes::codebase::ts_resolver::normalize_path(
+                    &absolute,
+                ));
+            }
             df
         })
         .collect();

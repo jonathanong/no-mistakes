@@ -8,12 +8,21 @@ pub(super) fn project_root_patterns(project_root: &str) -> Vec<String> {
 }
 
 pub(super) fn project_relative_pattern(project_root: &str, pattern: &str) -> String {
+    let (negated, pattern) = pattern
+        .trim()
+        .strip_prefix('!')
+        .map_or((false, pattern.trim()), |pattern| (true, pattern));
     let root = normalize_project_glob_part(project_root);
     let pattern = normalize_project_glob_part(pattern);
-    if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
+    let joined = if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
         pattern
     } else {
         format!("{root}/{pattern}")
+    };
+    if negated {
+        format!("!{joined}")
+    } else {
+        joined
     }
 }
 
