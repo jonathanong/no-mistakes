@@ -65,15 +65,20 @@ fn merge_inherited_options(options: &mut Options, mut inherited: Options, path: 
     options.root = options.root.take().or(inherited.root);
     options.include = options.include.take().or(inherited.include);
     options.exclude = combine_excludes(inherited.exclude, options.exclude.take());
-    options.setup_files = crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
-        inherited.setup_files,
-        options.setup_files.take(),
-    );
-    options.global_setup =
-        crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
-            inherited.global_setup,
-            options.global_setup.take(),
-        );
+    if !options.setup_files_cleared {
+        options.setup_files =
+            crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
+                inherited.setup_files,
+                options.setup_files.take(),
+            );
+    }
+    if !options.global_setup_cleared {
+        options.global_setup =
+            crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
+                inherited.global_setup,
+                options.global_setup.take(),
+            );
+    }
 }
 
 fn normalize_inherited_root(inherited: &mut Options, path: &Path) {
@@ -140,10 +145,7 @@ fn add_unresolved_config_extends(
         conservative_specifiers: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     };
-    options.setup_files = crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
-        Some(vec![fallback]),
-        options.setup_files.take(),
-    );
+    append_setup_dependency(options, fallback);
 }
 
 fn add_config_extends_provenance(
@@ -168,8 +170,11 @@ fn add_config_extends_provenance(
         conservative_specifiers: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     };
-    options.setup_files = crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
-        Some(vec![provenance]),
-        options.setup_files.take(),
-    );
+    append_setup_dependency(options, provenance);
+}
+
+fn append_setup_dependency(options: &mut Options, dependency: VitestSetupDependency) {
+    let mut setups = vec![dependency];
+    setups.extend(options.setup_files.take().unwrap_or_default());
+    options.setup_files = Some(setups);
 }

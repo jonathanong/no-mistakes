@@ -26,12 +26,17 @@ fn tests_targets_napi_preserves_vitest_workspace_source() {
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
-    let target = &value["tests"][0]["targets"][0];
-
-    assert_eq!(target["workspace"], true);
-    assert_eq!(target["config"], "vitest.projects.ts");
-    assert_eq!(target["runner_args"], json!([
-        "--workspace", "vitest.projects.ts", "--project", "unit", "tests/unit.test.ts"
+    let targets = value["tests"][0]["targets"].as_array().unwrap();
+    let inline = targets
+        .iter()
+        .find(|target| target["project"] == "inline-object")
+        .unwrap();
+    assert!(targets.iter().any(|target| target["project"] == "nested-object"));
+    assert!(targets.iter().any(|target| target["project"].is_null()));
+    assert_eq!(inline["workspace"], true);
+    assert_eq!(inline["config"], "vitest.projects.ts");
+    assert_eq!(inline["runner_args"], json!([
+        "--workspace", "vitest.projects.ts", "--project", "inline-object", "tests/unit.test.ts"
     ]));
 }
 

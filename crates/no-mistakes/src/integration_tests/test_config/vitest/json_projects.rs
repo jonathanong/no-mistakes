@@ -53,6 +53,8 @@ pub(super) fn parse(
             options.exclude = None;
             options.setup_files = None;
             options.global_setup = None;
+            options.setup_files_cleared = false;
+            options.global_setup_cleared = false;
             options::merge(&mut options, options::parse(test, path)?);
         }
         projects.push(to_project(config_dir, root, options, resolver));

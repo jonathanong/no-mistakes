@@ -14,6 +14,16 @@ export default {
       {
         extends: true,
         test: {
+          name: 'cleared',
+          include: ['cleared/**/*.test.ts'],
+          // An empty setup array intentionally clears the inherited root setup.
+          setupFiles: [],
+          globalSetup: [],
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: 'merged-setups',
           include: ['merged/**/*.test.ts'],
           setupFiles: [duplicateRootSetup, './dir/../root-setup.ts', './project-setup.ts'],

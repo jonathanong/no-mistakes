@@ -9,18 +9,28 @@ pub(super) fn merge_options(root: &Options, project: Options) -> Options {
         root: project.root.or_else(|| root.root.clone()),
         include: project.include.or_else(|| root.include.clone()),
         exclude: combine(root.exclude.clone(), project.exclude),
-        setup_files: inherit_setup_files(
-            matches!(project.extends.as_ref(), Some(Extends::True))
-                .then(|| root.setup_files.clone())
-                .flatten(),
-            project.setup_files,
-        ),
-        global_setup: inherit_setup_files(
-            matches!(project.extends.as_ref(), Some(Extends::True))
-                .then(|| root.global_setup.clone())
-                .flatten(),
-            project.global_setup,
-        ),
+        setup_files: if project.setup_files_cleared {
+            project.setup_files
+        } else {
+            inherit_setup_files(
+                matches!(project.extends.as_ref(), Some(Extends::True))
+                    .then(|| root.setup_files.clone())
+                    .flatten(),
+                project.setup_files,
+            )
+        },
+        global_setup: if project.global_setup_cleared {
+            project.global_setup
+        } else {
+            inherit_setup_files(
+                matches!(project.extends.as_ref(), Some(Extends::True))
+                    .then(|| root.global_setup.clone())
+                    .flatten(),
+                project.global_setup,
+            )
+        },
+        setup_files_cleared: project.setup_files_cleared,
+        global_setup_cleared: project.global_setup_cleared,
         extends: project.extends,
         nested_test_scope: project.nested_test_scope,
         standalone_config: project.standalone_config,
@@ -33,12 +43,12 @@ pub(super) fn inherit_setup_files(
     inherited: Option<Vec<VitestSetupDependency>>,
     local: Option<Vec<VitestSetupDependency>>,
 ) -> Option<Vec<VitestSetupDependency>> {
-    let setups = inherited
-        .into_iter()
-        .flatten()
-        .chain(local.into_iter().flatten())
-        .collect::<Vec<_>>();
-    (!setups.is_empty()).then_some(setups)
+    match local {
+        // Vitest treats an explicit empty list as an override, not absence.
+        Some(setups) if setups.is_empty() => None,
+        Some(local) => Some(inherited.into_iter().flatten().chain(local).collect()),
+        None => inherited,
+    }
 }
 
 pub(super) fn dedupe_resolved_setups(setups: &mut Vec<VitestSetupDependency>) {

@@ -14,6 +14,12 @@ pub(super) fn parse(object: &Map<String, Value>, path: &Path) -> Result<Options>
         exclude: optional_strings(object, "exclude")?,
         setup_files: dependencies(object, "setupFiles", VitestSetupField::SetupFiles, path)?,
         global_setup: dependencies(object, "globalSetup", VitestSetupField::GlobalSetup, path)?,
+        setup_files_cleared: object
+            .get("setupFiles")
+            .is_some_and(|value| value == &Value::Array(vec![])),
+        global_setup_cleared: object
+            .get("globalSetup")
+            .is_some_and(|value| value == &Value::Array(vec![])),
         extends: optional_bool(object, "extends")?.map(|value| {
             if value {
                 Extends::True
@@ -32,6 +38,8 @@ pub(super) fn merge(base: &mut Options, nested: Options) {
     base.exclude = nested.exclude.or(base.exclude.take());
     base.setup_files = nested.setup_files.or(base.setup_files.take());
     base.global_setup = nested.global_setup.or(base.global_setup.take());
+    base.setup_files_cleared = nested.setup_files_cleared;
+    base.global_setup_cleared = nested.global_setup_cleared;
     base.extends = nested.extends.or(base.extends.take());
 }
 

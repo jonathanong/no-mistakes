@@ -28,6 +28,10 @@ pub(super) struct Options {
     pub(super) exclude: Option<Vec<String>>,
     pub(super) setup_files: Option<Vec<VitestSetupDependency>>,
     pub(super) global_setup: Option<Vec<VitestSetupDependency>>,
+    /// Distinguishes an explicit empty setup list from an omitted field while
+    /// config-extends provenance is being attached.
+    pub(super) setup_files_cleared: bool,
+    pub(super) global_setup_cleared: bool,
     /// A nested `test` object owns setup fields, including when it arrives
     /// through a supported static object spread.
     pub(super) nested_test_scope: bool,

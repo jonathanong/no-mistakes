@@ -39,19 +39,27 @@ fn merge_options(base: &mut Options, next: Options) {
     let inherited_global = base.global_setup.take();
     let next_setup = next.setup_files.clone();
     let next_global = next.global_setup.clone();
+    let next_setup_cleared = next.setup_files_cleared;
+    let next_global_cleared = next.global_setup_cleared;
     let nested = next.nested_test_scope;
     super::super::merge::merge_options(base, next);
     if nested {
-        base.setup_files =
-            crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
-                inherited_setup,
-                next_setup,
-            );
-        base.global_setup =
-            crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
-                inherited_global,
-                next_global,
-            );
+        base.setup_files = (!next_setup_cleared)
+            .then(|| {
+                crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
+                    inherited_setup,
+                    next_setup,
+                )
+            })
+            .flatten();
+        base.global_setup = (!next_global_cleared)
+            .then(|| {
+                crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
+                    inherited_global,
+                    next_global,
+                )
+            })
+            .flatten();
     } else {
         base.setup_files = inherited_setup;
         base.global_setup = inherited_global;

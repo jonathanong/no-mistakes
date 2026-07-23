@@ -61,6 +61,8 @@ fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result
                         options.exclude = None;
                         options.setup_files = None;
                         options.global_setup = None;
+                        options.setup_files_cleared = false;
+                        options.global_setup_cleared = false;
                         test_options.nested_test_scope = true;
                         merge_options(&mut options, test_options);
                     }
@@ -89,7 +91,7 @@ fn merge_property(
 ) -> Result<()> {
     let resolved = shared::expression_value(value, &ctx.bindings);
     match name.as_deref() {
-        Some("name") => options.name = shared::optional_string(resolved, ctx.source),
+        Some("name") => options.name = static_project_name(resolved, ctx.source),
         Some("root") => options.root = shared::optional_string(resolved, ctx.source),
         Some("extends") => {
             options.extends = match crate::codebase::ts_source::unwrap_ts_wrappers(resolved) {
@@ -114,17 +116,39 @@ fn merge_property(
             )?);
         }
         Some("setupFiles") if !nested_test => {
-            options.setup_files =
-                Some(setup_dependencies(value, VitestSetupField::SetupFiles, ctx));
+            let setups = setup_dependencies(value, VitestSetupField::SetupFiles, ctx);
+            options.setup_files_cleared = setups.is_empty();
+            options.setup_files = Some(setups);
         }
         Some("globalSetup") if !nested_test => {
-            options.global_setup = Some(setup_dependencies(
-                value,
-                VitestSetupField::GlobalSetup,
-                ctx,
-            ));
+            let setups = setup_dependencies(value, VitestSetupField::GlobalSetup, ctx);
+            options.global_setup_cleared = setups.is_empty();
+            options.global_setup = Some(setups);
         }
         _ => {}
     }
     Ok(())
+}
+
+fn static_project_name(value: &Expression<'_>, source: &str) -> Option<String> {
+    shared::optional_string(value, source).or_else(|| {
+        let Expression::ObjectExpression(object) =
+            crate::codebase::ts_source::unwrap_ts_wrappers(value)
+        else {
+            return None;
+        };
+        object
+            .properties
+            .iter()
+            .find_map(|property| match property {
+                ObjectPropertyKind::ObjectProperty(property)
+                    if !property.computed
+                        && !property.method
+                        && shared::property_key_name(&property.key).as_deref() == Some("label") =>
+                {
+                    shared::optional_string(&property.value, source)
+                }
+                _ => None,
+            })
+    })
 }

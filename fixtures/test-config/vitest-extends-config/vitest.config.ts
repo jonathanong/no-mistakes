@@ -10,6 +10,16 @@ export default {
         },
       },
       {
+        extends: './vite.config.js',
+        root: '.',
+        test: {
+          name: 'cleared-extends',
+          include: ['cleared-extends/**/*.test.ts'],
+          setupFiles: [],
+          globalSetup: [],
+        },
+      },
+      {
         extends: './cycle-base.js',
         test: {
           name: 'cycle',
@@ -56,6 +66,15 @@ export default {
         extends: './vite.merged.config.js',
         test: {
           name: 'merged-extends',
+        },
+      },
+      {
+        extends: './vite.merged.config.js',
+        test: {
+          name: 'cleared-merged-extends',
+          include: ['cleared-merged-extends/**/*.test.ts'],
+          setupFiles: [],
+          globalSetup: [],
         },
       },
       {

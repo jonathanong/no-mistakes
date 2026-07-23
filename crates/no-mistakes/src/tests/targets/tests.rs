@@ -25,8 +25,16 @@ fn vitest_projects_target_command_uses_workspace_flag() {
         json: false,
     })
     .unwrap();
-    let target = &report.tests[0].targets[0];
-
+    let targets = &report.tests[0].targets;
+    assert_eq!(targets.len(), 3);
+    let target = targets
+        .iter()
+        .find(|target| target.project.as_deref() == Some("inline-object"))
+        .unwrap();
+    assert!(targets
+        .iter()
+        .any(|target| target.project.as_deref() == Some("nested-object")));
+    assert!(targets.iter().any(|target| target.project.is_none()));
     assert!(target.workspace);
     assert_eq!(target.config.as_deref(), Some("vitest.projects.ts"));
     assert_eq!(
@@ -36,7 +44,7 @@ fn vitest_projects_target_command_uses_workspace_flag() {
             "--workspace",
             "vitest.projects.ts",
             "--project",
-            "unit",
+            "inline-object",
             "tests/unit.test.ts",
         ]
     );

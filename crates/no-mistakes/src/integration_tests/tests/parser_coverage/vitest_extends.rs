@@ -36,6 +36,12 @@ fn vitest_inline_setup_inheritance_requires_extends_true() {
             "{name}",
         );
     }
+    assert!(projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("cleared"))
+        .unwrap()
+        .vitest_setup
+        .is_empty());
     let unresolved = projects
         .iter()
         .find(|project| project.policy_name.as_deref() == Some("nonboolean"))
@@ -120,6 +126,17 @@ fn vitest_inline_setup_inheritance_resolves_static_config_extends() {
             .any(|path| path.ends_with("vite.config.js"))
             || setup.specifier.as_deref() == Some("./local-setup.ts")
     }));
+
+    for name in ["cleared-extends", "cleared-merged-extends"] {
+        let cleared = projects
+            .iter()
+            .find(|project| project.policy_name.as_deref() == Some(name))
+            .unwrap();
+        assert!(cleared
+            .vitest_setup
+            .iter()
+            .all(|setup| setup.config_extends_provenance));
+    }
 
     let cycle = projects
         .iter()
