@@ -102,7 +102,10 @@ such as `vitest.config.unit.ts` and `vite.config.e2e.js`.
 Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
 `vitest-setup-unresolved` warnings. If relevant, planning safely selects the
 known owner scope (or the discovered Vitest framework set if no owner is known)
-and sets `fallback_triggered` without relying on `globalConfigFallback`.
+and sets `fallback_triggered` without relying on `globalConfigFallback`. Its
+bounded helper closure follows ordinary static imports/re-exports and literal
+CommonJS `require(...)` dependencies, retaining edits and deletions as owner
+triggers; computed or dynamic `require` is not followed.
 
 Resolved setup edges use `via: ["vitest-setup"]`; optional aligned
 `via_details` records `{ type: "vitest-setup", field: "setupFiles" |

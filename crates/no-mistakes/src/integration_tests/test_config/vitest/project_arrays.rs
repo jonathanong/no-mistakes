@@ -174,7 +174,7 @@ pub(super) fn array_options(
                             ctx,
                         ) {
                             if string_roots.included.contains(&root)
-                                && !string_roots.excluded.contains(&root)
+                                && !excluded_roots.contains(&root)
                                 && parsed_string_roots.insert(root.clone())
                             {
                                 options.push(Options {

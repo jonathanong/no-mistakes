@@ -261,8 +261,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   static-pattern heuristic and does not execute glob libraries.
 - `vitest-setup` is created only for statically resolved Vitest setup modules.
   Dynamic or unresolved declarations do not guess an edge; test planning emits
-  a diagnostic and uses its bounded owner fallback instead. The setup module's
-  ordinary import/re-export edges provide transitive impact.
+  a diagnostic and uses its bounded owner fallback instead. Its helper closure
+  follows ordinary static import/re-export and literal CommonJS `require(...)`
+  dependencies, retaining edits and deletions as owner triggers; computed or
+  dynamic `require` is not followed.
 
 
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse

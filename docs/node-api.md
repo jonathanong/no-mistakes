@@ -99,7 +99,10 @@ targets outside the tracked graph universe. `ci` remains the separate legacy
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests. Vitest plans also use this surface for a
 dynamic or unresolved `setupFiles`/`globalSetup` declaration: the result is
-bounded to its known project owner when possible. Resolved setup paths use
+bounded to its known project owner when possible. Its helper closure follows
+ordinary static imports/re-exports and literal CommonJS `require(...)`
+dependencies, retaining edits and deletions as owner triggers; computed or
+dynamic `require` is not followed. Resolved setup paths use
 `via: ["vitest-setup"]` and may add `via_details`, an optional array aligned
 with `via` whose setup edge detail is `{ type: "vitest-setup", field:
 "setupFiles" | "globalSetup" }`.

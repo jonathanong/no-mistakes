@@ -134,7 +134,10 @@ declaring config, field, and project. When such a declaration is relevant, the
 plan conservatively selects the affected owner scope (or the discovered Vitest
 framework set when ownership cannot be determined) and sets
 `fallback_triggered`; this safety fallback does not require
-`--global-config-fallback`.
+`--global-config-fallback`. Its bounded helper closure follows ordinary static
+imports/re-exports and literal CommonJS `require(...)` dependencies, retaining
+their edits and deletions as owner triggers; computed or dynamic `require` is
+not followed.
 
 Resolved paths use `via: ["vitest-setup"]`. JSON may also contain the optional
 aligned `via_details` array; its `{ "type": "vitest-setup", "field":

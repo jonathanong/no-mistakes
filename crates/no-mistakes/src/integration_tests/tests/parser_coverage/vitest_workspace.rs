@@ -305,7 +305,9 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .unwrap()
     };
 
+    crate::ast::begin_parse_count(&root);
     let broad = parse("vitest.config.ts");
+    let broad_parses = crate::ast::finish_parse_count(&root);
     assert_eq!(
         broad
             .iter()
@@ -321,11 +323,17 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .collect::<Vec<_>>(),
         [
             "packages/arbitrary",
+            "packages/array-projects",
             "packages/business",
             "packages/configless",
             "packages/custom",
         ],
         "folder globs retain configless visible roots as default projects"
+    );
+    assert_eq!(
+        broad_parses.get(&root.join("packages/array-projects/vitest.projects.ts")),
+        None,
+        "a local workspace/project-array file must not be parsed as the folder config"
     );
     assert!(
         broad

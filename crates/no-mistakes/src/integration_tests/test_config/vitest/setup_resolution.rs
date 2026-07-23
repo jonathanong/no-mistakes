@@ -91,7 +91,6 @@ fn collect_runtime_setup_candidates(
                 matches!(
                     import.kind,
                     crate::codebase::dependencies::extract::ImportKind::Dynamic
-                        | crate::codebase::dependencies::extract::ImportKind::Require
                 )
             })
         {

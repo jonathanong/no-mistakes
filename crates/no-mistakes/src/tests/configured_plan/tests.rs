@@ -212,6 +212,40 @@ fn dynamic_vitest_setup_transitive_helper_changes_and_deletions_use_owner_fallba
 }
 
 #[test]
+fn dynamic_vitest_setup_commonjs_helper_changes_and_deletions_use_owner_fallback() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let helper = root.join("config/dynamic-commonjs-values.cjs");
+    let changed =
+        crate::tests::plan::generate_plan(&vitest_setup_args(root.clone(), vec![helper])).unwrap();
+    let mut deleted_args = vitest_setup_args(root.clone(), Vec::new());
+    deleted_args.diff_content = Some(
+        "diff --git a/config/dynamic-commonjs-values.cjs b/config/dynamic-commonjs-values.cjs\n\
+--- a/config/dynamic-commonjs-values.cjs\n\
++++ /dev/null\n\
+@@ -1 +0,0 @@\n\
+-exports.commonjsDynamicSetup = () => process.env.VITEST_SETUP\n"
+            .to_string(),
+    );
+    let deleted = crate::tests::plan::generate_plan(&deleted_args).unwrap();
+
+    for plan in [changed, deleted] {
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            ["commonjs-closure-owner/commonjs-closure.test.ts"],
+            "{plan:#?}"
+        );
+        assert!(plan.fallback_triggered, "{plan:#?}");
+        assert!(plan
+            .fallback_reason
+            .as_deref()
+            .is_some_and(|reason| reason.contains("owning project")));
+    }
+}
+
+#[test]
 fn dynamic_vitest_setup_with_known_empty_owner_never_widens_to_framework() {
     let (_fixture, root) = vitest_setup_fixture();
     let plan = crate::tests::plan::generate_plan(&vitest_setup_args(

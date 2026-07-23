@@ -86,12 +86,13 @@ fn commonjs_require_binding(expression: &Expression<'_>) -> Option<(String, Stri
     }
 }
 
-/// Runtime module sources, including side-effect imports and re-exports.
-/// Dynamic Vitest setup values use this for a bounded helper-module closure.
+/// Runtime module sources, including side-effect imports, re-exports, and
+/// literal CommonJS `require` calls. Dynamic Vitest setup values use this for
+/// a bounded helper-module closure.
 pub(in crate::integration_tests::test_config::vitest) fn import_sources(
     program: &Program<'_>,
 ) -> BTreeSet<String> {
-    program
+    let mut sources = program
         .body
         .iter()
         .filter_map(|statement| match statement {
@@ -113,5 +114,19 @@ pub(in crate::integration_tests::test_config::vitest) fn import_sources(
             }
             _ => None,
         })
-        .collect()
+        .collect::<BTreeSet<_>>();
+    // Reuse canonical dependency extraction for CommonJS semantics instead of
+    // teaching this config-only parser a second require recognizer.
+    sources.extend(
+        crate::codebase::dependencies::extract::extract_imports_from_program(program)
+            .into_iter()
+            .filter(|import| {
+                matches!(
+                    import.kind,
+                    crate::codebase::dependencies::extract::ImportKind::Require
+                )
+            })
+            .map(|import| import.specifier),
+    );
+    sources
 }

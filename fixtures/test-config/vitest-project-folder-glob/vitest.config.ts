@@ -1,10 +1,15 @@
 import folderProjects from './project-folders'
+import excludedProjectFolders from './excluded-project-folders'
 
 export default {
   test: {
     // Configless folder projects must retain their own default include.
     include: ['root/**/*.spec.ts'],
-    // Root negation must filter configless roots introduced by this imported spread.
-    projects: ['./packages/direct/vitest.config.ts', '!packages/skip', ...folderProjects],
+    // Imported negations must filter configless roots introduced by another spread.
+    projects: [
+      './packages/direct/vitest.config.ts',
+      ...excludedProjectFolders,
+      ...folderProjects,
+    ],
   },
 }

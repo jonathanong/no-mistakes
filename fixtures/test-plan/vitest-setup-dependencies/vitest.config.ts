@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import { dynamicSetup } from './config/setup-selector'
 import { importedDynamicSetup } from './config/dynamic-wrapper'
+import { importedCommonjsDynamicSetup } from './config/dynamic-commonjs-wrapper'
 import { importedSetupFiles } from './config/imported-setup-values'
 import defaultImportedSetups from './config/default-imported-setups'
 import defaultNamedImportedSetups from './config/default-named-setup-reexport'
@@ -29,6 +30,7 @@ const localSetups = { files: ['./setup/local-member.ts'] }
 const requiredSetups = require('./config/commonjs-require-setups.cjs').setupFiles
 
 const localDynamicSetup = () => importedDynamicSetup()
+const localCommonjsDynamicSetup = () => importedCommonjsDynamicSetup()
 // This static reference cycle must stop after recording the config trigger.
 const cyclicDynamicSetup = () => cyclicDynamicSetup()
 
@@ -245,6 +247,16 @@ export default defineConfig({
           // The transitive helper is outside this project root. Keep this
           // dynamic declaration so impact fallback must follow its closure.
           setupFiles: localDynamicSetup,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'dynamic-commonjs-closure',
+          root: './commonjs-closure-owner',
+          include: ['**/*.test.ts'],
+          // This external dynamic helper reaches its value through require.
+          setupFiles: localCommonjsDynamicSetup,
           globalSetup: [],
         },
       },

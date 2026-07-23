@@ -12,9 +12,7 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn is_vite
         .file_stem()
         .map(|stem| stem.to_string_lossy())
         .unwrap_or_default();
-    stem == "vitest.workspace"
-        || stem == "vitest.projects"
-        || stem == "vitest.config"
+    stem == "vitest.config"
         || stem.starts_with("vitest.config.")
         || stem == "vite.config"
         || stem.starts_with("vite.config.")

@@ -30,6 +30,33 @@ fn tests_plan_json_union_applies_vitest_setup_fallback() {
 }
 
 #[test]
+fn tests_plan_json_tracks_commonjs_dynamic_setup_helper() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        json!({
+            "framework": "vitest",
+            "root": root,
+            "changedFiles": ["config/dynamic-commonjs-values.cjs"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+    assert_eq!(
+        plan["selected_tests"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|test| test["test_file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["commonjs-closure-owner/commonjs-closure.test.ts"]
+    );
+}
+
+#[test]
 fn tests_plan_json_setup_fallback_spends_dependency_group_budget() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/vitest-setup-dependencies");

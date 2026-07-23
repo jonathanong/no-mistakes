@@ -12,14 +12,14 @@ fn project_config_suffixes_are_executable_vitest_configs() {
         "vite.config.e2e.js",
         "vitest.unit.config.ts",
         "vite.e2e.config.js",
-        "vitest.workspace.mts",
-        "vitest.projects.cjs",
     ] {
         assert!(is_vitest_project_config(Path::new(path)), "{path}");
     }
     for path in [
         "vitest.config.unit.d.ts",
         "vite.config.d.mts",
+        "vitest.workspace.mts",
+        "vitest.projects.cjs",
         "vitest.foo.bar.config.ts",
         "vite.foo.bar.config.ts",
         "vitest.foo!.config.ts",
