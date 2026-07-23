@@ -26,3 +26,40 @@ fn flow_query_reports_resolved_vitest_setup_edges() {
         "{report:#?}"
     );
 }
+
+#[test]
+fn import_only_flow_keeps_explicit_vitest_config_indexable() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
+    );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let report = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        run(&FlowOptions {
+            target: "vitest.config.ts".to_string(),
+            root: root.clone(),
+            tsconfig: None,
+            config: None,
+            direction: FlowDirection::Deps,
+            depth: 1,
+            relationships: vec![RelationshipArg::Import],
+        })
+        .unwrap()
+    };
+
+    assert!(
+        report.edges.iter().any(|edge| {
+            edge.from == "vitest.config.ts"
+                && edge.to == "config/setup-selector.ts"
+                && edge.kind == "import"
+        }),
+        "{report:#?}"
+    );
+    let work = observer.snapshot().work;
+    assert_eq!(work["discovery.roots"], 1, "{work:#?}");
+    assert_eq!(
+        observer.source_read_snapshot()[&root.join("vitest.config.ts")],
+        1
+    );
+}

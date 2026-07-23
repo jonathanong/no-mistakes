@@ -259,6 +259,45 @@ fn resolved_setup_runtime_loader_deletion_uses_its_owner_fallback() {
 }
 
 #[test]
+fn setup_fallback_respects_the_existing_dependency_group_budget() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut args = vitest_setup_args(
+        root.clone(),
+        vec![
+            root.join("setup/conditional-a.ts"),
+            root.join("config/setup-selector.ts"),
+        ],
+    );
+    args.config = Some(root.join("dependency-limit.no-mistakes.yml"));
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert_eq!(plan.groups.len(), 1, "{plan:#?}");
+    assert_eq!(plan.groups[0].r#type, "dependencies");
+    assert_eq!(plan.groups[0].limit, Some(1));
+    assert_eq!(plan.groups[0].selected.len(), 1, "{plan:#?}");
+    assert_eq!(plan.selected_tests.len(), 1, "{plan:#?}");
+}
+
+#[test]
+fn setup_fallback_uses_later_dependency_group_capacity() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let mut args = vitest_setup_args(root.clone(), vec![root.join("config/setup-selector.ts")]);
+    args.config = Some(root.join("dependency-multiple-groups.no-mistakes.yml"));
+    let plan = crate::tests::plan::generate_plan(&args).unwrap();
+
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert_eq!(plan.groups.len(), 2, "{plan:#?}");
+    assert!(plan.groups[0].selected.is_empty(), "{plan:#?}");
+    assert_eq!(
+        plan.groups[1].selected,
+        ["inherits/inherited.test.ts"],
+        "{plan:#?}"
+    );
+    assert_eq!(plan.selected_tests.len(), 1, "{plan:#?}");
+}
+
+#[test]
 fn resolved_setup_config_helpers_fall_back_but_setup_modules_keep_graph_edges() {
     let (_fixture, root) = vitest_setup_fixture();
     let config_helper = crate::tests::plan::generate_plan(&vitest_setup_args(

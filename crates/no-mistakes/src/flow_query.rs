@@ -70,7 +70,11 @@ pub fn run(options: &FlowOptions) -> Result<FlowReport> {
     let root = root.canonicalize().unwrap_or(root);
     let allowed = relationship_filter(&options.relationships);
     let plan = GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(true);
-    let framework_plan = crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(plan);
+    let mut framework_plan =
+        crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(plan);
+    if let Some(path) = resolve_target(&root, &options.target).as_file() {
+        framework_plan.retain_indexable_path(path.to_path_buf());
+    }
     let mut traversal =
         crate::codebase::dependencies::SharedTraversalContext::prepare_with_framework_plan(
             root,

@@ -55,15 +55,18 @@ pub(super) fn apply_selection(
     selected_map: &mut BTreeMap<PathBuf, SelectedTest>,
     group_results: &mut Vec<TestPlanGroupResult>,
     fallback_reasons: &mut Vec<String>,
-    global_limit: usize,
+    dependency_group: Option<(usize, usize)>,
+    remaining_global: usize,
     has_global_limit: bool,
     all_test_count: usize,
-) {
+) -> Option<usize> {
     if framework != TestFramework::Vitest || all_test_count == 0 {
-        return;
+        return None;
     }
-    let fallback_remaining = global_limit.saturating_sub(used.len());
-    let Some((reason, picked)) = selection(
+    let fallback_remaining = dependency_group
+        .map_or(remaining_global, |(_, remaining)| remaining)
+        .min(remaining_global);
+    let (reason, picked) = selection(
         root,
         changed_files,
         deleted_files,
@@ -71,9 +74,7 @@ pub(super) fn apply_selection(
         discovered,
         used,
         fallback_remaining,
-    ) else {
-        return;
-    };
+    )?;
     for test in &picked {
         used.insert(test.test_file.clone());
         selected_map
@@ -82,14 +83,25 @@ pub(super) fn apply_selection(
             .or_insert_with(|| test.clone());
     }
     if !picked.is_empty() {
-        group_results.push(TestPlanGroupResult {
-            r#type: "dependencies".to_string(),
-            selected: picked.iter().map(|test| test.test_file.clone()).collect(),
-            remaining: all_test_count.saturating_sub(used.len()),
-            limit: has_global_limit.then_some(fallback_remaining),
-        });
+        if let Some((index, _)) = dependency_group {
+            let group = &mut group_results[index];
+            group
+                .selected
+                .extend(picked.iter().map(|test| test.test_file.clone()));
+            group.remaining = all_test_count.saturating_sub(used.len());
+        } else {
+            group_results.push(TestPlanGroupResult {
+                r#type: "dependencies".to_string(),
+                selected: picked.iter().map(|test| test.test_file.clone()).collect(),
+                remaining: all_test_count.saturating_sub(used.len()),
+                limit: has_global_limit.then_some(fallback_remaining),
+            });
+        }
     }
-    fallback_reasons.push(reason);
+    if !fallback_reasons.contains(&reason) {
+        fallback_reasons.push(reason);
+    }
+    Some(picked.len())
 }
 
 /// Select a conservative, project-bounded fallback only after an unsafe setup

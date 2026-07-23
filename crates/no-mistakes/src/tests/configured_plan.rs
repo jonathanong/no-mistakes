@@ -192,17 +192,41 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let target_only_group_index =
         insert_synthesized_dependency_group(&mut groups, !targeted_candidates.is_empty());
     let mut targeted_overlaps = TargetedOverlapRecovery::new(&targeted_candidates);
+    let mut dependency_fallback_budget = None;
+    let mut vitest_fallback_checked = false;
+    let mut fallback_reasons = Vec::new();
 
     for (group_index, group) in groups.iter().enumerate() {
         let recover_targeted_overlaps = targeted_overlaps.should_recover(framework, group.type_);
         let merge_zero_budget_targeted =
             group.type_ == TestPlanGroupType::Dependencies && !targeted_candidates.is_empty();
         if remaining_global == 0 && !recover_targeted_overlaps && !merge_zero_budget_targeted {
+            let result_index = group_results.len();
             group_results.push(empty_group_result(
                 group_type_name(group.type_),
                 all_tests.len().saturating_sub(used.len()),
                 has_global_limit.then_some(0),
             ));
+            if group.type_ == TestPlanGroupType::Dependencies {
+                dependency_fallback_budget = Some((result_index, 0));
+                vitest_setup_fallback::apply_selection(
+                    framework,
+                    root,
+                    changed_files,
+                    deleted_files,
+                    prepared.vitest_projects(),
+                    &discovered_tests,
+                    &mut used,
+                    &mut selected_map,
+                    &mut group_results,
+                    &mut fallback_reasons,
+                    dependency_fallback_budget,
+                    0,
+                    has_global_limit,
+                    all_tests.len(),
+                );
+                vitest_fallback_checked = true;
+            }
             continue;
         }
         if matches!(
@@ -275,6 +299,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 .or_insert_with(|| test.clone());
         }
         remaining_global = remaining_global.saturating_sub(picked.len());
+        let result_index = group_results.len();
         group_results.push(TestPlanGroupResult {
             r#type: group_type_name(group.type_).to_string(),
             selected: picked.iter().map(|test| test.test_file.clone()).collect(),
@@ -285,6 +310,29 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 .then_some(group_limit)
                 .or_else(|| has_global_limit.then_some(group_limit)),
         });
+        if group.type_ == TestPlanGroupType::Dependencies {
+            dependency_fallback_budget =
+                Some((result_index, group_limit.saturating_sub(picked.len())));
+            let picked = vitest_setup_fallback::apply_selection(
+                framework,
+                root,
+                changed_files,
+                deleted_files,
+                prepared.vitest_projects(),
+                &discovered_tests,
+                &mut used,
+                &mut selected_map,
+                &mut group_results,
+                &mut fallback_reasons,
+                dependency_fallback_budget,
+                remaining_global,
+                has_global_limit,
+                all_tests.len(),
+            )
+            .unwrap_or_default();
+            remaining_global = remaining_global.saturating_sub(picked);
+            vitest_fallback_checked = true;
+        }
         targeted_overlaps.finish_group(group.type_);
     }
 
@@ -340,7 +388,6 @@ pub(crate) fn generate_configured_plan_with_prepared(
         }
     }
 
-    let mut fallback_reasons = Vec::new();
     if !all_tests.is_empty() {
         if let Some((reason, picked)) = native_fallback_selection(
             framework,
@@ -376,21 +423,25 @@ pub(crate) fn generate_configured_plan_with_prepared(
         }
     }
 
-    vitest_setup_fallback::apply_selection(
-        framework,
-        root,
-        changed_files,
-        deleted_files,
-        prepared.vitest_projects(),
-        &discovered_tests,
-        &mut used,
-        &mut selected_map,
-        &mut group_results,
-        &mut fallback_reasons,
-        global_limit,
-        has_global_limit,
-        all_tests.len(),
-    );
+    if !vitest_fallback_checked {
+        let remaining_global = global_limit.saturating_sub(used.len());
+        vitest_setup_fallback::apply_selection(
+            framework,
+            root,
+            changed_files,
+            deleted_files,
+            prepared.vitest_projects(),
+            &discovered_tests,
+            &mut used,
+            &mut selected_map,
+            &mut group_results,
+            &mut fallback_reasons,
+            dependency_fallback_budget,
+            remaining_global,
+            has_global_limit,
+            all_tests.len(),
+        );
+    }
 
     let mut plan = TestPlan {
         selected_tests: sorted_selected_tests(selected_map),

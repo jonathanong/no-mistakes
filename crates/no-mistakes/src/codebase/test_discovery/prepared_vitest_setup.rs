@@ -14,8 +14,8 @@ impl PreparedTestProjects {
                 let mut setups = project
                     .vitest_setup
                     .iter()
-                    .filter_map(|setup| {
-                        let path = setup.resolved_path.clone()?;
+                    .filter(|setup| setup.specifier.is_some())
+                    .flat_map(|setup| {
                         let field = match setup.field {
                             crate::integration_tests::types::VitestSetupField::SetupFiles => {
                                 crate::codebase::dependencies::graph::VitestSetupField::SetupFiles
@@ -24,7 +24,19 @@ impl PreparedTestProjects {
                                 crate::codebase::dependencies::graph::VitestSetupField::GlobalSetup
                             }
                         };
-                        Some((path, field))
+                        setup
+                            .resolved_path
+                            .iter()
+                            .chain(
+                                setup
+                                    .resolved_path
+                                    .is_none()
+                                    .then_some(&setup.resolver_candidate_paths)
+                                    .into_iter()
+                                    .flatten(),
+                            )
+                            .cloned()
+                            .map(move |path| (path, field))
                     })
                     .collect::<Vec<_>>();
                 setups.sort();
