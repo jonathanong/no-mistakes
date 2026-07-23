@@ -118,3 +118,7 @@ pub(crate) fn is_runtime_module(path: &Path) -> bool {
             name.ends_with(".d.ts") || name.ends_with(".d.mts") || name.ends_with(".d.cts")
         })
 }
+
+#[cfg(test)]
+#[path = "setup_resolution/tests.rs"]
+mod tests;
