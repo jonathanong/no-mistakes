@@ -154,6 +154,84 @@ fn commonjs_literal_setup_exports_create_owner_scoped_setup_edges() {
 }
 
 #[test]
+fn named_imported_setup_member_changes_and_deletions_keep_exact_owner_edges() {
+    let (_fixture, root) = vitest_setup_fixture();
+    for setup in [
+        "named-member.ts",
+        "named-member-source.ts",
+        "named-member-imported.ts",
+        "named-member-star.ts",
+        "named-member-commonjs.ts",
+    ] {
+        let relative = format!("shared-setup/{setup}");
+        let changed = crate::tests::plan::generate_plan(&vitest_setup_args(
+            root.clone(),
+            vec![root.join(&relative)],
+        ))
+        .unwrap();
+        let mut deleted_args = vitest_setup_args(root.clone(), Vec::new());
+        deleted_args.diff_content = Some(format!(
+            "diff --git a/{relative} b/{relative}\n--- a/{relative}\n+++ /dev/null\n@@ -1 +0,0 @@\n-export const removed = true\n"
+        ));
+        let deleted = crate::tests::plan::generate_plan(&deleted_args).unwrap();
+
+        for plan in [changed, deleted] {
+            assert_eq!(
+                plan.selected_tests
+                    .iter()
+                    .map(|test| test.test_file.as_str())
+                    .collect::<Vec<_>>(),
+                ["named-member-owner/named-member.test.ts"],
+                "{setup}: {plan:#?}"
+            );
+            assert!(!plan.fallback_triggered, "{setup}: {plan:#?}");
+            assert!(plan.selected_tests[0]
+                .reasons
+                .iter()
+                .any(|reason| { reason.via.last().is_some_and(|edge| edge == "vitest-setup") }));
+        }
+    }
+}
+
+#[test]
+fn named_imported_setup_member_helper_provenance_keeps_its_owner() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let changed = crate::tests::plan::generate_plan(&vitest_setup_args(
+        root.clone(),
+        vec![root.join("config/named-member-setups.ts")],
+    ))
+    .unwrap();
+    let mut deleted_args = vitest_setup_args(root.clone(), Vec::new());
+    deleted_args.diff_content = Some(
+        "diff --git a/config/named-member-setups.ts b/config/named-member-setups.ts\n\
+--- a/config/named-member-setups.ts\n\
++++ /dev/null\n\
+@@ -1,3 +0,0 @@\n\
+-export const namedMemberConfig = {\n\
+-  files: '../shared-setup/named-member.ts',\n\
+-}\n"
+            .to_string(),
+    );
+    let deleted = crate::tests::plan::generate_plan(&deleted_args).unwrap();
+
+    for plan in [changed, deleted] {
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            ["named-member-owner/named-member.test.ts"],
+            "{plan:#?}"
+        );
+        assert!(plan.fallback_triggered, "{plan:#?}");
+        assert_eq!(
+            plan.fallback_reason.as_deref(),
+            Some("Vitest setup configuration changed; selected owning project tests")
+        );
+    }
+}
+
+#[test]
 fn resolved_setup_runtime_loader_deletion_uses_its_owner_fallback() {
     let (_fixture, root) = vitest_setup_fixture();
     for helper in ["required-helper", "dynamic-helper"] {

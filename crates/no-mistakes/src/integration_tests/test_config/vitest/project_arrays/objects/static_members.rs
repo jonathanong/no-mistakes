@@ -28,7 +28,12 @@ pub(super) fn static_member_setup_dependencies(
                 ctx,
             )
         } else {
-            None
+            super::setup_imports::imported_setup_member_dependencies(
+                &import,
+                member.property.name.as_str(),
+                field,
+                ctx,
+            )
         }
     } else {
         ctx.bindings

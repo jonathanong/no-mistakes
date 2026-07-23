@@ -1,4 +1,5 @@
 include!("tests_impact/resources.rs");
+include!("tests_impact/vitest_setup.rs");
 
 #[test]
 fn tests_impact_json_preserves_configured_native_test_projects() {
@@ -43,27 +44,6 @@ fn tests_impact_json_returns_plan_for_file_entrypoint() {
         .collect();
     assert!(test_files.contains(&"service.test.mts"));
     assert!(test_files.contains(&"other.test.mts"));
-}
-
-#[test]
-fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
-    );
-    let options = json!({
-        "root": root,
-        "config": root.join("resolved.no-mistakes.yml"),
-        "entrypoints": ["setup/resolved-helper.ts"]
-    })
-    .to_string();
-    let output = tests_impact_json_impl(options).unwrap();
-    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
-    let selected = plan["selected_tests"].as_array().unwrap();
-    assert!(
-        selected.iter().any(|test| test["test_file"] == "resolved/resolved.test.ts"),
-        "prepared Vitest setup edge should reach its owner: {selected:?}"
-    );
 }
 
 #[test]

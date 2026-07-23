@@ -14,6 +14,12 @@ import commonjsDefaultSetups, { namedSetups as commonjsNamedSetups } from './con
 import { declarationOnlySetups } from './config/declaration-only-setups'
 import { missingBarrelSetups } from './config/missing-setup-barrel'
 import { useAlternateSetup } from './config/branch-selector'
+import { namedMemberConfig } from './config/named-member-setups'
+import { sourcedNamedMemberConfig } from './config/named-member-source-reexport'
+import { importedNamedMemberConfig } from './config/named-member-imported-reexport'
+import { starNamedMemberConfig } from './config/named-member-star-barrel'
+import { commonjsNamedMemberConfig } from './config/named-member-commonjs.cjs'
+import { cycleMemberConfig } from './config/named-member-cycle-a'
 
 const localSetups = { files: ['./setup/local-member.ts'] }
 
@@ -39,6 +45,33 @@ export default defineConfig({
           name: 'namespace-member',
           include: ['namespace-member/**/*.test.ts'],
           setupFiles: namespaceSetups.files,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'named-import-member',
+          root: './named-member-owner',
+          include: ['**/*.test.ts'],
+          // The setup is shared outside this owner. Named imported object
+          // members must retain an exact setup edge and helper provenance.
+          setupFiles: [
+            namedMemberConfig.files,
+            sourcedNamedMemberConfig.files,
+            importedNamedMemberConfig.files,
+            starNamedMemberConfig.files,
+            commonjsNamedMemberConfig.files,
+          ],
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'named-import-member-cycle',
+          root: './named-member-cycle-owner',
+          include: ['**/*.test.ts'],
+          // Re-export cycles remain a bounded dynamic fallback.
+          setupFiles: cycleMemberConfig.files,
           globalSetup: [],
         },
       },
