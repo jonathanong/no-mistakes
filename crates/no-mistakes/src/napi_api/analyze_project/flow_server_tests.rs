@@ -33,4 +33,5 @@ fn parser_count_server_fixture() -> PathBuf {
 
 include!("flow_server_tests/flow.rs");
 include!("flow_server_tests/server.rs");
+include!("flow_server_tests/targets.rs");
 include!("flow_server_tests/vitest_workspace_precedence.rs");
