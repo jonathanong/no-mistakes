@@ -42,36 +42,54 @@ pub enum RelationshipArg {
 
 impl RelationshipArg {
     pub fn as_str(&self) -> &'static str {
+        self.workflow_str()
+            .unwrap_or_else(|| self.non_workflow_str())
+    }
+
+    fn workflow_str(&self) -> Option<&'static str> {
         match self {
-            RelationshipArg::Import => "import",
-            RelationshipArg::ImportStatic => "import-static",
-            RelationshipArg::ImportDynamic => "import-dynamic",
-            RelationshipArg::ImportType => "import-type",
-            RelationshipArg::ImportRequire => "import-require",
-            RelationshipArg::RouteImport => "route-import",
-            RelationshipArg::Workspace => "workspace",
-            RelationshipArg::Package => "package",
-            RelationshipArg::Test => "test",
-            RelationshipArg::Route => "route",
-            RelationshipArg::Queue => "queue",
-            RelationshipArg::Md => "md",
-            RelationshipArg::Ci => "ci",
-            RelationshipArg::Workflow => "workflow",
-            RelationshipArg::WorkflowJob => "workflow-job",
-            RelationshipArg::WorkflowStep => "workflow-step",
-            RelationshipArg::WorkflowNeeds => "workflow-needs",
-            RelationshipArg::WorkflowUses => "workflow-uses",
-            RelationshipArg::WorkflowRun => "workflow-run",
-            RelationshipArg::WorkflowArtifact => "workflow-artifact",
-            RelationshipArg::Http => "http",
-            RelationshipArg::Process => "process",
-            RelationshipArg::Asset => "asset",
-            RelationshipArg::React => "react",
-            RelationshipArg::Dotnet => "dotnet",
-            RelationshipArg::Swift => "swift",
-            RelationshipArg::Terraform => "terraform",
-            RelationshipArg::Resource => "resource",
-            RelationshipArg::All => "all",
+            Self::Workflow => Some("workflow"),
+            Self::WorkflowJob => Some("workflow-job"),
+            Self::WorkflowStep => Some("workflow-step"),
+            Self::WorkflowNeeds => Some("workflow-needs"),
+            Self::WorkflowUses => Some("workflow-uses"),
+            Self::WorkflowRun => Some("workflow-run"),
+            Self::WorkflowArtifact => Some("workflow-artifact"),
+            _ => None,
+        }
+    }
+
+    fn non_workflow_str(&self) -> &'static str {
+        match self {
+            Self::Import => "import",
+            Self::ImportStatic => "import-static",
+            Self::ImportDynamic => "import-dynamic",
+            Self::ImportType => "import-type",
+            Self::ImportRequire => "import-require",
+            Self::RouteImport => "route-import",
+            Self::Workspace => "workspace",
+            Self::Package => "package",
+            Self::Test => "test",
+            Self::Route => "route",
+            Self::Queue => "queue",
+            Self::Md => "md",
+            Self::Ci => "ci",
+            Self::Http => "http",
+            Self::Process => "process",
+            Self::Asset => "asset",
+            Self::React => "react",
+            Self::Dotnet => "dotnet",
+            Self::Swift => "swift",
+            Self::Terraform => "terraform",
+            Self::Resource => "resource",
+            Self::All => "all",
+            Self::Workflow
+            | Self::WorkflowJob
+            | Self::WorkflowStep
+            | Self::WorkflowNeeds
+            | Self::WorkflowUses
+            | Self::WorkflowRun
+            | Self::WorkflowArtifact => unreachable!("workflow relationships are handled first"),
         }
     }
 }

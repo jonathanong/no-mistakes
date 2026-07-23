@@ -1,6 +1,7 @@
 /// The kind of dependency edge connecting two nodes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
 #[serde(rename_all = "kebab-case")]
+#[repr(u8)]
 pub enum EdgeKind {
     /// Regular TS/JS static import.
     Import,
@@ -131,43 +132,7 @@ impl EdgeKind {
 }
 
 /// Stable ordering for deterministic graph output.
+/// Keep variants append-only so their discriminants preserve this public order.
 pub(crate) const fn edge_kind_rank(kind: EdgeKind) -> u8 {
-    match kind {
-        EdgeKind::Import => 0,
-        EdgeKind::TypeImport => 1,
-        EdgeKind::DynamicImport => 2,
-        EdgeKind::RouteImport => 3,
-        EdgeKind::Require => 4,
-        EdgeKind::TestOf => 5,
-        EdgeKind::RouteRef => 6,
-        EdgeKind::QueueEnqueue => 7,
-        EdgeKind::QueueWorker => 8,
-        EdgeKind::RouteTest => 9,
-        EdgeKind::Layout => 10,
-        EdgeKind::MarkdownLink => 11,
-        EdgeKind::WorkspaceImport => 12,
-        EdgeKind::PackageDependency => 13,
-        EdgeKind::CiInvocation => 14,
-        EdgeKind::HttpCall => 15,
-        EdgeKind::ProcessSpawn => 16,
-        EdgeKind::AssetImport => 17,
-        EdgeKind::Resource => 18,
-        EdgeKind::ReactRender => 19,
-        EdgeKind::Selector => 20,
-        EdgeKind::SwiftImport => 21,
-        EdgeKind::SwiftReference => 22,
-        EdgeKind::SwiftPackageDependency => 23,
-        EdgeKind::DotnetUsing => 24,
-        EdgeKind::DotnetReference => 25,
-        EdgeKind::DotnetProjectDependency => 26,
-        EdgeKind::TerraformReference => 27,
-        EdgeKind::TerraformModuleRef => 28,
-        EdgeKind::TerraformOutputRef => 29,
-        EdgeKind::WorkflowJob => 30,
-        EdgeKind::WorkflowStep => 31,
-        EdgeKind::WorkflowNeeds => 32,
-        EdgeKind::WorkflowUses => 33,
-        EdgeKind::WorkflowRun => 34,
-        EdgeKind::WorkflowArtifact => 35,
-    }
+    kind as u8
 }

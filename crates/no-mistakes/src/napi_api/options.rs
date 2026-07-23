@@ -113,38 +113,8 @@ pub(crate) fn project_roots(options: &ProjectOptions) -> Vec<String> {
 }
 
 pub(crate) fn parse_relationship(value: &str) -> AnyhowResult<RelationshipArg> {
-    match value {
-        "import" => Ok(RelationshipArg::Import),
-        "import-static" => Ok(RelationshipArg::ImportStatic),
-        "import-dynamic" => Ok(RelationshipArg::ImportDynamic),
-        "import-type" => Ok(RelationshipArg::ImportType),
-        "import-require" => Ok(RelationshipArg::ImportRequire),
-        "route-import" => Ok(RelationshipArg::RouteImport),
-        "workspace" => Ok(RelationshipArg::Workspace),
-        "package" => Ok(RelationshipArg::Package),
-        "test" => Ok(RelationshipArg::Test),
-        "route" => Ok(RelationshipArg::Route),
-        "queue" => Ok(RelationshipArg::Queue),
-        "md" => Ok(RelationshipArg::Md),
-        "ci" => Ok(RelationshipArg::Ci),
-        "workflow" => Ok(RelationshipArg::Workflow),
-        "workflow-job" => Ok(RelationshipArg::WorkflowJob),
-        "workflow-step" => Ok(RelationshipArg::WorkflowStep),
-        "workflow-needs" => Ok(RelationshipArg::WorkflowNeeds),
-        "workflow-uses" => Ok(RelationshipArg::WorkflowUses),
-        "workflow-run" => Ok(RelationshipArg::WorkflowRun),
-        "workflow-artifact" => Ok(RelationshipArg::WorkflowArtifact),
-        "http" => Ok(RelationshipArg::Http),
-        "process" => Ok(RelationshipArg::Process),
-        "asset" => Ok(RelationshipArg::Asset),
-        "react" => Ok(RelationshipArg::React),
-        "dotnet" => Ok(RelationshipArg::Dotnet),
-        "swift" => Ok(RelationshipArg::Swift),
-        "terraform" => Ok(RelationshipArg::Terraform),
-        "resource" => Ok(RelationshipArg::Resource),
-        "all" => Ok(RelationshipArg::All),
-        _ => bail!("unknown relationship: {value}"),
-    }
+    <RelationshipArg as clap::ValueEnum>::from_str(value, false)
+        .map_err(|_| anyhow::anyhow!("unknown relationship: {value}"))
 }
 
 pub(crate) fn parse_export_kind(value: &str) -> AnyhowResult<ExportKindArg> {

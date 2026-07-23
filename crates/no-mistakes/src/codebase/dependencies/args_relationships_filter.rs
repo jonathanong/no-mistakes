@@ -10,79 +10,73 @@ pub(crate) fn relationship_filter(
     }
     let mut set = std::collections::HashSet::new();
     for r in relationships {
-        let edges: &[EdgeKind] = match r {
-            RelationshipArg::Import => &[
+        if matches!(r, RelationshipArg::All) {
+            set.extend(standard_relationship_edges());
+            continue;
+        }
+        if let Some(edges) = workflow_relationship_edges(r) {
+            set.extend(edges);
+            continue;
+        }
+        set.extend(non_workflow_relationship_edges(r));
+    }
+    Some(set)
+}
+
+fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [EdgeKind] {
+    match relationship {
+        RelationshipArg::Import => &[
                 EdgeKind::Import,
                 EdgeKind::TypeImport,
                 EdgeKind::DynamicImport,
                 EdgeKind::Require,
             ],
-            RelationshipArg::ImportStatic => &[EdgeKind::Import],
-            RelationshipArg::ImportDynamic => &[EdgeKind::DynamicImport],
-            RelationshipArg::ImportType => &[EdgeKind::TypeImport],
-            RelationshipArg::ImportRequire => &[EdgeKind::Require],
-            RelationshipArg::RouteImport => &[EdgeKind::RouteImport],
-            RelationshipArg::Workspace => &[EdgeKind::WorkspaceImport],
-            RelationshipArg::Package => &[EdgeKind::PackageDependency],
-            RelationshipArg::Test => &[
+        RelationshipArg::ImportStatic => &[EdgeKind::Import],
+        RelationshipArg::ImportDynamic => &[EdgeKind::DynamicImport],
+        RelationshipArg::ImportType => &[EdgeKind::TypeImport],
+        RelationshipArg::ImportRequire => &[EdgeKind::Require],
+        RelationshipArg::RouteImport => &[EdgeKind::RouteImport],
+        RelationshipArg::Workspace => &[EdgeKind::WorkspaceImport],
+        RelationshipArg::Package => &[EdgeKind::PackageDependency],
+        RelationshipArg::Test => &[
                 EdgeKind::TestOf,
                 EdgeKind::RouteTest,
                 EdgeKind::Layout,
                 EdgeKind::Selector,
             ],
-            RelationshipArg::Route => {
-                &[EdgeKind::RouteRef, EdgeKind::RouteTest, EdgeKind::Layout]
-            }
-            RelationshipArg::Queue => &[EdgeKind::QueueEnqueue, EdgeKind::QueueWorker],
-            RelationshipArg::Md => &[EdgeKind::MarkdownLink],
-            RelationshipArg::Ci => &[EdgeKind::CiInvocation],
-            RelationshipArg::Workflow => workflow_edges(),
-            RelationshipArg::WorkflowJob => &[EdgeKind::WorkflowJob],
-            RelationshipArg::WorkflowStep => &[EdgeKind::WorkflowJob, EdgeKind::WorkflowStep],
-            RelationshipArg::WorkflowNeeds => &[EdgeKind::WorkflowJob, EdgeKind::WorkflowNeeds],
-            RelationshipArg::WorkflowUses => &[
-                EdgeKind::WorkflowJob,
-                EdgeKind::WorkflowStep,
-                EdgeKind::WorkflowUses,
-            ],
-            RelationshipArg::WorkflowRun => &[
-                EdgeKind::WorkflowJob,
-                EdgeKind::WorkflowStep,
-                EdgeKind::WorkflowRun,
-            ],
-            RelationshipArg::WorkflowArtifact => &[
-                EdgeKind::WorkflowJob,
-                EdgeKind::WorkflowStep,
-                EdgeKind::WorkflowArtifact,
-            ],
-            RelationshipArg::Http => &[EdgeKind::HttpCall],
-            RelationshipArg::Process => &[EdgeKind::ProcessSpawn],
-            RelationshipArg::Asset => &[EdgeKind::AssetImport],
-            RelationshipArg::React => &[EdgeKind::ReactRender],
-            RelationshipArg::Dotnet => &[
+        RelationshipArg::Route => &[EdgeKind::RouteRef, EdgeKind::RouteTest, EdgeKind::Layout],
+        RelationshipArg::Queue => &[EdgeKind::QueueEnqueue, EdgeKind::QueueWorker],
+        RelationshipArg::Md => &[EdgeKind::MarkdownLink],
+        RelationshipArg::Ci => &[EdgeKind::CiInvocation],
+        RelationshipArg::Http => &[EdgeKind::HttpCall],
+        RelationshipArg::Process => &[EdgeKind::ProcessSpawn],
+        RelationshipArg::Asset => &[EdgeKind::AssetImport],
+        RelationshipArg::React => &[EdgeKind::ReactRender],
+        RelationshipArg::Dotnet => &[
                 EdgeKind::DotnetUsing,
                 EdgeKind::DotnetReference,
                 EdgeKind::DotnetProjectDependency,
             ],
-            RelationshipArg::Swift => &[
+        RelationshipArg::Swift => &[
                 EdgeKind::SwiftImport,
                 EdgeKind::SwiftReference,
                 EdgeKind::SwiftPackageDependency,
             ],
-            RelationshipArg::Terraform => &[
+        RelationshipArg::Terraform => &[
                 EdgeKind::TerraformReference,
                 EdgeKind::TerraformModuleRef,
                 EdgeKind::TerraformOutputRef,
             ],
-            RelationshipArg::Resource => &[EdgeKind::Resource],
-            RelationshipArg::All => {
-                set.extend(standard_relationship_edges());
-                &[]
-            }
-        };
-        set.extend(edges.iter().copied());
+        RelationshipArg::Resource => &[EdgeKind::Resource],
+        RelationshipArg::Workflow
+        | RelationshipArg::WorkflowJob
+        | RelationshipArg::WorkflowStep
+        | RelationshipArg::WorkflowNeeds
+        | RelationshipArg::WorkflowUses
+        | RelationshipArg::WorkflowRun
+        | RelationshipArg::WorkflowArtifact
+        | RelationshipArg::All => unreachable!("handled before non-workflow relationship mapping"),
     }
-    Some(set)
 }
 
 /// Edge kinds included by legacy unfiltered traversal and `--relationship all`.
@@ -139,4 +133,29 @@ const fn workflow_edges() -> &'static [EdgeKind] {
         EdgeKind::WorkflowRun,
         EdgeKind::WorkflowArtifact,
     ]
+}
+
+fn workflow_relationship_edges(relationship: &RelationshipArg) -> Option<&'static [EdgeKind]> {
+    match relationship {
+        RelationshipArg::Workflow => Some(workflow_edges()),
+        RelationshipArg::WorkflowJob => Some(&[EdgeKind::WorkflowJob]),
+        RelationshipArg::WorkflowStep => Some(&[EdgeKind::WorkflowJob, EdgeKind::WorkflowStep]),
+        RelationshipArg::WorkflowNeeds => Some(&[EdgeKind::WorkflowJob, EdgeKind::WorkflowNeeds]),
+        RelationshipArg::WorkflowUses => Some(&[
+            EdgeKind::WorkflowJob,
+            EdgeKind::WorkflowStep,
+            EdgeKind::WorkflowUses,
+        ]),
+        RelationshipArg::WorkflowRun => Some(&[
+            EdgeKind::WorkflowJob,
+            EdgeKind::WorkflowStep,
+            EdgeKind::WorkflowRun,
+        ]),
+        RelationshipArg::WorkflowArtifact => Some(&[
+            EdgeKind::WorkflowJob,
+            EdgeKind::WorkflowStep,
+            EdgeKind::WorkflowArtifact,
+        ]),
+        _ => None,
+    }
 }
