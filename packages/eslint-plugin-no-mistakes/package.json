@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-no-mistakes",
-  "version": "0.34.0",
+  "version": "0.35.0",
   "description": "ESLint and Oxlint rules for deterministic no-mistakes code analysis",
   "license": "MIT",
   "repository": {
