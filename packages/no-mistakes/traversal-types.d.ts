@@ -12,6 +12,13 @@ export type Relationship =
   | "queue"
   | "md"
   | "ci"
+  | "workflow"
+  | "workflow-job"
+  | "workflow-step"
+  | "workflow-needs"
+  | "workflow-uses"
+  | "workflow-run"
+  | "workflow-artifact"
   | "http"
   | "process"
   | "asset"
@@ -41,7 +48,12 @@ export interface DependencyFile {
   file?: string;
   symbol?: string;
   queueFile?: string;
+  /** Workflow file for a virtual GitHub Actions job or step node. */
+  workflowFile?: string;
+  /** GitHub Actions job identifier for a virtual workflow job or step node. */
   job?: string;
+  /** Zero-based step index for a virtual GitHub Actions workflow step node. */
+  step?: number;
   module?: string;
   depth: number;
   via?: string[];

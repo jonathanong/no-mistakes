@@ -181,6 +181,38 @@ fn ci_maps_to_ci_invocation() {
 }
 
 #[test]
+fn workflow_relationships_include_their_structural_bridges() {
+    let workflow = relationship_filter(&[RelationshipArg::Workflow]).unwrap();
+    for edge in [
+        EdgeKind::WorkflowJob,
+        EdgeKind::WorkflowStep,
+        EdgeKind::WorkflowNeeds,
+        EdgeKind::WorkflowUses,
+        EdgeKind::WorkflowRun,
+        EdgeKind::WorkflowArtifact,
+    ] {
+        assert!(workflow.contains(&edge));
+    }
+
+    let run = relationship_filter(&[RelationshipArg::WorkflowRun]).unwrap();
+    assert_eq!(
+        run,
+        [
+            EdgeKind::WorkflowJob,
+            EdgeKind::WorkflowStep,
+            EdgeKind::WorkflowRun,
+        ]
+        .into()
+    );
+
+    let needs = relationship_filter(&[RelationshipArg::WorkflowNeeds]).unwrap();
+    assert_eq!(needs, [EdgeKind::WorkflowJob, EdgeKind::WorkflowNeeds].into());
+
+    let ci = relationship_filter(&[RelationshipArg::Ci]).unwrap();
+    assert_eq!(ci, [EdgeKind::CiInvocation].into());
+}
+
+#[test]
 fn multiple_kinds_combined() {
     let set = relationship_filter(&[RelationshipArg::Import, RelationshipArg::Test]).unwrap();
     assert!(set.contains(&EdgeKind::Import));

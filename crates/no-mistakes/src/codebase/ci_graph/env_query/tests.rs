@@ -1,4 +1,5 @@
 use super::*;
+use serde_yaml::Value;
 
 fn locations(yaml: &str, var: &str) -> Vec<CiEnvLocation> {
     let value: Value = serde_yaml::from_str(yaml).unwrap();

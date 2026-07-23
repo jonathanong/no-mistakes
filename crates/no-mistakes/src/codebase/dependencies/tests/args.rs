@@ -261,6 +261,29 @@ fn parse_path_multiple_hashes_splits_on_first() {
 }
 
 #[test]
+fn workflow_virtual_entrypoint_suffixes_round_trip() {
+    let file = Path::new("/repo/.github/workflows/main.yml");
+    assert_eq!(
+        workflow_node_from_suffix(file, "job:build"),
+        Some(NodeId::WorkflowJob {
+            workflow_file: file.to_path_buf(),
+            job: "build".to_string(),
+        })
+    );
+    assert_eq!(
+        workflow_node_from_suffix(file, "job:build/step:3"),
+        Some(NodeId::WorkflowStep {
+            workflow_file: file.to_path_buf(),
+            job: "build".to_string(),
+            step: 3,
+        })
+    );
+    assert!(workflow_node_from_suffix(file, "job:/step:3").is_none());
+    assert!(workflow_node_from_suffix(file, "job:build/step:nope").is_none());
+    assert!(workflow_node_from_suffix(file, "ordinary-symbol").is_none());
+}
+
+#[test]
 fn resolve_root_uses_absolute_path() {
     let root = fixture_root("simple");
     let args = {

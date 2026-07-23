@@ -1,0 +1,8 @@
+name: Reusable
+on:
+  workflow_call:
+jobs:
+  reused:
+    runs-on: ubuntu-latest
+    steps:
+      - run: node scripts/build.mjs

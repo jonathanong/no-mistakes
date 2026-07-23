@@ -68,8 +68,11 @@ What are you trying to find?
 │   └─ no-mistakes dependents <file> --relationship queue
 │   (requires .no-mistakes.yml with the relevant project/rule config)
 │
-└─ Which CI workflows invoke a binary
-    └─ no-mistakes dependents src/bin/mybinary.rs --relationship ci
+├─ Which CI workflows invoke a Rust binary through supported Cargo commands
+│   └─ no-mistakes dependents src/bin/mybinary.rs --relationship ci
+│
+└─ Which local GitHub Actions jobs/steps, scripts, or artifacts reach a file
+    └─ no-mistakes dependents <file> --relationship workflow
 ```
 
 ## Choosing a --relationship flag
@@ -89,6 +92,13 @@ What are you trying to find?
 | `queue` | Queue enqueue/worker relationship → virtual queue job |
 | `md` | Markdown link → linked source file |
 | `ci` | CI workflow YAML → binary entry point |
+| `workflow` | GitHub Actions workflow → virtual job → virtual step, `needs`, local uses, static run targets, and same-run artifacts |
+| `workflow-job` | Workflow file → virtual job only |
+| `workflow-step` | Job/step structural path |
+| `workflow-needs` | Job structural path plus `needs` |
+| `workflow-uses` | Job/step structural path plus local reusable workflow/action use |
+| `workflow-run` | Job/step structural path plus static run/package-script targets |
+| `workflow-artifact` | Job/step structural path plus same-run artifact upload → download |
 | `http` | HTTP client call with a static path → backend route definition |
 | `process` | `spawn`/`exec`/Playwright `webServer` → spawned entry file |
 | `asset` | Explicit non-code asset import |
@@ -96,7 +106,7 @@ What are you trying to find?
 | `dotnet` | C# `using`/type reference/project reference edges |
 | `swift` | Swift import/type reference/SwiftPM target dependency edges |
 | `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
-| `all` | All standard relationships except the opt-in `route-import` relationship (default) |
+| `all` | All standard relationships, including `workflow`, except the opt-in `route-import` relationship (default) |
 
 Repeatable — `--relationship import --relationship workspace` follows both kinds.
 
@@ -161,3 +171,10 @@ selector coverage is approximate; exact configured test ID edges are stronger.
 `route-import` and `route` are different: the former follows the conservative
 runtime module closure used by Playwright, while the latter follows URL-route,
 route-test, and layout relationships.
+
+`workflow` is local and static: virtual nodes use `WORKFLOW#job:<job>` and
+`WORKFLOW#job:<job>/step:<zero-based-index>`, commands resolve only supported
+literal forms, and artifacts connect upload/download steps in the same run.
+Remote `uses`, `workflow_run`, dynamic shell syntax, and targets outside the
+tracked graph require a fallback such as `rg`. `ci` remains the separate
+legacy workflow-file-to-Rust-binary Cargo relationship.

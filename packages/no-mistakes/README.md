@@ -126,6 +126,18 @@ aliases isolated while shared code can still select all importing tests. Pass
 `tsconfig` explicitly to force one config for a whole invocation when debugging
 or preserving a legacy single-config workflow.
 
+Graph queries also support `relationships: ["workflow"]` for canonical local
+GitHub Actions traversal: workflow file -> virtual job -> virtual step,
+`needs`, local reusable workflows/actions, supported literal `run:` targets and
+package scripts, and same-run artifact handoffs. Virtual IDs are
+`workflow.yml#job:<job>` and `workflow.yml#job:<job>/step:<zero-based-index>`.
+Use the precise `workflow-job`, `workflow-step`, `workflow-needs`,
+`workflow-uses`, `workflow-run`, or `workflow-artifact` filters to select a
+semantic while retaining its required structural bridge edges. The legacy `ci`
+relationship stays separate: it covers only workflow-file-to-Rust-binary Cargo
+invocations. Remote actions/workflows, `workflow_run`, dynamic shell commands,
+and paths outside the tracked graph are intentionally excluded.
+
 External `no-mistakes-*` executables on `PATH` can be invoked as subcommands.
 For example, after installing `no-mistakes-scripts`:
 

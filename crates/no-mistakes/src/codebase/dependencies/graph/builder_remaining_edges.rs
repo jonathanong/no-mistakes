@@ -19,6 +19,12 @@ fn collect_remaining_edges(
     let plan = edge_inputs.plan;
     let graph_files = edge_inputs.graph_files;
     let config_options = edge_inputs.config_options;
+    let default_ci = crate::config::v2::schema::CiConfig::default();
+    let ci = config_options
+        .map(|options| &options.ci)
+        .unwrap_or(&default_ci);
+    let parsed_workflows = (plan.ci || plan.workflow_topology)
+        .then(|| parsed_workflows_for_graph(root, &graph_files.all, ci));
 
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.markdown", || {
@@ -33,7 +39,35 @@ fn collect_remaining_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.ci", || {
         if plan.ci {
-            add_ci_edges(root, &graph_files.all, forward, reverse);
+            add_ci_edges(
+                root,
+                &graph_files.all,
+                parsed_workflows
+                    .as_ref()
+                    .expect("CI graph plan prepares parsed workflows"),
+                forward,
+                reverse,
+            );
+        }
+    });
+    crate::invocation::check_timeout()?;
+    crate::perf_trace::trace("graph.workflow_topology", || {
+        if plan.workflow_topology {
+            let parsed = parsed_workflows
+                .as_ref()
+                .expect("workflow topology graph plan prepares parsed workflows");
+            let topology =
+                crate::codebase::workflow_topology::load_workflow_topology_from_parsed(
+                    root,
+                    ci,
+                    parsed,
+                    &[],
+                );
+            merge_edges(
+                forward,
+                reverse,
+                collect_workflow_topology_edges(root, &graph_files.all, ci, parsed, &topology),
+            );
         }
     });
     crate::invocation::check_timeout()?;

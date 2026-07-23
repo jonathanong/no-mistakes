@@ -134,7 +134,11 @@ fn collect_resource_edges(
         sites.dedup();
     }
     edges.sort_by(|left, right| {
-        (&left.0, &left.1, left.2 as u8).cmp(&(&right.0, &right.1, right.2 as u8))
+        (&left.0, &left.1, edge_kind_rank(left.2)).cmp(&(
+            &right.0,
+            &right.1,
+            edge_kind_rank(right.2),
+        ))
     });
     edges.dedup();
     (edges, details, diagnostics)

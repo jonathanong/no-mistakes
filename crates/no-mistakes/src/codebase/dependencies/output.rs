@@ -33,7 +33,7 @@ pub(crate) fn write_json_with_diagnostics(
 }
 
 /// Write one relative path per line — suitable for shell `$()` substitution.
-/// QueueJob virtual nodes are rendered as `queueFile#job`.
+/// Virtual nodes use their stable display identifiers.
 pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) -> Result<()> {
     for entry in entries {
         match &entry.node {
@@ -50,6 +50,9 @@ pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) ->
                     .strip_prefix(root_dir)
                     .unwrap_or(queue_file.as_path());
                 writeln!(w, "{}#{}", rel.display(), job)?;
+            }
+            NodeId::WorkflowJob { .. } | NodeId::WorkflowStep { .. } => {
+                writeln!(w, "{}", entry.node.display_name(root_dir))?;
             }
             NodeId::Module(specifier) => {
                 writeln!(w, "{specifier}")?;

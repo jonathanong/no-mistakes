@@ -7,8 +7,8 @@ pub struct CiConfig {
     /// Directories (relative to root) to scan for GitHub Actions workflow YAML.
     /// Defaults to `.github/workflows`.
     pub workflow_dirs: Vec<String>,
-    /// Directories (relative to root) holding local composite actions. Recorded
-    /// for future use; their internal env/permissions are not yet inlined.
+    /// Directories (relative to root) holding local action descriptors.
+    /// Dependency graphs resolve local `uses:` only beneath these roots.
     pub action_dirs: Vec<String>,
 }
 

@@ -119,6 +119,21 @@ fn flow_query_deps_edges_and_resolvers_cover_path_branches() {
         resolve_target(&root, root.join("other.mts").to_str().unwrap()),
         NodeId::File(root.join("other.mts"))
     );
+    assert_eq!(
+        resolve_target(&root, ".github/workflows/main.yml#job:build"),
+        NodeId::WorkflowJob {
+            workflow_file: root.join(".github/workflows/main.yml"),
+            job: "build".to_string(),
+        }
+    );
+    assert_eq!(
+        resolve_target(&root, ".github/workflows/main.yml#job:build/step:2"),
+        NodeId::WorkflowStep {
+            workflow_file: root.join(".github/workflows/main.yml"),
+            job: "build".to_string(),
+            step: 2,
+        }
+    );
     let aliased_root = fixture_root("aliased");
     assert!(resolve_tsconfig(&aliased_root, Some(Path::new("tsconfig.json"))).is_ok());
     assert!(resolve_tsconfig(&aliased_root, None).is_ok());
@@ -153,6 +168,38 @@ fn flow_query_helper_nodes_cover_module_and_queue_variants() {
     assert_eq!(queue.kind, "queue-job");
     assert_eq!(queue.queue_file.as_deref(), Some("jobs.mts"));
     assert_eq!(queue.job.as_deref(), Some("send"));
+
+    let workflow_job = flow_node(
+        &NodeId::WorkflowJob {
+            workflow_file: root.join(".github/workflows/main.yml"),
+            job: "build".to_string(),
+        },
+        &root,
+        4,
+    );
+    assert_eq!(workflow_job.kind, "workflow-job");
+    assert_eq!(
+        workflow_job.workflow_file.as_deref(),
+        Some(".github/workflows/main.yml")
+    );
+    assert_eq!(workflow_job.job.as_deref(), Some("build"));
+
+    let workflow_step = flow_node(
+        &NodeId::WorkflowStep {
+            workflow_file: root.join(".github/workflows/main.yml"),
+            job: "build".to_string(),
+            step: 2,
+        },
+        &root,
+        5,
+    );
+    assert_eq!(workflow_step.kind, "workflow-step");
+    assert_eq!(
+        workflow_step.workflow_file.as_deref(),
+        Some(".github/workflows/main.yml")
+    );
+    assert_eq!(workflow_step.job.as_deref(), Some("build"));
+    assert_eq!(workflow_step.step, Some(2));
 }
 
 #[test]
@@ -163,49 +210,4 @@ fn flow_query_explicit_missing_tsconfig_errors() {
     assert!(error.to_string().contains("missing.tsconfig.json"));
 }
 
-#[test]
-fn flow_prepared_graph_honors_explicit_config_without_nested_discovery() {
-    let root = fixture_root("graph-default-route-config");
-    let empty_config = fixture_root("graph-empty-route-config").join(".no-mistakes.yml");
-    let options = |config| FlowOptions {
-        target: "src/client.ts".to_string(),
-        root: root.clone(),
-        tsconfig: None,
-        config,
-        direction: FlowDirection::Deps,
-        depth: 1,
-        relationships: vec![RelationshipArg::Route],
-    };
-
-    let default = run(&options(None)).unwrap();
-    assert!(default
-        .nodes
-        .iter()
-        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
-    let explicit = run(&options(Some(empty_config))).unwrap();
-    assert!(!explicit
-        .nodes
-        .iter()
-        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
-
-    let source = include_str!("flow_query.rs");
-    let run_body = source
-        .split("pub fn run(options: &FlowOptions)")
-        .nth(1)
-        .and_then(|source| source.split("include!(\"flow_query_traverse.rs\")").next())
-        .expect("flow run body");
-    assert_eq!(
-        run_body.matches("VisiblePathSnapshot::new(&root)").count(),
-        1
-    );
-    assert_eq!(run_body.matches("load_v2_config_from_visible(").count(), 1);
-    assert_eq!(run_body.matches("config_from_loaded_v2(").count(), 1);
-    assert_eq!(run_body.matches("prepare_graph_config(").count(), 1);
-    assert_eq!(
-        run_body
-            .matches("build_with_plan_files_prepared_config_facts_and_resolution_cache(")
-            .count(),
-        1
-    );
-    assert!(!run_body.contains("build_with_plan_and_files_config("));
-}
+include!("flow_query_tests/prepared_config.rs");

@@ -41,6 +41,7 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
+        ci: crate::config::v2::schema::CiConfig::default(),
     };
     let queue_only = effective_ts_fact_plan(
         GraphBuildPlan {

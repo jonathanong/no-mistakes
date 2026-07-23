@@ -23,7 +23,8 @@ use super::posix_path;
 use super::render_json::render_workflow_topology_json;
 use super::render_mermaid::render_workflow_topology_mermaid;
 use super::topology_identifiers;
-use super::{load_workflow_topology, model};
+use super::{load_workflow_topology, load_workflow_topology_from_parsed, model};
+use crate::codebase::ci_workflows::ParsedWorkflowSet;
 use crate::config::v2::schema::CiConfig;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -95,6 +96,20 @@ macro_rules! golden_test {
 }
 
 golden_test!(needs_basic_matches_ts_engine, "needs-basic");
+
+#[test]
+fn shared_documents_preserve_schema_v1_topology_output() {
+    let root = fixture("needs-basic");
+    let config = CiConfig::default();
+    let parsed = ParsedWorkflowSet::load(&root, &config);
+    let shared = load_workflow_topology_from_parsed(&root, &config, &parsed, &[]);
+    let direct = load_workflow_topology(&root, &config, &[]);
+    assert_eq!(
+        render_workflow_topology_json(&shared).unwrap(),
+        render_workflow_topology_json(&direct).unwrap()
+    );
+}
+
 golden_test!(job_cycle_matches_ts_engine, "job-cycle");
 golden_test!(step_references_matches_ts_engine, "step-references");
 golden_test!(duplicate_names_matches_ts_engine, "duplicate-names");

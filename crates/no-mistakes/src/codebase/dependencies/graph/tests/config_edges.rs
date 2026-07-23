@@ -405,6 +405,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
+        ci: crate::config::v2::schema::CiConfig::default(),
     };
     let invalid_glob_options = GraphConfigOptions {
         route: crate::codebase::config::RouteOptions::default(),
@@ -423,6 +424,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
+        ci: crate::config::v2::schema::CiConfig::default(),
     };
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&explicit.join("tsconfig.json")).unwrap();
@@ -463,6 +465,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
+        ci: crate::config::v2::schema::CiConfig::default(),
     };
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();

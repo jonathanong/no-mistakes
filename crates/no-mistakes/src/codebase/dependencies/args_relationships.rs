@@ -22,6 +22,13 @@ pub enum RelationshipArg {
     Queue,
     Md,
     Ci,
+    Workflow,
+    WorkflowJob,
+    WorkflowStep,
+    WorkflowNeeds,
+    WorkflowUses,
+    WorkflowRun,
+    WorkflowArtifact,
     Http,
     Process,
     Asset,
@@ -49,6 +56,13 @@ impl RelationshipArg {
             RelationshipArg::Queue => "queue",
             RelationshipArg::Md => "md",
             RelationshipArg::Ci => "ci",
+            RelationshipArg::Workflow => "workflow",
+            RelationshipArg::WorkflowJob => "workflow-job",
+            RelationshipArg::WorkflowStep => "workflow-step",
+            RelationshipArg::WorkflowNeeds => "workflow-needs",
+            RelationshipArg::WorkflowUses => "workflow-uses",
+            RelationshipArg::WorkflowRun => "workflow-run",
+            RelationshipArg::WorkflowArtifact => "workflow-artifact",
             RelationshipArg::Http => "http",
             RelationshipArg::Process => "process",
             RelationshipArg::Asset => "asset",
@@ -62,115 +76,7 @@ impl RelationshipArg {
     }
 }
 
-/// Convert `--relationship` values into a `HashSet<EdgeKind>` filter.
-/// Empty input and `all` expand to the standard public edge set; the
-/// conservative `route-import` relationship remains explicit opt-in.
-#[inline(never)]
-pub(crate) fn relationship_filter(
-    relationships: &[RelationshipArg],
-) -> Option<std::collections::HashSet<EdgeKind>> {
-    if relationships.is_empty() {
-        return Some(standard_relationship_edges());
-    }
-    let mut set = std::collections::HashSet::new();
-    for r in relationships {
-        let edges: &[EdgeKind] = match r {
-            RelationshipArg::Import => &[
-                EdgeKind::Import,
-                EdgeKind::TypeImport,
-                EdgeKind::DynamicImport,
-                EdgeKind::Require,
-            ],
-            RelationshipArg::ImportStatic => &[EdgeKind::Import],
-            RelationshipArg::ImportDynamic => &[EdgeKind::DynamicImport],
-            RelationshipArg::ImportType => &[EdgeKind::TypeImport],
-            RelationshipArg::ImportRequire => &[EdgeKind::Require],
-            RelationshipArg::RouteImport => &[EdgeKind::RouteImport],
-            RelationshipArg::Workspace => &[EdgeKind::WorkspaceImport],
-            RelationshipArg::Package => &[EdgeKind::PackageDependency],
-            // Selector edges connect tests to covered app components.
-            RelationshipArg::Test => &[
-                EdgeKind::TestOf,
-                EdgeKind::RouteTest,
-                EdgeKind::Layout,
-                EdgeKind::Selector,
-            ],
-            RelationshipArg::Route => {
-                &[EdgeKind::RouteRef, EdgeKind::RouteTest, EdgeKind::Layout]
-            }
-            RelationshipArg::Queue => &[EdgeKind::QueueEnqueue, EdgeKind::QueueWorker],
-            RelationshipArg::Md => &[EdgeKind::MarkdownLink],
-            RelationshipArg::Ci => &[EdgeKind::CiInvocation],
-            RelationshipArg::Http => &[EdgeKind::HttpCall],
-            RelationshipArg::Process => &[EdgeKind::ProcessSpawn],
-            RelationshipArg::Asset => &[EdgeKind::AssetImport],
-            RelationshipArg::React => &[EdgeKind::ReactRender],
-            RelationshipArg::Dotnet => &[
-                EdgeKind::DotnetUsing,
-                EdgeKind::DotnetReference,
-                EdgeKind::DotnetProjectDependency,
-            ],
-            RelationshipArg::Swift => &[
-                EdgeKind::SwiftImport,
-                EdgeKind::SwiftReference,
-                EdgeKind::SwiftPackageDependency,
-            ],
-            RelationshipArg::Terraform => &[
-                EdgeKind::TerraformReference,
-                EdgeKind::TerraformModuleRef,
-                EdgeKind::TerraformOutputRef,
-            ],
-            RelationshipArg::Resource => &[EdgeKind::Resource],
-            RelationshipArg::All => {
-                set.extend(standard_relationship_edges());
-                &[]
-            }
-        };
-        for edge in edges {
-            set.insert(*edge);
-        }
-    }
-    Some(set)
-}
-
-/// Edge kinds included by legacy unfiltered traversal and `--relationship all`.
-/// `RouteImport` is intentionally absent: it is a conservative alternate view
-/// that must be requested explicitly to avoid weakening ordinary call pruning.
-fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
-    [
-        EdgeKind::Import,
-        EdgeKind::TypeImport,
-        EdgeKind::DynamicImport,
-        EdgeKind::Require,
-        EdgeKind::TestOf,
-        EdgeKind::RouteRef,
-        EdgeKind::QueueEnqueue,
-        EdgeKind::QueueWorker,
-        EdgeKind::RouteTest,
-        EdgeKind::Layout,
-        EdgeKind::MarkdownLink,
-        EdgeKind::WorkspaceImport,
-        EdgeKind::PackageDependency,
-        EdgeKind::CiInvocation,
-        EdgeKind::HttpCall,
-        EdgeKind::ProcessSpawn,
-        EdgeKind::AssetImport,
-        EdgeKind::ReactRender,
-        EdgeKind::Selector,
-        EdgeKind::SwiftImport,
-        EdgeKind::SwiftReference,
-        EdgeKind::SwiftPackageDependency,
-        EdgeKind::DotnetUsing,
-        EdgeKind::DotnetReference,
-        EdgeKind::DotnetProjectDependency,
-        EdgeKind::TerraformReference,
-        EdgeKind::TerraformModuleRef,
-        EdgeKind::TerraformOutputRef,
-        EdgeKind::Resource,
-    ]
-    .into_iter()
-    .collect()
-}
+include!("args_relationships_filter.rs");
 
 fn relationships_are_import_only(relationships: &[RelationshipArg]) -> bool {
     !relationships.is_empty()
@@ -198,4 +104,22 @@ pub fn parse_entrypoint(s: &str) -> (PathBuf, Option<String>) {
         Some((file, symbol)) => (PathBuf::from(file), Some(symbol.to_string())),
         None => (PathBuf::from(s), None),
     }
+}
+
+pub(crate) fn workflow_node_from_suffix(file: &Path, suffix: &str) -> Option<NodeId> {
+    let suffix = suffix.strip_prefix("job:")?;
+    if let Some((job, step)) = suffix.split_once("/step:") {
+        if job.is_empty() {
+            return None;
+        }
+        return Some(NodeId::WorkflowStep {
+            workflow_file: file.to_path_buf(),
+            job: job.to_string(),
+            step: step.parse().ok()?,
+        });
+    }
+    (!suffix.is_empty()).then(|| NodeId::WorkflowJob {
+        workflow_file: file.to_path_buf(),
+        job: suffix.to_string(),
+    })
 }

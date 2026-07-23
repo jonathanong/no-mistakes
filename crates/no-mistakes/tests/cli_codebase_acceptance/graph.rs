@@ -404,7 +404,7 @@ fn large_graph_monorepo_exercises_all_relationships() {
     let files = value["files"].as_array().expect("files should be an array");
     assert_eq!(
         files.len(),
-        178,
+        182,
         "large fixture traversal should stay stable"
     );
     assert!(
@@ -439,6 +439,8 @@ fn large_graph_monorepo_exercises_all_relationships() {
         "test",
         "type-import",
         "workspace",
+        "workflow-job",
+        "workflow-step",
     ] {
         assert!(
             kinds.contains(expected),

@@ -1,0 +1,7 @@
+name: Local fixture action
+description: The descriptor itself is the tracked local-action dependency.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo local

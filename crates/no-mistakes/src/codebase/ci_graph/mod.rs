@@ -22,13 +22,14 @@ pub mod triggers;
 #[cfg(test)]
 mod tests;
 
+use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use crate::codebase::ts_source::VisiblePathSnapshot;
 use crate::config::v2::schema::CiConfig;
 use model::{CiWarning, Workflow};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-pub use env_query::{analyze_env, analyze_env_from_snapshot, CiEnvReport};
+pub use env_query::{analyze_env, analyze_env_from_parsed, analyze_env_from_snapshot, CiEnvReport};
 pub use impact::{analyze_impact, CiImpactReport};
 
 /// A parsed set of workflows plus any non-fatal load warnings.
@@ -56,42 +57,59 @@ impl WorkflowSet {
         let mut workflows = Vec::new();
         let mut warnings = Vec::new();
 
-        for path in discover_workflow_files_from_snapshot(root, ci, snapshot) {
-            let rel = relative_slash(root, &path);
-            // Distinguish I/O failures (permissions, encoding) from parse errors
-            // so the warning points at the real cause.
-            let content = match std::fs::read_to_string(&path) {
-                Ok(content) => content,
-                Err(error) => {
-                    warnings.push(CiWarning {
-                        path: rel,
-                        message: format!("could not read workflow file: {error}"),
-                    });
-                    continue;
-                }
-            };
-            match parse::parse_workflow(&content, &rel) {
-                Ok(workflow) => {
+        let parsed = ParsedWorkflowSet::load_from_snapshot(root, ci, snapshot);
+        Self::populate_from_parsed(&parsed, &mut workflows, &mut warnings);
+
+        WorkflowSet {
+            workflows,
+            warnings,
+        }
+    }
+
+    /// Convert shared parsed documents to the legacy impact model while
+    /// preserving its distinct read-versus-parse warning contract.
+    pub fn from_parsed(parsed: &ParsedWorkflowSet) -> WorkflowSet {
+        let mut workflows = Vec::new();
+        let mut warnings = Vec::new();
+        Self::populate_from_parsed(parsed, &mut workflows, &mut warnings);
+        WorkflowSet {
+            workflows,
+            warnings,
+        }
+    }
+
+    fn populate_from_parsed(
+        parsed: &ParsedWorkflowSet,
+        workflows: &mut Vec<Workflow>,
+        warnings: &mut Vec<CiWarning>,
+    ) {
+        for document in &parsed.documents {
+            match &document.value {
+                Ok(value) => {
+                    let workflow = parse::parse_workflow_value(value, &document.path);
                     for note in &workflow.warnings {
                         warnings.push(CiWarning {
-                            path: rel.clone(),
+                            path: document.path.clone(),
                             message: note.clone(),
                         });
                     }
                     workflows.push(workflow);
                 }
                 Err(error) => warnings.push(CiWarning {
-                    path: rel,
-                    message: format!("could not parse workflow YAML: {error}"),
+                    path: document.path.clone(),
+                    message: match error.kind {
+                        WorkflowDocumentErrorKind::Read => {
+                            format!("could not read workflow file: {}", error.message)
+                        }
+                        WorkflowDocumentErrorKind::Parse => {
+                            format!("could not parse workflow YAML: {}", error.message)
+                        }
+                    },
                 }),
             }
         }
 
         workflows.sort_by(|a, b| a.path.cmp(&b.path));
-        WorkflowSet {
-            workflows,
-            warnings,
-        }
     }
 }
 

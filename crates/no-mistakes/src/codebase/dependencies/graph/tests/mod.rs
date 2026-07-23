@@ -22,6 +22,23 @@ fn package_name_from_spec(spec: &str) -> &str {
     }
 }
 
+fn parsed_workflow_set(
+    root: &Path,
+    all_files: &[PathBuf],
+) -> crate::codebase::ci_workflows::ParsedWorkflowSet {
+    crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(
+        root,
+        all_files
+            .iter()
+            .filter(|path| {
+                path.extension()
+                    .and_then(std::ffi::OsStr::to_str)
+                    .is_some_and(|extension| matches!(extension, "yml" | "yaml"))
+            })
+            .cloned(),
+    )
+}
+
 #[test]
 fn playwright_graph_build_has_one_snapshot_construction_site() {
     let builder = [
@@ -66,3 +83,4 @@ include!("types.rs");
 
 mod selector_fact_plan;
 mod selector_optimization;
+mod workflow_topology_edges;

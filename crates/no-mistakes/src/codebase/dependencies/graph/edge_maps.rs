@@ -12,6 +12,19 @@ fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
                 queue_file: crate::codebase::ts_resolver::normalize_path(queue_file),
                 job: job.clone(),
             },
+            NodeId::WorkflowJob { workflow_file, job } => NodeId::WorkflowJob {
+                workflow_file: crate::codebase::ts_resolver::normalize_path(workflow_file),
+                job: job.clone(),
+            },
+            NodeId::WorkflowStep {
+                workflow_file,
+                job,
+                step,
+            } => NodeId::WorkflowStep {
+                workflow_file: crate::codebase::ts_resolver::normalize_path(workflow_file),
+                job: job.clone(),
+                step: *step,
+            },
         })
         .collect()
 }
@@ -37,24 +50,24 @@ fn edge_index_from_maps(mut forward: EdgeMap, mut reverse: EdgeMap) -> EdgeIndex
             &left.from,
             node_sort_key(&left.to),
             &left.to,
-            left.kind as u8,
+            edge_kind_rank(left.kind),
         )
             .cmp(&(
                 node_sort_key(&right.from),
                 &right.from,
                 node_sort_key(&right.to),
                 &right.to,
-                right.kind as u8,
+                edge_kind_rank(right.kind),
             ))
     })
 }
 
 fn sort_edge_index_adjacency(index: &mut EdgeIndex<NodeId, EdgeKind>) {
     index.sort_adjacency_by(|(left_node, left_kind), (right_node, right_kind)| {
-        (node_sort_key(left_node), left_node, *left_kind as u8).cmp(&(
+        (node_sort_key(left_node), left_node, edge_kind_rank(*left_kind)).cmp(&(
             node_sort_key(right_node),
             right_node,
-            *right_kind as u8,
+            edge_kind_rank(*right_kind),
         ))
     });
 }

@@ -39,6 +39,7 @@ struct GraphConfigOptions {
     dotnet_projects: Vec<crate::codebase::dotnet::DotnetConfigProject>,
     swift_packages: Vec<String>,
     terraform: crate::config::v2::schema::TerraformConfig,
+    ci: crate::config::v2::schema::CiConfig,
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
@@ -93,6 +94,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         dotnet_projects: crate::codebase::dotnet::configured_projects(root, &v2_config.tests.dotnet),
         swift_packages: v2_config.tests.swift.packages.clone(),
         terraform: v2_config.infra.terraform.clone(),
+        ci: v2_config.ci.clone(),
     }
 }
 

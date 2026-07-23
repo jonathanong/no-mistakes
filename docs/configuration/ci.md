@@ -9,15 +9,15 @@ ci:
   # Defaults to [.github/workflows].
   workflowDirs:
     - .github/workflows
-  # Directories holding local composite actions. Recorded for future use; their
-  # internal env/permissions are not yet inlined. Defaults to [].
+  # Directories holding local action descriptors used by workflow dependency
+  # edges. Action internals are not inlined. Defaults to [].
   actionDirs: []
 ```
 
 | Key | Default | Description |
 | --- | --- | --- |
 | `workflowDirs` | `[.github/workflows]` | Where to find `*.yml` / `*.yaml` workflows. |
-| `actionDirs` | `[]` | Local composite-action directories (reserved). |
+| `actionDirs` | `[]` | Roots for local action descriptors resolved by workflow dependency edges. |
 
 Workflow discovery examines direct children of each configured directory and
 uses Git visibility: tracked workflows and untracked workflows that are not

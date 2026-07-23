@@ -219,7 +219,7 @@ reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
 - `--test vitest|playwright|cargo|dotnet|swift` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|md|ci|http|process|asset|react|dotnet|swift|terraform|all`.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
   `--verbose-timings` (stderr), and `--jobs`.
@@ -262,6 +262,12 @@ member usage.
   URL-route, Playwright route-test, and Next.js layout edges instead.
 - `route-import` is explicit opt-in. Omitted relationships and `all` keep the
   standard call-pruned graph so test impact and dependency checks do not widen.
+- `workflow` traces static, tracked GitHub Actions topology and execution:
+  workflow -> job -> step, `needs`, local `uses`, literal run/package-script
+  targets, and same-run artifacts. Virtual IDs are `WORKFLOW#job:<job>` and
+  `WORKFLOW#job:<job>/step:<zero-based-index>`. `ci` remains only the legacy
+  workflow-file -> Rust-binary Cargo edge; remote `uses` and `workflow_run`
+  are intentionally outside `workflow`.
 - Bare external specifiers such as `react` are terminal module nodes; their
   `node_modules` sources are not parsed. Node built-ins such as `node:path`
   remain excluded from module nodes.

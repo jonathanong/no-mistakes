@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests_types {
-    use crate::codebase::dependencies::graph::NodeId;
+    use crate::codebase::dependencies::graph::{edge_kind_rank, EdgeKind, NodeId};
     use std::path::PathBuf;
 
     #[test]
@@ -23,5 +23,26 @@ mod tests_types {
             job: "jobName".to_string(),
         };
         assert_eq!(queue_node.as_file(), None);
+
+        let workflow_job = NodeId::WorkflowJob {
+            workflow_file: file_path.clone(),
+            job: "build".to_string(),
+        };
+        assert_eq!(workflow_job.as_file(), None);
+
+        let workflow_step = NodeId::WorkflowStep {
+            workflow_file: file_path,
+            job: "build".to_string(),
+            step: 0,
+        };
+        assert_eq!(workflow_step.as_file(), None);
+    }
+
+    #[test]
+    fn edge_kind_rank_appends_workflow_kinds_without_reordering_existing_kinds() {
+        assert_eq!(edge_kind_rank(EdgeKind::CiInvocation), 14);
+        assert_eq!(edge_kind_rank(EdgeKind::TerraformOutputRef), 29);
+        assert_eq!(edge_kind_rank(EdgeKind::WorkflowJob), 30);
+        assert_eq!(edge_kind_rank(EdgeKind::WorkflowArtifact), 35);
     }
 }

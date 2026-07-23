@@ -150,7 +150,9 @@ fn check_rule_application(
                         m.is_match(rel.to_string_lossy().replace('\\', "/"))
                     })
                 }
-                NodeId::QueueJob { .. } => false,
+                NodeId::QueueJob { .. }
+                | NodeId::WorkflowJob { .. }
+                | NodeId::WorkflowStep { .. } => false,
             };
             if !matched {
                 continue;

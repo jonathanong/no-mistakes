@@ -102,6 +102,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             module: None,
             queue_file: None,
             job: None,
+            workflow_file: None,
+            step: None,
         },
         NodeId::Symbol { file, symbol } => FlowNode {
             id,
@@ -112,6 +114,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             module: None,
             queue_file: None,
             job: None,
+            workflow_file: None,
+            step: None,
         },
         NodeId::Module(module) => FlowNode {
             id,
@@ -122,6 +126,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             module: Some(module.clone()),
             queue_file: None,
             job: None,
+            workflow_file: None,
+            step: None,
         },
         NodeId::QueueJob { queue_file, job } => FlowNode {
             id,
@@ -132,6 +138,36 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             module: None,
             queue_file: Some(relative(root, queue_file)),
             job: Some(job.clone()),
+            workflow_file: None,
+            step: None,
+        },
+        NodeId::WorkflowJob { workflow_file, job } => FlowNode {
+            id,
+            kind: "workflow-job",
+            depth,
+            file: None,
+            symbol: None,
+            module: None,
+            queue_file: None,
+            job: Some(job.clone()),
+            workflow_file: Some(relative(root, workflow_file)),
+            step: None,
+        },
+        NodeId::WorkflowStep {
+            workflow_file,
+            job,
+            step,
+        } => FlowNode {
+            id,
+            kind: "workflow-step",
+            depth,
+            file: None,
+            symbol: None,
+            module: None,
+            queue_file: None,
+            job: Some(job.clone()),
+            workflow_file: Some(relative(root, workflow_file)),
+            step: Some(*step),
         },
     }
 }
@@ -145,7 +181,8 @@ fn resolve_target(root: &Path, raw: &str) -> NodeId {
     };
     let path = normalize_path(&path);
     match symbol {
-        Some(symbol) => NodeId::Symbol { file: path, symbol },
+        Some(symbol) => workflow_node_from_suffix(&path, &symbol)
+            .unwrap_or(NodeId::Symbol { file: path, symbol }),
         None => NodeId::File(path),
     }
 }

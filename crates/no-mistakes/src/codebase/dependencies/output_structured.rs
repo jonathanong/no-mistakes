@@ -6,6 +6,8 @@ enum OutputNode {
     File(OutputFile),
     Symbol(OutputSymbol),
     QueueJob(OutputQueueJob),
+    WorkflowJob(OutputWorkflowJob),
+    WorkflowStep(OutputWorkflowStep),
     Module(OutputModule),
 }
 
@@ -39,6 +41,27 @@ struct OutputQueueJob {
 #[derive(Serialize)]
 struct OutputModule {
     module: String,
+    depth: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    via: Vec<&'static str>,
+}
+
+#[derive(Serialize)]
+struct OutputWorkflowJob {
+    #[serde(rename = "workflowFile")]
+    workflow_file: String,
+    job: String,
+    depth: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    via: Vec<&'static str>,
+}
+
+#[derive(Serialize)]
+struct OutputWorkflowStep {
+    #[serde(rename = "workflowFile")]
+    workflow_file: String,
+    job: String,
+    step: usize,
     depth: usize,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     via: Vec<&'static str>,
@@ -106,6 +129,33 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                         OutputNode::QueueJob(OutputQueueJob {
                             queue_file: rel.to_string_lossy().into_owned(),
                             job: job.clone(),
+                            depth: entry.depth,
+                            via,
+                        })
+                    }
+                    NodeId::WorkflowJob { workflow_file, job } => {
+                        let rel = workflow_file
+                            .strip_prefix(root_dir)
+                            .unwrap_or(workflow_file.as_path());
+                        OutputNode::WorkflowJob(OutputWorkflowJob {
+                            workflow_file: rel.to_string_lossy().into_owned(),
+                            job: job.clone(),
+                            depth: entry.depth,
+                            via,
+                        })
+                    }
+                    NodeId::WorkflowStep {
+                        workflow_file,
+                        job,
+                        step,
+                    } => {
+                        let rel = workflow_file
+                            .strip_prefix(root_dir)
+                            .unwrap_or(workflow_file.as_path());
+                        OutputNode::WorkflowStep(OutputWorkflowStep {
+                            workflow_file: rel.to_string_lossy().into_owned(),
+                            job: job.clone(),
+                            step: *step,
                             depth: entry.depth,
                             via,
                         })

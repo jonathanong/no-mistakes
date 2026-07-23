@@ -32,6 +32,7 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(GraphBuildPlan::all().imports);
     assert!(!GraphBuildPlan::all().route_imports);
     assert!(GraphBuildPlan::all().workspace);
+    assert!(GraphBuildPlan::all().workflow_topology);
     assert_eq!(GraphBuildPlan::from_allowed(None), GraphBuildPlan::all());
 
     let route_import_only: HashSet<_> = [EdgeKind::RouteImport].into();
@@ -67,6 +68,11 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(plan.process);
     assert!(plan.assets);
     assert!(plan.react);
+
+    let workflow_only: HashSet<_> = [EdgeKind::WorkflowRun].into();
+    let plan = GraphBuildPlan::from_allowed(Some(&workflow_only));
+    assert!(plan.workflow_topology);
+    assert!(!plan.ci);
 
     let import_only: HashSet<_> = [EdgeKind::Require].into();
     let plan = GraphBuildPlan::from_allowed(Some(&import_only));

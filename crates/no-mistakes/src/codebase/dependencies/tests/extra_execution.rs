@@ -479,6 +479,13 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::Queue.as_str(), "queue");
     assert_eq!(RelationshipArg::Md.as_str(), "md");
     assert_eq!(RelationshipArg::Ci.as_str(), "ci");
+    assert_eq!(RelationshipArg::Workflow.as_str(), "workflow");
+    assert_eq!(RelationshipArg::WorkflowJob.as_str(), "workflow-job");
+    assert_eq!(RelationshipArg::WorkflowStep.as_str(), "workflow-step");
+    assert_eq!(RelationshipArg::WorkflowNeeds.as_str(), "workflow-needs");
+    assert_eq!(RelationshipArg::WorkflowUses.as_str(), "workflow-uses");
+    assert_eq!(RelationshipArg::WorkflowRun.as_str(), "workflow-run");
+    assert_eq!(RelationshipArg::WorkflowArtifact.as_str(), "workflow-artifact");
     assert_eq!(RelationshipArg::Http.as_str(), "http");
     assert_eq!(RelationshipArg::Process.as_str(), "process");
     assert_eq!(RelationshipArg::Asset.as_str(), "asset");

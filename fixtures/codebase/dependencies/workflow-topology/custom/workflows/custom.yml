@@ -1,0 +1,8 @@
+name: Custom directory
+on:
+  push:
+jobs:
+  configured:
+    runs-on: ubuntu-latest
+    steps:
+      - run: node scripts/direct.mjs
