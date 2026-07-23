@@ -1,12 +1,11 @@
-use self::exports::{
-    exported_array, exported_expression, exported_function_body, reexported_imports,
-};
+use self::exports::{exported_expression, exported_function_body, reexported_imports};
 use super::super::{
     direct_literal_require_binding, import_bindings, shared,
     string_projects::{string_project_paths, string_project_roots},
     top_level_function_bodies, Ctx, ImportBinding,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::integration_tests::test_config::vitest::project_arrays::exports::commonjs::commonjs_reexport;
 use oxc_ast::ast::{ArrayExpressionElement, Expression};
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -114,7 +113,8 @@ fn extend_imported_exclusions(
                 |program, source| {
                     let bindings = shared::top_level_object_bindings(program);
                     let imports = import_bindings(program);
-                    let array = exported_array(program, &bindings, &import.imported);
+                    let expression = exported_expression(program, &bindings, &import.imported);
+                    let commonjs_reexport = commonjs_reexport(program, &import.imported);
                     let reexports = reexported_imports(program, &import.imported);
                     let mut local_seen = BTreeSet::new();
                     let mut object_seen = BTreeSet::new();
@@ -129,10 +129,10 @@ fn extend_imported_exclusions(
                         local_seen: &mut local_seen,
                         object_seen: &mut object_seen,
                     };
-                    if let Some(array) = array {
-                        for element in &array.elements {
-                            extend_global_exclusions(element, &mut ctx, excluded);
-                        }
+                    if let Some(expression) = expression {
+                        extend_expression_exclusions(expression, &mut ctx, excluded);
+                    } else if let Some(reexport) = commonjs_reexport {
+                        extend_imported_exclusions(&reexport, &mut ctx, excluded);
                     } else {
                         for reexport in reexports {
                             extend_imported_exclusions(&reexport, &mut ctx, excluded);

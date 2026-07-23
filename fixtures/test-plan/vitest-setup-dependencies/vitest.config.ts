@@ -39,6 +39,9 @@ const { projects: cjsNamedMemberProjects } = require('./config/cjs-project-named
 const { projects: cjsNamedObjectProjects } = require('./config/cjs-project-named-object.cjs')
 const { projects: cjsNamedReplacementProjects } = require('./config/cjs-project-named-replacement.cjs')
 const { projects: cjsNamedExcludedProjects } = require('./config/cjs-project-named-exclusions.cjs')
+const { projects: cjsNamedAliasExcludedProjects } = require('./config/cjs-project-named-alias-exclusions.cjs')
+const { projects: cjsNamedObjectExcludedProjects } = require('./config/cjs-project-named-object-exclusions.cjs')
+const { projects: cjsNamedReexportExcludedProjects } = require('./config/cjs-project-named-reexport-exclusions.cjs')
 
 const localDynamicSetup = () => importedDynamicSetup()
 const localCommonjsDynamicSetup = () => importedCommonjsDynamicSetup()
@@ -337,6 +340,12 @@ export default defineConfig({
       // Imported exclusions suppress outer positives before they are parsed.
       ...require('./config/cjs-project-exclusions.cjs'),
       ...cjsNamedExcludedProjects,
+      ...require('./config/cjs-project-alias-exclusions.cjs'),
+      ...require('./config/cjs-project-chain-exclusions.cjs'),
+      ...require('./config/cjs-project-cycle-exclusions-a.cjs'),
+      ...cjsNamedAliasExcludedProjects,
+      ...cjsNamedObjectExcludedProjects,
+      ...cjsNamedReexportExcludedProjects,
       // Cycles and computed CommonJS exports remain deliberately empty.
       ...require('./config/cjs-project-cycle-a.cjs'),
       ...require('./config/cjs-project-computed.cjs'),
@@ -345,6 +354,12 @@ export default defineConfig({
       './vitest.standalone-imported-project.ts',
       './vitest.cjs-require-excluded-project.ts',
       './vitest.cjs-named-excluded-project.ts',
+      './vitest.cjs-alias-excluded-project.ts',
+      './vitest.cjs-chain-excluded-project.ts',
+      './vitest.cjs-cycle-excluded-project.ts',
+      './vitest.cjs-named-alias-excluded-project.ts',
+      './vitest.cjs-named-object-excluded-project.ts',
+      './vitest.cjs-named-reexport-excluded-project.ts',
       './packages/foo/vitest.project.ts',
       './configless-project',
     ],

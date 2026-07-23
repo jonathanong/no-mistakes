@@ -1,1 +1,1 @@
-module.exports.projects = ['!./vitest.cjs-named-excluded-project.ts']
+module.exports.projects = ['!../vitest.cjs-named-excluded-project.ts']

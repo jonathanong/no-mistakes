@@ -1,4 +1,6 @@
-use super::super::{objects, shared, ExprMap};
+use super::super::{
+    imports::direct_literal_require_binding, objects, shared, ExprMap, ImportBinding,
+};
 use crate::ast;
 use oxc_ast::ast::{AssignmentOperator, AssignmentTarget, Expression, Program, Statement};
 
@@ -20,14 +22,49 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn commonj
             resolved = (exported == "default")
                 .then_some(right)
                 .or_else(|| named_object_property(right, exported, bindings));
-        } else if (exported != "default"
-            && path.len() == 3
-            && path[0] == "module"
-            && path[1] == "exports"
-            && path[2] == exported)
-            || (!exports_detached && path.len() == 2 && path[0] == "exports" && path[1] == exported)
+        } else if exported != "default"
+            && ((path.len() == 3
+                && path[0] == "module"
+                && path[1] == "exports"
+                && path[2] == exported)
+                || (!exports_detached
+                    && path.len() == 2
+                    && path[0] == "exports"
+                    && path[1] == exported))
         {
             resolved = Some(right);
+        }
+    }
+    resolved
+}
+
+pub(in crate::integration_tests::test_config::vitest::project_arrays) fn commonjs_reexport(
+    program: &Program<'_>,
+    exported: &str,
+) -> Option<ImportBinding> {
+    let mut resolved = None;
+    let mut exports_detached = false;
+    for statement in &program.body {
+        let Some((path, right)) = commonjs_assignment(statement) else {
+            continue;
+        };
+        if path == ["module", "exports"] {
+            exports_detached = true;
+            resolved = direct_literal_require_binding(right).map(|mut import| {
+                import.imported = exported.to_string();
+                import
+            });
+        } else if exported != "default"
+            && ((path.len() == 3
+                && path[0] == "module"
+                && path[1] == "exports"
+                && path[2] == exported)
+                || (!exports_detached
+                    && path.len() == 2
+                    && path[0] == "exports"
+                    && path[1] == exported))
+        {
+            resolved = direct_literal_require_binding(right);
         }
     }
     resolved

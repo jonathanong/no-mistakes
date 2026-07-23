@@ -29,10 +29,7 @@ fn tests_impact_ignores_excluded_commonjs_projects() {
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/test-plan/vitest-setup-dependencies"),
     );
-    let plan = plan_for(
-        &root,
-        "cjs-require-excluded-owner/setup/require-excluded.ts",
-    );
+    let plan = plan_for(&root, "cjs-commonjs-excluded-owner/setup/chain-excluded.ts");
     assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
     assert!(
         plan["selected_tests"].as_array().unwrap().is_empty(),

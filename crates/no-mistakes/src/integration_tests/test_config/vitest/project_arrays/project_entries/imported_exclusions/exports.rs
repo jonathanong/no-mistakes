@@ -1,24 +1,9 @@
 use super::super::super::{root_spreads, ImportBinding};
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::integration_tests::test_config::vitest::project_arrays::exports::commonjs::commonjs_exported_expression;
 use oxc_ast::ast::{
-    ArrayExpression, Declaration, ExportDefaultDeclarationKind, Expression, FunctionBody, Program,
-    Statement,
+    Declaration, ExportDefaultDeclarationKind, Expression, FunctionBody, Program, Statement,
 };
 use std::collections::BTreeMap;
-
-pub(super) fn exported_array<'a>(
-    program: &'a Program<'a>,
-    bindings: &BTreeMap<String, &'a Expression<'a>>,
-    exported: &str,
-) -> Option<&'a ArrayExpression<'a>> {
-    exported_expression(program, bindings, exported)
-        .and_then(|expression| match unwrap_ts_wrappers(expression) {
-            Expression::ArrayExpression(array) => Some(array),
-            _ => None,
-        })
-        .map(|array| &**array)
-}
 
 pub(super) fn reexported_imports(program: &Program<'_>, exported: &str) -> Vec<ImportBinding> {
     let mut reexports = Vec::new();

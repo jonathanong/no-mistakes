@@ -41,8 +41,15 @@ fn commonjs_project_exclusions_and_default_members_have_no_owner() {
     let (_fixture, root) = vitest_setup_fixture();
     for setup in [
         "cjs-default-member-owner/setup/default-member.ts",
+        "cjs-exports-default-member-owner/setup/exports-default-member.ts",
         "cjs-require-excluded-owner/setup/require-excluded.ts",
         "cjs-named-excluded-owner/setup/named-excluded.ts",
+        "cjs-commonjs-excluded-owner/setup/alias-excluded.ts",
+        "cjs-commonjs-excluded-owner/setup/chain-excluded.ts",
+        "cjs-commonjs-excluded-owner/setup/cycle-excluded.ts",
+        "cjs-commonjs-excluded-owner/setup/named-alias-excluded.ts",
+        "cjs-commonjs-excluded-owner/setup/named-object-excluded.ts",
+        "cjs-commonjs-excluded-owner/setup/named-reexport-excluded.ts",
     ] {
         let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
             root.clone(),

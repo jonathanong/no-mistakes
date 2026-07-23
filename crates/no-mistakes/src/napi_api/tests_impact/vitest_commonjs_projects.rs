@@ -25,13 +25,13 @@ fn tests_impact_json_keeps_named_commonjs_project_setup_owner_exact() {
 #[test]
 fn tests_impact_json_ignores_named_commonjs_excluded_projects() {
     let root = crate::codebase::ts_resolver::normalize_path(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/test-plan/vitest-setup-dependencies"),
     );
     let output = tests_impact_json_impl(
         json!({
             "root": root,
-            "entrypoints": ["cjs-named-excluded-owner/setup/named-excluded.ts"]
+            "entrypoints": ["cjs-commonjs-excluded-owner/setup/named-reexport-excluded.ts"]
         })
         .to_string(),
     )
