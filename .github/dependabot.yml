@@ -3,6 +3,9 @@ version: 2
 updates:
   - package-ecosystem: cargo
     directory: /
+    exclude-paths:
+      - fixtures/**
+      - test-cases/**
     schedule:
       interval: weekly
       day: monday
@@ -21,6 +24,9 @@ updates:
 
   - package-ecosystem: npm
     directory: /
+    exclude-paths:
+      - fixtures/**
+      - test-cases/**
     schedule:
       interval: weekly
       day: monday
@@ -39,6 +45,9 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    exclude-paths:
+      - fixtures/**
+      - test-cases/**
     schedule:
       interval: weekly
       day: monday
