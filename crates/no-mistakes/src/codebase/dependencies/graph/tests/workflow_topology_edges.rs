@@ -166,6 +166,56 @@ fn workflow_graph_uses_configured_workflow_directories() {
 }
 
 #[test]
+fn workflow_topology_excludes_jobs_outside_the_graph_file_universe() {
+    let root = workflow_topology_fixture();
+    let all_files = vec![root.join("scripts/direct.mjs")];
+    let parsed = crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(
+        &root,
+        [root.join(".github/workflows/main.yml")],
+    );
+    let topology = crate::codebase::workflow_topology::load_workflow_topology(
+        &root,
+        &crate::config::v2::schema::CiConfig::default(),
+        &[],
+    );
+
+    assert!(collect_workflow_topology_edges(
+        &root,
+        &all_files,
+        &crate::config::v2::schema::CiConfig::default(),
+        &parsed,
+        &topology,
+    )
+    .is_empty());
+}
+
+#[test]
+fn workflow_run_collection_skips_steps_absent_from_the_topology_graph() {
+    let root = workflow_topology_fixture();
+    let parsed = crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(
+        &root,
+        [root.join(".github/workflows/main.yml")],
+    );
+    let jobs = HashMap::from([(
+        ".github/workflows/main.yml#build".to_string(),
+        workflow_node(&root, "build"),
+    )]);
+    let universe = HashSet::from([root.join("package.json")]);
+    let mut edges = Vec::new();
+
+    add_workflow_run_edges(
+        &root,
+        &universe,
+        &parsed,
+        &jobs,
+        &HashMap::new(),
+        &mut edges,
+    );
+
+    assert!(edges.is_empty());
+}
+
+#[test]
 fn workflow_edges_support_relative_graph_roots() {
     let root = workflow_topology_fixture();
     let current = std::env::current_dir().unwrap();
@@ -239,6 +289,7 @@ fn workflow_command_parsing_is_literal_and_conservative() {
     );
     assert!(static_command_segments("cd scripts # stop").is_empty());
     assert!(static_command_segments("''").is_empty());
+    assert!(static_command_segments("'unterminated").is_empty());
     assert_eq!(
         shellish_literal_words(r#""double's quote" escaped\ space"#),
         Some(vec![
@@ -332,6 +383,7 @@ fn workflow_run_resolution_handles_cycles_cargo_and_unsafe_inputs() {
         .resolve("npm run missing", &root.parent().unwrap().join("outside"))
         .is_empty());
     assert!(resolver.resolve("ONLY_ENV=set", &root).is_empty());
+    assert_eq!(resolver.nearest_package_json(root.parent().unwrap()), None);
     let mut targets = HashSet::new();
     resolver.resolve_cargo_targets(&[], &mut targets);
     resolver.resolve_package_script("${DYNAMIC}", &root, &mut HashSet::new(), &mut targets);

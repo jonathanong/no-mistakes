@@ -230,6 +230,22 @@ fn paths_queue_job_rendered_as_hash() {
 }
 
 #[test]
+fn paths_workflow_nodes_use_stable_virtual_identifiers() {
+    let root = p("/root");
+    let entries = vec![
+        workflow_job_entry("/root/.github/workflows/ci.yml", "build", 1),
+        workflow_step_entry("/root/.github/workflows/ci.yml", "build", 0, 2),
+    ];
+    let mut buf = Vec::new();
+    write_paths(&entries, &root, &mut buf).unwrap();
+
+    assert_eq!(
+        String::from_utf8(buf).unwrap(),
+        ".github/workflows/ci.yml#job:build\n.github/workflows/ci.yml#job:build/step:0\n"
+    );
+}
+
+#[test]
 fn paths_module_rendered_as_specifier() {
     let root = p("/root");
     let entries = vec![module_entry("@react/client", 1, vec![])];

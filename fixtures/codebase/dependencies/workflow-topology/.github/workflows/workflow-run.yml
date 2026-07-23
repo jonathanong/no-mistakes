@@ -1,0 +1,10 @@
+name: Workflow run
+on:
+  workflow_run:
+    workflows: [Main]
+    types: [completed]
+jobs:
+  downstream:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo downstream

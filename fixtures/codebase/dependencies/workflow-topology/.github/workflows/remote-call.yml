@@ -1,0 +1,5 @@
+name: Remote call
+on: push
+jobs:
+  remote:
+    uses: octo/example/.github/workflows/reusable.yml@v1
