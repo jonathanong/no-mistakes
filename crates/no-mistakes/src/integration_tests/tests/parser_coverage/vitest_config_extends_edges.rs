@@ -56,13 +56,26 @@ fn unreadable_static_vitest_config_extends_keeps_owner_fallback() {
         .unwrap()
         .unwrap();
 
-    assert_eq!(projects[0].vitest_setup.len(), 1);
+    let setups = &projects[0].vitest_setup;
+    assert_eq!(setups.len(), 2, "{setups:#?}");
+    let provenance = setups
+        .iter()
+        .find(|setup| setup.config_extends_provenance)
+        .expect("a resolved-but-unreadable config remains a config-change trigger");
+    assert!(provenance.unresolved_config_extends.is_none());
+    assert!(provenance.trigger_paths.contains(&resolver.path));
+
+    let fallback = setups
+        .iter()
+        .find(|setup| setup.unresolved_config_extends.is_some())
+        .expect("an unreadable config keeps the owner-scoped conservative fallback");
     assert_eq!(
-        projects[0].vitest_setup[0]
-            .unresolved_config_extends
-            .as_deref(),
+        fallback.unresolved_config_extends.as_deref(),
         Some("./unreadable.js")
     );
+    assert!(!fallback.config_extends_provenance);
+    assert!(fallback.trigger_paths.contains(&path));
+    assert!(fallback.trigger_paths.contains(&resolver.path));
 }
 
 #[test]
