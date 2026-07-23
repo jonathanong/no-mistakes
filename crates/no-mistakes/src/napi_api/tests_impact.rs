@@ -1,4 +1,32 @@
 include!("tests_impact/resources.rs");
+include!("tests_impact/vitest_commonjs_projects.rs");
+include!("tests_impact/vitest_setup.rs");
+
+#[test]
+fn tests_impact_json_preserves_configured_native_test_projects() {
+    for (fixture, test) in [
+        (
+            "dotnet-test-plan",
+            "dotnet-clients/tests/App.Tests/FeedServiceTests.cs",
+        ),
+        (
+            "swift-test-plan",
+            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+        ),
+    ] {
+        let output = tests_impact_json_impl(
+            json!({
+                "root": fixture_root(fixture),
+                "entrypoints": [test]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(plan["selected_tests"][0]["test_file"], test, "{plan:#}");
+        assert_eq!(plan["selected_tests"][0]["reasons"][0]["via"][0], "self");
+    }
+}
 
 #[test]
 fn tests_impact_json_returns_plan_for_file_entrypoint() {
@@ -17,6 +45,38 @@ fn tests_impact_json_returns_plan_for_file_entrypoint() {
         .collect();
     assert!(test_files.contains(&"service.test.mts"));
     assert!(test_files.contains(&"other.test.mts"));
+}
+
+#[test]
+fn tests_impact_json_forces_explicit_ignored_tsconfig_for_vitest_setups_once() {
+    let fixture = crate::test_support::materialize_gitignore_fixture(
+        "tests-impact-forced-tsconfig",
+    );
+    let root = fixture.path().canonicalize().unwrap();
+    crate::ast::begin_parse_count(&root);
+    let output = crate::ast::with_request_parse_cache(|| {
+        tests_impact_json_impl(
+            json!({
+                "root": root,
+                "tsconfig": "tsconfig.custom.json",
+                "entrypoints": ["setup/helper.ts"]
+            })
+            .to_string(),
+        )
+    })
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert!(plan["selected_tests"].as_array().unwrap().iter().any(|test| {
+        test["test_file"] == "tests/custom.test.ts"
+    }), "{plan:#?}");
+    for path in [
+        root.join("vitest.config.ts"),
+        root.join("setup/custom.ts"),
+        root.join("setup/helper.ts"),
+    ] {
+        assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
+    }
 }
 
 #[test]

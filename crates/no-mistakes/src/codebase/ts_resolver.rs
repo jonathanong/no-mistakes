@@ -10,6 +10,7 @@ include!("ts_resolver/resolver.rs");
 include!("ts_resolver/resolver_impl.rs");
 include!("ts_resolver/resolver_cache_impl.rs");
 include!("ts_resolver/resolver_paths.rs");
+include!("ts_resolver/resolver_candidates.rs");
 include!("ts_resolver/path.rs");
 include!("ts_resolver/catalog.rs");
 include!("ts_resolver/catalog_config.rs");

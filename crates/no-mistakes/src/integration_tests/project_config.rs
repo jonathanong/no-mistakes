@@ -8,8 +8,10 @@ use std::path::Path;
 
 mod discovery;
 mod globs;
+mod json;
 pub(crate) use discovery::discovered_config_paths;
 pub(crate) use globs::{build_globset, prefix_globs};
+pub(super) use json::load_vitest_json_projects;
 
 pub(crate) fn load_projects(
     root: &Path,
@@ -130,6 +132,16 @@ pub(super) fn load_config_projects_inner(
     if matches!(framework, Framework::Dotnet | Framework::Swift) {
         return Ok(Vec::new());
     }
+    if framework == Framework::Vitest
+        && path.extension().and_then(|value| value.to_str()) == Some("json")
+    {
+        anyhow::ensure!(
+            test_config::vitest::is_vitest_project_array_path(path),
+            "unsupported Vitest JSON config filename: {}; use vitest.workspace.json or vitest.projects.json",
+            path.display()
+        );
+        return json::load_vitest_json_projects(input);
+    }
     crate::integration_tests::runner_config::with_program(path, source, |program, _| {
         load_config_projects_from_program(
             ConfigProjectInput {
@@ -170,6 +182,7 @@ pub(super) fn load_config_projects_from_program(
             Ok(parsed.into_projects(root, raw))
         }
         Framework::Vitest => {
+            let workspace = test_config::vitest::is_vitest_project_array_path(path);
             let parsed = test_config::vitest::parse_program_with_resolver(
                 program, source, path, config_dir, root, resolver,
             )?;
@@ -177,6 +190,7 @@ pub(super) fn load_config_projects_from_program(
                 .into_iter()
                 .map(|mut project| {
                     project.config = Some(raw.to_string());
+                    project.workspace = workspace;
                     project
                 })
                 .collect())

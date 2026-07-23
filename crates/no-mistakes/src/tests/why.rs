@@ -41,7 +41,11 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
                 .iter()
                 .map(|step| {
                     if let Some(ref via) = step.via {
-                        format!("`{}` ➔ [{}]", step.node, via)
+                        format!(
+                            "`{}` ➔ [{}]",
+                            step.node,
+                            display_via(via, step.detail.as_ref())
+                        )
                     } else {
                         format!("`{}`", step.node)
                     }
@@ -56,6 +60,13 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
     crate::invocation::commit_timeout()?;
     print!("{output}");
     Ok(ExitCode::SUCCESS)
+}
+
+fn display_via(via: &str, detail: Option<&ImpactEdgeDetail>) -> String {
+    match detail {
+        Some(ImpactEdgeDetail::VitestSetup { field }) => format!("{via} ({field})"),
+        Some(ImpactEdgeDetail::Resource { .. }) | None => via.to_string(),
+    }
 }
 
 const _: fn(WhyArgs) -> Result<ExitCode> = run;
@@ -209,35 +220,6 @@ fn relative_path_str(root: &Path, path: &Path) -> String {
     };
     let absolute_normalized = no_mistakes::codebase::ts_resolver::normalize_path(&absolute);
     no_mistakes::codebase::ts_source::relative_slash_path(root, &absolute_normalized)
-}
-
-pub(crate) fn resolve_tsconfig(
-    tsconfig_arg: Option<&Path>,
-    root: &Path,
-) -> Result<no_mistakes::codebase::ts_resolver::TsConfig> {
-    match tsconfig_arg {
-        Some(path) => {
-            let path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                root.join(path)
-            };
-            no_mistakes::codebase::ts_resolver::load_tsconfig(&path)
-                .with_context(|| format!("loading tsconfig {}", path.display()))
-        }
-        None => match no_mistakes::codebase::ts_resolver::find_tsconfig_from_visible(
-            root,
-            &no_mistakes::codebase::ts_source::discover_visible_paths(root),
-        ) {
-            Some(path) => no_mistakes::codebase::ts_resolver::load_tsconfig(&path),
-            None => Ok(no_mistakes::codebase::ts_resolver::TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
 }
 
 #[cfg(test)]

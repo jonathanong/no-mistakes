@@ -1,0 +1,98 @@
+import { defineConfig } from 'vitest/config'
+import * as values from '../../config/bounded-values'
+
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'bounded',
+          root: '.',
+          include: ['**/*.test.ts'],
+          // Deliberately exceeds the static setup dependency budget. The
+          // This resolves from the package project root after capping.
+          setupFiles: [
+          ,
+          ...['./shared/outside.ts'],
+          './setup-01.ts',
+          './setup-02.ts',
+          './setup-03.ts',
+          './setup-04.ts',
+          './setup-05.ts',
+          './setup-06.ts',
+          './setup-07.ts',
+          './setup-08.ts',
+          './setup-09.ts',
+          './setup-10.ts',
+          './setup-11.ts',
+          './setup-12.ts',
+          './setup-13.ts',
+          './setup-14.ts',
+          './setup-15.ts',
+          './setup-16.ts',
+          './setup-17.ts',
+          './setup-18.ts',
+          './setup-19.ts',
+          './setup-20.ts',
+          './setup-21.ts',
+          './setup-22.ts',
+          './setup-23.ts',
+          './setup-24.ts',
+          './setup-25.ts',
+          './setup-26.ts',
+          './setup-27.ts',
+          './setup-28.ts',
+          './setup-29.ts',
+          './setup-30.ts',
+          './setup-31.ts',
+          './setup-32.ts',
+          './setup-33.ts',
+          './setup-34.ts',
+          './setup-35.ts',
+          './setup-36.ts',
+          './setup-37.ts',
+          './setup-38.ts',
+          './setup-39.ts',
+          './setup-40.ts',
+          './setup-41.ts',
+          './setup-42.ts',
+          './setup-43.ts',
+          './setup-44.ts',
+          './setup-45.ts',
+          './setup-46.ts',
+          './setup-47.ts',
+          './setup-48.ts',
+          './setup-49.ts',
+          './setup-50.ts',
+          './setup-51.ts',
+          './setup-52.ts',
+          './setup-53.ts',
+          './setup-54.ts',
+          './setup-55.ts',
+          './setup-56.ts',
+          './setup-57.ts',
+          './setup-58.ts',
+          './setup-59.ts',
+          './setup-60.ts',
+          './setup-61.ts',
+          './setup-62.ts',
+          './setup-63.ts',
+          './setup-64.ts',
+          ],
+        },
+      },
+      {
+        test: {
+          name: 'bounded-rebased',
+          // The imported helper lives under config/, but Vitest resolves this
+          // capped list from the separate rebased project root.
+          root: '../rebased',
+          include: ['rebased.test.ts'],
+          // This list is imported from outside the project root. Its first
+          // literal must be rebased from this project root after the cap.
+          setupFiles: values.files,
+        },
+      },
+    ],
+  },
+})

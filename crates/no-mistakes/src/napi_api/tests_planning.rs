@@ -1,5 +1,87 @@
 // Included into `napi_api::tests`; shares its fixture helpers and imports.
 
+include!("tests_planning/vitest_config_extends.rs");
+
+#[test]
+fn tests_plan_json_union_applies_vitest_setup_fallback() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        json!({
+            "root": root,
+            "changedFiles": ["config/setup-selector.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["warnings"].as_array().unwrap().iter().any(|warning| {
+        warning["type"] == "vitest-setup-dynamic"
+    }));
+    assert_eq!(
+        plan["selected_tests"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|test| test["test_file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["inherits/inherited.test.ts"]
+    );
+}
+
+#[test]
+fn tests_plan_json_tracks_commonjs_dynamic_setup_helper() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        json!({
+            "framework": "vitest",
+            "root": root,
+            "changedFiles": ["config/dynamic-commonjs-values.cjs"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+    assert_eq!(
+        plan["selected_tests"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|test| test["test_file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["commonjs-closure-owner/commonjs-closure.test.ts"]
+    );
+}
+
+#[test]
+fn tests_plan_json_setup_fallback_spends_dependency_group_budget() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        json!({
+            "framework": "vitest",
+            "root": root,
+            "config": "dependency-limit.no-mistakes.yml",
+            "changedFiles": ["setup/conditional-a.ts", "config/setup-selector.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+    assert_eq!(plan["groups"].as_array().unwrap().len(), 1, "{plan:#}");
+    assert_eq!(plan["groups"][0]["type"], "dependencies");
+    assert_eq!(plan["groups"][0]["limit"], 1);
+    assert_eq!(plan["groups"][0]["selected"].as_array().unwrap().len(), 1);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+}
+
 #[test]
 fn tests_plan_why_comment_and_graph_exports_return_reports() {
     let root = fixture_root("test-plan-config");

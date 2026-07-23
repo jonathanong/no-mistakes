@@ -31,11 +31,13 @@ fn runner_projects_lossy(
 fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProject {
     ConfigProject {
         config: Some(config.to_string()),
+        workspace: false,
         policy_name: Some(policy_name.to_string()),
         runner_project_arg: Some(policy_name.to_string()),
         scope: None,
         include: vec![include.to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }
 }
 
@@ -52,6 +54,7 @@ fn explicit_policy_replaces_each_matching_config_project() {
         config_project("vitest.browser.ts", "shared", "browser/**/*.test.ts"),
         config_project("vitest.other.ts", "other", "other/**/*.test.ts"),
     ];
+    projects[0].workspace = true;
 
     apply_explicit_policy_projects(
         root,
@@ -71,7 +74,49 @@ fn explicit_policy_replaces_each_matching_config_project() {
     assert!(shared
         .iter()
         .any(|project| project.config.as_deref() == Some("vitest.browser.ts")));
+    assert!(shared.iter().any(|project| project.workspace));
     assert_eq!(projects.len(), 3);
+}
+
+#[test]
+fn explicit_policy_keeps_scope_empty_for_policy_dominance() {
+    let root = Path::new("");
+    let policy = TestProjectPolicy {
+        include: vec!["tests/**/*.test.ts".to_string()],
+        ..Default::default()
+    };
+    let mut projects = vec![config_project(
+        "vitest.config.ts",
+        "unit",
+        "unit/**/*.test.ts",
+    )];
+    projects[0].scope = Some("packages/unit".to_string());
+    apply_explicit_policy_projects(
+        root,
+        None,
+        &BTreeMap::from([("unit".to_string(), policy)]),
+        &mut projects,
+    );
+    assert!(projects[0].scope.is_none());
+}
+
+#[test]
+fn explicit_policy_projects_builds_config_free_runner_projects() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "unit".to_string(),
+        TestProjectPolicy {
+            include: vec!["tests/**/*.test.ts".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let projects = explicit_policy_projects(Path::new("/repo"), &config, TestRunner::Vitest);
+    assert_eq!(projects.len(), 1);
+    assert!(projects[0].config.is_none());
+    assert_eq!(projects[0].policy_name.as_deref(), Some("unit"));
+    assert_eq!(projects[0].runner_project_arg.as_deref(), Some("unit"));
+    assert_eq!(projects[0].include, ["tests/**/*.test.ts"]);
 }
 
 #[test]

@@ -18,23 +18,45 @@ impl DepGraph {
         self.resource_edge_details.get(&key).map(Vec::as_slice)
     }
 
+    fn traversal_edges(&self) -> &EdgeIndex<NodeId, EdgeKind> {
+        if self.vitest_setup_projects.is_empty() {
+            return &self.edges;
+        }
+        self.effective_edges.get_or_init(|| {
+            let vitest_edges = self.materialize_vitest_setup_edges();
+            let nodes = self
+                .edges
+                .forward()
+                .keys()
+                .cloned()
+                .chain(vitest_edges.iter().flat_map(|edge| {
+                    [edge.from.clone(), edge.to.clone()]
+                }))
+                .collect::<Vec<_>>();
+            let edges = self.edges.edges().iter().cloned().chain(vitest_edges);
+            let mut index = EdgeIndex::from_edges_and_nodes(edges, nodes);
+            sort_edge_index_adjacency(&mut index);
+            index
+        })
+    }
+
     pub(crate) fn parse_error(&self, path: &Path) -> Option<&str> {
         self.parse_errors.get(path).map(String::as_str)
     }
 
     pub(crate) fn contains_file(&self, path: &Path) -> bool {
-        self.edges.forward().contains_key(&NodeId::File(
+        self.traversal_edges().forward().contains_key(&NodeId::File(
             crate::codebase::ts_resolver::normalize_path(path),
         ))
     }
     /// Get the direct dependents (reverse edges) of a single node.
     pub fn dependents_of_node(&self, node: &NodeId) -> Option<&Vec<(NodeId, EdgeKind)>> {
-        self.edges.reverse().get(node)
+        self.traversal_edges().reverse().get(node)
     }
 
     /// Get the direct dependencies (forward edges) of a single node.
     pub fn dependencies_of_node(&self, node: &NodeId) -> Option<&Vec<(NodeId, EdgeKind)>> {
-        self.edges.forward().get(node)
+        self.traversal_edges().forward().get(node)
     }
 
     /// Find all nodes that `roots` transitively depend on (follow imports).
@@ -45,7 +67,7 @@ impl DepGraph {
         allowed: Option<&HashSet<EdgeKind>>,
     ) -> Vec<NodeEntry> {
         let roots = normalize_nodes(roots);
-        bfs(&roots, self.edges.forward(), max_depth, allowed)
+        bfs(&roots, self.traversal_edges().forward(), max_depth, allowed)
     }
 
     pub(crate) fn deps_of_in_file_universe(
@@ -58,7 +80,7 @@ impl DepGraph {
         let roots = normalize_nodes(roots);
         bfs_in_file_universe(
             &roots,
-            self.edges.forward(),
+            self.traversal_edges().forward(),
             max_depth,
             allowed,
             file_universe,
@@ -73,7 +95,7 @@ impl DepGraph {
         allowed: Option<&HashSet<EdgeKind>>,
     ) -> Vec<NodeEntry> {
         let roots = normalize_nodes(roots);
-        bfs(&roots, self.edges.reverse(), max_depth, allowed)
+        bfs(&roots, self.traversal_edges().reverse(), max_depth, allowed)
     }
 
     /// Reverse traversal for symbol roots. The graph includes file -> symbol
@@ -86,7 +108,7 @@ impl DepGraph {
         allowed: Option<&HashSet<EdgeKind>>,
     ) -> Vec<NodeEntry> {
         let roots = normalize_nodes(roots);
-        bfs_skipping_symbol_owner_files(&roots, self.edges.reverse(), max_depth, allowed)
+        bfs_skipping_symbol_owner_files(&roots, self.traversal_edges().reverse(), max_depth, allowed)
     }
 
     /// Find all files that import `symbol` from `file`, transitively.
@@ -126,7 +148,7 @@ impl DepGraph {
             queue_file: file.to_path_buf(),
             job: symbol.to_string(),
         };
-        if self.edges.reverse().contains_key(&queue_job) {
+        if self.traversal_edges().reverse().contains_key(&queue_job) {
             direct_importers.insert(queue_job);
         }
 
@@ -146,7 +168,7 @@ impl DepGraph {
             })
             .collect::<Vec<_>>();
         let remaining_depth = max_depth.map(|depth| depth.saturating_sub(1));
-        let mut downstream = bfs(&roots, self.edges.reverse(), remaining_depth, allowed);
+        let mut downstream = bfs(&roots, self.traversal_edges().reverse(), remaining_depth, allowed);
         for entry in &mut downstream {
             entry.depth += 1;
         }
@@ -159,11 +181,11 @@ impl DepGraph {
     }
 
     pub(crate) fn has_reverse_node(&self, node: &NodeId) -> bool {
-        self.edges.reverse().contains_key(node)
+        self.traversal_edges().reverse().contains_key(node)
     }
 
     pub fn all_files(&self) -> impl Iterator<Item = &NodeId> {
-        self.edges.forward().keys()
+        self.traversal_edges().forward().keys()
     }
 
     fn merge_canonical_edges(&mut self, edges: Vec<Edge>) {
@@ -178,5 +200,6 @@ impl DepGraph {
             }));
         self.edges = EdgeIndex::from_edges_and_nodes(combined, nodes);
         sort_edge_index_adjacency(&mut self.edges);
+        self.effective_edges = OnceLock::new();
     }
 }

@@ -27,6 +27,7 @@ all` output.
 | `asset` | `AssetImport` | `asset` | TS/JS file -> explicit relative non-code asset import | [`graph-missing-edges/packages/app/src/entry.mts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/app/src/entry.mts) |
 | `resource` | `Resource` | `resource` | TS/JS consumer -> tracked runtime filesystem resource | fixture-backed resource-impact tests |
 | `test` | `TestOf` | `test` | test file -> corresponding source file | [`codebase-intel/packages/api/src/index.test.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/index.test.mts) |
+| `vitest-setup` | `VitestSetup` | `test` | Vitest test file -> its effective `setupFiles` or `globalSetup` module; edge detail identifies the field | `fixtures/test-plan/vitest-setup-dependencies` |
 | `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx) |
 | `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts) |
 | `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts) |
@@ -68,7 +69,7 @@ all` output.
 | `route-import` | `route-import` |
 | `workspace` | `workspace` |
 | `package` | `package` |
-| `test` | `test`, `route-test`, `layout`, `selector` |
+| `test` | `test`, `vitest-setup`, `route-test`, `layout`, `selector` |
 | `route` | `route`, `route-test`, `layout` |
 | `queue` | `queue-enqueue`, `queue-worker` |
 | `md` | `md` |
@@ -258,6 +259,12 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   untracked/ignored files, and symlinks resolving outside the analysis root are
   excluded. `readdir` covers immediate tracked children; glob support is a
   static-pattern heuristic and does not execute glob libraries.
+- `vitest-setup` is created only for statically resolved Vitest setup modules.
+  Dynamic or unresolved declarations do not guess an edge; test planning emits
+  a diagnostic and uses its bounded owner fallback instead. Its helper closure
+  follows ordinary static import/re-export and literal CommonJS `require(...)`
+  or `require.resolve(...)` dependencies, retaining edits and deletions as
+  owner triggers; computed or non-literal forms are not followed.
 
 
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse

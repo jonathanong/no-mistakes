@@ -1,4 +1,8 @@
 use super::*;
+use std::path::PathBuf;
+
+mod discovery_precedence;
+mod folder_strings;
 
 fn load_config_projects(
     root: &Path,
@@ -136,4 +140,29 @@ fn explicit_ignored_runner_config_is_authorized_without_exposing_ignored_helpers
         Some("playwright.ignored.config.ts")
     );
     assert!(!visible_paths.contains(&ignored_config));
+}
+
+#[test]
+fn default_vitest_discovery_includes_workspace_and_projects_configs() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config/vitest-workspace-export-forms");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let projects = load_projects(&root, Framework::Vitest, None).unwrap();
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["star-export-project", "named-export-project"]
+    );
+    assert!(projects.iter().all(|project| project.workspace));
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.config.as_deref())
+            .collect::<Vec<_>>(),
+        ["vitest.workspace.ts", "vitest.projects.ts"]
+    );
 }

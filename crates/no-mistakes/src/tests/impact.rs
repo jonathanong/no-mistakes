@@ -10,7 +10,6 @@ use anyhow::{Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::dependencies::parse_entrypoint;
-use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::load_v2_config;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -40,16 +39,23 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     let root = root.canonicalize().unwrap_or(root);
 
     let config = load_v2_config(&root, args.config.as_deref())?;
-    let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
-    let graph =
-        crate::tests::build_test_impact_graph(root.as_path(), &tsconfig, args.include_symbols)?;
-    let test_filter = TestFileFilter::for_impact(root.as_path(), &config);
+    let impact_graph = crate::tests::build_test_impact_graph(
+        root.as_path(),
+        args.tsconfig.as_deref(),
+        &config,
+        args.config.as_deref(),
+        args.include_symbols,
+    )?;
+    let graph = &impact_graph.graph;
+    let test_filter = &impact_graph.test_filter;
     let registry_set = compile_registry_globset(&config.tests.impact.registries);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
     let mut warnings = Vec::new();
     let mut warnings_seen: HashSet<WarningKey> = HashSet::new();
     let mut registry_seen: HashSet<(String, String)> = HashSet::new();
+    let mut changed_files = Vec::new();
+    let mut deleted_files = Vec::new();
 
     for (index, raw) in args.entrypoints.iter().enumerate() {
         let structured_symbol = args.entrypoint_symbols.get(index).cloned().flatten();
@@ -74,8 +80,13 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
             root.join(&raw_file)
         };
         let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&file);
+        if impact_graph.visible_files.contains(&normalized) {
+            changed_files.push(normalized.clone());
+        } else {
+            deleted_files.push(normalized.clone());
+        }
         let start_nodes =
-            symbol_aware_start_nodes(&graph, &normalized, symbol.as_ref(), args.include_symbols);
+            symbol_aware_start_nodes(graph, &normalized, symbol.as_ref(), args.include_symbols);
         let rel_changed = symbol
             .as_ref()
             .filter(|_| args.include_symbols)
@@ -86,13 +97,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
         // A dynamic resource call has no edge to traverse, but a directly
         // changed consumer is still relevant to this impact query.
-        push_resource_diagnostics(
-            &graph,
-            &root,
-            &normalized,
-            &mut warnings,
-            &mut warnings_seen,
-        );
+        push_resource_diagnostics(graph, &root, &normalized, &mut warnings, &mut warnings_seen);
 
         // Registry hints are file-level ("this file is registered in X"); a
         // symbol-scoped entrypoint asks about one export, so a file-level hint
@@ -100,7 +105,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
         if symbol.is_none() {
             if let Some(registry_set) = registry_set.as_ref() {
                 push_registry_hints(
-                    &graph,
+                    graph,
                     &normalized,
                     &root,
                     registry_set,
@@ -135,7 +140,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
         for start_node in start_nodes {
             let (reachable_tests, path_parents) =
-                bfs_path_find(&graph, &start_node, &test_filter, &root);
+                bfs_path_find(graph, &start_node, test_filter, &root);
 
             for (test_node, edge_path) in reachable_tests {
                 let test_path = match &test_node {
@@ -153,7 +158,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 while let Some((parent, kind)) = path_parents.get(&curr) {
                     if let Some(file) = curr.as_file() {
                         push_resource_diagnostics(
-                            &graph,
+                            graph,
                             &root,
                             file,
                             &mut warnings,
@@ -161,7 +166,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                         );
                     }
                     node_chain.push(slash_node_name(parent, &root));
-                    reverse_details.push(resource_edge_detail(&graph, &curr, parent, *kind, &root));
+                    reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, &root));
                     push_warning(
                         &root,
                         &curr,
@@ -174,7 +179,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 }
                 if let Some(file) = curr.as_file() {
                     push_resource_diagnostics(
-                        &graph,
+                        graph,
                         &root,
                         file,
                         &mut warnings,
@@ -215,6 +220,38 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
         }
     }
 
+    for warning in crate::tests::configured_plan::vitest_setup_fallback::warnings(
+        &root,
+        Some(&impact_graph.vitest_projects),
+    ) {
+        if warnings_seen.insert(warning_key(&warning)) {
+            warnings.push(warning);
+        }
+    }
+    let used = selected_map
+        .values()
+        .map(|test| test.test_file.clone())
+        .collect::<HashSet<_>>();
+    let vitest_fallback = crate::tests::configured_plan::vitest_setup_fallback::selection(
+        &root,
+        &changed_files,
+        &deleted_files,
+        Some(&impact_graph.vitest_projects),
+        &impact_graph.vitest_discovered,
+        &used,
+        usize::MAX,
+    );
+    if let Some((_, picked)) = &vitest_fallback {
+        for test in picked {
+            selected_map
+                .entry(root.join(&test.test_file))
+                .and_modify(|existing| {
+                    crate::tests::configured_plan_candidates::merge_selected(existing, test)
+                })
+                .or_insert_with(|| test.clone());
+        }
+    }
+
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
     for test in &mut selected_tests {
         test.reasons
@@ -229,8 +266,8 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
         selected_tests,
         groups: Vec::new(),
         warnings,
-        fallback_triggered: false,
-        fallback_reason: None,
+        fallback_triggered: vitest_fallback.is_some(),
+        fallback_reason: vitest_fallback.map(|(reason, _)| reason),
     })
 }
 
@@ -340,5 +377,80 @@ fn push_warning(
     };
     if warnings_seen.insert(warning_key(&warn)) {
         warnings.push(warn);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn impact_classifies_missing_setup_helper_entrypoints_as_deleted() {
+        let root = no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/test-plan/vitest-setup-dependencies"),
+        );
+        let plan = generate_impact_plan(&ImpactArgs {
+            entrypoints: vec!["runtime-owner/setup/deleted-runtime-helper.ts".to_string()],
+            entrypoint_symbols: Vec::new(),
+            include_symbols: false,
+            root,
+            config: None,
+            tsconfig: None,
+            format: None,
+            json: true,
+        })
+        .unwrap();
+
+        assert!(plan.fallback_triggered, "{plan:#?}");
+        assert_eq!(
+            plan.selected_tests[0].test_file,
+            "runtime-owner/runtime-owner.test.ts"
+        );
+        assert!(plan.fallback_reason.as_deref().is_some_and(|reason| {
+            reason.contains("transitive dependency of a resolved setup was deleted")
+        }));
+    }
+
+    #[test]
+    fn impact_keeps_native_tests_when_optional_vitest_discovery_fails() {
+        let root = no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/test-plan/impact-invalid-vitest-config"),
+        );
+        let plan = generate_impact_plan(&ImpactArgs {
+            entrypoints: vec!["tests/ServiceTests.cs".to_string()],
+            entrypoint_symbols: Vec::new(),
+            include_symbols: false,
+            root,
+            config: None,
+            tsconfig: None,
+            format: None,
+            json: true,
+        })
+        .unwrap();
+
+        assert_eq!(plan.selected_tests[0].test_file, "tests/ServiceTests.cs");
+        assert_eq!(plan.selected_tests[0].reasons[0].via, ["self"]);
+    }
+
+    #[test]
+    fn impact_rejects_valid_vitest_discovery_errors() {
+        let root = no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/test-plan/impact-invalid-vitest-discovery"),
+        );
+        let result = generate_impact_plan(&ImpactArgs {
+            entrypoints: vec!["tests/ServiceTests.cs".to_string()],
+            entrypoint_symbols: Vec::new(),
+            include_symbols: false,
+            root,
+            config: None,
+            tsconfig: None,
+            format: None,
+            json: true,
+        });
+
+        assert!(result.is_err());
     }
 }

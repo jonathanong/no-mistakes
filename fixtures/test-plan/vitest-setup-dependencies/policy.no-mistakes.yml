@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+    projects:
+      inherits:
+        include: [inherits/**/*.test.ts]

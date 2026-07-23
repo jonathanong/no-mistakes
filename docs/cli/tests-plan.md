@@ -110,6 +110,71 @@ edges. JSON reasons expose call-site provenance in optional `via_details`,
 aligned with `via`; non-JSON formats remain test-only. Dynamic paths, glob
 patterns, and cwd values are reported as warnings rather than treated as a
 global fallback.
+Vitest `setupFiles` and `globalSetup` are included in the test dependency
+graph automatically. A change to either configured module, or to a static
+import/re-export reachable from one, selects only the tests owned by that
+Vitest project. Inline projects inherit root setup fields only with
+`extends: true`; otherwise (including the default and `extends: false`) their
+own value applies, and `[]` clears it. A static string `extends` value on an
+inline project (for example `extends: './vite.config.js'`) inherits that
+config's `setupFiles` and `globalSetup`; local values are appended. A config
+referenced as a string in `test.projects` is parsed as an independent config
+and does not inherit the referencing config's setup fields.
+Literal CommonJS project arrays are also supported as direct `require(...)`
+entries or spreads. Named `projects` bindings destructured from a literal
+require resolve static `module.exports.projects` and
+`module.exports = { projects: [...] }` assignments; computed, dynamic, and
+cyclic forms remain unsupported.
+Direct requires only follow an exact `module.exports = [...]` assignment:
+`module.exports.default` and `exports.default` remain object members, not
+project arrays. Negated strings in supported imported arrays suppress matching
+outer project strings before either config is parsed.
+For supported inline objects, a nested `test` object owns `setupFiles` and
+`globalSetup`; same-named outer fields are ignored regardless of direct or
+static-spread declaration order.
+
+Vitest workspace configs may export a project array directly or through
+`defineWorkspace([...])`. With no `tests.vitest.configs`, root
+`vitest.workspace.*` and `vitest.projects.*` files are discovered by default,
+including JSON. JSON arrays accept static inline project objects and string
+project paths/globs. Inline project `name` values may be a string or Vitest's
+`{ "label", "color" }` object; its `label` is used for `--project`.
+A project glob matches both visible files and visible
+project folders. Folder matches select one conventional config directly inside
+each matched project root, preferring `vitest.config.*` over `vite.config.*`;
+nested roots require their own folder glob. Explicit project config-file globs
+can select multiple files and recognize suffixes such as
+`vitest.config.unit.ts` and
+`vite.config.e2e.js`.
+When a root workspace/project-array source is present, it is the default
+discovery source instead of sibling `vitest.config.*`; list that config from
+the workspace explicitly when it is also a project.
+An exact folder project string remains a folder project rather than resolving
+an `index` module. CommonJS workspace files may also use a direct literal
+`module.exports = require('./projects.cjs')`; chained or dynamic requires stay
+unsupported.
+`defineWorkspace` is static through a named ESM import, an ESM namespace, or a
+direct `require('vitest/config')` namespace; ESM defaults and CommonJS
+`.default` members remain unsupported dynamic forms.
+
+Setup values are extracted statically from string and array forms. Dynamic
+expressions, unresolved literal modules, and unavailable static inline config
+`extends` targets produce a JSON warning with the declaring config, field, and
+project. When such a declaration is relevant, the
+plan conservatively selects the affected owner scope (or the discovered Vitest
+framework set when ownership cannot be determined) and sets
+`fallback_triggered`; this safety fallback does not require
+`--global-config-fallback`. Its bounded helper closure follows ordinary static
+imports/re-exports and literal CommonJS `require(...)` or
+`require.resolve(...)` dependencies, retaining their edits and deletions as
+owner triggers. Static CommonJS setup bindings may use direct members or
+destructured aliases, and helpers may expose named values through
+`module.exports = { ... }`; computed or non-literal forms are not followed.
+
+Resolved paths use `via: ["vitest-setup"]`. JSON may also contain the optional
+aligned `via_details` array; its `{ "type": "vitest-setup", "field":
+"setupFiles" | "globalSetup" }` entry names the setup field responsible for
+that edge. `tests why` and `tests graph` expose the same structured `detail`.
 
 `dotnet` plans require configured `.csproj` or `.sln` paths. They select
 changed C# test files directly and select dependent C# tests through namespace

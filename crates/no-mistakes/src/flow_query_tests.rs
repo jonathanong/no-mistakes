@@ -1,11 +1,35 @@
 use super::*;
 
-fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
-    resolve_tsconfig_from_visible(
-        root,
+#[path = "flow_query_tests/preparation_errors.rs"]
+mod preparation_errors;
+
+#[path = "flow_query_tests/basics.rs"]
+mod basics;
+
+#[path = "flow_query_tests/vitest_setup.rs"]
+mod vitest_setup;
+
+fn resolve_tsconfig(
+    root: &Path,
+    explicit: Option<&Path>,
+) -> Result<crate::codebase::ts_resolver::TsConfig> {
+    crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
         explicit,
+        root,
         &crate::codebase::ts_source::discover_visible_paths(root),
     )
+    .or_else(|error| {
+        if explicit.is_some() {
+            Err(error)
+        } else {
+            Ok(crate::codebase::ts_resolver::TsConfig {
+                dir: root.to_path_buf(),
+                paths_dir: root.to_path_buf(),
+                paths: Vec::new(),
+                base_url: None,
+            })
+        }
+    })
 }
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -22,80 +46,6 @@ fn gitignore_fixture() -> tempfile::TempDir {
     crate::test_support::git_init(fixture.path());
     crate::test_support::git_add_all(fixture.path());
     fixture
-}
-
-#[test]
-fn flow_query_covers_deps_and_dependents_directions() {
-    let root = fixture_root("tests-impact-symbol");
-    for direction in [FlowDirection::Deps, FlowDirection::Dependents] {
-        let report = run(&FlowOptions {
-            target: "utils.mts#parseDate".to_string(),
-            root: root.clone(),
-            tsconfig: None,
-            config: None,
-            direction,
-            depth: 1,
-            relationships: vec![RelationshipArg::Import],
-        })
-        .unwrap();
-
-        assert_eq!(report.target, "utils.mts#parseDate");
-        assert!(report
-            .nodes
-            .iter()
-            .any(|node| node.id == "utils.mts#parseDate"));
-    }
-}
-
-#[test]
-fn flow_query_symbol_dependents_skip_owner_file_bridge() {
-    let root = fixture_root("tests-impact-symbol");
-    let report = run(&FlowOptions {
-        target: "utils.mts#parseDate".to_string(),
-        root,
-        tsconfig: None,
-        config: None,
-        direction: FlowDirection::Dependents,
-        depth: 1,
-        relationships: vec![RelationshipArg::Import],
-    })
-    .unwrap();
-
-    assert!(report
-        .nodes
-        .iter()
-        .any(|node| node.id == "utils.mts#parseDate"));
-    assert!(!report.nodes.iter().any(|node| node.id == "utils.mts"));
-}
-
-#[test]
-fn flow_ignores_automatic_ignored_tsconfig_but_honors_explicit_path() {
-    let fixture = gitignore_fixture();
-    let options = |tsconfig| FlowOptions {
-        target: "entry.ts".to_string(),
-        root: fixture.path().to_path_buf(),
-        tsconfig,
-        config: None,
-        direction: FlowDirection::Deps,
-        depth: 1,
-        relationships: vec![RelationshipArg::Import],
-    };
-
-    let automatic = run(&options(None)).unwrap();
-    assert!(automatic
-        .nodes
-        .iter()
-        .any(|node| { node.kind == "module" && node.module.as_deref() == Some("@lib/forbidden") }));
-    assert!(!automatic
-        .nodes
-        .iter()
-        .any(|node| node.file.as_deref() == Some("src/forbidden.ts")));
-
-    let explicit = run(&options(Some(PathBuf::from("tsconfig.json")))).unwrap();
-    assert!(explicit
-        .nodes
-        .iter()
-        .any(|node| node.file.as_deref() == Some("src/forbidden.ts")));
 }
 
 #[test]
@@ -203,11 +153,37 @@ fn flow_query_helper_nodes_cover_module_and_queue_variants() {
 }
 
 #[test]
-fn flow_query_explicit_missing_tsconfig_errors() {
-    let root = fixture_root("simple");
-    let error = resolve_tsconfig(&root, Some(Path::new("missing.tsconfig.json"))).unwrap_err();
+fn flow_prepared_graph_honors_explicit_config_without_nested_discovery() {
+    let root = fixture_root("graph-default-route-config");
+    let empty_config = fixture_root("graph-empty-route-config").join(".no-mistakes.yml");
+    let options = |config| FlowOptions {
+        target: "src/client.ts".to_string(),
+        root: root.clone(),
+        tsconfig: None,
+        config,
+        direction: FlowDirection::Deps,
+        depth: 1,
+        relationships: vec![RelationshipArg::Route],
+    };
 
-    assert!(error.to_string().contains("missing.tsconfig.json"));
+    let default = run(&options(None)).unwrap();
+    assert!(default
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
+    let explicit = run(&options(Some(empty_config))).unwrap();
+    assert!(!explicit
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
+
+    let source = include_str!("flow_query.rs");
+    let run_body = source
+        .split("pub fn run(options: &FlowOptions)")
+        .nth(1)
+        .and_then(|source| source.split("include!(\"flow_query_traverse.rs\")").next())
+        .expect("flow run body");
+    assert!(run_body.contains("SharedTraversalContext::prepare_with_framework_plan("));
+    assert!(!run_body.contains("VisiblePathSnapshot::new("));
+    assert!(!run_body.contains("DepGraph::build"));
 }
-
-include!("flow_query_tests/prepared_config.rs");

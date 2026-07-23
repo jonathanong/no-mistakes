@@ -16,6 +16,20 @@ const VITEST_CONFIGS: &[&str] = &[
     "vitest.config.js",
     "vitest.config.mjs",
     "vitest.config.cjs",
+    "vitest.workspace.ts",
+    "vitest.workspace.mts",
+    "vitest.workspace.cts",
+    "vitest.workspace.js",
+    "vitest.workspace.mjs",
+    "vitest.workspace.cjs",
+    "vitest.workspace.json",
+    "vitest.projects.ts",
+    "vitest.projects.mts",
+    "vitest.projects.cts",
+    "vitest.projects.js",
+    "vitest.projects.mjs",
+    "vitest.projects.cjs",
+    "vitest.projects.json",
 ];
 
 pub(crate) fn discovered_config_paths(
@@ -28,7 +42,7 @@ pub(crate) fn discovered_config_paths(
         Framework::Playwright => PLAYWRIGHT_CONFIGS,
         Framework::Vitest => VITEST_CONFIGS,
     };
-    names
+    let mut paths = names
         .iter()
         .filter(|name| {
             let candidate = crate::codebase::ts_resolver::normalize_path(&root.join(name));
@@ -37,5 +51,13 @@ pub(crate) fn discovered_config_paths(
                 .any(|path| crate::codebase::ts_resolver::normalize_path(path) == candidate)
         })
         .map(|name| (*name).to_string())
-        .collect()
+        .collect::<Vec<_>>();
+    if framework == Framework::Vitest && paths.iter().any(|path| is_project_array(path)) {
+        paths.retain(|path| is_project_array(path));
+    }
+    paths
+}
+
+fn is_project_array(path: &str) -> bool {
+    path.starts_with("vitest.workspace.") || path.starts_with("vitest.projects.")
 }

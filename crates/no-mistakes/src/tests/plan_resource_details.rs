@@ -7,6 +7,11 @@ pub(crate) fn resource_edge_detail(
     kind: EdgeKind,
     root: &Path,
 ) -> Option<ImpactEdgeDetail> {
+    if let EdgeKind::VitestSetup(field) = kind {
+        return Some(ImpactEdgeDetail::VitestSetup {
+            field: field.as_str().to_string(),
+        });
+    }
     if kind != EdgeKind::Resource {
         return None;
     }

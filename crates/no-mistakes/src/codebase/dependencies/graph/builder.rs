@@ -1,9 +1,25 @@
 pub struct DepGraph {
     root: PathBuf,
+    /// Base canonical graph built from source facts. Vitest setup edges stay
+    /// compact until a graph traversal requests adjacency.
     edges: EdgeIndex<NodeId, EdgeKind>,
+    vitest_setup_projects: Vec<VitestSetupProject>,
+    effective_edges: OnceLock<EdgeIndex<NodeId, EdgeKind>>,
     parse_errors: HashMap<PathBuf, String>,
     resource_edge_details: ResourceEdgeDetails,
     resource_diagnostics: Vec<ResourceGraphDiagnostic>,
+}
+
+/// Compact Vitest project ownership retained until test-edge traversal.
+pub(crate) struct VitestSetupProject {
+    pub(crate) config: Option<String>,
+    pub(crate) scope: Option<String>,
+    pub(crate) filter: crate::codebase::test_discovery::ProjectTestFilter,
+    /// Visible files explicitly matched by this project's Vitest globs. These
+    /// may be non-TS/JS tests, so they do not necessarily have a base graph
+    /// node before lazy setup edges are materialized.
+    pub(crate) tests: Vec<PathBuf>,
+    pub(crate) setups: Vec<(PathBuf, VitestSetupField)>,
 }
 
 #[derive(Clone, Copy)]

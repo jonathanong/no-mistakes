@@ -142,7 +142,7 @@ fn add_deleted_transitive(
             changed_file: rel_deleted.to_string(),
             path: node_chain,
             via: via_strings,
-            via_details: Vec::new(),
+            via_details: deleted_transitive_via_details(&edge_path),
         };
         let entry = selected_map
             .entry(test_path.clone())
@@ -159,6 +159,12 @@ fn add_deleted_transitive(
             entry.reasons.push(reason);
         }
     }
+}
+
+fn deleted_transitive_via_details(edge_path: &[EdgeKind]) -> Vec<Option<ImpactEdgeDetail>> {
+    std::iter::once(None)
+        .chain(via_details_from_edges(edge_path))
+        .collect()
 }
 
 pub(crate) fn trace_entrypoints(
@@ -256,7 +262,7 @@ pub(crate) fn trace_entrypoints(
                     changed_file: rel_changed.clone(),
                     path: node_chain,
                     via: via_strings,
-                    via_details: Vec::new(),
+                    via_details: via_details_from_edges(&edge_path),
                 };
                 let entry = selected_map
                     .entry(test_path)
@@ -276,4 +282,20 @@ pub(crate) fn trace_entrypoints(
         }
     }
     Ok(())
+}
+
+fn global_config_fallback(args: &PlanArgs) -> bool {
+    args.global_config_fallback.unwrap_or(false)
+}
+
+fn next_project_root(path: &Path) -> bool {
+    path.join("app").is_dir()
+        || path.join("pages").is_dir()
+        || path.join("src/app").is_dir()
+        || path.join("src/pages").is_dir()
+}
+
+#[cfg(test)]
+mod tests {
+    include!("plan_extra_inputs/tests.rs");
 }

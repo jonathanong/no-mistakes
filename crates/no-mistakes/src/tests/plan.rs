@@ -1,6 +1,7 @@
 use crate::tests::{
-    push_resource_diagnostics, warning_key, Confidence, ImpactEdgeDetail, ImpactReason, PlanArgs,
-    PlanFormat, ResourceCallSite, SelectedTest, TestPlan, Warning, WarningKey,
+    push_resource_diagnostics, via_details_from_edges, warning_key, Confidence, ImpactEdgeDetail,
+    ImpactReason, PlanArgs, PlanFormat, ResourceCallSite, SelectedTest, TestPlan, Warning,
+    WarningKey,
 };
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
@@ -10,6 +11,9 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 include!("plan_extra_inputs.rs");
+
+#[path = "plan_vitest_setup.rs"]
+mod plan_vitest_setup;
 
 pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     let plan = generate_plan(&args)?;
@@ -365,7 +369,7 @@ pub(crate) fn generate_plan_with_prepared(
                 changed_file: lockfile_rel.clone(),
                 path: node_chain,
                 via: via_strings,
-                via_details: Vec::new(),
+                via_details: via_details_from_edges(&edge_path),
             };
 
             let entry = selected_map
@@ -451,6 +455,16 @@ pub(crate) fn generate_plan_with_prepared(
         args.include_symbols,
     )?;
 
+    let vitest_fallback_reason = plan_vitest_setup::apply_union_fallback(
+        prepared,
+        root,
+        changed_files,
+        deleted_files,
+        &mut selected_map,
+        &mut warnings,
+        &mut warnings_seen,
+    )?;
+
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
     for test in &mut selected_tests {
         test.reasons
@@ -465,13 +479,9 @@ pub(crate) fn generate_plan_with_prepared(
         selected_tests,
         groups: Vec::new(),
         warnings,
-        fallback_triggered: false,
-        fallback_reason: None,
+        fallback_triggered: vitest_fallback_reason.is_some(),
+        fallback_reason: vitest_fallback_reason,
     })
-}
-
-fn global_config_fallback(args: &PlanArgs) -> bool {
-    args.global_config_fallback.unwrap_or(false)
 }
 
 pub(crate) fn global_config_trigger(
@@ -545,13 +555,6 @@ fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
         return false;
     };
     parent == root || next_project_root(parent)
-}
-
-fn next_project_root(path: &Path) -> bool {
-    path.join("app").is_dir()
-        || path.join("pages").is_dir()
-        || path.join("src/app").is_dir()
-        || path.join("src/pages").is_dir()
 }
 
 fn discover_all_tests_from_prepared(

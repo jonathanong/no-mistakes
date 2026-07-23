@@ -5,6 +5,7 @@ fn playwright_escapes_file_arg_as_regex_literal() {
     let target = target_for(
         TestRunner::Playwright,
         Some("playwright.config.ts"),
+        false,
         Some("chromium"),
         "e2e/[locale].pw.ts",
     );
@@ -26,6 +27,7 @@ fn vitest_keeps_file_arg_literal() {
     let target = target_for(
         TestRunner::Vitest,
         Some("vitest.config.ts"),
+        false,
         Some("unit"),
         "src/[locale].test.ts",
     );
@@ -43,10 +45,34 @@ fn vitest_keeps_file_arg_literal() {
 }
 
 #[test]
+fn vitest_workspace_uses_workspace_flag() {
+    let target = target_for(
+        TestRunner::Vitest,
+        Some("vitest.projects.ts"),
+        true,
+        Some("unit"),
+        "tests/unit.test.ts",
+    );
+
+    assert!(target.workspace);
+    assert_eq!(
+        target.runner_args,
+        vec![
+            "--workspace",
+            "vitest.projects.ts",
+            "--project",
+            "unit",
+            "tests/unit.test.ts"
+        ]
+    );
+}
+
+#[test]
 fn dotnet_target_without_project_path_runs_project_scope() {
     let target = target_for(
         TestRunner::Dotnet,
         None,
+        false,
         Some("Company.App.Tests"),
         "dotnet-clients/tests/App.Tests/FeedServiceTests.cs",
     );
@@ -67,6 +93,7 @@ fn swift_target_uses_file_parent_as_filter_without_project() {
     let target = target_for(
         TestRunner::Swift,
         Some("swift-clients/core"),
+        false,
         None,
         "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
     );

@@ -400,7 +400,8 @@ fn configured_suites_cover_matching_variants() {
     assert!(
         project_config::load_projects(&root, types::Framework::Vitest, None)
             .unwrap()
-            .is_empty()
+            .iter()
+            .any(|project| project.config.as_deref() == Some("vitest.projects.mts"))
     );
     let commonjs_root = fixture("cjs-cts-configs");
     assert!(

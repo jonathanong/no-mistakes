@@ -66,11 +66,13 @@ fn vitest_explicit_project_matches_playwright_owned_file() {
     );
     let projects = vec![ConfigProject {
         config: Some("vitest.config.mts".to_string()),
+        workspace: false,
         policy_name: Some("browser".to_string()),
         runner_project_arg: Some("browser".to_string()),
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
 
     let discovered = discover_from_projects(&root, &config, TestRunner::Vitest, projects).unwrap();
@@ -89,11 +91,13 @@ fn target_metadata_uses_executable_project_name_only() {
     let config = NoMistakesConfig::default();
     let projects = vec![ConfigProject {
         config: Some("playwright.config.ts".to_string()),
+        workspace: false,
         policy_name: Some("top-level-config-name".to_string()),
         runner_project_arg: None,
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
 
     let discovered =
@@ -136,6 +140,7 @@ fn policy_only_project_inherits_single_explicit_runner_config() {
         project.config.as_deref(),
         Some("configs/vitest.workspace.mts")
     );
+    assert!(project.workspace);
 }
 
 #[test]
@@ -340,7 +345,7 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
         fact_context.clone(),
     );
     let config_file = root.join("vitest.config.ts");
-    let helper_file = root.join("vitest.projects.ts");
+    let helper_file = root.join("project-list.ts");
     assert!(prepared.graph_facts().contains_key(&config_file));
     assert!(prepared.graph_facts().contains_key(&helper_file));
 
@@ -493,5 +498,5 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         .is_ok());
     let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
-    assert_eq!(counts.get(&root.join("vitest.projects.ts")), Some(&1));
+    assert_eq!(counts.get(&root.join("project-list.ts")), Some(&1));
 }

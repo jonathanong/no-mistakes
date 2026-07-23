@@ -13,6 +13,13 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
+fn saved_config_fixture(name: &str) -> tempfile::TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config")
+        .join(name);
+    crate::test_support::materialize_saved_fixture(&source)
+}
+
 fn integration_policy() -> TestProjectPolicy {
     TestProjectPolicy {
         integration_suites: BTreeMap::from([("integration".to_string(), Vec::new())]),
@@ -92,6 +99,91 @@ fn prepared_runner_deduplicates_config_parsing_and_supports_direct_fact_parsing(
 }
 
 #[test]
+fn prepared_runner_parses_json_workspace_through_batch_and_direct_apis() {
+    let fixture = saved_config_fixture("vitest-workspace-json");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.workspace.json");
+    let prepared = prepare_vitest(
+        &root,
+        StringOrList::One("vitest.workspace.json".to_string()),
+    );
+
+    let parsed = prepared.parse_all().unwrap();
+    let projects = parsed.projects_for(&prepared, Framework::Vitest).unwrap();
+    assert_eq!(projects.len(), 2);
+    assert_eq!(projects[0].policy_name.as_deref(), Some("json-inline"));
+    assert!(projects[0].workspace);
+
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = prepared
+        .parse_path_for_facts_with_session(&session, &path)
+        .unwrap();
+    assert_eq!(facts.results.len(), 1);
+    assert!(facts.results[0].projects.is_ok());
+    assert!(facts.analyses.is_empty());
+}
+
+#[test]
+fn json_workspace_folder_strings_use_default_projects_and_global_negations() {
+    let fixture = saved_config_fixture("vitest-workspace-json");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.projects.json".to_string()));
+
+    let projects = prepared
+        .parse_all()
+        .unwrap()
+        .projects_for(&prepared, Framework::Vitest)
+        .unwrap();
+    let scopes = projects
+        .iter()
+        .filter_map(|project| project.scope.as_deref())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        scopes,
+        ["string-project", "configless", "folder-projects/one"]
+    );
+    assert!(projects
+        .iter()
+        .all(|project| { project.scope.as_deref() != Some("folder-projects/skip") }));
+    assert!(projects.iter().any(|project| {
+        project.scope.as_deref() == Some("configless")
+            && project
+                .include
+                .iter()
+                .any(|include| include == "configless/**/*.test.ts")
+    }));
+}
+
+#[test]
+fn prepared_runner_reports_named_and_unsupported_json_errors() {
+    let fixture = saved_config_fixture("vitest-workspace-json-errors");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    for (raw, expected) in [
+        (
+            "vitest.workspace.json",
+            "expected `extends` to be a boolean",
+        ),
+        (
+            "vitest.projects.json",
+            "expected `globalSetup` to be a string or string array",
+        ),
+        (
+            "unsupported.json",
+            "unsupported vitest JSON config filename",
+        ),
+    ] {
+        let prepared = prepare_vitest(&root, StringOrList::One(raw.to_string()));
+        let parsed = prepared.parse_all().unwrap();
+        let error = parsed
+            .projects_for(&prepared, Framework::Vitest)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(expected), "{raw}: {error}");
+    }
+}
+
+#[test]
 fn prepared_runner_uses_session_source_and_parser_gateways_once() {
     let root = fixture_root("basic");
     let path = root.join("vitest.config.mts");
@@ -153,11 +245,13 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
     let omitted_analysis = root.join("helpers/omitted.ts");
     let project = ConfigProject {
         config: Some("vitest.config.ts".to_string()),
+        workspace: false,
         policy_name: Some("unit".to_string()),
         runner_project_arg: Some("unit".to_string()),
         scope: Some("tests".to_string()),
         include: vec!["tests/**/*.test.ts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     };
     let parsed = ParsedRunnerConfigs::with_files(BTreeMap::from([(
         config_path.clone(),

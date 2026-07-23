@@ -72,11 +72,13 @@ fn collect_projects(
         }
         projects.push(ConfigProject {
             config: Some(configured_project.project.clone()),
+            workspace: false,
             policy_name: Some(configured_project.name.clone()),
             runner_project_arg: Some(project_facts.root_namespace.clone()),
             scope: project_scope(root, &project_path),
             include: project_includes(root, &facts, &configured_project, &project_path),
             exclude: prefix_globs(root, root, &configured_project.exclude),
+            vitest_setup: Vec::new(),
         });
     }
     (projects, missing, facts)

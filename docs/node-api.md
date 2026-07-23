@@ -65,6 +65,14 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 | `ci topology` | `ciTopology(options)` |
 | `impacted-checks` | `impactedChecks(options)` |
 
+`testsTargets()` and test-plan targets set `workspace: true` when a Vitest
+workspace/project-array source must be passed with `--workspace`; the emitted
+`runner_args` already contain the correct flag. This includes configured and
+default-discovered `vitest.workspace.*` and `vitest.projects.*` sources,
+including JSON project arrays, matching the CLI. A default-discovered root
+workspace/project-array source takes precedence over sibling
+`vitest.config.*`; explicitly configured paths remain authoritative.
+
 The Playwright APIs load the same selector-wrapper configuration as the CLI.
 Configured wrapper calls therefore appear in `playwrightEdges()` and
 `analyzeProject()` through the existing selector-edge JSON shape; no separate
@@ -90,7 +98,25 @@ targets outside the tracked graph universe. `ci` remains the separate legacy
 
 `testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
-framework-scoped discovered tests.
+framework-scoped discovered tests. Vitest plans also use this surface for a
+dynamic or unresolved `setupFiles`/`globalSetup` declaration: the result is
+bounded to its known project owner when possible. Its helper closure follows
+ordinary static imports/re-exports and literal CommonJS `require(...)` or
+`require.resolve(...)` dependencies, retaining edits and deletions as owner
+triggers; computed or non-literal forms are not followed. Resolved setup paths
+use `via: ["vitest-setup"]` and may add `via_details`, an optional array aligned
+with `via` whose setup edge detail is `{ type: "vitest-setup", field:
+"setupFiles" | "globalSetup" }`.
+
+`testsWhy()` and `testsGraph()` expose the same optional structured `detail`,
+and the Mermaid graph renders the Vitest field in the edge label. The optional
+fields preserve compatibility with previously saved plan JSON and are absent
+for ordinary edges.
+
+`testsImpact()` skips only a failed or unavailable optional Vitest config so a
+native test impact remains available. If Vitest configuration prepared
+successfully, its discovery errors (such as invalid include patterns) reject
+the API call just as they do for direct Vitest discovery.
 
 `testsPlan(options)` rejects (rather than resolving to an empty plan) when
 `base`/`head`/`fromGitDiff` can't be resolved by Git — an invalid ref, a
@@ -109,8 +135,10 @@ also identical for revision and inline-diff inputs.
 `testsPlan`, `testsImpact`, `testsWhy`, and `testsGraph` expose resource-edge
 provenance without a separate API: plan reasons use optional edge-aligned
 `via_details`, why steps use optional `detail`, and graph JSON edges use
-optional `detail`. All include `{ type: "resource", consumer_file,
-call_sites: [{ call_kind, line }] }` only for literal runtime filesystem edges.
+optional `detail`. Details are `{ type: "resource", consumer_file,
+call_sites: [{ call_kind, line }] }` for literal runtime filesystem edges or
+`{ type: "vitest-setup", field: "setupFiles" | "globalSetup" }` for setup
+edges.
 
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.

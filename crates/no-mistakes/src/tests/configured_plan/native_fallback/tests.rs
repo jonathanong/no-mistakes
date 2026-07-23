@@ -152,6 +152,7 @@ fn native_fallback_does_not_trigger_when_every_candidate_is_already_used() {
             vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                 runner: "swift".to_string(),
                 config: Some(String::new()),
+                workspace: false,
                 project: Some("RootTests".to_string()),
                 base_command: vec!["swift".to_string(), "test".to_string()],
                 runner_args: Vec::new(),
@@ -208,6 +209,7 @@ fn root_swift_manifest_scopes_to_root_package_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "swift".to_string(),
                     config: Some(".".to_string()),
+                    workspace: false,
                     project: Some("RootTests".to_string()),
                     base_command: vec!["swift".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -218,6 +220,7 @@ fn root_swift_manifest_scopes_to_root_package_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "swift".to_string(),
                     config: Some("clients".to_string()),
+                    workspace: false,
                     project: Some("ClientTests".to_string()),
                     base_command: vec!["swift".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -269,6 +272,7 @@ fn target_config_matching_normalizes_dot_prefixes() {
             vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                 runner: "dotnet".to_string(),
                 config: Some("./clients/tests/App.Tests/App.Tests.csproj".to_string()),
+                workspace: false,
                 project: Some("Company.App.Tests".to_string()),
                 base_command: vec!["dotnet".to_string(), "test".to_string()],
                 runner_args: Vec::new(),
@@ -301,6 +305,7 @@ fn scoped_fallback_preserves_unscoped_discovered_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "dotnet".to_string(),
                     config: Some("clients/tests/App.Tests/App.Tests.csproj".to_string()),
+                    workspace: false,
                     project: Some("Company.App.Tests".to_string()),
                     base_command: vec!["dotnet".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -311,6 +316,7 @@ fn scoped_fallback_preserves_unscoped_discovered_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "dotnet".to_string(),
                     config: None,
+                    workspace: false,
                     project: None,
                     base_command: vec!["dotnet".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -342,6 +348,7 @@ fn empty_scoped_configs_do_not_select_unscoped_tests() {
             vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                 runner: "dotnet".to_string(),
                 config: None,
+                workspace: false,
                 project: None,
                 base_command: vec!["dotnet".to_string(), "test".to_string()],
                 runner_args: Vec::new(),

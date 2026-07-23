@@ -33,6 +33,21 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn importe
     exported: &str,
 ) -> Option<ImportBinding> {
     let imports = import_bindings(program);
+    if exported == "default" {
+        if let Some(import) = program.body.iter().find_map(|statement| {
+            let Statement::ExportDefaultDeclaration(export) = statement else {
+                return None;
+            };
+            let oxc_ast::ast::Expression::Identifier(identifier) =
+                export.declaration.as_expression()?
+            else {
+                return None;
+            };
+            imports.get(identifier.name.as_str()).cloned()
+        }) {
+            return Some(import);
+        }
+    }
     for statement in &program.body {
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;

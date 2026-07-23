@@ -35,7 +35,7 @@ pub(crate) struct PreparedTestPlanRequest {
     pub(crate) config: NoMistakesConfig,
     config_path: Option<PathBuf>,
     pub(crate) tsconfig: TsConfig,
-    tsconfig_catalog: no_mistakes::codebase::ts_resolver::TsConfigCatalog,
+    tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) collected: ChangedFiles,
     pub(crate) changed_files: Vec<PathBuf>,
     pub(crate) lockfile_analysis: LockfileAnalysis,
@@ -214,7 +214,8 @@ impl PreparedTestPlanInputs {
                 graph_plan,
                 &preliminary_graph_config,
             );
-        let prepared_test_projects = Arc::new(
+        let sources = visible_paths.source_store_for(&root);
+        let mut prepared_test_projects =
             no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
                 &root,
                 &config,
@@ -222,16 +223,15 @@ impl PreparedTestPlanInputs {
                 Arc::clone(&preliminary_tsconfig_catalog),
                 no_mistakes::codebase::test_discovery::PreparedTestProjectRequest {
                     graph: (graph_files.indexable(), runner_graph_plan, runner_graph_context),
-                    sources: visible_paths.source_store_for(&root),
+                    sources: Arc::clone(&sources),
                     collect_graph_facts: true,
                     preparation_plan: &framework_plan,
                 },
-            ),
-        );
+            );
         tsconfig_candidate_roots.extend(prepared_test_projects.tsconfig_candidate_roots(&root));
         tsconfig_candidate_roots.sort();
         tsconfig_candidate_roots.dedup();
-        let tsconfig_catalog = if let Some(path) = args.tsconfig.as_deref() {
+        let tsconfig_catalog = Arc::new(if let Some(path) = args.tsconfig.as_deref() {
             let path = if path.is_absolute() {
                 path.to_path_buf()
             } else {
@@ -248,7 +248,20 @@ impl PreparedTestPlanInputs {
                 &tsconfig_candidate_roots,
                 &root_visible_paths,
             )
-        };
+        });
+        prepared_test_projects.reparse_vitest_with_final_catalog(
+            &root,
+            &config,
+            &root_visible_paths,
+            Arc::clone(&tsconfig_catalog),
+            sources,
+        );
+        prepared_test_projects.reresolve_vitest_setups(
+            &root,
+            &tsconfig_catalog,
+            &root_visible_paths,
+        );
+        let prepared_test_projects = Arc::new(prepared_test_projects);
         let test_filter =
             no_mistakes::codebase::test_filter::TestFileFilter::from_prepared_projects(
                 &root,
@@ -359,7 +372,7 @@ impl PreparedTestPlanRequest {
                     ));
                     Box::new(facts)
                 };
-            DepGraph::build_with_plan_files_prepared_config_and_all_facts(
+            let graph = DepGraph::build_with_plan_files_prepared_config_and_all_facts(
                 PreparedGraphBuild {
                     root: &self.root,
                     tsconfig: &self.tsconfig,
@@ -375,7 +388,11 @@ impl PreparedTestPlanRequest {
                     visible_paths: None,
                 },
             )
-            .map_err(|error| format!("{error:#}"))
+            .map_err(|error| format!("{error:#}"))?;
+            let graph = graph.with_vitest_setup_projects(
+                self.prepared_test_projects.vitest_setup_projects(),
+            );
+            Ok(graph)
         })
             .as_ref()
             .map_err(|error| anyhow::Error::msg(error.clone()))
@@ -387,6 +404,16 @@ impl PreparedTestPlanRequest {
 
     pub(crate) fn graph_build_count(&self) -> usize {
         self.graph_builds.load(Ordering::Relaxed)
+    }
+
+    /// Parsed Vitest project metadata from the request's single runner-config
+    /// pass. Callers use this for conservative setup diagnostics and must not
+    /// reparse configuration when Vitest was not requested.
+    pub(crate) fn vitest_projects(
+        &self,
+    ) -> Option<&[no_mistakes::integration_tests::types::ConfigProject]> {
+        self.prepared_test_projects
+            .prepared_projects(TestRunner::Vitest)
     }
 }
 

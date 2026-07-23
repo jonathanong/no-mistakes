@@ -38,11 +38,13 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
 
     let project = ConfigProject {
         config: None,
+        workspace: false,
         policy_name: None,
         runner_project_arg: None,
         scope: None,
         include: vec!["./src/**/*.test.ts".to_string()],
         exclude: vec!["./src/generated/**".to_string()],
+        vitest_setup: Vec::new(),
     };
     assert_eq!(project_name(&project), "default");
     assert_eq!(

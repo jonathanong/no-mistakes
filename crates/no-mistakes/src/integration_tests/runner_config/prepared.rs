@@ -10,6 +10,8 @@ use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
+mod errors;
+mod json;
 mod setup;
 
 pub(crate) use setup::{prepare, prepare_with_catalog_and_sources};
@@ -108,28 +110,6 @@ impl PreparedIntegrationRunnerConfigs {
         Some(RunnerConfigFileFacts { results, analyses })
     }
 
-    pub(crate) fn parse_error(
-        &self,
-        path: &Path,
-        message: String,
-    ) -> Option<RunnerConfigFileFacts> {
-        let path = crate::codebase::ts_resolver::normalize_path(path);
-        let results = self
-            .specs
-            .iter()
-            .filter(|spec| spec.path == path)
-            .map(|spec| ProjectResult {
-                framework: spec.framework,
-                raw: spec.raw.clone(),
-                projects: Err(message.clone()),
-            })
-            .collect::<Vec<_>>();
-        (!results.is_empty()).then_some(RunnerConfigFileFacts {
-            results,
-            analyses: BTreeMap::new(),
-        })
-    }
-
     fn read_source(&self, path: &Path) -> Result<std::sync::Arc<str>> {
         match &self.sources {
             Some(sources) => sources
@@ -165,10 +145,14 @@ impl PreparedIntegrationRunnerConfigs {
                     error
                 )
             })?;
-            let facts = with_request_program(&spec.path, &source, |program, source| {
-                self.parse_program(&spec.path, program, source)
-                    .expect("runner config path was prepared")
-            })?;
+            let facts = if spec.path.extension().and_then(|value| value.to_str()) == Some("json") {
+                self.parse_json(&spec.path, &source)
+            } else {
+                with_request_program(&spec.path, &source, |program, source| {
+                    self.parse_program(&spec.path, program, source)
+                        .expect("runner config path was prepared")
+                })?
+            };
             parsed.analyses.extend(facts.analyses.clone());
             parsed.files.insert(spec.path.clone(), facts);
         }
@@ -192,6 +176,9 @@ impl PreparedIntegrationRunnerConfigs {
             Ok(source) => source,
             Err(error) => return self.parse_error(path, error.to_string()),
         };
+        if path.extension().and_then(|value| value.to_str()) == Some("json") {
+            return Some(self.parse_json(path, &source));
+        }
         match session.with_program(path, &source, |program, source| {
             self.parse_program(path, program, source)
                 .expect("runner config path was prepared")

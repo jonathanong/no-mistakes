@@ -81,3 +81,49 @@ fn flow_napi_direct_impl_returns_report_and_validates_options() {
     .unwrap_err();
     assert!(bad_relationship.reason.contains("unknown relationship"));
 }
+
+#[test]
+fn flow_napi_direct_impl_includes_vitest_setup_relationships() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = crate::napi_api::flow_json_impl(
+        json!({
+            "root": root,
+            "target": "setup/conditional-a.ts",
+            "direction": "dependents",
+            "depth": 1,
+            "relationships": ["test"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    assert!(value["edges"].as_array().unwrap().iter().any(|edge| {
+        edge["from"] == "conditional-owner/conditional.test.ts"
+            && edge["to"] == "setup/conditional-a.ts"
+            && edge["kind"] == "vitest-setup"
+    }), "{value:#}");
+}
+
+#[test]
+fn flow_napi_import_only_target_keeps_vitest_config_imports() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = crate::napi_api::flow_json_impl(
+        json!({
+            "root": root,
+            "target": "vitest.config.ts",
+            "direction": "deps",
+            "depth": 1,
+            "relationships": ["import"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    assert!(value["edges"].as_array().unwrap().iter().any(|edge| {
+        edge["from"] == "vitest.config.ts"
+            && edge["to"] == "config/setup-selector.ts"
+            && edge["kind"] == "import"
+    }), "{value:#}");
+}

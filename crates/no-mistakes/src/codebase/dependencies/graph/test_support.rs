@@ -39,6 +39,8 @@ pub(crate) fn from_raw_maps(
     DepGraph {
         root,
         edges: edge_index_from_test_maps(typed_fwd, typed_rev),
+        vitest_setup_projects: Vec::new(),
+        effective_edges: std::sync::OnceLock::new(),
         parse_errors: HashMap::new(),
         resource_edge_details: HashMap::new(),
         resource_diagnostics: Vec::new(),
@@ -50,6 +52,8 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
     DepGraph {
         root,
         edges: edge_index_from_test_maps(forward, reverse),
+        vitest_setup_projects: Vec::new(),
+        effective_edges: std::sync::OnceLock::new(),
         parse_errors: HashMap::new(),
         resource_edge_details: HashMap::new(),
         resource_diagnostics: Vec::new(),
@@ -57,6 +61,10 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
 }
 
 impl DepGraph {
+    pub(crate) fn vitest_setup_edges_materialized(&self) -> bool {
+        self.effective_edges.get().is_some()
+    }
+
     pub(crate) fn build_with_plan_file_list_config_and_check_facts(
         root: &Path,
         tsconfig: &TsConfig,

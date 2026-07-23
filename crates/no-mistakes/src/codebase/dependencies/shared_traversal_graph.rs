@@ -65,6 +65,7 @@ impl SharedTraversalContext {
         plan: graph::GraphBuildPlan,
     ) -> Result<std::sync::Arc<graph::DepGraph>> {
         self.ensure_facts();
+        let vitest_setup_projects = self.prepared_vitest_setup_projects();
         let key = EffectiveGraphPlanKey::new(plan, &self.graph_files, self.analysis_generation);
         let builds_before = self.graph_cache.build_count();
         let graph = self.graph_cache.get_or_build(key, || {
@@ -89,6 +90,7 @@ impl SharedTraversalContext {
                     .prepared_test_projects
                     .as_ref()
                     .and_then(|projects| projects.swift_facts()),
+                vitest_setup_projects,
                 visible_paths: self.dataset.visible_paths(),
                 session: self.session.clone(),
             })
@@ -104,6 +106,7 @@ impl SharedTraversalContext {
         &mut self,
         facts: &crate::codebase::check_facts::CheckFactMap,
     ) -> Result<()> {
+        let vitest_setup_projects = self.prepared_vitest_setup_projects();
         let key = EffectiveGraphPlanKey::new(
             self.build_plan,
             &self.graph_files,
@@ -128,6 +131,7 @@ impl SharedTraversalContext {
                     .prepared_test_projects
                     .as_ref()
                     .and_then(|projects| projects.swift_facts()),
+                vitest_setup_projects,
                 visible_paths: self.dataset.visible_paths(),
                 session: self.session.clone(),
             })
@@ -135,6 +139,12 @@ impl SharedTraversalContext {
         self.graph = Some(graph);
         self.graph_builds = self.graph_cache.build_count();
         Ok(())
+    }
+
+    fn prepared_vitest_setup_projects(&self) -> Vec<graph::VitestSetupProject> {
+        self.prepared_test_projects
+            .as_ref()
+            .map_or_else(Vec::new, |projects| projects.vitest_setup_projects())
     }
 
     fn symbol_index(&mut self) -> Result<std::sync::Arc<graph::SymbolIndex>> {

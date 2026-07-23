@@ -1,7 +1,9 @@
+#[path = "types_edges_sort.rs"]
+mod sort;
+
 /// The kind of dependency edge connecting two nodes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
 #[serde(rename_all = "kebab-case")]
-#[repr(u8)]
 pub enum EdgeKind {
     /// Regular TS/JS static import.
     Import,
@@ -75,6 +77,27 @@ pub enum EdgeKind {
     WorkflowRun,
     /// An upload-artifact step produces an artifact consumed by a download step.
     WorkflowArtifact,
+    /// A Vitest test file depends on a project setup module. The direction is
+    /// deliberately test → setup so reverse impact traversal reaches the
+    /// owning tests after following ordinary setup-module imports.
+    VitestSetup(VitestSetupField),
+}
+
+/// The Vitest configuration field that declared a setup dependency.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum VitestSetupField {
+    SetupFiles,
+    GlobalSetup,
+}
+
+impl VitestSetupField {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::SetupFiles => "setupFiles",
+            Self::GlobalSetup => "globalSetup",
+        }
+    }
 }
 
 impl EdgeKind {
@@ -105,6 +128,7 @@ impl EdgeKind {
             Self::WorkflowUses => Some("workflow-uses"),
             Self::WorkflowRun => Some("workflow-run"),
             Self::WorkflowArtifact => Some("workflow-artifact"),
+            Self::VitestSetup(_) => Some("vitest-setup"),
             _ => None,
         }
     }
@@ -129,10 +153,18 @@ impl EdgeKind {
             _ => unreachable!("core edge kinds are handled before domain rendering"),
         }
     }
-}
 
-/// Stable ordering for deterministic graph output.
-/// Keep variants append-only so their discriminants preserve this public order.
-pub(crate) const fn edge_kind_rank(kind: EdgeKind) -> u8 {
-    kind as u8
+    /// Optional stable provenance for a field-specific relationship.
+    pub const fn detail(self) -> Option<&'static str> {
+        match self {
+            Self::VitestSetup(field) => Some(field.as_str()),
+            _ => None,
+        }
+    }
+
+    /// Deterministic key for adjacency and traversal output. Parameterized
+    /// edge kinds cannot use enum-discriminant casts for sorting.
+    pub const fn sort_key(self) -> (u8, u8) {
+        sort::key(self)
+    }
 }

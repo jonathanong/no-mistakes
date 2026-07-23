@@ -1,7 +1,6 @@
 use anyhow::Result;
-use no_mistakes::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::test_discovery::TestExecutionTarget;
-use no_mistakes::codebase::ts_resolver::TsConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::Path;
@@ -17,6 +16,7 @@ pub(crate) mod diff_parser;
 pub(crate) mod git_diff;
 pub(crate) mod graph;
 pub(crate) mod impact;
+mod impact_graph;
 pub(crate) mod lockfile_changes;
 pub(crate) mod plan;
 pub(crate) mod plan_output;
@@ -94,6 +94,9 @@ pub enum ImpactEdgeDetail {
     Resource {
         consumer_file: String,
         call_sites: Vec<ResourceCallSite>,
+    },
+    VitestSetup {
+        field: String,
     },
 }
 
@@ -178,6 +181,24 @@ pub(crate) fn push_resource_diagnostics(
     }
 }
 
+/// Keep optional edge provenance aligned with the public `via` path.  Omit
+/// the field completely for ordinary paths so saved plan JSON remains stable.
+pub(crate) fn via_details_from_edges(
+    edges: &[no_mistakes::codebase::dependencies::graph::EdgeKind],
+) -> Vec<Option<ImpactEdgeDetail>> {
+    edges
+        .iter()
+        .map(|edge| match edge {
+            no_mistakes::codebase::dependencies::graph::EdgeKind::VitestSetup(field) => {
+                Some(ImpactEdgeDetail::VitestSetup {
+                    field: field.as_str().to_string(),
+                })
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 pub fn run(args: TestsArgs) -> Result<ExitCode> {
     match args.command {
         TestsCommand::Plan(sub_args) => plan::run(*sub_args),
@@ -191,18 +212,7 @@ pub fn run(args: TestsArgs) -> Result<ExitCode> {
 
 const _: fn(TestsArgs) -> Result<ExitCode> = run;
 
-/// Build the canonical graph shape shared by both test-impact entry points.
-pub(crate) fn build_test_impact_graph(
-    root: &Path,
-    tsconfig: &TsConfig,
-    include_symbols: bool,
-) -> Result<DepGraph> {
-    DepGraph::build_with_plan(
-        root,
-        tsconfig,
-        GraphBuildPlan::test_impact().with_symbols(include_symbols),
-    )
-}
+pub(crate) use impact_graph::build_test_impact_graph;
 
 #[cfg(test)]
 mod serde_tests {

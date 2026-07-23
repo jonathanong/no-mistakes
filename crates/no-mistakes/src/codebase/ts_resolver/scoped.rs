@@ -89,6 +89,20 @@ impl<'a> ScopedImportResolver<'a> {
             .resolve(specifier, importing_file)
     }
 
+    /// Resolve every candidate with the TypeScript configuration selected for
+    /// this importer, including targets deleted before planning.
+    pub(crate) fn resolution_candidates(
+        &self,
+        specifier: &str,
+        importing_file: &ScopedPath,
+    ) -> std::collections::BTreeSet<ScopedPathBuf> {
+        if let Some(resolver) = self.fixed_resolver_for(importing_file) {
+            return resolver.resolution_candidates(specifier, importing_file);
+        }
+        self.resolver_for(importing_file)
+            .resolution_candidates(specifier, importing_file)
+    }
+
     pub(crate) fn classify_import(
         &self,
         specifier: &str,

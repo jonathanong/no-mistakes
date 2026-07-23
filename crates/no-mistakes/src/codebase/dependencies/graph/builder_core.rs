@@ -157,6 +157,8 @@ impl DepGraph {
         let mut graph = Self {
             root: root.to_path_buf(),
             edges: edge_index_from_maps(forward, reverse),
+            vitest_setup_projects: Vec::new(),
+            effective_edges: OnceLock::new(),
             parse_errors,
             resource_edge_details,
             resource_diagnostics,

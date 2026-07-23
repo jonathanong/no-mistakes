@@ -66,6 +66,8 @@ export interface SelectedTest {
 export interface TestExecutionTarget {
   runner: "vitest" | "playwright" | "dotnet" | "swift";
   config?: string | null;
+  /** True when config is a Vitest workspace/project-array source rendered with --workspace. */
+  workspace?: boolean;
   project?: string | null;
   base_command: string[];
   runner_args: string[];
@@ -79,12 +81,17 @@ export interface ImpactReason {
   via_details?: Array<ImpactEdgeDetail | null>;
 }
 
-export type ImpactEdgeDetail = ResourceImpactEdgeDetail;
+export type ImpactEdgeDetail = ResourceImpactEdgeDetail | VitestSetupImpactEdgeDetail;
 
 export interface ResourceImpactEdgeDetail {
   type: "resource";
   consumer_file: string;
   call_sites: ResourceCallSite[];
+}
+
+export interface VitestSetupImpactEdgeDetail {
+  type: "vitest-setup";
+  field: "setupFiles" | "globalSetup";
 }
 
 export interface ResourceCallSite {

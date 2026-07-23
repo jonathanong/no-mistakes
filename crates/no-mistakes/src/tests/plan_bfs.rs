@@ -179,6 +179,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::RouteRef | EdgeKind::RouteTest => "route",
         EdgeKind::Layout => "layout",
         EdgeKind::TestOf => "test",
+        EdgeKind::VitestSetup(_) => "vitest-setup",
         EdgeKind::QueueEnqueue | EdgeKind::QueueWorker => "queue",
         EdgeKind::MarkdownLink => "md",
         EdgeKind::CiInvocation => "ci",

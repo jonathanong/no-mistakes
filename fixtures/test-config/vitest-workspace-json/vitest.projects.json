@@ -1,0 +1,8 @@
+[
+  "./string-project/vitest.config.ts",
+  "./configless",
+  "./folder-projects/*",
+  "!./folder-projects/skip",
+  "./excluded/vitest.config.ts",
+  "!./excluded/vitest.config.ts"
+]

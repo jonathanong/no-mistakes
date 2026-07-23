@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests_types {
-    use crate::codebase::dependencies::graph::{edge_kind_rank, EdgeKind, NodeId};
+    use crate::codebase::dependencies::graph::{EdgeKind, NodeId, VitestSetupField};
     use std::path::PathBuf;
 
     #[test]
@@ -39,10 +39,14 @@ mod tests_types {
     }
 
     #[test]
-    fn edge_kind_rank_appends_workflow_kinds_without_reordering_existing_kinds() {
-        assert_eq!(edge_kind_rank(EdgeKind::CiInvocation), 14);
-        assert_eq!(edge_kind_rank(EdgeKind::TerraformOutputRef), 29);
-        assert_eq!(edge_kind_rank(EdgeKind::WorkflowJob), 30);
-        assert_eq!(edge_kind_rank(EdgeKind::WorkflowArtifact), 35);
+    fn edge_kind_sort_key_appends_workflow_and_vitest_kinds_without_reordering_existing_kinds() {
+        assert_eq!(EdgeKind::CiInvocation.sort_key(), (14, 0));
+        assert_eq!(EdgeKind::TerraformOutputRef.sort_key(), (29, 0));
+        assert_eq!(EdgeKind::WorkflowJob.sort_key(), (30, 0));
+        assert_eq!(EdgeKind::WorkflowArtifact.sort_key(), (35, 0));
+        assert_eq!(
+            EdgeKind::VitestSetup(VitestSetupField::SetupFiles).sort_key(),
+            (36, 0)
+        );
     }
 }

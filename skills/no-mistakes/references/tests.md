@@ -84,6 +84,55 @@ Node API: `testsPlan(options)`.
 In a TypeScript/JavaScript workspace, omit `tsconfig` so test impact follows
 the config owning each importing file. Passing `tsconfig` deliberately forces a
 single config for the whole plan.
+### Vitest setup dependency tracing
+
+`tests plan vitest` and `testsPlan()` statically trace each project's effective
+`setupFiles` and `globalSetup`, including their ordinary import/re-export
+closure. A changed setup dependency selects only tests owned by that Vitest
+project. Inline project fields inherit a root field only with `extends: true`;
+the default and `extends: false` keep the project independent. A string config
+in `test.projects` is likewise independent of its referencing config. A static
+inline `extends: './vite.config.js'` inherits the referenced config's setup
+fields before local values. Explicit values replace inherited fields and `[]`
+clears them.
+For supported inline objects, nested `test` owns `setupFiles` and
+`globalSetup`; same-named outer fields are ignored regardless of direct or
+static-spread declaration order.
+Workspace configs may export projects directly or through
+`defineWorkspace([...])`. Without `tests.vitest.configs`, root
+`vitest.workspace.*` and `vitest.projects.*` files, including `.json`, are
+discovered by default. Config globs include suffixes such as
+`vitest.config.unit.ts` and `vite.config.e2e.js`.
+When a root workspace/project-array source exists, it takes precedence over a
+sibling default `vitest.config.*`; list the config in the workspace to include
+it as a project.
+Exact folder project strings remain folders rather than resolving an `index`
+module. CommonJS workspace files may use direct literal
+`module.exports = require('./projects.cjs')`; chained or dynamic requires stay
+unsupported.
+`defineWorkspace` is static through named ESM imports, ESM namespaces, or a
+direct `require('vitest/config')` namespace; ESM defaults and CommonJS
+`.default` members remain unsupported dynamic forms.
+
+Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
+`vitest-setup-unresolved` warnings. An unavailable static inline config
+`extends` emits `vitest-config-extends-unresolved`. If relevant, planning safely selects the
+known owner scope (or the discovered Vitest framework set if no owner is known)
+and sets `fallback_triggered` without relying on `globalConfigFallback`. Its
+bounded helper closure follows ordinary static imports/re-exports and literal
+CommonJS `require(...)` or `require.resolve(...)` dependencies, retaining
+edits and deletions as owner triggers. Static CommonJS bindings support direct
+members, destructured aliases, and named `module.exports = { ... }` values;
+computed or non-literal forms are not followed.
+
+For `tests impact`, a malformed or unavailable optional Vitest config does not
+block unrelated native test impact. A successfully prepared Vitest config is
+still strict: discovery errors such as invalid include patterns are returned.
+
+Resolved setup edges use `via: ["vitest-setup"]`; optional aligned
+`via_details` records `{ type: "vitest-setup", field: "setupFiles" |
+"globalSetup" }`. `tests why` and `tests graph` expose the same structured
+`detail`.
 
 ## `tests why`
 
@@ -120,8 +169,9 @@ Node API: `testsImpact(options)`.
 Literal runtime filesystem resources (`fs` reads/directories and supported
 static glob calls) are part of ordinary test impact. A plan JSON reason with
 `via: ["resource"]` may carry edge-aligned `via_details` containing the
-consumer file and call-site line. Dynamic paths, patterns, or cwd values are
-warnings, not guessed dependencies or implicit fallback triggers.
+structured `{ type: "resource", consumer_file, call_sites: [{ call_kind,
+line }] }` detail. Dynamic paths, patterns, or cwd values are warnings, not
+guessed dependencies or implicit fallback triggers.
 
 ## `tests comment`
 

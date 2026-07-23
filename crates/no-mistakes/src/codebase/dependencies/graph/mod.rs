@@ -11,7 +11,7 @@ use globset::{Glob, GlobBuilder, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use crate::edge_index::{CanonicalEdge, EdgeIndex};
 
@@ -35,6 +35,7 @@ include!("builder_edges.rs");
 include!("builder_remaining_edges.rs");
 include!("builder_helpers.rs");
 include!("builder_entrypoints.rs");
+include!("methods_lazy_vitest_setup.rs");
 include!("methods_lazy.rs");
 include!("lazy_import_types.rs");
 include!("lazy_import_entrypoints.rs");

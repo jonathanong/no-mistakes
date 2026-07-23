@@ -1,14 +1,20 @@
 use super::shared;
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::integration_tests::project_config::prefix_globs;
-use crate::integration_tests::types::ConfigProject;
+use crate::integration_tests::types::{ConfigProject, VitestSetupDependency};
 use anyhow::Result;
 use oxc_ast::ast::Program;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+mod json_projects;
+mod merge;
 mod project_arrays;
+pub(crate) mod setup_resolution;
 #[cfg(test)]
 pub(in crate::integration_tests) mod tests;
+
+use merge::merge_options;
+use setup_resolution::resolve_setup_dependencies;
 
 const DEFAULT_EXTENSIONS: &[&str] = &[
     "js", "jsx", "ts", "tsx", "mjs", "mjsx", "mts", "mtsx", "cjs", "cjsx", "cts", "ctsx",
@@ -20,6 +26,35 @@ pub(super) struct Options {
     pub(super) root: Option<String>,
     pub(super) include: Option<Vec<String>>,
     pub(super) exclude: Option<Vec<String>>,
+    pub(super) setup_files: Option<Vec<VitestSetupDependency>>,
+    pub(super) global_setup: Option<Vec<VitestSetupDependency>>,
+    /// Distinguishes an explicit empty setup list from an omitted field while
+    /// config-extends provenance is being attached.
+    pub(super) setup_files_cleared: bool,
+    pub(super) global_setup_cleared: bool,
+    /// A nested `test` object owns setup fields, including when it arrives
+    /// through a supported static object spread.
+    pub(super) nested_test_scope: bool,
+    /// Whether an inline project inherits root setup fields, opts out, or
+    /// inherits setup fields from another static config source.
+    pub(super) extends: Option<Extends>,
+    /// A config named directly by `test.projects` is independent of the
+    /// aggregate config that referenced it.
+    pub(super) standalone_config: bool,
+    /// Canonical path of a standalone `test.projects` config, retained only
+    /// while parsing so glob negations can remove the matching entry.
+    pub(super) standalone_config_path: Option<PathBuf>,
+    /// A project config named by `test.projects` is a standalone config file.
+    /// Its relative settings are therefore based on that file, not the
+    /// aggregate config that happened to reference it.
+    pub(super) config_base: Option<PathBuf>,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub(super) enum Extends {
+    False,
+    True,
+    Config(String),
 }
 
 pub(in crate::integration_tests) fn parse_program_with_resolver(
@@ -31,31 +66,68 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
     resolver: &dyn ImportResolution,
 ) -> Result<Vec<ConfigProject>> {
     let bindings = shared::top_level_object_bindings(program);
-    let Some(root_object) = shared::default_export_object(program, &bindings) else {
-        return Ok(Vec::new());
-    };
+    let root_object = shared::default_export_object(program, &bindings);
+    let workspace_options = (root_object.is_none() && is_vitest_project_array_path(path))
+        .then(|| project_arrays::workspace_options(program, source, path, resolver))
+        .transpose()?
+        .unwrap_or_default();
+    if root_object.is_none() {
+        return Ok(workspace_options
+            .into_iter()
+            .map(|options| to_project(config_dir, root, options, resolver))
+            .collect());
+    }
+    let root_object = root_object.expect("workspace branch returns when config object is absent");
     let root_options = project_arrays::root_options(program, root_object, source, path, resolver)?;
     let project_options =
-        project_arrays::project_options(program, root_object, source, path, root, resolver)?;
+        project_arrays::project_options(program, root_object, source, path, resolver)?;
     let mut projects = Vec::new();
     if project_options.is_empty() {
-        projects.push(to_project(config_dir, root, root_options));
+        projects.push(to_project(config_dir, root, root_options, resolver));
         return Ok(projects);
     }
 
     for project_options in project_options {
-        projects.push(to_project(
-            config_dir,
-            root,
-            merge_options(&root_options, project_options),
-        ));
+        let options = if project_options.standalone_config {
+            project_options
+        } else {
+            merge_options(&root_options, project_options)
+        };
+        projects.push(to_project(config_dir, root, options, resolver));
     }
     Ok(projects)
 }
 
-fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject {
+pub(crate) fn is_vitest_project_array_path(path: &Path) -> bool {
+    const EXTENSIONS: &[&str] = &["mts", "ts", "mjs", "js", "cjs", "cts", "json"];
+    let Some(extension) = path.extension().and_then(|extension| extension.to_str()) else {
+        return false;
+    };
+    EXTENSIONS.contains(&extension)
+        && path.file_stem().is_some_and(|stem| {
+            matches!(stem.to_str(), Some("vitest.workspace" | "vitest.projects"))
+        })
+}
+
+pub(in crate::integration_tests) fn parse_json_with_resolver(
+    source: &str,
+    path: &Path,
+    config_dir: &Path,
+    root: &Path,
+    resolver: &dyn ImportResolution,
+) -> Result<Vec<ConfigProject>> {
+    json_projects::parse(source, path, config_dir, root, resolver)
+}
+
+fn to_project(
+    config_dir: &Path,
+    root: &Path,
+    mut options: Options,
+    resolver: &dyn ImportResolution,
+) -> ConfigProject {
+    let config_dir = options.config_base.as_deref().unwrap_or(config_dir);
     let include = options.include.unwrap_or_else(default_include);
-    let config_dir = options
+    let project_root = options
         .root
         .as_deref()
         .map(|project_root| {
@@ -67,32 +139,41 @@ fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject
             }
         })
         .unwrap_or_else(|| config_dir.to_path_buf());
+    let project_root = crate::codebase::ts_resolver::normalize_path(&project_root);
+    resolve_setup_dependencies(
+        options
+            .setup_files
+            .iter_mut()
+            .chain(options.global_setup.iter_mut())
+            .flatten(),
+        &project_root,
+        root,
+        resolver,
+    );
+    if let Some(setups) = options.setup_files.as_mut() {
+        merge::dedupe_resolved_setups(setups);
+    }
+    if let Some(setups) = options.global_setup.as_mut() {
+        merge::dedupe_resolved_setups(setups);
+    }
     ConfigProject {
         config: None,
+        workspace: false,
         policy_name: options.name.clone(),
         runner_project_arg: options.name,
         scope: Some(crate::codebase::ts_source::relative_slash_path(
             root,
-            &config_dir,
+            &project_root,
         )),
-        include: prefix_globs(root, &config_dir, &include),
-        exclude: prefix_globs(root, &config_dir, &options.exclude.unwrap_or_default()),
+        include: prefix_globs(root, &project_root, &include),
+        exclude: prefix_globs(root, &project_root, &options.exclude.unwrap_or_default()),
+        vitest_setup: options
+            .setup_files
+            .into_iter()
+            .flatten()
+            .chain(options.global_setup.into_iter().flatten())
+            .collect(),
     }
-}
-
-fn merge_options(root: &Options, project: Options) -> Options {
-    Options {
-        name: project.name.or_else(|| root.name.clone()),
-        root: project.root.or_else(|| root.root.clone()),
-        include: project.include.or_else(|| root.include.clone()),
-        exclude: combine(root.exclude.clone(), project.exclude),
-    }
-}
-
-fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Option<Vec<String>> {
-    let mut values = left.unwrap_or_default();
-    values.extend(right.unwrap_or_default());
-    (!values.is_empty()).then_some(values)
 }
 
 fn default_include() -> Vec<String> {

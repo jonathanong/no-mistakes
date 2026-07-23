@@ -93,6 +93,7 @@ struct CanonicalGraphBuild<'a> {
     import_resolution_cache: &'a crate::codebase::ts_resolver::ImportResolutionCache,
     dotnet_facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
+    vitest_setup_projects: Vec<graph::VitestSetupProject>,
     visible_paths: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 }
@@ -115,4 +116,5 @@ fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGra
         },
         input.session,
     )
+    .map(|graph| graph.with_vitest_setup_projects(input.vitest_setup_projects))
 }

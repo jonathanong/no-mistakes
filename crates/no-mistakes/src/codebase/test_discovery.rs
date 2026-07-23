@@ -23,6 +23,10 @@ pub use targets::TestExecutionTarget;
 pub use types::{DiscoveredTests, PreparedRunnerProject, TestRunner};
 include!("test_discovery/preparation_plan.rs");
 include!("test_discovery/prepared.rs");
+include!("test_discovery/prepared_catalog.rs");
+include!("test_discovery/prepared_vitest_resolution.rs");
+include!("test_discovery/prepared_vitest_reparse.rs");
+include!("test_discovery/prepared_vitest_setup.rs");
 include!("test_discovery/api.rs");
 
 pub fn literal_path_glob(path: &str) -> String {
@@ -77,6 +81,7 @@ fn discover_from_projects_from_visible(
                 targets::target_for(
                     runner,
                     project.config.as_deref(),
+                    project.workspace,
                     project.runner_project_arg.as_deref(),
                     &rel,
                 )
@@ -166,7 +171,7 @@ fn discover_with_fallback(
             targets_by_path
                 .entry(path)
                 .or_default()
-                .insert(targets::target_for(runner, None, None, &rel));
+                .insert(targets::target_for(runner, None, false, None, &rel));
         }
     }
     to_discovered(tests, targets_by_path, used_fallback)
