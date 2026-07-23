@@ -76,7 +76,7 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
     let root_object = root_object.expect("workspace branch returns when config object is absent");
     let root_options = project_arrays::root_options(program, root_object, source, path, resolver)?;
     let project_options =
-        project_arrays::project_options(program, root_object, source, path, root, resolver)?;
+        project_arrays::project_options(program, root_object, source, path, resolver)?;
     let mut projects = Vec::new();
     if project_options.is_empty() {
         projects.push(to_project(config_dir, root, root_options, resolver));

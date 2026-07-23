@@ -2,7 +2,9 @@ use super::super::{objects, shared, ExprMap};
 use crate::ast;
 use oxc_ast::ast::{AssignmentOperator, AssignmentTarget, Expression, Program, Statement};
 
-pub(super) fn commonjs_exported_expression<'a>(
+pub(in crate::integration_tests::test_config::vitest::project_arrays) fn commonjs_exported_expression<
+    'a,
+>(
     program: &'a Program<'a>,
     exported: &str,
     bindings: &ExprMap<'a>,
@@ -18,7 +20,8 @@ pub(super) fn commonjs_exported_expression<'a>(
             resolved = (exported == "default")
                 .then_some(right)
                 .or_else(|| named_object_property(right, exported, bindings));
-        } else if (path.len() == 3
+        } else if (exported != "default"
+            && path.len() == 3
             && path[0] == "module"
             && path[1] == "exports"
             && path[2] == exported)

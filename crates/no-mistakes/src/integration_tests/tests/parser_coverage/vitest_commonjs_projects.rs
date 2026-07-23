@@ -39,6 +39,9 @@ fn commonjs_project_arrays_support_direct_requires_and_named_exports() {
         "cjs-named-stale",
         "cjs-named-detached",
         "cjs-computed-project",
+        "cjs-default-member",
+        "cjs-require-excluded",
+        "cjs-named-excluded",
     ] {
         assert!(
             !projects

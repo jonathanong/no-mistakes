@@ -2,7 +2,7 @@ use self::exports::{
     exported_array, exported_expression, exported_function_body, reexported_imports,
 };
 use super::super::{
-    import_bindings, shared,
+    direct_literal_require_binding, import_bindings, shared,
     string_projects::{string_project_paths, string_project_roots},
     top_level_function_bodies, Ctx, ImportBinding,
 };
@@ -51,6 +51,7 @@ pub(super) fn extend_global_exclusions(
         return;
     };
     let Expression::StringLiteral(project_config) = unwrap_ts_wrappers(expression) else {
+        extend_expression_exclusions(expression, ctx, excluded);
         return;
     };
     let Some(specifier) = project_config.value.as_str().strip_prefix('!') else {
@@ -83,8 +84,12 @@ pub(super) fn extend_expression_exclusions(
             }
             ctx.local_seen.remove(name);
         }
-        Expression::CallExpression(call) if call.arguments.is_empty() => {
-            calls::extend_call_exclusions(&call.callee, ctx, excluded);
+        Expression::CallExpression(call) => {
+            if let Some(import) = direct_literal_require_binding(expression) {
+                extend_imported_exclusions(&import, ctx, excluded);
+            } else if call.arguments.is_empty() {
+                calls::extend_call_exclusions(&call.callee, ctx, excluded);
+            }
         }
         _ => {}
     }

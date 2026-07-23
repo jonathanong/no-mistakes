@@ -35,3 +35,21 @@ fn commonjs_project_arrays_keep_resolved_setup_owners_exact() {
         assert!(!plan.fallback_triggered, "{setup}: {plan:#?}");
     }
 }
+
+#[test]
+fn commonjs_project_exclusions_and_default_members_have_no_owner() {
+    let (_fixture, root) = vitest_setup_fixture();
+    for setup in [
+        "cjs-default-member-owner/setup/default-member.ts",
+        "cjs-require-excluded-owner/setup/require-excluded.ts",
+        "cjs-named-excluded-owner/setup/named-excluded.ts",
+    ] {
+        let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
+            root.clone(),
+            vec![root.join(setup)],
+        ))
+        .unwrap();
+        assert!(plan.selected_tests.is_empty(), "{setup}: {plan:#?}");
+        assert!(!plan.fallback_triggered, "{setup}: {plan:#?}");
+    }
+}

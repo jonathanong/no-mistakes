@@ -21,3 +21,22 @@ fn tests_impact_json_keeps_named_commonjs_project_setup_owner_exact() {
         "{plan:#}"
     );
 }
+
+#[test]
+fn tests_impact_json_ignores_named_commonjs_excluded_projects() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
+    );
+    let output = tests_impact_json_impl(
+        json!({
+            "root": root,
+            "entrypoints": ["cjs-named-excluded-owner/setup/named-excluded.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    assert!(plan["selected_tests"].as_array().unwrap().is_empty(), "{plan:#}");
+}

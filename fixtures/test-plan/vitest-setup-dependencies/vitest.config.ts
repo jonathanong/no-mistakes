@@ -38,6 +38,7 @@ const replacedNonobjectSetups = require('./config/commonjs-nonobject-replacement
 const { projects: cjsNamedMemberProjects } = require('./config/cjs-project-named-member.cjs')
 const { projects: cjsNamedObjectProjects } = require('./config/cjs-project-named-object.cjs')
 const { projects: cjsNamedReplacementProjects } = require('./config/cjs-project-named-replacement.cjs')
+const { projects: cjsNamedExcludedProjects } = require('./config/cjs-project-named-exclusions.cjs')
 
 const localDynamicSetup = () => importedDynamicSetup()
 const localCommonjsDynamicSetup = () => importedCommonjsDynamicSetup()
@@ -331,12 +332,19 @@ export default defineConfig({
       ...cjsNamedMemberProjects,
       ...cjsNamedObjectProjects,
       ...cjsNamedReplacementProjects,
+      // A direct require only follows exact module.exports assignments.
+      ...require('./config/cjs-project-default-member.cjs'),
+      // Imported exclusions suppress outer positives before they are parsed.
+      ...require('./config/cjs-project-exclusions.cjs'),
+      ...cjsNamedExcludedProjects,
       // Cycles and computed CommonJS exports remain deliberately empty.
       ...require('./config/cjs-project-cycle-a.cjs'),
       ...require('./config/cjs-project-computed.cjs'),
       importedProject,
       './vitest.string-project.ts',
       './vitest.standalone-imported-project.ts',
+      './vitest.cjs-require-excluded-project.ts',
+      './vitest.cjs-named-excluded-project.ts',
       './packages/foo/vitest.project.ts',
       './configless-project',
     ],

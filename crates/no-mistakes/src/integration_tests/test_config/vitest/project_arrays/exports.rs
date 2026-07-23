@@ -9,7 +9,7 @@ use oxc_ast::ast::{ExportDefaultDeclarationKind, Program, Statement};
 use std::collections::BTreeSet;
 use std::path::Path;
 
-mod commonjs;
+pub(in crate::integration_tests::test_config::vitest::project_arrays) mod commonjs;
 mod declarations;
 mod workspace;
 use commonjs::commonjs_exported_expression;

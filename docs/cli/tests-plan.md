@@ -125,6 +125,10 @@ entries or spreads. Named `projects` bindings destructured from a literal
 require resolve static `module.exports.projects` and
 `module.exports = { projects: [...] }` assignments; computed, dynamic, and
 cyclic forms remain unsupported.
+Direct requires only follow an exact `module.exports = [...]` assignment:
+`module.exports.default` and `exports.default` remain object members, not
+project arrays. Negated strings in supported imported arrays suppress matching
+outer project strings before either config is parsed.
 For supported inline objects, a nested `test` object owns `setupFiles` and
 `globalSetup`; same-named outer fields are ignored regardless of direct or
 static-spread declaration order.

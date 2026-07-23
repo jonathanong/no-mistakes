@@ -58,10 +58,23 @@ pub(super) fn project_options(
     object: &ObjectExpression<'_>,
     source: &str,
     path: &Path,
-    _root: &Path,
     resolver: &dyn ImportResolution,
 ) -> Result<Vec<Options>> {
-    project_options_inner(program, object, source, path, _root, resolver)
+    let mut seen = BTreeSet::new();
+    let mut local_seen = BTreeSet::new();
+    let mut object_seen = BTreeSet::new();
+    let mut ctx = Ctx {
+        source,
+        bindings: shared::top_level_object_bindings(program),
+        functions: top_level_function_bodies(program),
+        imports: import_bindings(program),
+        resolver,
+        path,
+        seen: &mut seen,
+        local_seen: &mut local_seen,
+        object_seen: &mut object_seen,
+    };
+    root_spreads::project_options(object, &mut ctx).map(|options| options.unwrap_or_default())
 }
 
 /// A `vitest.workspace.*` or `vitest.projects.*` file exports projects directly, rather than nesting
@@ -88,31 +101,6 @@ pub(super) fn workspace_options(
         object_seen: &mut object_seen,
     };
     exports::workspace_default_options(program, &mut ctx)
-}
-
-fn project_options_inner(
-    program: &Program<'_>,
-    object: &ObjectExpression<'_>,
-    source: &str,
-    path: &Path,
-    _root: &Path,
-    resolver: &dyn ImportResolution,
-) -> Result<Vec<Options>> {
-    let mut seen = BTreeSet::new();
-    let mut local_seen = BTreeSet::new();
-    let mut object_seen = BTreeSet::new();
-    let mut ctx = Ctx {
-        source,
-        bindings: shared::top_level_object_bindings(program),
-        functions: top_level_function_bodies(program),
-        imports: import_bindings(program),
-        resolver,
-        path,
-        seen: &mut seen,
-        local_seen: &mut local_seen,
-        object_seen: &mut object_seen,
-    };
-    root_spreads::project_options(object, &mut ctx).map(|options| options.unwrap_or_default())
 }
 
 pub(super) fn array_options(

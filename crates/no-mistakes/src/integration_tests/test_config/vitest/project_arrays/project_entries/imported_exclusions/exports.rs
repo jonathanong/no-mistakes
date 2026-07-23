@@ -1,5 +1,6 @@
 use super::super::super::{root_spreads, ImportBinding};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::integration_tests::test_config::vitest::project_arrays::exports::commonjs::commonjs_exported_expression;
 use oxc_ast::ast::{
     ArrayExpression, Declaration, ExportDefaultDeclarationKind, Expression, FunctionBody, Program,
     Statement,
@@ -41,8 +42,8 @@ pub(super) fn exported_expression<'a>(
     bindings: &BTreeMap<String, &'a Expression<'a>>,
     exported: &str,
 ) -> Option<&'a Expression<'a>> {
-    if exported == "default" {
-        return program.body.iter().find_map(|statement| {
+    let esm_expression = if exported == "default" {
+        program.body.iter().find_map(|statement| {
             let Statement::ExportDefaultDeclaration(export) = statement else {
                 return None;
             };
@@ -53,32 +54,35 @@ pub(super) fn exported_expression<'a>(
                 }
                 _ => Some(expression),
             }
-        });
-    }
-    program.body.iter().find_map(|statement| {
-        let Statement::ExportNamedDeclaration(export) = statement else {
-            return None;
-        };
-        if export.export_kind.is_type() || export.source.is_some() {
-            return None;
-        }
-        if let Some(Declaration::VariableDeclaration(declaration)) = &export.declaration {
-            for declarator in &declaration.declarations {
-                let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id
-                else {
-                    continue;
-                };
-                if identifier.name == exported {
-                    return declarator.init.as_ref();
+        })
+    } else {
+        program.body.iter().find_map(|statement| {
+            let Statement::ExportNamedDeclaration(export) = statement else {
+                return None;
+            };
+            if export.export_kind.is_type() || export.source.is_some() {
+                return None;
+            }
+            if let Some(Declaration::VariableDeclaration(declaration)) = &export.declaration {
+                for declarator in &declaration.declarations {
+                    let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) =
+                        &declarator.id
+                    else {
+                        continue;
+                    };
+                    if identifier.name == exported {
+                        return declarator.init.as_ref();
+                    }
                 }
             }
-        }
-        export.specifiers.iter().find_map(|specifier| {
-            (!specifier.export_kind.is_type() && specifier.exported.name() == exported)
-                .then(|| bindings.get(specifier.local.name().as_str()).copied())
-                .flatten()
+            export.specifiers.iter().find_map(|specifier| {
+                (!specifier.export_kind.is_type() && specifier.exported.name() == exported)
+                    .then(|| bindings.get(specifier.local.name().as_str()).copied())
+                    .flatten()
+            })
         })
-    })
+    };
+    esm_expression.or_else(|| commonjs_exported_expression(program, exported, bindings))
 }
 
 pub(super) fn exported_function_body<'a>(
