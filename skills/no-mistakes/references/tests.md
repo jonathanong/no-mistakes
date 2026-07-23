@@ -91,8 +91,10 @@ single config for the whole plan.
 closure. A changed setup dependency selects only tests owned by that Vitest
 project. Inline project fields inherit a root field only with `extends: true`;
 the default and `extends: false` keep the project independent. A string config
-in `test.projects` is likewise independent of its referencing config. Explicit
-values replace inherited fields and `[]` clears them.
+in `test.projects` is likewise independent of its referencing config. A static
+inline `extends: './vite.config.js'` inherits the referenced config's setup
+fields before local values. Explicit values replace inherited fields and `[]`
+clears them.
 For supported inline objects, nested `test` owns `setupFiles` and
 `globalSetup`; same-named outer fields are ignored regardless of direct or
 static-spread declaration order.
@@ -101,6 +103,9 @@ Workspace configs may export projects directly or through
 `vitest.workspace.*` and `vitest.projects.*` files, including `.json`, are
 discovered by default. Config globs include suffixes such as
 `vitest.config.unit.ts` and `vite.config.e2e.js`.
+When a root workspace/project-array source exists, it takes precedence over a
+sibling default `vitest.config.*`; list the config in the workspace to include
+it as a project.
 Exact folder project strings remain folders rather than resolving an `index`
 module. CommonJS workspace files may use direct literal
 `module.exports = require('./projects.cjs')`; chained or dynamic requires stay
@@ -110,7 +115,8 @@ direct `require('vitest/config')` namespace; ESM defaults and CommonJS
 `.default` members remain unsupported dynamic forms.
 
 Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
-`vitest-setup-unresolved` warnings. If relevant, planning safely selects the
+`vitest-setup-unresolved` warnings. An unavailable static inline config
+`extends` emits `vitest-config-extends-unresolved`. If relevant, planning safely selects the
 known owner scope (or the discovered Vitest framework set if no owner is known)
 and sets `fallback_triggered` without relying on `globalConfigFallback`. Its
 bounded helper closure follows ordinary static imports/re-exports and literal

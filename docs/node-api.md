@@ -69,7 +69,9 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 workspace/project-array source must be passed with `--workspace`; the emitted
 `runner_args` already contain the correct flag. This includes configured and
 default-discovered `vitest.workspace.*` and `vitest.projects.*` sources,
-including JSON project arrays, matching the CLI.
+including JSON project arrays, matching the CLI. A default-discovered root
+workspace/project-array source takes precedence over sibling
+`vitest.config.*`; explicitly configured paths remain authoritative.
 
 The Playwright APIs load the same selector-wrapper configuration as the CLI.
 Configured wrapper calls therefore appear in `playwrightEdges()` and

@@ -146,6 +146,14 @@ pub(crate) struct VitestSetupDependency {
     /// catalog, but its bare specifier may resolve through a package catalog
     /// discovered from runner project roots.
     pub(crate) needs_final_catalog_reparse: bool,
+    /// A static config `extends` target could not be read, so this synthetic
+    /// dependency keeps a project-bounded fallback trigger without inventing
+    /// a setup module edge.
+    pub(crate) unresolved_config_extends: Option<String>,
+    /// A readable static config `extends` target. This preserves its resolved
+    /// path and candidates for owner-scoped config-change planning without
+    /// creating a synthetic setup edge.
+    pub(crate) config_extends_provenance: bool,
     pub(crate) resolved_path: Option<PathBuf>,
     /// Effective Vitest project root used to resolve a relative setup
     /// specifier. This deliberately differs from `declaration_path` for

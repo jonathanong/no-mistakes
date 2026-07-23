@@ -138,6 +138,8 @@ fn setup_dependency(
         field,
         specifier,
         needs_final_catalog_reparse: false,
+        unresolved_config_extends: None,
+        config_extends_provenance: false,
         resolved_path: None,
         resolution_base: ctx.path.parent().unwrap_or(Path::new(".")).to_path_buf(),
         declaration_path: ctx.path.to_path_buf(),

@@ -345,7 +345,7 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
         fact_context.clone(),
     );
     let config_file = root.join("vitest.config.ts");
-    let helper_file = root.join("vitest.projects.ts");
+    let helper_file = root.join("project-list.ts");
     assert!(prepared.graph_facts().contains_key(&config_file));
     assert!(prepared.graph_facts().contains_key(&helper_file));
 
@@ -498,5 +498,5 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         .is_ok());
     let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
-    assert_eq!(counts.get(&root.join("vitest.projects.ts")), Some(&1));
+    assert_eq!(counts.get(&root.join("project-list.ts")), Some(&1));
 }

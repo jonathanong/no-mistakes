@@ -115,9 +115,11 @@ graph automatically. A change to either configured module, or to a static
 import/re-export reachable from one, selects only the tests owned by that
 Vitest project. Inline projects inherit root setup fields only with
 `extends: true`; otherwise (including the default and `extends: false`) their
-own value applies, and `[]` clears it. A config referenced as a string in
-`test.projects` is parsed as an independent config and does not inherit the
-referencing config's setup fields.
+own value applies, and `[]` clears it. A static string `extends` value on an
+inline project (for example `extends: './vite.config.js'`) inherits that
+config's `setupFiles` and `globalSetup`; local values are appended. A config
+referenced as a string in `test.projects` is parsed as an independent config
+and does not inherit the referencing config's setup fields.
 For supported inline objects, a nested `test` object owns `setupFiles` and
 `globalSetup`; same-named outer fields are ignored regardless of direct or
 static-spread declaration order.
@@ -130,6 +132,9 @@ project paths/globs. Folder globs select configs directly inside each matched
 project root; nested roots require their own folder glob. Project config-file
 globs recognize suffixes such as `vitest.config.unit.ts` and
 `vite.config.e2e.js`.
+When a root workspace/project-array source is present, it is the default
+discovery source instead of sibling `vitest.config.*`; list that config from
+the workspace explicitly when it is also a project.
 An exact folder project string remains a folder project rather than resolving
 an `index` module. CommonJS workspace files may also use a direct literal
 `module.exports = require('./projects.cjs')`; chained or dynamic requires stay
@@ -139,8 +144,9 @@ direct `require('vitest/config')` namespace; ESM defaults and CommonJS
 `.default` members remain unsupported dynamic forms.
 
 Setup values are extracted statically from string and array forms. Dynamic
-expressions and unresolved literal modules produce a JSON warning with the
-declaring config, field, and project. When such a declaration is relevant, the
+expressions, unresolved literal modules, and unavailable static inline config
+`extends` targets produce a JSON warning with the declaring config, field, and
+project. When such a declaration is relevant, the
 plan conservatively selects the affected owner scope (or the discovered Vitest
 framework set when ownership cannot be determined) and sets
 `fallback_triggered`; this safety fallback does not require

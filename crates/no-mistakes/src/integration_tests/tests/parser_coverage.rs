@@ -16,6 +16,12 @@ mod vitest_nested_setup;
 #[path = "parser_coverage/vitest_extends.rs"]
 mod vitest_extends;
 
+#[path = "parser_coverage/vitest_config_extends_edges.rs"]
+mod vitest_config_extends_edges;
+
+#[path = "parser_coverage/vitest_json_extends.rs"]
+mod vitest_json_extends;
+
 #[path = "parser_coverage/vitest_named_members.rs"]
 mod vitest_named_members;
 

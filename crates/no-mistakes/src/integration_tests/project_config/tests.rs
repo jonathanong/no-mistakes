@@ -1,6 +1,7 @@
 use super::*;
 use std::path::PathBuf;
 
+mod discovery_precedence;
 mod folder_strings;
 
 fn load_config_projects(

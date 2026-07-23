@@ -1,4 +1,4 @@
-use super::{project_arrays, to_project, Options};
+use super::{project_arrays, to_project, Extends, Options};
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::integration_tests::types::{ConfigProject, VitestSetupDependency, VitestSetupField};
 use anyhow::{Context, Result};
@@ -94,7 +94,13 @@ fn parse_options(object: &Map<String, Value>, path: &Path) -> Result<Options> {
             VitestSetupField::GlobalSetup,
             path,
         )?,
-        extends: optional_bool(object, "extends")?,
+        extends: optional_bool(object, "extends")?.map(|value| {
+            if value {
+                Extends::True
+            } else {
+                Extends::False
+            }
+        }),
         ..Options::default()
     })
 }
@@ -106,7 +112,7 @@ fn merge_json_options(base: &mut Options, nested: Options) {
     base.exclude = nested.exclude.or(base.exclude.take());
     base.setup_files = nested.setup_files.or(base.setup_files.take());
     base.global_setup = nested.global_setup.or(base.global_setup.take());
-    base.extends = nested.extends.or(base.extends);
+    base.extends = nested.extends.or(base.extends.take());
 }
 
 fn optional_string(object: &Map<String, Value>, key: &str) -> Result<Option<String>> {
@@ -174,6 +180,8 @@ fn setup_dependencies(
                     field,
                     specifier: Some(specifier),
                     needs_final_catalog_reparse: false,
+                    unresolved_config_extends: None,
+                    config_extends_provenance: false,
                     resolved_path: None,
                     resolution_base: base.clone(),
                     declaration_path: path.to_path_buf(),

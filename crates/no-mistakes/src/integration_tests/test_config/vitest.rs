@@ -31,9 +31,9 @@ pub(super) struct Options {
     /// A nested `test` object owns setup fields, including when it arrives
     /// through a supported static object spread.
     pub(super) nested_test_scope: bool,
-    /// Whether an inline project explicitly sets `extends`. Root setup fields
-    /// are inherited only when its final value is `Some(true)`.
-    pub(super) extends: Option<bool>,
+    /// Whether an inline project inherits root setup fields, opts out, or
+    /// inherits setup fields from another static config source.
+    pub(super) extends: Option<Extends>,
     /// A config named directly by `test.projects` is independent of the
     /// aggregate config that referenced it.
     pub(super) standalone_config: bool,
@@ -44,6 +44,13 @@ pub(super) struct Options {
     /// Its relative settings are therefore based on that file, not the
     /// aggregate config that happened to reference it.
     pub(super) config_base: Option<PathBuf>,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub(super) enum Extends {
+    False,
+    True,
+    Config(String),
 }
 
 pub(in crate::integration_tests) fn parse_program_with_resolver(

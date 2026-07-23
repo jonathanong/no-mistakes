@@ -1,4 +1,4 @@
-use super::Options;
+use super::{Extends, Options};
 use crate::integration_tests::types::VitestSetupDependency;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -10,13 +10,13 @@ pub(super) fn merge_options(root: &Options, project: Options) -> Options {
         include: project.include.or_else(|| root.include.clone()),
         exclude: combine(root.exclude.clone(), project.exclude),
         setup_files: inherit_setup_files(
-            (project.extends == Some(true))
+            matches!(project.extends.as_ref(), Some(Extends::True))
                 .then(|| root.setup_files.clone())
                 .flatten(),
             project.setup_files,
         ),
         global_setup: inherit_setup_files(
-            (project.extends == Some(true))
+            matches!(project.extends.as_ref(), Some(Extends::True))
                 .then(|| root.global_setup.clone())
                 .flatten(),
             project.global_setup,

@@ -1,10 +1,12 @@
 use super::{shared, Ctx, ExprMap, ImportBinding, Options};
+use crate::integration_tests::test_config::vitest::Extends;
 use crate::integration_tests::types::VitestSetupField;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use std::collections::BTreeSet;
 
 mod calls;
+mod config_extends;
 mod dynamic_triggers;
 mod exports;
 mod members;
@@ -14,6 +16,7 @@ mod setup_dependencies;
 mod setup_imports;
 mod static_members;
 
+use config_extends::resolve_config_extends;
 use merge::merge_options;
 pub(super) use object_expressions::expression_object_options;
 use object_expressions::{imported_options, spread_options};
@@ -73,6 +76,7 @@ fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result
             }
         }
     }
+    resolve_config_extends(&mut options, ctx)?;
     Ok(options)
 }
 
@@ -89,8 +93,12 @@ fn merge_property(
         Some("root") => options.root = shared::optional_string(resolved, ctx.source),
         Some("extends") => {
             options.extends = match crate::codebase::ts_source::unwrap_ts_wrappers(resolved) {
-                Expression::BooleanLiteral(boolean) => Some(boolean.value),
-                _ => None,
+                Expression::BooleanLiteral(boolean) => Some(if boolean.value {
+                    Extends::True
+                } else {
+                    Extends::False
+                }),
+                _ => shared::optional_string(resolved, ctx.source).map(Extends::Config),
             };
         }
         Some("include") => {

@@ -268,14 +268,22 @@ fn deleted_transitive_trigger_paths(
 }
 
 fn is_unsafe(setup: &VitestSetupDependency) -> bool {
-    setup.specifier.is_none() || setup.resolved_path.is_none()
+    !setup.config_extends_provenance && (setup.specifier.is_none() || setup.resolved_path.is_none())
 }
 
 fn warning(root: &Path, project: &ConfigProject, setup: &VitestSetupDependency) -> Warning {
     let config = config_path(root, project, setup);
     let declaration = relative_path(root, &setup.declaration_path);
     let project = project_name(project);
-    let (r#type, message) = if let Some(specifier) = &setup.specifier {
+    let (r#type, message) = if let Some(specifier) = &setup.unresolved_config_extends {
+        (
+            "vitest-config-extends-unresolved",
+            format!(
+                "Vitest config `extends` for project `{project}` in `{declaration}` at line {} could not resolve `{specifier}`.",
+                setup.declaration_line,
+            ),
+        )
+    } else if let Some(specifier) = &setup.specifier {
         (
             "vitest-setup-unresolved",
             format!(
@@ -330,8 +338,10 @@ fn trigger_paths(
                         && trigger.is_dir()
                         && changed.starts_with(trigger))
             });
-        let dynamic_owner_scope =
-            setup.specifier.is_none() && (changed == scope || changed.starts_with(&scope));
+        let dynamic_owner_scope = setup.specifier.is_none()
+            && setup.unresolved_config_extends.is_none()
+            && !setup.config_extends_provenance
+            && (changed == scope || changed.starts_with(&scope));
         if config_or_helper || dynamic_owner_scope {
             triggered.insert(changed);
         }

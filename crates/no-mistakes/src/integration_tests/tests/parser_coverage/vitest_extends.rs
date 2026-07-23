@@ -10,7 +10,7 @@ fn vitest_inline_setup_inheritance_requires_extends_true() {
     let source = std::fs::read_to_string(&path).unwrap();
     let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
 
-    for name in ["default", "false", "nonboolean", "spread-false-last"] {
+    for name in ["default", "false", "spread-false-last"] {
         assert!(projects
             .iter()
             .find(|project| project.policy_name.as_deref() == Some(name))
@@ -19,6 +19,8 @@ fn vitest_inline_setup_inheritance_requires_extends_true() {
             .is_empty());
     }
     for name in ["true", "spread-true-last"] {
+        // `parse_options` always checks static config extends first; boolean
+        // `true` must remain available for the later root-setup merge.
         let inherited = projects
             .iter()
             .find(|project| project.policy_name.as_deref() == Some(name))
@@ -34,6 +36,17 @@ fn vitest_inline_setup_inheritance_requires_extends_true() {
             "{name}",
         );
     }
+    let unresolved = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("nonboolean"))
+        .unwrap();
+    assert_eq!(unresolved.vitest_setup.len(), 1);
+    assert_eq!(
+        unresolved.vitest_setup[0]
+            .unresolved_config_extends
+            .as_deref(),
+        Some("not-boolean")
+    );
     let merged = projects
         .iter()
         .find(|project| project.policy_name.as_deref() == Some("merged-setups"))
@@ -66,6 +79,84 @@ fn vitest_inline_setup_inheritance_requires_extends_true() {
     assert_eq!(
         standalone.vitest_setup[0].specifier.as_deref(),
         Some("./standalone-setup.ts")
+    );
+}
+
+#[test]
+fn vitest_inline_setup_inheritance_resolves_static_config_extends() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config/vitest-extends-config");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+    let project = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("extended"))
+        .unwrap();
+
+    assert!(project
+        .vitest_setup
+        .iter()
+        .any(|setup| setup.config_extends_provenance));
+    assert_eq!(
+        project
+            .vitest_setup
+            .iter()
+            .filter(|setup| !setup.config_extends_provenance)
+            .map(|setup| (setup.field.as_str(), setup.specifier.as_deref()))
+            .collect::<Vec<_>>(),
+        vec![
+            ("setupFiles", Some("./base-setup.ts")),
+            ("setupFiles", Some("./local-setup.ts")),
+            ("globalSetup", Some("./base-global.ts")),
+        ]
+    );
+    assert!(project.vitest_setup.iter().all(|setup| {
+        setup
+            .trigger_paths
+            .iter()
+            .any(|path| path.ends_with("vite.config.js"))
+            || setup.specifier.as_deref() == Some("./local-setup.ts")
+    }));
+
+    let cycle = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("cycle"))
+        .unwrap();
+    assert_eq!(
+        cycle
+            .vitest_setup
+            .iter()
+            .filter(|setup| !setup.config_extends_provenance)
+            .map(|setup| setup.specifier.as_deref())
+            .collect::<Vec<_>>(),
+        vec![Some("./cycle-setup.ts"), Some("./cycle-global.ts")]
+    );
+
+    let unresolved = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("unresolved"))
+        .unwrap();
+    assert_eq!(unresolved.vitest_setup.len(), 1);
+    assert_eq!(
+        unresolved.vitest_setup[0]
+            .unresolved_config_extends
+            .as_deref(),
+        Some("./missing-vite.config.js")
+    );
+
+    let unsupported = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("unsupported"))
+        .unwrap();
+    assert_eq!(unsupported.vitest_setup.len(), 1);
+    assert_eq!(
+        unsupported.vitest_setup[0]
+            .unresolved_config_extends
+            .as_deref(),
+        Some("./vite-factory.js")
     );
 }
 
