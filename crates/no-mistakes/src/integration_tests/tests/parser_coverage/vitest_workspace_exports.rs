@@ -39,6 +39,13 @@ fn vitest_workspace_exports_handle_namespace_reexports_and_safe_empty_forms() {
             "cjs",
             Some("commonjs-filter-project"),
         ),
+        (
+            "vitest-workspace-commonjs-require",
+            "cjs",
+            Some("commonjs-required-workspace-project"),
+        ),
+        ("vitest-workspace-commonjs-factory", "cjs", None),
+        ("vitest-workspace-commonjs-dynamic-require", "cjs", None),
     ] {
         let fixture = saved_fixture(fixture_name);
         let root = crate::codebase::ts_resolver::normalize_path(fixture.path());

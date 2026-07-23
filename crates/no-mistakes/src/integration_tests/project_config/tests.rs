@@ -1,6 +1,8 @@
 use super::*;
 use std::path::PathBuf;
 
+mod folder_strings;
+
 fn load_config_projects(
     root: &Path,
     framework: Framework,

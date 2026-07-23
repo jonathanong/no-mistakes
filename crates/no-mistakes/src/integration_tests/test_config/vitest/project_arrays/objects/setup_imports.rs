@@ -89,6 +89,9 @@ fn imported_setup_dependencies_inner(
     parent.seen.remove(&path);
     result.map(|mut dependencies| {
         for dependency in &mut dependencies {
+            // The importing config is an ownership trigger even when the
+            // literal setup declaration lives in a static helper module.
+            dependency.trigger_paths.insert(parent.path.to_path_buf());
             dependency.trigger_paths.insert(path.clone());
             dependency.trigger_paths.extend(candidates.iter().cloned());
         }

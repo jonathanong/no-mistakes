@@ -130,6 +130,10 @@ project paths/globs. Folder globs select configs directly inside each matched
 project root; nested roots require their own folder glob. Project config-file
 globs recognize suffixes such as `vitest.config.unit.ts` and
 `vite.config.e2e.js`.
+An exact folder project string remains a folder project rather than resolving
+an `index` module. CommonJS workspace files may also use a direct literal
+`module.exports = require('./projects.cjs')`; chained or dynamic requires stay
+unsupported.
 `defineWorkspace` is static through a named ESM import, an ESM namespace, or a
 direct `require('vitest/config')` namespace; ESM defaults and CommonJS
 `.default` members remain unsupported dynamic forms.

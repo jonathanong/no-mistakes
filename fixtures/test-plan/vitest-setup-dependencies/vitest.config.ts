@@ -324,6 +324,7 @@ export default defineConfig({
       },
       importedProject,
       './vitest.string-project.ts',
+      './vitest.standalone-imported-project.ts',
       './packages/foo/vitest.project.ts',
       './configless-project',
     ],

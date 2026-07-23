@@ -99,3 +99,22 @@ fn commonjs_module_replacements_do_not_restore_stale_named_setup_edges() {
         assert!(!plan.fallback_triggered, "{setup}: {plan:#?}");
     }
 }
+
+#[test]
+fn standalone_imported_setup_config_changes_select_its_exact_owner() {
+    let (_fixture, root) = vitest_setup_fixture();
+    let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
+        root.clone(),
+        vec![root.join("vitest.standalone-imported-project.ts")],
+    ))
+    .unwrap();
+
+    assert_eq!(
+        plan.selected_tests[0].test_file,
+        "standalone-imported-setup-owner/standalone-imported-setup.test.ts",
+        "{plan:#?}"
+    );
+    assert_eq!(plan.selected_tests.len(), 1, "{plan:#?}");
+    // Config edits conservatively fall back, but only to this setup owner.
+    assert!(plan.fallback_triggered, "{plan:#?}");
+}

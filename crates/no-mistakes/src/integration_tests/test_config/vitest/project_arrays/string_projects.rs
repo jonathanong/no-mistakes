@@ -34,9 +34,11 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
     resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
 ) -> Vec<PathBuf> {
     let mut paths = BTreeSet::new();
-    if let Some(path) = resolver.resolve(specifier, declaration_path) {
-        if is_runtime_project_source(&path) {
-            paths.insert(path);
+    if is_file_like_project_specifier(specifier) {
+        if let Some(path) = resolver.resolve(specifier, declaration_path) {
+            if is_runtime_project_source(&path) {
+                paths.insert(path);
+            }
         }
     }
     let Some(visible) = resolver.visible_files() else {
@@ -69,6 +71,11 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
         }
     }
     paths.into_iter().collect()
+}
+
+fn is_file_like_project_specifier(specifier: &str) -> bool {
+    let path = Path::new(specifier);
+    is_runtime_project_source(path) || crate::integration_tests::is_vitest_project_array_path(path)
 }
 
 fn slash_path(path: &Path) -> String {

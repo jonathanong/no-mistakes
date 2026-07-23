@@ -157,3 +157,22 @@ fn tests_impact_keeps_commonjs_object_setup_owners_exact() {
         assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
     }
 }
+
+#[test]
+fn tests_impact_keeps_standalone_imported_setup_config_owner_exact() {
+    let plan = impact(
+        &vitest_setup_root(),
+        "vitest.standalone-imported-project.ts",
+    );
+    assert_eq!(
+        plan["selected_tests"][0]["test_file"],
+        "standalone-imported-setup-owner/standalone-imported-setup.test.ts",
+        "{plan:#}"
+    );
+    assert_eq!(
+        plan["selected_tests"].as_array().unwrap().len(),
+        1,
+        "{plan:#}"
+    );
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+}

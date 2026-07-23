@@ -55,4 +55,13 @@ fn static_setup_reexports_resolve_commonjs_members_and_imported_defaults() {
         2,
         "named values missing from a final object or non-object replacement stay dynamic"
     );
+    let standalone = &project("standalone-imported-setup").vitest_setup;
+    assert_eq!(standalone.len(), 1, "{standalone:#?}");
+    assert_eq!(
+        standalone[0].resolved_path.as_deref(),
+        Some(root.join("shared-setup/standalone-imported.ts").as_path())
+    );
+    assert!(standalone[0]
+        .trigger_paths
+        .contains(&root.join("vitest.standalone-imported-project.ts")));
 }

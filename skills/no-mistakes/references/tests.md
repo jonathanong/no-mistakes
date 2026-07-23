@@ -101,6 +101,10 @@ Workspace configs may export projects directly or through
 `vitest.workspace.*` and `vitest.projects.*` files, including `.json`, are
 discovered by default. Config globs include suffixes such as
 `vitest.config.unit.ts` and `vite.config.e2e.js`.
+Exact folder project strings remain folders rather than resolving an `index`
+module. CommonJS workspace files may use direct literal
+`module.exports = require('./projects.cjs')`; chained or dynamic requires stay
+unsupported.
 `defineWorkspace` is static through named ESM imports, ESM namespaces, or a
 direct `require('vitest/config')` namespace; ESM defaults and CommonJS
 `.default` members remain unsupported dynamic forms.
