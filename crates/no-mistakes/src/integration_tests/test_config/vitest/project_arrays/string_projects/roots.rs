@@ -13,7 +13,7 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn string_
     let Some(visible) = ctx.resolver.visible_files() else {
         return Vec::new();
     };
-    let base = ctx.path.parent().unwrap_or_else(|| Path::new("."));
+    let base = ctx.path.parent().unwrap_or(Path::new("."));
     let pattern = crate::codebase::ts_resolver::normalize_path(
         &base.join(specifier.trim_start_matches("./")),
     );

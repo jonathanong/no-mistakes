@@ -29,6 +29,51 @@ pub(super) fn prepare_test_projects_from_visible(
 }
 
 #[test]
+fn requested_dotnet_project_errors_are_retained_in_the_prepared_catalog() {
+    let root = fixture_root("prepared-test-projects");
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let tsconfig = resolve_tsconfig_lossy(&root, &visible_paths);
+    let mut config = NoMistakesConfig::default();
+    config.tests.dotnet.projects.insert(
+        "missing".to_string(),
+        crate::config::v2::schema::DotnetProjectConfig {
+            project: "missing/Missing.csproj".to_string(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: true,
+        },
+    );
+    let snapshot =
+        crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &visible_paths);
+    let plan = FrameworkPreparationPlan::for_runners([TestRunner::Dotnet]);
+
+    let prepared = prepare_test_projects_from_visible_with_sources_and_plan(
+        &root,
+        &config,
+        &visible_paths,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root, tsconfig, None,
+        )),
+        PreparedTestProjectRequest {
+            graph: (
+                &[],
+                crate::codebase::ts_source::facts::TsFactPlan::default(),
+                crate::codebase::ts_source::facts::TsFactContext::default(),
+            ),
+            sources: snapshot.source_store_for(&root),
+            collect_graph_facts: false,
+            preparation_plan: &plan,
+        },
+    );
+
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Dotnet)
+        .unwrap_err()
+        .to_string()
+        .contains("missing/Missing.csproj"));
+}
+
+#[test]
 fn dotnet_strict_project_discovery_errors_on_missing_projects() {
     let root = fixture_root("dotnet-test-plan");
     let mut config = crate::config::v2::load_v2_config(&root, None).unwrap();

@@ -133,11 +133,7 @@ fn setup_dependency(
         field,
         specifier,
         resolved_path: None,
-        resolution_base: ctx
-            .path
-            .parent()
-            .unwrap_or_else(|| Path::new("."))
-            .to_path_buf(),
+        resolution_base: ctx.path.parent().unwrap_or(Path::new(".")).to_path_buf(),
         declaration_path: ctx.path.to_path_buf(),
         declaration_line,
         trigger_paths,

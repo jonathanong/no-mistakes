@@ -41,7 +41,7 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
     let Some(visible) = resolver.visible_files() else {
         return paths.into_iter().collect();
     };
-    let base = declaration_path.parent().unwrap_or_else(|| Path::new("."));
+    let base = declaration_path.parent().unwrap_or(Path::new("."));
     let visible_specifier = specifier.trim_start_matches("./");
     let pattern = crate::codebase::ts_resolver::normalize_path(&base.join(visible_specifier));
     let has_glob = visible_specifier.contains(['*', '?', '[', '{']);

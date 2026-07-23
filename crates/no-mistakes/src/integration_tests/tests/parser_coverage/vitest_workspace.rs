@@ -203,6 +203,21 @@ fn vitest_workspace_named_export_reexported_as_default_is_parsed() {
 }
 
 #[test]
+fn vitest_workspace_follows_star_and_named_export_reexports() {
+    let fixture = saved_fixture("vitest-workspace-export-forms");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    for (file, project) in [
+        ("vitest.workspace.ts", "star-export-project"),
+        ("vitest.projects.ts", "named-export-project"),
+    ] {
+        let path = root.join(file);
+        let source = std::fs::read_to_string(&path).unwrap();
+        let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+        assert_eq!(projects[0].policy_name.as_deref(), Some(project), "{file}");
+    }
+}
+
+#[test]
 fn vitest_workspace_commonjs_exports_keep_workspace_setup_ownership() {
     assert_workspace_project(
         "vitest-workspace-commonjs-array",
@@ -360,6 +375,38 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .collect::<Vec<_>>(),
         ["packages/business"]
     );
+}
+
+#[test]
+fn commonjs_require_bindings_ignore_incomplete_static_forms() {
+    let fixture = saved_fixture("vitest-commonjs-negative");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.config.cjs");
+    let source = std::fs::read_to_string(&path).unwrap();
+
+    let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+    assert_eq!(
+        projects[0].policy_name.as_deref(),
+        Some("commonjs-negative-bindings")
+    );
+    assert!(projects[0].vitest_setup.is_empty());
+}
+
+#[test]
+fn explicit_custom_project_syntax_errors_are_reported() {
+    let fixture = saved_fixture("vitest-custom-project-error");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+
+    assert!(test_support::parse_vitest_from_visible(
+        &source, &path, &root, &root, &tsconfig, &visible,
+    )
+    .is_err());
 }
 
 #[test]
