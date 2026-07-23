@@ -8,14 +8,13 @@ use super::{
 use anyhow::Result;
 use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::codebase::workspaces::WorkspaceMap;
-use no_mistakes::config::v2::schema::{
-    NoMistakesConfig, TestPlanEnvironment, TestPlanGroup, TestPlanGroupType, TestPlanLimit,
-};
+use no_mistakes::config::v2::schema::{NoMistakesConfig, TestPlanGroupType};
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
 mod dep_triggers;
 mod discovery;
+mod environment;
 mod fallback;
 mod finalize;
 mod hints;
@@ -26,8 +25,13 @@ mod targeted_triggers;
 #[cfg(test)]
 mod tests;
 pub(super) mod vitest_setup_fallback;
+mod vitest_setup_groups;
 use dep_triggers::dependency_triggers;
 pub(crate) use discovery::discover_framework_tests_from_prepared;
+use environment::{
+    configured_environment, configured_groups, effective_global_config_fallback, framework_name,
+    group_type_name, limit_count, override_limit,
+};
 use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
     attach_targets, empty_group_result, select_limited_group_candidates, sorted_selected_tests,
@@ -42,6 +46,7 @@ use targeted_triggers::{
     insert_synthesized_dependency_group, merge_targeted_candidates, targeted_dependency_candidates,
     TargetedOverlapRecovery,
 };
+use vitest_setup_groups::{VitestSetupFallback, VitestSetupFallbackInputs, VitestSetupSelection};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan_with_prepared(
@@ -192,9 +197,17 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let target_only_group_index =
         insert_synthesized_dependency_group(&mut groups, !targeted_candidates.is_empty());
     let mut targeted_overlaps = TargetedOverlapRecovery::new(&targeted_candidates);
-    let mut dependency_fallback_budget = None;
-    let mut vitest_fallback_checked = false;
     let mut fallback_reasons = Vec::new();
+    let mut vitest_setup_fallback = VitestSetupFallback::new(VitestSetupFallbackInputs {
+        framework,
+        root,
+        changed_files,
+        deleted_files,
+        projects: prepared.vitest_projects(),
+        discovered: &discovered_tests,
+        has_global_limit,
+        all_test_count: all_tests.len(),
+    });
 
     for (group_index, group) in groups.iter().enumerate() {
         let recover_targeted_overlaps = targeted_overlaps.should_recover(framework, group.type_);
@@ -208,24 +221,17 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 has_global_limit.then_some(0),
             ));
             if group.type_ == TestPlanGroupType::Dependencies {
-                dependency_fallback_budget = Some((result_index, 0));
-                vitest_setup_fallback::apply_selection(
-                    framework,
-                    root,
-                    changed_files,
-                    deleted_files,
-                    prepared.vitest_projects(),
-                    &discovered_tests,
-                    &mut used,
-                    &mut selected_map,
-                    &mut group_results,
-                    &mut fallback_reasons,
-                    dependency_fallback_budget,
+                vitest_setup_fallback.apply_dependency_group(
+                    VitestSetupSelection {
+                        used: &mut used,
+                        selected_map: &mut selected_map,
+                        group_results: &mut group_results,
+                        fallback_reasons: &mut fallback_reasons,
+                    },
+                    result_index,
                     0,
-                    has_global_limit,
-                    all_tests.len(),
+                    0,
                 );
-                vitest_fallback_checked = true;
             }
             continue;
         }
@@ -311,27 +317,18 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 .or_else(|| has_global_limit.then_some(group_limit)),
         });
         if group.type_ == TestPlanGroupType::Dependencies {
-            dependency_fallback_budget =
-                Some((result_index, group_limit.saturating_sub(picked.len())));
-            let picked = vitest_setup_fallback::apply_selection(
-                framework,
-                root,
-                changed_files,
-                deleted_files,
-                prepared.vitest_projects(),
-                &discovered_tests,
-                &mut used,
-                &mut selected_map,
-                &mut group_results,
-                &mut fallback_reasons,
-                dependency_fallback_budget,
+            let picked = vitest_setup_fallback.apply_dependency_group(
+                VitestSetupSelection {
+                    used: &mut used,
+                    selected_map: &mut selected_map,
+                    group_results: &mut group_results,
+                    fallback_reasons: &mut fallback_reasons,
+                },
+                result_index,
+                group_limit.saturating_sub(picked.len()),
                 remaining_global,
-                has_global_limit,
-                all_tests.len(),
-            )
-            .unwrap_or_default();
+            );
             remaining_global = remaining_global.saturating_sub(picked);
-            vitest_fallback_checked = true;
         }
         targeted_overlaps.finish_group(group.type_);
     }
@@ -423,23 +420,16 @@ pub(crate) fn generate_configured_plan_with_prepared(
         }
     }
 
-    if !vitest_fallback_checked {
+    if !vitest_setup_fallback.checked_dependency_group() {
         let remaining_global = global_limit.saturating_sub(used.len());
-        vitest_setup_fallback::apply_selection(
-            framework,
-            root,
-            changed_files,
-            deleted_files,
-            prepared.vitest_projects(),
-            &discovered_tests,
-            &mut used,
-            &mut selected_map,
-            &mut group_results,
-            &mut fallback_reasons,
-            dependency_fallback_budget,
+        vitest_setup_fallback.apply_without_dependency_group(
+            VitestSetupSelection {
+                used: &mut used,
+                selected_map: &mut selected_map,
+                group_results: &mut group_results,
+                fallback_reasons: &mut fallback_reasons,
+            },
             remaining_global,
-            has_global_limit,
-            all_tests.len(),
         );
     }
 
@@ -452,112 +442,4 @@ pub(crate) fn generate_configured_plan_with_prepared(
     };
     attach_targets(&mut plan, root, &discovered_tests);
     Ok(plan)
-}
-
-fn effective_global_config_fallback(env: &TestPlanEnvironment, args: &PlanArgs) -> bool {
-    args.global_config_fallback
-        .or(env.global_config_fallback)
-        .unwrap_or(false)
-}
-
-fn configured_environment(
-    args: &PlanArgs,
-    framework: TestFramework,
-    config: &NoMistakesConfig,
-) -> Result<TestPlanEnvironment> {
-    let plan = match framework {
-        TestFramework::Dotnet => &config.test_plan.dotnet,
-        TestFramework::Playwright => &config.test_plan.playwright,
-        TestFramework::Vitest => &config.test_plan.vitest,
-        TestFramework::Swift => &config.test_plan.swift,
-    };
-    let key = normalize_environment(&args.environment);
-    for (name, env) in &plan.environments {
-        if normalize_environment(name) == key {
-            return Ok(env.clone());
-        }
-    }
-    Ok(TestPlanEnvironment {
-        groups: default_groups(framework),
-        ..TestPlanEnvironment::default()
-    })
-}
-
-fn normalize_environment(raw: &str) -> String {
-    raw.chars()
-        .filter(|ch| *ch != '-' && *ch != '_')
-        .flat_map(char::to_lowercase)
-        .collect()
-}
-
-fn configured_groups(env: &TestPlanEnvironment, framework: TestFramework) -> Vec<TestPlanGroup> {
-    if env.groups.is_empty() {
-        default_groups(framework)
-    } else {
-        env.groups.clone()
-    }
-}
-
-fn default_groups(framework: TestFramework) -> Vec<TestPlanGroup> {
-    let mut groups = vec![TestPlanGroup {
-        type_: TestPlanGroupType::Direct,
-        limit: None,
-        sample_when_limited: false,
-    }];
-    if framework == TestFramework::Playwright {
-        groups.push(TestPlanGroup {
-            type_: TestPlanGroupType::Coverage,
-            limit: None,
-            sample_when_limited: false,
-        });
-    }
-    groups.push(TestPlanGroup {
-        type_: TestPlanGroupType::Dependencies,
-        limit: None,
-        sample_when_limited: false,
-    });
-    groups
-}
-
-fn framework_name(framework: TestFramework) -> &'static str {
-    match framework {
-        TestFramework::Playwright => "playwright",
-        TestFramework::Vitest => "vitest",
-        TestFramework::Dotnet => "dotnet",
-        TestFramework::Swift => "swift",
-    }
-}
-
-fn group_type_name(group: TestPlanGroupType) -> &'static str {
-    match group {
-        TestPlanGroupType::Direct => "direct",
-        TestPlanGroupType::Coverage => "coverage",
-        TestPlanGroupType::Dependencies => "dependencies",
-        TestPlanGroupType::Sample => "sample",
-    }
-}
-
-fn override_limit(limit: Option<&TestPlanLimit>, args: &PlanArgs) -> Option<TestPlanLimit> {
-    let mut next = limit.cloned().unwrap_or_default();
-    if let Some(percent) = args.limit_percent {
-        next.percent = Some(no_mistakes::config::v2::schema::TestPlanPercent::Number(
-            percent,
-        ));
-    }
-    if let Some(files) = args.limit_files {
-        next.files = Some(files);
-    }
-    (next.percent.is_some() || next.files.is_some()).then_some(next)
-}
-
-fn limit_count(limit: Option<&TestPlanLimit>, total: usize) -> Option<usize> {
-    let limit = limit?;
-    let percent = limit.percent.as_ref().and_then(|percent| percent.value());
-    let percent_files = percent.map(|percent| ((total as f64) * percent / 100.0).ceil() as usize);
-    match (percent_files, limit.files) {
-        (Some(percent), Some(files)) => Some(percent.min(files)),
-        (Some(percent), None) => Some(percent),
-        (None, Some(files)) => Some(files),
-        (None, None) => None,
-    }
 }
