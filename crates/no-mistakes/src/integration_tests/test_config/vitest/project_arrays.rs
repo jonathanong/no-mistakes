@@ -30,18 +30,16 @@ use function_returns::body_return_options;
 use functions::top_level_function_bodies;
 use imports::{import_bindings, ImportBinding};
 use project_entries::{
-    flattened_project_elements, global_excluded_string_project_paths,
-    selected_string_project_paths, selected_string_project_roots,
+    flattened_project_elements, global_excluded_string_projects, selected_string_project_paths,
+    selected_string_project_roots,
 };
 pub(super) use root_options::root_options;
 pub(in crate::integration_tests::test_config::vitest) use string_projects::{
     parse_string_project_with_resolver, string_project_paths_with_resolver,
 };
 use string_projects::{string_project_options_for_paths, string_project_paths};
-
 type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
 type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
-
 pub(super) struct Ctx<'a, 'r> {
     source: &'a str,
     bindings: ExprMap<'a>,
@@ -121,13 +119,14 @@ pub(super) fn array_options(
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
     let elements = flattened_project_elements(projects, ctx);
-    // Collect exclusions before parsing any referenced config. This makes
-    // negation order-independent without moving a positive config ahead of
-    // adjacent inline entries in the final project list.
+    // Collect exclusions before parsing referenced configs so negation is order-independent.
     let string_paths = selected_string_project_paths(&elements, ctx);
     let string_roots = selected_string_project_roots(&elements, ctx);
+    let global_exclusions = global_excluded_string_projects(&elements, ctx);
     let mut excluded_paths = string_paths.excluded.clone();
-    excluded_paths.extend(global_excluded_string_project_paths(&elements, ctx));
+    excluded_paths.extend(global_exclusions.paths);
+    let mut excluded_roots = string_roots.excluded.clone();
+    excluded_roots.extend(global_exclusions.roots);
     let mut parsed_string_paths = BTreeSet::new();
     let mut parsed_string_roots = BTreeSet::new();
     let mut options = Vec::new();
@@ -135,6 +134,15 @@ pub(super) fn array_options(
         match element {
             ArrayExpressionElement::SpreadElement(spread) => {
                 for option in expression_options(&spread.argument, ctx)? {
+                    if option.standalone_config
+                        && option.standalone_config_path.is_none()
+                        && option
+                            .root
+                            .as_deref()
+                            .is_some_and(|root| excluded_roots.contains(Path::new(root)))
+                    {
+                        continue;
+                    }
                     let Some(path) = option.standalone_config_path.as_ref() else {
                         options.push(option);
                         continue;
@@ -170,10 +178,7 @@ pub(super) fn array_options(
                             {
                                 options.push(Options {
                                     root: Some(root.to_string_lossy().into_owned()),
-                                    // A project string that names a folder is
-                                    // an independent Vitest project. It must
-                                    // use its own defaults instead of merging
-                                    // aggregate config include/name settings.
+                                    // Folder strings use independent Vitest defaults.
                                     standalone_config: true,
                                     ..Options::default()
                                 });

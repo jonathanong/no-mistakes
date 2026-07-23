@@ -19,28 +19,13 @@ pub(super) fn exported_array<'a>(
         .map(|array| &**array)
 }
 
-pub(super) fn reexported_imports(
-    program: &Program<'_>,
-    imports: &BTreeMap<String, ImportBinding>,
-    exported: &str,
-) -> Vec<ImportBinding> {
+pub(super) fn reexported_imports(program: &Program<'_>, exported: &str) -> Vec<ImportBinding> {
     let mut reexports = Vec::new();
     if let Some(import) = root_spreads::sourced_reexport(program, exported) {
         reexports.push(import);
     }
     if let Some(import) = root_spreads::imported_reexport(program, exported) {
         reexports.push(import);
-    }
-    if exported == "default" {
-        reexports.extend(program.body.iter().filter_map(|statement| {
-            let Statement::ExportDefaultDeclaration(export) = statement else {
-                return None;
-            };
-            let Expression::Identifier(identifier) = export.declaration.as_expression()? else {
-                return None;
-            };
-            imports.get(identifier.name.as_str()).cloned()
-        }));
     }
     reexports.extend(
         root_spreads::star_barrel_sources(program).map(|source| ImportBinding {

@@ -2,8 +2,9 @@ use self::exports::{
     exported_array, exported_expression, exported_function_body, reexported_imports,
 };
 use super::super::{
-    import_bindings, shared, string_projects::string_project_paths, top_level_function_bodies, Ctx,
-    ImportBinding,
+    import_bindings, shared,
+    string_projects::{string_project_paths, string_project_roots},
+    top_level_function_bodies, Ctx, ImportBinding,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ArrayExpressionElement, Expression};
@@ -13,15 +14,24 @@ use std::path::PathBuf;
 mod calls;
 mod exports;
 
+pub(in crate::integration_tests::test_config::vitest::project_arrays) struct GlobalStringProjectExclusions
+{
+    pub(in crate::integration_tests::test_config::vitest::project_arrays) paths: BTreeSet<PathBuf>,
+    pub(in crate::integration_tests::test_config::vitest::project_arrays) roots: BTreeSet<PathBuf>,
+}
+
 /// Collect negated config strings through the same static array forms that
 /// project entries accept. This prepass happens before any config is parsed,
 /// so a negation nested in an imported/spread array applies to an outer
 /// positive entry as well as to entries in that imported array.
-pub(in crate::integration_tests::test_config::vitest::project_arrays) fn global_excluded_string_project_paths(
+pub(in crate::integration_tests::test_config::vitest::project_arrays) fn global_excluded_string_projects(
     elements: &[&ArrayExpressionElement<'_>],
     ctx: &mut Ctx<'_, '_>,
-) -> BTreeSet<PathBuf> {
-    let mut excluded = BTreeSet::new();
+) -> GlobalStringProjectExclusions {
+    let mut excluded = GlobalStringProjectExclusions {
+        paths: BTreeSet::new(),
+        roots: BTreeSet::new(),
+    };
     for element in elements {
         extend_global_exclusions(element, ctx, &mut excluded);
     }
@@ -31,7 +41,7 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn global_
 pub(super) fn extend_global_exclusions(
     element: &ArrayExpressionElement<'_>,
     ctx: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     let Some(expression) = element.as_expression() else {
         let ArrayExpressionElement::SpreadElement(spread) = element else {
@@ -46,13 +56,14 @@ pub(super) fn extend_global_exclusions(
     let Some(specifier) = project_config.value.as_str().strip_prefix('!') else {
         return;
     };
-    excluded.extend(string_project_paths(specifier, ctx));
+    excluded.paths.extend(string_project_paths(specifier, ctx));
+    excluded.roots.extend(string_project_roots(specifier, ctx));
 }
 
 pub(super) fn extend_expression_exclusions(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     match unwrap_ts_wrappers(expression) {
         Expression::ArrayExpression(array) => {
@@ -82,7 +93,7 @@ pub(super) fn extend_expression_exclusions(
 fn extend_imported_exclusions(
     import: &ImportBinding,
     parent: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     let Some(path) = parent.resolver.resolve(&import.source, parent.path) else {
         return;
@@ -99,7 +110,7 @@ fn extend_imported_exclusions(
                     let bindings = shared::top_level_object_bindings(program);
                     let imports = import_bindings(program);
                     let array = exported_array(program, &bindings, &import.imported);
-                    let reexports = reexported_imports(program, &imports, &import.imported);
+                    let reexports = reexported_imports(program, &import.imported);
                     let mut local_seen = BTreeSet::new();
                     let mut object_seen = BTreeSet::new();
                     let mut ctx = Ctx {
@@ -131,7 +142,7 @@ fn extend_imported_exclusions(
 pub(super) fn extend_imported_call_exclusions(
     import: &ImportBinding,
     parent: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     let Some(path) = parent.resolver.resolve(&import.source, parent.path) else {
         return;
@@ -149,7 +160,7 @@ pub(super) fn extend_imported_call_exclusions(
                     let imports = import_bindings(program);
                     let expression = exported_expression(program, &bindings, &import.imported);
                     let function = exported_function_body(program, &import.imported);
-                    let reexports = reexported_imports(program, &imports, &import.imported);
+                    let reexports = reexported_imports(program, &import.imported);
                     let mut local_seen = BTreeSet::new();
                     let mut object_seen = BTreeSet::new();
                     let mut ctx = Ctx {

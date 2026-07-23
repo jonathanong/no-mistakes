@@ -2,6 +2,7 @@ import importedProjects from './projects/imported-projects'
 import importedExclusions from './projects/imported-exclusions'
 import defaultFunctionExclusions from './projects/default-function-exclusions'
 import defaultFunctionIdentifierExclusions from './projects/default-function-identifier-exclusions'
+import defaultImportedExclusions from './projects/default-imported-exclusions'
 import { namedFunctionExclusions } from './projects/named-function-exclusions'
 
 const spreadProjects = [
@@ -44,12 +45,14 @@ export default {
       './projects/negated-imported.config.ts',
       './projects/negated-default-function.config.ts',
       './projects/negated-default-function-identifier.config.ts',
+      './projects/negated-default-imported.config.ts',
       './projects/negated-named-function.config.ts',
       // Static zero-argument helpers participate in global exclusions too.
       ...localExclusions(),
       ...importedExclusions(),
       ...defaultFunctionExclusions(),
       ...defaultFunctionIdentifierExclusions(),
+      ...defaultImportedExclusions,
       ...namedFunctionExclusions(),
       // This outer negation must also exclude config strings from imported arrays.
       '!./projects/imported-excluded/vitest.config.ts',

@@ -1,14 +1,15 @@
 use super::super::super::{shared, Ctx};
-use super::{extend_expression_exclusions, extend_imported_call_exclusions};
+use super::{
+    extend_expression_exclusions, extend_imported_call_exclusions, GlobalStringProjectExclusions,
+};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, FunctionBody, Statement};
 use std::collections::BTreeSet;
-use std::path::PathBuf;
 
 pub(super) fn extend_call_exclusions(
     callee: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     let Expression::Identifier(identifier) = unwrap_ts_wrappers(callee) else {
         return;
@@ -31,7 +32,7 @@ pub(super) fn extend_call_exclusions(
 pub(super) fn extend_callable_exclusions(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     match unwrap_ts_wrappers(expression) {
         Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
@@ -56,7 +57,7 @@ pub(super) fn extend_callable_exclusions(
 pub(super) fn extend_function_body_exclusions(
     body: &FunctionBody<'_>,
     ctx: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     let body_bindings = shared::function_body_bindings(body);
     if body_bindings.is_empty() {
@@ -83,7 +84,7 @@ pub(super) fn extend_function_body_exclusions(
 fn extend_return_exclusions(
     body: &FunctionBody<'_>,
     ctx: &mut Ctx<'_, '_>,
-    excluded: &mut BTreeSet<PathBuf>,
+    excluded: &mut GlobalStringProjectExclusions,
 ) {
     let Some(argument) = body
         .statements

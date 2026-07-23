@@ -10,7 +10,11 @@ import { barrelSetupFiles } from './config/setup-barrel'
 import templateImportedSetup from './config/template-imported-setup'
 import importedProject from './vitest.setup-imported'
 import * as namespaceSetups from './config/namespace-setups'
-import commonjsDefaultSetups, { namedSetups as commonjsNamedSetups } from './config/commonjs-setups.cjs'
+import commonjsDefaultSetups, {
+  namedSetups as commonjsNamedSetups,
+  moduleNamedSetups as commonjsModuleNamedSetups,
+} from './config/commonjs-setups.cjs'
+import reexportedDefaultSetups from './config/default-imported-through-local'
 import { declarationOnlySetups } from './config/declaration-only-setups'
 import { missingBarrelSetups } from './config/missing-setup-barrel'
 import { useAlternateSetup } from './config/branch-selector'
@@ -124,7 +128,20 @@ export default defineConfig({
           root: './commonjs-values',
           include: ['**/*.test.ts'],
           // CJS helpers can provide literal setup arrays without execution.
-          setupFiles: [commonjsDefaultSetups, commonjsNamedSetups],
+          setupFiles: [
+            commonjsDefaultSetups,
+            commonjsNamedSetups,
+            commonjsModuleNamedSetups,
+          ],
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'imported-default-local-reexport',
+          root: './imported-default-local-reexport',
+          include: ['**/*.test.ts'],
+          setupFiles: reexportedDefaultSetups,
           globalSetup: [],
         },
       },

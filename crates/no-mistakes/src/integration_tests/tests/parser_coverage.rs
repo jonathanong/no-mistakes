@@ -13,6 +13,12 @@ mod vitest_extends;
 #[path = "parser_coverage/vitest_named_members.rs"]
 mod vitest_named_members;
 
+#[path = "parser_coverage/vitest_setup_reexports.rs"]
+mod vitest_setup_reexports;
+
+#[path = "parser_coverage/vitest_exclusions.rs"]
+mod vitest_exclusions;
+
 fn coverage_files(prefix: &str, suffix: &str) -> Vec<String> {
     let mut files: Vec<_> = std::fs::read_dir(fixture("coverage"))
         .unwrap()
@@ -459,6 +465,7 @@ fn vitest_project_string_entries_use_only_the_visible_config_universe() {
                         | "negated-imported"
                         | "negated-default-function"
                         | "negated-default-function-identifier"
+                        | "negated-default-imported"
                         | "negated-named-function"
                 )
             )

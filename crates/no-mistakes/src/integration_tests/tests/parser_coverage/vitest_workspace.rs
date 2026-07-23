@@ -324,6 +324,12 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
         ],
         "folder globs retain configless visible roots as default projects"
     );
+    assert!(
+        broad
+            .iter()
+            .all(|project| project.scope.as_deref() != Some("packages/skip")),
+        "the root negation must filter configless roots from imported folder globs"
+    );
     let configless = broad
         .iter()
         .find(|project| project.scope.as_deref() == Some("packages/configless"))

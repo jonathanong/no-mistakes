@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 
 mod imported_exclusions;
-pub(super) use imported_exclusions::global_excluded_string_project_paths;
+pub(super) use imported_exclusions::global_excluded_string_projects;
 
 pub(super) struct StringProjectPaths {
     pub(super) included: BTreeSet<PathBuf>,

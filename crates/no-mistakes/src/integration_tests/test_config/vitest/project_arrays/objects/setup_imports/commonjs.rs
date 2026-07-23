@@ -24,7 +24,8 @@ pub(super) fn commonjs_setup_expression<'a>(
             let matches = (exported == "default"
                 && object == ["module"]
                 && member.property.name == "exports")
-                || (object == ["exports"] && member.property.name == exported);
+                || ((object == ["exports"] || object == ["module", "exports"])
+                    && member.property.name == exported);
             matches.then_some(&assignment.right)
         })
         .next_back()
