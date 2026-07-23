@@ -52,6 +52,9 @@ fn merge_options(base: &mut Options, next: Options) {
                 inherited_global,
                 next_global,
             );
+    } else {
+        base.setup_files = inherited_setup;
+        base.global_setup = inherited_global;
     }
 }
 

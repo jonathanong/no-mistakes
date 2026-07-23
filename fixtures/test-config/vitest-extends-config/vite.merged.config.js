@@ -11,8 +11,7 @@ const shared = defineConfig({
 export default mergeConfig(
   shared,
   defineConfig({
-    test: {
-      exclude: ['ignored/**'],
-    },
+    // No nested test object: inherited setup must still remain effective.
+    cacheDir: '.merged-cache',
   }),
 )
