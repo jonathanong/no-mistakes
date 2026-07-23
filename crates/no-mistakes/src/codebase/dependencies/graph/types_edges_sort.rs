@@ -103,3 +103,7 @@ const fn workflow(kind: EdgeKind) -> (u8, u8) {
         _ => panic!("workflow edge group is exhaustive"),
     }
 }
+
+#[cfg(test)]
+#[path = "types_edges_sort/tests.rs"]
+mod tests;
