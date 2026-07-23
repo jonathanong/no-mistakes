@@ -45,7 +45,7 @@ pub(super) fn visible_folder_config_glob(
 ) -> Result<globset::GlobSet, globset::Error> {
     let mut builder = GlobSetBuilder::new();
     builder.add(
-        GlobBuilder::new(&format!("{}/*", specifier.trim_end_matches('/')))
+        GlobBuilder::new(specifier.trim_end_matches('/'))
             .literal_separator(true)
             .build()?,
     );

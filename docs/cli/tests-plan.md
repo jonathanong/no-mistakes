@@ -137,10 +137,11 @@ Vitest workspace configs may export a project array directly or through
 `defineWorkspace([...])`. With no `tests.vitest.configs`, root
 `vitest.workspace.*` and `vitest.projects.*` files are discovered by default,
 including JSON. JSON arrays accept static inline project objects and string
-project paths/globs. Folder globs select one conventional config directly
-inside each matched project root, preferring `vitest.config.*` over
-`vite.config.*`; nested roots require their own folder glob. Explicit project
-config-file globs can select multiple files and recognize suffixes such as
+project paths/globs. A project glob matches both visible files and visible
+project folders. Folder matches select one conventional config directly inside
+each matched project root, preferring `vitest.config.*` over `vite.config.*`;
+nested roots require their own folder glob. Explicit project config-file globs
+can select multiple files and recognize suffixes such as
 `vitest.config.unit.ts` and
 `vite.config.e2e.js`.
 When a root workspace/project-array source is present, it is the default

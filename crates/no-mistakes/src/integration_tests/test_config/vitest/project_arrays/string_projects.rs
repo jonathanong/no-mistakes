@@ -36,25 +36,21 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
     resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
 ) -> Vec<PathBuf> {
     let mut paths = BTreeSet::new();
-    let file_like = is_file_like_project_specifier(specifier);
-    let file_pattern = file_like || Path::new(specifier).extension().is_some();
-    if file_like {
-        if let Some(path) = resolver.resolve(specifier, declaration_path) {
-            if is_runtime_project_source(&path) {
-                paths.insert(path);
+    let Some(visible) = resolver.visible_files() else {
+        if is_file_like_project_specifier(specifier) {
+            if let Some(path) = resolver.resolve(specifier, declaration_path) {
+                if is_runtime_project_source(&path) {
+                    paths.insert(path);
+                }
             }
         }
-    }
-    let Some(visible) = resolver.visible_files() else {
         return paths.into_iter().collect();
     };
-    if !file_pattern {
-        return folder_config_paths(specifier, declaration_path, visible);
-    }
     let base = declaration_path.parent().unwrap_or(Path::new("."));
-    let visible_specifier = specifier.trim_start_matches("./");
-    let pattern = crate::codebase::ts_resolver::normalize_path(&base.join(visible_specifier));
-    let has_glob = visible_specifier.contains(['*', '?', '[', '{']);
+    let pattern = crate::codebase::ts_resolver::normalize_path(
+        &base.join(specifier.trim_start_matches("./")),
+    );
+    let has_glob = specifier.contains(['*', '?', '[', '{']);
     let direct_glob = has_glob.then(|| {
         GlobBuilder::new(&slash_path(&pattern))
             .literal_separator(true)
@@ -71,6 +67,7 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
             paths.insert(path.clone());
         }
     }
+    paths.extend(folder_config_paths(specifier, declaration_path, visible));
     paths.into_iter().collect()
 }
 

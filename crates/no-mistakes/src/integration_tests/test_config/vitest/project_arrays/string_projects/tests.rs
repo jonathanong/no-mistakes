@@ -1,9 +1,38 @@
 use super::{
     folder_configs::visible_folder_config_glob, is_vitest_project_config,
-    parse_string_project_with_resolver, slash_path,
+    parse_string_project_with_resolver, slash_path, string_project_paths_with_resolver,
 };
-use std::collections::BTreeSet;
+use crate::codebase::ts_resolver::{ImportClassification, ImportResolution};
+use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
+
+struct DirectProjectResolver {
+    target: PathBuf,
+}
+
+impl ImportResolution for DirectProjectResolver {
+    fn resolve(&self, _: &str, _: &Path) -> Option<PathBuf> {
+        Some(self.target.clone())
+    }
+
+    fn resolution_candidates(&self, _: &str, _: &Path) -> BTreeSet<PathBuf> {
+        BTreeSet::from([self.target.clone()])
+    }
+
+    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+        None
+    }
+
+    fn classify_import(
+        &self,
+        _: &str,
+        _: &Path,
+        _: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        _: &HashSet<PathBuf>,
+    ) -> ImportClassification {
+        unreachable!("direct project resolution does not classify imports")
+    }
+}
 
 #[test]
 fn project_config_suffixes_are_executable_vitest_configs() {
@@ -77,7 +106,7 @@ fn active_string_project_cycles_are_skipped() {
 #[test]
 fn absolute_project_globs_use_slashes_for_windows_paths() {
     let pattern = slash_path(Path::new(r"C:\repo\configs\..\packages\*"));
-    let candidate = slash_path(Path::new(r"C:\repo\packages\e2e\vitest.config.ts"));
+    let candidate = slash_path(Path::new(r"C:\repo\packages\e2e"));
     assert!(!pattern.contains('\\'));
     assert!(!candidate.contains('\\'));
 
@@ -85,4 +114,21 @@ fn absolute_project_globs_use_slashes_for_windows_paths() {
     assert!(visible_folder_config_glob(&normalized_pattern)
         .unwrap()
         .is_match(candidate));
+}
+
+#[test]
+fn direct_project_paths_resolve_without_a_visible_file_catalog() {
+    let target = PathBuf::from("/repo/packages/unit/vitest.config.ts");
+    let resolver = DirectProjectResolver {
+        target: target.clone(),
+    };
+
+    assert_eq!(
+        string_project_paths_with_resolver(
+            "./packages/unit/vitest.config.ts",
+            Path::new("/repo/vitest.config.ts"),
+            &resolver,
+        ),
+        [target]
+    );
 }

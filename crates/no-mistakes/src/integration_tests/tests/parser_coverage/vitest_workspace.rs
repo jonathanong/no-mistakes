@@ -337,7 +337,11 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .iter()
             .filter_map(|project| project.policy_name.as_deref())
             .collect::<Vec<_>>(),
-        ["direct-project", "multiple-vitest-project"]
+        [
+            "direct-project",
+            "dotted-folder-project",
+            "multiple-vitest-project",
+        ]
     );
     assert_eq!(
         broad
@@ -403,6 +407,24 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
         explicit_names,
         ["multiple-vite-project", "multiple-vitest-project"],
         "explicit config-file globs retain every matching config"
+    );
+    let dotted_folder = parse("vitest.dotted-folder.config.ts");
+    assert_eq!(
+        dotted_folder
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["dotted-folder-project"],
+        "a dotted directory string remains a folder project"
+    );
+    let dotted_folder_glob = parse("vitest.dotted-folder-glob.config.ts");
+    assert_eq!(
+        dotted_folder_glob
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["dotted-folder-project"],
+        "a dotted directory glob remains a folder project"
     );
     let custom = parse("vitest.custom-project.config.ts");
     assert_eq!(
