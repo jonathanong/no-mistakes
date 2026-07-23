@@ -36,7 +36,11 @@ pub(super) fn folder_config_paths(
     }
     candidates
         .into_values()
-        .filter_map(|paths| paths.into_iter().min_by_key(folder_config_rank))
+        .filter_map(|paths| {
+            paths
+                .into_iter()
+                .min_by_key(|path| folder_config_rank(path))
+        })
         .collect()
 }
 
@@ -52,7 +56,7 @@ pub(super) fn visible_folder_config_glob(
     builder.build()
 }
 
-fn folder_config_rank(path: &PathBuf) -> (u8, String) {
+fn folder_config_rank(path: &Path) -> (u8, String) {
     let name = path
         .file_name()
         .and_then(|name| name.to_str())

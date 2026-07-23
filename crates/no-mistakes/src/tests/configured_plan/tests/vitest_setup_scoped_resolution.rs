@@ -77,7 +77,7 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
                 crate::codebase::dependencies::graph::NodeId::File(
                     root.join("packages/unit/setup/aliased-default.ts"),
                 ),
-                setup.clone(),
+                setup,
             ),
             (
                 crate::codebase::dependencies::graph::NodeId::File(
