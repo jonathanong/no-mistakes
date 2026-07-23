@@ -30,6 +30,13 @@ export default {
           include: ['unsupported/**/*.test.ts'],
         },
       },
+      {
+        extends: './vite.scope.config.js',
+        test: {
+          name: 'scope-inherited',
+          exclude: ['local-ignore/**'],
+        },
+      },
     ],
   },
 }

@@ -337,7 +337,7 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .iter()
             .filter_map(|project| project.policy_name.as_deref())
             .collect::<Vec<_>>(),
-        ["direct-project"]
+        ["direct-project", "multiple-vitest-project"]
     );
     assert_eq!(
         broad
@@ -392,6 +392,17 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .collect::<Vec<_>>(),
         ["arbitrary-project-file"],
         "an explicit project-file glob may use any supported runtime filename"
+    );
+    let explicit_configs = parse("vitest.explicit-config-glob.ts");
+    let mut explicit_names = explicit_configs
+        .iter()
+        .filter_map(|project| project.policy_name.as_deref())
+        .collect::<Vec<_>>();
+    explicit_names.sort_unstable();
+    assert_eq!(
+        explicit_names,
+        ["multiple-vite-project", "multiple-vitest-project"],
+        "explicit config-file globs retain every matching config"
     );
     let custom = parse("vitest.custom-project.config.ts");
     assert_eq!(

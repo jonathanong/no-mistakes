@@ -1,6 +1,6 @@
 use super::{
-    is_vitest_project_config, parse_string_project_with_resolver, slash_path,
-    visible_folder_config_glob,
+    folder_configs::visible_folder_config_glob, is_vitest_project_config,
+    parse_string_project_with_resolver, slash_path,
 };
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};

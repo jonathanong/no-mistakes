@@ -55,6 +55,15 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
         return Ok(());
     };
     add_config_extends_provenance(options, &path, candidates, ctx);
+    merge_inherited_options(options, inherited);
+    Ok(())
+}
+
+fn merge_inherited_options(options: &mut Options, inherited: Options) {
+    options.name = options.name.take().or(inherited.name);
+    options.root = options.root.take().or(inherited.root);
+    options.include = options.include.take().or(inherited.include);
+    options.exclude = combine_excludes(inherited.exclude, options.exclude.take());
     options.setup_files = crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
         inherited.setup_files,
         options.setup_files.take(),
@@ -64,7 +73,15 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
             inherited.global_setup,
             options.global_setup.take(),
         );
-    Ok(())
+}
+
+fn combine_excludes(
+    inherited: Option<Vec<String>>,
+    local: Option<Vec<String>>,
+) -> Option<Vec<String>> {
+    let mut excludes = inherited.unwrap_or_default();
+    excludes.extend(local.unwrap_or_default());
+    (!excludes.is_empty()).then_some(excludes)
 }
 
 fn add_unresolved_config_extends(

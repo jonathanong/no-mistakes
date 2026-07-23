@@ -1,13 +1,15 @@
 use super::{import_bindings, objects, shared, top_level_function_bodies, Ctx, Options};
 use anyhow::Result;
-use globset::{GlobBuilder, GlobSetBuilder};
+use globset::GlobBuilder;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod config_paths;
+mod folder_configs;
 mod roots;
 use config_paths::is_runtime_project_source;
 pub(super) use config_paths::is_vitest_project_config;
+use folder_configs::folder_config_paths;
 pub(super) use roots::string_project_roots;
 pub(in crate::integration_tests::test_config::vitest) use roots::string_project_roots_with_resolver;
 
@@ -34,7 +36,9 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
     resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
 ) -> Vec<PathBuf> {
     let mut paths = BTreeSet::new();
-    if is_file_like_project_specifier(specifier) {
+    let file_like = is_file_like_project_specifier(specifier);
+    let file_pattern = file_like || Path::new(specifier).extension().is_some();
+    if file_like {
         if let Some(path) = resolver.resolve(specifier, declaration_path) {
             if is_runtime_project_source(&path) {
                 paths.insert(path);
@@ -44,6 +48,9 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
     let Some(visible) = resolver.visible_files() else {
         return paths.into_iter().collect();
     };
+    if !file_pattern {
+        return folder_config_paths(specifier, declaration_path, visible);
+    }
     let base = declaration_path.parent().unwrap_or(Path::new("."));
     let visible_specifier = specifier.trim_start_matches("./");
     let pattern = crate::codebase::ts_resolver::normalize_path(&base.join(visible_specifier));
@@ -54,19 +61,13 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
             .build()
             .map(|glob| glob.compile_matcher())
     });
-    let folder_glob = has_glob.then(|| visible_folder_config_glob(&slash_path(&pattern)));
     for path in visible {
         let direct_match = match &direct_glob {
             Some(Ok(glob)) => glob.is_match(slash_path(path)),
             Some(Err(_)) => false,
             None => path == &pattern,
         };
-        let folder_match = match &folder_glob {
-            Some(Ok(glob)) => glob.is_match(slash_path(path)),
-            Some(Err(_)) => false,
-            None => path.parent() == Some(pattern.as_path()),
-        };
-        if direct_match || (folder_match && is_vitest_project_config(path)) {
+        if direct_match {
             paths.insert(path.clone());
         }
     }
@@ -80,19 +81,6 @@ fn is_file_like_project_specifier(specifier: &str) -> bool {
 
 fn slash_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
-}
-
-fn visible_folder_config_glob(specifier: &str) -> Result<globset::GlobSet, globset::Error> {
-    let mut builder = GlobSetBuilder::new();
-    // A folder glob selects concrete project roots. Only config files directly
-    // inside each matched root belong to that entry; descendants require a
-    // separate explicit folder glob (for example `packages/business/*`).
-    builder.add(
-        GlobBuilder::new(&format!("{}/*", specifier.trim_end_matches('/')))
-            .literal_separator(true)
-            .build()?,
-    );
-    builder.build()
 }
 
 fn parse_string_project(path: &Path, ctx: &mut Ctx<'_, '_>) -> Result<Option<Options>> {

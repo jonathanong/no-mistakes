@@ -53,6 +53,11 @@ fn setup_dependencies_bounded(
         {
             return take_dependencies(dependencies, remaining);
         }
+        if unresolved_bare_member_import(member, ctx) {
+            let mut dependency = setup_dependency(value, field, ctx);
+            dependency.needs_final_catalog_reparse = true;
+            return take_dependencies(vec![dependency], remaining);
+        }
     }
     match unwrap_ts_wrappers(value) {
         Expression::ConditionalExpression(conditional) => {
@@ -154,6 +159,18 @@ fn unresolved_bare_import(specifier: &str, ctx: &Ctx<'_, '_>) -> bool {
     !specifier.starts_with('.')
         && !Path::new(specifier).is_absolute()
         && ctx.resolver.resolve(specifier, ctx.path).is_none()
+}
+
+fn unresolved_bare_member_import(
+    member: &oxc_ast::ast::StaticMemberExpression<'_>,
+    ctx: &Ctx<'_, '_>,
+) -> bool {
+    let Expression::Identifier(identifier) = unwrap_ts_wrappers(&member.object) else {
+        return false;
+    };
+    ctx.imports
+        .get(identifier.name.as_str())
+        .is_some_and(|import| unresolved_bare_import(&import.source, ctx))
 }
 
 fn conservative_setup_dependency(

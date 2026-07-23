@@ -19,4 +19,20 @@ fn tests_plan_napi_traces_static_vitest_config_extends() {
         "{plan:#}"
     );
     assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+
+    let output = tests_plan_json_impl(
+        json!({
+            "framework": "vitest",
+            "root": root,
+            "changedFiles": ["scope-setup.ts"],
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(
+        plan["selected_tests"][0]["test_file"],
+        "scope-inherited/owned/owned.spec.ts",
+        "{plan:#}"
+    );
 }

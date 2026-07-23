@@ -158,6 +158,24 @@ fn vitest_inline_setup_inheritance_resolves_static_config_extends() {
             .as_deref(),
         Some("./vite-factory.js")
     );
+
+    let scope = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("scope-inherited"))
+        .unwrap();
+    assert_eq!(scope.scope.as_deref(), Some("scope-inherited"));
+    assert_eq!(scope.include, ["scope-inherited/owned/**/*.spec.ts"]);
+    assert_eq!(
+        scope.exclude,
+        [
+            "scope-inherited/inherited-ignore/**",
+            "scope-inherited/local-ignore/**",
+        ]
+    );
+    assert!(scope
+        .vitest_setup
+        .iter()
+        .any(|setup| setup.specifier.as_deref() == Some("./scope-setup.ts")));
 }
 
 fn assert_merged_provenance(

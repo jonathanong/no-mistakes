@@ -64,34 +64,46 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
         Some(root.join("packages/unit/setup/list.ts"))
     );
     let graph = shared.canonical_graph().unwrap();
+    let owner = crate::codebase::dependencies::graph::NodeId::File(
+        root.join("packages/unit/tests/owner.test.ts"),
+    );
+    let setup = crate::codebase::dependencies::graph::EdgeKind::VitestSetup(
+        crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+    );
     assert_eq!(
-        graph.dependencies_of_node(&crate::codebase::dependencies::graph::NodeId::File(
-            root.join("packages/unit/tests/owner.test.ts"),
-        ),),
-        Some(&vec![(
-            crate::codebase::dependencies::graph::NodeId::File(
-                root.join("packages/unit/setup/aliased.ts"),
+        graph.dependencies_of_node(&owner),
+        Some(&vec![
+            (
+                crate::codebase::dependencies::graph::NodeId::File(
+                    root.join("packages/unit/setup/aliased-default.ts"),
+                ),
+                setup.clone(),
             ),
-            crate::codebase::dependencies::graph::EdgeKind::VitestSetup(
-                crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+            (
+                crate::codebase::dependencies::graph::NodeId::File(
+                    root.join("packages/unit/setup/aliased-namespace.ts"),
+                ),
+                setup,
             ),
-        ),])
+        ])
     );
-    let mut args = vitest_setup_args(
-        root.clone(),
-        vec![root.join("packages/unit/setup/aliased.ts")],
-    );
-    args.config = Some(config_path);
-    let plan = crate::tests::plan::generate_plan(&args).unwrap();
-
-    assert_eq!(
-        plan.selected_tests
-            .iter()
-            .map(|test| test.test_file.as_str())
-            .collect::<Vec<_>>(),
-        ["packages/unit/tests/owner.test.ts"]
-    );
-    assert!(!plan.fallback_triggered, "{plan:#?}");
+    for setup in ["aliased-default.ts", "aliased-namespace.ts"] {
+        let mut args = vitest_setup_args(
+            root.clone(),
+            vec![root.join("packages/unit/setup").join(setup)],
+        );
+        args.config = Some(config_path.clone());
+        let plan = crate::tests::plan::generate_plan(&args).unwrap();
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            ["packages/unit/tests/owner.test.ts"],
+            "{setup}: {plan:#?}"
+        );
+        assert!(!plan.fallback_triggered, "{setup}: {plan:#?}");
+    }
 }
 
 #[test]
