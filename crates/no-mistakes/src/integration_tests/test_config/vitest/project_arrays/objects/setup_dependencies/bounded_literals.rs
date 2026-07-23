@@ -13,15 +13,15 @@ pub(super) fn trigger_paths(expression: &Expression<'_>, ctx: &Ctx<'_, '_>) -> B
     collect_specifiers(expression, ctx, 0, &mut specifiers);
     let mut paths = BTreeSet::new();
     for specifier in specifiers {
-        if let Some(path) = ctx.resolver.resolve(&specifier, ctx.path) {
-            paths.insert(path);
-        }
-        for candidate in ctx.resolver.resolution_candidates(&specifier, ctx.path) {
-            if paths.len() >= MAX_PATHS {
-                return paths;
-            }
-            paths.insert(candidate);
-        }
+        let remaining = MAX_PATHS.saturating_sub(paths.len());
+        let resolved = ctx.resolver.resolve(&specifier, ctx.path).into_iter();
+        let mut additions = BTreeSet::new();
+        let additions = resolved
+            .chain(ctx.resolver.resolution_candidates(&specifier, ctx.path))
+            .filter(|path| !paths.contains(path) && additions.insert(path.clone()))
+            .take(remaining)
+            .collect::<Vec<_>>();
+        paths.extend(additions);
     }
     paths
 }
@@ -51,11 +51,14 @@ fn collect_specifiers(
                     ArrayExpressionElement::SpreadElement(spread) => {
                         collect_specifiers(&spread.argument, ctx, depth + 1, specifiers);
                     }
-                    _ => {
-                        if let Some(expression) = element.as_expression() {
-                            collect_specifiers(expression, ctx, depth + 1, specifiers);
-                        }
-                    }
+                    _ => collect_specifiers(
+                        element
+                            .as_expression()
+                            .expect("non-spread, non-elision array elements are expressions"),
+                        ctx,
+                        depth + 1,
+                        specifiers,
+                    ),
                 }
             }
         }

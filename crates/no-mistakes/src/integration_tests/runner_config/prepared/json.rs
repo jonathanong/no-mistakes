@@ -1,16 +1,14 @@
 use super::*;
 
 impl PreparedIntegrationRunnerConfigs {
-    pub(super) fn parse_json(&self, path: &Path, source: &str) -> Option<RunnerConfigFileFacts> {
+    pub(super) fn parse_json(&self, path: &Path, source: &str) -> RunnerConfigFileFacts {
         let path = crate::codebase::ts_resolver::normalize_path(path);
         let specs = self
             .specs
             .iter()
             .filter(|spec| spec.path == path)
             .collect::<Vec<_>>();
-        if specs.is_empty() {
-            return None;
-        }
+        debug_assert!(!specs.is_empty(), "JSON config path must be prepared");
         let config_dir = path.parent().unwrap_or(&self.root);
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
             &self.tsconfig_catalog,
@@ -43,9 +41,9 @@ impl PreparedIntegrationRunnerConfigs {
                 },
             })
             .collect();
-        Some(RunnerConfigFileFacts {
+        RunnerConfigFileFacts {
             results,
             analyses: BTreeMap::new(),
-        })
+        }
     }
 }

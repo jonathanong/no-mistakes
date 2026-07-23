@@ -86,16 +86,15 @@ fn setup_dependencies_bounded(
                         depth + 1,
                         remaining,
                     )?,
-                    _ => match element.as_expression() {
-                        Some(expression) => setup_dependencies_bounded(
-                            expression,
-                            field,
-                            ctx,
-                            depth + 1,
-                            remaining,
-                        )?,
-                        None => Vec::new(),
-                    },
+                    _ => setup_dependencies_bounded(
+                        element
+                            .as_expression()
+                            .expect("non-spread, non-elision array elements are expressions"),
+                        field,
+                        ctx,
+                        depth + 1,
+                        remaining,
+                    )?,
                 };
                 dependencies.extend(next);
             }

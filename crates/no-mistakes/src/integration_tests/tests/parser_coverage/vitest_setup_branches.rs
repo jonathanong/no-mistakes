@@ -58,3 +58,23 @@ fn vitest_setup_branch_expansion_has_a_total_budget() {
         .trigger_paths
         .contains(&root.join("shared/outside.ts")));
 }
+
+#[test]
+fn vitest_setup_branch_expansion_has_a_depth_limit() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-config/vitest-setup-depth"),
+    );
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+
+    assert_eq!(projects.len(), 3);
+    for project in projects {
+        assert_eq!(project.vitest_setup.len(), 1);
+        let setup = &project.vitest_setup[0];
+        assert_eq!(setup.specifier, None);
+        assert!(setup.trigger_paths.contains(&path));
+        assert!(setup.trigger_paths.contains(&root));
+    }
+}

@@ -309,7 +309,12 @@ fn vitest_setup_config_fallbacks_are_fixture_backed() {
             .iter()
             .filter_map(|project| project.policy_name.as_deref())
             .collect::<Vec<_>>(),
-        vec!["spread-setup", "named-dynamic", "directory-dynamic"],
+        vec![
+            "spread-setup",
+            "named-dynamic",
+            "directory-dynamic",
+            "static-member-setup",
+        ],
     );
     assert!(parsed
         .iter()
@@ -330,6 +335,14 @@ fn vitest_setup_config_fallbacks_are_fixture_backed() {
     assert!(named.vitest_setup[0]
         .trigger_paths
         .contains(&root.join("dynamic.ts")));
+    let static_member = parsed
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("static-member-setup"))
+        .unwrap();
+    assert_eq!(
+        static_member.vitest_setup[0].specifier.as_deref(),
+        Some("./setup.ts")
+    );
 
     let tsconfig = test_support::tsconfig_without_config(&root);
     let visible = std::collections::HashSet::from([root.join("config")]);
@@ -338,13 +351,18 @@ fn vitest_setup_config_fallbacks_are_fixture_backed() {
         test_support::parse_vitest_from_visible(&source, &path, &root, &root, &tsconfig, &visible)
             .expect("directory and unresolved config candidates should be ignored");
 
-    assert_eq!(projects.len(), 3);
+    assert_eq!(projects.len(), 4);
     assert_eq!(
         projects
             .iter()
             .filter_map(|project| project.policy_name.as_deref())
             .collect::<Vec<_>>(),
-        vec!["spread-setup", "named-dynamic", "directory-dynamic"],
+        vec![
+            "spread-setup",
+            "named-dynamic",
+            "directory-dynamic",
+            "static-member-setup",
+        ],
     );
     let directory_dynamic = projects
         .iter()

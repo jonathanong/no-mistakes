@@ -1,0 +1,7 @@
+[
+  {
+    "test": {
+      "globalSetup": 42
+    }
+  }
+]

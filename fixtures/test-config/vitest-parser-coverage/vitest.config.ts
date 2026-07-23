@@ -1,5 +1,6 @@
 import { firstDynamic, secondDynamic } from './dynamic'
 import { directoryDynamic } from './config'
+import * as setupOptions from './setup-values'
 
 const spreadSetups = ['./setup.ts']
 
@@ -29,6 +30,13 @@ export default {
           name: 'directory-dynamic',
           include: ['directory/**/*.test.ts'],
           setupFiles: directoryDynamic,
+        },
+      },
+      {
+        test: {
+          name: 'static-member-setup',
+          include: ['static-member/**/*.test.ts'],
+          setupFiles: setupOptions.primary,
         },
       },
       './no-default.ts',

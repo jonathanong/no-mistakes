@@ -147,7 +147,6 @@ impl PreparedIntegrationRunnerConfigs {
             })?;
             let facts = if spec.path.extension().and_then(|value| value.to_str()) == Some("json") {
                 self.parse_json(&spec.path, &source)
-                    .expect("runner config path was prepared")
             } else {
                 with_request_program(&spec.path, &source, |program, source| {
                     self.parse_program(&spec.path, program, source)
@@ -178,7 +177,7 @@ impl PreparedIntegrationRunnerConfigs {
             Err(error) => return self.parse_error(path, error.to_string()),
         };
         if path.extension().and_then(|value| value.to_str()) == Some("json") {
-            return self.parse_json(path, &source);
+            return Some(self.parse_json(path, &source));
         }
         match session.with_program(path, &source, |program, source| {
             self.parse_program(path, program, source)

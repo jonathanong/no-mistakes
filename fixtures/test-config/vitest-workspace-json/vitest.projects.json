@@ -1,3 +1,5 @@
 [
-  "./string-project/vitest.config.ts"
+  "./string-project/vitest.config.ts",
+  "./excluded/vitest.config.ts",
+  "!./excluded/vitest.config.ts"
 ]

@@ -8,5 +8,10 @@
       "include": ["**/*.test.ts"],
       "globalSetup": "./setup.ts"
     }
+  },
+  {
+    "root": "./inline",
+    "include": ["**/*.test.ts"],
+    "setupFiles": "./setup.ts"
   }
 ]

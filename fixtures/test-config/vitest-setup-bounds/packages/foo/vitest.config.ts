@@ -12,7 +12,8 @@ export default defineConfig({
           // first literal also escapes this declaration directory so the
           // collapsed dependency must preserve bounded candidate provenance.
           setupFiles: [
-          '../../shared/outside.ts',
+          ,
+          ...['../../shared/outside.ts'],
           './setup-01.ts',
           './setup-02.ts',
           './setup-03.ts',
