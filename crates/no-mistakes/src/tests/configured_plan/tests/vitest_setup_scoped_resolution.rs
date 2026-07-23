@@ -40,8 +40,8 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
     );
     assert_eq!(
         shared.source_store().physical_read_count(),
-        6,
-        "the final reparse must reuse already-loaded runner configs"
+        10,
+        "the final reparse must reuse already-loaded runner configs while reading each fixture source once"
     );
     assert_eq!(
         shared
