@@ -175,7 +175,38 @@ fn vitest_inline_setup_inheritance_resolves_static_config_extends() {
     assert!(scope
         .vitest_setup
         .iter()
-        .any(|setup| setup.specifier.as_deref() == Some("./scope-setup.ts")));
+        .any(|setup| setup.specifier.as_deref() == Some("../scope-setup.ts")));
+
+    let cross = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("cross-inherited"))
+        .unwrap();
+    assert_eq!(
+        cross.scope.as_deref(),
+        Some("configs/shared/inherited-root")
+    );
+    assert_eq!(
+        cross.include,
+        ["configs/shared/inherited-root/inherited/**/*.spec.ts"]
+    );
+    assert_eq!(
+        cross.exclude,
+        ["configs/shared/inherited-root/inherited-ignore/**"]
+    );
+
+    let local = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("cross-local"))
+        .unwrap();
+    assert_eq!(local.scope.as_deref(), Some("local-root"));
+    assert_eq!(local.include, ["local-root/local/**/*.test.ts"]);
+    assert_eq!(
+        local.exclude,
+        [
+            "local-root/inherited-ignore/**",
+            "local-root/local-ignore/**"
+        ]
+    );
 }
 
 fn assert_merged_provenance(

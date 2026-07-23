@@ -1,1 +1,1 @@
-export const files = './aliased-namespace.ts'
+export const files = './setup/aliased-namespace.ts'

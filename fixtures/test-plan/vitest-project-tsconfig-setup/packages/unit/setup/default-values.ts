@@ -1,3 +1,3 @@
 export default {
-  files: './aliased-default.ts',
+  files: './setup/aliased-default.ts',
 }

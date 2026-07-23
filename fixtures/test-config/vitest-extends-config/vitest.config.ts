@@ -37,6 +37,21 @@ export default {
           exclude: ['local-ignore/**'],
         },
       },
+      {
+        extends: './configs/shared/vite.cross.config.js',
+        test: {
+          name: 'cross-inherited',
+        },
+      },
+      {
+        extends: './configs/shared/vite.cross.config.js',
+        test: {
+          name: 'cross-local',
+          root: './local-root',
+          include: ['local/**/*.test.ts'],
+          exclude: ['local-ignore/**'],
+        },
+      },
     ],
   },
 }

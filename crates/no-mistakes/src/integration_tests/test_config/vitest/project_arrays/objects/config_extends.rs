@@ -55,11 +55,12 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
         return Ok(());
     };
     add_config_extends_provenance(options, &path, candidates, ctx);
-    merge_inherited_options(options, inherited);
+    merge_inherited_options(options, inherited, &path);
     Ok(())
 }
 
-fn merge_inherited_options(options: &mut Options, inherited: Options) {
+fn merge_inherited_options(options: &mut Options, mut inherited: Options, path: &Path) {
+    normalize_inherited_root(&mut inherited, path);
     options.name = options.name.take().or(inherited.name);
     options.root = options.root.take().or(inherited.root);
     options.include = options.include.take().or(inherited.include);
@@ -73,6 +74,22 @@ fn merge_inherited_options(options: &mut Options, inherited: Options) {
             inherited.global_setup,
             options.global_setup.take(),
         );
+}
+
+fn normalize_inherited_root(inherited: &mut Options, path: &Path) {
+    let Some(root) = inherited.root.as_deref() else {
+        return;
+    };
+    let root = Path::new(root);
+    if !root.is_absolute() {
+        inherited.root = Some(
+            crate::codebase::ts_resolver::normalize_path(
+                &path.parent().unwrap_or(Path::new(".")).join(root),
+            )
+            .to_string_lossy()
+            .into_owned(),
+        );
+    }
 }
 
 fn combine_excludes(

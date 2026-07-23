@@ -85,3 +85,30 @@ fn tests_targets_cli_uses_inherited_inline_vitest_scope() {
         .unwrap()
         .contains("vitest --config vitest.config.ts --project scope-inherited"));
 }
+
+#[test]
+fn tests_targets_cli_keeps_local_inline_scope_base() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config/vitest-extends-config");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args([
+            "test",
+            "targets",
+            "vitest",
+            "local-root/local/owned.test.ts",
+            "--root",
+            root.to_str().unwrap(),
+            "--format",
+            "commands",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(String::from_utf8(output.stdout)
+        .unwrap()
+        .contains("vitest --config vitest.config.ts --project cross-local"));
+}

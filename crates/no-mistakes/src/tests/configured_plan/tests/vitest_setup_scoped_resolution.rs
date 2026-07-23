@@ -85,9 +85,17 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
                 ),
                 setup,
             ),
+            (
+                crate::codebase::dependencies::graph::NodeId::File(
+                    root.join("packages/unit/setup/aliased.ts"),
+                ),
+                crate::codebase::dependencies::graph::EdgeKind::VitestSetup(
+                    crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+                ),
+            ),
         ])
     );
-    for setup in ["aliased-default.ts", "aliased-namespace.ts"] {
+    for setup in ["aliased-default.ts", "aliased-namespace.ts", "aliased.ts"] {
         let mut args = vitest_setup_args(
             root.clone(),
             vec![root.join("packages/unit/setup").join(setup)],
