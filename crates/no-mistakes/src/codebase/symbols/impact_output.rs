@@ -158,7 +158,10 @@ fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> 
         NodeId::Symbol { file, symbol } => {
             Some((relative_slash_path(root, file), Some(symbol.clone())))
         }
-        NodeId::Module(_) | NodeId::QueueJob { .. } => None,
+        NodeId::Module(_)
+        | NodeId::QueueJob { .. }
+        | NodeId::WorkflowJob { .. }
+        | NodeId::WorkflowStep { .. } => None,
     }
 }
 

@@ -1,0 +1,8 @@
+name: Dynamic working directory
+on: push
+jobs:
+  dynamic:
+    runs-on: ubuntu-latest
+    steps:
+      - working-directory: ${{ matrix.directory }}
+        run: node scripts/direct.mjs

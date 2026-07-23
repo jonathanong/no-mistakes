@@ -1,0 +1,6 @@
+ci:
+  workflowDirs:
+    - .github/workflows
+    - custom/workflows
+  actionDirs:
+    - .github/actions

@@ -35,7 +35,7 @@ fn resolve_entrypoints_with_files_and_workspace(
             } else {
                 parse_entrypoint(&raw_str)
             };
-            let symbol = structured_symbol.or(parsed_symbol);
+            let mut symbol = structured_symbol.or(parsed_symbol);
             let raw_for_node = raw_file.to_string_lossy().to_string();
             let file = if raw_file.is_absolute() {
                 raw_file
@@ -59,7 +59,13 @@ fn resolve_entrypoints_with_files_and_workspace(
                 NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.clone(),
                 _ => normalized,
             };
-            if include_symbols {
+            if let Some(workflow_node) = symbol
+                .as_deref()
+                .and_then(|suffix| workflow_node_from_suffix(&file, suffix))
+            {
+                node = workflow_node;
+                symbol = None;
+            } else if include_symbols {
                 if let (NodeId::File(file), Some(symbol)) = (&node, &symbol) {
                     node = NodeId::Symbol {
                         file: file.clone(),

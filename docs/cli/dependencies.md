@@ -12,6 +12,13 @@ process, asset, resource, and React edges can all be included. Use
 `--relationship resource` to restrict output to literal runtime filesystem
 reads, directory reads, and supported static glob matches.
 
+Use `--relationship workflow` to traverse a tracked GitHub Actions workflow's
+jobs and zero-based steps, local reusable workflows/actions, static `run:`
+targets, and same-run artifact handoffs. Virtual IDs are
+`workflow.yml#job:<job>` and `workflow.yml#job:<job>/step:<index>`. The legacy
+`--relationship ci` filter remains only workflow-file-to-Rust-binary Cargo
+invocations; it does not include workflow topology or package scripts.
+
 Use `--relationship route-import` when you need the conservative runtime module
 closure used by Playwright route analysis. It follows runtime static
 imports/re-exports and literal dynamic imports without function-reachability

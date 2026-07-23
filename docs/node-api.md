@@ -70,6 +70,24 @@ Configured wrapper calls therefore appear in `playwrightEdges()` and
 `analyzeProject()` through the existing selector-edge JSON shape; no separate
 Node option or result type is required.
 
+The graph APIs (`dependencies`, `dependents`, `related`, `flow`, and graph
+reports in `analyzeProject`) accept the `workflow`, `workflow-job`,
+`workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, and
+`workflow-artifact` relationship values. `workflow` includes all six edges;
+the precise values retain their required structural job/step bridges for a
+connected traversal. `all` includes `workflow`.
+
+Workflow jobs and steps are virtual graph nodes with IDs
+`workflow.yml#job:<job>` and `workflow.yml#job:<job>/step:<zero-based-index>`.
+`DependencyFile` records expose `workflowFile`, `job`, and optional `step`;
+`FlowNode` additionally uses `kind: "workflow-job"` or `"workflow-step"`.
+The workflow graph tracks only local, static topology: local reusable workflows
+and action descriptors, supported literal `run:` targets/package scripts, and
+same-run artifact upload -> download edges. It omits remote `uses`,
+`workflow_run`, malformed/dangling endpoints, dynamic shell resolution, and
+targets outside the tracked graph universe. `ci` remains the separate legacy
+`CiInvocation` relationship from workflow file to supported Rust Cargo binary.
+
 `testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests.

@@ -9,7 +9,6 @@ use super::model;
 use super::value_primitives;
 use super::workflow_values;
 use serde_yaml::Value;
-use std::path::Path;
 
 /// A `needs.<callJobKey>.outputs.<output>` reference found anywhere in a
 /// job (its own scalars, its `if:`, or a step's `if:`), keyed by the
@@ -29,26 +28,10 @@ pub struct ParsedWorkflow {
     pub output_references: Vec<ParsedWorkflowOutputReference>,
 }
 
-/// Reads and parses one workflow YAML file. Both I/O failures and YAML
-/// parse errors become a single `malformed-workflow` diagnostic, matching
-/// the TS engine's `parseWorkflowFile` (which does its own file read and
-/// doesn't distinguish the two failure modes) — an intentional divergence
-/// from the sibling `ci_graph::WorkflowSet::load`, which does distinguish
-/// them. Note the diagnostic *message text* necessarily differs from the
-/// TS engine's: `serde_yaml`'s and `js-yaml`'s error messages are
-/// different libraries' wording for the same failure, not a
-/// reproducible string.
-pub fn parse_workflow_file(root_dir: &Path, path: &str) -> ParsedWorkflow {
-    let content = match std::fs::read_to_string(root_dir.join(path)) {
-        Ok(content) => content,
-        Err(error) => return malformed_result(path, &error.to_string()),
-    };
-    let value: Value = match serde_yaml::from_str(&content) {
-        Ok(value) => value,
-        Err(error) => return malformed_result(path, &error.to_string()),
-    };
-    if !value_primitives::is_record(Some(&value)) {
-        return malformed_result(path, "workflow root must be a mapping");
+/// Parse a topology fragment from an already loaded YAML document.
+pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
+    if !value_primitives::is_record(Some(value)) {
+        return malformed_workflow(path, "workflow root must be a mapping");
     }
 
     let triggers = workflow_values::parse_triggers(value.get("on"));
@@ -168,7 +151,7 @@ fn add_job_edges(
     }
 }
 
-fn malformed_result(path: &str, message: &str) -> ParsedWorkflow {
+pub(crate) fn malformed_workflow(path: &str, message: &str) -> ParsedWorkflow {
     ParsedWorkflow {
         node: model::WorkflowNode {
             id: path.to_string(),

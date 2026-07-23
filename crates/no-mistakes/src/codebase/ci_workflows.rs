@@ -1,10 +1,14 @@
 use anyhow::Result;
 
 mod cargo;
+mod workflow_set;
 
 pub use cargo::{
     extract_binary_names, extract_cargo_targets, parse_cargo_bins, parse_cargo_package_name,
     parse_cargo_workspace_excludes, parse_cargo_workspace_members, CargoTarget,
+};
+pub use workflow_set::{
+    ParsedWorkflowDocument, ParsedWorkflowSet, WorkflowDocumentError, WorkflowDocumentErrorKind,
 };
 
 /// A single step invocation extracted from a CI workflow.
@@ -24,6 +28,11 @@ pub struct Invocation {
 /// Extract all `run:` step invocations from a GitHub Actions workflow YAML.
 pub fn extract_invocations(workflow_yaml: &str) -> Result<Vec<Invocation>> {
     let value: serde_yaml::Value = serde_yaml::from_str(workflow_yaml)?;
+    Ok(extract_invocations_value(&value))
+}
+
+/// Extract invocations from an already parsed workflow YAML document.
+pub fn extract_invocations_value(value: &serde_yaml::Value) -> Vec<Invocation> {
     let mut results = Vec::new();
     let mut line_counter: u32 = 1;
 
@@ -62,7 +71,7 @@ pub fn extract_invocations(workflow_yaml: &str) -> Result<Vec<Invocation>> {
         }
     }
 
-    Ok(results)
+    results
 }
 
 #[cfg(test)]

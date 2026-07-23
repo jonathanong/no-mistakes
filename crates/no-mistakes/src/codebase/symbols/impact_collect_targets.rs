@@ -62,7 +62,10 @@ fn signature_target_symbols(
                 NodeId::File(file) => {
                     target_symbols.entry(file.clone()).or_default();
                 }
-                NodeId::Module(_) | NodeId::QueueJob { .. } => {}
+                NodeId::Module(_)
+                | NodeId::QueueJob { .. }
+                | NodeId::WorkflowJob { .. }
+                | NodeId::WorkflowStep { .. } => {}
             }
         }
     }

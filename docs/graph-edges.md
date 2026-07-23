@@ -2,7 +2,8 @@
 
 `DepGraph` is the canonical graph for `no-mistakes dependencies`,
 `dependents`, `related`, and test-impact traversal. Graph nodes are files,
-external modules, or virtual queue jobs. Every edge has an internal `EdgeKind`,
+external modules, virtual queue jobs, or virtual GitHub Actions workflow jobs
+and steps. Every edge has an internal `EdgeKind`,
 serialized in JSON/YAML/text output through the `via` field.
 
 The canonical in-memory edge index is also used by `queues edges|related` and
@@ -36,6 +37,12 @@ all` output.
 | `react-render` | `ReactRender` | `react` | React component file -> rendered child component file | [`graph-missing-edges/packages/web/app/components/Parent.tsx`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/app/components/Parent.tsx) |
 | `md` | `MarkdownLink` | `md` | Markdown file -> linked visible file | [`codebase-intel/README.md`](../test-cases/codebase-analysis/codebase-intel/fixture/README.md) |
 | `ci` | `CiInvocation` | `ci` | GitHub Actions workflow -> Rust binary source invoked by supported Cargo commands | [`codebase-intel/.github/workflows/ci.yml`](../test-cases/codebase-analysis/codebase-intel/fixture/.github/workflows/ci.yml) |
+| `workflow-job` | `WorkflowJob` | `workflow`, `workflow-job` | workflow file -> virtual job node | workflow graph fixtures |
+| `workflow-step` | `WorkflowStep` | `workflow`, `workflow-step` | virtual job node -> virtual zero-based step node | workflow graph fixtures |
+| `workflow-needs` | `WorkflowNeeds` | `workflow`, `workflow-needs` | prerequisite virtual job node -> dependent virtual job node | workflow graph fixtures |
+| `workflow-uses` | `WorkflowUses` | `workflow`, `workflow-uses` | virtual job -> local reusable workflow file, or virtual step -> local action descriptor | workflow graph fixtures |
+| `workflow-run` | `WorkflowRun` | `workflow`, `workflow-run` | virtual step -> package manifest and statically resolved local command/script targets | workflow graph fixtures |
+| `workflow-artifact` | `WorkflowArtifact` | `workflow`, `workflow-artifact` | same-run upload virtual step -> download virtual step | workflow graph fixtures |
 | `process` | `ProcessSpawn` | `process` | spawner/config file -> launched entry file | [`codebase-intel/packages/api/src/spawn-runner.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/spawn-runner.mts) |
 | `dotnet-using` | `DotnetUsing` | `dotnet` | C# file -> local files in the imported namespace | [`dotnet-test-plan`](../test-cases/codebase-analysis/dotnet-test-plan) |
 | `dotnet-ref` | `DotnetReference` | `dotnet` | C# file -> file declaring a referenced C# type | [`dotnet-test-plan`](../test-cases/codebase-analysis/dotnet-test-plan) |
@@ -66,6 +73,13 @@ all` output.
 | `queue` | `queue-enqueue`, `queue-worker` |
 | `md` | `md` |
 | `ci` | `ci` |
+| `workflow` | `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact` |
+| `workflow-job` | `workflow-job` |
+| `workflow-step` | `workflow-job`, `workflow-step` |
+| `workflow-needs` | `workflow-job`, `workflow-needs` |
+| `workflow-uses` | `workflow-job`, `workflow-step`, `workflow-uses` |
+| `workflow-run` | `workflow-job`, `workflow-step`, `workflow-run` |
+| `workflow-artifact` | `workflow-job`, `workflow-step`, `workflow-artifact` |
 | `http` | `http` |
 | `process` | `process` |
 | `asset` | `asset` |
@@ -74,7 +88,19 @@ all` output.
 | `dotnet` | `dotnet-using`, `dotnet-ref`, `dotnet-project` |
 | `swift` | `swift-import`, `swift-ref`, `swift-package` |
 | `terraform` | `terraform-ref`, `terraform-module`, `terraform-output` |
-| `all` | all standard edge kinds; excludes the opt-in `route-import` alternate view |
+| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` alternate view |
+
+Workflow virtual-node IDs are stable and project-relative:
+`path/to/workflow.yml#job:<job>` for a job and
+`path/to/workflow.yml#job:<job>/step:<zero-based-index>` for a step. JSON/YAML
+dependency records expose the same identity through `workflowFile`, `job`, and
+when applicable `step`; Flow nodes use the `workflow-job` and `workflow-step`
+kinds.
+
+The precise workflow filters include the structural edges listed above so a
+forward or reverse traversal can enter and leave the relevant virtual node.
+For example, `workflow-run` includes workflow-to-job and job-to-step bridges,
+then the run edge; it does not silently include unrelated workflow semantics.
 
 ## Examples And Counterexamples
 
@@ -146,6 +172,31 @@ await queue.add(jobName, payload);
 new Worker(prefix + queueName, processor);
 ```
 
+GitHub Actions workflow edges describe static in-repository topology and
+execution targets. A workflow file connects to each job, a job to each step,
+and `needs` points from the prerequisite job to the dependent job. Local
+`uses: ./...` resolves from the repository root: a job may call a tracked local
+reusable workflow, while a step may use a tracked `action.yml` (preferred over
+`action.yaml`) beneath a configured `ci.actionDirs` root. Workflow discovery
+likewise uses only configured `ci.workflowDirs`. The action descriptor is
+terminal for this graph.
+
+For a literal `run:`, resolution applies workflow defaults, job defaults, then
+the step `working-directory`. Supported Cargo commands, literal executable
+paths, literal operands for common script runtimes, and literal package-manager
+scripts can produce edges. Package scripts first connect the step to the
+nearest tracked `package.json`, then recursively follow explicit static
+script-to-script calls with cycle protection. Quoted literals, static
+environment prefixes, newlines, `;`, `&&`, and `||` are supported; `cd`, pipes,
+substitutions, variables, globs, workspace/filter selectors, cwd flags, and
+generated paths are intentionally opaque. Paths escaping the tracked universe
+produce no edge.
+
+An upload-artifact step connects only to download-artifact steps in the same
+workflow run. Remote actions and reusable workflows, `workflow_run` dispatch
+boundaries, malformed YAML, and dangling topology endpoints remain outside the
+canonical graph.
+
 Literal runtime filesystem access produces `resource` edges. Plain relative
 paths resolve from the analysis root, while `new URL("./schema.sql",
 import.meta.url)` resolves from the calling module. `readFile`, `readdir`, and
@@ -188,8 +239,11 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   argument is a supported literal. Wrapper module identity uses the shared
   TypeScript/workspace resolver; wrapper bodies and dynamic values are not
   inferred.
-- `ci` is intentionally narrow: it covers the current workflow-to-Rust-bin
-  support and is not a full shell, npm script, or workflow dependency graph.
+- `ci` is intentionally narrow and unchanged: it covers only the legacy
+  workflow-file-to-Rust-bin `CiInvocation` edge for supported Cargo commands.
+  Use `workflow` for job/step topology, local uses, static run targets, and
+  same-run artifacts; it deliberately excludes remote uses and `workflow_run`
+  dispatch boundaries.
 - External packages are terminal module nodes. They can be selected as roots,
   targets, or filtered with `--target-module`, but their `node_modules` source
   is not parsed. Node built-ins such as `node:path` remain excluded from the

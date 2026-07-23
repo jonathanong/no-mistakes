@@ -160,6 +160,12 @@ For Rust binaries invoked by supported Cargo commands in GitHub Actions:
 no-mistakes dependents src/bin/pg_schema.rs --relationship ci --format json
 ```
 
+For local GitHub Actions control flow and static execution impact instead:
+
+```bash
+no-mistakes dependents src/bin/pg_schema.rs --relationship workflow --format json
+```
+
 Use the results as:
 
 - `impacted-checks` combines configured generic checks with framework-specific
@@ -174,7 +180,11 @@ Use the results as:
   callees.
 - `--relationship ci` is narrow: it maps GitHub Actions workflow files to Rust
   binary sources invoked by supported Cargo command shapes. It is not a general
-  shell, npm script, or workflow dependency graph.
+  shell, npm script, or workflow dependency graph. Use `--relationship
+  workflow` for static local jobs/steps, local uses, supported literal
+  run/package scripts, and same-run artifacts. Its virtual IDs are
+  `WORKFLOW#job:<job>` and `WORKFLOW#job:<job>/step:<zero-based-index>`;
+  remote `uses` and `workflow_run` remain outside that graph.
 
 ## Diff test impact planning
 

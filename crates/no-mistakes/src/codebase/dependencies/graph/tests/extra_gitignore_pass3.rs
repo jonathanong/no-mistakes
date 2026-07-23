@@ -22,7 +22,14 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
 
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
-    add_ci_edges(&root, graph_files.all(), &mut forward, &mut reverse);
+    let parsed = parsed_workflow_set(&root, graph_files.all());
+    add_ci_edges(
+        &root,
+        graph_files.all(),
+        &parsed,
+        &mut forward,
+        &mut reverse,
+    );
     let workflow = NodeId::File(root.join(".github/workflows/ci.yml"));
     let targets = forward.get(&workflow).cloned().unwrap_or_default();
     assert!(targets.iter().any(|(target, kind)| {

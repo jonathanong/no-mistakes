@@ -1,7 +1,7 @@
 fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
     if !entry.via.contains(&kind) {
         entry.via.push(kind);
-        entry.via.sort_by_key(|k| *k as u8);
+        entry.via.sort_by_key(|k| edge_kind_rank(*k));
     }
 }
 
@@ -13,5 +13,13 @@ fn node_sort_key(n: &NodeId) -> String {
         NodeId::QueueJob { queue_file, job } => {
             format!("{}#{}", queue_file.to_string_lossy(), job)
         }
+        NodeId::WorkflowJob { workflow_file, job } => {
+            format!("{}#job:{job}", workflow_file.to_string_lossy())
+        }
+        NodeId::WorkflowStep {
+            workflow_file,
+            job,
+            step,
+        } => format!("{}#job:{job}/step:{step}", workflow_file.to_string_lossy()),
     }
 }

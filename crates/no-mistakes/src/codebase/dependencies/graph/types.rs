@@ -1,6 +1,6 @@
 pub use crate::codebase::ts_source::SKIP_DIRS;
 
-/// A node in the dependency graph: a source file, external module, or virtual queue-job node.
+/// A node in the dependency graph: a source file, external module, or virtual node.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum NodeId {
     /// A source file on disk.
@@ -11,6 +11,14 @@ pub enum NodeId {
     Module(String),
     /// A virtual job node representing one (queue, jobName) pair.
     QueueJob { queue_file: PathBuf, job: String },
+    /// A virtual GitHub Actions workflow job.
+    WorkflowJob { workflow_file: PathBuf, job: String },
+    /// A virtual GitHub Actions workflow step. `step` is zero-based.
+    WorkflowStep {
+        workflow_file: PathBuf,
+        job: String,
+        step: usize,
+    },
 }
 
 impl NodeId {
@@ -21,6 +29,7 @@ impl NodeId {
             NodeId::Symbol { file, .. } => Some(file.as_path()),
             NodeId::Module(_) => None,
             NodeId::QueueJob { .. } => None,
+            NodeId::WorkflowJob { .. } | NodeId::WorkflowStep { .. } => None,
         }
     }
 
@@ -29,6 +38,9 @@ impl NodeId {
             Self::File(path) | Self::Symbol { file: path, .. } => universe.contains(path),
             Self::Module(_) => true,
             Self::QueueJob { queue_file, .. } => universe.contains(queue_file),
+            Self::WorkflowJob { workflow_file, .. } | Self::WorkflowStep { workflow_file, .. } => {
+                universe.contains(workflow_file)
+            }
         }
     }
 
@@ -50,130 +62,27 @@ impl NodeId {
                     .unwrap_or(queue_file.as_path());
                 format!("{}#{}", rel.display(), job)
             }
+            NodeId::WorkflowJob { workflow_file, job } => {
+                let rel = workflow_file
+                    .strip_prefix(root)
+                    .unwrap_or(workflow_file.as_path());
+                format!("{}#job:{job}", rel.display())
+            }
+            NodeId::WorkflowStep {
+                workflow_file,
+                job,
+                step,
+            } => {
+                let rel = workflow_file
+                    .strip_prefix(root)
+                    .unwrap_or(workflow_file.as_path());
+                format!("{}#job:{job}/step:{step}", rel.display())
+            }
         }
     }
 }
 
-/// The kind of dependency edge connecting two nodes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum EdgeKind {
-    /// Regular TS/JS static import.
-    Import,
-    /// Type-only import (`import type ...`).
-    TypeImport,
-    /// Runtime dynamic import (`import("...")`).
-    DynamicImport,
-    /// Conservative runtime import used for Playwright route reachability.
-    /// Unlike ordinary import edges, function-scoped imports are not pruned.
-    RouteImport,
-    /// CommonJS `require("...")` call.
-    Require,
-    /// Test correspondence: `foo.mts` ↔ `foo.test.mts`.
-    TestOf,
-    /// Frontend/backend route reference: ref_file → route_def_file.
-    RouteRef,
-    /// Enqueue site → QueueJob virtual node.
-    QueueEnqueue,
-    /// QueueJob virtual node → worker/processor file.
-    QueueWorker,
-    /// Playwright test ↔ frontend page file.
-    RouteTest,
-    /// Next.js App Router page → inherited layout/template/error file.
-    Layout,
-    /// Markdown link: `*.md` → linked file.
-    MarkdownLink,
-    /// Cross-workspace package import (via npm workspace resolution).
-    WorkspaceImport,
-    /// Dependency declared in a package.json dependency field.
-    PackageDependency,
-    /// CI workflow invokes a binary: `*.yml` → `src/bin/*.rs`.
-    CiInvocation,
-    /// HTTP call from a client file to a backend route-definition file.
-    HttpCall,
-    /// Process spawn: a file launches another file via `spawn`/`exec`/playwright webServer.
-    ProcessSpawn,
-    /// Explicit relative import of a non-code asset such as CSS, JSON, image, or wasm.
-    AssetImport,
-    /// Statically resolved runtime filesystem resource consumed by a TS/JS file.
-    Resource,
-    /// React component render relationship: parent component file → rendered child component file.
-    ReactRender,
-    /// Playwright selector coverage: test file → app/component file matched by
-    /// selector analysis (e.g. `data-pw` / `data-testid` attributes, locator
-    /// text).  Direction mirrors `TestOf` so that `dependents_of(component)`
-    /// returns tests that cover it via selector-based paths.
-    Selector,
-    /// Swift module import from one Swift file to local files in the imported target.
-    SwiftImport,
-    /// Swift symbol/member reference from one Swift file to the declaring file.
-    SwiftReference,
-    /// SwiftPM target dependency fallback edge between package targets.
-    SwiftPackageDependency,
-    /// C# using directive from one file to local files in the used namespace.
-    DotnetUsing,
-    /// C# type/member reference from one file to the declaring file.
-    DotnetReference,
-    /// .NET ProjectReference fallback edge between project source files.
-    DotnetProjectDependency,
-    /// Terraform/OpenTofu resource reference: a file referencing `<type>.<name>`
-    /// → the file declaring that resource/data source.
-    TerraformReference,
-    /// Terraform/OpenTofu module block reference: the file with the `module` block
-    /// → files in the module's local source directory.
-    TerraformModuleRef,
-    /// Terraform/OpenTofu output consumption: a file referencing
-    /// `module.<name>.<output>` → the file declaring that output.
-    TerraformOutputRef,
-}
-
-impl EdgeKind {
-    pub fn as_str(&self) -> &'static str {
-        self.as_core_str().unwrap_or_else(|| self.as_domain_str())
-    }
-
-    fn as_core_str(&self) -> Option<&'static str> {
-        match self {
-            EdgeKind::Import => Some("import"),
-            EdgeKind::TypeImport => Some("type-import"),
-            EdgeKind::DynamicImport => Some("dynamic-import"),
-            EdgeKind::RouteImport => Some("route-import"),
-            EdgeKind::Require => Some("require"),
-            EdgeKind::TestOf => Some("test"),
-            EdgeKind::RouteRef => Some("route"),
-            EdgeKind::QueueEnqueue => Some("queue-enqueue"),
-            EdgeKind::QueueWorker => Some("queue-worker"),
-            EdgeKind::RouteTest => Some("route-test"),
-            EdgeKind::Layout => Some("layout"),
-            EdgeKind::MarkdownLink => Some("md"),
-            EdgeKind::WorkspaceImport => Some("workspace"),
-            EdgeKind::PackageDependency => Some("package"),
-            EdgeKind::CiInvocation => Some("ci"),
-            _ => None,
-        }
-    }
-
-    fn as_domain_str(&self) -> &'static str {
-        match self {
-            EdgeKind::HttpCall => "http",
-            EdgeKind::ProcessSpawn => "process",
-            EdgeKind::AssetImport => "asset",
-            EdgeKind::Resource => "resource",
-            EdgeKind::ReactRender => "react-render",
-            EdgeKind::Selector => "selector",
-            EdgeKind::SwiftImport => "swift-import",
-            EdgeKind::SwiftReference => "swift-ref",
-            EdgeKind::SwiftPackageDependency => "swift-package",
-            EdgeKind::DotnetUsing => "dotnet-using",
-            EdgeKind::DotnetReference => "dotnet-ref",
-            EdgeKind::DotnetProjectDependency => "dotnet-project",
-            EdgeKind::TerraformReference => "terraform-ref",
-            EdgeKind::TerraformModuleRef => "terraform-module",
-            EdgeKind::TerraformOutputRef => "terraform-output",
-            _ => unreachable!("core edge kinds are handled before domain rendering"),
-        }
-    }
-}
+include!("types_edges.rs");
 
 /// A single node in the traversal result.
 #[derive(Debug, Clone, PartialEq)]

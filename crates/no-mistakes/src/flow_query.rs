@@ -1,7 +1,9 @@
 use crate::codebase::dependencies::graph::{
     DepGraph, EdgeKind, GraphBuildPlan, GraphFiles, NodeId, PreparedGraphBuild,
 };
-use crate::codebase::dependencies::{parse_entrypoint, relationship_filter, RelationshipArg};
+use crate::codebase::dependencies::{
+    parse_entrypoint, relationship_filter, workflow_node_from_suffix, RelationshipArg,
+};
 use crate::codebase::ts_resolver::{
     find_tsconfig_from_visible, load_tsconfig, normalize_path, TsConfig,
 };
@@ -53,6 +55,10 @@ pub struct FlowNode {
     pub queue_file: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub job: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workflow_file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub step: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -187,31 +193,4 @@ mod flow_query_resource_tests;
 #[path = "flow_query_timeout_tests.rs"]
 mod flow_query_timeout_tests;
 
-fn resolve_tsconfig_from_visible(
-    root: &Path,
-    explicit: Option<&Path>,
-    visible_paths: &[PathBuf],
-) -> Result<TsConfig> {
-    let explicit_path = explicit.is_some();
-    let path = match explicit {
-        Some(path) if path.is_absolute() => Some(path.to_path_buf()),
-        Some(path) => Some(root.join(path)),
-        None => find_tsconfig_from_visible(root, visible_paths),
-    };
-    match path {
-        Some(path) if explicit_path => {
-            load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()))
-        }
-        Some(path) => Ok(load_tsconfig(&path).unwrap_or_else(|_| empty_tsconfig(root))),
-        None => Ok(empty_tsconfig(root)),
-    }
-}
-
-fn empty_tsconfig(root: &Path) -> TsConfig {
-    TsConfig {
-        dir: root.to_path_buf(),
-        paths_dir: root.to_path_buf(),
-        paths: Vec::new(),
-        base_url: None,
-    }
-}
+include!("flow_query_config.rs");

@@ -55,7 +55,8 @@ pub mod workflow_values;
 #[cfg(test)]
 mod tests;
 
-use crate::codebase::ci_graph::{discover_workflow_files_from_snapshot, relative_slash};
+use crate::codebase::ci_graph::relative_slash;
+use crate::codebase::ci_workflows::ParsedWorkflowSet;
 use crate::codebase::ts_source::VisiblePathSnapshot;
 use crate::config::v2::schema::CiConfig;
 use std::collections::HashMap;
@@ -92,12 +93,20 @@ pub fn load_workflow_topology_from_snapshot(
     snapshot: &VisiblePathSnapshot,
     workflow_filters: &[String],
 ) -> model::WorkflowTopology {
-    let mut paths: Vec<String> = discover_workflow_files_from_snapshot(root, ci, snapshot)
-        .into_iter()
-        .map(|absolute| relative_slash(root, &absolute))
-        .collect();
-    paths.sort();
+    let parsed = ParsedWorkflowSet::load_from_snapshot(root, ci, snapshot);
+    load_workflow_topology_from_parsed(root, ci, &parsed, workflow_filters)
+}
 
+/// Build a topology graph from workflow documents loaded once by the caller.
+///
+/// This keeps `ci topology`, legacy CI analysis, and canonical dependency
+/// graph producers on a single read/deserialization result per workflow.
+pub fn load_workflow_topology_from_parsed(
+    root: &Path,
+    ci: &CiConfig,
+    parsed: &ParsedWorkflowSet,
+    workflow_filters: &[String],
+) -> model::WorkflowTopology {
     // The same `root.join(dir)` + normalize + relative-slash round trip
     // discovery itself applies to `ci.workflow_dirs` above — so a
     // `--workflow` filter's directory comparisons (`normalize_workflow_filter`)
@@ -122,8 +131,11 @@ pub fn load_workflow_topology_from_snapshot(
     let mut diagnostics = Vec::new();
     let mut output_references = Vec::new();
 
-    for path in &paths {
-        let parsed = parse::parse_workflow_file(root, path);
+    for document in &parsed.documents {
+        let parsed = match &document.value {
+            Ok(value) => parse::parse_workflow_value(value, &document.path),
+            Err(error) => parse::malformed_workflow(&document.path, &error.message),
+        };
         workflows.push(parsed.node);
         jobs.extend(parsed.jobs);
         edges.extend(parsed.edges);

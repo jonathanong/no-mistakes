@@ -10,6 +10,18 @@ pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, queue_file);
             format!("{}#{}", rel, job)
         }
+        NodeId::WorkflowJob { workflow_file, job } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, workflow_file);
+            format!("{}#job:{job}", rel)
+        }
+        NodeId::WorkflowStep {
+            workflow_file,
+            job,
+            step,
+        } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, workflow_file);
+            format!("{}#job:{job}/step:{step}", rel)
+        }
     }
 }
 
@@ -183,5 +195,11 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
             EdgeKind::TerraformReference => "terraform-ref",
         EdgeKind::TerraformModuleRef => "terraform-module",
         EdgeKind::TerraformOutputRef => "terraform-output",
+        EdgeKind::WorkflowJob => "workflow-job",
+        EdgeKind::WorkflowStep => "workflow-step",
+        EdgeKind::WorkflowNeeds => "workflow-needs",
+        EdgeKind::WorkflowUses => "workflow-uses",
+        EdgeKind::WorkflowRun => "workflow-run",
+        EdgeKind::WorkflowArtifact => "workflow-artifact",
     }
 }

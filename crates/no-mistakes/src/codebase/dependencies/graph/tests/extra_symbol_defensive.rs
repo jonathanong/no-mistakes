@@ -237,6 +237,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
+        ci: crate::config::v2::schema::CiConfig::default(),
     };
     assert!(collect_symbol_http_route_defs(
         Path::new("/repo"),

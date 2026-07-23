@@ -8,6 +8,8 @@ pub struct GraphBuildPlan {
     pub tests: bool,
     pub markdown: bool,
     pub ci: bool,
+    /// Build canonical GitHub Actions workflow topology edges.
+    pub workflow_topology: bool,
     pub routes: bool,
     pub queues: bool,
     pub playwright_routes: bool,
@@ -38,6 +40,7 @@ impl GraphBuildPlan {
             tests: true,
             markdown: true,
             ci: true,
+            workflow_topology: true,
             routes: true,
             queues: true,
             playwright_routes: true,
@@ -90,6 +93,12 @@ impl GraphBuildPlan {
             tests: allowed.contains(&EdgeKind::TestOf),
             markdown: allowed.contains(&EdgeKind::MarkdownLink),
             ci: allowed.contains(&EdgeKind::CiInvocation),
+            workflow_topology: allowed.contains(&EdgeKind::WorkflowJob)
+                || allowed.contains(&EdgeKind::WorkflowStep)
+                || allowed.contains(&EdgeKind::WorkflowNeeds)
+                || allowed.contains(&EdgeKind::WorkflowUses)
+                || allowed.contains(&EdgeKind::WorkflowRun)
+                || allowed.contains(&EdgeKind::WorkflowArtifact),
             routes: allowed.contains(&EdgeKind::RouteRef),
             queues: allowed.contains(&EdgeKind::QueueEnqueue)
                 || allowed.contains(&EdgeKind::QueueWorker),
@@ -122,6 +131,7 @@ impl GraphBuildPlan {
         self.tests |= other.tests;
         self.markdown |= other.markdown;
         self.ci |= other.ci;
+        self.workflow_topology |= other.workflow_topology;
         self.routes |= other.routes;
         self.queues |= other.queues;
         self.playwright_routes |= other.playwright_routes;
@@ -162,7 +172,9 @@ impl GraphBuildPlan {
 }
 
 fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
-    plan.routes
+    plan.ci
+        || plan.workflow_topology
+        || plan.routes
         || plan.queues
         || plan.http
         || plan.tests

@@ -1,30 +1,25 @@
-fn add_ci_edges(root: &Path, all_files: &[PathBuf], forward: &mut EdgeMap, reverse: &mut EdgeMap) {
+fn add_ci_edges(
+    root: &Path,
+    all_files: &[PathBuf],
+    parsed: &crate::codebase::ci_workflows::ParsedWorkflowSet,
+    forward: &mut EdgeMap,
+    reverse: &mut EdgeMap,
+) {
     let bins = collect_cargo_bins(root, all_files);
     if bins.is_empty() {
         return;
     }
 
-    // Walk .github/workflows/*.yml
-    let workflows_dir = root.join(".github").join("workflows");
-    if !workflows_dir.is_dir() {
-        return;
-    }
-
-    let edges: Vec<Edge> = all_files
+    let edges: Vec<Edge> = parsed
+        .documents
         .par_iter()
-        .filter(|path| path.starts_with(&workflows_dir))
-        .filter(|path| {
-            matches!(
-                path.extension().and_then(|e| e.to_str()),
-                Some("yml" | "yaml")
-            )
-        })
-        .flat_map_iter(|path| {
-            let source = std::fs::read_to_string(path).unwrap_or_default();
-            let Ok(invocations) = crate::codebase::ci_workflows::extract_invocations(&source)
-            else {
+        .flat_map_iter(|document| {
+            let Ok(value) = document.value.as_ref() else {
                 return Vec::new();
             };
+            let path =
+                crate::codebase::ts_resolver::normalize_path(&root.join(&document.path));
+            let invocations = crate::codebase::ci_workflows::extract_invocations_value(value);
 
             let mut edges = Vec::new();
             for inv in invocations {
@@ -80,14 +75,12 @@ impl CargoBinIndex {
         &self,
         target: &crate::codebase::ci_workflows::CargoTarget,
     ) -> Option<&PathBuf> {
-        target
-            .package
-            .as_ref()
-            .and_then(|package| {
-                self.by_package_and_name
-                    .get(&(package.clone(), target.binary.clone()))
-            })
-            .or_else(|| self.by_name.get(&target.binary))
+        match &target.package {
+            Some(package) => self
+                .by_package_and_name
+                .get(&(package.clone(), target.binary.clone())),
+            None => self.by_name.get(&target.binary),
+        }
     }
 }
 

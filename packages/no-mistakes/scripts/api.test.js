@@ -315,6 +315,29 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
 });
 
+test("graph declarations expose GitHub Actions workflow relationships and virtual nodes", () => {
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const flowDeclarations = readFileSync(join(packageRoot, "flow-types.d.ts"), "utf8");
+
+  for (const relationship of [
+    "workflow",
+    "workflow-job",
+    "workflow-step",
+    "workflow-needs",
+    "workflow-uses",
+    "workflow-run",
+    "workflow-artifact",
+  ]) {
+    assert.match(traversalDeclarations, new RegExp(`\\| "${relationship}"`));
+  }
+  assert.match(traversalDeclarations, /workflowFile\?: string;/);
+  assert.match(traversalDeclarations, /job\?: string;/);
+  assert.match(traversalDeclarations, /step\?: number;/);
+  assert.match(flowDeclarations, /"workflow-job" \| "workflow-step"/);
+  assert.match(flowDeclarations, /workflowFile\?: string;/);
+  assert.match(flowDeclarations, /step\?: number;/);
+});
+
 test("declarations expose invocation controls on every analysis", () => {
   const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
   const invocationDeclarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");

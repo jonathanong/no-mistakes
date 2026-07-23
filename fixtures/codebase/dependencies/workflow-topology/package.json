@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "nested": "npm run build",
+    "cycle-a": "npm run cycle-b",
+    "cycle-b": "npm run cycle-a"
+  }
+}

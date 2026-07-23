@@ -13,6 +13,7 @@ fn empty_options() -> GraphConfigOptions {
         dotnet_projects: Vec::new(),
         swift_packages: Vec::new(),
         terraform: Default::default(),
+        ci: crate::config::v2::schema::CiConfig::default(),
     }
 }
 
