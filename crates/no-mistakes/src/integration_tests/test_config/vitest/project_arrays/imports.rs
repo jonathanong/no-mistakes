@@ -1,5 +1,5 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{Expression, ImportDeclarationSpecifier, Program, Statement};
+use oxc_ast::ast::{BindingPattern, Expression, ImportDeclarationSpecifier, Program, Statement};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone)]
@@ -51,21 +51,78 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
                     let Some((source, imported)) = commonjs_require_binding(init) else {
                         continue;
                     };
-                    let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) =
-                        &declarator.id
-                    else {
-                        continue;
+                    let is_vitest_namespace =
+                        matches!(&declarator.id, BindingPattern::BindingIdentifier(_))
+                            && imported == "default"
+                            && is_direct_commonjs_require(init)
+                            && is_commonjs_vitest_namespace_source(&source);
+                    let imported = if is_vitest_namespace {
+                        "*".to_string()
+                    } else {
+                        imported
                     };
-                    bindings.insert(
-                        identifier.name.to_string(),
-                        ImportBinding { source, imported },
-                    );
+                    commonjs_bindings(&declarator.id, source, imported, &mut bindings);
                 }
             }
             _ => {}
         }
     }
     bindings
+}
+
+fn commonjs_bindings(
+    pattern: &BindingPattern<'_>,
+    source: String,
+    imported: String,
+    bindings: &mut BTreeMap<String, ImportBinding>,
+) {
+    match pattern {
+        BindingPattern::BindingIdentifier(identifier) => {
+            bindings.insert(
+                identifier.name.to_string(),
+                ImportBinding { source, imported },
+            );
+        }
+        // A destructured direct require is equivalent to a static named import.
+        // Aliases stay exact; computed/rest patterns remain intentionally dynamic.
+        BindingPattern::ObjectPattern(object) if imported == "default" => {
+            for property in &object.properties {
+                if property.computed {
+                    continue;
+                }
+                let Some(imported) =
+                    crate::integration_tests::test_config::shared_literals::property_key_name(
+                        &property.key,
+                    )
+                else {
+                    continue;
+                };
+                let BindingPattern::BindingIdentifier(local) = &property.value else {
+                    continue;
+                };
+                bindings.insert(
+                    local.name.to_string(),
+                    ImportBinding {
+                        source: source.clone(),
+                        imported,
+                    },
+                );
+            }
+        }
+        _ => {}
+    }
+}
+
+fn is_commonjs_vitest_namespace_source(source: &str) -> bool {
+    source == "vitest/config"
+}
+
+fn is_direct_commonjs_require(expression: &Expression<'_>) -> bool {
+    matches!(
+        unwrap_ts_wrappers(expression),
+        Expression::CallExpression(call)
+            if matches!(&call.callee, Expression::Identifier(identifier) if identifier.name == "require")
+    )
 }
 
 /// Follow only a literal CommonJS `require` binding. It is equivalent to a

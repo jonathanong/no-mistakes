@@ -135,3 +135,30 @@ fn tests_impact_json_rejects_valid_vitest_discovery_errors() {
 
     assert!(result.is_err());
 }
+
+#[test]
+fn tests_impact_json_keeps_commonjs_object_setup_owners_exact() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
+    );
+    for (entrypoint, test) in [
+        (
+            "shared-setup/destructured-commonjs.ts",
+            "destructured-commonjs-require/destructured-commonjs-require.test.ts",
+        ),
+        (
+            "shared-setup/module-exports-object.ts",
+            "module-exports-object/module-exports-object.test.ts",
+        ),
+    ] {
+        let output = tests_impact_json_impl(
+            json!({ "root": root, "entrypoints": [entrypoint] }).to_string(),
+        )
+        .unwrap();
+        let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+        assert_eq!(plan["selected_tests"][0]["test_file"], test, "{plan:#}");
+        assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1, "{plan:#}");
+        assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    }
+}

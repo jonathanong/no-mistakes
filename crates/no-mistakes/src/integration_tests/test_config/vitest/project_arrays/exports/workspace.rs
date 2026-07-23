@@ -148,6 +148,8 @@ fn is_define_workspace_call(callee: &Expression<'_>, ctx: &Ctx<'_, '_>) -> bool 
                     .imports
                     .get(namespace.name.as_str())
                     .is_some_and(|import| {
+                        // A direct CommonJS require is namespace-like. ESM
+                        // default imports remain deliberately unsupported.
                         import.imported == "*" && is_vitest_source(&import.source)
                     })
         }

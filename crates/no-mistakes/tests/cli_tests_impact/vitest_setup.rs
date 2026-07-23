@@ -133,3 +133,27 @@ fn tests_plan_setup_fallback_spends_dependency_group_budget() {
     assert_eq!(plan["groups"][0]["selected"].as_array().unwrap().len(), 1);
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
 }
+
+#[test]
+fn tests_impact_keeps_commonjs_object_setup_owners_exact() {
+    let root = vitest_setup_root();
+    for (entrypoint, test) in [
+        (
+            "shared-setup/destructured-commonjs.ts",
+            "destructured-commonjs-require/destructured-commonjs-require.test.ts",
+        ),
+        (
+            "shared-setup/module-exports-object.ts",
+            "module-exports-object/module-exports-object.test.ts",
+        ),
+    ] {
+        let plan = impact(&root, entrypoint);
+        assert_eq!(plan["selected_tests"][0]["test_file"], test, "{plan:#}");
+        assert_eq!(
+            plan["selected_tests"].as_array().unwrap().len(),
+            1,
+            "{plan:#}"
+        );
+        assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    }
+}

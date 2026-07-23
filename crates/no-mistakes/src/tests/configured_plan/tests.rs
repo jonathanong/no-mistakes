@@ -41,6 +41,7 @@ fn vitest_setup_fixture() -> (tempfile::TempDir, PathBuf) {
     (fixture, root)
 }
 
+mod vitest_setup_commonjs_objects;
 mod vitest_setup_require_resolve;
 mod vitest_setup_review_regressions;
 mod vitest_setup_scoped_resolution;

@@ -123,13 +123,16 @@ For supported inline objects, a nested `test` object owns `setupFiles` and
 static-spread declaration order.
 
 Vitest workspace configs may export a project array directly or through
-`defineWorkspace([...])`. With no `tests.vitest.configs`, executable root
-`vitest.workspace.*` and `vitest.projects.*` files are discovered by default.
-`vitest.workspace.json` and `vitest.projects.json` remain explicit-only and
-accept static arrays of inline objects and string project paths/globs. Folder
-globs select configs directly inside each matched project root; nested roots
-require their own folder glob. Project config-file globs recognize suffixes
-such as `vitest.config.unit.ts` and `vite.config.e2e.js`.
+`defineWorkspace([...])`. With no `tests.vitest.configs`, root
+`vitest.workspace.*` and `vitest.projects.*` files are discovered by default,
+including JSON. JSON arrays accept static inline project objects and string
+project paths/globs. Folder globs select configs directly inside each matched
+project root; nested roots require their own folder glob. Project config-file
+globs recognize suffixes such as `vitest.config.unit.ts` and
+`vite.config.e2e.js`.
+`defineWorkspace` is static through a named ESM import, an ESM namespace, or a
+direct `require('vitest/config')` namespace; ESM defaults and CommonJS
+`.default` members remain unsupported dynamic forms.
 
 Setup values are extracted statically from string and array forms. Dynamic
 expressions and unresolved literal modules produce a JSON warning with the
@@ -140,7 +143,9 @@ framework set when ownership cannot be determined) and sets
 `--global-config-fallback`. Its bounded helper closure follows ordinary static
 imports/re-exports and literal CommonJS `require(...)` or
 `require.resolve(...)` dependencies, retaining their edits and deletions as
-owner triggers; computed or non-literal forms are not followed.
+owner triggers. Static CommonJS setup bindings may use direct members or
+destructured aliases, and helpers may expose named values through
+`module.exports = { ... }`; computed or non-literal forms are not followed.
 
 Resolved paths use `via: ["vitest-setup"]`. JSON may also contain the optional
 aligned `via_details` array; its `{ "type": "vitest-setup", "field":

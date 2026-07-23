@@ -33,4 +33,26 @@ fn static_setup_reexports_resolve_commonjs_members_and_imported_defaults() {
         root.join("config/default-imported-setups.ts"),
         "the final static helper owns the resolved setup declaration"
     );
+    let replacement = &project("commonjs-replacement").vitest_setup;
+    assert_eq!(replacement.len(), 4, "{replacement:#?}");
+    let resolved = replacement
+        .iter()
+        .filter_map(|setup| setup.resolved_path.as_ref())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        resolved,
+        [
+            &root.join("shared-setup/alias-barrier-retained.ts"),
+            &root.join("shared-setup/module-override.ts"),
+        ],
+        "a module.exports replacement shadows old named values and detaches exports"
+    );
+    assert_eq!(
+        replacement
+            .iter()
+            .filter(|setup| setup.specifier.is_none())
+            .count(),
+        2,
+        "named values missing from a final object or non-object replacement stay dynamic"
+    );
 }

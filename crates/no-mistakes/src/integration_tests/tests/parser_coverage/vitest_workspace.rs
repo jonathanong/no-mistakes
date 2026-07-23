@@ -52,7 +52,7 @@ fn saved_fixture(name: &str) -> tempfile::TempDir {
 }
 
 #[test]
-fn explicitly_configured_json_workspaces_parse_objects_and_string_projects() {
+fn default_json_workspace_discovery_parses_objects_and_string_projects() {
     let fixture = saved_fixture("vitest-workspace-json");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let visible = crate::codebase::ts_source::discover_visible_paths(&root);
@@ -92,23 +92,27 @@ fn explicitly_configured_json_workspaces_parse_objects_and_string_projects() {
         inline.vitest_setup[0].specifier.as_deref(),
         Some("./setup.ts")
     );
+    // JSON project arrays have their own parser and do not enter the AST count.
     assert_eq!(counts.get(&root.join("vitest.workspace.json")), None);
     assert_eq!(counts.get(&root.join("vitest.projects.json")), None);
     assert_eq!(
         counts.get(&root.join("string-project/vitest.config.ts")),
         Some(&1)
     );
-    assert!(
-        crate::integration_tests::project_config::load_projects_from_visible(
-            &root,
-            Framework::Vitest,
-            None,
-            &visible,
-            &tsconfig,
-        )
-        .unwrap()
-        .is_empty(),
-        "JSON project arrays remain explicit-only"
+    let default_projects = crate::integration_tests::project_config::load_projects_from_visible(
+        &root,
+        Framework::Vitest,
+        None,
+        &visible,
+        &tsconfig,
+    )
+    .unwrap();
+    assert_eq!(
+        default_projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["json-inline", "json-string"]
     );
 }
 
@@ -268,6 +272,26 @@ fn arbitrary_default_call_is_not_a_workspace_config() {
 }
 
 #[test]
+fn default_vitest_bindings_are_not_workspace_namespaces() {
+    for (fixture_name, file) in [
+        ("vitest-workspace-default-import", "vitest.workspace.ts"),
+        ("vitest-workspace-default-member", "vitest.workspace.cts"),
+    ] {
+        let fixture = saved_fixture(fixture_name);
+        let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+        let path = root.join(file);
+        let source = std::fs::read_to_string(&path).unwrap();
+
+        assert!(
+            parse_vitest_fixture(&source, &path, &root)
+                .unwrap()
+                .is_empty(),
+            "{fixture_name}"
+        );
+    }
+}
+
+#[test]
 fn vitest_project_glob_accepts_config_suffixes() {
     let fixture = saved_fixture("vitest-config-suffix-glob");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
@@ -406,7 +430,14 @@ fn commonjs_require_bindings_ignore_incomplete_static_forms() {
         projects[0].policy_name.as_deref(),
         Some("commonjs-negative-bindings")
     );
-    assert!(projects[0].vitest_setup.is_empty());
+    assert_eq!(projects[0].vitest_setup.len(), 2, "{projects:#?}");
+    assert!(
+        projects[0]
+            .vitest_setup
+            .iter()
+            .all(|setup| setup.specifier.is_none() && setup.resolved_path.is_none()),
+        "{projects:#?}"
+    );
 }
 
 #[test]

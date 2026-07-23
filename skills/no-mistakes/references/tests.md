@@ -97,10 +97,13 @@ For supported inline objects, nested `test` owns `setupFiles` and
 `globalSetup`; same-named outer fields are ignored regardless of direct or
 static-spread declaration order.
 Workspace configs may export projects directly or through
-`defineWorkspace([...])`. Without `tests.vitest.configs`, executable root
-`vitest.workspace.*` and `vitest.projects.*` files are discovered by default;
-their `.json` counterparts remain explicit-only. Config globs include suffixes
-such as `vitest.config.unit.ts` and `vite.config.e2e.js`.
+`defineWorkspace([...])`. Without `tests.vitest.configs`, root
+`vitest.workspace.*` and `vitest.projects.*` files, including `.json`, are
+discovered by default. Config globs include suffixes such as
+`vitest.config.unit.ts` and `vite.config.e2e.js`.
+`defineWorkspace` is static through named ESM imports, ESM namespaces, or a
+direct `require('vitest/config')` namespace; ESM defaults and CommonJS
+`.default` members remain unsupported dynamic forms.
 
 Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
 `vitest-setup-unresolved` warnings. If relevant, planning safely selects the
@@ -108,8 +111,9 @@ known owner scope (or the discovered Vitest framework set if no owner is known)
 and sets `fallback_triggered` without relying on `globalConfigFallback`. Its
 bounded helper closure follows ordinary static imports/re-exports and literal
 CommonJS `require(...)` or `require.resolve(...)` dependencies, retaining
-edits and deletions as owner triggers; computed or non-literal forms are not
-followed.
+edits and deletions as owner triggers. Static CommonJS bindings support direct
+members, destructured aliases, and named `module.exports = { ... }` values;
+computed or non-literal forms are not followed.
 
 For `tests impact`, a malformed or unavailable optional Vitest config does not
 block unrelated native test impact. A successfully prepared Vitest config is

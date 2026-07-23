@@ -22,12 +22,14 @@ const VITEST_CONFIGS: &[&str] = &[
     "vitest.workspace.js",
     "vitest.workspace.mjs",
     "vitest.workspace.cjs",
+    "vitest.workspace.json",
     "vitest.projects.ts",
     "vitest.projects.mts",
     "vitest.projects.cts",
     "vitest.projects.js",
     "vitest.projects.mjs",
     "vitest.projects.cjs",
+    "vitest.projects.json",
 ];
 
 pub(crate) fn discovered_config_paths(

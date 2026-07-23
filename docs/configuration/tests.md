@@ -38,9 +38,8 @@ refer to ignored files.
 `tests.vitest.configs` explicitly accepts `vitest.workspace.*` and
 `vitest.projects.*` for the extensions `ts`, `mts`, `cts`, `js`, `mjs`, `cjs`,
 and `json`. When omitted, default discovery includes Git-visible root
-`vitest.config.*`, `vitest.workspace.*`, and `vitest.projects.*` files with the
-executable extensions. `vitest.workspace.json` and `vitest.projects.json`
-remain explicit-only. Configured project-array sources export project arrays
+`vitest.config.*`, `vitest.workspace.*`, and `vitest.projects.*` files,
+including JSON project arrays. Project-array sources export project arrays
 directly; JSON arrays support static inline project objects and string project
 paths/globs and are parsed as JSON, not JavaScript.
 

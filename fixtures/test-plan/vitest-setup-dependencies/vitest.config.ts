@@ -28,6 +28,13 @@ import { cycleMemberConfig } from './config/named-member-cycle-a'
 
 const localSetups = { files: ['./setup/local-member.ts'] }
 const requiredSetups = require('./config/commonjs-require-setups.cjs').setupFiles
+// Destructured CJS aliases remain static setup bindings, not dynamic values.
+const { destructuredSetups: aliasedDestructuredSetups } = require('./config/module-exports-object-setups.cjs')
+const objectMemberSetups = require('./config/module-exports-object-setups.cjs').objectMemberSetups
+const replacedObjectSetups = require('./config/commonjs-replacement-setups.cjs').replacedObjectSetups
+const aliasBarrierSetups = require('./config/commonjs-replacement-setups.cjs').aliasBarrierSetups
+const moduleOverrideSetups = require('./config/commonjs-replacement-setups.cjs').moduleOverrideSetups
+const replacedNonobjectSetups = require('./config/commonjs-nonobject-replacement-setups.cjs').replacedNonobjectSetups
 
 const localDynamicSetup = () => importedDynamicSetup()
 const localCommonjsDynamicSetup = () => importedCommonjsDynamicSetup()
@@ -159,6 +166,24 @@ export default defineConfig({
       },
       {
         test: {
+          name: 'destructured-commonjs-require',
+          root: './destructured-commonjs-require',
+          include: ['**/*.test.ts'],
+          setupFiles: aliasedDestructuredSetups,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'module-exports-object',
+          root: './module-exports-object',
+          include: ['**/*.test.ts'],
+          setupFiles: objectMemberSetups,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
           name: 'arbitrary-project-match',
           root: './arbitrary-project-match',
           include: ['**/*.fixture'],
@@ -237,6 +262,22 @@ export default defineConfig({
           root: './empty-owner',
           include: ['**/*.test.ts'],
           setupFiles: dynamicSetup,
+        },
+      },
+      {
+        test: {
+          name: 'commonjs-replacement',
+          root: './commonjs-replacement-owner',
+          include: ['**/*.test.ts'],
+          // Final module replacement detaches `exports`, while a later
+          // `module.exports.member` assignment remains an exact override.
+          setupFiles: [
+            replacedObjectSetups,
+            replacedNonobjectSetups,
+            aliasBarrierSetups,
+            moduleOverrideSetups,
+          ],
+          globalSetup: [],
         },
       },
       {
