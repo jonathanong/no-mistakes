@@ -35,6 +35,9 @@ const replacedObjectSetups = require('./config/commonjs-replacement-setups.cjs')
 const aliasBarrierSetups = require('./config/commonjs-replacement-setups.cjs').aliasBarrierSetups
 const moduleOverrideSetups = require('./config/commonjs-replacement-setups.cjs').moduleOverrideSetups
 const replacedNonobjectSetups = require('./config/commonjs-nonobject-replacement-setups.cjs').replacedNonobjectSetups
+const { projects: cjsNamedMemberProjects } = require('./config/cjs-project-named-member.cjs')
+const { projects: cjsNamedObjectProjects } = require('./config/cjs-project-named-object.cjs')
+const { projects: cjsNamedReplacementProjects } = require('./config/cjs-project-named-replacement.cjs')
 
 const localDynamicSetup = () => importedDynamicSetup()
 const localCommonjsDynamicSetup = () => importedCommonjsDynamicSetup()
@@ -322,6 +325,15 @@ export default defineConfig({
           globalSetup: [],
         },
       },
+      // Literal CommonJS project arrays work both as entries and spreads.
+      require('./config/cjs-project-direct-element.cjs'),
+      ...require('./config/cjs-project-direct-spread.cjs'),
+      ...cjsNamedMemberProjects,
+      ...cjsNamedObjectProjects,
+      ...cjsNamedReplacementProjects,
+      // Cycles and computed CommonJS exports remain deliberately empty.
+      ...require('./config/cjs-project-cycle-a.cjs'),
+      ...require('./config/cjs-project-computed.cjs'),
       importedProject,
       './vitest.string-project.ts',
       './vitest.standalone-imported-project.ts',

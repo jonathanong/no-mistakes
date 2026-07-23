@@ -4,6 +4,9 @@ use std::process::{Command, Output};
 #[path = "cli_tests_impact/vitest_setup.rs"]
 mod vitest_setup;
 
+#[path = "cli_tests_impact/vitest_commonjs_projects.rs"]
+mod vitest_commonjs_projects;
+
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }

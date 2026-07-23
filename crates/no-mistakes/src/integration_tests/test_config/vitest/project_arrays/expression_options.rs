@@ -1,6 +1,6 @@
 use super::{
-    array_options, body_return_options, calls, exports, members, objects, Ctx, ImportBinding,
-    Options,
+    array_options, body_return_options, calls, direct_literal_require_binding, exports, members,
+    objects, Ctx, ImportBinding, Options,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
@@ -15,10 +15,15 @@ pub(super) fn expression_options(
         Expression::ArrayExpression(array) => array_options(array, ctx),
         Expression::ObjectExpression(object) => Ok(vec![objects::project_options(object, ctx)?]),
         Expression::Identifier(identifier) => identifier_options(identifier.name.as_str(), ctx),
-        Expression::CallExpression(call) if call.arguments.is_empty() => {
-            calls::call_options(&call.callee, ctx)
+        Expression::CallExpression(call) => {
+            if let Some(import) = direct_literal_require_binding(expression) {
+                imported_options(&import, ctx)
+            } else if call.arguments.is_empty() {
+                calls::call_options(&call.callee, ctx)
+            } else {
+                Ok(Vec::new())
+            }
         }
-        Expression::CallExpression(_) => Ok(Vec::new()),
         Expression::StaticMemberExpression(member) => {
             members::namespace_member_options(member, ctx)
         }

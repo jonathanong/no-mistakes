@@ -19,6 +19,9 @@ mod vitest_extends;
 #[path = "parser_coverage/vitest_config_extends_edges.rs"]
 mod vitest_config_extends_edges;
 
+#[path = "parser_coverage/vitest_commonjs_projects.rs"]
+mod vitest_commonjs_projects;
+
 #[path = "parser_coverage/vitest_json_extends.rs"]
 mod vitest_json_extends;
 

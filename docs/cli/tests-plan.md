@@ -120,6 +120,11 @@ inline project (for example `extends: './vite.config.js'`) inherits that
 config's `setupFiles` and `globalSetup`; local values are appended. A config
 referenced as a string in `test.projects` is parsed as an independent config
 and does not inherit the referencing config's setup fields.
+Literal CommonJS project arrays are also supported as direct `require(...)`
+entries or spreads. Named `projects` bindings destructured from a literal
+require resolve static `module.exports.projects` and
+`module.exports = { projects: [...] }` assignments; computed, dynamic, and
+cyclic forms remain unsupported.
 For supported inline objects, a nested `test` object owns `setupFiles` and
 `globalSetup`; same-named outer fields are ignored regardless of direct or
 static-spread declaration order.

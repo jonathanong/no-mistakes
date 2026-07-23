@@ -42,6 +42,7 @@ fn vitest_setup_fixture() -> (tempfile::TempDir, PathBuf) {
 }
 
 mod vitest_setup_commonjs_objects;
+mod vitest_setup_commonjs_projects;
 mod vitest_setup_config_extends;
 mod vitest_setup_require_resolve;
 mod vitest_setup_review_regressions;

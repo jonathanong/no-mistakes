@@ -28,7 +28,7 @@ use expression_options::{
 };
 use function_returns::body_return_options;
 use functions::top_level_function_bodies;
-use imports::{import_bindings, ImportBinding};
+use imports::{direct_literal_require_binding, import_bindings, ImportBinding};
 use project_entries::{
     flattened_project_elements, global_excluded_string_projects, selected_string_project_paths,
     selected_string_project_roots,
@@ -187,7 +187,9 @@ pub(super) fn array_options(
                         }
                         continue;
                     }
-                    if !shared::is_array_expression_reference(expression, &ctx.bindings) {
+                    if direct_literal_require_binding(expression).is_some() {
+                        options.extend(expression_options(expression, ctx)?);
+                    } else if !shared::is_array_expression_reference(expression, &ctx.bindings) {
                         if let Some(option) = objects::expression_object_options(expression, ctx)? {
                             options.push(option);
                         }

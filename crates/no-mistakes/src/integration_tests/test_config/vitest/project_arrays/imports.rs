@@ -1,6 +1,9 @@
-use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{BindingPattern, Expression, ImportDeclarationSpecifier, Program, Statement};
+use oxc_ast::ast::{BindingPattern, ImportDeclarationSpecifier, Program, Statement};
 use std::collections::{BTreeMap, BTreeSet};
+
+mod commonjs;
+pub(super) use commonjs::direct_literal_require_binding;
+use commonjs::{is_direct_commonjs_require, require_binding};
 
 #[derive(Clone)]
 pub(super) struct ImportBinding {
@@ -48,7 +51,7 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
                     let Some(init) = declarator.init.as_ref() else {
                         continue;
                     };
-                    let Some((source, imported)) = commonjs_require_binding(init) else {
+                    let Some((source, imported)) = require_binding(init) else {
                         continue;
                     };
                     let is_vitest_namespace =
@@ -115,32 +118,6 @@ fn commonjs_bindings(
 
 fn is_commonjs_vitest_namespace_source(source: &str) -> bool {
     source == "vitest/config"
-}
-
-fn is_direct_commonjs_require(expression: &Expression<'_>) -> bool {
-    matches!(
-        unwrap_ts_wrappers(expression),
-        Expression::CallExpression(call)
-            if matches!(&call.callee, Expression::Identifier(identifier) if identifier.name == "require")
-    )
-}
-
-/// Follow only a literal CommonJS `require` binding. It is equivalent to a
-/// static ESM import for config parsing; computed and executable forms remain
-/// dynamic and retain the conservative fallback path.
-fn commonjs_require_binding(expression: &Expression<'_>) -> Option<(String, String)> {
-    match unwrap_ts_wrappers(expression) {
-        Expression::CallExpression(call) if matches!(&call.callee, Expression::Identifier(identifier) if identifier.name == "require") =>
-        {
-            let [oxc_ast::ast::Argument::StringLiteral(source)] = call.arguments.as_slice() else {
-                return None;
-            };
-            Some((source.value.to_string(), "default".to_string()))
-        }
-        Expression::StaticMemberExpression(member) => commonjs_require_binding(&member.object)
-            .map(|(source, _)| (source, member.property.name.to_string())),
-        _ => None,
-    }
 }
 
 /// Runtime module sources, including side-effect imports, re-exports, and

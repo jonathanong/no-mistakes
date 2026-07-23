@@ -1,4 +1,5 @@
 include!("tests_impact/resources.rs");
+include!("tests_impact/vitest_commonjs_projects.rs");
 include!("tests_impact/vitest_setup.rs");
 
 #[test]
