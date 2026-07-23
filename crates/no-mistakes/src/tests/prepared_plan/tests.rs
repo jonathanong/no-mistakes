@@ -142,6 +142,22 @@ fn prepared_vitest_setup_projects_retain_visible_test_candidates() {
 }
 
 #[test]
+fn prepared_vitest_setup_projects_skip_builtin_and_configured_directories() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-skipped"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let mut args = framework_args(&root, TestFramework::Vitest);
+    args.config = Some(root.join(".no-mistakes.yml"));
+    let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
+    let projects = prepared.prepared_test_projects.vitest_setup_projects();
+
+    assert!(projects.is_empty());
+}
+
+#[test]
 fn requested_runner_failure_is_memoized() {
     let source = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

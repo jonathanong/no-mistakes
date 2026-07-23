@@ -36,6 +36,13 @@ pub(super) fn expression_object<'a>(
 
 fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result<Options> {
     let mut options = Options::default();
+    // Vitest treats setup fields as test-scoped whenever a nested `test`
+    // object exists, regardless of declaration order.
+    let nested_test = object.properties.iter().any(|property| {
+        matches!(property, ObjectPropertyKind::ObjectProperty(property)
+            if !property.computed && !property.method
+                && shared::property_key_name(&property.key).as_deref() == Some("test"))
+    });
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
@@ -44,17 +51,20 @@ fn parse_options(object: &ObjectExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Result
                 }
                 let name = shared::property_key_name(&property.key);
                 if name.as_deref() == Some("test") {
-                    if let Some(test_options) = expression_object_options(&property.value, ctx)? {
+                    if let Some(mut test_options) = expression_object_options(&property.value, ctx)?
+                    {
                         options.name = None;
                         options.include = None;
                         options.exclude = None;
                         options.setup_files = None;
                         options.global_setup = None;
+                        test_options.nested_test_scope = true;
                         merge_options(&mut options, test_options);
                     }
                     continue;
                 }
-                merge_property(&mut options, name, &property.value, ctx)?;
+                let nested_test_scope = nested_test || options.nested_test_scope;
+                merge_property(&mut options, name, &property.value, nested_test_scope, ctx)?;
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
                 if let Some(imported) = spread_options(&spread.argument, ctx)? {
@@ -70,6 +80,7 @@ fn merge_property(
     options: &mut Options,
     name: Option<String>,
     value: &Expression<'_>,
+    nested_test: bool,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<()> {
     let resolved = shared::expression_value(value, &ctx.bindings);
@@ -94,11 +105,11 @@ fn merge_property(
                 resolved, ctx.source, "exclude",
             )?);
         }
-        Some("setupFiles") => {
+        Some("setupFiles") if !nested_test => {
             options.setup_files =
                 Some(setup_dependencies(value, VitestSetupField::SetupFiles, ctx));
         }
-        Some("globalSetup") => {
+        Some("globalSetup") if !nested_test => {
             options.global_setup = Some(setup_dependencies(
                 value,
                 VitestSetupField::GlobalSetup,

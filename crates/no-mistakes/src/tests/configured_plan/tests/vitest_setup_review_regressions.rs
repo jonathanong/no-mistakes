@@ -239,7 +239,7 @@ fn named_imported_setup_member_helper_provenance_keeps_its_owner() {
 #[test]
 fn resolved_setup_runtime_loader_deletion_uses_its_owner_fallback() {
     let (_fixture, root) = vitest_setup_fixture();
-    for helper in ["required-helper", "dynamic-helper"] {
+    for helper in ["required-helper", "dynamic-helper", "resolved-loader"] {
         let mut args = vitest_setup_args(root.clone(), Vec::new());
         args.diff_content = Some(format!(
             "diff --git a/runtime-owner/setup/{helper}.ts b/runtime-owner/setup/{helper}.ts\n--- a/runtime-owner/setup/{helper}.ts\n+++ /dev/null\n@@ -1 +0,0 @@\n-export const {helper} = true\n"
@@ -261,6 +261,19 @@ fn resolved_setup_runtime_loader_deletion_uses_its_owner_fallback() {
             "{helper}: {plan:#?}"
         );
     }
+
+    let mut nonliteral = vitest_setup_args(root, Vec::new());
+    nonliteral.diff_content = Some(
+        "diff --git a/runtime-owner/setup/nonliteral-loader.ts b/runtime-owner/setup/nonliteral-loader.ts\n\
+--- a/runtime-owner/setup/nonliteral-loader.ts\n\
++++ /dev/null\n\
+@@ -1 +0,0 @@\n\
+-export const nonliteral = true\n"
+            .to_string(),
+    );
+    let plan = crate::tests::plan::generate_plan(&nonliteral).unwrap();
+    assert!(plan.selected_tests.is_empty(), "{plan:#?}");
+    assert!(!plan.fallback_triggered, "{plan:#?}");
 }
 
 #[test]

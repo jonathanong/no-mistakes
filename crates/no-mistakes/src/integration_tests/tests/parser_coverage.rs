@@ -10,6 +10,9 @@ mod vitest_workspace_exports;
 #[path = "parser_coverage/vitest_setup_branches.rs"]
 mod vitest_setup_branches;
 
+#[path = "parser_coverage/vitest_nested_setup.rs"]
+mod vitest_nested_setup;
+
 #[path = "parser_coverage/vitest_extends.rs"]
 mod vitest_extends;
 

@@ -1,6 +1,33 @@
+use super::Options;
 use crate::integration_tests::types::VitestSetupDependency;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+
+pub(super) fn merge_options(root: &Options, project: Options) -> Options {
+    Options {
+        name: project.name.or_else(|| root.name.clone()),
+        root: project.root.or_else(|| root.root.clone()),
+        include: project.include.or_else(|| root.include.clone()),
+        exclude: combine(root.exclude.clone(), project.exclude),
+        setup_files: inherit_setup_files(
+            (project.extends == Some(true))
+                .then(|| root.setup_files.clone())
+                .flatten(),
+            project.setup_files,
+        ),
+        global_setup: inherit_setup_files(
+            (project.extends == Some(true))
+                .then(|| root.global_setup.clone())
+                .flatten(),
+            project.global_setup,
+        ),
+        extends: project.extends,
+        nested_test_scope: project.nested_test_scope,
+        standalone_config: project.standalone_config,
+        standalone_config_path: project.standalone_config_path,
+        config_base: project.config_base.or_else(|| root.config_base.clone()),
+    }
+}
 
 pub(super) fn inherit_setup_files(
     inherited: Option<Vec<VitestSetupDependency>>,
@@ -37,4 +64,10 @@ pub(super) fn dedupe_resolved_setups(setups: &mut Vec<VitestSetupDependency>) {
         }
     }
     *setups = retained;
+}
+
+fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Option<Vec<String>> {
+    let mut values = left.unwrap_or_default();
+    values.extend(right.unwrap_or_default());
+    (!values.is_empty()).then_some(values)
 }

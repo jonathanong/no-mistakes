@@ -13,6 +13,7 @@ pub(crate) mod setup_resolution;
 #[cfg(test)]
 pub(in crate::integration_tests) mod tests;
 
+use merge::merge_options;
 use setup_resolution::resolve_setup_dependencies;
 
 const DEFAULT_EXTENSIONS: &[&str] = &[
@@ -27,6 +28,9 @@ pub(super) struct Options {
     pub(super) exclude: Option<Vec<String>>,
     pub(super) setup_files: Option<Vec<VitestSetupDependency>>,
     pub(super) global_setup: Option<Vec<VitestSetupDependency>>,
+    /// A nested `test` object owns setup fields, including when it arrives
+    /// through a supported static object spread.
+    pub(super) nested_test_scope: bool,
     /// Whether an inline project explicitly sets `extends`. Root setup fields
     /// are inherited only when its final value is `Some(true)`.
     pub(super) extends: Option<bool>,
@@ -158,37 +162,6 @@ fn to_project(
             .chain(options.global_setup.into_iter().flatten())
             .collect(),
     }
-}
-
-fn merge_options(root: &Options, project: Options) -> Options {
-    Options {
-        name: project.name.or_else(|| root.name.clone()),
-        root: project.root.or_else(|| root.root.clone()),
-        include: project.include.or_else(|| root.include.clone()),
-        exclude: combine(root.exclude.clone(), project.exclude),
-        setup_files: merge::inherit_setup_files(
-            (project.extends == Some(true))
-                .then(|| root.setup_files.clone())
-                .flatten(),
-            project.setup_files,
-        ),
-        global_setup: merge::inherit_setup_files(
-            (project.extends == Some(true))
-                .then(|| root.global_setup.clone())
-                .flatten(),
-            project.global_setup,
-        ),
-        extends: project.extends,
-        standalone_config: project.standalone_config,
-        standalone_config_path: project.standalone_config_path,
-        config_base: project.config_base.or_else(|| root.config_base.clone()),
-    }
-}
-
-fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Option<Vec<String>> {
-    let mut values = left.unwrap_or_default();
-    values.extend(right.unwrap_or_default());
-    (!values.is_empty()).then_some(values)
 }
 
 fn default_include() -> Vec<String> {

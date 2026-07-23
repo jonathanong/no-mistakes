@@ -93,6 +93,9 @@ project. Inline project fields inherit a root field only with `extends: true`;
 the default and `extends: false` keep the project independent. A string config
 in `test.projects` is likewise independent of its referencing config. Explicit
 values replace inherited fields and `[]` clears them.
+For supported inline objects, nested `test` owns `setupFiles` and
+`globalSetup`; same-named outer fields are ignored regardless of direct or
+static-spread declaration order.
 Workspace configs may export projects directly or through
 `defineWorkspace([...])`. Without `tests.vitest.configs`, executable root
 `vitest.workspace.*` and `vitest.projects.*` files are discovered by default;
@@ -104,8 +107,13 @@ Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
 known owner scope (or the discovered Vitest framework set if no owner is known)
 and sets `fallback_triggered` without relying on `globalConfigFallback`. Its
 bounded helper closure follows ordinary static imports/re-exports and literal
-CommonJS `require(...)` dependencies, retaining edits and deletions as owner
-triggers; computed or dynamic `require` is not followed.
+CommonJS `require(...)` or `require.resolve(...)` dependencies, retaining
+edits and deletions as owner triggers; computed or non-literal forms are not
+followed.
+
+For `tests impact`, a malformed or unavailable optional Vitest config does not
+block unrelated native test impact. A successfully prepared Vitest config is
+still strict: discovery errors such as invalid include patterns are returned.
 
 Resolved setup edges use `via: ["vitest-setup"]`; optional aligned
 `via_details` records `{ type: "vitest-setup", field: "setupFiles" |

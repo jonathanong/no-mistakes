@@ -118,6 +118,9 @@ Vitest project. Inline projects inherit root setup fields only with
 own value applies, and `[]` clears it. A config referenced as a string in
 `test.projects` is parsed as an independent config and does not inherit the
 referencing config's setup fields.
+For supported inline objects, a nested `test` object owns `setupFiles` and
+`globalSetup`; same-named outer fields are ignored regardless of direct or
+static-spread declaration order.
 
 Vitest workspace configs may export a project array directly or through
 `defineWorkspace([...])`. With no `tests.vitest.configs`, executable root
@@ -135,9 +138,9 @@ plan conservatively selects the affected owner scope (or the discovered Vitest
 framework set when ownership cannot be determined) and sets
 `fallback_triggered`; this safety fallback does not require
 `--global-config-fallback`. Its bounded helper closure follows ordinary static
-imports/re-exports and literal CommonJS `require(...)` dependencies, retaining
-their edits and deletions as owner triggers; computed or dynamic `require` is
-not followed.
+imports/re-exports and literal CommonJS `require(...)` or
+`require.resolve(...)` dependencies, retaining their edits and deletions as
+owner triggers; computed or non-literal forms are not followed.
 
 Resolved paths use `via: ["vitest-setup"]`. JSON may also contain the optional
 aligned `via_details` array; its `{ "type": "vitest-setup", "field":

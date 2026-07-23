@@ -100,10 +100,10 @@ targets outside the tracked graph universe. `ci` remains the separate legacy
 framework-scoped discovered tests. Vitest plans also use this surface for a
 dynamic or unresolved `setupFiles`/`globalSetup` declaration: the result is
 bounded to its known project owner when possible. Its helper closure follows
-ordinary static imports/re-exports and literal CommonJS `require(...)`
-dependencies, retaining edits and deletions as owner triggers; computed or
-dynamic `require` is not followed. Resolved setup paths use
-`via: ["vitest-setup"]` and may add `via_details`, an optional array aligned
+ordinary static imports/re-exports and literal CommonJS `require(...)` or
+`require.resolve(...)` dependencies, retaining edits and deletions as owner
+triggers; computed or non-literal forms are not followed. Resolved setup paths
+use `via: ["vitest-setup"]` and may add `via_details`, an optional array aligned
 with `via` whose setup edge detail is `{ type: "vitest-setup", field:
 "setupFiles" | "globalSetup" }`.
 
@@ -111,6 +111,11 @@ with `via` whose setup edge detail is `{ type: "vitest-setup", field:
 and the Mermaid graph renders the Vitest field in the edge label. The optional
 fields preserve compatibility with previously saved plan JSON and are absent
 for ordinary edges.
+
+`testsImpact()` skips only a failed or unavailable optional Vitest config so a
+native test impact remains available. If Vitest configuration prepared
+successfully, its discovery errors (such as invalid include patterns) reject
+the API call just as they do for direct Vitest discovery.
 
 `testsPlan(options)` rejects (rather than resolving to an empty plan) when
 `base`/`head`/`fromGitDiff` can't be resolved by Git — an invalid ref, a

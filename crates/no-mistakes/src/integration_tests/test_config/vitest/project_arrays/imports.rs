@@ -87,8 +87,8 @@ fn commonjs_require_binding(expression: &Expression<'_>) -> Option<(String, Stri
 }
 
 /// Runtime module sources, including side-effect imports, re-exports, and
-/// literal CommonJS `require` calls. Dynamic Vitest setup values use this for
-/// a bounded helper-module closure.
+/// literal CommonJS `require` and `require.resolve` calls. Dynamic Vitest
+/// setup values use this for a bounded helper-module closure.
 pub(in crate::integration_tests::test_config::vitest) fn import_sources(
     program: &Program<'_>,
 ) -> BTreeSet<String> {
@@ -116,7 +116,8 @@ pub(in crate::integration_tests::test_config::vitest) fn import_sources(
         })
         .collect::<BTreeSet<_>>();
     // Reuse canonical dependency extraction for CommonJS semantics instead of
-    // teaching this config-only parser a second require recognizer.
+    // teaching this config-only parser a second require recognizer. A literal
+    // `require.resolve` is also a runtime loader candidate when deleted.
     sources.extend(
         crate::codebase::dependencies::extract::extract_imports_from_program(program)
             .into_iter()
@@ -124,6 +125,7 @@ pub(in crate::integration_tests::test_config::vitest) fn import_sources(
                 matches!(
                     import.kind,
                     crate::codebase::dependencies::extract::ImportKind::Require
+                        | crate::codebase::dependencies::extract::ImportKind::RequireResolve
                 )
             })
             .map(|import| import.specifier),

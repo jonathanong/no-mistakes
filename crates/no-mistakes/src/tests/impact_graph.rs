@@ -132,7 +132,10 @@ pub(crate) fn build_test_impact_graph(
         .prepared_projects(TestRunner::Vitest)
         .unwrap_or_default()
         .to_vec();
-    let vitest_discovered =
+    // Vitest setup fallback is optional only when its prepared config failed
+    // or was unavailable. Valid Vitest projects still surface discovery
+    // errors, such as invalid include/exclude patterns.
+    let vitest_discovered = if projects.prepared_projects(TestRunner::Vitest).is_some() {
         no_mistakes::codebase::test_discovery::discover_tests_from_prepared_projects(
             root,
             config,
@@ -140,7 +143,14 @@ pub(crate) fn build_test_impact_graph(
             &projects,
             &visible_paths,
             &tsconfig,
-        )?;
+        )?
+    } else {
+        DiscoveredTests {
+            tests: Vec::new(),
+            targets_by_path: Default::default(),
+            used_fallback: false,
+        }
+    };
     let prepared_graph_config =
         no_mistakes::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
             root,
@@ -270,6 +280,44 @@ mod tests {
             &root,
             &root.join("swift-clients/core/Sources/VouchaCore/APIClient.swift")
         ));
+    }
+
+    #[test]
+    fn impact_graph_keeps_native_test_filters_when_optional_vitest_is_invalid() {
+        let root = no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/test-plan/impact-invalid-vitest-config"),
+        );
+        let visible = VisiblePathSnapshot::new(&root);
+        let config = no_mistakes::config::v2::load_v2_config_from_visible(
+            &root,
+            None,
+            &visible.paths_for(&root),
+        )
+        .unwrap();
+        let impact = build_test_impact_graph(&root, None, &config, None, false).unwrap();
+
+        assert!(impact
+            .test_filter
+            .is_match(&root, &root.join("tests/ServiceTests.cs")));
+        assert!(impact.vitest_discovered.tests.is_empty());
+    }
+
+    #[test]
+    fn impact_graph_keeps_valid_vitest_discovery_errors_strict() {
+        let root = no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/test-plan/impact-invalid-vitest-discovery"),
+        );
+        let visible = VisiblePathSnapshot::new(&root);
+        let config = no_mistakes::config::v2::load_v2_config_from_visible(
+            &root,
+            None,
+            &visible.paths_for(&root),
+        )
+        .unwrap();
+
+        assert!(build_test_impact_graph(&root, None, &config, None, false).is_err());
     }
 
     #[test]

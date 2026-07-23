@@ -106,3 +106,32 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
         "{plan:#}"
     );
 }
+
+#[test]
+fn tests_impact_json_keeps_native_tests_when_optional_vitest_is_invalid() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/impact-invalid-vitest-config"),
+    );
+    let output = tests_impact_json_impl(
+        json!({ "root": root, "entrypoints": ["tests/ServiceTests.cs"] }).to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["selected_tests"][0]["test_file"], "tests/ServiceTests.cs");
+    assert_eq!(plan["selected_tests"][0]["reasons"][0]["via"][0], "self");
+}
+
+#[test]
+fn tests_impact_json_rejects_valid_vitest_discovery_errors() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/impact-invalid-vitest-discovery"),
+    );
+    let result = tests_impact_json_impl(
+        json!({ "root": root, "entrypoints": ["tests/ServiceTests.cs"] }).to_string(),
+    );
+
+    assert!(result.is_err());
+}

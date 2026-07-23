@@ -13,6 +13,11 @@ not narrow the result.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
 
+When Vitest configuration is malformed or unavailable, its optional setup
+fallback is skipped so unrelated native test impact can still be reported. A
+successfully prepared Vitest config remains strict: invalid Vitest discovery
+patterns fail `tests impact`.
+
 ## Runtime filesystem resources
 
 Impact traversal also follows supported literal filesystem reads, directory

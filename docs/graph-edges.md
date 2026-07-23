@@ -263,8 +263,8 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   Dynamic or unresolved declarations do not guess an edge; test planning emits
   a diagnostic and uses its bounded owner fallback instead. Its helper closure
   follows ordinary static import/re-export and literal CommonJS `require(...)`
-  dependencies, retaining edits and deletions as owner triggers; computed or
-  dynamic `require` is not followed.
+  or `require.resolve(...)` dependencies, retaining edits and deletions as
+  owner triggers; computed or non-literal forms are not followed.
 
 
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse
