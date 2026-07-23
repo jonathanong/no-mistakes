@@ -1,5 +1,40 @@
 use super::*;
-use std::path::PathBuf;
+use crate::codebase::ts_resolver::{ImportClassification, ImportResolution};
+use std::collections::{BTreeSet, HashSet};
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+
+struct MissingWorkspaceSourceResolver {
+    missing_path: PathBuf,
+    resolved_missing_source: AtomicBool,
+}
+
+impl ImportResolution for MissingWorkspaceSourceResolver {
+    fn resolve(&self, specifier: &str, _: &Path) -> Option<PathBuf> {
+        (specifier == "./missing-projects.cjs").then(|| {
+            self.resolved_missing_source.store(true, Ordering::Relaxed);
+            self.missing_path.clone()
+        })
+    }
+
+    fn resolution_candidates(&self, specifier: &str, _: &Path) -> BTreeSet<PathBuf> {
+        self.resolve(specifier, Path::new("")).into_iter().collect()
+    }
+
+    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+        None
+    }
+
+    fn classify_import(
+        &self,
+        _: &str,
+        _: &Path,
+        _: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        _: &HashSet<PathBuf>,
+    ) -> ImportClassification {
+        unreachable!("workspace export parsing only resolves direct literal requires")
+    }
+}
 
 fn saved_fixture(name: &str) -> tempfile::TempDir {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -66,4 +101,27 @@ fn vitest_workspace_exports_handle_namespace_reexports_and_safe_empty_forms() {
             "{fixture_name}"
         );
     }
+}
+
+#[test]
+fn missing_literal_commonjs_workspace_require_is_a_safe_empty_export() {
+    let fixture = saved_fixture("vitest-workspace-commonjs-missing-require");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.workspace.cjs");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let resolver = MissingWorkspaceSourceResolver {
+        missing_path: root.join("missing-projects.cjs"),
+        resolved_missing_source: AtomicBool::new(false),
+    };
+    let projects =
+        crate::integration_tests::runner_config::with_program(&path, &source, |program, source| {
+            crate::integration_tests::test_config::vitest::parse_program_with_resolver(
+                program, source, &path, &root, &root, &resolver,
+            )
+        })
+        .unwrap()
+        .unwrap();
+
+    assert!(resolver.resolved_missing_source.load(Ordering::Relaxed));
+    assert!(projects.is_empty());
 }
