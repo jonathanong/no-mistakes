@@ -30,7 +30,8 @@ use function_returns::body_return_options;
 use functions::top_level_function_bodies;
 use imports::{import_bindings, ImportBinding};
 use project_entries::{
-    flattened_project_elements, global_excluded_string_project_paths, selected_string_project_paths,
+    flattened_project_elements, global_excluded_string_project_paths,
+    selected_string_project_paths, selected_string_project_roots,
 };
 pub(super) use root_options::root_options;
 pub(in crate::integration_tests::test_config::vitest) use string_projects::{
@@ -124,9 +125,11 @@ pub(super) fn array_options(
     // negation order-independent without moving a positive config ahead of
     // adjacent inline entries in the final project list.
     let string_paths = selected_string_project_paths(&elements, ctx);
+    let string_roots = selected_string_project_roots(&elements, ctx);
     let mut excluded_paths = string_paths.excluded.clone();
     excluded_paths.extend(global_excluded_string_project_paths(&elements, ctx));
     let mut parsed_string_paths = BTreeSet::new();
+    let mut parsed_string_roots = BTreeSet::new();
     let mut options = Vec::new();
     for element in elements {
         match element {
@@ -155,6 +158,25 @@ pub(super) fn array_options(
                                     std::iter::once(path),
                                     ctx,
                                 )?);
+                            }
+                        }
+                        for root in string_projects::string_project_roots(
+                            project_config.value.as_str().trim_start_matches('!'),
+                            ctx,
+                        ) {
+                            if string_roots.included.contains(&root)
+                                && !string_roots.excluded.contains(&root)
+                                && parsed_string_roots.insert(root.clone())
+                            {
+                                options.push(Options {
+                                    root: Some(root.to_string_lossy().into_owned()),
+                                    // A project string that names a folder is
+                                    // an independent Vitest project. It must
+                                    // use its own defaults instead of merging
+                                    // aggregate config include/name settings.
+                                    standalone_config: true,
+                                    ..Options::default()
+                                });
                             }
                         }
                         continue;

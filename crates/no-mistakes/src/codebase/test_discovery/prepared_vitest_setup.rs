@@ -42,10 +42,23 @@ impl PreparedTestProjects {
                 setups.sort();
                 setups.dedup();
                 (!setups.is_empty()).then(|| {
+                    let tests = self
+                        .visible_paths
+                        .iter()
+                        .filter(|path| {
+                            let relative = crate::codebase::ts_source::relative_slash_path(
+                                &self.root,
+                                path,
+                            );
+                            filter.is_match(&relative)
+                        })
+                        .cloned()
+                        .collect();
                     crate::codebase::dependencies::graph::VitestSetupProject {
                         config: project.config.clone(),
                         scope: project.scope.clone(),
                         filter,
+                        tests,
                         setups,
                     }
                 })

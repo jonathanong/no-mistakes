@@ -2,13 +2,24 @@ use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{
     DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphBuild,
 };
-use no_mistakes::codebase::test_discovery::{FrameworkPreparationPlan, PreparedTestProjectRequest};
+use no_mistakes::codebase::test_discovery::{
+    DiscoveredTests, FrameworkPreparationPlan, PreparedTestProjectRequest, TestRunner,
+};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::codebase::ts_resolver::{TsConfig, TsConfigCatalog};
 use no_mistakes::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
 use no_mistakes::config::v2::NoMistakesConfig;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+pub(crate) struct ImpactGraph {
+    pub(crate) graph: DepGraph,
+    pub(crate) test_filter: TestFileFilter,
+    pub(crate) vitest_projects: Vec<no_mistakes::integration_tests::types::ConfigProject>,
+    pub(crate) vitest_discovered: DiscoveredTests,
+    pub(crate) visible_files: HashSet<PathBuf>,
+}
 
 /// Build the canonical graph shared by the CLI and N-API impact entrypoints.
 /// Discovery, source loading, runner parsing, fact collection, and graph
@@ -19,7 +30,7 @@ pub(crate) fn build_test_impact_graph(
     config: &NoMistakesConfig,
     config_path: Option<&Path>,
     include_symbols: bool,
-) -> Result<(DepGraph, TestFileFilter)> {
+) -> Result<ImpactGraph> {
     let visible = VisiblePathSnapshot::new(root);
     let visible_paths = visible.paths_for(root);
     let sources = visible.source_store_for(root);
@@ -110,6 +121,19 @@ pub(crate) fn build_test_impact_graph(
         &visible_paths,
         projects.project_filters(),
     );
+    let vitest_projects = projects
+        .prepared_projects(TestRunner::Vitest)
+        .unwrap_or_default()
+        .to_vec();
+    let vitest_discovered =
+        no_mistakes::codebase::test_discovery::discover_tests_from_prepared_projects(
+            root,
+            config,
+            TestRunner::Vitest,
+            &projects,
+            &visible_paths,
+            &tsconfig,
+        )?;
     let prepared_graph_config =
         no_mistakes::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
             root,
@@ -155,10 +179,13 @@ pub(crate) fn build_test_impact_graph(
             swift_facts: projects.swift_facts(),
             visible_paths: Some(&visible),
         })?;
-    Ok((
-        graph.with_vitest_setup_projects(projects.vitest_setup_projects()),
+    Ok(ImpactGraph {
+        graph: graph.with_vitest_setup_projects(projects.vitest_setup_projects()),
         test_filter,
-    ))
+        vitest_projects,
+        vitest_discovered,
+        visible_files: visible_paths.iter().cloned().collect(),
+    })
 }
 
 fn catalog(
@@ -209,7 +236,7 @@ mod tests {
         .unwrap();
         build_test_impact_graph(&root, None, &config, None, false)
             .unwrap()
-            .1
+            .test_filter
     }
 
     #[test]

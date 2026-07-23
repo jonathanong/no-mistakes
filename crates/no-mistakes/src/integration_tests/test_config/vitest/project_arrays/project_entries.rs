@@ -1,4 +1,7 @@
-use super::{string_projects::string_project_paths, Ctx};
+use super::{
+    string_projects::{string_project_paths, string_project_roots},
+    Ctx,
+};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ArrayExpression, ArrayExpressionElement, Expression};
 use std::collections::BTreeSet;
@@ -8,6 +11,11 @@ mod imported_exclusions;
 pub(super) use imported_exclusions::global_excluded_string_project_paths;
 
 pub(super) struct StringProjectPaths {
+    pub(super) included: BTreeSet<PathBuf>,
+    pub(super) excluded: BTreeSet<PathBuf>,
+}
+
+pub(super) struct StringProjectRoots {
     pub(super) included: BTreeSet<PathBuf>,
     pub(super) excluded: BTreeSet<PathBuf>,
 }
@@ -34,6 +42,29 @@ pub(super) fn selected_string_project_paths(
     }
     included.retain(|path| !excluded.contains(path));
     StringProjectPaths { included, excluded }
+}
+
+pub(super) fn selected_string_project_roots(
+    elements: &[&ArrayExpressionElement<'_>],
+    ctx: &Ctx<'_, '_>,
+) -> StringProjectRoots {
+    let mut included = BTreeSet::new();
+    let mut excluded = BTreeSet::new();
+    for element in elements {
+        let Some(expression) = element.as_expression() else {
+            continue;
+        };
+        let Expression::StringLiteral(project) = unwrap_ts_wrappers(expression) else {
+            continue;
+        };
+        let (specifier, roots) = match project.value.as_str().strip_prefix('!') {
+            Some(pattern) => (pattern, &mut excluded),
+            None => (project.value.as_str(), &mut included),
+        };
+        roots.extend(string_project_roots(specifier, ctx));
+    }
+    included.retain(|path| !excluded.contains(path));
+    StringProjectRoots { included, excluded }
 }
 
 pub(super) fn flattened_project_elements<'a>(

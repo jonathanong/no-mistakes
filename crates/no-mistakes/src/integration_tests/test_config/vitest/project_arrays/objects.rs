@@ -72,18 +72,18 @@ fn merge_property(
     value: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<()> {
-    let value = shared::expression_value(value, &ctx.bindings);
+    let resolved = shared::expression_value(value, &ctx.bindings);
     match name.as_deref() {
-        Some("name") => options.name = shared::optional_string(value, ctx.source),
-        Some("root") => options.root = shared::optional_string(value, ctx.source),
+        Some("name") => options.name = shared::optional_string(resolved, ctx.source),
+        Some("root") => options.root = shared::optional_string(resolved, ctx.source),
         Some("extends") => {
-            options.extends = match crate::codebase::ts_source::unwrap_ts_wrappers(value) {
+            options.extends = match crate::codebase::ts_source::unwrap_ts_wrappers(resolved) {
                 Expression::BooleanLiteral(boolean) => Some(boolean.value),
                 _ => None,
             };
         }
         Some("include") => {
-            let include = shared::inferred_string_or_array(value, ctx.source, "include")?;
+            let include = shared::inferred_string_or_array(resolved, ctx.source, "include")?;
             if include.is_empty() {
                 anyhow::bail!("expected string literal or string array for include");
             }
@@ -91,7 +91,7 @@ fn merge_property(
         }
         Some("exclude") => {
             options.exclude = Some(shared::inferred_string_or_array(
-                value, ctx.source, "exclude",
+                resolved, ctx.source, "exclude",
             )?);
         }
         Some("setupFiles") => {

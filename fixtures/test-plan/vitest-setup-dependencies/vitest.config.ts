@@ -22,6 +22,7 @@ import { commonjsNamedMemberConfig } from './config/named-member-commonjs.cjs'
 import { cycleMemberConfig } from './config/named-member-cycle-a'
 
 const localSetups = { files: ['./setup/local-member.ts'] }
+const requiredSetups = require('./config/commonjs-require-setups.cjs').setupFiles
 
 const localDynamicSetup = () => importedDynamicSetup()
 // This static reference cycle must stop after recording the config trigger.
@@ -29,6 +30,8 @@ const cyclicDynamicSetup = () => cyclicDynamicSetup()
 
 export default defineConfig({
   test: {
+    // Configless project folders must not inherit this aggregate-only glob.
+    include: ['root/**/*.spec.ts'],
     setupFiles: './setup/root.ts',
     globalSetup: './setup/global.mts',
     projects: [
@@ -127,10 +130,32 @@ export default defineConfig({
       },
       {
         test: {
+          name: 'commonjs-require',
+          root: './commonjs-require',
+          include: ['**/*.test.ts'],
+          // Static CommonJS config bindings are equivalent to literal imports.
+          setupFiles: requiredSetups,
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
+          name: 'arbitrary-project-match',
+          root: './arbitrary-project-match',
+          include: ['**/*.fixture'],
+          setupFiles: './setup/arbitrary.ts',
+          globalSetup: [],
+        },
+      },
+      {
+        test: {
           name: 'runtime-loaders',
           root: './runtime-owner',
           include: ['**/*.test.ts'],
-          setupFiles: './setup/runtime-loaders.ts',
+          setupFiles: [
+            './setup/runtime-loaders.ts',
+            './setup/deleted-runtime-loader.ts',
+          ],
           globalSetup: [],
         },
       },
@@ -230,6 +255,7 @@ export default defineConfig({
       importedProject,
       './vitest.string-project.ts',
       './packages/foo/vitest.project.ts',
+      './configless-project',
     ],
   },
 })

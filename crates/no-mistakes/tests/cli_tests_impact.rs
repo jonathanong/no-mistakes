@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "cli_tests_impact/vitest_setup.rs"]
+mod vitest_setup;
+
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
@@ -54,79 +57,6 @@ fn only_reason_via(plan: &serde_json::Value, test_file: &str) -> Vec<String> {
         .iter()
         .map(|kind| kind.as_str().unwrap().to_string())
         .collect()
-}
-
-#[test]
-fn tests_impact_keeps_unresolved_literal_vitest_setup_as_an_entrypoint() {
-    let root = no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
-    );
-    let output = run(&[
-        "tests",
-        "impact",
-        "inherits/setup/missing.ts",
-        "--root",
-        root.to_str().unwrap(),
-        "--json",
-    ]);
-
-    assert!(
-        output.status.success(),
-        "stderr: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    let selected = plan["selected_tests"].as_array().unwrap();
-    assert_eq!(selected.len(), 1, "{plan:#}");
-    assert_eq!(selected[0]["test_file"], "inherits/inherited.test.ts");
-    assert!(
-        selected[0]["reasons"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|reason| {
-                reason["via"]
-                    .as_array()
-                    .is_some_and(|via| via.last().is_some_and(|edge| edge == "vitest-setup"))
-            }),
-        "{plan:#}"
-    );
-}
-
-#[test]
-fn tests_plan_setup_fallback_spends_dependency_group_budget() {
-    let root = no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
-    );
-    let output = run(&[
-        "tests",
-        "plan",
-        "vitest",
-        "--root",
-        root.to_str().unwrap(),
-        "--config",
-        "dependency-limit.no-mistakes.yml",
-        "--changed-file",
-        "setup/conditional-a.ts",
-        "--changed-file",
-        "config/setup-selector.ts",
-        "--json",
-    ]);
-
-    assert!(
-        output.status.success(),
-        "stderr: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
-    assert_eq!(plan["groups"].as_array().unwrap().len(), 1, "{plan:#}");
-    assert_eq!(plan["groups"][0]["type"], "dependencies");
-    assert_eq!(plan["groups"][0]["limit"], 1);
-    assert_eq!(plan["groups"][0]["selected"].as_array().unwrap().len(), 1);
-    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
 }
 
 #[test]

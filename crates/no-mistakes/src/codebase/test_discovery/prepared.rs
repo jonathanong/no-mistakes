@@ -2,7 +2,9 @@
 /// and every framework-specific discovery view.
 #[doc(hidden)]
 pub struct PreparedTestProjects {
+    root: PathBuf,
     projects: BTreeMap<TestRunner, std::result::Result<Vec<ConfigProject>, String>>,
+    visible_paths: Vec<PathBuf>,
     graph_facts: crate::codebase::ts_source::facts::TsFactMap,
     dotnet_facts: Option<crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<crate::codebase::swift::SwiftFactMap>,
@@ -116,7 +118,9 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
                 .collect()
         });
     PreparedTestProjects {
+        root: root.to_path_buf(),
         projects,
+        visible_paths: visible_paths.to_vec(),
         dotnet_facts: prepared_dotnet.map(|(_, facts)| facts),
         swift_facts: prepared_swift,
         graph_facts: crate::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(

@@ -12,11 +12,22 @@ impl DepGraph {
 
     fn materialize_vitest_setup_edges(&self) -> Vec<CanonicalEdge<NodeId, EdgeKind>> {
         let mut edges = Vec::new();
-        for node in self.edges.forward().keys() {
-            let NodeId::File(test) = node else {
-                continue;
-            };
-            let relative = crate::codebase::ts_source::relative_slash_path(&self.root, test);
+        let mut tests = self
+            .edges
+            .forward()
+            .keys()
+            .filter_map(|node| match node {
+                NodeId::File(path) => Some(path.clone()),
+                _ => None,
+            })
+            .collect::<std::collections::BTreeSet<_>>();
+        tests.extend(
+            self.vitest_setup_projects
+                .iter()
+                .flat_map(|project| project.tests.iter().cloned()),
+        );
+        for test in tests {
+            let relative = crate::codebase::ts_source::relative_slash_path(&self.root, &test);
             let matched = self
                 .vitest_setup_projects
                 .iter()

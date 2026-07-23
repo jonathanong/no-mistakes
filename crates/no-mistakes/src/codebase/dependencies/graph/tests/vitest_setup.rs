@@ -27,6 +27,7 @@ fn vitest_setup_edges_are_lazy_and_connect_setup_dependencies_to_tests() {
             },
         )
         .unwrap(),
+        tests: Vec::new(),
         setups: vec![(setup.clone(), VitestSetupField::SetupFiles)],
     }]);
 
@@ -45,6 +46,24 @@ fn vitest_setup_edges_are_lazy_and_connect_setup_dependencies_to_tests() {
         impacted
             .iter()
             .any(|entry| entry.node == NodeId::File(test.clone()))
+    );
+}
+
+#[test]
+fn vitest_setup_edges_keep_explicit_non_indexable_project_matches() {
+    let test = p("/repo/contracts/widget.snapshot");
+    let setup = p("/repo/setup/contracts.ts");
+    let mut project = vitest_project("contracts", Some("."), "contracts/**/*.snapshot", &setup);
+    project.tests = vec![test.clone()];
+    let graph = from_typed_maps(p("/repo"), HashMap::new(), EdgeMap::new())
+        .with_vitest_setup_projects(vec![project]);
+
+    assert_eq!(
+        graph.dependents_of_node(&NodeId::File(setup)),
+        Some(&vec![(
+            NodeId::File(test),
+            EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
+        )]),
     );
 }
 
@@ -201,6 +220,7 @@ fn vitest_project(
         scope: project.scope.clone(),
         filter: crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(&project)
             .unwrap(),
+        tests: Vec::new(),
         setups: vec![(setup.to_path_buf(), VitestSetupField::SetupFiles)],
     }
 }

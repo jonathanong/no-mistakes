@@ -51,4 +51,58 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
             .as_array()
             .is_some_and(|via| via.last().is_some_and(|edge| edge == "vitest-setup"))
     }), "{selected:#?}");
+
+    let output = tests_impact_json_impl(
+        json!({
+            "root": root,
+            "entrypoints": ["arbitrary-project-match/setup/arbitrary.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(
+        plan["selected_tests"][0]["test_file"],
+        "arbitrary-project-match/arbitrary.fixture",
+        "{plan:#}"
+    );
+
+    let output = tests_impact_json_impl(
+        json!({ "root": root, "entrypoints": ["config/setup-selector.ts"] }).to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+    assert_eq!(plan["selected_tests"][0]["test_file"], "inherits/inherited.test.ts");
+
+    let output = tests_impact_json_impl(
+        json!({
+            "root": root,
+            "entrypoints": ["runtime-owner/setup/deleted-runtime-helper.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+    assert_eq!(
+        plan["selected_tests"][0]["test_file"],
+        "runtime-owner/runtime-owner.test.ts",
+        "{plan:#}"
+    );
+    assert!(plan["fallback_reason"]
+        .as_str()
+        .is_some_and(|reason| reason.contains("transitive dependency of a resolved setup was deleted")), "{plan:#}");
+
+    let output = tests_impact_json_impl(
+        json!({ "root": root, "entrypoints": ["configless-project/default.test.ts"] })
+            .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(
+        plan["selected_tests"][0]["test_file"],
+        "configless-project/default.test.ts",
+        "{plan:#}"
+    );
 }

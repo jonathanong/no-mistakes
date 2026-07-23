@@ -295,6 +295,31 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .collect::<Vec<_>>(),
         ["direct-project"]
     );
+    assert_eq!(
+        broad
+            .iter()
+            .filter(|project| project.policy_name.is_none())
+            .filter_map(|project| project.scope.as_deref())
+            .collect::<Vec<_>>(),
+        [
+            "packages/arbitrary",
+            "packages/business",
+            "packages/configless",
+            "packages/custom",
+        ],
+        "folder globs retain configless visible roots as default projects"
+    );
+    let configless = broad
+        .iter()
+        .find(|project| project.scope.as_deref() == Some("packages/configless"))
+        .expect("synthesized configless project");
+    assert!(
+        configless
+            .include
+            .iter()
+            .any(|include| include == "packages/configless/**/*.test.ts"),
+        "configless folders must not inherit the aggregate root include"
+    );
     let nested = parse("vitest.business.config.ts");
     assert_eq!(
         nested
@@ -302,6 +327,38 @@ fn vitest_folder_globs_only_parse_configs_in_matched_roots() {
             .filter_map(|project| project.policy_name.as_deref())
             .collect::<Vec<_>>(),
         ["nested-business-project"]
+    );
+    let arbitrary = parse("vitest.arbitrary.config.ts");
+    assert_eq!(
+        arbitrary
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["arbitrary-project-file"],
+        "an explicit project-file glob may use any supported runtime filename"
+    );
+    let custom = parse("vitest.custom-project.config.ts");
+    assert_eq!(
+        custom
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["custom-extension-project"],
+        "an explicit project file may use an obscure extension with TS parsing fallback"
+    );
+    let exact_folder = parse("vitest.exact-folder.config.ts");
+    assert!(
+        exact_folder
+            .iter()
+            .all(|project| project.policy_name.as_deref() != Some("nested-business-project")),
+        "an exact folder entry must not parse a nested Vitest config"
+    );
+    assert_eq!(
+        exact_folder
+            .iter()
+            .filter_map(|project| project.scope.as_deref())
+            .collect::<Vec<_>>(),
+        ["packages/business"]
     );
 }
 

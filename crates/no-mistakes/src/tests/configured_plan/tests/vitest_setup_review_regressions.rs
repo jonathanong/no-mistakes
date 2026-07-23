@@ -135,6 +135,7 @@ fn commonjs_literal_setup_exports_create_owner_scoped_setup_edges() {
         "commonjs-values/setup/commonjs-default-template.ts",
         "commonjs-values/setup/commonjs-named.ts",
         "commonjs-values/setup/commonjs-named-template.ts",
+        "commonjs-require/setup/commonjs-required.ts",
     ] {
         let plan = crate::tests::plan::generate_plan(&vitest_setup_args(
             root.clone(),
@@ -146,7 +147,11 @@ fn commonjs_literal_setup_exports_create_owner_scoped_setup_edges() {
                 .iter()
                 .map(|test| test.test_file.as_str())
                 .collect::<Vec<_>>(),
-            ["commonjs-values/commonjs-values.test.ts"],
+            [if setup.starts_with("commonjs-require/") {
+                "commonjs-require/commonjs-require.test.ts"
+            } else {
+                "commonjs-values/commonjs-values.test.ts"
+            },],
             "{setup}: {plan:#?}"
         );
         assert!(!plan.fallback_triggered, "{setup}: {plan:#?}");

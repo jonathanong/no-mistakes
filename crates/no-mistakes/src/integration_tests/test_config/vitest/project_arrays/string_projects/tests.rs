@@ -1,5 +1,6 @@
 use super::{
-    is_vitest_project_config, parse_string_project_with_resolver, slash_path, visible_config_glob,
+    is_vitest_project_config, parse_string_project_with_resolver, slash_path,
+    visible_folder_config_glob,
 };
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -75,13 +76,13 @@ fn active_string_project_cycles_are_skipped() {
 
 #[test]
 fn absolute_project_globs_use_slashes_for_windows_paths() {
-    let pattern = slash_path(Path::new(r"C:\repo\configs\..\packages\*\vitest.config.ts"));
+    let pattern = slash_path(Path::new(r"C:\repo\configs\..\packages\*"));
     let candidate = slash_path(Path::new(r"C:\repo\packages\e2e\vitest.config.ts"));
     assert!(!pattern.contains('\\'));
     assert!(!candidate.contains('\\'));
 
     let normalized_pattern = pattern.replace("configs/../", "");
-    assert!(visible_config_glob(&normalized_pattern)
+    assert!(visible_folder_config_glob(&normalized_pattern)
         .unwrap()
         .is_match(candidate));
 }

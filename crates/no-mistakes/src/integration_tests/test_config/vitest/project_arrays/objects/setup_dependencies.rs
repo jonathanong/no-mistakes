@@ -32,7 +32,6 @@ fn setup_dependencies_bounded(
     if depth >= MAX_STATIC_SETUP_BRANCH_DEPTH {
         return None;
     }
-    let value = shared::expression_value(value, &ctx.bindings);
     if let Expression::Identifier(identifier) = unwrap_ts_wrappers(value) {
         if let Some(import) = ctx.imports.get(identifier.name.as_str()).cloned() {
             if let Some(dependencies) =
@@ -42,6 +41,7 @@ fn setup_dependencies_bounded(
             }
         }
     }
+    let value = shared::expression_value(value, &ctx.bindings);
     if let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(value) {
         if let Some(dependencies) =
             super::static_members::static_member_setup_dependencies(member, field, ctx)
