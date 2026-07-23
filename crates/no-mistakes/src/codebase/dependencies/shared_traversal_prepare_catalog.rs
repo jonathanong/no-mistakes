@@ -92,6 +92,13 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
             root_visible_paths,
             &sources,
         ));
+    projects.reparse_vitest_with_final_catalog(
+        root,
+        config,
+        root_visible_paths,
+        std::sync::Arc::clone(&catalog),
+        std::sync::Arc::clone(&sources),
+    );
     projects.reresolve_vitest_setups(root, &catalog, root_visible_paths);
     Ok((catalog, projects))
 }

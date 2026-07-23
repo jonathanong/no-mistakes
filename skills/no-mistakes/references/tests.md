@@ -94,8 +94,10 @@ the default and `extends: false` keep the project independent. A string config
 in `test.projects` is likewise independent of its referencing config. Explicit
 values replace inherited fields and `[]` clears them.
 Workspace configs may export projects directly or through
-`defineWorkspace([...])`; config globs include suffixes such as
-`vitest.config.unit.ts` and `vite.config.e2e.js`.
+`defineWorkspace([...])`. Without `tests.vitest.configs`, executable root
+`vitest.workspace.*` and `vitest.projects.*` files are discovered by default;
+their `.json` counterparts remain explicit-only. Config globs include suffixes
+such as `vitest.config.unit.ts` and `vite.config.e2e.js`.
 
 Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
 `vitest-setup-unresolved` warnings. If relevant, planning safely selects the

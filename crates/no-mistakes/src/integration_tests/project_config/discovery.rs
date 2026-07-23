@@ -16,6 +16,18 @@ const VITEST_CONFIGS: &[&str] = &[
     "vitest.config.js",
     "vitest.config.mjs",
     "vitest.config.cjs",
+    "vitest.workspace.ts",
+    "vitest.workspace.mts",
+    "vitest.workspace.cts",
+    "vitest.workspace.js",
+    "vitest.workspace.mjs",
+    "vitest.workspace.cjs",
+    "vitest.projects.ts",
+    "vitest.projects.mts",
+    "vitest.projects.cts",
+    "vitest.projects.js",
+    "vitest.projects.mjs",
+    "vitest.projects.cjs",
 ];
 
 pub(crate) fn discovered_config_paths(

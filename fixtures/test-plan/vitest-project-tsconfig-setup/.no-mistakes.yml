@@ -1,3 +1,3 @@
 tests:
   vitest:
-    configs: vitest.config.ts
+    configs: vitest.workspace.ts

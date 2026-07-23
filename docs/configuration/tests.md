@@ -37,10 +37,12 @@ refer to ignored files.
 
 `tests.vitest.configs` explicitly accepts `vitest.workspace.*` and
 `vitest.projects.*` for the extensions `ts`, `mts`, `cts`, `js`, `mjs`, `cjs`,
-and `json`. These project-array filenames are not auto-discovered; when
-configured, they export project arrays directly. JSON arrays support static
-inline project objects and string project paths/globs and are parsed as JSON,
-not JavaScript.
+and `json`. When omitted, default discovery includes Git-visible root
+`vitest.config.*`, `vitest.workspace.*`, and `vitest.projects.*` files with the
+executable extensions. `vitest.workspace.json` and `vitest.projects.json`
+remain explicit-only. Configured project-array sources export project arrays
+directly; JSON arrays support static inline project objects and string project
+paths/globs and are parsed as JSON, not JavaScript.
 
 Dotnet and Swift test plans use explicit config for source-graph targeting.
 `tests.dotnet.projects` or `tests.dotnet.solutions`, and

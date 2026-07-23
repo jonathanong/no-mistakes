@@ -26,6 +26,7 @@ fn setup(specifier: Option<&str>) -> VitestSetupDependency {
     VitestSetupDependency {
         field: VitestSetupField::SetupFiles,
         specifier: specifier.map(str::to_string),
+        needs_final_catalog_reparse: false,
         resolved_path: None,
         resolution_base: PathBuf::from("/repo/config"),
         declaration_path: PathBuf::from("/repo/config/setup.ts"),

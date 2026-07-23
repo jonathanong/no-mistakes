@@ -14,11 +14,74 @@ fn fixture(name: &str) -> (tempfile::TempDir, PathBuf) {
 #[test]
 fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
     let (_fixture, root) = fixture("vitest-project-tsconfig-setup");
+    let config_path = root.join(".no-mistakes.yml");
+    crate::ast::begin_parse_count(&root);
+    let mut shared =
+        crate::codebase::dependencies::SharedTraversalContext::prepare_with_framework_plan(
+            root.clone(),
+            None,
+            Some(&config_path),
+            crate::codebase::dependencies::graph::GraphBuildPlan::default(),
+            crate::codebase::test_discovery::FrameworkPreparationPlan::for_runners([
+                crate::codebase::test_discovery::TestRunner::Vitest,
+            ]),
+        )
+        .unwrap();
+    let parses = crate::ast::finish_parse_count(&root);
+    assert_eq!(
+        parses.get(&root.join("vitest.workspace.ts")),
+        Some(&2),
+        "the unresolved imported alias is reparsed once with the final catalog: {parses:#?}"
+    );
+    assert_eq!(
+        parses.get(&root.join("packages/unit/vitest.config.ts")),
+        Some(&2),
+        "the standalone project config is reparsed once with the final catalog: {parses:#?}"
+    );
+    assert_eq!(
+        shared.source_store().physical_read_count(),
+        6,
+        "the final reparse must reuse already-loaded runner configs"
+    );
+    assert_eq!(
+        shared
+            .tsconfig_catalog()
+            .provenance_for(&root.join("packages/unit/vitest.config.ts"))
+            .config
+            .as_deref(),
+        Some(root.join("packages/unit/tsconfig.json").as_path())
+    );
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new(
+        shared.tsconfig_catalog(),
+        shared.graph_files().visible(),
+    );
+    assert_eq!(
+        crate::codebase::ts_resolver::ImportResolution::resolve(
+            &resolver,
+            "@setup/list",
+            &root.join("packages/unit/vitest.config.ts"),
+        ),
+        Some(root.join("packages/unit/setup/list.ts"))
+    );
+    let graph = shared.canonical_graph().unwrap();
+    assert_eq!(
+        graph.dependencies_of_node(&crate::codebase::dependencies::graph::NodeId::File(
+            root.join("packages/unit/tests/owner.test.ts"),
+        ),),
+        Some(&vec![(
+            crate::codebase::dependencies::graph::NodeId::File(
+                root.join("packages/unit/setup/aliased.ts"),
+            ),
+            crate::codebase::dependencies::graph::EdgeKind::VitestSetup(
+                crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
+            ),
+        ),])
+    );
     let mut args = vitest_setup_args(
         root.clone(),
         vec![root.join("packages/unit/setup/aliased.ts")],
     );
-    args.config = Some(root.join(".no-mistakes.yml"));
+    args.config = Some(config_path);
     let plan = crate::tests::plan::generate_plan(&args).unwrap();
 
     assert_eq!(
@@ -29,6 +92,32 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
         ["packages/unit/tests/owner.test.ts"]
     );
     assert!(!plan.fallback_triggered, "{plan:#?}");
+}
+
+#[test]
+fn dynamic_setup_expression_does_not_trigger_final_catalog_reparse() {
+    let (_fixture, root) = fixture("vitest-dynamic-setup-no-reparse");
+    let config_path = root.join(".no-mistakes.yml");
+    crate::ast::begin_parse_count(&root);
+    let shared =
+        crate::codebase::dependencies::SharedTraversalContext::prepare_with_framework_plan(
+            root.clone(),
+            None,
+            Some(&config_path),
+            crate::codebase::dependencies::graph::GraphBuildPlan::default(),
+            crate::codebase::test_discovery::FrameworkPreparationPlan::for_runners([
+                crate::codebase::test_discovery::TestRunner::Vitest,
+            ]),
+        )
+        .unwrap();
+    let parses = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(parses.get(&root.join("vitest.config.ts")), Some(&1));
+    assert_eq!(
+        shared.source_store().physical_read_count(),
+        2,
+        "the dynamic setup config is read once; no final-catalog reparse occurs"
+    );
 }
 
 #[test]

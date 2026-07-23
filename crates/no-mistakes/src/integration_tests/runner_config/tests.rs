@@ -124,6 +124,37 @@ fn prepared_runner_parses_json_workspace_through_batch_and_direct_apis() {
 }
 
 #[test]
+fn json_workspace_folder_strings_use_default_projects_and_global_negations() {
+    let fixture = saved_config_fixture("vitest-workspace-json");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.projects.json".to_string()));
+
+    let projects = prepared
+        .parse_all()
+        .unwrap()
+        .projects_for(&prepared, Framework::Vitest)
+        .unwrap();
+    let scopes = projects
+        .iter()
+        .filter_map(|project| project.scope.as_deref())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        scopes,
+        ["string-project", "configless", "folder-projects/one"]
+    );
+    assert!(projects
+        .iter()
+        .all(|project| { project.scope.as_deref() != Some("folder-projects/skip") }));
+    assert!(projects.iter().any(|project| {
+        project.scope.as_deref() == Some("configless")
+            && project
+                .include
+                .iter()
+                .any(|include| include == "configless/**/*.test.ts")
+    }));
+}
+
+#[test]
 fn prepared_runner_reports_named_and_unsupported_json_errors() {
     let fixture = saved_config_fixture("vitest-workspace-json-errors");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());

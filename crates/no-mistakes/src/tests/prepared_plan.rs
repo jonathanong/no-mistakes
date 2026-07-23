@@ -35,7 +35,7 @@ pub(crate) struct PreparedTestPlanRequest {
     pub(crate) config: NoMistakesConfig,
     config_path: Option<PathBuf>,
     pub(crate) tsconfig: TsConfig,
-    tsconfig_catalog: no_mistakes::codebase::ts_resolver::TsConfigCatalog,
+    tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) collected: ChangedFiles,
     pub(crate) changed_files: Vec<PathBuf>,
     pub(crate) lockfile_analysis: LockfileAnalysis,
@@ -214,6 +214,7 @@ impl PreparedTestPlanInputs {
                 graph_plan,
                 &preliminary_graph_config,
             );
+        let sources = visible_paths.source_store_for(&root);
         let mut prepared_test_projects =
             no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
                 &root,
@@ -222,7 +223,7 @@ impl PreparedTestPlanInputs {
                 Arc::clone(&preliminary_tsconfig_catalog),
                 no_mistakes::codebase::test_discovery::PreparedTestProjectRequest {
                     graph: (graph_files.indexable(), runner_graph_plan, runner_graph_context),
-                    sources: visible_paths.source_store_for(&root),
+                    sources: Arc::clone(&sources),
                     collect_graph_facts: true,
                     preparation_plan: &framework_plan,
                 },
@@ -230,7 +231,7 @@ impl PreparedTestPlanInputs {
         tsconfig_candidate_roots.extend(prepared_test_projects.tsconfig_candidate_roots(&root));
         tsconfig_candidate_roots.sort();
         tsconfig_candidate_roots.dedup();
-        let tsconfig_catalog = if let Some(path) = args.tsconfig.as_deref() {
+        let tsconfig_catalog = Arc::new(if let Some(path) = args.tsconfig.as_deref() {
             let path = if path.is_absolute() {
                 path.to_path_buf()
             } else {
@@ -247,7 +248,14 @@ impl PreparedTestPlanInputs {
                 &tsconfig_candidate_roots,
                 &root_visible_paths,
             )
-        };
+        });
+        prepared_test_projects.reparse_vitest_with_final_catalog(
+            &root,
+            &config,
+            &root_visible_paths,
+            Arc::clone(&tsconfig_catalog),
+            sources,
+        );
         prepared_test_projects.reresolve_vitest_setups(
             &root,
             &tsconfig_catalog,

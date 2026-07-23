@@ -142,6 +142,10 @@ impl VitestSetupField {
 pub(crate) struct VitestSetupDependency {
     pub(crate) field: VitestSetupField,
     pub(crate) specifier: Option<String>,
+    /// An imported setup helper could not resolve through the preliminary
+    /// catalog, but its bare specifier may resolve through a package catalog
+    /// discovered from runner project roots.
+    pub(crate) needs_final_catalog_reparse: bool,
     pub(crate) resolved_path: Option<PathBuf>,
     /// Effective Vitest project root used to resolve a relative setup
     /// specifier. This deliberately differs from `declaration_path` for

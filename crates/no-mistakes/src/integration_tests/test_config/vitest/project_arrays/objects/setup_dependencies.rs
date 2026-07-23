@@ -39,6 +39,11 @@ fn setup_dependencies_bounded(
             {
                 return take_dependencies(dependencies, remaining);
             }
+            if unresolved_bare_import(&import.source, ctx) {
+                let mut dependency = setup_dependency(value, field, ctx);
+                dependency.needs_final_catalog_reparse = true;
+                return take_dependencies(vec![dependency], remaining);
+            }
         }
     }
     let value = shared::expression_value(value, &ctx.bindings);
@@ -132,6 +137,7 @@ fn setup_dependency(
     VitestSetupDependency {
         field,
         specifier,
+        needs_final_catalog_reparse: false,
         resolved_path: None,
         resolution_base: ctx.path.parent().unwrap_or(Path::new(".")).to_path_buf(),
         declaration_path: ctx.path.to_path_buf(),
@@ -140,6 +146,12 @@ fn setup_dependency(
         resolver_candidate_paths: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     }
+}
+
+fn unresolved_bare_import(specifier: &str, ctx: &Ctx<'_, '_>) -> bool {
+    !specifier.starts_with('.')
+        && !Path::new(specifier).is_absolute()
+        && ctx.resolver.resolve(specifier, ctx.path).is_none()
 }
 
 fn conservative_setup_dependency(

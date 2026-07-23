@@ -68,7 +68,9 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 `testsTargets()` and test-plan targets set `workspace: true` when a Vitest
 workspace/project-array source must be passed with `--workspace`; the emitted
 `runner_args` already contain the correct flag. This includes explicitly
-configured `vitest.workspace.json` and `vitest.projects.json` arrays.
+configured `vitest.workspace.json` and `vitest.projects.json` arrays, plus
+default-discovered executable `vitest.workspace.*` and `vitest.projects.*`
+sources. JSON project-array files remain explicit-only, matching the CLI.
 
 The Playwright APIs load the same selector-wrapper configuration as the CLI.
 Configured wrapper calls therefore appear in `playwrightEdges()` and

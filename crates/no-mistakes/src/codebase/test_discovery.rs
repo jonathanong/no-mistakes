@@ -25,6 +25,7 @@ include!("test_discovery/preparation_plan.rs");
 include!("test_discovery/prepared.rs");
 include!("test_discovery/prepared_catalog.rs");
 include!("test_discovery/prepared_vitest_resolution.rs");
+include!("test_discovery/prepared_vitest_reparse.rs");
 include!("test_discovery/prepared_vitest_setup.rs");
 include!("test_discovery/api.rs");
 

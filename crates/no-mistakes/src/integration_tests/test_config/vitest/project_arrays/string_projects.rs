@@ -9,6 +9,7 @@ mod roots;
 use config_paths::is_runtime_project_source;
 pub(super) use config_paths::is_vitest_project_config;
 pub(super) use roots::string_project_roots;
+pub(in crate::integration_tests::test_config::vitest) use roots::string_project_roots_with_resolver;
 
 /// Parse static project config files through the same object/config extractor
 /// as inline projects; never execute the config.

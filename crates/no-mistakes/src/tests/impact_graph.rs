@@ -106,13 +106,20 @@ pub(crate) fn build_test_impact_graph(
     catalog_roots.extend(projects.tsconfig_candidate_roots(root));
     catalog_roots.sort();
     catalog_roots.dedup();
-    let catalog = catalog(
+    let catalog = Arc::new(catalog(
         root,
         &tsconfig,
         tsconfig_path,
         &catalog_roots,
         &visible_paths,
         &sources,
+    ));
+    projects.reparse_vitest_with_final_catalog(
+        root,
+        config,
+        &visible_paths,
+        Arc::clone(&catalog),
+        Arc::clone(&sources),
     );
     projects.reresolve_vitest_setups(root, &catalog, &visible_paths);
     let test_filter = TestFileFilter::for_impact_from_prepared_projects(
@@ -215,6 +222,7 @@ fn catalog(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use no_mistakes::codebase::dependencies::graph::{EdgeKind, NodeId, VitestSetupField};
 
     fn fixture(name: &str) -> PathBuf {
         no_mistakes::codebase::ts_resolver::normalize_path(
@@ -262,5 +270,33 @@ mod tests {
             &root,
             &root.join("swift-clients/core/Sources/VouchaCore/APIClient.swift")
         ));
+    }
+
+    #[test]
+    fn impact_graph_connects_final_catalog_setup_alias_to_its_owner() {
+        let root = no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/test-plan/vitest-project-tsconfig-setup"),
+        );
+        let config_path = root.join(".no-mistakes.yml");
+        let visible = VisiblePathSnapshot::new(&root);
+        let config = no_mistakes::config::v2::load_v2_config_from_visible(
+            &root,
+            Some(&config_path),
+            &visible.paths_for(&root),
+        )
+        .unwrap();
+        let impact =
+            build_test_impact_graph(&root, None, &config, Some(&config_path), false).unwrap();
+
+        assert_eq!(
+            impact
+                .graph
+                .dependents_of_node(&NodeId::File(root.join("packages/unit/setup/aliased.ts"),)),
+            Some(&vec![(
+                NodeId::File(root.join("packages/unit/tests/owner.test.ts")),
+                EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
+            )])
+        );
     }
 }

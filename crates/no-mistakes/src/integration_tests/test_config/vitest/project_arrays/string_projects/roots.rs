@@ -1,4 +1,5 @@
 use super::{is_vitest_project_config, slash_path, Ctx};
+use crate::codebase::ts_resolver::ImportResolution;
 use globset::GlobBuilder;
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
@@ -10,10 +11,18 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn string_
     specifier: &str,
     ctx: &Ctx<'_, '_>,
 ) -> Vec<PathBuf> {
-    let Some(visible) = ctx.resolver.visible_files() else {
+    string_project_roots_with_resolver(specifier, ctx.path, ctx.resolver)
+}
+
+pub(in crate::integration_tests::test_config::vitest) fn string_project_roots_with_resolver(
+    specifier: &str,
+    declaration_path: &Path,
+    resolver: &dyn ImportResolution,
+) -> Vec<PathBuf> {
+    let Some(visible) = resolver.visible_files() else {
         return Vec::new();
     };
-    let base = ctx.path.parent().unwrap_or(Path::new("."));
+    let base = declaration_path.parent().unwrap_or(Path::new("."));
     let pattern = crate::codebase::ts_resolver::normalize_path(
         &base.join(specifier.trim_start_matches("./")),
     );

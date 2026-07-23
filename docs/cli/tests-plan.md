@@ -120,12 +120,13 @@ own value applies, and `[]` clears it. A config referenced as a string in
 referencing config's setup fields.
 
 Vitest workspace configs may export a project array directly or through
-`defineWorkspace([...])`. Explicit `vitest.workspace.json` and
-`vitest.projects.json` files accept static arrays of inline objects and string
-project paths/globs. Folder globs select configs directly inside each matched
-project root; nested roots require their own folder glob. Project config-file
-globs recognize suffixes such as `vitest.config.unit.ts` and
-`vite.config.e2e.js`.
+`defineWorkspace([...])`. With no `tests.vitest.configs`, executable root
+`vitest.workspace.*` and `vitest.projects.*` files are discovered by default.
+`vitest.workspace.json` and `vitest.projects.json` remain explicit-only and
+accept static arrays of inline objects and string project paths/globs. Folder
+globs select configs directly inside each matched project root; nested roots
+require their own folder glob. Project config-file globs recognize suffixes
+such as `vitest.config.unit.ts` and `vite.config.e2e.js`.
 
 Setup values are extracted statically from string and array forms. Dynamic
 expressions and unresolved literal modules produce a JSON warning with the

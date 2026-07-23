@@ -77,9 +77,12 @@ fn explicitly_configured_json_workspaces_parse_objects_and_string_projects() {
         ["json-inline", "json-string"]
     );
     assert!(projects.iter().all(|project| project.workspace));
-    assert!(projects.iter().all(|project| {
-        project.vitest_setup.len() == 1 && project.vitest_setup[0].resolved_path.is_some()
-    }));
+    assert!(projects
+        .iter()
+        .filter(|project| project.policy_name.is_some())
+        .all(|project| {
+            project.vitest_setup.len() == 1 && project.vitest_setup[0].resolved_path.is_some()
+        }));
     let inline = projects
         .iter()
         .find(|project| project.policy_name.as_deref() == Some("json-inline"))
