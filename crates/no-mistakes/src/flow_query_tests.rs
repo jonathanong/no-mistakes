@@ -3,6 +3,12 @@ use super::*;
 #[path = "flow_query_tests/preparation_errors.rs"]
 mod preparation_errors;
 
+#[path = "flow_query_tests/basics.rs"]
+mod basics;
+
+#[path = "flow_query_tests/vitest_setup.rs"]
+mod vitest_setup;
+
 fn resolve_tsconfig(
     root: &Path,
     explicit: Option<&Path>,
@@ -40,80 +46,6 @@ fn gitignore_fixture() -> tempfile::TempDir {
     crate::test_support::git_init(fixture.path());
     crate::test_support::git_add_all(fixture.path());
     fixture
-}
-
-#[test]
-fn flow_query_covers_deps_and_dependents_directions() {
-    let root = fixture_root("tests-impact-symbol");
-    for direction in [FlowDirection::Deps, FlowDirection::Dependents] {
-        let report = run(&FlowOptions {
-            target: "utils.mts#parseDate".to_string(),
-            root: root.clone(),
-            tsconfig: None,
-            config: None,
-            direction,
-            depth: 1,
-            relationships: vec![RelationshipArg::Import],
-        })
-        .unwrap();
-
-        assert_eq!(report.target, "utils.mts#parseDate");
-        assert!(report
-            .nodes
-            .iter()
-            .any(|node| node.id == "utils.mts#parseDate"));
-    }
-}
-
-#[test]
-fn flow_query_symbol_dependents_skip_owner_file_bridge() {
-    let root = fixture_root("tests-impact-symbol");
-    let report = run(&FlowOptions {
-        target: "utils.mts#parseDate".to_string(),
-        root,
-        tsconfig: None,
-        config: None,
-        direction: FlowDirection::Dependents,
-        depth: 1,
-        relationships: vec![RelationshipArg::Import],
-    })
-    .unwrap();
-
-    assert!(report
-        .nodes
-        .iter()
-        .any(|node| node.id == "utils.mts#parseDate"));
-    assert!(!report.nodes.iter().any(|node| node.id == "utils.mts"));
-}
-
-#[test]
-fn flow_ignores_automatic_ignored_tsconfig_but_honors_explicit_path() {
-    let fixture = gitignore_fixture();
-    let options = |tsconfig| FlowOptions {
-        target: "entry.ts".to_string(),
-        root: fixture.path().to_path_buf(),
-        tsconfig,
-        config: None,
-        direction: FlowDirection::Deps,
-        depth: 1,
-        relationships: vec![RelationshipArg::Import],
-    };
-
-    let automatic = run(&options(None)).unwrap();
-    assert!(automatic
-        .nodes
-        .iter()
-        .any(|node| { node.kind == "module" && node.module.as_deref() == Some("@lib/forbidden") }));
-    assert!(!automatic
-        .nodes
-        .iter()
-        .any(|node| node.file.as_deref() == Some("src/forbidden.ts")));
-
-    let explicit = run(&options(Some(PathBuf::from("tsconfig.json")))).unwrap();
-    assert!(explicit
-        .nodes
-        .iter()
-        .any(|node| node.file.as_deref() == Some("src/forbidden.ts")));
 }
 
 #[test]

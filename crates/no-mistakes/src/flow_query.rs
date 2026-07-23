@@ -131,10 +131,6 @@ include!("flow_query_traverse.rs");
 mod flow_query_tests;
 
 #[cfg(test)]
-#[path = "flow_query_vitest_tests.rs"]
-mod flow_query_vitest_tests;
-
-#[cfg(test)]
 #[path = "flow_query_resource_tests.rs"]
 mod flow_query_resource_tests;
 
