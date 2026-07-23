@@ -35,6 +35,7 @@ fn setup(specifier: Option<&str>) -> VitestSetupDependency {
         declaration_line: 7,
         trigger_paths,
         resolver_candidate_paths: BTreeSet::new(),
+        conservative_specifiers: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     }
 }

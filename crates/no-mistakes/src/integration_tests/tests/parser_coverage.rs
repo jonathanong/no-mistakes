@@ -189,6 +189,7 @@ fn vitest_setup_dependencies_preserve_effective_project_ownership() {
     crate::integration_tests::resolve_setup_dependencies(
         std::iter::once(&mut reresolved),
         &root.join("dynamic-closure"),
+        &root,
         &resolver,
     );
     assert!(reresolved

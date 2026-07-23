@@ -151,6 +151,7 @@ fn setup_dependency(
         declaration_line,
         trigger_paths,
         resolver_candidate_paths: BTreeSet::new(),
+        conservative_specifiers: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     }
 }
@@ -185,8 +186,6 @@ fn conservative_setup_dependency(
     dependency
         .trigger_paths
         .insert(dependency.resolution_base.clone());
-    dependency
-        .trigger_paths
-        .extend(bounded_literals::trigger_paths(expression, ctx));
+    dependency.conservative_specifiers = bounded_literals::specifiers(expression, ctx);
     dependency
 }

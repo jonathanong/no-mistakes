@@ -151,13 +151,14 @@ fn vitest_inline_setup_inheritance_resolves_static_config_extends() {
         .iter()
         .find(|project| project.policy_name.as_deref() == Some("unsupported"))
         .unwrap();
-    assert_eq!(unsupported.vitest_setup.len(), 1);
-    assert_eq!(
-        unsupported.vitest_setup[0]
-            .unresolved_config_extends
-            .as_deref(),
-        Some("./vite-factory.js")
-    );
+    assert!(unsupported
+        .vitest_setup
+        .iter()
+        .any(|setup| { setup.unresolved_config_extends.as_deref() == Some("./vite-factory.js") }));
+    assert!(unsupported
+        .vitest_setup
+        .iter()
+        .any(|setup| setup.config_extends_provenance));
 
     let scope = projects
         .iter()
@@ -207,6 +208,29 @@ fn vitest_inline_setup_inheritance_resolves_static_config_extends() {
             "local-root/local-ignore/**"
         ]
     );
+
+    let merged = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("merged-extends"))
+        .unwrap();
+    assert_eq!(merged.scope.as_deref(), Some("merged-root"));
+    assert_eq!(merged.include, ["merged-root/owned/**/*.test.ts"]);
+    assert!(merged
+        .vitest_setup
+        .iter()
+        .any(|setup| setup.specifier.as_deref() == Some("./merged-setup.ts")));
+
+    let dynamic = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("merged-dynamic"))
+        .unwrap();
+    assert!(dynamic.vitest_setup.iter().any(|setup| {
+        setup.unresolved_config_extends.as_deref() == Some("./vite.merged-dynamic.config.js")
+    }));
+    assert!(dynamic
+        .vitest_setup
+        .iter()
+        .any(|setup| setup.config_extends_provenance));
 }
 
 fn assert_merged_provenance(

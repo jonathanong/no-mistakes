@@ -57,6 +57,18 @@ fn vitest_setup_branch_expansion_has_a_total_budget() {
     assert!(setup[0]
         .trigger_paths
         .contains(&root.join("shared/outside.ts")));
+
+    let rebased = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("bounded-rebased"))
+        .expect("bounded imported helper project");
+    assert_eq!(rebased.vitest_setup.len(), 1, "{rebased:#?}");
+    assert!(rebased.vitest_setup[0]
+        .conservative_specifiers
+        .contains("../shared/outside.ts"));
+    assert!(rebased.vitest_setup[0]
+        .trigger_paths
+        .contains(&root.join("packages/shared/outside.ts")));
 }
 
 #[test]

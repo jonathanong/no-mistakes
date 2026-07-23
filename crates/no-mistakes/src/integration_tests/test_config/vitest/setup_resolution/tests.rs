@@ -38,6 +38,7 @@ fn deleted_runtime_setup_source_skips_transitive_import_walk() {
 
     runtime_setup_candidates(
         &root.join("setup/runtime.ts"),
+        &root,
         &MissingSourceResolver,
         &mut candidates,
     );

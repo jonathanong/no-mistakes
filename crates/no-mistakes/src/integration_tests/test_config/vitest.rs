@@ -143,6 +143,7 @@ fn to_project(
             .chain(options.global_setup.iter_mut())
             .flatten(),
         &project_root,
+        root,
         resolver,
     );
     if let Some(setups) = options.setup_files.as_mut() {

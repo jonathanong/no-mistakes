@@ -178,11 +178,29 @@ fn tests_targets_napi_preserves_json_workspace_sources() {
         .as_array()
         .unwrap()
         .iter()
-        .map(|test| &test["targets"][0])
+        .flat_map(|test| test["targets"].as_array().unwrap())
         .collect::<Vec<_>>();
 
-    assert_eq!(targets[0]["config"], "vitest.workspace.json");
-    assert_eq!(targets[1]["config"], "vitest.projects.json");
+    let json_target = targets
+        .iter()
+        .find(|target| target["project"] == "json-inline")
+        .unwrap();
+    let string_target = targets
+        .iter()
+        .find(|target| target["project"] == "json-string")
+        .unwrap();
+    assert_eq!(json_target["config"], "vitest.workspace.json");
+    assert_eq!(string_target["config"], "vitest.projects.json");
+    assert_eq!(
+        json_target["runner_args"],
+        json!([
+            "--workspace",
+            "vitest.workspace.json",
+            "--project",
+            "json-inline",
+            "inline/inline.test.ts"
+        ])
+    );
     for target in targets {
         assert_eq!(target["workspace"], true);
         assert_eq!(target["runner_args"][0], "--workspace");

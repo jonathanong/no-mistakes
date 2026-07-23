@@ -1,9 +1,11 @@
-use super::{project_options, shared, Ctx, Options};
+use super::{shared, Ctx, Options};
 use crate::integration_tests::test_config::vitest::Extends;
 use crate::integration_tests::types::{VitestSetupDependency, VitestSetupField};
 use anyhow::Result;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+mod merged;
 
 pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_>) -> Result<()> {
     let Some(extends) = options.extends.take() else {
@@ -28,9 +30,6 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
             &source,
             |program, source| {
                 let bindings = shared::top_level_object_bindings(program);
-                let Some(object) = shared::default_export_object(program, &bindings) else {
-                    return Ok(None);
-                };
                 let mut local_seen = BTreeSet::new();
                 let mut object_seen = BTreeSet::new();
                 let mut inherited_ctx = Ctx {
@@ -44,13 +43,14 @@ pub(super) fn resolve_config_extends(options: &mut Options, ctx: &mut Ctx<'_, '_
                     local_seen: &mut local_seen,
                     object_seen: &mut object_seen,
                 };
-                project_options(object, &mut inherited_ctx).map(Some)
+                merged::default_options(program, &mut inherited_ctx)
             },
         )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);
     let Some(inherited) = inherited? else {
+        add_config_extends_provenance(options, &path, candidates.clone(), ctx);
         add_unresolved_config_extends(options, specifier, candidates, ctx);
         return Ok(());
     };
@@ -137,6 +137,7 @@ fn add_unresolved_config_extends(
         declaration_line,
         trigger_paths: candidates,
         resolver_candidate_paths: BTreeSet::new(),
+        conservative_specifiers: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     };
     options.setup_files = crate::integration_tests::test_config::vitest::merge::inherit_setup_files(
@@ -164,6 +165,7 @@ fn add_config_extends_provenance(
         declaration_line: 1,
         trigger_paths: candidates,
         resolver_candidate_paths: BTreeSet::new(),
+        conservative_specifiers: BTreeSet::new(),
         transitive_trigger_paths: BTreeSet::new(),
     };
     options.setup_files = crate::integration_tests::test_config::vitest::merge::inherit_setup_files(

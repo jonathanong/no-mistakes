@@ -2,28 +2,15 @@ use super::super::super::{shared, Ctx};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{ArrayExpressionElement, Expression};
 use std::collections::BTreeSet;
-use std::path::PathBuf;
 
 const MAX_DEPTH: usize = 32;
 const MAX_SPECIFIERS: usize = 64;
 const MAX_PATHS: usize = 256;
 
-pub(super) fn trigger_paths(expression: &Expression<'_>, ctx: &Ctx<'_, '_>) -> BTreeSet<PathBuf> {
+pub(super) fn specifiers(expression: &Expression<'_>, ctx: &Ctx<'_, '_>) -> BTreeSet<String> {
     let mut specifiers = Vec::new();
     collect_specifiers(expression, ctx, 0, &mut specifiers);
-    let mut paths = BTreeSet::new();
-    for specifier in specifiers {
-        let remaining = MAX_PATHS.saturating_sub(paths.len());
-        let resolved = ctx.resolver.resolve(&specifier, ctx.path).into_iter();
-        let mut additions = BTreeSet::new();
-        let additions = resolved
-            .chain(ctx.resolver.resolution_candidates(&specifier, ctx.path))
-            .filter(|path| !paths.contains(path) && additions.insert(path.clone()))
-            .take(remaining)
-            .collect::<Vec<_>>();
-        paths.extend(additions);
-    }
-    paths
+    specifiers.into_iter().take(MAX_PATHS).collect()
 }
 
 fn collect_specifiers(

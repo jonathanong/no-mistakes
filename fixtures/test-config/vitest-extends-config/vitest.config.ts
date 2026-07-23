@@ -52,6 +52,20 @@ export default {
           exclude: ['local-ignore/**'],
         },
       },
+      {
+        extends: './vite.merged.config.js',
+        test: {
+          name: 'merged-extends',
+        },
+      },
+      {
+        extends: './vite.merged-dynamic.config.js',
+        test: {
+          name: 'merged-dynamic',
+          root: './merged-dynamic-root',
+          include: ['**/*.test.ts'],
+        },
+      },
     ],
   },
 }

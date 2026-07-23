@@ -3,5 +3,6 @@
 require('./required-helper')
 import('./dynamic-helper')
 require.resolve('./resolved-loader')
+require('node:fs').readFileSync('./runtime-resource.json')
 // Nonliteral resolution remains dynamic and must not invent a deleted trigger.
 require.resolve(process.env.RUNTIME_LOADER)

@@ -169,6 +169,9 @@ pub(crate) struct VitestSetupDependency {
     /// parser provenance so a later scoped re-resolution can replace only its
     /// own facts without dropping config and helper triggers.
     pub(crate) resolver_candidate_paths: BTreeSet<PathBuf>,
+    /// Literal setup specifiers retained after bounded static enumeration.
+    /// They are resolved only after the effective project root is known.
+    pub(crate) conservative_specifiers: BTreeSet<String>,
     /// Runtime candidates reached through a resolved setup module. These stay
     /// separate so a deletion can recover the missing graph edge without
     /// treating unrelated alternate candidates as unsafe fallbacks.

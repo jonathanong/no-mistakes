@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import * as values from '../../config/bounded-values'
 
 export default defineConfig({
   test: {
@@ -79,6 +80,16 @@ export default defineConfig({
           './setup-63.ts',
           './setup-64.ts',
           ],
+        },
+      },
+      {
+        test: {
+          name: 'bounded-rebased',
+          root: '.',
+          include: ['rebased.test.ts'],
+          // This list is imported from outside the project root. Its first
+          // literal must be rebased from this project root after the cap.
+          setupFiles: values.files,
         },
       },
     ],

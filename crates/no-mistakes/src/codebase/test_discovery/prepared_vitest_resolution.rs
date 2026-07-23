@@ -33,6 +33,7 @@ impl PreparedTestProjects {
                 crate::integration_tests::resolve_setup_dependencies(
                     std::iter::once(setup),
                     &resolution_base,
+                    root,
                     &resolver,
                 );
             }

@@ -3,7 +3,10 @@
     "name": "outer-name-is-ignored",
     "setupFiles": "./outer-setup-is-ignored.ts",
     "test": {
-      "name": "json-inline",
+      "name": {
+        "label": "json-inline",
+        "color": "#00aaff"
+      },
       "root": "./inline",
       "include": ["**/*.test.ts"],
       "globalSetup": "./setup.ts"
