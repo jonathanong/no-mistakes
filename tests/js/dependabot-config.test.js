@@ -3,6 +3,7 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
 const repoRoot = join(__dirname, "..", "..");
+const fixtureExclusions = ["fixtures/**", "test-cases/**"];
 
 function sequenceValues(source, key) {
   const lines = source.split("\n");
@@ -30,7 +31,7 @@ function sequenceValues(source, key) {
   return values;
 }
 
-test("every Dependabot update excludes fixture manifests", () => {
+test("every Dependabot update excludes test fixture manifests", () => {
   const source = readFileSync(join(repoRoot, ".github", "dependabot.yml"), "utf8");
   const updateHeaders = [...source.matchAll(/^  - package-ecosystem: ([^\n]+)$/gm)];
 
@@ -42,9 +43,12 @@ test("every Dependabot update excludes fixture manifests", () => {
 
     // Fixture manifests are saved test inputs; updating them can desynchronize
     // package manifests from their lockfile and expected-output snapshots.
-    assert.ok(
-      sequenceValues(update, "exclude-paths").includes("fixtures/**"),
-      `${header[1]} Dependabot updates must exclude fixtures/**`,
-    );
+    const excludePaths = sequenceValues(update, "exclude-paths");
+    for (const fixtureExclusion of fixtureExclusions) {
+      assert.ok(
+        excludePaths.includes(fixtureExclusion),
+        `${header[1]} Dependabot updates must exclude ${fixtureExclusion}`,
+      );
+    }
   }
 });
