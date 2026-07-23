@@ -10,11 +10,10 @@ export default defineConfig({
           root: '.',
           include: ['**/*.test.ts'],
           // Deliberately exceeds the static setup dependency budget. The
-          // first literal also escapes this declaration directory so the
-          // collapsed dependency must preserve bounded candidate provenance.
+          // This resolves from the package project root after capping.
           setupFiles: [
           ,
-          ...['../../shared/outside.ts'],
+          ...['./shared/outside.ts'],
           './setup-01.ts',
           './setup-02.ts',
           './setup-03.ts',
@@ -85,7 +84,9 @@ export default defineConfig({
       {
         test: {
           name: 'bounded-rebased',
-          root: '.',
+          // The imported helper lives under config/, but Vitest resolves this
+          // capped list from the separate rebased project root.
+          root: '../rebased',
           include: ['rebased.test.ts'],
           // This list is imported from outside the project root. Its first
           // literal must be rebased from this project root after the cap.

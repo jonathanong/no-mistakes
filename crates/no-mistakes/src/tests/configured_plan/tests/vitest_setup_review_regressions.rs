@@ -3,28 +3,6 @@ use super::*;
 mod round26;
 
 #[test]
-fn exhausted_setup_budget_tracks_changes_outside_the_owner() {
-    let source = no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/test-config/vitest-setup-bounds"),
-    );
-    let fixture = crate::test_support::materialize_saved_fixture(&source);
-    let root = fixture.path().canonicalize().unwrap();
-    let mut args = vitest_setup_args(root.clone(), vec![root.join("shared/outside.ts")]);
-    args.framework = None;
-    let plan = crate::tests::plan::generate_plan(&args).unwrap();
-
-    assert!(plan.fallback_triggered, "{plan:#?}");
-    assert_eq!(
-        plan.selected_tests
-            .iter()
-            .map(|test| test.test_file.as_str())
-            .collect::<Vec<_>>(),
-        ["packages/foo/bounded.test.ts"]
-    );
-}
-
-#[test]
 fn union_plan_applies_dynamic_setup_warnings_and_owner_fallback() {
     let (_fixture, root) = vitest_setup_fixture();
     let mut args = vitest_setup_args(root.clone(), vec![root.join("config/setup-selector.ts")]);

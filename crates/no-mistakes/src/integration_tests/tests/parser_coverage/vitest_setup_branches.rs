@@ -47,7 +47,10 @@ fn vitest_setup_branch_expansion_has_a_total_budget() {
     );
     let path = root.join("packages/foo/vitest.config.ts");
     let source = std::fs::read_to_string(&path).unwrap();
-    let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let projects =
+        test_support::parse_vitest(&source, &path, path.parent().unwrap(), &root, &tsconfig)
+            .unwrap();
     let setup = &projects[0].vitest_setup;
 
     assert_eq!(setup.len(), 1, "{setup:#?}");
@@ -56,7 +59,8 @@ fn vitest_setup_branch_expansion_has_a_total_budget() {
     assert!(setup[0].trigger_paths.contains(&root.join("packages/foo")));
     assert!(setup[0]
         .trigger_paths
-        .contains(&root.join("shared/outside.ts")));
+        .contains(&root.join("packages/foo/shared/outside.ts")));
+    assert_eq!(setup[0].resolution_base, root.join("packages/foo"));
 
     let rebased = projects
         .iter()

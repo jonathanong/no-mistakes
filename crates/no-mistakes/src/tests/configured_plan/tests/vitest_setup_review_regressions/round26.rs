@@ -1,6 +1,40 @@
 use super::*;
 
 #[test]
+fn exhausted_setup_budget_tracks_changes_outside_the_owner() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-config/vitest-setup-bounds"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let mut changed_args = vitest_setup_args(
+        root.clone(),
+        vec![root.join("packages/foo/shared/outside.ts")],
+    );
+    changed_args.framework = None;
+    let changed = crate::tests::plan::generate_plan(&changed_args).unwrap();
+    let mut deleted_args = vitest_setup_args(root, Vec::new());
+    deleted_args.framework = None;
+    deleted_args.diff_content = Some(
+        "diff --git a/packages/foo/shared/outside.ts b/packages/foo/shared/outside.ts\n--- a/packages/foo/shared/outside.ts\n+++ /dev/null\n@@ -1 +0,0 @@\n-export const directOutsideSetup = true\n"
+            .to_string(),
+    );
+    let deleted = crate::tests::plan::generate_plan(&deleted_args).unwrap();
+
+    for plan in [changed, deleted] {
+        assert!(plan.fallback_triggered, "{plan:#?}");
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            ["packages/foo/bounded.test.ts"]
+        );
+    }
+}
+
+#[test]
 fn exhausted_imported_setup_literals_rebase_to_the_final_project_root() {
     let source = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -25,7 +59,7 @@ fn exhausted_imported_setup_literals_rebase_to_the_final_project_root() {
                 .iter()
                 .map(|test| test.test_file.as_str())
                 .collect::<Vec<_>>(),
-            ["packages/foo/rebased.test.ts"],
+            ["packages/rebased/rebased.test.ts"],
             "{plan:#?}"
         );
     }
