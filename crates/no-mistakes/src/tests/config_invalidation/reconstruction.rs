@@ -24,6 +24,7 @@ pub(super) fn reconstruct_diff_sources(
                 .map(|(before, after)| (Some(before), Some(after)))
         }
         DiffFileStatus::Renamed => reconstruct_renamed_sources(diff),
+        DiffFileStatus::Copied => reconstruct_copied_sources(diff),
     }
 }
 
@@ -87,6 +88,26 @@ fn reconstruct_renamed_sources(diff: &DiffFile) -> Result<(Option<String>, Optio
     )
 }
 
+fn reconstruct_copied_sources(diff: &DiffFile) -> Result<(Option<String>, Option<String>)> {
+    let source_path = diff
+        .old_path
+        .as_ref()
+        .context("copied unified diff is missing its source path")?;
+    if let Some(after) = read_optional(&diff.path)? {
+        apply_unified_hunks(&after, diff, true)?;
+        return Ok((None, Some(after)));
+    }
+    if let Some(source) = read_optional(source_path)? {
+        let after = apply_unified_hunks(&source, diff, false)?;
+        return Ok((None, Some(after)));
+    }
+    anyhow::bail!(
+        "neither side of copied unified diff exists in the checkout: {} -> {}",
+        source_path.display(),
+        diff.path.display()
+    )
+}
+
 fn read_optional(path: &Path) -> Result<Option<String>> {
     match fs::read_to_string(path) {
         Ok(source) => Ok(Some(source)),
@@ -99,8 +120,11 @@ fn read_optional(path: &Path) -> Result<Option<String>> {
 
 pub(super) fn apply_unified_hunks(source: &str, diff: &DiffFile, reverse: bool) -> Result<String> {
     if diff.hunks.is_empty() {
-        if diff.status == DiffFileStatus::Renamed {
-            // Git may represent a content-identical rename without hunks.
+        if matches!(
+            diff.status,
+            DiffFileStatus::Renamed | DiffFileStatus::Copied
+        ) {
+            // Git may represent a content-identical rename or copy without hunks.
             return Ok(source.to_string());
         }
         anyhow::bail!(

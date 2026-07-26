@@ -13,6 +13,10 @@ no-mistakes test plan --changed-file src/utils.mts --changed-file src/service.mt
 no-mistakes test plan --changed-files changed-files.txt
 ```
 
+Manual paths that lexically escape the project root, or existing symlinks that
+resolve outside it, are rejected. In-root symlinks retain their lexical identity
+in the returned `changed_files` inventory while analysis follows the target.
+
 ### Git diff (explicit)
 
 ```bash
@@ -83,6 +87,11 @@ const plan = await testsImpact({
   entrypoints: ["src/utils.mts#formatDate", "src/service.mts"],
 });
 ```
+
+`testsPlan()` returns `changed_files`, the complete deterministic, deduplicated
+changed-file inventory prepared by the same invocation, relative to the request
+root. It remains available when no tests are selected and includes deleted paths
+plus both sides of detected renames and copies.
 
 ## Lockfile Change Handling
 

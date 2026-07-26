@@ -29,6 +29,9 @@ pub(crate) use args::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct TestPlan {
+    /// Complete normalized changed-file inventory used to prepare this plan.
+    #[serde(default)]
+    pub changed_files: Vec<String>,
     pub selected_tests: Vec<SelectedTest>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub groups: Vec<TestPlanGroupResult>,

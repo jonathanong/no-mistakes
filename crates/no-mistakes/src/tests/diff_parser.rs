@@ -7,6 +7,7 @@ pub(crate) enum DiffFileStatus {
     Modified,
     Deleted,
     Renamed,
+    Copied,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -76,12 +77,17 @@ impl DiffFile {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
+    parse_unified_diff_checked(diff_text).expect("inline unified diff contains a malformed path")
+}
+
+pub(crate) fn parse_unified_diff_checked(diff_text: &str) -> Result<Vec<DiffFile>> {
     let mut parser = DiffStreamParser::new();
     for line in diff_text.lines() {
         parser.push_line(line);
     }
-    parser.finish()
+    parser.finish_checked()
 }
 
 /// Incremental (push-based) unified-diff parser. Lets a streaming producer
@@ -94,6 +100,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
 pub(crate) struct DiffStreamParser {
     results: Vec<DiffFile>,
     current: Option<PendingDiffFile>,
+    path_error: Option<String>,
 }
 
 /// Per-`diff --git` block accumulator. Mirrors the locals of the old
@@ -106,8 +113,10 @@ struct PendingDiffFile {
     new_path: PathBuf,
     rename_from: Option<PathBuf>,
     rename_to: Option<PathBuf>,
-    minus_path: Option<String>,
-    plus_path: Option<String>,
+    copy_from: Option<PathBuf>,
+    copy_to: Option<PathBuf>,
+    minus_path: Option<PathBuf>,
+    plus_path: Option<PathBuf>,
     /// Set on a header-phase `deleted file mode` line. Git omits `--- `/
     /// `+++ ` entirely for a hunkless deletion (an empty or binary file), so
     /// this is the only signal available for those cases.
@@ -123,6 +132,7 @@ struct PendingDiffFile {
     hunks: Vec<DiffHunk>,
     current_hunk: Option<DiffHunk>,
     in_hunk: bool,
+    path_error: Option<String>,
 }
 
 impl DiffStreamParser {
@@ -130,6 +140,7 @@ impl DiffStreamParser {
         Self {
             results: Vec::new(),
             current: None,
+            path_error: None,
         }
     }
 
@@ -138,8 +149,12 @@ impl DiffStreamParser {
     pub(crate) fn push_line(&mut self, line: &str) {
         if line.starts_with("diff --git ") {
             self.finalize_current();
-            let (old_path, new_path) = parse_diff_header(line);
-            self.current = Some(PendingDiffFile::new(old_path, new_path));
+            match parse_diff_header(line) {
+                Ok((old_path, new_path)) => {
+                    self.current = Some(PendingDiffFile::new(old_path, new_path));
+                }
+                Err(error) => self.path_error = Some(error.to_string()),
+            }
             return;
         }
         // Lines before the first `diff --git ` header are ignored, matching
@@ -151,15 +166,28 @@ impl DiffStreamParser {
 
     fn finalize_current(&mut self) {
         if let Some(pending) = self.current.take() {
-            self.results.push(pending.finish());
+            if let Some(error) = pending.path_error.clone() {
+                self.path_error.get_or_insert(error);
+            } else {
+                self.results.push(pending.finish());
+            }
         }
     }
 
     /// Finalize any in-progress block and return the parsed, deduplicated
     /// diff files (same shape and ordering as [`parse_unified_diff`]).
+    #[cfg(test)]
     pub(crate) fn finish(mut self) -> Vec<DiffFile> {
         self.finalize_current();
         dedup_diff_files(self.results)
+    }
+
+    pub(crate) fn finish_checked(mut self) -> Result<Vec<DiffFile>> {
+        self.finalize_current();
+        if let Some(error) = self.path_error {
+            anyhow::bail!("{error}")
+        }
+        Ok(dedup_diff_files(self.results))
     }
 }
 
@@ -170,6 +198,8 @@ impl PendingDiffFile {
             new_path,
             rename_from: None,
             rename_to: None,
+            copy_from: None,
+            copy_to: None,
             minus_path: None,
             plus_path: None,
             deleted_file_mode: false,
@@ -181,6 +211,7 @@ impl PendingDiffFile {
             hunks: Vec::new(),
             current_hunk: None,
             in_hunk: false,
+            path_error: None,
         }
     }
 
@@ -221,13 +252,17 @@ impl PendingDiffFile {
             return;
         }
         if let Some(rest) = line.strip_prefix("rename from ") {
-            self.rename_from = Some(PathBuf::from(rest));
+            self.assign_path(rest, |pending, path| pending.rename_from = Some(path));
         } else if let Some(rest) = line.strip_prefix("rename to ") {
-            self.rename_to = Some(PathBuf::from(rest));
+            self.assign_path(rest, |pending, path| pending.rename_to = Some(path));
+        } else if let Some(rest) = line.strip_prefix("copy from ") {
+            self.assign_path(rest, |pending, path| pending.copy_from = Some(path));
+        } else if let Some(rest) = line.strip_prefix("copy to ") {
+            self.assign_path(rest, |pending, path| pending.copy_to = Some(path));
         } else if let Some(rest) = line.strip_prefix("--- ") {
-            self.minus_path = Some(rest.to_string());
+            self.assign_path(rest, |pending, path| pending.minus_path = Some(path));
         } else if let Some(rest) = line.strip_prefix("+++ ") {
-            self.plus_path = Some(rest.to_string());
+            self.assign_path(rest, |pending, path| pending.plus_path = Some(path));
         } else if line.starts_with("deleted file mode") {
             self.deleted_file_mode = true;
         } else if line.starts_with("new file mode") {
@@ -235,6 +270,13 @@ impl PendingDiffFile {
         } else if line.starts_with("@@") {
             self.in_hunk = true;
             self.current_hunk = parse_hunk_header(line);
+        }
+    }
+
+    fn assign_path(&mut self, raw: &str, assign: impl FnOnce(&mut Self, PathBuf)) {
+        match parse_git_path(raw) {
+            Ok(path) => assign(self, path),
+            Err(error) => self.path_error = Some(error.to_string()),
         }
     }
 
@@ -256,9 +298,22 @@ impl PendingDiffFile {
             };
         }
 
+        if let (Some(from), Some(to)) = (self.copy_from, self.copy_to) {
+            return DiffFile {
+                path: to,
+                status: DiffFileStatus::Copied,
+                old_path: Some(from),
+                removed_lines: self.removed_lines,
+                added_lines: self.added_lines,
+                context_lines: self.context_lines,
+                hunk_lines: self.hunk_lines,
+                hunks: self.hunks,
+            };
+        }
+
         let status = match (self.minus_path.as_deref(), self.plus_path.as_deref()) {
-            (Some("/dev/null"), _) => DiffFileStatus::Added,
-            (_, Some("/dev/null")) => DiffFileStatus::Deleted,
+            (Some(path), _) if path == Path::new("/dev/null") => DiffFileStatus::Added,
+            (_, Some(path)) if path == Path::new("/dev/null") => DiffFileStatus::Deleted,
             // A hunkless deletion/addition (an empty or binary file) has no
             // `--- `/`+++ ` lines at all — git relies on the mode-change
             // header lines instead, so they're the only signal left.
@@ -277,13 +332,16 @@ impl PendingDiffFile {
             DiffFileStatus::Deleted => self
                 .minus_path
                 .as_deref()
-                .filter(|p| *p != "/dev/null")
+                .filter(|path| *path != Path::new("/dev/null"))
                 .map(strip_ab_prefix)
                 .unwrap_or_else(|| self.old_path.unwrap_or(self.new_path)),
-            _ => self
+            DiffFileStatus::Added
+            | DiffFileStatus::Modified
+            | DiffFileStatus::Renamed
+            | DiffFileStatus::Copied => self
                 .plus_path
                 .as_deref()
-                .filter(|p| *p != "/dev/null")
+                .filter(|path| *path != Path::new("/dev/null"))
                 .map(strip_ab_prefix)
                 .unwrap_or(self.new_path),
         };
@@ -306,13 +364,11 @@ impl PendingDiffFile {
 /// tab disambiguator, appended only when the path itself contains
 /// whitespace (e.g. `--- a/a b/file.ts\t`), so it doesn't become part of the
 /// path.
-fn strip_ab_prefix(raw: &str) -> PathBuf {
-    let raw = raw.strip_suffix('\t').unwrap_or(raw);
-    PathBuf::from(
-        raw.strip_prefix("a/")
-            .or_else(|| raw.strip_prefix("b/"))
-            .unwrap_or(raw),
-    )
+fn strip_ab_prefix(raw: &Path) -> PathBuf {
+    raw.strip_prefix("a")
+        .or_else(|_| raw.strip_prefix("b"))
+        .unwrap_or(raw)
+        .to_path_buf()
 }
 
 fn parse_hunk_header(line: &str) -> Option<DiffHunk> {
@@ -342,8 +398,23 @@ fn parse_hunk_range(range: &str) -> Option<(usize, usize)> {
     Some((start.parse().ok()?, count.parse().ok()?))
 }
 
-fn parse_diff_header(line: &str) -> (Option<PathBuf>, PathBuf) {
+fn parse_diff_header(line: &str) -> Result<(Option<PathBuf>, PathBuf)> {
     let rest = line.strip_prefix("diff --git ").unwrap_or("");
+    if let Some(decoded) = parse_c_quoted_path(rest) {
+        let (old_path, consumed) = decoded?;
+        let remainder = rest[consumed..]
+            .strip_prefix(' ')
+            .context("quoted git diff header is missing its destination path")?;
+        let new_path = parse_git_path(remainder)?;
+        return Ok((Some(strip_ab_prefix(&old_path)), strip_ab_prefix(&new_path)));
+    }
+    if let Some((old_path, quoted_new_path)) = rest.split_once(" \"b/") {
+        let new_path = parse_git_path(&format!("\"b/{quoted_new_path}"))?;
+        return Ok((
+            Some(strip_ab_prefix(Path::new(old_path))),
+            strip_ab_prefix(&new_path),
+        ));
+    }
     // For anything but a rename, git shows the *same* path on both sides
     // (`a/P b/P`), so the correct split is wherever the two halves match —
     // not necessarily the first " b/" substring, which a path containing
@@ -352,13 +423,96 @@ fn parse_diff_header(line: &str) -> (Option<PathBuf>, PathBuf) {
     // lines to fall back on), so it must be resolved here rather than left
     // to the `---`/`+++` preference in `PendingDiffFile::finish`.
     if let Some(path) = split_matching_ab_halves(rest) {
-        return (Some(PathBuf::from(path)), PathBuf::from(path));
+        return Ok((Some(PathBuf::from(path)), PathBuf::from(path)));
     }
     let (a_part, b_part) = match rest.split_once(" b/") {
         Some((a, b)) => (a.strip_prefix("a/").unwrap_or(a), b),
-        None => return (None, PathBuf::from(rest)),
+        None => return Ok((None, PathBuf::from(rest))),
     };
-    (Some(PathBuf::from(a_part)), PathBuf::from(b_part))
+    Ok((Some(PathBuf::from(a_part)), PathBuf::from(b_part)))
+}
+
+fn parse_git_path(raw: &str) -> Result<PathBuf> {
+    let raw = raw.strip_suffix('\t').unwrap_or(raw);
+    match parse_c_quoted_path(raw) {
+        Some(decoded) => {
+            let (path, consumed) = decoded?;
+            if consumed != raw.len() {
+                anyhow::bail!("quoted git path has trailing bytes")
+            }
+            Ok(path)
+        }
+        None => Ok(PathBuf::from(raw)),
+    }
+}
+
+fn parse_c_quoted_path(raw: &str) -> Option<Result<(PathBuf, usize)>> {
+    let bytes = raw.as_bytes();
+    if bytes.first() != Some(&b'"') {
+        return None;
+    }
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 1;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'"' => {
+                let path = match String::from_utf8(decoded) {
+                    Ok(path) => path,
+                    Err(error) => return Some(Err(error.into())),
+                };
+                return Some(Ok((PathBuf::from(path), index + 1)));
+            }
+            b'\\' => {
+                index += 1;
+                let Some(escaped) = bytes.get(index).copied() else {
+                    return Some(Err(anyhow::anyhow!(
+                        "quoted git path ends with an incomplete escape"
+                    )));
+                };
+                match escaped {
+                    b'a' => decoded.push(0x07),
+                    b'b' => decoded.push(0x08),
+                    b't' => decoded.push(b'\t'),
+                    b'n' => decoded.push(b'\n'),
+                    b'v' => decoded.push(0x0b),
+                    b'f' => decoded.push(0x0c),
+                    b'r' => decoded.push(b'\r'),
+                    b'\\' | b'"' => decoded.push(escaped),
+                    b'0'..=b'7' => {
+                        let mut value = u16::from(escaped - b'0');
+                        let mut digits = 1;
+                        while digits < 3 {
+                            let Some(next @ b'0'..=b'7') = bytes.get(index + 1).copied() else {
+                                break;
+                            };
+                            value = value * 8 + u16::from(next - b'0');
+                            index += 1;
+                            digits += 1;
+                        }
+                        let value = match u8::try_from(value) {
+                            Ok(value) => value,
+                            Err(_) => {
+                                return Some(Err(anyhow::anyhow!(
+                                    "quoted git path contains an out-of-range octal escape"
+                                )));
+                            }
+                        };
+                        decoded.push(value);
+                    }
+                    _ => {
+                        return Some(Err(anyhow::anyhow!(
+                            "quoted git path contains an unsupported escape"
+                        )));
+                    }
+                }
+            }
+            byte => decoded.push(byte),
+        }
+        index += 1;
+    }
+    Some(Err(anyhow::anyhow!(
+        "quoted git path is missing its closing quote"
+    )))
 }
 
 /// Find the `" b/"` occurrence in a `diff --git a/X b/Y` header's `a/X b/Y`

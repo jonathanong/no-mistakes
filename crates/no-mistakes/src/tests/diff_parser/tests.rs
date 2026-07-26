@@ -162,6 +162,39 @@ rename to new-name.ts
 }
 
 #[test]
+fn parse_copied_file() {
+    let diff = "\
+diff --git a/source.ts b/copied.ts
+similarity index 100%
+copy from source.ts
+copy to copied.ts
+";
+    let files = parse_unified_diff(diff);
+    assert_eq!(files.len(), 1);
+    assert_eq!(files[0].path, PathBuf::from("copied.ts"));
+    assert_eq!(files[0].status, DiffFileStatus::Copied);
+    assert_eq!(files[0].old_path, Some(PathBuf::from("source.ts")));
+}
+
+#[test]
+fn git_c_quoted_paths_decode_supported_escapes_and_reject_malformed_input() {
+    assert_eq!(
+        parse_git_path(r#""a/\a\b\t\n\v\f\r\\\".ts""#).unwrap(),
+        PathBuf::from("a/\u{7}\u{8}\t\n\u{b}\u{c}\r\\\".ts")
+    );
+    for malformed in [
+        r#""a/trailing.ts" extra"#,
+        r#""a/incomplete\"#,
+        r#""a/unsupported\q.ts""#,
+        r#""a/out-of-range\777.ts""#,
+        r#""a/non-utf8\377.ts""#,
+        r#""a/missing-close.ts"#,
+    ] {
+        assert!(parse_git_path(malformed).is_err(), "{malformed}");
+    }
+}
+
+#[test]
 fn parse_multi_file_diff() {
     let diff = "\
 diff --git a/a.mts b/a.mts

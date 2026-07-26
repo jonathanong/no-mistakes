@@ -8,11 +8,15 @@ use std::path::{Path, PathBuf};
 
 pub(crate) struct ChangedFiles {
     pub files: Vec<PathBuf>,
+    /// Lexical paths exposed through `TestPlan.changed_files`. Manual
+    /// symlinks retain the caller's repository-relative identity while
+    /// `files` contains their resolved analysis targets.
+    pub inventory_files: Vec<PathBuf>,
     pub deleted: Vec<PathBuf>,
     /// Paths reported specifically by the automatic `--base`/`--head` Git
     /// comparison. Kept separate so other input sources cannot borrow Git's
     /// endpoint provenance. This includes deleted paths and both sides of a
-    /// rename, preserving semantic deletion and rename comparisons.
+    /// rename or copy, preserving semantic deletion and path-pair comparisons.
     pub git_files: Vec<PathBuf>,
     /// Paths supplied directly through `--changed-file` or `--changed-files`.
     /// These do not provide either endpoint of a configuration comparison.
@@ -32,6 +36,7 @@ pub(crate) struct ChangedFiles {
 
 pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<ChangedFiles> {
     let mut files = Vec::new();
+    let mut inventory_files = Vec::new();
     let mut deleted = Vec::new();
     let mut git_provenance_files = Vec::new();
     let mut manual_files = Vec::new();
@@ -39,10 +44,11 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     let mut diff_files: Vec<DiffFile> = Vec::new();
 
     for f in &args.changed_file {
-        let path = resolve_path(f, root);
-        files.push(path.clone());
-        authoritative_files.push(path.clone());
-        manual_files.push(path);
+        let (inventory_path, analysis_path) = resolve_manual_path(f, root)?;
+        inventory_files.push(inventory_path);
+        files.push(analysis_path.clone());
+        authoritative_files.push(analysis_path.clone());
+        manual_files.push(analysis_path);
     }
 
     if let Some(ref path) = args.changed_files {
@@ -52,10 +58,12 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         for line in content.lines() {
             let line = line.trim();
             if !line.is_empty() {
-                let path = resolve_path(&PathBuf::from(line), root);
-                files.push(path.clone());
-                authoritative_files.push(path.clone());
-                manual_files.push(path);
+                let (inventory_path, analysis_path) =
+                    resolve_manual_path(&PathBuf::from(line), root)?;
+                inventory_files.push(inventory_path);
+                files.push(analysis_path.clone());
+                authoritative_files.push(analysis_path.clone());
+                manual_files.push(analysis_path);
             }
         }
     }
@@ -86,6 +94,7 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
                     for f in git_files.files {
                         let path = root.join(f);
                         files.push(path.clone());
+                        inventory_files.push(path.clone());
                         git_provenance_files.push(path);
                     }
                     for f in git_files.deleted {
@@ -102,6 +111,7 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
                 Ok(diff) => {
                     let git_start = files.len();
                     apply_diff_files(&diff, root, &mut files, &mut deleted);
+                    inventory_files.extend(files[git_start..].iter().cloned());
                     git_provenance_files.extend(files[git_start..].iter().cloned());
                     diff_files.extend(diff);
                 }
@@ -117,9 +127,11 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
 
     let explicit_diff_start = files.len();
     collect_diff_files(args, root, &mut files, &mut deleted, &mut diff_files)?;
+    inventory_files.extend(files[explicit_diff_start..].iter().cloned());
     authoritative_files.extend(files[explicit_diff_start..].iter().cloned());
 
     let result = normalize_unique(files);
+    let inventory_files = normalize_unique(inventory_files);
     let git_files = normalize_unique(git_provenance_files);
     let manual_files = normalize_unique(manual_files);
     let authoritative_files = normalize_unique(authoritative_files);
@@ -158,6 +170,7 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
 
     Ok(ChangedFiles {
         files: result,
+        inventory_files,
         deleted: deleted_result,
         git_files,
         manual_files,
@@ -200,7 +213,8 @@ fn collect_diff_files(
         return Ok(());
     };
 
-    let diff_files = super::diff_parser::parse_unified_diff(&content);
+    let diff_files = super::diff_parser::parse_unified_diff_checked(&content)
+        .context("provided unified diff contains a malformed path")?;
     apply_diff_files(&diff_files, root, files, deleted);
     diff_files_out.extend(diff_files);
     Ok(())
@@ -251,7 +265,7 @@ fn apply_diff_files(
             deleted.push(path);
         }
 
-        if df.status == DiffFileStatus::Renamed {
+        if matches!(df.status, DiffFileStatus::Renamed | DiffFileStatus::Copied) {
             if let Some(ref old) = df.old_path {
                 let old_abs = if old.is_absolute() {
                     old.clone()
@@ -259,20 +273,37 @@ fn apply_diff_files(
                     root.join(old)
                 };
                 files.push(old_abs.clone());
-                deleted.push(old_abs);
+                if df.status == DiffFileStatus::Renamed {
+                    deleted.push(old_abs);
+                }
             }
         }
     }
 }
 
-fn resolve_path(path: &Path, root: &Path) -> PathBuf {
-    let abs = if path.is_absolute() {
+fn resolve_manual_path(path: &Path, root: &Path) -> Result<(PathBuf, PathBuf)> {
+    let lexical = if path.is_absolute() {
         path.to_path_buf()
     } else {
         root.join(path)
     };
-    abs.canonicalize()
-        .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&abs))
+    let lexical = no_mistakes::codebase::ts_resolver::normalize_path(&lexical);
+    if !lexical.starts_with(root) {
+        anyhow::bail!(
+            "changed file `{}` is outside the project root `{}`",
+            path.display(),
+            root.display()
+        )
+    }
+    let analysis = lexical.canonicalize().unwrap_or_else(|_| lexical.clone());
+    if !analysis.starts_with(root) {
+        anyhow::bail!(
+            "changed file `{}` resolves outside the project root `{}`",
+            path.display(),
+            root.display()
+        )
+    }
+    Ok((lexical, analysis))
 }
 
 pub(crate) fn existing_changed_files(changed: &ChangedFiles) -> Vec<PathBuf> {
@@ -368,6 +399,7 @@ fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<
             "diff",
             "--relative",
             "--name-status",
+            "-z",
             &format!("{base}...{head_commit}"),
         ])
         .current_dir(root);
@@ -377,42 +409,49 @@ fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<
             super::git_diff::classify_git_diff_failure(root, base, head_commit, &output.stderr)?;
         return Err(classification.into());
     }
-    Ok(parse_git_name_status(&String::from_utf8(output.stdout)?))
+    parse_git_name_status_z(&output.stdout)
 }
 
-fn parse_git_name_status(output: &str) -> GitChangedFiles {
+fn parse_git_name_status_z(output: &[u8]) -> Result<GitChangedFiles> {
     let mut files = HashSet::new();
     let mut deleted = HashSet::new();
-    for line in output.lines() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
+    let mut fields = output.split(|byte| *byte == b'\0');
+    while let Some(status) = fields.next() {
+        if status.is_empty() {
             continue;
         }
-        let mut parts = trimmed.split('\t');
-        let status = parts.next().unwrap_or_default();
-        if status.starts_with('R') {
-            if let Some(old_path) = parts.next() {
-                files.insert(PathBuf::from(old_path));
-                deleted.insert(PathBuf::from(old_path));
+        let status = std::str::from_utf8(status).context("git diff returned a non-UTF-8 status")?;
+        let first_path = fields
+            .next()
+            .filter(|path| !path.is_empty())
+            .context("git diff --name-status returned a status without a path")?;
+        let first_path = std::str::from_utf8(first_path)
+            .context("git diff returned a non-UTF-8 changed path")?;
+        if status.starts_with('R') || status.starts_with('C') {
+            files.insert(PathBuf::from(first_path));
+            if status.starts_with('R') {
+                deleted.insert(PathBuf::from(first_path));
             }
-            if let Some(new_path) = parts.next() {
-                files.insert(PathBuf::from(new_path));
-            }
+            let second_path = fields
+                .next()
+                .filter(|path| !path.is_empty())
+                .context("git diff --name-status returned a rename/copy without a destination")?;
+            let second_path = std::str::from_utf8(second_path)
+                .context("git diff returned a non-UTF-8 changed path")?;
+            files.insert(PathBuf::from(second_path));
             continue;
         }
-        if let Some(path) = parts.next() {
-            let path = PathBuf::from(path);
-            files.insert(path.clone());
-            if status == "D" {
-                deleted.insert(path);
-            }
+        let path = PathBuf::from(first_path);
+        files.insert(path.clone());
+        if status == "D" {
+            deleted.insert(path);
         }
     }
     let mut files: Vec<_> = files.into_iter().collect();
     files.sort();
     let mut deleted: Vec<_> = deleted.into_iter().collect();
     deleted.sort();
-    GitChangedFiles { files, deleted }
+    Ok(GitChangedFiles { files, deleted })
 }
 
 #[cfg(test)]
@@ -421,8 +460,10 @@ mod tests {
 
     #[test]
     fn git_name_status_preserves_deleted_and_renamed_paths() {
-        let changed =
-            parse_git_name_status("M\talive.cs\nD\tdeleted.cs\nR100\told-name.cs\tnew-name.cs\n");
+        let changed = parse_git_name_status_z(
+            b"M\0alive.cs\0D\0deleted.cs\0R100\0old-name.cs\0new-name.cs\0",
+        )
+        .unwrap();
 
         assert_eq!(
             changed.files,
@@ -437,6 +478,69 @@ mod tests {
             changed.deleted,
             vec![PathBuf::from("deleted.cs"), PathBuf::from("old-name.cs")]
         );
+    }
+
+    #[test]
+    fn git_name_status_preserves_both_copy_paths_without_marking_the_source_deleted() {
+        let changed = parse_git_name_status_z(b"C100\0source.cs\0copied.cs\0").unwrap();
+
+        assert_eq!(
+            changed.files,
+            vec![PathBuf::from("copied.cs"), PathBuf::from("source.cs")]
+        );
+        assert!(changed.deleted.is_empty());
+    }
+
+    #[test]
+    fn git_name_status_nul_format_preserves_newlines_spaces_unicode_and_leading_dashes() {
+        let changed = parse_git_name_status_z(
+            "M\0line\nbreak.cs\0M\0space name.cs\0M\0日本語.cs\0M\0-leading.cs\0".as_bytes(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            changed.files,
+            vec![
+                PathBuf::from("-leading.cs"),
+                PathBuf::from("line\nbreak.cs"),
+                PathBuf::from("space name.cs"),
+                PathBuf::from("日本語.cs"),
+            ]
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn manual_symlink_keeps_lexical_inventory_path_and_resolves_analysis_target() {
+        let root = tempfile::tempdir().unwrap();
+        fs::write(root.path().join("target.ts"), "export const value = 1;\n").unwrap();
+        std::os::unix::fs::symlink("target.ts", root.path().join("alias.ts")).unwrap();
+        let canonical_root = root.path().canonicalize().unwrap();
+
+        let (inventory, analysis) =
+            resolve_manual_path(Path::new("alias.ts"), &canonical_root).unwrap();
+
+        assert_eq!(inventory, canonical_root.join("alias.ts"));
+        assert_eq!(analysis, canonical_root.join("target.ts"));
+    }
+
+    #[test]
+    fn manual_changed_path_rejects_lexical_and_resolved_root_escape() {
+        let root = tempfile::tempdir().unwrap();
+        let canonical_root = root.path().canonicalize().unwrap();
+        let lexical = resolve_manual_path(Path::new("../outside.ts"), &canonical_root).unwrap_err();
+        assert!(lexical.to_string().contains("outside the project root"));
+
+        #[cfg(unix)]
+        {
+            let outside = tempfile::NamedTempFile::new().unwrap();
+            std::os::unix::fs::symlink(outside.path(), root.path().join("escape.ts")).unwrap();
+            let resolved =
+                resolve_manual_path(Path::new("escape.ts"), &canonical_root).unwrap_err();
+            assert!(resolved
+                .to_string()
+                .contains("resolves outside the project root"));
+        }
     }
 
     #[test]

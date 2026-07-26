@@ -96,6 +96,11 @@ same-run artifact upload -> download edges. It omits remote `uses`,
 targets outside the tracked graph universe. `ci` remains the separate legacy
 `CiInvocation` relationship from workflow file to supported Rust Cargo binary.
 
+`testsPlan(options)` returns `changed_files`, the sorted, deduplicated
+changed-file inventory prepared by that same call, relative to the request root.
+The field is present even when no tests are selected and retains deleted paths
+plus both sides of detected renames and copies.
+
 `testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests. Vitest plans also use this surface for a

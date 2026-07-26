@@ -40,11 +40,21 @@ returning an empty plan:
   shallow fetch (common in CI checkouts); fetch more history
   (`git fetch --unshallow` or a deeper `--depth`).
 - `git-exit-failure` — Git failed for another reason; see the embedded stderr.
-- `git-malformed-output` — a single diff line exceeded the internal
-  pathological-line bound.
+- `git-malformed-output` — a diff line exceeded the internal pathological-line
+  bound, or Git returned a malformed/non-UTF-8 quoted path.
 
 Node's `testsPlan()` rejects with the same stable code and message instead of
 resolving to an empty plan.
+
+JSON plans include `changed_files`, the sorted, deduplicated, root-relative
+inventory prepared by that invocation. It is present even when no tests are
+selected and retains deleted paths plus both sides of detected renames and
+copies. Non-JSON formats continue to render selected tests only.
+
+Manual `--changed-file` and `--changed-files` entries must remain within
+`--root`, both lexically and after resolving an existing symlink. A symlink to
+an in-root target keeps its lexical path in `changed_files`, while dependency
+analysis follows the resolved target.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and

@@ -271,6 +271,7 @@ mod tests {
             via_details: vec![Some(resource_detail(line)), None],
         };
         let plan = TestPlan {
+            changed_files: Vec::new(),
             selected_tests: vec![SelectedTest {
                 test_file: "tests/schema.test.ts".to_string(),
                 confidence: Confidence::High,

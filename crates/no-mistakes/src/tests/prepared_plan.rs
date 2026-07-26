@@ -320,6 +320,18 @@ impl PreparedTestPlanRequest {
         &self.root_visible_paths
     }
 
+    pub(crate) fn changed_file_inventory(&self) -> Vec<String> {
+        let mut files: Vec<String> = self
+            .collected
+            .inventory_files
+            .iter()
+            .map(|path| no_mistakes::codebase::ts_source::relative_slash_path(&self.root, path))
+            .collect();
+        files.sort();
+        files.dedup();
+        files
+    }
+
     pub(crate) fn config_path(&self) -> Option<&Path> {
         self.config_path.as_deref()
     }

@@ -70,6 +70,8 @@ const {
     framework: "vitest", // also supports "playwright", "dotnet", and "swift"
     changedFiles: ["src/utils.mts"],
   });
+  // Complete changed-file inventory, including paths that selected no tests.
+  console.log(plan.changed_files);
   const targetCommands = await testsTargets({
     root: process.cwd(),
     framework: "vitest",

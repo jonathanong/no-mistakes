@@ -341,6 +341,8 @@ fn diff_side_source(
         (DiffFileStatus::Modified, _) => is_new_path,
         (DiffFileStatus::Renamed, DiffSide::Before) => is_old_path,
         (DiffFileStatus::Renamed, DiffSide::After) => is_new_path,
+        (DiffFileStatus::Copied, DiffSide::Before) => false,
+        (DiffFileStatus::Copied, DiffSide::After) => is_new_path,
         _ => false,
     };
     if !endpoint_matches {

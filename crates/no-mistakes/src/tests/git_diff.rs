@@ -55,7 +55,11 @@ pub(crate) fn stream_git_diff(
     command
         .args([
             "-c",
-            "core.quotePath=false",
+            // Force Git's C-quoted path grammar so tabs/newlines and
+            // non-UTF-8 bytes never reach the line-oriented stream raw.
+            // `DiffStreamParser` decodes valid UTF-8 paths and rejects
+            // byte sequences that the public String API cannot represent.
+            "core.quotePath=true",
             "diff",
             "--relative",
             "-M",
@@ -100,7 +104,13 @@ pub(crate) fn stream_git_diff(
     };
 
     if outcome.status.success() {
-        return Ok(parser.finish());
+        return parser.finish_checked().map_err(|error| {
+            GitDiffError {
+                code: "git-malformed-output",
+                message: format!("git diff returned a malformed path: {error}"),
+            }
+            .into()
+        });
     }
 
     Err(classify_git_diff_failure(root, base, head, &outcome.stderr)?.into())

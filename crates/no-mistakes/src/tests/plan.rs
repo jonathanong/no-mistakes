@@ -15,6 +15,9 @@ include!("plan_extra_inputs.rs");
 #[path = "plan_vitest_setup.rs"]
 mod plan_vitest_setup;
 
+mod changed_inventory;
+pub(crate) use changed_inventory::generate_plan_with_prepared;
+
 pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     let plan = generate_plan(&args)?;
 
@@ -37,8 +40,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     generate_plan_with_prepared(prepared.args(), &prepared, None)
 }
 
-/// Generate a framework or union plan from immutable request-scoped inputs.
-pub(crate) fn generate_plan_with_prepared(
+fn generate_plan_with_prepared_inner(
     args: &PlanArgs,
     prepared: &super::prepared_plan::PreparedTestPlanRequest,
     timing: Option<&mut crate::impacted_checks::timing::TimingTracker>,
@@ -128,6 +130,7 @@ pub(crate) fn generate_plan_with_prepared(
         }
         selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
         return Ok(TestPlan {
+            changed_files: Vec::new(),
             selected_tests,
             groups: Vec::new(),
             warnings: {
@@ -418,6 +421,7 @@ pub(crate) fn generate_plan_with_prepared(
             .collect();
         selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
         return Ok(TestPlan {
+            changed_files: Vec::new(),
             selected_tests,
             groups: Vec::new(),
             warnings: prepared.tsconfig_warnings(),
@@ -476,6 +480,7 @@ pub(crate) fn generate_plan_with_prepared(
     });
 
     Ok(TestPlan {
+        changed_files: Vec::new(),
         selected_tests,
         groups: Vec::new(),
         warnings,

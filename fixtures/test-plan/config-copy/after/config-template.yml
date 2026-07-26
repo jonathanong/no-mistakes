@@ -1,0 +1,3 @@
+tests:
+  vitest:
+    configs: independently-modified.ts

@@ -81,6 +81,11 @@ specs whose navigation path interpolates an unresolvable value (e.g.
 
 Node API: `testsPlan(options)`.
 
+JSON plans and `testsPlan()` results expose `changed_files`, the complete
+sorted, deduplicated, root-relative inventory prepared by the same invocation.
+It is available even when `selected_tests` is empty and retains deleted paths
+plus both sides of detected renames and copies.
+
 In a TypeScript/JavaScript workspace, omit `tsconfig` so test impact follows
 the config owning each importing file. Passing `tsconfig` deliberately forces a
 single config for the whole plan.

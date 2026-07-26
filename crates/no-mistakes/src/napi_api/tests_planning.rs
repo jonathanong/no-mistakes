@@ -1,6 +1,7 @@
 // Included into `napi_api::tests`; shares its fixture helpers and imports.
 
 include!("tests_planning/vitest_config_extends.rs");
+include!("tests_planning/changed_files.rs");
 
 #[test]
 fn tests_plan_json_union_applies_vitest_setup_fallback() {

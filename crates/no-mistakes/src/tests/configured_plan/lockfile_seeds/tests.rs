@@ -87,6 +87,7 @@ fn post_loop_seed_merges_into_used_targeted_test_at_zero_budget() {
     );
     assert!(selected_test.targets.is_empty());
     let mut plan = crate::tests::TestPlan {
+        changed_files: Vec::new(),
         selected_tests: vec![selected_test.clone()],
         groups,
         warnings: Vec::new(),

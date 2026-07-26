@@ -315,6 +315,21 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
 });
 
+test("test plan declarations require current results but accept saved legacy plan documents", () => {
+  const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
+
+  assert.match(
+    declarations,
+    /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
+  );
+  assert.match(declarations, /\n  changed_files: string\[\];/);
+  assert.match(
+    declarations,
+    /export type SavedTestPlan = Omit<TestPlan, "changed_files"> & \{\n  changed_files\?: string\[\];\n\};/,
+  );
+  assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
+});
+
 test("graph declarations expose GitHub Actions workflow relationships and virtual nodes", () => {
   const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
   const flowDeclarations = readFileSync(join(packageRoot, "flow-types.d.ts"), "utf8");

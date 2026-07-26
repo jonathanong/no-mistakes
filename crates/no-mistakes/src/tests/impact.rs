@@ -263,6 +263,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     });
 
     Ok(TestPlan {
+        changed_files: Vec::new(),
         selected_tests,
         groups: Vec::new(),
         warnings,
