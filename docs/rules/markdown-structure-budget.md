@@ -23,6 +23,11 @@ The comparison is strict: exactly 180 lines or 12,000 characters does not
 trigger the budget. Mermaid is identified from the first fenced-code info token
 case-insensitively; indented code is not a Mermaid block.
 
+Finding paths are lexical from the request root. External configured projects
+use a stable `../project/file.md` path, so standard file suppressions resolve
+back to the source. Baseline entries remain relative to each effective project
+root, keeping a project's rollout state portable across request locations.
+
 For staged rollout, `baselineFile` may name a tracked JSON object mapping each
 current violation to exact `{ "tables": N, "mermaid": N }` counts. Any count
 change, resolved/deleted path, malformed JSON, or new violation fails.

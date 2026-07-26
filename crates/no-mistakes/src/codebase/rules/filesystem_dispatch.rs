@@ -18,6 +18,7 @@ use super::{
 mod candidate_helpers;
 mod candidate_index;
 mod entrypoints;
+mod inventory;
 mod preserved;
 mod run_rule;
 #[macro_use]
@@ -86,8 +87,11 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         files,
         &snapshot.tracked_paths_from(files),
         &metadata_files,
-        Some(snapshot.tracked_paths_for(root)),
+        Some(inventory::tracked_inventory_with_markdown_project_roots(
+            root, config, snapshot,
+        )),
     );
+    inventory::register_trusted_external_candidates(root, &candidates, &sources);
     macro_rules! run_rules {
         ($($id:expr => $call:path),* $(,)?) => {
             rayon::scope(|s| {

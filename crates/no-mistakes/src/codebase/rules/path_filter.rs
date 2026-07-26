@@ -5,6 +5,11 @@ use std::path::{Path, PathBuf};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 
+mod findings;
+mod markdown;
+pub(crate) use findings::filter_findings;
+pub(crate) use markdown::filter_markdown_rule_files;
+
 pub(crate) fn filter_rule_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -19,29 +24,10 @@ pub(crate) fn filter_rule_files(
         .collect())
 }
 
-pub(crate) fn filter_findings(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule_id: &str,
-    findings: Vec<super::RuleFinding>,
-) -> Result<Vec<super::RuleFinding>> {
-    let mut filtered = Vec::new();
-    for rule in config.rule_applications(rule_id) {
-        let filter = RulePathFilter::new(root, config, rule)?;
-        filtered.extend(
-            findings
-                .iter()
-                .filter(|finding| filter.is_match(&root.join(&finding.file)))
-                .cloned(),
-        );
-    }
-    super::sort_findings(&mut filtered);
-    Ok(filtered)
-}
-
 pub(crate) struct RulePathFilter {
     root: PathBuf,
     repository: bool,
+    allow_external_projects: bool,
     projects: Vec<ProjectPathFilter>,
     include: GlobMatcher,
     exclude: GlobMatcher,
@@ -59,11 +45,30 @@ impl RulePathFilter {
         Self::new_with_inferred(root, config, rule, &mut inferred_roots)
     }
 
+    fn new_with_external_projects(
+        root: &Path,
+        config: &NoMistakesConfig,
+        rule: &RuleDef,
+    ) -> Result<Self> {
+        let mut inferred_roots = crate::codebase::config::InferredRoots::default();
+        Self::new_with_inferred_and_external(root, config, rule, &mut inferred_roots, true)
+    }
+
     pub(crate) fn new_with_inferred(
         root: &Path,
         config: &NoMistakesConfig,
         rule: &RuleDef,
         inferred_roots: &mut crate::codebase::config::InferredRoots,
+    ) -> Result<Self> {
+        Self::new_with_inferred_and_external(root, config, rule, inferred_roots, false)
+    }
+
+    fn new_with_inferred_and_external(
+        root: &Path,
+        config: &NoMistakesConfig,
+        rule: &RuleDef,
+        inferred_roots: &mut crate::codebase::config::InferredRoots,
+        allow_external_projects: bool,
     ) -> Result<Self> {
         let root = crate::codebase::ts_resolver::normalize_path(root);
         let include = GlobMatcher::new(&rule.include, &format!("rule `{}` include", rule.rule))?;
@@ -93,6 +98,7 @@ impl RulePathFilter {
         Ok(Self {
             root,
             repository: rule.applies_to_repository() || has_test_target(rule),
+            allow_external_projects,
             projects,
             include,
             exclude,
@@ -105,11 +111,17 @@ impl RulePathFilter {
         } else {
             crate::codebase::ts_resolver::normalize_path(&self.root.join(path))
         };
-        if !path.starts_with(&self.root) {
+        if !path.starts_with(&self.root)
+            && (!self.allow_external_projects
+                || !self
+                    .projects
+                    .iter()
+                    .any(|project| path.starts_with(&project.root)))
+        {
             return false;
         }
         let repo_rel = relative_slash_path(&self.root, &path);
-        if self.repository && self.matches_rule(&repo_rel, None) {
+        if self.repository && path.starts_with(&self.root) && self.matches_rule(&repo_rel, None) {
             return true;
         }
         self.projects.iter().any(|project| {

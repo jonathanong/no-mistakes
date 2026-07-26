@@ -9,5 +9,8 @@
 [invalid escape](docs/%zz.md)
 [absolute](/docs/doc.md)
 [current directory](./docs/doc.md)
+[encoded extension](docs/doc%2Emd)
 
 [doc]: docs/doc.md?raw=1#top
+
+## x

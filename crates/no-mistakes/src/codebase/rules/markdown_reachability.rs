@@ -1,6 +1,5 @@
 //! Enforces the deliberately small documentation discovery graph used by agents.
 use super::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
@@ -13,12 +12,19 @@ mod graph;
 
 use baseline::{read_baseline, BaselineEntry};
 use finding::{finding, stale};
-use graph::{direct_or_readme_hop, link_graph, shortest_depth};
+use graph::{direct_or_readme_hop, link_graph, shortest_depths};
 
 pub const RULE_ID: &str = "markdown-reachability";
 const DEFAULT_ROOT_FILENAMES: &[&str] = &["CLAUDE.md"];
 const DEFAULT_INDEX_FILENAMES: &[&str] = &["README.md"];
 const DEFAULT_MAX_DEPTH: usize = 2;
+type RuleStates = BTreeMap<String, RuleState>;
+
+struct RuleState {
+    finding_file: String,
+    depth: Option<usize>,
+    allowed: bool,
+}
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -35,29 +41,23 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let markdown = markdown_files(root, all_files);
-    let graph = link_graph(root, &markdown, sources);
+    let markdown = super::markdown_scope::markdown_files(all_files);
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.rule_options();
         let roots = filenames(&options.root_filenames, DEFAULT_ROOT_FILENAMES);
         let indexes = filenames(&options.index_filenames, DEFAULT_INDEX_FILENAMES);
         let max_depth = validate_max_depth(options.max_depth)?;
-        let target_paths = super::path_filter::filter_rule_files(root, config, rule, &markdown)?;
-        let target_names = target_paths
-            .iter()
-            .filter(|path| !is_named(path, &roots))
-            .map(|path| relative_slash_path(root, path))
-            .collect::<BTreeSet<_>>();
-        let states = target_paths
-            .iter()
-            .filter(|path| !is_named(path, &roots))
-            .map(|path| {
-                let depth = shortest_depth(path, &roots, &graph);
-                let allowed = direct_or_readme_hop(path, &roots, &indexes, &graph, max_depth);
-                (relative_slash_path(root, path), (depth, allowed))
-            })
-            .collect::<BTreeMap<_, _>>();
+        let target_paths =
+            super::path_filter::filter_markdown_rule_files(root, config, rule, &markdown)?;
+        let scope_options = ScopeOptions {
+            roots: &roots,
+            indexes: &indexes,
+            max_depth,
+            sources,
+        };
+        let (states, target_names) =
+            scoped_states(root, config, rule, &markdown, &target_paths, scope_options)?;
         let baseline = read_baseline(root, options.baseline_file.as_deref(), all_files)?;
         collect_findings(&mut findings, states, &target_names, &baseline, max_depth);
     }
@@ -65,26 +65,95 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
+struct ScopeOptions<'a> {
+    roots: &'a BTreeSet<String>,
+    indexes: &'a BTreeSet<String>,
+    max_depth: usize,
+    sources: &'a crate::codebase::ts_source::SourceStore,
+}
+
+fn scoped_states(
+    root: &Path,
+    config: &NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+    markdown: &[PathBuf],
+    targets: &[PathBuf],
+    options: ScopeOptions<'_>,
+) -> Result<(RuleStates, BTreeSet<String>)> {
+    let scope_roots = super::markdown_scope::scope_roots(root, config, rule);
+    let mut targets_by_scope = BTreeMap::<PathBuf, Vec<&PathBuf>>::new();
+    for target in targets {
+        let Some(scope_root) = super::markdown_scope::scope_root_for_path(&scope_roots, target)
+        else {
+            continue;
+        };
+        targets_by_scope
+            .entry(scope_root.clone())
+            .or_default()
+            .push(target);
+    }
+    let mut states = BTreeMap::new();
+    let mut target_names = BTreeSet::new();
+    for (scope_root, scoped_targets) in targets_by_scope {
+        let scoped_markdown = markdown
+            .iter()
+            .filter(|path| path.starts_with(&scope_root))
+            .cloned()
+            .collect::<Vec<_>>();
+        let graph = link_graph(&scope_root, &scoped_markdown, options.sources);
+        let depths = shortest_depths(options.roots, &graph);
+        for target in scoped_targets
+            .into_iter()
+            .filter(|path| !is_named(path, options.roots))
+        {
+            let baseline_key = super::markdown_scope::baseline_key(root, &scope_root, target);
+            if !target_names.insert(baseline_key.clone()) {
+                anyhow::bail!(
+                    "{RULE_ID} has ambiguous baseline key `{baseline_key}` across configured project roots; configure separate rule applications"
+                );
+            }
+            states.insert(
+                baseline_key,
+                RuleState {
+                    finding_file: super::markdown_scope::finding_key(root, target),
+                    depth: depths.get(target).copied(),
+                    allowed: direct_or_readme_hop(
+                        target,
+                        options.roots,
+                        options.indexes,
+                        &graph,
+                        options.max_depth,
+                    ),
+                },
+            );
+        }
+    }
+    Ok((states, target_names))
+}
+
 fn collect_findings(
     findings: &mut Vec<RuleFinding>,
-    states: BTreeMap<String, (Option<usize>, bool)>,
+    states: RuleStates,
     target_names: &BTreeSet<String>,
     baseline: &BTreeMap<String, BaselineEntry>,
     max_depth: usize,
 ) {
-    for (file, (depth, allowed)) in states {
-        let expected = expected_state(depth, allowed);
-        match (expected, baseline.get(&file)) {
-            (None, Some(_)) => {
-                findings.push(stale(&file, "is reachable; remove its baseline entry"))
-            }
+    for (baseline_key, state) in states {
+        let expected = expected_state(state.depth, state.allowed);
+        match (expected, baseline.get(&baseline_key)) {
+            (None, Some(_)) => findings.push(stale(
+                &state.finding_file,
+                "is reachable; remove its baseline entry",
+            )),
             (None, None) => {}
             (Some(expected), Some(actual)) if actual == &expected => {}
             (Some(expected), Some(_)) => findings.push(stale(
-                &file,
+                &state.finding_file,
                 &format!("baseline does not match current {}", expected.state),
             )),
-            (Some(expected), None) => findings.push(finding(&file, &expected, max_depth)),
+            (Some(expected), None) => {
+                findings.push(finding(&state.finding_file, &expected, max_depth))
+            }
         }
     }
     for file in baseline.keys() {
@@ -110,17 +179,6 @@ fn validate_max_depth(configured: Option<usize>) -> Result<usize> {
         anyhow::bail!("{RULE_ID} options.maxDepth must be 1 or 2; README-only discovery supports no deeper graph")
     }
     Ok(depth)
-}
-
-fn markdown_files(root: &Path, files: &[PathBuf]) -> Vec<PathBuf> {
-    let mut files = files
-        .iter()
-        .filter(|path| path.starts_with(root) && path.extension().is_some_and(|ext| ext == "md"))
-        .cloned()
-        .collect::<Vec<_>>();
-    files.sort();
-    files.dedup();
-    files
 }
 
 fn filenames(configured: &Option<Vec<String>>, defaults: &[&str]) -> BTreeSet<String> {

@@ -80,7 +80,7 @@ fn visible_snapshot_entrypoint_excludes_untracked_markdown() {
         .unwrap();
     assert!(output.status.success());
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(fixture.path());
-    let findings = run_filesystem_rules_with_visible_and_snapshot(
+    let findings = crate::codebase::rules::run_filesystem_rules_with_visible_and_snapshot(
         fixture.path(),
         Some(&fixture.path().join(".no-mistakes.yml")),
         &[

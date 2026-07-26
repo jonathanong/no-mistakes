@@ -114,19 +114,29 @@ fn recognizes_reference_links_and_ignores_non_local_or_escaping_links() {
 }
 
 #[test]
-fn shortest_depth_skips_duplicate_queue_entries() {
+fn shortest_depths_use_a_single_multi_source_bfs_and_skip_duplicate_queue_entries() {
     let root = Path::new("/repo");
     let claude = root.join("CLAUDE.md");
+    let second_root = root.join("SECOND.md");
     let shared = root.join("shared.md");
     let target = root.join("target.md");
     let graph = BTreeMap::from([
         (claude.clone(), vec![shared.clone(), shared.clone()]),
+        (second_root.clone(), vec![target.clone()]),
         (shared, vec![target.clone()]),
         (target.clone(), Vec::new()),
     ]);
     assert_eq!(
-        graph::shortest_depth(&target, &BTreeSet::from(["CLAUDE.md".to_string()]), &graph),
-        Some(2)
+        graph::shortest_depths(
+            &BTreeSet::from(["CLAUDE.md".to_string(), "SECOND.md".to_string()]),
+            &graph,
+        ),
+        BTreeMap::from([
+            (claude, 0),
+            (second_root, 0),
+            (root.join("shared.md"), 1),
+            (target, 1),
+        ])
     );
 }
 

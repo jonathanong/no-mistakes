@@ -235,6 +235,82 @@ fn markdown_repository_rules_use_the_full_tracked_inventory_not_untracked_files(
 }
 
 #[test]
+fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directories() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/filesystem-dispatch/markdown-external-project");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture.path().join("request"));
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new_observed(
+        &root,
+        Some(Arc::clone(&observer)),
+    );
+    let inventory = super::super::inventory::tracked_inventory_with_markdown_project_roots(
+        &root, &config, &snapshot,
+    );
+    let index =
+        RuleCandidateIndex::prepare_with_inventory(&root, &config, &[], &[], &[], Some(inventory));
+
+    let external_docs = [
+        fixture.path().join("external/CLAUDE.md"),
+        fixture.path().join("external/guide.md"),
+    ];
+    for rule_id in [MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET] {
+        let candidates = index.candidates(rule_id);
+        assert!(
+            external_docs.iter().all(|path| candidates.contains(path)),
+            "{rule_id} keeps the external tracked Markdown project: {candidates:?}"
+        );
+        assert!(
+            !candidates.contains(&fixture.path().join("external/generated/ignored.md"))
+                && !candidates.contains(&fixture.path().join("external/coverage/ignored.md")),
+            "{rule_id} excludes configured and built-in skipped Markdown: {candidates:?}"
+        );
+    }
+
+    let files = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
+    sources.read_path(&root.join("CLAUDE.md")).unwrap();
+    let warmed_reads = sources.physical_read_count();
+    let findings = super::super::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        &root,
+        &config,
+        &files,
+        &snapshot,
+        None,
+        Arc::clone(&sources),
+    )
+    .unwrap();
+    let pairs = findings
+        .iter()
+        .map(|finding| (finding.rule.as_str(), finding.file.as_str()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        pairs,
+        [
+            (MARKDOWN_REACHABILITY, "../external-two/guide.md"),
+            (MARKDOWN_REACHABILITY, "../external/guide.md"),
+            (MARKDOWN_STRUCTURE_BUDGET, "../external/over-budget.md"),
+        ],
+        "external Markdown projects produce unique request-relative findings"
+    );
+    assert!(
+        sources.physical_read_count() > warmed_reads,
+        "external analysis uses the caller's warmed source store"
+    );
+    let observed_reads = observer.source_read_snapshot();
+    assert!(
+        observed_reads.contains_key(&root.join("CLAUDE.md"))
+            && observed_reads.contains_key(&fixture.path().join("external/suppressed.md")),
+        "external suppression reads stay attached to the caller's observer: {observed_reads:?}"
+    );
+}
+
+#[test]
 fn repository_banned_paths_uses_full_inventory_and_keeps_external_project_candidates() {
     let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
     let external_root = root.parent().unwrap().join("external-app");

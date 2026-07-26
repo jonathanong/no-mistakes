@@ -37,15 +37,15 @@ fn extract_local_links(
             .split(['#', '?'])
             .next()
             .unwrap_or_default();
-        if destination.is_empty()
-            || md_links::is_external(destination)
-            || !destination.ends_with(".md")
-        {
+        if destination.is_empty() || md_links::is_external(destination) {
             continue;
         }
         let Some(destination) = md_links::decode_local_path(destination) else {
             continue;
         };
+        if !destination.ends_with(".md") {
+            continue;
+        }
         let base = if destination.starts_with('/') {
             root.to_path_buf()
         } else {
@@ -103,25 +103,22 @@ pub(super) fn direct_or_readme_hop(
         })
 }
 
-pub(super) fn shortest_depth(
-    target: &Path,
+pub(super) fn shortest_depths(
     roots: &BTreeSet<String>,
     graph: &BTreeMap<PathBuf, Vec<PathBuf>>,
-) -> Option<usize> {
+) -> BTreeMap<PathBuf, usize> {
     let mut queue = graph
         .keys()
         .filter(|path| is_named(path, roots))
         .cloned()
         .map(|path| (path, 0usize))
         .collect::<VecDeque<_>>();
-    let mut seen = BTreeSet::new();
+    let mut depths = BTreeMap::new();
     while let Some((current, depth)) = queue.pop_front() {
-        if !seen.insert(current.clone()) {
+        if depths.contains_key(&current) {
             continue;
         }
-        if current == target {
-            return Some(depth);
-        }
+        depths.insert(current.clone(), depth);
         queue.extend(
             graph
                 .get(&current)
@@ -131,5 +128,5 @@ pub(super) fn shortest_depth(
                 .map(|next| (next, depth + 1)),
         );
     }
-    None
+    depths
 }

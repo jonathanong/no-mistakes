@@ -1,0 +1,16 @@
+filesystem:
+  skipDirectories: [generated]
+projects:
+  external-docs:
+    root: ../external
+  second-external-docs:
+    root: ../external-two
+rules:
+  - rule: markdown-reachability
+    projects: [external-docs]
+  - rule: markdown-reachability
+    projects: [second-external-docs]
+  - rule: markdown-structure-budget
+    projects: [external-docs]
+    options:
+      maxLines: 1

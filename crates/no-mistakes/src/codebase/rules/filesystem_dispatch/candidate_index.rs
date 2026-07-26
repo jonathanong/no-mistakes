@@ -41,7 +41,10 @@ impl RuleCandidateIndex {
         {
             plans
                 .entry((
-                    preserved::filesystem_rule_preserved_roots(&root, config, rule_id),
+                    preserved::filesystem_rule_preserved_roots(&root, config, rule_id)
+                        .into_iter()
+                        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+                        .collect(),
                     rule_id == FORBIDDEN_WORKSPACE_CLOSURE,
                     rule_id == BANNED_PATHS,
                     (rule_id == BANNED_PATHS
@@ -90,7 +93,14 @@ impl RuleCandidateIndex {
                         .map(|paths| paths.as_slice())
                         .unwrap_or_default()
                         .iter()
-                        .filter(|path| path.starts_with(&root))
+                        // Markdown's tracked repository inventory must honor
+                        // both its configured project roots and every source
+                        // skip directory. Unlike source discovery, tracked
+                        // docs are never retained merely because a project
+                        // root happens to sit below a skipped directory.
+                        .filter(|path| {
+                            markdown_inventory_path_allowed(path, &preserved_roots, &skip)
+                        })
                         .cloned()
                         .collect(),
                 )
@@ -180,6 +190,22 @@ impl RuleCandidateIndex {
     pub(super) fn exclusive_rust_candidates(&self) -> &[PathBuf] {
         &self.exclusive_rust
     }
+
+    pub(super) fn all_candidates(&self) -> impl Iterator<Item = &PathBuf> {
+        self.by_rule.values().flat_map(|paths| paths.iter())
+    }
+}
+
+fn markdown_inventory_path_allowed(path: &Path, roots: &[PathBuf], skip: &HashSet<&str>) -> bool {
+    // Baselines are JSON companions rather than documentation targets, so
+    // retain them for the rule's tracked-baseline validation.
+    if path.extension().is_none_or(|extension| extension != "md") {
+        return true;
+    }
+    roots.iter().any(|root| {
+        path.starts_with(root)
+            && !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
+    })
 }
 
 #[cfg(test)]

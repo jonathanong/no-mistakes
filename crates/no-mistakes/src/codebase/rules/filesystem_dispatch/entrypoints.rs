@@ -18,7 +18,6 @@ pub fn run_filesystem_rules_with_files(
 /// Run filesystem rules with a caller-supplied visible work list and the
 /// request's existing discovery snapshot. This preserves tracked-only rules
 /// without a second Git discovery.
-#[doc(hidden)]
 pub fn run_filesystem_rules_with_visible_and_snapshot(
     root: &Path,
     config_path: Option<&Path>,

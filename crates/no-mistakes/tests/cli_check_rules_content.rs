@@ -16,17 +16,11 @@ fn fixture(category: &str, scenario: &str) -> PathBuf {
 }
 
 fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        std::fs::read_to_string(root.join(name)).unwrap(),
-    )
-    .unwrap();
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(root.join(name))
         .output()
         .unwrap()
 }

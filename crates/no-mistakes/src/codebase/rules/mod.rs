@@ -14,6 +14,7 @@ pub mod integration_test_no_mocks;
 pub mod lockfile_allowlist;
 pub mod markdown_link_display_text;
 pub mod markdown_reachability;
+pub(crate) mod markdown_scope;
 pub mod markdown_structure_budget;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
@@ -57,6 +58,7 @@ pub use filesystem_dispatch::{
     run_filesystem_rules_with_config_and_snapshot,
     run_filesystem_rules_with_config_snapshot_and_vitest_catalog,
     run_filesystem_rules_with_config_snapshot_catalog_and_sources, run_filesystem_rules_with_files,
+    run_filesystem_rules_with_visible_and_snapshot,
 };
 pub use ids::*;
 pub(crate) use run::canonical_graph_plan;

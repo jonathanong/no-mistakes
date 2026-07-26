@@ -1,3 +1,6 @@
+#[path = "common/gitignore_fixture.rs"]
+mod gitignore_fixture;
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
@@ -18,14 +21,12 @@ fn git(root: &Path, args: &[&str]) -> bool {
         .success()
 }
 
-fn check(root: &Path, config: &str) -> Output {
-    let config_file = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config_file.path(), config).unwrap();
+fn check(root: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config_file.path())
+        .arg(root.join(".no-mistakes.yml"))
         .output()
         .unwrap()
 }
@@ -53,18 +54,11 @@ fn commit_fixture(root: &Path) {
 
 #[test]
 fn agents_md_max_size_skips_gitignored_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("ignored")).unwrap();
-    std::fs::write(root.join("ignored/AGENTS.md"), "line\n".repeat(300)).unwrap();
-    std::fs::write(root.join("CLAUDE.md"), "# ok\n").unwrap();
-    std::fs::write(root.join(".gitignore"), "ignored/\n").unwrap();
+    let fixture = gitignore_fixture::materialize("cli-check-rules-agents-md-max-size");
+    let root = fixture.path();
     commit_fixture(root);
 
-    let output = check(
-        root,
-        "rules:\n  - rule: agents-md-max-size\n    scope: repository\n    options:\n      maxLines: 5\n",
-    );
+    let output = check(root);
     assert!(
         output.status.success(),
         "gitignored files must not be flagged: {}",
@@ -74,22 +68,11 @@ fn agents_md_max_size_skips_gitignored_files() {
 
 #[test]
 fn rust_no_inline_tests_skips_gitignored_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("generated")).unwrap();
-    std::fs::write(
-        root.join("generated/lib.rs"),
-        "#[cfg(test)]\nmod tests {\n}\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("clean.rs"), "pub fn ok() {}\n").unwrap();
-    std::fs::write(root.join(".gitignore"), "generated/\n").unwrap();
+    let fixture = gitignore_fixture::materialize("cli-check-rules-rust-no-inline-tests");
+    let root = fixture.path();
     commit_fixture(root);
 
-    let output = check(
-        root,
-        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
-    );
+    let output = check(root);
     assert!(
         output.status.success(),
         "gitignored files must not be flagged: {}",

@@ -7,6 +7,7 @@ use std::sync::{Arc, OnceLock};
 
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
+mod regular_paths;
 mod validation;
 use validation::ValidatedPathCache;
 
@@ -29,6 +30,7 @@ pub struct SourceStore {
         std::collections::HashMap<std::path::PathBuf, Arc<OnceLock<SourceReadOutcome>>>,
     >,
     validated_regular_paths: std::sync::Mutex<ValidatedPathCache>,
+    trusted_regular_paths: std::sync::Mutex<std::collections::HashSet<std::path::PathBuf>>,
     physical_reads: AtomicUsize,
     json_parse_count: AtomicUsize,
 }
@@ -52,6 +54,7 @@ impl SourceStore {
             json_parses: std::sync::Mutex::new(std::collections::HashMap::new()),
             supplemental_reads: std::sync::Mutex::new(std::collections::HashMap::new()),
             validated_regular_paths: std::sync::Mutex::new(std::collections::HashMap::new()),
+            trusted_regular_paths: std::sync::Mutex::new(std::collections::HashSet::new()),
             physical_reads: AtomicUsize::new(0),
             json_parse_count: AtomicUsize::new(0),
         }
@@ -177,22 +180,6 @@ impl SourceStore {
             self.increment("manifest.cache_hits", 1);
         }
         result
-    }
-
-    /// Validate a lexical candidate once for suppression consumers. Regular
-    /// inventory entries were already classified at discovery; symlinks and
-    /// supplemental paths additionally require canonical containment.
-    pub(crate) fn validated_regular_path(
-        &self,
-        root: &Path,
-        candidate: &Path,
-    ) -> Option<std::path::PathBuf> {
-        validation::validated_regular_path(
-            &self.inventory,
-            &self.validated_regular_paths,
-            root,
-            candidate,
-        )
     }
 
     #[doc(hidden)]

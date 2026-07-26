@@ -47,7 +47,7 @@ fn suppress_rule_findings_inner(
             return true;
         }
         let source = sources.entry(finding.file.clone()).or_insert_with(|| {
-            let relative = safe_relative_finding_path(&finding.file)?;
+            let relative = safe_relative_finding_path(&finding.file, request_sources.is_some())?;
             let candidate = lexical_root.join(relative);
             let path = match request_sources {
                 Some(sources) => sources.validated_regular_path(&lexical_root, &candidate),
@@ -71,17 +71,19 @@ fn suppress_rule_findings_inner(
     });
 }
 
-fn safe_relative_finding_path(file: &str) -> Option<&Path> {
+fn safe_relative_finding_path(file: &str, allow_parent: bool) -> Option<&Path> {
     let path = Path::new(file);
     if path.is_absolute()
         || path.components().any(|component| {
             matches!(
                 component,
-                std::path::Component::Prefix(_)
-                    | std::path::Component::RootDir
-                    | std::path::Component::ParentDir
+                std::path::Component::Prefix(_) | std::path::Component::RootDir
             )
         })
+        || (!allow_parent
+            && path
+                .components()
+                .any(|component| matches!(component, std::path::Component::ParentDir)))
     {
         return None;
     }

@@ -50,6 +50,9 @@ fn full_check_uses_strict_thresholds_and_unicode_scalar_characters() {
     let root = fixture(".");
     let crlf = std::fs::read(root.join("exact-crlf.md")).unwrap();
     assert!(crlf.windows(2).any(|pair| pair == b"\r\n"));
+    let cr = std::fs::read(root.join("exact-cr.md")).unwrap();
+    assert!(cr.contains(&b'\r'));
+    assert!(!cr.windows(2).any(|pair| pair == b"\r\n"));
     let options = "maxLines: 6\nmaxChars: 100\nmaxTables: 1\nmaxMermaid: 1";
     let findings = run(
         &root,
@@ -59,6 +62,14 @@ fn full_check_uses_strict_thresholds_and_unicode_scalar_characters() {
     .unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "over-budget.md");
+    let cr_only = run(
+        &root,
+        &config("maxLines: 5\nmaxTables: 0", &["**/*.md"], &[]),
+        &["exact-cr.md"],
+    )
+    .unwrap();
+    assert_eq!(cr_only.len(), 1, "{cr_only:#?}");
+    assert_eq!(cr_only[0].file, "exact-cr.md");
     let unicode = run(
         &root,
         &config("maxLines: 99\nmaxChars: 3", &["**/*.md"], &[]),
