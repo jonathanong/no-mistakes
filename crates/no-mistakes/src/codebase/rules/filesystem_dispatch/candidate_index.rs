@@ -1,17 +1,15 @@
 use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{
-    rule_enabled, BANNED_PATHS, BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES, DOC_CONSISTENCY,
-    FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_WORKSPACE_CLOSURE,
-    INTEGRATION_TEST_NO_MOCKS, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
-    NO_EMPTY_OR_COMMENTS_ONLY_FILES, NO_GIT_IDENTITY_MUTATION, REQUIRED_COMPANION_IMPORTS,
-    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
-    STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY,
+    rule_enabled, BANNED_PATHS, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_REACHABILITY,
+    MARKDOWN_STRUCTURE_BUDGET, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS,
+    RUST_NO_INLINE_TESTS,
 };
 use crate::config::v2::NoMistakesConfig;
-use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+use super::candidate_helpers::{is_rust_path, normalized_paths, rule_can_consume_rust_source};
 
 /// Immutable, request-scoped candidates for every enabled filesystem rule.
 ///
@@ -182,53 +180,6 @@ impl RuleCandidateIndex {
     pub(super) fn exclusive_rust_candidates(&self) -> &[PathBuf] {
         &self.exclusive_rust
     }
-}
-
-fn is_rust_path(path: &Path) -> bool {
-    path.extension().and_then(|extension| extension.to_str()) == Some("rs")
-}
-
-// Rules that may read Rust directly or emit a Rust-path finding whose
-// suppression check must read the source from the shared store.
-fn rule_can_consume_rust_source(rule_id: &str) -> bool {
-    matches!(
-        rule_id,
-        BANNED_PATHS
-            | BANNED_RENAMED_FILES
-            | CONFIG_PATH_REFERENCES
-            | DOC_CONSISTENCY
-            | FILE_EXTENSION_POLICY
-            | FINITE_SET_CONSISTENCY
-            | INTEGRATION_TEST_NO_MOCKS
-            | NO_EMPTY_OR_COMMENTS_ONLY_FILES
-            | NO_GIT_IDENTITY_MUTATION
-            | REQUIRED_COMPANION_IMPORTS
-            | SHELLCHECK_RUNNER
-            | STRUCTURED_CONFIG_POLICY
-            | TEST_EMAIL_DOMAIN_POLICY
-    )
-}
-
-fn normalized_paths(paths: &[PathBuf]) -> Cow<'_, [PathBuf]> {
-    let already_normalized = paths.windows(2).all(|pair| pair[0] < pair[1])
-        && paths.iter().all(|path| {
-            !path.components().any(|component| {
-                matches!(
-                    component,
-                    std::path::Component::CurDir | std::path::Component::ParentDir
-                )
-            })
-        });
-    if already_normalized {
-        return Cow::Borrowed(paths);
-    }
-    let mut normalized = paths
-        .iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<Vec<_>>();
-    normalized.sort();
-    normalized.dedup();
-    Cow::Owned(normalized)
 }
 
 #[cfg(test)]

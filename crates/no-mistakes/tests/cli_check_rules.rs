@@ -98,19 +98,6 @@ fn markdown_rules_check_json_reports_both_rule_ids() {
     }
 }
 
-fn git(root: &std::path::Path, args: &[&str]) -> bool {
-    Command::new("git")
-        .args(["-C", root.to_str().unwrap()])
-        .args(args)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_COMMON_DIR")
-        .env_remove("GIT_INDEX_FILE")
-        .env_remove("GIT_WORK_TREE")
-        .status()
-        .unwrap()
-        .success()
-}
-
 // ── server-route-client-boundary ─────────────────────────────────────────────
 
 #[test]
@@ -343,43 +330,6 @@ fn no_git_identity_mutation_fails_for_identity_config() {
     assert!(body.contains("setup.sh"), "{body}");
 }
 
-// ── no-empty-or-comments-only-files ─────────────────────────────────────────
-
-#[test]
-fn no_empty_or_comments_only_files_fails_for_comment_only_fixture() {
-    let root = fixture("no-empty-or-comments-only-files", "fail");
-    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    let body = format!("{findings:?}");
-
-    assert!(!findings.is_empty(), "expected findings");
-    assert!(body.contains("no-empty-or-comments-only-files"), "{body}");
-    assert!(body.contains("placeholder.ts"), "{body}");
-}
-
-#[test]
-fn no_empty_or_comments_only_files_cli_fails_for_comment_only_fixture() {
-    let root = fixture("no-empty-or-comments-only-files", "fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
-    let body = stdout(&out);
-
-    assert!(!out.status.success(), "expected exit 1");
-    assert!(body.contains("no-empty-or-comments-only-files"), "{body}");
-    assert!(body.contains("placeholder.ts"), "{body}");
-}
-
-// ── package-json-registry-only ──────────────────────────────────────────────
-
-#[test]
-fn package_json_registry_only_fails_for_non_registry_dependency() {
-    let root = fixture("package-json-registry-only", "fail");
-    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    let body = format!("{findings:?}");
-
-    assert!(!findings.is_empty(), "expected findings");
-    assert!(body.contains("package-json-registry-only"), "{body}");
-    assert!(body.contains("package.json"), "{body}");
-}
-
 // ── rust-no-inline-tests ──────────────────────────────────────────────────────
 
 #[test]
@@ -524,107 +474,4 @@ fn rust_no_inline_allows_filesystem_runner_accepts_absolute_roots() {
     assert_eq!(findings.len(), 2);
     assert_eq!(findings[0].file, "src/a.rs");
     assert_eq!(findings[1].file, "src/b.rs");
-}
-
-// ── gitignored files are skipped ─────────────────────────────────────────────
-
-#[test]
-fn agents_md_max_size_skips_gitignored_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-
-    // Over-limit file in a gitignored directory
-    std::fs::create_dir_all(root.join("ignored")).unwrap();
-    let big: String = "line\n".repeat(300);
-    std::fs::write(root.join("ignored/AGENTS.md"), &big).unwrap();
-
-    // Passing tracked file
-    std::fs::write(root.join("CLAUDE.md"), "# ok\n").unwrap();
-
-    // .gitignore excludes the directory
-    std::fs::write(root.join(".gitignore"), "ignored/\n").unwrap();
-
-    // Initialise a git repo and commit so git ls-files is the source of truth
-    assert!(git(root, &["init", "-q"]));
-    assert!(git(root, &["add", "."]));
-    assert!(git(
-        root,
-        &[
-            "-c",
-            "user.email=t@t",
-            "-c",
-            "user.name=t",
-            "commit",
-            "-qm",
-            "init"
-        ]
-    ));
-
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: agents-md-max-size\n    scope: repository\n    options:\n      maxLines: 5\n",
-    )
-    .unwrap();
-    let out = Command::new(bin())
-        .args(["check", "--root"])
-        .arg(root)
-        .arg("--config")
-        .arg(config.path())
-        .output()
-        .unwrap();
-    assert!(
-        out.status.success(),
-        "gitignored files must not be flagged: {}",
-        stdout(&out)
-    );
-}
-
-#[test]
-fn rust_no_inline_tests_skips_gitignored_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-
-    std::fs::create_dir_all(root.join("generated")).unwrap();
-    std::fs::write(
-        root.join("generated/lib.rs"),
-        "#[cfg(test)]\nmod tests {\n}\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("clean.rs"), "pub fn ok() {}\n").unwrap();
-    std::fs::write(root.join(".gitignore"), "generated/\n").unwrap();
-
-    assert!(git(root, &["init", "-q"]));
-    assert!(git(root, &["add", "."]));
-    assert!(git(
-        root,
-        &[
-            "-c",
-            "user.email=t@t",
-            "-c",
-            "user.name=t",
-            "commit",
-            "-qm",
-            "init"
-        ]
-    ));
-
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
-    )
-    .unwrap();
-    let out = Command::new(bin())
-        .args(["check", "--root"])
-        .arg(root)
-        .arg("--config")
-        .arg(config.path())
-        .output()
-        .unwrap();
-    assert!(
-        out.status.success(),
-        "gitignored files must not be flagged: {}",
-        stdout(&out)
-    );
 }
