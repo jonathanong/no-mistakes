@@ -10,7 +10,7 @@ use std::sync::Arc;
 pub(crate) struct FrozenPathRemapper {
     visible: HashSet<PathBuf>,
     normalized_visible: Arc<HashSet<PathBuf>>,
-    canonical_visible: HashMap<PathBuf, PathBuf>,
+    canonical_visible: HashMap<PathBuf, Option<PathBuf>>,
 }
 
 impl FrozenPathRemapper {
@@ -20,7 +20,7 @@ impl FrozenPathRemapper {
         paths.dedup();
         let visible = paths.iter().cloned().collect::<HashSet<_>>();
         let mut normalized_visible = HashSet::with_capacity(paths.len());
-        let mut canonical_visible = HashMap::new();
+        let mut canonical_visible = HashMap::<PathBuf, Option<PathBuf>>::new();
         for path in &paths {
             normalized_visible.insert(crate::codebase::ts_resolver::normalize_path(path));
             let Some(canonical) = path.canonicalize().ok() else {
@@ -28,11 +28,18 @@ impl FrozenPathRemapper {
             };
             let canonical = crate::codebase::ts_resolver::normalize_path(&canonical);
             normalized_visible.insert(canonical.clone());
-            // Preserve a deterministic lexical graph namespace when a
-            // symlink path and its real target are both visible.
+            // A non-exact lookup may only select a lexical identity when the
+            // filesystem target has exactly one visible spelling. Selecting
+            // the first of two case/symlink aliases would make graph output
+            // depend on discovery order.
             canonical_visible
                 .entry(canonical)
-                .or_insert_with(|| path.clone());
+                .and_modify(|existing| {
+                    if existing.as_ref().is_some_and(|first| first != path) {
+                        *existing = None;
+                    }
+                })
+                .or_insert_with(|| Some(path.clone()));
         }
         Self {
             visible,
@@ -48,18 +55,20 @@ impl FrozenPathRemapper {
         Arc::clone(&self.normalized_visible)
     }
 
-    pub(crate) fn remap(&self, path: &Path) -> PathBuf {
+    /// Return a frozen visible identity for `path`. An unresolved or
+    /// ambiguous filesystem alias is deliberately rejected rather than
+    /// leaking a path outside the request's visible namespace.
+    pub(crate) fn remap(&self, path: &Path) -> Option<PathBuf> {
         if let Some(path) = self.visible.get(path) {
-            return path.clone();
+            return Some(path.clone());
         }
         let normalized = crate::codebase::ts_resolver::normalize_path(path);
-        if let Some(path) = self.canonical_visible.get(&normalized) {
-            return path.clone();
+        if let Some(Some(path)) = self.canonical_visible.get(&normalized) {
+            return Some(path.clone());
         }
         path.canonicalize()
             .ok()
             .map(|canonical| crate::codebase::ts_resolver::normalize_path(&canonical))
-            .and_then(|canonical| self.canonical_visible.get(&canonical).cloned())
-            .unwrap_or(normalized)
+            .and_then(|canonical| self.canonical_visible.get(&canonical).cloned().flatten())
     }
 }

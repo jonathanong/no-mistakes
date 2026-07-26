@@ -97,7 +97,7 @@ impl PlaywrightModuleResolution {
                 let resolver = self.catalog_resolver.as_ref().expect("catalog facade");
                 let classification = resolver.classify(specifier, importing_file, &self.workspace);
                 if let Some(path) = classification.import_classification.preferred_path() {
-                    return Some(ModuleIdentity::Path(self.remapper.remap(path)));
+                    return self.remapper.remap(path).map(ModuleIdentity::Path);
                 }
                 (classification
                     .import_classification
@@ -126,7 +126,7 @@ fn identity_from_resolver(
     let classification =
         resolver.classify_import(specifier, importing_file, workspace, visible_files);
     if let Some(path) = classification.preferred_path() {
-        return Some(ModuleIdentity::Path(remapper.remap(path)));
+        return remapper.remap(path).map(ModuleIdentity::Path);
     }
     (classification.is_unresolved_external() && is_external_terminal(resolver, specifier))
         .then(|| ModuleIdentity::External(specifier.to_string()))

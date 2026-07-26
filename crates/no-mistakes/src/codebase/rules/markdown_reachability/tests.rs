@@ -93,6 +93,33 @@ fn full_check_accepts_direct_and_readme_paths_and_rejects_other_paths() {
 }
 
 #[test]
+fn markdown_links_follow_the_actual_filesystem_case_resolution() {
+    let root = fixture("case-path");
+    let findings = run(
+        &root,
+        &config("", &["**/*.md"], &[]),
+        &["CLAUDE.md", "guide.md"],
+    )
+    .unwrap();
+
+    let candidate = root.join("Guide.MD");
+    let tracked = root.join("guide.md");
+    let case_variant_resolves = candidate.canonicalize().ok() == tracked.canonicalize().ok();
+    if case_variant_resolves {
+        assert!(findings.is_empty(), "Guide.MD resolves to tracked guide.md");
+    } else {
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| finding.file.as_str())
+                .collect::<Vec<_>>(),
+            ["guide.md"],
+            "a case-sensitive filesystem keeps the Markdown link unresolved"
+        );
+    }
+}
+
+#[test]
 fn reports_excess_depth_when_a_readme_path_exceeds_the_configured_limit() {
     let root = fixture("paths");
     let findings = run(
@@ -129,6 +156,59 @@ fn scoped_states_ignore_targets_without_a_matching_scope() {
     .unwrap();
     assert!(states.is_empty());
     assert!(names.is_empty());
+}
+
+#[test]
+fn nested_project_uses_its_own_scope_not_a_reachable_outer_document() {
+    let root = fixture("nested-scope");
+    let mut config = config("", &["**/*.md"], &[]);
+    config.projects.insert(
+        "nested-docs".to_string(),
+        crate::config::v2::schema::Project {
+            root: Some("docs".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].projects = vec!["nested-docs".to_string()];
+
+    let findings = run(&root, &config, &["CLAUDE.md", "docs/lost.md"]).unwrap();
+
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<Vec<_>>(),
+        ["docs/lost.md"],
+        "the outer CLAUDE.md must not make a nested project document reachable"
+    );
+}
+
+#[test]
+fn scope_roots_choose_the_deepest_root_and_deduplicate_exact_ties() {
+    let root = Path::new("/repo");
+    let mut config = config("", &[], &[]);
+    config.projects.insert(
+        "same-root".to_string(),
+        crate::config::v2::schema::Project {
+            root: Some(".".to_string()),
+            ..Default::default()
+        },
+    );
+    config.projects.insert(
+        "nested".to_string(),
+        crate::config::v2::schema::Project {
+            root: Some("docs".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].projects = vec!["same-root".to_string(), "nested".to_string()];
+
+    let scopes = super::super::markdown_scope::scope_roots(root, &config, &config.rules[0]);
+    assert_eq!(scopes, vec![root.join("docs"), root.to_path_buf()]);
+    assert_eq!(
+        super::super::markdown_scope::scope_root_for_path(&scopes, &root.join("docs/file.md")),
+        Some(&root.join("docs"))
+    );
 }
 
 #[test]
@@ -176,6 +256,40 @@ fn baseline_finding_key_preserves_an_unresolvable_key() {
         )
         .unwrap(),
         key
+    );
+}
+
+#[test]
+fn finding_keys_handle_windows_volumes_without_host_specific_path_parsing() {
+    assert_eq!(
+        super::super::markdown_scope::finding_key(
+            Path::new(r"C:\repo\docs"),
+            Path::new(r"C:\repo\guides\..\guide.md"),
+        ),
+        "../guide.md"
+    );
+    assert_eq!(
+        super::super::markdown_scope::finding_key(
+            Path::new(r"C:\repo"),
+            Path::new(r"D:\external\docs\..\guide.md"),
+        ),
+        "D:/external/guide.md",
+        "cross-volume paths are external absolute findings, not parent traversals"
+    );
+    assert_eq!(
+        super::super::markdown_scope::finding_key(
+            Path::new(r"\\RequestHost\RequestShare\repo"),
+            Path::new(r"\\ExternalHost\ExternalShare\docs\..\guide.md"),
+        ),
+        "//ExternalHost/ExternalShare/guide.md"
+    );
+    assert_eq!(
+        super::super::markdown_scope::finding_key(
+            Path::new(r"\\HOST\Share\repo"),
+            Path::new(r"\\host\share\guide.md"),
+        ),
+        "../guide.md",
+        "UNC roots compare case-insensitively but preserve emitted spelling"
     );
 }
 

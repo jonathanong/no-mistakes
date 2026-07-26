@@ -199,6 +199,8 @@ pub(crate) fn sort_findings(findings: &mut Vec<RuleFinding>) {
 }
 
 #[cfg(test)]
+mod suppression_absolute_paths_tests;
+#[cfg(test)]
 mod suppression_tests;
 #[cfg(test)]
 mod target_roots_tests;

@@ -53,7 +53,8 @@ fn resolve_export(
     let resolved = if let ExportKind::ReExport { source, .. } = &e.kind {
         resolver
             .resolve(source, abs_path)
-            .map(|abs| make_relative(&remapper.remap(&abs), root))
+            .and_then(|abs| remapper.remap(&abs))
+            .map(|abs| make_relative(&abs, root))
     } else {
         None
     };
@@ -74,7 +75,8 @@ fn resolve_named_import(
 ) -> ResolvedImport {
     let resolved = resolver
         .resolve(&i.source, abs_path)
-        .map(|abs| make_relative(&remapper.remap(&abs), root));
+        .and_then(|abs| remapper.remap(&abs))
+        .map(|abs| make_relative(&abs, root));
     ResolvedImport {
         source: i.source,
         imported: i.imported,

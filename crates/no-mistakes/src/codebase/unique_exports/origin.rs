@@ -34,7 +34,7 @@ struct OriginSearch<'a, R: ImportResolverFacade> {
 
 impl<R: ImportResolverFacade> OriginSearch<'_, R> {
     fn find(&mut self, target: &Path, imported: &str) -> Option<ExportOrigin> {
-        let target = self.remapper.remap(target);
+        let target = self.remapper.remap(target)?;
         if !self.visiting.insert(target.clone()) {
             return None;
         }
@@ -152,7 +152,7 @@ pub(super) fn resolve_export_source<R: ImportResolverFacade>(
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Option<PathBuf> {
     if let Some(path) = resolver.resolve(source, importing_file) {
-        return Some(remapper.remap(&path));
+        return remapper.remap(&path);
     }
     let workspace_path = match resolver.visible_files() {
         Some(visible) => {
@@ -161,7 +161,7 @@ pub(super) fn resolve_export_source<R: ImportResolverFacade>(
         None => workspace.resolve_specifier(source),
     };
     if let Some(path) = workspace_path {
-        return Some(remapper.remap(&path));
+        return remapper.remap(&path);
     }
     None
 }

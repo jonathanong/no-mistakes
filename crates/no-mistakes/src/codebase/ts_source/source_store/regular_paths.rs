@@ -37,4 +37,13 @@ impl SourceStore {
                 .map(|_| super::super::normalize_discovery_path(path))
         }));
     }
+
+    pub(crate) fn trusted_regular_path(&self, candidate: &Path) -> Option<PathBuf> {
+        let normalized = super::super::normalize_discovery_path(candidate);
+        self.trusted_regular_paths
+            .lock()
+            .expect("trusted regular paths mutex poisoned")
+            .contains(&normalized)
+            .then(|| candidate.to_path_buf())
+    }
 }

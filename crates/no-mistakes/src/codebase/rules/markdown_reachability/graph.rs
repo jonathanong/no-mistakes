@@ -10,11 +10,12 @@ pub(super) fn link_graph(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> BTreeMap<PathBuf, Vec<PathBuf>> {
     let known = markdown.iter().cloned().collect::<BTreeSet<_>>();
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(markdown.to_vec());
     markdown
         .iter()
         .map(|path| {
             let links = super::super::read_source(sources, path)
-                .map(|source| extract_local_links(root, path, &source, &known))
+                .map(|source| extract_local_links(root, path, &source, &known, &remapper))
                 .unwrap_or_default();
             (path.clone(), links)
         })
@@ -26,6 +27,7 @@ fn extract_local_links(
     source: &Path,
     content: &str,
     known: &BTreeSet<PathBuf>,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<PathBuf> {
     let mut paths = BTreeSet::new();
     for event in Parser::new_ext(content, MarkdownOptions::all()) {
@@ -43,9 +45,6 @@ fn extract_local_links(
         let Some(destination) = md_links::decode_local_path(destination) else {
             continue;
         };
-        if !destination.ends_with(".md") {
-            continue;
-        }
         let base = if destination.starts_with('/') {
             root.to_path_buf()
         } else {
@@ -53,7 +52,7 @@ fn extract_local_links(
         };
         if let Some(path) = normalize_inside(root, &base.join(destination.trim_start_matches('/')))
         {
-            if known.contains(&path) {
+            if let Some(path) = remapper.remap(&path).filter(|path| known.contains(path)) {
                 paths.insert(path);
             }
         }
