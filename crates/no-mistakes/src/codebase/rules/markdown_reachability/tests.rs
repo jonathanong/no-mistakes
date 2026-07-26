@@ -85,8 +85,38 @@ fn full_check_accepts_direct_and_readme_paths_and_rejects_other_paths() {
             .collect::<Vec<_>>(),
         ["arbitrary.md", "lost.md"]
     );
-    assert!(findings[0].message.contains("depth 2"));
+    assert_eq!(
+        findings[0].message,
+        "reachable at depth 2, but an intermediary must be a configured index Markdown file"
+    );
     assert!(findings[1].message.contains("not reachable"));
+}
+
+#[test]
+fn default_depth_two_distinguishes_an_invalid_intermediary_in_findings_and_baselines() {
+    let root = fixture("invalid-intermediary");
+    let files = ["CLAUDE.md", "overview.md", "detail.md", "baseline.json"];
+    let findings = run(&root, &config("", &["**/*.md"], &[]), &files).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "detail.md");
+    assert_eq!(
+        findings[0].message,
+        "reachable at depth 2, but an intermediary must be a configured index Markdown file"
+    );
+    assert!(run(
+        &root,
+        &config("baselineFile: baseline.json", &["**/*.md"], &[]),
+        &files,
+    )
+    .unwrap()
+    .is_empty());
+    assert!(run(
+        &root,
+        &config("indexFilenames: [overview.md]", &["**/*.md"], &[]),
+        &files,
+    )
+    .unwrap()
+    .is_empty());
 }
 
 #[test]
@@ -214,6 +244,66 @@ fn accepts_a_tracked_baseline_outside_the_rule_project_root() {
     )
     .unwrap();
     assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn stale_external_baseline_entries_use_request_relative_finding_paths() {
+    let root = fixture("external-request");
+    let external = root.parent().unwrap().join("external-project");
+    let mut config = config("baselineFile: baseline.json", &[], &[]);
+    config.projects.insert(
+        "external".to_string(),
+        crate::config::v2::schema::Project {
+            root: Some(external.to_string_lossy().to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["external".to_string()];
+    let findings = run(
+        &root,
+        &config,
+        &["baseline.json", "../external-project/CLAUDE.md"],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "../external-project/stale.md");
+}
+
+#[test]
+fn rejects_ambiguous_stale_external_baseline_keys() {
+    let root = fixture("external-request");
+    let mut config = config("baselineFile: baseline.json", &[], &[]);
+    for name in ["external-one", "external-two"] {
+        config.projects.insert(
+            name.to_string(),
+            crate::config::v2::schema::Project {
+                root: Some(
+                    root.parent()
+                        .unwrap()
+                        .join(name)
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                ..Default::default()
+            },
+        );
+    }
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["external-one".to_string(), "external-two".to_string()];
+    let error = run(
+        &root,
+        &config,
+        &[
+            "baseline.json",
+            "../external-one/CLAUDE.md",
+            "../external-two/CLAUDE.md",
+        ],
+    )
+    .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("ambiguous baseline key `stale.md`"));
 }
 
 #[test]

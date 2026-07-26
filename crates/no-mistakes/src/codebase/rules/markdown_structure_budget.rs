@@ -75,8 +75,10 @@ pub(crate) fn check_with_files_and_sources(
         }
         for file in baseline.keys() {
             if !seen.contains(file) {
+                let finding_file =
+                    super::markdown_scope::baseline_finding_key(root, &scope_roots, file, RULE_ID)?;
                 findings.push(stale(
-                    file,
+                    &finding_file,
                     "references a deleted or excluded Markdown file",
                 ));
             }

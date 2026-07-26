@@ -1,7 +1,17 @@
 use super::{BaselineEntry, RuleFinding, RULE_ID};
 
-pub(super) fn finding(file: &str, state: &BaselineEntry, max_depth: usize) -> RuleFinding {
-    let message = if state.state == "unreachable" {
+pub(super) fn finding(
+    file: &str,
+    state: &BaselineEntry,
+    max_depth: usize,
+    invalid_intermediary: bool,
+) -> RuleFinding {
+    let message = if invalid_intermediary {
+        format!(
+            "reachable at depth {}, but an intermediary must be a configured index Markdown file",
+            state.depth.unwrap_or_default()
+        )
+    } else if state.state == "unreachable" {
         format!("not reachable from a configured root Markdown file within {max_depth} hops")
     } else {
         format!(

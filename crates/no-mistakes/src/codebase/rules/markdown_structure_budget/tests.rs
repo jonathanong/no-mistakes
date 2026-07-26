@@ -140,6 +140,66 @@ fn immutable_baseline_variants_detect_resolved_and_changed_counts() {
 }
 
 #[test]
+fn stale_external_baseline_entries_use_request_relative_finding_paths() {
+    let root = fixture("external-request");
+    let external = root.parent().unwrap().join("external-project");
+    let mut config = config("baselineFile: baseline.json", &[], &[]);
+    config.projects.insert(
+        "external".to_string(),
+        crate::config::v2::schema::Project {
+            root: Some(external.to_string_lossy().to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["external".to_string()];
+    let findings = run(
+        &root,
+        &config,
+        &["baseline.json", "../external-project/CLAUDE.md"],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "../external-project/stale.md");
+}
+
+#[test]
+fn rejects_ambiguous_stale_external_baseline_keys() {
+    let root = fixture("external-request");
+    let mut config = config("baselineFile: baseline.json", &[], &[]);
+    for name in ["external-one", "external-two"] {
+        config.projects.insert(
+            name.to_string(),
+            crate::config::v2::schema::Project {
+                root: Some(
+                    root.parent()
+                        .unwrap()
+                        .join(name)
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                ..Default::default()
+            },
+        );
+    }
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["external-one".to_string(), "external-two".to_string()];
+    let error = run(
+        &root,
+        &config,
+        &[
+            "baseline.json",
+            "../external-one/one.md",
+            "../external-two/two.md",
+        ],
+    )
+    .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("ambiguous baseline key `stale.md`"));
+}
+
+#[test]
 fn ignores_tracked_paths_without_a_source_snapshot() {
     let root = fixture(".");
     let findings = run(

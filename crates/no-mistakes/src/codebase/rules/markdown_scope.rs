@@ -1,4 +1,6 @@
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
+use anyhow::Result;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn markdown_files(files: &[PathBuf]) -> Vec<PathBuf> {
@@ -52,5 +54,36 @@ pub(crate) fn baseline_key(root: &Path, scope_root: &Path, path: &Path) -> Strin
         crate::codebase::ts_source::relative_slash_path(&root, path)
     } else {
         crate::codebase::ts_source::relative_slash_path(scope_root, path)
+    }
+}
+
+/// Resolves a baseline key to the request-relative finding path. A baseline key
+/// is request-relative for in-request projects, but project-relative for
+/// external projects, so more than one configured project can make it ambiguous.
+pub(crate) fn baseline_finding_key(
+    root: &Path,
+    scope_roots: &[PathBuf],
+    baseline_key: &str,
+    rule_id: &str,
+) -> Result<String> {
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    let mut candidates = BTreeSet::new();
+    for scope_root in scope_roots {
+        let path = if scope_root.starts_with(&root) {
+            root.join(baseline_key)
+        } else {
+            scope_root.join(baseline_key)
+        };
+        let path = crate::codebase::ts_resolver::normalize_path(&path);
+        if path.starts_with(scope_root) {
+            candidates.insert(finding_key(&root, &path));
+        }
+    }
+    match candidates.len() {
+        0 => Ok(baseline_key.to_string()),
+        1 => Ok(candidates.into_iter().next().unwrap()),
+        _ => anyhow::bail!(
+            "{rule_id} has ambiguous baseline key `{baseline_key}` across configured project roots; configure separate rule applications"
+        ),
     }
 }
