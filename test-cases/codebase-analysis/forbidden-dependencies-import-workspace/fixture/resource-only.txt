@@ -1,0 +1,1 @@
+This target is reachable only through a resource edge.

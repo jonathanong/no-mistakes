@@ -54,37 +54,51 @@ where
         index
     }
 
-    pub(crate) fn from_adjacency_maps_by(
+    /// Build from adjacency that has already been sorted and deduplicated.
+    ///
+    /// Flattening each normalized source adjacency in sorted source order is
+    /// equivalent to globally sorting the resulting edges by `(from, to,
+    /// kind)`, but avoids materializing and sorting one repository-wide edge
+    /// vector. Empty forward nodes and reverse-only targets remain in their
+    /// respective maps unchanged.
+    pub(crate) fn from_normalized_adjacency_maps_by_source(
         forward: HashMap<Node, Vec<(Node, Kind)>>,
         reverse: HashMap<Node, Vec<(Node, Kind)>>,
-        mut compare: impl FnMut(&CanonicalEdge<Node, Kind>, &CanonicalEdge<Node, Kind>) -> Ordering,
+        mut compare_sources: impl FnMut(&Node, &Node) -> Ordering,
     ) -> Self {
         #[cfg(debug_assertions)]
         assert_adjacency_maps_are_consistent(&forward, &reverse);
 
-        let mut edges = Vec::with_capacity(forward.values().map(Vec::len).sum());
-        for (from, adjacent) in &forward {
-            edges.extend(
-                adjacent
-                    .iter()
-                    .map(|(to, kind)| CanonicalEdge::new(from.clone(), to.clone(), kind.clone())),
-            );
-        }
-        edges.sort_by(&mut compare);
-        edges.dedup();
+        let edges =
+            crate::perf_trace::trace("graph.canonical_flatten", || {
+                let mut sources = forward.keys().collect::<Vec<_>>();
+                sources.sort_by(|left, right| compare_sources(left, right));
+                let edge_capacity = forward.values().map(Vec::len).sum();
+                let mut edges = Vec::with_capacity(edge_capacity);
+                for from in sources {
+                    edges.extend(forward[from].iter().map(|(to, kind)| {
+                        CanonicalEdge::new(from.clone(), to.clone(), kind.clone())
+                    }));
+                }
+                edges
+            });
 
-        let mut forward_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
-        let mut reverse_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
-        for (ordinal, edge) in edges.iter().enumerate() {
-            forward_ordinals
-                .entry(edge.from.clone())
-                .or_default()
-                .push(ordinal);
-            reverse_ordinals
-                .entry(edge.to.clone())
-                .or_default()
-                .push(ordinal);
-        }
+        let (forward_ordinals, reverse_ordinals) =
+            crate::perf_trace::trace("graph.ordinal_construction", || {
+                let mut forward_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
+                let mut reverse_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
+                for (ordinal, edge) in edges.iter().enumerate() {
+                    forward_ordinals
+                        .entry(edge.from.clone())
+                        .or_default()
+                        .push(ordinal);
+                    reverse_ordinals
+                        .entry(edge.to.clone())
+                        .or_default()
+                        .push(ordinal);
+                }
+                (forward_ordinals, reverse_ordinals)
+            });
 
         Self {
             edges,
@@ -92,6 +106,50 @@ where
             reverse,
             forward_ordinals,
             reverse_ordinals,
+        }
+    }
+
+    /// Append edges without renumbering existing canonical ordinals.
+    ///
+    /// Callers that need a domain-specific adjacency order can sort it after
+    /// this operation; ordinals intentionally retain base edges before new
+    /// edges, matching reconstruction through [`Self::from_edges_and_nodes`].
+    pub(crate) fn extend_edges_preserving_ordinals(
+        &mut self,
+        edges: impl IntoIterator<Item = CanonicalEdge<Node, Kind>>,
+    ) {
+        // Materialize each touched source's existing adjacency once. This
+        // keeps high-fanout selector batches linear in that source's existing
+        // and incoming edges rather than scanning a growing Vec per edge.
+        let mut known_by_source = HashMap::<Node, HashSet<(Node, Kind)>>::new();
+        for edge in edges {
+            let known = known_by_source.entry(edge.from.clone()).or_insert_with(|| {
+                self.forward
+                    .get(&edge.from)
+                    .map(|adjacent| adjacent.iter().cloned().collect())
+                    .unwrap_or_default()
+            });
+            if !known.insert((edge.to.clone(), edge.kind.clone())) {
+                continue;
+            }
+            let ordinal = self.edges.len();
+            self.forward
+                .entry(edge.from.clone())
+                .or_default()
+                .push((edge.to.clone(), edge.kind.clone()));
+            self.reverse
+                .entry(edge.to.clone())
+                .or_default()
+                .push((edge.from.clone(), edge.kind.clone()));
+            self.forward_ordinals
+                .entry(edge.from.clone())
+                .or_default()
+                .push(ordinal);
+            self.reverse_ordinals
+                .entry(edge.to.clone())
+                .or_default()
+                .push(ordinal);
+            self.edges.push(edge);
         }
     }
 }

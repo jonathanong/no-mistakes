@@ -11,7 +11,7 @@ mod reports;
 
 use aggregate::{bench_aggregate_and_multi_report, bench_impacted_checks};
 use criterion::{criterion_group, criterion_main};
-use graph::{bench_facts_graph_and_query, bench_lazy_traversal};
+use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
 use observer::bench_observer_overhead;
 use reports::{bench_symbols, bench_workspace};
 
@@ -19,6 +19,7 @@ criterion_group!(
     benches,
     bench_lazy_traversal,
     bench_facts_graph_and_query,
+    bench_high_fanout_finalization,
     bench_symbols,
     bench_workspace,
     bench_aggregate_and_multi_report,

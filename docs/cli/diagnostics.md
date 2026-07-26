@@ -26,6 +26,13 @@ Parallel phase durations can overlap their enclosing phase and siblings. Never
 add lines marked `parallel; non-additive` to estimate total time; use `total`
 for wall time.
 
+For graph-finalization regressions, verbose `check` output separates
+`graph.forward_adjacency_normalization`, `graph.reverse_adjacency_normalization`,
+`graph.canonical_flatten`, and `graph.ordinal_construction`. Playwright-enabled
+graphs additionally report `graph.playwright_selector_merge`. These labels
+identify deterministic finalization work; they do not change graph output or
+canonical edge order.
+
 Instrumentation is invocation-scoped and disabled by default. A disabled run
 does not construct an observer, start clocks, or retain work ledgers. Enabled
 runs memoize successful and failed discovery/read/parse operations in memory

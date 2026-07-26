@@ -83,6 +83,7 @@ include!("extra_gitignore_pass3.rs");
 include!("types.rs");
 include!("vitest_setup.rs");
 
+mod finalization;
 mod selector_fact_plan;
 mod selector_optimization;
 mod workflow_topology_edges;

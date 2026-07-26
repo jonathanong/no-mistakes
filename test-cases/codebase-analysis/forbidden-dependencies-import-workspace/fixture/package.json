@@ -1,0 +1,7 @@
+{
+  "name": "forbidden-dependencies-import-workspace",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}
