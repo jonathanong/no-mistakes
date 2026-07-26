@@ -47,6 +47,14 @@ fn resolves_only_links_inside_root() {
         graph::normalize_inside(root, &root.join("../../b.md")),
         None
     );
+    assert_eq!(
+        graph::normalize_inside(Path::new(""), Path::new(".")),
+        Some(PathBuf::new())
+    );
+    assert_eq!(
+        graph::normalize_inside(Path::new(""), Path::new("/b.md")),
+        None
+    );
 }
 
 #[test]
@@ -102,6 +110,23 @@ fn recognizes_reference_links_and_ignores_non_local_or_escaping_links() {
             .map(|finding| finding.file.as_str())
             .collect::<Vec<_>>(),
         ["docs/blocked.md", "docs/unlinked.md"]
+    );
+}
+
+#[test]
+fn shortest_depth_skips_duplicate_queue_entries() {
+    let root = Path::new("/repo");
+    let claude = root.join("CLAUDE.md");
+    let shared = root.join("shared.md");
+    let target = root.join("target.md");
+    let graph = BTreeMap::from([
+        (claude.clone(), vec![shared.clone(), shared.clone()]),
+        (shared, vec![target.clone()]),
+        (target.clone(), Vec::new()),
+    ]);
+    assert_eq!(
+        graph::shortest_depth(&target, &BTreeSet::from(["CLAUDE.md".to_string()]), &graph),
+        Some(2)
     );
 }
 

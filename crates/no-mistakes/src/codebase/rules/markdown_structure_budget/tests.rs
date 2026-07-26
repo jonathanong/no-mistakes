@@ -127,3 +127,16 @@ fn immutable_baseline_variants_detect_resolved_and_changed_counts() {
         assert!(findings[0].message.contains(expected));
     }
 }
+
+#[test]
+fn ignores_tracked_paths_without_a_source_snapshot() {
+    let root = fixture(".");
+    let findings = run(
+        &root,
+        &config("maxLines: 1", &["**/*.md"], &[]),
+        &["over-budget.md", "missing.md"],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "over-budget.md");
+}

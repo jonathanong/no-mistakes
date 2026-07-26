@@ -27,6 +27,21 @@ fn dispatch_with_files_covers_all_rule_branches() {
     );
 }
 
+#[test]
+fn dispatch_with_files_returns_configuration_errors() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/filesystem-dispatch/invalid-config");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let error = run_filesystem_rules_with_visible_and_snapshot(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+        &[],
+        &snapshot,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("parse"), "{error:#}");
+}
+
 /// Cover all dispatch branches via `run_filesystem_rules`.
 /// Each rule's own `check()` fn is called; with an empty/non-git directory
 /// discover_files returns nothing, so no findings are emitted.
