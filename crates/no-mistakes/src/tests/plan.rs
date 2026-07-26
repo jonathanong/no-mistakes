@@ -43,6 +43,16 @@ pub(crate) fn generate_plan_with_prepared(
     prepared: &super::prepared_plan::PreparedTestPlanRequest,
     timing: Option<&mut crate::impacted_checks::timing::TimingTracker>,
 ) -> Result<TestPlan> {
+    let mut plan = generate_plan_with_prepared_inner(args, prepared, timing)?;
+    plan.changed_files = prepared.changed_file_inventory();
+    Ok(plan)
+}
+
+fn generate_plan_with_prepared_inner(
+    args: &PlanArgs,
+    prepared: &super::prepared_plan::PreparedTestPlanRequest,
+    timing: Option<&mut crate::impacted_checks::timing::TimingTracker>,
+) -> Result<TestPlan> {
     let root = &prepared.root;
     let config = &prepared.config;
     let collected = &prepared.collected;
@@ -128,6 +138,7 @@ pub(crate) fn generate_plan_with_prepared(
         }
         selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
         return Ok(TestPlan {
+            changed_files: Vec::new(),
             selected_tests,
             groups: Vec::new(),
             warnings: {
@@ -418,6 +429,7 @@ pub(crate) fn generate_plan_with_prepared(
             .collect();
         selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
         return Ok(TestPlan {
+            changed_files: Vec::new(),
             selected_tests,
             groups: Vec::new(),
             warnings: prepared.tsconfig_warnings(),
@@ -476,6 +488,7 @@ pub(crate) fn generate_plan_with_prepared(
     });
 
     Ok(TestPlan {
+        changed_files: Vec::new(),
         selected_tests,
         groups: Vec::new(),
         warnings,

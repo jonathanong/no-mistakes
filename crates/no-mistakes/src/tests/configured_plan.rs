@@ -434,6 +434,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
     }
 
     let mut plan = TestPlan {
+        changed_files: Vec::new(),
         selected_tests: sorted_selected_tests(selected_map),
         groups: group_results,
         warnings: sorted_warnings(warnings),

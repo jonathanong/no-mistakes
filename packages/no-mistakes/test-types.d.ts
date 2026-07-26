@@ -49,6 +49,8 @@ export interface TestsTargetsOptions {
 }
 
 export interface TestPlan {
+  /** Complete deterministic changed-file inventory, relative to the request root. */
+  changed_files: string[];
   selected_tests: SelectedTest[];
   groups?: TestPlanGroup[];
   warnings: TestPlanWarning[];
@@ -157,9 +159,14 @@ export interface WhyStep {
   detail?: ImpactEdgeDetail | null;
 }
 
+/** A current or pre-`changed_files` plan accepted by saved-plan document APIs. */
+export type SavedTestPlan = Omit<TestPlan, "changed_files"> & {
+  changed_files?: string[];
+};
+
 export interface TestsPlanDocumentOptions {
   plan?: string;
-  planJson?: TestPlan | string;
+  planJson?: SavedTestPlan | string;
 }
 
 export interface TestGraph {

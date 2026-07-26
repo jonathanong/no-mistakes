@@ -31,6 +31,7 @@ pub(super) fn fallback_plan(
         request.has_limit.then_some(effective_limit),
     );
     TestPlan {
+        changed_files: Vec::new(),
         selected_tests,
         groups: vec![group],
         warnings: Vec::new(),

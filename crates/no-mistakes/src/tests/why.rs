@@ -230,6 +230,7 @@ mod tests {
     #[test]
     fn plan_backed_why_preserves_resource_edge_detail() {
         let plan = TestPlan {
+            changed_files: Vec::new(),
             selected_tests: vec![SelectedTest {
                 test_file: "src/load.test.ts".to_string(),
                 confidence: Confidence::High,

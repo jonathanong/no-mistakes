@@ -1,5 +1,6 @@
 use super::*;
 use crate::tests::diff_parser::{parse_unified_diff, DiffFileStatus};
+use std::path::PathBuf;
 use std::process::{Command, Output};
 
 fn git(args: &[&str], root: &Path) -> Output {
@@ -239,10 +240,8 @@ fn classify_git_diff_failure_propagates_a_deadline_timeout_from_the_repo_root_pr
     assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
 }
 
-// Compatibility: spaces and non-ASCII paths. `-c core.quotePath=false` is
-// the whole reason a path like this comes back as raw UTF-8 instead of a
-// C-style-quoted, backslash-escaped string the parser would otherwise need
-// to unescape.
+// Compatibility: spaces and non-ASCII paths. The streamed parser decodes
+// Git's forced C-quoted path grammar back to the repository path.
 #[test]
 fn stream_git_diff_handles_spaces_and_non_ascii_paths() {
     let dir = tempfile::tempdir().unwrap();
@@ -258,6 +257,76 @@ fn stream_git_diff_handles_spaces_and_non_ascii_paths() {
     let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
     assert_eq!(diff.len(), 1);
     assert_eq!(diff[0].path, Path::new(path));
+}
+
+#[test]
+fn stream_git_diff_decodes_tabs_and_newlines_in_paths() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    let paths = ["src/tab\tname.ts", "src/line\nbreak.ts"];
+    std::fs::create_dir_all(root.join("src")).unwrap();
+    for path in paths {
+        std::fs::write(root.join(path), "export const x = 1;\n").unwrap();
+    }
+    commit_all(root, "base");
+    for path in paths {
+        std::fs::write(root.join(path), "export const x = 2;\n").unwrap();
+    }
+    commit_all(root, "head");
+
+    let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
+    let mut actual = diff
+        .iter()
+        .map(|file| file.path.clone())
+        .collect::<Vec<_>>();
+    actual.sort();
+    let mut expected = paths.map(PathBuf::from);
+    expected.sort();
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn stream_git_diff_decodes_mixed_quoted_rename_paths() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    std::fs::write(root.join("old\nname.ts"), "first\n").unwrap();
+    std::fs::write(root.join("plain-old.ts"), "second\n").unwrap();
+    commit_all(root, "base");
+    std::fs::rename(root.join("old\nname.ts"), root.join("plain-new.ts")).unwrap();
+    std::fs::rename(root.join("plain-old.ts"), root.join("new\nname.ts")).unwrap();
+    commit_all(root, "head");
+
+    let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
+    let renamed = diff
+        .iter()
+        .filter(|file| file.status == DiffFileStatus::Renamed)
+        .map(|file| (file.old_path.clone().unwrap(), file.path.clone()))
+        .collect::<Vec<_>>();
+
+    assert!(renamed.contains(&(PathBuf::from("old\nname.ts"), PathBuf::from("plain-new.ts"))));
+    assert!(renamed.contains(&(PathBuf::from("plain-old.ts"), PathBuf::from("new\nname.ts"))));
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn stream_git_diff_rejects_a_non_utf8_path() {
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    init_repo(root);
+    let path = PathBuf::from(OsString::from_vec(b"invalid-\xff.ts".to_vec()));
+    std::fs::write(root.join(&path), "one\n").unwrap();
+    commit_all(root, "base");
+    std::fs::write(root.join(&path), "two\n").unwrap();
+    commit_all(root, "head");
+
+    let error = stream_git_diff(root, "HEAD~1", "HEAD").unwrap_err();
+    let git_diff_error = error.downcast_ref::<GitDiffError>().unwrap();
+    assert_eq!(git_diff_error.code(), "git-malformed-output");
 }
 
 // Compatibility: a binary file change has no `@@` hunks — just a
