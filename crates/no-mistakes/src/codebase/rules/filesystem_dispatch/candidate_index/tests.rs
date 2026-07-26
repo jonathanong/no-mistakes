@@ -259,6 +259,14 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
         fixture.path().join("external/CLAUDE.md"),
         fixture.path().join("external/guide.md"),
     ];
+    let nested_request_docs = [
+        fixture.path().join("request/docs/CLAUDE.md"),
+        fixture.path().join("request/docs/guide.md"),
+    ];
+    let request_root_skips = [
+        fixture.path().join("request/fixtures/ignored.md"),
+        fixture.path().join("request/generated/ignored.md"),
+    ];
     for rule_id in [MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET] {
         let candidates = index.candidates(rule_id);
         assert!(
@@ -266,9 +274,18 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
             "{rule_id} keeps the external tracked Markdown project: {candidates:?}"
         );
         assert!(
+            nested_request_docs
+                .iter()
+                .all(|path| candidates.contains(path)),
+            "{rule_id} keeps nested request-root projects outside skipped directories: {candidates:?}"
+        );
+        assert!(
             !candidates.contains(&fixture.path().join("external/generated/ignored.md"))
-                && !candidates.contains(&fixture.path().join("external/coverage/ignored.md")),
-            "{rule_id} excludes configured and built-in skipped Markdown: {candidates:?}"
+                && !candidates.contains(&fixture.path().join("external/coverage/ignored.md"))
+                && request_root_skips
+                    .iter()
+                    .all(|path| !candidates.contains(path)),
+            "{rule_id} excludes request-root, configured, and built-in skipped Markdown: {candidates:?}"
         );
     }
 
@@ -294,9 +311,11 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
         [
             (MARKDOWN_REACHABILITY, "../external-two/guide.md"),
             (MARKDOWN_REACHABILITY, "../external/guide.md"),
+            (MARKDOWN_REACHABILITY, "docs/guide.md"),
             (MARKDOWN_STRUCTURE_BUDGET, "../external/over-budget.md"),
+            (MARKDOWN_STRUCTURE_BUDGET, "docs/over-budget.md"),
         ],
-        "external Markdown projects produce unique request-relative findings"
+        "only external and non-skipped nested Markdown projects produce request-relative findings"
     );
     assert!(
         sources.physical_read_count() > warmed_reads,

@@ -5,12 +5,24 @@ projects:
     root: ../external
   second-external-docs:
     root: ../external-two
+  request-fixtures:
+    root: fixtures
+  request-generated:
+    root: generated
+  request-docs:
+    root: docs
 rules:
   - rule: markdown-reachability
     projects: [external-docs]
   - rule: markdown-reachability
     projects: [second-external-docs]
+  - rule: markdown-reachability
+    projects: [request-fixtures, request-generated, request-docs]
   - rule: markdown-structure-budget
     projects: [external-docs]
+    options:
+      maxLines: 1
+  - rule: markdown-structure-budget
+    projects: [request-fixtures, request-generated, request-docs]
     options:
       maxLines: 1

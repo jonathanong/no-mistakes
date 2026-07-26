@@ -99,7 +99,7 @@ impl RuleCandidateIndex {
                         // docs are never retained merely because a project
                         // root happens to sit below a skipped directory.
                         .filter(|path| {
-                            markdown_inventory_path_allowed(path, &preserved_roots, &skip)
+                            markdown_inventory_path_allowed(&root, path, &preserved_roots, &skip)
                         })
                         .cloned()
                         .collect(),
@@ -196,16 +196,22 @@ impl RuleCandidateIndex {
     }
 }
 
-fn markdown_inventory_path_allowed(path: &Path, roots: &[PathBuf], skip: &HashSet<&str>) -> bool {
+fn markdown_inventory_path_allowed(
+    request_root: &Path,
+    path: &Path,
+    roots: &[PathBuf],
+    skip: &HashSet<&str>,
+) -> bool {
     // Baselines are JSON companions rather than documentation targets, so
     // retain them for the rule's tracked-baseline validation.
     if path.extension().is_none_or(|extension| extension != "md") {
         return true;
     }
-    roots.iter().any(|root| {
-        path.starts_with(root)
-            && !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
-    })
+    !crate::codebase::ts_source::is_under_skipped_dir(request_root, path, skip)
+        && roots.iter().any(|root| {
+            path.starts_with(root)
+                && !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
+        })
 }
 
 #[cfg(test)]
