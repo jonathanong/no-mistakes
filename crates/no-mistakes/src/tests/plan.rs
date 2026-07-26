@@ -15,6 +15,9 @@ include!("plan_extra_inputs.rs");
 #[path = "plan_vitest_setup.rs"]
 mod plan_vitest_setup;
 
+mod changed_inventory;
+pub(crate) use changed_inventory::generate_plan_with_prepared;
+
 pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     let plan = generate_plan(&args)?;
 
@@ -35,17 +38,6 @@ const _: fn(PlanArgs) -> Result<ExitCode> = run;
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let prepared = super::prepared_plan::PreparedTestPlanRequest::prepare(args)?;
     generate_plan_with_prepared(prepared.args(), &prepared, None)
-}
-
-/// Generate a framework or union plan from immutable request-scoped inputs.
-pub(crate) fn generate_plan_with_prepared(
-    args: &PlanArgs,
-    prepared: &super::prepared_plan::PreparedTestPlanRequest,
-    timing: Option<&mut crate::impacted_checks::timing::TimingTracker>,
-) -> Result<TestPlan> {
-    let mut plan = generate_plan_with_prepared_inner(args, prepared, timing)?;
-    plan.changed_files = prepared.changed_file_inventory();
-    Ok(plan)
 }
 
 fn generate_plan_with_prepared_inner(
