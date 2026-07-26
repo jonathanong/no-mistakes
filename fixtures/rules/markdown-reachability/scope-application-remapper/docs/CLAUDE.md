@@ -1,1 +1,1 @@
-[Case-resolved guide](Guide.MD)
+[Symlinked guide](guide-link)

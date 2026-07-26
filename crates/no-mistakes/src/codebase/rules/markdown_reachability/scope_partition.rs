@@ -142,16 +142,23 @@ fn rule_application_remappers_ignore_aliases_owned_by_other_applications() {
         ..Default::default()
     });
 
+    // Keep the extensionless symlink tracked but outside the Markdown graph so
+    // the link must canonically remap to guide.md.
     let findings = run(
         &root,
         &config,
-        &["docs/CLAUDE.md", "docs/guide.md", "other/alias.md"],
+        &[
+            "docs/CLAUDE.md",
+            "docs/guide-link",
+            "docs/guide.md",
+            "other/alias.md",
+        ],
     )
     .unwrap();
 
     assert!(
         findings.is_empty(),
-        "an alias selected only by another rule application must not make this application's case-resolved link ambiguous"
+        "an alias selected only by another rule application must not make this application's symlinked link ambiguous"
     );
 }
 
