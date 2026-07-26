@@ -106,3 +106,37 @@ fn check_json_returns_migrated_filesystem_rules() {
             && finding["target"] == "news-story-clusters.md"
     }));
 }
+
+#[test]
+fn check_json_reports_both_markdown_rule_ids() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/markdown-report/fixture");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let output = check_json_impl(
+        json!({ "root": fixture.path(), "config": ".no-mistakes.yml" }).to_string(),
+    )
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let findings = value["rules"].as_array().unwrap();
+    let rule_ids = findings
+        .iter()
+        .filter_map(|finding| finding["rule"].as_str())
+        .collect::<Vec<_>>();
+
+    assert!(rule_ids.contains(&"markdown-reachability"), "{value:#?}");
+    assert!(
+        rule_ids.contains(&"markdown-structure-budget"),
+        "{value:#?}"
+    );
+    for rule_id in ["markdown-reachability", "markdown-structure-budget"] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["rule"] == rule_id)
+            .unwrap_or_else(|| panic!("missing {rule_id}: {value:#?}"));
+        assert!(finding["file"].is_string(), "{finding:#?}");
+        assert!(finding["line"].is_u64(), "{finding:#?}");
+        assert!(finding["message"].is_string(), "{finding:#?}");
+    }
+}

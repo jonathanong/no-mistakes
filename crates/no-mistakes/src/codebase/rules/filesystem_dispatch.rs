@@ -8,10 +8,11 @@ use super::{
     agents_md_max_size, banned_paths, banned_renamed_files, config_path_references,
     doc_consistency, file_extension_policy, finite_set_consistency, forbidden_workspace_closure,
     github_actions_pinned_hash, integration_test_no_mocks, lockfile_allowlist,
-    markdown_link_display_text, no_empty_or_comments_only_files, no_git_identity_mutation,
-    package_json_registry_only, package_json_workspace_coverage, require_files_in_subdirs,
-    require_test_per_subdir, required_companion_imports, required_local_docs, rust_rules_combined,
-    shellcheck_runner, strict_package_layout, structured_config_policy, test_email_domain_policy,
+    markdown_link_display_text, markdown_reachability, markdown_structure_budget,
+    no_empty_or_comments_only_files, no_git_identity_mutation, package_json_registry_only,
+    package_json_workspace_coverage, require_files_in_subdirs, require_test_per_subdir,
+    required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
+    strict_package_layout, structured_config_policy, test_email_domain_policy,
     tsconfig_alias_folder_mapping, vitest_ci_path_coverage, vitest_project_mapping,
     vitest_test_correspondence, workspace_package_cycles,
 };
@@ -25,18 +26,20 @@ use super::{
     BANNED_PATHS, BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES, DOC_CONSISTENCY,
     FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_WORKSPACE_CLOSURE,
     INTEGRATION_TEST_NO_MOCKS, LOCKFILE_ALLOWLIST, MARKDOWN_LINK_DISPLAY_TEXT,
-    NO_EMPTY_OR_COMMENTS_ONLY_FILES, NO_GIT_IDENTITY_MUTATION, PACKAGE_JSON_REGISTRY_ONLY,
-    PACKAGE_JSON_WORKSPACE_COVERAGE, REQUIRED_COMPANION_IMPORTS, REQUIRED_DOC_SECTION,
-    REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
-    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
-    STRICT_PACKAGE_LAYOUT, STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY,
-    TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING,
-    VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
+    MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET, NO_EMPTY_OR_COMMENTS_ONLY_FILES,
+    NO_GIT_IDENTITY_MUTATION, PACKAGE_JSON_REGISTRY_ONLY, PACKAGE_JSON_WORKSPACE_COVERAGE,
+    REQUIRED_COMPANION_IMPORTS, REQUIRED_DOC_SECTION, REQUIRED_LOCAL_DOCS,
+    REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR, RUST_MAX_LINES_PER_FILE,
+    RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER, STRICT_PACKAGE_LAYOUT,
+    STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY, TSCONFIG_ALIAS_FOLDER_MAPPING,
+    VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE,
+    WORKSPACE_PACKAGE_CYCLES,
 };
 pub use entrypoints::{
     run_filesystem_rules, run_filesystem_rules_with_config,
     run_filesystem_rules_with_config_and_snapshot,
     run_filesystem_rules_with_config_snapshot_and_vitest_catalog, run_filesystem_rules_with_files,
+    run_filesystem_rules_with_visible_and_snapshot,
 };
 const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 
@@ -79,6 +82,8 @@ macro_rules! define_filesystem_rule_ids {
     ($($id:expr => $call:path),* $(,)?) => {
         const FILESYSTEM_RULE_IDS: &[&str] = &[
             $($id,)*
+            MARKDOWN_REACHABILITY,
+            MARKDOWN_STRUCTURE_BUDGET,
             RUST_MAX_LINES_PER_FILE,
             RUST_NO_INLINE_TESTS,
             RUST_NO_INLINE_ALLOWS,
@@ -135,6 +140,32 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
                         });
                     }
                 )*
+                if rule_enabled(config, MARKDOWN_REACHABILITY) {
+                    s.spawn(|_| {
+                        let res = markdown_reachability::check_with_files_and_sources(
+                            root,
+                            config,
+                            candidates.candidates(MARKDOWN_REACHABILITY),
+                            &sources,
+                        );
+                        acc.lock()
+                            .expect("mutex poisoned")
+                            .push((MARKDOWN_REACHABILITY, res));
+                    });
+                }
+                if rule_enabled(config, MARKDOWN_STRUCTURE_BUDGET) {
+                    s.spawn(|_| {
+                        let res = markdown_structure_budget::check_with_files_and_sources(
+                            root,
+                            config,
+                            candidates.candidates(MARKDOWN_STRUCTURE_BUDGET),
+                            &sources,
+                        );
+                        acc.lock()
+                            .expect("mutex poisoned")
+                            .push((MARKDOWN_STRUCTURE_BUDGET, res));
+                    });
+                }
                 if rust_rules_enabled(config) {
                     s.spawn(|_| {
                         let res = rust_rules_combined::check_with_files_and_sources(

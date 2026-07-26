@@ -10,6 +10,8 @@ pub use super::forbidden_workspace_closure::RULE_ID as FORBIDDEN_WORKSPACE_CLOSU
 pub use super::integration_test_no_mocks::RULE_ID as INTEGRATION_TEST_NO_MOCKS;
 pub use super::lockfile_allowlist::RULE_ID as LOCKFILE_ALLOWLIST;
 pub use super::markdown_link_display_text::RULE_ID as MARKDOWN_LINK_DISPLAY_TEXT;
+pub use super::markdown_reachability::RULE_ID as MARKDOWN_REACHABILITY;
+pub use super::markdown_structure_budget::RULE_ID as MARKDOWN_STRUCTURE_BUDGET;
 pub use super::nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use super::nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
 pub use super::no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_ONLY_FILES;

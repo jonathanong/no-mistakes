@@ -13,6 +13,8 @@ mod ids;
 pub mod integration_test_no_mocks;
 pub mod lockfile_allowlist;
 pub mod markdown_link_display_text;
+pub mod markdown_reachability;
+pub mod markdown_structure_budget;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
 pub mod no_empty_or_comments_only_files;

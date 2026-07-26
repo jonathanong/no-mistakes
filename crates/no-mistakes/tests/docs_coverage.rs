@@ -95,6 +95,8 @@ fn no_mistakes_rules_have_docs() {
         rules::INTEGRATION_TEST_NO_MOCKS,
         rules::LOCKFILE_ALLOWLIST,
         rules::MARKDOWN_LINK_DISPLAY_TEXT,
+        rules::MARKDOWN_REACHABILITY,
+        rules::MARKDOWN_STRUCTURE_BUDGET,
         rules::NEXTJS_NO_API_ROUTES,
         rules::NEXTJS_NO_CACHING,
         rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,

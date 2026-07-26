@@ -24,6 +24,13 @@ fn codebase_fixture(scenario: &str) -> PathBuf {
     )
 }
 
+fn markdown_report_fixture() -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/markdown-report/fixture"),
+    )
+}
+
 fn check(root: &PathBuf, yaml: &str) -> Output {
     let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
     std::fs::write(config.path(), yaml).unwrap();
@@ -43,6 +50,52 @@ fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
 
 fn stdout(o: &Output) -> String {
     String::from_utf8_lossy(&o.stdout).into_owned()
+}
+
+#[test]
+fn markdown_rules_check_json_reports_both_rule_ids() {
+    let root = markdown_report_fixture();
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .args([
+            "--config",
+            root.join(".no-mistakes.yml").to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+    let body = stdout(&output);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "stdout: {body}\nstderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap_or_else(|error| {
+        panic!(
+            "expected JSON report: {error}; stdout: {body:?}; stderr: {:?}",
+            String::from_utf8_lossy(&output.stderr)
+        )
+    });
+    let findings = report["rules"].as_array().unwrap();
+    let rule_ids = findings
+        .iter()
+        .filter_map(|finding| finding["rule"].as_str())
+        .collect::<Vec<_>>();
+
+    assert!(rule_ids.contains(&"markdown-reachability"), "{body}");
+    assert!(rule_ids.contains(&"markdown-structure-budget"), "{body}");
+    for rule_id in ["markdown-reachability", "markdown-structure-budget"] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["rule"] == rule_id)
+            .unwrap_or_else(|| panic!("missing {rule_id}: {body}"));
+        assert!(finding["file"].is_string(), "{finding:#?}");
+        assert!(finding["line"].is_u64(), "{finding:#?}");
+        assert!(finding["message"].is_string(), "{finding:#?}");
+    }
 }
 
 fn git(root: &std::path::Path, args: &[&str]) -> bool {

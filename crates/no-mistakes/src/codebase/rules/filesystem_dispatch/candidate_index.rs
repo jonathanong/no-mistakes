@@ -2,9 +2,10 @@ use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{
     rule_enabled, BANNED_PATHS, BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES, DOC_CONSISTENCY,
     FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_WORKSPACE_CLOSURE,
-    INTEGRATION_TEST_NO_MOCKS, NO_EMPTY_OR_COMMENTS_ONLY_FILES, NO_GIT_IDENTITY_MUTATION,
-    REQUIRED_COMPANION_IMPORTS, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS,
-    RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER, STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY,
+    INTEGRATION_TEST_NO_MOCKS, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
+    NO_EMPTY_OR_COMMENTS_ONLY_FILES, NO_GIT_IDENTITY_MUTATION, REQUIRED_COMPANION_IMPORTS,
+    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
+    STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY,
 };
 use crate::config::v2::NoMistakesConfig;
 use std::borrow::Cow;
@@ -33,7 +34,8 @@ impl RuleCandidateIndex {
         inventory_paths: Option<Arc<Vec<PathBuf>>>,
     ) -> Self {
         let root = crate::codebase::ts_resolver::normalize_path(root);
-        let mut plans = BTreeMap::<(Vec<PathBuf>, bool, bool, bool), Vec<&'static str>>::new();
+        let mut plans =
+            BTreeMap::<(Vec<PathBuf>, bool, bool, bool, bool), Vec<&'static str>>::new();
         for rule_id in FILESYSTEM_RULE_IDS
             .iter()
             .copied()
@@ -44,11 +46,13 @@ impl RuleCandidateIndex {
                     preserved::filesystem_rule_preserved_roots(&root, config, rule_id),
                     rule_id == FORBIDDEN_WORKSPACE_CLOSURE,
                     rule_id == BANNED_PATHS,
-                    rule_id == BANNED_PATHS
+                    (rule_id == BANNED_PATHS
                         && config
                             .rule_applications(rule_id)
                             .iter()
-                            .any(|rule| rule.applies_to_repository()),
+                            .any(|rule| rule.applies_to_repository()))
+                        || matches!(rule_id, MARKDOWN_REACHABILITY | MARKDOWN_STRUCTURE_BUDGET),
+                    matches!(rule_id, MARKDOWN_REACHABILITY | MARKDOWN_STRUCTURE_BUDGET),
                 ))
                 .or_default()
                 .push(rule_id);
@@ -61,7 +65,13 @@ impl RuleCandidateIndex {
 
         // Rules with identical effective scopes share one candidate vector.
         for (
-            (preserved_roots, includes_metadata, tracked_only, includes_repository_inventory),
+            (
+                preserved_roots,
+                includes_metadata,
+                tracked_only,
+                includes_repository_inventory,
+                inventory_only,
+            ),
             rule_ids,
         ) in plans
         {
@@ -75,7 +85,18 @@ impl RuleCandidateIndex {
             let allowed = |path: &PathBuf| {
                 super::super::file_allowed_by_roots_and_skip(&root, &skip, path, &preserved_roots)
             };
-            let shared = if includes_repository_inventory {
+            let shared = if inventory_only {
+                Arc::new(
+                    inventory_paths
+                        .as_ref()
+                        .map(|paths| paths.as_slice())
+                        .unwrap_or_default()
+                        .iter()
+                        .filter(|path| path.starts_with(&root))
+                        .cloned()
+                        .collect(),
+                )
+            } else if includes_repository_inventory {
                 let mut candidates = inventory_paths
                     .as_ref()
                     .map(|paths| paths.as_slice())

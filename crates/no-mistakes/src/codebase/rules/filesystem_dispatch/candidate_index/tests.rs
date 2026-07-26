@@ -196,6 +196,45 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
 }
 
 #[test]
+fn markdown_repository_rules_use_the_full_tracked_inventory_not_untracked_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
+    let tracked_root = root.join("CLAUDE.md");
+    let tracked_doc = root.join("docs/tracked.md");
+    let untracked_doc = root.join("docs/untracked.md");
+    let files = vec![tracked_root.clone(), tracked_doc.clone(), untracked_doc];
+    let tracked_files = vec![tracked_root.clone(), tracked_doc.clone()];
+    let repository_rule = |rule: &str| RuleDef {
+        rule: rule.to_string(),
+        scope: Some(RuleScope::Repository),
+        ..Default::default()
+    };
+    let config = NoMistakesConfig {
+        rules: vec![
+            repository_rule(super::super::MARKDOWN_REACHABILITY),
+            repository_rule(super::super::MARKDOWN_STRUCTURE_BUDGET),
+        ],
+        ..Default::default()
+    };
+    let inventory = Arc::new(tracked_files.clone());
+    let index = RuleCandidateIndex::prepare_with_inventory(
+        &root,
+        &config,
+        &files,
+        &tracked_files,
+        &[],
+        Some(inventory),
+    );
+    assert_eq!(
+        index.candidates(super::super::MARKDOWN_REACHABILITY),
+        tracked_files
+    );
+    assert_eq!(
+        index.candidates(super::super::MARKDOWN_STRUCTURE_BUDGET),
+        [tracked_root, tracked_doc]
+    );
+}
+
+#[test]
 fn repository_banned_paths_uses_full_inventory_and_keeps_external_project_candidates() {
     let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
     let external_root = root.parent().unwrap().join("external-app");
