@@ -46,6 +46,11 @@ fn counts_gfm_tables_and_mermaid_fences() {
 }
 
 #[test]
+fn line_count_treats_empty_markdown_as_zero_lines() {
+    assert_eq!(line_count(""), 0);
+}
+
+#[test]
 fn full_check_uses_strict_thresholds_and_unicode_scalar_characters() {
     let root = fixture(".");
     let crlf = std::fs::read(root.join("exact-crlf.md")).unwrap();
@@ -91,6 +96,38 @@ fn counts_multiple_tables_and_case_insensitive_fenced_mermaid_only() {
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("2 tables"));
     assert!(findings[0].message.contains("2 Mermaid"));
+}
+
+#[test]
+fn rejects_duplicate_baseline_keys_across_external_project_roots() {
+    let root = fixture("external-request");
+    let mut config = config("", &[], &[]);
+    for name in ["external-one", "external-two"] {
+        config.projects.insert(
+            name.to_string(),
+            crate::config::v2::schema::Project {
+                root: Some(
+                    root.parent()
+                        .unwrap()
+                        .join(name)
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                ..Default::default()
+            },
+        );
+    }
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["external-one".to_string(), "external-two".to_string()];
+    let error = run(
+        &root,
+        &config,
+        &["../external-one/CLAUDE.md", "../external-two/CLAUDE.md"],
+    )
+    .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("ambiguous baseline key `CLAUDE.md`"));
 }
 
 #[test]

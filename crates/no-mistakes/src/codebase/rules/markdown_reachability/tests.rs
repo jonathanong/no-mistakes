@@ -93,6 +93,93 @@ fn full_check_accepts_direct_and_readme_paths_and_rejects_other_paths() {
 }
 
 #[test]
+fn reports_excess_depth_when_a_readme_path_exceeds_the_configured_limit() {
+    let root = fixture("paths");
+    let findings = run(
+        &root,
+        &config("maxDepth: 1", &["**/*.md"], &[]),
+        &["CLAUDE.md", "README.md", "indexed.md"],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "indexed.md");
+    assert_eq!(
+        findings[0].message,
+        "reachable only at depth 2; maximum is 1"
+    );
+}
+
+#[test]
+fn scoped_states_ignore_targets_without_a_matching_scope() {
+    let root = fixture("paths");
+    let targets = vec![root.join("lost.md")];
+    let sources = super::super::source_store_for_files(&targets);
+    let (states, names) = scoped_states(
+        &root,
+        &[root.join("docs")],
+        &targets,
+        &targets,
+        ScopeOptions {
+            roots: &BTreeSet::from(["CLAUDE.md".to_string()]),
+            indexes: &BTreeSet::from(["README.md".to_string()]),
+            max_depth: DEFAULT_MAX_DEPTH,
+            sources: &sources,
+        },
+    )
+    .unwrap();
+    assert!(states.is_empty());
+    assert!(names.is_empty());
+}
+
+#[test]
+fn rejects_duplicate_baseline_keys_across_external_project_roots() {
+    let root = fixture("external-request");
+    let mut config = config("rootFilenames: [ROOT.md]", &[], &[]);
+    for name in ["external-one", "external-two"] {
+        config.projects.insert(
+            name.to_string(),
+            crate::config::v2::schema::Project {
+                root: Some(
+                    root.parent()
+                        .unwrap()
+                        .join(name)
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                ..Default::default()
+            },
+        );
+    }
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["external-one".to_string(), "external-two".to_string()];
+    let error = run(
+        &root,
+        &config,
+        &["../external-one/CLAUDE.md", "../external-two/CLAUDE.md"],
+    )
+    .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("ambiguous baseline key `CLAUDE.md`"));
+}
+
+#[test]
+fn baseline_finding_key_preserves_an_unresolvable_key() {
+    let root = Path::new("/repo");
+    let key = "../outside.md";
+    assert_eq!(
+        super::super::markdown_scope::baseline_finding_key(
+            root,
+            &[root.join("docs")],
+            key,
+            RULE_ID,
+        )
+        .unwrap(),
+        key
+    );
+}
+
+#[test]
 fn default_depth_two_distinguishes_an_invalid_intermediary_in_findings_and_baselines() {
     let root = fixture("invalid-intermediary");
     let files = ["CLAUDE.md", "overview.md", "detail.md", "baseline.json"];
