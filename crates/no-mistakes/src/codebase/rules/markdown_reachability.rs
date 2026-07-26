@@ -9,23 +9,18 @@ use std::path::{Path, PathBuf};
 mod baseline;
 mod finding;
 mod graph;
+mod state;
 
 use baseline::{read_baseline, BaselineEntry};
 use finding::{finding, stale};
 use graph::{direct_or_readme_hop, link_graph, shortest_depths};
+use state::{expected_state, RuleState};
 
 pub const RULE_ID: &str = "markdown-reachability";
 const DEFAULT_ROOT_FILENAMES: &[&str] = &["CLAUDE.md"];
 const DEFAULT_INDEX_FILENAMES: &[&str] = &["README.md"];
 const DEFAULT_MAX_DEPTH: usize = 2;
 type RuleStates = BTreeMap<String, RuleState>;
-
-struct RuleState {
-    finding_file: String,
-    depth: Option<usize>,
-    allowed: bool,
-    invalid_intermediary: bool,
-}
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -184,13 +179,6 @@ fn collect_findings(
         }
     }
     Ok(())
-}
-
-fn expected_state(depth: Option<usize>, allowed: bool) -> Option<BaselineEntry> {
-    (!allowed).then(|| match depth {
-        Some(depth) => BaselineEntry::depth(depth),
-        None => BaselineEntry::unreachable(),
-    })
 }
 
 fn validate_max_depth(configured: Option<usize>) -> Result<usize> {
