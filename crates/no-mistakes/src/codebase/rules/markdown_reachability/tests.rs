@@ -4,6 +4,8 @@ use crate::config::v2::{
     NoMistakesConfig,
 };
 
+mod scope_partition;
+
 fn config(options: &str, include: &[&str], exclude: &[&str]) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
@@ -133,81 +135,6 @@ fn reports_excess_depth_when_a_readme_path_exceeds_the_configured_limit() {
     assert_eq!(
         findings[0].message,
         "reachable only at depth 2; maximum is 1"
-    );
-}
-
-#[test]
-fn scoped_states_ignore_targets_without_a_matching_scope() {
-    let root = fixture("paths");
-    let targets = vec![root.join("lost.md")];
-    let sources = super::super::source_store_for_files(&targets);
-    let (states, names) = scoped_states(
-        &root,
-        &[root.join("docs")],
-        &targets,
-        &targets,
-        ScopeOptions {
-            roots: &BTreeSet::from(["CLAUDE.md".to_string()]),
-            indexes: &BTreeSet::from(["README.md".to_string()]),
-            max_depth: DEFAULT_MAX_DEPTH,
-            sources: &sources,
-        },
-    )
-    .unwrap();
-    assert!(states.is_empty());
-    assert!(names.is_empty());
-}
-
-#[test]
-fn nested_project_uses_its_own_scope_not_a_reachable_outer_document() {
-    let root = fixture("nested-scope");
-    let mut config = config("", &["**/*.md"], &[]);
-    config.projects.insert(
-        "nested-docs".to_string(),
-        crate::config::v2::schema::Project {
-            root: Some("docs".to_string()),
-            ..Default::default()
-        },
-    );
-    config.rules[0].projects = vec!["nested-docs".to_string()];
-
-    let findings = run(&root, &config, &["CLAUDE.md", "docs/lost.md"]).unwrap();
-
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| finding.file.as_str())
-            .collect::<Vec<_>>(),
-        ["docs/lost.md"],
-        "the outer CLAUDE.md must not make a nested project document reachable"
-    );
-}
-
-#[test]
-fn scope_roots_choose_the_deepest_root_and_deduplicate_exact_ties() {
-    let root = Path::new("/repo");
-    let mut config = config("", &[], &[]);
-    config.projects.insert(
-        "same-root".to_string(),
-        crate::config::v2::schema::Project {
-            root: Some(".".to_string()),
-            ..Default::default()
-        },
-    );
-    config.projects.insert(
-        "nested".to_string(),
-        crate::config::v2::schema::Project {
-            root: Some("docs".to_string()),
-            ..Default::default()
-        },
-    );
-    config.rules[0].projects = vec!["same-root".to_string(), "nested".to_string()];
-
-    let scopes = super::super::markdown_scope::scope_roots(root, &config, &config.rules[0]);
-    assert_eq!(scopes, vec![root.join("docs"), root.to_path_buf()]);
-    assert_eq!(
-        super::super::markdown_scope::scope_root_for_path(&scopes, &root.join("docs/file.md")),
-        Some(&root.join("docs"))
     );
 }
 

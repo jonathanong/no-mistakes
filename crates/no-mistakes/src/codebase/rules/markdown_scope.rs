@@ -37,6 +37,26 @@ pub(crate) fn scope_root_for_path<'a>(roots: &'a [PathBuf], path: &Path) -> Opti
     roots.iter().find(|root| path.starts_with(root))
 }
 
+/// Assign every Markdown file to its most-specific configured scope exactly
+/// once. Graph rules use this partition so overlapping repository and project
+/// scopes cannot contribute roots or edges to one another.
+pub(crate) fn partition_markdown_by_scope(
+    scope_roots: &[PathBuf],
+    markdown: &[PathBuf],
+) -> std::collections::BTreeMap<PathBuf, Vec<PathBuf>> {
+    let mut markdown_by_scope = std::collections::BTreeMap::new();
+    for path in markdown {
+        let Some(scope_root) = scope_root_for_path(scope_roots, path) else {
+            continue;
+        };
+        markdown_by_scope
+            .entry(scope_root.clone())
+            .or_insert_with(Vec::new)
+            .push(path.clone());
+    }
+    markdown_by_scope
+}
+
 /// Stable rule findings are lexical paths from the request root, including
 /// `../` for external projects. Joining the key back to the request root
 /// resolves the source file for standard suppression handling.

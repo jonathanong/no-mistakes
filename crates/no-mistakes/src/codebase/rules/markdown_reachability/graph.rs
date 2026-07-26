@@ -8,14 +8,14 @@ pub(super) fn link_graph(
     root: &Path,
     markdown: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> BTreeMap<PathBuf, Vec<PathBuf>> {
     let known = markdown.iter().cloned().collect::<BTreeSet<_>>();
-    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(markdown.to_vec());
     markdown
         .iter()
         .map(|path| {
             let links = super::super::read_source(sources, path)
-                .map(|source| extract_local_links(root, path, &source, &known, &remapper))
+                .map(|source| extract_local_links(root, path, &source, &known, remapper))
                 .unwrap_or_default();
             (path.clone(), links)
         })

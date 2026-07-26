@@ -9,11 +9,12 @@ use std::path::{Path, PathBuf};
 mod baseline;
 mod finding;
 mod graph;
+mod scope_state;
 mod state;
 
 use baseline::{read_baseline, BaselineEntry};
 use finding::{finding, stale};
-use graph::{direct_or_readme_hop, link_graph, shortest_depths};
+use scope_state::{scoped_states, ScopeOptions};
 use state::{expected_state, RuleState};
 
 pub const RULE_ID: &str = "markdown-reachability";
@@ -68,74 +69,6 @@ pub(crate) fn check_with_files_and_sources(
     }
     super::sort_findings(&mut findings);
     Ok(findings)
-}
-
-struct ScopeOptions<'a> {
-    roots: &'a BTreeSet<String>,
-    indexes: &'a BTreeSet<String>,
-    max_depth: usize,
-    sources: &'a crate::codebase::ts_source::SourceStore,
-}
-
-fn scoped_states(
-    root: &Path,
-    scope_roots: &[PathBuf],
-    markdown: &[PathBuf],
-    targets: &[PathBuf],
-    options: ScopeOptions<'_>,
-) -> Result<(RuleStates, BTreeSet<String>)> {
-    let mut targets_by_scope = BTreeMap::<PathBuf, Vec<&PathBuf>>::new();
-    for target in targets {
-        let Some(scope_root) = super::markdown_scope::scope_root_for_path(scope_roots, target)
-        else {
-            continue;
-        };
-        targets_by_scope
-            .entry(scope_root.clone())
-            .or_default()
-            .push(target);
-    }
-    let mut states = BTreeMap::new();
-    let mut target_names = BTreeSet::new();
-    for (scope_root, scoped_targets) in targets_by_scope {
-        let scoped_markdown = markdown
-            .iter()
-            .filter(|path| path.starts_with(&scope_root))
-            .cloned()
-            .collect::<Vec<_>>();
-        let graph = link_graph(&scope_root, &scoped_markdown, options.sources);
-        let depths = shortest_depths(options.roots, &graph);
-        for target in scoped_targets
-            .into_iter()
-            .filter(|path| !is_named(path, options.roots))
-        {
-            let baseline_key = super::markdown_scope::baseline_key(root, &scope_root, target);
-            if !target_names.insert(baseline_key.clone()) {
-                anyhow::bail!(
-                    "{RULE_ID} has ambiguous baseline key `{baseline_key}` across configured project roots; configure separate rule applications"
-                );
-            }
-            let depth = depths.get(target).copied();
-            let allowed = direct_or_readme_hop(
-                target,
-                options.roots,
-                options.indexes,
-                &graph,
-                options.max_depth,
-            );
-            states.insert(
-                baseline_key,
-                RuleState {
-                    finding_file: super::markdown_scope::finding_key(root, target),
-                    depth,
-                    allowed,
-                    invalid_intermediary: !allowed
-                        && depth.is_some_and(|depth| depth <= options.max_depth),
-                },
-            );
-        }
-    }
-    Ok((states, target_names))
 }
 
 fn collect_findings(
