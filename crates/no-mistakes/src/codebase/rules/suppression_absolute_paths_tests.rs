@@ -30,7 +30,7 @@ fn request_sources_only_suppress_registered_absolute_paths() {
 }
 
 #[test]
-fn portable_absolute_path_detection_rejects_windows_paths_on_every_host() {
+fn portable_absolute_path_detection_accepts_windows_paths_on_every_host() {
     assert!(crate::codebase::ts_source::is_portably_absolute_path(
         Path::new(r"C:\repo\file.md")
     ));
