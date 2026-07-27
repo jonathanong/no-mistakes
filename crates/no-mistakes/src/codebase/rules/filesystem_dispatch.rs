@@ -91,7 +91,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
             root, config, snapshot,
         )),
     );
-    inventory::register_trusted_external_candidates(root, &candidates, &sources);
+    inventory::register_trusted_external_candidates(root, config, &candidates, &sources);
     macro_rules! run_rules {
         ($($id:expr => $call:path),* $(,)?) => {
             rayon::scope(|s| {

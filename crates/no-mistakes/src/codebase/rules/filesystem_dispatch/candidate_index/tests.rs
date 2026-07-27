@@ -257,7 +257,9 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
 
     let external_docs = [
         fixture.path().join("external/CLAUDE.md"),
+        fixture.path().join("external/escaped-suppressed.md"),
         fixture.path().join("external/guide.md"),
+        fixture.path().join("external/suppressed-link.md"),
     ];
     let nested_request_docs = [
         fixture.path().join("request/docs/CLAUDE.md"),
@@ -324,8 +326,11 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
     let observed_reads = observer.source_read_snapshot();
     assert!(
         observed_reads.contains_key(&root.join("CLAUDE.md"))
-            && observed_reads.contains_key(&fixture.path().join("external/suppressed.md")),
-        "external suppression reads stay attached to the caller's observer: {observed_reads:?}"
+            && observed_reads.contains_key(&fixture.path().join("external/suppressed.md"))
+            // This tracked symlink resolves inside its configured external
+            // project and must retain the target's file-level suppression.
+            && observed_reads.contains_key(&fixture.path().join("external/suppressed-link.md")),
+        "external regular and symlink suppression reads stay attached to the caller's observer: {observed_reads:?}"
     );
 }
 

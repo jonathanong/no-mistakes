@@ -29,13 +29,22 @@ pub(super) fn tracked_inventory_with_markdown_project_roots(
 
 pub(super) fn register_trusted_external_candidates(
     root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
     candidates: &RuleCandidateIndex,
     sources: &crate::codebase::ts_source::SourceStore,
 ) {
+    let trusted_roots = preserved::filesystem_rule_target_roots(
+        root,
+        config,
+        &[MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET],
+    )
+    .into_iter()
+    .filter(|path| !path.starts_with(root))
+    .collect::<Vec<_>>();
     let external = candidates
         .all_candidates()
         .filter(|path| !path.starts_with(root))
         .cloned()
         .collect::<Vec<_>>();
-    sources.register_trusted_regular_paths(&external);
+    sources.register_trusted_regular_paths(&external, &trusted_roots);
 }

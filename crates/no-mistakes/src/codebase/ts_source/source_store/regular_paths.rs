@@ -25,16 +25,28 @@ impl SourceStore {
 
     /// Trust exact regular files that came from an immutable discovery
     /// snapshot but sit outside this store's request-root inventory.
-    pub(crate) fn register_trusted_regular_paths(&self, paths: &[PathBuf]) {
+    pub(crate) fn register_trusted_regular_paths(
+        &self,
+        paths: &[PathBuf],
+        trusted_roots: &[PathBuf],
+    ) {
+        let canonical_roots = trusted_roots
+            .iter()
+            .filter_map(|root| std::fs::canonicalize(root).ok())
+            .collect::<Vec<_>>();
         let mut trusted = self
             .trusted_regular_paths
             .lock()
             .expect("trusted regular paths mutex poisoned");
         trusted.extend(paths.iter().filter_map(|path| {
-            std::fs::symlink_metadata(path)
-                .ok()
-                .filter(|metadata| metadata.file_type().is_file())
-                .map(|_| super::super::normalize_discovery_path(path))
+            let file_type = std::fs::symlink_metadata(path).ok()?.file_type();
+            let trusted_file = file_type.is_file()
+                || (file_type.is_symlink()
+                    && std::fs::canonicalize(path).ok().is_some_and(|target| {
+                        target.is_file()
+                            && canonical_roots.iter().any(|root| target.starts_with(root))
+                    }));
+            trusted_file.then(|| super::super::normalize_discovery_path(path))
         }));
     }
 
