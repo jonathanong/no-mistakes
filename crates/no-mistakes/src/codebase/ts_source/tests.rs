@@ -68,6 +68,14 @@ fn frozen_path_remapper_preserves_exact_links_without_canonical_fallback() {
         remapper.remap(&root.join("link/src/value.ts")),
         Some(root.join("link/src/value.ts"))
     );
+
+    let real = root.join("real/src/value.ts");
+    let remapper = FrozenPathRemapper::from_paths(vec![real.clone()]);
+    assert_eq!(
+        remapper.remap(&root.join("real/../real/src/value.ts")),
+        Some(real),
+        "a normalized direct lookup retains the only visible spelling"
+    );
 }
 
 #[test]

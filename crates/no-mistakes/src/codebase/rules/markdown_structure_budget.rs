@@ -47,10 +47,13 @@ pub(crate) fn check_with_files_and_sources(
         let baseline = read_baseline(root, opts.baseline_file.as_deref(), files)?;
         let mut seen = BTreeSet::new();
         for path in targets {
-            let Some(_scope_root) = super::markdown_scope::scope_root_for_path(&scope_roots, &path)
-            else {
-                continue;
-            };
+            let _scope_root = super::markdown_scope::scope_root_for_path(&scope_roots, &path)
+                .with_context(|| {
+                    format!(
+                        "{RULE_ID} filtered target {} is outside its configured scope",
+                        path.display()
+                    )
+                })?;
             let Some(content) = super::read_source(sources, &path) else {
                 continue;
             };

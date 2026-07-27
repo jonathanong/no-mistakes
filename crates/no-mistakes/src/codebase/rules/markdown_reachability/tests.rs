@@ -221,6 +221,31 @@ fn finding_keys_handle_windows_volumes_without_host_specific_path_parsing() {
 }
 
 #[test]
+fn finding_keys_normalize_relative_malformed_and_parent_only_paths() {
+    assert_eq!(
+        super::super::markdown_scope::finding_key(
+            Path::new("/request"),
+            Path::new("../relative.md"),
+        ),
+        "../relative.md"
+    );
+    assert_eq!(
+        super::super::markdown_scope::finding_key(Path::new("request"), Path::new("//server")),
+        "/server",
+        "an incomplete UNC prefix falls back to a normalized POSIX path"
+    );
+    assert_eq!(
+        super::super::markdown_scope::finding_key(Path::new("request"), Path::new("/../guide.md")),
+        "/guide.md",
+        "a parent component cannot escape an absolute filesystem root"
+    );
+    assert_eq!(
+        super::super::markdown_scope::finding_key(Path::new("request"), Path::new("/")),
+        "/"
+    );
+}
+
+#[test]
 fn default_depth_two_distinguishes_an_invalid_intermediary_in_findings_and_baselines() {
     let root = fixture("invalid-intermediary");
     let files = ["CLAUDE.md", "overview.md", "detail.md", "baseline.json"];
