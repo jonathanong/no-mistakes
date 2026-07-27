@@ -146,5 +146,5 @@ fn resolve_visible_import<R: ImportResolverFacade>(
     resolution
         .resolver
         .resolve(source, caller_file)
-        .map(|path| resolution.remapper.remap(&path))
+        .and_then(|path| resolution.remapper.remap(&path))
 }

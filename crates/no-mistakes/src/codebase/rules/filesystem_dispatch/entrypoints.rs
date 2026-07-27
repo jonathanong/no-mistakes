@@ -3,8 +3,9 @@ use crate::codebase::rules::{rule_enabled, RuleFinding};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-/// Run filesystem rules using a pre-discovered file list so the caller's single
-/// `git ls-files` result is reused. Rules run in parallel.
+/// Run filesystem rules using an authoritative tracked-file list. Rules run in
+/// parallel. Callers that have a visible list containing untracked files must
+/// use [`run_filesystem_rules_with_visible_and_snapshot`] instead.
 pub fn run_filesystem_rules_with_files(
     root: &Path,
     config_path: Option<&Path>,
@@ -12,6 +13,23 @@ pub fn run_filesystem_rules_with_files(
 ) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
     run_filesystem_rules_with_config(root, &config, files)
+}
+
+/// Run filesystem rules with a caller-supplied visible work list and the
+/// request's existing discovery snapshot. This preserves tracked-only rules
+/// without a second Git discovery.
+pub fn run_filesystem_rules_with_visible_and_snapshot(
+    root: &Path,
+    config_path: Option<&Path>,
+    visible_files: &[PathBuf],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+) -> Result<Vec<RuleFinding>> {
+    let config = crate::config::v2::load_v2_config_from_visible(
+        root,
+        config_path,
+        &snapshot.paths_for(root),
+    )?;
+    run_filesystem_rules_with_config_and_snapshot(root, &config, visible_files, snapshot)
 }
 
 /// Standalone entry point: discover files once, then reuse the with-files

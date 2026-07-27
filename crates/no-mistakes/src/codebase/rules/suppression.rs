@@ -47,9 +47,10 @@ fn suppress_rule_findings_inner(
             return true;
         }
         let source = sources.entry(finding.file.clone()).or_insert_with(|| {
-            let relative = safe_relative_finding_path(&finding.file)?;
-            let candidate = lexical_root.join(relative);
+            let (candidate, is_absolute) =
+                finding_source_candidate(&lexical_root, &finding.file, request_sources.is_some())?;
             let path = match request_sources {
+                Some(sources) if is_absolute => sources.trusted_regular_path(&candidate),
                 Some(sources) => sources.validated_regular_path(&lexical_root, &candidate),
                 None => source_path_for_candidate(
                     canonical_root
@@ -71,21 +72,28 @@ fn suppress_rule_findings_inner(
     });
 }
 
-fn safe_relative_finding_path(file: &str) -> Option<&Path> {
+fn finding_source_candidate(
+    root: &Path,
+    file: &str,
+    allow_absolute: bool,
+) -> Option<(PathBuf, bool)> {
     let path = Path::new(file);
-    if path.is_absolute()
-        || path.components().any(|component| {
-            matches!(
-                component,
-                std::path::Component::Prefix(_)
-                    | std::path::Component::RootDir
-                    | std::path::Component::ParentDir
-            )
-        })
+    if crate::codebase::ts_source::is_portably_absolute_path(path) {
+        return allow_absolute.then(|| (path.to_path_buf(), true));
+    }
+    if path.components().any(|component| {
+        matches!(
+            component,
+            std::path::Component::Prefix(_) | std::path::Component::RootDir
+        )
+    }) || (!allow_absolute
+        && path
+            .components()
+            .any(|component| matches!(component, std::path::Component::ParentDir)))
     {
         return None;
     }
-    Some(path)
+    Some((root.join(path), false))
 }
 
 fn source_path_for_candidate(canonical_root: &Path, candidate: PathBuf) -> Option<PathBuf> {

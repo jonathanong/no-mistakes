@@ -29,19 +29,88 @@ fn frozen_path_remapper_keeps_symlink_namespace_deterministic() {
     let missing_member = PathBuf::from("/definitely/missing-member.ts");
     let missing = PathBuf::from("/definitely/missing.ts");
     let first = FrozenPathRemapper::from_paths(vec![real.clone(), lexical.clone(), missing_member]);
-    let reversed = FrozenPathRemapper::from_paths(vec![lexical.clone(), real]);
+    let reversed = FrozenPathRemapper::from_paths(vec![lexical.clone(), real.clone()]);
 
-    // The remapper prefers the deterministic lexical path even if the source
-    // map arrives in reverse HashMap iteration order.
-    assert_eq!(first.remap(&lexical), lexical);
-    // This is already the real target after lexical normalization, so it
-    // exercises the canonical-map fast path without another stat call.
-    assert_eq!(first.remap(&normalized_real), lexical);
-    // The lexical symlink spelling is not a canonical map key; canonicalize
-    // falls back to the same frozen graph identity.
-    assert_eq!(first.remap(&noncanonical_link), lexical);
-    assert_eq!(reversed.remap(&noncanonical_link), lexical);
-    assert_eq!(first.remap(&missing), missing);
+    // Exact lexical paths retain their own graph identities.
+    assert_eq!(first.remap(&lexical), Some(lexical.clone()));
+    // A normalized alias is ambiguous because both lexical paths refer to the
+    // same file, so it must not select one based on discovery order.
+    assert_eq!(first.remap(&normalized_real), None);
+    assert_eq!(first.remap(&noncanonical_link), None);
+    assert_eq!(reversed.remap(&noncanonical_link), None);
+    assert_eq!(first.remap(&missing), None);
+}
+
+#[test]
+fn frozen_path_remapper_rejects_ambiguous_canonical_membership() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/symlink-workspace");
+    let lexical = root.join("link/src/value.ts");
+    let real = root.join("real/src/value.ts");
+    let remapper = FrozenPathRemapper::from_paths(vec![lexical, real]);
+
+    assert_eq!(
+        remapper.remap(&root.join("link/../link/src/value.ts")),
+        None,
+        "a non-exact lookup must not arbitrarily select one of two lexical paths to the same file"
+    );
+}
+
+#[test]
+fn frozen_path_remapper_preserves_exact_links_without_canonical_fallback() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/symlink-workspace");
+    let lexical = root.join("link/src/value.ts");
+    let remapper = FrozenPathRemapper::from_paths(vec![lexical.clone()]);
+
+    assert_eq!(remapper.remap(&lexical), Some(lexical));
+    assert_eq!(
+        remapper.remap(&root.join("link/src/value.ts")),
+        Some(root.join("link/src/value.ts"))
+    );
+
+    let real = root.join("real/src/value.ts");
+    let remapper = FrozenPathRemapper::from_paths(vec![real.clone()]);
+    assert_eq!(
+        remapper.remap(&root.join("real/../real/src/value.ts")),
+        Some(real),
+        "a normalized direct lookup retains the only visible spelling"
+    );
+}
+
+#[test]
+fn frozen_path_remapper_follows_actual_filesystem_case_resolution() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/symlink-workspace");
+    let tracked = root.join("real/src/value.ts");
+    let remapper = FrozenPathRemapper::from_paths(vec![tracked.clone()]);
+
+    let candidate = root.join("real/src/VALUE.ts");
+    let case_variant_resolves = candidate.canonicalize().ok() == tracked.canonicalize().ok();
+    assert_eq!(
+        remapper.remap(&candidate),
+        case_variant_resolves.then_some(tracked)
+    );
+}
+
+#[test]
+fn frozen_path_remapper_rejects_case_variant_symlink_real_ambiguity() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/symlink-workspace");
+    let remapper = FrozenPathRemapper::from_paths(vec![
+        root.join("link/src/value.ts"),
+        root.join("real/src/value.ts"),
+    ]);
+
+    let candidate = root.join("LINK/src/VALUE.ts");
+    let case_variant_reaches_the_file = candidate.canonicalize().is_ok();
+    assert_eq!(remapper.remap(&candidate), None);
+    if case_variant_reaches_the_file {
+        assert!(
+            remapper.remap(&candidate).is_none(),
+            "case-insensitive aliases still reject the symlink/real ambiguity"
+        );
+    }
 }
 
 #[test]

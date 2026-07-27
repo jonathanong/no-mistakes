@@ -62,7 +62,7 @@ fn imported_target_local_names(
                         resolver.visible_files()?,
                     )
                 })
-                .map(|resolved| remapper.remap(&resolved))
+                .and_then(|resolved| remapper.remap(&resolved))
                 .and_then(|resolved| target_symbols.get(&resolved))?;
             if exported_symbols.is_empty() {
                 return None;

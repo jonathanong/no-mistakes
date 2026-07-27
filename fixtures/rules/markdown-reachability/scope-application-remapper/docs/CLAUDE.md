@@ -1,0 +1,1 @@
+[Symlinked guide](guide-link)

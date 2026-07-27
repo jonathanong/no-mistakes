@@ -58,7 +58,7 @@ pub(super) fn resolve_workers<R: ImportResolverFacade>(
                 .processor_specifier
                 .as_ref()
                 .and_then(|spec| resolver.resolve(spec, path))
-                .map(|path| remapper.remap(&path));
+                .and_then(|path| remapper.remap(&path));
             out.push(InternalWorker { site, queue });
         }
     }
@@ -89,7 +89,9 @@ fn local_queues<R: ImportResolverFacade>(
         let Some(resolved) = resolver.resolve(&import.source, path) else {
             continue;
         };
-        let resolved = remapper.remap(&resolved);
+        let Some(resolved) = remapper.remap(&resolved) else {
+            continue;
+        };
         if let Some(exports) = queue_defs.get(&resolved) {
             if let Some(queue_name) = exports.get(&import.imported) {
                 map.insert(

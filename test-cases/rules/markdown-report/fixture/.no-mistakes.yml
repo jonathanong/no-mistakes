@@ -1,0 +1,12 @@
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    options:
+      baselineFile: reachability-baseline.json
+      rootFilenames: [CLAUDE.md]
+      indexFilenames: [README.md]
+  - rule: markdown-structure-budget
+    scope: repository
+    options:
+      maxLines: 1
+      baselineFile: structure-baseline.json

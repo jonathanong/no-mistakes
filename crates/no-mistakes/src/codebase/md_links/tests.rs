@@ -71,3 +71,9 @@ fn not_external_relative() {
     assert!(!is_external("../bar.ts"));
     assert!(!is_external("packages/api/src/index.mts"));
 }
+
+#[test]
+fn decodes_lowercase_hex_and_rejects_invalid_escapes() {
+    assert_eq!(decode_local_path("guides%2fprivate.md"), None);
+    assert_eq!(decode_local_path("guides/%zz.md"), None);
+}

@@ -27,6 +27,21 @@ fn dispatch_with_files_covers_all_rule_branches() {
     );
 }
 
+#[test]
+fn dispatch_with_files_returns_configuration_errors() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/filesystem-dispatch/invalid-config");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let error = run_filesystem_rules_with_visible_and_snapshot(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+        &[],
+        &snapshot,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("parse"), "{error:#}");
+}
+
 /// Cover all dispatch branches via `run_filesystem_rules`.
 /// Each rule's own `check()` fn is called; with an empty/non-git directory
 /// discover_files returns nothing, so no findings are emitted.
@@ -38,6 +53,67 @@ fn dispatch_standalone_covers_all_rule_branches() {
     assert!(
         findings.is_empty(),
         "empty directory should produce no findings: {findings:?}"
+    );
+}
+
+#[test]
+fn pre_discovered_entrypoints_do_not_start_another_discovery_snapshot() {
+    let entrypoints = include_str!("entrypoints.rs");
+    assert_eq!(
+        entrypoints.matches("VisiblePathSnapshot::new(").count(),
+        1,
+        "only the standalone entrypoint may discover paths"
+    );
+}
+
+#[test]
+fn visible_snapshot_entrypoint_excludes_untracked_markdown() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/filesystem-dispatch/markdown-visible-tracked");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let output = std::process::Command::new("git")
+        .current_dir(fixture.path())
+        .args(["rm", "--cached", "--", "untracked.md"])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(fixture.path());
+    let findings = crate::codebase::rules::run_filesystem_rules_with_visible_and_snapshot(
+        fixture.path(),
+        Some(&fixture.path().join(".no-mistakes.yml")),
+        &[
+            fixture.path().join("CLAUDE.md"),
+            fixture.path().join("tracked.md"),
+            fixture.path().join("untracked.md"),
+        ],
+        &snapshot,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn dispatcher_uses_scoped_baseline_inventory_for_markdown_rules() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/filesystem-dispatch/markdown-rules/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let files = [
+        "docs/CLAUDE.md",
+        "docs/tracked.md",
+        "docs/over-budget.md",
+        "baselines/reachability.json",
+        "baselines/structure.json",
+    ]
+    .map(|file| root.join(file));
+    let findings =
+        run_filesystem_rules_with_files(&root, Some(&root.join(".no-mistakes.yml")), &files)
+            .unwrap();
+
+    assert!(
+        findings.is_empty(),
+        "tracked baselines outside the scoped docs project must remain available: {findings:#?}"
     );
 }
 
