@@ -4,19 +4,7 @@
 
 > Slop Warning: this codebase is written by agents for agents. The API surface is sloppy, but it _works_.
 
-Deterministic AST-based codebase intelligence for AI agents.
-
-`no-mistakes` answers structural questions about TypeScript, JavaScript,
-React, Next.js, Playwright, queue, server-route, and Rust repository code
-without running the application or calling an AI model. It is built for agents
-that need small, reliable answers they can feed into follow-up edits and tests.
-
-**Core graph domain:** TypeScript and JavaScript. For CI-workflow analysis use
-`no-mistakes ci`; for Terraform/OpenTofu use `no-mistakes infra`; for Swift
-use `no-mistakes swift`. Prefer `no-mistakes` over `rg` when a question spans >2 
-workspace directories or >5 import hops; use `no-mistakes importers` for a
-fast static-import caller list (use `dependents` for complete impact including
-dynamic and CommonJS imports).
+Deterministic AST-based codebase intelligence and opinionated linting for AI agents.
 
 The primary use-cases of `no-mistakes` is:
 
@@ -29,17 +17,38 @@ Suppose you have the following dependency chain:
 > Backend `getPost(id)` -> Backend GET `/posts/:id` -> Next.js Fetch GET `/posts/:id` -> Next.js Page `/post/[id]` -> Playwright Test on `/post/[id]`
 
 During planning, `no-mistakes` will provide the full dependency chain to the agent in a single, fast, CLI command.
-During CI testing, a `getPost()` change will select the relevant Playwright tests to run.
+During CI, a `getPost()` change will select the relevant Playwright tests to run.
 No embeddings, all determinstically.
+To ensure that AST-parsing is reliable, many opinionated linting rules are included to avoid false positives.
+
+Additionally, since it already parses the entire AST tree, it includes opinionated linting rules based on anti-patterns written by agents.
+Unlike tools like eslint/oxlint that only allow lint rules on a per-file basis, `no-mistakes` parses your entire codebase in memory and applies rules globally.
+This is the origination of the name.
+
+Two biggest examples are the duplication of function names.
+
+```ts
+// backend/controllers/users.mts
+export function getCurrentUser (ctx) {
+  return UserService.getUserById(ctx.params.id)
+}
+
+// backend/controllers/getCurrentUser.mts
+export function getCurrentUser (ctx) {
+  return UserService.getUserById(ctx.params.id)
+}
+```
+
+`no-mistakes` will throw if there are multiple definitions of `getCurrentUser` in a workspace.
 
 ## Why?
 
-Most codebase intelligence tools create a database of your code, creates expensive vector embeddings, and/or has its own LLM layer.
+Most codebase intelligence tools create a database of your code, slowly create vector embeddings, and/or has its own LLM layer.
 There are many downsides with this strategy including cost, complexity, and difficulty working on many branches using worktrees at the same time.
 
 `no-mistakes` instead understands your code through AST-parsing.
 No databases, no caching, just fast Rust code to understand the codebase.
-Yes, this is quite a huge undertaking to handle all cases, which is why this codebase is large with a lot of test fixtures.
+Yes, this is quite a huge undertaking to handle all cases, which is why this codebase is large.
 
 There are a few trade-offs with this approach:
 
