@@ -18,11 +18,9 @@ where
 
         let mut edges = Vec::with_capacity(forward.values().map(Vec::len).sum());
         for (from, adjacent) in &forward {
-            edges.extend(
-                adjacent
-                    .iter()
-                    .map(|(to, kind)| CanonicalEdge::new(from.clone(), to.clone(), kind.clone())),
-            );
+            for (to, kind) in adjacent {
+                edges.push(CanonicalEdge::new(from.clone(), to.clone(), kind.clone()));
+            }
         }
         edges.sort_by(&mut compare);
         edges.dedup();
@@ -30,14 +28,10 @@ where
         let mut forward_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
         let mut reverse_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
         for (ordinal, edge) in edges.iter().enumerate() {
-            forward_ordinals
-                .entry(edge.from.clone())
-                .or_default()
-                .push(ordinal);
-            reverse_ordinals
-                .entry(edge.to.clone())
-                .or_default()
-                .push(ordinal);
+            let forward = forward_ordinals.entry(edge.from.clone()).or_default();
+            forward.push(ordinal);
+            let reverse = reverse_ordinals.entry(edge.to.clone()).or_default();
+            reverse.push(ordinal);
         }
 
         Self {
@@ -50,7 +44,7 @@ where
     }
 }
 
-fn assert_adjacency_maps_are_consistent<Node, Kind>(
+pub(super) fn assert_adjacency_maps_are_consistent<Node, Kind>(
     forward: &HashMap<Node, Vec<(Node, Kind)>>,
     reverse: &HashMap<Node, Vec<(Node, Kind)>>,
 ) where
