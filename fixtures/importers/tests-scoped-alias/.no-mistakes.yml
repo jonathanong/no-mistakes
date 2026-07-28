@@ -1,0 +1,3 @@
+tests:
+  vitest:
+    configs: packages/unit/vitest.config.ts

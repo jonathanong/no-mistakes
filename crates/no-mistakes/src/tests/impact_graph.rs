@@ -1,6 +1,6 @@
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{
-    DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphBuild, SymbolIndex,
+    DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphBuild,
 };
 use no_mistakes::codebase::test_discovery::{
     DiscoveredTests, FrameworkPreparationPlan, PreparedTestProjectRequest, TestRunner,
@@ -19,14 +19,35 @@ pub(crate) struct ImpactGraph {
     pub(crate) vitest_projects: Vec<no_mistakes::integration_tests::types::ConfigProject>,
     pub(crate) vitest_discovered: DiscoveredTests,
     pub(crate) visible_files: HashSet<PathBuf>,
-    reverse_index: Option<SymbolIndex>,
 }
 
-impl ImpactGraph {
-    pub(crate) fn file_importers(&self, file: &Path) -> Option<Vec<PathBuf>> {
-        self.reverse_index
-            .as_ref()
-            .map(|index| index.file_importers(file))
+/// Test impact plus the union fact map collected for an enclosing reverse
+/// query. The graph takes the broader runner catalog; the caller projects the
+/// same facts through its own ordinary catalog for reverse-query fields.
+pub(crate) struct PreparedImpactGraph {
+    pub(crate) impact: ImpactGraph,
+    facts: no_mistakes::codebase::ts_source::facts::TsFactMap,
+}
+
+pub(crate) struct ReverseQueryImpactRequest<'a> {
+    pub(crate) root: &'a Path,
+    pub(crate) tsconfig_path: Option<&'a Path>,
+    pub(crate) config: &'a NoMistakesConfig,
+    pub(crate) config_path: Option<&'a Path>,
+    pub(crate) visible: &'a VisiblePathSnapshot,
+    pub(crate) sources: &'a Arc<SourceStore>,
+    pub(crate) session: &'a Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
+    pub(crate) ordinary_graph_files: &'a GraphFiles,
+}
+
+impl PreparedImpactGraph {
+    pub(crate) fn into_parts(
+        self,
+    ) -> (
+        ImpactGraph,
+        no_mistakes::codebase::ts_source::facts::TsFactMap,
+    ) {
+        (self.impact, self.facts)
     }
 }
 
@@ -39,7 +60,8 @@ struct PreparedImpactGraphRequest<'a> {
     sources: &'a Arc<SourceStore>,
     session: &'a Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
     include_symbols: bool,
-    build_reverse_index: bool,
+    additional_indexable: &'a [PathBuf],
+    additional_fact_plan: no_mistakes::codebase::ts_source::facts::TsFactPlan,
 }
 
 /// Build the canonical graph shared by the CLI and N-API impact entrypoints.
@@ -57,32 +79,40 @@ pub(crate) fn build_test_impact_graph(
     );
     let visible = session.visible_paths(root);
     let sources = session.dataset(root).sources_for(root);
-    build_test_impact_graph_with_prepared(PreparedImpactGraphRequest {
+    Ok(
+        build_test_impact_graph_for_request(PreparedImpactGraphRequest {
+            root,
+            tsconfig_path,
+            config,
+            config_path,
+            visible: &visible,
+            sources: &sources,
+            session: &session,
+            include_symbols,
+            additional_indexable: &[],
+            additional_fact_plan: Default::default(),
+        })?
+        .impact,
+    )
+}
+
+/// Build test impact and the union TS facts needed by an enclosing reverse
+/// query. The caller must project the returned facts through its ordinary
+/// catalog; the broader runner catalog below remains test-impact-only.
+pub(crate) fn build_test_impact_graph_for_reverse_query_with_prepared(
+    request: ReverseQueryImpactRequest<'_>,
+) -> Result<PreparedImpactGraph> {
+    let ReverseQueryImpactRequest {
         root,
         tsconfig_path,
         config,
         config_path,
-        visible: &visible,
-        sources: &sources,
-        session: &session,
-        include_symbols,
-        build_reverse_index: false,
-    })
-}
-
-/// Build test-impact relationships from the caller's request-scoped snapshot
-/// and source/session caches, additionally retaining the reverse import index
-/// needed by `importers --tests`.
-pub(crate) fn build_test_impact_graph_with_prepared_reverse_index(
-    root: &Path,
-    tsconfig_path: Option<&Path>,
-    config: &NoMistakesConfig,
-    config_path: Option<&Path>,
-    visible: &VisiblePathSnapshot,
-    sources: &Arc<SourceStore>,
-    session: &Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
-) -> Result<ImpactGraph> {
-    build_test_impact_graph_with_prepared(PreparedImpactGraphRequest {
+        visible,
+        sources,
+        session,
+        ordinary_graph_files,
+    } = request;
+    let impact = build_test_impact_graph_for_request(PreparedImpactGraphRequest {
         root,
         tsconfig_path,
         config,
@@ -91,13 +121,16 @@ pub(crate) fn build_test_impact_graph_with_prepared_reverse_index(
         sources,
         session,
         include_symbols: false,
-        build_reverse_index: true,
-    })
+        additional_indexable: ordinary_graph_files.indexable(),
+        additional_fact_plan:
+            no_mistakes::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
+    })?;
+    Ok(impact)
 }
 
-fn build_test_impact_graph_with_prepared(
+fn build_test_impact_graph_for_request(
     request: PreparedImpactGraphRequest<'_>,
-) -> Result<ImpactGraph> {
+) -> Result<PreparedImpactGraph> {
     let PreparedImpactGraphRequest {
         root,
         tsconfig_path,
@@ -107,7 +140,8 @@ fn build_test_impact_graph_with_prepared(
         sources,
         session,
         include_symbols,
-        build_reverse_index,
+        additional_indexable,
+        additional_fact_plan,
     } = request;
     let visible_paths = visible.paths_for(root);
     let sources = Arc::clone(sources);
@@ -168,10 +202,7 @@ fn build_test_impact_graph_with_prepared(
             graph_plan,
             &preliminary_graph_config,
         );
-    if build_reverse_index {
-        runner_fact_plan
-            .include(no_mistakes::codebase::ts_source::facts::TsFactPlan::imports_and_symbols());
-    }
+    runner_fact_plan.include(additional_fact_plan);
     let mut projects =
         no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
             root,
@@ -248,37 +279,47 @@ fn build_test_impact_graph_with_prepared(
             graph_plan,
             &prepared_graph_config,
         );
-    if build_reverse_index {
-        fact_plan
-            .include(no_mistakes::codebase::ts_source::facts::TsFactPlan::imports_and_symbols());
-    }
+    fact_plan.include(additional_fact_plan);
     let mut facts = projects.graph_facts().clone();
-    let remaining = graph_files
-        .indexable()
+    let mut fact_paths = graph_files.indexable().to_vec();
+    fact_paths.extend_from_slice(additional_indexable);
+    fact_paths.sort();
+    fact_paths.dedup();
+    let recovered_error_paths = fact_paths
         .iter()
-        .filter(|path| !facts.contains_key(*path))
+        .filter(|path| {
+            facts
+                .get(*path)
+                .is_some_and(|facts| facts.parse_error.is_some())
+        })
+        .cloned()
+        .collect::<HashSet<_>>();
+    let remaining = fact_paths
+        .iter()
+        .filter(|path| {
+            !facts.contains_key(*path)
+                // Runner-config parsing uses strict program mode. Its
+                // parse-error-only helper facts cannot satisfy dependency
+                // graph construction: recovered TS facts may still contain
+                // imports. Recollect them for both standalone impact and the
+                // reverse-query projection so their graph semantics match.
+                || recovered_error_paths.contains(*path)
+        })
         .cloned()
         .collect::<Vec<_>>();
+    let mut serial_fact_paths = recovered_error_paths.into_iter().collect::<Vec<_>>();
+    serial_fact_paths.sort();
+    serial_fact_paths.dedup();
     facts.extend(
-        no_mistakes::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
+        crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session_serializing_paths(
             session,
             &remaining,
             fact_plan,
             &fact_context,
             &sources,
+            &serial_fact_paths,
         ),
     );
-    let reverse_index = build_reverse_index.then(|| {
-        SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
-            &tsconfig,
-            Some(&catalog),
-            &graph_files,
-            &facts,
-            prepared_graph_config.workspace(),
-            None,
-            session,
-        )
-    });
     let graph = DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
         PreparedGraphBuild {
             root,
@@ -296,13 +337,15 @@ fn build_test_impact_graph_with_prepared(
         },
         Arc::clone(session),
     )?;
-    Ok(ImpactGraph {
-        graph: graph.with_vitest_setup_projects(projects.vitest_setup_projects()),
-        test_filter,
-        vitest_projects,
-        vitest_discovered,
-        visible_files: visible_paths.iter().cloned().collect(),
-        reverse_index,
+    Ok(PreparedImpactGraph {
+        impact: ImpactGraph {
+            graph: graph.with_vitest_setup_projects(projects.vitest_setup_projects()),
+            test_filter,
+            vitest_projects,
+            vitest_discovered,
+            visible_files: visible_paths.iter().cloned().collect(),
+        },
+        facts,
     })
 }
 

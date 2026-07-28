@@ -59,8 +59,8 @@ impl AnalysisSession {
         result
     }
 
-    /// Parse through the recovered-program gateway while preserving the TS
-    /// fact collector's explicit unknown-extension fallback.
+    /// Parse unknown extensions as TypeScript while retaining recovered
+    /// diagnostics. This preserves the fact collector's direct-file fallback.
     pub(crate) fn with_recovered_typescript_program<T>(
         &self,
         path: &Path,

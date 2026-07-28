@@ -42,10 +42,15 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 ## Prepared analysis ownership
 
 - A public CLI, N-API entrypoint, or integration runner creates exactly one
-  request-scoped prepared analysis/session. It owns the visible-file inventory,
-  `SourceStore`, resolver/catalog, requested TS facts, and canonical graph for
-  that request. Lower layers borrow those prepared inputs; they do not create a
-  competing session, inventory, store, resolver, or graph.
+  request-scoped analysis session. It owns the visible-file inventory,
+  `SourceStore`, requested TS facts, and canonical relationship data for that
+  request. Lower layers borrow those prepared inputs; they do not create a
+  competing session, inventory, store, fact pass, or equivalent graph.
+- Semantically distinct resolver/catalog projections may coexist inside that
+  ownership boundary when one request needs them (for example, ordinary
+  codebase resolution plus broader test-runner project resolution). They must
+  share the request inventory, sources, and union fact pass, and each output
+  field must use the projection whose scope defines its public semantics.
 - Declare the complete fact and relationship demand at the boundary before
   collection. Domain checks and graph edge producers consume the prepared
   `TsFactLookup`/fact map, including failure entries, instead of collecting
@@ -59,6 +64,16 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   dependency graph (or its prepared symbol/reverse projection). Commands,
   checks, and reports project/filter those relationships; they must not each
   rebuild an equivalent reverse index or a private graph shape.
+- Treat the resolver catalog, candidate-file universe, configuration fallback,
+  and relationship filters as part of a prepared analysis's semantics, not just
+  implementation details. Reuse a prepared graph or reverse projection only
+  when those inputs are equivalent for the fields being produced; a broader
+  runner/project catalog must not answer an ordinary codebase query.
+- Additive CLI flags must not change pre-existing report fields. For example,
+  requesting test impact may add `testImpact`, but it must not change ordinary
+  `directImporters` or `dependentsCount`. When an additive analysis uses broader
+  resolver scope, add a fixture-backed parity test that compares the baseline
+  fields with the flag both off and on.
 - Keep bindings declarative per layer: extract syntactic imports, exports, and
   domain occurrences into facts; resolve paths and ownership in the prepared
   resolver/catalog layer; then project graph/query relationships. Do not blend

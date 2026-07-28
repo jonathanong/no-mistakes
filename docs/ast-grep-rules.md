@@ -138,14 +138,19 @@ The following path-scoped rules protect performance and DRY boundaries that
 generic Rust/JS patterns can observe:
 
 - `no-unprepared-domain-fact-collection` reserves
-  `collect_domain_facts` for the canonical TS fact gateway and the unified
-  check-fact pass. Both own an explicit graph fact plan and collect from the
-  same per-file program; every leaf consumer must use their prepared facts.
+  `collect_domain_facts` for the canonical TS fact gateway (including its
+  per-file extraction submodule) and the unified check-fact pass. Both own an
+  explicit graph fact plan and collect from the same per-file program; every
+  leaf consumer must use their prepared facts.
 - `no-reverse-query-standalone-index` covers `codebase/queries/**`. Reverse
   queries may not rediscover graph files, including in the projection owner.
   Its companion `no-reverse-query-leaf-projection` prevents query leaves from
   collecting TS facts or building `SymbolIndex`; those operations belong only
-  to the prepared owner in `reverse.rs`.
+  to the prepared owner in `reverse.rs`. Prepared inputs are reusable only when
+  their resolver catalog, candidate files, fallbacks, and relationship filters
+  preserve the query's semantics; the structural rule cannot prove that
+  equivalence, so `CLAUDE.md` additionally requires baseline-field parity tests
+  when an additive flag introduces a broader analysis scope.
 - `no-global-edge-vector-dedup` protects canonical graph finalization in
   `edge_index/build.rs`. A full `edges` vector there must be produced by the
   normalized-adjacency flatten, not globally sorted and deduplicated after the

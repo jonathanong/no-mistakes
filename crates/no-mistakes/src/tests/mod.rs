@@ -216,7 +216,8 @@ pub fn run(args: TestsArgs) -> Result<ExitCode> {
 const _: fn(TestsArgs) -> Result<ExitCode> = run;
 
 pub(crate) use impact_graph::{
-    build_test_impact_graph, build_test_impact_graph_with_prepared_reverse_index,
+    build_test_impact_graph, build_test_impact_graph_for_reverse_query_with_prepared,
+    ReverseQueryImpactRequest,
 };
 
 #[cfg(test)]

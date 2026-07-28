@@ -76,10 +76,6 @@ pub(crate) fn build_reverse_analysis_with_plan(
     let mut plan = crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols();
     plan.include(additional_plan);
     let prepared = target.prepare_reverse()?;
-    let target_tsconfig = prepared
-        .tsconfig_catalog
-        .config_for(&target.abs_file)
-        .clone();
     let facts =
         crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
             &target.session,
@@ -88,20 +84,36 @@ pub(crate) fn build_reverse_analysis_with_plan(
             &crate::codebase::ts_source::facts::TsFactContext::default(),
             &target.sources,
         );
-    let index = SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
-        &target_tsconfig,
-        Some(&prepared.tsconfig_catalog),
-        &prepared.graph_files,
-        &facts,
-        &prepared.workspace,
-        None,
-        &target.session,
-    );
+    let (index, target_tsconfig) = build_reverse_index_from_prepared(target, &prepared, &facts);
     Ok(ReverseAnalysis {
         index,
         facts,
         target_tsconfig,
     })
+}
+
+/// Project already-collected facts through the ordinary reverse-query catalog.
+/// Callers may share facts with a broader analysis, but the resolver/catalog
+/// used for ordinary importer output remains the one prepared by `Target`.
+pub(crate) fn build_reverse_index_from_prepared(
+    target: &Target,
+    prepared: &super::shared::ReversePrepared,
+    facts: &crate::codebase::ts_source::facts::TsFactMap,
+) -> (SymbolIndex, crate::codebase::ts_resolver::TsConfig) {
+    let target_tsconfig = prepared
+        .tsconfig_catalog
+        .config_for(&target.abs_file)
+        .clone();
+    let index = SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
+        &target_tsconfig,
+        Some(&prepared.tsconfig_catalog),
+        &prepared.graph_files,
+        facts,
+        &prepared.workspace,
+        None,
+        &target.session,
+    );
+    (index, target_tsconfig)
 }
 
 /// The symbol name a concrete export is indexed under. Default exports are

@@ -20,6 +20,7 @@ mod plan;
 pub use call_sites::CallSiteFact;
 pub(crate) use collect::{
     collect_file_facts_from_program, collect_ts_facts_with_context_sources_and_session,
+    collect_ts_facts_with_context_sources_and_session_serializing_paths,
 };
 pub use collect::{
     collect_ts_facts, collect_ts_facts_with_context, collect_ts_facts_with_context_and_sources,
