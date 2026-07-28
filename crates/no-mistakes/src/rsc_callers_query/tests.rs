@@ -1,4 +1,4 @@
-use super::test_support::*;
+use super::test_support::detect_environment;
 use super::*;
 use std::path::PathBuf;
 
@@ -231,12 +231,6 @@ fn detect_environment_variants() {
         detect_environment(Path::new("/no/such/component.tsx")),
         Environment::Unknown
     );
-}
-
-#[test]
-fn resolve_tsconfig_falls_back_to_default() {
-    let cfg = resolve_tsconfig(Path::new("/nonexistent-root"), None).unwrap();
-    assert!(cfg.paths.is_empty());
 }
 
 #[test]

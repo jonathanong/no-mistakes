@@ -23,20 +23,19 @@ impl ReverseAnalysis {
     }
 
     pub(crate) fn symbols(&self, target: &Target) -> Result<FileSymbols> {
-        let facts = self
-            .facts
-            .get(&target.abs_file)
-            .ok_or_else(|| anyhow::anyhow!("missing facts for {}", target.abs_file.display()))?;
+        let Some(facts) = self.facts.get(&target.abs_file) else {
+            anyhow::bail!("missing facts for {}", target.abs_file.display());
+        };
         if let Some(error) = &facts.parse_error {
             anyhow::bail!(
                 "extracting symbols from {}: {error}",
                 target.abs_file.display()
             );
         }
-        facts
-            .symbols
-            .clone()
-            .ok_or_else(|| anyhow::anyhow!("missing symbols for {}", target.abs_file.display()))
+        let Some(symbols) = facts.symbols.clone() else {
+            anyhow::bail!("missing symbols for {}", target.abs_file.display());
+        };
+        Ok(symbols)
     }
 }
 
@@ -231,3 +230,6 @@ pub(crate) fn export_kind_str(kind: &ExportKind) -> &'static str {
         ExportKind::ReExport { .. } => "re-export",
     }
 }
+
+#[cfg(test)]
+mod tests;
