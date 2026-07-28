@@ -86,34 +86,35 @@ impl Target {
     /// actually resolves an import. Reverse queries use their full catalog
     /// instead and therefore never parse this automatic target config twice.
     pub(crate) fn tsconfig(&self) -> Result<&TsConfig> {
-        let result = self.tsconfig.get_or_init(|| {
-            match self.explicit_tsconfig.as_deref() {
-                Some(path) => self
-                    .dataset
-                    .tsconfig(Some(path))
-                    .map(|config| (*config).clone()),
-                None => crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+        let result = self.tsconfig.get_or_init(|| match self.explicit_tsconfig.as_deref() {
+            Some(path) => match self.dataset.tsconfig(Some(path)) {
+                Ok(config) => Ok((*config).clone()),
+                Err(error) => Err(format!("{error:#}")),
+            },
+            None => {
+                let config = match crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
                     None,
                     &self.abs_file,
                     &self.dataset.paths_for(&self.root),
                     &self.sources,
-                )
-                // Automatic config discovery remains best effort for these
-                // queries. Explicit `--tsconfig` stays authoritative above.
-                .or_else(|_| {
-                    Ok(TsConfig {
+                ) {
+                    Ok(config) => config,
+                    // Automatic config discovery remains best effort for these
+                    // queries. Explicit `--tsconfig` stays authoritative above.
+                    Err(_) => TsConfig {
                         dir: self.root.clone(),
                         paths: Vec::new(),
                         paths_dir: self.root.clone(),
                         base_url: None,
-                    })
-                }),
+                    },
+                };
+                Ok(config)
             }
-            .map_err(|error| format!("{error:#}"))
         });
-        result
-            .as_ref()
-            .map_err(|error| anyhow::anyhow!(error.clone()))
+        match result {
+            Ok(config) => Ok(config),
+            Err(error) => Err(anyhow::anyhow!(error.clone())),
+        }
     }
 
     pub(crate) fn prepare_reverse(&self) -> Result<ReversePrepared> {
