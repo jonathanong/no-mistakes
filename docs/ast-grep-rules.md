@@ -146,7 +146,7 @@ generic Rust/JS patterns can observe:
   Its companion `no-reverse-query-leaf-projection` prevents query leaves from
   collecting TS facts or building `SymbolIndex`; those operations belong only
   to the prepared owner in `reverse.rs`.
-- `no-global-edge-vector-dedup` protects the canonical graph finalizer in
+- `no-global-edge-vector-dedup` protects canonical graph finalization in
   `edge_index/build.rs`. A full `edges` vector there must be produced by the
   normalized-adjacency flatten, not globally sorted and deduplicated after the
   fact. Deduplication belongs to per-source adjacency normalization or

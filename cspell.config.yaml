@@ -18,6 +18,7 @@ words:
   - callsite
   - callsites
   - cooldown
+  - dedup
   - dtolnay
   - codebase
   - codecov
@@ -32,8 +33,10 @@ words:
   - invalidators
   - jsonc
   - linecount
+  - libuv
   - lockfiles
   - markdown
+  - napi
   - nextjs
   - Ong
   - oxlint
