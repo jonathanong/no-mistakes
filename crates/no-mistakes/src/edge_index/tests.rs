@@ -144,3 +144,15 @@ fn direct_adjacency_constructor_rejects_reverse_only_edges() {
 
     let _ = EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| left.cmp(right));
 }
+
+#[test]
+fn direct_adjacency_constructor_accepts_consistent_edges() {
+    let mut forward = HashMap::new();
+    forward.insert("a".to_owned(), vec![("b".to_owned(), 1_u8)]);
+    let mut reverse = HashMap::new();
+    reverse.insert("b".to_owned(), vec![("a".to_owned(), 1_u8)]);
+
+    let index = EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| left.cmp(right));
+
+    assert_eq!(index.edges(), &[edge("a", "b", 1)]);
+}
