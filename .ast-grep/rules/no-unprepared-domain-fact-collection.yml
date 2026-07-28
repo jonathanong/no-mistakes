@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Domain extraction is the canonical TS fact gateway's job. A second caller
+# reparses/recollects data that the request plan should have prepared already.
+id: no-unprepared-domain-fact-collection
+language: rust
+severity: error
+message: >-
+  Direct domain fact collection outside the canonical TS fact gateway. Add the
+  domain to the prepared TsFactPlan and consume the request's TsFactLookup
+  instead, so all consumers share one parse and fact collection pass.
+rule:
+  any:
+    - pattern: collect_domain_facts($$$)
+    - pattern: domain::collect_domain_facts($$$)
+    - pattern: facts::domain::collect_domain_facts($$$)
+    - pattern: crate::codebase::ts_source::facts::domain::collect_domain_facts($$$)
+files:
+  - "crates/no-mistakes/src/**"
+ignores:
+  # This is the single canonical owner that translates a declared fact plan
+  # into per-file domain facts. Keep every consumer outside it caught.
+  - "crates/no-mistakes/src/codebase/ts_source/facts/collect.rs"
+  # The unified check-fact pass also owns a declared graph fact plan so checks
+  # and graph construction share the same per-file program.
+  - "crates/no-mistakes/src/codebase/check_facts/file/program.rs"
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes/src/**/test_support.rs"

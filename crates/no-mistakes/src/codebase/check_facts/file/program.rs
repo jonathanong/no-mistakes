@@ -38,6 +38,11 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         None
     };
+    let call_sites = if plan.graph.call_sites {
+        facts::call_sites::collect_call_site_facts(program, source)
+    } else {
+        Vec::new()
+    };
     let react = if plan.react || plan.graph.react {
         Some(std::sync::Arc::new(
             match plan.graph_context.visible_files.as_deref() {
@@ -123,6 +128,7 @@ pub(crate) fn collect_file_facts_from_program(
         parse_error: None,
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
+        call_sites,
         resource_calls: resources.calls,
         resource_diagnostics: resources.diagnostics,
         symbol_references: import_facts.symbol_references,

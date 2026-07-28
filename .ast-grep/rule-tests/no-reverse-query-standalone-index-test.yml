@@ -1,0 +1,17 @@
+id: no-reverse-query-standalone-index
+valid:
+  - |
+    fn importers(prepared: &PreparedSymbolCatalog, file: &Path) {
+        let importers = prepared.file_importers(file);
+    }
+  - |
+    fn build(target: &Target, files: &GraphFiles, facts: &TsFactMap) -> SymbolIndex {
+        SymbolIndex::build_from_facts(&target.root, &target.tsconfig, files, facts)
+    }
+invalid:
+  - |
+    fn build(target: &Target) -> Result<SymbolIndex> {
+        let files = GraphFiles::discover(&target.root);
+        let facts = collect_ts_facts(files.indexable(), TsFactPlan::imports_and_symbols());
+        Ok(SymbolIndex::build_from_facts(&target.root, &target.tsconfig, &files, &facts))
+    }

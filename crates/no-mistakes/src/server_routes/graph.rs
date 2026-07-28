@@ -3,7 +3,7 @@ use crate::codebase::ts_resolver::{
     TsConfigCatalog,
 };
 use crate::config::v2::ConfigView;
-use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
+use crate::edge_index::{CanonicalEdge, PreparedRelationshipIndex};
 use crate::server_routes::model::{FileFacts, PreparedProjectReport, ProjectReport, RouteSite};
 use crate::server_routes::mounts::{prefixes_for, resolve_mounts_with_resolver};
 use crate::server_routes::normalize::{join_paths, normalize_route};

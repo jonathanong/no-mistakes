@@ -44,6 +44,32 @@ fn plan_constructors_select_expected_fact_sets() {
 }
 
 #[test]
+fn call_site_facts_are_collected_only_when_requested() {
+    let file = fixture("imports.ts");
+    let without_call_sites = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan::imports_and_symbols(),
+    );
+    assert!(without_call_sites[&file].call_sites.is_empty());
+
+    let with_call_sites = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan {
+            call_sites: true,
+            ..TsFactPlan::imports_and_symbols()
+        },
+    );
+    let call_site = with_call_sites[&file]
+        .call_sites
+        .iter()
+        .find(|site| site.callee == "helper")
+        .expect("helper call site");
+    assert_eq!(call_site.line, 3);
+    assert_eq!(call_site.arg_count, 0);
+    assert!(call_site.caller.is_none());
+}
+
+#[test]
 fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
     let file = fixture("imports.ts");
     let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
@@ -291,6 +317,10 @@ fn plan_empty_detection_tracks_all_flags() {
             ..TsFactPlan::default()
         },
         TsFactPlan {
+            call_sites: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
             route_refs: true,
             ..TsFactPlan::default()
         },
@@ -349,6 +379,22 @@ fn plan_coverage_tracks_effect_and_rsc_facts() {
     }));
     assert!(!TsFactPlan::default().covers(TsFactPlan {
         rsc_environment: true,
+        ..TsFactPlan::default()
+    }));
+}
+
+#[test]
+fn plan_coverage_tracks_call_site_facts() {
+    let available = TsFactPlan {
+        call_sites: true,
+        ..TsFactPlan::default()
+    };
+    assert!(available.covers(TsFactPlan {
+        call_sites: true,
+        ..TsFactPlan::default()
+    }));
+    assert!(!TsFactPlan::default().covers(TsFactPlan {
+        call_sites: true,
         ..TsFactPlan::default()
     }));
 }

@@ -85,6 +85,24 @@ fn config_parse_failures_are_memoized_exactly_once() {
 }
 
 #[test]
+fn config_path_selection_failures_are_memoized_and_accounted_for() {
+    let root = repository_fixture("test-cases/codebase-analysis/queries/fixture");
+    let (dataset, observer) = observed_dataset(&root);
+
+    let first = dataset.config(Some(Path::new("missing.no-mistakes.yml")));
+    let second = dataset.config(Some(Path::new("missing.no-mistakes.yml")));
+
+    assert!(first.is_err());
+    assert!(second.is_err());
+    let work = observer.snapshot().work;
+    assert_eq!(work["manifest.requests"], 2);
+    assert_eq!(work.get("manifest.parses"), None);
+    assert_eq!(work["manifest.errors"], 1);
+    assert_eq!(work["manifest.cache_hits"], 1);
+    assert_eq!(dataset.sources_for(&root).physical_read_count(), 0);
+}
+
+#[test]
 fn automatic_and_explicit_manifest_paths_share_cache_entries() {
     let root =
         repository_fixture("test-cases/codebase-analysis/forbidden-dependencies-passes/fixture");

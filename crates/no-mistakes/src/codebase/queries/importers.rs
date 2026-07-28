@@ -1,8 +1,8 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::build_index;
+use super::reverse::build_reverse_analysis;
 use super::shared::{rel_str, resolve_target, Target};
 use crate::cli::Format;
-use crate::tests::impact::generate_impact_plan;
+use crate::tests::impact::generate_impact_plan_with_prepared;
 use crate::tests::ImpactArgs;
 use anyhow::Result;
 use is_terminal::IsTerminal;
@@ -57,43 +57,68 @@ pub struct ImportersReport {
     test_impact: Option<TestImpact>,
 }
 
-fn test_impact(args: &ImportersArgs, target: &Target) -> Result<TestImpact> {
-    let plan = generate_impact_plan(&ImpactArgs {
-        entrypoints: vec![target.abs_file.display().to_string()],
-        // Pass an empty structured symbol so a literal `#` in the path is not
-        // parsed as a `file#symbol` entrypoint.
-        entrypoint_symbols: vec![Some(String::new())],
-        include_symbols: false,
-        root: target.root.clone(),
-        config: None,
-        tsconfig: args.tsconfig.clone(),
-        format: None,
-        json: false,
-    })?;
+fn test_impact(args: &ImportersArgs, target: &Target) -> Result<(TestImpact, Vec<String>)> {
+    let config = target.config(None)?;
+    let impact_graph = crate::tests::build_test_impact_graph_with_prepared_reverse_index(
+        &target.root,
+        args.tsconfig.as_deref(),
+        config.as_ref(),
+        None,
+        &target.visible_paths,
+        &target.sources,
+        &target.session,
+    )?;
+    let direct_importers = impact_graph
+        .file_importers(&target.abs_file)
+        .expect("prepared importers impact graph has a reverse index")
+        .iter()
+        .map(|importer| rel_str(importer, &target.root))
+        .collect();
+    let plan = generate_impact_plan_with_prepared(
+        &ImpactArgs {
+            entrypoints: vec![target.abs_file.display().to_string()],
+            // Pass an empty structured symbol so a literal `#` in the path is not
+            // parsed as a `file#symbol` entrypoint.
+            entrypoint_symbols: vec![Some(String::new())],
+            include_symbols: false,
+            root: target.root.clone(),
+            config: None,
+            tsconfig: args.tsconfig.clone(),
+            format: None,
+            json: false,
+        },
+        &target.root,
+        &config,
+        impact_graph,
+    )?;
     let tests: Vec<String> = plan
         .selected_tests
         .into_iter()
         .map(|test| test.test_file)
         .collect();
-    Ok(TestImpact {
-        count: tests.len(),
-        tests,
-    })
+    Ok((
+        TestImpact {
+            count: tests.len(),
+            tests,
+        },
+        direct_importers,
+    ))
 }
 
 fn compute(args: &ImportersArgs) -> Result<ImportersReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let index = build_index(&target)?;
-    let direct_importers: Vec<String> = index
-        .file_importers(&target.abs_file)
-        .iter()
-        .map(|importer| rel_str(importer, &target.root))
-        .collect();
-
-    let test_impact = if args.tests {
-        Some(test_impact(args, &target)?)
+    let (direct_importers, test_impact) = if args.tests {
+        let (impact, importers) = test_impact(args, &target)?;
+        (importers, Some(impact))
     } else {
-        None
+        let analysis = build_reverse_analysis(&target)?;
+        let importers = analysis
+            .index
+            .file_importers(&target.abs_file)
+            .iter()
+            .map(|importer| rel_str(importer, &target.root))
+            .collect();
+        (importers, None)
     };
 
     Ok(ImportersReport {

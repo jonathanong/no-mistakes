@@ -138,6 +138,11 @@ pub(crate) fn collect_file_facts_from_program(
     let symbols = plan
         .symbols
         .then(|| std::sync::Arc::new(extract_symbols_from_program(program, source)));
+    let call_sites = if plan.call_sites {
+        super::call_sites::collect_call_site_facts(program, source)
+    } else {
+        Vec::new()
+    };
     let domain = if plan.has_domain_facts() {
         domain::collect_domain_facts(program, path, source, plan, context)
     } else {
@@ -168,6 +173,7 @@ pub(crate) fn collect_file_facts_from_program(
         source: plan.source.then(|| source.to_owned()),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
+        call_sites,
         resource_calls: resources.calls,
         resource_diagnostics: resources.diagnostics,
         symbol_references: import_facts.symbol_references,

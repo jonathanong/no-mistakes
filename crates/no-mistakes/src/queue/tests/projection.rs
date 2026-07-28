@@ -1,5 +1,6 @@
 use super::*;
-use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
+use crate::edge_index::{CanonicalEdge, PreparedRelationshipIndex};
+use crate::queue::graph_build::public_node;
 use crate::queue::graph_model::PreparedProjectReport;
 use crate::queue::types::{JobKey, RelationshipNode};
 
@@ -14,7 +15,7 @@ fn typed_index_preserves_colliding_file_and_job_nodes() {
     });
     let worker = RelationshipNode::File(root.join("worker.ts"));
     let report = PreparedProjectReport {
-        root,
+        root: root.clone(),
         report: ProjectReport {
             producers: vec![],
             workers: vec![],
@@ -23,15 +24,13 @@ fn typed_index_preserves_colliding_file_and_job_nodes() {
             diagnostics: vec![],
             check: vec![],
         },
-        index: EdgeIndex::from_edges([
-            CanonicalEdge::new(file.clone(), job.clone(), EdgeKind::QueueEnqueue),
-            CanonicalEdge::new(job.clone(), worker.clone(), EdgeKind::QueueWorker),
-        ]),
-        nodes_by_name: HashMap::from([
-            ("queues.ts#send".into(), vec![file.clone(), job.clone()]),
-            ("worker.ts".into(), vec![worker]),
-        ]),
-        aliases: NodeAliases::from_groups([vec![file, job]]),
+        relationships: PreparedRelationshipIndex::from_edges(
+            [
+                CanonicalEdge::new(file, job.clone(), EdgeKind::QueueEnqueue),
+                CanonicalEdge::new(job, worker, EdgeKind::QueueWorker),
+            ],
+            |node| public_node(&root, node),
+        ),
     };
 
     assert_eq!(

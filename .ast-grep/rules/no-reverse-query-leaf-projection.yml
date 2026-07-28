@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+id: no-reverse-query-leaf-projection
+language: rust
+severity: error
+message: >-
+  Reverse-query leaves must consume the prepared reverse projection. Fact
+  collection and SymbolIndex construction belong only in reverse.rs.
+rule:
+  any:
+    - pattern: collect_ts_facts($$$)
+    - pattern: crate::codebase::ts_source::facts::collect_ts_facts($$$)
+    - pattern: collect_ts_facts_with_context_sources_and_session($$$)
+    - pattern: crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session($$$)
+    - pattern: SymbolIndex::build($$$)
+    - pattern: SymbolIndex::build_from_root($$$)
+    - pattern: SymbolIndex::build_from_files($$$)
+    - pattern: SymbolIndex::build_from_facts($$$)
+    - pattern: SymbolIndex::build_from_facts_with_session($$$)
+    - pattern: SymbolIndex::build_from_facts_workspace_resolution_cache_and_session($$$)
+files:
+  - "crates/no-mistakes/src/codebase/queries/**"
+ignores:
+  - "crates/no-mistakes/src/codebase/queries/reverse.rs"
+  - "crates/no-mistakes/src/codebase/queries/**/tests/**"
+  - "crates/no-mistakes/src/codebase/queries/**/*_tests.rs"
+  - "crates/no-mistakes/src/codebase/queries/**/tests.rs"
+  - "crates/no-mistakes/src/codebase/queries/**/test_support.rs"

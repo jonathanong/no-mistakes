@@ -1,4 +1,4 @@
-use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
+use crate::edge_index::{CanonicalEdge, PreparedRelationshipIndex};
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_model::{
     dedup_sorted, diagnostics, node_name, InternalProducer, InternalWorker, PreparedProjectReport,
@@ -26,41 +26,17 @@ pub(super) fn build_prepared_report(
     workers: Vec<InternalWorker>,
     facts: &HashMap<PathBuf, FileFacts>,
 ) -> PreparedProjectReport {
-    let (report, mut relationships) =
-        build_report_and_relationships(root, producers, workers, facts);
-    relationships.sort_by_key(|edge| {
-        (
-            public_node(root, &edge.from),
-            public_node(root, &edge.to),
-            edge.kind,
-            edge.clone(),
-        )
-    });
-    relationships.dedup();
-    let mut nodes_by_name = HashMap::<String, Vec<RelationshipNode>>::new();
-    for relationship in &relationships {
-        for node in [&relationship.from, &relationship.to] {
-            let nodes = nodes_by_name.entry(public_node(root, node)).or_default();
-            if !nodes.contains(node) {
-                nodes.push(node.clone());
-            }
-        }
-    }
-    for nodes in nodes_by_name.values_mut() {
-        nodes.sort();
-    }
-    let aliases = NodeAliases::from_groups(nodes_by_name.values().cloned());
-    let index = EdgeIndex::from_edges(
+    let (report, relationships) = build_report_and_relationships(root, producers, workers, facts);
+    let relationships = PreparedRelationshipIndex::from_edges(
         relationships
             .into_iter()
             .map(|edge| CanonicalEdge::new(edge.from, edge.to, edge.kind)),
+        |node| public_node(root, node),
     );
     PreparedProjectReport {
         root: root.to_path_buf(),
         report,
-        index,
-        nodes_by_name,
-        aliases,
+        relationships,
     }
 }
 

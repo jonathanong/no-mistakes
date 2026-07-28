@@ -82,8 +82,30 @@ fn export_without_importers_has_no_call_sites() {
 #[test]
 fn unreadable_file_yields_no_sites() {
     let names: HashSet<String> = ["used".to_string()].into_iter().collect();
-    let sites = sites_for_file(Path::new("/no/such/file.ts"), &names, Path::new("/"));
+    let sites = sites_for_file(Path::new("/no/such/file.ts"), &names, Path::new("/"), None);
     assert!(sites.is_empty());
+}
+
+#[test]
+fn reverse_preparation_parses_each_project_file_once() {
+    let source = fixture_root("queries");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    crate::ast::begin_parse_count(&root);
+
+    compute(&args(root.clone(), "util.ts", "used")).unwrap();
+
+    let counts = crate::ast::finish_parse_count(&root);
+    let files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files(&root, &[]),
+    )
+    .indexable()
+    .to_vec();
+    assert_eq!(counts.len(), files.len(), "{counts:#?}");
+    assert!(
+        files.iter().all(|file| counts.get(file) == Some(&1)),
+        "each source file must be parsed once: {counts:#?}"
+    );
 }
 
 #[test]

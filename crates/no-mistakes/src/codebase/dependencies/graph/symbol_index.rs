@@ -59,36 +59,15 @@ impl SymbolIndex {
         import_resolution_cache: Option<&crate::codebase::ts_resolver::ImportResolutionCache>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
-        let scoped_resolver = tsconfig_catalog.map(|catalog| {
-            let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
-                catalog,
-                graph_files.visible(),
-                session,
-            );
-            match import_resolution_cache {
-                Some(cache) => resolver.with_shared_cache(cache),
-                None => resolver,
-            }
-        });
-        let legacy_resolver = tsconfig_catalog.is_none().then(|| {
-            let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
-                .with_visible(graph_files.visible());
-            match import_resolution_cache {
-                Some(cache) => resolver.with_shared_cache(cache),
-                None => resolver,
-            }
-        });
-        let resolver: &dyn ImportResolution = scoped_resolver
-            .as_ref()
-            .map(|resolver| resolver as &dyn ImportResolution)
-            .or_else(|| {
-                legacy_resolver
-                    .as_ref()
-                    .map(|resolver| resolver as &dyn ImportResolution)
-            })
-            .expect("a scoped or legacy symbol resolver is initialized");
+        let resolver = crate::codebase::ts_resolver::ProjectImportResolver::new(
+            tsconfig,
+            tsconfig_catalog,
+            graph_files.visible(),
+            import_resolution_cache,
+            session,
+        );
         session.record_work("symbol_index.builds", 1);
-        Self::build_index(resolver, graph_files, facts, workspace)
+        Self::build_index(&resolver, graph_files, facts, workspace)
     }
 
     pub(crate) fn build_from_facts_with_session(

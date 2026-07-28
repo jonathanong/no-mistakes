@@ -2,6 +2,7 @@ use super::*;
 use crate::cli::Format;
 use crate::codebase::queries::render::render;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 fn fixture_root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -34,11 +35,42 @@ fn lists_direct_importers_and_count() {
 }
 
 #[test]
+fn reverse_query_discovers_and_parses_each_file_once() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+
+    compute(&args("util.ts", false)).unwrap();
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["discovery.roots"], 1, "{work:#?}");
+    assert_eq!(work["symbol_index.builds"], 1, "{work:#?}");
+    assert_eq!(work["parse.requests"], work["parse.files"], "{work:#?}");
+}
+
+#[test]
 fn tests_flag_adds_impacted_tests() {
     let report = compute(&args("util.ts", true)).unwrap();
+    assert_eq!(
+        report.direct_importers,
+        ["barrel.ts", "broken.ts", "consumer.ts"]
+    );
     let impact = report.test_impact.expect("test impact present");
     assert_eq!(impact.count, 1);
     assert_eq!(impact.tests, vec!["consumer.test.ts".to_string()]);
+}
+
+#[test]
+fn tests_flag_reuses_one_discovery_parse_and_graph_pipeline() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+
+    compute(&args("util.ts", true)).unwrap();
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["discovery.roots"], 1, "{work:#?}");
+    assert_eq!(work["graph.builds"], 1, "{work:#?}");
+    assert_eq!(work["symbol_index.builds"], 1, "{work:#?}");
+    assert_eq!(work["parse.requests"], work["parse.files"], "{work:#?}");
 }
 
 #[test]

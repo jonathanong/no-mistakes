@@ -33,6 +33,25 @@ fn resolve_target_rejects_missing_file_or_directory() {
 }
 
 #[test]
+fn reverse_preparation_is_lazy_and_reuses_the_target_tsconfig_source() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/queries/fixture");
+    let target = resolve_target(Path::new("consumer.ts"), Some(&root), None).unwrap();
+
+    // Resolving a target is only path/inventory setup. It must not parse a
+    // tsconfig, workspace manifest, or the repository-wide reverse universe.
+    assert_eq!(target.sources.physical_read_count(), 0);
+    let prepared = target.prepare_reverse().unwrap();
+    assert!(!prepared.graph_files.indexable().is_empty());
+    assert_eq!(target.sources.physical_read_count(), 1);
+
+    // The later single-file resolver shares the catalog's source read instead
+    // of rereading the same automatic tsconfig.
+    assert!(!target.tsconfig().unwrap().paths.is_empty());
+    assert_eq!(target.sources.physical_read_count(), 1);
+}
+
+#[test]
 fn rel_str_strips_root_prefix_and_forward_slashes() {
     let root = Path::new("/repo");
     assert_eq!(rel_str(Path::new("/repo/src/a.ts"), root), "src/a.ts");

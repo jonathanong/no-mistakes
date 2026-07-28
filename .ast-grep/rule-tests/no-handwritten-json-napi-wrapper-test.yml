@@ -1,0 +1,24 @@
+id: no-handwritten-json-napi-wrapper
+valid:
+  - |
+    macro_rules! json_binding {
+        ($rust_name:ident, $js_name:literal, $implementation:path) => {
+            pub fn $rust_name(options_json: String) -> AsyncTask<JsonTask> {
+                AsyncTask::new(JsonTask::new(options_json, $implementation))
+            }
+        };
+    }
+  - |
+    fn version() -> AsyncTask<VersionTask> {
+        AsyncTask::new(VersionTask)
+    }
+invalid:
+  - |
+    pub fn symbols_json(options_json: String) -> AsyncTask<JsonTask> {
+        AsyncTask::new(JsonTask::new(options_json, symbols_json_impl))
+    }
+  - |
+    fn register(options_json: String) -> AsyncTask<JsonTask> {
+        let task = AsyncTask::new(JsonTask::new(options_json, check_json_impl));
+        task
+    }

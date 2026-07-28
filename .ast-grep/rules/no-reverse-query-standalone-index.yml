@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Reverse query commands are projections of a request's prepared symbol catalog.
+# They must not restore their old private discovery/fact/index pipeline.
+id: no-reverse-query-standalone-index
+language: rust
+severity: error
+message: >-
+  Reverse queries must not rediscover their own file universe. Build canonical
+  prepared facts and reverse indexes from the request-owned graph inputs.
+rule:
+  any:
+    - pattern: GraphFiles::discover($$$)
+    - pattern: crate::codebase::dependencies::graph::GraphFiles::discover($$$)
+files:
+  - "crates/no-mistakes/src/codebase/queries/**"
+ignores:
+  - "crates/no-mistakes/src/codebase/queries/**/tests/**"
+  - "crates/no-mistakes/src/codebase/queries/**/*_tests.rs"
+  - "crates/no-mistakes/src/codebase/queries/**/tests.rs"
+  - "crates/no-mistakes/src/codebase/queries/**/test_support.rs"

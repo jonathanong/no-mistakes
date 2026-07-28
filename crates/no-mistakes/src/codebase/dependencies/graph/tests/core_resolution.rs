@@ -14,11 +14,18 @@ fn graph_resolver_forwards_deleted_target_candidates_for_scoped_and_legacy_resol
         tsconfig.clone(),
         None,
     );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let resolvers = [
-        GraphImportResolver::Scoped(
-            crate::codebase::ts_resolver::ScopedImportResolver::from_visible(&catalog, &visible),
+        crate::codebase::ts_resolver::ProjectImportResolver::new(
+            &tsconfig,
+            Some(&catalog),
+            &visible,
+            None,
+            &session,
         ),
-        GraphImportResolver::Legacy(ImportResolver::new(&tsconfig).with_visible(&visible)),
+        crate::codebase::ts_resolver::ProjectImportResolver::new(
+            &tsconfig, None, &visible, None, &session,
+        ),
     ];
 
     for resolver in resolvers {

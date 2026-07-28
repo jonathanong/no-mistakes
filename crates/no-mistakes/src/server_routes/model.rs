@@ -1,4 +1,4 @@
-use crate::edge_index::{EdgeIndex, NodeAliases};
+use crate::edge_index::PreparedRelationshipIndex;
 use crate::server_routes::types::{EdgeKind, Framework, RelationshipNode};
 use serde::Serialize;
 use std::collections::HashMap;
@@ -51,9 +51,7 @@ pub(crate) struct FileFacts {
 pub struct PreparedProjectReport {
     pub(crate) root: PathBuf,
     pub(crate) report: ProjectReport,
-    pub(crate) index: EdgeIndex<RelationshipNode, EdgeKind>,
-    pub(crate) nodes_by_name: HashMap<String, Vec<RelationshipNode>>,
-    pub(crate) aliases: NodeAliases<RelationshipNode>,
+    pub(crate) relationships: PreparedRelationshipIndex<RelationshipNode, EdgeKind>,
 }
 
 impl PreparedProjectReport {

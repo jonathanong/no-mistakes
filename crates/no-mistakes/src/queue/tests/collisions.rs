@@ -35,7 +35,7 @@ fn indexed_traversal_expands_colliding_jobs_reached_transitively() {
     assert!(dependents.iter().any(|edge| edge.to == "producer-beta.ts"));
 
     let queue_order = indexed
-        .index
+        .relationships
         .edges()
         .iter()
         .filter_map(|edge| match (&edge.from, &edge.to, edge.kind) {

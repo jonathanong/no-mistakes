@@ -108,9 +108,7 @@ fn classify(
         .filter(|path| imp.kind == ImportKind::Type || !is_declaration_file(path));
     let status = if resolved.is_some() {
         Status::Resolved
-    } else if imp.specifier.starts_with('.')
-        || ImportResolver::new(&target.tsconfig).matches_alias(&imp.specifier)
-    {
+    } else if imp.specifier.starts_with('.') || resolver.matches_alias(&imp.specifier) {
         Status::Unresolved
     } else {
         Status::External
@@ -125,14 +123,16 @@ fn classify(
 
 fn compute(args: &ResolveCheckArgs) -> Result<ResolveCheckReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let source = std::fs::read_to_string(&target.abs_file)
+    let source = target
+        .sources
+        .read_path(&target.abs_file)
         .context(format!("reading {}", target.abs_file.display()))?;
     let extractor = if is_tsx_file(&target.abs_file) {
         ImportExtractor::for_tsx()?
     } else {
         ImportExtractor::for_typescript()?
     };
-    let resolver = ImportResolver::new(&target.tsconfig)
+    let resolver = ImportResolver::new(target.tsconfig()?)
         .with_visible(&target.visible_files)
         .without_cache();
     let imports: Vec<ImportRow> = extractor

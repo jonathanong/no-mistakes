@@ -11,11 +11,13 @@ use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+pub(crate) mod call_sites;
 mod collect;
 pub(crate) mod domain;
 mod map;
 mod plan;
 
+pub use call_sites::CallSiteFact;
 pub(crate) use collect::{
     collect_file_facts_from_program, collect_ts_facts_with_context_sources_and_session,
 };
@@ -29,6 +31,7 @@ pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactCon
 pub struct TsFactPlan {
     pub imports: bool,
     pub function_calls: bool,
+    pub call_sites: bool,
     pub resources: bool,
     pub symbols: bool,
     pub source: bool,
@@ -53,6 +56,7 @@ pub struct TsFileFacts {
     pub source: Option<String>,
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
+    pub call_sites: Vec<CallSiteFact>,
     pub resource_calls: Vec<ResourceCall>,
     pub resource_diagnostics: Vec<ResourceDiagnostic>,
     pub symbol_references: Vec<FunctionCall>,

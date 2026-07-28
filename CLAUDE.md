@@ -39,6 +39,32 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Heuristics — can't be perfect, but we'll try our best
 - All CLIs must also be available through the N-API API for node.js
 
+## Prepared analysis ownership
+
+- A public CLI, N-API entrypoint, or integration runner creates exactly one
+  request-scoped prepared analysis/session. It owns the visible-file inventory,
+  `SourceStore`, resolver/catalog, requested TS facts, and canonical graph for
+  that request. Lower layers borrow those prepared inputs; they do not create a
+  competing session, inventory, store, resolver, or graph.
+- Declare the complete fact and relationship demand at the boundary before
+  collection. Domain checks and graph edge producers consume the prepared
+  `TsFactLookup`/fact map, including failure entries, instead of collecting
+  domain facts or parsing a second time.
+- The session is also the ownership boundary for source text. Every source
+  consumer reads through its session-provided `SourceStore`, so a successful
+  read and an I/O failure both have one request-wide identity and accounting
+  path. A helper that accepts a path but not prepared sources is a design smell
+  for any TS/JS source consumer.
+- Relationship analyzers emit typed relationships once into the canonical
+  dependency graph (or its prepared symbol/reverse projection). Commands,
+  checks, and reports project/filter those relationships; they must not each
+  rebuild an equivalent reverse index or a private graph shape.
+- Keep bindings declarative per layer: extract syntactic imports, exports, and
+  domain occurrences into facts; resolve paths and ownership in the prepared
+  resolver/catalog layer; then project graph/query relationships. Do not blend
+  file reads, parsing, resolution, and output-specific traversal in a command
+  handler just because it is convenient locally.
+
 ## Context Management
 
 - By default, show minimum output

@@ -15,6 +15,7 @@ pub(crate) struct AnalysisDataset {
     visible_paths: Arc<super::ts_source::VisiblePathSnapshot>,
     root_sources: Arc<super::ts_source::SourceStore>,
     workspace: std::sync::OnceLock<Arc<super::workspaces::IndexedWorkspaceMap>>,
+    config_path: ManifestCache<Option<PathBuf>>,
     config: ManifestCache<crate::config::v2::NoMistakesConfig>,
     tsconfig: ManifestCache<super::ts_resolver::TsConfig>,
 }
@@ -47,6 +48,7 @@ impl AnalysisDataset {
             visible_paths,
             root_sources,
             workspace: std::sync::OnceLock::new(),
+            config_path: ManifestCache::default(),
             config: ManifestCache::default(),
             tsconfig: ManifestCache::default(),
         }
@@ -68,21 +70,35 @@ impl AnalysisDataset {
     ) -> anyhow::Result<Arc<crate::config::v2::NoMistakesConfig>> {
         self.increment("manifest.requests", 1);
         let visible_paths = self.paths_for(&self.root);
-        let effective_path = crate::config::v2::effective_v2_config_path_from_visible(
-            &self.root,
-            config_path,
-            &visible_paths,
-        )
-        .ok()
-        .flatten();
-        let key = effective_path
-            .map(|path| super::ts_resolver::normalize_path(&path))
-            .or_else(|| manifest_key(&self.root, config_path));
-        let loaded = self.config.load(key, || {
-            crate::config::v2::load_v2_config_from_source_store(
+        let selector_key = manifest_key(&self.root, config_path);
+        let selected = self.config_path.load(selector_key, || {
+            crate::config::v2::effective_v2_config_path_from_visible(
                 &self.root,
                 config_path,
                 &visible_paths,
+            )
+            .map(Arc::new)
+            .map_err(|error| Arc::<str>::from(format!("{error:#}")))
+        });
+        // Path selection can fail before there is a config source to parse.
+        // It still participates in the request's memoized diagnostics: count
+        // its first failure once and report subsequent callers as cache hits.
+        if selected.value.is_err() {
+            if selected.loaded {
+                self.increment("manifest.errors", 1);
+            } else {
+                self.increment("manifest.cache_hits", 1);
+            }
+        }
+        let effective_path = selected
+            .value
+            .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+        let key = effective_path
+            .as_deref()
+            .map(super::ts_resolver::normalize_path);
+        let loaded = self.config.load(key, || {
+            crate::config::v2::load_v2_config_from_selected_source_store(
+                effective_path.as_deref(),
                 &self.root_sources,
             )
             .map(Arc::new)

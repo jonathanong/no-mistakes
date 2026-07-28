@@ -4,6 +4,42 @@ use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
 use anyhow::Result;
 use std::path::Path;
 
+pub(crate) struct ReverseAnalysis {
+    pub(crate) index: SymbolIndex,
+    facts: crate::codebase::ts_source::facts::TsFactMap,
+    target_tsconfig: crate::codebase::ts_resolver::TsConfig,
+}
+
+impl ReverseAnalysis {
+    pub(crate) fn facts_at(
+        &self,
+        path: &Path,
+    ) -> Option<&crate::codebase::ts_source::facts::TsFileFacts> {
+        self.facts.get(path)
+    }
+
+    pub(crate) fn target_tsconfig(&self) -> &crate::codebase::ts_resolver::TsConfig {
+        &self.target_tsconfig
+    }
+
+    pub(crate) fn symbols(&self, target: &Target) -> Result<FileSymbols> {
+        let facts = self
+            .facts
+            .get(&target.abs_file)
+            .ok_or_else(|| anyhow::anyhow!("missing facts for {}", target.abs_file.display()))?;
+        if let Some(error) = &facts.parse_error {
+            anyhow::bail!(
+                "extracting symbols from {}: {error}",
+                target.abs_file.display()
+            );
+        }
+        facts
+            .symbols
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("missing symbols for {}", target.abs_file.display()))
+    }
+}
+
 /// Find an export by its public name, also accepting `default` for the default
 /// export (whose stored name is the local declaration name).
 pub(crate) fn find_export<'a>(symbols: &'a FileSymbols, name: &str) -> Option<&'a Export> {
@@ -25,28 +61,48 @@ pub(crate) fn find_export<'a>(symbols: &'a FileSymbols, name: &str) -> Option<&'
 
 /// Build the reverse import index for the whole project in one parallel scan.
 /// Cheaper than a full `DepGraph` — it only resolves import/re-export edges.
-pub(crate) fn build_index(target: &Target) -> Result<SymbolIndex> {
-    let graph_files = crate::codebase::dependencies::graph::GraphFiles::discover(&target.root);
-    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
-        graph_files.indexable(),
-        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
-    );
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    let workspace =
-        crate::codebase::workspaces::load_indexed_from_files(&target.root, graph_files.all())
-            .unwrap_or_default();
-    Ok(
-        SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
-            &target.tsconfig,
-            Some(&target.tsconfig_catalog),
-            &graph_files,
-            &facts,
-            &workspace,
-            None,
-            &session,
-        ),
+pub(crate) fn build_reverse_analysis(target: &Target) -> Result<ReverseAnalysis> {
+    build_reverse_analysis_with_plan(
+        target,
+        crate::codebase::ts_source::facts::TsFactPlan::default(),
     )
+}
+
+/// Build reverse-import facts plus explicitly requested query-specific syntax
+/// facts in the same project-wide parse pass.
+pub(crate) fn build_reverse_analysis_with_plan(
+    target: &Target,
+    additional_plan: crate::codebase::ts_source::facts::TsFactPlan,
+) -> Result<ReverseAnalysis> {
+    let mut plan = crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols();
+    plan.include(additional_plan);
+    let prepared = target.prepare_reverse()?;
+    let target_tsconfig = prepared
+        .tsconfig_catalog
+        .config_for(&target.abs_file)
+        .clone();
+    let facts =
+        crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
+            &target.session,
+            prepared.graph_files.indexable(),
+            plan,
+            &crate::codebase::ts_source::facts::TsFactContext::default(),
+            &target.sources,
+        );
+    let index = SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
+        &target_tsconfig,
+        Some(&prepared.tsconfig_catalog),
+        &prepared.graph_files,
+        &facts,
+        &prepared.workspace,
+        None,
+        &target.session,
+    );
+    Ok(ReverseAnalysis {
+        index,
+        facts,
+        target_tsconfig,
+    })
 }
 
 /// The symbol name a concrete export is indexed under. Default exports are

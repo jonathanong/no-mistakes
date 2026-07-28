@@ -6,10 +6,59 @@ const { join } = require("node:path");
 const packageRoot = join(__dirname, "..");
 const addonPath = join(packageRoot, "bin", "no-mistakes.node");
 const indexPath = join(packageRoot, "index.js");
+const planningPath = join(packageRoot, "planning.js");
+const repositoryRoot = join(packageRoot, "..", "..");
+
+const RUST_NAPI_BINDING_FILES = [
+  "crates/no-mistakes/src/napi_api.rs",
+  "crates/no-mistakes/src/napi_api/codebase_bindings.rs",
+  "crates/no-mistakes/src/napi_api/planning_bindings.rs",
+  "crates/no-mistakes/src/napi_api/wrappers_query.rs",
+  "crates/no-mistakes/src/napi_api/ci_bindings.rs",
+  "crates/no-mistakes/src/napi_api/queries.rs",
+  "crates/no-mistakes/src/napi_api/infra_swift.rs",
+];
+
+const RAW_NATIVE_EXPORTS = {
+  testsComment: "testsCommentMarkdown",
+  testsGraphMermaid: "testsGraphMermaid",
+  version: "version",
+};
+
+function nativeExportNames() {
+  const exports = new Set(["version"]);
+
+  for (const relativePath of RUST_NAPI_BINDING_FILES) {
+    const source = readFileSync(join(repositoryRoot, relativePath), "utf8");
+    for (const match of source.matchAll(/json_binding!\(\s*\w+,\s*"([^"]+)"/g)) {
+      exports.add(match[1]);
+    }
+    for (const match of source.matchAll(/napi\(js_name = "([^"]+)"\)/g)) {
+      exports.add(match[1]);
+    }
+  }
+
+  return [...exports].sort();
+}
+
+function declarationExportNames() {
+  const declarations = ["index.d.ts", "index-ci-infra.d.ts"]
+    .map((file) => readFileSync(join(packageRoot, file), "utf8"))
+    .join("\n");
+  return [
+    ...new Set([...declarations.matchAll(/export function (\w+)\(/g)].map((match) => match[1])),
+  ].sort();
+}
+
+function nativeExportNameForApi(apiName) {
+  return RAW_NATIVE_EXPORTS[apiName] || `${apiName}Json`;
+}
 
 test("programmatic API proxies object options through async native addon calls", async () => {
   const previous = require.extensions[".node"];
   delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
 
   require.extensions[".node"] = (module, filename) => {
     assert.equal(filename, addonPath);
@@ -237,6 +286,63 @@ test("programmatic API proxies object options through async native addon calls",
     assert.equal(await api.version(), "1.2.3");
   } finally {
     delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
+    if (previous) {
+      require.extensions[".node"] = previous;
+    } else {
+      delete require.extensions[".node"];
+    }
+  }
+});
+
+test("native exports, JavaScript exports, and declarations stay in parity", async () => {
+  const previous = require.extensions[".node"];
+  const nativeExports = nativeExportNames();
+  const observedExports = new Set();
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
+
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = Object.fromEntries(
+      nativeExports.map((name) => [
+        name,
+        async (json) => {
+          observedExports.add(name);
+          if (Object.values(RAW_NATIVE_EXPORTS).includes(name)) return name;
+          return JSON.stringify({ name, options: JSON.parse(json) });
+        },
+      ]),
+    );
+  };
+
+  try {
+    const api = require(indexPath);
+    const declaredExports = declarationExportNames();
+    assert.deepEqual(Object.keys(api).sort(), declaredExports);
+
+    // This export is intentionally pure JS; every other declared function
+    // must cross the N-API boundary and keep returning a promise.
+    for (const name of declaredExports) {
+      if (name === "createWorkflowTopologyIndex") continue;
+      const expectedNativeExport = nativeExportNameForApi(name);
+      const result = api[name]({});
+      assert.equal(typeof result.then, "function", `${name} must remain async`);
+      const value = await result;
+      if (Object.hasOwn(RAW_NATIVE_EXPORTS, name)) {
+        assert.equal(value, expectedNativeExport);
+      } else {
+        assert.equal(value.name, expectedNativeExport);
+      }
+    }
+
+    assert.deepEqual([...observedExports].sort(), nativeExports);
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
     if (previous) {
       require.extensions[".node"] = previous;
     } else {

@@ -1,5 +1,6 @@
 use super::test_support::*;
 use super::*;
+use std::path::PathBuf;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -36,7 +37,9 @@ fn rsc_callers_reuses_one_parse_for_imports_and_directives() {
 
     let run_source = include_str!("prepare.rs");
     assert_eq!(
-        run_source.matches("collect_ts_facts_with_context(").count(),
+        run_source
+            .matches("collect_ts_facts_with_context_sources_and_session(")
+            .count(),
         1
     );
     let run_body = run_source

@@ -6,6 +6,8 @@ mod fixtures;
 mod graph;
 #[path = "core_analysis/observer.rs"]
 mod observer;
+#[path = "core_analysis/relationships.rs"]
+mod relationships;
 #[path = "core_analysis/reports.rs"]
 mod reports;
 
@@ -13,6 +15,7 @@ use aggregate::{bench_aggregate_and_multi_report, bench_impacted_checks};
 use criterion::{criterion_group, criterion_main};
 use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
 use observer::bench_observer_overhead;
+use relationships::bench_relationship_projection;
 use reports::{bench_symbols, bench_workspace};
 
 criterion_group!(
@@ -25,5 +28,6 @@ criterion_group!(
     bench_aggregate_and_multi_report,
     bench_impacted_checks,
     bench_observer_overhead,
+    bench_relationship_projection,
 );
 criterion_main!(benches);

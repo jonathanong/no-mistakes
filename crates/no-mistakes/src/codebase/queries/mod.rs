@@ -12,7 +12,6 @@
 //! [`SymbolIndex`]: crate::codebase::dependencies::graph::SymbolIndex
 
 pub mod call_sites;
-mod call_sites_visit;
 pub mod dead_exports;
 pub mod exports_of;
 pub mod importers;

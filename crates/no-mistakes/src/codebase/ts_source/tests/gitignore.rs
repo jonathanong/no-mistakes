@@ -193,6 +193,16 @@ fn pass5a_graph_queries_reuse_one_graph_file_discovery() {
         let body = function_body(source, signature);
         assert_eq!(
             body.matches("VisiblePathSnapshot::new").count(),
+            0,
+            "{signature}"
+        );
+        assert_eq!(
+            body.matches("AnalysisSession::new").count(),
+            1,
+            "{signature}"
+        );
+        assert_eq!(
+            body.matches("dataset.visible_paths_arc").count(),
             1,
             "{signature}"
         );

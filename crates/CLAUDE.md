@@ -13,6 +13,76 @@
 - No hardcoded domain defaults: route roots, HTTP prefixes, queue factories, and
   worker locations must be configured instead of inferred from repo conventions.
 
+### Prepared analysis, source-session ownership, and relationship projection
+
+The public check, query, N-API, or integration-runner boundary owns one
+`AnalysisSession`/prepared analysis for the invocation. That owner declares the
+complete `TsFactPlan` and graph demand, then prepares the visible-file inventory,
+`SourceStore`, resolver/catalog, fact map, workspace data, and canonical graph
+once. Lower layers receive the prepared facts and session-owned stores by
+reference; they must not open an independent source/read/parse/resolution or
+graph-building pipeline.
+
+`SourceStore` is specifically a *session-owned* physical-I/O boundary. A
+source consumer must use the store supplied by its prepared request, including
+for a supplemental normalized path. This memoizes both source text and read
+failures and makes read accounting meaningful. Do not compensate for a missing
+prepared source parameter by calling `std::fs::read_to_string`; thread the
+prepared store down instead.
+
+Each layer has a deliberately narrow, declarative responsibility:
+
+1. Fact extraction records syntactic facts (imports, exports, routes,
+   selectors, queues, HTTP calls, and similar per-file occurrences) for the
+   declared plan. It does not decide a report-specific traversal.
+2. The prepared resolver/catalog and workspace layer resolves those facts with
+   the request's visible-file universe. It owns path/config variation rather
+   than commands rebuilding their own resolver or index.
+3. Graph builders project the resolved facts into the one typed `DepGraph`/
+   `EdgeIndex`. Query and rule layers filter or traverse that prepared
+   relationship projection; they do not create parallel forward/reverse maps.
+4. Renderers only shape already-computed results. A renderer/CLI leaf that
+   discovers files, reads sources, parses programs, or calls an extractor has
+   crossed the boundary in the wrong direction.
+
+This split is important for determinism as well as speed: a fact plan makes
+what is collected explicit, the source session gives every input one identity,
+and a canonical relationship projection gives every consumer the same answer.
+
+For reverse symbol queries, the prepared analysis owner supplies the symbol
+catalog/reverse projection. `importers`, `exports-of`, `dead-exports`, and
+`call-sites` may project it differently, but none may discover graph files,
+collect TS facts, or build a `SymbolIndex` ad hoc. Similarly, a domain edge
+producer requests its domain facts through the plan and projects typed edges;
+it never invokes `collect_domain_facts` itself.
+
+Do not add a blanket ast-grep guard for a future `PreparedSymbolCatalog` yet:
+this branch has no stable post-refactor module/type/call shape to scope without
+either missing aliases or banning its legitimate constructor. Protect that
+invariant with fixture-backed semantic architecture tests that assert one
+prepared catalog is reused, then add a narrow structural rule only once its
+owner and public API are stable.
+
+The N-API JSON bindings have a stable, narrower rule: the binding-only
+`napi_api/*_bindings.rs`/`wrappers_query.rs` includes and the root registration
+module must call `json_binding!`, never hand-write an
+`AsyncTask::new(JsonTask::new(...))` function. Likewise, the two JS facades
+must route direct native JSON conversion through `callJson`/`createJsonApis`
+rather than add another static or computed `native.*` parse/stringify wrapper.
+The ast-grep guards cover that exact boilerplate. They cannot prove that an
+alias, re-export, or wrapper chain ultimately delegates to the right prepared
+operation, so fixture-backed N-API/JS parity tests remain the semantic guard.
+
+### Canonical edge finalization
+
+When relationship producers have already normalized each source adjacency,
+flatten the forward map in deterministic source order and assign ordinals in
+that pass. Do **not** rebuild one repository-wide `Vec<CanonicalEdge>`, sort
+it, and deduplicate it again: that adds a global O(E log E) pass after local
+normalization and can become the graph's dominant allocation/sort cost. New
+edge batches should use `EdgeIndex`'s keyed/per-source deduplication, then sort
+only the affected adjacency lists when their public order requires it.
+
 ### Diagnosing a performance regression
 
 Use `no-mistakes check --timings --verbose-timings` (`perf_trace.rs`) instead of
@@ -50,19 +120,9 @@ path that discovers files more than once per invocation, e.g. the additive
 
 Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`. The
 lock serialises every lookup and insert across all threads, eliminating most
-parallel speedup. Use `DashMap<K, V>` instead:
-
-```rust
-// Bad – contended lock dominates runtime at high thread counts
-let cache: Mutex<HashMap<PathBuf, Arc<Vec<PathBuf>>>> = Mutex::new(HashMap::new());
-
-// Good – concurrent map with sharded locks; or_insert_with runs the closure only once per key
-let cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
-let deps = cache
-    .entry(key.clone())
-    .or_insert_with(|| Arc::new(expensive_compute(&key)))
-    .clone();
-```
+parallel speedup. Use `DashMap<K, V>` instead; its sharded
+`entry(...).or_insert_with(...)` keeps per-key computation single-shot without
+serializing unrelated keys.
 
 ### Verify a builder method doesn't silently disable an existing cache
 
@@ -74,41 +134,11 @@ it only asserts the same value comes back twice, which holds regardless of
 whether caching happened; assert on the cache's own state (length, hit counter)
 instead.
 
-```rust
-// Bad – bundles an unrelated cache_enabled=false into an unrelated setter.
-pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
-    self.visible = Some(visible);
-    self.cache_enabled = false;
-    self
-}
-
-// Good – caching stays on; an opt-out gets its own method (`without_cache()`).
-pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
-    self.visible = Some(visible);
-    self
-}
-```
-
 ### Hoist per-iteration I/O and parsing out of hot loops
 
 Never read from disk, spawn processes, or parse files inside a loop that runs
 once per test file (or per any other O(N) entity). Instead, compute the
-invariant data once before the loop and pass it in:
-
-```rust
-// Bad – reads and parses config on every iteration
-for file in test_files.par_iter() {
-    let setup = config::setup_files_for_test(root, config, rel_path)?;
-    // ...
-}
-
-// Good – compute once, reuse across all iterations
-let setup_data = config::precompute_setup_data(root, config)?;
-for file in test_files.par_iter() {
-    let setup = config::setup_files_for_test_precomputed(&rel_path, &setup_data);
-    // ...
-}
-```
+invariant data once before the loop and pass it in.
 
 Common violations to watch for:
 - Calling `discover_files` (which runs `git ls-files`) per test file
@@ -121,17 +151,7 @@ Common violations to watch for:
 
 `discover_files` runs `git ls-files` (two child processes). Only call it when
 you actually need the file list. Guard with an early return for the empty-input
-case:
-
-```rust
-fn expand_config_patterns(root: &Path, patterns: Vec<String>) -> Vec<ConfigFile> {
-    if patterns.is_empty() {
-        return Vec::new();  // avoid git ls-files when nothing to expand
-    }
-    let files = discover_files(root, &[]);
-    // ...
-}
-```
+case so pattern expansion does not spawn Git when there is nothing to expand.
 
 ### Never walk the tree without `.gitignore` awareness
 
@@ -150,23 +170,6 @@ Prefer, in order:
 2. If a walk is unavoidable (e.g. outside a git repository), use the `ignore` crate
    (`WalkBuilder`) so `.gitignore` rules apply, not a hardcoded directory denylist.
 
-```rust
-// Bad – .gitignore-blind; visits every entry, including large ignored dirs.
-fn find_dirs_matching(base: &Path, name: &str) -> Vec<PathBuf> {
-    let mut out = Vec::new();
-    collect_recursive(base, name, &mut out); // raw std::fs::read_dir recursion
-    out
-}
-
-// Good – derive from the git-visible list; non-git fallback uses `ignore`.
-fn find_dirs_matching(base: &Path, name: &str, git_files: Option<&[String]>) -> Vec<PathBuf> {
-    match git_files {
-        Some(files) => dirs_matching_from_files(base, name, files),
-        None => walk_with_ignore_crate(base, name),
-    }
-}
-```
-
 Root/prefix expansion (include globs, preserved roots, project roots) must reuse
 the single discovered file list, not walk per pattern or per project — compute
 once, memoize per `(base, pattern)`, and early-return when nothing to expand.
@@ -182,19 +185,5 @@ nested match) and assert on the disagreement.
 When every parallel work item needs a BFS traversal of the same graph, run all
 BFS traversals up front in a single `par_iter()` pass so the results are cached
 before the work loop begins. This avoids redundant traversals and lets the
-expensive computation scale linearly:
-
-```rust
-// Pre-populate cache for all test files before the per-test loop
-test_files.par_iter().for_each(|file| {
-    dependency_cache
-        .entry(file.clone())
-        .or_insert_with(|| Arc::new(runtime_deps(&graph, file.clone())));
-});
-
-// Now every per-test reachable check is a cache hit
-test_files.into_par_iter().map(|file| {
-    reachable::check(/* ... uses dependency_cache ... */)?;
-    // ...
-})
-```
+expensive computation scale linearly. Regression tests must show the traversal
+cache is populated before the dependent per-entity loop.

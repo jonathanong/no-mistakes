@@ -110,10 +110,10 @@ hand for this specific regression class.
 
 Four narrow rules protect the shared analysis boundary:
 
-- `no-direct-source-read` covers the TS/JS shared-fact directories and the
-  demand-driven import traversal, shared traversal fact seeder, and prepared
-  integration-runner config readers, and requires the canonical
-  `SourceStore::read_path` gateway.
+- `no-direct-source-read` covers the TS/JS shared-fact directories, all
+  `codebase/queries` source consumers, the demand-driven import traversal,
+  shared traversal fact seeder, and prepared integration-runner config readers,
+  and requires the canonical `SourceStore::read_path` gateway.
   It deliberately does not flag Markdown, YAML, lockfile, or other document
   readers.
 - `no-direct-oxc-parser` blocks new OXC parser construction outside the AST
@@ -131,6 +131,39 @@ Four narrow rules protect the shared analysis boundary:
 These rules use exact path allowlists. They are intentionally narrower than a
 blanket ban on reads or parser libraries because non-source documents and
 bounded string-only adapters are valid inputs.
+
+### Prepared-analysis regression guards
+
+The following path-scoped rules protect performance and DRY boundaries that
+generic Rust/JS patterns can observe:
+
+- `no-unprepared-domain-fact-collection` reserves
+  `collect_domain_facts` for the canonical TS fact gateway and the unified
+  check-fact pass. Both own an explicit graph fact plan and collect from the
+  same per-file program; every leaf consumer must use their prepared facts.
+- `no-reverse-query-standalone-index` covers `codebase/queries/**`. Reverse
+  queries may not rediscover graph files, including in the projection owner.
+  Its companion `no-reverse-query-leaf-projection` prevents query leaves from
+  collecting TS facts or building `SymbolIndex`; those operations belong only
+  to the prepared owner in `reverse.rs`.
+- `no-global-edge-vector-dedup` protects the canonical graph finalizer in
+  `edge_index/build.rs`. A full `edges` vector there must be produced by the
+  normalized-adjacency flatten, not globally sorted and deduplicated after the
+  fact. Deduplication belongs to per-source adjacency normalization or
+  `EdgeIndex`'s keyed batch insertion.
+- `no-handwritten-json-napi-wrapper` protects the stable Rust N-API
+  registration surface, including the query and infrastructure modules.
+  Direct `AsyncTask::new(JsonTask::new(...))` functions must be registered via
+  `json_binding!` so the libuv/task/name policy has one implementation.
+- `no-handwritten-js-json-wrapper` protects the two Node facades. A direct
+  static or computed `native.*` JSON parse/stringify wrapper must use the
+  shared `callJson`/`createJsonApis` descriptor path instead.
+
+Prepared-symbol catalog reuse is protected primarily by fixture-backed
+observer tests because its ownership is semantic rather than a single stable
+constructor shape. The Rust/JS wrapper rules above only catch their exact
+direct boilerplate; parity tests still cover alias, re-export, and
+descriptor-resolution semantics.
 
 ### `no-process-spawn-in-file-loop`
 

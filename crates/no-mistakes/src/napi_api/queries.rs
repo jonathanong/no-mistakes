@@ -14,35 +14,15 @@ use crate::codebase::queries::{
     CallSitesArgs, DeadExportsArgs, ExportsOfArgs, ImportersArgs, ResolveCheckArgs,
 };
 
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "importersJson"))]
-pub fn importers_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, importers_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "exportsOfJson"))]
-pub fn exports_of_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, exports_of_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "deadExportsJson"))]
-pub fn dead_exports_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, dead_exports_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "callSitesJson"))]
-pub fn call_sites_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, call_sites_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "resolveCheckJson"))]
-pub fn resolve_check_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, resolve_check_json_impl))
-}
+json_binding!(importers_json, "importersJson", importers_json_impl);
+json_binding!(exports_of_json, "exportsOfJson", exports_of_json_impl);
+json_binding!(dead_exports_json, "deadExportsJson", dead_exports_json_impl);
+json_binding!(call_sites_json, "callSitesJson", call_sites_json_impl);
+json_binding!(
+    resolve_check_json,
+    "resolveCheckJson",
+    resolve_check_json_impl
+);
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]

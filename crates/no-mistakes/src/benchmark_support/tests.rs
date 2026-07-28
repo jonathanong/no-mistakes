@@ -94,3 +94,14 @@ fn production_graph_fixture_exercises_finalization_and_selector_append() {
         }
     );
 }
+
+#[test]
+fn relationship_projection_fixture_deduplicates_typed_public_collisions() {
+    let fixture = relationship_projection_fixture(32);
+    assert_eq!(
+        project_relationship_edges(&fixture),
+        RelationshipProjectionSummary {
+            projected_edges: 32,
+        }
+    );
+}
