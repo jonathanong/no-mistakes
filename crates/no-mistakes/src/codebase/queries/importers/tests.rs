@@ -11,6 +11,14 @@ fn fixture_root() -> PathBuf {
     )
 }
 
+fn test_plan_fixture_root(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan")
+            .join(name),
+    )
+}
+
 fn args(file: &str, tests: bool) -> ImportersArgs {
     ImportersArgs {
         file: PathBuf::from(file),
@@ -71,6 +79,29 @@ fn tests_flag_reuses_one_discovery_parse_and_graph_pipeline() {
     assert_eq!(work["graph.builds"], 1, "{work:#?}");
     assert_eq!(work["symbol_index.builds"], 1, "{work:#?}");
     assert_eq!(work["parse.requests"], work["parse.files"], "{work:#?}");
+}
+
+#[test]
+fn tests_flag_surfaces_strict_vitest_discovery_errors() {
+    // A syntactically valid Vitest config with an invalid discovery glob is a
+    // project error. `importers --tests` must preserve that graph-preparation
+    // failure instead of returning a partial impact report.
+    let root = test_plan_fixture_root("impact-invalid-vitest-discovery");
+    let result = compute(&ImportersArgs {
+        file: PathBuf::from("src/Service.cs"),
+        tests: true,
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    });
+    let error = match result {
+        Err(error) => error,
+        Ok(_) => panic!("invalid Vitest discovery must fail the impact graph"),
+    };
+
+    let detail = format!("{error:#}");
+    assert!(detail.contains("error parsing glob"), "{detail}");
 }
 
 #[test]

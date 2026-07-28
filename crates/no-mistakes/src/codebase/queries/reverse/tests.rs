@@ -39,3 +39,35 @@ fn direct_and_file_importer_projections_preserve_their_distinct_meaning() {
         ]
     );
 }
+
+#[test]
+fn symbols_reports_incomplete_prepared_fact_states() {
+    let root = fixture_root();
+    let target = resolve_target(Path::new("util.ts"), Some(&root), None).unwrap();
+
+    let mut missing_facts = build_reverse_analysis(&target).unwrap();
+    missing_facts.facts.remove(&target.abs_file);
+    let error = missing_facts.symbols(&target).unwrap_err().to_string();
+    assert!(error.contains("missing facts for"), "{error}");
+    assert!(error.contains("util.ts"), "{error}");
+
+    let mut parse_error = build_reverse_analysis(&target).unwrap();
+    parse_error
+        .facts
+        .get_mut(&target.abs_file)
+        .unwrap()
+        .parse_error = Some("fixture parser diagnostic".to_string());
+    let error = parse_error.symbols(&target).unwrap_err().to_string();
+    assert!(error.contains("extracting symbols from"), "{error}");
+    assert!(error.contains("fixture parser diagnostic"), "{error}");
+
+    let mut missing_symbols = build_reverse_analysis(&target).unwrap();
+    missing_symbols
+        .facts
+        .get_mut(&target.abs_file)
+        .unwrap()
+        .symbols = None;
+    let error = missing_symbols.symbols(&target).unwrap_err().to_string();
+    assert!(error.contains("missing symbols for"), "{error}");
+    assert!(error.contains("util.ts"), "{error}");
+}

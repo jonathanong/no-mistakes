@@ -8,6 +8,13 @@ fn query_fixture_root() -> PathBuf {
     )
 }
 
+fn invalid_tsconfig_fixture_root() -> PathBuf {
+    normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/query-invalid-tsconfig"),
+    )
+}
+
 #[test]
 fn resolve_target_handles_absolute_and_cwd_fallback() {
     // `Cargo.toml` exists in the crate directory (the test cwd) but not under the
@@ -81,6 +88,37 @@ fn explicit_tsconfig_is_reused_for_single_file_and_reverse_queries() {
 }
 
 #[test]
+fn absolute_explicit_tsconfig_is_normalized_before_loading() {
+    let root = query_fixture_root();
+    // The redundant component makes this a lexical-normalization assertion,
+    // not merely an assertion that absolute paths are accepted.
+    let tsconfig = root.join("nested/../tsconfig.json");
+    let target = resolve_target(Path::new("consumer.ts"), Some(&root), Some(&tsconfig)).unwrap();
+
+    assert_eq!(
+        target.explicit_tsconfig.as_deref(),
+        Some(root.join("tsconfig.json").as_path())
+    );
+    assert_eq!(target.tsconfig().unwrap().paths[0].0, "@app/*");
+}
+
+#[test]
+fn explicit_invalid_tsconfig_is_reported_consistently() {
+    let root = invalid_tsconfig_fixture_root();
+    let target = resolve_target(
+        Path::new("entry.ts"),
+        Some(&root),
+        Some(Path::new("tsconfig.json")),
+    )
+    .unwrap();
+
+    let first = target.tsconfig().unwrap_err().to_string();
+    let second = target.tsconfig().unwrap_err().to_string();
+    assert!(first.contains("tsconfig.json"), "{first}");
+    assert_eq!(second, first);
+}
+
+#[test]
 fn automatic_tsconfig_uses_an_empty_config_when_none_exists() {
     let root = normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -93,6 +131,20 @@ fn automatic_tsconfig_uses_an_empty_config_when_none_exists() {
     // is where discovery started.
     let config = target.tsconfig().unwrap();
     assert_eq!(config.dir, target.abs_file);
+    assert!(config.paths.is_empty());
+    assert!(config.base_url.is_none());
+}
+
+#[test]
+fn automatic_invalid_tsconfig_falls_back_to_an_empty_config() {
+    let root = invalid_tsconfig_fixture_root();
+    let target = resolve_target(Path::new("entry.ts"), Some(&root), None).unwrap();
+
+    // Automatic discovery is intentionally best effort: a malformed nearest
+    // config cannot make a query that needs no aliases fail.
+    let config = target.tsconfig().unwrap();
+    assert_eq!(config.dir, root);
+    assert_eq!(config.paths_dir, root);
     assert!(config.paths.is_empty());
     assert!(config.base_url.is_none());
 }

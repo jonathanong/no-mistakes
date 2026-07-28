@@ -147,6 +147,36 @@ fn legacy_symbol_facts_retain_a_meaningful_fatal_parse_error() {
 }
 
 #[test]
+fn collect_file_facts_populates_call_sites_for_the_graph_plan() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/shared-facts/fixture"),
+    );
+    let file = root.join("src/everything.tsx");
+    let facts = collect_file_facts(
+        &root,
+        &file,
+        &CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                call_sites: true,
+                ..Default::default()
+            },
+            ..CheckFactPlan::default()
+        },
+        None,
+    )
+    .expect("fixture facts are collected");
+
+    let call_site = facts
+        .ts
+        .call_sites
+        .iter()
+        .find(|site| site.callee == "Widget")
+        .expect("graph call-site demand preserves the Widget call");
+    assert_eq!(call_site.arg_count, 0);
+}
+
+#[test]
 fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
     use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 

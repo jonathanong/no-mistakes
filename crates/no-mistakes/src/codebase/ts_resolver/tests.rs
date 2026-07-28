@@ -252,6 +252,47 @@ fn scoped_catalog_session_reuses_dynamic_importer_scope_cache() {
 }
 
 #[test]
+fn project_resolver_legacy_path_retains_the_explicit_shared_cache() {
+    let root = workspace_tsconfig_fixture();
+    let web = root.join("apps/web");
+    let importer = web.join("src/entry.ts");
+    let target = web.join("src/runtime/value.ts");
+    let tsconfig = load_tsconfig(&web.join("tsconfig.json")).unwrap();
+    let visible = HashSet::from([importer.clone(), target.clone()]);
+    let cache = ImportResolutionCache::default();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+
+    let first = ProjectImportResolver::new(&tsconfig, None, &visible, Some(&cache), &session);
+    assert!(matches!(&first, ProjectImportResolver::Legacy(_)));
+    assert_eq!(
+        first.resolve("@runtime/value", &importer),
+        Some(target.clone())
+    );
+    let first_work = observer.snapshot().work;
+
+    let second = ProjectImportResolver::new(&tsconfig, None, &visible, Some(&cache), &session);
+    assert_eq!(
+        second.resolve("@runtime/value", &importer),
+        Some(target),
+        "legacy project resolvers reuse their explicit request cache"
+    );
+    let repeated_work = observer.snapshot().work;
+
+    assert_eq!(
+        repeated_work["resolver.computations"],
+        first_work["resolver.computations"]
+    );
+    assert!(
+        repeated_work["resolver.cache_hits"]
+            > first_work
+                .get("resolver.cache_hits")
+                .copied()
+                .unwrap_or_default()
+    );
+}
+
+#[test]
 fn queue_compatibility_never_clears_the_standard_fixed_session_cache() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/queue-ast-hop/tsconfig-paths/fixture");

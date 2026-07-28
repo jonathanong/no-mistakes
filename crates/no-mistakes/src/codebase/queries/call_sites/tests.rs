@@ -170,6 +170,20 @@ fn type_only_export_is_rejected() {
 }
 
 #[test]
+fn surfaces_explicit_tsconfig_errors_from_reverse_preparation() {
+    let root = fixture_root("symbols-output");
+    let mut query = args(root.clone(), "src/utils.mts", "unused");
+    query.tsconfig = Some(root.join("tsconfig-invalid.json"));
+
+    let error = match compute(&query) {
+        Err(error) => error,
+        Ok(_) => panic!("explicit malformed tsconfig must fail preparation"),
+    };
+
+    assert!(format!("{error:#}").contains("tsconfig-invalid.json"));
+}
+
+#[test]
 fn finds_default_export_callers() {
     // `def` is the declaration name of the default export; external callers
     // import it under `default`.
