@@ -132,27 +132,30 @@ fn both_deduplicates_self_loops_and_reciprocal_projections() {
 }
 
 #[test]
-#[should_panic(expected = "forward and reverse adjacency maps must describe identical edges")]
-fn direct_adjacency_constructor_rejects_reverse_only_edges() {
-    let mut forward = HashMap::new();
-    forward.insert("a".to_owned(), vec![("b".to_owned(), 1_u8)]);
-    let mut reverse = HashMap::new();
-    reverse.insert(
-        "b".to_owned(),
-        vec![("a".to_owned(), 1_u8), ("c".to_owned(), 2_u8)],
-    );
-
-    let _ = EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| left.cmp(right));
-}
-
-#[test]
-fn direct_adjacency_constructor_accepts_consistent_edges() {
+fn direct_adjacency_constructor_covers_consistent_and_inconsistent_maps_sequentially() {
+    // Keep both paths in one test: LLVM coverage counters are not atomic, so
+    // parallel tests of this helper can lose one path's counter updates.
     let mut forward = HashMap::new();
     forward.insert("a".to_owned(), vec![("b".to_owned(), 1_u8)]);
     let mut reverse = HashMap::new();
     reverse.insert("b".to_owned(), vec![("a".to_owned(), 1_u8)]);
 
-    let index = EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| left.cmp(right));
+    let index =
+        EdgeIndex::from_adjacency_maps_by(forward.clone(), reverse.clone(), |left, right| {
+            left.cmp(right)
+        });
 
     assert_eq!(index.edges(), &[edge("a", "b", 1)]);
+
+    reverse.get_mut("b").unwrap().push(("c".to_owned(), 2_u8));
+    let panic = std::panic::catch_unwind(|| {
+        EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| left.cmp(right))
+    })
+    .expect_err("reverse-only edge must be rejected");
+    let message = panic
+        .downcast_ref::<String>()
+        .map(String::as_str)
+        .or_else(|| panic.downcast_ref::<&str>().copied())
+        .unwrap_or_default();
+    assert!(message.contains("forward and reverse adjacency maps must describe identical edges"));
 }
