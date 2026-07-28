@@ -41,6 +41,26 @@ fn direct_and_file_importer_projections_preserve_their_distinct_meaning() {
 }
 
 #[test]
+fn reverse_analysis_does_not_eagerly_read_the_target_nested_tsconfig() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("nested-target-alias");
+    let root = normalize_path(fixture.path());
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(std::sync::Arc::clone(&observer));
+    let target = resolve_target(Path::new("nested/src/value.ts"), Some(&root), None).unwrap();
+
+    build_reverse_analysis(&target).unwrap();
+
+    // Ordinary reverse resolution is rooted in root/workspace scope. Only
+    // `exports-of` should consult this target-local config for re-exports.
+    let reads = target.session.work_snapshot().source_reads;
+    assert!(
+        !reads.contains_key(&root.join("nested/tsconfig.json")),
+        "reverse analysis must not eagerly load the target config: {reads:#?}"
+    );
+}
+
+#[test]
 fn symbols_distinguishes_recovered_and_incomplete_prepared_facts() {
     let root = fixture_root();
     let target = resolve_target(Path::new("util.ts"), Some(&root), None).unwrap();

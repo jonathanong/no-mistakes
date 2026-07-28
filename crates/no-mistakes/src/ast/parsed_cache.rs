@@ -170,7 +170,9 @@ impl ParsedProgramCache {
     }
 }
 
-pub(super) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
+/// Whether the regular file-backed parser uses exactly the legacy
+/// `extract_symbols_at_path` source type for `path`.
+pub(crate) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
     let Ok(source_type) = SourceType::from_path(path) else {
         return false;
     };

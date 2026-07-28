@@ -104,6 +104,27 @@ fn tests_flag_does_not_broaden_direct_importers_to_runner_scoped_aliases() {
 }
 
 #[test]
+fn target_reexport_tsconfig_does_not_broaden_ordinary_importers() {
+    // `exports-of` may resolve aliases from its nested target tsconfig, but
+    // ordinary reverse edges remain rooted in the root/workspace catalog.
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("nested-target-alias");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let report = compute(&ImportersArgs {
+        file: PathBuf::from("nested/src/value.ts"),
+        tests: false,
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+
+    assert!(report.direct_importers.is_empty());
+    assert_eq!(report.dependents_count, 0);
+}
+
+#[test]
 fn tests_flag_keeps_recovered_imports_from_malformed_runner_helpers() {
     let fixture = crate::test_support::materialize_saved_fixture(&importers_fixture_root(
         "malformed-runner-helper",

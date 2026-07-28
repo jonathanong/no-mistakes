@@ -98,7 +98,7 @@ fn test_impact(
     )?;
     // The impact planner consumes its graph. Build the ordinary projection
     // afterwards so the large graph and SymbolIndex are not live together.
-    let (ordinary_index, _) = build_reverse_index_from_prepared(target, ordinary_reverse, &facts);
+    let ordinary_index = build_reverse_index_from_prepared(target, ordinary_reverse, &facts);
     let tests: Vec<String> = plan
         .selected_tests
         .into_iter()

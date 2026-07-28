@@ -65,10 +65,10 @@ fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
         let analysis = build_reverse_analysis(&target)?;
         (analysis.symbols(&target)?, Some(analysis))
     };
-    let resolver_config = match &analysis {
-        Some(analysis) => analysis.target_tsconfig(),
-        None => target.tsconfig()?,
-    };
+    // Target re-export rendering retains the single-file command's nearest
+    // visible-tsconfig semantics. Keep it here so reverse-only commands do
+    // not eagerly resolve a target config they never use.
+    let resolver_config = target.tsconfig()?;
     let resolver = ImportResolver::new(resolver_config).with_visible(&target.visible_files);
 
     let exports = symbols

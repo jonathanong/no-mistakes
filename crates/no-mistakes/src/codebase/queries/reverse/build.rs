@@ -28,12 +28,8 @@ pub(crate) fn build_reverse_analysis_with_plan(
             &crate::codebase::ts_source::facts::TsFactContext::default(),
             &target.sources,
         );
-    let (index, target_tsconfig) = build_reverse_index_from_prepared(target, &prepared, &facts);
-    Ok(ReverseAnalysis {
-        index,
-        facts,
-        target_tsconfig,
-    })
+    let index = build_reverse_index_from_prepared(target, &prepared, &facts);
+    Ok(ReverseAnalysis { index, facts })
 }
 
 /// Project already-collected facts through the ordinary reverse-query catalog.
@@ -43,19 +39,14 @@ pub(crate) fn build_reverse_index_from_prepared(
     target: &Target,
     prepared: &ReversePrepared,
     facts: &crate::codebase::ts_source::facts::TsFactMap,
-) -> (SymbolIndex, crate::codebase::ts_resolver::TsConfig) {
-    let target_tsconfig = prepared
-        .tsconfig_catalog
-        .config_for(&target.abs_file)
-        .clone();
-    let index = SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
-        &target_tsconfig,
+) -> SymbolIndex {
+    SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
+        prepared.tsconfig_catalog.config_for(&target.abs_file),
         Some(&prepared.tsconfig_catalog),
         &prepared.graph_files,
         facts,
         &prepared.workspace,
         None,
         &target.session,
-    );
-    (index, target_tsconfig)
+    )
 }

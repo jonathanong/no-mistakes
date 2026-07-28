@@ -82,9 +82,10 @@ impl Target {
         self.dataset.config(path)
     }
 
-    /// Resolve the one configuration a single-file query needs, only when it
-    /// actually resolves an import. Reverse queries use their full catalog
-    /// instead and therefore never parse this automatic target config twice.
+    /// Resolve the one configuration a single-file query needs. Reverse
+    /// indexes use their ordinary root/workspace catalog, while target-facing
+    /// re-export rendering uses this nearest visible config for parity with
+    /// `exports-of --no-importers`.
     pub(crate) fn tsconfig(&self) -> Result<&TsConfig> {
         let result = self.tsconfig.get_or_init(|| match self.explicit_tsconfig.as_deref() {
             Some(path) => match self.dataset.tsconfig(Some(path)) {

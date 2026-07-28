@@ -1,7 +1,7 @@
 use super::shared::Target;
 use crate::codebase::dependencies::graph::SymbolIndex;
-use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
-use anyhow::Result;
+use crate::codebase::ts_symbols::{extract_symbols_from_program, Export, ExportKind, FileSymbols};
+use anyhow::{Context, Result};
 use std::path::Path;
 
 mod build;
@@ -14,7 +14,6 @@ pub(crate) use importers::{direct_importer_paths, export_importer_paths, export_
 pub(crate) struct ReverseAnalysis {
     pub(crate) index: SymbolIndex,
     facts: crate::codebase::ts_source::facts::TsFactMap,
-    target_tsconfig: crate::codebase::ts_resolver::TsConfig,
 }
 
 impl ReverseAnalysis {
@@ -25,11 +24,33 @@ impl ReverseAnalysis {
         self.facts.get(path)
     }
 
-    pub(crate) fn target_tsconfig(&self) -> &crate::codebase::ts_resolver::TsConfig {
-        &self.target_tsconfig
+    pub(crate) fn symbols(&self, target: &Target) -> Result<FileSymbols> {
+        // The canonical parser-cache predicate covers all source-type
+        // distinctions, including `.mts`, `.cts`, and declaration files.
+        // Reuse prepared facts only where their native parse mode is exactly
+        // the historical `extract_symbols_at_path` mode.
+        if crate::ast::legacy_symbols_share_standard_parse(&target.abs_file) {
+            return self.symbols_from_facts(target);
+        }
+        let source = target
+            .sources
+            .read_path(&target.abs_file)
+            .context(format!("reading {}", target.abs_file.display()))?;
+        // Reverse facts use each file's native source type for the project-
+        // wide index. The queried file instead preserves the historical
+        // `extract_symbols_at_path` source type for this non-equivalent path.
+        target
+            .session
+            .with_legacy_symbols_program(&target.abs_file, &source, |program, source, _| {
+                extract_symbols_from_program(program, source)
+            })
+            .context(format!(
+                "extracting symbols from {}",
+                target.abs_file.display()
+            ))
     }
 
-    pub(crate) fn symbols(&self, target: &Target) -> Result<FileSymbols> {
+    fn symbols_from_facts(&self, target: &Target) -> Result<FileSymbols> {
         let Some(facts) = self.facts.get(&target.abs_file) else {
             anyhow::bail!("missing facts for {}", target.abs_file.display());
         };
