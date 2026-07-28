@@ -6,7 +6,7 @@ impl TsConfigCatalog {
         candidate_roots: &[PathBuf],
         visible_paths: &[PathBuf],
     ) -> Self {
-        CatalogBuilder::new(root, candidate_roots, visible_paths, None).build()
+        CatalogBuilder::new(root, candidate_roots, visible_paths, None, None).build()
     }
 
     /// Same as [`Self::from_visible`], reusing the invocation source cache.
@@ -17,7 +17,28 @@ impl TsConfigCatalog {
         visible_paths: &[PathBuf],
         sources: &crate::codebase::ts_source::SourceStore,
     ) -> Self {
-        CatalogBuilder::new(root, candidate_roots, visible_paths, Some(sources)).build()
+        CatalogBuilder::new(root, candidate_roots, visible_paths, Some(sources), None).build()
+    }
+
+    /// Build an automatic catalog from invocation-owned sources and already
+    /// prepared workspace facts. This avoids reparsing workspace manifests
+    /// solely to discover package-local tsconfig roots.
+    #[doc(hidden)]
+    pub(crate) fn from_visible_and_sources_with_workspace(
+        root: &Path,
+        candidate_roots: &[PathBuf],
+        visible_paths: &[PathBuf],
+        sources: &crate::codebase::ts_source::SourceStore,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    ) -> Self {
+        CatalogBuilder::new(
+            root,
+            candidate_roots,
+            visible_paths,
+            Some(sources),
+            Some(workspace),
+        )
+        .build()
     }
 
     /// Make the legacy explicit `--tsconfig` behavior available through the

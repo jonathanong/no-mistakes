@@ -9,7 +9,7 @@ use std::path::Path;
 mod expression;
 mod parsed_cache;
 pub use expression::{binary_concat_path_text, expression_path, span_text, template_literal_text};
-pub(crate) use parsed_cache::ParsedProgramCache;
+pub(crate) use parsed_cache::{legacy_symbols_share_standard_parse, ParsedProgramCache};
 
 thread_local! {
     static REQUEST_PARSE_CACHES: RefCell<Vec<ParsedProgramCache>> = const { RefCell::new(Vec::new()) };
@@ -154,18 +154,19 @@ pub(crate) fn with_program_observed<T>(
         .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
-/// Parse a JavaScript or TypeScript source while preserving OXC's recovered
-/// program when diagnostics are present. `on_parse` runs only for a physical
-/// parser invocation, not for a request-cache hit.
-pub(crate) fn with_recovered_program_observed<T>(
+/// Recovered parse that additionally reports whether the parser panicked.
+/// `on_parse` runs only for a physical parser invocation, not for a
+/// request-cache hit. General recovered consumers may use partial ASTs; fact
+/// collectors can preserve the panic distinction for sound consumers.
+pub(crate) fn with_recovered_program_status_observed<T>(
     path: &Path,
     source: &str,
     on_parse: impl FnOnce(),
-    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>, bool) -> T,
 ) -> Result<T> {
     let cache = current_request_parse_cache().unwrap_or_default();
     cache
-        .with_recovered_program_observed(path, source, on_parse, analyze)
+        .with_recovered_program_status_observed(path, source, on_parse, analyze)
         .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 

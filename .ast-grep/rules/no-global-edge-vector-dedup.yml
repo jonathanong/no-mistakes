@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# The graph finalizer receives source-normalized adjacency maps. Sorting and
+# deduplicating a rebuilt global `edges` vector repeats that work at O(E log E).
+id: no-global-edge-vector-dedup
+language: rust
+severity: error
+message: >-
+  Global canonical-edge sort/dedup in the graph finalizer. Flatten the already
+  normalized adjacency maps in deterministic source order; use per-source or
+  keyed deduplication instead of sorting the whole edges vector again.
+rule:
+  any:
+    - pattern: $EDGES.sort()
+    - pattern: $EDGES.sort_by($$$)
+    - pattern: $EDGES.sort_by_key($$$)
+    - pattern: $EDGES.sort_by_cached_key($$$)
+    - pattern: $EDGES.dedup()
+    - pattern: $EDGES.dedup_by($$$)
+    - pattern: $EDGES.dedup_by_key($$$)
+constraints:
+  EDGES:
+    regex: "^edges$"
+files:
+  - "crates/no-mistakes/src/edge_index/build.rs"

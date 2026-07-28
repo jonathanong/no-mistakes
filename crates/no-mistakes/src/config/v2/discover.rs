@@ -76,13 +76,20 @@ pub(crate) fn load_v2_config_from_source_store(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<NoMistakesConfig> {
     let path = effective_v2_config_path_from_visible(root, cli_config, visible_paths)?;
+    load_v2_config_from_selected_source_store(path.as_deref(), sources)
+}
+
+pub(crate) fn load_v2_config_from_selected_source_store(
+    path: Option<&Path>,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<NoMistakesConfig> {
     let Some(path) = path else {
         return Ok(NoMistakesConfig::default());
     };
     let source = sources
-        .read_path(&path)
+        .read_path(path)
         .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?;
-    parse_v2_config(&source, &path)
+    parse_v2_config(&source, path)
 }
 
 pub(crate) fn effective_v2_config_path_from_visible(

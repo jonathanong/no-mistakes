@@ -1,4 +1,35 @@
 use super::*;
+use crate::codebase::ts_resolver::{find_tsconfig_from_visible, load_tsconfig, TsConfig};
+use std::path::PathBuf;
+
+fn resolve_tsconfig_from_visible(
+    root: &Path,
+    tsconfig: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<TsConfig> {
+    match tsconfig {
+        // Resolve a relative explicit tsconfig against `root`, not the cwd.
+        Some(path) if path.is_absolute() => load_tsconfig(path),
+        Some(path) => load_tsconfig(&root.join(path)),
+        None => match find_tsconfig_from_visible(root, visible_paths) {
+            Some(path) => match load_tsconfig(&path) {
+                Ok(config) => Ok(config),
+                Err(_) => Ok(TsConfig {
+                    dir: root.to_path_buf(),
+                    paths: vec![],
+                    paths_dir: root.to_path_buf(),
+                    base_url: None,
+                }),
+            },
+            None => Ok(TsConfig {
+                dir: root.to_path_buf(),
+                paths: vec![],
+                paths_dir: root.to_path_buf(),
+                base_url: None,
+            }),
+        },
+    }
+}
 
 fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {
     resolve_tsconfig_from_visible(
@@ -335,7 +366,9 @@ fn effects_reuses_one_parse_for_imports_and_effect_calls() {
 
     let run_source = include_str!("../effects_query.rs");
     assert_eq!(
-        run_source.matches("collect_ts_facts_with_context(").count(),
+        run_source
+            .matches("collect_ts_facts_with_context_sources_and_session(")
+            .count(),
         1
     );
     assert!(!run_source.contains("scan_file("));

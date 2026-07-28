@@ -1,10 +1,11 @@
-use super::{domain, TsFactContext, TsFactMap, TsFactPlan, TsFileFacts};
-use crate::codebase::dependencies::extract::{
-    extract_import_facts_from_program_with_source_and_resource_roots, is_indexable,
-};
-use crate::codebase::ts_symbols::extract_symbols_from_program;
+use super::{TsFactContext, TsFactMap, TsFactPlan};
+use crate::codebase::dependencies::extract::is_indexable;
 use rayon::prelude::*;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+mod file;
+pub(crate) use file::collect_file_facts_from_program;
+use file::collect_file_facts_with_sources_and_session;
 
 #[cfg(test)]
 pub(crate) mod test_support;
@@ -62,135 +63,68 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session(
     context: &TsFactContext,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> TsFactMap {
-    let files = crate::codebase::ts_source::deduplicate_analysis_paths(
-        files.iter().filter(|path| is_indexable(path)),
-    );
-    let facts = files
-        .par_iter()
-        .map(|path| {
-            crate::invocation::check_timeout().ok().map(|()| {
-                collect_file_facts_with_sources_and_session(session, path, plan, context, sources)
-                    .map(|facts| (path.clone(), facts))
-            })
-        })
-        .while_some()
-        .flatten()
-        .collect();
-    TsFactMap::with_plan(facts, plan)
+    collect_ts_facts_with_context_sources_and_session_serializing_paths(
+        session,
+        files,
+        plan,
+        context,
+        sources,
+        &[],
+    )
 }
 
-fn collect_file_facts_with_sources_and_session(
+/// Collect one project-wide fact map, keeping selected paths on the calling
+/// thread so they can reuse parser state produced by a serial preparatory
+/// phase (such as runner-config analysis). All other files remain parallel.
+pub(crate) fn collect_ts_facts_with_context_sources_and_session_serializing_paths(
     session: &crate::codebase::analysis_session::AnalysisSession,
-    path: &Path,
+    files: &[PathBuf],
     plan: TsFactPlan,
     context: &TsFactContext,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Option<TsFileFacts> {
-    let source = match sources.read_path(path) {
-        Ok(source) => source,
-        Err(error) => {
-            return Some(TsFileFacts {
-                parse_error: Some(format!("failed to read {}: {error}", path.display())),
-                ..TsFileFacts::default()
-            });
-        }
-    };
-    match session.with_recovered_typescript_program(
-        path,
-        &source,
-        |program, source, parse_error| {
-            collect_file_facts_from_program(path, plan, context, source, program, parse_error)
-        },
-    ) {
-        Ok(facts) => Some(facts),
-        // This collector historically parsed unsupported extensions as TS.
-        // It is only called for indexable files, so reaching this branch means
-        // the extension allowlist and OXC source-type support drifted apart.
-        Err(error) => Some(TsFileFacts {
-            parse_error: Some(error.to_string()),
-            ..TsFileFacts::default()
-        }),
-    }
-}
-
-pub(crate) fn collect_file_facts_from_program(
-    path: &Path,
-    plan: TsFactPlan,
-    context: &TsFactContext,
-    source: &str,
-    program: &oxc_ast::ast::Program<'_>,
-    parse_error: Option<String>,
-) -> TsFileFacts {
-    let import_facts = if plan.imports || plan.function_calls {
-        extract_import_facts_from_program_with_source_and_resource_roots(
-            program,
-            source,
-            plan.resources,
-        )
-    } else {
-        Default::default()
-    };
-    let resources = if plan.resources {
-        crate::codebase::ts_resources::extract(program, source)
-    } else {
-        Default::default()
-    };
-    let symbols = plan
-        .symbols
-        .then(|| std::sync::Arc::new(extract_symbols_from_program(program, source)));
-    let domain = if plan.has_domain_facts() {
-        domain::collect_domain_facts(program, path, source, plan, context)
-    } else {
-        domain::DomainFacts::default()
-    };
-    let react_components = if plan.react {
-        match context.visible_files.as_deref() {
-            Some(visible) => crate::react_traits::analyze::file::analyze_program_from_visible(
-                path,
-                &context.root,
-                source,
-                program,
-                visible,
-            ),
-            None => crate::react_traits::analyze::file::analyze_program(
-                path,
-                &context.root,
-                source,
-                program,
-            ),
-        }
-        .components
-    } else {
-        Default::default()
-    };
-    TsFileFacts {
-        parse_error,
-        source: plan.source.then(|| source.to_owned()),
-        imports: import_facts.imports,
-        function_calls: import_facts.function_calls,
-        resource_calls: resources.calls,
-        resource_diagnostics: resources.diagnostics,
-        symbol_references: import_facts.symbol_references,
-        exported_functions: import_facts.exported_functions,
-        exported_resource_roots: import_facts.exported_resource_roots,
-        exported_resource_scopes: import_facts.exported_resource_scopes,
-        unknown_callers: import_facts.unknown_callers,
-        has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
-        symbols: symbols.as_deref().cloned(),
-        route_refs: domain.route_refs,
-        route_helpers: domain.route_helpers,
-        route_helper_imports: domain.route_helper_imports,
-        route_helper_refs: domain.route_helper_refs,
-        backend_routes: domain.backend_routes,
-        queue_usage: domain.queue_usage,
-        queue_create_line: domain.queue_create_line,
-        queue_name: domain.queue_name,
-        queue_project: domain.queue_project,
-        http_calls: domain.http_calls,
-        process_spawns: domain.process_spawns,
-        server_routes: domain.server_routes,
-        react_components: react_components.as_ref().clone(),
-        effect_calls: domain.effect_calls,
-        rsc_environment: domain.rsc_environment,
-    }
+    serial_paths: &[PathBuf],
+) -> TsFactMap {
+    let files = crate::codebase::ts_source::deduplicate_analysis_paths(
+        files.iter().filter(|path| is_indexable(path)),
+    );
+    // Count fact extraction separately from physical parses: a request-local
+    // parser cache can hide duplicate Rayon collection passes on different
+    // workers, while this records every file handed to the fact collector.
+    session.record_work("ts_facts.collections", 1);
+    session.record_work("ts_facts.files", files.len() as u64);
+    let serial_paths = serial_paths
+        .iter()
+        .collect::<std::collections::HashSet<_>>();
+    let (serial_files, parallel_files): (Vec<_>, Vec<_>) = files
+        .into_iter()
+        .partition(|path| serial_paths.contains(path));
+    let mut facts = serial_files
+        .into_iter()
+        .filter_map(|path| {
+            crate::invocation::check_timeout()
+                .ok()
+                .and_then(|()| {
+                    collect_file_facts_with_sources_and_session(
+                        session, &path, plan, context, sources,
+                    )
+                })
+                .map(|facts| (path, facts))
+        })
+        .collect::<Vec<_>>();
+    facts.extend(
+        parallel_files
+            .par_iter()
+            .map(|path| {
+                crate::invocation::check_timeout().ok().map(|()| {
+                    collect_file_facts_with_sources_and_session(
+                        session, path, plan, context, sources,
+                    )
+                    .map(|facts| (path.clone(), facts))
+                })
+            })
+            .while_some()
+            .flatten()
+            .collect::<Vec<_>>(),
+    );
+    TsFactMap::with_plan(facts.into_iter().collect(), plan)
 }

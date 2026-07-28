@@ -1,0 +1,20 @@
+id: no-reverse-query-leaf-projection
+valid:
+  - |
+    fn importers(prepared: &ReverseAnalysis, file: &Path) {
+        let importers = prepared.index.file_importers(file);
+    }
+invalid:
+  - |
+    fn importers(target: &Target) {
+        let facts = collect_ts_facts(target.files(), TsFactPlan::imports());
+    }
+  - |
+    fn dead_exports(target: &Target, facts: &TsFactMap) {
+        let index = SymbolIndex::build_from_facts(
+            &target.root,
+            target.tsconfig(),
+            target.files(),
+            facts,
+        );
+    }

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# The package facades expose descriptor-generated APIs. Keep their direct
+# native JSON conversion in callJson so additions cannot drift independently.
+id: no-handwritten-js-json-wrapper
+language: javascript
+severity: error
+message: >-
+  Handwritten native JSON wrapper. Add this API to createJsonApis and route it
+  through callJson so the package facade has one parse/stringify implementation.
+rule:
+  any:
+    - pattern: JSON.parse(await native.$NAME(JSON.stringify($OPTIONS || {})))
+    - pattern: JSON.parse(await native[$NAME](JSON.stringify($OPTIONS || {})))
+files:
+  - "packages/no-mistakes/index.js"
+  - "packages/no-mistakes/planning.js"

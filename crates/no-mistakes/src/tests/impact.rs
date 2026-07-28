@@ -10,7 +10,7 @@ use anyhow::{Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::dependencies::parse_entrypoint;
-use no_mistakes::config::v2::load_v2_config;
+use no_mistakes::config::v2::{load_v2_config, NoMistakesConfig};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -46,6 +46,17 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
         args.config.as_deref(),
         args.include_symbols,
     )?;
+    generate_impact_plan_with_prepared(args, &root, &config, impact_graph)
+}
+
+/// Project an impact plan from a request-scoped graph prepared by the caller.
+/// The caller owns the graph's discovery snapshot, facts, and canonical graph.
+pub(crate) fn generate_impact_plan_with_prepared(
+    args: &ImpactArgs,
+    root: &Path,
+    config: &NoMistakesConfig,
+    impact_graph: crate::tests::impact_graph::ImpactGraph,
+) -> Result<TestPlan> {
     let graph = &impact_graph.graph;
     let test_filter = &impact_graph.test_filter;
     let registry_set = compile_registry_globset(&config.tests.impact.registries);
@@ -91,13 +102,13 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
             .as_ref()
             .filter(|_| args.include_symbols)
             .map_or_else(
-                || relative_path(&root, &normalized),
-                |symbol| format!("{}#{}", relative_path(&root, &normalized), symbol),
+                || relative_path(root, &normalized),
+                |symbol| format!("{}#{}", relative_path(root, &normalized), symbol),
             );
 
         // A dynamic resource call has no edge to traverse, but a directly
         // changed consumer is still relevant to this impact query.
-        push_resource_diagnostics(graph, &root, &normalized, &mut warnings, &mut warnings_seen);
+        push_resource_diagnostics(graph, root, &normalized, &mut warnings, &mut warnings_seen);
 
         // Registry hints are file-level ("this file is registered in X"); a
         // symbol-scoped entrypoint asks about one export, so a file-level hint
@@ -107,7 +118,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 push_registry_hints(
                     graph,
                     &normalized,
-                    &root,
+                    root,
                     registry_set,
                     &mut warnings,
                     &mut registry_seen,
@@ -115,8 +126,8 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
             }
         }
 
-        if test_filter.is_match(&root, &normalized) {
-            let rel_test = relative_path(&root, &normalized);
+        if test_filter.is_match(root, &normalized) {
+            let rel_test = relative_path(root, &normalized);
             let entry = selected_map
                 .entry(normalized.clone())
                 .or_insert_with(|| SelectedTest {
@@ -140,35 +151,35 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
         for start_node in start_nodes {
             let (reachable_tests, path_parents) =
-                bfs_path_find(graph, &start_node, test_filter, &root);
+                bfs_path_find(graph, &start_node, test_filter, root);
 
             for (test_node, edge_path) in reachable_tests {
                 let test_path = match &test_node {
                     NodeId::File(p) => p.clone(),
                     _ => continue,
                 };
-                let rel_test = relative_path(&root, &test_path);
+                let rel_test = relative_path(root, &test_path);
                 let path_conf = path_confidence(&edge_path);
 
                 let mut node_chain = Vec::new();
                 let mut reverse_details = Vec::new();
                 let mut curr = test_node.clone();
-                node_chain.push(slash_node_name(&curr, &root));
+                node_chain.push(slash_node_name(&curr, root));
 
                 while let Some((parent, kind)) = path_parents.get(&curr) {
                     if let Some(file) = curr.as_file() {
                         push_resource_diagnostics(
                             graph,
-                            &root,
+                            root,
                             file,
                             &mut warnings,
                             &mut warnings_seen,
                         );
                     }
-                    node_chain.push(slash_node_name(parent, &root));
-                    reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, &root));
+                    node_chain.push(slash_node_name(parent, root));
+                    reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, root));
                     push_warning(
-                        &root,
+                        root,
                         &curr,
                         parent,
                         *kind,
@@ -178,13 +189,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                     curr = parent.clone();
                 }
                 if let Some(file) = curr.as_file() {
-                    push_resource_diagnostics(
-                        graph,
-                        &root,
-                        file,
-                        &mut warnings,
-                        &mut warnings_seen,
-                    );
+                    push_resource_diagnostics(graph, root, file, &mut warnings, &mut warnings_seen);
                 }
                 node_chain.reverse();
                 reverse_details.reverse();
@@ -221,7 +226,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     }
 
     for warning in crate::tests::configured_plan::vitest_setup_fallback::warnings(
-        &root,
+        root,
         Some(&impact_graph.vitest_projects),
     ) {
         if warnings_seen.insert(warning_key(&warning)) {
@@ -233,7 +238,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
         .map(|test| test.test_file.clone())
         .collect::<HashSet<_>>();
     let vitest_fallback = crate::tests::configured_plan::vitest_setup_fallback::selection(
-        &root,
+        root,
         &changed_files,
         &deleted_files,
         Some(&impact_graph.vitest_projects),

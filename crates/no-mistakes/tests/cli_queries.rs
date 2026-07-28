@@ -78,6 +78,26 @@ fn exports_of_lists_exports_and_importers() {
 }
 
 #[test]
+fn exports_of_no_importers_omits_reverse_consumers() {
+    let root = fixture("queries");
+    let output = run(&[
+        "exports-of",
+        "util.ts",
+        "--root",
+        root.to_str().unwrap(),
+        "--no-importers",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let exports = json(&output)["exports"].as_array().unwrap().clone();
+    assert!(!exports.is_empty());
+    assert!(exports
+        .iter()
+        .all(|export| export["importers"].as_array().unwrap().is_empty()));
+}
+
+#[test]
 fn dead_exports_exits_non_zero_when_dead() {
     let root = fixture("queries");
     let output = run(&[
@@ -89,6 +109,31 @@ fn dead_exports_exits_non_zero_when_dead() {
     ]);
     assert_eq!(output.status.code(), Some(1));
     assert_eq!(json(&output)["anyDead"], true);
+}
+
+#[test]
+fn dead_exports_marks_a_removed_positional_name_dead() {
+    let root = fixture("queries");
+    let output = run(&[
+        "dead-exports",
+        "util.ts",
+        "removed",
+        "--root",
+        root.to_str().unwrap(),
+        "--json",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    let value = json(&output);
+    assert_eq!(value["anyDead"], true);
+    assert_eq!(
+        value["results"],
+        serde_json::json!([{
+            "name": "removed",
+            "referenced": false,
+            "importerCount": 0,
+        }])
+    );
 }
 
 #[test]

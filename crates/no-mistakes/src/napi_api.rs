@@ -5,6 +5,19 @@ use napi::bindgen_prelude::AsyncTask;
 #[cfg(all(not(test), not(coverage)))]
 use napi_derive::napi;
 
+// Keep every JSON N-API entrypoint on libuv while making its Rust and
+// JavaScript names explicit at the registration site. Defined before the
+// child modules so their registrations use the same declarative boundary.
+macro_rules! json_binding {
+    ($rust_name:ident, $js_name:literal, $implementation:path) => {
+        #[cfg(not(coverage))]
+        #[cfg_attr(not(test), napi(js_name = $js_name))]
+        pub fn $rust_name(options_json: String) -> AsyncTask<JsonTask> {
+            AsyncTask::new(JsonTask::new(options_json, $implementation))
+        }
+    };
+}
+
 mod analyze_project;
 #[cfg(feature = "test-instrumentation")]
 pub(crate) use analyze_project::analyze_project_json_impl;
@@ -57,73 +70,40 @@ pub(crate) fn version_impl() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "dependenciesJson"))]
-pub fn dependencies_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, dependencies_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "dependentsJson"))]
-pub fn dependents_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, dependents_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "relatedJson"))]
-pub fn related_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, related_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "analyzeProjectJson"))]
-pub fn analyze_project_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(
-        options_json,
-        analyze_project::analyze_project_json_impl,
-    ))
-}
+json_binding!(
+    dependencies_json,
+    "dependenciesJson",
+    dependencies_json_impl
+);
+json_binding!(dependents_json, "dependentsJson", dependents_json_impl);
+json_binding!(related_json, "relatedJson", related_json_impl);
+json_binding!(
+    analyze_project_json,
+    "analyzeProjectJson",
+    analyze_project::analyze_project_json_impl
+);
 
 include!("napi_api/codebase_bindings.rs");
 
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "fetchesJson"))]
-pub fn fetches_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, fetches_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "checkJson"))]
-pub fn check_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, check_json_impl))
-}
+json_binding!(fetches_json, "fetchesJson", fetches_json_impl);
+json_binding!(check_json, "checkJson", check_json_impl);
 
 include!("napi_api/planning_bindings.rs");
 
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "reactAnalyzeJson"))]
-pub fn react_analyze_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, react_analyze_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "reactCheckJson"))]
-pub fn react_check_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, react_check_json_impl))
-}
-
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "reactUsagesJson"))]
-pub fn react_usages_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, react_usages_json_impl))
-}
+json_binding!(
+    react_analyze_json,
+    "reactAnalyzeJson",
+    react_analyze_json_impl
+);
+json_binding!(react_check_json, "reactCheckJson", react_check_json_impl);
+json_binding!(react_usages_json, "reactUsagesJson", react_usages_json_impl);
 
 include!("napi_api/wrappers_query.rs");
 
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "lockfileDiffJson"))]
-pub fn lockfile_diff_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, lockfile_diff_json_impl))
-}
+json_binding!(
+    lockfile_diff_json,
+    "lockfileDiffJson",
+    lockfile_diff_json_impl
+);
 
 include!("napi_api/ci_bindings.rs");

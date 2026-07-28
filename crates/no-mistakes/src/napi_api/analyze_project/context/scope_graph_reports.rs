@@ -52,7 +52,7 @@ impl PreparedScope {
         let (entries, roots) = crate::codebase::symbols::collect_entries_with_prepared_facts(
             &args,
             self.traversal.root(),
-            self.traversal.tsconfig(),
+            self.traversal.tsconfig_catalog(),
             self.traversal.graph_files().visible(),
             &self.facts,
             &self.symbol_facts,

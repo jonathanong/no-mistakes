@@ -5,7 +5,7 @@ pub fn collect_entries(args: &SymbolsArgs) -> Result<(Vec<FileEntry>, Vec<String
 pub(crate) fn collect_entries_with_prepared_facts(
     args: &SymbolsArgs,
     root: &Path,
-    tsconfig: &TsConfig,
+    catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
     visible_files: &std::collections::HashSet<PathBuf>,
     facts: &crate::codebase::check_facts::CheckFactMap,
     supplemental: &crate::codebase::check_facts::CheckFactMap,
@@ -14,28 +14,8 @@ pub(crate) fn collect_entries_with_prepared_facts(
     let cwd = std::env::current_dir().context("reading current directory")?;
     let abs_files = resolve_input_files(&args.files, root, &cwd);
     let kind_filter = build_kind_filter(&args.kinds);
-    let visible_paths = visible_files.iter().cloned().collect::<Vec<_>>();
-    let catalog = match args.tsconfig.as_deref() {
-        None => crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
-            root,
-            &[root.to_path_buf()],
-            &visible_paths,
-        ),
-        Some(path) => {
-            let path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                root.join(path)
-            };
-            crate::codebase::ts_resolver::TsConfigCatalog::forced(
-                root,
-                tsconfig.clone(),
-                Some(crate::codebase::ts_resolver::normalize_path(&path)),
-            )
-        }
-    };
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
-        &catalog,
+        catalog,
         visible_files,
         session,
     );

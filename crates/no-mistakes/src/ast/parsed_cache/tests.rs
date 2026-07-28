@@ -56,7 +56,12 @@ fn legacy_symbols_reuse_or_split_physical_cache_by_source_semantics() {
         let cache = ParsedProgramCache::default();
         let path = Path::new(path);
         cache
-            .with_recovered_program_observed(path, "export const value = 1;", || {}, |_, _, _| ())
+            .with_recovered_program_status_observed(
+                path,
+                "export const value = 1;",
+                || {},
+                |_, _, _, _| (),
+            )
             .unwrap();
         cache
             .with_legacy_symbols_program_observed(

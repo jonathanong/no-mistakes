@@ -9,7 +9,7 @@
 //! components) are reported and traversal continues through them.
 
 use std::collections::{HashSet, VecDeque};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::Result;
 use serde::Serialize;

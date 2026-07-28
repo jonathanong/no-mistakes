@@ -27,6 +27,21 @@ fn args(file: &str, no_importers: bool) -> ExportsOfArgs {
     }
 }
 
+fn target_shape(report: &ExportsOfReport) -> Vec<(String, &'static str, u32, Option<String>)> {
+    report
+        .exports
+        .iter()
+        .map(|export| {
+            (
+                export.name.clone(),
+                export.kind,
+                export.line,
+                export.resolved.clone(),
+            )
+        })
+        .collect()
+}
+
 #[test]
 fn lists_exports_with_importers() {
     let json = run_json(args("util.ts", false)).unwrap();
@@ -48,6 +63,181 @@ fn no_importers_skips_reverse_scan() {
         .exports
         .iter()
         .all(|export| export.importers.is_empty()));
+}
+
+#[test]
+fn recovered_default_export_matches_no_importers_output() {
+    let fixture = crate::codebase::queries::test_support::materialize_root_fixture(
+        "recovered-target-symbols",
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let without_importers = compute(&ExportsOfArgs {
+        file: PathBuf::from("target.ts"),
+        root: Some(root.clone()),
+        tsconfig: None,
+        no_importers: true,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    let with_importers = compute(&ExportsOfArgs {
+        file: PathBuf::from("target.ts"),
+        root: Some(root),
+        tsconfig: None,
+        no_importers: false,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+
+    assert_eq!(without_importers.exports.len(), 1);
+    assert_eq!(without_importers.exports[0].kind, "default");
+    assert_eq!(
+        with_importers.exports[0].name,
+        without_importers.exports[0].name
+    );
+    assert_eq!(
+        with_importers.exports[0].kind,
+        without_importers.exports[0].kind
+    );
+    assert_eq!(with_importers.exports[0].importers, vec!["consumer.ts"]);
+}
+
+#[test]
+fn reverse_target_symbols_keep_typescript_parsing_for_js_and_mjs() {
+    // `extract_symbols_at_path` has always parsed these extension-bearing
+    // files as TypeScript. The project-wide reverse facts use their native JS
+    // mode, so this parity check keeps the target-facing contract explicit.
+    let root = named_fixture("symbols-output");
+    for file in [
+        "src/types-in-js.js",
+        "src/types-in-mjs.mjs",
+        // `.mts` uses a module source type in reverse facts but legacy target
+        // extraction uses `SourceType::ts`, so it must not reuse those facts.
+        "src/types.mts",
+    ] {
+        let without_importers = compute(&ExportsOfArgs {
+            file: PathBuf::from(file),
+            root: Some(root.clone()),
+            tsconfig: None,
+            no_importers: true,
+            format: None,
+            json: false,
+        })
+        .unwrap();
+        let with_importers = compute(&ExportsOfArgs {
+            file: PathBuf::from(file),
+            root: Some(root.clone()),
+            tsconfig: None,
+            no_importers: false,
+            format: None,
+            json: false,
+        })
+        .unwrap();
+
+        assert_eq!(
+            target_shape(&with_importers),
+            target_shape(&without_importers)
+        );
+        assert!(
+            !with_importers.exports.is_empty(),
+            "{file} must retain its TypeScript declarations"
+        );
+    }
+}
+
+#[test]
+fn reverse_target_symbols_keep_legacy_parse_mode_for_cts_and_declarations() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("legacy-target-symbols");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    for file in ["commonjs.cts", "declaration.d.ts"] {
+        let without_importers = compute(&ExportsOfArgs {
+            file: PathBuf::from(file),
+            root: Some(root.clone()),
+            tsconfig: None,
+            no_importers: true,
+            format: None,
+            json: false,
+        })
+        .unwrap();
+        let with_importers = compute(&ExportsOfArgs {
+            file: PathBuf::from(file),
+            root: Some(root.clone()),
+            tsconfig: None,
+            no_importers: false,
+            format: None,
+            json: false,
+        })
+        .unwrap();
+
+        assert_eq!(
+            target_shape(&with_importers),
+            target_shape(&without_importers)
+        );
+        assert!(
+            !with_importers.exports.is_empty(),
+            "{file} must retain its TypeScript declarations"
+        );
+    }
+}
+
+#[test]
+fn reverse_reexport_resolution_uses_the_target_nested_tsconfig() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("nested-target-alias");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let make_args = |no_importers| ExportsOfArgs {
+        file: PathBuf::from("nested/src/barrel.ts"),
+        root: Some(root.clone()),
+        tsconfig: None,
+        no_importers,
+        format: None,
+        json: false,
+    };
+
+    let without_importers = compute(&make_args(true)).unwrap();
+    let with_importers = compute(&make_args(false)).unwrap();
+    assert_eq!(
+        without_importers.exports[0].resolved.as_deref(),
+        Some("nested/src/value.ts")
+    );
+    assert_eq!(
+        with_importers.exports[0].resolved,
+        without_importers.exports[0].resolved
+    );
+}
+
+#[test]
+fn fatal_parse_error_is_not_recovered_as_an_export() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("fatal-target-symbols");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    for no_importers in [true, false] {
+        let error = match compute(&ExportsOfArgs {
+            file: PathBuf::from("target.ts"),
+            root: Some(root.clone()),
+            tsconfig: None,
+            no_importers,
+            format: None,
+            json: false,
+        }) {
+            Err(error) => format!("{error:#}"),
+            Ok(_) => panic!("fatal parser failure must not yield exports"),
+        };
+        assert!(error.contains("extracting symbols from"), "{error}");
+        if no_importers {
+            // Direct extraction rejects OXC parser panics with its stable
+            // symbol-extraction error. Reverse facts preserve the diagnostic
+            // but mark it fatal for the same outcome.
+            assert!(
+                error.contains("failed to parse TypeScript source"),
+                "{error}"
+            );
+        }
+    }
 }
 
 #[test]

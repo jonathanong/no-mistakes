@@ -1,0 +1,32 @@
+id: no-global-edge-vector-dedup
+valid:
+  - |
+    fn normalize(adjacency: &mut Vec<Edge>) {
+        adjacency.sort();
+        adjacency.dedup();
+    }
+  - |
+    fn flatten(forward: &HashMap<Node, Vec<Edge>>) -> Vec<Edge> {
+        let mut edges = Vec::new();
+        for adjacent in forward.values() {
+            edges.extend(adjacent.iter().cloned());
+        }
+        edges
+    }
+invalid:
+  - |
+    fn flatten(forward: &HashMap<Node, Vec<Edge>>) -> Vec<Edge> {
+        let mut edges = Vec::new();
+        for adjacent in forward.values() {
+            edges.extend(adjacent.iter().cloned());
+        }
+        edges.sort();
+        edges.dedup();
+        edges
+    }
+  - |
+    fn flatten(mut edges: Vec<Edge>) -> Vec<Edge> {
+        edges.sort_by(|left, right| left.cmp(right));
+        edges.dedup_by(|left, right| left == right);
+        edges
+    }

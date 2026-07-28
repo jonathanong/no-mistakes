@@ -41,8 +41,12 @@ fn analyze_project_inner<T>(
         &HashMap<PathBuf, FileFacts>,
     ) -> T,
 ) -> anyhow::Result<T> {
-    let visible_paths = snapshot.paths_for(root);
-    let sources = snapshot.source_store_for(root);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    session.insert_visible_paths(root, std::sync::Arc::new(snapshot));
+    let dataset = session.dataset(root);
+    let visible_paths = dataset.paths_for(root);
+    let sources = dataset.sources_for(root);
     let visible_files =
         crate::codebase::ts_source::discover_files_from_visible(root, &[], &visible_paths);
     let visible_set = visible_files.iter().cloned().collect();
@@ -68,8 +72,9 @@ fn analyze_project_inner<T>(
         ),
     };
     let filter = build_filter(filters)?;
-    let factory_names = crate::config::v2::load_v2_config_from_visible(root, None, &visible_paths)
-        .map(|config| config.queues.factories)
+    let factory_names = dataset
+        .config(None)
+        .map(|config| config.queues.factories.clone())
         .unwrap_or_default();
     let files = visible_files
         .into_iter()
@@ -88,21 +93,25 @@ fn analyze_project_inner<T>(
         .collect::<Vec<_>>();
     let mut context = crate::codebase::ts_source::facts::TsFactContext::new(root);
     context.queue_project_factory_names = factory_names;
-    let ts_facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
-        &files,
-        crate::codebase::ts_source::facts::TsFactPlan {
-            queue_project: true,
-            ..Default::default()
-        },
-        &context,
-    );
+    let ts_facts =
+        crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
+            &session,
+            &files,
+            crate::codebase::ts_source::facts::TsFactPlan {
+                queue_project: true,
+                ..Default::default()
+            },
+            &context,
+            &sources,
+        );
     crate::invocation::check_timeout()?;
     let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
 
     let queue_defs = queue_definitions(&facts);
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         &tsconfig_catalog,
         &visible_set,
+        &session,
     )
     .with_queue_compatibility(root);
     let remapper =

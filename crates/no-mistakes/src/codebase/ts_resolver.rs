@@ -16,6 +16,7 @@ include!("ts_resolver/catalog.rs");
 include!("ts_resolver/catalog_config.rs");
 include!("ts_resolver/scoped.rs");
 include!("ts_resolver/scoped_setup.rs");
+include!("ts_resolver/project_resolver.rs");
 
 #[cfg(test)]
 mod scoped_test_support;

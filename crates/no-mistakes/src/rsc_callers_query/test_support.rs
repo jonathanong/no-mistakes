@@ -1,13 +1,4 @@
 use super::*;
-use crate::codebase::ts_resolver::TsConfig;
-
-pub(super) fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {
-    super::prepare::resolve_tsconfig_from_visible(
-        root,
-        tsconfig,
-        &crate::codebase::ts_source::discover_visible_paths(root),
-    )
-}
 
 pub(super) fn detect_environment(path: &Path) -> Environment {
     let Ok(source) = std::fs::read_to_string(path) else {

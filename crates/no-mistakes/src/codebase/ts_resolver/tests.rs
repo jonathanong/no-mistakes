@@ -252,6 +252,47 @@ fn scoped_catalog_session_reuses_dynamic_importer_scope_cache() {
 }
 
 #[test]
+fn project_resolver_legacy_path_retains_the_explicit_shared_cache() {
+    let root = workspace_tsconfig_fixture();
+    let web = root.join("apps/web");
+    let importer = web.join("src/entry.ts");
+    let target = web.join("src/runtime/value.ts");
+    let tsconfig = load_tsconfig(&web.join("tsconfig.json")).unwrap();
+    let visible = HashSet::from([importer.clone(), target.clone()]);
+    let cache = ImportResolutionCache::default();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+
+    let first = ProjectImportResolver::new(&tsconfig, None, &visible, Some(&cache), &session);
+    assert!(matches!(&first, ProjectImportResolver::Legacy(_)));
+    assert_eq!(
+        first.resolve("@runtime/value", &importer),
+        Some(target.clone())
+    );
+    let first_work = observer.snapshot().work;
+
+    let second = ProjectImportResolver::new(&tsconfig, None, &visible, Some(&cache), &session);
+    assert_eq!(
+        second.resolve("@runtime/value", &importer),
+        Some(target),
+        "legacy project resolvers reuse their explicit request cache"
+    );
+    let repeated_work = observer.snapshot().work;
+
+    assert_eq!(
+        repeated_work["resolver.computations"],
+        first_work["resolver.computations"]
+    );
+    assert!(
+        repeated_work["resolver.cache_hits"]
+            > first_work
+                .get("resolver.cache_hits")
+                .copied()
+                .unwrap_or_default()
+    );
+}
+
+#[test]
 fn queue_compatibility_never_clears_the_standard_fixed_session_cache() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/queue-ast-hop/tsconfig-paths/fixture");
@@ -447,6 +488,35 @@ fn catalog_keeps_symlink_root_config_paths_lexical_for_extends_and_config_dir() 
 }
 
 #[test]
+fn source_backed_catalog_reuses_prepared_workspace_facts() {
+    let root = workspace_tsconfig_fixture();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let visible = snapshot.paths_for(&root);
+    let workspace =
+        crate::codebase::workspaces::load_indexed_from_source_store(&root, &sources).unwrap();
+    let workspace_manifest_parses = sources.json_parse_count();
+
+    let catalog = TsConfigCatalog::from_visible_and_sources_with_workspace(
+        &root,
+        std::slice::from_ref(&root),
+        &visible,
+        &sources,
+        &workspace,
+    );
+
+    assert_eq!(
+        sources.json_parse_count(),
+        workspace_manifest_parses,
+        "catalog discovery must reuse the prepared workspace instead of reparsing manifests"
+    );
+    assert_eq!(
+        catalog.config_for(&root.join("apps/web/src/entry.ts")).dir,
+        root.join("apps/web")
+    );
+}
+
+#[test]
 fn catalog_appends_json_to_dotted_extends_and_reference_basenames() {
     let root = dotted_config_paths_tsconfig_fixture();
     let referenced = root.join("packages/referenced");
@@ -506,6 +576,7 @@ fn catalog_prefers_an_exact_dotted_non_json_extends_file() {
         std::slice::from_ref(&fixture),
         &visible,
         Some(&sources),
+        None,
     );
 
     let effective = builder.load_effective(&config).unwrap();
@@ -860,7 +931,7 @@ fn catalog_matcher_treats_exact_include_files_as_exact() {
         other_module.clone(),
         nested.clone(),
     ];
-    let mut builder = CatalogBuilder::new(&root, std::slice::from_ref(&root), &visible, None);
+    let mut builder = CatalogBuilder::new(&root, std::slice::from_ref(&root), &visible, None, None);
     let matcher = builder.load_effective(&config).unwrap().matcher();
 
     assert!(matcher.owns(&entry));
@@ -883,7 +954,7 @@ fn catalog_matcher_treats_dot_include_as_the_config_directory() {
         nested.clone(),
         script.clone(),
     ];
-    let mut builder = CatalogBuilder::new(&root, std::slice::from_ref(&root), &visible, None);
+    let mut builder = CatalogBuilder::new(&root, std::slice::from_ref(&root), &visible, None, None);
     let matcher = builder.load_effective(&config).unwrap().matcher();
 
     assert!(matcher.owns(&entry));
@@ -901,6 +972,7 @@ fn catalog_matcher_accepts_directory_includes_with_trailing_separators() {
         &root,
         std::slice::from_ref(&root),
         &[config.clone(), entry.clone(), setup.clone()],
+        None,
         None,
     );
     let matcher = builder.load_effective(&config).unwrap().matcher();
@@ -920,6 +992,7 @@ fn catalog_matcher_matches_absolute_config_dir_include_and_exclude_globs() {
         std::slice::from_ref(&root),
         &[config.clone(), included.clone(), excluded.clone()],
         None,
+        None,
     );
     let matcher = builder.load_effective(&config).unwrap().matcher();
 
@@ -932,7 +1005,7 @@ fn catalog_matcher_matches_absolute_config_dir_include_and_exclude_globs() {
 #[test]
 fn catalog_builder_helpers_cover_fallback_resolution_shapes() {
     let root = workspace_tsconfig_fixture();
-    let builder = CatalogBuilder::new(&root, &[], &[], None);
+    let builder = CatalogBuilder::new(&root, &[], &[], None, None);
     assert!(builder.candidates().is_empty());
     assert_eq!(
         builder.resolve_config_value(&root, "./tsconfig").unwrap(),

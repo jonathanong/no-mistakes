@@ -1,0 +1,17 @@
+id: no-handwritten-js-json-wrapper
+valid:
+  - |
+    async function callJson(fn, options) {
+      return JSON.parse(await fn(JSON.stringify(options || {})));
+    }
+  - |
+    const api = async (options) => callJson(native.symbolsJson, options);
+invalid:
+  - |
+    async function symbols(options) {
+      return JSON.parse(await native.symbolsJson(JSON.stringify(options || {})));
+    }
+  - |
+    const symbols = async (options) => JSON.parse(
+      await native["symbolsJson"](JSON.stringify(options || {})),
+    );

@@ -1,6 +1,8 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, direct_importer_paths, export_importer_paths, find_export};
-use super::shared::{read_symbols, rel_str, resolve_target};
+use super::reverse::{
+    build_reverse_analysis, direct_importer_paths, export_importer_paths, find_export,
+};
+use super::shared::{rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::ts_symbols::Export;
 use anyhow::Result;
@@ -67,7 +69,8 @@ impl DeadExportsReport {
 
 fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let symbols = read_symbols(&target.abs_file)?;
+    let analysis = build_reverse_analysis(&target)?;
+    let symbols = analysis.symbols(&target)?;
     // Each entry pairs the display name with the matching export (when one
     // exists), so default and `export *` rows are looked up correctly even when
     // names are passed explicitly.
@@ -83,16 +86,16 @@ fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
             .map(|name| (name.clone(), find_export(&symbols, name)))
             .collect()
     };
-    let index = build_index(&target)?;
-
     let results: Vec<DeadResult> = entries
         .iter()
         .map(|(name, export)| {
             let importers = match export {
                 Some(export) => {
-                    export_importer_paths(&index, &target.abs_file, export, &target.root)
+                    export_importer_paths(&analysis.index, &target.abs_file, export, &target.root)
                 }
-                None => direct_importer_paths(&index, &target.abs_file, name, &target.root),
+                None => {
+                    direct_importer_paths(&analysis.index, &target.abs_file, name, &target.root)
+                }
             };
             DeadResult {
                 name: name.clone(),

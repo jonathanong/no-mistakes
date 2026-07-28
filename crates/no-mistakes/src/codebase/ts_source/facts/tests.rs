@@ -44,6 +44,32 @@ fn plan_constructors_select_expected_fact_sets() {
 }
 
 #[test]
+fn call_site_facts_are_collected_only_when_requested() {
+    let file = fixture("imports.ts");
+    let without_call_sites = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan::imports_and_symbols(),
+    );
+    assert!(without_call_sites[&file].call_sites.is_empty());
+
+    let with_call_sites = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan {
+            call_sites: true,
+            ..TsFactPlan::imports_and_symbols()
+        },
+    );
+    let call_site = with_call_sites[&file]
+        .call_sites
+        .iter()
+        .find(|site| site.callee == "helper")
+        .expect("helper call site");
+    assert_eq!(call_site.line, 3);
+    assert_eq!(call_site.arg_count, 0);
+    assert!(call_site.caller.is_none());
+}
+
+#[test]
 fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
     let file = fixture("imports.ts");
     let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
@@ -257,6 +283,20 @@ fn collected_fact_map_retains_its_plan_and_read_errors() {
 }
 
 #[test]
+fn failed_collection_result_becomes_parse_error_facts() {
+    let facts = super::collect::test_support::facts_from_collection_result(Err(anyhow::anyhow!(
+        "synthetic parse failure"
+    )));
+
+    assert_eq!(
+        facts.parse_error.as_deref(),
+        Some("synthetic parse failure")
+    );
+    assert!(!facts.fatal_parse_error);
+    assert!(facts.symbols.is_none());
+}
+
+#[test]
 fn fact_map_supports_hash_map_compatible_iteration() {
     let path = fixture("imports.ts");
     let mut facts = TsFactMap::new();
@@ -288,6 +328,10 @@ fn plan_empty_detection_tracks_all_flags() {
         },
         TsFactPlan {
             source: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            call_sites: true,
             ..TsFactPlan::default()
         },
         TsFactPlan {
@@ -349,6 +393,22 @@ fn plan_coverage_tracks_effect_and_rsc_facts() {
     }));
     assert!(!TsFactPlan::default().covers(TsFactPlan {
         rsc_environment: true,
+        ..TsFactPlan::default()
+    }));
+}
+
+#[test]
+fn plan_coverage_tracks_call_site_facts() {
+    let available = TsFactPlan {
+        call_sites: true,
+        ..TsFactPlan::default()
+    };
+    assert!(available.covers(TsFactPlan {
+        call_sites: true,
+        ..TsFactPlan::default()
+    }));
+    assert!(!TsFactPlan::default().covers(TsFactPlan {
+        call_sites: true,
         ..TsFactPlan::default()
     }));
 }

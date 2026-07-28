@@ -1,0 +1,21 @@
+id: no-unprepared-domain-fact-collection
+valid:
+  - |
+    fn collect_prepared(facts: &dyn TsFactLookup, path: &Path) {
+        let domain = facts.get_ts_facts(path).and_then(|facts| facts.domain.as_ref());
+    }
+invalid:
+  - |
+    fn collect_again(program: &Program, path: &Path, source: &str, plan: TsFactPlan) {
+        let domain = collect_domain_facts(program, path, source, plan, &TsFactContext::default());
+    }
+  - |
+    fn collect_again(program: &Program, path: &Path, source: &str, plan: TsFactPlan) {
+        let domain = facts::domain::collect_domain_facts(
+            program,
+            path,
+            source,
+            plan,
+            &TsFactContext::default(),
+        );
+    }

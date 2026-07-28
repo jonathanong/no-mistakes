@@ -19,6 +19,7 @@ impl<'a> CatalogBuilder<'a> {
         candidate_roots: &[PathBuf],
         visible_paths: &[PathBuf],
         sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+        workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
     ) -> Self {
         let root = normalize_path(root);
         let root_real = real_path(&root).unwrap_or_else(|| root.clone());
@@ -27,8 +28,30 @@ impl<'a> CatalogBuilder<'a> {
         } else {
             candidate_roots.iter().map(|path| normalize_path(path)).collect()
         };
-        if let Ok(workspace) = crate::codebase::workspaces::load_from_files(&root, visible_paths) {
-            candidate_roots.extend(workspace.packages.into_iter().map(|package| normalize_path(&package.dir)));
+        // Prepared callers pass their request-owned workspace so manifest
+        // parsing is shared. Compatibility callers without one retain the
+        // historical filesystem-backed package-root discovery.
+        let workspace_roots: Option<Vec<PathBuf>> = workspace
+            .map(|workspace| {
+                workspace
+                    .packages
+                    .iter()
+                    .map(|package| normalize_path(&package.dir))
+                    .collect::<Vec<_>>()
+            })
+            .or_else(|| {
+                crate::codebase::workspaces::load_from_files(&root, visible_paths)
+                    .map(|workspace| {
+                        workspace
+                            .packages
+                            .into_iter()
+                            .map(|package| normalize_path(&package.dir))
+                            .collect::<Vec<_>>()
+                    })
+                    .ok()
+            });
+        if let Some(workspace_roots) = workspace_roots {
+            candidate_roots.extend(workspace_roots);
         }
         candidate_roots.sort();
         candidate_roots.dedup();

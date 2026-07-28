@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# JSON N-API entrypoints share the libuv task/name registration macro. Restrict
+# this to its stable registration module and binding-only includes so ordinary
+# AsyncTask use elsewhere remains unconstrained.
+id: no-handwritten-json-napi-wrapper
+language: rust
+severity: error
+message: >-
+  Handwritten JSON N-API wrapper. Register this entrypoint with json_binding!
+  so AsyncTask/JsonTask construction and its public JS name stay declarative
+  and consistent across the N-API surface.
+rule:
+  all:
+    - pattern: AsyncTask::new(JsonTask::new($$$))
+    - inside:
+        kind: function_item
+        stopBy: end
+files:
+  - "crates/no-mistakes/src/napi_api.rs"
+  - "crates/no-mistakes/src/napi_api/codebase_bindings.rs"
+  - "crates/no-mistakes/src/napi_api/planning_bindings.rs"
+  - "crates/no-mistakes/src/napi_api/wrappers_query.rs"
+  - "crates/no-mistakes/src/napi_api/ci_bindings.rs"
+  - "crates/no-mistakes/src/napi_api/queries.rs"
+  - "crates/no-mistakes/src/napi_api/infra_swift.rs"
+ignores:
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes/src/**/test_support.rs"

@@ -4,9 +4,11 @@ use std::hash::Hash;
 
 mod aliases;
 mod build;
+mod prepared;
 mod traversal;
 
 pub(crate) use aliases::NodeAliases;
+pub(crate) use prepared::PreparedRelationshipIndex;
 
 #[cfg(test)]
 mod test_support;

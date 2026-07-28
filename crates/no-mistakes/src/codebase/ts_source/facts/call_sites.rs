@@ -2,10 +2,12 @@ use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::{Argument, CallExpression, Expression, Function, Program};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
-use std::collections::HashSet;
 
-/// One raw call site found in a file, before it is made root-relative.
-pub(crate) struct RawCallSite {
+/// A direct identifier call recorded during the shared TypeScript fact pass.
+/// Query consumers select the relevant callee names without reparsing callers.
+#[derive(Debug, Clone)]
+pub struct CallSiteFact {
+    pub callee: String,
     pub line: u32,
     pub caller: Option<String>,
     pub arg_count: usize,
@@ -13,17 +15,9 @@ pub(crate) struct RawCallSite {
     pub args: Vec<&'static str>,
 }
 
-/// Collect call sites of any function whose local name is in `targets`. Only
-/// direct identifier callees (`foo(...)`) match — namespace member calls
-/// (`ns.foo()`) and indirect aliases (`const f = foo; f()`) are not resolved.
-pub(crate) fn collect_call_sites(
-    program: &Program<'_>,
-    source: &str,
-    targets: &HashSet<String>,
-) -> Vec<RawCallSite> {
+pub(crate) fn collect_call_site_facts(program: &Program<'_>, source: &str) -> Vec<CallSiteFact> {
     let mut visitor = CallSiteVisitor {
         source,
-        targets,
         scope: Vec::new(),
         sites: Vec::new(),
     };
@@ -33,9 +27,8 @@ pub(crate) fn collect_call_sites(
 
 struct CallSiteVisitor<'a> {
     source: &'a str,
-    targets: &'a HashSet<String>,
     scope: Vec<String>,
-    sites: Vec<RawCallSite>,
+    sites: Vec<CallSiteFact>,
 }
 
 fn callee_name<'a>(callee: &'a Expression<'a>) -> Option<&'a str> {
@@ -75,8 +68,9 @@ impl<'a> Visit<'a> for CallSiteVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if callee_name(&call.callee).is_some_and(|name| self.targets.contains(name)) {
-            self.sites.push(RawCallSite {
+        if let Some(callee) = callee_name(&call.callee) {
+            self.sites.push(CallSiteFact {
+                callee: callee.to_string(),
                 line: byte_offset_to_line(self.source, call.span.start as usize),
                 caller: self.scope.last().cloned(),
                 arg_count: call.arguments.len(),

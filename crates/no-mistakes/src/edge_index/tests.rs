@@ -123,6 +123,61 @@ fn aliases_expand_every_reached_frontier_without_synthetic_edges() {
 }
 
 #[test]
+fn prepared_projection_preserves_aliases_orientation_empty_roots_and_first_seen_order() {
+    fn public_node(node: &str) -> String {
+        match node {
+            "job-a" | "job-b" => "job".to_owned(),
+            "worker-a" | "worker-b" => "worker".to_owned(),
+            node => node.to_owned(),
+        }
+    }
+
+    let prepared = PreparedRelationshipIndex::from_edges(
+        [
+            edge("producer", "job-a", 1),
+            edge("producer", "job-b", 1),
+            edge("job-a", "worker-a", 2),
+            edge("job-b", "worker-b", 2),
+        ],
+        |node: &String| public_node(node),
+    );
+    let project = |edge: CanonicalEdge<String, u8>| {
+        (public_node(&edge.from), public_node(&edge.to), edge.kind)
+    };
+
+    assert_eq!(
+        prepared.edge_view(&[], None, project),
+        vec![
+            ("job".to_owned(), "worker".to_owned(), 2),
+            ("producer".to_owned(), "job".to_owned(), 1),
+        ],
+        "empty edge roots retain the full public edge view order",
+    );
+    assert_eq!(
+        prepared.edge_view(&["producer".to_owned()], None, project),
+        vec![
+            ("producer".to_owned(), "job".to_owned(), 1),
+            ("job".to_owned(), "worker".to_owned(), 2),
+        ],
+        "aliases reached after the first hop must project only their first public edge",
+    );
+    assert_eq!(
+        prepared.related(&["worker".to_owned()], EdgeDirection::Dependents, project,),
+        vec![
+            ("worker".to_owned(), "job".to_owned(), 2),
+            ("job".to_owned(), "producer".to_owned(), 1),
+        ],
+        "reverse views retain traversal orientation before callers sort them",
+    );
+    assert!(
+        prepared
+            .related(&[], EdgeDirection::Both, project)
+            .is_empty(),
+        "related queries retain their historical empty-root result",
+    );
+}
+
+#[test]
 fn both_deduplicates_self_loops_and_reciprocal_projections() {
     let index = index(&[("a", "a", 1), ("a", "b", 2), ("b", "a", 2)]);
     assert_eq!(
