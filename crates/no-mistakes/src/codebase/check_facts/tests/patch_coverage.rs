@@ -148,10 +148,7 @@ fn legacy_symbol_facts_retain_a_meaningful_fatal_parse_error() {
 
 #[test]
 fn collect_file_facts_populates_call_sites_for_the_graph_plan() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/shared-facts/fixture"),
-    );
+    let root = super::fixture_path("");
     let file = root.join("src/everything.tsx");
     let facts = collect_file_facts(
         &root,
