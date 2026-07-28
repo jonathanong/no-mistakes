@@ -1,0 +1,14 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - entrypoints/api.mts
+      forbiddenModules:
+        - sharp
+      forbiddenFiles:
+        - packages/local/src/worker.mts
+        - resource-only.txt
+      relationships:
+        - import
+        - workspace

@@ -132,15 +132,38 @@ fn both_deduplicates_self_loops_and_reciprocal_projections() {
 }
 
 #[test]
-#[should_panic(expected = "forward and reverse adjacency maps must describe identical edges")]
-fn direct_adjacency_constructor_rejects_reverse_only_edges() {
+fn direct_adjacency_constructor_and_invariant_cover_both_map_states() {
+    fn compare_edges(
+        left: &CanonicalEdge<String, u8>,
+        right: &CanonicalEdge<String, u8>,
+    ) -> std::cmp::Ordering {
+        left.cmp(right)
+    }
+
     let mut forward = HashMap::new();
     forward.insert("a".to_owned(), vec![("b".to_owned(), 1_u8)]);
     let mut reverse = HashMap::new();
-    reverse.insert(
-        "b".to_owned(),
-        vec![("a".to_owned(), 1_u8), ("c".to_owned(), 2_u8)],
-    );
+    reverse.insert("b".to_owned(), vec![("a".to_owned(), 1_u8)]);
 
-    let _ = EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| left.cmp(right));
+    let index = EdgeIndex::from_adjacency_maps_by(forward.clone(), reverse.clone(), compare_edges);
+
+    assert_eq!(index.edges(), &[edge("a", "b", 1)]);
+
+    reverse.get_mut("b").unwrap().push(("c".to_owned(), 2_u8));
+    let panic = std::panic::catch_unwind(|| {
+        #[cfg(coverage)]
+        test_support::assert_adjacency_maps_are_consistent(&forward, &reverse);
+        // A panicking generic constructor call makes LLVM subtract downstream
+        // LCOV counters to zero, so coverage builds exercise the same invariant
+        // directly while ordinary tests retain the constructor contract.
+        #[cfg(not(coverage))]
+        EdgeIndex::from_adjacency_maps_by(forward, reverse, compare_edges);
+    })
+    .expect_err("reverse-only edge must be rejected");
+    let message = panic
+        .downcast_ref::<String>()
+        .map(String::as_str)
+        .or_else(|| panic.downcast_ref::<&str>().copied())
+        .unwrap_or_default();
+    assert!(message.contains("forward and reverse adjacency maps must describe identical edges"));
 }

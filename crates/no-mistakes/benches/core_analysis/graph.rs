@@ -1,5 +1,6 @@
 use super::fixtures::{fixture_root, source_files, traverse_args, tsconfig, EXPECTED_SOURCE_FILES};
 use criterion::{black_box, BenchmarkId, Criterion, Throughput};
+use no_mistakes::benchmark_support;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use no_mistakes::codebase::dependencies::{self, Direction, RelationshipArg};
 use no_mistakes::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
@@ -89,4 +90,70 @@ pub(super) fn bench_facts_graph_and_query(c: &mut Criterion) {
             black_box((deps.len(), dependents.len()))
         });
     });
+}
+
+pub(super) fn bench_high_fanout_finalization(c: &mut Criterion) {
+    let mut group = c.benchmark_group("graph_finalization");
+    for (name, nodes, fanout) in [("large", 4_096, 16), ("high_fanout", 1_024, 128)] {
+        let fixture = benchmark_support::high_fanout_finalization_fixture(nodes, fanout);
+        let expected_edges = (nodes * fanout) as usize;
+        assert_eq!(
+            benchmark_support::finalize_high_fanout_adjacency(fixture.clone()).canonical_edges,
+            expected_edges,
+            "duplicate input edges must not inflate finalized graph size"
+        );
+        group.throughput(Throughput::Elements(expected_edges as u64));
+        group.bench_with_input(
+            BenchmarkId::new(name, expected_edges),
+            &fixture,
+            |b, fixture| {
+                b.iter_batched(
+                    || fixture.clone(),
+                    |fixture| {
+                        black_box(benchmark_support::finalize_high_fanout_adjacency(
+                            black_box(fixture),
+                        ));
+                    },
+                    criterion::BatchSize::SmallInput,
+                );
+            },
+        );
+    }
+    group.finish();
+
+    let mut production = c.benchmark_group("graph_production_finalization");
+    let fixture = benchmark_support::production_graph_fixture(1_024, 128);
+    let expected_edges = 1_024 * 128;
+    assert_eq!(
+        benchmark_support::finalize_production_graph(fixture.clone()).canonical_edges,
+        expected_edges
+    );
+    assert_eq!(
+        benchmark_support::append_production_selectors(fixture.clone()).selector_appended_edges,
+        expected_edges
+    );
+    production.throughput(Throughput::Elements(expected_edges as u64));
+    production.bench_function("node_id_finalization", |b| {
+        b.iter_batched(
+            || fixture.clone(),
+            |fixture| {
+                black_box(benchmark_support::finalize_production_graph(black_box(
+                    fixture,
+                )))
+            },
+            criterion::BatchSize::SmallInput,
+        );
+    });
+    production.bench_function("selector_append", |b| {
+        b.iter_batched(
+            || fixture.clone(),
+            |fixture| {
+                black_box(benchmark_support::append_production_selectors(black_box(
+                    fixture,
+                )))
+            },
+            criterion::BatchSize::SmallInput,
+        );
+    });
+    production.finish();
 }

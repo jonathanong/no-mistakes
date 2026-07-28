@@ -202,4 +202,14 @@ impl DepGraph {
         sort_edge_index_adjacency(&mut self.edges);
         self.effective_edges = OnceLock::new();
     }
+
+    fn append_canonical_edges(&mut self, edges: Vec<Edge>) {
+        self.edges.extend_edges_preserving_ordinals(
+            edges
+                .into_iter()
+                .map(|(from, to, kind)| CanonicalEdge::new(from, to, kind)),
+        );
+        sort_edge_index_adjacency(&mut self.edges);
+        self.effective_edges = OnceLock::new();
+    }
 }

@@ -40,25 +40,17 @@ fn merge_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
     }
 }
 
-fn edge_index_from_maps(mut forward: EdgeMap, mut reverse: EdgeMap) -> EdgeIndex<NodeId, EdgeKind> {
+pub(crate) fn edge_index_from_maps(
+    mut forward: EdgeMap,
+    mut reverse: EdgeMap,
+) -> EdgeIndex<NodeId, EdgeKind> {
     // Preserve the historical graph-membership boundary: only nodes present in
-    // the forward map count as graph nodes.
+    // the forward map count as graph nodes. Adjacency is normalized before a
+    // source-ordered flatten so canonical edge ordinals retain the exact order
+    // of the former global edge comparator without a repository-wide sort.
     sort_adjacency_lists(&mut forward, &mut reverse);
-    EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| {
-        (
-            node_sort_key(&left.from),
-            &left.from,
-            node_sort_key(&left.to),
-            &left.to,
-            left.kind.sort_key(),
-        )
-            .cmp(&(
-                node_sort_key(&right.from),
-                &right.from,
-                node_sort_key(&right.to),
-                &right.to,
-                right.kind.sort_key(),
-            ))
+    EdgeIndex::from_normalized_adjacency_maps_by_source(forward, reverse, |left, right| {
+        (node_sort_key(left), left).cmp(&(node_sort_key(right), right))
     })
 }
 

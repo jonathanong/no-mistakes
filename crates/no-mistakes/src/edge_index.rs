@@ -9,6 +9,8 @@ mod traversal;
 pub(crate) use aliases::NodeAliases;
 
 #[cfg(test)]
+mod test_support;
+#[cfg(test)]
 mod tests;
 
 /// One canonical, typed relationship in a request-scoped edge index.

@@ -38,3 +38,59 @@ fn benchmark_adapters_preserve_output_with_and_without_observers() {
     assert_eq!(observed_project, plain_project);
     assert!(!project_diagnostics.work.is_empty());
 }
+
+#[test]
+fn high_fanout_finalization_dedupes_and_preserves_canonical_order() {
+    let first = high_fanout_finalization_fixture(32, 7);
+    let second = high_fanout_finalization_fixture(32, 7);
+    assert_eq!(
+        finalize_high_fanout_adjacency(first.clone()),
+        HighFanoutFinalizationSummary {
+            canonical_edges: 32 * 7,
+            forward_nodes: 32,
+            reverse_nodes: 32,
+        }
+    );
+    assert_eq!(
+        high_fanout_finalization_signature(first),
+        high_fanout_finalization_signature(second),
+        "source-ordered finalization must not depend on HashMap iteration order"
+    );
+}
+
+#[test]
+fn high_fanout_finalization_emits_split_verbose_timings() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+    let fixture = high_fanout_finalization_fixture(32, 7);
+    let _ = finalize_high_fanout_adjacency(fixture);
+    drop(guard);
+
+    let labels = observer
+        .snapshot()
+        .timings
+        .into_iter()
+        .map(|timing| timing.label)
+        .collect::<Vec<_>>();
+    assert!(labels.contains(&"graph.canonical_flatten".to_string()));
+    assert!(labels.contains(&"graph.ordinal_construction".to_string()));
+}
+
+#[test]
+fn production_graph_fixture_exercises_finalization_and_selector_append() {
+    let fixture = production_graph_fixture(32, 7);
+    assert_eq!(
+        finalize_production_graph(fixture.clone()),
+        ProductionGraphSummary {
+            canonical_edges: 32 * 7,
+            selector_appended_edges: 0,
+        }
+    );
+    assert_eq!(
+        append_production_selectors(fixture),
+        ProductionGraphSummary {
+            canonical_edges: 32 * 7,
+            selector_appended_edges: 32 * 7,
+        }
+    );
+}

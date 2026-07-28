@@ -1,5 +1,5 @@
-use super::*;
 use super::test_support::*;
+use super::*;
 
 mod config_edges;
 mod config_fact_plan;

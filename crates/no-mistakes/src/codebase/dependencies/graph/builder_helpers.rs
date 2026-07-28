@@ -131,11 +131,22 @@ fn merge_terraform_edges(
 }
 
 fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
-    // Sort adjacency lists for deterministic BFS output.
-    for adj in forward.values_mut().chain(reverse.values_mut()) {
+    // Each map entry is independent, so normalize both directional views in
+    // parallel before the final source-ordered flatten assigns ordinals.
+    let normalize = |adj: &mut Vec<(NodeId, EdgeKind)>| {
         adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), k.sort_key()));
         adj.dedup();
-    }
+    };
+    crate::perf_trace::trace("graph.forward_adjacency_normalization", || {
+        forward
+            .par_iter_mut()
+            .for_each(|(_, adjacent)| normalize(adjacent));
+    });
+    crate::perf_trace::trace("graph.reverse_adjacency_normalization", || {
+        reverse
+            .par_iter_mut()
+            .for_each(|(_, adjacent)| normalize(adjacent));
+    });
 }
 
 fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {

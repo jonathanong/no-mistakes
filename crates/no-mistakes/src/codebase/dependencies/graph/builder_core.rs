@@ -181,7 +181,16 @@ impl DepGraph {
                     },
                 )
             })?;
-            graph.merge_canonical_edges(selector_edges);
+            // Route-import selector analysis reads the partial graph, so keep
+            // its historical reconstruction path. Direct selectors can append
+            // to the finished index without renumbering the base graph.
+            crate::perf_trace::trace("graph.playwright_selector_merge", || {
+                if plan.route_imports {
+                    graph.merge_canonical_edges(selector_edges);
+                } else {
+                    graph.append_canonical_edges(selector_edges);
+                }
+            });
         }
         record_graph_observability(&graph, &session);
         Ok(graph)
