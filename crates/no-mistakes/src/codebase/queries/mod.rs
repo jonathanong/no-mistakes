@@ -20,6 +20,8 @@ pub mod resolve_check;
 mod render;
 mod reverse;
 mod shared;
+#[cfg(test)]
+mod test_support;
 
 pub use call_sites::CallSitesArgs;
 pub use dead_exports::DeadExportsArgs;

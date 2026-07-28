@@ -25,13 +25,27 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     // in standard recovered mode so runner-config analysis can share the same
     // request cache. The direct-file test/support path retains the historical
     // TypeScript fallback for unknown extensions.
-    let collect = |program: &oxc_ast::ast::Program<'_>, source: &str, parse_error| {
-        collect_file_facts_from_program(path, plan, context, source, program, parse_error)
-    };
     let result = if is_indexable(path) {
-        session.with_recovered_program(path, &source, collect)
+        session.with_recovered_program_status(
+            path,
+            &source,
+            |program, source, parse_error, panicked| {
+                let mut facts = collect_file_facts_from_program(
+                    path,
+                    plan,
+                    context,
+                    source,
+                    program,
+                    parse_error,
+                );
+                facts.fatal_parse_error = panicked;
+                facts
+            },
+        )
     } else {
-        session.with_recovered_typescript_program(path, &source, collect)
+        session.with_recovered_typescript_program(path, &source, |program, source, parse_error| {
+            collect_file_facts_from_program(path, plan, context, source, program, parse_error)
+        })
     };
     match result {
         Ok(facts) => Some(facts),
@@ -101,6 +115,7 @@ pub(crate) fn collect_file_facts_from_program(
     };
     TsFileFacts {
         parse_error,
+        fatal_parse_error: false,
         source: plan.source.then(|| source.to_owned()),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,

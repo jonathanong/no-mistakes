@@ -92,12 +92,13 @@ impl ParsedProgramCache {
         }
     }
 
-    pub(crate) fn with_recovered_program_observed<T>(
+    /// Exposes OXC's recovered program, diagnostic, and fatal-panic status.
+    pub(crate) fn with_recovered_program_status_observed<T>(
         &self,
         path: &Path,
         source: &str,
         on_parse: impl FnOnce(),
-        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>, bool) -> T,
     ) -> Result<T, String> {
         let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
         Ok(cached.with_dependent(|owner, parsed| {
@@ -105,6 +106,7 @@ impl ParsedProgramCache {
                 &parsed.program,
                 owner.source.as_str(),
                 parsed.diagnostic_error.clone(),
+                parsed.panic_error.is_some(),
             )
         }))
     }

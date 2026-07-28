@@ -205,6 +205,21 @@ fn accepts_default_as_export_name() {
 }
 
 #[test]
+fn finds_callers_for_recovered_default_export() {
+    let fixture = crate::codebase::queries::test_support::materialize_root_fixture(
+        "recovered-target-symbols",
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let report = compute(&args(root, "target.ts", "default")).unwrap();
+
+    assert!(report
+        .call_sites
+        .iter()
+        .any(|site| site.file == "consumer.ts"));
+}
+
+#[test]
 fn renders_formats_and_runs() {
     let report = compute(&args(fixture_root("queries"), "util.ts", "used")).unwrap();
     let mut human = Vec::new();

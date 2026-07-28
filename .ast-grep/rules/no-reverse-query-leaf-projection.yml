@@ -4,7 +4,8 @@ language: rust
 severity: error
 message: >-
   Reverse-query leaves must consume the prepared reverse projection. Fact
-  collection and SymbolIndex construction belong only in reverse.rs.
+  collection and SymbolIndex construction belong only in the reverse module's
+  prepared build owner.
 rule:
   any:
     - pattern: collect_ts_facts($$$)
@@ -21,6 +22,7 @@ files:
   - "crates/no-mistakes/src/codebase/queries/**"
 ignores:
   - "crates/no-mistakes/src/codebase/queries/reverse.rs"
+  - "crates/no-mistakes/src/codebase/queries/reverse/build.rs"
   - "crates/no-mistakes/src/codebase/queries/**/tests/**"
   - "crates/no-mistakes/src/codebase/queries/**/*_tests.rs"
   - "crates/no-mistakes/src/codebase/queries/**/tests.rs"

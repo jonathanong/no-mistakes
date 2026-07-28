@@ -54,6 +54,10 @@ pub struct TsFileFacts {
     /// Parser diagnostic for this source file. Facts may contain the parser's
     /// recovered AST, but consumers that require sound syntax can reject it.
     pub parse_error: Option<String>,
+    /// Whether [`Self::parse_error`] came from a parser panic rather than a
+    /// recoverable diagnostic. Such partial facts must not answer sound
+    /// symbol queries.
+    pub fatal_parse_error: bool,
     pub source: Option<String>,
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,

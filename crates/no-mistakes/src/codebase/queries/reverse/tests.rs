@@ -31,7 +31,7 @@ fn direct_and_file_importer_projections_preserve_their_distinct_meaning() {
             .is_empty()
     );
     assert_eq!(
-        file_importer_paths(&analysis.index, &target.abs_file, &target.root),
+        super::importers::file_importer_paths(&analysis.index, &target.abs_file, &target.root),
         vec![
             "barrel.ts".to_string(),
             "broken.ts".to_string(),
@@ -41,7 +41,7 @@ fn direct_and_file_importer_projections_preserve_their_distinct_meaning() {
 }
 
 #[test]
-fn symbols_reports_incomplete_prepared_fact_states() {
+fn symbols_distinguishes_recovered_and_incomplete_prepared_facts() {
     let root = fixture_root();
     let target = resolve_target(Path::new("util.ts"), Some(&root), None).unwrap();
 
@@ -51,13 +51,19 @@ fn symbols_reports_incomplete_prepared_fact_states() {
     assert!(error.contains("missing facts for"), "{error}");
     assert!(error.contains("util.ts"), "{error}");
 
-    let mut parse_error = build_reverse_analysis(&target).unwrap();
-    parse_error
+    let mut recovered_diagnostic = build_reverse_analysis(&target).unwrap();
+    recovered_diagnostic
         .facts
         .get_mut(&target.abs_file)
         .unwrap()
         .parse_error = Some("fixture parser diagnostic".to_string());
-    let error = parse_error.symbols(&target).unwrap_err().to_string();
+    assert!(recovered_diagnostic.symbols(&target).is_ok());
+
+    let mut fatal_parse_error = build_reverse_analysis(&target).unwrap();
+    let facts = fatal_parse_error.facts.get_mut(&target.abs_file).unwrap();
+    facts.parse_error = Some("fixture parser diagnostic".to_string());
+    facts.fatal_parse_error = true;
+    let error = fatal_parse_error.symbols(&target).unwrap_err().to_string();
     assert!(error.contains("extracting symbols from"), "{error}");
     assert!(error.contains("fixture parser diagnostic"), "{error}");
 

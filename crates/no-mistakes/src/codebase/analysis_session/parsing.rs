@@ -36,21 +36,34 @@ impl AnalysisSession {
         source: &str,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
     ) -> anyhow::Result<T> {
+        self.with_recovered_program_status(path, source, |program, source, diagnostic, _| {
+            analyze(program, source, diagnostic)
+        })
+    }
+
+    /// Recovered parser access with an explicit fatal-panic marker for fact
+    /// collectors that expose partial AST-derived results to sound queries.
+    pub(crate) fn with_recovered_program_status<T>(
+        &self,
+        path: &Path,
+        source: &str,
+        analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>, bool) -> T,
+    ) -> anyhow::Result<T> {
         let path = normalize_path(path);
         self.increment("parse.requests", 1);
         let parse_started = Cell::new(false);
-        let result = crate::ast::with_recovered_program_observed(
+        let result = crate::ast::with_recovered_program_status_observed(
             &path,
             source,
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
             },
-            |program, source, parse_error| {
+            |program, source, parse_error, panicked| {
                 if parse_started.get() && parse_error.is_some() {
                     self.increment("parse.errors", 1);
                 }
-                analyze(program, source, parse_error)
+                analyze(program, source, parse_error, panicked)
             },
         );
         if parse_started.get() && result.is_err() {

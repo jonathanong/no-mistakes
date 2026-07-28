@@ -126,6 +126,7 @@ pub(crate) fn collect_file_facts_from_program(
     let ts = TsFileFacts {
         source: stored_source.as_deref().map(str::to_owned),
         parse_error: None,
+        fatal_parse_error: false,
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         call_sites,

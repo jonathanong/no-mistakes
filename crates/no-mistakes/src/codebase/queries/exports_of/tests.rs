@@ -51,6 +51,76 @@ fn no_importers_skips_reverse_scan() {
 }
 
 #[test]
+fn recovered_default_export_matches_no_importers_output() {
+    let fixture = crate::codebase::queries::test_support::materialize_root_fixture(
+        "recovered-target-symbols",
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let without_importers = compute(&ExportsOfArgs {
+        file: PathBuf::from("target.ts"),
+        root: Some(root.clone()),
+        tsconfig: None,
+        no_importers: true,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    let with_importers = compute(&ExportsOfArgs {
+        file: PathBuf::from("target.ts"),
+        root: Some(root),
+        tsconfig: None,
+        no_importers: false,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+
+    assert_eq!(without_importers.exports.len(), 1);
+    assert_eq!(without_importers.exports[0].kind, "default");
+    assert_eq!(
+        with_importers.exports[0].name,
+        without_importers.exports[0].name
+    );
+    assert_eq!(
+        with_importers.exports[0].kind,
+        without_importers.exports[0].kind
+    );
+    assert_eq!(with_importers.exports[0].importers, vec!["consumer.ts"]);
+}
+
+#[test]
+fn fatal_parse_error_is_not_recovered_as_an_export() {
+    let fixture =
+        crate::codebase::queries::test_support::materialize_root_fixture("fatal-target-symbols");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    for no_importers in [true, false] {
+        let error = match compute(&ExportsOfArgs {
+            file: PathBuf::from("target.ts"),
+            root: Some(root.clone()),
+            tsconfig: None,
+            no_importers,
+            format: None,
+            json: false,
+        }) {
+            Err(error) => format!("{error:#}"),
+            Ok(_) => panic!("fatal parser failure must not yield exports"),
+        };
+        assert!(error.contains("extracting symbols from"), "{error}");
+        if no_importers {
+            // Direct extraction rejects OXC parser panics with its stable
+            // symbol-extraction error. Reverse facts preserve the diagnostic
+            // but mark it fatal for the same outcome.
+            assert!(
+                error.contains("failed to parse TypeScript source"),
+                "{error}"
+            );
+        }
+    }
+}
+
+#[test]
 fn pass4b_exports_of_skips_ignored_reexport_for_visible_fallback() {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
     crate::test_support::git_init(fixture.path());

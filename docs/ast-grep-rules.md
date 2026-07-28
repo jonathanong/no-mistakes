@@ -146,10 +146,11 @@ generic Rust/JS patterns can observe:
   queries may not rediscover graph files, including in the projection owner.
   Its companion `no-reverse-query-leaf-projection` prevents query leaves from
   collecting TS facts or building `SymbolIndex`; those operations belong only
-  to the prepared owner in `reverse.rs`. Prepared inputs are reusable only when
-  their resolver catalog, candidate files, fallbacks, and relationship filters
-  preserve the query's semantics; the structural rule cannot prove that
-  equivalence, so `CLAUDE.md` additionally requires baseline-field parity tests
+  to the prepared build owner in the `reverse` module. Prepared inputs are
+  reusable only when their resolver catalog, candidate files, fallbacks, and
+  relationship filters preserve the query's semantics; the structural rule
+  cannot prove that equivalence, so `CLAUDE.md` additionally requires
+  baseline-field parity tests
   when an additive flag introduces a broader analysis scope.
 - `no-global-edge-vector-dedup` protects canonical graph finalization in
   `edge_index/build.rs`. A full `edges` vector there must be produced by the

@@ -1,8 +1,15 @@
-use super::shared::{rel_str, Target};
+use super::shared::Target;
 use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
 use anyhow::Result;
 use std::path::Path;
+
+mod build;
+mod importers;
+pub(crate) use build::{
+    build_reverse_analysis, build_reverse_analysis_with_plan, build_reverse_index_from_prepared,
+};
+pub(crate) use importers::{direct_importer_paths, export_importer_paths, export_lookup_symbol};
 
 pub(crate) struct ReverseAnalysis {
     pub(crate) index: SymbolIndex,
@@ -26,16 +33,31 @@ impl ReverseAnalysis {
         let Some(facts) = self.facts.get(&target.abs_file) else {
             anyhow::bail!("missing facts for {}", target.abs_file.display());
         };
+        if facts.fatal_parse_error {
+            if let Some(error) = &facts.parse_error {
+                anyhow::bail!(
+                    "extracting symbols from {}: {error}",
+                    target.abs_file.display()
+                );
+            }
+            anyhow::bail!(
+                "fatal parser failure while extracting symbols from {}",
+                target.abs_file.display()
+            );
+        }
+        // Recovered parser facts can retain top-level symbols alongside a
+        // diagnostic. Direct symbol extraction does the same unless the
+        // parser panicked, which is tracked separately above.
+        if let Some(symbols) = facts.symbols.clone() {
+            return Ok(symbols);
+        }
         if let Some(error) = &facts.parse_error {
             anyhow::bail!(
                 "extracting symbols from {}: {error}",
                 target.abs_file.display()
             );
         }
-        let Some(symbols) = facts.symbols.clone() else {
-            anyhow::bail!("missing symbols for {}", target.abs_file.display());
-        };
-        Ok(symbols)
+        anyhow::bail!("missing symbols for {}", target.abs_file.display());
     }
 }
 
@@ -56,176 +78,6 @@ pub(crate) fn find_export<'a>(symbols: &'a FileSymbols, name: &str) -> Option<&'
                 })
                 .flatten()
         })
-}
-
-/// Build the reverse import index for the whole project in one parallel scan.
-/// Cheaper than a full `DepGraph` — it only resolves import/re-export edges.
-pub(crate) fn build_reverse_analysis(target: &Target) -> Result<ReverseAnalysis> {
-    build_reverse_analysis_with_plan(
-        target,
-        crate::codebase::ts_source::facts::TsFactPlan::default(),
-    )
-}
-
-/// Build reverse-import facts plus explicitly requested query-specific syntax
-/// facts in the same project-wide parse pass.
-pub(crate) fn build_reverse_analysis_with_plan(
-    target: &Target,
-    additional_plan: crate::codebase::ts_source::facts::TsFactPlan,
-) -> Result<ReverseAnalysis> {
-    let mut plan = crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols();
-    plan.include(additional_plan);
-    let prepared = target.prepare_reverse()?;
-    let facts =
-        crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
-            &target.session,
-            prepared.graph_files.indexable(),
-            plan,
-            &crate::codebase::ts_source::facts::TsFactContext::default(),
-            &target.sources,
-        );
-    let (index, target_tsconfig) = build_reverse_index_from_prepared(target, &prepared, &facts);
-    Ok(ReverseAnalysis {
-        index,
-        facts,
-        target_tsconfig,
-    })
-}
-
-/// Project already-collected facts through the ordinary reverse-query catalog.
-/// Callers may share facts with a broader analysis, but the resolver/catalog
-/// used for ordinary importer output remains the one prepared by `Target`.
-pub(crate) fn build_reverse_index_from_prepared(
-    target: &Target,
-    prepared: &super::shared::ReversePrepared,
-    facts: &crate::codebase::ts_source::facts::TsFactMap,
-) -> (SymbolIndex, crate::codebase::ts_resolver::TsConfig) {
-    let target_tsconfig = prepared
-        .tsconfig_catalog
-        .config_for(&target.abs_file)
-        .clone();
-    let index = SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
-        &target_tsconfig,
-        Some(&prepared.tsconfig_catalog),
-        &prepared.graph_files,
-        facts,
-        &prepared.workspace,
-        None,
-        &target.session,
-    );
-    (index, target_tsconfig)
-}
-
-/// The symbol name a concrete export is indexed under. Default exports are
-/// recorded under `default` regardless of the local declaration name.
-pub(crate) fn export_lookup_symbol(export: &Export) -> String {
-    match export.kind {
-        ExportKind::Default => "default".to_string(),
-        _ => export.name.clone(),
-    }
-}
-
-/// True for an anonymous `export * from '...'` row, whose consumers import
-/// concrete names from the re-exporting file rather than a single symbol. A
-/// named `export * as ns from '...'` has a concrete public name (`ns`) and is
-/// not a transparent star row.
-fn is_star_reexport(export: &Export) -> bool {
-    export.name == "*"
-        && matches!(&export.kind, ExportKind::ReExport { imported, .. } if imported == "*")
-}
-
-fn dedup_sorted(mut paths: Vec<String>) -> Vec<String> {
-    paths.sort();
-    paths.dedup();
-    paths
-}
-
-fn symbol_importers(index: &SymbolIndex, file: &Path, symbol: &str, root: &Path) -> Vec<String> {
-    index
-        .importers_of(file, symbol)
-        .map(|records| records.iter().map(|(i, _, _)| rel_str(i, root)).collect())
-        .unwrap_or_default()
-}
-
-/// Importers recorded under the wildcard `*` — namespace imports
-/// (`import * as ns`), namespace re-exports (`export * as ns`, recorded with a
-/// concrete local name), and anonymous `export *` star barrels (local name
-/// `*`). When `exclude_anon_star` is set (for the `default` export, which an
-/// anonymous `export *` does not forward) only the anonymous star rows are
-/// dropped; namespace imports and `export * as ns` still expose `.default`.
-fn wildcard_importers(
-    index: &SymbolIndex,
-    file: &Path,
-    root: &Path,
-    exclude_anon_star: bool,
-) -> Vec<String> {
-    index
-        .importers_of(file, "*")
-        .map(|records| {
-            records
-                .iter()
-                .filter(|(_, local, is_reexport)| {
-                    !(exclude_anon_star && *is_reexport && local == "*")
-                })
-                .map(|(i, _, _)| rel_str(i, root))
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
-/// Unique importer files that reference `(file, symbol)`, root-relative and
-/// sorted. Includes barrel re-exporters and wildcard importers (namespace
-/// imports always; `export *` barrels for every symbol except `default`).
-pub(crate) fn importer_paths(
-    index: &SymbolIndex,
-    file: &Path,
-    symbol: &str,
-    root: &Path,
-) -> Vec<String> {
-    let mut paths = symbol_importers(index, file, symbol, root);
-    if symbol != "*" {
-        paths.extend(wildcard_importers(index, file, root, symbol == "default"));
-    }
-    dedup_sorted(paths)
-}
-
-/// Importers recorded for exactly `(file, symbol)`, with no wildcard widening.
-/// Used for names that are not (or no longer) exports, where a namespace import
-/// or `export *` barrel does not reference the specific deleted name.
-pub(crate) fn direct_importer_paths(
-    index: &SymbolIndex,
-    file: &Path,
-    symbol: &str,
-    root: &Path,
-) -> Vec<String> {
-    dedup_sorted(symbol_importers(index, file, symbol, root))
-}
-
-/// All importers of any symbol of `file` — the consumers of an `export *` row,
-/// who import concrete names rather than the star itself.
-pub(crate) fn file_importer_paths(index: &SymbolIndex, file: &Path, root: &Path) -> Vec<String> {
-    dedup_sorted(
-        index
-            .file_importers(file)
-            .iter()
-            .map(|path| rel_str(path, root))
-            .collect(),
-    )
-}
-
-/// Importers of a specific export row. `export *` rows resolve to their
-/// concrete-name consumers; every other row uses the symbol lookup.
-pub(crate) fn export_importer_paths(
-    index: &SymbolIndex,
-    file: &Path,
-    export: &Export,
-    root: &Path,
-) -> Vec<String> {
-    if is_star_reexport(export) {
-        file_importer_paths(index, file, root)
-    } else {
-        importer_paths(index, file, &export_lookup_symbol(export), root)
-    }
 }
 
 pub(crate) fn export_kind_str(kind: &ExportKind) -> &'static str {
