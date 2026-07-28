@@ -1,6 +1,10 @@
 use super::super::{TsFactContext, TsFactPlan, TsFileFacts};
 use std::path::Path;
 
+pub(crate) fn facts_from_collection_result(result: anyhow::Result<TsFileFacts>) -> TsFileFacts {
+    super::file::facts_from_collection_result(result)
+}
+
 pub(crate) fn collect_file_facts_with_sources(
     path: &Path,
     plan: TsFactPlan,

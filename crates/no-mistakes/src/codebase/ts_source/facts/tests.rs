@@ -283,6 +283,20 @@ fn collected_fact_map_retains_its_plan_and_read_errors() {
 }
 
 #[test]
+fn failed_collection_result_becomes_parse_error_facts() {
+    let facts = super::collect::test_support::facts_from_collection_result(Err(anyhow::anyhow!(
+        "synthetic parse failure"
+    )));
+
+    assert_eq!(
+        facts.parse_error.as_deref(),
+        Some("synthetic parse failure")
+    );
+    assert!(!facts.fatal_parse_error);
+    assert!(facts.symbols.is_none());
+}
+
+#[test]
 fn fact_map_supports_hash_map_compatible_iteration() {
     let path = fixture("imports.ts");
     let mut facts = TsFactMap::new();

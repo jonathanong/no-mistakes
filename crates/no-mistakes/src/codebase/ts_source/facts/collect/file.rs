@@ -5,6 +5,18 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
 
+pub(super) fn facts_from_collection_result(result: anyhow::Result<TsFileFacts>) -> TsFileFacts {
+    match result {
+        Ok(facts) => facts,
+        // Indexable extensions are expected to have an OXC source type.
+        // Reaching this branch means that allowlist and OXC support drifted.
+        Err(error) => TsFileFacts {
+            parse_error: Some(error.to_string()),
+            ..TsFileFacts::default()
+        },
+    }
+}
+
 pub(super) fn collect_file_facts_with_sources_and_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     path: &Path,
@@ -47,15 +59,7 @@ pub(super) fn collect_file_facts_with_sources_and_session(
             collect_file_facts_from_program(path, plan, context, source, program, parse_error)
         })
     };
-    match result {
-        Ok(facts) => Some(facts),
-        // Indexable extensions are expected to have an OXC source type.
-        // Reaching this branch means that allowlist and OXC support drifted.
-        Err(error) => Some(TsFileFacts {
-            parse_error: Some(error.to_string()),
-            ..TsFileFacts::default()
-        }),
-    }
+    Some(facts_from_collection_result(result))
 }
 
 pub(crate) fn collect_file_facts_from_program(

@@ -67,6 +67,33 @@ fn symbols_distinguishes_recovered_and_incomplete_prepared_facts() {
     assert!(error.contains("extracting symbols from"), "{error}");
     assert!(error.contains("fixture parser diagnostic"), "{error}");
 
+    let mut fatal_without_diagnostic = build_reverse_analysis(&target).unwrap();
+    fatal_without_diagnostic
+        .facts
+        .get_mut(&target.abs_file)
+        .unwrap()
+        .fatal_parse_error = true;
+    let error = fatal_without_diagnostic
+        .symbols(&target)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("fatal parser failure"), "{error}");
+    assert!(error.contains("util.ts"), "{error}");
+
+    let mut diagnostic_without_symbols = build_reverse_analysis(&target).unwrap();
+    let facts = diagnostic_without_symbols
+        .facts
+        .get_mut(&target.abs_file)
+        .unwrap();
+    facts.parse_error = Some("fixture parser diagnostic".to_string());
+    facts.symbols = None;
+    let error = diagnostic_without_symbols
+        .symbols(&target)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("extracting symbols from"), "{error}");
+    assert!(error.contains("fixture parser diagnostic"), "{error}");
+
     let mut missing_symbols = build_reverse_analysis(&target).unwrap();
     missing_symbols
         .facts
