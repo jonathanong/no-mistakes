@@ -118,3 +118,16 @@ fn relationship_projection_fixture_deduplicates_typed_public_collisions() {
         }
     );
 }
+
+#[test]
+fn scoped_resolver_fixture_caches_one_selection_per_importer() {
+    let fixture = scoped_resolver_selection_fixture();
+
+    assert_eq!(
+        resolve_repeated_scoped_imports(&fixture, 64),
+        ScopedResolverSelectionSummary {
+            resolved: 64,
+            selection_builds: 1,
+        }
+    );
+}
