@@ -5,10 +5,11 @@ on: push
 env:
   Z_WORKFLOW: 9
   A_WORKFLOW: ${{ secrets.WORKFLOW_TOKEN }}
+  B_UPPER_WORKFLOW: ${{ SECRETS.Upper_Token }}
 
 jobs:
   default:
-    if: secrets.BARE_JOB_TOKEN != ''
+    if: SECRETS.BARE_JOB_TOKEN != ''
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: production

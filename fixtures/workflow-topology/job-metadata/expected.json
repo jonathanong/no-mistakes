@@ -17,9 +17,11 @@
       ],
       "env": {
         "A_WORKFLOW": "${{ secrets.WORKFLOW_TOKEN }}",
+        "B_UPPER_WORKFLOW": "${{ SECRETS.Upper_Token }}",
         "Z_WORKFLOW": "9"
       },
       "secretReferences": [
+        "Upper_Token",
         "WORKFLOW_TOKEN"
       ]
     },
@@ -64,7 +66,7 @@
       "workflowId": ".github/workflows/default.yml",
       "key": "default",
       "kind": "job",
-      "condition": "secrets.BARE_JOB_TOKEN != ''",
+      "condition": "SECRETS.BARE_JOB_TOKEN != ''",
       "steps": [
         {
           "index": 0,

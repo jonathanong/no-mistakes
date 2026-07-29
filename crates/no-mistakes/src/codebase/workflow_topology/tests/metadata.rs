@@ -72,7 +72,7 @@ fn secret_references_are_static_names_attributed_to_the_direct_scope() {
         .unwrap();
     assert_eq!(
         workflow.secret_references.as_deref(),
-        Some(["WORKFLOW_TOKEN".to_string()].as_slice())
+        Some(["Upper_Token".to_string(), "WORKFLOW_TOKEN".to_string()].as_slice())
     );
 
     let default_job = topology
