@@ -140,6 +140,8 @@ fn dataset_shared_traversal_extends_absent_facts_and_seeds_cached_program_facts(
         shared.facts.as_ref().unwrap()[&unit].imports.len(),
     );
 
+    // Cached-program seeding must retain source text when the union plan requests it.
+    shared.fact_plan.source = true;
     shared.seed_cached_program_facts(&std::collections::HashSet::from([
         unit.clone(),
         excluded.clone(),
@@ -148,6 +150,7 @@ fn dataset_shared_traversal_extends_absent_facts_and_seeds_cached_program_facts(
     let facts = shared.facts.as_ref().unwrap();
     assert!(facts.contains_key(&unit));
     assert!(facts.contains_key(&excluded));
+    assert!(facts[&excluded].source.is_some());
     assert!(!facts.contains_key(&missing));
 
     shared.facts = None;
