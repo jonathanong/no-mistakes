@@ -42,6 +42,7 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
     candidate_roots.push(root.to_path_buf());
     candidate_roots.extend(workspace.packages.iter().map(|package| package.dir.clone()));
     candidate_roots.extend(crate::integration_tests::configured_runner_config_dirs(root, config));
+    let preliminary_roots = candidate_roots.clone();
     let preliminary_catalog = std::sync::Arc::new(catalog_for_request(
         root,
         tsconfig_path,
@@ -82,16 +83,21 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
         },
     );
     candidate_roots.extend(projects.tsconfig_candidate_roots(root));
-    candidate_roots.sort();
-    candidate_roots.dedup();
-    let catalog = std::sync::Arc::new(catalog_for_request(
-            root,
-            tsconfig_path,
-            tsconfig,
-            &candidate_roots,
-            root_visible_paths,
-            &sources,
-        ));
+    let catalog = crate::codebase::test_discovery::reuse_or_rebuild_prepared_catalog(
+        preliminary_catalog,
+        &preliminary_roots,
+        &mut candidate_roots,
+        |candidate_roots| {
+            std::sync::Arc::new(catalog_for_request(
+                root,
+                tsconfig_path,
+                tsconfig,
+                candidate_roots,
+                root_visible_paths,
+                &sources,
+            ))
+        },
+    );
     projects.reparse_vitest_with_final_catalog(
         root,
         config,

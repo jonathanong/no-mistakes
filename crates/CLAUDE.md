@@ -49,6 +49,14 @@ This split is important for determinism as well as speed: a fact plan makes
 what is collected explicit, the source session gives every input one identity,
 and a canonical relationship projection gives every consumer the same answer.
 
+Keep extracted facts in their final ownership form. Do not wrap an owned value
+in `Arc` only to recover it with `as_deref().cloned()` for its sole consumer;
+that deep-copies nested data. Use `Arc` only for retained shared ownership.
+
+Cache immutable selection work at the coarsest stable request key. A scoped
+resolver selects once per importing file, including negative results; assert
+the selection-computation count in tests.
+
 For reverse symbol queries, the prepared analysis owner supplies the symbol
 catalog/reverse projection. `importers`, `exports-of`, `dead-exports`, and
 `call-sites` may project it differently, but none may discover graph files,
@@ -91,6 +99,9 @@ wrapped in `crate::perf_trace::trace(label, || { ... })`. Wrap new hot paths
 the same way, not a temporary `eprintln!` timer. `cargo bench` in CI is
 diagnostic-only — `ast-grep` plus tests proving buggy vs. fixed paths
 disagree is the real regression-prevention layer.
+
+Benchmark preparation separately from projection. When optimizing construction,
+add a batched constructor benchmark alongside lookup/projection benchmarks.
 
 ### Duplicate full-repo work across independent call paths
 

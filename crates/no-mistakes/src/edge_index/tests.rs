@@ -1,4 +1,5 @@
 use super::*;
+use std::cell::Cell;
 use std::collections::HashMap;
 
 fn edge(from: &str, to: &str, kind: u8) -> CanonicalEdge<String, u8> {
@@ -18,6 +19,26 @@ fn canonicalizes_edges_and_sorts_adjacency() {
         &[("b".to_owned(), 1), ("c".to_owned(), 2)]
     );
     assert_eq!(index.reverse().get("b").unwrap(), &[("a".to_owned(), 1)]);
+}
+
+#[test]
+fn unique_edge_constructor_retains_ordinals_and_sorts_adjacency() {
+    let edges = vec![edge("a", "c", 2), edge("a", "b", 1), edge("b", "d", 3)];
+    let index = EdgeIndex::from_unique_edges_in_order(edges.clone());
+
+    assert_eq!(index.edges(), edges);
+    assert_eq!(
+        index.forward().get("a").unwrap(),
+        &[("b".to_owned(), 1), ("c".to_owned(), 2)],
+        "ordinal order must be independent from adjacency ordering",
+    );
+}
+
+#[cfg(debug_assertions)]
+#[test]
+#[should_panic(expected = "already-unique edge input must not contain duplicates")]
+fn unique_edge_constructor_rejects_duplicate_edges_in_debug_builds() {
+    EdgeIndex::from_unique_edges_in_order(vec![edge("a", "b", 1), edge("a", "b", 1)]);
 }
 
 #[test]
@@ -141,8 +162,8 @@ fn prepared_projection_preserves_aliases_orientation_empty_roots_and_first_seen_
         ],
         |node: &String| public_node(node),
     );
-    let project = |edge: CanonicalEdge<String, u8>| {
-        (public_node(&edge.from), public_node(&edge.to), edge.kind)
+    let project = |edge: &CanonicalEdge<String, u8>, from: &str, to: &str| {
+        (from.to_owned(), to.to_owned(), edge.kind)
     };
 
     assert_eq!(
@@ -174,6 +195,49 @@ fn prepared_projection_preserves_aliases_orientation_empty_roots_and_first_seen_
             .related(&[], EdgeDirection::Both, project)
             .is_empty(),
         "related queries retain their historical empty-root result",
+    );
+}
+
+#[test]
+fn prepared_index_renders_each_typed_node_once_before_preserving_public_order() {
+    let calls = Cell::new(0);
+    let prepared = PreparedRelationshipIndex::from_edges(
+        [
+            edge("shared", "z", 1),
+            edge("shared", "a", 1),
+            edge("other", "shared", 2),
+            edge("shared", "z", 1),
+        ],
+        |node: &String| {
+            calls.set(calls.get() + 1);
+            match node.as_str() {
+                "shared" => "job".to_owned(),
+                "a" | "z" => "worker".to_owned(),
+                "other" => "producer".to_owned(),
+                _ => unreachable!("test nodes are exhaustive"),
+            }
+        },
+    );
+
+    assert_eq!(calls.get(), 4, "one public name per distinct typed node");
+    assert_eq!(
+        prepared.edges(),
+        &[
+            edge("shared", "a", 1),
+            edge("shared", "z", 1),
+            edge("other", "shared", 2)
+        ],
+        "public from/to/kind order must retain typed-edge ordering as its final tie breaker",
+    );
+    assert_eq!(
+        prepared.edge_view(&[], None, |edge, from, to| {
+            (from.to_owned(), to.to_owned(), edge.kind)
+        }),
+        vec![
+            ("job".to_owned(), "worker".to_owned(), 1),
+            ("producer".to_owned(), "job".to_owned(), 2),
+        ],
+        "projection must reuse cached public names and retain first-seen public edges",
     );
 }
 

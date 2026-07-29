@@ -52,6 +52,10 @@ impl<'a> ScopedImportResolver<'a> {
             automatic_fixed_roots,
             caches: ScopedDashMap::new(),
             scope_caches: ScopedDashMap::new(),
+            importer_selections: ScopedArc::new(ImporterSelectionCache {
+                selections: ScopedDashMap::new(),
+                builds: ScopedAtomicUsize::new(0),
+            }),
             scope_key_builds: ScopedAtomicUsize::new(0),
             scope_cache_lookups: ScopedAtomicUsize::new(0),
             session,

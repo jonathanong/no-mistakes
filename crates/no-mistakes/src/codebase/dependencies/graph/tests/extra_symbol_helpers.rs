@@ -1,31 +1,4 @@
-#[test]
-fn symbol_index_basic_lookup() {
-    let mut map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
-    map.insert(
-        p("/src/b.mts"),
-        vec![(
-            p("/src/a.mts"),
-            "alpha".to_string(),
-            "alpha".to_string(),
-            false,
-        )],
-    );
-    let index = SymbolIndex::build(&map);
-    let importers = index
-        .importers_of(p("/src/a.mts").as_path(), "alpha")
-        .unwrap();
-    assert_eq!(importers.len(), 1);
-    assert_eq!(importers[0].0, p("/src/b.mts"));
-}
-
-#[test]
-fn symbol_index_missing_returns_none() {
-    let map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
-    let index = SymbolIndex::build(&map);
-    assert!(index
-        .importers_of(p("/src/a.mts").as_path(), "ghost")
-        .is_none());
-}
+include!("extra_symbol_index.rs");
 
 #[test]
 fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {

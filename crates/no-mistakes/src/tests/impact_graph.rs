@@ -166,6 +166,7 @@ fn build_test_impact_graph_for_request(
     let mut catalog_roots = vec![root.to_path_buf()];
     catalog_roots
         .extend(no_mistakes::integration_tests::configured_runner_config_dirs(root, config));
+    let preliminary_roots = catalog_roots.clone();
     let preliminary_catalog = catalog(
         root,
         &tsconfig,
@@ -208,7 +209,7 @@ fn build_test_impact_graph_for_request(
             root,
             config,
             &visible_paths,
-            preliminary_catalog,
+            Arc::clone(&preliminary_catalog),
             PreparedTestProjectRequest {
                 graph: (graph_files.indexable(), runner_fact_plan, runner_fact_context),
                 sources: Arc::clone(&sources),
@@ -217,16 +218,21 @@ fn build_test_impact_graph_for_request(
             },
         );
     catalog_roots.extend(projects.tsconfig_candidate_roots(root));
-    catalog_roots.sort();
-    catalog_roots.dedup();
-    let catalog = Arc::new(catalog(
-        root,
-        &tsconfig,
-        tsconfig_path,
-        &catalog_roots,
-        &visible_paths,
-        &sources,
-    ));
+    let catalog = no_mistakes::codebase::test_discovery::reuse_or_rebuild_prepared_catalog(
+        preliminary_catalog,
+        &preliminary_roots,
+        &mut catalog_roots,
+        |catalog_roots| {
+            catalog(
+                root,
+                &tsconfig,
+                tsconfig_path,
+                catalog_roots,
+                &visible_paths,
+                &sources,
+            )
+        },
+    );
     projects.reparse_vitest_with_final_catalog(
         root,
         config,

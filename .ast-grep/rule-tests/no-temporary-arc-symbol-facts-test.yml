@@ -1,0 +1,15 @@
+id: no-temporary-arc-symbol-facts
+valid:
+  - |
+    fn collect(program: &Program, source: &str) -> Option<FileSymbols> {
+        Some(extract_symbols_from_program(program, source))
+    }
+invalid:
+  - |
+    fn collect(program: &Program, source: &str) -> Option<Arc<FileSymbols>> {
+        Some(Arc::new(extract_symbols_from_program(program, source)))
+    }
+  - |
+    fn collect(program: &Program, source: &str) -> Option<std::sync::Arc<FileSymbols>> {
+        Some(std::sync::Arc::new(extract_symbols_from_program(program, source)))
+    }
