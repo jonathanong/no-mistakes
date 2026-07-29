@@ -40,7 +40,6 @@ pub struct ProjectReport {
 #[doc(hidden)]
 #[derive(Debug, Clone)]
 pub struct PreparedProjectReport {
-    pub(crate) root: PathBuf,
     pub(crate) report: ProjectReport,
     pub(crate) relationships: PreparedRelationshipIndex<RelationshipNode, EdgeKind>,
 }

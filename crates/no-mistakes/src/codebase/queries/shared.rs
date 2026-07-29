@@ -14,11 +14,11 @@ pub(crate) struct Target {
     pub root: PathBuf,
     pub visible_paths: Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
     pub abs_file: PathBuf,
-    pub visible_files: HashSet<PathBuf>,
     pub session: Arc<crate::codebase::analysis_session::AnalysisSession>,
     pub sources: Arc<crate::codebase::ts_source::SourceStore>,
     dataset: Arc<crate::codebase::analysis_dataset::AnalysisDataset>,
     explicit_tsconfig: Option<PathBuf>,
+    visible_files: OnceLock<HashSet<PathBuf>>,
     tsconfig: OnceLock<std::result::Result<TsConfig, String>>,
 }
 
@@ -44,7 +44,6 @@ pub(crate) fn resolve_target(
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let dataset = session.dataset(&root);
     let snapshot = dataset.visible_paths_arc();
-    let visible_paths = dataset.paths_for(&root);
     let sources = dataset.sources_for(&root);
     let abs_file = resolve_input_file(file, &root, &cwd);
     // Reject a missing target or a directory up front so a typo or stale path
@@ -57,24 +56,37 @@ pub(crate) fn resolve_target(
             root.join(path)
         })
     });
-    let visible_files = visible_paths
-        .iter()
-        .map(|path| normalize_path(path))
-        .collect();
     Ok(Target {
         root,
         visible_paths: snapshot,
         abs_file,
-        visible_files,
         session,
         sources,
         dataset,
         explicit_tsconfig,
+        visible_files: OnceLock::new(),
         tsconfig: OnceLock::new(),
     })
 }
 
 impl Target {
+    pub(crate) fn validate_explicit_tsconfig(&self) -> Result<()> {
+        if self.explicit_tsconfig.is_some() {
+            self.tsconfig()?;
+        }
+        Ok(())
+    }
+
+    pub(crate) fn visible_files(&self) -> &HashSet<PathBuf> {
+        self.visible_files.get_or_init(|| {
+            self.dataset
+                .paths_for(&self.root)
+                .iter()
+                .map(|path| normalize_path(path))
+                .collect()
+        })
+    }
+
     pub(crate) fn config(
         &self,
         path: Option<&Path>,

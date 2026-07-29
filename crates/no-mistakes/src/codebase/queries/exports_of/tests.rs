@@ -66,6 +66,27 @@ fn no_importers_skips_reverse_scan() {
 }
 
 #[test]
+fn ordinary_exports_keep_an_explicit_tsconfig_authoritative() {
+    let root = fixture_root();
+    let error = match compute(&ExportsOfArgs {
+        file: PathBuf::from("util.ts"),
+        root: Some(root.clone()),
+        tsconfig: Some(root.join("missing-tsconfig.json")),
+        no_importers: true,
+        format: None,
+        json: false,
+    }) {
+        Ok(_) => panic!("missing explicit tsconfig must fail"),
+        Err(error) => error,
+    };
+
+    assert!(
+        error.to_string().contains("missing-tsconfig.json"),
+        "{error}"
+    );
+}
+
+#[test]
 fn recovered_default_export_matches_no_importers_output() {
     let fixture = crate::codebase::queries::test_support::materialize_root_fixture(
         "recovered-target-symbols",

@@ -96,3 +96,33 @@ impl PreparedTestProjects {
         roots
     }
 }
+
+/// Reuse the preliminary request catalog unless runner preparation discovered
+/// a genuinely new automatic-catalog root.
+#[doc(hidden)]
+pub fn reuse_or_rebuild_prepared_catalog(
+    preliminary: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    preliminary_roots: &[PathBuf],
+    final_roots: &mut Vec<PathBuf>,
+    rebuild: impl FnOnce(
+        &[PathBuf],
+    ) -> std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+) -> std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog> {
+    let mut preliminary_roots = preliminary_roots
+        .iter()
+        .map(|root| crate::codebase::ts_resolver::normalize_path(root))
+        .collect::<Vec<_>>();
+    preliminary_roots.sort();
+    preliminary_roots.dedup();
+    for root in final_roots.iter_mut() {
+        *root = crate::codebase::ts_resolver::normalize_path(root);
+    }
+    final_roots.sort();
+    final_roots.dedup();
+
+    if preliminary.is_forced() || *final_roots == preliminary_roots {
+        preliminary
+    } else {
+        rebuild(final_roots)
+    }
+}

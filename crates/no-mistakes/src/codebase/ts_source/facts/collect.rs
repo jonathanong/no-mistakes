@@ -92,6 +92,24 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session_serializing_path
     // workers, while this records every file handed to the fact collector.
     session.record_work("ts_facts.collections", 1);
     session.record_work("ts_facts.files", files.len() as u64);
+    if serial_paths.is_empty() {
+        return TsFactMap::with_plan(
+            files
+                .par_iter()
+                .map(|path| {
+                    crate::invocation::check_timeout().ok().map(|()| {
+                        collect_file_facts_with_sources_and_session(
+                            session, path, plan, context, sources,
+                        )
+                        .map(|facts| (path.clone(), facts))
+                    })
+                })
+                .while_some()
+                .flatten()
+                .collect(),
+            plan,
+        );
+    }
     let serial_paths = serial_paths
         .iter()
         .collect::<std::collections::HashSet<_>>();

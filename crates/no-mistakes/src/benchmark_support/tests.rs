@@ -104,4 +104,17 @@ fn relationship_projection_fixture_deduplicates_typed_public_collisions() {
             projected_edges: 32,
         }
     );
+    assert_eq!(
+        project_all_relationship_edges(&fixture),
+        RelationshipProjectionSummary {
+            projected_edges: 32,
+        }
+    );
+    let constructed = relationship_index_from_fixture(relationship_construction_fixture(32));
+    assert_eq!(
+        project_relationship_edges(&constructed),
+        RelationshipProjectionSummary {
+            projected_edges: 32,
+        }
+    );
 }

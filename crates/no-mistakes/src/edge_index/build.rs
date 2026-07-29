@@ -3,6 +3,8 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+mod unique;
+
 impl<Node, Kind> EdgeIndex<Node, Kind>
 where
     Node: Clone + Eq + Hash + Ord,

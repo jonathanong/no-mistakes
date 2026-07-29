@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# The standalone fact collector owns its FileSymbols directly. Wrapping the
+# extraction in Arc and then cloning it into TsFileFacts deep-copies every
+# nested symbol string and vector without creating a retained shared owner.
+id: no-temporary-arc-symbol-facts
+language: rust
+severity: error
+message: >-
+  Standalone TS facts own FileSymbols directly. Return the extracted value and
+  move it into TsFileFacts instead of allocating an Arc that is immediately
+  deep-cloned.
+rule:
+  any:
+    - pattern: std::sync::Arc::new(extract_symbols_from_program($$$))
+    - pattern: Arc::new(extract_symbols_from_program($$$))
+files:
+  - "crates/no-mistakes/src/codebase/ts_source/facts/collect/file.rs"

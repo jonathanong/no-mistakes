@@ -50,6 +50,7 @@ fn discover_from_projects(
     )
 }
 
+mod prepared_catalog_reuse;
 mod runner_basics;
 use runner_basics::prepare_test_projects_from_visible;
 

@@ -114,13 +114,6 @@ impl TsConfigCatalog {
         }
     }
 
-    pub(crate) fn resolver_scope_for(
-        &self,
-        importing_file: &Path,
-    ) -> (&TsConfig, Option<&str>, &[PathBuf]) {
-        self.resolver_scope_at(self.selection(importing_file))
-    }
-
     /// Select a catalog entry once for a persistent consumer. The index is
     /// request-local and is only meaningful with this catalog instance.
     pub(crate) fn resolver_scope_index_for(&self, importing_file: &Path) -> Option<usize> {

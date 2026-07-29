@@ -15,7 +15,6 @@ fn typed_index_preserves_colliding_file_and_job_nodes() {
     });
     let worker = RelationshipNode::File(root.join("worker.ts"));
     let report = PreparedProjectReport {
-        root: root.clone(),
         report: ProjectReport {
             producers: vec![],
             workers: vec![],

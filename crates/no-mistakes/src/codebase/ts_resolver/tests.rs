@@ -186,6 +186,16 @@ fn scoped_catalog_selects_and_resolves_workspace_aliases() {
         resolver.resolve("@shared/message", &importer),
         Some(root.join("packages/shared/src/message.ts"))
     );
+    assert_eq!(
+        resolver.resolve("@runtime/value", &web.join("src/../src/entry.ts")),
+        Some(web.join("src/runtime/value.ts"))
+    );
+    assert_eq!(resolver.importer_selection_build_count(), 1);
+
+    let outside_importer = root.join("../outside.ts");
+    assert_eq!(resolver.resolve("@runtime/value", &outside_importer), None);
+    assert_eq!(resolver.resolve("@runtime/value", &outside_importer), None);
+    assert_eq!(resolver.importer_selection_build_count(), 2);
 }
 
 #[test]

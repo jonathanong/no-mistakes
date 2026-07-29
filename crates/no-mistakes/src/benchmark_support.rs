@@ -4,86 +4,26 @@
 //! the real in-process aggregate paths without making their internal result
 //! types part of the supported Rust API.
 
-use crate::edge_index::{CanonicalEdge, PreparedRelationshipIndex};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::path::Path;
 
 mod production_graph;
+mod relationships;
+mod scoped_resolver;
 pub use production_graph::{
     append_production_selectors, finalize_production_graph, production_graph_fixture,
     ProductionGraphFixture, ProductionGraphSummary,
 };
-
-/// Synthetic prepared relationships with paired typed nodes that collapse to
-/// one public edge, matching queue job and route identity collisions.
-#[derive(Clone)]
-pub struct RelationshipProjectionFixture {
-    relationships: PreparedRelationshipIndex<u32, u8>,
-    roots: Vec<String>,
-}
-
-/// Stable count returned by the prepared relationship projection benchmark.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RelationshipProjectionSummary {
-    pub projected_edges: usize,
-}
-
-/// Build a deterministic high-volume prepared projection fixture.
-///
-/// Every logical edge has two distinct typed representations with identical
-/// public names. This exercises alias expansion plus first-seen HashSet
-/// deduplication without relying on repository files.
-pub fn relationship_projection_fixture(logical_edges: u32) -> RelationshipProjectionFixture {
-    assert!(logical_edges > 0, "logical_edges must be nonzero");
-
-    let mut edges = Vec::with_capacity((logical_edges * 2) as usize);
-    for edge in 0..logical_edges {
-        let base = edge * 4;
-        edges.extend([
-            CanonicalEdge::new(base, base + 2, 1),
-            CanonicalEdge::new(base + 1, base + 3, 1),
-        ]);
-    }
-    RelationshipProjectionFixture {
-        relationships: PreparedRelationshipIndex::from_edges(edges, relationship_node_name),
-        roots: (0..logical_edges)
-            .map(|edge| format!("producer-{edge}"))
-            .collect(),
-    }
-}
-
-/// Run the same one-hop public-edge projection used by prepared queue and
-/// server edge views.
-pub fn project_relationship_edges(
-    fixture: &RelationshipProjectionFixture,
-) -> RelationshipProjectionSummary {
-    let projected_edges = fixture
-        .relationships
-        .edge_view(&fixture.roots, Some(1), |edge| ProjectedRelationshipEdge {
-            from: relationship_node_name(&edge.from),
-            to: relationship_node_name(&edge.to),
-            kind: edge.kind,
-        })
-        .len();
-    RelationshipProjectionSummary { projected_edges }
-}
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-struct ProjectedRelationshipEdge {
-    from: String,
-    to: String,
-    kind: u8,
-}
-
-fn relationship_node_name(node: &u32) -> String {
-    let edge = node / 4;
-    if node % 4 < 2 {
-        format!("producer-{edge}")
-    } else {
-        format!("worker-{edge}")
-    }
-}
+pub use relationships::{
+    project_all_relationship_edges, project_relationship_edges, relationship_construction_fixture,
+    relationship_index_from_fixture, relationship_projection_fixture,
+    RelationshipConstructionFixture, RelationshipProjectionFixture, RelationshipProjectionSummary,
+};
+pub use scoped_resolver::{
+    resolve_repeated_scoped_imports, scoped_resolver_selection_fixture,
+    ScopedResolverSelectionFixture, ScopedResolverSelectionSummary,
+};
 
 /// Synthetic, deterministic adjacency input for measuring graph finalization.
 ///

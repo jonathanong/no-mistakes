@@ -65,11 +65,21 @@ fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
         let analysis = build_reverse_analysis(&target)?;
         (analysis.symbols(&target)?, Some(analysis))
     };
+    // Explicit configuration is authoritative even when the target has no
+    // re-exports. Automatic configuration remains lazy for ordinary exports.
+    target.validate_explicit_tsconfig()?;
     // Target re-export rendering retains the single-file command's nearest
-    // visible-tsconfig semantics. Keep it here so reverse-only commands do
-    // not eagerly resolve a target config they never use.
-    let resolver_config = target.tsconfig()?;
-    let resolver = ImportResolver::new(resolver_config).with_visible(&target.visible_files);
+    // visible-tsconfig semantics. Ordinary exports do not need a resolver.
+    let resolver = symbols
+        .exports
+        .iter()
+        .any(|export| matches!(export.kind, ExportKind::ReExport { .. }))
+        .then(|| {
+            target
+                .tsconfig()
+                .map(|config| ImportResolver::new(config).with_visible(target.visible_files()))
+        })
+        .transpose()?;
 
     let exports = symbols
         .exports
@@ -77,6 +87,8 @@ fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
         .map(|export| {
             let resolved = if let ExportKind::ReExport { source, .. } = &export.kind {
                 resolver
+                    .as_ref()
+                    .expect("re-export resolver is prepared")
                     .resolve(source, &target.abs_file)
                     .map(|abs| rel_str(&abs, &target.root))
             } else {

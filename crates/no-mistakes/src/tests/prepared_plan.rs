@@ -135,6 +135,8 @@ impl PreparedTestPlanInputs {
         );
         tsconfig_candidate_roots
             .extend(no_mistakes::integration_tests::configured_runner_config_dirs(&root, &config));
+        let preliminary_tsconfig_roots = tsconfig_candidate_roots.clone();
+        let sources = visible_paths.source_store_for(&root);
         // Test-runner configs are parsed before their project scopes can
         // contribute more roots. Explicit runner config parents are candidate
         // roots too, so aliases resolve from a configured package even when
@@ -155,7 +157,7 @@ impl PreparedTestPlanInputs {
                 &root,
                 &tsconfig_candidate_roots,
                 &root_visible_paths,
-                &visible_paths.source_store_for(&root),
+                &sources,
             )
         });
         let framework_plan = args.framework.map_or_else(
@@ -214,7 +216,6 @@ impl PreparedTestPlanInputs {
                 graph_plan,
                 &preliminary_graph_config,
             );
-        let sources = visible_paths.source_store_for(&root);
         let mut prepared_test_projects =
             no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
                 &root,
@@ -229,32 +230,28 @@ impl PreparedTestPlanInputs {
                 },
             );
         tsconfig_candidate_roots.extend(prepared_test_projects.tsconfig_candidate_roots(&root));
-        tsconfig_candidate_roots.sort();
-        tsconfig_candidate_roots.dedup();
-        let tsconfig_catalog = Arc::new(if let Some(path) = args.tsconfig.as_deref() {
-            let path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                root.join(path)
-            };
-            no_mistakes::codebase::ts_resolver::TsConfigCatalog::forced(
-                &root,
-                tsconfig.clone(),
-                Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
-            )
-        } else {
-            no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible(
-                &root,
-                &tsconfig_candidate_roots,
-                &root_visible_paths,
-            )
-        });
+        let tsconfig_catalog =
+            no_mistakes::codebase::test_discovery::reuse_or_rebuild_prepared_catalog(
+                preliminary_tsconfig_catalog,
+                &preliminary_tsconfig_roots,
+                &mut tsconfig_candidate_roots,
+                |candidate_roots| {
+                    Arc::new(
+                        no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+                            &root,
+                            candidate_roots,
+                            &root_visible_paths,
+                            &sources,
+                        ),
+                    )
+                },
+            );
         prepared_test_projects.reparse_vitest_with_final_catalog(
             &root,
             &config,
             &root_visible_paths,
             Arc::clone(&tsconfig_catalog),
-            sources,
+            Arc::clone(&sources),
         );
         prepared_test_projects.reresolve_vitest_setups(
             &root,

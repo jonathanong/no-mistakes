@@ -35,6 +35,11 @@ impl ScopedResolverSelectionKey {
     }
 }
 
+struct ImporterSelectionCache {
+    selections: ScopedDashMap<ScopedPathBuf, Option<usize>>,
+    builds: ScopedAtomicUsize,
+}
+
 /// A resolver facade that chooses one cached `ImportResolver` scope for each
 /// importer. It owns a normalized visibility view, so symlinked workspace
 /// paths and real config identities share cached resolver outcomes.
@@ -45,6 +50,7 @@ pub(crate) struct ScopedImportResolver<'a> {
     automatic_fixed_roots: Option<(ScopedPathBuf, ScopedPathBuf)>,
     caches: ScopedDashMap<ResolverCacheScopeKey, ScopedArc<ResolverResultCache>>,
     scope_caches: ScopedDashMap<ScopedResolverSelectionKey, ScopedArc<ResolverResultCache>>,
+    importer_selections: ScopedArc<ImporterSelectionCache>,
     scope_key_builds: ScopedAtomicUsize,
     scope_cache_lookups: ScopedAtomicUsize,
     session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
@@ -122,7 +128,8 @@ impl<'a> ScopedImportResolver<'a> {
     }
 
     fn resolver_for(&self, importing_file: &ScopedPath) -> ImportResolver<'_> {
-        let (config, module_resolution, identity) = self.catalog.resolver_scope_for(importing_file);
+        let selection = self.importer_selection(importing_file);
+        let (config, module_resolution, identity) = self.catalog.resolver_scope_at(selection);
         let observer = match self.session {
             Some(session) => session.observer().cloned(),
             None => None,
@@ -170,6 +177,35 @@ impl<'a> ScopedImportResolver<'a> {
         resolver.cache = cache;
         resolver.session_scoped = true;
         resolver
+    }
+
+    fn importer_selection(&self, importing_file: &ScopedPath) -> Option<usize> {
+        if let Some(selection) = self.importer_selections.selections.get(importing_file) {
+            return *selection;
+        }
+        let importing_file = normalize_path(importing_file);
+        match self
+            .importer_selections
+            .selections
+            .entry(importing_file.clone())
+        {
+            ScopedEntry::Occupied(entry) => *entry.get(),
+            ScopedEntry::Vacant(entry) => {
+                self.importer_selections
+                    .builds
+                    .fetch_add(1, ScopedOrdering::Relaxed);
+                let selection = self.catalog.resolver_scope_index_for(&importing_file);
+                entry.insert(selection);
+                selection
+            }
+        }
+    }
+
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    pub(crate) fn importer_selection_build_count(&self) -> usize {
+        self.importer_selections
+            .builds
+            .load(ScopedOrdering::Relaxed)
     }
 
     fn fixed_resolver_for(&self, importing_file: &ScopedPath) -> Option<&ImportResolver<'a>> {

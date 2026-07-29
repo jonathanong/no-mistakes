@@ -10,6 +10,7 @@ use std::hash::Hash;
 #[derive(Debug, Clone)]
 pub(crate) struct PreparedRelationshipIndex<Node, Kind> {
     index: EdgeIndex<Node, Kind>,
+    public_names: HashMap<Node, String>,
     nodes_by_name: HashMap<String, Vec<Node>>,
     aliases: NodeAliases<Node>,
 }
@@ -25,11 +26,29 @@ where
         edges: impl IntoIterator<Item = CanonicalEdge<Node, Kind>>,
         mut public_node: impl FnMut(&Node) -> String,
     ) -> Self {
-        let mut edges = edges.into_iter().collect::<Vec<_>>();
+        let edges = edges.into_iter().collect::<Vec<_>>();
+        // A typed node often appears in many relationships. Public rendering
+        // can require path normalization/allocation, so derive it once per
+        // distinct typed node before sorting or grouping its edges.
+        let mut public_names = HashMap::<Node, String>::new();
+        for edge in &edges {
+            public_names
+                .entry(edge.from.clone())
+                .or_insert_with(|| public_node(&edge.from));
+            public_names
+                .entry(edge.to.clone())
+                .or_insert_with(|| public_node(&edge.to));
+        }
+        let public_name = |node: &Node| {
+            public_names
+                .get(node)
+                .expect("every indexed relationship node must have a cached public name")
+        };
+        let mut edges = edges;
         edges.sort_by(|left, right| {
-            public_node(&left.from)
-                .cmp(&public_node(&right.from))
-                .then_with(|| public_node(&left.to).cmp(&public_node(&right.to)))
+            public_name(&left.from)
+                .cmp(public_name(&right.from))
+                .then_with(|| public_name(&left.to).cmp(public_name(&right.to)))
                 .then_with(|| left.kind.cmp(&right.kind))
                 .then_with(|| left.cmp(right))
         });
@@ -37,27 +56,30 @@ where
 
         // A BTreeSet preserves the pre-existing sorted typed-root vectors
         // without repeatedly scanning a high-collision public-name bucket.
-        let mut nodes_by_name = HashMap::<String, BTreeSet<Node>>::new();
+        let mut grouped_nodes = HashMap::<&str, BTreeSet<Node>>::new();
         for edge in &edges {
-            for node in [&edge.from, &edge.to] {
-                nodes_by_name
-                    .entry(public_node(node))
-                    .or_default()
-                    .insert(node.clone());
-            }
+            grouped_nodes
+                .entry(public_name(&edge.from).as_str())
+                .or_default()
+                .insert(edge.from.clone());
+            grouped_nodes
+                .entry(public_name(&edge.to).as_str())
+                .or_default()
+                .insert(edge.to.clone());
         }
         let aliases = NodeAliases::from_groups(
-            nodes_by_name
+            grouped_nodes
                 .values()
                 .map(|nodes| nodes.iter().cloned().collect::<Vec<_>>()),
         );
-        let nodes_by_name = nodes_by_name
+        let nodes_by_name = grouped_nodes
             .into_iter()
-            .map(|(name, nodes)| (name, nodes.into_iter().collect()))
+            .map(|(name, nodes)| (name.to_owned(), nodes.into_iter().collect()))
             .collect();
 
         Self {
-            index: EdgeIndex::from_edges(edges),
+            index: EdgeIndex::from_unique_edges_in_order(edges),
+            public_names,
             nodes_by_name,
             aliases,
         }
@@ -70,17 +92,29 @@ where
         &self,
         roots: &[String],
         depth: Option<usize>,
-        project: impl FnMut(CanonicalEdge<Node, Kind>) -> Output,
+        mut project: impl FnMut(&CanonicalEdge<Node, Kind>, &str, &str) -> Output,
     ) -> Vec<Output>
     where
         Output: Clone + Eq + Hash,
     {
-        let relationships = if roots.is_empty() {
-            self.index.edges().to_vec()
+        if roots.is_empty() {
+            project_first_seen(self.index.edges().iter(), |edge| {
+                project(
+                    edge,
+                    self.public_name(&edge.from),
+                    self.public_name(&edge.to),
+                )
+            })
         } else {
-            self.traverse(roots, EdgeDirection::Dependencies, depth)
-        };
-        project_first_seen(relationships, project)
+            let relationships = self.traverse(roots, EdgeDirection::Dependencies, depth);
+            project_first_seen(relationships.iter(), |edge| {
+                project(
+                    edge,
+                    self.public_name(&edge.from),
+                    self.public_name(&edge.to),
+                )
+            })
+        }
     }
 
     /// Project a related view. Reverse edges retain traversal orientation; the
@@ -89,12 +123,19 @@ where
         &self,
         roots: &[String],
         direction: EdgeDirection,
-        project: impl FnMut(CanonicalEdge<Node, Kind>) -> Output,
+        mut project: impl FnMut(&CanonicalEdge<Node, Kind>, &str, &str) -> Output,
     ) -> Vec<Output>
     where
         Output: Clone + Eq + Hash,
     {
-        project_first_seen(self.traverse(roots, direction, None), project)
+        let relationships = self.traverse(roots, direction, None);
+        project_first_seen(relationships.iter(), |edge| {
+            project(
+                edge,
+                self.public_name(&edge.from),
+                self.public_name(&edge.to),
+            )
+        })
     }
 
     fn traverse(
@@ -112,6 +153,13 @@ where
             .iter()
             .flat_map(|root| self.nodes_by_name.get(root).into_iter().flatten().cloned())
             .collect()
+    }
+
+    fn public_name(&self, node: &Node) -> &str {
+        self.public_names
+            .get(node)
+            .map(String::as_str)
+            .expect("every indexed relationship node must have a cached public name")
     }
 }
 

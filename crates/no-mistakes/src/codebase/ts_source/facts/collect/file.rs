@@ -86,7 +86,7 @@ pub(crate) fn collect_file_facts_from_program(
     };
     let symbols = plan
         .symbols
-        .then(|| std::sync::Arc::new(extract_symbols_from_program(program, source)));
+        .then(|| extract_symbols_from_program(program, source));
     let call_sites = if plan.call_sites {
         super::super::call_sites::collect_call_site_facts(program, source)
     } else {
@@ -132,7 +132,7 @@ pub(crate) fn collect_file_facts_from_program(
         exported_resource_scopes: import_facts.exported_resource_scopes,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
-        symbols: symbols.as_deref().cloned(),
+        symbols,
         route_refs: domain.route_refs,
         route_helpers: domain.route_helpers,
         route_helper_imports: domain.route_helper_imports,

@@ -34,7 +34,6 @@ pub(super) fn build_prepared_report(
         |node| public_node(root, node),
     );
     PreparedProjectReport {
-        root: root.to_path_buf(),
         report,
         relationships,
     }
