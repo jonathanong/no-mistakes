@@ -139,7 +139,8 @@ pub use edge_model::{
     WorkflowTopologyEdge,
 };
 pub use node_model::{
-    JobKind, StepKind, WorkflowJobNode, WorkflowNode, WorkflowRunsOn, WorkflowStep,
+    JobKind, StepKind, WorkflowJobNode, WorkflowNode, WorkflowRunsOn, WorkflowRunsOnGroup,
+    WorkflowRunsOnLabels, WorkflowStep,
 };
 
 /// The complete workflow topology graph for a repository. This is the

@@ -16,13 +16,14 @@ pub fn static_context_references(
         return static_references_case_insensitive(Some(value), context);
     }
     let chars: Vec<char> = value.chars().collect();
-    embedded_expressions(&chars)
-        .into_iter()
-        .flat_map(|expression| {
-            let expression: String = expression.into_iter().collect();
-            static_references_case_insensitive(Some(&expression), context)
-        })
-        .collect::<std::collections::BTreeSet<_>>()
-        .into_iter()
-        .collect()
+    let mut references = std::collections::BTreeMap::new();
+    for expression in embedded_expressions(&chars) {
+        let expression: String = expression.into_iter().collect();
+        for reference in static_references_case_insensitive(Some(&expression), context) {
+            references
+                .entry(reference.to_ascii_lowercase())
+                .or_insert(reference);
+        }
+    }
+    references.into_values().collect()
 }

@@ -39,4 +39,6 @@ jobs:
 
   unsupported-environment:
     environment: 42
+    runs-on:
+      group: restricted
     steps: []

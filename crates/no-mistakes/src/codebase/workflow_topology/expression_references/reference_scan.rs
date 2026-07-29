@@ -25,7 +25,7 @@ fn static_references_with_case(
     };
     let chars: Vec<char> = condition.chars().collect();
     let context_chars: Vec<char> = context.chars().collect();
-    let mut references = std::collections::BTreeSet::new();
+    let mut references = std::collections::BTreeMap::new();
     let mut index = 0usize;
     while index < chars.len() {
         let character = chars[index];
@@ -53,11 +53,16 @@ fn static_references_with_case(
         let access_start = index + context_chars.len();
         match static_access(&chars, access_start) {
             Some((reference, end)) => {
-                references.insert(reference);
+                let sort_key = if case_sensitive {
+                    reference.clone()
+                } else {
+                    reference.to_ascii_lowercase()
+                };
+                references.entry(sort_key).or_insert(reference);
                 index = end;
             }
             None => index = access_start,
         }
     }
-    references.into_iter().collect()
+    references.into_values().collect()
 }

@@ -29,6 +29,26 @@ pub fn parse_runs_on(value: Option<&Value>) -> Option<model::WorkflowRunsOn> {
                 .filter_map(|item| item.as_str().map(str::to_string))
                 .collect(),
         )),
+        Value::Mapping(mapping) => Some(model::WorkflowRunsOn::Group(model::WorkflowRunsOnGroup {
+            group: mapping
+                .get(Value::String("group".to_string()))
+                .and_then(Value::as_str)?
+                .to_string(),
+            labels: parse_runs_on_labels(mapping.get(Value::String("labels".to_string()))),
+        })),
+        _ => None,
+    }
+}
+
+fn parse_runs_on_labels(value: Option<&Value>) -> Option<model::WorkflowRunsOnLabels> {
+    match value? {
+        Value::String(label) => Some(model::WorkflowRunsOnLabels::Label(label.clone())),
+        Value::Sequence(items) => Some(model::WorkflowRunsOnLabels::Labels(
+            items
+                .iter()
+                .filter_map(|item| item.as_str().map(str::to_string))
+                .collect(),
+        )),
         _ => None,
     }
 }

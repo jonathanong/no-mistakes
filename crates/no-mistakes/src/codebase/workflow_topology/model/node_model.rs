@@ -71,9 +71,25 @@ pub enum JobKind {
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 #[serde(untagged)]
+pub enum WorkflowRunsOnLabels {
+    Label(String),
+    Labels(Vec<String>),
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowRunsOnGroup {
+    pub group: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub labels: Option<WorkflowRunsOnLabels>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(untagged)]
 pub enum WorkflowRunsOn {
     Label(String),
     Labels(Vec<String>),
+    Group(WorkflowRunsOnGroup),
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]

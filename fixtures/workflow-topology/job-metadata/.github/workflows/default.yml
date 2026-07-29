@@ -6,6 +6,8 @@ env:
   Z_WORKFLOW: 9
   A_WORKFLOW: ${{ secrets.WORKFLOW_TOKEN }}
   B_UPPER_WORKFLOW: ${{ SECRETS.Upper_Token }}
+  # Context and secret names are case-insensitive; preserve the first spelling.
+  C_DUPLICATE_WORKFLOW: ${{ SECRETS.workflow_token }}
 
 jobs:
   default:

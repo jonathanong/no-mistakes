@@ -37,8 +37,9 @@ and the command exits `1`. Output is only printed once the (possibly
   secrets, outputs).
 - **Jobs** carry their `key`, `kind` (`job` or `matrix-template` when a
   `strategy.matrix` is present), condition, resolved concurrency, environment
-  name, declared timeout and runner labels, effective permissions, output and
-  `env` declarations, direct secret references, and steps. An omitted
+  name, declared timeout and runner labels or group selection, effective
+  permissions, output and `env` declarations, direct secret references, and
+  steps. An omitted
   `timeoutMinutes` means the workflow did not declare one; GitHub's effective
   default is 360 minutes.
 - **Steps** carry authored `run` text, scalar `with` inputs, `env`
@@ -150,8 +151,9 @@ name-only: it never fetches, resolves, persists, or compares secret values.
 Authored expressions remain visible in raw fields such as `run`, `with`, and
 `env`, but they are never evaluated.
 
-`runsOn` supports a string or an ordered string array, including expression
-strings. Runner-group mapping syntax is currently omitted. `environment`
+`runsOn` supports a string, an ordered string array, or a runner-group mapping
+with `group` and optional string/string-array `labels`; every form may contain
+expression strings. `environment`
 captures either a scalar environment name or the `name` from object syntax;
 the optional environment URL is not included.
 

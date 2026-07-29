@@ -128,4 +128,17 @@ test("deep-freezes enriched job and step metadata", () => {
   assert.equal(Object.isFrozen(job.secretReferences), true);
   assert.equal(Object.isFrozen(job.steps[0].with), true);
   assert.equal(Object.isFrozen(job.steps[0].secretReferences), true);
+
+  const groupJob = index.jobsById.get(".github/workflows/malformed-metadata.yml#malformed");
+  assert.deepEqual(groupJob.runsOn, {
+    group: "hosted",
+    labels: "ubuntu-latest",
+  });
+  assert.equal(Object.isFrozen(groupJob.runsOn), true);
+
+  const groupOnlyJob = index.jobsById.get(
+    ".github/workflows/malformed-metadata.yml#unsupported-environment",
+  );
+  assert.deepEqual(groupOnlyJob.runsOn, { group: "restricted" });
+  assert.equal(Object.isFrozen(groupOnlyJob.runsOn), true);
 });

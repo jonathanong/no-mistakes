@@ -34,7 +34,7 @@ export type JsonValue =
   | { [key: string]: JsonValue };
 
 export type ConcurrencyValue = boolean | string;
-export type WorkflowRunsOn = string | string[];
+export type WorkflowRunsOn = string | string[] | { group: string; labels?: string | string[] };
 
 export interface WorkflowConcurrency {
   raw: { group: string; cancelInProgress?: ConcurrencyValue; queue?: string };
@@ -118,7 +118,7 @@ export interface WorkflowJobNode {
   environment?: string;
   /** Declared timeout; absent jobs use GitHub's effective 360-minute default. */
   timeoutMinutes?: number;
-  /** Declared runner label or ordered label list. */
+  /** Declared runner label, ordered label list, or runner-group selection. */
   runsOn?: WorkflowRunsOn;
   /** Effective permissions, identical to the `ciImpact()` job shape. */
   permissions: ResolvedPermissions;

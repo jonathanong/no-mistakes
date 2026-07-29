@@ -18,6 +18,7 @@
       "env": {
         "A_WORKFLOW": "${{ secrets.WORKFLOW_TOKEN }}",
         "B_UPPER_WORKFLOW": "${{ SECRETS.Upper_Token }}",
+        "C_DUPLICATE_WORKFLOW": "${{ SECRETS.workflow_token }}",
         "Z_WORKFLOW": "9"
       },
       "secretReferences": [
@@ -178,6 +179,10 @@
           }
         }
       ],
+      "runsOn": {
+        "group": "hosted",
+        "labels": "ubuntu-latest"
+      },
       "permissions": {
         "source": "default",
         "scopes": {
@@ -195,6 +200,9 @@
       "key": "unsupported-environment",
       "kind": "job",
       "steps": [],
+      "runsOn": {
+        "group": "restricted"
+      },
       "permissions": {
         "source": "default",
         "scopes": {
