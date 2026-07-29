@@ -40,7 +40,7 @@ fn infra_report(options: &InfraOptions) -> napi::Result<crate::terraform_api::In
 }
 
 fn to_pretty<T: serde::Serialize>(value: &T) -> napi::Result<String> {
-    serde_json::to_string_pretty(value).map_err(|error| napi::Error::from_reason(error.to_string()))
+    serde_json::to_string(value).map_err(|error| napi::Error::from_reason(error.to_string()))
 }
 
 pub(crate) fn infra_resource_refs_json_impl(options_json: String) -> napi::Result<String> {

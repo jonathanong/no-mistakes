@@ -47,7 +47,7 @@ pub(super) fn fill_parse_errors(
         results[index] = Some(CheckFileFacts {
             ts: Arc::new(TsFileFacts {
                 parse_error: Some(parse_error.clone()),
-                source: stored_source.as_deref().map(str::to_owned),
+                source: stored_source.as_deref().map(std::sync::Arc::<str>::from),
                 ..TsFileFacts::default()
             }),
             source: stored_source,

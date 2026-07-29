@@ -58,7 +58,7 @@ pub struct TsFileFacts {
     /// recoverable diagnostic. Such partial facts must not answer sound
     /// symbol queries.
     pub fatal_parse_error: bool,
-    pub source: Option<String>,
+    pub source: Option<std::sync::Arc<str>>,
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
     pub call_sites: Vec<CallSiteFact>,
@@ -90,7 +90,8 @@ pub struct TsFileFacts {
 
 #[derive(Debug, Clone, Default)]
 pub struct TsFactMap {
-    facts: HashMap<PathBuf, TsFileFacts>,
+    owned: HashMap<PathBuf, TsFileFacts>,
+    shared: HashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
     plan: TsFactPlan,
 }
 

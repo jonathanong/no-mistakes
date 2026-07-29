@@ -29,6 +29,9 @@ pub(super) fn prepare_with_session(
     );
     let config = session.config(root, config_path)?;
     let tsconfig = session.tsconfig(root, tsconfig_path)?;
+    let workspace = (tsconfig_path.is_none()
+        || no_mistakes::playwright::rules::configured(&config))
+    .then(|| session.workspace(root));
     prepare_from_shared(
         root,
         config_path,
@@ -36,6 +39,7 @@ pub(super) fn prepare_with_session(
         visible_paths,
         config.as_ref().clone(),
         tsconfig.as_ref().clone(),
+        workspace,
     )
 }
 
@@ -46,6 +50,7 @@ pub(crate) fn prepare_from_shared(
     visible_paths: Arc<VisiblePathSnapshot>,
     config: NoMistakesConfig,
     tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
+    workspace: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
 ) -> Result<PreparedCheckInputs> {
     let root_paths = visible_paths.paths_for(root);
     let inferred_roots =
@@ -73,22 +78,35 @@ pub(crate) fn prepare_from_shared(
                 root, &config,
             ),
         );
-        no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+        no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources_with_workspace(
             root,
             &candidate_roots,
             root_paths.as_ref(),
             &sources,
+            workspace
+                .as_deref()
+                .expect("automatic tsconfig catalog requires a workspace projection"),
         )
     });
-    let playwright = no_mistakes::playwright::rules::prepare_from_snapshot_with_catalog(
-        root,
-        config_path,
-        &config,
-        Arc::clone(&visible_paths),
-        Arc::new(tsconfig.clone()),
-        Arc::clone(&tsconfig_catalog),
-    )
-    .context("failed to prepare Playwright shared facts")?;
+    let playwright = no_mistakes::playwright::rules::configured(&config)
+        .then(|| {
+            no_mistakes::playwright::rules::prepare_from_snapshot_with_catalog(
+                root,
+                config_path,
+                &config,
+                Arc::clone(&visible_paths),
+                Arc::new(tsconfig.clone()),
+                Arc::clone(&tsconfig_catalog),
+                Arc::clone(
+                    workspace
+                        .as_ref()
+                        .expect("configured Playwright rules require a workspace projection"),
+                ),
+            )
+            .context("failed to prepare Playwright shared facts")
+        })
+        .transpose()?
+        .flatten();
     let react = no_mistakes::react_traits::prepare_check_from_loaded_config(&config, false);
     let vitest_projects = (config
         .rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)

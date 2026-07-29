@@ -51,6 +51,7 @@ impl PreparedScopePlan {
                     traversal.visible_paths_arc(),
                     traversal.config(),
                     traversal.tsconfig(),
+                    traversal.workspace_arc(),
                 )
             })
             .transpose()?;

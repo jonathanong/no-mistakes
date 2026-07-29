@@ -120,7 +120,7 @@ pub(crate) fn collect_file_facts_from_program(
     TsFileFacts {
         parse_error,
         fatal_parse_error: false,
-        source: plan.source.then(|| source.to_owned()),
+        source: plan.source.then(|| std::sync::Arc::<str>::from(source)),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         call_sites,

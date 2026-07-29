@@ -26,6 +26,7 @@ impl SharedCheckContext {
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
         config: &crate::config::v2::NoMistakesConfig,
         tsconfig: &crate::codebase::ts_resolver::TsConfig,
+        workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     ) -> Result<Self> {
         use crate::check_runner::enabled::{
             fact_plan, integration_configured, plan_requests_facts, ConfiguredChecks, EnabledChecks,
@@ -47,6 +48,7 @@ impl SharedCheckContext {
             visible_paths,
             config.clone(),
             tsconfig.clone(),
+            Some(workspace),
         )?;
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);

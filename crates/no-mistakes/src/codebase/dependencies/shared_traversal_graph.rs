@@ -12,7 +12,7 @@ impl SharedTraversalContext {
             .filter(|path| {
                 self.facts
                     .as_ref()
-                    .is_none_or(|facts| !facts.contains_key(*path))
+                    .is_none_or(|facts| !facts.contains_key(path))
             })
             .cloned()
             .collect::<Vec<_>>();

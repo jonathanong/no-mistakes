@@ -18,6 +18,7 @@ are unchanged.
 [timing] analysis.rules: 7.034ms (parallel; non-additive)
 [timing] total: 21.882ms
 [work] discovery.roots: 1
+[work] workspace.builds: 1
 [work] parse.files: 42
 [work] source.reads: 42
 ```

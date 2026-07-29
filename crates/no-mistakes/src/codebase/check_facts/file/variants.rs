@@ -104,7 +104,7 @@ fn collect_variant(
         program,
     );
     if should_store_source(variant.plan) {
-        Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
+        Arc::make_mut(&mut facts.ts).source = Some(Arc::clone(source));
         facts.source = Some(Arc::clone(source));
     }
     if recover_symbols {

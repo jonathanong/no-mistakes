@@ -47,11 +47,12 @@ fn config_and_tsconfig_parses_are_memoized_exactly_once() {
 #[test]
 fn workspace_indexes_are_built_once_and_reused() {
     let root = repository_fixture("test-cases/codebase-analysis/large-graph-monorepo/fixture");
-    let dataset = dataset(&root);
+    let (dataset, observer) = observed_dataset(&root);
     let first = dataset.workspace();
     let second = dataset.workspace();
     assert!(std::sync::Arc::ptr_eq(&first, &second));
     assert!(first.shares_indexes_with(&second));
+    assert_eq!(observer.snapshot().work["workspace.builds"], 1);
 }
 
 #[test]

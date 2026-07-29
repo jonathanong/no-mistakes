@@ -24,7 +24,7 @@ impl TsConfigCatalog {
     /// prepared workspace facts. This avoids reparsing workspace manifests
     /// solely to discover package-local tsconfig roots.
     #[doc(hidden)]
-    pub(crate) fn from_visible_and_sources_with_workspace(
+    pub fn from_visible_and_sources_with_workspace(
         root: &Path,
         candidate_roots: &[PathBuf],
         visible_paths: &[PathBuf],

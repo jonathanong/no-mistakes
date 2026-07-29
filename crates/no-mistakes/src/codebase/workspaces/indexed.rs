@@ -5,7 +5,8 @@ struct WorkspaceIndexes {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct IndexedWorkspaceMap {
+#[doc(hidden)]
+pub struct IndexedWorkspaceMap {
     workspace: std::sync::Arc<WorkspaceMap>,
     indexes: std::sync::Arc<WorkspaceIndexes>,
     root_dependency_names: std::sync::Arc<std::collections::HashSet<String>>,

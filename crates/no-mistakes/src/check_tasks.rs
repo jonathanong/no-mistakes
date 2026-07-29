@@ -108,6 +108,7 @@ pub(crate) fn run_rules_check(
 pub(crate) fn run_integration_check(
     session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     root: &std::path::Path,
+    enabled: bool,
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
     tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
@@ -117,14 +118,18 @@ pub(crate) fn run_integration_check(
         "analysis.integration",
         no_mistakes::diagnostics::TimingKind::Parallel,
         || {
-            integration_tests::check_with_prepared_facts_catalog_and_session(
-                root,
-                config,
-                facts,
-                std::sync::Arc::clone(tsconfig_catalog),
-                visible_paths,
-                session,
-            )
+            if enabled {
+                integration_tests::check_with_prepared_facts_catalog_and_session(
+                    root,
+                    config,
+                    facts,
+                    std::sync::Arc::clone(tsconfig_catalog),
+                    visible_paths,
+                    session,
+                )
+            } else {
+                Ok(Vec::new())
+            }
         },
     );
     let findings = findings?;

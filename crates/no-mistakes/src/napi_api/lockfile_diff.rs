@@ -158,7 +158,7 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
         });
     }
 
-    serde_json::to_string_pretty(&entries).map_err(|e| napi::Error::from_reason(e.to_string()))
+    serde_json::to_string(&entries).map_err(|e| napi::Error::from_reason(e.to_string()))
 }
 
 fn manager_name(m: PackageManager) -> &'static str {
