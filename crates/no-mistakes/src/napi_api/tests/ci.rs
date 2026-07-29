@@ -24,6 +24,15 @@ fn workflow_topology_fixture(name: &str) -> String {
     .to_string()
 }
 
+fn workflow_metadata_fixture() -> String {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/workflow-topology/job-metadata"),
+    )
+    .display()
+    .to_string()
+}
+
 fn impacted_checks_root() -> String {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/impacted-checks/basic"),
@@ -183,6 +192,26 @@ fn ci_topology_json_returns_the_parsed_graph() {
     assert_eq!(value["workflows"].as_array().unwrap().len(), 1);
     assert_eq!(value["jobs"].as_array().unwrap().len(), 3);
     assert!(value["diagnostics"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn ci_topology_json_exposes_enriched_job_and_step_metadata() {
+    let output =
+        ci_topology_json_impl(json!({ "root": workflow_metadata_fixture() }).to_string()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let job = value["jobs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|job| job["key"] == "default")
+        .unwrap();
+    assert_eq!(job["environment"], "production");
+    assert_eq!(job["timeoutMinutes"], 45);
+    assert_eq!(job["runsOn"], "ubuntu-latest");
+    assert_eq!(job["permissions"]["assumed_default"], true);
+    assert_eq!(job["secretReferences"][0], "BARE_JOB_TOKEN");
+    assert_eq!(job["steps"][0]["with"]["enabled"], true);
+    assert_eq!(job["steps"][0]["secretReferences"][0], "STEP_ENV_TOKEN");
 }
 
 #[test]

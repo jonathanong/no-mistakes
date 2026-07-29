@@ -9,6 +9,7 @@
 use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
 use serde_yaml::Value;
+use std::collections::BTreeMap;
 
 /// Accepts a single string OR a sequence of strings; non-string sequence
 /// items are silently dropped. Anything else yields an empty list.
@@ -151,4 +152,46 @@ pub fn yaml_number_to_json(number: &serde_yaml::Number) -> Option<serde_json::Nu
         .map(serde_json::Number::from)
         .or_else(|| number.as_u64().map(serde_json::Number::from))
         .or_else(|| number.as_f64().and_then(serde_json::Number::from_f64))
+}
+
+pub(super) fn scalar_value(value: &Value) -> Option<super::model::JsonScalar> {
+    match value {
+        Value::String(text) => Some(super::model::JsonScalar::Text(text.clone())),
+        Value::Bool(flag) => Some(super::model::JsonScalar::Bool(*flag)),
+        Value::Number(number) => yaml_number_to_json(number).map(super::model::JsonScalar::Number),
+        _ => None,
+    }
+}
+
+pub(super) fn scalar_record(
+    value: Option<&Value>,
+) -> Option<BTreeMap<String, super::model::JsonScalar>> {
+    let Value::Mapping(mapping) = value? else {
+        return None;
+    };
+    Some(
+        mapping
+            .iter()
+            .filter_map(|(key, item)| Some((mapping_key(key)?, scalar_value(item)?)))
+            .collect(),
+    )
+}
+
+pub(super) fn string_record(value: Option<&Value>) -> Option<BTreeMap<String, String>> {
+    let Value::Mapping(mapping) = value? else {
+        return None;
+    };
+    Some(
+        mapping
+            .iter()
+            .filter_map(|(key, item)| Some((mapping_key(key)?, string_value(Some(item))?)))
+            .collect(),
+    )
+}
+
+fn mapping_key(value: &Value) -> Option<String> {
+    value
+        .as_str()
+        .map(str::to_string)
+        .or_else(|| string_value(Some(value)))
 }

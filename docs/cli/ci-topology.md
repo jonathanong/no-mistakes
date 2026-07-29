@@ -30,12 +30,20 @@ and the command exits `1`. Output is only printed once the (possibly
 
 ## Model
 
-- **Workflows** carry their triggers, `jobIds`, resolved `concurrency`
+- **Workflows** carry their triggers, `jobIds`, `env` declarations, static
+  `secretReferences`, and resolved `concurrency`
   (`raw` as declared, `effective` with GitHub's documented defaults filled
   in), and — when reusable — the parsed `workflow_call` contract (inputs,
   secrets, outputs).
 - **Jobs** carry their `key`, `kind` (`job` or `matrix-template` when a
-  `strategy.matrix` is present), condition, resolved concurrency, and steps.
+  `strategy.matrix` is present), condition, resolved concurrency, environment
+  name, declared timeout and runner labels, effective permissions, output and
+  `env` declarations, direct secret references, and steps. An omitted
+  `timeoutMinutes` means the workflow did not declare one; GitHub's effective
+  default is 360 minutes.
+- **Steps** carry authored `run` text, scalar `with` inputs, `env`
+  declarations, and direct secret references in addition to their existing
+  identity, condition, action, and artifact metadata.
 - **Edges** are one of four kinds: `needs` (job control flow), `calls`
   (reusable-workflow calls — `to` is present only for local `./` targets;
   remote calls are opaque), `workflow-run` (resolved `workflow_run`
@@ -102,7 +110,16 @@ invocation isn't reported as true at all.
       "workflowId": ".github/workflows/ci.yml",
       "key": "test",
       "kind": "job",
-      "steps": [{ "index": 0, "kind": "run" }]
+      "steps": [{ "index": 0, "kind": "run", "run": "npm test" }],
+      "timeoutMinutes": 30,
+      "runsOn": "ubuntu-latest",
+      "permissions": {
+        "source": "default",
+        "scopes": { "contents": "read", "metadata": "read", "packages": "read" },
+        "assumed_default": true
+      },
+      "env": { "NODE_ENV": "test" },
+      "secretReferences": ["PACKAGE_TOKEN"]
     }
   ],
   "edges": [
@@ -125,6 +142,18 @@ This is a stable, versioned schema (`schemaVersion: 1`): field names, field
 order, and array/diagnostic sort order are part of the contract. Optional
 fields (e.g. a job's `name`, a workflow's `concurrency`) are omitted rather
 than emitted as `null` when absent.
+
+`secretReferences` contains sorted static names from `secrets.NAME` and
+quoted bracket access at the workflow, job, or step that directly consumes
+them. Dynamic secret names are not guessed. The analyzer is local and
+name-only: it never fetches, resolves, persists, or compares secret values.
+Authored expressions remain visible in raw fields such as `run`, `with`, and
+`env`, but they are never evaluated.
+
+`runsOn` supports a string or an ordered string array, including expression
+strings. Runner-group mapping syntax is currently omitted. `environment`
+captures either a scalar environment name or the `name` from object syntax;
+the optional environment URL is not included.
 
 `mermaid` renders a `flowchart LR` diagram — workflows as subgraphs
 containing their jobs, typed edges, and lock nodes for every declared

@@ -1,7 +1,8 @@
 //! Core data model for the GitHub Actions workflow topology graph.
 //!
-//! This is a faithful port of a standalone TypeScript engine's `types.mts`.
-//! The serialized JSON shape produced by [`super::render_json`] is a
+//! This model originated as a port of a standalone TypeScript engine and is
+//! extended with first-party no-mistakes workflow metadata. The serialized
+//! JSON shape produced by [`super::render_json`] is a
 //! stability contract (schema v1): **field names, field ORDER, and array
 //! sort order must match exactly**. Struct field declaration order below is
 //! not arbitrary — it mirrors the TS engine's object-literal construction
@@ -13,7 +14,6 @@
 //! throughout, matching the TS engine's `...(cond ? {field} : {})` spreads:
 //! an absent optional is never emitted, never serialized as `null`.
 
-use super::artifact_types::ArtifactDeclaration;
 use super::value_primitives::OrderedJson;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -129,85 +129,17 @@ pub struct WorkflowCallContract {
     pub outputs: BTreeMap<String, WorkflowCallOutput>,
 }
 
-/// A parsed workflow file.
-///
-/// Field order (id, path, name, callable, `workflowCall?`, triggers,
-/// jobIds, `concurrency?`) matches the TS engine's real object-literal
-/// construction order in `parse-workflow.mts`, **not** the order its
-/// `WorkflowNodeBase & {callable...}` intersection type declares fields in
-/// (which would put `triggers`/`jobIds` before `callable`/`workflowCall`).
-#[derive(Debug, Clone, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkflowNode {
-    pub id: String,
-    pub path: String,
-    pub name: String,
-    pub callable: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub workflow_call: Option<WorkflowCallContract>,
-    pub triggers: Vec<WorkflowTrigger>,
-    pub job_ids: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub concurrency: Option<WorkflowConcurrency>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum StepKind {
-    Action,
-    Run,
-    Other,
-}
-
-#[derive(Debug, Clone, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkflowStep {
-    pub index: u32,
-    pub kind: StepKind,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub condition: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub uses: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub artifact: Option<ArtifactDeclaration>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum JobKind {
-    Job,
-    MatrixTemplate,
-}
-
-#[derive(Debug, Clone, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkflowJobNode {
-    pub id: String,
-    pub workflow_id: String,
-    pub key: String,
-    pub kind: JobKind,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub condition: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub matrix: Option<OrderedJson>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub concurrency: Option<WorkflowConcurrency>,
-    pub steps: Vec<WorkflowStep>,
-}
-
 mod diagnostic_model;
 mod edge_model;
+mod node_model;
 
 pub use diagnostic_model::{DiagnosticCode, Severity, WorkflowTopologyDiagnostic};
 pub use edge_model::{
     NeedsEdge, WorkflowCallBindings, WorkflowCallEdge, WorkflowCallSecretsBinding, WorkflowRunEdge,
     WorkflowTopologyEdge,
+};
+pub use node_model::{
+    JobKind, StepKind, WorkflowJobNode, WorkflowNode, WorkflowRunsOn, WorkflowStep,
 };
 
 /// The complete workflow topology graph for a repository. This is the

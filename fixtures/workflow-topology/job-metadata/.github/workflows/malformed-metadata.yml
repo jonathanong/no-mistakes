@@ -1,0 +1,42 @@
+name: Malformed metadata
+
+on: push
+
+env:
+  true: false
+  ? [complex, key]
+  : ignored
+  nested:
+    ignored: true
+
+jobs:
+  ignored-job: false
+
+  malformed:
+    runs-on:
+      group: hosted
+      labels: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeout }}
+    environment:
+      url: https://example.test
+    outputs: invalid
+    env:
+      nested:
+        ignored: true
+    steps:
+      - run: 42
+        with: invalid
+        env: invalid
+      - run: echo metadata
+        with:
+          true: false
+          ? [complex, key]
+          : ignored
+        env:
+          true: false
+          ? [complex, key]
+          : ignored
+
+  unsupported-environment:
+    environment: 42
+    steps: []

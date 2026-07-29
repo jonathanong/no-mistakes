@@ -1,0 +1,54 @@
+name: Default metadata
+
+on: push
+
+env:
+  Z_WORKFLOW: 9
+  A_WORKFLOW: ${{ secrets.WORKFLOW_TOKEN }}
+
+jobs:
+  default:
+    if: secrets.BARE_JOB_TOKEN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    outputs:
+      result: ${{ steps.build.outputs.result }}
+      numeric: 4
+    env:
+      JOB_TOKEN: ${{ secrets.Job_Token }}
+      FLAG: true
+    steps:
+      - id: build
+        name: Build
+        run: |
+          echo "${{ secrets.STEP_RUN_TOKEN }}"
+        with:
+          enabled: true
+          retries: 3
+          ignored:
+            nested: value
+        env:
+          STEP_ENV: ${{ secrets.STEP_ENV_TOKEN }}
+          COUNT: 2
+      - uses: example/action@v1
+        with:
+          token: ${{ secrets['ACTION_TOKEN'] }}
+          retries: 2
+        env: {}
+
+  override:
+    runs-on:
+      - self-hosted
+      - ${{ matrix.label }}
+      - false
+    environment:
+      name: staging
+      url: https://example.test
+    permissions:
+      contents: write
+      issues: none
+    outputs: {}
+    env: {}
+    steps:
+      - run: echo "${{ secrets[inputs.dynamic] }} ${{ 'secrets.QUOTED' }}"

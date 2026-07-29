@@ -19,6 +19,7 @@ use serde_yaml::Value;
 use std::collections::HashMap;
 
 mod char_scan;
+mod context_references;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StaticWorkflowOutputReference {
@@ -62,6 +63,8 @@ pub fn static_references(condition: Option<&str>, context: &str) -> Vec<String> 
     }
     references.into_iter().collect()
 }
+
+pub use context_references::static_context_references;
 
 /// Extract every `needs.<job>.outputs.<name>` chain. When `allow_bare` is
 /// false (the default use), only chains inside `${{ ... }}` delimiters
