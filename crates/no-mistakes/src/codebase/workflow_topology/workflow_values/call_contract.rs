@@ -110,23 +110,6 @@ fn parse_workflow_call_output(value: Option<&Value>) -> model::WorkflowCallOutpu
     }
 }
 
-pub(super) fn scalar_record(value: Option<&Value>) -> BTreeMap<String, model::JsonScalar> {
-    let Some(Value::Mapping(mapping)) = value else {
-        return BTreeMap::new();
-    };
-    mapping
-        .iter()
-        .filter_map(|(key, item)| Some((key_name(key)?, scalar_value(item)?)))
-        .collect()
-}
-
 fn scalar_value(value: &Value) -> Option<model::JsonScalar> {
-    match value {
-        Value::String(text) => Some(model::JsonScalar::Text(text.clone())),
-        Value::Bool(flag) => Some(model::JsonScalar::Bool(*flag)),
-        Value::Number(number) => {
-            value_primitives::yaml_number_to_json(number).map(model::JsonScalar::Number)
-        }
-        _ => None,
-    }
+    value_primitives::scalar_value(value)
 }

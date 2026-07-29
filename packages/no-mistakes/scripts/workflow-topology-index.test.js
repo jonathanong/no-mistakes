@@ -24,6 +24,20 @@ function fixtureTopology(name) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
+function metadataFixtureTopology() {
+  const path = join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "fixtures",
+    "workflow-topology",
+    "job-metadata",
+    "expected.json",
+  );
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
 test("job upstream/downstream traversal is direct and transitive", () => {
   const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
   const build = ".github/workflows/pipeline.yml#build";
@@ -102,4 +116,29 @@ test("does not mutate or reference the source topology object", () => {
   const before = JSON.stringify(topology);
   createWorkflowTopologyIndex(topology);
   assert.equal(JSON.stringify(topology), before);
+});
+
+test("deep-freezes enriched job and step metadata", () => {
+  const index = createWorkflowTopologyIndex(metadataFixtureTopology());
+  const job = index.jobsById.get(".github/workflows/default.yml#default");
+
+  assert.equal(Object.isFrozen(job.permissions), true);
+  assert.equal(Object.isFrozen(job.permissions.scopes), true);
+  assert.equal(Object.isFrozen(job.env), true);
+  assert.equal(Object.isFrozen(job.secretReferences), true);
+  assert.equal(Object.isFrozen(job.steps[0].with), true);
+  assert.equal(Object.isFrozen(job.steps[0].secretReferences), true);
+
+  const groupJob = index.jobsById.get(".github/workflows/malformed-metadata.yml#malformed");
+  assert.deepEqual(groupJob.runsOn, {
+    group: "hosted",
+    labels: "ubuntu-latest",
+  });
+  assert.equal(Object.isFrozen(groupJob.runsOn), true);
+
+  const groupOnlyJob = index.jobsById.get(
+    ".github/workflows/malformed-metadata.yml#unsupported-environment",
+  );
+  assert.deepEqual(groupOnlyJob.runsOn, { group: "restricted" });
+  assert.equal(Object.isFrozen(groupOnlyJob.runsOn), true);
 });

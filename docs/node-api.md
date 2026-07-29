@@ -171,6 +171,14 @@ callers inspect the returned `diagnostics` array themselves.
 `artifactConsumersForProducerJob`, etc.) over that result — it is pure JS,
 runs entirely client-side, and never crosses the N-API boundary itself:
 
+Workflow, job, and step nodes also expose authored CI configuration:
+environment-variable blocks, static secret-reference names, job runner and
+timeout declarations, effective permissions, job outputs, and step
+`run`/`with` data. Values are not evaluated. Secret analysis is strictly
+name-only and never reads GitHub or process secret material. See
+[`ci topology`](cli/ci-topology.md) for the exact schema and normalization
+rules.
+
 ```js
 const { ciTopology, createWorkflowTopologyIndex } = require("no-mistakes");
 

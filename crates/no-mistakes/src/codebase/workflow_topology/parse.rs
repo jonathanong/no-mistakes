@@ -35,6 +35,8 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
     }
 
     let triggers = workflow_values::parse_triggers(value.get("on"));
+    let workflow_permissions =
+        crate::codebase::ci_graph::parse::parse_permission_spec(value.get("permissions"));
     let job_entries: Vec<(String, &Value)> = match value.get("jobs") {
         Some(Value::Mapping(mapping)) => mapping
             .iter()
@@ -58,6 +60,8 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
         let matrix = workflow_values::matrix_from_job(unknown_job);
         let concurrency = workflow_values::parse_concurrency(unknown_job.get("concurrency"));
         let steps = workflow_values::parse_steps(unknown_job.get("steps"), matrix.as_ref());
+        let job_permissions =
+            crate::codebase::ci_graph::parse::parse_permission_spec(unknown_job.get("permissions"));
         jobs.push(model::WorkflowJobNode {
             id: job_id.clone(),
             workflow_id: path.to_string(),
@@ -72,6 +76,18 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
             matrix,
             concurrency,
             steps,
+            environment: workflow_values::parse_environment(unknown_job.get("environment")),
+            timeout_minutes: workflow_values::parse_timeout_minutes(
+                unknown_job.get("timeout-minutes"),
+            ),
+            runs_on: workflow_values::parse_runs_on(unknown_job.get("runs-on")),
+            permissions: crate::codebase::ci_graph::permissions::effective_permissions_from_specs(
+                &workflow_permissions,
+                &job_permissions,
+            ),
+            outputs: value_primitives::string_record(unknown_job.get("outputs")),
+            env: value_primitives::string_record(unknown_job.get("env")),
+            secret_references: super::secret_references::job(unknown_job),
         });
         for reference in expression_references::workflow_output_references(unknown_job) {
             output_references.push(ParsedWorkflowOutputReference {
@@ -106,6 +122,8 @@ pub fn parse_workflow_value(value: &Value, path: &str) -> ParsedWorkflow {
             triggers,
             job_ids,
             concurrency,
+            env: value_primitives::string_record(value.get("env")),
+            secret_references: super::secret_references::workflow(value),
         },
         jobs,
         edges,
@@ -162,6 +180,8 @@ pub(crate) fn malformed_workflow(path: &str, message: &str) -> ParsedWorkflow {
             triggers: Vec::new(),
             job_ids: Vec::new(),
             concurrency: None,
+            env: None,
+            secret_references: None,
         },
         jobs: Vec::new(),
         edges: Vec::new(),

@@ -148,7 +148,7 @@ fn string_list(value: Option<&Value>) -> Vec<String> {
 /// best-effort analysis, so an unknown shorthand string is treated as `Empty`
 /// and an unknown level is dropped rather than erroring. Use `actionlint` for
 /// schema validation.
-pub(super) fn parse_permission_spec(value: Option<&Value>) -> PermissionSpec {
+pub(crate) fn parse_permission_spec(value: Option<&Value>) -> PermissionSpec {
     match value {
         None | Some(Value::Null) => PermissionSpec::Unspecified,
         Some(Value::String(s)) => match s.as_str() {

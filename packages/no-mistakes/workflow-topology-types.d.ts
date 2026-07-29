@@ -6,6 +6,7 @@
 // array/diagnostic sort order are part of the contract).
 
 import type { ArtifactDeclaration, ArtifactEdge } from "./workflow-topology-artifact-types";
+import type { ResolvedPermissions } from "./ci-types";
 
 export * from "./workflow-topology-artifact-types";
 export * from "./workflow-topology-index-types";
@@ -33,6 +34,7 @@ export type JsonValue =
   | { [key: string]: JsonValue };
 
 export type ConcurrencyValue = boolean | string;
+export type WorkflowRunsOn = string | string[] | { group: string; labels?: string | string[] };
 
 export interface WorkflowConcurrency {
   raw: { group: string; cancelInProgress?: ConcurrencyValue; queue?: string };
@@ -74,6 +76,10 @@ export type WorkflowNode = {
   triggers: WorkflowTrigger[];
   jobIds: string[];
   concurrency?: WorkflowConcurrency;
+  /** Workflow-scoped environment declarations, without expression evaluation. */
+  env?: Record<string, string>;
+  /** Static `secrets.*` names referenced directly at workflow scope. */
+  secretReferences?: string[];
 } & (
   | { callable: true; workflowCall: WorkflowCallContract }
   | { callable: false; workflowCall?: undefined }
@@ -88,6 +94,14 @@ export interface WorkflowStep {
   uses?: string;
   /** Present when this step is an `actions/{upload,download}-artifact` action. */
   artifact?: ArtifactDeclaration;
+  /** Raw authored shell command; expressions are not evaluated. */
+  run?: string;
+  /** Raw scalar action inputs; expressions are not evaluated. */
+  with?: Record<string, JsonScalar>;
+  /** Step-scoped environment declarations, without expression evaluation. */
+  env?: Record<string, string>;
+  /** Static `secrets.*` names referenced directly by this step. */
+  secretReferences?: string[];
 }
 
 export interface WorkflowJobNode {
@@ -100,6 +114,20 @@ export interface WorkflowJobNode {
   matrix?: JsonValue;
   concurrency?: WorkflowConcurrency;
   steps: WorkflowStep[];
+  /** Environment name from scalar or `{ name }` job syntax. */
+  environment?: string;
+  /** Declared timeout; absent jobs use GitHub's effective 360-minute default. */
+  timeoutMinutes?: number;
+  /** Declared runner label, ordered label list, or runner-group selection. */
+  runsOn?: WorkflowRunsOn;
+  /** Effective permissions, identical to the `ciImpact()` job shape. */
+  permissions: ResolvedPermissions;
+  /** Job output declarations, without expression evaluation. */
+  outputs?: Record<string, string>;
+  /** Job-scoped environment declarations, without expression evaluation. */
+  env?: Record<string, string>;
+  /** Static `secrets.*` names referenced directly by this job. */
+  secretReferences?: string[];
 }
 
 export interface NeedsEdge {

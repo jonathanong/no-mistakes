@@ -4,12 +4,13 @@
 
 use super::model;
 use super::value_primitives;
-use call_contract::scalar_record;
 use serde_yaml::Value;
 
 mod call_contract;
+mod metadata;
 
 pub use call_contract::parse_workflow_call;
+pub use metadata::{parse_environment, parse_runs_on, parse_timeout_minutes};
 
 /// A mapping key coerced to a string the way a JS object property name
 /// would be (YAML mapping keys are practically always strings already;
@@ -127,6 +128,10 @@ pub fn parse_steps(
                 condition: value_primitives::string_value(step.get("if")),
                 uses,
                 artifact,
+                run,
+                with: value_primitives::scalar_record(step.get("with")),
+                env: value_primitives::string_record(step.get("env")),
+                secret_references: super::secret_references::step(step),
             })
         })
         .collect()
@@ -153,12 +158,12 @@ pub fn call_edge(job_id: &str, target: &str, job: &Value) -> model::WorkflowCall
         target: target.to_string(),
         local,
         bindings: model::WorkflowCallBindings {
-            inputs: scalar_record(job.get("with")),
+            inputs: value_primitives::scalar_record(job.get("with")).unwrap_or_default(),
             secrets: if secrets_inherit {
                 model::WorkflowCallSecretsBinding::Inherit
             } else {
                 model::WorkflowCallSecretsBinding::Explicit {
-                    values: scalar_record(job.get("secrets")),
+                    values: value_primitives::scalar_record(job.get("secrets")).unwrap_or_default(),
                 }
             },
         },

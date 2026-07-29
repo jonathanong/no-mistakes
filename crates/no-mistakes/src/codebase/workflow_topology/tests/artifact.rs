@@ -21,8 +21,9 @@ use super::super::artifact_values::{
 use super::super::model::{JobKind, WorkflowJobNode};
 use super::super::value_primitives::{to_json, yaml_number_to_json, OrderedJson};
 use super::super::workflow_values::{key_name, parse_triggers};
+use crate::codebase::ci_graph::permissions::{PermissionSource, ResolvedPermissions};
 use std::cell::RefCell;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::rc::Rc;
 
 fn yaml(text: &str) -> serde_yaml::Value {
@@ -160,6 +161,17 @@ fn candidate_instance_count_saturates_instead_of_wrapping() {
         matrix: None,
         concurrency: None,
         steps: Vec::new(),
+        environment: None,
+        timeout_minutes: None,
+        runs_on: None,
+        permissions: ResolvedPermissions {
+            source: PermissionSource::Default,
+            scopes: BTreeMap::new(),
+            assumed_default: true,
+        },
+        outputs: None,
+        env: None,
+        secret_references: None,
     };
     let occurrence = ArtifactOccurrence {
         id: "occurrence".to_string(),

@@ -19,6 +19,8 @@ use serde_yaml::Value;
 use std::collections::HashMap;
 
 mod char_scan;
+mod context_references;
+mod reference_scan;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StaticWorkflowOutputReference {
@@ -26,42 +28,8 @@ pub struct StaticWorkflowOutputReference {
     pub output: String,
 }
 
-/// Extract every `needs.<x>` / `steps.<x>` access (dot or bracket form)
-/// directly in `condition`, sorted and deduplicated. `context` is `"needs"`
-/// or `"steps"` and is matched case-sensitively (unlike the output-chain
-/// scanner below, which matches `needs` case-insensitively).
-pub fn static_references(condition: Option<&str>, context: &str) -> Vec<String> {
-    let Some(condition) = condition else {
-        return Vec::new();
-    };
-    let chars: Vec<char> = condition.chars().collect();
-    let context_chars: Vec<char> = context.chars().collect();
-    let mut references = std::collections::BTreeSet::new();
-    let mut index = 0usize;
-    while index < chars.len() {
-        let character = chars[index];
-        if character == '\'' || character == '"' {
-            index = quoted_end(&chars, index, character);
-            continue;
-        }
-        let starts_with_context = chars[index..].starts_with(context_chars.as_slice());
-        if !starts_with_context
-            || !is_access_boundary(previous_non_whitespace(&chars, index as isize - 1))
-        {
-            index += 1;
-            continue;
-        }
-        let access_start = index + context_chars.len();
-        match static_access(&chars, access_start) {
-            Some((reference, end)) => {
-                references.insert(reference);
-                index = end;
-            }
-            None => index = access_start,
-        }
-    }
-    references.into_iter().collect()
-}
+pub use context_references::static_context_references;
+pub use reference_scan::static_references;
 
 /// Extract every `needs.<job>.outputs.<name>` chain. When `allow_bare` is
 /// false (the default use), only chains inside `${{ ... }}` delimiters

@@ -6,8 +6,9 @@
 //! structured diagnostics for malformed, dangling, cyclic, or
 //! contract-violating workflow definitions.
 //!
-//! This is a faithful Rust port of a standalone TypeScript engine's
-//! schema-v1 model. The serialized [`model::WorkflowTopology`] JSON shape
+//! This originated as a Rust port of a standalone TypeScript engine's
+//! schema-v1 model and now carries first-party no-mistakes metadata. The
+//! serialized [`model::WorkflowTopology`] JSON shape
 //! (field names, field ORDER, and array/diagnostic sort order) is a
 //! stability contract downstream consumers snapshot-diff against — see the
 //! field-order notes in `model.rs` before changing anything there.
@@ -46,6 +47,7 @@ pub mod parse;
 pub mod posix_path;
 pub mod render_json;
 pub mod render_mermaid;
+pub mod secret_references;
 pub mod topology_graph;
 pub mod topology_identifiers;
 pub mod value_primitives;

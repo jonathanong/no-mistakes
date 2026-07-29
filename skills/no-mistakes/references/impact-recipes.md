@@ -177,7 +177,10 @@ Use the results as:
   workflow into typed `needs`/`calls`/`workflow-run` edges plus diagnostics
   for dangling, cyclic, or contract-violating definitions. Use `--workflow`
   to scope to one workflow and its transitive local reusable-workflow
-  callees.
+  callees. Workflow/job/step nodes also carry runner, timeout, effective
+  permission, environment, output, `run`/`with`, and `env` metadata. Static
+  `secretReferences` are names-only; the command never fetches or evaluates
+  secret values.
 - `--relationship ci` is narrow: it maps GitHub Actions workflow files to Rust
   binary sources invoked by supported Cargo command shapes. It is not a general
   shell, npm script, or workflow dependency graph. Use `--relationship

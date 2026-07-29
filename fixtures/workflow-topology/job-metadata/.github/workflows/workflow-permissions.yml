@@ -1,0 +1,20 @@
+name: Workflow permissions
+
+on: push
+
+permissions: read-all
+
+jobs:
+  inherited:
+    runs-on: ${{ matrix.runner }}
+    steps: []
+
+  empty:
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps: []
+
+  write-all:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps: []
