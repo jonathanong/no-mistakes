@@ -32,7 +32,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { shouldCloseFixtureOnlyChange } = require(
+            const { fixtureOnlyDecision } = require(
               `${process.env.GITHUB_WORKSPACE}/.github/scripts/dependabot-pr-policy.cjs`
             );
             const owner = context.repo.owner;
@@ -81,13 +81,17 @@ jobs:
               per_page: 100,
             });
             const changedPaths = files.map(file => file.filename);
+            const fixtureDecision = fixtureOnlyDecision(changedPaths, pr.changed_files);
 
-            if (files.length !== pr.changed_files) {
+            if (fixtureDecision === 'incomplete') {
               core.warning(
                 `Skipping fixture-only policy because GitHub returned ${files.length} `
                 + `of ${pr.changed_files} changed files`
               );
-            } else if (shouldCloseFixtureOnlyChange(changedPaths, pr.changed_files)) {
+              return;
+            }
+
+            if (fixtureDecision === 'close') {
               core.info('Closing fixture-only Dependabot pull request');
               await github.rest.pulls.update({
                 owner,

@@ -8,11 +8,15 @@ function isFixtureOnlyChange(paths) {
   return paths.length > 0 && paths.every(isFixturePath);
 }
 
-function shouldCloseFixtureOnlyChange(paths, changedFileCount) {
-  return paths.length === changedFileCount && isFixtureOnlyChange(paths);
+function fixtureOnlyDecision(paths, changedFileCount) {
+  if (paths.length !== changedFileCount) {
+    return "incomplete";
+  }
+
+  return isFixtureOnlyChange(paths) ? "close" : "continue";
 }
 
 module.exports = {
+  fixtureOnlyDecision,
   isFixtureOnlyChange,
-  shouldCloseFixtureOnlyChange,
 };

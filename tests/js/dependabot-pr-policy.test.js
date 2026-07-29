@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const { join } = require("node:path");
 
-const { isFixtureOnlyChange, shouldCloseFixtureOnlyChange } = require(
+const { fixtureOnlyDecision, isFixtureOnlyChange } = require(
   join(__dirname, "..", "..", ".github", "scripts", "dependabot-pr-policy.cjs"),
 );
 
@@ -24,6 +24,7 @@ test("keeps non-fixture Dependabot changes eligible for auto-merge", () => {
 test("keeps fixture-only changes open when GitHub truncates the file list", () => {
   const returnedPaths = ["fixtures/example/package.json"];
 
-  assert.equal(shouldCloseFixtureOnlyChange(returnedPaths, 2), false);
-  assert.equal(shouldCloseFixtureOnlyChange(returnedPaths, 1), true);
+  assert.equal(fixtureOnlyDecision(returnedPaths, 2), "incomplete");
+  assert.equal(fixtureOnlyDecision(returnedPaths, 1), "close");
+  assert.equal(fixtureOnlyDecision(["package.json"], 1), "continue");
 });
