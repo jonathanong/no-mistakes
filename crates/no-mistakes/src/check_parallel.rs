@@ -26,9 +26,10 @@ pub(crate) struct DomainCheckInputs<'a> {
     pub(crate) tsconfig_path: &'a Option<PathBuf>,
     pub(crate) react_enabled: bool,
     pub(crate) queues_enabled: bool,
+    pub(crate) integration_enabled: bool,
     pub(crate) unique_exports_enabled: bool,
     pub(crate) filesystem_rules_enabled: bool,
-    pub(crate) discovered_files: Vec<PathBuf>,
+    pub(crate) discovered_files: &'a [PathBuf],
     pub(crate) facts: &'a CheckFactMap,
     pub(crate) prepared_playwright:
         Option<&'a no_mistakes::playwright::rules::PreparedPlaywrightRules>,
@@ -57,6 +58,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let tsconfig_path = inputs.tsconfig_path;
     let react_enabled = inputs.react_enabled;
     let queues_enabled = inputs.queues_enabled;
+    let integration_enabled = inputs.integration_enabled;
     let unique_exports_enabled = inputs.unique_exports_enabled;
     let filesystem_rules_enabled = inputs.filesystem_rules_enabled;
     let discovered_files = inputs.discovered_files;
@@ -126,6 +128,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 run_integration_check(
                                     &session,
                                     root,
+                                    integration_enabled,
                                     config,
                                     facts,
                                     prepared_tsconfig_catalog,
@@ -159,7 +162,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                 root,
                                                 config,
                                                 filesystem_rules_enabled,
-                                                &discovered_files,
+                                                discovered_files,
                                                 visible_paths,
                                                 sources,
                                                 vitest_projects,

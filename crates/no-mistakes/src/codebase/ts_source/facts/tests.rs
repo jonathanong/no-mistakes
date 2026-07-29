@@ -1,6 +1,8 @@
 use super::*;
 use std::path::Path;
 
+mod map;
+
 fn collect_file_facts(
     path: &Path,
     plan: TsFactPlan,
@@ -11,19 +13,6 @@ fn collect_file_facts(
     ]));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
     super::collect::test_support::collect_file_facts_with_sources(path, plan, context, &sources)
-}
-
-impl TsFactMap {
-    pub(crate) fn extend_shared(
-        &mut self,
-        facts: impl IntoIterator<Item = (PathBuf, std::sync::Arc<TsFileFacts>)>,
-    ) {
-        self.facts.extend(
-            facts
-                .into_iter()
-                .map(|(path, facts)| (path, std::sync::Arc::unwrap_or_clone(facts))),
-        );
-    }
 }
 
 fn fixture(name: &str) -> PathBuf {

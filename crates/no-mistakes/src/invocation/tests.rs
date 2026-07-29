@@ -7,53 +7,12 @@ use std::process::Command;
 use std::time::Instant;
 use wait_timeout::ChildExt;
 
+mod napi_options;
+
 fn fixture_path(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/invocation")
         .join(name)
-}
-
-#[test]
-fn napi_options_default_and_strip_controls() {
-    let (json, options) = extract_napi_options(
-        r#"{"timeout":4,"lockTimeout":5,"failOnLock":true,"root":"."}"#.to_string(),
-    )
-    .unwrap();
-    assert_eq!(options.timeout, Some(Duration::from_secs(4)));
-    assert_eq!(options.lock_timeout, Some(Duration::from_secs(5)));
-    assert!(options.fail_on_lock);
-    assert_eq!(
-        serde_json::from_str::<Value>(&json).unwrap(),
-        serde_json::json!({"root":"."})
-    );
-}
-
-#[test]
-fn napi_zero_and_null_disable_timeouts() {
-    let (_, options) =
-        extract_napi_options(r#"{"timeout":0,"lockTimeout":null}"#.to_string()).unwrap();
-    assert_eq!(options.timeout, None);
-    assert_eq!(options.lock_timeout, None);
-}
-
-#[test]
-fn napi_missing_controls_use_defaults() {
-    let (_, options) = extract_napi_options("{}".to_string()).unwrap();
-    assert_eq!(options, InvocationOptions::default());
-}
-
-#[test]
-fn napi_controls_validate_types() {
-    for json in [
-        r#"{"timeout":-1}"#,
-        r#"{"timeout":1.5}"#,
-        r#"{"lockTimeout":"30"}"#,
-        r#"{"failOnLock":1}"#,
-        "[]",
-        "not-json",
-    ] {
-        assert!(extract_napi_options(json.to_string()).is_err(), "{json}");
-    }
 }
 
 #[test]

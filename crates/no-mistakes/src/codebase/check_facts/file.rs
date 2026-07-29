@@ -123,7 +123,7 @@ fn collect_file_facts_from_source(
         let mut facts =
             collect_file_facts_from_program(root, path, plan, playwright, parsed_source, program);
         if should_store_source(plan) {
-            Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
+            Arc::make_mut(&mut facts.ts).source = Some(Arc::clone(&source));
             facts.source = Some(Arc::clone(&source));
         }
         facts
@@ -145,7 +145,7 @@ fn collect_file_facts_from_source(
             Some(CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
                     parse_error: Some(parse_error.clone()),
-                    source: stored_source.as_deref().map(str::to_owned),
+                    source: stored_source.as_deref().map(std::sync::Arc::<str>::from),
                     ..TsFileFacts::default()
                 }),
                 source: stored_source,

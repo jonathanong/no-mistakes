@@ -29,6 +29,12 @@ impl SharedTraversalContext {
         self.dataset.sources_for(&self.root)
     }
 
+    pub(crate) fn workspace_arc(
+        &self,
+    ) -> std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap> {
+        self.dataset.workspace()
+    }
+
     pub(crate) fn visible_paths_arc(
         &self,
     ) -> std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot> {

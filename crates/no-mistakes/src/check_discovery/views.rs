@@ -22,13 +22,13 @@ pub(crate) struct CheckFileViews {
     pub(crate) graph: Vec<PathBuf>,
 }
 
-pub(super) fn discover_check_file_views_with_external_lookup(
+pub(super) fn discover_check_file_views_with_absolute_lookup(
     root: &Path,
     config: &NoMistakesConfig,
     skip_directories: &[String],
     unique_exports_enabled: bool,
-    root_files: Option<Vec<String>>,
-    mut external_git_files: impl FnMut(&Path) -> Option<Vec<String>>,
+    root_files: Option<Vec<PathBuf>>,
+    mut external_files: impl FnMut(&Path) -> Option<Vec<PathBuf>>,
 ) -> CheckFileViews {
     // Git provides the complete repository universe once. When Git is known
     // unavailable, walk each base exactly once with pattern-aware skip pruning.
@@ -44,7 +44,7 @@ pub(super) fn discover_check_file_views_with_external_lookup(
         Vec::new()
     };
     let mut universe = match root_files {
-        Some(root_files) => normalized_paths(root, root_files),
+        Some(root_files) => root_files,
         None => walk_ignore_aware_universe(
             root,
             &repository_include_patterns(config),
@@ -75,8 +75,8 @@ pub(super) fn discover_check_file_views_with_external_lookup(
         if fallback {
             universe.extend(walk_ignore_aware_universe(project_root, includes, &[], &[]));
         } else {
-            match external_git_files(project_root) {
-                Some(files) => universe.extend(normalized_paths(project_root, files)),
+            match external_files(project_root) {
+                Some(files) => universe.extend(files),
                 None => {
                     universe.extend(walk_ignore_aware_universe(project_root, includes, &[], &[]));
                 }
@@ -117,11 +117,4 @@ pub(super) fn discover_check_file_views_with_external_lookup(
     );
 
     CheckFileViews { filesystem, graph }
-}
-
-fn normalized_paths(root: &Path, files: Vec<String>) -> Vec<PathBuf> {
-    files
-        .into_iter()
-        .map(|relative| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(relative)))
-        .collect()
 }

@@ -114,6 +114,15 @@ impl AnalysisSession {
         dataset.visible_paths_arc()
     }
 
+    /// Return the invocation-owned workspace projection for `root`.
+    ///
+    /// The projection is built at most once for the exact analysis dataset and
+    /// is shared by catalogs, graph preparation, and domain checks.
+    #[doc(hidden)]
+    pub fn workspace(&self, root: &Path) -> Arc<crate::codebase::workspaces::IndexedWorkspaceMap> {
+        self.dataset(root).workspace()
+    }
+
     /// Seed a snapshot prepared by an enclosing pipeline. This is used by
     /// compatibility adapters while callers migrate to session discovery.
     pub fn insert_visible_paths(&self, root: &Path, snapshot: Arc<VisiblePathSnapshot>) {

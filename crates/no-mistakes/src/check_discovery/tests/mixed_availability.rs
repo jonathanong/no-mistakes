@@ -68,12 +68,12 @@ fn mixed_git_availability_walks_external_base_with_its_patterns_once() {
         .join("external-project");
     let mut lookups = Vec::new();
 
-    let views = super::super::views::discover_check_file_views_with_external_lookup(
+    let views = super::super::views::discover_check_file_views_with_absolute_lookup(
         &root,
         &config,
         &config.filesystem.skip_directories,
         false,
-        Some(root_files),
+        Some(super::absolute_paths(&root, root_files)),
         |base| {
             lookups.push(base.to_path_buf());
             None

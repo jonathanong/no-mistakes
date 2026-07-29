@@ -21,7 +21,7 @@ pub(crate) fn data_pw_json_impl(options_json: String) -> napi::Result<String> {
     .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }
 
 pub(crate) fn effects_json_impl(options_json: String) -> napi::Result<String> {
@@ -47,7 +47,7 @@ pub(crate) fn effects_json_impl(options_json: String) -> napi::Result<String> {
     .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }
 
 pub(crate) fn rsc_callers_json_impl(options_json: String) -> napi::Result<String> {
@@ -68,7 +68,7 @@ pub(crate) fn rsc_callers_json_impl(options_json: String) -> napi::Result<String
     .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }
 
 pub(crate) fn registry_extension_json_impl(options_json: String) -> napi::Result<String> {
@@ -81,5 +81,5 @@ pub(crate) fn registry_extension_json_impl(options_json: String) -> napi::Result
         .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }

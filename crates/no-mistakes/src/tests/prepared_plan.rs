@@ -370,7 +370,7 @@ impl PreparedTestPlanRequest {
                         .graph_files
                         .indexable()
                         .iter()
-                        .filter(|path| !facts.contains_key(*path))
+                        .filter(|path| !facts.contains_key(path))
                         .cloned()
                         .collect::<Vec<_>>();
                     facts.extend(no_mistakes::codebase::ts_source::facts::collect_ts_facts_with_context_and_sources(

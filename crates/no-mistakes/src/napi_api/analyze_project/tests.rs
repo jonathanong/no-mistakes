@@ -29,6 +29,20 @@ fn queue_fixture() -> PathBuf {
 }
 
 #[test]
+fn analyze_project_value_impl_accepts_parsed_options() {
+    let output = analyze_project_value_impl(json!({
+        "root": fixture_root("simple"),
+        "reports": []
+    }))
+    .unwrap();
+
+    assert_eq!(
+        serde_json::from_str::<Value>(&output).unwrap()["reports"],
+        json!([])
+    );
+}
+
+#[test]
 fn analyze_project_check_and_graph_report_share_one_canonical_graph() {
     let options = parse_options::<AnalyzeProjectOptions>(
         &json!({

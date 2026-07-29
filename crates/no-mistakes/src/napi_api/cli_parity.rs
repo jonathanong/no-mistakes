@@ -189,5 +189,5 @@ fn load_plan_document(options: TestsPlanDocumentOptions) -> AnyhowResult<crate::
 }
 
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
-    Ok(serde_json::to_string_pretty(value).expect("N-API report serialization never fails"))
+    Ok(serde_json::to_string(value).expect("N-API report serialization never fails"))
 }

@@ -11,7 +11,7 @@ pub(crate) fn server_contracts_json_impl(options_json: String) -> napi::Result<S
         crate::server_routes::analyze_contracts_with_prepared(&prepared, &report, &filters)
             .map_err(to_napi_error)?;
     Ok(
-        serde_json::to_string_pretty(&contracts)
+        serde_json::to_string(&contracts)
             .expect("server contract serialization never fails"),
     )
 }
@@ -26,7 +26,7 @@ pub(crate) fn flow_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<super::options::FlowOptions>(&options_json)?;
     let options = build_flow_options(options).map_err(to_napi_error)?;
     let report = crate::flow_query::run(&options).map_err(to_napi_error)?;
-    Ok(serde_json::to_string_pretty(&report).expect("flow report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("flow report serialization never fails"))
 }
 
 pub(crate) fn build_flow_options(

@@ -295,7 +295,7 @@ fn build_test_impact_graph_for_request(
         .iter()
         .filter(|path| {
             facts
-                .get(*path)
+                .get(path)
                 .is_some_and(|facts| facts.parse_error.is_some())
         })
         .cloned()
@@ -303,7 +303,7 @@ fn build_test_impact_graph_for_request(
     let remaining = fact_paths
         .iter()
         .filter(|path| {
-            !facts.contains_key(*path)
+            !facts.contains_key(path)
                 // Runner-config parsing uses strict program mode. Its
                 // parse-error-only helper facts cannot satisfy dependency
                 // graph construction: recovered TS facts may still contain

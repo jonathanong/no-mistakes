@@ -11,14 +11,14 @@ pub(crate) fn ts_facts(
     if !(plan.imports || plan.graph.imports || plan.graph.function_calls) {
         return TsFileFacts {
             parse_error: Some(parse_error),
-            source: source.as_deref().map(str::to_owned),
+            source: source.as_deref().map(std::sync::Arc::<str>::from),
             ..Default::default()
         };
     }
     let import_facts = extract_import_facts_from_program(program);
     TsFileFacts {
         parse_error: Some(parse_error),
-        source: source.as_deref().map(str::to_owned),
+        source: source.as_deref().map(std::sync::Arc::<str>::from),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         exported_functions: import_facts.exported_functions,

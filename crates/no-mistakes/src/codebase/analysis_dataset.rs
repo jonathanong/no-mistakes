@@ -152,6 +152,7 @@ impl AnalysisDataset {
     pub(crate) fn workspace(&self) -> Arc<super::workspaces::IndexedWorkspaceMap> {
         self.workspace
             .get_or_init(|| {
+                self.increment("workspace.builds", 1);
                 match super::workspaces::load_indexed_from_source_store(
                     &self.root,
                     &self.root_sources,

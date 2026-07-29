@@ -22,7 +22,7 @@ impl SharedTraversalContext {
                 .filter(|path| {
                     self.facts
                         .as_ref()
-                        .is_none_or(|facts| !facts.contains_key(*path))
+                        .is_none_or(|facts| !facts.contains_key(path))
                 })
                 .filter_map(|path| {
                     let source = sources.read_path(path).ok()?;
@@ -38,7 +38,7 @@ impl SharedTraversalContext {
                                     None,
                                 );
                                 if self.fact_plan.source {
-                                    facts.source = Some(source.to_string());
+                                    facts.source = Some(std::sync::Arc::<str>::from(source));
                                 }
                                 facts
                             })

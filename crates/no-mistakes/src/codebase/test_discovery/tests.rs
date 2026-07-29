@@ -384,7 +384,7 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
     let remaining = graph_files
         .indexable()
         .iter()
-        .filter(|path| !facts.contains_key(*path))
+        .filter(|path| !facts.contains_key(path))
         .cloned()
         .collect::<Vec<_>>();
     facts.extend(

@@ -16,6 +16,13 @@ macro_rules! json_binding {
             AsyncTask::new(JsonTask::new(options_json, $implementation))
         }
     };
+    ($rust_name:ident, $js_name:literal, $implementation:path, value) => {
+        #[cfg(not(coverage))]
+        #[cfg_attr(not(test), napi(js_name = $js_name))]
+        pub fn $rust_name(options_json: String) -> AsyncTask<JsonValueTask> {
+            AsyncTask::new(JsonValueTask::new(options_json, $implementation))
+        }
+    };
 }
 
 mod analyze_project;
@@ -31,7 +38,7 @@ mod project;
 pub mod queries;
 
 #[cfg(not(coverage))]
-use async_task::{JsonTask, VersionTask};
+use async_task::{JsonTask, JsonValueTask, VersionTask};
 pub(crate) use cli_parity::{
     check_json_impl, ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl,
     fetches_json_impl, impacted_checks_json_impl, playwright_check_json_impl,
@@ -80,7 +87,8 @@ json_binding!(related_json, "relatedJson", related_json_impl);
 json_binding!(
     analyze_project_json,
     "analyzeProjectJson",
-    analyze_project::analyze_project_json_impl
+    analyze_project::analyze_project_value_impl,
+    value
 );
 
 include!("napi_api/codebase_bindings.rs");

@@ -121,6 +121,17 @@ impl FileInventory {
         Arc::clone(&self.paths)
     }
 
+    /// Return paths whose live targets were files when this inventory was frozen.
+    #[doc(hidden)]
+    pub fn target_file_paths(&self) -> Vec<PathBuf> {
+        self.paths
+            .iter()
+            .zip(self.classifications.iter())
+            .filter(|(_, classification)| classification.target_is_file())
+            .map(|(path, _)| path.clone())
+            .collect()
+    }
+
     #[doc(hidden)]
     pub fn id_for_path(&self, path: &Path) -> Option<FileId> {
         if let Some(id) = self.id_for_normalized_path(path) {

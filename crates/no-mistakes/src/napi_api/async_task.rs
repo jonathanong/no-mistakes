@@ -5,6 +5,41 @@ pub struct JsonTask {
     run: fn(String) -> napi::Result<String>,
 }
 
+pub struct JsonValueTask {
+    options_json: String,
+    run: fn(serde_json::Value) -> napi::Result<String>,
+}
+
+impl JsonValueTask {
+    pub(crate) fn new(
+        options_json: String,
+        run: fn(serde_json::Value) -> napi::Result<String>,
+    ) -> Self {
+        Self { options_json, run }
+    }
+}
+
+impl Task for JsonValueTask {
+    type Output = String;
+    type JsValue = String;
+
+    fn compute(&mut self) -> napi::Result<Self::Output> {
+        let options_json = std::mem::take(&mut self.options_json);
+        let (options, invocation_options) =
+            crate::invocation::extract_napi_options_value(options_json).map_err(to_napi_error)?;
+        let _guard = crate::invocation::InvocationGuard::acquire(invocation_options)
+            .map_err(to_napi_error)?;
+        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        let output = crate::ast::with_request_parse_cache(|| (self.run)(options));
+        crate::invocation::check_timeout().map_err(to_napi_error)?;
+        output
+    }
+
+    fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+        Ok(output)
+    }
+}
+
 impl JsonTask {
     pub(crate) fn new(options_json: String, run: fn(String) -> napi::Result<String>) -> Self {
         Self { options_json, run }

@@ -1,6 +1,6 @@
 use napi::{Env, Task};
 
-use super::super::async_task::{JsonTask, VersionTask};
+use super::super::async_task::{JsonTask, JsonValueTask, VersionTask};
 
 fn echo_task(input: String) -> napi::Result<String> {
     Ok(format!("echo:{input}"))
@@ -12,6 +12,14 @@ fn failing_task(_input: String) -> napi::Result<String> {
 
 fn parse_cache_task(_input: String) -> napi::Result<String> {
     Ok(crate::ast::request_parse_cache_active().to_string())
+}
+
+fn value_task(input: serde_json::Value) -> napi::Result<String> {
+    Ok(format!(
+        "{}:{}",
+        input["root"].as_str().unwrap(),
+        crate::ast::request_parse_cache_active()
+    ))
 }
 
 #[test]
@@ -30,6 +38,19 @@ fn async_json_task_runs_on_task_interface() {
 
     let mut task = JsonTask::new("{}".to_string(), parse_cache_task);
     assert_eq!(task.compute().unwrap(), "true");
+    assert!(!crate::ast::request_parse_cache_active());
+}
+
+#[test]
+fn async_json_value_task_parses_options_once() {
+    let mut task = JsonValueTask::new(r#"{"timeout":4,"root":"fixture"}"#.to_string(), value_task);
+
+    assert_eq!(task.compute().unwrap(), "fixture:true");
+    assert_eq!(
+        task.resolve(Env::from_raw(std::ptr::null_mut()), "done".to_string())
+            .unwrap(),
+        "done"
+    );
     assert!(!crate::ast::request_parse_cache_active());
 }
 

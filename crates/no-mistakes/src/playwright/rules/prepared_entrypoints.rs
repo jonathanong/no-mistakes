@@ -70,14 +70,8 @@ pub fn prepare_from_snapshot_with_catalog(
     snapshot: Arc<VisiblePathSnapshot>,
     tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
     tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
-    let workspace = Arc::new(
-        crate::codebase::workspaces::load_indexed_from_source_store(
-            root,
-            &snapshot.source_store_for(root),
-        )
-        .unwrap_or_default(),
-    );
     prepare_with_settings(
         root,
         config,

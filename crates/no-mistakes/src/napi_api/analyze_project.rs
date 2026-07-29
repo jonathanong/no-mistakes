@@ -2,7 +2,9 @@ use anyhow::{bail, Result as AnyhowResult};
 use serde_json::Value;
 
 use super::codebase::build_traverse_args;
-use super::options::{parse_options, to_napi_error};
+#[cfg(any(test, feature = "test-instrumentation"))]
+use super::options::parse_options;
+use super::options::to_napi_error;
 use crate::codebase::dependencies::TraverseArgs;
 
 mod context;
@@ -45,11 +47,21 @@ mod tests_dispatch;
 #[path = "analyze_project/tracked_banned_paths_tests.rs"]
 mod tracked_banned_paths_tests;
 
+#[cfg(any(test, feature = "test-instrumentation"))]
 pub(crate) fn analyze_project_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<AnalyzeProjectOptions>(&options_json)?;
+    analyze_project_options_impl(options)
+}
+
+pub(crate) fn analyze_project_value_impl(options: Value) -> napi::Result<String> {
+    let options = serde_json::from_value::<AnalyzeProjectOptions>(options)
+        .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))?;
+    analyze_project_options_impl(options)
+}
+
+fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<String> {
     let output = analyze_project(options).map_err(to_napi_error)?;
-    Ok(serde_json::to_string_pretty(&output)
-        .expect("analyzeProject result serialization never fails"))
+    Ok(serde_json::to_string(&output).expect("analyzeProject result serialization never fails"))
 }
 
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {

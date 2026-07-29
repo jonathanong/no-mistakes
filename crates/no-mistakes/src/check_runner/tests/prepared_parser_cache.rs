@@ -67,3 +67,36 @@ fn standalone_preparation_keeps_same_root_tsconfig_scopes_distinct() {
 
     assert!(format!("{error:#}").contains("tsconfig-invalid.json"));
 }
+
+#[test]
+fn preparation_builds_at_most_one_workspace_projection() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/symbols-output/fixture"),
+    );
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(
+        std::sync::Arc::clone(&observer),
+    ));
+
+    prepared::prepare_with_session(&session, &root, None, None).unwrap();
+
+    assert_eq!(observer.snapshot().work["workspace.builds"], 1);
+}
+
+#[test]
+fn explicit_tsconfig_without_playwright_skips_workspace_projection() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/queries/fixture"),
+    );
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(
+        std::sync::Arc::clone(&observer),
+    ));
+
+    prepared::prepare_with_session(&session, &root, None, Some(Path::new("tsconfig.json")))
+        .unwrap();
+
+    assert_eq!(observer.snapshot().work.get("workspace.builds"), None);
+}

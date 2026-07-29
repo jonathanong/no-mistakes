@@ -54,8 +54,8 @@ fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
         &sources,
     );
 
-    let source: &String = facts[&file].source.as_ref().unwrap();
-    assert_eq!(source, expected.as_ref());
+    let source: &std::sync::Arc<str> = facts[&file].source.as_ref().unwrap();
+    assert_eq!(source.as_ref(), expected.as_ref());
     let symbols: Option<crate::codebase::ts_symbols::FileSymbols> = facts[&file].symbols.clone();
     assert!(symbols.is_none());
     let components: &mut Vec<crate::react_traits::report::types::ComponentFacts> =

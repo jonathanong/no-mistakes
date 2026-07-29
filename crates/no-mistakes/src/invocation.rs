@@ -9,7 +9,7 @@ mod napi_options;
 pub use child::command_output;
 pub(crate) use child::stream::stream_command_lines;
 pub use deadline::{check_timeout, commit_timeout};
-pub use napi_options::extract_napi_options;
+pub use napi_options::{extract_napi_options, extract_napi_options_value};
 
 use anyhow::Result;
 use deadline::DeadlineGuard;
