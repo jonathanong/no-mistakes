@@ -104,3 +104,40 @@ fn absent_expression_text_has_no_static_context_references() {
             .is_empty()
     );
 }
+
+#[test]
+fn runner_group_metadata_handles_supported_and_malformed_shapes() {
+    use super::super::model::{WorkflowRunsOn, WorkflowRunsOnGroup, WorkflowRunsOnLabels};
+    use super::super::workflow_values::parse_runs_on;
+
+    let root = fixture();
+    let source = std::fs::read_to_string(root.join("runs-on-cases.yml")).unwrap();
+    let cases: serde_yaml::Value = serde_yaml::from_str(&source).unwrap();
+
+    assert_eq!(
+        parse_runs_on(cases.get("label-array")),
+        Some(WorkflowRunsOn::Labels(vec![
+            "self-hosted".to_string(),
+            "linux".to_string(),
+        ]))
+    );
+    assert_eq!(
+        parse_runs_on(cases.get("group-label-array")),
+        Some(WorkflowRunsOn::Group(WorkflowRunsOnGroup {
+            group: "restricted".to_string(),
+            labels: Some(WorkflowRunsOnLabels::Labels(vec![
+                "self-hosted".to_string(),
+                "linux".to_string(),
+            ])),
+        }))
+    );
+    assert_eq!(parse_runs_on(cases.get("missing-group")), None);
+    assert_eq!(
+        parse_runs_on(cases.get("invalid-labels")),
+        Some(WorkflowRunsOn::Group(WorkflowRunsOnGroup {
+            group: "restricted".to_string(),
+            labels: None,
+        }))
+    );
+    assert_eq!(parse_runs_on(cases.get("invalid-type")), None);
+}
