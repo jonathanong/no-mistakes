@@ -35,10 +35,7 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
 
 const _: fn(PlanArgs) -> Result<ExitCode> = run;
 
-pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
-    let prepared = super::prepared_plan::PreparedTestPlanRequest::prepare(args)?;
-    generate_plan_with_prepared(prepared.args(), &prepared, None)
-}
+include!("plan/generate.rs");
 
 fn generate_plan_with_prepared_inner(
     args: &PlanArgs,

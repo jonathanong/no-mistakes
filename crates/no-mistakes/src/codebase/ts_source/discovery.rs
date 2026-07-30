@@ -135,6 +135,26 @@ pub fn discover_files_from_visible(
         .collect()
 }
 
+/// Apply only configured directory exclusions to an already-discovered source
+/// universe. This keeps request preparation single-pass when the canonical
+/// graph inventory has already applied the built-in discovery exclusions.
+pub fn filter_discovered_files_by_skip_directories(
+    root: &Path,
+    extra_skip: &[String],
+    files: &[PathBuf],
+) -> Vec<PathBuf> {
+    if extra_skip.is_empty() {
+        return files.to_vec();
+    }
+    let root = normalize_discovery_path(root);
+    let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
+    files
+        .iter()
+        .filter(|path| !is_under_skipped_dir(&root, path, &extra_skip))
+        .cloned()
+        .collect()
+}
+
 fn normalized_visible_path(path: &Path) -> PathBuf {
     if path.components().any(|component| {
         matches!(

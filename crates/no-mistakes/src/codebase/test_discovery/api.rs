@@ -15,13 +15,9 @@ pub fn discover_tests_from_visible(
 ) -> Result<DiscoveredTests> {
     let projects = projects::runner_projects_from_visible(root, config, runner, visible_paths, tsconfig)?;
     discover_from_projects_from_visible(
-        root,
-        config,
-        runner,
+        DiscoveryRequest::new(root, config, runner, visible_paths, tsconfig),
         projects,
         None,
-        visible_paths,
-        tsconfig,
     )
 }
 
@@ -40,21 +36,22 @@ pub fn discover_tests_from_prepared_projects(
     let projects = prepared.requested_projects(runner).transpose()?.unwrap_or_else(|| {
         projects::explicit_policy_projects(root, config, runner)
     });
-    discover_from_projects_from_visible(
-        root,
-        config,
-        runner,
+    discover_from_projects_from_files(
+        DiscoveryRequest::new(root, config, runner, visible_paths, tsconfig),
         projects,
-        (runner == TestRunner::Vitest)
-            .then(|| {
-                prepared
-                    .projects_if_prepared(TestRunner::Playwright)
-                    .unwrap_or_else(|| {
-                        projects::explicit_policy_projects(root, config, TestRunner::Playwright)
-                    })
-            }),
-        visible_paths,
-        tsconfig,
+        match runner {
+            TestRunner::Vitest => Some(TestRunner::Playwright),
+            TestRunner::Playwright => Some(TestRunner::Vitest),
+            TestRunner::Dotnet | TestRunner::Swift => None,
+        }
+        .map(|reserved_runner| {
+            prepared
+                .projects_if_prepared(reserved_runner)
+                .unwrap_or_else(|| {
+                    projects::explicit_policy_projects(root, config, reserved_runner)
+                })
+        }),
+        prepared.discovery_files(),
     )
 }
 

@@ -30,18 +30,18 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
     let parses = crate::ast::finish_parse_count(&root);
     assert_eq!(
         parses.get(&root.join("vitest.workspace.ts")),
-        Some(&2),
-        "the unresolved imported alias is reparsed once with the final catalog: {parses:#?}"
+        Some(&1),
+        "final-catalog resolution must reuse the prepared workspace AST: {parses:#?}"
     );
     assert_eq!(
         parses.get(&root.join("packages/unit/vitest.config.ts")),
-        Some(&2),
-        "the standalone project config is reparsed once with the final catalog: {parses:#?}"
+        Some(&1),
+        "final-catalog resolution must reuse the prepared project AST: {parses:#?}"
     );
     assert_eq!(
         shared.source_store().physical_read_count(),
         10,
-        "the final reparse must reuse already-loaded runner configs while reading each fixture source once"
+        "final-catalog resolution must read each fixture source once"
     );
     assert_eq!(
         shared

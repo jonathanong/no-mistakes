@@ -35,6 +35,15 @@ pub(crate) fn generate_impacted_checks_with_timing(
     args: &ImpactedChecksArgs,
     timing: &mut super::timing::TimingTracker,
 ) -> Result<(ImpactedChecksReport, PlanStats)> {
+    crate::ast::with_request_parse_cache(|| {
+        generate_impacted_checks_with_timing_and_cache(args, timing)
+    })
+}
+
+fn generate_impacted_checks_with_timing_and_cache(
+    args: &ImpactedChecksArgs,
+    timing: &mut super::timing::TimingTracker,
+) -> Result<(ImpactedChecksReport, PlanStats)> {
     let prepared = timing.run_phase("prepare", || prepare_impacted_checks(args))?;
     let frameworks = prepared.frameworks.clone();
 

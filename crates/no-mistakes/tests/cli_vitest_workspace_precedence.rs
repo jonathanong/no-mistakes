@@ -41,8 +41,8 @@ fn tests_targets_cli_prefers_default_vitest_workspace_ownership() {
         ])
         .output()
         .expect("no-mistakes should run");
-    assert!(root_config.status.success());
-    assert!(!String::from_utf8(root_config.stdout)
+    assert!(!root_config.status.success());
+    assert!(String::from_utf8(root_config.stderr)
         .unwrap()
-        .contains("--config vitest.config.ts"));
+        .contains("is not owned by a vitest test project"));
 }

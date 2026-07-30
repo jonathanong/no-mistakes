@@ -204,6 +204,12 @@ fn build_test_impact_graph_for_request(
             &preliminary_graph_config,
         );
     runner_fact_plan.include(additional_fact_plan);
+    let discovery_files =
+        no_mistakes::codebase::ts_source::filter_discovered_files_by_skip_directories(
+            root,
+            &config.filesystem.skip_directories,
+            graph_files.all(),
+        );
     let mut projects =
         no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
             root,
@@ -211,6 +217,7 @@ fn build_test_impact_graph_for_request(
             &visible_paths,
             Arc::clone(&preliminary_catalog),
             PreparedTestProjectRequest {
+                discovery_files: &discovery_files,
                 graph: (graph_files.indexable(), runner_fact_plan, runner_fact_context),
                 sources: Arc::clone(&sources),
                 collect_graph_facts: true,

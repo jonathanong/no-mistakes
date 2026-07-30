@@ -31,6 +31,13 @@ no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format json
 no-mistakes tests plan vitest --environment prePush --changed-file src/api.mts --format paths
 ```
 
+Runner selection is applied to test endpoints before impact traversal:
+Vitest plans terminate only at Vitest-owned tests and Playwright plans only at
+Playwright-owned tests. Configured Vitest/Playwright project globs are closed
+and authoritative; generic filename fallback runs only when that runner has no
+recovered projects. Non-code dependencies still count—static Markdown or
+workflow resources referenced by a Vitest test remain valid impact paths.
+
 Key flags:
 - `--changed-file <FILE>` — explicit changed file path; repeatable.
 - `--changed-files <FILE>` — path to a file containing one changed path per line.

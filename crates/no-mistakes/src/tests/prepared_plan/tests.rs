@@ -93,6 +93,72 @@ fn framework_plan_leaves_invalid_unrequested_runner_untouched() {
 }
 
 #[test]
+fn framework_plans_pre_filter_endpoints_and_parse_each_config_once() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/runner-isolation"),
+    );
+
+    for (framework, expected_test) in [
+        (TestFramework::Vitest, "tests/unit.test.mts"),
+        (TestFramework::Playwright, "e2e/unit.spec.mts"),
+    ] {
+        let fixture = crate::test_support::materialize_saved_fixture(&source);
+        let root = fixture.path().canonicalize().unwrap();
+        let args = framework_args(&root, framework);
+        crate::ast::begin_parse_count(&root);
+        let plan = crate::tests::plan::generate_plan(&args).unwrap();
+        let counts = crate::ast::finish_parse_count(&root);
+
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            [expected_test],
+            "{framework:?} must terminate only at its own discovered tests"
+        );
+        assert!(
+            plan.selected_tests
+                .iter()
+                .all(|test| !test.reasons.is_empty()),
+            "every selected test must retain explainable graph provenance"
+        );
+        assert_eq!(
+            counts.get(&root.join("vitest.config.ts")),
+            Some(&1),
+            "{counts:#?}"
+        );
+        assert_eq!(
+            counts.get(&root.join("playwright.config.ts")),
+            Some(&1),
+            "{counts:#?}"
+        );
+        assert!(
+            counts.values().all(|count| *count == 1),
+            "one prepared plan must parse every TypeScript file at most once: {counts:#?}"
+        );
+
+        if framework == TestFramework::Vitest {
+            let why = crate::tests::why::why_steps(&crate::tests::WhyArgs {
+                root: root.clone(),
+                config: None,
+                tsconfig: None,
+                test: root.join(expected_test),
+                changed: Some(root.join("src/unit.ts")),
+                plan: None,
+                format: crate::tests::WhyFormat::Text,
+            })
+            .unwrap();
+            assert!(
+                why.values().all(|steps| !steps.is_empty()) && !why.is_empty(),
+                "tests why must explain the configured Vitest selection"
+            );
+        }
+    }
+}
+
+#[test]
 fn requested_runner_projects_reuses_the_prepared_vitest_catalog() {
     let source = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -178,7 +244,7 @@ fn requested_runner_failure_is_memoized() {
     assert_eq!(first.to_string(), second.to_string());
     assert_eq!(prepared.framework_discovery_count(), 1);
     assert_eq!(counts.get(&root.join("playwright.config.ts")), Some(&1));
-    assert!(!counts.contains_key(&root.join("vitest.config.ts")));
+    assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
 }
 
 #[test]

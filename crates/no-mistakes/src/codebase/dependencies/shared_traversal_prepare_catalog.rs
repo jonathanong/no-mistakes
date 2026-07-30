@@ -23,6 +23,17 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
     std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     crate::codebase::test_discovery::PreparedTestProjects,
 )> {
+    crate::ast::with_request_parse_cache(|| {
+        prepare_tsconfig_catalog_with_framework_projects_and_cache(input)
+    })
+}
+
+fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
+    input: FrameworkCatalogPreparation<'_>,
+) -> Result<(
+    std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    crate::codebase::test_discovery::PreparedTestProjects,
+)> {
     let FrameworkCatalogPreparation {
         root,
         tsconfig_path,
@@ -65,18 +76,25 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
         build_plan,
         &preliminary_graph,
     );
-    let graph_files = if collect_graph_facts {
+    let graph_fact_files = if collect_graph_facts {
         graph_files.indexable()
     } else {
         &[]
     };
+    let discovery_files =
+        crate::codebase::ts_source::filter_discovered_files_by_skip_directories(
+            root,
+            &config.filesystem.skip_directories,
+            graph_files.all(),
+        );
     let mut projects = crate::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
         root,
         config,
         root_visible_paths,
         std::sync::Arc::clone(&preliminary_catalog),
         crate::codebase::test_discovery::PreparedTestProjectRequest {
-            graph: (graph_files, fact_plan, fact_context),
+            discovery_files: &discovery_files,
+            graph: (graph_fact_files, fact_plan, fact_context),
             sources: std::sync::Arc::clone(&sources),
             collect_graph_facts,
             preparation_plan: framework_plan,

@@ -40,13 +40,9 @@ fn discover_from_projects(
     let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
     let tsconfig = resolve_tsconfig_lossy(root, &visible_paths);
     discover_from_projects_from_visible(
-        root,
-        config,
-        runner,
+        DiscoveryRequest::new(root, config, runner, &visible_paths, &tsconfig),
         projects,
         None,
-        &visible_paths,
-        &tsconfig,
     )
 }
 
@@ -171,7 +167,7 @@ fn policy_only_project_does_not_guess_from_multiple_explicit_configs() {
 }
 
 #[test]
-fn policy_only_project_discovery_preserves_fallback_tests_outside_policy() {
+fn policy_only_project_discovery_is_authoritative() {
     let root = fixture_root("test-discovery-policy-fallback");
     let mut config = NoMistakesConfig::default();
     config.tests.vitest.projects.insert(
@@ -190,8 +186,8 @@ fn policy_only_project_discovery_preserves_fallback_tests_outside_policy() {
         .iter()
         .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
         .collect();
-    assert!(rel_tests.contains(&"src/policy.test.mts".to_string()));
-    assert!(rel_tests.contains(&"src/fallback.test.mts".to_string()));
+    assert_eq!(rel_tests, vec!["src/policy.test.mts"]);
+    assert!(!discovered.used_fallback);
 }
 
 #[test]
@@ -258,6 +254,29 @@ fn vitest_fallback_skips_playwright_policy_tests() {
 }
 
 #[test]
+fn playwright_fallback_skips_vitest_policy_tests() {
+    let root = fixture_root("test-discovery-policy-fallback");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "browser".to_string(),
+        TestProjectPolicy {
+            include: vec!["e2e/**/*.spec.ts".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let discovered = discover_tests(&root, &config, TestRunner::Playwright).unwrap();
+
+    let rel_tests: Vec<String> = discovered
+        .tests
+        .iter()
+        .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
+        .collect();
+    assert!(!rel_tests.contains(&"e2e/home.spec.ts".to_string()));
+    assert!(rel_tests.contains(&"tests/e2e/home.spec.ts".to_string()));
+}
+
+#[test]
 fn playwright_policy_exclude_prevents_generic_fallback() {
     let root = fixture_root("test-discovery-policy-fallback");
     let mut config = NoMistakesConfig::default();
@@ -279,6 +298,7 @@ fn playwright_policy_exclude_prevents_generic_fallback() {
         .collect();
     assert!(rel_tests.contains(&"e2e/home.spec.ts".to_string()));
     assert!(!rel_tests.contains(&"e2e/flaky.spec.ts".to_string()));
+    assert!(!discovered.used_fallback);
 }
 
 #[test]
@@ -457,6 +477,7 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
             None,
         )),
         PreparedTestProjectRequest {
+            discovery_files: &[],
             graph: (&[], graph_plan, graph_context.clone()),
             sources: std::sync::Arc::clone(&sources),
             collect_graph_facts: false,
@@ -484,6 +505,7 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
             None,
         )),
         PreparedTestProjectRequest {
+            discovery_files: &[],
             graph: (&[], graph_plan, graph_context),
             sources,
             collect_graph_facts: false,
@@ -493,9 +515,12 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
     assert!(prepared
         .project_filters()
         .iter()
-        .all(|(runner, _)| *runner == TestRunner::Vitest));
+        .all(|(runner, _)| matches!(runner, TestRunner::Vitest | TestRunner::Playwright)));
     assert!(prepared
         .requested_runner_projects(TestRunner::Vitest)
+        .is_ok());
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Playwright)
         .is_ok());
     let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));

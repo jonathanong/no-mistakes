@@ -4,8 +4,7 @@
 pub struct PreparedTestProjects {
     root: PathBuf,
     projects: BTreeMap<TestRunner, std::result::Result<Vec<ConfigProject>, String>>,
-    visible_paths: Vec<PathBuf>,
-    skip_directories: Vec<String>,
+    discovery_files: Vec<PathBuf>,
     graph_facts: crate::codebase::ts_source::facts::TsFactMap,
     dotnet_facts: Option<crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<crate::codebase::swift::SwiftFactMap>,
@@ -14,6 +13,9 @@ pub struct PreparedTestProjects {
 /// Request-local graph inputs and framework demand used during test-project preparation.
 #[doc(hidden)]
 pub struct PreparedTestProjectRequest<'a> {
+    /// The request's already-filtered candidate universe. Framework projections
+    /// borrow this instead of rebuilding it from the visible-path inventory.
+    pub discovery_files: &'a [PathBuf],
     pub graph: (
         &'a [PathBuf],
         crate::codebase::ts_source::facts::TsFactPlan,
@@ -35,11 +37,13 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
     request: PreparedTestProjectRequest<'_>,
 ) -> PreparedTestProjects {
     let PreparedTestProjectRequest {
+        discovery_files,
         graph: (graph_indexable_files, graph_plan, graph_context),
         sources,
         collect_graph_facts,
         preparation_plan,
     } = request;
+    let discovery_files = discovery_files.to_vec();
     let prepared_dotnet = preparation_plan
         .runners
         .contains(&TestRunner::Dotnet)
@@ -55,14 +59,9 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
         .runners
         .contains(&TestRunner::Swift)
         .then(|| {
-            let all_files = crate::codebase::ts_source::discover_files_from_visible(
-                root,
-                &config.filesystem.skip_directories,
-                visible_paths,
-            );
             crate::codebase::swift::collect_swift_facts(
                 root,
-                &all_files,
+                &discovery_files,
                 &config.tests.swift.packages,
             )
         });
@@ -121,8 +120,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
     PreparedTestProjects {
         root: root.to_path_buf(),
         projects,
-        visible_paths: visible_paths.to_vec(),
-        skip_directories: config.filesystem.skip_directories.clone(),
+        discovery_files,
         dotnet_facts: prepared_dotnet.map(|(_, facts)| facts),
         swift_facts: prepared_swift,
         graph_facts: crate::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(

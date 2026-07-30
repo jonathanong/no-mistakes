@@ -1,0 +1,41 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+  playwright:
+    configs: playwright.config.ts
+  dotnet:
+    projects:
+      app:
+        project: dotnet/src/App/App.csproj
+      app-tests:
+        project: dotnet/tests/App.Tests/App.Tests.csproj
+        test: true
+  swift:
+    packages:
+      - swift/App
+
+test_plan:
+  vitest:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+  playwright:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+  swift:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
