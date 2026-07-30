@@ -43,9 +43,10 @@ fn impacted_checks_reuse_one_parse_pass_without_cross_runner_tests() {
         1,
         "unrelated Playwright, .NET, and Swift suites must stay out: {test_commands:#?}"
     );
-    assert!(
-        test_commands[0].contains("vitest") && test_commands[0].contains("--project unit"),
-        "the Vitest-owned file must retain its configured project target"
+    assert_eq!(
+        test_commands,
+        ["vitest --config vitest.config.ts --project unit tests/unit.test.mts"],
+        "the Vitest-owned file must retain its configured project target",
     );
     assert_eq!(stats.framework_discoveries, 4);
     assert_eq!(stats.graph_builds, 1);
