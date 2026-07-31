@@ -8,9 +8,9 @@ use super::{
     github_actions_pinned_hash, integration_test_no_mocks, lockfile_allowlist,
     markdown_link_display_text, markdown_reachability, markdown_structure_budget,
     no_empty_or_comments_only_files, no_git_identity_mutation, package_json_registry_only,
-    package_json_workspace_coverage, require_files_in_subdirs, require_test_per_subdir,
-    required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
-    strict_package_layout, structured_config_policy, test_email_domain_policy,
+    package_json_workspace_coverage, production_dependency_declarations, require_files_in_subdirs,
+    require_test_per_subdir, required_companion_imports, required_local_docs, rust_rules_combined,
+    shellcheck_runner, strict_package_layout, structured_config_policy, test_email_domain_policy,
     tsconfig_alias_folder_mapping, vitest_ci_path_coverage, vitest_project_mapping,
     vitest_test_correspondence, workspace_package_cycles,
 };
@@ -30,12 +30,12 @@ use super::{
     INTEGRATION_TEST_NO_MOCKS, LOCKFILE_ALLOWLIST, MARKDOWN_LINK_DISPLAY_TEXT,
     MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET, NO_EMPTY_OR_COMMENTS_ONLY_FILES,
     NO_GIT_IDENTITY_MUTATION, PACKAGE_JSON_REGISTRY_ONLY, PACKAGE_JSON_WORKSPACE_COVERAGE,
-    REQUIRED_COMPANION_IMPORTS, REQUIRED_DOC_SECTION, REQUIRED_LOCAL_DOCS,
-    REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR, RUST_MAX_LINES_PER_FILE,
-    RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER, STRICT_PACKAGE_LAYOUT,
-    STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY, TSCONFIG_ALIAS_FOLDER_MAPPING,
-    VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE,
-    WORKSPACE_PACKAGE_CYCLES,
+    PRODUCTION_DEPENDENCY_DECLARATIONS, REQUIRED_COMPANION_IMPORTS, REQUIRED_DOC_SECTION,
+    REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
+    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
+    STRICT_PACKAGE_LAYOUT, STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY,
+    TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING,
+    VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
 };
 pub use entrypoints::{
     run_filesystem_rules, run_filesystem_rules_with_config,
@@ -72,7 +72,9 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
     let acc = Mutex::new(Vec::new());
-    let metadata_files = if rule_enabled(config, FORBIDDEN_WORKSPACE_CLOSURE) {
+    let metadata_files = if rule_enabled(config, FORBIDDEN_WORKSPACE_CLOSURE)
+        || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
+    {
         let mut metadata_files = files.to_vec();
         metadata_files.extend(snapshot.paths_for(root).iter().cloned());
         metadata_files.sort();
