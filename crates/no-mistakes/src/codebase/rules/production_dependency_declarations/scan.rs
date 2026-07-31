@@ -56,6 +56,14 @@ pub(super) fn run(
         .collect();
     let owners = discovery::compute_owners(&workspace, files);
     let package_files = discovery::group_by_package(&owners);
+    let reachability_ctx = reachability::ReachabilityContext {
+        root,
+        workspace: &workspace,
+        imports_by_file: &imports_by_file,
+        owners: &owners,
+        test_globset: &test_globset,
+        visible: &visible,
+    };
 
     let mut findings = Vec::new();
     for package in &workspace.packages {
@@ -65,14 +73,9 @@ pub(super) fn run(
         };
         let manifest = PackageManifest::load(&package.dir.join("package.json"), sources);
         let reachable = reachability::production_reachable_files(
-            root,
-            &workspace,
+            &reachability_ctx,
             &package_dir,
             files_in_package,
-            &imports_by_file,
-            &owners,
-            &test_globset,
-            &visible,
         );
         for file in &reachable {
             if test_globset.is_match(relative_slash_path(root, file)) {

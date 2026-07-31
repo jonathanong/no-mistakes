@@ -41,12 +41,17 @@ pub(super) fn load_workspace(
             packages.insert(package.name.clone(), package);
         }
     }
-    Ok(WorkspaceMap::from_packages(packages.into_values().collect()))
+    Ok(WorkspaceMap::from_packages(
+        packages.into_values().collect(),
+    ))
 }
 
 /// The nearest workspace package (by ancestor directory) owning each file,
 /// for files that have one.
-pub(super) fn compute_owners(workspace: &WorkspaceMap, files: &[PathBuf]) -> HashMap<PathBuf, PathBuf> {
+pub(super) fn compute_owners(
+    workspace: &WorkspaceMap,
+    files: &[PathBuf],
+) -> HashMap<PathBuf, PathBuf> {
     files
         .iter()
         .filter_map(|file| {
@@ -57,13 +62,18 @@ pub(super) fn compute_owners(workspace: &WorkspaceMap, files: &[PathBuf]) -> Has
 }
 
 fn nearest_package_dir(workspace: &WorkspaceMap, file: &Path) -> Option<PathBuf> {
-    file.ancestors()
-        .find_map(|dir| workspace.package_by_dir(dir).map(|package| normalize_path(&package.dir)))
+    file.ancestors().find_map(|dir| {
+        workspace
+            .package_by_dir(dir)
+            .map(|package| normalize_path(&package.dir))
+    })
 }
 
 /// Invert `owners` into package dir -> its owned files, for reachability
 /// closure membership checks.
-pub(super) fn group_by_package(owners: &HashMap<PathBuf, PathBuf>) -> HashMap<PathBuf, HashSet<PathBuf>> {
+pub(super) fn group_by_package(
+    owners: &HashMap<PathBuf, PathBuf>,
+) -> HashMap<PathBuf, HashSet<PathBuf>> {
     let mut grouped: HashMap<PathBuf, HashSet<PathBuf>> = HashMap::new();
     for (file, dir) in owners {
         grouped.entry(dir.clone()).or_default().insert(file.clone());

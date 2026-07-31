@@ -61,9 +61,7 @@ pub(crate) fn check_with_files_and_sources(
             discovery_roots.dedup();
             let files: Vec<PathBuf> = all_files
                 .iter()
-                .filter(|p| {
-                    super::file_allowed_by_roots_and_skip(root, &skip, p, &discovery_roots)
-                })
+                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &discovery_roots))
                 .cloned()
                 .collect();
             scan::run(root, &workspace_roots, &opts, &files, sources)

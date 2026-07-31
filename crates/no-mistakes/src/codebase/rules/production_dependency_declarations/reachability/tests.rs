@@ -212,17 +212,17 @@ fn production_reachable_files_seeds_from_an_external_importer_and_follows_relati
     let visible: HashSet<PathBuf> = [app_entry.clone(), lib_entry.clone(), lib_helper.clone()]
         .into_iter()
         .collect();
+    let test_globset = globset(&["**/__tests__/**"]);
+    let ctx = ReachabilityContext {
+        root: &root,
+        workspace: &workspace,
+        imports_by_file: &imports_by_file,
+        owners: &owners,
+        test_globset: &test_globset,
+        visible: &visible,
+    };
 
-    let reachable = production_reachable_files(
-        &root,
-        &workspace,
-        &package_dir,
-        &package_files,
-        &imports_by_file,
-        &owners,
-        &globset(&["**/__tests__/**"]),
-        &visible,
-    );
+    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
 
     assert_eq!(
         reachable,
@@ -258,17 +258,17 @@ fn production_reachable_files_excludes_test_only_importers_from_seeding() {
     let mut owners = HashMap::new();
     owners.insert(test_file.clone(), app_dir);
     let visible: HashSet<PathBuf> = [lib_entry, test_file].into_iter().collect();
+    let test_globset = globset(&["**/__tests__/**"]);
+    let ctx = ReachabilityContext {
+        root: &root,
+        workspace: &workspace,
+        imports_by_file: &imports_by_file,
+        owners: &owners,
+        test_globset: &test_globset,
+        visible: &visible,
+    };
 
-    let reachable = production_reachable_files(
-        &root,
-        &workspace,
-        &package_dir,
-        &package_files,
-        &imports_by_file,
-        &owners,
-        &globset(&["**/__tests__/**"]),
-        &visible,
-    );
+    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
 
     assert!(reachable.is_empty());
 }
@@ -303,17 +303,17 @@ fn production_reachable_files_treats_a_missing_imports_entry_as_a_leaf() {
     let mut owners = HashMap::new();
     owners.insert(app_entry.clone(), app_dir);
     let visible: HashSet<PathBuf> = [app_entry, lib_entry.clone()].into_iter().collect();
+    let test_globset = globset(&["**/__tests__/**"]);
+    let ctx = ReachabilityContext {
+        root: &root,
+        workspace: &workspace,
+        imports_by_file: &imports_by_file,
+        owners: &owners,
+        test_globset: &test_globset,
+        visible: &visible,
+    };
 
-    let reachable = production_reachable_files(
-        &root,
-        &workspace,
-        &package_dir,
-        &package_files,
-        &imports_by_file,
-        &owners,
-        &globset(&["**/__tests__/**"]),
-        &visible,
-    );
+    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
 
     assert_eq!(reachable, [lib_entry].into_iter().collect::<HashSet<_>>());
 }
@@ -347,17 +347,17 @@ fn production_reachable_files_does_not_seed_from_files_owned_by_the_same_package
     let mut owners = HashMap::new();
     owners.insert(lib_helper.clone(), package_dir.clone());
     let visible: HashSet<PathBuf> = [lib_entry, lib_helper].into_iter().collect();
+    let test_globset = globset(&["**/__tests__/**"]);
+    let ctx = ReachabilityContext {
+        root: &root,
+        workspace: &workspace,
+        imports_by_file: &imports_by_file,
+        owners: &owners,
+        test_globset: &test_globset,
+        visible: &visible,
+    };
 
-    let reachable = production_reachable_files(
-        &root,
-        &workspace,
-        &package_dir,
-        &package_files,
-        &imports_by_file,
-        &owners,
-        &globset(&["**/__tests__/**"]),
-        &visible,
-    );
+    let reachable = production_reachable_files(&ctx, &package_dir, &package_files);
 
     assert!(reachable.is_empty());
 }

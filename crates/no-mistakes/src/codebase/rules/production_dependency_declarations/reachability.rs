@@ -56,31 +56,38 @@ pub(super) fn file_imports(
         .collect()
 }
 
+/// Inputs shared across every package's reachability walk within one rule
+/// application, computed once for every in-scope file.
+pub(super) struct ReachabilityContext<'a> {
+    pub(super) root: &'a Path,
+    pub(super) workspace: &'a WorkspaceMap,
+    pub(super) imports_by_file: &'a HashMap<PathBuf, Vec<FileImport>>,
+    pub(super) owners: &'a HashMap<PathBuf, PathBuf>,
+    pub(super) test_globset: &'a GlobSet,
+    pub(super) visible: &'a HashSet<PathBuf>,
+}
+
 /// Files of the package rooted at `package_dir` that are reachable from
-/// production entry points, per `imports_by_file`/`owners` computed once for
-/// every in-scope file.
-#[allow(clippy::too_many_arguments)]
+/// production entry points.
 pub(super) fn production_reachable_files(
-    root: &Path,
-    workspace: &WorkspaceMap,
+    ctx: &ReachabilityContext,
     package_dir: &Path,
     package_files: &HashSet<PathBuf>,
-    imports_by_file: &HashMap<PathBuf, Vec<FileImport>>,
-    owners: &HashMap<PathBuf, PathBuf>,
-    test_globset: &GlobSet,
-    visible: &HashSet<PathBuf>,
 ) -> HashSet<PathBuf> {
     let mut reachable = HashSet::new();
     let mut queue = VecDeque::new();
 
-    for (file, imports) in imports_by_file {
-        if owners.get(file).map(PathBuf::as_path) == Some(package_dir) {
+    for (file, imports) in ctx.imports_by_file {
+        if ctx.owners.get(file).map(PathBuf::as_path) == Some(package_dir) {
             continue; // an importer inside the package is not an external seed
         }
-        if test_globset.is_match(relative_slash_path(root, file)) {
+        if ctx
+            .test_globset
+            .is_match(relative_slash_path(ctx.root, file))
+        {
             continue; // test-only importers never make a file production-reachable
         }
-        for target in resolved_targets(workspace, file, imports, visible) {
+        for target in resolved_targets(ctx.workspace, file, imports, ctx.visible) {
             if package_files.contains(&target) && reachable.insert(target.clone()) {
                 queue.push_back(target);
             }
@@ -88,10 +95,10 @@ pub(super) fn production_reachable_files(
     }
 
     while let Some(file) = queue.pop_front() {
-        let Some(imports) = imports_by_file.get(&file) else {
+        let Some(imports) = ctx.imports_by_file.get(&file) else {
             continue;
         };
-        for target in resolved_targets(workspace, &file, imports, visible) {
+        for target in resolved_targets(ctx.workspace, &file, imports, ctx.visible) {
             if package_files.contains(&target) && reachable.insert(target.clone()) {
                 queue.push_back(target);
             }

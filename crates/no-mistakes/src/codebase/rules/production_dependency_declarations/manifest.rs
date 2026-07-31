@@ -35,7 +35,10 @@ impl PackageManifest {
             package_deps::ALL_DEPENDENCY_FIELDS,
             sources,
         ) {
-            fields_by_name.entry(entry.name).or_default().insert(entry.field);
+            fields_by_name
+                .entry(entry.name)
+                .or_default()
+                .insert(entry.field);
         }
         Self { fields_by_name }
     }
