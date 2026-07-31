@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const test = globalThis.test || require("node:test").test;
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 const packageRoot = join(__dirname, "..");
 const addonPath = join(packageRoot, "bin", "no-mistakes.node");
@@ -343,6 +344,41 @@ test("native exports, JavaScript exports, and declarations stay in parity", asyn
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(planningPath)];
     delete require.cache[addonPath];
+    if (previous) {
+      require.extensions[".node"] = previous;
+    } else {
+      delete require.extensions[".node"];
+    }
+  }
+});
+
+test("native ESM imports expose every declared root API", async () => {
+  const previous = require.extensions[".node"];
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[require.resolve(addonPath)];
+
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = { version: async () => "1.2.3" };
+  };
+
+  try {
+    const esm = await import(pathToFileURL(indexPath).href);
+    const declaredExports = declarationExportNames();
+
+    for (const name of declaredExports) {
+      assert.equal(typeof esm[name], "function", `${name} must support native ESM named imports`);
+    }
+
+    assert.equal(typeof esm.ciTopology, "function");
+    assert.equal(typeof esm.testsPlan, "function");
+    assert.equal(typeof esm.createWorkflowTopologyIndex, "function");
+    assert.equal(typeof esm.version, "function");
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[require.resolve(addonPath)];
     if (previous) {
       require.extensions[".node"] = previous;
     } else {

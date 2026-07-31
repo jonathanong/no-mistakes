@@ -58,9 +58,56 @@ async function version() {
   return native.version();
 }
 
-module.exports = {
-  createWorkflowTopologyIndex,
-  version,
-  ...jsonApis,
-  ...planning,
-};
+module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
+module.exports.version = version;
+module.exports.analyzeProject = jsonApis.analyzeProject;
+module.exports.callSites = jsonApis.callSites;
+module.exports.check = jsonApis.check;
+module.exports.ciEnv = jsonApis.ciEnv;
+module.exports.ciImpact = jsonApis.ciImpact;
+module.exports.ciTopology = jsonApis.ciTopology;
+module.exports.dataPw = jsonApis.dataPw;
+module.exports.deadExports = jsonApis.deadExports;
+module.exports.dependencies = jsonApis.dependencies;
+module.exports.dependents = jsonApis.dependents;
+module.exports.effects = jsonApis.effects;
+module.exports.exportsOf = jsonApis.exportsOf;
+module.exports.fetches = jsonApis.fetches;
+module.exports.impactedChecks = jsonApis.impactedChecks;
+module.exports.importUsages = jsonApis.importUsages;
+module.exports.importers = jsonApis.importers;
+module.exports.infraOutputs = jsonApis.infraOutputs;
+module.exports.infraResourceRefs = jsonApis.infraResourceRefs;
+module.exports.infraTestFor = jsonApis.infraTestFor;
+module.exports.lockfileDiff = jsonApis.lockfileDiff;
+module.exports.playwrightCheck = jsonApis.playwrightCheck;
+module.exports.playwrightEdges = jsonApis.playwrightEdges;
+module.exports.playwrightRelated = jsonApis.playwrightRelated;
+module.exports.playwrightTests = jsonApis.playwrightTests;
+module.exports.reactAnalyze = jsonApis.reactAnalyze;
+module.exports.reactCheck = jsonApis.reactCheck;
+module.exports.reactUsages = jsonApis.reactUsages;
+module.exports.registryExtension = jsonApis.registryExtension;
+module.exports.related = jsonApis.related;
+module.exports.resolveCheck = jsonApis.resolveCheck;
+module.exports.rscCallers = jsonApis.rscCallers;
+module.exports.swiftImporters = jsonApis.swiftImporters;
+module.exports.swiftTestTargets = jsonApis.swiftTestTargets;
+module.exports.symbols = jsonApis.symbols;
+module.exports.testsComment = planning.testsComment;
+module.exports.testsGraphMermaid = planning.testsGraphMermaid;
+module.exports.flow = planning.flow;
+module.exports.queueCheck = planning.queueCheck;
+module.exports.queueEdges = planning.queueEdges;
+module.exports.queueRelated = planning.queueRelated;
+module.exports.queues = planning.queues;
+module.exports.serverContracts = planning.serverContracts;
+module.exports.serverRouteEdges = planning.serverRouteEdges;
+module.exports.serverRouteList = planning.serverRouteList;
+module.exports.serverRouteRelated = planning.serverRouteRelated;
+module.exports.serverRoutes = planning.serverRoutes;
+module.exports.testsGraph = planning.testsGraph;
+module.exports.testsImpact = planning.testsImpact;
+module.exports.testsPlan = planning.testsPlan;
+module.exports.testsTargets = planning.testsTargets;
+module.exports.testsWhy = planning.testsWhy;
