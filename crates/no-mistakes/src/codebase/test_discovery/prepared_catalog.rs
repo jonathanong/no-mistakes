@@ -1,4 +1,8 @@
 impl PreparedTestProjects {
+    pub(super) fn discovery_files(&self) -> &[PathBuf] {
+        &self.discovery_files
+    }
+
     fn requested_projects(&self, runner: TestRunner) -> Option<Result<Vec<ConfigProject>>> {
         self.projects
             .get(&runner)

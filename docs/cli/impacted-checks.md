@@ -35,7 +35,9 @@ Changed files may also be passed as positional arguments.
   prepared once per invocation and reused across the
   configured frameworks (`dotnet`, `vitest`, `playwright`, and `swift`). Each
   selected `TestExecutionTarget` becomes a `test` check; emitted commands match
-  `tests plan` exactly.
+  `tests plan` exactly. Runner ownership is preserved, so a Vitest-owned
+  `.test.*` path is never rewritten into a Playwright command merely because
+  Playwright generic discovery could match its filename.
 - Each `checks.commands` entry whose `include` globs match a changed file
   produces a `generic` check. `fileArgs: append` adds the matched files as
   trailing arguments; `fileArgs: none` runs the command once.

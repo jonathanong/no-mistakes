@@ -75,6 +75,14 @@ tests:
 These policies are also used by `vitest-project-mapping` when that rule sets
 `explicitProjectsOnly: true`.
 
+Recovered Vitest/Playwright config projects and explicit project policies are
+authoritative test universes. Generic filename fallback is used only when that
+runner has no recovered projects; it does not add tests outside configured
+`include`/`exclude` globs. Vitest and Playwright also reserve each other's owned
+files before applying that fallback, while an explicit overlapping policy for
+the requested runner remains authoritative. Dotnet and Swift keep their
+documented explicit native full-suite fallback behavior.
+
 ## Dotnet
 
 `tests.dotnet.projects` lists explicit .NET project mappings used by

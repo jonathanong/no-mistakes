@@ -212,7 +212,7 @@ fn prepared_runner_uses_session_source_and_parser_gateways_once() {
 }
 
 #[test]
-fn runner_config_request_cache_does_not_recollect_prepared_config_facts() {
+fn runner_config_request_cache_reuses_program_for_graph_facts() {
     let root = fixture_root("basic");
     let path = root.join("vitest.config.mts");
     let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".to_string()));
@@ -234,7 +234,11 @@ fn runner_config_request_cache_does_not_recollect_prepared_config_facts() {
         with_program(&path, &source, |_, _| ()).unwrap()
     });
 
-    assert!(helper_facts.is_empty());
+    let facts = helper_facts
+        .get(&path)
+        .expect("the runner parse should also supply ordinary graph facts");
+    assert!(facts.integration_runner_config.is_none());
+    assert!(facts.parsed);
 }
 
 #[test]

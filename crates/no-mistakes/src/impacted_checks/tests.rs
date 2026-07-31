@@ -9,6 +9,7 @@ use crate::tests::TestFramework;
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod runner_isolation;
 mod timeout;
 
 fn fixture() -> PathBuf {
@@ -454,7 +455,10 @@ fn impacted_fanout_prepares_and_builds_the_graph_once() {
         include_str!("../tests/prepared_plan.rs"),
         include_str!("../tests/prepared_plan_discovery.rs"),
     );
-    let plan = include_str!("../tests/plan.rs");
+    let plan = concat!(
+        include_str!("../tests/plan.rs"),
+        include_str!("../tests/plan/generate.rs"),
+    );
 
     assert_eq!(
         impacted_prepare

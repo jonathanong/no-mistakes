@@ -60,6 +60,10 @@ fn playwright_config_parser_covers_project_defaults() {
         "playwright.invalid.ts",
         "playwright.object-testignore-invalid.ts",
     ]);
+    let unresolved_exports = BTreeSet::from([
+        "playwright.call-invalid.ts",
+        "playwright.default-identifier-missing.ts",
+    ]);
     let mut policy_names = BTreeSet::new();
 
     for file in coverage_files("playwright.", ".ts") {
@@ -71,7 +75,14 @@ fn playwright_config_parser_covers_project_defaults() {
             continue;
         }
         let parsed = result.unwrap_or_else(|error| panic!("{file} should parse: {error:#}"));
-        for project in parsed.into_projects(&root, &file) {
+        let projects = parsed.into_projects(&root, &file);
+        if unresolved_exports.contains(file.as_str()) {
+            assert!(
+                projects.is_empty(),
+                "{file} must not widen an unresolved Playwright export to the repository root"
+            );
+        }
+        for project in projects {
             if let Some(policy_name) = project.policy_name {
                 policy_names.insert(policy_name);
             }

@@ -25,12 +25,16 @@ pub(in crate::integration_tests) fn expression_config_object<'a>(
     }
 }
 
-fn argument_config_object<'a>(
+pub(super) fn argument_config_object<'a>(
     argument: &'a Argument<'a>,
     bindings: &BTreeMap<String, &'a Expression<'a>>,
     seen: &mut BTreeSet<String>,
 ) -> Option<&'a ObjectExpression<'a>> {
     match argument {
+        Argument::CallExpression(call) => call
+            .arguments
+            .first()
+            .and_then(|argument| argument_config_object(argument, bindings, seen)),
         Argument::ObjectExpression(object) => Some(object),
         Argument::Identifier(identifier) => {
             identifier_config_object(identifier.name.as_str(), bindings, seen)
@@ -42,7 +46,7 @@ fn argument_config_object<'a>(
     }
 }
 
-fn identifier_config_object<'a>(
+pub(super) fn identifier_config_object<'a>(
     name: &str,
     bindings: &BTreeMap<String, &'a Expression<'a>>,
     seen: &mut BTreeSet<String>,

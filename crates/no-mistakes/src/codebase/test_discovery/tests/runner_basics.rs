@@ -10,6 +10,11 @@ pub(super) fn prepare_test_projects_from_visible(
     graph_context: crate::codebase::ts_source::facts::TsFactContext,
 ) -> PreparedTestProjects {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible_paths);
+    let discovery_files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        visible_paths,
+    );
     prepare_test_projects_from_visible_with_sources_and_plan(
         root,
         config,
@@ -20,6 +25,7 @@ pub(super) fn prepare_test_projects_from_visible(
             None,
         )),
         PreparedTestProjectRequest {
+            discovery_files: &discovery_files,
             graph: (graph_indexable_files, graph_plan, graph_context),
             sources: snapshot.source_store_for(root),
             collect_graph_facts: true,
@@ -55,6 +61,7 @@ fn requested_dotnet_project_errors_are_retained_in_the_prepared_catalog() {
             &root, tsconfig, None,
         )),
         PreparedTestProjectRequest {
+            discovery_files: &[],
             graph: (
                 &[],
                 crate::codebase::ts_source::facts::TsFactPlan::default(),

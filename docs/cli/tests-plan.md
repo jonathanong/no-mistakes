@@ -119,7 +119,14 @@ Plans also trace supported literal filesystem resources through `resource`
 edges. JSON reasons expose call-site provenance in optional `via_details`,
 aligned with `via`; non-JSON formats remain test-only. Dynamic paths, glob
 patterns, and cwd values are reported as warnings rather than treated as a
-global fallback.
+global fallback. Resource impact is extension-agnostic: a Vitest test that
+statically consumes a Markdown file or GitHub Actions workflow is selected when
+that resource changes.
+
+Framework selection filters test endpoints before graph traversal terminates.
+`tests plan vitest` can terminate only at Vitest-owned tests, and
+`tests plan playwright` only at Playwright-owned tests; canonical dependency and
+resource edges between ordinary files remain available to both traversals.
 Vitest `setupFiles` and `globalSetup` are included in the test dependency
 graph automatically. A change to either configured module, or to a static
 import/re-export reachable from one, selects only the tests owned by that

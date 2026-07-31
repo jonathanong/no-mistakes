@@ -68,7 +68,8 @@ impl FrameworkPreparationPlan {
 
     fn insert(&mut self, runner: TestRunner) {
         self.runners.insert(runner);
-        if runner == TestRunner::Vitest {
+        if matches!(runner, TestRunner::Vitest | TestRunner::Playwright) {
+            self.runners.insert(TestRunner::Vitest);
             self.runners.insert(TestRunner::Playwright);
         }
     }

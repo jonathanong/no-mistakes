@@ -20,13 +20,19 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
     } else {
         return;
     };
-    if plan
+    let graph_only_plan = plan
         .integration_runner_configs
         .as_ref()
         .is_some_and(|configs| configs.contains(&path))
-    {
-        return;
-    }
+        .then(|| {
+            // Project discovery already consumes the runner-config syntax from
+            // this exact Program. Collect the ordinary graph facts now while
+            // suppressing only the duplicate runner-config projection.
+            let mut graph_only = plan.clone();
+            graph_only.integration_runner_configs = None;
+            graph_only
+        });
+    let plan = graph_only_plan.as_ref().unwrap_or(plan);
     let facts = crate::codebase::check_facts::collect_file_facts_from_program(
         &request.root,
         &path,

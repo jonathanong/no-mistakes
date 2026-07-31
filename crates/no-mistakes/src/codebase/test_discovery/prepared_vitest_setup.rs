@@ -42,12 +42,9 @@ impl PreparedTestProjects {
                 setups.sort();
                 setups.dedup();
                 (!setups.is_empty()).then(|| {
-                    let tests: Vec<_> = crate::codebase::ts_source::discover_files_from_visible(
-                        &self.root,
-                        &self.skip_directories,
-                        &self.visible_paths,
-                    )
-                    .into_iter()
+                    let tests: Vec<_> = self
+                        .discovery_files
+                        .iter()
                         .filter(|path| {
                             let relative = crate::codebase::ts_source::relative_slash_path(
                                 &self.root,
@@ -55,6 +52,7 @@ impl PreparedTestProjects {
                             );
                             filter.is_match(&relative)
                         })
+                        .cloned()
                         .collect();
                     (!tests.is_empty()).then(|| crate::codebase::dependencies::graph::VitestSetupProject {
                         config: project.config.clone(),

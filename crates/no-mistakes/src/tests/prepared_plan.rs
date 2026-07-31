@@ -175,6 +175,12 @@ impl PreparedTestPlanInputs {
             &[],
             &root_visible_paths,
         );
+        let discovery_files =
+            no_mistakes::codebase::ts_source::filter_discovered_files_by_skip_directories(
+                &root,
+                &config.filesystem.skip_directories,
+                &graph_all_files,
+            );
         let mut resource_candidates = visible_paths.tracked_paths_for(&root).as_ref().clone();
         // The post-change snapshot cannot contain deleted tracked resources,
         // but reverse impact still needs their phantom nodes. Reuse the diff
@@ -223,6 +229,7 @@ impl PreparedTestPlanInputs {
                 &root_visible_paths,
                 Arc::clone(&preliminary_tsconfig_catalog),
                 no_mistakes::codebase::test_discovery::PreparedTestProjectRequest {
+                    discovery_files: &discovery_files,
                     graph: (graph_files.indexable(), runner_graph_plan, runner_graph_context),
                     sources: Arc::clone(&sources),
                     collect_graph_facts: true,

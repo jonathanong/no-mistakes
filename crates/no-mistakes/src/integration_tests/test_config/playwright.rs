@@ -86,7 +86,13 @@ pub(in crate::integration_tests) fn parse_program_with_resolver(
 ) -> Result<ParsedPlaywrightConfig> {
     let bindings = shared::top_level_object_bindings(program);
     let Some(root_object) = shared::default_export_object(program, &bindings) else {
-        return Ok(single_project(config_dir, &Options::default(), None));
+        // An unsupported dynamic wrapper is not evidence that Playwright owns
+        // every test-shaped file in the repository. Explicit no-mistakes
+        // project policies are applied after parsing; when none exist,
+        // runner-specific filename fallback remains available.
+        return Ok(ParsedPlaywrightConfig {
+            projects: Vec::new(),
+        });
     };
     let root_options = project_arrays::root_options(program, root_object, source, path, resolver)?;
     let project_options =

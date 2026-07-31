@@ -66,6 +66,33 @@ fn literal_resource_change_selects_importing_test_with_provenance() {
 }
 
 #[test]
+fn markdown_and_workflow_resources_impact_their_vitest_test() {
+    let fixture = resource_fixture_root();
+    let root = fixture.path().canonicalize().unwrap();
+
+    for changed in [
+        "docs/release-policy.md",
+        ".github/workflows/release.yml",
+    ] {
+        let mut args = resource_plan_args(&root, root.join(changed));
+        args.framework = Some(crate::tests::TestFramework::Vitest);
+        let plan = generate_plan(&args).unwrap();
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            ["policy-consumer.test.ts"],
+            "{changed} must remain an impact edge even though it is not source code"
+        );
+        assert_eq!(
+            plan.selected_tests[0].reasons[0].via,
+            ["resource", "dependency"]
+        );
+    }
+}
+
+#[test]
 fn require_promises_alias_and_named_url_resources_select_the_importing_test() {
     let fixture = resource_fixture_root();
     let root = fixture.path().canonicalize().unwrap();
