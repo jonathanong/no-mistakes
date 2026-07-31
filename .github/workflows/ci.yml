@@ -9,13 +9,65 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 jobs:
-  tests:
-    name: Tests with coverage
+  changes:
+    name: Detect benchmark changes
+    runs-on: ubuntu-latest
+    outputs:
+      benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+
+      - name: Check benchmark paths
+        id: benchmark-paths
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for sha in "$BASE_SHA" "$HEAD_SHA"; do
+            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "$sha"
+            fi
+          done
+
+          changed_paths="$(mktemp)"
+          trap 'rm -f "$changed_paths"' EXIT
+          git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" > "$changed_paths"
+
+          changed=false
+          while IFS= read -r -d '' path; do
+            case "$path" in
+              Cargo.toml|Cargo.lock|crates/*|fixtures/performance/*|.cargo/*|rust-toolchain*|.github/workflows/ci.yml)
+                changed=true
+                break
+                ;;
+            esac
+          done < "$changed_paths"
+
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+  quality:
+    name: Lint and package checks
     runs-on: ubuntu-latest
 
     steps:
@@ -37,25 +89,32 @@ jobs:
             printf '%s' "$value"
           }
 
+          matches="$(mktemp)"
+          trap 'rm -f "$matches"' EXIT
+
+          if git grep --cached -z -l -a -P '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]' -- . > "$matches"; then
+            :
+          else
+            status=$?
+            if [[ "$status" -eq 1 ]]; then
+              exit 0
+            fi
+            exit "$status"
+          fi
+
           fail=0
           while IFS= read -r -d '' path; do
             metadata="$(git ls-files -s -- "$path")"
             mode="${metadata%% *}"
-            rest="${metadata#* }"
-            object="${rest%% *}"
 
             if [[ "$mode" != 100644 && "$mode" != 100755 ]]; then
               continue
             fi
 
-            if git cat-file blob "$object" | perl -e 'while (1) { my $n = sysread(STDIN, my $buffer, 65536); die "read failed: $!" unless defined $n; last if $n == 0; exit 1 if $buffer =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/; }'; then
-              continue
-            else
-              escaped_path="$(escape_workflow_command_property "$path")"
-              printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
-              fail=1
-            fi
-          done < <(git ls-files -z)
+            escaped_path="$(escape_workflow_command_property "$path")"
+            printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
+            fail=1
+          done < "$matches"
           exit "$fail"
 
       - name: Set up Node.js
@@ -108,18 +167,60 @@ jobs:
             CLAUDE.md
           fail: true
 
+      - name: Check Cargo packages
+        run: cargo publish --dry-run --locked -p no-mistakes
+
+      - name: Check npm packages
+        run: npm pack --dry-run --workspaces
+
+  javascript-tests:
+    name: JavaScript tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci --ignore-scripts
+
       - name: Build JavaScript packages
         run: npm run build:js
 
       - name: Run npm tests
         run: npm run test:ci --ignore-scripts
 
-      - name: Check Cargo packages
-        run: |
-          cargo publish --dry-run --locked -p no-mistakes
+      - name: Upload JavaScript coverage to Codecov
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        continue-on-error: true
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: coverage/lcov.info
+          flags: javascript
+          fail_ci_if_error: true
 
-      - name: Check npm packages
-        run: npm pack --dry-run --workspaces
+  tests:
+    name: Rust tests and coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        with:
+          toolchain: "1.96.0"
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@a6b2e2dcd845ddd7f509ce4f3ed3d922b80cc5d9 # v2.84.0
@@ -144,21 +245,23 @@ jobs:
           source <(cargo llvm-cov show-env --sh)
           cargo test --workspace --all-features --lib --bins --tests
 
-      - name: Show Rust coverage table (debug)
-        run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov report \
-            --show-missing-lines 2>&1 | tail -60
-        continue-on-error: true
-
       - name: Enforce Rust coverage
+        id: rust-coverage
         run: |
           mkdir -p target/llvm-cov
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           cargo llvm-cov report \
             --fail-under-lines 99 --fail-under-functions 99 --show-missing-lines --lcov --output-path target/llvm-cov/lcov.info
+
+      - name: Show Rust coverage table (debug)
+        if: ${{ failure() && steps.rust-coverage.outcome == 'failure' }}
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report \
+            --show-missing-lines 2>&1 | tail -60
+        continue-on-error: true
 
       - name: Install cargo-crap
         uses: taiki-e/install-action@a6b2e2dcd845ddd7f509ce4f3ed3d922b80cc5d9 # v2.84.0
@@ -178,15 +281,26 @@ jobs:
           flags: rust
           fail_ci_if_error: true
 
-      - name: Upload JavaScript coverage to Codecov
-        if: ${{ env.CODECOV_TOKEN != '' }}
-        continue-on-error: true
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
-        with:
-          token: ${{ env.CODECOV_TOKEN }}
-          files: coverage/lcov.info
-          flags: javascript
-          fail_ci_if_error: true
+  tests-gate:
+    name: Tests with coverage
+    needs:
+      - quality
+      - javascript-tests
+      - tests
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check test and quality results
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          JAVASCRIPT_RESULT: ${{ needs.javascript-tests.result }}
+          RUST_RESULT: ${{ needs.tests.result }}
+        run: |
+          if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$RUST_RESULT" != "success" ]]; then
+            echo "Quality checks, JavaScript tests, or Rust coverage failed." >&2
+            exit 1
+          fi
 
   ast-analysis:
     name: AST analysis
@@ -207,10 +321,10 @@ jobs:
           key: ast-analysis
 
       - name: Build no-mistakes check CLI
-        run: cargo build --release -p no-mistakes
+        run: cargo build -p no-mistakes
 
       - name: Run no-mistakes check
-        run: target/release/no-mistakes check
+        run: target/debug/no-mistakes check
 
       - name: Install ast-grep
         run: |
@@ -228,11 +342,10 @@ jobs:
         run: ast-grep scan
 
   bench:
-    name: Benchmarks
+    name: Build benchmarks
+    needs: changes
+    if: ${{ needs.changes.outputs.benchmarks == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     env:
       RAYON_NUM_THREADS: "4"
 
@@ -262,16 +375,111 @@ jobs:
           -m simulation
           -m memory
 
-      - name: Run CPU benchmarks
-        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
-        with:
-          mode: simulation
-          run: cargo codspeed run -m simulation
+      - name: Package benchmark executables
+        run: tar -C target/codspeed -cf codspeed-analysis.tar analysis
 
-      # Keep memory execution separate: CodSpeed instruments the same in-process
-      # fixture workloads with allocation tracking instead of CPU simulation.
-      - name: Run memory benchmarks
+      - name: Upload benchmark executables
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: codspeed-analysis
+          path: codspeed-analysis.tar
+          compression-level: 0
+          retention-days: 1
+
+  benchmark-shards:
+    name: Benchmark (${{ matrix.name }})
+    needs:
+      - changes
+      - bench
+    if: ${{ needs.changes.outputs.benchmarks == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: CPU
+            mode: simulation
+            filter: ""
+            benchmark-shard: ""
+          - name: memory
+            mode: memory
+            filter: ""
+            benchmark-shard: general-memory
+          - name: node memory
+            mode: memory
+            filter: "graph_production_finalization::node_id_finalization$"
+            benchmark-shard: ""
+          - name: selector memory
+            mode: memory
+            filter: "graph_production_finalization::selector_append$"
+            benchmark-shard: ""
+    env:
+      BENCHMARK_FILTER: ${{ matrix.filter }}
+      CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
+      NO_MISTAKES_BENCH_SHARD: ${{ matrix.benchmark-shard }}
+      RAYON_NUM_THREADS: "4"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download benchmark executables
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: codspeed-analysis
+
+      - name: Extract benchmark executables
+        run: |
+          mkdir -p target/codspeed
+          tar -C target/codspeed -xf codspeed-analysis.tar
+
+      - name: Run benchmarks
         uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
         with:
-          mode: memory
-          run: cargo codspeed run -m memory
+          mode: ${{ matrix.mode }}
+          run: |
+            mapfile -t benchmarks < <(find target/codspeed/analysis -type f -perm -111)
+            if [[ "${#benchmarks[@]}" -ne 1 ]]; then
+              echo "Expected one benchmark executable, found ${#benchmarks[@]}" >&2
+              exit 1
+            fi
+            if [[ -n "$BENCHMARK_FILTER" ]]; then
+              "${benchmarks[0]}" "$BENCHMARK_FILTER"
+            else
+              "${benchmarks[0]}"
+            fi
+
+  benchmark-gate:
+    name: Benchmarks
+    needs:
+      - changes
+      - bench
+      - benchmark-shards
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check benchmark results
+        env:
+          BENCHMARKS_CHANGED: ${{ needs.changes.outputs.benchmarks }}
+          CHANGE_RESULT: ${{ needs.changes.result }}
+          BUILD_RESULT: ${{ needs.bench.result }}
+          SHARD_RESULT: ${{ needs.benchmark-shards.result }}
+        run: |
+          if [[ "$CHANGE_RESULT" != "success" ]]; then
+            echo "Benchmark change detection failed." >&2
+            exit 1
+          fi
+
+          if [[ "$BENCHMARKS_CHANGED" != "true" ]]; then
+            echo "No benchmark-relevant files changed."
+            exit 0
+          fi
+
+          if [[ "$BUILD_RESULT" != "success" || "$SHARD_RESULT" != "success" ]]; then
+            echo "Benchmark build or execution failed." >&2
+            exit 1
+          fi

@@ -121,6 +121,12 @@ pub(super) fn bench_high_fanout_finalization(c: &mut Criterion) {
     }
     group.finish();
 
+    // The general memory shard excludes the two expensive production cases;
+    // dedicated shards run each one under its existing benchmark identity.
+    if std::env::var("NO_MISTAKES_BENCH_SHARD").as_deref() == Ok("general-memory") {
+        return;
+    }
+
     let mut production = c.benchmark_group("graph_production_finalization");
     let fixture = benchmark_support::production_graph_fixture(1_024, 128);
     let expected_edges = 1_024 * 128;
