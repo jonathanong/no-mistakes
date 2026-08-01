@@ -29,7 +29,7 @@ may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`.
 Only step-based jobs with a non-empty, static `runs-on` string or label array
 count; missing, dynamic, or reusable-workflow jobs do not.
-The containing workflow must declare at least one file-triggerable `push`,
+The containing workflow must declare at least one file-triggered `push`,
 `pull_request`, or `pull_request_target` event whose path filters allow every
 visible TypeScript/JavaScript source selected by that project's
 `files`/`include`/`exclude` settings. Projects with no known source files fall
@@ -96,7 +96,7 @@ such as `set +e` are also rejected as a whole because the rule does not model
 shell reachability or option state. Negated pipelines and bodies with unquoted shell comments,
 quoted command separators, or shell function/group braces, and local shell
 invocations that enable a
-non-executing mode such as `bash -n` or `set -o noexec`, are rejected rather
+non-executing mode such as `bash -n`, are rejected rather
 than credited heuristically. A typecheck before another command in an `&&`
 list is rejected when a later top-level command could mask a failed or skipped
 typecheck. A final static `&&` list remains recognized.
