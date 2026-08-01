@@ -108,7 +108,10 @@ fn opening_delimiter(source: &str, offset: usize) -> Option<FenceDelimiter> {
         if length < 3 {
             continue;
         }
-        let trailing = std::str::from_utf8(&line[index + length..]).ok()?;
+        // The slice begins after an ASCII fence-marker run inside an existing
+        // UTF-8 string, so both boundaries are necessarily valid.
+        let trailing = std::str::from_utf8(&line[index + length..])
+            .expect("slice after an ASCII fence marker must remain UTF-8");
         if is_mermaid_info(trailing) {
             let prefix = &line[..index];
             let container_indent = if prefix.iter().any(|byte| !byte.is_ascii_whitespace()) {

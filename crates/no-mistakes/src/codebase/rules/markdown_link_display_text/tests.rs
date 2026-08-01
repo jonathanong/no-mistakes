@@ -1,6 +1,22 @@
 use super::link_target::{finding_for_link, href_basename, href_destination};
 use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
 use std::path::PathBuf;
+
+fn config_with_options(options: &str) -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(options).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
 
 fn scan(
     root: &std::path::Path,
@@ -390,6 +406,20 @@ fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links
     assert!(parser::parse_inline_link("[text] no href", 0).is_none());
     assert!(parser::parse_inline_link("[text", 0).is_none());
     assert_eq!(href_destination("<docs/new.md"), "<docs/new.md");
+}
+
+#[test]
+fn source_store_entrypoint_prepares_configured_extension_facts() {
+    let root = fixture("custom");
+    let mdx = root.join("docs/page.mdx");
+    let files = vec![mdx];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let config = config_with_options("extensions: [.mdx]");
+
+    let findings = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "docs/page.mdx");
 }
 
 #[test]
