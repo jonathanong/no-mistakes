@@ -9,18 +9,31 @@ enum Literal {
     BlockComment,
 }
 
+#[path = "mdx_expression/javascript.rs"]
+mod javascript;
+use javascript::ByteAction;
+
 #[derive(Default)]
 pub(crate) struct MdxExpressionScanner {
     depth: usize,
+    esm: bool,
+    paren_depth: usize,
+    bracket_depth: usize,
     literal: Literal,
     escaped: bool,
     regex_character_class: bool,
     can_start_regex: bool,
+    jsx_opening: bool,
+    jsx_quote: Option<u8>,
 }
 
 impl MdxExpressionScanner {
     pub(crate) fn is_inside_expression(&self) -> bool {
-        self.depth > 0
+        self.depth > 0 || self.esm
+    }
+
+    pub(crate) fn is_masking_markdown(&self) -> bool {
+        self.is_inside_expression() || self.jsx_quote.is_some()
     }
 
     pub(super) fn observe_line(&mut self, line: &[u8]) {
@@ -28,73 +41,27 @@ impl MdxExpressionScanner {
     }
 
     fn observe_line_until_closed(&mut self, line: &[u8], stop_when_closed: bool) -> bool {
+        if !self.is_masking_markdown() && starts_esm_statement(line) {
+            self.esm = true;
+            self.can_start_regex = true;
+        }
         let mut index = 0;
         while index < line.len() {
             let byte = line[index];
             let next = line.get(index + 1).copied();
-            if matches!(self.literal, Literal::None) && self.depth > 0 {
-                if is_identifier_start(byte) {
-                    let end = identifier_end(line, index);
-                    self.can_start_regex = keyword_allows_regex(&line[index..end]);
-                    index = end;
-                    continue;
-                }
-                if byte.is_ascii_digit() {
-                    index = token_end(line, index);
-                    self.can_start_regex = false;
-                    continue;
-                }
+            if self.observe_jsx_byte(byte, next) {
+                index += 1;
+                continue;
             }
-            match self.literal {
-                Literal::SingleQuoted => self.observe_quoted(byte, b'\''),
-                Literal::DoubleQuoted => self.observe_quoted(byte, b'"'),
-                Literal::Template => self.observe_quoted(byte, b'`'),
-                Literal::Regex => self.observe_regex(byte),
-                Literal::BlockComment => {
-                    if byte == b'*' && next == Some(b'/') {
-                        self.literal = Literal::None;
-                        index += 1;
-                    }
-                }
-                Literal::None => match (byte, next) {
-                    (b'/', Some(b'/')) if self.depth > 0 => break,
-                    (b'/', Some(b'*')) if self.depth > 0 => {
-                        self.literal = Literal::BlockComment;
-                        index += 1;
-                    }
-                    (b'/', _) if self.depth > 0 && self.can_start_regex => {
-                        self.literal = Literal::Regex;
-                        self.regex_character_class = false;
-                    }
-                    (b'/', _) if self.depth > 0 => self.can_start_regex = true,
-                    (b'\'', _) if self.depth > 0 => self.literal = Literal::SingleQuoted,
-                    (b'"', _) if self.depth > 0 => self.literal = Literal::DoubleQuoted,
-                    (b'`', _) if self.depth > 0 => self.literal = Literal::Template,
-                    (b'{', _) => {
-                        self.depth += 1;
-                        self.can_start_regex = true;
-                    }
-                    (b'}', _) if self.depth > 0 => {
-                        self.depth -= 1;
-                        self.can_start_regex = false;
-                    }
-                    (b'+' | b'-', Some(next)) if self.depth > 0 && next == byte => {
-                        self.can_start_regex = false;
-                        index += 1;
-                    }
-                    (b')' | b']' | b'.', _) if self.depth > 0 => {
-                        self.can_start_regex = false;
-                    }
-                    (
-                        b'(' | b'[' | b',' | b':' | b';' | b'?' | b'!' | b'=' | b'+' | b'-' | b'*'
-                        | b'%' | b'&' | b'|' | b'^' | b'~' | b'<' | b'>',
-                        _,
-                    ) if self.depth > 0 => self.can_start_regex = true,
-                    _ => {}
-                },
+            if let Some(end) = self.javascript_token_end(line, index) {
+                index = end;
+                continue;
             }
-            index += 1;
-            if stop_when_closed && self.depth == 0 {
+            match self.observe_javascript_byte(byte, next) {
+                ByteAction::Advance(extra) => index += extra + 1,
+                ByteAction::Break => break,
+            }
+            if stop_when_closed && !self.is_masking_markdown() && !self.jsx_opening {
                 self.escaped = false;
                 return true;
             }
@@ -103,84 +70,71 @@ impl MdxExpressionScanner {
             self.literal = Literal::None;
             self.regex_character_class = false;
         }
+        if self.esm
+            && self.depth == 0
+            && self.paren_depth == 0
+            && self.bracket_depth == 0
+            && matches!(self.literal, Literal::None)
+            && !esm_line_continues(line)
+        {
+            self.esm = false;
+        }
         self.escaped = false;
         false
     }
 
-    pub(crate) fn observe_active_source(&mut self, source: &[u8]) {
+    pub(crate) fn observe_source(&mut self, source: &[u8]) {
         for line in source.split(|byte| matches!(byte, b'\r' | b'\n')) {
-            if self.observe_line_until_closed(line, true) {
-                break;
-            }
-        }
-    }
-
-    fn observe_quoted(&mut self, byte: u8, delimiter: u8) {
-        if self.escaped {
-            self.escaped = false;
-        } else if byte == b'\\' {
-            self.escaped = true;
-        } else if byte == delimiter {
-            self.literal = Literal::None;
-            self.can_start_regex = false;
-        }
-    }
-
-    fn observe_regex(&mut self, byte: u8) {
-        if self.escaped {
-            self.escaped = false;
-        } else {
-            match byte {
-                b'\\' => self.escaped = true,
-                b'[' => self.regex_character_class = true,
-                b']' => self.regex_character_class = false,
-                b'/' if !self.regex_character_class => {
-                    self.literal = Literal::None;
-                    self.can_start_regex = false;
-                }
-                _ => {}
-            }
+            let stop_when_closed = self.is_masking_markdown();
+            self.observe_line_until_closed(line, stop_when_closed);
         }
     }
 }
 
-fn is_identifier_start(byte: u8) -> bool {
-    byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$')
-}
-
-fn identifier_end(line: &[u8], start: usize) -> usize {
-    line[start..]
+fn starts_esm_statement(line: &[u8]) -> bool {
+    let line = line.strip_prefix(b"\xef\xbb\xbf").unwrap_or(line);
+    let line = &line[line
         .iter()
-        .take_while(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$'))
-        .count()
-        + start
-}
-
-fn token_end(line: &[u8], start: usize) -> usize {
-    line[start..]
+        .take_while(|byte| matches!(byte, b' ' | b'\t'))
+        .count()..];
+    [b"import".as_slice(), b"export".as_slice()]
         .iter()
-        .take_while(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_'))
-        .count()
-        + start
+        .any(|keyword| {
+            line.starts_with(keyword)
+                && line
+                    .get(keyword.len())
+                    .is_none_or(|byte| !is_identifier_continue(*byte))
+        })
 }
 
-fn keyword_allows_regex(identifier: &[u8]) -> bool {
-    matches!(
-        identifier,
-        b"return"
-            | b"throw"
-            | b"case"
-            | b"delete"
-            | b"void"
-            | b"typeof"
-            | b"new"
-            | b"in"
-            | b"instanceof"
-            | b"yield"
-            | b"await"
-            | b"else"
-            | b"do"
-    )
+fn esm_line_continues(line: &[u8]) -> bool {
+    line.iter()
+        .rev()
+        .find(|byte| !matches!(byte, b' ' | b'\t'))
+        .is_some_and(|byte| {
+            matches!(
+                byte,
+                b'=' | b','
+                    | b'.'
+                    | b':'
+                    | b'?'
+                    | b'!'
+                    | b'+'
+                    | b'-'
+                    | b'*'
+                    | b'/'
+                    | b'%'
+                    | b'&'
+                    | b'|'
+                    | b'^'
+                    | b'<'
+                    | b'>'
+            )
+        })
+}
+
+fn is_identifier_continue(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$')
 }
 
 #[cfg(test)]

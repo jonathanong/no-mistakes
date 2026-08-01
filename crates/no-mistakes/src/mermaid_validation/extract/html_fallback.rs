@@ -84,7 +84,7 @@ pub(super) fn extract(
     let mut fences = Vec::new();
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
-        let opening = (!expressions.is_inside_expression())
+        let opening = (!expressions.is_masking_markdown())
             .then(|| opening_fence(source, cursor, line_end))
             .flatten();
         let Some(opening) = opening else {

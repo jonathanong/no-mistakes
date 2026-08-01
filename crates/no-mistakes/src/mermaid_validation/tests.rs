@@ -88,3 +88,14 @@ fn ignores_non_mermaid_code_fences() {
     assert_eq!(result.diagram_count, 0);
     assert!(result.diagnostics.is_empty());
 }
+
+#[test]
+fn ignores_mermaid_fence_text_inside_multiline_jsx_quoted_attributes() {
+    let result = validate_markdown(
+        &fixture("mdx-multiline-quoted-attribute.mdx"),
+        Some("docs/quoted-attribute.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+}

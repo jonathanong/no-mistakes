@@ -286,6 +286,17 @@ fn ignores_fence_like_text_inside_an_mdx_javascript_expression() {
 }
 
 #[test]
+fn ignores_fence_like_text_inside_top_level_mdx_code_regions() {
+    for file in [Some("docs/top-level-code.mdx"), None] {
+        let result = validate_markdown(&fixture("mdx-top-level-code-regions.mdx"), file);
+
+        assert!(result.valid, "{file:?}: {:#?}", result.diagnostics);
+        assert_eq!(result.diagram_count, 1, "{file:?}");
+        assert!(result.diagnostics.is_empty(), "{file:?}");
+    }
+}
+
+#[test]
 fn markdown_file_does_not_enable_mdx_jsx_recovery() {
     let result = validate_markdown(
         &fixture("jsx-adjacent-invalid.mdx"),

@@ -102,7 +102,7 @@ impl<'source> MermaidFenceCollector<'source> {
                     self.mdx_code_block = true;
                     self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
                 }
-                if !self.mdx_expression.is_inside_expression() {
+                if !self.mdx_expression.is_masking_markdown() {
                     if let CodeBlockKind::Fenced(info) = kind {
                         if is_mermaid_info(info) {
                             if let Some(delimiter) = opening_delimiter(
@@ -120,6 +120,10 @@ impl<'source> MermaidFenceCollector<'source> {
                         }
                     }
                 }
+            }
+            Event::Code(_) if self.html_fallback != HtmlFallbackMode::Disabled => {
+                self.advance_mdx_expression_to(range.start);
+                self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
             }
             Event::Text(text) => {
                 if let Some(active) = &mut self.active {
@@ -153,12 +157,11 @@ impl<'source> MermaidFenceCollector<'source> {
     fn advance_mdx_expression_to(&mut self, end: usize) {
         let end = end.min(self.source.len());
         if end > self.mdx_scanned_until {
-            // Only an HTML/JSX range can begin an MDX expression. Once one is
-            // active, scan parser gaps so it can close across block boundaries.
-            if self.mdx_expression.is_inside_expression() {
-                self.mdx_expression
-                    .observe_active_source(&self.source.as_bytes()[self.mdx_scanned_until..end]);
-            }
+            // Pulldown-cmark does not understand top-level MDX expressions or
+            // ESM. Scan parser gaps so fence-looking text in their multiline
+            // JavaScript values is not mistaken for Markdown.
+            self.mdx_expression
+                .observe_source(&self.source.as_bytes()[self.mdx_scanned_until..end]);
             self.mdx_scanned_until = end;
         }
     }

@@ -35,7 +35,7 @@ fn stops_gap_scanning_when_the_active_expression_closes() {
     let mut scanner = MdxExpressionScanner::default();
 
     scanner.observe_line(b"{`");
-    scanner.observe_active_source(b"still inside the template\n`} then Markdown `literal { brace`");
+    scanner.observe_source(b"still inside the template\n`} then Markdown `literal { brace`");
 
     assert!(!scanner.is_inside_expression());
 }
@@ -75,4 +75,49 @@ fn distinguishes_division_from_regex_literals() {
 
         assert!(!scanner.is_inside_expression(), "{expression:?}");
     }
+}
+
+#[test]
+fn discovers_top_level_expressions_and_esm_regions() {
+    for lines in [
+        &[b"{".as_slice(), b"  `~~~mermaid", b"invalid", b"~~~`", b"}"][..],
+        &[
+            b"\xef\xbb\xbfexport const example =".as_slice(),
+            b"`",
+            b"~~~mermaid",
+            b"invalid",
+            b"~~~`;",
+        ][..],
+        &[
+            b"import {".as_slice(),
+            b"  example",
+            b"} from './example.js'",
+        ][..],
+        &[b"export const values = (".as_slice(), b"  [example]", b")"][..],
+    ] {
+        let mut scanner = MdxExpressionScanner::default();
+        for line in &lines[..lines.len() - 1] {
+            scanner.observe_source(line);
+            assert!(scanner.is_inside_expression(), "{line:?}");
+        }
+        scanner.observe_source(lines[lines.len() - 1]);
+        assert!(!scanner.is_inside_expression(), "{lines:?}");
+    }
+
+    let mut scanner = MdxExpressionScanner::default();
+    scanner.observe_source(b"important prose\nexported value\n");
+    assert!(!scanner.is_inside_expression());
+}
+
+#[test]
+fn masks_multiline_jsx_quoted_attributes() {
+    let mut scanner = MdxExpressionScanner::default();
+
+    scanner.observe_line(b"<DiagramCard description=\"");
+    assert!(scanner.is_masking_markdown());
+    scanner.observe_line(b"```mermaid");
+    assert!(scanner.is_masking_markdown());
+    scanner.observe_line(b"\" />");
+    assert!(!scanner.is_masking_markdown());
+    assert!(!scanner.jsx_opening);
 }
