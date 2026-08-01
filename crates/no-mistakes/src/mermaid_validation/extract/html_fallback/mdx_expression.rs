@@ -110,14 +110,21 @@ fn starts_esm_statement(line: &[u8]) -> bool {
         .iter()
         .take_while(|byte| matches!(byte, b' ' | b'\t'))
         .count()..];
-    [b"import".as_slice(), b"export".as_slice()]
-        .iter()
-        .any(|keyword| {
-            line.starts_with(keyword)
-                && line
-                    .get(keyword.len())
-                    .is_none_or(|byte| !is_identifier_continue(*byte))
-        })
+    line.strip_prefix(b"import")
+        .is_some_and(|rest| esm_declaration_follows(rest, true))
+        || line
+            .strip_prefix(b"export")
+            .is_some_and(|rest| esm_declaration_follows(rest, false))
+}
+
+fn esm_declaration_follows(rest: &[u8], import: bool) -> bool {
+    rest.first().is_none_or(|byte| {
+        byte.is_ascii_whitespace()
+            || matches!(byte, b'{' | b'*')
+            || (import && matches!(byte, b'\'' | b'"'))
+            || rest.starts_with(b"//")
+            || rest.starts_with(b"/*")
+    })
 }
 
 fn esm_token_continues(byte: Option<u8>) -> bool {
@@ -169,10 +176,6 @@ fn next_mdx_region_start(line: &[u8], mut index: usize) -> Option<usize> {
         }
     }
     None
-}
-
-fn is_identifier_continue(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$')
 }
 
 #[cfg(test)]

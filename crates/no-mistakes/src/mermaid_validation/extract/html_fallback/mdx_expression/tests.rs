@@ -160,6 +160,27 @@ fn esm_continuation_uses_the_last_token_before_trailing_comments() {
 }
 
 #[test]
+fn esm_detection_requires_a_declaration_delimiter() {
+    for declaration in [
+        b"export { value }".as_slice(),
+        b"export*from 'module'",
+        b"import\"module\"",
+        b"import/* note */{ value }",
+    ] {
+        assert!(starts_esm_statement(declaration), "{declaration:?}");
+    }
+    for prose in [
+        b"export:".as_slice(),
+        b"import:",
+        b"export.value",
+        b"import.meta",
+        b"export\"module\"",
+    ] {
+        assert!(!starts_esm_statement(prose), "{prose:?}");
+    }
+}
+
+#[test]
 fn finds_unescaped_mdx_regions_after_expression_closures() {
     assert_eq!(markdown_escape_end(b"plain", 0), None);
     assert_eq!(markdown_escape_end(br"\{", 0), Some(2));
