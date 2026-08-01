@@ -58,6 +58,28 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
     );
     assert_eq!(
         scan_argv_for_typechecked_projects(
+            &["tsc".into(), "--noEmit".into(), "--project=app".into()],
+            ".",
+        ),
+        vec!["app"]
+    );
+    assert_eq!(
+        scan_argv_for_typechecked_projects(
+            &[
+                "pnpm".into(),
+                "--dir=app".into(),
+                "exec".into(),
+                "tsc".into(),
+                "--noEmit".into(),
+                "--project".into(),
+                ".".into(),
+            ],
+            ".",
+        ),
+        vec!["app"]
+    );
+    assert_eq!(
+        scan_argv_for_typechecked_projects(
             &[
                 "tsc".into(),
                 "--noEmit".into(),
@@ -177,6 +199,18 @@ fn token_scanner_covers_pnpm_and_project_argument_edge_cases() {
         Some("app/tsconfig.json".into())
     );
     assert_eq!(project_argument(&tsc), Some("tsconfig.json".into()));
+    assert_eq!(
+        scan_tokens(
+            &[
+                "tsc".into(),
+                "--noEmit".into(),
+                "--project".into(),
+                ".".into()
+            ],
+            ".",
+        ),
+        vec!["."]
+    );
     assert_eq!(
         join_relative(".", "./app/tsconfig.json"),
         Some("app/tsconfig.json".into())

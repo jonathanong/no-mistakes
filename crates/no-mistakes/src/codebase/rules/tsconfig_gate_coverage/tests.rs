@@ -1,3 +1,4 @@
+use super::application::resolve_gate_projects_against_tracked;
 use super::workflow::{
     default_working_directory, effective_working_directory, is_repo_relative_project_path,
 };
@@ -45,10 +46,35 @@ fn check(root: &Path, config: &NoMistakesConfig) -> anyhow::Result<Vec<RuleFindi
 }
 
 #[test]
-fn static_ci_and_local_registrations_cover_primary_and_auxiliary_tsconfigs() {
+fn directory_project_arguments_cover_tracked_primary_tsconfig_in_ci_and_local_checks() {
     let root = fixture_root("pass");
     let report = findings(&root, &config(&root));
     assert!(report.is_empty(), "unexpected findings: {report:#?}");
+}
+
+#[test]
+fn directory_project_arguments_resolve_only_against_tracked_tsconfigs() {
+    let tracked = BTreeSet::from([
+        "app/tsconfig.json".to_string(),
+        "app.json/tsconfig.json".to_string(),
+        "tsconfig.json".to_string(),
+    ]);
+    let gate_projects = BTreeSet::from([
+        "app".to_string(),
+        "app.json".to_string(),
+        ".".to_string(),
+        "missing".to_string(),
+    ]);
+
+    assert_eq!(
+        resolve_gate_projects_against_tracked(&gate_projects, &tracked),
+        BTreeSet::from([
+            "app/tsconfig.json".to_string(),
+            "app.json/tsconfig.json".to_string(),
+            "missing".to_string(),
+            "tsconfig.json".to_string(),
+        ])
+    );
 }
 
 #[test]
@@ -77,6 +103,28 @@ fn workflow_defaults_step_directories_and_shell_cwds_are_resolved() {
     let root = fixture_root("working-directories");
     let report = findings(&root, &config(&root));
     assert!(report.is_empty(), "unexpected findings: {report:#?}");
+}
+
+#[test]
+fn statically_disabled_or_nonblocking_workflow_commands_do_not_cover_projects() {
+    let root = fixture_root("non-enforcing-workflow");
+    let report = findings(&root, &config(&root));
+    assert_eq!(report.len(), 6, "{report:#?}");
+    for project in [
+        "disabled-job/tsconfig.json",
+        "disabled-step/tsconfig.json",
+        "nonblocking-job/tsconfig.json",
+        "nonblocking-step/tsconfig.json",
+        "expression/tsconfig.json",
+        "constant-nonblocking-step/tsconfig.json",
+    ] {
+        assert!(report.iter().any(|finding| {
+            finding.file == project && finding.message.contains("no CI typecheck registration")
+        }));
+    }
+    assert!(report
+        .iter()
+        .all(|finding| finding.file != "dynamic-expression/tsconfig.json"));
 }
 
 #[test]

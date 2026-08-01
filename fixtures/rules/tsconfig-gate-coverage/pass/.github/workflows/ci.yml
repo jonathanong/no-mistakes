@@ -4,5 +4,5 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - run: pnpm --dir app exec tsc --noEmit
+      - run: pnpm exec tsc --noEmit --project app
       - run: pnpm exec tsc --noEmit --project=tools/tsconfig.tools.json

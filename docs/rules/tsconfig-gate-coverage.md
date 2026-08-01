@@ -27,6 +27,12 @@ default `tsconfig.json` relative to the effective working directory, sequential
 may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`.
 
+Literal YAML `if: false` and `continue-on-error: true` values, plus exact
+constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
+step do not count as CI registrations because they cannot enforce a typecheck.
+Other expressions in either field remain unresolved and are not evaluated by
+this static rule.
+
 Counterexample: `packages/api/tsconfig.json` exists, but its `tsc --noEmit`
 command appears only in a local command catalog. CI can therefore miss type
 errors in that package.

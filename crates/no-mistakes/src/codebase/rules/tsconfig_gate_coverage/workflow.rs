@@ -14,11 +14,17 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
             continue;
         };
         for job in jobs.values() {
+            if statically_not_enforcing(job) {
+                continue;
+            }
             let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
                 continue;
             };
             let job_cwd = effective_working_directory(job, workflow_cwd.clone());
             for step in steps {
+                if statically_not_enforcing(step) {
+                    continue;
+                }
                 let step_cwd = match step.get("working-directory").and_then(Value::as_str) {
                     Some(raw) => command_scan::normalize_repo_relative(raw),
                     None => job_cwd.clone(),
@@ -38,6 +44,26 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
         }
     }
     projects
+}
+
+/// A static disabled or non-blocking YAML node cannot enforce a typecheck.
+/// Only exact boolean expressions are resolved; all other expressions remain
+/// unresolved so the rule stays deterministic.
+fn statically_not_enforcing(value: &Value) -> bool {
+    static_bool(value.get("if")) == Some(false)
+        || static_bool(value.get("continue-on-error")) == Some(true)
+}
+
+fn static_bool(value: Option<&Value>) -> Option<bool> {
+    match value {
+        Some(Value::Bool(value)) => Some(*value),
+        Some(Value::String(expression)) => match expression.trim() {
+            "${{ false }}" => Some(false),
+            "${{ true }}" => Some(true),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 
 pub(super) fn default_working_directory(value: &Value) -> Option<&str> {

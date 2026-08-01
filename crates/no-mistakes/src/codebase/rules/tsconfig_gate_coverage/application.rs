@@ -16,6 +16,8 @@ pub(super) fn scan_application(
     local_projects: &BTreeSet<String>,
     config_file: &str,
 ) -> Vec<RuleFinding> {
+    let ci_projects = resolve_gate_projects_against_tracked(ci_projects, tracked);
+    let local_projects = resolve_gate_projects_against_tracked(local_projects, tracked);
     let (allowlist, mut findings) = validate_allowlist(opts, tracked, config_file);
     for project in candidates {
         if allowlist.contains(project) {
@@ -39,6 +41,34 @@ pub(super) fn scan_application(
         }
     }
     findings
+}
+
+/// Resolve the directory form accepted by `tsc --project` only when the
+/// request's tracked tsconfig inventory proves that interpretation. This keeps
+/// static command parsing path-only while correctly handling directories such
+/// as `app.json` that a filename-suffix heuristic would misclassify.
+pub(super) fn resolve_gate_projects_against_tracked(
+    gate_projects: &BTreeSet<String>,
+    tracked: &BTreeSet<String>,
+) -> BTreeSet<String> {
+    gate_projects
+        .iter()
+        .map(|project| {
+            if tracked.contains(project) {
+                return project.clone();
+            }
+            let directory_config = if project == "." {
+                "tsconfig.json".to_string()
+            } else {
+                format!("{project}/tsconfig.json")
+            };
+            if tracked.contains(&directory_config) {
+                directory_config
+            } else {
+                project.clone()
+            }
+        })
+        .collect()
 }
 
 fn validate_allowlist(

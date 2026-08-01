@@ -1,7 +1,7 @@
 checks:
   commands:
     - name: typecheck-app
-      command: [pnpm, --dir, app, exec, tsc, --noEmit]
+      command: [pnpm, exec, tsc, --noEmit, --project, app]
       fileArgs: none
       always: true
     - name: typecheck-tools
