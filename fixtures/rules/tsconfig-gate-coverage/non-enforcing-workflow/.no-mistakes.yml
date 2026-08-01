@@ -1,0 +1,53 @@
+checks:
+  commands:
+    - name: typecheck-disabled-job
+      command: [tsc, --noEmit, --project, disabled-job/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-disabled-step
+      command: [tsc, --noEmit, --project, disabled-step/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-nonblocking-job
+      command: [tsc, --noEmit, --project, nonblocking-job/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-nonblocking-step
+      command: [tsc, --noEmit, --project, nonblocking-step/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-expression
+      command: [tsc, --noEmit, --project, expression/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-constant-nonblocking-step
+      command: [tsc, --noEmit, --project, constant-nonblocking-step/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-expression
+      command: [tsc, --noEmit, --project, dynamic-expression/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-failure-mode-mutated
+      command: [tsc, --noEmit, --project, failure-mode-mutated/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-non-posix-shell
+      command: [tsc, --noEmit, --project, non-posix-shell/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-missing-runner
+      command: [tsc, --noEmit, --project, missing-runner/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-runner
+      command: [tsc, --noEmit, --project, dynamic-runner/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-implicit-windows-shell
+      command: [tsc, --noEmit, --project, implicit-windows-shell/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

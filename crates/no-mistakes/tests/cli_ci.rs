@@ -77,6 +77,37 @@ fn impacted_checks_lists_commands() {
 }
 
 #[test]
+fn impacted_checks_generic_only_skips_test_commands() {
+    let root = case("impacted-checks/multi-framework");
+    let config = case("../fixtures/impacted-checks/generic-only.no-mistakes.yml");
+    let output = run(&[
+        "impacted-checks",
+        "src/value.ts",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+        "--generic-only",
+        "--format",
+        "json",
+    ]);
+
+    assert!(output.status.success(), "{}", stderr(&output));
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report["warnings"], serde_json::json!([]));
+    assert_eq!(report["fallback_triggered"], false);
+    assert_eq!(
+        report["checks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|check| check["kind"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["generic", "generic"]
+    );
+}
+
+#[test]
 fn impacted_checks_multi_file_json_covers_every_configured_framework() {
     let root = case("impacted-checks/multi-framework");
     let output = run(&[

@@ -43,6 +43,8 @@ pub struct CheckCommandDef {
     pub command: Vec<String>,
     /// How matched file paths are added to the command invocation.
     pub file_args: CheckFileArgs,
+    /// Run this whole-project command even when no changed files match it.
+    pub always: bool,
 }
 
 impl Default for CheckCommandDef {
@@ -53,6 +55,7 @@ impl Default for CheckCommandDef {
             exclude: Vec::new(),
             command: Vec::new(),
             file_args: CheckFileArgs::Append,
+            always: false,
         }
     }
 }

@@ -197,6 +197,7 @@ const { impactedChecks } = require("no-mistakes");
 const report = await impactedChecks({
   root: process.cwd(),
   changedFiles: ["src/api.mts"],
+  genericOnly: true,
   timings: true,
 });
 
@@ -207,6 +208,11 @@ Timing entries use stable phase identifiers and fractional-millisecond
 durations. The lazy `graph` phase is present only when dependency analysis is
 needed. The property is omitted by default. Unlike CLI `--timings`, Node timing
 collection does not print progress to stderr.
+
+Set `genericOnly: true` to return only configured `checks.commands` entries.
+It preserves changed-file collection but skips test-framework discovery and
+selection; its report has no warnings or full-suite fallback, and timed calls
+report `prepare`, `generic-checks`, then `total`.
 
 ## Invocation Lock And Timeouts
 

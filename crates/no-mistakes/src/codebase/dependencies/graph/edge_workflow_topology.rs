@@ -2,6 +2,7 @@ fn parsed_workflows_for_graph(
     root: &Path,
     all_files: &[PathBuf],
     ci: &crate::config::v2::schema::CiConfig,
+    prepared: Option<&crate::codebase::ci_workflows::ParsedWorkflowSet>,
 ) -> crate::codebase::ci_workflows::ParsedWorkflowSet {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let workflow_dirs: HashSet<PathBuf> = ci
@@ -9,18 +10,25 @@ fn parsed_workflows_for_graph(
         .iter()
         .map(|directory| crate::codebase::ts_resolver::normalize_path(&root.join(directory)))
         .collect();
-    let paths = all_files.iter().filter(|path| {
-        path.parent()
-            .is_some_and(|parent| workflow_dirs.contains(parent))
-            && path
-                .extension()
-                .and_then(std::ffi::OsStr::to_str)
-                .is_some_and(|extension| {
-                    extension.eq_ignore_ascii_case("yml")
-                        || extension.eq_ignore_ascii_case("yaml")
-                })
-    });
-    crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(&root, paths.cloned())
+    let paths = all_files
+        .iter()
+        .filter(|path| {
+            path.parent()
+                .is_some_and(|parent| workflow_dirs.contains(parent))
+                && path
+                    .extension()
+                    .and_then(std::ffi::OsStr::to_str)
+                    .is_some_and(|extension| {
+                        extension.eq_ignore_ascii_case("yml")
+                            || extension.eq_ignore_ascii_case("yaml")
+                    })
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    match prepared {
+        Some(prepared) => prepared.project_paths(&root, paths),
+        None => crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(&root, paths),
+    }
 }
 
 fn collect_workflow_topology_edges(
@@ -35,9 +43,7 @@ fn collect_workflow_topology_edges(
     let workflow_files: HashSet<PathBuf> = topology
         .workflows
         .iter()
-        .map(|workflow| {
-            crate::codebase::ts_resolver::normalize_path(&root.join(&workflow.path))
-        })
+        .map(|workflow| crate::codebase::ts_resolver::normalize_path(&root.join(&workflow.path)))
         .collect();
     let action_dirs: Vec<PathBuf> = ci
         .action_dirs
@@ -71,19 +77,11 @@ fn collect_workflow_topology_edges(
                 step: step.index as usize,
             };
             steps.insert((job.id.clone(), step.index as usize), step_node.clone());
-            edges.push((
-                job_node.clone(),
-                step_node.clone(),
-                EdgeKind::WorkflowStep,
-            ));
+            edges.push((job_node.clone(), step_node.clone(), EdgeKind::WorkflowStep));
             if let Some(target) = step.uses.as_deref().and_then(|target| {
                 resolve_local_action_descriptor(&root, target, &universe, &action_dirs)
             }) {
-                edges.push((
-                    step_node,
-                    NodeId::File(target),
-                    EdgeKind::WorkflowUses,
-                ));
+                edges.push((step_node, NodeId::File(target), EdgeKind::WorkflowUses));
             }
         }
     }
@@ -105,11 +103,7 @@ fn collect_workflow_topology_edges(
                     .get(&edge.from)
                     .filter(|_| workflow_files.contains(&target))
                 {
-                    edges.push((
-                        from.clone(),
-                        NodeId::File(target),
-                        EdgeKind::WorkflowUses,
-                    ));
+                    edges.push((from.clone(), NodeId::File(target), EdgeKind::WorkflowUses));
                 }
             }
             WorkflowTopologyEdge::Artifact(edge) => {
@@ -156,7 +150,9 @@ fn add_workflow_run_edges(
             if !jobs.contains_key(&job_id) {
                 continue;
             }
-            let Some(raw_steps) = raw_job.get("steps").and_then(serde_yaml::Value::as_sequence)
+            let Some(raw_steps) = raw_job
+                .get("steps")
+                .and_then(serde_yaml::Value::as_sequence)
             else {
                 continue;
             };
@@ -183,3 +179,7 @@ fn add_workflow_run_edges(
         }
     }
 }
+
+#[cfg(test)]
+#[path = "edge_workflow_topology/tests.rs"]
+mod edge_workflow_topology_tests;

@@ -61,6 +61,9 @@ pub struct ImpactedChecksArgs {
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
     pub(crate) json: bool,
+    /// Return configured generic commands only; skip test-framework discovery and selection.
+    #[arg(long, default_value_t = false)]
+    pub(crate) generic_only: bool,
     /// Legacy programmatic timing switch. CLI timing flags are root-global.
     #[arg(skip)]
     pub(crate) timings: bool,

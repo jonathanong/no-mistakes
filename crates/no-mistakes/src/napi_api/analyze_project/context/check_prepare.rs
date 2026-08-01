@@ -91,7 +91,7 @@ impl SharedCheckContext {
                 ),
             ));
         }
-        let prepared_graph = forbidden_graph_plan
+        let mut prepared_graph = forbidden_graph_plan
             .map(|graph_plan| {
                 crate::codebase::dependencies::graph::prepare_graph_config(
                     &root,
@@ -102,6 +102,9 @@ impl SharedCheckContext {
                 )
             })
             .transpose()?;
+        if let Some(graph) = prepared_graph.as_mut() {
+            graph.set_workflow_documents(prepared.workflow_documents.clone());
+        }
         if let Some(graph_playwright) = prepared_graph
             .as_ref()
             .map(|graph| {

@@ -37,6 +37,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::STRUCTURED_CONFIG_POLICY,
     rules::TEST_EMAIL_DOMAIN_POLICY,
     rules::TSCONFIG_ALIAS_FOLDER_MAPPING,
+    rules::TSCONFIG_GATE_COVERAGE,
     rules::VITEST_CI_PATH_COVERAGE,
     rules::VITEST_PROJECT_MAPPING,
     rules::VITEST_TEST_CORRESPONDENCE,
@@ -48,9 +49,7 @@ pub(crate) fn run_filesystem_rules_check(
     config: &NoMistakesConfig,
     enabled: bool,
     files: &[PathBuf],
-    visible_paths: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
-    sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
-    vitest_projects: Option<&rules::PreparedVitestProjectCatalog>,
+    prepared: rules::filesystem_dispatch::PreparedFilesystemRuleInputs<'_>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.filesystem_rules",
@@ -58,12 +57,7 @@ pub(crate) fn run_filesystem_rules_check(
         || -> Result<_> {
             Ok(if enabled {
                 rules::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
-                    root,
-                    config,
-                    files,
-                    visible_paths,
-                    vitest_projects,
-                    sources,
+                    root, config, files, prepared,
                 )?
             } else {
                 Vec::new()

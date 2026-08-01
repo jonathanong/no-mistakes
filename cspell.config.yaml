@@ -24,6 +24,7 @@ words:
   - codecov
   - emnapi
   - eprintln
+  - errexit
   - extglob
   - gitignore
   - glibc
@@ -38,9 +39,12 @@ words:
   - markdown
   - napi
   - nextjs
+  - noprofile
+  - norc
   - Ong
   - oxlint
   - PCRE
+  - pipefail
   - pnpm
   - refspec
   - refspecs

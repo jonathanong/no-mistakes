@@ -1,4 +1,11 @@
+use super::scan::{
+    check_with_files_from_snapshot_and_catalog,
+    check_with_files_from_snapshot_catalog_sources_and_workflows, mapped_filter_names,
+    missing_mapping_finding, scan as scan_inputs, ScanInputs,
+};
 use super::*;
+use crate::config::v2::schema::NoMistakesConfig;
+use anyhow::Result;
 
 fn scan_with_catalog(
     root: &Path,
@@ -8,7 +15,17 @@ fn scan_with_catalog(
     catalog: Option<&super::super::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<RuleFinding>> {
     let sources = snapshot.source_store_for(root);
-    scan_with_catalog_and_sources(root, config, inputs, snapshot, catalog, &sources)
+    scan_inputs(ScanInputs {
+        root,
+        config,
+        opts: inputs.0,
+        files: inputs.1,
+        all_files: inputs.2,
+        snapshot,
+        catalog,
+        sources: &sources,
+        workflows: None,
+    })
 }
 
 fn scan(
@@ -105,6 +122,56 @@ fn prepared_vitest_catalog_matches_standalone_coverage_loading() {
     .unwrap();
 
     assert_eq!(prepared, standalone);
+}
+
+#[test]
+fn prepared_workflows_use_the_scan_path_without_rereading_workflow_sources() {
+    let root = fixture_root("fixture");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let all_files = files(&root);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let workflows =
+        crate::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
+            &root, &config.ci, &snapshot, &sources,
+        );
+    let reads_after_workflow_preparation = sources.physical_read_count();
+
+    let prepared = check_with_files_from_snapshot_catalog_sources_and_workflows(
+        &root,
+        &config,
+        &all_files,
+        &snapshot,
+        None,
+        &sources,
+        Some(&workflows),
+    )
+    .unwrap();
+
+    assert_eq!(
+        sources.physical_read_count(),
+        reads_after_workflow_preparation,
+        "the scan path must consume prepared workflow documents without rereading them"
+    );
+    assert_eq!(
+        prepared,
+        check_with_files(&root, &config, &all_files).unwrap()
+    );
+}
+
+#[test]
+fn invalid_rule_path_filter_returns_its_configuration_error() {
+    let root = fixture_root("fixture");
+    let mut config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    config
+        .rules
+        .iter_mut()
+        .find(|rule| rule.rule == RULE_ID)
+        .expect("fixture should include vitest-ci-path-coverage rule")
+        .include = vec!["[".to_string()];
+
+    let error = check_with_files(&root, &config, &files(&root)).unwrap_err();
+    assert!(error.to_string().contains("invalid glob"), "{error:#}");
 }
 
 #[test]

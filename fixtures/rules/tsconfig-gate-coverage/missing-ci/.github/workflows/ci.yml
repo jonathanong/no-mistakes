@@ -1,0 +1,7 @@
+name: CI
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm --dir app exec tsc --noEmit

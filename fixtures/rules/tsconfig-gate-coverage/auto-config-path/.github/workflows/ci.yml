@@ -1,0 +1,6 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project app/tsconfig.json

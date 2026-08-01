@@ -8,12 +8,17 @@ pub(crate) struct PreparedCheckInputs {
     pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
     pub(crate) inferred_roots: no_mistakes::codebase::config::InferredRoots,
     pub(crate) config: NoMistakesConfig,
+    pub(crate) config_path: Option<std::path::PathBuf>,
     pub(crate) codebase_config: no_mistakes::codebase::config::Config,
     pub(crate) playwright: Option<no_mistakes::playwright::rules::PreparedPlaywrightRules>,
     pub(crate) react: no_mistakes::react_traits::PreparedReactCheck,
     pub(crate) tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     pub(crate) tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) vitest_projects: Option<no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
+    pub(crate) workflow_documents:
+        Option<Arc<no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>>,
+    pub(crate) tsconfig_gate_project_inputs:
+        Option<no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
 }
 
 pub(super) fn prepare_with_session(
@@ -27,14 +32,15 @@ pub(super) fn prepare_with_session(
         no_mistakes::diagnostics::TimingKind::Serial,
         || session.visible_paths(root),
     );
-    let config = session.config(root, config_path)?;
+    let (config, effective_config_path) = session.config_with_path(root, config_path)?;
     let tsconfig = session.tsconfig(root, tsconfig_path)?;
     let workspace = (tsconfig_path.is_none()
-        || no_mistakes::playwright::rules::configured(&config))
+        || no_mistakes::playwright::rules::configured(&config)
+        || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE))
     .then(|| session.workspace(root));
     prepare_from_shared(
         root,
-        config_path,
+        effective_config_path.as_deref(),
         tsconfig_path,
         visible_paths,
         config.as_ref().clone(),
@@ -119,15 +125,44 @@ pub(crate) fn prepare_from_shared(
             &tsconfig_catalog,
         )
     });
+    let workflow_documents = (config
+        .rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
+        || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
+        || config.rule_configured(no_mistakes::codebase::rules::FORBIDDEN_DEPENDENCIES))
+    .then(|| {
+        Arc::new(
+            no_mistakes::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
+                root,
+                &config.ci,
+                visible_paths.as_ref(),
+                &sources,
+            ),
+        )
+    });
+    let tsconfig_gate_project_inputs = config
+        .rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
+        .then(|| {
+            no_mistakes::codebase::rules::tsconfig_gate_coverage::prepare_project_source_inputs(
+                root,
+                root_paths.as_ref(),
+                &sources,
+                workspace
+                    .as_deref()
+                    .expect("tsconfig gate coverage requires a workspace projection"),
+            )
+        });
     Ok(PreparedCheckInputs {
         visible_paths,
         inferred_roots,
         config,
+        config_path: config_path.map(Path::to_path_buf),
         codebase_config,
         playwright,
         react,
         tsconfig,
         tsconfig_catalog,
         vitest_projects,
+        workflow_documents,
+        tsconfig_gate_project_inputs,
     })
 }

@@ -246,12 +246,61 @@ checks:
     assert_eq!(cfg.checks.commands.len(), 2);
     // Missing fileArgs defaults to Append (exercises CheckCommandDef::default).
     assert_eq!(cfg.checks.commands[0].file_args, CheckFileArgs::Append);
+    assert!(!cfg.checks.commands[0].always);
     assert_eq!(cfg.checks.commands[1].file_args, CheckFileArgs::None);
 
     // Serialize → deserialize is stable.
     let serialized = serde_yaml::to_string(&cfg).unwrap();
     let reparsed: NoMistakesConfig = serde_yaml::from_str(&serialized).unwrap();
     assert_eq!(cfg, reparsed);
+}
+
+#[test]
+fn always_checks_require_whole_project_commands_without_globs() {
+    let missing_command = super::discover::parse_v2_config_quiet(
+        "checks:\n  commands:\n    - name: invalid\n      always: true\n      fileArgs: none\n",
+        Path::new("invalid.yml"),
+    )
+    .unwrap_err();
+    assert!(missing_command
+        .to_string()
+        .contains("checks.commands[0].command must start with a non-blank executable token"));
+
+    let blank_executable = super::discover::parse_v2_config_quiet(
+        "checks:\n  commands:\n    - name: invalid\n      command: [' ']\n",
+        Path::new("invalid.yml"),
+    )
+    .unwrap_err();
+    assert!(blank_executable
+        .to_string()
+        .contains("checks.commands[0].command must start with a non-blank executable token"));
+
+    let invalid_file_args = super::discover::parse_v2_config_quiet(
+        "checks:\n  commands:\n    - name: invalid\n      always: true\n      command: [echo, always]\n",
+        Path::new("invalid.yml"),
+    )
+    .unwrap_err();
+    assert!(invalid_file_args
+        .to_string()
+        .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; set fileArgs: none"));
+
+    let invalid_globs = super::discover::parse_v2_config_quiet(
+        "checks:\n  commands:\n    - name: invalid\n      always: true\n      include: [\"src/**/*.ts\"]\n      command: [echo, always]\n      fileArgs: none\n",
+        Path::new("invalid.yml"),
+    )
+    .unwrap_err();
+    assert!(invalid_globs
+        .to_string()
+        .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; remove include and exclude"));
+
+    let invalid_exclude = super::discover::parse_v2_config_quiet(
+        "checks:\n  commands:\n    - name: invalid\n      always: true\n      exclude: [\"generated/**\"]\n      command: [echo, always]\n      fileArgs: none\n",
+        Path::new("invalid.yml"),
+    )
+    .unwrap_err();
+    assert!(invalid_exclude
+        .to_string()
+        .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; remove include and exclude"));
 }
 
 #[test]

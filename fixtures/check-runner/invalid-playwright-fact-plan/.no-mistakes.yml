@@ -1,0 +1,13 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+
+rules:
+  - rule: playwright-coverage
+    projects:
+      - web

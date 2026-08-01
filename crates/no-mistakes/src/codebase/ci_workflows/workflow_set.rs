@@ -7,7 +7,7 @@
 //! `ci impact` and `ci env` distinguish read and parse warnings.
 
 use crate::codebase::ci_graph::{discover_workflow_files_from_snapshot, relative_slash};
-use crate::codebase::ts_source::VisiblePathSnapshot;
+use crate::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
 use crate::config::v2::schema::CiConfig;
 use rayon::prelude::*;
 use serde_yaml::Value;
@@ -54,9 +54,22 @@ impl ParsedWorkflowSet {
     /// Reuses an invocation's visibility snapshot for workflow discovery.
     #[doc(hidden)]
     pub fn load_from_snapshot(root: &Path, ci: &CiConfig, snapshot: &VisiblePathSnapshot) -> Self {
-        Self::from_paths(
+        let sources = snapshot.source_store_for(root);
+        Self::load_from_snapshot_and_sources(root, ci, snapshot, &sources)
+    }
+
+    /// Reuses both an invocation's visibility snapshot and canonical source store.
+    #[doc(hidden)]
+    pub fn load_from_snapshot_and_sources(
+        root: &Path,
+        ci: &CiConfig,
+        snapshot: &VisiblePathSnapshot,
+        sources: &SourceStore,
+    ) -> Self {
+        Self::from_paths_and_sources(
             root,
             discover_workflow_files_from_snapshot(root, ci, snapshot),
+            sources,
         )
     }
 
@@ -71,11 +84,29 @@ impl ParsedWorkflowSet {
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect();
+        let snapshot = VisiblePathSnapshot::from_paths(root, &paths);
+        let sources = snapshot.source_store_for(root);
+        Self::from_paths_and_sources(root, paths, &sources)
+    }
+
+    /// Parse a caller-provided workflow universe through prepared request sources.
+    #[doc(hidden)]
+    pub fn from_paths_and_sources(
+        root: &Path,
+        paths: impl IntoIterator<Item = PathBuf>,
+        sources: &SourceStore,
+    ) -> Self {
+        let paths: Vec<PathBuf> = paths
+            .into_iter()
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
         let documents = paths
             .into_par_iter()
             .map(|absolute| {
                 let path = relative_slash(root, &absolute);
-                let value = std::fs::read_to_string(&absolute)
+                let value = sources
+                    .read_path(&absolute)
                     .map_err(|error| WorkflowDocumentError {
                         kind: WorkflowDocumentErrorKind::Read,
                         message: error.to_string(),
@@ -93,5 +124,22 @@ impl ParsedWorkflowSet {
         let mut documents = documents;
         documents.sort_by(|left, right| left.path.cmp(&right.path));
         Self { documents }
+    }
+
+    /// Project already-parsed documents onto an output-specific path universe.
+    #[doc(hidden)]
+    pub fn project_paths(&self, root: &Path, paths: impl IntoIterator<Item = PathBuf>) -> Self {
+        let selected = paths
+            .into_iter()
+            .map(|path| relative_slash(root, &path))
+            .collect::<BTreeSet<_>>();
+        Self {
+            documents: self
+                .documents
+                .iter()
+                .filter(|document| selected.contains(&document.path))
+                .cloned()
+                .collect(),
+        }
     }
 }

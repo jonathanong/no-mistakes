@@ -11,8 +11,8 @@ pub fn run_filesystem_rules_with_files(
     config_path: Option<&Path>,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
-    run_filesystem_rules_with_config(root, &config, files)
+    let (config, effective_path) = crate::config::v2::load_v2_config_with_path(root, config_path)?;
+    run_filesystem_rules_with_config_and_path(root, &config, effective_path.as_deref(), files)
 }
 
 /// Run filesystem rules with a caller-supplied visible work list and the
@@ -24,12 +24,18 @@ pub fn run_filesystem_rules_with_visible_and_snapshot(
     visible_files: &[PathBuf],
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config_from_visible(
+    let (config, effective_path) = crate::config::v2::load_v2_config_with_path_from_visible(
         root,
         config_path,
         &snapshot.paths_for(root),
     )?;
-    run_filesystem_rules_with_config_and_snapshot(root, &config, visible_files, snapshot)
+    run_filesystem_rules_with_config_snapshot_and_path(
+        root,
+        &config,
+        effective_path.as_deref(),
+        visible_files,
+        snapshot,
+    )
 }
 
 /// Standalone entry point: discover files once, then reuse the with-files
@@ -37,7 +43,11 @@ pub fn run_filesystem_rules_with_visible_and_snapshot(
 pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<Vec<RuleFinding>> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
-    let config = crate::config::v2::load_v2_config_from_visible(root, config_path, &visible_paths)?;
+    let (config, effective_path) = crate::config::v2::load_v2_config_with_path_from_visible(
+        root,
+        config_path,
+        &visible_paths,
+    )?;
     if !FILESYSTEM_RULE_IDS
         .iter()
         .any(|rule_id| rule_enabled(&config, rule_id))
@@ -52,7 +62,13 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
         &preserved_roots,
         &visible_paths,
     );
-    run_filesystem_rules_with_config_and_snapshot(root, &config, &files, &snapshot)
+    run_filesystem_rules_with_config_snapshot_and_path(
+        root,
+        &config,
+        effective_path.as_deref(),
+        &files,
+        &snapshot,
+    )
 }
 
 #[doc(hidden)]
@@ -65,6 +81,16 @@ pub fn run_filesystem_rules_with_config(
     run_filesystem_rules_with_config_and_snapshot(root, config, files, &snapshot)
 }
 
+fn run_filesystem_rules_with_config_and_path(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    config_path: Option<&Path>,
+    files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, files);
+    run_filesystem_rules_with_config_snapshot_and_path(root, config, config_path, files, &snapshot)
+}
+
 #[doc(hidden)]
 pub fn run_filesystem_rules_with_config_and_snapshot(
     root: &Path,
@@ -72,9 +98,68 @@ pub fn run_filesystem_rules_with_config_and_snapshot(
     files: &[PathBuf],
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<Vec<RuleFinding>> {
+    run_filesystem_rules_with_config_snapshot_and_path(root, config, None, files, snapshot)
+}
+
+fn run_filesystem_rules_with_config_snapshot_and_path(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    config_path: Option<&Path>,
+    files: &[PathBuf],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+) -> Result<Vec<RuleFinding>> {
+    run_filesystem_rules_with_config_snapshot_path_and_catalog(
+        root,
+        config,
+        config_path,
+        files,
+        snapshot,
+        None,
+    )
+}
+
+fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    config_path: Option<&Path>,
+    files: &[PathBuf],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+    vitest_catalog: Option<&crate::codebase::rules::PreparedVitestProjectCatalog>,
+) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
-    run_filesystem_rules_with_config_snapshot_and_vitest_catalog(
-        &root, config, files, snapshot, None,
+    let sources = snapshot.source_store_for(&root);
+    let workflows =
+        rule_enabled(config, crate::codebase::rules::TSCONFIG_GATE_COVERAGE).then(|| {
+            crate::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
+                &root, &config.ci, snapshot, &sources,
+            )
+        });
+    let project_inputs = rule_enabled(config, crate::codebase::rules::TSCONFIG_GATE_COVERAGE)
+        .then(|| {
+            let workspace =
+                crate::codebase::workspaces::load_indexed_from_source_store(&root, &sources)?;
+            Ok::<_, anyhow::Error>(
+                crate::codebase::rules::tsconfig_gate_coverage::prepare_project_source_inputs(
+                    &root,
+                    snapshot.paths_for(&root).as_ref(),
+                    &sources,
+                    &workspace,
+                ),
+            )
+        })
+        .transpose()?;
+    super::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        &root,
+        config,
+        files,
+        super::PreparedFilesystemRuleInputs {
+            snapshot,
+            vitest_catalog,
+            sources,
+            workflow_documents: workflows.as_ref(),
+            tsconfig_gate_project_inputs: project_inputs.as_ref(),
+            config_path,
+        },
     )
 }
 
@@ -86,12 +171,12 @@ pub fn run_filesystem_rules_with_config_snapshot_and_vitest_catalog(
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
     vitest_catalog: Option<&crate::codebase::rules::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<RuleFinding>> {
-    super::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+    run_filesystem_rules_with_config_snapshot_path_and_catalog(
         root,
         config,
+        None,
         files,
         snapshot,
         vitest_catalog,
-        snapshot.source_store_for(root),
     )
 }

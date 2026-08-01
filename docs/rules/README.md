@@ -63,6 +63,7 @@ rules:
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
+| [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md)                         | Require tracked TypeScript projects to have CI and local typecheck registrations. |
 | [`unique-exports`](unique-exports.md)                                         | Prevent ambiguous duplicate public export names.                                |
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |
 | [`vitest-project-mapping`](vitest-project-mapping.md)                         | Require Vitest tests to map to exactly one project.                             |

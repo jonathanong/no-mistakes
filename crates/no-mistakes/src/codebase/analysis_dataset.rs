@@ -5,6 +5,8 @@ use manifest_cache::ManifestCache;
 
 mod manifest_cache;
 
+type LoadedConfig = (Arc<crate::config::v2::NoMistakesConfig>, Option<PathBuf>);
+
 /// Immutable request-scoped ownership boundary for discovered files and source text.
 ///
 /// Derived facts, graphs, and indexes live in the request contexts that consume this
@@ -68,6 +70,13 @@ impl AnalysisDataset {
         &self,
         config_path: Option<&Path>,
     ) -> anyhow::Result<Arc<crate::config::v2::NoMistakesConfig>> {
+        self.config_with_path(config_path).map(|(config, _)| config)
+    }
+
+    pub(crate) fn config_with_path(
+        &self,
+        config_path: Option<&Path>,
+    ) -> anyhow::Result<LoadedConfig> {
         self.increment("manifest.requests", 1);
         let visible_paths = self.paths_for(&self.root);
         let selector_key = manifest_key(&self.root, config_path);
@@ -112,9 +121,10 @@ impl AnalysisDataset {
         } else {
             self.increment("manifest.cache_hits", 1);
         }
-        loaded
+        let config = loaded
             .value
-            .map_err(|error| anyhow::anyhow!(error.to_string()))
+            .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+        Ok((config, effective_path.as_deref().map(Path::to_path_buf)))
     }
 
     pub(crate) fn tsconfig(

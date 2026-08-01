@@ -1,4 +1,7 @@
+use super::extract::from_workflow as extract_filters_from_workflow_with_sources;
 use super::*;
+
+mod parsed;
 
 fn ci_filters_from_snapshot(
     root: &Path,

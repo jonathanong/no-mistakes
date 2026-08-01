@@ -25,6 +25,7 @@ fn impacted_checks_reuse_one_parse_pass_without_cross_runner_tests() {
         diff_content: None,
         format: None,
         json: false,
+        generic_only: false,
         timings: false,
     };
 

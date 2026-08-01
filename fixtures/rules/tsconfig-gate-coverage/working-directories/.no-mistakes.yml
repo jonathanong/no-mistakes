@@ -1,0 +1,21 @@
+checks:
+  commands:
+    - name: typecheck-workflow-default
+      command: [bash, -c, cd workflow-default && tsc --noEmit]
+      fileArgs: none
+      always: true
+    - name: typecheck-job-default
+      command: [pnpm, --dir=job-default, exec, tsc, --noEmit]
+      fileArgs: none
+      always: true
+    - name: typecheck-step-default
+      command: [tsc, --noEmit, --project, step-default/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-cd-project
+      command: [bash, -c, cd cd-project && tsc --noEmit]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

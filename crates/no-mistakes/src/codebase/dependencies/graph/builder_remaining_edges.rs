@@ -23,8 +23,14 @@ fn collect_remaining_edges(
     let ci = config_options
         .map(|options| &options.ci)
         .unwrap_or(&default_ci);
-    let parsed_workflows = (plan.ci || plan.workflow_topology)
-        .then(|| parsed_workflows_for_graph(root, &graph_files.all, ci));
+    let parsed_workflows = (plan.ci || plan.workflow_topology).then(|| {
+        parsed_workflows_for_graph(
+            root,
+            &graph_files.all,
+            ci,
+            edge_inputs.workflow_documents,
+        )
+    });
 
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.markdown", || {

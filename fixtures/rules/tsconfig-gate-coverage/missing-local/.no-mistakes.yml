@@ -1,0 +1,12 @@
+checks:
+  commands:
+    - name: app-typecheck-but-append
+      include: [app/**/*.ts]
+      command: [tsc, --noEmit, --project, app/tsconfig.json]
+      fileArgs: append
+    - name: app-typecheck-but-no-include
+      command: [tsc, --noEmit, --project, app/tsconfig.json]
+      fileArgs: none
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

@@ -1,0 +1,8 @@
+on:
+  push:
+    paths: [app/tsconfig.json]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project app

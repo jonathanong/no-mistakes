@@ -1,5 +1,28 @@
 use super::*;
 
+fn workflow_fixture_root(name: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/ci-workflows")
+            .join(name),
+    )
+}
+
+#[test]
+fn projects_preparsed_workflows_to_the_requested_paths() {
+    let root = workflow_fixture_root("project-paths");
+    let workflows = ParsedWorkflowSet::from_paths(
+        &root,
+        [
+            root.join(".github/workflows/a.yml"),
+            root.join(".github/workflows/b.yml"),
+        ],
+    );
+    let projected = workflows.project_paths(&root, [root.join(".github/workflows/b.yml")]);
+    assert_eq!(projected.documents.len(), 1);
+    assert_eq!(projected.documents[0].path, ".github/workflows/b.yml");
+}
+
 // ── extract_binary_names ─────────────────────────────────────────────
 
 #[test]

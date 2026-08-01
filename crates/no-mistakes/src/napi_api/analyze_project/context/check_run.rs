@@ -87,6 +87,11 @@ impl SharedCheckContext {
                 config,
                 codebase_config: &self.prepared.codebase_config,
                 vitest_projects: self.prepared.vitest_projects.as_ref(),
+                workflow_documents: self.prepared.workflow_documents.as_deref(),
+                tsconfig_gate_project_inputs: self
+                    .prepared
+                    .tsconfig_gate_project_inputs
+                    .as_ref(),
             });
         let completed = crate::check_runner::complete_domain_checks((
             react,

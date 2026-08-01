@@ -129,7 +129,10 @@ fn rust_exclusivity_tracks_enabled_non_rust_candidate_overlap() {
 
 #[test]
 fn dispatch_prepares_one_index_and_only_reads_preclassified_views() {
-    let dispatch = include_str!("../../filesystem_dispatch.rs");
+    let dispatch = concat!(
+        include_str!("../../filesystem_dispatch.rs"),
+        include_str!("../execute.rs"),
+    );
 
     assert_eq!(dispatch.matches("RuleCandidateIndex::prepare").count(), 1);
     assert_eq!(dispatch.matches("filesystem_rule_files(").count(), 0);
@@ -299,9 +302,14 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
         &root,
         &config,
         &files,
-        &snapshot,
-        None,
-        Arc::clone(&sources),
+        super::super::PreparedFilesystemRuleInputs {
+            snapshot: &snapshot,
+            vitest_catalog: None,
+            sources: Arc::clone(&sources),
+            workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
+            config_path: None,
+        },
     )
     .unwrap();
     let pairs = findings
