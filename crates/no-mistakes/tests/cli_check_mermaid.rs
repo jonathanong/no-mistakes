@@ -74,7 +74,7 @@ fn reports_invalid_and_unclosed_fences() {
         .filter(|finding| finding["rule"] == "markdown-mermaid-validation")
         .collect::<Vec<_>>();
 
-    assert_eq!(findings.len(), 15, "{body}");
+    assert_eq!(findings.len(), 16, "{body}");
     for file in [
         "invalid-flowchart.md",
         "invalid-markdown.markdown",
@@ -107,6 +107,14 @@ fn reports_invalid_and_unclosed_fences() {
     assert!(jsx_adjacent["message"]
         .as_str()
         .is_some_and(|message| message.contains("invalid Mermaid diagram")));
+    let jsx_after_non_mermaid = findings
+        .iter()
+        .find(|finding| finding["file"] == "jsx-non-mermaid-blank-line.mdx")
+        .unwrap_or_else(|| panic!("missing JSX fence after non-Mermaid fence: {body}"));
+    assert_eq!(
+        jsx_after_non_mermaid["line"], 8,
+        "{jsx_after_non_mermaid:#?}"
+    );
     for (file, line) in [
         ("unclosed.md", 3),
         ("unclosed-tab-indented.md", 3),

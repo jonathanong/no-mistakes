@@ -25,6 +25,7 @@ pub(crate) struct MdxExpressionScanner {
     can_start_regex: bool,
     jsx_opening: bool,
     jsx_quote: Option<u8>,
+    last_js_code_byte: Option<u8>,
 }
 
 impl MdxExpressionScanner {
@@ -44,6 +45,7 @@ impl MdxExpressionScanner {
         if !self.is_masking_markdown() && starts_esm_statement(line) {
             self.esm = true;
             self.can_start_regex = true;
+            self.last_js_code_byte = None;
         }
         let mut index = 0;
         while index < line.len() {
@@ -52,6 +54,12 @@ impl MdxExpressionScanner {
             if self.observe_jsx_byte(byte, next) {
                 index += 1;
                 continue;
+            }
+            if !self.is_inside_expression() {
+                if let Some(end) = markdown_escape_end(line, index) {
+                    index = end;
+                    continue;
+                }
             }
             if let Some(end) = self.javascript_token_end(line, index) {
                 index = end;
@@ -62,8 +70,12 @@ impl MdxExpressionScanner {
                 ByteAction::Break => break,
             }
             if stop_when_closed && !self.is_masking_markdown() && !self.jsx_opening {
-                self.escaped = false;
-                return true;
+                if let Some(next) = next_mdx_region_start(line, index) {
+                    index = next;
+                } else {
+                    self.escaped = false;
+                    return true;
+                }
             }
         }
         if matches!(self.literal, Literal::Regex) {
@@ -75,9 +87,10 @@ impl MdxExpressionScanner {
             && self.paren_depth == 0
             && self.bracket_depth == 0
             && matches!(self.literal, Literal::None)
-            && !esm_line_continues(line)
+            && !esm_token_continues(self.last_js_code_byte)
         {
             self.esm = false;
+            self.last_js_code_byte = None;
         }
         self.escaped = false;
         false
@@ -107,30 +120,55 @@ fn starts_esm_statement(line: &[u8]) -> bool {
         })
 }
 
-fn esm_line_continues(line: &[u8]) -> bool {
-    line.iter()
-        .rev()
-        .find(|byte| !matches!(byte, b' ' | b'\t'))
-        .is_some_and(|byte| {
-            matches!(
-                byte,
-                b'=' | b','
-                    | b'.'
-                    | b':'
-                    | b'?'
-                    | b'!'
-                    | b'+'
-                    | b'-'
-                    | b'*'
-                    | b'/'
-                    | b'%'
-                    | b'&'
-                    | b'|'
-                    | b'^'
-                    | b'<'
-                    | b'>'
-            )
-        })
+fn esm_token_continues(byte: Option<u8>) -> bool {
+    byte.is_some_and(|byte| b"=,.:?!+-*/%&|^<>".contains(&byte))
+}
+
+fn markdown_escape_end(line: &[u8], start: usize) -> Option<usize> {
+    if line.get(start) != Some(&b'\\') {
+        return None;
+    }
+    let count = line[start..]
+        .iter()
+        .take_while(|byte| **byte == b'\\')
+        .count();
+    let after_slashes = start + count;
+    Some(
+        if count % 2 == 1 && line.get(after_slashes) == Some(&b'{') {
+            after_slashes + 1
+        } else {
+            after_slashes
+        },
+    )
+}
+
+fn next_mdx_region_start(line: &[u8], mut index: usize) -> Option<usize> {
+    while index < line.len() {
+        match line[index] {
+            b'\\' => index = markdown_escape_end(line, index)?,
+            b'{' => return Some(index),
+            b'<' if line
+                .get(index + 1)
+                .copied()
+                .is_some_and(javascript::is_jsx_start) =>
+            {
+                return Some(index);
+            }
+            b'`' => {
+                let length = line[index..]
+                    .iter()
+                    .take_while(|byte| **byte == b'`')
+                    .count();
+                let closer = line[index + length..]
+                    .windows(length)
+                    .position(|window| window.iter().all(|byte| *byte == b'`'));
+                let closer = closer?;
+                index += length + closer + length;
+            }
+            _ => index += 1,
+        }
+    }
+    None
 }
 
 fn is_identifier_continue(byte: u8) -> bool {

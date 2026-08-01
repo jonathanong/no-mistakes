@@ -1,0 +1,15 @@
+export const hidden =
+  // The assignment continues past this comment.
+  `
+```mermaid
+flowchart TD
+  Hidden --> Broken -->
+```
+  `;
+
+export const completed = hidden /* This comment does not continue the statement. */
+
+```mermaid
+flowchart TD
+  Parsed --> Diagram
+```

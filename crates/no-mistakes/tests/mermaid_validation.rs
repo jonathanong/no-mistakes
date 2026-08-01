@@ -132,6 +132,19 @@ fn validates_an_mdx_jsx_fence_split_across_html_block_ranges() {
 }
 
 #[test]
+fn resumes_after_a_non_mermaid_mdx_fence_split_across_html_ranges() {
+    let result = validate_markdown(
+        &fixture("jsx-non-mermaid-blank-line.mdx"),
+        Some("docs/non-mermaid-first.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(result.diagnostics[0].fence_line, 8);
+}
+
+#[test]
 fn omitted_file_auto_detects_a_fence_inside_clear_mdx_jsx() {
     let result = validate_markdown(&fixture("jsx-adjacent-invalid.mdx"), None);
 
@@ -244,6 +257,18 @@ fn validates_mdx_list_lines_with_tab_overshoot() {
 }
 
 #[test]
+fn ignores_mdx_fence_text_after_overwide_list_padding() {
+    let result = validate_markdown(
+        &fixture("mdx-overwide-list-padding-ignored.mdx"),
+        Some("docs/overwide-list-padding.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
 fn container_blank_lines_allow_only_spaces_and_tabs() {
     for fixture_name in [
         "unclosed-mdx-form-feed-container-blank.mdx",
@@ -293,6 +318,26 @@ fn ignores_fence_like_text_inside_top_level_mdx_code_regions() {
         assert!(result.valid, "{file:?}: {:#?}", result.diagnostics);
         assert_eq!(result.diagram_count, 1, "{file:?}");
         assert!(result.diagnostics.is_empty(), "{file:?}");
+    }
+}
+
+#[test]
+fn handles_mdx_expression_boundaries_and_esm_comments() {
+    for fixture_name in [
+        "mdx-escaped-expression-brace.mdx",
+        "mdx-same-line-expressions.mdx",
+        "mdx-esm-trailing-comments.mdx",
+    ] {
+        for file in [Some(fixture_name), None] {
+            let result = validate_markdown(&fixture(fixture_name), file);
+
+            assert!(
+                result.valid,
+                "{fixture_name} ({file:?}): {:#?}",
+                result.diagnostics
+            );
+            assert_eq!(result.diagram_count, 1, "{fixture_name} ({file:?})");
+        }
     }
 }
 

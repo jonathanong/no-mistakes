@@ -7,6 +7,8 @@ mod delimiter;
 mod fence_syntax;
 #[path = "extract/html_fallback.rs"]
 mod html_fallback;
+#[path = "extract/mdx_collector.rs"]
+mod mdx_collector;
 use delimiter::{line_number, opening_delimiter};
 use fence_syntax::{has_closing_fence, FenceDelimiter};
 use html_fallback::MdxExpressionScanner;
@@ -89,14 +91,20 @@ impl<'source> MermaidFenceCollector<'source> {
                         && html_fallback::looks_like_clear_mdx_jsx(self.source, range.clone())) =>
             {
                 self.advance_mdx_expression_to(range.start);
-                self.fences.extend(html_fallback::extract(
-                    self.source,
-                    range.clone(),
-                    &mut self.mdx_expression,
-                ));
-                self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
+                let start = range.start.max(self.mdx_scanned_until.min(range.end));
+                let extracted =
+                    html_fallback::extract(self.source, start..range.end, &mut self.mdx_expression);
+                self.fences.extend(extracted.fences);
+                self.mdx_scanned_until = self
+                    .mdx_scanned_until
+                    .max(range.end)
+                    .max(extracted.consumed_until);
             }
             Event::Start(Tag::CodeBlock(kind)) => {
+                if self.recover_overlapping_mdx_code_block(range.clone()) {
+                    self.mdx_code_block = true;
+                    return;
+                }
                 if self.html_fallback != HtmlFallbackMode::Disabled {
                     self.advance_mdx_expression_to(range.start);
                     self.mdx_code_block = true;
@@ -152,18 +160,6 @@ impl<'source> MermaidFenceCollector<'source> {
         self.fences.sort_by_key(|fence| fence.fence_offset);
         self.fences.dedup_by_key(|fence| fence.fence_offset);
         self.fences
-    }
-
-    fn advance_mdx_expression_to(&mut self, end: usize) {
-        let end = end.min(self.source.len());
-        if end > self.mdx_scanned_until {
-            // Pulldown-cmark does not understand top-level MDX expressions or
-            // ESM. Scan parser gaps so fence-looking text in their multiline
-            // JavaScript values is not mistaken for Markdown.
-            self.mdx_expression
-                .observe_source(&self.source.as_bytes()[self.mdx_scanned_until..end]);
-            self.mdx_scanned_until = end;
-        }
     }
 }
 

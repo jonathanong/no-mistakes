@@ -121,3 +121,57 @@ fn masks_multiline_jsx_quoted_attributes() {
     assert!(!scanner.is_masking_markdown());
     assert!(!scanner.jsx_opening);
 }
+
+#[test]
+fn ignores_markdown_escaped_braces_outside_expressions() {
+    let mut scanner = MdxExpressionScanner::default();
+
+    scanner.observe_source(br"prose \{ is not JavaScript");
+    assert!(!scanner.is_inside_expression());
+    scanner.observe_source(br"prose \\{");
+    assert!(scanner.is_inside_expression());
+}
+
+#[test]
+fn resumes_at_another_expression_on_the_same_line() {
+    let mut scanner = MdxExpressionScanner::default();
+
+    scanner.observe_line(b"{");
+    scanner.observe_source(b"true} {`");
+    assert!(scanner.is_inside_expression());
+}
+
+#[test]
+fn esm_continuation_uses_the_last_token_before_trailing_comments() {
+    for lines in [
+        &[b"export const value = // why".as_slice(), b"  example"][..],
+        &[b"export const value = /* why */".as_slice(), b"  example"][..],
+    ] {
+        let mut scanner = MdxExpressionScanner::default();
+        scanner.observe_line(lines[0]);
+        assert!(scanner.is_inside_expression(), "{lines:?}");
+        scanner.observe_line(lines[1]);
+        assert!(!scanner.is_inside_expression(), "{lines:?}");
+    }
+
+    let mut scanner = MdxExpressionScanner::default();
+    scanner.observe_line(b"export const value = example /* done */");
+    assert!(!scanner.is_inside_expression());
+}
+
+#[test]
+fn finds_unescaped_mdx_regions_after_expression_closures() {
+    assert_eq!(markdown_escape_end(b"plain", 0), None);
+    assert_eq!(markdown_escape_end(br"\{", 0), Some(2));
+    assert_eq!(markdown_escape_end(br"\\{", 0), Some(2));
+
+    assert_eq!(next_mdx_region_start(b" prose {value}", 0), Some(7));
+    assert_eq!(next_mdx_region_start(br" \{ prose", 0), None);
+    assert_eq!(next_mdx_region_start(b" prose <Card>", 0), Some(7));
+    assert_eq!(
+        next_mdx_region_start(b" `literal { brace` {value}", 0),
+        Some(19)
+    );
+    assert_eq!(next_mdx_region_start(b" `literal { brace", 0), None);
+    assert_eq!(next_mdx_region_start(b" prose only", 0), None);
+}

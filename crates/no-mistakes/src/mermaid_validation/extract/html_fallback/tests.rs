@@ -6,6 +6,7 @@ fn extract_all(source: &str) -> Vec<MermaidFence> {
         0..source.len(),
         &mut MdxExpressionScanner::default(),
     )
+    .fences
 }
 
 #[test]

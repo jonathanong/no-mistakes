@@ -30,6 +30,11 @@ struct OpeningFence {
     container: ContainerPrefix,
 }
 
+pub(super) struct Extracted {
+    pub(super) fences: Vec<MermaidFence>,
+    pub(super) consumed_until: usize,
+}
+
 pub(super) fn looks_like_clear_mdx_jsx(source: &str, range: Range<usize>) -> bool {
     let block = source[range].trim_start();
     let Some(after_open) = block.strip_prefix('<') else {
@@ -78,9 +83,10 @@ pub(super) fn extract(
     source: &str,
     range: Range<usize>,
     expressions: &mut MdxExpressionScanner,
-) -> Vec<MermaidFence> {
+) -> Extracted {
     let limit = range.end.min(source.len());
     let mut cursor = range.start.min(limit);
+    let mut consumed_until = cursor;
     let mut fences = Vec::new();
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
@@ -93,14 +99,9 @@ pub(super) fn extract(
             continue;
         };
         // A blank line can make pulldown-cmark end an MDX HTML-block range even
-        // though the fenced block remains open. Once the range has supplied a
-        // Mermaid opener, continue only that fence's search through the source.
-        let closing_limit = if opening.is_mermaid {
-            source.len()
-        } else {
-            limit
-        };
-        let closing = closing_fence(source, &opening, closing_limit);
+        // though any recognized fenced block remains open. Follow its actual
+        // closer so a later range resumes after, rather than at, that closer.
+        let closing = closing_fence(source, &opening, source.len());
         if opening.is_mermaid {
             let body_end = closing.map_or(limit, |(start, _)| start);
             fences.push(MermaidFence {
@@ -114,9 +115,13 @@ pub(super) fn extract(
             break;
         };
         cursor = closing_end;
+        consumed_until = closing_end;
     }
 
-    fences
+    Extracted {
+        fences,
+        consumed_until,
+    }
 }
 
 fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence> {

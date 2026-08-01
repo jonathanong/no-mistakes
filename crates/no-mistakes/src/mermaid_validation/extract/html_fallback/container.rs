@@ -78,11 +78,17 @@ fn strip_one_list_marker(line: &[u8]) -> Option<(&[u8], usize)> {
     {
         return None;
     }
-    let padding = line[marker_end..]
+    let padding_bytes = line[marker_end..]
         .iter()
         .take_while(|byte| matches!(byte, b' ' | b'\t'))
         .count();
-    let consumed = if padding <= 4 { padding } else { 1 };
+    let padding_end = marker_end + padding_bytes;
+    let padding_columns =
+        indentation_columns(&line[..padding_end]) - indentation_columns(&line[..marker_end]);
+    let consumed = match padding_columns {
+        0..=4 => padding_bytes,
+        _ => 1,
+    };
     let end = marker_end + consumed;
     Some((&line[end..], indentation_columns(&line[..end])))
 }

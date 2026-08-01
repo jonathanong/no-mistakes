@@ -7,6 +7,10 @@ use token::{
     keyword_allows_regex, token_end,
 };
 
+pub(super) fn is_jsx_start(byte: u8) -> bool {
+    is_jsx_name_start(byte)
+}
+
 pub(super) enum ByteAction {
     Advance(usize),
     Break,
@@ -46,11 +50,18 @@ impl MdxExpressionScanner {
         if is_identifier_start(byte) {
             let end = identifier_end(line, start);
             self.can_start_regex = keyword_allows_regex(&line[start..end]);
+            if self.esm {
+                self.last_js_code_byte = line.get(end - 1).copied();
+            }
             return Some(end);
         }
         if byte.is_ascii_digit() {
             self.can_start_regex = false;
-            return Some(token_end(line, start));
+            let end = token_end(line, start);
+            if self.esm {
+                self.last_js_code_byte = line.get(end - 1).copied();
+            }
+            return Some(end);
         }
         None
     }
@@ -78,6 +89,12 @@ impl MdxExpressionScanner {
 
     fn observe_code_byte(&mut self, byte: u8, next: Option<u8>) -> ByteAction {
         let active = self.is_inside_expression();
+        if self.esm
+            && !byte.is_ascii_whitespace()
+            && !matches!((byte, next), (b'/', Some(b'/' | b'*')))
+        {
+            self.last_js_code_byte = Some(byte);
+        }
         match (byte, next) {
             (b'/', Some(b'/')) if active => return ByteAction::Break,
             (b'/', Some(b'*')) if active => {

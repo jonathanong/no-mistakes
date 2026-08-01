@@ -65,6 +65,11 @@ fn recognizes_ordered_markers_and_rejects_lookalikes() {
         tabbed.strip_line(b"\tgraph TD").as_deref(),
         Some(&b"graph TD"[..])
     );
+
+    let (opening, overwide_tabbed_padding) =
+        ContainerPrefix::from_opening_line(b"-   \t```mermaid");
+    assert_eq!(opening, b"  \t```mermaid");
+    assert_eq!(overwide_tabbed_padding.steps.len(), 1);
 }
 
 #[test]
