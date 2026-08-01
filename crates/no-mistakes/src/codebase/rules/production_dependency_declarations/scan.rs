@@ -39,7 +39,7 @@ pub(super) fn run(
         }
     };
 
-    let workspace = discovery::load_workspace(root, workspace_roots, files, sources)?;
+    let workspace = discovery::load_workspace(workspace_roots, files, sources)?;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
@@ -114,7 +114,10 @@ fn emit_finding(
     if import.kind == ImportKind::Type {
         return; // erased by verbatimModuleSyntax; cannot fail at runtime
     }
-    if specifier::is_relative(&import.specifier) || import.specifier.starts_with('#') {
+    if specifier::is_relative(&import.specifier)
+        || import.specifier.starts_with('#')
+        || specifier::is_scheme_prefixed(&import.specifier)
+    {
         return; // not a package.json dependency question
     }
     let Some(package_name) = specifier::package_name(&import.specifier) else {
@@ -129,6 +132,7 @@ fn emit_finding(
             root,
             file,
             import.line,
+            owning_package,
             &package_name,
             &import.specifier,
         )),
@@ -136,6 +140,7 @@ fn emit_finding(
             root,
             file,
             import.line,
+            owning_package,
             &package_name,
             &import.specifier,
         )),

@@ -10,19 +10,26 @@ fn is_relative_recognizes_dot_prefixed_specifiers() {
 }
 
 #[test]
-fn is_node_builtin_matches_bare_and_prefixed_forms() {
+fn is_node_builtin_matches_a_bare_module_name() {
     assert!(is_node_builtin("fs"));
-    assert!(is_node_builtin("node:fs"));
-    assert!(is_node_builtin("node:path"));
+    assert!(is_node_builtin("path"));
     assert!(!is_node_builtin("chalk"));
-    assert!(!is_node_builtin("node:not-a-builtin"));
 }
 
 #[test]
 fn is_node_builtin_matches_subpath_imports() {
     assert!(is_node_builtin("fs/promises"));
-    assert!(is_node_builtin("node:fs/promises"));
     assert!(!is_node_builtin("chalk/subpath"));
+}
+
+#[test]
+fn is_scheme_prefixed_recognizes_a_colon_before_the_first_path_segment() {
+    assert!(is_scheme_prefixed("virtual:app-config"));
+    assert!(is_scheme_prefixed("data:text/plain;base64,aGVsbG8="));
+    assert!(is_scheme_prefixed("node:fs"));
+    assert!(!is_scheme_prefixed("left-pad"));
+    assert!(!is_scheme_prefixed("left-pad/lib/helper"));
+    assert!(!is_scheme_prefixed("@acme/lib"));
 }
 
 #[test]

@@ -58,13 +58,9 @@ pub(crate) fn check_with_files_and_sources(
                 Err(message) => return Ok(vec![findings::config(&message)]),
             };
             let skip = super::skip_dir_set(config);
-            let mut discovery_roots = vec![root.to_path_buf()];
-            discovery_roots.extend(workspace_roots.iter().cloned());
-            discovery_roots.sort();
-            discovery_roots.dedup();
             let files: Vec<PathBuf> = all_files
                 .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &discovery_roots))
+                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &workspace_roots))
                 .cloned()
                 .collect();
             scan::run(root, &workspace_roots, &opts, &files, sources)
