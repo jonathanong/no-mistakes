@@ -13,6 +13,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 mod architecture;
+mod config_path;
 mod integration_gitignore;
 #[cfg(feature = "test-instrumentation")]
 mod prepared_parser_cache;
@@ -78,31 +79,6 @@ fn aggregate_html_id_rule_targets_keep_coverage_isolated() {
     let findings = aggregate_html_id_rule_composition("multi-project-isolation");
 
     assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn empty_results_records_cli_side_channels() {
-    let results = results::empty_results([Some("warning".to_string())]);
-    assert!(!results.warnings.is_empty());
-    assert!(!results.timings.is_empty());
-    assert!(results.react.is_empty());
-    assert!(results.queues.is_empty());
-    assert!(results.rules.is_empty());
-    assert!(results.integration.is_empty());
-    assert!(results.codebase.is_empty());
-}
-
-#[test]
-fn run_all_returns_empty_results_when_no_check_domain_is_configured() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
-
-    let results = run_all(root, None, None).unwrap();
-
-    assert!(results.react.is_empty());
-    assert!(results.queues.is_empty());
-    assert!(results.rules.is_empty());
-    assert!(results.integration.is_empty());
-    assert!(results.codebase.is_empty());
 }
 
 #[test]

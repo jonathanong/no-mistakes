@@ -1,0 +1,13 @@
+# no-mistakes-disable-file tsconfig-gate-coverage
+checks:
+  commands:
+    - name: typecheck-app
+      command: [tsc, --noEmit, --project, app/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+    options:
+      allowProjects:
+        missing/tsconfig.json: intentionally suppressed regression entry

@@ -6,7 +6,7 @@ mod review;
 fn shell_scanner_tracks_cd_and_pnpm_dir() {
     assert_eq!(
         scan_shell_for_typechecked_projects(
-            "cd app && pnpm exec tsc --noEmit; pnpm --dir tools exec tsc --noEmit --project tsconfig.tools.json",
+            "cd app; pnpm exec tsc --noEmit; pnpm --dir tools exec tsc --noEmit --project tsconfig.tools.json",
             ".",
         ),
         vec!["app/tools/tsconfig.tools.json", "app/tsconfig.json"]
@@ -59,7 +59,7 @@ fn shell_scanner_rejects_reachability_control_commands_without_modeling_them() {
 
     assert_eq!(
         scan_shell_for_typechecked_projects(
-            "cd app && tsc --noEmit; cd tools && tsc --noEmit --project tsconfig.tools.json",
+            "cd app; tsc --noEmit; cd tools; tsc --noEmit --project tsconfig.tools.json",
             ".",
         ),
         vec!["app/tools/tsconfig.tools.json", "app/tsconfig.json"]
@@ -110,23 +110,26 @@ fn shell_scanner_rejects_unsupported_working_directory_commands() {
 
 #[test]
 fn local_shell_gates_require_failure_propagation_or_a_final_typecheck() {
-    for argv in [
-        vec![
-            "bash".into(),
-            "-c".into(),
-            "tsc --noEmit; echo ignored failure".into(),
-        ],
-        vec![
-            "sh".into(),
-            "-c".into(),
-            "tsc --noEmit && echo success".into(),
-        ],
-    ] {
-        assert!(
-            scan_argv_for_typechecked_projects(&argv, ".").is_empty(),
-            "{argv:?}"
-        );
-    }
+    let masked = vec![
+        "bash".into(),
+        "-c".into(),
+        "tsc --noEmit; echo ignored failure".into(),
+    ];
+    assert!(
+        scan_argv_for_typechecked_projects(&masked, ".").is_empty(),
+        "{masked:?}"
+    );
+    assert_eq!(
+        scan_argv_for_typechecked_projects(
+            &[
+                "sh".into(),
+                "-c".into(),
+                "tsc --noEmit && echo success".into(),
+            ],
+            ".",
+        ),
+        vec!["tsconfig.json"]
+    );
 
     for argv in [
         vec!["bash".into(), "-c".into(), "cd app; tsc --noEmit".into()],

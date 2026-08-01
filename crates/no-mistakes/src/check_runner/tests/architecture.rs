@@ -44,7 +44,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     // would bypass request-wide config/tsconfig reuse even though it looks locally self-contained.
     assert_eq!(
         prepared
-            .matches("session.config(root, config_path)?")
+            .matches("session.config_with_path(root, config_path)?")
             .count(),
         1
     );
@@ -184,7 +184,7 @@ fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
     // value onward; direct loading here would split the cache from other request consumers.
     assert_eq!(
         aggregate
-            .matches("session.config(root, config_path)?")
+            .matches("session.config_with_path(root, config_path)?")
             .count(),
         1
     );

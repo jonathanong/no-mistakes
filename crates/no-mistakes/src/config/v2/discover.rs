@@ -31,15 +31,22 @@ mod targeted_triggers;
 /// 2. `.no-mistakes.{yaml,yml,json,jsonc}` in `root`.
 /// 3. Empty default.
 pub fn load_v2_config(root: &Path, cli_config: Option<&Path>) -> Result<NoMistakesConfig> {
+    load_v2_config_with_path(root, cli_config).map(|(config, _)| config)
+}
+
+pub(crate) fn load_v2_config_with_path(
+    root: &Path,
+    cli_config: Option<&Path>,
+) -> Result<(NoMistakesConfig, Option<PathBuf>)> {
     if cli_config.is_some() {
-        return load_v2_config_from_visible(root, cli_config, &[]);
+        return load_v2_config_with_path_from_visible(root, cli_config, &[]);
     }
 
     if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
-        return parse_v2_config(&source, &path);
+        return Ok((parse_v2_config(&source, &path)?, Some(path)));
     }
 
-    Ok(NoMistakesConfig::default())
+    Ok((NoMistakesConfig::default(), None))
 }
 
 /// Load config while reusing a request's canonical visible-path candidates.
@@ -51,21 +58,29 @@ pub fn load_v2_config_from_visible(
     cli_config: Option<&Path>,
     visible_paths: &[PathBuf],
 ) -> Result<NoMistakesConfig> {
+    load_v2_config_with_path_from_visible(root, cli_config, visible_paths).map(|(config, _)| config)
+}
+
+pub(crate) fn load_v2_config_with_path_from_visible(
+    root: &Path,
+    cli_config: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<(NoMistakesConfig, Option<PathBuf>)> {
     if let Some(path) = cli_config {
         let resolved = resolve(root, path);
         if !resolved.exists() {
             anyhow::bail!("config file does not exist: {}", resolved.display());
         }
         let source = std::fs::read_to_string(&resolved)?;
-        return parse_v2_config(&source, &resolved);
+        return Ok((parse_v2_config(&source, &resolved)?, Some(resolved)));
     }
 
     if let Some(path) = find_automatic_config_path_from_visible(root, V2_STEMS, visible_paths)? {
         let source = std::fs::read_to_string(&path)?;
-        return parse_v2_config(&source, &path);
+        return Ok((parse_v2_config(&source, &path)?, Some(path)));
     }
 
-    Ok(NoMistakesConfig::default())
+    Ok((NoMistakesConfig::default(), None))
 }
 
 #[doc(hidden)]

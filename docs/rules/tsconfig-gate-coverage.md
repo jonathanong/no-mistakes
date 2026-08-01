@@ -84,11 +84,13 @@ as registrations. Express such a command statically if it is intended to
 provide this gate.
 Shell bodies containing `exit`, `return`, `false`, or a failure-mode mutation
 such as `set +e` are also rejected as a whole because the rule does not model
-shell reachability or option state. Bodies with unquoted shell comments,
+shell reachability or option state. Negated pipelines and bodies with unquoted shell comments,
 quoted command separators, or shell function/group braces, and local shell
 invocations that enable a
 non-executing mode such as `bash -n` or `set -o noexec`, are rejected rather
-than credited heuristically.
+than credited heuristically. A typecheck before another command in an `&&`
+list is rejected when a later top-level command could mask a failed or skipped
+typecheck. A final static `&&` list remains recognized.
 
 Informational, setup, or config-bypassing commands (`--showConfig`,
 `--help`/`-h`, `--version`/`-v`, `--init`, enabled `--noCheck`,

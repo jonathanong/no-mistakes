@@ -23,6 +23,7 @@ pub(crate) fn run_all(
         config_path.as_deref(),
         tsconfig_path.as_deref(),
     )?;
+    let config_path = prepared.config_path.clone();
     let config = &prepared.config;
     let queues_enabled = check_tasks::queues_configured(config);
     let unique_exports_enabled = check_tasks::unique_exports_configured(config);

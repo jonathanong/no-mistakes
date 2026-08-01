@@ -137,7 +137,12 @@ fn local_typechecked_projects(config: &NoMistakesConfig) -> BTreeSet<String> {
 fn config_file(root: &Path, config_path: Option<&Path>) -> String {
     config_path.map_or_else(
         || ".no-mistakes.yml".to_string(),
-        |path| relative_slash_path(root, path),
+        |path| {
+            relative_slash_path(
+                &crate::codebase::ts_resolver::normalize_path(root),
+                &crate::codebase::ts_resolver::normalize_path(path),
+            )
+        },
     )
 }
 

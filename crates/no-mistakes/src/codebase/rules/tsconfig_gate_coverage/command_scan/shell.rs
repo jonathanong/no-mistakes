@@ -14,41 +14,50 @@ pub(super) fn scan_shell_body_for_typechecked_projects(
     }
     let mut cwd = normalize_repo_relative(initial_cwd);
     let mut projects = Vec::new();
-    let segments = script
+    let groups = script
         .split(['\n', ';'])
-        .flat_map(|line| line.split("&&"))
         .filter(|segment| !segment.trim().is_empty())
         .collect::<Vec<_>>();
-    for (index, segment) in segments.iter().enumerate() {
-        let Some(tokens) = static_tokens(segment) else {
-            continue;
-        };
-        let first = tokens
-            .first()
-            .expect("a nonblank static shell segment has at least one token");
-        if is_unsupported_control_command(first)
-            || disables_failure_enforcement(&tokens)
-            || enables_non_executing_mode(&tokens)
-            || is_unsupported_working_directory_command(&tokens)
-        {
+    for (group_index, group) in groups.iter().enumerate() {
+        let segments = group
+            .split("&&")
+            .filter(|segment| !segment.trim().is_empty())
+            .collect::<Vec<_>>();
+        let final_group = group_index + 1 == groups.len();
+        if segments.len() > 1 && !final_group {
             return Vec::new();
         }
-        failure_enforced |= enables_failure_enforcement(&tokens);
-        if first == "cd" {
-            cwd = (tokens.len() == 2)
-                .then(|| {
-                    tokens
-                        .get(1)
-                        .and_then(|path| cwd.as_ref().and_then(|base| join_relative(base, path)))
-                })
-                .flatten();
-            continue;
-        }
-        let Some(base) = cwd.as_deref() else {
-            continue;
-        };
-        if failure_enforced || index + 1 == segments.len() {
-            projects.extend(scan_tokens(&tokens, base));
+        for segment in segments {
+            let Some(tokens) = static_tokens(segment) else {
+                continue;
+            };
+            let first = tokens
+                .first()
+                .expect("a nonblank static shell segment has at least one token");
+            if is_unsupported_control_command(first)
+                || disables_failure_enforcement(&tokens)
+                || enables_non_executing_mode(&tokens)
+                || is_unsupported_working_directory_command(&tokens)
+            {
+                return Vec::new();
+            }
+            failure_enforced |= enables_failure_enforcement(&tokens);
+            if first == "cd" {
+                cwd = (tokens.len() == 2)
+                    .then(|| {
+                        tokens.get(1).and_then(|path| {
+                            cwd.as_ref().and_then(|base| join_relative(base, path))
+                        })
+                    })
+                    .flatten();
+                continue;
+            }
+            let Some(base) = cwd.as_deref() else {
+                continue;
+            };
+            if failure_enforced || final_group {
+                projects.extend(scan_tokens(&tokens, base));
+            }
         }
     }
     projects.sort();
@@ -89,7 +98,7 @@ fn contains_unsupported_multiline_shell_construct(script: &str) -> bool {
 }
 
 fn is_unsupported_control_command(command: &str) -> bool {
-    matches!(command, "exit" | "return" | "false")
+    matches!(command, "!" | "exit" | "return" | "false")
 }
 
 fn disables_failure_enforcement(tokens: &[String]) -> bool {

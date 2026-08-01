@@ -23,6 +23,16 @@ impl AnalysisSession {
         self.dataset(root).config(config_path)
     }
 
+    /// Return the invocation's canonical configuration and selected source path.
+    #[doc(hidden)]
+    pub fn config_with_path(
+        &self,
+        root: &Path,
+        config_path: Option<&Path>,
+    ) -> anyhow::Result<(Arc<crate::config::v2::NoMistakesConfig>, Option<PathBuf>)> {
+        self.dataset(root).config_with_path(config_path)
+    }
+
     /// Return the invocation's canonical, memoized TypeScript configuration.
     #[doc(hidden)]
     pub fn tsconfig(

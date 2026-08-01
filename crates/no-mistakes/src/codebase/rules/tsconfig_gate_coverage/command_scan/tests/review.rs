@@ -51,6 +51,31 @@ fn shell_scanner_rejects_unmodeled_function_and_group_bodies() {
 }
 
 #[test]
+fn shell_scanner_does_not_credit_masked_and_list_commands() {
+    for script in [
+        "! true && tsc --noEmit --project app/tsconfig.json; true",
+        "tsc --noEmit --project app/tsconfig.json && echo checked; echo done",
+        "cd app && tsc --noEmit; echo done",
+    ] {
+        assert!(
+            scan_shell_for_typechecked_projects(script, ".").is_empty(),
+            "{script}"
+        );
+    }
+    assert_eq!(
+        scan_shell_for_typechecked_projects("cd app && tsc --noEmit", ".",),
+        vec!["app/tsconfig.json"]
+    );
+    assert_eq!(
+        scan_shell_for_typechecked_projects(
+            "tsc --noEmit --project app/tsconfig.json && echo checked",
+            ".",
+        ),
+        vec!["app/tsconfig.json"]
+    );
+}
+
+#[test]
 fn local_shell_scanner_rejects_non_executing_modes() {
     for argv in [
         vec![

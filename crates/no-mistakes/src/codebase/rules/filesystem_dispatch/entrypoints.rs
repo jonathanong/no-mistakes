@@ -11,8 +11,8 @@ pub fn run_filesystem_rules_with_files(
     config_path: Option<&Path>,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
-    run_filesystem_rules_with_config_and_path(root, &config, config_path, files)
+    let (config, effective_path) = crate::config::v2::load_v2_config_with_path(root, config_path)?;
+    run_filesystem_rules_with_config_and_path(root, &config, effective_path.as_deref(), files)
 }
 
 /// Run filesystem rules with a caller-supplied visible work list and the
@@ -24,7 +24,7 @@ pub fn run_filesystem_rules_with_visible_and_snapshot(
     visible_files: &[PathBuf],
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config_from_visible(
+    let (config, effective_path) = crate::config::v2::load_v2_config_with_path_from_visible(
         root,
         config_path,
         &snapshot.paths_for(root),
@@ -32,7 +32,7 @@ pub fn run_filesystem_rules_with_visible_and_snapshot(
     run_filesystem_rules_with_config_snapshot_and_path(
         root,
         &config,
-        config_path,
+        effective_path.as_deref(),
         visible_files,
         snapshot,
     )
@@ -43,7 +43,11 @@ pub fn run_filesystem_rules_with_visible_and_snapshot(
 pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<Vec<RuleFinding>> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
-    let config = crate::config::v2::load_v2_config_from_visible(root, config_path, &visible_paths)?;
+    let (config, effective_path) = crate::config::v2::load_v2_config_with_path_from_visible(
+        root,
+        config_path,
+        &visible_paths,
+    )?;
     if !FILESYSTEM_RULE_IDS
         .iter()
         .any(|rule_id| rule_enabled(&config, rule_id))
@@ -61,7 +65,7 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
     run_filesystem_rules_with_config_snapshot_and_path(
         root,
         &config,
-        config_path,
+        effective_path.as_deref(),
         &files,
         &snapshot,
     )
