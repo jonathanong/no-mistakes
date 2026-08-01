@@ -21,6 +21,8 @@ const INDEX_BASENAMES: &[&str] = &[
     "index.mjs",
     "index.js",
     "index.jsx",
+    "index.cts",
+    "index.cjs",
 ];
 
 pub(super) struct FileImport {
