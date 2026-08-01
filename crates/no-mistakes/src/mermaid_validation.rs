@@ -40,10 +40,10 @@ pub struct MermaidValidationResult {
 }
 
 pub(crate) fn validate_mermaid_fences(
+    analyzer: &Analyzer,
     fences: &[MermaidFence],
     file: &str,
 ) -> MermaidValidationResult {
-    let analyzer = Analyzer::new();
     let mut diagnostics = Vec::new();
 
     for fence in fences {
@@ -99,7 +99,7 @@ pub fn validate_markdown(content: &str, file: Option<&str>) -> MermaidValidation
     } else {
         extract_mermaid_fences(content)
     };
-    validate_mermaid_fences(&fences, file.unwrap_or(DEFAULT_FILE))
+    validate_mermaid_fences(&Analyzer::new(), &fences, file.unwrap_or(DEFAULT_FILE))
 }
 
 #[cfg(test)]

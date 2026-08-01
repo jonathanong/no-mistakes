@@ -2,6 +2,7 @@ use super::{
     extract_mermaid_fences, validate_markdown, validate_mermaid_fences,
     MermaidValidationDiagnosticCode,
 };
+use merman_analysis::Analyzer;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> String {
@@ -22,13 +23,22 @@ fn extracts_and_validates_supported_commonmark_fences() {
             .iter()
             .map(|fence| fence.fence_line)
             .collect::<Vec<_>>(),
-        vec![3, 8, 13, 18, 23]
+        vec![3, 8, 13, 19, 24]
     );
     assert!(fences.iter().all(|fence| fence.closed));
 
-    let result = validate_mermaid_fences(&fences, "docs/diagrams.md");
+    let result = validate_mermaid_fences(&Analyzer::new(), &fences, "docs/diagrams.md");
     assert!(result.valid, "{:#?}", result.diagnostics);
     assert_eq!(result.diagram_count, 5);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn validates_merman_full_registry_diagram_families() {
+    let result = validate_markdown(&fixture("full-registry.md"), Some("docs/full-registry.md"));
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 3);
     assert!(result.diagnostics.is_empty());
 }
 

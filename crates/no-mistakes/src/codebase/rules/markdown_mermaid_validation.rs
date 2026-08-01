@@ -1,4 +1,5 @@
 use anyhow::Result;
+use merman_analysis::Analyzer;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
@@ -29,16 +30,18 @@ pub(crate) fn check_with_files_and_facts(
     facts: &super::markdown_facts::MarkdownFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let documents = super::markdown_scope::mermaid_document_files(files);
+    let analyzer = Analyzer::new();
     let all = config
         .rule_applications(RULE_ID)
         .into_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let targets =
                 super::path_filter::filter_markdown_rule_files(root, config, rule, &documents)?;
-            Ok(targets
+            let findings = targets
                 .par_iter()
-                .flat_map(|path| findings_for_path(root, path, facts))
-                .collect())
+                .map(|path| findings_for_path(root, path, facts, &analyzer))
+                .collect::<Result<Vec<_>>>()?;
+            Ok(findings.into_iter().flatten().collect())
         })
         .collect::<Result<Vec<_>>>()?;
     let mut findings = all.into_iter().flatten().collect();
@@ -50,16 +53,17 @@ fn findings_for_path(
     root: &Path,
     path: &Path,
     facts: &super::markdown_facts::MarkdownFactMap,
-) -> Vec<RuleFinding> {
-    let Some(markdown) = facts.get(path) else {
-        return Vec::new();
-    };
+    analyzer: &Analyzer,
+) -> Result<Vec<RuleFinding>> {
+    let markdown = facts.get_for_rule(path, RULE_ID)?;
     let file = super::markdown_scope::finding_key(root, path);
-    validate_mermaid_fences(&markdown.mermaid_fences, &file)
-        .diagnostics
-        .into_iter()
-        .map(finding)
-        .collect()
+    Ok(
+        validate_mermaid_fences(analyzer, &markdown.mermaid_fences, &file)
+            .diagnostics
+            .into_iter()
+            .map(finding)
+            .collect(),
+    )
 }
 
 fn finding(diagnostic: MermaidValidationDiagnostic) -> RuleFinding {

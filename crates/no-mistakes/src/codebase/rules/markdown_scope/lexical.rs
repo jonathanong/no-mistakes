@@ -120,3 +120,7 @@ impl LexicalPath {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "lexical/tests.rs"]
+mod tests;

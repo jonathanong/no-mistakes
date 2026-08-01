@@ -265,14 +265,19 @@ fn rejects_ambiguous_stale_external_baseline_keys() {
 }
 
 #[test]
-fn ignores_tracked_paths_without_a_source_snapshot() {
-    let root = fixture(".");
-    let findings = run(
+fn reports_read_failures_instead_of_a_stale_deleted_baseline() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/markdown-read-failure");
+    let error = run(
         &root,
-        &config("maxLines: 1", &["**/*.md"], &[]),
-        &["over-budget.md", "missing.md"],
+        &config(
+            "maxLines: 1\nbaselineFile: baseline.json",
+            &["**/*.md"],
+            &[],
+        ),
+        &["unreadable.md", "baseline.json"],
     )
-    .unwrap();
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "over-budget.md");
+    .unwrap_err();
+    assert!(error.to_string().contains(RULE_ID));
+    assert!(error.to_string().contains("could not read Markdown file"));
 }

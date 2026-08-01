@@ -32,9 +32,18 @@ fn standalone_rule_wrapper_reads_saved_markdown_fixtures() {
 }
 
 #[test]
-fn missing_facts_and_partial_locations_are_rendered_defensively() {
+fn missing_facts_report_a_planning_error_and_partial_locations_render_defensively() {
     let facts = super::super::markdown_facts::MarkdownFactMap::default();
-    assert!(findings_for_path(Path::new("."), Path::new("missing.md"), &facts).is_empty());
+    let error = findings_for_path(
+        Path::new("."),
+        Path::new("missing.md"),
+        &facts,
+        &Analyzer::new(),
+    )
+    .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("internal analysis-planning error"));
 
     let line_only = finding(diagnostic(Some(4), None));
     assert!(line_only.message.contains("at diagram line 4:"));

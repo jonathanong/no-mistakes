@@ -44,7 +44,7 @@ pub(super) fn scoped_states(
             .get(&scope_root)
             .map(Vec::as_slice)
             .unwrap_or_default();
-        let graph = link_graph(&scope_root, scoped_markdown, options.facts, &remapper);
+        let graph = link_graph(&scope_root, scoped_markdown, options.facts, &remapper)?;
         let depths = shortest_depths(options.roots, &graph);
         for target in scoped_targets
             .into_iter()

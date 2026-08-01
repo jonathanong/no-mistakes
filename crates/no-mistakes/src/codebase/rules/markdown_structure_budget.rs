@@ -53,9 +53,7 @@ pub(crate) fn check_with_files_sources_and_facts(
                         path.display()
                     )
                 })?;
-            let Some(markdown) = facts.get(&path) else {
-                continue;
-            };
+            let markdown = facts.get_for_rule(&path, RULE_ID)?;
             let baseline_key = super::markdown_scope::baseline_key(root, _scope_root, &path);
             let file = super::markdown_scope::finding_key(root, &path);
             let tables = markdown.table_count;

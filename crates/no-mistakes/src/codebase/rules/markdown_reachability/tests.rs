@@ -41,6 +41,23 @@ fn fixture(name: &str) -> PathBuf {
         .join("../../fixtures/rules/markdown-reachability")
         .join(name)
 }
+
+#[test]
+fn reports_prepared_read_failures_instead_of_treating_them_as_leaf_nodes() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/markdown-read-failure");
+
+    let error = run(
+        &root,
+        &config("rootFilenames: [unreadable.md]", &["**/*.md"], &[]),
+        &["unreadable.md"],
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains(RULE_ID));
+    assert!(error.to_string().contains("could not read Markdown file"));
+}
+
 #[test]
 fn resolves_only_links_inside_root() {
     let root = Path::new("/repo");

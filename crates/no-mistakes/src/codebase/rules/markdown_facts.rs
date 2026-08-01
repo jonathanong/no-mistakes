@@ -1,6 +1,7 @@
 use pulldown_cmark::{Event, Options as MarkdownOptions, Parser, Tag};
 use rayon::prelude::*;
 use std::collections::BTreeMap;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -50,7 +51,7 @@ pub(crate) struct MarkdownFacts {
 
 #[derive(Default)]
 pub(crate) struct MarkdownFactMap {
-    by_path: BTreeMap<PathBuf, MarkdownFacts>,
+    by_path: BTreeMap<PathBuf, Result<MarkdownFacts, Arc<io::Error>>>,
 }
 
 impl MarkdownFactMap {
@@ -64,9 +65,11 @@ impl MarkdownFactMap {
         let mut facts = plan
             .by_path
             .par_iter()
-            .filter_map(|(path, demand)| {
-                let source = sources.read_path(path).ok()?;
-                Some((path.clone(), collect(path, source, *demand)))
+            .map(|(path, demand)| {
+                let outcome = sources
+                    .read_path(path)
+                    .map(|source| collect(path, source, *demand));
+                (path.clone(), outcome)
             })
             .collect::<Vec<_>>();
         facts.sort_unstable_by(|left, right| left.0.cmp(&right.0));
@@ -75,8 +78,22 @@ impl MarkdownFactMap {
         }
     }
 
-    pub(crate) fn get(&self, path: &Path) -> Option<&MarkdownFacts> {
-        self.by_path.get(path)
+    pub(crate) fn get_for_rule(
+        &self,
+        path: &Path,
+        rule_id: &str,
+    ) -> anyhow::Result<&MarkdownFacts> {
+        match self.by_path.get(path) {
+            Some(Ok(facts)) => Ok(facts),
+            Some(Err(error)) => Err(anyhow::Error::new(Arc::clone(error)).context(format!(
+                "{rule_id} could not read Markdown file {}: {error}. The rule cannot safely analyze incomplete Markdown facts; restore it as a readable UTF-8 file or exclude it from this rule",
+                path.display()
+            ))),
+            None => anyhow::bail!(
+                "{rule_id} could not analyze Markdown file {} because its facts were not prepared. This is an internal analysis-planning error; report it to no-mistakes",
+                path.display()
+            ),
+        }
     }
 }
 

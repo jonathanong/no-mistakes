@@ -39,7 +39,7 @@ fn check_file(
     let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
     plan.request_display_links([path.to_path_buf()]);
     let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
-    check_file_with_facts(root, path, extensions, &facts)
+    check_file_with_facts(root, path, extensions, &facts).unwrap()
 }
 
 fn fixture(name: &str) -> PathBuf {
@@ -385,7 +385,7 @@ fn ignores_links_after_invalid_closing_fence_text() {
 }
 
 #[test]
-fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links() {
+fn covers_custom_extensions_non_matching_files_and_malformed_links() {
     let root = fixture("custom");
     let mdx = root.join("docs/page.mdx");
 
@@ -394,7 +394,7 @@ fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links
         &Options {
             extensions: vec![".mdx".to_string()],
         },
-        &[mdx.clone(), root.join("docs/missing.mdx")],
+        std::slice::from_ref(&mdx),
     )
     .unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
@@ -406,6 +406,24 @@ fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links
     assert!(parser::parse_inline_link("[text] no href", 0).is_none());
     assert!(parser::parse_inline_link("[text", 0).is_none());
     assert_eq!(href_destination("<docs/new.md"), "<docs/new.md");
+}
+
+#[test]
+fn reports_missing_configured_extension_sources() {
+    let root = fixture("custom");
+    let missing = root.join("docs/missing.mdx");
+
+    let error = scan(
+        &root,
+        &Options {
+            extensions: vec![".mdx".to_string()],
+        },
+        &[missing],
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains(RULE_ID));
+    assert!(error.to_string().contains("could not read Markdown file"));
 }
 
 #[test]

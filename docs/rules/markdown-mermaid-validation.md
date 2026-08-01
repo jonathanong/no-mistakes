@@ -4,11 +4,14 @@ Validates Mermaid diagrams embedded in fenced code blocks in tracked `.md`,
 `.markdown`, and `.mdx` files. The rule is opt-in and scans only the configured
 repository or project scope.
 
+The recognized extension set is intentionally fixed to those three Markdown
+formats; `include` and `exclude` can narrow it but do not add custom extensions.
+
 ```yaml
 rules:
   - rule: markdown-mermaid-validation
     scope: repository
-    include: ["**/*.md"]
+    include: ["**/*.md", "**/*.markdown", "**/*.mdx"]
 ```
 
 Compliant example:
@@ -49,4 +52,5 @@ be accepted until the corresponding Merman release is available.
 
 For in-memory content, the async Node API exposes
 `validateMermaidMarkdown({ content, file? })` and returns structured diagnostics
-without requiring a temporary Markdown file.
+without requiring a temporary Markdown file. Pass an `.mdx` file name to enable
+recovery of Markdown fences nested directly inside MDX JSX blocks.

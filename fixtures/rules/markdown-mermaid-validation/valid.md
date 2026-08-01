@@ -15,6 +15,7 @@ stateDiagram-v2
 [*] --> Idle
 ````
 
+<!-- markdownlint-disable-next-line MD048 -->
 > ~~~mermaid
 > flowchart LR
 > Quote --> Works

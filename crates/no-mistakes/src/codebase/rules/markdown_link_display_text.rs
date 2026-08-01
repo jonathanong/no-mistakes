@@ -98,10 +98,11 @@ fn scan_with_facts(
     facts: &super::markdown_facts::MarkdownFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let extensions = effective_extensions(opts);
-    let mut findings: Vec<RuleFinding> = files
+    let findings: Result<Vec<Vec<RuleFinding>>> = files
         .par_iter()
-        .flat_map(|path| check_file_with_facts(root, path, &extensions, facts))
+        .map(|path| check_file_with_facts(root, path, &extensions, facts))
         .collect();
+    let mut findings = findings?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -119,20 +120,18 @@ fn check_file_with_facts(
     path: &Path,
     extensions: &[&str],
     facts: &super::markdown_facts::MarkdownFactMap,
-) -> Vec<RuleFinding> {
+) -> Result<Vec<RuleFinding>> {
     let rel = relative_slash_path(root, path);
     if !extensions.iter().any(|ext| rel.ends_with(ext)) {
-        return Vec::new();
+        return Ok(Vec::new());
     }
-    let Some(markdown) = facts.get(path) else {
-        return Vec::new();
-    };
-    markdown
+    let markdown = facts.get_for_rule(path, RULE_ID)?;
+    Ok(markdown
         .display_links
         .iter()
         .cloned()
         .filter_map(|link| link_target::finding_for_link(&rel, &markdown.source, link, extensions))
-        .collect()
+        .collect())
 }
 
 #[cfg(test)]

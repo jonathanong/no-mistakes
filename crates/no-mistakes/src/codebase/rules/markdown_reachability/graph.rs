@@ -1,5 +1,6 @@
 use super::is_named;
 use crate::codebase::md_links;
+use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Component, Path, PathBuf};
 
@@ -8,18 +9,14 @@ pub(super) fn link_graph(
     markdown: &[PathBuf],
     facts: &super::super::markdown_facts::MarkdownFactMap,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
-) -> BTreeMap<PathBuf, Vec<PathBuf>> {
+) -> Result<BTreeMap<PathBuf, Vec<PathBuf>>> {
     let known = markdown.iter().cloned().collect::<BTreeSet<_>>();
     markdown
         .iter()
-        .map(|path| {
-            let links = facts
-                .get(path)
-                .map(|facts| {
-                    extract_local_links(root, path, &facts.link_destinations, &known, remapper)
-                })
-                .unwrap_or_default();
-            (path.clone(), links)
+        .map(|path| -> Result<_> {
+            let facts = facts.get_for_rule(path, super::RULE_ID)?;
+            let links = extract_local_links(root, path, &facts.link_destinations, &known, remapper);
+            Ok((path.clone(), links))
         })
         .collect()
 }
