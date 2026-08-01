@@ -1,6 +1,6 @@
 use super::{
-    is_atx_heading, is_indented_code, is_setext_heading_underline, is_thematic_break,
-    looks_like_mdx_flow_boundary, starts_block_container, ContainerPrefix,
+    is_atx_heading, is_indented_code, is_link_reference_definition, is_setext_heading_underline,
+    is_thematic_break, looks_like_mdx_flow_boundary, starts_block_container, ContainerPrefix,
 };
 
 pub(super) fn retain_paragraph_context(
@@ -62,6 +62,7 @@ fn is_non_container_paragraph_boundary(line: &[u8], in_paragraph: bool) -> bool 
         Some(b'<') if looks_like_mdx_flow_boundary(line) => true,
         Some(b'<') => !in_paragraph,
         Some(b'#') if is_atx_heading(line) => true,
+        Some(b'[') if !in_paragraph && is_link_reference_definition(line) => true,
         Some(b'*' | b'-' | b'_') if is_thematic_break(line) => true,
         Some(b'=' | b'-') if in_paragraph && is_setext_heading_underline(line) => true,
         _ => false,

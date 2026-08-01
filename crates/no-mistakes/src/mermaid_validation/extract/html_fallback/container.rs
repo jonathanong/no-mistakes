@@ -45,6 +45,12 @@ impl ContainerPrefix {
         !self.steps.is_empty()
     }
 
+    pub(super) fn has_list_indent(&self) -> bool {
+        self.steps
+            .iter()
+            .any(|step| matches!(step, ContainerStep::ListIndent(_)))
+    }
+
     pub(super) fn strip_line<'line>(&self, line: &'line [u8]) -> Option<Cow<'line, [u8]>> {
         if line.iter().all(|byte| matches!(byte, b' ' | b'\t')) {
             if self
@@ -69,6 +75,17 @@ impl ContainerPrefix {
         }
         Some(line)
     }
+}
+
+pub(super) fn list_container_for_line(
+    line: &[u8],
+    active: Option<ContainerPrefix>,
+) -> Option<ContainerPrefix> {
+    let (_, container) = ContainerPrefix::from_opening_line(line);
+    if container.has_list_indent() {
+        return Some(container);
+    }
+    active.filter(|container| container.strip_line(line).is_some())
 }
 
 fn strip_one_blockquote(line: &[u8]) -> Option<(&[u8], usize)> {

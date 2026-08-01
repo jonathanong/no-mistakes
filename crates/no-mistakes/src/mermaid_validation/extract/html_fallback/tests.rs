@@ -82,6 +82,18 @@ fn extracts_and_normalizes_list_and_blockquote_containers() {
 }
 
 #[test]
+fn extracts_fences_from_multiline_ordered_list_continuations() {
+    let source = "<DiagramCard>\n10. item\n    ```mermaid\n    flowchart TD\n    List --> Works\n    ```\n</DiagramCard>\n";
+
+    let fences = extract_all(source);
+
+    assert_eq!(fences.len(), 1);
+    assert_eq!(fences[0].fence_line, 3);
+    assert_eq!(fences[0].content, "flowchart TD\nList --> Works\n");
+    assert!(fences[0].closed);
+}
+
+#[test]
 fn container_closers_must_preserve_the_opening_context() {
     for source in [
         "- ```mermaid\n  flowchart TD\n```\n",
@@ -194,6 +206,29 @@ fn recognizes_setext_and_container_block_boundaries() {
 }
 
 #[test]
+fn recognizes_link_reference_definition_block_boundaries() {
+    for definition in [
+        b"[guide]: /docs".as_slice(),
+        b"   [guide]: <https://example.com/docs> \"Guide\"",
+    ] {
+        assert!(is_link_reference_definition(definition), "{definition:?}");
+    }
+    for paragraph in [
+        b"plain text".as_slice(),
+        b"[guide: /docs",
+        b"[guide] /docs".as_slice(),
+        b"[]: /docs",
+        b"[ ]: /docs",
+        b"[guide]:",
+        b"[guide]: \x0c/docs",
+        b"    [guide]: /docs",
+        b"[guide]: <unterminated",
+    ] {
+        assert!(!is_link_reference_definition(paragraph), "{paragraph:?}");
+    }
+}
+
+#[test]
 fn paragraph_state_uses_content_inside_markdown_containers() {
     let mut in_paragraph = false;
     let mut container = None;
@@ -237,6 +272,12 @@ fn paragraph_state_uses_content_inside_markdown_containers() {
     retain_paragraph_context(b"===", &mut in_paragraph, &mut container);
     update_paragraph_state(b"===", &mut in_paragraph, &mut container);
     assert!(!in_paragraph);
+
+    update_paragraph_state(b"Paragraph text", &mut in_paragraph, &mut container);
+    update_paragraph_state(b"[guide]: /docs", &mut in_paragraph, &mut container);
+    assert!(in_paragraph);
+    in_paragraph = false;
+    container = None;
 
     update_paragraph_state(b"- nested prose", &mut in_paragraph, &mut container);
     retain_paragraph_context(b"top-level prose", &mut in_paragraph, &mut container);

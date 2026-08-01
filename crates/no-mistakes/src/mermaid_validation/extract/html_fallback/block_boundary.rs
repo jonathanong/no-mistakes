@@ -49,6 +49,37 @@ pub(super) fn is_setext_heading_underline(line: &[u8]) -> bool {
         .all(|byte| matches!(byte, b' ' | b'\t'))
 }
 
+pub(super) fn is_link_reference_definition(line: &[u8]) -> bool {
+    let indent = line.iter().take_while(|byte| **byte == b' ').count();
+    if indent > 3 || line.get(indent) != Some(&b'[') {
+        return false;
+    }
+    let label = &line[indent + 1..];
+    let Some(label_end) = label.iter().position(|byte| *byte == b']') else {
+        return false;
+    };
+    if label_end == 0
+        || !label[..label_end]
+            .iter()
+            .any(|byte| !byte.is_ascii_whitespace())
+    {
+        return false;
+    }
+    let Some(destination) = label[label_end + 1..].strip_prefix(b":") else {
+        return false;
+    };
+    let destination_indent = destination
+        .iter()
+        .take_while(|byte| matches!(byte, b' ' | b'\t'))
+        .count();
+    let destination = &destination[destination_indent..];
+    match destination.first() {
+        Some(b'<') => destination[1..].contains(&b'>'),
+        Some(byte) => !byte.is_ascii_control() && !byte.is_ascii_whitespace(),
+        None => false,
+    }
+}
+
 pub(super) fn starts_block_container(line: &[u8], in_paragraph: bool) -> bool {
     let indent = line.iter().take_while(|byte| **byte == b' ').count();
     if indent > 3 {

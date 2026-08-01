@@ -4,15 +4,15 @@ use super::{fence_syntax::is_closing_fence_suffix, is_mermaid_info, line_number,
 
 #[path = "html_fallback/container.rs"]
 mod container;
-use container::ContainerPrefix;
+use container::{list_container_for_line, ContainerPrefix};
 #[path = "html_fallback/code_span.rs"]
 mod code_span;
 use code_span::CodeSpanScanner;
 #[path = "html_fallback/block_boundary.rs"]
 mod block_boundary;
 use block_boundary::{
-    is_atx_heading, is_indented_code, is_setext_heading_underline, is_thematic_break,
-    starts_block_container,
+    is_atx_heading, is_indented_code, is_link_reference_definition, is_setext_heading_underline,
+    is_thematic_break, starts_block_container,
 };
 #[path = "html_fallback/mdx_expression.rs"]
 mod mdx_expression;
@@ -51,13 +51,15 @@ pub(super) fn extract(
     let mut fences = Vec::new();
     let mut in_paragraph = false;
     let mut paragraph_container = None;
+    let mut active_list_container = None;
     let mut code_spans = CodeSpanScanner::default();
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
         let raw_line = &source.as_bytes()[cursor..line_end];
         retain_paragraph_context(raw_line, &mut in_paragraph, &mut paragraph_container);
+        active_list_container = list_container_for_line(raw_line, active_list_container);
         let opening = (!expressions.is_masking_markdown() && !code_spans.is_masking_markdown())
-            .then(|| opening_fence(source, cursor, line_end))
+            .then(|| opening_fence(source, cursor, line_end, active_list_container.as_ref()))
             .flatten();
         let Some(opening) =
             opening.filter(|opening| !in_paragraph || opening.can_interrupt_paragraph)
@@ -96,8 +98,22 @@ pub(super) fn extract(
     }
 }
 
-fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence> {
-    let (line, container) = ContainerPrefix::from_opening_line(&source.as_bytes()[start..end]);
+fn opening_fence(
+    source: &str,
+    start: usize,
+    end: usize,
+    active_list_container: Option<&ContainerPrefix>,
+) -> Option<OpeningFence> {
+    let raw_line = &source.as_bytes()[start..end];
+    let (opening_line, opening_container) = ContainerPrefix::from_opening_line(raw_line);
+    let (line, container, is_list_continuation) = if opening_container.has_list_indent() {
+        (opening_line.into(), opening_container, false)
+    } else if let Some(container) = active_list_container {
+        let line = container.strip_line(raw_line)?;
+        (line, container.clone(), true)
+    } else {
+        (opening_line.into(), opening_container, false)
+    };
     let indent = line.iter().take_while(|byte| **byte == b' ').count();
     if indent > 3 || line.get(indent) == Some(&b'\t') {
         return None;
@@ -123,7 +139,10 @@ fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence>
         length,
         body_start: next_line_start(source, end, source.len()),
         is_mermaid: is_mermaid_info(info),
-        can_interrupt_paragraph: container.can_interrupt_paragraph(),
+        // An ordered marker such as `10.` cannot interrupt a paragraph at
+        // the point it appears. Its already-open list item can, however,
+        // contain a later fenced block on an indented continuation line.
+        can_interrupt_paragraph: is_list_continuation || container.can_interrupt_paragraph(),
         container,
     })
 }

@@ -74,7 +74,7 @@ fn reports_invalid_and_unclosed_fences() {
         .filter(|finding| finding["rule"] == "markdown-mermaid-validation")
         .collect::<Vec<_>>();
 
-    assert_eq!(findings.len(), 29, "{body}");
+    assert_eq!(findings.len(), 31, "{body}");
     for file in [
         "invalid-flowchart.md",
         "invalid-markdown.markdown",

@@ -79,6 +79,17 @@ fn distinguishes_division_from_regex_literals() {
 }
 
 #[test]
+fn treats_unicode_identifiers_as_division_operands() {
+    for expression in ["{π / 2}", "{变量 / 2}", "{café / 2}"] {
+        let mut scanner = MdxExpressionScanner::default();
+
+        scanner.observe_line(expression.as_bytes());
+
+        assert!(!scanner.is_inside_expression(), "{expression}");
+    }
+}
+
+#[test]
 fn discovers_top_level_expressions_and_esm_regions() {
     for lines in [
         &[b"{".as_slice(), b"  `~~~mermaid", b"invalid", b"~~~`", b"}"][..],

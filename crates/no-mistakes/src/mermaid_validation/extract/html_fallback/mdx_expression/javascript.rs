@@ -2,9 +2,7 @@ use super::{Literal, MdxExpressionScanner};
 
 #[path = "javascript/token.rs"]
 mod token;
-use token::{
-    allows_following_regex, identifier_end, is_identifier_start, keyword_allows_regex, token_end,
-};
+use token::{allows_following_regex, identifier_end, keyword_allows_regex, token_end};
 
 pub(super) enum ByteAction {
     Advance(usize),
@@ -17,8 +15,7 @@ impl MdxExpressionScanner {
             return None;
         }
         let byte = line[start];
-        if is_identifier_start(byte) {
-            let end = identifier_end(line, start);
+        if let Some(end) = identifier_end(line, start) {
             let token = &line[start..end];
             self.can_start_regex = keyword_allows_regex(token);
             if self.esm {

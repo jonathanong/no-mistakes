@@ -99,3 +99,20 @@ fn ignores_mermaid_fence_text_inside_multiline_jsx_quoted_attributes() {
     assert!(result.valid, "{:#?}", result.diagnostics);
     assert_eq!(result.diagram_count, 1);
 }
+
+#[test]
+fn validates_mermaid_fences_in_multiline_jsx_list_continuations() {
+    let result = validate_markdown(
+        &fixture("jsx-list-continuation-invalid.mdx"),
+        Some("docs/list-continuation.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(
+        result.diagnostics[0].code,
+        MermaidValidationDiagnosticCode::InvalidSyntax
+    );
+    assert_eq!(result.diagnostics[0].fence_line, 3);
+}

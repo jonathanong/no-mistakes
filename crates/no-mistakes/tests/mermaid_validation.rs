@@ -295,6 +295,19 @@ fn non_one_ordered_list_markers_can_follow_other_mdx_block_boundaries() {
 }
 
 #[test]
+fn non_one_ordered_list_marker_can_follow_an_mdx_link_reference_definition() {
+    let result = validate_markdown(
+        &fixture("jsx-link-reference-definition.mdx"),
+        Some("docs/link-reference.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(result.diagnostics[0].fence_line, 3);
+}
+
+#[test]
 fn non_one_ordered_list_marker_can_follow_an_mdx_flow_jsx_boundary() {
     let result = validate_markdown(
         &fixture("jsx-flow-boundary-ordered-list.mdx"),
@@ -472,6 +485,18 @@ fn handles_mdx_expression_boundaries_and_esm_comments() {
         );
         assert_eq!(result.diagram_count, 1, "{fixture_name} ({file:?})");
     }
+}
+
+#[test]
+fn finds_mermaid_after_mdx_unicode_identifier_division() {
+    let result = validate_markdown(
+        &fixture("mdx-unicode-identifier-division.mdx"),
+        Some("docs/unicode-identifier-division.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
 }
 
 #[test]

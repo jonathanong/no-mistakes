@@ -1492,6 +1492,7 @@ dependencies = [
  "syn 3.0.2",
  "tempfile",
  "toml",
+ "unicode-id-start",
  "wait-timeout",
  "walkdir",
  "windows-sys",
