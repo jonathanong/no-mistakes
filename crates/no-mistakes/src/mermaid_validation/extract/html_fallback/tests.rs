@@ -110,6 +110,8 @@ fn reports_unclosed_and_over_indented_closing_fences() {
     for source in [
         "```mermaid\nflowchart TD\nA-->B",
         "```mermaid\nflowchart TD\nA-->B\n    ```\n",
+        "```mermaid\nflowchart TD\nA-->B\n```\x0c\n",
+        "~~~mermaid\nflowchart TD\nA-->B\n~~~\x0b\n",
     ] {
         let fences = extract_all(source);
         assert_eq!(fences.len(), 1);

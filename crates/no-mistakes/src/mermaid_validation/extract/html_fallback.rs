@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use super::{is_mermaid_info, line_number, MermaidFence};
+use super::{fence_syntax::is_closing_fence_suffix, is_mermaid_info, line_number, MermaidFence};
 
 #[path = "html_fallback/container.rs"]
 mod container;
@@ -146,11 +146,7 @@ fn closing_fence(source: &str, opening: &OpeningFence, limit: usize) -> Option<(
                 .iter()
                 .take_while(|byte| **byte == opening.marker)
                 .count();
-            if length >= opening.length
-                && remainder[length..]
-                    .iter()
-                    .all(|byte| byte.is_ascii_whitespace())
-            {
+            if length >= opening.length && is_closing_fence_suffix(&remainder[length..]) {
                 return Some((cursor, next_line_start(source, line_end, limit)));
             }
         }

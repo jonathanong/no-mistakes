@@ -74,7 +74,7 @@ fn reports_invalid_and_unclosed_fences() {
         .filter(|finding| finding["rule"] == "markdown-mermaid-validation")
         .collect::<Vec<_>>();
 
-    assert_eq!(findings.len(), 11, "{body}");
+    assert_eq!(findings.len(), 13, "{body}");
     for file in [
         "invalid-flowchart.md",
         "invalid-markdown.markdown",
@@ -107,17 +107,19 @@ fn reports_invalid_and_unclosed_fences() {
     assert!(jsx_adjacent["message"]
         .as_str()
         .is_some_and(|message| message.contains("invalid Mermaid diagram")));
-    for file in [
-        "unclosed.md",
-        "unclosed-tab-indented.md",
-        "unclosed-top-level-quoted-closer.md",
-        "unclosed-blockquote-wrong-depth.md",
+    for (file, line) in [
+        ("unclosed.md", 3),
+        ("unclosed-tab-indented.md", 3),
+        ("unclosed-top-level-quoted-closer.md", 3),
+        ("unclosed-blockquote-wrong-depth.md", 3),
+        ("unclosed-form-feed-suffix.md", 3),
+        ("unclosed-mdx-vertical-tab-suffix.mdx", 4),
     ] {
         let unclosed = findings
             .iter()
             .find(|finding| finding["file"] == file)
             .unwrap_or_else(|| panic!("missing {file}: {body}"));
-        assert_eq!(unclosed["line"], 3, "{unclosed:#?}");
+        assert_eq!(unclosed["line"], line, "{unclosed:#?}");
         assert!(unclosed["message"]
             .as_str()
             .is_some_and(|message| message.contains("unclosed Mermaid fence")));

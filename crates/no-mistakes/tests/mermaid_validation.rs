@@ -162,6 +162,49 @@ fn tabbed_list_fence_closer_uses_markdown_columns() {
 }
 
 #[test]
+fn list_continuation_closer_allows_container_indent_plus_three_columns() {
+    let result = validate_markdown(
+        &fixture("list-continuation-valid-closer.md"),
+        Some("docs/list-continuation.md"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn blockquote_tab_padding_uses_the_original_markdown_column() {
+    let result = validate_markdown(
+        &fixture("blockquote-tab-padding-valid.md"),
+        Some("docs/blockquote-tab.md"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn closing_fence_suffix_allows_only_spaces_and_tabs() {
+    for fixture_name in [
+        "unclosed-form-feed-suffix.md",
+        "unclosed-mdx-vertical-tab-suffix.mdx",
+    ] {
+        let result = validate_markdown(&fixture(fixture_name), Some(fixture_name));
+
+        assert!(!result.valid, "{fixture_name}");
+        assert_eq!(result.diagram_count, 1, "{fixture_name}");
+        assert_eq!(result.diagnostics.len(), 1, "{fixture_name}");
+        assert_eq!(
+            result.diagnostics[0].code,
+            MermaidValidationDiagnosticCode::UnclosedFence,
+            "{fixture_name}"
+        );
+    }
+}
+
+#[test]
 fn validates_list_and_blockquote_fences_inside_mdx_jsx() {
     let result = validate_markdown(
         &fixture("jsx-containers-valid.mdx"),

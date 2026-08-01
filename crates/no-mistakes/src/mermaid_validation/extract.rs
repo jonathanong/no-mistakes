@@ -1,11 +1,14 @@
 use pulldown_cmark::{CodeBlockKind, Event, Tag, TagEnd};
 use std::ops::Range;
 
+#[path = "extract/delimiter.rs"]
+mod delimiter;
 #[path = "fence_syntax.rs"]
 mod fence_syntax;
 #[path = "extract/html_fallback.rs"]
 mod html_fallback;
-use fence_syntax::{has_closing_fence, line_end_with_ending, FenceDelimiter};
+use delimiter::{line_number, opening_delimiter};
+use fence_syntax::{has_closing_fence, FenceDelimiter};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum HtmlFallbackMode {
@@ -36,6 +39,7 @@ struct ActiveFence {
 pub(crate) struct MermaidFenceCollector<'source> {
     source: &'source str,
     html_fallback: HtmlFallbackMode,
+    list_item_depth: usize,
     active: Option<ActiveFence>,
     fences: Vec<MermaidFence>,
 }
@@ -45,6 +49,7 @@ impl<'source> MermaidFenceCollector<'source> {
         Self {
             source,
             html_fallback: HtmlFallbackMode::Disabled,
+            list_item_depth: 0,
             active: None,
             fences: Vec::new(),
         }
@@ -54,6 +59,7 @@ impl<'source> MermaidFenceCollector<'source> {
         Self {
             source,
             html_fallback: HtmlFallbackMode::All,
+            list_item_depth: 0,
             active: None,
             fences: Vec::new(),
         }
@@ -63,6 +69,7 @@ impl<'source> MermaidFenceCollector<'source> {
         Self {
             source,
             html_fallback: HtmlFallbackMode::ClearMdxJsx,
+            list_item_depth: 0,
             active: None,
             fences: Vec::new(),
         }
@@ -70,6 +77,9 @@ impl<'source> MermaidFenceCollector<'source> {
 
     pub(crate) fn observe(&mut self, event: &Event<'_>, range: Range<usize>) {
         match event {
+            Event::Start(Tag::Item) => {
+                self.list_item_depth += 1;
+            }
             Event::Start(Tag::HtmlBlock)
                 if self.html_fallback == HtmlFallbackMode::All
                     || (self.html_fallback == HtmlFallbackMode::ClearMdxJsx
@@ -79,7 +89,9 @@ impl<'source> MermaidFenceCollector<'source> {
                     .extend(html_fallback::extract(self.source, range));
             }
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(info))) if is_mermaid_info(info) => {
-                if let Some(delimiter) = opening_delimiter(self.source, range.start) {
+                if let Some(delimiter) =
+                    opening_delimiter(self.source, range.start, self.list_item_depth > 0)
+                {
                     self.active = Some(ActiveFence {
                         content: String::new(),
                         fence_offset: range.start,
@@ -102,6 +114,9 @@ impl<'source> MermaidFenceCollector<'source> {
                         closed: has_closing_fence(self.source, active.delimiter, range.end),
                     });
                 }
+            }
+            Event::End(TagEnd::Item) => {
+                self.list_item_depth = self.list_item_depth.saturating_sub(1);
             }
             _ => {}
         }
@@ -150,72 +165,6 @@ fn is_mermaid_info(info: &str) -> bool {
     info.split_whitespace()
         .next()
         .is_some_and(|token| token.eq_ignore_ascii_case("mermaid"))
-}
-
-fn opening_delimiter(source: &str, offset: usize) -> Option<FenceDelimiter> {
-    let line_start = source[..offset.min(source.len())]
-        .rfind(['\n', '\r'])
-        .map_or(0, |index| index + 1);
-    let line_end = source[line_start..]
-        .find(['\n', '\r'])
-        .map_or(source.len(), |index| line_start + index);
-    let (line, blockquote_depth) =
-        fence_syntax::strip_blockquote_prefix(&source.as_bytes()[line_start..line_end]);
-
-    for index in 0..line.len() {
-        let marker = line[index];
-        if marker != b'`' && marker != b'~' {
-            continue;
-        }
-        let length = line[index..]
-            .iter()
-            .take_while(|byte| **byte == marker)
-            .count();
-        if length < 3 {
-            continue;
-        }
-        // The slice begins after an ASCII fence-marker run inside an existing
-        // UTF-8 string, so both boundaries are necessarily valid.
-        let trailing = std::str::from_utf8(&line[index + length..])
-            .expect("slice after an ASCII fence marker must remain UTF-8");
-        if is_mermaid_info(trailing) {
-            let prefix = &line[..index];
-            let container_indent = if prefix.iter().any(|byte| !byte.is_ascii_whitespace()) {
-                fence_syntax::markdown_columns(prefix)
-            } else {
-                0
-            };
-            return Some(FenceDelimiter {
-                marker,
-                length,
-                blockquote_depth,
-                container_indent,
-                content_start: line_end_with_ending(source, line_end),
-            });
-        }
-    }
-    None
-}
-
-fn line_number(source: &str, offset: usize) -> usize {
-    let bytes = source.as_bytes();
-    let mut line = 1;
-    let mut index = 0;
-    let limit = offset.min(bytes.len());
-    while index < limit {
-        match bytes[index] {
-            b'\n' => line += 1,
-            b'\r' => {
-                line += 1;
-                if bytes.get(index + 1) == Some(&b'\n') {
-                    index += 1;
-                }
-            }
-            _ => {}
-        }
-        index += 1;
-    }
-    line
 }
 
 #[cfg(test)]
