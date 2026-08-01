@@ -245,10 +245,34 @@ fn validates_list_and_blockquote_fences_inside_mdx_jsx() {
 }
 
 #[test]
+fn non_one_ordered_list_marker_does_not_interrupt_an_mdx_paragraph() {
+    let result = validate_markdown(
+        &fixture("jsx-ordered-list-interruption.mdx"),
+        Some("docs/list-interruption.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
 fn validates_mdx_list_lines_with_tab_overshoot() {
     let result = validate_markdown(
         &fixture("mdx-tab-overshoot-valid.mdx"),
         Some("docs/tab-overshoot.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn preserves_mdx_blockquote_tab_residual_indentation() {
+    let result = validate_markdown(
+        &fixture("mdx-blockquote-tab-residual-valid.mdx"),
+        Some("docs/blockquote-tab-residual.mdx"),
     );
 
     assert!(result.valid, "{:#?}", result.diagnostics);

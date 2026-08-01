@@ -37,10 +37,14 @@ fn strips_interleaved_container_steps_in_opening_order() {
 fn recognizes_ordered_markers_and_rejects_lookalikes() {
     let (opening, ordered) = ContainerPrefix::from_opening_line(b"123. ```mermaid");
     assert_eq!(opening, b"```mermaid");
+    assert!(!ordered.can_interrupt_paragraph());
     assert_eq!(
         ordered.strip_line(b"     graph TD").as_deref(),
         Some(&b"graph TD"[..])
     );
+
+    let (_, one) = ContainerPrefix::from_opening_line(b"01. ```mermaid");
+    assert!(one.can_interrupt_paragraph());
 
     for source in [
         b"1234567890. ```mermaid".as_slice(),
@@ -82,6 +86,14 @@ fn preserves_non_container_lines_and_normalizes_blank_lines() {
     );
 
     let (_, quoted) = ContainerPrefix::from_opening_line(b"> ```mermaid");
+    assert_eq!(
+        quoted.strip_line(b">\troot").as_deref(),
+        Some(&b"  root"[..])
+    );
+    assert_eq!(
+        quoted.strip_line(b"   >\troot").as_deref(),
+        Some(&b"   root"[..])
+    );
     assert_eq!(quoted.strip_line(b"   ").as_deref(), Some(&b""[..]));
     assert_eq!(quoted.strip_line(b" \t").as_deref(), Some(&b""[..]));
     assert_eq!(quoted.strip_line(b"\x0c"), None);

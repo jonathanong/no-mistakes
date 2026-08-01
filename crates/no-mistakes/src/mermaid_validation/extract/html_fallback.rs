@@ -8,18 +8,9 @@ use container::ContainerPrefix;
 #[path = "html_fallback/mdx_expression.rs"]
 mod mdx_expression;
 pub(super) use mdx_expression::MdxExpressionScanner;
-
-const STANDARD_HTML_TAGS: &str = concat!(
-    "a abbr acronym address applet area article aside audio b base basefont bdi bdo big ",
-    "blockquote body br button canvas caption center cite code col colgroup data datalist dd ",
-    "del details dfn dialog dir div dl dt em embed fieldset figcaption figure font footer form ",
-    "frame frameset h1 h2 h3 h4 h5 h6 head header hgroup hr html i iframe img input ins kbd ",
-    "label legend li link main map mark marquee menu menuitem meta meter nav nobr noembed ",
-    "noframes noscript object ol optgroup option output p param picture plaintext pre progress ",
-    "q rb rp rt rtc ruby s samp script search section select slot small source span strike ",
-    "strong style sub summary sup table tbody td template textarea tfoot th thead time title tr ",
-    "track tt u ul var video wbr xmp",
-);
+#[path = "html_fallback/mdx_jsx.rs"]
+mod mdx_jsx;
+pub(super) use mdx_jsx::looks_like_clear_mdx_jsx;
 
 #[derive(Clone)]
 struct OpeningFence {
@@ -28,55 +19,12 @@ struct OpeningFence {
     body_start: usize,
     is_mermaid: bool,
     container: ContainerPrefix,
+    can_interrupt_paragraph: bool,
 }
 
 pub(super) struct Extracted {
     pub(super) fences: Vec<MermaidFence>,
     pub(super) consumed_until: usize,
-}
-
-pub(super) fn looks_like_clear_mdx_jsx(source: &str, range: Range<usize>) -> bool {
-    let block = source[range].trim_start();
-    let Some(after_open) = block.strip_prefix('<') else {
-        return false;
-    };
-    if after_open.starts_with('>') {
-        return true;
-    }
-
-    let name_end = after_open
-        .find(|character: char| {
-            !character.is_ascii_alphanumeric() && !matches!(character, '_' | '-' | '.' | ':' | '$')
-        })
-        .unwrap_or(after_open.len());
-    let name = &after_open[..name_end];
-    let component_name = name
-        .chars()
-        .next()
-        .is_some_and(|character| character.is_ascii_uppercase())
-        && !STANDARD_HTML_TAGS
-            .split_ascii_whitespace()
-            .any(|tag| name.eq_ignore_ascii_case(tag));
-    component_name || has_unquoted_jsx_expression_brace(after_open)
-}
-
-fn has_unquoted_jsx_expression_brace(opening: &str) -> bool {
-    let mut quote = None;
-    for character in opening.chars() {
-        if let Some(expected) = quote {
-            if character == expected {
-                quote = None;
-            }
-            continue;
-        }
-        match character {
-            '\'' | '"' => quote = Some(character),
-            '{' => return true,
-            '>' => return false,
-            _ => {}
-        }
-    }
-    false
 }
 
 pub(super) fn extract(
@@ -88,13 +36,17 @@ pub(super) fn extract(
     let mut cursor = range.start.min(limit);
     let mut consumed_until = cursor;
     let mut fences = Vec::new();
+    let mut in_paragraph = false;
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
         let opening = (!expressions.is_masking_markdown())
             .then(|| opening_fence(source, cursor, line_end))
             .flatten();
-        let Some(opening) = opening else {
+        let Some(opening) =
+            opening.filter(|opening| !in_paragraph || opening.can_interrupt_paragraph)
+        else {
             expressions.observe_line(&source.as_bytes()[cursor..line_end]);
+            update_paragraph_state(&source.as_bytes()[cursor..line_end], &mut in_paragraph);
             cursor = next_line_start(source, line_end, limit);
             continue;
         };
@@ -116,6 +68,7 @@ pub(super) fn extract(
         };
         cursor = closing_end;
         consumed_until = closing_end;
+        in_paragraph = false;
     }
 
     Extracted {
@@ -151,8 +104,18 @@ fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence>
         length,
         body_start: next_line_start(source, end, source.len()),
         is_mermaid: is_mermaid_info(info),
+        can_interrupt_paragraph: container.can_interrupt_paragraph(),
         container,
     })
+}
+
+fn update_paragraph_state(line: &[u8], in_paragraph: &mut bool) {
+    let first = line.iter().position(|byte| !matches!(byte, b' ' | b'\t'));
+    match first.map(|index| line[index]) {
+        None => *in_paragraph = false,
+        Some(b'<') => {}
+        Some(_) => *in_paragraph = true,
+    }
 }
 
 fn closing_fence(source: &str, opening: &OpeningFence, limit: usize) -> Option<(usize, usize)> {
