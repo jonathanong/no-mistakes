@@ -1,0 +1,7 @@
+{
+  "name": "@acme/lib",
+  "main": "index.mts",
+  "dependencies": {
+    "@acme/tool": "workspace:^"
+  }
+}

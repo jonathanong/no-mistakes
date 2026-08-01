@@ -1,0 +1,7 @@
+{
+  "name": "@acme/lib",
+  "main": "index.mts",
+  "devDependencies": {
+    "@acme/build-tool": "workspace:^"
+  }
+}

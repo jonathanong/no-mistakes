@@ -11,6 +11,7 @@ macro_rules! filesystem_rules {
             NO_GIT_IDENTITY_MUTATION => no_git_identity_mutation::check_with_files,
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files,
             PACKAGE_JSON_WORKSPACE_COVERAGE => package_json_workspace_coverage::check_with_files,
+            PRODUCTION_DEPENDENCY_DECLARATIONS => production_dependency_declarations::check_with_files,
             WORKSPACE_PACKAGE_CYCLES => workspace_package_cycles::check_with_files,
             REQUIRED_COMPANION_IMPORTS => required_companion_imports::check_with_files,
             REQUIRE_TEST_PER_SUBDIR => require_test_per_subdir::check_with_files,

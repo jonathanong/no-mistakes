@@ -106,6 +106,7 @@ fn no_mistakes_rules_have_docs() {
         playwright_rules::PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,
         playwright_rules::PLAYWRIGHT_UNIQUE_HTML_IDS,
         playwright_rules::PLAYWRIGHT_UNIQUE_TEST_IDS,
+        rules::PRODUCTION_DEPENDENCY_DECLARATIONS,
         rules::REQUIRE_FILES_IN_SUBDIRS,
         rules::REQUIRE_STORYBOOK_STORIES,
         rules::REQUIRE_TEST_PER_SUBDIR,
