@@ -149,7 +149,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         timings,
     } = results;
     let _ = timings;
-    serde_json::json!({
+    let mut value = serde_json::json!({
         "react": react,
         "queues": queues,
         "rules": rules,
@@ -157,5 +157,10 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         "codebase": codebase,
         "warnings": warnings,
         "advisories": advisories,
-    })
+    });
+    // Dependency feature unification can switch serde_json maps from sorted
+    // storage to insertion-ordered storage. Keep the public report stable in
+    // either configuration, including keys in nested finding objects.
+    value.sort_all_objects();
+    value
 }
