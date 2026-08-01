@@ -1,14 +1,22 @@
+#[cfg(feature = "mermaid-validation")]
 use merman_analysis::{Analyzer, DiagnosticSeverity};
+#[cfg(feature = "mermaid-validation")]
 use serde::Serialize;
 
 mod extract;
-pub(crate) use extract::{
+#[cfg(feature = "mermaid-validation")]
+pub(crate) use extract::MermaidFence;
+pub(crate) use extract::MermaidFenceCollector;
+#[cfg(feature = "mermaid-validation")]
+use extract::{
     extract_mermaid_fences, extract_mermaid_fences_with_automatic_mdx_html_fallback,
-    extract_mermaid_fences_with_mdx_html_fallback, MermaidFence, MermaidFenceCollector,
+    extract_mermaid_fences_with_mdx_html_fallback,
 };
 
+#[cfg(feature = "mermaid-validation")]
 const DEFAULT_FILE: &str = "<input>";
 
+#[cfg(feature = "mermaid-validation")]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum MermaidValidationDiagnosticCode {
@@ -16,6 +24,7 @@ pub enum MermaidValidationDiagnosticCode {
     UnclosedFence,
 }
 
+#[cfg(feature = "mermaid-validation")]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MermaidValidationDiagnostic {
@@ -31,6 +40,7 @@ pub struct MermaidValidationDiagnostic {
     pub message: String,
 }
 
+#[cfg(feature = "mermaid-validation")]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MermaidValidationResult {
@@ -39,6 +49,7 @@ pub struct MermaidValidationResult {
     pub diagnostics: Vec<MermaidValidationDiagnostic>,
 }
 
+#[cfg(feature = "mermaid-validation")]
 pub(crate) fn validate_mermaid_fences(
     analyzer: &Analyzer,
     fences: &[MermaidFence],
@@ -86,6 +97,7 @@ pub(crate) fn validate_mermaid_fences(
 }
 
 /// Validate every fenced Mermaid diagram in a Markdown document.
+#[cfg(feature = "mermaid-validation")]
 pub fn validate_markdown(content: &str, file: Option<&str>) -> MermaidValidationResult {
     let is_mdx = file.is_some_and(|file| {
         let path = file.split(['?', '#']).next().unwrap_or(file);
@@ -102,6 +114,6 @@ pub fn validate_markdown(content: &str, file: Option<&str>) -> MermaidValidation
     validate_mermaid_fences(&Analyzer::new(), &fences, file.unwrap_or(DEFAULT_FILE))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "mermaid-validation"))]
 #[path = "mermaid_validation/tests.rs"]
 mod tests;

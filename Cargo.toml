@@ -8,8 +8,3 @@ resolver = "2"
 [profile.release]
 lto = true
 codegen-units = 1
-
-# merman-core's generated parser is not exercised by the core-analysis benchmarks;
-# optimizing it under Codspeed's instrumentation can exceed the CI build limit.
-[profile.bench.package.merman-core]
-opt-level = 0

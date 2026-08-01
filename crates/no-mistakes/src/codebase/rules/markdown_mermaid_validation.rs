@@ -1,16 +1,20 @@
 use anyhow::Result;
+#[cfg(feature = "mermaid-validation")]
 use merman_analysis::Analyzer;
+#[cfg(feature = "mermaid-validation")]
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
+#[cfg(feature = "mermaid-validation")]
 use crate::mermaid_validation::{
     validate_mermaid_fences, MermaidValidationDiagnostic, MermaidValidationDiagnosticCode,
 };
 
 pub const RULE_ID: &str = "markdown-mermaid-validation";
 
+#[cfg(feature = "mermaid-validation")]
 pub fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -23,6 +27,16 @@ pub fn check_with_files(
     check_with_files_and_facts(root, config, files, &facts)
 }
 
+#[cfg(not(feature = "mermaid-validation"))]
+pub fn check_with_files(
+    _root: &Path,
+    _config: &NoMistakesConfig,
+    _files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    anyhow::bail!(feature_disabled_message())
+}
+
+#[cfg(feature = "mermaid-validation")]
 pub(crate) fn check_with_files_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
@@ -49,6 +63,22 @@ pub(crate) fn check_with_files_and_facts(
     Ok(findings)
 }
 
+#[cfg(not(feature = "mermaid-validation"))]
+pub(crate) fn check_with_files_and_facts(
+    _root: &Path,
+    _config: &NoMistakesConfig,
+    _files: &[PathBuf],
+    _facts: &super::markdown_facts::MarkdownFactMap,
+) -> Result<Vec<RuleFinding>> {
+    anyhow::bail!(feature_disabled_message())
+}
+
+#[cfg(not(feature = "mermaid-validation"))]
+fn feature_disabled_message() -> &'static str {
+    "markdown-mermaid-validation requires the default mermaid-validation Cargo feature; rebuild without --no-default-features or enable --features mermaid-validation"
+}
+
+#[cfg(feature = "mermaid-validation")]
 fn findings_for_path(
     root: &Path,
     path: &Path,
@@ -66,6 +96,7 @@ fn findings_for_path(
     )
 }
 
+#[cfg(feature = "mermaid-validation")]
 fn finding(diagnostic: MermaidValidationDiagnostic) -> RuleFinding {
     let message = match diagnostic.code {
         MermaidValidationDiagnosticCode::InvalidSyntax => {
@@ -96,6 +127,6 @@ fn finding(diagnostic: MermaidValidationDiagnostic) -> RuleFinding {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "mermaid-validation"))]
 #[path = "markdown_mermaid_validation/tests.rs"]
 mod tests;

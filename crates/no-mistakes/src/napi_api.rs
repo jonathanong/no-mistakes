@@ -33,6 +33,7 @@ mod cli_parity;
 mod codebase;
 mod infra_swift;
 mod lockfile_diff;
+#[cfg(feature = "mermaid-validation")]
 mod mermaid;
 mod options;
 mod project;
@@ -57,6 +58,7 @@ pub use infra_swift::{
     swift_test_targets_json,
 };
 pub(crate) use lockfile_diff::lockfile_diff_json_impl;
+#[cfg(feature = "mermaid-validation")]
 pub(crate) use mermaid::validate_mermaid_markdown_json_impl;
 pub(crate) use project::{
     data_pw_json_impl, effects_json_impl, flow_json_impl, queue_check_json_impl,
@@ -97,6 +99,7 @@ include!("napi_api/codebase_bindings.rs");
 
 json_binding!(fetches_json, "fetchesJson", fetches_json_impl);
 json_binding!(check_json, "checkJson", check_json_impl);
+#[cfg(feature = "mermaid-validation")]
 json_binding!(
     validate_mermaid_markdown_json,
     "validateMermaidMarkdownJson",

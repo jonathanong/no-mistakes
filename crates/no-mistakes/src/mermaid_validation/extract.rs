@@ -57,6 +57,7 @@ impl<'source> MermaidFenceCollector<'source> {
         Self::with_fallback(source, HtmlFallbackMode::All)
     }
 
+    #[cfg(feature = "mermaid-validation")]
     pub(crate) fn new_with_automatic_mdx_html_fallback(source: &'source str) -> Self {
         Self::with_fallback(source, HtmlFallbackMode::ClearMdxJsx)
     }
@@ -163,10 +164,12 @@ impl<'source> MermaidFenceCollector<'source> {
     }
 }
 
+#[cfg(feature = "mermaid-validation")]
 pub(crate) fn extract_mermaid_fences(source: &str) -> Vec<MermaidFence> {
     extract_with_collector(source, MermaidFenceCollector::new(source))
 }
 
+#[cfg(feature = "mermaid-validation")]
 pub(crate) fn extract_mermaid_fences_with_mdx_html_fallback(source: &str) -> Vec<MermaidFence> {
     extract_with_collector(
         source,
@@ -174,6 +177,7 @@ pub(crate) fn extract_mermaid_fences_with_mdx_html_fallback(source: &str) -> Vec
     )
 }
 
+#[cfg(feature = "mermaid-validation")]
 pub(crate) fn extract_mermaid_fences_with_automatic_mdx_html_fallback(
     source: &str,
 ) -> Vec<MermaidFence> {
@@ -183,6 +187,7 @@ pub(crate) fn extract_mermaid_fences_with_automatic_mdx_html_fallback(
     )
 }
 
+#[cfg(feature = "mermaid-validation")]
 fn extract_with_collector<'source>(
     source: &'source str,
     mut collector: MermaidFenceCollector<'source>,

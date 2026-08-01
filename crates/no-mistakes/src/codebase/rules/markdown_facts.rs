@@ -6,7 +6,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use super::markdown_link_display_text::parser::{markdown_links_outside_code, InlineLink};
-use crate::mermaid_validation::{MermaidFence, MermaidFenceCollector};
+#[cfg(feature = "mermaid-validation")]
+use crate::mermaid_validation::MermaidFence;
+use crate::mermaid_validation::MermaidFenceCollector;
 
 #[derive(Clone, Copy, Default)]
 struct FactDemand {
@@ -44,6 +46,7 @@ pub(crate) struct MarkdownFacts {
     pub(crate) char_count: usize,
     pub(crate) table_count: usize,
     pub(crate) mermaid_count: usize,
+    #[cfg(feature = "mermaid-validation")]
     pub(crate) mermaid_fences: Vec<MermaidFence>,
     pub(crate) link_destinations: Vec<String>,
     pub(crate) display_links: Vec<InlineLink>,
@@ -130,6 +133,7 @@ fn collect(path: &Path, source: Arc<str>, demand: FactDemand) -> MarkdownFacts {
         source,
         table_count,
         mermaid_count,
+        #[cfg(feature = "mermaid-validation")]
         mermaid_fences,
         link_destinations,
         display_links,
