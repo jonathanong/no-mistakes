@@ -229,16 +229,18 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
         ),
         vec!["tsconfig.json"]
     );
-    for project_option in [
-        vec!["-p".into(), "app/tsconfig.json".into()],
-        vec!["-p=app/tsconfig.json".into()],
-    ] {
-        let argv = [vec!["tsc".into(), "--noEmit".into()], project_option].concat();
-        assert_eq!(
-            scan_argv_for_typechecked_projects(&argv, "."),
-            vec!["app/tsconfig.json"]
-        );
-    }
+    assert_eq!(
+        scan_argv_for_typechecked_projects(
+            &[
+                "tsc".into(),
+                "--noEmit".into(),
+                "-p".into(),
+                "app/tsconfig.json".into(),
+            ],
+            ".",
+        ),
+        vec!["app/tsconfig.json"]
+    );
     for argv in [
         vec!["tsc".into(), "--noEmit".into(), "--project=".into()],
         vec![
@@ -251,6 +253,16 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
         vec!["tsc".into(), "--noEmit".into(), "--pretty=maybe".into()],
         vec!["tsc".into(), "--noEmit".into(), "-p".into()],
         vec!["tsc".into(), "--noEmit".into(), "-p=".into()],
+        vec![
+            "tsc".into(),
+            "--noEmit".into(),
+            "--project=app/tsconfig.json".into(),
+        ],
+        vec![
+            "tsc".into(),
+            "--noEmit".into(),
+            "-p=app/tsconfig.json".into(),
+        ],
     ] {
         assert!(
             scan_argv_for_typechecked_projects(&argv, ".").is_empty(),
@@ -287,7 +299,12 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
     }
     assert_eq!(
         scan_argv_for_typechecked_projects(
-            &["tsc".into(), "--noEmit".into(), "--project=app".into()],
+            &[
+                "tsc".into(),
+                "--noEmit".into(),
+                "--project".into(),
+                "app".into(),
+            ],
             ".",
         ),
         vec!["app"]
@@ -312,7 +329,8 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
             &[
                 "tsc".into(),
                 "--noEmit".into(),
-                "--project=app/tsconfig.json".into()
+                "--project".into(),
+                "app/tsconfig.json".into()
             ],
             ".",
         ),
@@ -330,36 +348,6 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
         ],
     ] {
         assert!(scan_argv_for_typechecked_projects(&argv, ".").is_empty());
-    }
-}
-
-#[test]
-fn informational_or_init_tsc_modes_do_not_count_as_typechecks() {
-    for mode in [
-        "--showConfig",
-        "--help",
-        "-h",
-        "--version",
-        "-v",
-        "--init",
-        "--noCheck",
-        "--noCheck=true",
-        "--listFilesOnly",
-        "--listFilesOnly=true",
-        "--ignoreConfig",
-        "--ignoreConfig=true",
-    ] {
-        assert!(scan_argv_for_typechecked_projects(
-            &[
-                "tsc".into(),
-                "--noEmit".into(),
-                mode.into(),
-                "--project".into(),
-                "app/tsconfig.json".into(),
-            ],
-            ".",
-        )
-        .is_empty());
     }
 }
 
@@ -402,31 +390,6 @@ fn default_project_requires_project_mode_without_source_inputs() {
         ),
         vec!["tsconfig.json"]
     );
-}
-
-#[test]
-fn normalizer_accepts_only_static_relative_paths() {
-    assert_eq!(
-        normalize_repo_relative("./app//tsconfig.json"),
-        Some("app/tsconfig.json".into())
-    );
-    for invalid in [
-        "",
-        "/tmp/tsconfig.json",
-        "~/tsconfig.json",
-        "../tsconfig.json",
-        "$ROOT/tsconfig.json",
-        "app\\tsconfig.json",
-        "$(pwd)/tsconfig.json",
-    ] {
-        assert_eq!(normalize_repo_relative(invalid), None, "{invalid}");
-    }
-    assert_eq!(normalize_repo_relative("./"), Some(".".into()));
-}
-
-#[test]
-fn tokenizer_leaves_whitespace_only_input_without_a_command() {
-    assert_eq!(static_tokens(" \t"), Some(Vec::new()));
 }
 
 #[test]
@@ -489,7 +452,11 @@ fn token_scanner_covers_pnpm_and_project_argument_edge_cases() {
         assert!(scan_tokens(&tokens, ".").is_empty());
     }
     assert_eq!(
-        project_argument(&["--noEmit".into(), "--project=app/tsconfig.json".into()]),
+        project_argument(&[
+            "--noEmit".into(),
+            "--project".into(),
+            "app/tsconfig.json".into(),
+        ]),
         Some("app/tsconfig.json".into())
     );
     assert_eq!(

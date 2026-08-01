@@ -5,7 +5,7 @@ checks:
       fileArgs: none
       always: true
     - name: typecheck-tools
-      command: [pnpm, exec, tsc, --noEmit, --project=tools/tsconfig.tools.json]
+      command: [pnpm, exec, tsc, --noEmit, --project, tools/tsconfig.tools.json]
       fileArgs: none
       always: true
 rules:

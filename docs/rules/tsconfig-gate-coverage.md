@@ -21,8 +21,8 @@ rules:
 ```
 
 The rule recognizes static `tsc --noEmit` commands in workflow `run:` steps
-and `checks.commands`. It supports `--project <path>` / `--project=<path>` and
-`-p <path>` / `-p=<path>`, a default `tsconfig.json` relative to the effective
+and `checks.commands`. It supports `--project <path>` and `-p <path>`, a
+default `tsconfig.json` relative to the effective
 working directory, sequential `cd` commands, and
 `pnpm --dir <path> exec tsc`. Workflow working directories
 may come from workflow/job `defaults.run.working-directory` or a step's
@@ -30,8 +30,11 @@ may come from workflow/job `defaults.run.working-directory` or a step's
 Only step-based jobs with a non-empty, static `runs-on` string or label array
 count; missing, dynamic, or reusable-workflow jobs do not.
 The containing workflow must declare at least one file-triggerable `push`,
-`pull_request`, or `pull_request_target` event. Manual, scheduled, reusable,
-empty, and tag-only workflows cannot provide a repository typecheck gate.
+`pull_request`, or `pull_request_target` event whose path filters allow the
+tracked tsconfig path. Manual, scheduled, reusable, empty, tag-only, and
+path-filtered-out workflows cannot provide a repository typecheck gate. For
+example, `paths: [docs/**]` cannot cover `app/tsconfig.json`; add `app/**` or an
+unfiltered applicable event.
 
 Workflow commands run only when their effective shell is GitHub Actions'
 implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
@@ -81,15 +84,17 @@ as registrations. Express such a command statically if it is intended to
 provide this gate.
 Shell bodies containing `exit`, `return`, `false`, or a failure-mode mutation
 such as `set +e` are also rejected as a whole because the rule does not model
-shell reachability or option state. Bodies with unquoted shell comments or
-quoted command separators, and local shell invocations that enable a
+shell reachability or option state. Bodies with unquoted shell comments,
+quoted command separators, or shell function/group braces, and local shell
+invocations that enable a
 non-executing mode such as `bash -n` or `set -o noexec`, are rejected rather
 than credited heuristically.
 
 Informational, setup, or config-bypassing commands (`--showConfig`,
-`--help`/`-h`, `--version`/`-v`, `--init`, `--noCheck`, `--listFilesOnly`, and
-`--ignoreConfig`) do not count, even when combined with `--noEmit`, because they
-do not fully typecheck the project.
+`--help`/`-h`, `--version`/`-v`, `--init`, enabled `--noCheck`,
+`--listFilesOnly`, and `--ignoreConfig`) do not count, even when combined with
+`--noEmit`, because they do not fully typecheck the project. Explicit
+`--noCheck false` and `--noCheck=false` forms remain typechecking modes.
 
 Findings use line 1 of the tsconfig, workflow, or configuration file. Use a
 top-of-file `no-mistakes-disable-file tsconfig-gate-coverage` directive only

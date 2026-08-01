@@ -3,13 +3,6 @@ use serde_yaml::Value;
 #[cfg(test)]
 mod tests;
 
-pub(super) fn has_file_trigger(workflow: &Value, path: &str) -> bool {
-    !crate::codebase::ci_graph::parse::parse_workflow_value(workflow, path)
-        .triggers
-        .events
-        .is_empty()
-}
-
 /// A CI job cannot provide a typecheck gate unless Actions can schedule it on
 /// a statically known runner. Reusable-workflow jobs use `uses:` rather than
 /// `steps:` and are excluded separately by the step requirement.

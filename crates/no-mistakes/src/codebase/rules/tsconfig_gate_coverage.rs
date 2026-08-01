@@ -52,7 +52,7 @@ pub(crate) fn check_with_prepared(
 ) -> Result<Vec<RuleFinding>> {
     let tracked = tracked_tsconfigs(root, prepared.tracked_paths);
     let non_enforcing = non_enforcing_tsconfigs(root, &tracked, prepared.sources);
-    let ci_projects = ci_typechecked_projects(prepared.workflows);
+    let ci_projects = ci_typechecked_projects(prepared.workflows, &tracked);
     let local_projects = local_typechecked_projects(config);
     let config_file = config_file(root, prepared.config_path);
     let workflow_errors = workflow_load_findings(prepared.workflows);

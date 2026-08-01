@@ -27,11 +27,27 @@ fn ci_scanner_credits_only_workflows_with_file_triggers() {
                 "pull-request.yml",
                 &format!("on: pull_request\n{}", job("pull-request")),
             ),
+            workflow(
+                "filtered-out.yml",
+                &format!("on:\n  push:\n    paths: [docs/**]\n{}", job("app")),
+            ),
+            workflow(
+                "filtered-in.yml",
+                "on:\n  push:\n    paths: [filtered-app/**]\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project filtered-app\n",
+            ),
         ],
     };
+    let tracked = BTreeSet::from([
+        "app/tsconfig.json".to_string(),
+        "filtered-app/tsconfig.json".to_string(),
+        "pull-request/tsconfig.json".to_string(),
+    ]);
 
     assert_eq!(
-        ci_typechecked_projects(&workflows),
-        BTreeSet::from(["pull-request/tsconfig.json".to_string()])
+        ci_typechecked_projects(&workflows, &tracked),
+        BTreeSet::from([
+            "filtered-app/tsconfig.json".to_string(),
+            "pull-request/tsconfig.json".to_string(),
+        ])
     );
 }

@@ -386,7 +386,7 @@ fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
             },
         ],
     };
-    assert!(ci_typechecked_projects(&workflows).is_empty());
+    assert!(ci_typechecked_projects(&workflows, &BTreeSet::new()).is_empty());
 }
 
 #[test]
@@ -403,13 +403,11 @@ fn ci_scanner_honors_static_posix_shell_overrides_and_defaults() {
         }],
     };
 
-    assert_eq!(
-        ci_typechecked_projects(&workflows),
-        BTreeSet::from([
-            "job-default-bash-template/tsconfig.json".to_string(),
-            "step-override-sh-template/tsconfig.json".to_string(),
-        ])
-    );
+    let expected = BTreeSet::from([
+        "job-default-bash-template/tsconfig.json".to_string(),
+        "step-override-sh-template/tsconfig.json".to_string(),
+    ]);
+    assert_eq!(ci_typechecked_projects(&workflows, &expected), expected);
 }
 
 #[test]
@@ -425,7 +423,11 @@ fn ci_scanner_rejects_an_empty_shell_setting() {
             value: Ok(workflow),
         }],
     };
-    assert!(ci_typechecked_projects(&workflows).is_empty());
+    assert!(ci_typechecked_projects(
+        &workflows,
+        &BTreeSet::from(["app/tsconfig.json".to_string()])
+    )
+    .is_empty());
 }
 
 #[test]
@@ -442,14 +444,12 @@ fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
         }],
     };
 
-    assert_eq!(
-        ci_typechecked_projects(&workflows),
-        BTreeSet::from([
-            "bare-bash/tsconfig.json".to_string(),
-            "bash-flags/tsconfig.json".to_string(),
-            "sh-flags/tsconfig.json".to_string(),
-        ])
-    );
+    let expected = BTreeSet::from([
+        "bare-bash/tsconfig.json".to_string(),
+        "bash-flags/tsconfig.json".to_string(),
+        "sh-flags/tsconfig.json".to_string(),
+    ]);
+    assert_eq!(ci_typechecked_projects(&workflows, &expected), expected);
 }
 
 #[test]
@@ -465,18 +465,16 @@ fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
         }],
     };
 
-    assert_eq!(
-        ci_typechecked_projects(&workflows),
-        BTreeSet::from([
-            "builtin-bash/tsconfig.json".to_string(),
-            "custom-errexit-option/tsconfig.json".to_string(),
-            "custom-errexit/tsconfig.json".to_string(),
-            "custom-final-typecheck/tsconfig.json".to_string(),
-            "explicit-bash-windows/tsconfig.json".to_string(),
-            "implicit-shell/tsconfig.json".to_string(),
-            "label-array-runner/tsconfig.json".to_string(),
-        ])
-    );
+    let expected = BTreeSet::from([
+        "builtin-bash/tsconfig.json".to_string(),
+        "custom-errexit-option/tsconfig.json".to_string(),
+        "custom-errexit/tsconfig.json".to_string(),
+        "custom-final-typecheck/tsconfig.json".to_string(),
+        "explicit-bash-windows/tsconfig.json".to_string(),
+        "implicit-shell/tsconfig.json".to_string(),
+        "label-array-runner/tsconfig.json".to_string(),
+    ]);
+    assert_eq!(ci_typechecked_projects(&workflows, &expected), expected);
 }
 
 #[test]

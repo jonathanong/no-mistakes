@@ -9,19 +9,20 @@ pub(super) fn project_argument(arguments: &[String]) -> Option<String> {
     let mut no_emit = false;
     let mut index = 0;
     while let Some(argument) = arguments.get(index) {
-        if is_non_typechecking_mode(argument) {
+        if argument == "--noCheck=false" {
+        } else if argument == "--noCheck" {
+            if arguments
+                .get(index + 1)
+                .is_some_and(|value| value == "false")
+            {
+                index += 1;
+            } else {
+                return None;
+            }
+        } else if argument.starts_with("--noCheck=") || is_non_typechecking_mode(argument) {
             return None;
-        }
-        if argument == "--noEmit" {
+        } else if argument == "--noEmit" {
             no_emit = true;
-        } else if let Some(value) = argument.strip_prefix("--project=") {
-            if value.is_empty() || project.replace(value.to_string()).is_some() {
-                return None;
-            }
-        } else if let Some(value) = argument.strip_prefix("-p=") {
-            if value.is_empty() || project.replace(value.to_string()).is_some() {
-                return None;
-            }
         } else if matches!(argument.as_str(), "--project" | "-p") {
             let value = arguments.get(index + 1)?;
             if value.starts_with('-') || project.replace(value.clone()).is_some() {
@@ -68,8 +69,7 @@ fn is_non_typechecking_mode(argument: &str) -> bool {
         .map_or(argument, |(option, _)| option);
     matches!(
         option,
-        "--noCheck"
-            | "--listFilesOnly"
+        "--listFilesOnly"
             | "--ignoreConfig"
             | "--showConfig"
             | "--help"

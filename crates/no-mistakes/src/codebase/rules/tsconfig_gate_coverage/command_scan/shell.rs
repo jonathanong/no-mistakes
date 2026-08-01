@@ -81,6 +81,7 @@ fn contains_unsupported_multiline_shell_construct(script: &str) -> bool {
             Some(_) if matches!(character, '\n' | ';' | '&') => return true,
             Some(_) => {}
             None if matches!(character, '\'' | '"') => quote = Some(character),
+            None if matches!(character, '{' | '}') => return true,
             None => {}
         }
     }

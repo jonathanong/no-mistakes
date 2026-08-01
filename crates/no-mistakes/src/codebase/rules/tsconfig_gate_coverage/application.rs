@@ -63,22 +63,27 @@ pub(super) fn resolve_gate_projects_against_tracked(
 ) -> BTreeSet<String> {
     gate_projects
         .iter()
-        .map(|project| {
-            if tracked.contains(project) {
-                return project.clone();
-            }
-            let directory_config = if project == "." {
-                "tsconfig.json".to_string()
-            } else {
-                format!("{project}/tsconfig.json")
-            };
-            if tracked.contains(&directory_config) {
-                directory_config
-            } else {
-                project.clone()
-            }
-        })
+        .map(|project| resolve_gate_project_against_tracked(project, tracked))
         .collect()
+}
+
+pub(super) fn resolve_gate_project_against_tracked(
+    project: &str,
+    tracked: &BTreeSet<String>,
+) -> String {
+    if tracked.contains(project) {
+        return project.to_string();
+    }
+    let directory_config = if project == "." {
+        "tsconfig.json".to_string()
+    } else {
+        format!("{project}/tsconfig.json")
+    };
+    if tracked.contains(&directory_config) {
+        directory_config
+    } else {
+        project.to_string()
+    }
 }
 
 fn validate_allowlist(

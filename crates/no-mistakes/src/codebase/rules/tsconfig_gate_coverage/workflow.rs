@@ -1,23 +1,32 @@
 mod runtime;
 
-use super::{application::project_finding, command_scan, RuleFinding};
+use super::{
+    application::{project_finding, resolve_gate_project_against_tracked},
+    command_scan, RuleFinding,
+};
+use crate::codebase::ci_graph::{
+    parse::parse_workflow_value,
+    triggers::{CompiledTriggers, TriggerMatch},
+};
 use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use runtime::{
-    effective_shell, has_file_trigger, has_static_runnable_runs_on, runs_on_can_default_to_windows,
+    effective_shell, has_static_runnable_runs_on, runs_on_can_default_to_windows,
     shell_failure_enforced,
 };
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
-pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet<String> {
+pub(super) fn ci_typechecked_projects(
+    workflows: &ParsedWorkflowSet,
+    tracked: &BTreeSet<String>,
+) -> BTreeSet<String> {
     let mut projects = BTreeSet::new();
     for document in &workflows.documents {
         let Ok(workflow) = document.value.as_ref() else {
             continue;
         };
-        if !has_file_trigger(workflow, &document.path) {
-            continue;
-        }
+        let trigger_model = parse_workflow_value(workflow, &document.path);
+        let triggers = CompiledTriggers::new(&trigger_model);
         let workflow_cwd = effective_working_directory(workflow, Some(".".to_string()));
         let workflow_shell = effective_shell(workflow, None);
         let Some(jobs) = workflow.get("jobs").and_then(Value::as_mapping) else {
@@ -59,7 +68,13 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
                     command_scan::scan_workflow_shell_for_typechecked_projects(run, &cwd, false)
                 };
                 for project in scanned_projects {
-                    projects.insert(project);
+                    let project = resolve_gate_project_against_tracked(&project, tracked);
+                    if matches!(
+                        triggers.evaluate(&project).0,
+                        TriggerMatch::Matched | TriggerMatch::Always
+                    ) {
+                        projects.insert(project);
+                    }
                 }
             }
         }
