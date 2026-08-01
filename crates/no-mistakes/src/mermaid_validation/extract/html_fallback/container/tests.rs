@@ -84,6 +84,7 @@ fn preserves_non_container_lines_and_normalizes_blank_lines() {
         direct.strip_line(b" graph TD").as_deref(),
         Some(&b" graph TD"[..])
     );
+    assert_eq!(direct.strip_line(b" \t").as_deref(), Some(&b""[..]));
 
     let (_, quoted) = ContainerPrefix::from_opening_line(b"> ```mermaid");
     assert_eq!(
@@ -94,8 +95,9 @@ fn preserves_non_container_lines_and_normalizes_blank_lines() {
         quoted.strip_line(b"   >\troot").as_deref(),
         Some(&b"   root"[..])
     );
-    assert_eq!(quoted.strip_line(b"   ").as_deref(), Some(&b""[..]));
-    assert_eq!(quoted.strip_line(b" \t").as_deref(), Some(&b""[..]));
+    assert_eq!(quoted.strip_line(b">").as_deref(), Some(&b""[..]));
+    assert_eq!(quoted.strip_line(b"   "), None);
+    assert_eq!(quoted.strip_line(b" \t"), None);
     assert_eq!(quoted.strip_line(b"\x0c"), None);
     assert_eq!(quoted.strip_line(b"\x0b"), None);
     assert_eq!(quoted.strip_line(b"    > graph TD"), None);

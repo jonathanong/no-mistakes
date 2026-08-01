@@ -43,6 +43,13 @@ impl ContainerPrefix {
 
     pub(super) fn strip_line<'line>(&self, line: &'line [u8]) -> Option<Cow<'line, [u8]>> {
         if line.iter().all(|byte| matches!(byte, b' ' | b'\t')) {
+            if self
+                .steps
+                .iter()
+                .any(|step| matches!(step, ContainerStep::Blockquote))
+            {
+                return None;
+            }
             return Some(Cow::Borrowed(&line[line.len()..]));
         }
         let mut line = Cow::Borrowed(line);

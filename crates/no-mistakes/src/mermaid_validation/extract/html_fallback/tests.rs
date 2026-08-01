@@ -86,6 +86,7 @@ fn container_closers_must_preserve_the_opening_context() {
     for source in [
         "- ```mermaid\n  flowchart TD\n```\n",
         "> ```mermaid\n> flowchart TD\n```\n",
+        "> ```mermaid\n> flowchart TD\n\n> ```\n",
         "- ```mermaid\n  flowchart TD\n      ```\n",
     ] {
         let fences = extract_all(source);
@@ -105,5 +106,19 @@ fn reports_unclosed_and_over_indented_closing_fences() {
         let fences = extract_all(source);
         assert_eq!(fences.len(), 1);
         assert!(!fences[0].closed);
+    }
+}
+
+#[test]
+fn recognizes_only_commonmark_atx_heading_shapes() {
+    for heading in [b"# heading".as_slice(), b"   ######\theading", b"##"] {
+        assert!(is_atx_heading(heading), "{heading:?}");
+    }
+    for paragraph in [
+        b"####### heading".as_slice(),
+        b"#not-a-heading",
+        b"    # indented code",
+    ] {
+        assert!(!is_atx_heading(paragraph), "{paragraph:?}");
     }
 }

@@ -3,13 +3,8 @@ use super::{Literal, MdxExpressionScanner};
 #[path = "javascript/token.rs"]
 mod token;
 use token::{
-    allows_following_regex, identifier_end, is_identifier_start, is_jsx_name_start,
-    keyword_allows_regex, token_end,
+    allows_following_regex, identifier_end, is_identifier_start, keyword_allows_regex, token_end,
 };
-
-pub(super) fn is_jsx_start(byte: u8) -> bool {
-    is_jsx_name_start(byte)
-}
 
 pub(super) enum ByteAction {
     Advance(usize),
@@ -17,31 +12,6 @@ pub(super) enum ByteAction {
 }
 
 impl MdxExpressionScanner {
-    pub(super) fn observe_jsx_byte(&mut self, byte: u8, next: Option<u8>) -> bool {
-        if let Some(delimiter) = self.jsx_quote {
-            if byte == delimiter {
-                self.jsx_quote = None;
-            }
-            return true;
-        }
-        if self.depth > 0 || self.esm {
-            return false;
-        }
-        if self.jsx_opening {
-            match byte {
-                b'\'' | b'"' => {
-                    self.jsx_quote = Some(byte);
-                    return true;
-                }
-                b'>' => self.jsx_opening = false,
-                _ => {}
-            }
-        } else if byte == b'<' && next.is_some_and(is_jsx_name_start) {
-            self.jsx_opening = true;
-        }
-        false
-    }
-
     pub(super) fn javascript_token_end(&mut self, line: &[u8], start: usize) -> Option<usize> {
         if !matches!(self.literal, Literal::None) || !self.is_inside_expression() {
             return None;
@@ -153,6 +123,7 @@ impl MdxExpressionScanner {
     fn close_brace(&mut self) {
         self.depth -= 1;
         self.can_start_regex = false;
+        self.resume_jsx_after_expression();
     }
 
     fn open_paren(&mut self) {

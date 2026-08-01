@@ -114,8 +114,24 @@ fn update_paragraph_state(line: &[u8], in_paragraph: &mut bool) {
     match first.map(|index| line[index]) {
         None => *in_paragraph = false,
         Some(b'<') => {}
+        Some(b'#') if is_atx_heading(line) => *in_paragraph = false,
         Some(_) => *in_paragraph = true,
     }
+}
+
+fn is_atx_heading(line: &[u8]) -> bool {
+    let indent = line.iter().take_while(|byte| **byte == b' ').count();
+    if indent > 3 {
+        return false;
+    }
+    let hashes = line[indent..]
+        .iter()
+        .take_while(|byte| **byte == b'#')
+        .count();
+    (1..=6).contains(&hashes)
+        && line
+            .get(indent + hashes)
+            .is_none_or(|byte| matches!(byte, b' ' | b'\t'))
 }
 
 fn closing_fence(source: &str, opening: &OpeningFence, limit: usize) -> Option<(usize, usize)> {

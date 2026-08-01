@@ -12,6 +12,8 @@ enum Literal {
 #[path = "mdx_expression/javascript.rs"]
 mod javascript;
 use javascript::ByteAction;
+#[path = "mdx_expression/jsx.rs"]
+mod jsx;
 
 #[derive(Default)]
 pub(crate) struct MdxExpressionScanner {
@@ -25,6 +27,14 @@ pub(crate) struct MdxExpressionScanner {
     can_start_regex: bool,
     jsx_opening: bool,
     jsx_quote: Option<u8>,
+    jsx_expression_root_depth: Option<usize>,
+    jsx_element_depth: usize,
+    jsx_closing_tag: bool,
+    jsx_self_closing_tag: bool,
+    jsx_text: bool,
+    jsx_js_base_depth: Option<usize>,
+    jsx_js_resume_text: bool,
+    jsx_return_to_js_depths: Vec<usize>,
     last_js_code_byte: Option<u8>,
     esm_export_prefix: bool,
     esm_value_pending: bool,
@@ -162,11 +172,7 @@ fn next_mdx_region_start(line: &[u8], mut index: usize) -> Option<usize> {
         match line[index] {
             b'\\' => index = markdown_escape_end(line, index)?,
             b'{' => return Some(index),
-            b'<' if line
-                .get(index + 1)
-                .copied()
-                .is_some_and(javascript::is_jsx_start) =>
-            {
+            b'<' if line.get(index + 1).copied().is_some_and(jsx::is_jsx_start) => {
                 return Some(index);
             }
             b'`' => {

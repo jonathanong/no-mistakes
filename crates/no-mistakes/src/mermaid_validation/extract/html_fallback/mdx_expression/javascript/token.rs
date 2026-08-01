@@ -2,10 +2,6 @@ pub(super) fn is_identifier_start(byte: u8) -> bool {
     byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$')
 }
 
-pub(super) fn is_jsx_name_start(byte: u8) -> bool {
-    byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$' | b'>')
-}
-
 pub(super) fn identifier_end(line: &[u8], start: usize) -> usize {
     line[start..]
         .iter()

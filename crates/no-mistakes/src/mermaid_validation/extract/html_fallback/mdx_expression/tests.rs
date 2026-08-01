@@ -210,3 +210,21 @@ fn finds_unescaped_mdx_regions_after_expression_closures() {
     assert_eq!(next_mdx_region_start(b" `literal { brace", 0), None);
     assert_eq!(next_mdx_region_start(b" prose only", 0), None);
 }
+
+#[test]
+fn tracks_nested_jsx_and_ignores_apostrophes_in_jsx_text() {
+    for source in [
+        b"{\n<Card value={value}>\n<span>It's ready</span>\n{ready && <strong>Agent's ready</strong>}\n</Card>\n}".as_slice(),
+        b"{<Card><Icon /></Card>}",
+        b"{<>It's ready</>}",
+        b"export const view = <span>It's ready</span>;",
+    ] {
+        let mut scanner = MdxExpressionScanner::default();
+        scanner.observe_source(source);
+
+        assert!(!scanner.is_masking_markdown(), "{source:?}");
+        assert_eq!(scanner.depth, 0, "{source:?}");
+        assert_eq!(scanner.jsx_expression_root_depth, None, "{source:?}");
+        assert_eq!(scanner.jsx_element_depth, 0, "{source:?}");
+    }
+}

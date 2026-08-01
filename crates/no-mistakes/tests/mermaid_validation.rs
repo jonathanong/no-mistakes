@@ -257,6 +257,19 @@ fn non_one_ordered_list_marker_does_not_interrupt_an_mdx_paragraph() {
 }
 
 #[test]
+fn non_one_ordered_list_marker_can_follow_an_mdx_atx_heading() {
+    let result = validate_markdown(
+        &fixture("jsx-heading-ordered-list.mdx"),
+        Some("docs/heading-list.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(result.diagnostics[0].fence_line, 3);
+}
+
+#[test]
 fn validates_mdx_list_lines_with_tab_overshoot() {
     let result = validate_markdown(
         &fixture("mdx-tab-overshoot-valid.mdx"),
@@ -312,6 +325,23 @@ fn container_blank_lines_allow_only_spaces_and_tabs() {
 }
 
 #[test]
+fn unmarked_blank_line_ends_an_mdx_blockquote_fence() {
+    let result = validate_markdown(
+        &fixture("unclosed-mdx-blockquote-unmarked-blank.mdx"),
+        Some("docs/blockquote-unmarked-blank.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(
+        result.diagnostics[0].code,
+        MermaidValidationDiagnosticCode::UnclosedFence
+    );
+    assert_eq!(result.diagnostics[0].fence_line, 4);
+}
+
+#[test]
 fn validates_interleaved_container_fences_inside_mdx_jsx() {
     let result = validate_markdown(
         &fixture("jsx-interleaved-containers-valid.mdx"),
@@ -362,6 +392,16 @@ fn handles_mdx_expression_boundaries_and_esm_comments() {
             );
             assert_eq!(result.diagram_count, 1, "{fixture_name} ({file:?})");
         }
+    }
+}
+
+#[test]
+fn finds_mermaid_after_nested_jsx_with_apostrophes_in_text() {
+    for file in [Some("docs/nested-jsx.mdx"), None] {
+        let result = validate_markdown(&fixture("mdx-expression-nested-jsx.mdx"), file);
+
+        assert!(result.valid, "{file:?}: {:#?}", result.diagnostics);
+        assert_eq!(result.diagram_count, 1, "{file:?}");
     }
 }
 
