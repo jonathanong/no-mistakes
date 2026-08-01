@@ -19,6 +19,13 @@ fn is_node_builtin_matches_bare_and_prefixed_forms() {
 }
 
 #[test]
+fn is_node_builtin_matches_subpath_imports() {
+    assert!(is_node_builtin("fs/promises"));
+    assert!(is_node_builtin("node:fs/promises"));
+    assert!(!is_node_builtin("chalk/subpath"));
+}
+
+#[test]
 fn package_name_returns_none_for_relative_absolute_and_hash_specifiers() {
     assert_eq!(package_name("./foo"), None);
     assert_eq!(package_name("../foo"), None);

@@ -1,10 +1,22 @@
 use super::*;
 
 /// Write a minimal `.no-mistakes.yml` that enables all the given rule IDs.
+/// `production-dependency-declarations` has no default `workspaceRoots` (it
+/// is a required option), so it gets an explicit value here to stay in scope
+/// for these "every rule dispatches cleanly" tests.
 fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
     let rule_entries: String = rules
         .iter()
-        .map(|id| format!("  - rule: {id}\n    scope: repository\n"))
+        .map(|id| {
+            if *id == PRODUCTION_DEPENDENCY_DECLARATIONS {
+                format!(
+                    "  - rule: {id}\n    scope: repository\n    options:\n      \
+                     workspaceRoots: [\".\"]\n"
+                )
+            } else {
+                format!("  - rule: {id}\n    scope: repository\n")
+            }
+        })
         .collect();
     let yaml = format!("rules:\n{rule_entries}");
     let config_path = dir.join(".no-mistakes.yml");

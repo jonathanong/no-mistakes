@@ -30,8 +30,10 @@ rules:
         - "**/*.d.*ts"
 ```
 
-`workspaceRoots` defaults to the check root when omitted. `allowedFields` and
-`testFilePatterns` default to the values shown above when omitted.
+`workspaceRoots` is required and must list at least one root; it is not
+inferred from the check root, so an omitted or empty value is a configuration
+error. `allowedFields` and `testFilePatterns` default to the values shown above
+when omitted.
 
 Counterexample:
 

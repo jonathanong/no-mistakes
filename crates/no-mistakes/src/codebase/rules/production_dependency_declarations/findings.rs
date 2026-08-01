@@ -18,9 +18,10 @@ pub(super) fn dev_only(
         file: rel.clone(),
         line: line as usize,
         message: format!(
-            "{rel}: imports '{import_name}', which {package_name} declares only under \
-             devDependencies; the production deploy prunes devDependencies, so move it to \
-             dependencies (or optionalDependencies/peerDependencies)"
+            "{rel}: imports '{import_name}', which {package_name} declares only under a \
+             non-production dependency field (e.g. devDependencies); the production deploy \
+             prunes that field, so move it to dependencies (or \
+             optionalDependencies/peerDependencies)"
         ),
         import: Some(import_name.to_string()),
         target: Some(package_name.to_string()),

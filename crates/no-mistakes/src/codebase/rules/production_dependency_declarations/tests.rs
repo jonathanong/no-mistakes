@@ -12,12 +12,17 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
+/// Builds a rule config from `yaml`, always merging in a `workspaceRoots`
+/// pointing at the fixture root itself (`workspaceRoots` is required and has
+/// no default), so callers only need to spell out the options a scenario
+/// actually varies.
 fn config(yaml: &str) -> NoMistakesConfig {
+    let merged = format!("workspaceRoots: [\".\"]\n{yaml}");
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
         rule: RULE_ID.to_string(),
         scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str(yaml).unwrap(),
+        options: serde_yaml::from_str(&merged).unwrap(),
         ..Default::default()
     });
     config
@@ -266,7 +271,7 @@ fn workspace_roots_maps_each_configured_relative_path_from_the_root() {
         test_file_patterns: Vec::new(),
     };
 
-    let roots = workspace_roots(&root, &opts);
+    let roots = workspace_roots(&root, &opts).unwrap();
 
     assert_eq!(
         roots,
@@ -278,10 +283,27 @@ fn workspace_roots_maps_each_configured_relative_path_from_the_root() {
 }
 
 #[test]
-fn workspace_roots_defaults_to_the_check_root_when_unconfigured() {
+fn workspace_roots_rejects_an_unconfigured_empty_value() {
     let root = PathBuf::from("/repo");
 
-    let roots = workspace_roots(&root, &Options::default());
+    let error = workspace_roots(&root, &Options::default()).unwrap_err();
 
-    assert_eq!(roots, vec![root]);
+    assert!(error.contains("workspaceRoots"));
+}
+
+#[test]
+fn check_with_files_reports_a_config_finding_when_workspace_roots_is_omitted() {
+    let root = fixture_root("dependencies-declared");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("").unwrap(),
+        ..Default::default()
+    });
+
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("workspaceRoots"));
 }

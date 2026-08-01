@@ -53,7 +53,10 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.rule_options();
-            let workspace_roots = workspace_roots(root, &opts);
+            let workspace_roots = match workspace_roots(root, &opts) {
+                Ok(roots) => roots,
+                Err(message) => return Ok(vec![findings::config(&message)]),
+            };
             let skip = super::skip_dir_set(config);
             let mut discovery_roots = vec![root.to_path_buf()];
             discovery_roots.extend(workspace_roots.iter().cloned());
@@ -72,15 +75,19 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn workspace_roots(root: &Path, opts: &Options) -> Vec<PathBuf> {
+fn workspace_roots(root: &Path, opts: &Options) -> Result<Vec<PathBuf>, String> {
     if opts.workspace_roots.is_empty() {
-        vec![root.to_path_buf()]
-    } else {
-        opts.workspace_roots
-            .iter()
-            .map(|relative| normalize_path(&root.join(relative)))
-            .collect()
+        return Err(
+            "workspaceRoots is required and must list at least one workspace root; it is not \
+             inferred from the check root"
+                .to_string(),
+        );
     }
+    Ok(opts
+        .workspace_roots
+        .iter()
+        .map(|relative| normalize_path(&root.join(relative)))
+        .collect())
 }
 
 #[cfg(test)]

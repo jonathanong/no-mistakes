@@ -54,10 +54,12 @@ pub(super) fn is_relative(specifier: &str) -> bool {
 }
 
 /// `true` for a Node built-in module, in either the bare or `node:`-prefixed
-/// form. These never require a `package.json` dependency declaration.
+/// form, including a subpath import (`"fs/promises"`, `"node:fs/promises"`).
+/// These never require a `package.json` dependency declaration.
 pub(super) fn is_node_builtin(name: &str) -> bool {
     let bare = name.strip_prefix("node:").unwrap_or(name);
-    NODE_BUILTIN_MODULES.contains(&bare)
+    let module = bare.split('/').next().unwrap_or(bare);
+    NODE_BUILTIN_MODULES.contains(&module)
 }
 
 /// Split a bare (non-relative, non-`#`) specifier into its package name,
