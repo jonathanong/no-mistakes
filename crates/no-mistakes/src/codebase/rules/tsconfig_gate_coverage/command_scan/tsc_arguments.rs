@@ -18,9 +18,11 @@ pub(super) fn project_argument(arguments: &[String]) -> Option<String> {
             if value.is_empty() || project.replace(value.to_string()).is_some() {
                 return None;
             }
-        } else if argument == "-p" {
-            return None;
-        } else if argument == "--project" {
+        } else if let Some(value) = argument.strip_prefix("-p=") {
+            if value.is_empty() || project.replace(value.to_string()).is_some() {
+                return None;
+            }
+        } else if matches!(argument.as_str(), "--project" | "-p") {
             let value = arguments.get(index + 1)?;
             if value.starts_with('-') || project.replace(value.clone()).is_some() {
                 return None;

@@ -13,6 +13,7 @@ fn resolution_defers_ambiguous_configs_and_resolves_local_extensionless_bases() 
         "bad-no-check/tsconfig.json".to_string(),
         "cycle/tsconfig.json".to_string(),
         "directory-base/tsconfig.json".to_string(),
+        "dotted-file-base/tsconfig.json".to_string(),
         "empty/tsconfig.json".to_string(),
         "file-base/tsconfig.json".to_string(),
         "missing-base/tsconfig.json".to_string(),
@@ -22,7 +23,7 @@ fn resolution_defers_ambiguous_configs_and_resolves_local_extensionless_bases() 
     assert_eq!(
         non_enforcing_tsconfigs(&root, &tracked, &sources),
         BTreeSet::from([
-            "directory-base/tsconfig.json".to_string(),
+            "dotted-file-base/tsconfig.json".to_string(),
             "file-base/tsconfig.json".to_string(),
         ])
     );

@@ -3,7 +3,7 @@ mod runtime;
 use super::{application::project_finding, command_scan, RuleFinding};
 use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use runtime::{
-    effective_shell, has_static_runnable_runs_on, runs_on_can_default_to_windows,
+    effective_shell, has_file_trigger, has_static_runnable_runs_on, runs_on_can_default_to_windows,
     shell_failure_enforced,
 };
 use serde_yaml::Value;
@@ -15,6 +15,9 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
         let Ok(workflow) = document.value.as_ref() else {
             continue;
         };
+        if !has_file_trigger(workflow, &document.path) {
+            continue;
+        }
         let workflow_cwd = effective_working_directory(workflow, Some(".".to_string()));
         let workflow_shell = effective_shell(workflow, None);
         let Some(jobs) = workflow.get("jobs").and_then(Value::as_mapping) else {

@@ -82,22 +82,17 @@ fn resolve_local_extends(dir: &Path, extends: &str, sources: &SourceStore) -> Re
         return Err(());
     }
     let candidate = crate::codebase::ts_resolver::normalize_path(&dir.join(extends));
-    if candidate.extension().is_some() {
+    if candidate.extension() == Some(std::ffi::OsStr::new("json"))
+        || sources
+            .inventory()
+            .id_for_normalized_path(&candidate)
+            .is_some()
+    {
         return Ok(candidate);
     }
-    let file = candidate.with_extension("json");
-    let directory = candidate.join("tsconfig.json");
-    if sources.inventory().id_for_normalized_path(&file).is_some() {
-        Ok(file)
-    } else if sources
-        .inventory()
-        .id_for_normalized_path(&directory)
-        .is_some()
-    {
-        Ok(directory)
-    } else {
-        Ok(file)
-    }
+    let mut file = candidate.as_os_str().to_os_string();
+    file.push(".json");
+    Ok(PathBuf::from(file))
 }
 
 fn own_no_check(value: &serde_json::Value) -> Result<Option<bool>, ()> {

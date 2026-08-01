@@ -1,11 +1,15 @@
 use super::{join_relative, normalize_repo_relative, scan_tokens, static_tokens};
 
+mod comments;
+
+use comments::contains_unquoted_hash;
+
 pub(super) fn scan_shell_body_for_typechecked_projects(
     script: &str,
     initial_cwd: &str,
     mut failure_enforced: bool,
 ) -> Vec<String> {
-    if contains_unsupported_multiline_shell_construct(script) {
+    if contains_unquoted_hash(script) || contains_unsupported_multiline_shell_construct(script) {
         return Vec::new();
     }
     let mut cwd = normalize_repo_relative(initial_cwd);
@@ -24,6 +28,7 @@ pub(super) fn scan_shell_body_for_typechecked_projects(
             .expect("a nonblank static shell segment has at least one token");
         if is_unsupported_control_command(first)
             || disables_failure_enforcement(&tokens)
+            || enables_non_executing_mode(&tokens)
             || is_unsupported_working_directory_command(&tokens)
         {
             return Vec::new();
@@ -108,6 +113,17 @@ fn enables_failure_enforcement(tokens: &[String]) -> bool {
     }
 }
 
+fn enables_non_executing_mode(tokens: &[String]) -> bool {
+    if tokens.first().is_none_or(|command| command != "set") {
+        return false;
+    }
+    match tokens.get(1).map(String::as_str) {
+        Some(option) if option.starts_with('-') && option.contains('n') => true,
+        Some("-o") => tokens.get(2).is_some_and(|option| option == "noexec"),
+        _ => false,
+    }
+}
+
 /// Parse the explicit local `bash|sh ... -c <literal>` shape. Unlike Actions,
 /// local shells start without failure propagation unless `-e`/`errexit` is
 /// present; the scanner can still credit a final `tsc` command.
@@ -138,6 +154,9 @@ pub(super) fn local_shell_command(argv: &[String]) -> Option<(&str, bool)> {
             .map(|options| ("-", options))
             .or_else(|| argument.strip_prefix('+').map(|options| ("+", options)))?;
         if options.is_empty() || !options.chars().all(|option| option.is_ascii_alphabetic()) {
+            return None;
+        }
+        if options.contains('n') || options.contains('D') {
             return None;
         }
         if options.contains('c') {

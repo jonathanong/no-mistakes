@@ -1,5 +1,7 @@
 use super::*;
 
+mod review;
+
 #[test]
 fn shell_scanner_tracks_cd_and_pnpm_dir() {
     assert_eq!(
@@ -227,6 +229,16 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
         ),
         vec!["tsconfig.json"]
     );
+    for project_option in [
+        vec!["-p".into(), "app/tsconfig.json".into()],
+        vec!["-p=app/tsconfig.json".into()],
+    ] {
+        let argv = [vec!["tsc".into(), "--noEmit".into()], project_option].concat();
+        assert_eq!(
+            scan_argv_for_typechecked_projects(&argv, "."),
+            vec!["app/tsconfig.json"]
+        );
+    }
     for argv in [
         vec!["tsc".into(), "--noEmit".into(), "--project=".into()],
         vec![
@@ -237,6 +249,8 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
         ],
         vec!["tsc".into(), "--noEmit".into(), "--pretty=".into()],
         vec!["tsc".into(), "--noEmit".into(), "--pretty=maybe".into()],
+        vec!["tsc".into(), "--noEmit".into(), "-p".into()],
+        vec!["tsc".into(), "--noEmit".into(), "-p=".into()],
     ] {
         assert!(
             scan_argv_for_typechecked_projects(&argv, ".").is_empty(),
@@ -313,12 +327,6 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
             "a/tsconfig.json".into(),
             "--project".into(),
             "b/tsconfig.json".into(),
-        ],
-        vec![
-            "tsc".into(),
-            "--noEmit".into(),
-            "-p".into(),
-            "app/tsconfig.json".into(),
         ],
     ] {
         assert!(scan_argv_for_typechecked_projects(&argv, ".").is_empty());

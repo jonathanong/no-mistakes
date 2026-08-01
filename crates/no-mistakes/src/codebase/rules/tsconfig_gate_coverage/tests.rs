@@ -14,6 +14,7 @@ use serde_yaml::Value;
 use std::collections::BTreeMap;
 
 mod no_check;
+mod workflow;
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -32,6 +33,10 @@ fn findings(root: &Path, config: &NoMistakesConfig) -> Vec<RuleFinding> {
 }
 
 fn add_static_runners(workflow: &mut Value) {
+    workflow.as_mapping_mut().expect("workflow mapping").insert(
+        Value::String("on".to_string()),
+        Value::String("push".to_string()),
+    );
     let jobs = workflow
         .get_mut("jobs")
         .and_then(Value::as_mapping_mut)
@@ -366,7 +371,7 @@ fn workflow_load_errors_are_rendered_for_both_failure_kinds() {
 #[test]
 fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
     let incomplete: Value = serde_yaml::from_str(
-        "jobs:\n  no-steps:\n    runs-on: ubuntu-latest\n  incomplete:\n    runs-on: ubuntu-latest\n    steps:\n      - working-directory: ${{ matrix.dir }}\n        run: tsc --noEmit\n      - name: no command\n",
+        "on: push\njobs:\n  no-steps:\n    runs-on: ubuntu-latest\n  incomplete:\n    runs-on: ubuntu-latest\n    steps:\n      - working-directory: ${{ matrix.dir }}\n        run: tsc --noEmit\n      - name: no command\n",
     )
     .unwrap();
     let workflows = ParsedWorkflowSet {
@@ -450,7 +455,7 @@ fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
 #[test]
 fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
     let workflow: Value = serde_yaml::from_str(
-        "jobs:\n  implicit-shell:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project implicit-shell/tsconfig.json; echo later\n  builtin-bash:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project builtin-bash/tsconfig.json; echo later\n  custom-final-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: echo first; tsc --noEmit --project custom-final-typecheck/tsconfig.json\n  custom-masked-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: tsc --noEmit --project custom-masked-typecheck/tsconfig.json; echo later\n  custom-errexit:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash -e {0}'\n        run: tsc --noEmit --project custom-errexit/tsconfig.json; echo later\n  custom-errexit-option:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'sh -o errexit {0}'\n        run: tsc --noEmit --project custom-errexit-option/tsconfig.json; echo later\n  missing-runner:\n    steps:\n      - run: tsc --noEmit --project missing-runner/tsconfig.json\n  dynamic-runner:\n    runs-on: ${{ matrix.os }}\n    steps:\n      - run: tsc --noEmit --project dynamic-runner/tsconfig.json\n  label-array-runner:\n    runs-on: [self-hosted, linux]\n    steps:\n      - run: tsc --noEmit --project label-array-runner/tsconfig.json\n  dynamic-label-array-runner:\n    runs-on: [self-hosted, '${{ matrix.os }}']\n    steps:\n      - run: tsc --noEmit --project dynamic-label-array-runner/tsconfig.json\n  implicit-windows:\n    runs-on: Windows-2025\n    steps:\n      - run: tsc --noEmit --project implicit-windows/tsconfig.json\n  implicit-self-hosted-windows:\n    runs-on: [self-hosted, windows]\n    steps:\n      - run: tsc --noEmit --project implicit-self-hosted-windows/tsconfig.json\n  explicit-bash-windows:\n    runs-on: windows-latest\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project explicit-bash-windows/tsconfig.json\n",
+        "on: push\njobs:\n  implicit-shell:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project implicit-shell/tsconfig.json; echo later\n  builtin-bash:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project builtin-bash/tsconfig.json; echo later\n  custom-final-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: echo first; tsc --noEmit --project custom-final-typecheck/tsconfig.json\n  custom-masked-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: tsc --noEmit --project custom-masked-typecheck/tsconfig.json; echo later\n  custom-errexit:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash -e {0}'\n        run: tsc --noEmit --project custom-errexit/tsconfig.json; echo later\n  custom-errexit-option:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'sh -o errexit {0}'\n        run: tsc --noEmit --project custom-errexit-option/tsconfig.json; echo later\n  missing-runner:\n    steps:\n      - run: tsc --noEmit --project missing-runner/tsconfig.json\n  dynamic-runner:\n    runs-on: ${{ matrix.os }}\n    steps:\n      - run: tsc --noEmit --project dynamic-runner/tsconfig.json\n  label-array-runner:\n    runs-on: [self-hosted, linux]\n    steps:\n      - run: tsc --noEmit --project label-array-runner/tsconfig.json\n  dynamic-label-array-runner:\n    runs-on: [self-hosted, '${{ matrix.os }}']\n    steps:\n      - run: tsc --noEmit --project dynamic-label-array-runner/tsconfig.json\n  implicit-windows:\n    runs-on: Windows-2025\n    steps:\n      - run: tsc --noEmit --project implicit-windows/tsconfig.json\n  implicit-self-hosted-windows:\n    runs-on: [self-hosted, windows]\n    steps:\n      - run: tsc --noEmit --project implicit-self-hosted-windows/tsconfig.json\n  explicit-bash-windows:\n    runs-on: windows-latest\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project explicit-bash-windows/tsconfig.json\n",
     )
     .unwrap();
     let workflows = ParsedWorkflowSet {
