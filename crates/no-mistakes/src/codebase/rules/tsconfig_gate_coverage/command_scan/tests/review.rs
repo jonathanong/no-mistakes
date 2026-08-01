@@ -5,8 +5,6 @@ fn shell_scanner_respects_static_comment_boundaries() {
     for script in [
         "# disabled; tsc --noEmit",
         "# disabled && tsc --noEmit",
-        "tsc --noEmit # project gate",
-        "echo foo#bar; tsc --noEmit",
         "# <<EOF; tsc --noEmit",
     ] {
         assert!(
@@ -14,7 +12,12 @@ fn shell_scanner_respects_static_comment_boundaries() {
             "{script}"
         );
     }
-    for script in ["echo '# literal'; tsc --noEmit", "echo \\#; tsc --noEmit"] {
+    for script in [
+        "tsc --noEmit # project gate",
+        "echo foo#bar; tsc --noEmit",
+        "echo '# literal'; tsc --noEmit",
+        "echo \\#; tsc --noEmit",
+    ] {
         assert_eq!(
             scan_shell_for_typechecked_projects(script, "."),
             vec!["tsconfig.json"],

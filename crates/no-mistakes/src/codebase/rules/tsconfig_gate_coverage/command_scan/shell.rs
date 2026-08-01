@@ -2,14 +2,15 @@ use super::{join_relative, normalize_repo_relative, scan_tokens, static_tokens};
 
 mod comments;
 
-use comments::contains_unquoted_hash;
+use comments::strip_static_comments;
 
 pub(super) fn scan_shell_body_for_typechecked_projects(
     script: &str,
     initial_cwd: &str,
     mut failure_enforced: bool,
 ) -> Vec<String> {
-    if contains_unquoted_hash(script) || contains_unsupported_multiline_shell_construct(script) {
+    let script = strip_static_comments(script);
+    if contains_unsupported_multiline_shell_construct(&script) {
         return Vec::new();
     }
     let mut cwd = normalize_repo_relative(initial_cwd);
