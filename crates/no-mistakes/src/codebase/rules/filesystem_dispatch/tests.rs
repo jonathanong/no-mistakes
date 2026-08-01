@@ -104,6 +104,7 @@ fn prepared_dispatch_rejects_tsconfig_gate_without_workflow_documents() {
             vitest_catalog: None,
             sources: snapshot.source_store_for(&root),
             workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
             config_path: Some(&config_path),
         },
     )
@@ -112,7 +113,7 @@ fn prepared_dispatch_rejects_tsconfig_gate_without_workflow_documents() {
     assert!(
         error
             .to_string()
-            .contains("prepared workflow documents are required"),
+            .contains("prepared workflow documents and project inputs are required"),
         "{error:#}"
     );
 }
@@ -348,6 +349,7 @@ fn aggregate_drops_exclusive_rust_sources_without_global_suppression_rereads() {
             vitest_catalog: None,
             sources: std::sync::Arc::clone(&sources),
             workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
             config_path: None,
         },
     )
@@ -413,6 +415,7 @@ fn aggregate_finding_and_suppression_share_one_physical_read() {
             vitest_catalog: None,
             sources: std::sync::Arc::clone(&sources),
             workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
             config_path: None,
         },
     )

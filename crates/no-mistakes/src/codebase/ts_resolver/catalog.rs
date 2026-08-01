@@ -5,6 +5,7 @@ use std::sync::Mutex;
 
 include!("catalog_types.rs");
 include!("catalog_api.rs");
+include!("catalog_membership.rs");
 include!("catalog_selection.rs");
 include!("catalog_paths.rs");
 include!("catalog_builder.rs");

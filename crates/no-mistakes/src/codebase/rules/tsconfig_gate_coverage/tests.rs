@@ -13,8 +13,16 @@ use crate::config::v2::{
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
+mod fixture_policy;
 mod no_check;
 mod workflow;
+
+fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {
+    tracked
+        .iter()
+        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
+        .collect()
+}
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -53,42 +61,19 @@ fn check(root: &Path, config: &NoMistakesConfig) -> anyhow::Result<Vec<RuleFindi
     let paths = crate::codebase::ts_source::discover_files(root, &[]);
     let workflows = ParsedWorkflowSet::load(root, &config.ci);
     let sources = super::super::source_store_for_files(&paths);
+    let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)?;
+    let project_source_inputs = prepare_project_source_inputs(root, &paths, &sources, &workspace);
     check_with_prepared(
         root,
         config,
         PreparedInputs {
             tracked_paths: &paths,
             workflows: &workflows,
+            project_source_inputs: &project_source_inputs,
             sources: &sources,
             config_path: Some(&root.join(".no-mistakes.yml")),
         },
     )
-}
-
-#[test]
-fn directory_project_arguments_cover_tracked_primary_tsconfig_in_ci_and_local_checks() {
-    let root = fixture_root("pass");
-    let report = findings(&root, &config(&root));
-    assert!(report.is_empty(), "unexpected findings: {report:#?}");
-}
-
-#[test]
-fn no_check_tsconfigs_do_not_credit_ci_or_local_gates() {
-    let root = fixture_root("no-check");
-    let report = findings(&root, &config(&root));
-
-    assert_eq!(report.len(), 2, "{report:#?}");
-    for project in ["direct/tsconfig.json", "inherited/tsconfig.json"] {
-        let finding = report
-            .iter()
-            .find(|finding| finding.file == project)
-            .unwrap_or_else(|| panic!("missing {project} finding: {report:#?}"));
-        assert!(finding.message.contains("compilerOptions.noCheck is true"));
-    }
-    assert!(report.iter().all(|finding| !matches!(
-        finding.file.as_str(),
-        "override/tsconfig.json" | "invalid/tsconfig.json"
-    )));
 }
 
 #[test]
@@ -100,11 +85,15 @@ fn unread_tsconfigs_defer_to_tsc_without_rereading_prepared_sources() {
     let paths = crate::codebase::ts_source::discover_files(&root, &[]);
     let workflows = ParsedWorkflowSet::load(&root, &config.ci);
     let sources = super::super::source_store_for_files(&paths);
+    let workspace =
+        crate::codebase::workspaces::load_indexed_from_source_store(&root, &sources).unwrap();
+    let project_source_inputs = prepare_project_source_inputs(&root, &paths, &sources, &workspace);
     std::fs::remove_file(root.join("override/tsconfig.json")).unwrap();
 
     let prepared = PreparedInputs {
         tracked_paths: &paths,
         workflows: &workflows,
+        project_source_inputs: &project_source_inputs,
         sources: &sources,
         config_path: Some(&root.join(".no-mistakes.yml")),
     };
@@ -120,6 +109,7 @@ fn unread_tsconfigs_defer_to_tsc_without_rereading_prepared_sources() {
         PreparedInputs {
             tracked_paths: &paths,
             workflows: &workflows,
+            project_source_inputs: &project_source_inputs,
             sources: &sources,
             config_path: Some(&root.join(".no-mistakes.yml")),
         },
@@ -386,7 +376,7 @@ fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
             },
         ],
     };
-    assert!(ci_typechecked_projects(&workflows, &BTreeSet::new()).is_empty());
+    assert!(ci_typechecked_projects(&workflows, &BTreeSet::new(), &BTreeMap::new()).is_empty());
 }
 
 #[test]
@@ -407,7 +397,10 @@ fn ci_scanner_honors_static_posix_shell_overrides_and_defaults() {
         "job-default-bash-template/tsconfig.json".to_string(),
         "step-override-sh-template/tsconfig.json".to_string(),
     ]);
-    assert_eq!(ci_typechecked_projects(&workflows, &expected), expected);
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &expected, &project_inputs(&expected)),
+        expected
+    );
 }
 
 #[test]
@@ -423,11 +416,8 @@ fn ci_scanner_rejects_an_empty_shell_setting() {
             value: Ok(workflow),
         }],
     };
-    assert!(ci_typechecked_projects(
-        &workflows,
-        &BTreeSet::from(["app/tsconfig.json".to_string()])
-    )
-    .is_empty());
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+    assert!(ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)).is_empty());
 }
 
 #[test]
@@ -449,7 +439,10 @@ fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
         "bash-flags/tsconfig.json".to_string(),
         "sh-flags/tsconfig.json".to_string(),
     ]);
-    assert_eq!(ci_typechecked_projects(&workflows, &expected), expected);
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &expected, &project_inputs(&expected)),
+        expected
+    );
 }
 
 #[test]
@@ -474,7 +467,10 @@ fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
         "implicit-shell/tsconfig.json".to_string(),
         "label-array-runner/tsconfig.json".to_string(),
     ]);
-    assert_eq!(ci_typechecked_projects(&workflows, &expected), expected);
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &expected, &project_inputs(&expected)),
+        expected
+    );
 }
 
 #[test]

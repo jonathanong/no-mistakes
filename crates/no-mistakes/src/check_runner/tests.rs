@@ -114,6 +114,7 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
             vitest_catalog: None,
             sources: snapshot.source_store_for(&root),
             workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
             config_path: None,
         },
     )

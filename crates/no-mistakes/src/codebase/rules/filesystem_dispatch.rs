@@ -19,6 +19,7 @@ mod candidate_index;
 mod entrypoints;
 mod execute;
 mod inventory;
+mod metadata;
 mod preserved;
 mod run_rule;
 #[macro_use]

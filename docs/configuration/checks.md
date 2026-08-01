@@ -36,3 +36,4 @@ is not excluded, unless it sets `always: true`. Always commands receive the
 normalized changed-file list in their result metadata, including an empty list.
 Use `fileArgs: none` for whole-project checks (typecheck, format-check) and
 `fileArgs: append` for per-file linters.
+Every `command` must start with a non-blank executable token.

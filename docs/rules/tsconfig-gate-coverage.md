@@ -30,10 +30,13 @@ may come from workflow/job `defaults.run.working-directory` or a step's
 Only step-based jobs with a non-empty, static `runs-on` string or label array
 count; missing, dynamic, or reusable-workflow jobs do not.
 The containing workflow must declare at least one file-triggerable `push`,
-`pull_request`, or `pull_request_target` event whose path filters allow the
-tracked tsconfig path. Manual, scheduled, reusable, empty, tag-only, and
+`pull_request`, or `pull_request_target` event whose path filters allow every
+visible TypeScript/JavaScript source selected by that project's
+`files`/`include`/`exclude` settings. Projects with no known source files fall
+back to the tracked tsconfig path. Manual, scheduled, reusable, empty, tag-only, and
 path-filtered-out workflows cannot provide a repository typecheck gate. For
-example, `paths: [docs/**]` cannot cover `app/tsconfig.json`; add `app/**` or an
+example, `paths: [app/tsconfig.json]` cannot cover `app/src/index.ts`; add
+`app/**` or an
 unfiltered applicable event.
 
 Workflow commands run only when their effective shell is GitHub Actions'
@@ -60,6 +63,12 @@ constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
 step do not count as CI registrations because they cannot enforce a typecheck.
 Other expressions in either field remain unresolved and are not evaluated by
 this static rule.
+
+A job blocked by a statically skipped `needs` dependency, including a
+transitive dependency, does not count. Exact `always()` and `!cancelled()` job
+conditions explicitly continue after a skipped need. A dependency with
+`continue-on-error: true` is non-enforcing itself but is not treated as
+skipped for downstream jobs.
 
 A project whose effective local `compilerOptions.noCheck` is `true` does not
 count as typechecked, even when both commands are registered. Remove or disable

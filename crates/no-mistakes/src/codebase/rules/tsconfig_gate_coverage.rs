@@ -18,11 +18,13 @@ use application::{scan_application, Options};
 use command_scan::scan_argv_for_typechecked_projects;
 use no_check::non_enforcing_tsconfigs;
 use rayon::prelude::*;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use workflow::{ci_typechecked_projects, workflow_load_findings};
 
 pub const RULE_ID: &str = "tsconfig-gate-coverage";
+#[doc(hidden)]
+pub type ProjectSourceInputs = BTreeMap<String, BTreeSet<String>>;
 
 /// Request-owned inputs supplied by the aggregate check runner.
 ///
@@ -33,6 +35,7 @@ pub const RULE_ID: &str = "tsconfig-gate-coverage";
 pub(crate) struct PreparedInputs<'a> {
     pub(crate) tracked_paths: &'a [PathBuf],
     pub(crate) workflows: &'a ParsedWorkflowSet,
+    pub(crate) project_source_inputs: &'a ProjectSourceInputs,
     /// The owner of all rule source reads, including workflow documents and
     /// effective `compilerOptions.noCheck` resolution for tracked tsconfigs.
     pub(crate) sources: &'a crate::codebase::ts_source::SourceStore,
@@ -52,7 +55,8 @@ pub(crate) fn check_with_prepared(
 ) -> Result<Vec<RuleFinding>> {
     let tracked = tracked_tsconfigs(root, prepared.tracked_paths);
     let non_enforcing = non_enforcing_tsconfigs(root, &tracked, prepared.sources);
-    let ci_projects = ci_typechecked_projects(prepared.workflows, &tracked);
+    let ci_projects =
+        ci_typechecked_projects(prepared.workflows, &tracked, prepared.project_source_inputs);
     let local_projects = local_typechecked_projects(config);
     let config_file = config_file(root, prepared.config_path);
     let workflow_errors = workflow_load_findings(prepared.workflows);
@@ -100,6 +104,43 @@ pub(crate) fn check_with_prepared(
     findings.extend(workflow_errors);
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+#[doc(hidden)]
+pub fn prepare_project_source_inputs(
+    root: &Path,
+    tracked_paths: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+) -> ProjectSourceInputs {
+    let tracked = tracked_tsconfigs(root, tracked_paths);
+    let config_paths = tracked
+        .iter()
+        .map(|path| root.join(path))
+        .collect::<Vec<_>>();
+    let membership = crate::codebase::ts_resolver::TsConfigCatalog::project_source_membership(
+        root,
+        &config_paths,
+        tracked_paths,
+        sources,
+        workspace,
+    );
+    tracked
+        .into_iter()
+        .map(|config| {
+            let absolute = crate::codebase::ts_resolver::normalize_path(&root.join(&config));
+            let mut inputs = membership
+                .get(&absolute)
+                .into_iter()
+                .flat_map(|paths| paths.iter())
+                .map(|path| relative_slash_path(root, path))
+                .collect::<BTreeSet<_>>();
+            if inputs.is_empty() {
+                inputs.insert(config.clone());
+            }
+            (config, inputs)
+        })
+        .collect()
 }
 
 fn tracked_tsconfigs(root: &Path, paths: &[PathBuf]) -> BTreeSet<String> {

@@ -134,6 +134,20 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
                 &root, &config.ci, snapshot, &sources,
             )
         });
+    let project_inputs = rule_enabled(config, crate::codebase::rules::TSCONFIG_GATE_COVERAGE)
+        .then(|| {
+            let workspace =
+                crate::codebase::workspaces::load_indexed_from_source_store(&root, &sources)?;
+            Ok::<_, anyhow::Error>(
+                crate::codebase::rules::tsconfig_gate_coverage::prepare_project_source_inputs(
+                    &root,
+                    snapshot.paths_for(&root).as_ref(),
+                    &sources,
+                    &workspace,
+                ),
+            )
+        })
+        .transpose()?;
     super::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         &root,
         config,
@@ -143,6 +157,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
             vitest_catalog,
             sources,
             workflow_documents: workflows.as_ref(),
+            tsconfig_gate_project_inputs: project_inputs.as_ref(),
             config_path,
         },
     )

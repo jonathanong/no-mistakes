@@ -50,6 +50,8 @@ pub(crate) struct DomainCheckInputs<'a> {
         Option<&'a no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
     pub(crate) workflow_documents:
         Option<&'a no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>,
+    pub(crate) tsconfig_gate_project_inputs:
+        Option<&'a no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
 }
 
 pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
@@ -79,6 +81,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let codebase_config = inputs.codebase_config;
     let vitest_projects = inputs.vitest_projects;
     let workflow_documents = inputs.workflow_documents;
+    let tsconfig_gate_project_inputs = inputs.tsconfig_gate_project_inputs;
 
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
@@ -171,6 +174,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                     sources,
                                                     vitest_catalog: vitest_projects,
                                                     workflow_documents,
+                                                    tsconfig_gate_project_inputs,
                                                     config_path: config_path.as_deref(),
                                                 },
                                             )

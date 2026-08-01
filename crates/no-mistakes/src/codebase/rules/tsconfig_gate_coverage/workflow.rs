@@ -19,6 +19,7 @@ use std::collections::BTreeSet;
 pub(super) fn ci_typechecked_projects(
     workflows: &ParsedWorkflowSet,
     tracked: &BTreeSet<String>,
+    project_source_inputs: &super::ProjectSourceInputs,
 ) -> BTreeSet<String> {
     let mut projects = BTreeSet::new();
     for document in &workflows.documents {
@@ -32,7 +33,14 @@ pub(super) fn ci_typechecked_projects(
         let Some(jobs) = workflow.get("jobs").and_then(Value::as_mapping) else {
             continue;
         };
-        for job in jobs.values() {
+        let skipped_jobs = statically_skipped_jobs(jobs);
+        for (job_id, job) in jobs {
+            if job_id
+                .as_str()
+                .is_some_and(|job_id| skipped_jobs.contains(job_id))
+            {
+                continue;
+            }
             if statically_not_enforcing(job) || !has_static_runnable_runs_on(job) {
                 continue;
             }
@@ -69,10 +77,14 @@ pub(super) fn ci_typechecked_projects(
                 };
                 for project in scanned_projects {
                     let project = resolve_gate_project_against_tracked(&project, tracked);
-                    if matches!(
-                        triggers.evaluate(&project).0,
-                        TriggerMatch::Matched | TriggerMatch::Always
-                    ) {
+                    if project_source_inputs.get(&project).is_some_and(|inputs| {
+                        inputs.iter().all(|input| {
+                            matches!(
+                                triggers.evaluate(input).0,
+                                TriggerMatch::Matched | TriggerMatch::Always
+                            )
+                        })
+                    }) {
                         projects.insert(project);
                     }
                 }
@@ -80,6 +92,42 @@ pub(super) fn ci_typechecked_projects(
         }
     }
     projects
+}
+
+fn statically_skipped_jobs(jobs: &serde_yaml::Mapping) -> BTreeSet<String> {
+    let mut skipped = BTreeSet::new();
+    loop {
+        let mut changed = false;
+        for (job_id, job) in jobs {
+            let Some(job_id) = job_id.as_str() else {
+                continue;
+            };
+            let directly_disabled = static_bool(job.get("if")) == Some(false);
+            let blocked_by_need = !continues_after_skipped_need(job)
+                && crate::codebase::workflow_topology::value_primitives::string_list(
+                    job.get("needs"),
+                )
+                .iter()
+                .any(|need| skipped.contains(need));
+            if (directly_disabled || blocked_by_need) && skipped.insert(job_id.to_string()) {
+                changed = true;
+            }
+        }
+        if !changed {
+            return skipped;
+        }
+    }
+}
+
+fn continues_after_skipped_need(job: &Value) -> bool {
+    job.get("if")
+        .and_then(Value::as_str)
+        .is_some_and(|expression| {
+            matches!(
+                expression.trim(),
+                "always()" | "${{ always() }}" | "!cancelled()" | "${{ !cancelled() }}"
+            )
+        })
 }
 
 /// A static disabled or non-blocking YAML node cannot enforce a typecheck.

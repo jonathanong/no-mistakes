@@ -307,6 +307,7 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
             vitest_catalog: None,
             sources: Arc::clone(&sources),
             workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
             config_path: None,
         },
     )

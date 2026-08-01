@@ -21,6 +21,7 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
+mod check_commands;
 mod targeted_triggers;
 
 /// Load the unified `.no-mistakes.yml` (or a recognized legacy config) from
@@ -166,18 +167,7 @@ fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         validate_globs(&rule.include, &format!("rules[{index}].include"))?;
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
-    for (index, command) in config.checks.commands.iter().enumerate() {
-        if command.always && command.file_args != super::schema::CheckFileArgs::None {
-            anyhow::bail!(
-                "checks.commands[{index}].always runs once for the whole project, so file selection is invalid; set fileArgs: none"
-            );
-        }
-        if command.always && (!command.include.is_empty() || !command.exclude.is_empty()) {
-            anyhow::bail!(
-                "checks.commands[{index}].always runs once for the whole project, so file selection is invalid; remove include and exclude"
-            );
-        }
-    }
+    check_commands::validate(config)?;
     targeted_triggers::validate(config, path)?;
     validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())

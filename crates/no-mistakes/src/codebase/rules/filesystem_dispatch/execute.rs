@@ -12,6 +12,7 @@ struct RuleRunInputs<'a> {
     vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
+    tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     config_path: Option<&'a Path>,
     candidates: &'a candidate_index::RuleCandidateIndex,
     acc: &'a ResultAccumulator,
@@ -24,6 +25,7 @@ pub struct PreparedFilesystemRuleInputs<'a> {
     pub vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     pub sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     pub workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
+    pub tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     pub config_path: Option<&'a Path>,
 }
 
@@ -39,10 +41,11 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         vitest_catalog,
         sources,
         workflow_documents,
+        tsconfig_gate_project_inputs,
         config_path,
     } = prepared;
     let acc = Mutex::new(Vec::new());
-    let metadata_files = metadata_files(root, config, files, snapshot);
+    let metadata_files = metadata::metadata_files(root, config, files, snapshot);
     let candidates = candidate_index::RuleCandidateIndex::prepare_with_inventory(
         root,
         config,
@@ -61,6 +64,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         vitest_catalog,
         sources: &sources,
         workflow_documents,
+        tsconfig_gate_project_inputs,
         config_path,
         candidates: &candidates,
         acc: &acc,
@@ -85,24 +89,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     Ok(findings)
 }
 
-fn metadata_files(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    files: &[PathBuf],
-    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
-) -> Vec<PathBuf> {
-    if !rule_enabled(config, FORBIDDEN_WORKSPACE_CLOSURE)
-        && !rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
-    {
-        return Vec::new();
-    }
-    let mut metadata_files = files.to_vec();
-    metadata_files.extend(snapshot.paths_for(root).iter().cloned());
-    metadata_files.sort();
-    metadata_files.dedup();
-    metadata_files
-}
-
 fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
     macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = run_rule::run_rule_with_sources($id, $call, inputs.root, inputs.config, inputs.candidates.candidates($id), inputs.sources); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; spawn_special_rules(scope, inputs); }); }; }
     crate::filesystem_rules!(run_rules);
@@ -116,6 +102,7 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
         vitest_catalog,
         sources,
         workflow_documents,
+        tsconfig_gate_project_inputs,
         config_path,
         candidates,
         acc,
@@ -178,25 +165,27 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
     }
     if rule_enabled(config, TSCONFIG_GATE_COVERAGE) {
         scope.spawn(move |_| {
-            let result = workflow_documents.map_or_else(
+            let result = workflow_documents
+                .zip(tsconfig_gate_project_inputs)
+                .map_or_else(
                 || {
                     Err(anyhow::anyhow!(
-                        "prepared workflow documents are required for {TSCONFIG_GATE_COVERAGE}"
+                        "prepared workflow documents and project inputs are required for {TSCONFIG_GATE_COVERAGE}"
                     ))
                 },
-                |workflows| {
+                |(workflows, project_source_inputs)| {
                     tsconfig_gate_coverage::check_with_prepared(
                         root,
                         config,
                         tsconfig_gate_coverage::PreparedInputs {
                             tracked_paths: snapshot.tracked_paths_for(root).as_ref(),
                             workflows,
+                            project_source_inputs,
                             sources,
                             config_path,
                         },
                     )
-                },
-            );
+                });
             acc.lock()
                 .expect("mutex poisoned")
                 .push((TSCONFIG_GATE_COVERAGE, result));

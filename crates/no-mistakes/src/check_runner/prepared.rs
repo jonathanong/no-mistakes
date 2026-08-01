@@ -17,6 +17,8 @@ pub(crate) struct PreparedCheckInputs {
     pub(crate) vitest_projects: Option<no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
     pub(crate) workflow_documents:
         Option<Arc<no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>>,
+    pub(crate) tsconfig_gate_project_inputs:
+        Option<no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
 }
 
 pub(super) fn prepare_with_session(
@@ -33,7 +35,8 @@ pub(super) fn prepare_with_session(
     let (config, effective_config_path) = session.config_with_path(root, config_path)?;
     let tsconfig = session.tsconfig(root, tsconfig_path)?;
     let workspace = (tsconfig_path.is_none()
-        || no_mistakes::playwright::rules::configured(&config))
+        || no_mistakes::playwright::rules::configured(&config)
+        || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE))
     .then(|| session.workspace(root));
     prepare_from_shared(
         root,
@@ -136,6 +139,18 @@ pub(crate) fn prepare_from_shared(
             ),
         )
     });
+    let tsconfig_gate_project_inputs = config
+        .rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
+        .then(|| {
+            no_mistakes::codebase::rules::tsconfig_gate_coverage::prepare_project_source_inputs(
+                root,
+                root_paths.as_ref(),
+                &sources,
+                workspace
+                    .as_deref()
+                    .expect("tsconfig gate coverage requires a workspace projection"),
+            )
+        });
     Ok(PreparedCheckInputs {
         visible_paths,
         inferred_roots,
@@ -148,5 +163,6 @@ pub(crate) fn prepare_from_shared(
         tsconfig_catalog,
         vitest_projects,
         workflow_documents,
+        tsconfig_gate_project_inputs,
     })
 }
