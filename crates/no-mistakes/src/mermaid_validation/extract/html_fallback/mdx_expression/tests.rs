@@ -32,6 +32,25 @@ fn keeps_multiline_literals_and_comments_inside_the_expression() {
 }
 
 #[test]
+fn scans_template_interpolations_as_javascript_before_resuming_the_template() {
+    for expression in [
+        b"{`label ${\"a`b\"}`}".as_slice(),
+        b"{`label ${ { nested: `value ${'}'}` } }`}".as_slice(),
+        b"{`escaped \\` backtick`}".as_slice(),
+    ] {
+        let mut scanner = MdxExpressionScanner::default();
+
+        scanner.observe_line(expression);
+
+        assert!(
+            !scanner.is_masking_markdown(),
+            "template interpolation did not close: {expression:?}"
+        );
+        assert!(scanner.template_resume_depths.is_empty(), "{expression:?}");
+    }
+}
+
+#[test]
 fn stops_gap_scanning_when_the_active_expression_closes() {
     let mut scanner = MdxExpressionScanner::default();
 

@@ -27,3 +27,18 @@ fn handles_unmatched_escaped_and_crlf_backticks() {
         assert!(!scanner.is_masking_markdown(), "{source:?}");
     }
 }
+
+#[test]
+fn backslash_escapes_only_an_opening_delimiter() {
+    let source = b"`code spanning\n\\` tail";
+    let mut scanner = CodeSpanScanner::default();
+
+    scanner.observe_source(source, 0, 14);
+    assert!(scanner.is_masking_markdown());
+    scanner.observe_source(source, 15, source.len());
+    assert!(!scanner.is_masking_markdown());
+
+    let mut escaped_opening = CodeSpanScanner::default();
+    escaped_opening.observe_source(b"\\`not code", 0, 10);
+    assert!(!escaped_opening.is_masking_markdown());
+}

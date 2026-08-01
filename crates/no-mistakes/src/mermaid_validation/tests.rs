@@ -1,6 +1,6 @@
 use super::{
-    extract_mermaid_fences, validate_markdown, validate_mermaid_fences,
-    MermaidValidationDiagnosticCode,
+    extract_mermaid_fences, extract_mermaid_fences_with_mdx_html_fallback, validate_markdown,
+    validate_mermaid_fences, MermaidValidationDiagnosticCode,
 };
 use merman_analysis::Analyzer;
 use std::path::PathBuf;
@@ -115,4 +115,42 @@ fn validates_mermaid_fences_in_multiline_jsx_list_continuations() {
         MermaidValidationDiagnosticCode::InvalidSyntax
     );
     assert_eq!(result.diagnostics[0].fence_line, 3);
+}
+
+#[test]
+fn validates_mermaid_fences_after_commonmark_html_comment_boundaries() {
+    let result = validate_markdown(
+        &fixture("jsx-html-comment-ordered-list.mdx"),
+        Some("docs/html-comment-ordered-list.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(
+        result.diagnostics[0].code,
+        MermaidValidationDiagnosticCode::InvalidSyntax
+    );
+    assert_eq!(result.diagnostics[0].fence_line, 4);
+}
+
+#[test]
+fn normalizes_mdx_fence_indentation_before_validation() {
+    let fences =
+        extract_mermaid_fences_with_mdx_html_fallback(&fixture("mdx-indented-fence-valid.mdx"));
+
+    assert_eq!(fences.len(), 1);
+    assert_eq!(fences[0].content, "mindmap\n  root((Root))\n    Child\n");
+}
+
+#[test]
+fn resumes_after_mdx_template_literal_interpolations() {
+    let result = validate_markdown(
+        &fixture("mdx-template-interpolation-valid.mdx"),
+        Some("docs/template-interpolation.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
 }

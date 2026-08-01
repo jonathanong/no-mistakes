@@ -12,13 +12,17 @@ const STANDARD_HTML_TAGS: &str = concat!(
     "track tt u ul var video wbr xmp",
 );
 
+// CommonMark HTML blocks of type 6. Types 1 (`script`, `pre`, `style`, and
+// `textarea`) have different opening rules and are handled separately below.
 const BLOCK_HTML_TAGS: &str = concat!(
     "address article aside base basefont blockquote body caption center col colgroup dd details ",
     "dialog dir div dl dt fieldset figcaption figure footer form frame frameset h1 h2 h3 h4 h5 ",
-    "h6 head header hr html iframe legend li link main menu menuitem nav noframes ol optgroup ",
-    "option p param pre script search section style summary table tbody td textarea tfoot th ",
+    "h6 head header hr html iframe legend li link main menu menuitem meta nav noframes ol optgroup ",
+    "option p param search section summary table tbody td tfoot th ",
     "thead title tr track ul",
 );
+
+const RAW_TEXT_HTML_TAGS: &str = "script pre style textarea";
 
 pub(crate) fn looks_like_clear_mdx_jsx(source: &str, range: Range<usize>) -> bool {
     let block = source[range].trim_start();
@@ -51,24 +55,53 @@ pub(super) fn looks_like_mdx_flow_boundary(line: &[u8]) -> bool {
         return false;
     }
     let line = std::str::from_utf8(&line[indent..]).expect("MDX source line must remain UTF-8");
-    looks_like_clear_mdx_jsx(line, 0..line.len()) || looks_like_block_html_tag(line)
+    looks_like_clear_mdx_jsx(line, 0..line.len())
+        || looks_like_commonmark_interrupting_html_block_opener(line)
 }
 
-fn looks_like_block_html_tag(line: &str) -> bool {
+/// Returns whether `line` begins with a CommonMark HTML block type that can
+/// interrupt a paragraph. Type 7 HTML blocks intentionally do not qualify.
+fn looks_like_commonmark_interrupting_html_block_opener(line: &str) -> bool {
+    line.starts_with("<!--")
+        || line.starts_with("<?")
+        || line.starts_with("<![CDATA[")
+        || line
+            .strip_prefix("<!")
+            .and_then(|rest| rest.as_bytes().first())
+            .is_some_and(u8::is_ascii_uppercase)
+        || looks_like_html_tag_opener(line, RAW_TEXT_HTML_TAGS, false, false)
+        || looks_like_html_tag_opener(line, BLOCK_HTML_TAGS, true, true)
+}
+
+fn looks_like_html_tag_opener(
+    line: &str,
+    tags: &str,
+    allow_closing: bool,
+    allow_self_closing: bool,
+) -> bool {
     let Some(after_open) = line.strip_prefix('<') else {
         return false;
     };
-    let after_open = after_open.strip_prefix('/').unwrap_or(after_open);
+    let (after_open, closing) = match after_open.strip_prefix('/') {
+        Some(after_open) => (after_open, true),
+        None => (after_open, false),
+    };
+    if closing && !allow_closing {
+        return false;
+    }
     let name_end = after_open
         .find(|character: char| !character.is_ascii_alphanumeric())
         .unwrap_or(after_open.len());
     let name = &after_open[..name_end];
     let delimiter = after_open.as_bytes().get(name_end).copied();
-    if delimiter.is_some_and(|byte| !byte.is_ascii_whitespace() && !matches!(byte, b'/' | b'>')) {
+    let valid_delimiter = delimiter.is_none_or(|byte| byte.is_ascii_whitespace() || byte == b'>')
+        || (allow_self_closing
+            && delimiter == Some(b'/')
+            && after_open.as_bytes().get(name_end + 1) == Some(&b'>'));
+    if !valid_delimiter {
         return false;
     }
-    BLOCK_HTML_TAGS
-        .split_ascii_whitespace()
+    tags.split_ascii_whitespace()
         .any(|tag| name.eq_ignore_ascii_case(tag))
 }
 

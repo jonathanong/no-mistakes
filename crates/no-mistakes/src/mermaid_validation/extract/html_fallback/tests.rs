@@ -30,6 +30,17 @@ fn recognizes_clear_mdx_jsx_without_treating_standard_html_as_mdx() {
 }
 
 #[test]
+fn commonmark_html_comments_end_a_paragraph_before_non_one_ordered_lists() {
+    let source = "<DiagramCard>\nParagraph text.\n<!-- note -->\n2. ```mermaid\n   sequenceDiagram\n     Alice->>\n   ```\n</DiagramCard>\n";
+
+    let fences = extract_all(source);
+
+    assert_eq!(fences.len(), 1);
+    assert_eq!(fences[0].fence_line, 4);
+    assert!(fences[0].closed);
+}
+
+#[test]
 fn ignores_non_fences_and_invalid_opening_delimiters() {
     for source in [
         "plain text\n",

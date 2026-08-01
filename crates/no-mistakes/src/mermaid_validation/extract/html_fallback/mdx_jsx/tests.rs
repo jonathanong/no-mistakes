@@ -24,6 +24,13 @@ fn distinguishes_flow_mdx_jsx_from_inline_html() {
         b"<>",
         b"<div>",
         b"</SECTION>",
+        b"<!-- note -->",
+        b"<?processing instruction?>",
+        b"<!DOCTYPE html>",
+        b"<![CDATA[text]]>",
+        b"<script>",
+        b"<div/>",
+        b"<div",
     ] {
         assert!(looks_like_mdx_flow_boundary(flow), "{flow:?}");
     }
@@ -33,6 +40,10 @@ fn distinguishes_flow_mdx_jsx_from_inline_html() {
         b"<a href='/'>inline</a>",
         b"<div.class>",
         b"<section-name>",
+        b"</script>",
+        b"<script/>",
+        b"<div/invalid>",
+        b"<!doctype html>",
         b"    <Badge />",
         b"\t<Badge />",
     ] {

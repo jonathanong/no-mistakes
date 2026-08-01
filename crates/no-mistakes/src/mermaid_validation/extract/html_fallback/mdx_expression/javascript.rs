@@ -54,7 +54,7 @@ impl MdxExpressionScanner {
         match self.literal {
             Literal::SingleQuoted => self.observe_quoted(byte, b'\''),
             Literal::DoubleQuoted => self.observe_quoted(byte, b'"'),
-            Literal::Template => self.observe_quoted(byte, b'`'),
+            Literal::Template => return self.observe_template(byte, next),
             Literal::Regex => self.observe_regex(byte),
             Literal::BlockComment => return self.observe_block_comment(byte, next),
             Literal::None => return self.observe_code_byte(byte, next),
@@ -120,6 +120,12 @@ impl MdxExpressionScanner {
     fn close_brace(&mut self) {
         self.depth -= 1;
         self.can_start_regex = false;
+        if self.template_resume_depths.last() == Some(&self.depth) {
+            self.template_resume_depths.pop();
+            self.literal = Literal::Template;
+            self.escaped = false;
+            return;
+        }
         self.resume_jsx_after_expression();
     }
 
@@ -152,6 +158,27 @@ impl MdxExpressionScanner {
             self.literal = Literal::None;
             self.can_start_regex = false;
         }
+    }
+
+    fn observe_template(&mut self, byte: u8, next: Option<u8>) -> ByteAction {
+        if self.escaped {
+            self.escaped = false;
+        } else if byte == b'\\' {
+            self.escaped = true;
+        } else if byte == b'$' && next == Some(b'{') {
+            // Scan `${...}` as JavaScript until its matching closing brace,
+            // then return to the enclosing template literal.  Counting the
+            // opening interpolation brace in `depth` also naturally handles
+            // nested object literals and nested templates.
+            self.template_resume_depths.push(self.depth);
+            self.literal = Literal::None;
+            self.open_brace();
+            return ByteAction::Advance(1);
+        } else if byte == b'`' {
+            self.literal = Literal::None;
+            self.can_start_regex = false;
+        }
+        ByteAction::Advance(0)
     }
 
     fn observe_regex(&mut self, byte: u8) {

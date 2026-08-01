@@ -11,7 +11,7 @@ impl CodeSpanScanner {
     pub(super) fn observe_source(&mut self, source: &[u8], start: usize, end: usize) {
         let mut index = start;
         while index < end {
-            if source[index] != b'`' || is_escaped(source, index) {
+            if source[index] != b'`' {
                 index += 1;
                 continue;
             }
@@ -19,7 +19,9 @@ impl CodeSpanScanner {
             match self.delimiter {
                 Some(delimiter) if length == delimiter => self.delimiter = None,
                 Some(_) => {}
-                None if has_closer_before_blank(source, index + length, length) => {
+                None if !is_escaped(source, index)
+                    && has_closer_before_blank(source, index + length, length) =>
+                {
                     self.delimiter = Some(length);
                 }
                 None => {}
@@ -33,7 +35,7 @@ fn has_closer_before_blank(source: &[u8], mut index: usize, delimiter: usize) ->
     let mut line_has_content = true;
     while index < source.len() {
         match source[index] {
-            b'`' if !is_escaped(source, index) => {
+            b'`' => {
                 let length = backtick_run(source, index);
                 if length == delimiter {
                     return true;

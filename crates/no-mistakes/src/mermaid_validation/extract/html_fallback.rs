@@ -4,7 +4,7 @@ use super::{fence_syntax::is_closing_fence_suffix, is_mermaid_info, line_number,
 
 #[path = "html_fallback/container.rs"]
 mod container;
-use container::{list_container_for_line, ContainerPrefix};
+use container::{list_container_for_line, strip_opening_indent, ContainerPrefix};
 #[path = "html_fallback/code_span.rs"]
 mod code_span;
 use code_span::CodeSpanScanner;
@@ -29,6 +29,7 @@ use paragraph::{retain_paragraph_context, update_paragraph_state};
 struct OpeningFence {
     marker: u8,
     length: usize,
+    indent: usize,
     body_start: usize,
     is_mermaid: bool,
     container: ContainerPrefix,
@@ -137,6 +138,7 @@ fn opening_fence(
     Some(OpeningFence {
         marker,
         length,
+        indent,
         body_start: next_line_start(source, end, source.len()),
         is_mermaid: is_mermaid_info(info),
         // An ordered marker such as `10.` cannot interrupt a paragraph at
@@ -180,7 +182,8 @@ fn body_content(source: &str, opening: &OpeningFence, end: usize) -> String {
             .container
             .strip_line(raw)
             .unwrap_or_else(|| raw.into());
-        content.push_str(std::str::from_utf8(&line).expect("source line must remain valid UTF-8"));
+        let line = strip_opening_indent(&line, opening.indent);
+        content.push_str(std::str::from_utf8(line).expect("source line must remain valid UTF-8"));
         let next = next_line_start(source, line_end, end);
         content.push_str(&source[line_end..next]);
         cursor = next;

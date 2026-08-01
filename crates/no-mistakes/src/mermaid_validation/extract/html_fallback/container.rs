@@ -88,6 +88,15 @@ pub(super) fn list_container_for_line(
     active.filter(|container| container.strip_line(line).is_some())
 }
 
+pub(super) fn strip_opening_indent(line: &[u8], maximum: usize) -> &[u8] {
+    let indent = line
+        .iter()
+        .take_while(|byte| **byte == b' ')
+        .count()
+        .min(maximum);
+    &line[indent..]
+}
+
 fn strip_one_blockquote(line: &[u8]) -> Option<(&[u8], usize)> {
     let spaces = line.iter().take_while(|byte| **byte == b' ').count();
     if spaces > 3 || line.get(spaces) != Some(&b'>') {

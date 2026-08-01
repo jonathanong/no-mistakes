@@ -352,6 +352,18 @@ fn preserves_mdx_blockquote_tab_residual_indentation() {
 }
 
 #[test]
+fn strips_mdx_opening_fence_indentation_from_body_lines() {
+    let result = validate_markdown(
+        &fixture("mdx-indented-fence-valid.mdx"),
+        Some("docs/indented-fence.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
 fn ignores_mdx_fence_text_after_overwide_list_padding() {
     let result = validate_markdown(
         &fixture("mdx-overwide-list-padding-ignored.mdx"),
@@ -443,6 +455,18 @@ fn ignores_fence_text_in_multiline_commonmark_code_spans() {
 
     assert!(result.valid, "{:#?}", result.diagnostics);
     assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn closes_multiline_commonmark_code_spans_after_a_backslash() {
+    let result = validate_markdown(
+        &fixture("mdx-backslash-before-code-span-closer.mdx"),
+        Some("docs/code-span-backslash.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
     assert!(result.diagnostics.is_empty());
 }
 

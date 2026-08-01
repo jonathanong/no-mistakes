@@ -24,6 +24,11 @@ pub(crate) struct MdxExpressionScanner {
     paren_depth: usize,
     bracket_depth: usize,
     literal: Literal,
+    /// Brace depths at which an active template interpolation resumes its
+    /// enclosing template.  A template interpolation is JavaScript, not
+    /// template text, so strings, nested templates, and braces within it
+    /// must be scanned with the ordinary JavaScript rules.
+    template_resume_depths: Vec<usize>,
     escaped: bool,
     regex_character_class: bool,
     can_start_regex: bool,

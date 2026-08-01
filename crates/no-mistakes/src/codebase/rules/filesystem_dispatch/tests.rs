@@ -206,9 +206,14 @@ fn enabling_mermaid_validation_preserves_existing_markdown_findings() {
             &root,
             config,
             &files,
-            &snapshot,
-            None,
-            snapshot.source_store_for(&root),
+            PreparedFilesystemRuleInputs {
+                snapshot: &snapshot,
+                vitest_catalog: None,
+                sources: snapshot.source_store_for(&root),
+                workflow_documents: None,
+                tsconfig_gate_project_inputs: None,
+                config_path: Some(&config_path),
+            },
         )
         .unwrap()
     };
