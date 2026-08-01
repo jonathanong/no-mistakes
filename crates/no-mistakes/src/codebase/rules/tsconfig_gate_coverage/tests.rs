@@ -348,6 +348,29 @@ fn ci_scanner_rejects_an_empty_shell_setting() {
 }
 
 #[test]
+fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
+    let workflow: Value = serde_yaml::from_str(
+        "jobs:\n  bare-bash:\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project bare-bash/tsconfig.json\n  bash-flags:\n    steps:\n      - shell: 'bash -eu -o pipefail {0}'\n        run: tsc --noEmit --project bash-flags/tsconfig.json\n  sh-flags:\n    steps:\n      - shell: 'sh -ux {0}'\n        run: tsc --noEmit --project sh-flags/tsconfig.json\n  syntax-check-only:\n    steps:\n      - shell: 'bash -n {0}'\n        run: tsc --noEmit --project syntax-check-only/tsconfig.json\n  version-only:\n    steps:\n      - shell: 'bash --version {0}'\n        run: tsc --noEmit --project version-only/tsconfig.json\n  shell-without-script-template:\n    steps:\n      - shell: 'bash -e'\n        run: tsc --noEmit --project shell-without-script-template/tsconfig.json\n  sh-pipefail:\n    steps:\n      - shell: 'sh -o pipefail {0}'\n        run: tsc --noEmit --project sh-pipefail/tsconfig.json\n  empty-short-flag:\n    steps:\n      - shell: 'bash - {0}'\n        run: tsc --noEmit --project empty-short-flag/tsconfig.json\n  bare-template-word:\n    steps:\n      - shell: 'bash pipefail {0}'\n        run: tsc --noEmit --project bare-template-word/tsconfig.json\n",
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/template-flags.yml".into(),
+            value: Ok(workflow),
+        }],
+    };
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows),
+        BTreeSet::from([
+            "bare-bash/tsconfig.json".to_string(),
+            "bash-flags/tsconfig.json".to_string(),
+            "sh-flags/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
 fn application_scan_combines_allowlist_and_missing_gate_findings() {
     let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
     let options = Options {

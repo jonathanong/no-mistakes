@@ -1,7 +1,9 @@
 //! Static command recognition shared by workflow and configured local gates.
 
+mod shell;
 mod tsc_arguments;
 
+use shell::local_shell_command;
 use tsc_arguments::project_argument;
 
 /// Normalize one static repository-relative path into slash form.
@@ -37,67 +39,18 @@ pub(crate) fn normalize_repo_relative(raw: &str) -> Option<String> {
 /// Only sequential newline, `&&`, and `;` segments are recognized. Shell
 /// interpolation, substitutions, pipes, conditionals, and arbitrary wrappers
 /// are not evaluated. A reachability-affecting control command rejects the
-/// whole body instead of trying to model shell execution.
+/// whole body instead of trying to model shell execution. GitHub Actions runs
+/// workflow shells with failure propagation, unlike an arbitrary local `sh -c`.
 pub(crate) fn scan_shell_for_typechecked_projects(script: &str, initial_cwd: &str) -> Vec<String> {
-    let mut cwd = normalize_repo_relative(initial_cwd);
-    let mut projects = Vec::new();
-    for segment in script.split(['\n', ';']).flat_map(|line| line.split("&&")) {
-        let Some(tokens) = static_tokens(segment) else {
-            continue;
-        };
-        let Some(first) = tokens.first() else {
-            continue;
-        };
-        if is_unsupported_control_command(first) || disables_failure_enforcement(&tokens) {
-            return Vec::new();
-        }
-        if first == "cd" {
-            cwd = (tokens.len() == 2)
-                .then(|| {
-                    tokens
-                        .get(1)
-                        .and_then(|path| cwd.as_ref().and_then(|base| join_relative(base, path)))
-                })
-                .flatten();
-            continue;
-        }
-        let Some(base) = cwd.as_deref() else {
-            continue;
-        };
-        projects.extend(scan_tokens(&tokens, base));
-    }
-    projects.sort();
-    projects.dedup();
-    projects
+    shell::scan_shell_body_for_typechecked_projects(script, initial_cwd, true)
 }
 
-/// These shell builtins can make later commands unreachable. Supporting their
-/// control flow would require modeling shell semantics, so reject the entire
-/// static body conservatively rather than crediting a possibly skipped `tsc`.
-fn is_unsupported_control_command(command: &str) -> bool {
-    matches!(command, "exit" | "return" | "false")
-}
-
-/// A later `tsc` cannot be credited once a shell body changes its failure
-/// behavior. Modeling every shell option and its scope is deliberately out of
-/// scope for this static scanner, so reject the whole body instead.
-fn disables_failure_enforcement(tokens: &[String]) -> bool {
-    if tokens.first().is_none_or(|command| command != "set") {
-        return false;
-    }
-    match tokens.get(1).map(String::as_str) {
-        Some(option) if option.starts_with('+') && option.contains('e') => true,
-        Some("+o") => tokens.get(2).is_some_and(|option| option == "errexit"),
-        _ => false,
-    }
-}
-
-/// Scan one configured argv command. A shell script is accepted only for the
-/// explicit `bash|sh -c <literal>` form; all other argv commands are parsed as
-/// direct static command tokens.
+/// Scan one configured argv command. A shell script is accepted only for a
+/// static `bash|sh ... -c <literal>` form; all other argv commands are parsed
+/// as direct static command tokens.
 pub(crate) fn scan_argv_for_typechecked_projects(argv: &[String], cwd: &str) -> Vec<String> {
-    if argv.len() == 3 && matches!(argv[0].as_str(), "bash" | "sh") && argv[1] == "-c" {
-        return scan_shell_for_typechecked_projects(&argv[2], cwd);
+    if let Some((script, failure_enforced)) = local_shell_command(argv) {
+        return shell::scan_shell_body_for_typechecked_projects(script, cwd, failure_enforced);
     }
     let Some(cwd) = normalize_repo_relative(cwd) else {
         return Vec::new();

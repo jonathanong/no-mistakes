@@ -30,8 +30,12 @@ may come from workflow/job `defaults.run.working-directory` or a step's
 Workflow commands run only when their effective shell is GitHub Actions'
 implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
 `defaults.run.shell` plus a step-level `shell` override; static shell templates
-must invoke `bash` or `sh` and pass the script as `{0}`. Other shells (such as
-`python`, PowerShell, or `cmd`) and dynamic/custom shell forms do not count.
+must invoke `bash` or `sh`, pass the script as `{0}`, and use only
+execution-preserving flags: `-e`, `-u`, `-x`, and Bash's `-o pipefail`,
+`--noprofile`, and `--norc`. This includes GitHub Actions' standard
+`bash --noprofile --norc -eo pipefail {0}` and `sh -e {0}` templates.
+Other shells (such as `python`, PowerShell, or `cmd`) and dynamic/custom shell
+forms do not count; neither do non-executing modes such as `bash -n {0}`.
 
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or

@@ -81,6 +81,110 @@ fn shell_scanner_rejects_failure_enforcement_mutations() {
         scan_shell_for_typechecked_projects("set -e; tsc --noEmit", "."),
         vec!["tsconfig.json"]
     );
+    assert_eq!(
+        scan_shell_for_typechecked_projects("set -o errexit; tsc --noEmit", "."),
+        vec!["tsconfig.json"]
+    );
+}
+
+#[test]
+fn local_shell_gates_require_failure_propagation_or_a_final_typecheck() {
+    for argv in [
+        vec![
+            "bash".into(),
+            "-c".into(),
+            "tsc --noEmit; echo ignored failure".into(),
+        ],
+        vec![
+            "sh".into(),
+            "-c".into(),
+            "tsc --noEmit && echo success".into(),
+        ],
+    ] {
+        assert!(
+            scan_argv_for_typechecked_projects(&argv, ".").is_empty(),
+            "{argv:?}"
+        );
+    }
+
+    for argv in [
+        vec!["bash".into(), "-c".into(), "cd app; tsc --noEmit".into()],
+        vec![
+            "bash".into(),
+            "-ec".into(),
+            "cd app; tsc --noEmit; echo reached only after a passing typecheck".into(),
+        ],
+        vec![
+            "sh".into(),
+            "-o".into(),
+            "errexit".into(),
+            "-c".into(),
+            "cd app; tsc --noEmit; echo reached only after a passing typecheck".into(),
+        ],
+        vec![
+            "sh".into(),
+            "-c".into(),
+            "set -e; cd app; tsc --noEmit; echo reached only after a passing typecheck".into(),
+        ],
+    ] {
+        assert_eq!(
+            scan_argv_for_typechecked_projects(&argv, "."),
+            vec!["app/tsconfig.json"],
+            "{argv:?}"
+        );
+    }
+}
+
+#[test]
+fn local_shell_parser_rejects_ambiguous_options_and_tracks_errexit() {
+    let to_argv = |values: &[&str]| -> Vec<String> {
+        values.iter().map(|value| (*value).to_string()).collect()
+    };
+
+    assert_eq!(
+        local_shell_command(&to_argv(&["sh", "-o", "errexit", "-c", "script"])),
+        Some(("script", true))
+    );
+    assert_eq!(
+        local_shell_command(&to_argv(&["bash", "+e", "-c", "script"])),
+        Some(("script", false))
+    );
+    assert_eq!(
+        local_shell_command(&to_argv(&["bash", "-ec", "script"])),
+        Some(("script", true))
+    );
+    assert_eq!(
+        local_shell_command(&to_argv(&["bash", "-u", "-c", "script"])),
+        Some(("script", false))
+    );
+    for values in [
+        ["node", "-c", "script"].as_slice(),
+        ["bash", "-c", "script", "extra"].as_slice(),
+        ["bash", "-o"].as_slice(),
+        ["bash", "+o", "nounset", "-c", "script"].as_slice(),
+        ["bash", "command"].as_slice(),
+        ["bash", "-"].as_slice(),
+        ["bash", "-1"].as_slice(),
+        ["bash", "+c", "script"].as_slice(),
+        ["bash", "-e"].as_slice(),
+    ] {
+        assert_eq!(local_shell_command(&to_argv(values)), None, "{values:?}");
+    }
+}
+
+#[test]
+fn shell_scanner_rejects_heredocs_and_multiline_quoted_bodies() {
+    for script in [
+        "cat <<'SCRIPT'\ntsc --noEmit\nSCRIPT",
+        "tsc --noEmit <<EOF\ninput\nEOF",
+        "echo 'data line\ntsc --noEmit\n'",
+        "echo \"data line\ntsc --noEmit\n\"",
+    ] {
+        assert!(
+            scan_shell_for_typechecked_projects(script, ".").is_empty(),
+            "{script}"
+        );
+    }
 }
 
 #[test]

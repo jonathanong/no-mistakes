@@ -98,7 +98,7 @@ fn effective_shell(value: &Value, fallback: Option<String>) -> Option<String> {
 
 /// Accept GitHub Actions' implicit shell and static POSIX shell forms only.
 /// A custom template must invoke `bash` or `sh`, pass the generated script as
-/// `{0}`, and avoid command-string options such as `-c` that would not run it.
+/// `{0}`, and use only flags that preserve normal script execution.
 fn is_supported_posix_shell(shell: Option<&str>) -> bool {
     let Some(shell) = shell else {
         return true;
@@ -111,16 +111,49 @@ fn is_supported_posix_shell(shell: Option<&str>) -> bool {
         return false;
     }
     let args = tokens.collect::<Vec<_>>();
-    args.is_empty()
-        || args.last() == Some(&"{0}")
-            && args[..args.len() - 1]
-                .iter()
-                .all(|argument| is_safe_posix_shell_template_argument(argument))
+    args.is_empty() || is_execution_preserving_shell_template(command, &args)
 }
 
-fn is_safe_posix_shell_template_argument(argument: &str) -> bool {
-    matches!(argument, "pipefail" | "--noprofile" | "--norc" | "--posix")
-        || argument.starts_with('-') && !argument.trim_start_matches('-').contains('c')
+fn is_execution_preserving_shell_template(command: &str, arguments: &[&str]) -> bool {
+    if arguments.last() != Some(&"{0}") {
+        return false;
+    }
+    let options = &arguments[..arguments.len() - 1];
+    let mut index = 0;
+    while let Some(option) = options.get(index) {
+        match *option {
+            "--noprofile" | "--norc" if command == "bash" => index += 1,
+            option
+                if command == "bash"
+                    && is_bash_pipefail_option(option)
+                    && options.get(index + 1) == Some(&"pipefail") =>
+            {
+                index += 2;
+            }
+            option if is_execution_preserving_short_option(option) => index += 1,
+            _ => return false,
+        }
+    }
+    true
+}
+
+fn is_bash_pipefail_option(option: &str) -> bool {
+    let Some(flags) = option.strip_prefix('-') else {
+        return false;
+    };
+    let Some(prefix) = flags.strip_suffix('o') else {
+        return false;
+    };
+    prefix.chars().all(|flag| matches!(flag, 'e' | 'u' | 'x'))
+}
+
+/// `-e`, `-u`, and `-x` only affect error handling or diagnostics. `-o` is
+/// handled separately so it can be limited to Bash's execution-safe pipefail.
+fn is_execution_preserving_short_option(option: &str) -> bool {
+    let Some(flags) = option.strip_prefix('-') else {
+        return false;
+    };
+    !flags.is_empty() && flags.chars().all(|flag| matches!(flag, 'e' | 'u' | 'x'))
 }
 
 pub(super) fn effective_working_directory(
