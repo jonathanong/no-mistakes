@@ -18,11 +18,14 @@ pub(super) fn non_enforcing_tsconfigs(
     tracked: &BTreeSet<String>,
     sources: &SourceStore,
 ) -> BTreeSet<String> {
+    use rayon::prelude::*;
+    use std::collections::HashSet;
+
     tracked
-        .iter()
+        .par_iter()
         .filter(|project| {
             matches!(
-                effective_no_check(&root.join(project), sources, &mut HashSet::new()),
+                effective_no_check(root, &root.join(project), sources, &mut HashSet::new()),
                 Ok(Some(true))
             )
         })
@@ -31,6 +34,7 @@ pub(super) fn non_enforcing_tsconfigs(
 }
 
 fn effective_no_check(
+    root: &Path,
     path: &Path,
     sources: &SourceStore,
     loading: &mut HashSet<PathBuf>,
@@ -39,12 +43,13 @@ fn effective_no_check(
     if !loading.insert(path.clone()) {
         return Err(());
     }
-    let result = effective_no_check_inner(&path, sources, loading);
+    let result = effective_no_check_inner(root, &path, sources, loading);
     loading.remove(&path);
     result
 }
 
 fn effective_no_check_inner(
+    root: &Path,
     path: &Path,
     sources: &SourceStore,
     loading: &mut HashSet<PathBuf>,
@@ -57,8 +62,8 @@ fn effective_no_check_inner(
     let dir = path.parent().ok_or(())?;
     let mut inherited = None;
     for extends in extends_values(&value)? {
-        let extended = resolve_local_extends(dir, &extends, sources)?;
-        if let Some(value) = effective_no_check(&extended, sources, loading)? {
+        let extended = resolve_extends(root, dir, &extends, sources)?;
+        if let Some(value) = effective_no_check(root, &extended, sources, loading)? {
             inherited = Some(value);
         }
     }
@@ -77,9 +82,14 @@ fn extends_values(value: &serde_json::Value) -> Result<Vec<String>, ()> {
     }
 }
 
-fn resolve_local_extends(dir: &Path, extends: &str, sources: &SourceStore) -> Result<PathBuf, ()> {
+fn resolve_extends(
+    root: &Path,
+    dir: &Path,
+    extends: &str,
+    sources: &SourceStore,
+) -> Result<PathBuf, ()> {
     if !extends.starts_with('.') {
-        return Err(());
+        return resolve_package_extends(root, dir, extends, sources);
     }
     let candidate = crate::codebase::ts_resolver::normalize_path(&dir.join(extends));
     if candidate.extension() == Some(std::ffi::OsStr::new("json"))
@@ -93,6 +103,32 @@ fn resolve_local_extends(dir: &Path, extends: &str, sources: &SourceStore) -> Re
     let mut file = candidate.as_os_str().to_os_string();
     file.push(".json");
     Ok(PathBuf::from(file))
+}
+
+fn resolve_package_extends(
+    root: &Path,
+    dir: &Path,
+    extends: &str,
+    sources: &SourceStore,
+) -> Result<PathBuf, ()> {
+    let mut current = Some(dir);
+    while let Some(base) = current.filter(|base| base.starts_with(root)) {
+        let candidate =
+            crate::codebase::ts_resolver::normalize_path(&base.join("node_modules").join(extends));
+        let mut json = candidate.as_os_str().to_os_string();
+        json.push(".json");
+        for config in [
+            candidate.clone(),
+            PathBuf::from(json),
+            candidate.join("tsconfig.json"),
+        ] {
+            if sources.read_path(&config).is_ok() {
+                return Ok(config);
+            }
+        }
+        current = base.parent();
+    }
+    Err(())
 }
 
 fn own_no_check(value: &serde_json::Value) -> Result<Option<bool>, ()> {

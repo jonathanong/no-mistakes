@@ -78,7 +78,7 @@ fn contains_unsupported_multiline_shell_construct(script: &str) -> bool {
     for character in script.chars() {
         match quote {
             Some(active) if character == active => quote = None,
-            Some(_) if character == '\n' => return true,
+            Some(_) if matches!(character, '\n' | ';' | '&') => return true,
             Some(_) => {}
             None if matches!(character, '\'' | '"') => quote = Some(character),
             None => {}

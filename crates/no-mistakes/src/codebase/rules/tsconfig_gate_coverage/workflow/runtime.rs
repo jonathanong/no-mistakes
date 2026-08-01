@@ -35,13 +35,25 @@ fn is_static_runner_label(label: &str) -> bool {
 /// still safe to analyze on the same runner.
 pub(super) fn runs_on_can_default_to_windows(job: &Value) -> bool {
     match job.get("runs-on") {
-        Some(Value::String(label)) => is_windows_runner_label(label),
-        Some(Value::Sequence(labels)) => labels
-            .iter()
-            .filter_map(Value::as_str)
-            .any(is_windows_runner_label),
+        Some(Value::String(label)) => labels_can_default_to_windows([label.as_str()]),
+        Some(Value::Sequence(labels)) => {
+            labels_can_default_to_windows(labels.iter().filter_map(Value::as_str))
+        }
         _ => false,
     }
+}
+
+fn labels_can_default_to_windows<'a>(labels: impl IntoIterator<Item = &'a str>) -> bool {
+    let mut self_hosted = false;
+    let mut known_posix = false;
+    for label in labels {
+        if is_windows_runner_label(label) {
+            return true;
+        }
+        self_hosted |= label.trim().eq_ignore_ascii_case("self-hosted");
+        known_posix |= is_posix_runner_label(label);
+    }
+    self_hosted && !known_posix
 }
 
 fn is_windows_runner_label(label: &str) -> bool {
@@ -50,6 +62,16 @@ fn is_windows_runner_label(label: &str) -> bool {
         || label
             .get(.."windows-".len())
             .is_some_and(|prefix| prefix.eq_ignore_ascii_case("windows-"))
+}
+
+fn is_posix_runner_label(label: &str) -> bool {
+    let label = label.trim();
+    ["linux", "ubuntu", "macos"].iter().any(|os| {
+        label.eq_ignore_ascii_case(os)
+            || label
+                .get(..os.len() + 1)
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case(&format!("{os}-")))
+    })
 }
 
 fn default_shell(value: &Value) -> Option<&str> {

@@ -48,6 +48,9 @@ without it, only a final `tsc` command counts.
 An implicit shell does not count for statically Windows-labeled runners
 (`windows-*` or a self-hosted `windows` label), because GitHub Actions defaults
 those runners to PowerShell; specify a supported `bash` or `sh` shell instead.
+A bare `self-hosted` label is also rejected with an implicit shell because its
+operating system is not statically known; add a `linux`/`macos` label or an
+explicit supported shell.
 
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
@@ -58,8 +61,9 @@ this static rule.
 A project whose effective local `compilerOptions.noCheck` is `true` does not
 count as typechecked, even when both commands are registered. Remove or disable
 `noCheck`, or document an intentional non-typechecking project with
-`allowProjects`. Local `extends` chains are resolved through the prepared source
-store; unresolved configs are left for `tsc` to reject.
+`allowProjects`. Local and installed-package `extends` chains are resolved
+through the prepared source store; unresolved configs are left for `tsc` to
+reject.
 
 Counterexample: `packages/api/tsconfig.json` exists, but its `tsc --noEmit`
 command appears only in a local command catalog. CI can therefore miss type
@@ -77,9 +81,10 @@ as registrations. Express such a command statically if it is intended to
 provide this gate.
 Shell bodies containing `exit`, `return`, `false`, or a failure-mode mutation
 such as `set +e` are also rejected as a whole because the rule does not model
-shell reachability or option state. Bodies with unquoted shell comments and
-local shell invocations that enable a non-executing mode such as `bash -n` or
-`set -o noexec` are rejected rather than credited heuristically.
+shell reachability or option state. Bodies with unquoted shell comments or
+quoted command separators, and local shell invocations that enable a
+non-executing mode such as `bash -n` or `set -o noexec`, are rejected rather
+than credited heuristically.
 
 Informational, setup, or config-bypassing commands (`--showConfig`,
 `--help`/`-h`, `--version`/`-v`, `--init`, `--noCheck`, `--listFilesOnly`, and

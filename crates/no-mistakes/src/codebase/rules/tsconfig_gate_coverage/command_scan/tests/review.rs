@@ -24,6 +24,19 @@ fn shell_scanner_respects_static_comment_boundaries() {
 }
 
 #[test]
+fn shell_scanner_rejects_separators_inside_quoted_literals() {
+    for script in [
+        "echo '; tsc --noEmit --project app/tsconfig.json; :'",
+        "echo \"&& tsc --noEmit --project app/tsconfig.json\"",
+    ] {
+        assert!(
+            scan_shell_for_typechecked_projects(script, ".").is_empty(),
+            "{script}"
+        );
+    }
+}
+
+#[test]
 fn local_shell_scanner_rejects_non_executing_modes() {
     for argv in [
         vec![

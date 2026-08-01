@@ -17,6 +17,7 @@ fn resolution_defers_ambiguous_configs_and_resolves_local_extensionless_bases() 
         "empty/tsconfig.json".to_string(),
         "file-base/tsconfig.json".to_string(),
         "missing-base/tsconfig.json".to_string(),
+        "missing-package-base/tsconfig.json".to_string(),
         "package-base/tsconfig.json".to_string(),
     ]);
 
@@ -25,6 +26,7 @@ fn resolution_defers_ambiguous_configs_and_resolves_local_extensionless_bases() 
         BTreeSet::from([
             "dotted-file-base/tsconfig.json".to_string(),
             "file-base/tsconfig.json".to_string(),
+            "package-base/tsconfig.json".to_string(),
         ])
     );
 }
