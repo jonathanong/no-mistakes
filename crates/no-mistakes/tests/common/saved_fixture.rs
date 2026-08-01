@@ -27,7 +27,20 @@ fn copy_tree(source: &Path, destination: &Path) {
             std::fs::create_dir_all(&target).unwrap();
         } else {
             std::fs::create_dir_all(target.parent().unwrap()).unwrap();
-            std::fs::copy(entry.path(), target).unwrap();
+            let bytes = std::fs::read(entry.path()).unwrap();
+            let encoded = std::str::from_utf8(&bytes)
+                .ok()
+                .filter(|text| text.contains("{{FORM_FEED}}") || text.contains("{{VERTICAL_TAB}}"));
+            if let Some(text) = encoded {
+                // Saved fixtures use explicit text tokens for control bytes that
+                // repository checks intentionally reject in committed files.
+                let materialized = text
+                    .replace("{{FORM_FEED}}", "\u{000c}")
+                    .replace("{{VERTICAL_TAB}}", "\u{000b}");
+                std::fs::write(target, materialized).unwrap();
+            } else {
+                std::fs::copy(entry.path(), target).unwrap();
+            }
         }
     }
 }

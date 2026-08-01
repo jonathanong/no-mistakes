@@ -9,6 +9,7 @@ mod fence_syntax;
 mod html_fallback;
 use delimiter::{line_number, opening_delimiter};
 use fence_syntax::{has_closing_fence, FenceDelimiter};
+use html_fallback::MdxExpressionScanner;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum HtmlFallbackMode {
@@ -40,42 +41,43 @@ pub(crate) struct MermaidFenceCollector<'source> {
     source: &'source str,
     html_fallback: HtmlFallbackMode,
     list_item_depth: usize,
+    mdx_expression: MdxExpressionScanner,
+    mdx_scanned_until: usize,
+    mdx_code_block: bool,
     active: Option<ActiveFence>,
     fences: Vec<MermaidFence>,
 }
 
 impl<'source> MermaidFenceCollector<'source> {
     pub(crate) fn new(source: &'source str) -> Self {
-        Self {
-            source,
-            html_fallback: HtmlFallbackMode::Disabled,
-            list_item_depth: 0,
-            active: None,
-            fences: Vec::new(),
-        }
+        Self::with_fallback(source, HtmlFallbackMode::Disabled)
     }
 
     pub(crate) fn new_with_mdx_html_fallback(source: &'source str) -> Self {
-        Self {
-            source,
-            html_fallback: HtmlFallbackMode::All,
-            list_item_depth: 0,
-            active: None,
-            fences: Vec::new(),
-        }
+        Self::with_fallback(source, HtmlFallbackMode::All)
     }
 
     pub(crate) fn new_with_automatic_mdx_html_fallback(source: &'source str) -> Self {
+        Self::with_fallback(source, HtmlFallbackMode::ClearMdxJsx)
+    }
+
+    fn with_fallback(source: &'source str, html_fallback: HtmlFallbackMode) -> Self {
         Self {
             source,
-            html_fallback: HtmlFallbackMode::ClearMdxJsx,
+            html_fallback,
             list_item_depth: 0,
+            mdx_expression: MdxExpressionScanner::default(),
+            mdx_scanned_until: 0,
+            mdx_code_block: false,
             active: None,
             fences: Vec::new(),
         }
     }
 
     pub(crate) fn observe(&mut self, event: &Event<'_>, range: Range<usize>) {
+        if self.mdx_code_block {
+            self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
+        }
         match event {
             Event::Start(Tag::Item) => {
                 self.list_item_depth += 1;
@@ -85,19 +87,37 @@ impl<'source> MermaidFenceCollector<'source> {
                     || (self.html_fallback == HtmlFallbackMode::ClearMdxJsx
                         && html_fallback::looks_like_clear_mdx_jsx(self.source, range.clone())) =>
             {
-                self.fences
-                    .extend(html_fallback::extract(self.source, range));
+                self.advance_mdx_expression_to(range.start);
+                self.fences.extend(html_fallback::extract(
+                    self.source,
+                    range.clone(),
+                    &mut self.mdx_expression,
+                ));
+                self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
             }
-            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(info))) if is_mermaid_info(info) => {
-                if let Some(delimiter) =
-                    opening_delimiter(self.source, range.start, self.list_item_depth > 0)
-                {
-                    self.active = Some(ActiveFence {
-                        content: String::new(),
-                        fence_offset: range.start,
-                        fence_line: line_number(self.source, range.start),
-                        delimiter,
-                    });
+            Event::Start(Tag::CodeBlock(kind)) => {
+                if self.html_fallback != HtmlFallbackMode::Disabled {
+                    self.advance_mdx_expression_to(range.start);
+                    self.mdx_code_block = true;
+                    self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
+                }
+                if !self.mdx_expression.is_inside_expression() {
+                    if let CodeBlockKind::Fenced(info) = kind {
+                        if is_mermaid_info(info) {
+                            if let Some(delimiter) = opening_delimiter(
+                                self.source,
+                                range.start,
+                                self.list_item_depth > 0,
+                            ) {
+                                self.active = Some(ActiveFence {
+                                    content: String::new(),
+                                    fence_offset: range.start,
+                                    fence_line: line_number(self.source, range.start),
+                                    delimiter,
+                                });
+                            }
+                        }
+                    }
                 }
             }
             Event::Text(text) => {
@@ -114,6 +134,7 @@ impl<'source> MermaidFenceCollector<'source> {
                         closed: has_closing_fence(self.source, active.delimiter, range.end),
                     });
                 }
+                self.mdx_code_block = false;
             }
             Event::End(TagEnd::Item) => {
                 self.list_item_depth = self.list_item_depth.saturating_sub(1);
@@ -126,6 +147,19 @@ impl<'source> MermaidFenceCollector<'source> {
         self.fences.sort_by_key(|fence| fence.fence_offset);
         self.fences.dedup_by_key(|fence| fence.fence_offset);
         self.fences
+    }
+
+    fn advance_mdx_expression_to(&mut self, end: usize) {
+        let end = end.min(self.source.len());
+        if end > self.mdx_scanned_until {
+            // Only an HTML/JSX range can begin an MDX expression. Once one is
+            // active, scan parser gaps so it can close across block boundaries.
+            if self.mdx_expression.is_inside_expression() {
+                self.mdx_expression
+                    .observe_active_source(&self.source.as_bytes()[self.mdx_scanned_until..end]);
+            }
+            self.mdx_scanned_until = end;
+        }
     }
 }
 

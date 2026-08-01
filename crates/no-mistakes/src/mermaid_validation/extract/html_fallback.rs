@@ -5,6 +5,9 @@ use super::{fence_syntax::is_closing_fence_suffix, is_mermaid_info, line_number,
 #[path = "html_fallback/container.rs"]
 mod container;
 use container::ContainerPrefix;
+#[path = "html_fallback/mdx_expression.rs"]
+mod mdx_expression;
+pub(super) use mdx_expression::MdxExpressionScanner;
 
 const STANDARD_HTML_TAGS: &str = concat!(
     "a abbr acronym address applet area article aside audio b base basefont bdi bdo big ",
@@ -71,18 +74,33 @@ fn has_unquoted_jsx_expression_brace(opening: &str) -> bool {
     false
 }
 
-pub(super) fn extract(source: &str, range: Range<usize>) -> Vec<MermaidFence> {
+pub(super) fn extract(
+    source: &str,
+    range: Range<usize>,
+    expressions: &mut MdxExpressionScanner,
+) -> Vec<MermaidFence> {
     let limit = range.end.min(source.len());
     let mut cursor = range.start.min(limit);
     let mut fences = Vec::new();
-
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
-        let Some(opening) = opening_fence(source, cursor, line_end) else {
+        let opening = (!expressions.is_inside_expression())
+            .then(|| opening_fence(source, cursor, line_end))
+            .flatten();
+        let Some(opening) = opening else {
+            expressions.observe_line(&source.as_bytes()[cursor..line_end]);
             cursor = next_line_start(source, line_end, limit);
             continue;
         };
-        let closing = closing_fence(source, &opening, limit);
+        // A blank line can make pulldown-cmark end an MDX HTML-block range even
+        // though the fenced block remains open. Once the range has supplied a
+        // Mermaid opener, continue only that fence's search through the source.
+        let closing_limit = if opening.is_mermaid {
+            source.len()
+        } else {
+            limit
+        };
+        let closing = closing_fence(source, &opening, closing_limit);
         if opening.is_mermaid {
             let body_end = closing.map_or(limit, |(start, _)| start);
             fences.push(MermaidFence {

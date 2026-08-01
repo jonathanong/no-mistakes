@@ -5,7 +5,11 @@ fn fixture(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/rules/markdown-mermaid-validation")
         .join(name);
-    std::fs::read_to_string(path).expect("Mermaid Markdown fixture should be readable")
+    std::fs::read_to_string(path)
+        .expect("Mermaid Markdown fixture should be readable")
+        // Keep control-character regressions representable in Git's text-only fixtures.
+        .replace("{{FORM_FEED}}", "\u{000c}")
+        .replace("{{VERTICAL_TAB}}", "\u{000b}")
 }
 
 #[test]
@@ -114,6 +118,17 @@ fn validates_a_fence_directly_inside_mdx_jsx() {
     );
     assert_eq!(result.diagnostics[0].file, "docs/component.mdx");
     assert_eq!(result.diagnostics[0].fence_line, 4);
+}
+
+#[test]
+fn validates_an_mdx_jsx_fence_split_across_html_block_ranges() {
+    for file in [Some("docs/blank-line.mdx"), None] {
+        let result = validate_markdown(&fixture("jsx-blank-line-valid.mdx"), file);
+
+        assert!(result.valid, "{file:?}: {:#?}", result.diagnostics);
+        assert_eq!(result.diagram_count, 1, "{file:?}");
+        assert!(result.diagnostics.is_empty(), "{file:?}");
+    }
 }
 
 #[test]
@@ -226,6 +241,17 @@ fn validates_interleaved_container_fences_inside_mdx_jsx() {
     assert!(result.valid, "{:#?}", result.diagnostics);
     assert_eq!(result.diagram_count, 2);
     assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn ignores_fence_like_text_inside_an_mdx_javascript_expression() {
+    for file in [Some("docs/expression.mdx"), None] {
+        let result = validate_markdown(&fixture("mdx-expression-fence-text.mdx"), file);
+
+        assert!(result.valid, "{file:?}: {:#?}", result.diagnostics);
+        assert_eq!(result.diagram_count, 1, "{file:?}");
+        assert!(result.diagnostics.is_empty(), "{file:?}");
+    }
 }
 
 #[test]

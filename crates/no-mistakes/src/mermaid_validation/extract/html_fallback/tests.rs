@@ -1,7 +1,11 @@
 use super::*;
 
 fn extract_all(source: &str) -> Vec<MermaidFence> {
-    extract(source, 0..source.len())
+    extract(
+        source,
+        0..source.len(),
+        &mut MdxExpressionScanner::default(),
+    )
 }
 
 #[test]
