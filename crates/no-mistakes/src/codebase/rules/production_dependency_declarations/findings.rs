@@ -9,8 +9,9 @@ pub(super) fn dev_only(
     root: &Path,
     file: &Path,
     line: u32,
-    package_name: &str,
-    import_name: &str,
+    owning_package: &str,
+    imported_package: &str,
+    import_specifier: &str,
 ) -> RuleFinding {
     let rel = relative_slash_path(root, file);
     RuleFinding {
@@ -18,13 +19,13 @@ pub(super) fn dev_only(
         file: rel.clone(),
         line: line as usize,
         message: format!(
-            "{rel}: imports '{import_name}', which {package_name} declares only under a \
+            "{rel}: imports '{import_specifier}', which {owning_package} declares only under a \
              non-production dependency field (e.g. devDependencies); the production deploy \
              prunes that field, so move it to dependencies (or \
              optionalDependencies/peerDependencies)"
         ),
-        import: Some(import_name.to_string()),
-        target: Some(package_name.to_string()),
+        import: Some(import_specifier.to_string()),
+        target: Some(imported_package.to_string()),
     }
 }
 
@@ -32,8 +33,9 @@ pub(super) fn undeclared(
     root: &Path,
     file: &Path,
     line: u32,
-    package_name: &str,
-    import_name: &str,
+    owning_package: &str,
+    imported_package: &str,
+    import_specifier: &str,
 ) -> RuleFinding {
     let rel = relative_slash_path(root, file);
     RuleFinding {
@@ -41,11 +43,11 @@ pub(super) fn undeclared(
         file: rel.clone(),
         line: line as usize,
         message: format!(
-            "{rel}: imports '{import_name}', which {package_name} does not declare as a \
+            "{rel}: imports '{import_specifier}', which {owning_package} does not declare as a \
              dependency; add it to dependencies (or optionalDependencies/peerDependencies)"
         ),
-        import: Some(import_name.to_string()),
-        target: Some(package_name.to_string()),
+        import: Some(import_specifier.to_string()),
+        target: Some(imported_package.to_string()),
     }
 }
 

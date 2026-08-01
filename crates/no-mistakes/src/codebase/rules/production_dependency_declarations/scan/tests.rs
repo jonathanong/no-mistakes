@@ -216,8 +216,27 @@ fn emit_finding_ignores_self_reference_imports() {
 
 #[test]
 fn emit_finding_ignores_node_builtin_imports() {
+    // Bare form only: `is_scheme_prefixed` already intercepts `node:fs` before
+    // this specifier would reach `is_node_builtin`, so a `node:`-prefixed
+    // specifier here would pass for the wrong reason.
     let mut findings = Vec::new();
-    let import = value_import("node:fs");
+    let import = value_import("fs");
+    emit_finding(
+        Path::new("/repo"),
+        Path::new("/repo/packages/lib/index.mts"),
+        &import,
+        "@acme/lib",
+        &dummy_manifest(),
+        &BTreeSet::from(["dependencies".to_string()]),
+        &mut findings,
+    );
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn emit_finding_ignores_scheme_prefixed_specifiers() {
+    let mut findings = Vec::new();
+    let import = value_import("virtual:app-config");
     emit_finding(
         Path::new("/repo"),
         Path::new("/repo/packages/lib/index.mts"),

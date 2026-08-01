@@ -7,17 +7,17 @@ use crate::codebase::workspaces::{self, WorkspaceMap};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-/// Discover every `package.json` under `root` and `workspace_roots`,
-/// bypassing the root manifest's `workspaces` glob membership so a package
-/// not (yet) listed there is still checked. Mirrors
-/// `forbidden_workspace_closure/workspace.rs`.
+/// Discover every `package.json` under `workspace_roots`, bypassing the root
+/// manifest's `workspaces` glob membership so a package not (yet) listed
+/// there is still checked. `workspace_roots` is the sole discovery scope —
+/// the check root is never implicitly included (see the `workspaceRoots`
+/// config validation message in the parent module).
 pub(super) fn load_workspace(
-    root: &Path,
     workspace_roots: &[PathBuf],
     files: &[PathBuf],
     sources: &SourceStore,
 ) -> anyhow::Result<WorkspaceMap> {
-    let mut roots: Vec<&Path> = vec![root];
+    let mut roots: Vec<&Path> = Vec::new();
     for workspace_root in workspace_roots {
         if !roots.contains(&workspace_root.as_path()) {
             roots.push(workspace_root);

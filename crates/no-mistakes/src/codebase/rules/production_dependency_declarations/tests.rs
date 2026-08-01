@@ -32,6 +32,21 @@ fn scenario_files(root: &Path, files: &[&str]) -> Vec<PathBuf> {
     files.iter().map(|file| root.join(file)).collect()
 }
 
+/// Like `config`, but lets a scenario configure its own `workspaceRoots`
+/// instead of the fixture-root default, to test scope-restriction behavior.
+fn config_with_roots(roots: &[&str]) -> NoMistakesConfig {
+    let quoted: Vec<String> = roots.iter().map(|root| format!("\"{root}\"")).collect();
+    let yaml = format!("workspaceRoots: [{}]\n", quoted.join(", "));
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(&yaml).unwrap(),
+        ..Default::default()
+    });
+    config
+}
+
 #[test]
 fn dev_only_workspace_import_from_production_file_is_flagged() {
     let root = fixture_root("dev-only-production-import");
@@ -54,6 +69,37 @@ fn dev_only_workspace_import_from_production_file_is_flagged() {
     assert_eq!(findings[0].target.as_deref(), Some("@acme/tool"));
     assert_eq!(findings[0].import.as_deref(), Some("@acme/tool"));
     assert!(findings[0].message.contains("devDependencies"));
+    // The owning package (@acme/lib), not the imported one (@acme/tool), must
+    // be named as the package with the missing declaration.
+    assert!(findings[0].message.contains("@acme/lib declares only"));
+}
+
+#[test]
+fn workspace_roots_excludes_an_external_importer_from_reachability_seeding() {
+    // Same fixture and files as `dev_only_workspace_import_from_production_file_is_flagged`,
+    // which finds a violation when `workspaceRoots` covers the whole fixture
+    // root. Here `workspaceRoots` covers only `packages/lib` — the package
+    // with the violation — but not `packages/app`, whose import of `@acme/lib`
+    // is the only thing that makes `packages/lib/index.mts`
+    // production-reachable at all. `workspaceRoots` filters `all_files` before
+    // reachability seeding runs, so `packages/app/index.mts` is invisible to
+    // the scan and the violation goes unseeded and unflagged.
+    let root = fixture_root("dev-only-production-import");
+    let files = scenario_files(
+        &root,
+        &[
+            "packages/app/package.json",
+            "packages/app/index.mts",
+            "packages/lib/package.json",
+            "packages/lib/index.mts",
+            "packages/tool/package.json",
+            "packages/tool/index.mts",
+        ],
+    );
+
+    let findings = check_with_files(&root, &config_with_roots(&["packages/lib"]), &files).unwrap();
+
+    assert!(findings.is_empty());
 }
 
 #[test]
@@ -136,6 +182,9 @@ fn undeclared_import_from_production_file_is_flagged() {
     assert_eq!(findings[0].target.as_deref(), Some("left-pad"));
     assert_eq!(findings[0].import.as_deref(), Some("left-pad"));
     assert!(findings[0].message.contains("does not declare"));
+    // The owning package (@acme/lib), not the imported one (left-pad), must
+    // be named as the package with the missing declaration.
+    assert!(findings[0].message.contains("@acme/lib does not declare"));
 }
 
 #[test]

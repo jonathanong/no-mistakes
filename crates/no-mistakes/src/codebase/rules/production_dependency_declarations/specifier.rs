@@ -53,13 +53,28 @@ pub(super) fn is_relative(specifier: &str) -> bool {
     specifier.starts_with('.')
 }
 
-/// `true` for a Node built-in module, in either the bare or `node:`-prefixed
-/// form, including a subpath import (`"fs/promises"`, `"node:fs/promises"`).
-/// These never require a `package.json` dependency declaration.
+/// `true` for a bare Node built-in module name, including a subpath import
+/// (`"fs/promises"`). Never requires a `package.json` dependency declaration.
+///
+/// Only handles the bare form: `is_scheme_prefixed` already intercepts the
+/// `node:`-prefixed form earlier in `emit_finding`, so a specifier reaching
+/// this function has never had that prefix.
 pub(super) fn is_node_builtin(name: &str) -> bool {
-    let bare = name.strip_prefix("node:").unwrap_or(name);
-    let module = bare.split('/').next().unwrap_or(bare);
+    let module = name.split('/').next().unwrap_or(name);
     NODE_BUILTIN_MODULES.contains(&module)
+}
+
+/// `true` for a specifier using a non-npm URL/loader scheme (e.g. Vite's
+/// `virtual:app-config`, a `data:` URI, webpack loader syntax), signaled by a
+/// `:` in the specifier's first path segment. npm package names can never
+/// contain `:`, so this can't misclassify a real package — it only stops a
+/// scheme specifier from being parsed as one before it ever reaches
+/// `package_name`.
+pub(super) fn is_scheme_prefixed(specifier: &str) -> bool {
+    specifier
+        .split('/')
+        .next()
+        .is_some_and(|first| first.contains(':'))
 }
 
 /// Split a bare (non-relative, non-`#`) specifier into its package name,

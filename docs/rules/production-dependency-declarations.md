@@ -15,7 +15,10 @@ reachable if an external package imports it (directly or through a chain of
 relative/self-reference imports), unless every external importer matches
 `testFilePatterns`. Package-internal tooling that nothing outside the package
 imports is out of scope. `import type` specifiers are exempt, since
-`verbatimModuleSyntax` erases them before runtime.
+`verbatimModuleSyntax` erases them before runtime. Specifiers using a non-npm
+URL/loader scheme (e.g. Vite's `virtual:app-config`, a `data:` URI) are also
+exempt — npm package names can never contain `:`, so these are never a
+`package.json` dependency question.
 
 ```yaml
 rules:
@@ -34,6 +37,13 @@ rules:
 inferred from the check root, so an omitted or empty value is a configuration
 error. `allowedFields` and `testFilePatterns` default to the values shown above
 when omitted.
+
+`workspaceRoots` also bounds which files the scan can see at all, including
+for reachability seeding: a package's only external importer living outside
+every configured root is invisible to the scan, so that package is never
+marked production-reachable and its findings go unseeded. List every root
+that participates in the import graph you care about, not just the packages
+you want findings for.
 
 Counterexample:
 
