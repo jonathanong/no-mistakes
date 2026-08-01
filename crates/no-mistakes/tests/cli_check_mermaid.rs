@@ -74,7 +74,7 @@ fn reports_invalid_and_unclosed_fences() {
         .filter(|finding| finding["rule"] == "markdown-mermaid-validation")
         .collect::<Vec<_>>();
 
-    assert_eq!(findings.len(), 7, "{body}");
+    assert_eq!(findings.len(), 9, "{body}");
     for file in [
         "invalid-flowchart.md",
         "invalid-markdown.markdown",
@@ -99,14 +99,24 @@ fn reports_invalid_and_unclosed_fences() {
         .find(|finding| finding["file"] == "multiple.md")
         .unwrap_or_else(|| panic!("missing multiple.md: {body}"));
     assert_eq!(multiple["line"], 8, "{multiple:#?}");
-    let unclosed = findings
+    let jsx_adjacent = findings
         .iter()
-        .find(|finding| finding["file"] == "unclosed.md")
-        .unwrap_or_else(|| panic!("missing unclosed.md: {body}"));
-    assert_eq!(unclosed["line"], 3, "{unclosed:#?}");
-    assert!(unclosed["message"]
+        .find(|finding| finding["file"] == "jsx-adjacent-invalid.mdx")
+        .unwrap_or_else(|| panic!("missing jsx-adjacent-invalid.mdx: {body}"));
+    assert_eq!(jsx_adjacent["line"], 4, "{jsx_adjacent:#?}");
+    assert!(jsx_adjacent["message"]
         .as_str()
-        .is_some_and(|message| message.contains("unclosed Mermaid fence")));
+        .is_some_and(|message| message.contains("invalid Mermaid diagram")));
+    for file in ["unclosed.md", "unclosed-tab-indented.md"] {
+        let unclosed = findings
+            .iter()
+            .find(|finding| finding["file"] == file)
+            .unwrap_or_else(|| panic!("missing {file}: {body}"));
+        assert_eq!(unclosed["line"], 3, "{unclosed:#?}");
+        assert!(unclosed["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("unclosed Mermaid fence")));
+    }
     for ignored in ["excluded.md", "ignored.md", "suppressed.md", "valid.md"] {
         assert!(
             findings.iter().all(|finding| finding["file"] != ignored),

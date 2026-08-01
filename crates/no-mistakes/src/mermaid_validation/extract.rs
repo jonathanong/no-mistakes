@@ -3,17 +3,21 @@ use std::ops::Range;
 
 #[path = "fence_syntax.rs"]
 mod fence_syntax;
+#[path = "extract/html_fallback.rs"]
+mod html_fallback;
 use fence_syntax::{has_closing_fence, line_end_with_ending, FenceDelimiter};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct MermaidFence {
     pub(crate) content: String,
+    pub(crate) fence_offset: usize,
     pub(crate) fence_line: usize,
     pub(crate) closed: bool,
 }
 
 struct ActiveFence {
     content: String,
+    fence_offset: usize,
     fence_line: usize,
     delimiter: FenceDelimiter,
 }
@@ -24,6 +28,7 @@ struct ActiveFence {
 /// with its other facts instead of reparsing a file for each rule.
 pub(crate) struct MermaidFenceCollector<'source> {
     source: &'source str,
+    mdx_html_fallback: bool,
     active: Option<ActiveFence>,
     fences: Vec<MermaidFence>,
 }
@@ -32,6 +37,16 @@ impl<'source> MermaidFenceCollector<'source> {
     pub(crate) fn new(source: &'source str) -> Self {
         Self {
             source,
+            mdx_html_fallback: false,
+            active: None,
+            fences: Vec::new(),
+        }
+    }
+
+    pub(crate) fn new_with_mdx_html_fallback(source: &'source str) -> Self {
+        Self {
+            source,
+            mdx_html_fallback: true,
             active: None,
             fences: Vec::new(),
         }
@@ -39,10 +54,15 @@ impl<'source> MermaidFenceCollector<'source> {
 
     pub(crate) fn observe(&mut self, event: &Event<'_>, range: Range<usize>) {
         match event {
+            Event::Start(Tag::HtmlBlock) if self.mdx_html_fallback => {
+                self.fences
+                    .extend(html_fallback::extract(self.source, range));
+            }
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(info))) if is_mermaid_info(info) => {
                 if let Some(delimiter) = opening_delimiter(self.source, range.start) {
                     self.active = Some(ActiveFence {
                         content: String::new(),
+                        fence_offset: range.start,
                         fence_line: line_number(self.source, range.start),
                         delimiter,
                     });
@@ -57,6 +77,7 @@ impl<'source> MermaidFenceCollector<'source> {
                 if let Some(active) = self.active.take() {
                     self.fences.push(MermaidFence {
                         content: active.content,
+                        fence_offset: active.fence_offset,
                         fence_line: active.fence_line,
                         closed: has_closing_fence(self.source, active.delimiter, range.end),
                     });
@@ -66,13 +87,28 @@ impl<'source> MermaidFenceCollector<'source> {
         }
     }
 
-    pub(crate) fn finish(self) -> Vec<MermaidFence> {
+    pub(crate) fn finish(mut self) -> Vec<MermaidFence> {
+        self.fences.sort_by_key(|fence| fence.fence_offset);
+        self.fences.dedup_by_key(|fence| fence.fence_offset);
         self.fences
     }
 }
 
 pub(crate) fn extract_mermaid_fences(source: &str) -> Vec<MermaidFence> {
-    let mut collector = MermaidFenceCollector::new(source);
+    extract_with_collector(source, MermaidFenceCollector::new(source))
+}
+
+pub(crate) fn extract_mermaid_fences_with_mdx_html_fallback(source: &str) -> Vec<MermaidFence> {
+    extract_with_collector(
+        source,
+        MermaidFenceCollector::new_with_mdx_html_fallback(source),
+    )
+}
+
+fn extract_with_collector<'source>(
+    source: &'source str,
+    mut collector: MermaidFenceCollector<'source>,
+) -> Vec<MermaidFence> {
     for (event, range) in
         pulldown_cmark::Parser::new_ext(source, pulldown_cmark::Options::all()).into_offset_iter()
     {

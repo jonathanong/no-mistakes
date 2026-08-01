@@ -3,6 +3,8 @@ use super::*;
 #[test]
 fn closing_fence_rejects_excess_indent_and_trailing_content() {
     assert!(!is_closing_fence_line(b"    ```", b'`', 3, 0));
+    assert!(!is_closing_fence_line(b"\t```", b'`', 3, 0));
+    assert!(!is_closing_fence_line(b" \t```", b'`', 3, 0));
     assert!(!is_closing_fence_line(b"``` trailing", b'`', 3, 0));
     assert!(is_closing_fence_line(b">```", b'`', 3, 0));
 }

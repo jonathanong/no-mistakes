@@ -56,6 +56,58 @@ fn reports_an_unclosed_fence_without_a_cascading_syntax_error() {
 }
 
 #[test]
+fn tab_indented_fence_does_not_close_a_top_level_block() {
+    let result = validate_markdown(
+        &fixture("unclosed-tab-indented.md"),
+        Some("docs/tab-indented.md"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    let diagnostic = &result.diagnostics[0];
+    assert_eq!(
+        diagnostic.code,
+        MermaidValidationDiagnosticCode::UnclosedFence
+    );
+    assert_eq!(diagnostic.file, "docs/tab-indented.md");
+    assert_eq!(diagnostic.fence_line, 3);
+    assert_eq!(diagnostic.diagram_line, None);
+    assert_eq!(diagnostic.diagram_column, None);
+    assert_eq!(diagnostic.diagram_type, None);
+}
+
+#[test]
+fn validates_a_fence_directly_inside_mdx_jsx() {
+    let result = validate_markdown(
+        &fixture("jsx-adjacent-invalid.mdx"),
+        Some("docs/component.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(
+        result.diagnostics[0].code,
+        MermaidValidationDiagnosticCode::InvalidSyntax
+    );
+    assert_eq!(result.diagnostics[0].file, "docs/component.mdx");
+    assert_eq!(result.diagnostics[0].fence_line, 4);
+}
+
+#[test]
+fn markdown_file_does_not_enable_mdx_jsx_recovery() {
+    let result = validate_markdown(
+        &fixture("jsx-adjacent-invalid.mdx"),
+        Some("docs/component.md"),
+    );
+
+    assert!(result.valid);
+    assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
 fn ignores_non_mermaid_code_fences() {
     let result = validate_markdown(&fixture("ignored.md"), None);
 

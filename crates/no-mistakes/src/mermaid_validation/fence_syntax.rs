@@ -34,19 +34,30 @@ fn is_closing_fence_line(
     container_indent: usize,
 ) -> bool {
     let line = strip_blockquote_prefix(line);
-    let indent = line
-        .iter()
-        .take_while(|byte| byte.is_ascii_whitespace())
-        .count();
-    if indent > container_indent + 3 {
+    let (indent_bytes, indent_columns) = leading_indentation(line);
+    if indent_columns > container_indent + 3 {
         return false;
     }
-    let remainder = &line[indent..];
+    let remainder = &line[indent_bytes..];
     let marker_length = remainder.iter().take_while(|byte| **byte == marker).count();
     marker_length >= opening_length
         && remainder[marker_length..]
             .iter()
             .all(|byte| byte.is_ascii_whitespace())
+}
+
+fn leading_indentation(line: &[u8]) -> (usize, usize) {
+    let mut bytes = 0;
+    let mut columns = 0;
+    for byte in line {
+        match byte {
+            b' ' => columns += 1,
+            b'\t' => columns += 4 - (columns % 4),
+            _ => break,
+        }
+        bytes += 1;
+    }
+    (bytes, columns)
 }
 
 pub(super) fn strip_blockquote_prefix(mut line: &[u8]) -> &[u8] {

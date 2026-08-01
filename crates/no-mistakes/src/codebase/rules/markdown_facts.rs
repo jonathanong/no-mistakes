@@ -66,7 +66,7 @@ impl MarkdownFactMap {
             .par_iter()
             .filter_map(|(path, demand)| {
                 let source = sources.read_path(path).ok()?;
-                Some((path.clone(), collect(source, *demand)))
+                Some((path.clone(), collect(path, source, *demand)))
             })
             .collect::<Vec<_>>();
         facts.sort_unstable_by(|left, right| left.0.cmp(&right.0));
@@ -80,10 +80,14 @@ impl MarkdownFactMap {
     }
 }
 
-fn collect(source: Arc<str>, demand: FactDemand) -> MarkdownFacts {
+fn collect(path: &Path, source: Arc<str>, demand: FactDemand) -> MarkdownFacts {
     let mut table_count = 0;
     let mut link_destinations = Vec::new();
-    let mut mermaid_collector = MermaidFenceCollector::new(&source);
+    let mut mermaid_collector = if path.extension().is_some_and(|extension| extension == "mdx") {
+        MermaidFenceCollector::new_with_mdx_html_fallback(&source)
+    } else {
+        MermaidFenceCollector::new(&source)
+    };
     if demand.pulldown {
         for (event, range) in Parser::new_ext(&source, MarkdownOptions::all()).into_offset_iter() {
             mermaid_collector.observe(&event, range);
