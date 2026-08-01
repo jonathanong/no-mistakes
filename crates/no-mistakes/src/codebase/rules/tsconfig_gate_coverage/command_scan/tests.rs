@@ -12,6 +12,14 @@ fn shell_scanner_tracks_cd_and_pnpm_dir() {
 }
 
 #[test]
+fn shell_scanner_skips_whitespace_only_segments() {
+    assert_eq!(
+        scan_shell_for_typechecked_projects("  \n tsc --noEmit", "."),
+        vec!["tsconfig.json"]
+    );
+}
+
+#[test]
 fn dynamic_and_indirect_commands_do_not_count() {
     for script in [
         "\"$ROOT_BIN/tsc\" --noEmit --project app/tsconfig.json",

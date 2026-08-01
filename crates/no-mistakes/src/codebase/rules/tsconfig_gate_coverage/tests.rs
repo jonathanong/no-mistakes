@@ -1,5 +1,5 @@
 use super::workflow::{
-    default_working_directory, effective_working_directory, is_project_inside_root,
+    default_working_directory, effective_working_directory, is_repo_relative_project_path,
 };
 use super::*;
 use crate::codebase::ci_workflows::{
@@ -204,14 +204,8 @@ fn pure_helpers_keep_config_and_workflow_boundaries_static() {
         ),
         "config/no-mistakes.yml"
     );
-    assert!(is_project_inside_root(
-        Path::new("/repo"),
-        "app/tsconfig.json"
-    ));
-    assert!(!is_project_inside_root(
-        Path::new("/repo"),
-        "../tsconfig.json"
-    ));
+    assert!(is_repo_relative_project_path("app/tsconfig.json"));
+    assert!(!is_repo_relative_project_path("../tsconfig.json"));
 }
 
 #[test]
@@ -260,7 +254,7 @@ fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
             },
         ],
     };
-    assert!(ci_typechecked_projects(Path::new("/repo"), &workflows).is_empty());
+    assert!(ci_typechecked_projects(&workflows).is_empty());
 }
 
 #[test]
@@ -290,4 +284,30 @@ fn application_scan_combines_allowlist_and_missing_gate_findings() {
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("no local typecheck registration")));
+}
+
+#[test]
+fn blank_allowlist_reasons_do_not_claim_normalized_paths() {
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+    let options = Options {
+        allow_projects: BTreeMap::from([
+            ("./app/tsconfig.json".to_string(), "".to_string()),
+            (
+                "app/tsconfig.json".to_string(),
+                "reasoned exemption".to_string(),
+            ),
+        ]),
+    };
+
+    let findings = scan_application(
+        &options,
+        &tracked,
+        &tracked,
+        &BTreeSet::new(),
+        &BTreeSet::new(),
+        ".no-mistakes.yml",
+    );
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].message.contains("non-empty reason"));
 }

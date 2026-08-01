@@ -98,7 +98,7 @@ impl DepGraph {
                 swift_facts: None,
                 import_resolution_cache: None,
                 visible_paths: None,
-                workflow_documents: None,
+                workflow_documents: prepared.workflow_documents(),
             },
             Some(facts as &dyn TsFactLookup),
             SuppliedFactPolicy::RequireComplete,

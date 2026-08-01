@@ -37,10 +37,13 @@ pub(crate) fn scan_shell_for_typechecked_projects(script: &str, initial_cwd: &st
     let mut cwd = normalize_repo_relative(initial_cwd);
     let mut projects = Vec::new();
     for segment in script.split(['\n', ';']).flat_map(|line| line.split("&&")) {
-        let Some(tokens) = static_tokens(segment.trim()) else {
+        let Some(tokens) = static_tokens(segment) else {
             continue;
         };
-        if tokens[0] == "cd" {
+        let Some(first) = tokens.first() else {
+            continue;
+        };
+        if first == "cd" {
             cwd = (tokens.len() == 2)
                 .then(|| {
                     tokens

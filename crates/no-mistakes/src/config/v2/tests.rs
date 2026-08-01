@@ -264,7 +264,7 @@ fn always_checks_require_whole_project_commands_without_globs() {
     .unwrap_err();
     assert!(invalid_file_args
         .to_string()
-        .contains("checks.commands[0].always requires fileArgs: none"));
+        .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; set fileArgs: none"));
 
     let invalid_globs = super::discover::parse_v2_config_quiet(
         "checks:\n  commands:\n    - name: invalid\n      always: true\n      include: [\"src/**/*.ts\"]\n      command: [echo, always]\n      fileArgs: none\n",
@@ -273,7 +273,7 @@ fn always_checks_require_whole_project_commands_without_globs() {
     .unwrap_err();
     assert!(invalid_globs
         .to_string()
-        .contains("checks.commands[0].always requires empty include and exclude"));
+        .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; remove include and exclude"));
 
     let invalid_exclude = super::discover::parse_v2_config_quiet(
         "checks:\n  commands:\n    - name: invalid\n      always: true\n      exclude: [\"generated/**\"]\n      command: [echo, always]\n      fileArgs: none\n",
@@ -282,7 +282,7 @@ fn always_checks_require_whole_project_commands_without_globs() {
     .unwrap_err();
     assert!(invalid_exclude
         .to_string()
-        .contains("checks.commands[0].always requires empty include and exclude"));
+        .contains("checks.commands[0].always runs once for the whole project, so file selection is invalid; remove include and exclude"));
 }
 
 #[test]

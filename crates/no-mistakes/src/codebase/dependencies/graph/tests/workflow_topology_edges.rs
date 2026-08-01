@@ -134,6 +134,69 @@ fn workflow_topology_builds_job_step_uses_and_run_edges() {
 }
 
 #[test]
+fn prepared_check_fact_graph_reuses_preparsed_workflows() {
+    let source = workflow_topology_fixture();
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let all_files = GraphFiles::discover(&root).all;
+    let plan = GraphBuildPlan {
+        workflow_topology: true,
+        ..GraphBuildPlan::default()
+    };
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = visible.source_store_for(&root);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &config);
+    let mut prepared = prepare_graph_config(&root, plan, &codebase_config, &config, &visible)
+        .expect("workflow graph config prepares");
+    let workflows = std::sync::Arc::new(
+        crate::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
+            &root, &config.ci, &visible, &sources,
+        ),
+    );
+    let reads_after_workflow_preparation = sources.physical_read_count();
+    prepared.set_workflow_documents(Some(workflows));
+
+    // The graph's file universe was already fixed above. If this entrypoint
+    // reparses workflows, the removed document has no jobs and loses this edge.
+    std::fs::remove_file(root.join(".github/workflows/main.yml")).unwrap();
+
+    let (fact_plan, fact_context) =
+        ts_fact_plan_and_context_for_plan_with_prepared(&root, plan, &prepared);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        all_files.clone(),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: fact_plan,
+            graph_context: fact_context,
+            ..Default::default()
+        },
+    );
+    let graph = DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
+        &root,
+        &TsConfig::default(),
+        plan,
+        all_files,
+        None,
+        &facts,
+        &prepared,
+    )
+    .expect("prepared workflow graph builds after its source file is unavailable");
+
+    assert_eq!(
+        sources.physical_read_count(),
+        reads_after_workflow_preparation,
+        "graph construction must reuse the request's parsed workflow documents"
+    );
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 0),
+        NodeId::File(root.join("scripts/direct.mjs")),
+        EdgeKind::WorkflowRun,
+    ));
+}
+
+#[test]
 fn workflow_artifacts_connect_exact_producer_and_consumer_steps() {
     let root = workflow_topology_fixture();
     let graph = DepGraph::build_with_plan(&root, &TsConfig::default(), GraphBuildPlan::all())

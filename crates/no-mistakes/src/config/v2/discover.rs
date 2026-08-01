@@ -153,10 +153,14 @@ fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
     }
     for (index, command) in config.checks.commands.iter().enumerate() {
         if command.always && command.file_args != super::schema::CheckFileArgs::None {
-            anyhow::bail!("checks.commands[{index}].always requires fileArgs: none");
+            anyhow::bail!(
+                "checks.commands[{index}].always runs once for the whole project, so file selection is invalid; set fileArgs: none"
+            );
         }
         if command.always && (!command.include.is_empty() || !command.exclude.is_empty()) {
-            anyhow::bail!("checks.commands[{index}].always requires empty include and exclude");
+            anyhow::bail!(
+                "checks.commands[{index}].always runs once for the whole project, so file selection is invalid; remove include and exclude"
+            );
         }
     }
     targeted_triggers::validate(config, path)?;

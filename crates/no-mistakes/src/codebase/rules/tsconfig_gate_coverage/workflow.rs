@@ -2,12 +2,8 @@ use super::{application::project_finding, command_scan, RuleFinding};
 use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
-use std::path::Path;
 
-pub(super) fn ci_typechecked_projects(
-    root: &Path,
-    workflows: &ParsedWorkflowSet,
-) -> BTreeSet<String> {
+pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet<String> {
     let mut projects = BTreeSet::new();
     for document in &workflows.documents {
         let Ok(workflow) = document.value.as_ref() else {
@@ -34,7 +30,7 @@ pub(super) fn ci_typechecked_projects(
                     continue;
                 };
                 for project in command_scan::scan_shell_for_typechecked_projects(run, &cwd) {
-                    if is_project_inside_root(root, &project) {
+                    if is_repo_relative_project_path(&project) {
                         projects.insert(project);
                     }
                 }
@@ -62,7 +58,7 @@ pub(super) fn effective_working_directory(
     }
 }
 
-pub(super) fn is_project_inside_root(_root: &Path, project: &str) -> bool {
+pub(super) fn is_repo_relative_project_path(project: &str) -> bool {
     command_scan::normalize_repo_relative(project).is_some()
 }
 

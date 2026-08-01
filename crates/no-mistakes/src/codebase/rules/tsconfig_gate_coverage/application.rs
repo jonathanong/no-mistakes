@@ -68,6 +68,14 @@ fn validate_allowlist(
             ));
             continue;
         }
+        if reason.trim().is_empty() {
+            findings.push(config_finding(
+                config_file,
+                raw_path,
+                format!("allowProjects entry `{raw_path}` must include a non-empty reason"),
+            ));
+            continue;
+        }
         if let Some(first) = normalized.insert(path.clone(), raw_path.clone()) {
             findings.push(config_finding(
                 config_file,
@@ -75,14 +83,6 @@ fn validate_allowlist(
                 format!(
                     "allowProjects entries `{first}` and `{raw_path}` normalize to the same path `{path}`"
                 ),
-            ));
-            continue;
-        }
-        if reason.trim().is_empty() {
-            findings.push(config_finding(
-                config_file,
-                raw_path,
-                format!("allowProjects entry `{raw_path}` must include a non-empty reason"),
             ));
             continue;
         }
