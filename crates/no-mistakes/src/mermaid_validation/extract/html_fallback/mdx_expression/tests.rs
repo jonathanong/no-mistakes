@@ -1,3 +1,4 @@
+use super::continuation::{leading_esm_continuation, LeadingContinuation};
 use super::*;
 
 #[test]
@@ -101,6 +102,7 @@ fn discovers_top_level_expressions_and_esm_regions() {
             assert!(scanner.is_inside_expression(), "{line:?}");
         }
         scanner.observe_source(lines[lines.len() - 1]);
+        scanner.resolve_deferred_esm_before_markdown("# Markdown resumes", 0);
         assert!(!scanner.is_inside_expression(), "{lines:?}");
     }
 
@@ -195,6 +197,20 @@ fn incomplete_export_default_keeps_esm_masked_across_lines() {
 }
 
 #[test]
+fn keeps_esm_active_for_a_next_line_leading_continuation() {
+    let mut scanner = MdxExpressionScanner::default();
+
+    scanner.observe_source(b"export default formatter\n");
+    assert!(scanner.is_inside_expression());
+    scanner.observe_source(b"// continuation follows\n  .render(String.raw`\n");
+    assert!(scanner.is_inside_expression());
+    scanner.observe_source(b"fence-like text\n  `)\n");
+    assert!(scanner.is_inside_expression());
+    scanner.resolve_deferred_esm_before_markdown("```mermaid", 0);
+    assert!(!scanner.is_inside_expression());
+}
+
+#[test]
 fn finds_unescaped_mdx_regions_after_expression_closures() {
     assert_eq!(markdown_escape_end(b"plain", 0), None);
     assert_eq!(markdown_escape_end(br"\{", 0), Some(2));
@@ -221,10 +237,25 @@ fn tracks_nested_jsx_and_ignores_apostrophes_in_jsx_text() {
     ] {
         let mut scanner = MdxExpressionScanner::default();
         scanner.observe_source(source);
+        scanner.resolve_deferred_esm_before_markdown("# Markdown resumes", 0);
 
         assert!(!scanner.is_masking_markdown(), "{source:?}");
         assert_eq!(scanner.depth, 0, "{source:?}");
         assert_eq!(scanner.jsx_expression_root_depth, None, "{source:?}");
         assert_eq!(scanner.jsx_element_depth, 0, "{source:?}");
     }
+}
+
+#[test]
+fn distinguishes_tagged_templates_from_markdown_fence_runs() {
+    for continuation in [b"`template".as_slice(), b"``"] {
+        assert!(matches!(
+            leading_esm_continuation(continuation),
+            LeadingContinuation::Continue
+        ));
+    }
+    assert!(matches!(
+        leading_esm_continuation(b"```mermaid"),
+        LeadingContinuation::End
+    ));
 }

@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use super::{html_fallback, HtmlFallbackMode, MermaidFenceCollector};
+use super::{html_fallback, MermaidFenceCollector};
 
 impl MermaidFenceCollector<'_> {
     pub(super) fn advance_mdx_expression_to(&mut self, end: usize) {
@@ -16,8 +16,7 @@ impl MermaidFenceCollector<'_> {
     }
 
     pub(super) fn recover_overlapping_mdx_code_block(&mut self, range: Range<usize>) -> bool {
-        if self.html_fallback == HtmlFallbackMode::Disabled || range.start >= self.mdx_scanned_until
-        {
+        if !self.mdx_scanning_enabled || range.start >= self.mdx_scanned_until {
             return false;
         }
         let extracted = html_fallback::extract(

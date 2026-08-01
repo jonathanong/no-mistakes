@@ -12,6 +12,8 @@ enum Literal {
 #[path = "mdx_expression/javascript.rs"]
 mod javascript;
 use javascript::ByteAction;
+#[path = "mdx_expression/continuation.rs"]
+mod continuation;
 #[path = "mdx_expression/jsx.rs"]
 mod jsx;
 
@@ -38,6 +40,7 @@ pub(crate) struct MdxExpressionScanner {
     last_js_code_byte: Option<u8>,
     esm_export_prefix: bool,
     esm_value_pending: bool,
+    esm_line_complete: bool,
 }
 
 impl MdxExpressionScanner {
@@ -50,16 +53,23 @@ impl MdxExpressionScanner {
     }
 
     pub(super) fn observe_line(&mut self, line: &[u8]) {
-        self.observe_line_until_closed(line, false);
+        self.observe_line_until_closed(line, false, false);
     }
 
-    fn observe_line_until_closed(&mut self, line: &[u8], stop_when_closed: bool) -> bool {
+    fn observe_line_until_closed(
+        &mut self,
+        line: &[u8],
+        stop_when_closed: bool,
+        defer_esm_close: bool,
+    ) -> bool {
+        self.resolve_deferred_esm(line);
         if !self.is_masking_markdown() && starts_esm_statement(line) {
             self.esm = true;
             self.can_start_regex = true;
             self.last_js_code_byte = None;
             self.esm_export_prefix = false;
             self.esm_value_pending = false;
+            self.esm_line_complete = false;
         }
         let mut index = 0;
         while index < line.len() {
@@ -105,10 +115,11 @@ impl MdxExpressionScanner {
             && !self.esm_export_prefix
             && !self.esm_value_pending
         {
-            self.esm = false;
-            self.last_js_code_byte = None;
-            self.esm_export_prefix = false;
-            self.esm_value_pending = false;
+            if defer_esm_close {
+                self.esm_line_complete = true;
+            } else {
+                self.close_esm();
+            }
         }
         self.escaped = false;
         false
@@ -117,7 +128,7 @@ impl MdxExpressionScanner {
     pub(crate) fn observe_source(&mut self, source: &[u8]) {
         for line in source.split(|byte| matches!(byte, b'\r' | b'\n')) {
             let stop_when_closed = self.is_masking_markdown();
-            self.observe_line_until_closed(line, stop_when_closed);
+            self.observe_line_until_closed(line, stop_when_closed, true);
         }
     }
 }

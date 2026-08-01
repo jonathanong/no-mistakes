@@ -5,6 +5,9 @@ use super::{fence_syntax::is_closing_fence_suffix, is_mermaid_info, line_number,
 #[path = "html_fallback/container.rs"]
 mod container;
 use container::ContainerPrefix;
+#[path = "html_fallback/code_span.rs"]
+mod code_span;
+use code_span::CodeSpanScanner;
 #[path = "html_fallback/block_boundary.rs"]
 mod block_boundary;
 use block_boundary::{
@@ -18,6 +21,9 @@ pub(super) use mdx_expression::MdxExpressionScanner;
 mod mdx_jsx;
 pub(super) use mdx_jsx::looks_like_clear_mdx_jsx;
 use mdx_jsx::looks_like_mdx_flow_boundary;
+#[path = "html_fallback/paragraph.rs"]
+mod paragraph;
+use paragraph::{retain_paragraph_context, update_paragraph_state};
 
 #[derive(Clone)]
 struct OpeningFence {
@@ -44,16 +50,21 @@ pub(super) fn extract(
     let mut consumed_until = cursor;
     let mut fences = Vec::new();
     let mut in_paragraph = false;
+    let mut paragraph_container = None;
+    let mut code_spans = CodeSpanScanner::default();
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
-        let opening = (!expressions.is_masking_markdown())
+        let raw_line = &source.as_bytes()[cursor..line_end];
+        retain_paragraph_context(raw_line, &mut in_paragraph, &mut paragraph_container);
+        let opening = (!expressions.is_masking_markdown() && !code_spans.is_masking_markdown())
             .then(|| opening_fence(source, cursor, line_end))
             .flatten();
         let Some(opening) =
             opening.filter(|opening| !in_paragraph || opening.can_interrupt_paragraph)
         else {
-            expressions.observe_line(&source.as_bytes()[cursor..line_end]);
-            update_paragraph_state(&source.as_bytes()[cursor..line_end], &mut in_paragraph);
+            expressions.observe_line(raw_line);
+            code_spans.observe_source(source.as_bytes(), cursor, line_end);
+            update_paragraph_state(raw_line, &mut in_paragraph, &mut paragraph_container);
             cursor = next_line_start(source, line_end, limit);
             continue;
         };
@@ -76,6 +87,7 @@ pub(super) fn extract(
         cursor = closing_end;
         consumed_until = closing_end;
         in_paragraph = false;
+        paragraph_container = None;
     }
 
     Extracted {
@@ -114,25 +126,6 @@ fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence>
         can_interrupt_paragraph: container.can_interrupt_paragraph(),
         container,
     })
-}
-
-fn update_paragraph_state(line: &[u8], in_paragraph: &mut bool) {
-    if is_indented_code(line) {
-        return;
-    }
-    let first = line.iter().position(|byte| !matches!(byte, b' ' | b'\t'));
-    match first.map(|index| line[index]) {
-        None => *in_paragraph = false,
-        Some(b'<') if looks_like_mdx_flow_boundary(line) => *in_paragraph = false,
-        Some(b'<') => {}
-        Some(b'#') if is_atx_heading(line) => *in_paragraph = false,
-        Some(b'*' | b'-' | b'_') if is_thematic_break(line) => *in_paragraph = false,
-        Some(b'=' | b'-') if *in_paragraph && is_setext_heading_underline(line) => {
-            *in_paragraph = false;
-        }
-        Some(_) if starts_block_container(line, *in_paragraph) => *in_paragraph = false,
-        Some(_) => *in_paragraph = true,
-    }
 }
 
 fn closing_fence(source: &str, opening: &OpeningFence, limit: usize) -> Option<(usize, usize)> {

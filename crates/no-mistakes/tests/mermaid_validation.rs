@@ -410,14 +410,49 @@ fn ignores_fence_like_text_inside_an_mdx_javascript_expression() {
 }
 
 #[test]
-fn ignores_fence_like_text_inside_top_level_mdx_code_regions() {
-    for file in [Some("docs/top-level-code.mdx"), None] {
-        let result = validate_markdown(&fixture("mdx-top-level-code-regions.mdx"), file);
+fn ignores_fence_text_in_mdx_container_paragraphs() {
+    let result = validate_markdown(
+        &fixture("mdx-container-paragraph-fence-text.mdx"),
+        Some("docs/container-paragraph.mdx"),
+    );
 
-        assert!(result.valid, "{file:?}: {:#?}", result.diagnostics);
-        assert_eq!(result.diagram_count, 1, "{file:?}");
-        assert!(result.diagnostics.is_empty(), "{file:?}");
-    }
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn ignores_fence_text_in_multiline_commonmark_code_spans() {
+    let result = validate_markdown(
+        &fixture("mdx-multiline-code-span-fence-text.mdx"),
+        Some("docs/code-span.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn ignores_fence_like_text_inside_top_level_mdx_code_regions() {
+    let file = Some("docs/top-level-code.mdx");
+    let result = validate_markdown(&fixture("mdx-top-level-code-regions.mdx"), file);
+
+    assert!(result.valid, "{file:?}: {:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1, "{file:?}");
+    assert!(result.diagnostics.is_empty(), "{file:?}");
+}
+
+#[test]
+fn ignores_fence_like_text_after_an_esm_leading_continuation() {
+    let result = validate_markdown(
+        &fixture("mdx-esm-leading-continuation.mdx"),
+        Some("docs/esm-continuation.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
 }
 
 #[test]
@@ -427,17 +462,28 @@ fn handles_mdx_expression_boundaries_and_esm_comments() {
         "mdx-same-line-expressions.mdx",
         "mdx-esm-trailing-comments.mdx",
     ] {
-        for file in [Some(fixture_name), None] {
-            let result = validate_markdown(&fixture(fixture_name), file);
+        let file = Some(fixture_name);
+        let result = validate_markdown(&fixture(fixture_name), file);
 
-            assert!(
-                result.valid,
-                "{fixture_name} ({file:?}): {:#?}",
-                result.diagnostics
-            );
-            assert_eq!(result.diagram_count, 1, "{fixture_name} ({file:?})");
-        }
+        assert!(
+            result.valid,
+            "{fixture_name} ({file:?}): {:#?}",
+            result.diagnostics
+        );
+        assert_eq!(result.diagram_count, 1, "{fixture_name} ({file:?})");
     }
+}
+
+#[test]
+fn automatic_mode_preserves_commonmark_until_clear_mdx_is_detected() {
+    let result = validate_markdown(&fixture("automatic-commonmark-unmatched-brace.md"), None);
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+
+    let mdx = validate_markdown(&fixture("mdx-expression-fence-text.mdx"), None);
+    assert!(mdx.valid, "{:#?}", mdx.diagnostics);
+    assert_eq!(mdx.diagram_count, 1);
 }
 
 #[test]

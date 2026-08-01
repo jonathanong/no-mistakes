@@ -192,3 +192,54 @@ fn recognizes_setext_and_container_block_boundaries() {
     }
     assert!(!is_indented_code(b"   code"));
 }
+
+#[test]
+fn paragraph_state_uses_content_inside_markdown_containers() {
+    let mut in_paragraph = false;
+    let mut container = None;
+    update_paragraph_state(b"- prose", &mut in_paragraph, &mut container);
+    assert!(in_paragraph);
+
+    retain_paragraph_context(b"  2. ```mermaid", &mut in_paragraph, &mut container);
+    update_paragraph_state(b"  2. ```mermaid", &mut in_paragraph, &mut container);
+    assert!(in_paragraph);
+
+    retain_paragraph_context(b"  - nested paragraph", &mut in_paragraph, &mut container);
+    update_paragraph_state(b"  - nested paragraph", &mut in_paragraph, &mut container);
+    assert!(in_paragraph);
+
+    in_paragraph = false;
+    container = None;
+    update_paragraph_state(b"> prose", &mut in_paragraph, &mut container);
+    assert!(in_paragraph);
+    retain_paragraph_context(b"> 2. ```mermaid", &mut in_paragraph, &mut container);
+    update_paragraph_state(b"> 2. ```mermaid", &mut in_paragraph, &mut container);
+    assert!(in_paragraph);
+
+    retain_paragraph_context(b"> # heading", &mut in_paragraph, &mut container);
+    update_paragraph_state(b"> # heading", &mut in_paragraph, &mut container);
+    assert!(!in_paragraph);
+
+    update_paragraph_state(b"* * *", &mut in_paragraph, &mut container);
+    update_paragraph_state(b"-", &mut in_paragraph, &mut container);
+    assert!(!in_paragraph);
+    for boundary in [
+        b"    indented code".as_slice(),
+        b"",
+        b"<Card />",
+        b"<span>inline</span>",
+    ] {
+        update_paragraph_state(boundary, &mut in_paragraph, &mut container);
+        assert!(!in_paragraph, "{boundary:?}");
+    }
+
+    update_paragraph_state(b"Setext heading", &mut in_paragraph, &mut container);
+    retain_paragraph_context(b"===", &mut in_paragraph, &mut container);
+    update_paragraph_state(b"===", &mut in_paragraph, &mut container);
+    assert!(!in_paragraph);
+
+    update_paragraph_state(b"- nested prose", &mut in_paragraph, &mut container);
+    retain_paragraph_context(b"top-level prose", &mut in_paragraph, &mut container);
+    assert!(!in_paragraph);
+    assert!(container.is_none());
+}

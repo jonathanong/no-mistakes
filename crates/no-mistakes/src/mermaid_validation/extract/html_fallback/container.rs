@@ -41,6 +41,10 @@ impl ContainerPrefix {
         self.can_interrupt_paragraph
     }
 
+    pub(super) fn has_steps(&self) -> bool {
+        !self.steps.is_empty()
+    }
+
     pub(super) fn strip_line<'line>(&self, line: &'line [u8]) -> Option<Cow<'line, [u8]>> {
         if line.iter().all(|byte| matches!(byte, b' ' | b'\t')) {
             if self

@@ -15,7 +15,7 @@ pub(super) fn prepare(
     config: &crate::config::v2::NoMistakesConfig,
     candidates: &RuleCandidateIndex,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> super::super::markdown_facts::MarkdownFactMap {
+) -> Result<super::super::markdown_facts::MarkdownFactMap> {
     let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
     if rule_enabled(config, MARKDOWN_LINK_DISPLAY_TEXT) {
         plan.request_display_links(markdown_link_display_text::fact_candidate_files(
@@ -25,9 +25,11 @@ pub(super) fn prepare(
         ));
     }
     if rule_enabled(config, MARKDOWN_MERMAID_VALIDATION) {
-        plan.request_pulldown(super::super::markdown_scope::mermaid_document_files(
+        plan.request_pulldown(markdown_mermaid_validation::fact_candidate_files(
+            root,
+            config,
             candidates.candidates(MARKDOWN_MERMAID_VALIDATION),
-        ));
+        )?);
     }
     for rule_id in [MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET] {
         if rule_enabled(config, rule_id) {
@@ -36,7 +38,9 @@ pub(super) fn prepare(
             ));
         }
     }
-    super::super::markdown_facts::MarkdownFactMap::prepare(&plan, sources)
+    Ok(super::super::markdown_facts::MarkdownFactMap::prepare(
+        &plan, sources,
+    ))
 }
 
 pub(super) fn spawn<'scope>(

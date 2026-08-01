@@ -5,7 +5,9 @@ Validates Mermaid diagrams embedded in fenced code blocks in tracked `.md`,
 repository or project scope.
 
 The recognized extension set is intentionally fixed to those three Markdown
-formats; `include` and `exclude` can narrow it but do not add custom extensions.
+formats and is matched case-insensitively. `include` and `exclude` narrow both
+the findings and the files prepared for parsing, but do not add custom
+extensions.
 
 ```yaml
 rules:

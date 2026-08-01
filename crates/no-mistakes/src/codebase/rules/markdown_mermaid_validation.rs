@@ -22,9 +22,26 @@ pub fn check_with_files(
 ) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(files);
     let mut plan = super::markdown_facts::MarkdownFactPlan::default();
-    plan.request_pulldown(super::markdown_scope::mermaid_document_files(files));
+    plan.request_pulldown(fact_candidate_files(root, config, files)?);
     let facts = super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
     check_with_files_and_facts(root, config, files, &facts)
+}
+
+pub(crate) fn fact_candidate_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+) -> Result<Vec<PathBuf>> {
+    let documents = super::markdown_scope::mermaid_document_files(files);
+    let mut targets = Vec::new();
+    for rule in config.rule_applications(RULE_ID) {
+        targets.extend(super::path_filter::filter_markdown_rule_files(
+            root, config, rule, &documents,
+        )?);
+    }
+    targets.sort();
+    targets.dedup();
+    Ok(targets)
 }
 
 #[cfg(not(feature = "mermaid-validation"))]

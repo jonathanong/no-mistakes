@@ -45,6 +45,7 @@ pub(crate) struct MermaidFenceCollector<'source> {
     list_item_depth: usize,
     mdx_expression: MdxExpressionScanner,
     mdx_scanned_until: usize,
+    mdx_scanning_enabled: bool,
     mdx_code_block: bool,
     active: Option<ActiveFence>,
     fences: Vec<MermaidFence>,
@@ -71,6 +72,7 @@ impl<'source> MermaidFenceCollector<'source> {
             list_item_depth: 0,
             mdx_expression: MdxExpressionScanner::default(),
             mdx_scanned_until: 0,
+            mdx_scanning_enabled: html_fallback == HtmlFallbackMode::All,
             mdx_code_block: false,
             active: None,
             fences: Vec::new(),
@@ -90,6 +92,13 @@ impl<'source> MermaidFenceCollector<'source> {
                     || (self.html_fallback == HtmlFallbackMode::ClearMdxJsx
                         && html_fallback::looks_like_clear_mdx_jsx(self.source, range.clone())) =>
             {
+                if self.html_fallback == HtmlFallbackMode::ClearMdxJsx && !self.mdx_scanning_enabled
+                {
+                    // Preserve CommonMark semantics before there is concrete
+                    // evidence that an omitted-filename document is MDX.
+                    self.mdx_scanned_until = self.mdx_scanned_until.max(range.start);
+                    self.mdx_scanning_enabled = true;
+                }
                 self.advance_mdx_expression_to(range.start);
                 let start = range.start.max(self.mdx_scanned_until.min(range.end));
                 let extracted =
@@ -105,8 +114,10 @@ impl<'source> MermaidFenceCollector<'source> {
                     self.mdx_code_block = true;
                     return;
                 }
-                if self.html_fallback != HtmlFallbackMode::Disabled {
+                if self.mdx_scanning_enabled {
                     self.advance_mdx_expression_to(range.start);
+                    self.mdx_expression
+                        .resolve_deferred_esm_before_markdown(self.source, range.start);
                     self.mdx_code_block = true;
                     self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
                 }
@@ -129,7 +140,7 @@ impl<'source> MermaidFenceCollector<'source> {
                     }
                 }
             }
-            Event::Code(_) if self.html_fallback != HtmlFallbackMode::Disabled => {
+            Event::Code(_) if self.mdx_scanning_enabled => {
                 self.advance_mdx_expression_to(range.start);
                 self.mdx_scanned_until = self.mdx_scanned_until.max(range.end);
             }
