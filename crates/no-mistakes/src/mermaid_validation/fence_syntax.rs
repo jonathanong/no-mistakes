@@ -53,17 +53,18 @@ fn is_closing_fence_line(
 }
 
 fn leading_indentation(line: &[u8]) -> (usize, usize) {
-    let mut bytes = 0;
-    let mut columns = 0;
-    for byte in line {
-        match byte {
-            b' ' => columns += 1,
-            b'\t' => columns += 4 - (columns % 4),
-            _ => break,
-        }
-        bytes += 1;
-    }
-    (bytes, columns)
+    let bytes = line
+        .iter()
+        .take_while(|byte| matches!(byte, b' ' | b'\t'))
+        .count();
+    (bytes, markdown_columns(&line[..bytes]))
+}
+
+pub(super) fn markdown_columns(bytes: &[u8]) -> usize {
+    bytes.iter().fold(0, |columns, byte| match byte {
+        b'\t' => columns + 4 - (columns % 4),
+        _ => columns + 1,
+    })
 }
 
 pub(super) fn strip_blockquote_prefix(mut line: &[u8]) -> (&[u8], usize) {

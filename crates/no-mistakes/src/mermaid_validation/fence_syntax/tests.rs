@@ -50,4 +50,6 @@ fn blockquote_and_line_end_helpers_cover_boundary_forms() {
     assert_eq!(line_end_with_ending("line\r\nnext", 4), 6);
     assert_eq!(line_end_with_ending("line\rnext", 4), 5);
     assert_eq!(line_end_with_ending("line", 4), 4);
+    assert_eq!(markdown_columns(b"-\t"), 4);
+    assert_eq!(markdown_columns(b"- \t"), 4);
 }

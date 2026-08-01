@@ -1,41 +1,42 @@
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
+enum ContainerStep {
+    Blockquote,
+    ListIndent(usize),
+}
+
+#[derive(Clone, Default)]
 pub(super) struct ContainerPrefix {
-    blockquote_depth: usize,
-    list_indent: Option<usize>,
+    steps: Vec<ContainerStep>,
 }
 
 impl ContainerPrefix {
     pub(super) fn from_opening_line(mut line: &[u8]) -> (&[u8], Self) {
-        let mut blockquote_depth = 0;
-        while let Some(remainder) = strip_one_blockquote(line) {
-            blockquote_depth += 1;
-            line = remainder;
+        let mut steps = Vec::new();
+        loop {
+            if let Some(remainder) = strip_one_blockquote(line) {
+                steps.push(ContainerStep::Blockquote);
+                line = remainder;
+            } else if let Some((remainder, indent)) = strip_one_list_marker(line) {
+                steps.push(ContainerStep::ListIndent(indent));
+                line = remainder;
+            } else {
+                break;
+            }
         }
-        let mut list_indent = None;
-        while let Some((remainder, indent)) = strip_one_list_marker(line) {
-            list_indent = Some(list_indent.unwrap_or(0) + indent);
-            line = remainder;
-        }
-        (
-            line,
-            Self {
-                blockquote_depth,
-                list_indent,
-            },
-        )
+        (line, Self { steps })
     }
 
     pub(super) fn strip_line<'line>(&self, mut line: &'line [u8]) -> Option<&'line [u8]> {
         if line.iter().all(|byte| byte.is_ascii_whitespace()) {
             return Some(&line[line.len()..]);
         }
-        for _ in 0..self.blockquote_depth {
-            line = strip_one_blockquote(line)?;
+        for step in &self.steps {
+            line = match step {
+                ContainerStep::Blockquote => strip_one_blockquote(line)?,
+                ContainerStep::ListIndent(indent) => strip_indentation(line, *indent)?,
+            };
         }
-        match self.list_indent {
-            Some(indent) => strip_indentation(line, indent),
-            None => Some(line),
-        }
+        Some(line)
     }
 }
 

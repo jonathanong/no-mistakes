@@ -17,8 +17,26 @@ fn recognizes_clear_mdx_jsx_without_treating_standard_html_as_mdx() {
         "plain text\n",
         "<div>\n```mermaid\nflowchart TD\n```\n</div>\n",
         "<DIV>\n```mermaid\nflowchart TD\n```\n</DIV>\n",
+        "<div data-template=\"{name}\">\n```mermaid\nflowchart TD\n```\n</div>\n",
+        "<div data-template='{name}'>\n```mermaid\nflowchart TD\n```\n</div>\n",
     ] {
         assert!(!looks_like_clear_mdx_jsx(source, 0..source.len()));
+    }
+}
+
+#[test]
+fn jsx_expression_braces_must_be_outside_quoted_attributes() {
+    for opening in ["div value={value}>", "div value = {value}>"] {
+        assert!(has_unquoted_jsx_expression_brace(opening));
+    }
+    for opening in [
+        "div data-template=\"{name}\">",
+        "div data-template='{name}'>",
+        "div data-template=\"before > {name} after\">",
+        "div>",
+        "div",
+    ] {
+        assert!(!has_unquoted_jsx_expression_brace(opening));
     }
 }
 

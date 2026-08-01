@@ -141,10 +141,43 @@ fn omitted_file_preserves_standard_markdown_html_block_semantics() {
 }
 
 #[test]
+fn omitted_file_ignores_braces_inside_quoted_standard_html_attributes() {
+    let result = validate_markdown(&fixture("standard-html-quoted-braces.md"), None);
+
+    assert!(result.valid);
+    assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn tabbed_list_fence_closer_uses_markdown_columns() {
+    let result = validate_markdown(
+        &fixture("tabbed-list-valid-closer.md"),
+        Some("docs/tabbed-list.md"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
 fn validates_list_and_blockquote_fences_inside_mdx_jsx() {
     let result = validate_markdown(
         &fixture("jsx-containers-valid.mdx"),
         Some("docs/containers.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 2);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn validates_interleaved_container_fences_inside_mdx_jsx() {
+    let result = validate_markdown(
+        &fixture("jsx-interleaved-containers-valid.mdx"),
+        Some("docs/interleaved-containers.mdx"),
     );
 
     assert!(result.valid, "{:#?}", result.diagnostics);

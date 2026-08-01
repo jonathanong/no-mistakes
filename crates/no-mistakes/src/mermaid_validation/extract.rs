@@ -181,7 +181,7 @@ fn opening_delimiter(source: &str, offset: usize) -> Option<FenceDelimiter> {
         if is_mermaid_info(trailing) {
             let prefix = &line[..index];
             let container_indent = if prefix.iter().any(|byte| !byte.is_ascii_whitespace()) {
-                index
+                fence_syntax::markdown_columns(prefix)
             } else {
                 0
             };

@@ -14,6 +14,20 @@ fn strips_nested_blockquote_and_list_containers() {
 }
 
 #[test]
+fn strips_interleaved_container_steps_in_opening_order() {
+    let (opening, prefix) = ContainerPrefix::from_opening_line(b"> - > 1. ~~~mermaid");
+
+    assert_eq!(opening, b"~~~mermaid");
+    assert_eq!(
+        prefix.strip_line(b">   >    flowchart TD"),
+        Some(&b"flowchart TD"[..])
+    );
+    assert_eq!(prefix.strip_line(b">   >    ~~~"), Some(&b"~~~"[..]));
+    assert_eq!(prefix.strip_line(b"> >      ~~~"), None);
+    assert_eq!(prefix.strip_line(b"  >    ~~~"), None);
+}
+
+#[test]
 fn recognizes_ordered_markers_and_rejects_lookalikes() {
     let (opening, ordered) = ContainerPrefix::from_opening_line(b"123. ```mermaid");
     assert_eq!(opening, b"```mermaid");

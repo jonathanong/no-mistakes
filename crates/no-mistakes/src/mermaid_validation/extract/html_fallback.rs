@@ -18,7 +18,7 @@ const STANDARD_HTML_TAGS: &str = concat!(
     "track tt u ul var video wbr xmp",
 );
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct OpeningFence {
     marker: u8,
     length: usize,
@@ -49,11 +49,26 @@ pub(super) fn looks_like_clear_mdx_jsx(source: &str, range: Range<usize>) -> boo
         && !STANDARD_HTML_TAGS
             .split_ascii_whitespace()
             .any(|tag| name.eq_ignore_ascii_case(tag));
-    let opening_tag = after_open
-        .split_once('>')
-        .map_or(after_open, |(opening, _)| opening);
+    component_name || has_unquoted_jsx_expression_brace(after_open)
+}
 
-    component_name || opening_tag.contains('{')
+fn has_unquoted_jsx_expression_brace(opening: &str) -> bool {
+    let mut quote = None;
+    for character in opening.chars() {
+        if let Some(expected) = quote {
+            if character == expected {
+                quote = None;
+            }
+            continue;
+        }
+        match character {
+            '\'' | '"' => quote = Some(character),
+            '{' => return true,
+            '>' => return false,
+            _ => {}
+        }
+    }
+    false
 }
 
 pub(super) fn extract(source: &str, range: Range<usize>) -> Vec<MermaidFence> {
@@ -67,11 +82,11 @@ pub(super) fn extract(source: &str, range: Range<usize>) -> Vec<MermaidFence> {
             cursor = next_line_start(source, line_end, limit);
             continue;
         };
-        let closing = closing_fence(source, opening, limit);
+        let closing = closing_fence(source, &opening, limit);
         if opening.is_mermaid {
             let body_end = closing.map_or(limit, |(start, _)| start);
             fences.push(MermaidFence {
-                content: body_content(source, opening, body_end),
+                content: body_content(source, &opening, body_end),
                 fence_offset: cursor,
                 fence_line: line_number(source, cursor),
                 closed: closing.is_some(),
@@ -117,7 +132,7 @@ fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence>
     })
 }
 
-fn closing_fence(source: &str, opening: OpeningFence, limit: usize) -> Option<(usize, usize)> {
+fn closing_fence(source: &str, opening: &OpeningFence, limit: usize) -> Option<(usize, usize)> {
     let mut cursor = opening.body_start;
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
@@ -144,7 +159,7 @@ fn closing_fence(source: &str, opening: OpeningFence, limit: usize) -> Option<(u
     None
 }
 
-fn body_content(source: &str, opening: OpeningFence, end: usize) -> String {
+fn body_content(source: &str, opening: &OpeningFence, end: usize) -> String {
     let mut content = String::new();
     let mut cursor = opening.body_start;
     while cursor < end {
