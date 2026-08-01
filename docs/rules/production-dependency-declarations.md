@@ -1,7 +1,7 @@
 # `production-dependency-declarations`
 
 Reports when a production-reachable file in a workspace package imports a
-package its own `package.json` does not declare under an allowed dependency
+package that its own `package.json` does not declare under an allowed dependency
 field. There are two finding kinds: `dev-only` (the package is declared, but
 only under `devDependencies`) and `undeclared` (the package appears in no
 dependency field at all). Both matter for the same reason: a filtered
