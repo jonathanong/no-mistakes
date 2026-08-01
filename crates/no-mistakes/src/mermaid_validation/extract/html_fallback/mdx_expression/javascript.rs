@@ -49,8 +49,23 @@ impl MdxExpressionScanner {
         let byte = line[start];
         if is_identifier_start(byte) {
             let end = identifier_end(line, start);
-            self.can_start_regex = keyword_allows_regex(&line[start..end]);
+            let token = &line[start..end];
+            self.can_start_regex = keyword_allows_regex(token);
             if self.esm {
+                match token {
+                    b"export" if self.last_js_code_byte.is_none() => {
+                        self.esm_export_prefix = true;
+                        self.esm_value_pending = false;
+                    }
+                    b"default" if self.esm_export_prefix => {
+                        self.esm_export_prefix = false;
+                        self.esm_value_pending = true;
+                    }
+                    _ => {
+                        self.esm_export_prefix = false;
+                        self.esm_value_pending = false;
+                    }
+                }
                 self.last_js_code_byte = line.get(end - 1).copied();
             }
             return Some(end);
@@ -60,6 +75,8 @@ impl MdxExpressionScanner {
             let end = token_end(line, start);
             if self.esm {
                 self.last_js_code_byte = line.get(end - 1).copied();
+                self.esm_export_prefix = false;
+                self.esm_value_pending = false;
             }
             return Some(end);
         }
@@ -94,6 +111,8 @@ impl MdxExpressionScanner {
             && !matches!((byte, next), (b'/', Some(b'/' | b'*')))
         {
             self.last_js_code_byte = Some(byte);
+            self.esm_export_prefix = false;
+            self.esm_value_pending = false;
         }
         match (byte, next) {
             (b'/', Some(b'/')) if active => return ByteAction::Break,

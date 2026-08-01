@@ -181,6 +181,20 @@ fn esm_detection_requires_a_declaration_delimiter() {
 }
 
 #[test]
+fn incomplete_export_default_keeps_esm_masked_across_lines() {
+    let mut scanner = MdxExpressionScanner::default();
+
+    scanner.observe_line(b"export default");
+    assert!(scanner.is_inside_expression());
+    scanner.observe_line(b"  /* expression follows */");
+    assert!(scanner.is_inside_expression());
+    scanner.observe_line(b"  String.raw`");
+    assert!(scanner.is_inside_expression());
+    scanner.observe_line(b"value`; ");
+    assert!(!scanner.is_inside_expression());
+}
+
+#[test]
 fn finds_unescaped_mdx_regions_after_expression_closures() {
     assert_eq!(markdown_escape_end(b"plain", 0), None);
     assert_eq!(markdown_escape_end(br"\{", 0), Some(2));

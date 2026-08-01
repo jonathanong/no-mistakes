@@ -26,6 +26,8 @@ pub(crate) struct MdxExpressionScanner {
     jsx_opening: bool,
     jsx_quote: Option<u8>,
     last_js_code_byte: Option<u8>,
+    esm_export_prefix: bool,
+    esm_value_pending: bool,
 }
 
 impl MdxExpressionScanner {
@@ -46,6 +48,8 @@ impl MdxExpressionScanner {
             self.esm = true;
             self.can_start_regex = true;
             self.last_js_code_byte = None;
+            self.esm_export_prefix = false;
+            self.esm_value_pending = false;
         }
         let mut index = 0;
         while index < line.len() {
@@ -88,9 +92,13 @@ impl MdxExpressionScanner {
             && self.bracket_depth == 0
             && matches!(self.literal, Literal::None)
             && !esm_token_continues(self.last_js_code_byte)
+            && !self.esm_export_prefix
+            && !self.esm_value_pending
         {
             self.esm = false;
             self.last_js_code_byte = None;
+            self.esm_export_prefix = false;
+            self.esm_value_pending = false;
         }
         self.escaped = false;
         false
