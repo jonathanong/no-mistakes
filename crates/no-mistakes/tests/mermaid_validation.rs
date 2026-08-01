@@ -232,6 +232,37 @@ fn validates_list_and_blockquote_fences_inside_mdx_jsx() {
 }
 
 #[test]
+fn validates_mdx_list_lines_with_tab_overshoot() {
+    let result = validate_markdown(
+        &fixture("mdx-tab-overshoot-valid.mdx"),
+        Some("docs/tab-overshoot.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 1);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn container_blank_lines_allow_only_spaces_and_tabs() {
+    for fixture_name in [
+        "unclosed-mdx-form-feed-container-blank.mdx",
+        "unclosed-mdx-vertical-tab-container-blank.mdx",
+    ] {
+        let result = validate_markdown(&fixture(fixture_name), Some(fixture_name));
+
+        assert!(!result.valid, "{fixture_name}");
+        assert_eq!(result.diagram_count, 1, "{fixture_name}");
+        assert_eq!(result.diagnostics.len(), 1, "{fixture_name}");
+        assert_eq!(
+            result.diagnostics[0].code,
+            MermaidValidationDiagnosticCode::UnclosedFence,
+            "{fixture_name}"
+        );
+    }
+}
+
+#[test]
 fn validates_interleaved_container_fences_inside_mdx_jsx() {
     let result = validate_markdown(
         &fixture("jsx-interleaved-containers-valid.mdx"),

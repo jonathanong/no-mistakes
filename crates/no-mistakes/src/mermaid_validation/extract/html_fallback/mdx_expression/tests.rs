@@ -39,3 +39,40 @@ fn stops_gap_scanning_when_the_active_expression_closes() {
 
     assert!(!scanner.is_inside_expression());
 }
+
+#[test]
+fn ignores_braces_inside_regex_literals() {
+    for expression in [
+        b"{/[{]/.test(value)}".as_slice(),
+        b"{/\\}/g.test(value)}",
+        b"{return /[}]/i}",
+        b"{condition ? /{/ : /}/}",
+    ] {
+        let mut scanner = MdxExpressionScanner::default();
+        scanner.observe_line(expression);
+        assert!(!scanner.is_inside_expression(), "{expression:?}");
+    }
+
+    // JavaScript regex literals cannot cross a raw newline; recover so one
+    // malformed line cannot mask every later Markdown fence.
+    let mut scanner = MdxExpressionScanner::default();
+    scanner.observe_line(b"{/[{]");
+    assert!(scanner.is_inside_expression());
+    scanner.observe_line(b"}");
+    assert!(!scanner.is_inside_expression());
+}
+
+#[test]
+fn distinguishes_division_from_regex_literals() {
+    for expression in [
+        b"{value / divisor + ({ nested: 1 }).nested}".as_slice(),
+        b"{value++ / divisor}",
+        b"{value-- / divisor}",
+    ] {
+        let mut scanner = MdxExpressionScanner::default();
+
+        scanner.observe_line(expression);
+
+        assert!(!scanner.is_inside_expression(), "{expression:?}");
+    }
+}

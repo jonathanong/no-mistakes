@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 #[derive(Clone, Copy)]
 enum ContainerStep {
     Blockquote,
@@ -26,15 +28,20 @@ impl ContainerPrefix {
         (line, Self { steps })
     }
 
-    pub(super) fn strip_line<'line>(&self, mut line: &'line [u8]) -> Option<&'line [u8]> {
-        if line.iter().all(|byte| byte.is_ascii_whitespace()) {
-            return Some(&line[line.len()..]);
+    pub(super) fn strip_line<'line>(&self, line: &'line [u8]) -> Option<Cow<'line, [u8]>> {
+        if line.iter().all(|byte| matches!(byte, b' ' | b'\t')) {
+            return Some(Cow::Borrowed(&line[line.len()..]));
         }
+        let mut line = Cow::Borrowed(line);
         for step in &self.steps {
-            line = match step {
-                ContainerStep::Blockquote => strip_one_blockquote(line)?,
-                ContainerStep::ListIndent(indent) => strip_indentation(line, *indent)?,
+            let (consumed, residual_spaces) = match step {
+                ContainerStep::Blockquote => {
+                    let remainder = strip_one_blockquote(&line)?;
+                    (line.len() - remainder.len(), 0)
+                }
+                ContainerStep::ListIndent(indent) => indentation_prefix(&line, *indent)?,
             };
+            line = strip_prefix(line, consumed, residual_spaces);
         }
         Some(line)
     }
@@ -91,7 +98,7 @@ fn ordered_marker_end(line: &[u8], start: usize) -> Option<usize> {
     matches!(line.get(start + digits), Some(b'.' | b')')).then_some(start + digits + 1)
 }
 
-fn strip_indentation(line: &[u8], expected: usize) -> Option<&[u8]> {
+fn indentation_prefix(line: &[u8], expected: usize) -> Option<(usize, usize)> {
     let mut columns = 0;
     for (index, byte) in line.iter().enumerate() {
         columns = match byte {
@@ -100,10 +107,30 @@ fn strip_indentation(line: &[u8], expected: usize) -> Option<&[u8]> {
             _ => return None,
         };
         if columns >= expected {
-            return Some(&line[index + 1..]);
+            return Some((index + 1, columns - expected));
         }
     }
     None
+}
+
+fn strip_prefix<'line>(
+    line: Cow<'line, [u8]>,
+    consumed: usize,
+    residual_spaces: usize,
+) -> Cow<'line, [u8]> {
+    if residual_spaces == 0 {
+        return match line {
+            Cow::Borrowed(line) => Cow::Borrowed(&line[consumed..]),
+            Cow::Owned(mut line) => {
+                line.drain(..consumed);
+                Cow::Owned(line)
+            }
+        };
+    }
+    let mut normalized = Vec::with_capacity(residual_spaces + line.len() - consumed);
+    normalized.resize(residual_spaces, b' ');
+    normalized.extend_from_slice(&line[consumed..]);
+    Cow::Owned(normalized)
 }
 
 fn indentation_columns(line: &[u8]) -> usize {

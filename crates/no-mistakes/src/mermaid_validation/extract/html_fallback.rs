@@ -179,8 +179,11 @@ fn body_content(source: &str, opening: &OpeningFence, end: usize) -> String {
     while cursor < end {
         let line_end = line_content_end(source, cursor, end);
         let raw = &source.as_bytes()[cursor..line_end];
-        let line = opening.container.strip_line(raw).unwrap_or(raw);
-        content.push_str(std::str::from_utf8(line).expect("source line must remain valid UTF-8"));
+        let line = opening
+            .container
+            .strip_line(raw)
+            .unwrap_or_else(|| raw.into());
+        content.push_str(std::str::from_utf8(&line).expect("source line must remain valid UTF-8"));
         let next = next_line_start(source, line_end, end);
         content.push_str(&source[line_end..next]);
         cursor = next;

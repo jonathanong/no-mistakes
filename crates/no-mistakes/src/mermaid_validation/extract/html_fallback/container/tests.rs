@@ -6,10 +6,13 @@ fn strips_nested_blockquote_and_list_containers() {
 
     assert_eq!(opening, b"```mermaid");
     assert_eq!(
-        prefix.strip_line(b"> >     flowchart TD"),
+        prefix.strip_line(b"> >     flowchart TD").as_deref(),
         Some(&b"flowchart TD"[..])
     );
-    assert_eq!(prefix.strip_line(b"> >     ```"), Some(&b"```"[..]));
+    assert_eq!(
+        prefix.strip_line(b"> >     ```").as_deref(),
+        Some(&b"```"[..])
+    );
     assert_eq!(prefix.strip_line(b"  ```"), None);
 }
 
@@ -19,10 +22,13 @@ fn strips_interleaved_container_steps_in_opening_order() {
 
     assert_eq!(opening, b"~~~mermaid");
     assert_eq!(
-        prefix.strip_line(b">   >    flowchart TD"),
+        prefix.strip_line(b">   >    flowchart TD").as_deref(),
         Some(&b"flowchart TD"[..])
     );
-    assert_eq!(prefix.strip_line(b">   >    ~~~"), Some(&b"~~~"[..]));
+    assert_eq!(
+        prefix.strip_line(b">   >    ~~~").as_deref(),
+        Some(&b"~~~"[..])
+    );
     assert_eq!(prefix.strip_line(b"> >      ~~~"), None);
     assert_eq!(prefix.strip_line(b"  >    ~~~"), None);
 }
@@ -31,7 +37,10 @@ fn strips_interleaved_container_steps_in_opening_order() {
 fn recognizes_ordered_markers_and_rejects_lookalikes() {
     let (opening, ordered) = ContainerPrefix::from_opening_line(b"123. ```mermaid");
     assert_eq!(opening, b"```mermaid");
-    assert_eq!(ordered.strip_line(b"     graph TD"), Some(&b"graph TD"[..]));
+    assert_eq!(
+        ordered.strip_line(b"     graph TD").as_deref(),
+        Some(&b"graph TD"[..])
+    );
 
     for source in [
         b"1234567890. ```mermaid".as_slice(),
@@ -45,21 +54,49 @@ fn recognizes_ordered_markers_and_rejects_lookalikes() {
 
     let (opening, padded) = ContainerPrefix::from_opening_line(b"-     ```mermaid");
     assert_eq!(opening, b"    ```mermaid");
-    assert_eq!(padded.strip_line(b"  graph TD"), Some(&b"graph TD"[..]));
+    assert_eq!(
+        padded.strip_line(b"  graph TD").as_deref(),
+        Some(&b"graph TD"[..])
+    );
 
     let (opening, tabbed) = ContainerPrefix::from_opening_line(b"-\t```mermaid");
     assert_eq!(opening, b"```mermaid");
-    assert_eq!(tabbed.strip_line(b"\tgraph TD"), Some(&b"graph TD"[..]));
+    assert_eq!(
+        tabbed.strip_line(b"\tgraph TD").as_deref(),
+        Some(&b"graph TD"[..])
+    );
 }
 
 #[test]
 fn preserves_non_container_lines_and_normalizes_blank_lines() {
     let (opening, direct) = ContainerPrefix::from_opening_line(b" ```mermaid");
     assert_eq!(opening, b" ```mermaid");
-    assert_eq!(direct.strip_line(b" graph TD"), Some(&b" graph TD"[..]));
+    assert_eq!(
+        direct.strip_line(b" graph TD").as_deref(),
+        Some(&b" graph TD"[..])
+    );
 
     let (_, quoted) = ContainerPrefix::from_opening_line(b"> ```mermaid");
-    assert_eq!(quoted.strip_line(b"   "), Some(&b""[..]));
+    assert_eq!(quoted.strip_line(b"   ").as_deref(), Some(&b""[..]));
+    assert_eq!(quoted.strip_line(b" \t").as_deref(), Some(&b""[..]));
+    assert_eq!(quoted.strip_line(b"\x0c"), None);
+    assert_eq!(quoted.strip_line(b"\x0b"), None);
     assert_eq!(quoted.strip_line(b"    > graph TD"), None);
-    assert_eq!(strip_indentation(b"", 2), None);
+    assert_eq!(indentation_prefix(b"", 2), None);
+}
+
+#[test]
+fn preserves_spaces_when_a_tab_overshoots_list_indentation() {
+    let (_, prefix) = ContainerPrefix::from_opening_line(b"- ```mermaid");
+    assert_eq!(
+        prefix.strip_line(b"\tgraph TD").as_deref(),
+        Some(&b"  graph TD"[..])
+    );
+
+    // Exercise a later container step against the owned residual-space buffer.
+    let (_, interleaved) = ContainerPrefix::from_opening_line(b"- > ```mermaid");
+    assert_eq!(
+        interleaved.strip_line(b"\t> graph TD").as_deref(),
+        Some(&b"graph TD"[..])
+    );
 }

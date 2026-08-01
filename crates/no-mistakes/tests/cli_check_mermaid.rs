@@ -74,7 +74,7 @@ fn reports_invalid_and_unclosed_fences() {
         .filter(|finding| finding["rule"] == "markdown-mermaid-validation")
         .collect::<Vec<_>>();
 
-    assert_eq!(findings.len(), 13, "{body}");
+    assert_eq!(findings.len(), 15, "{body}");
     for file in [
         "invalid-flowchart.md",
         "invalid-markdown.markdown",
@@ -114,6 +114,8 @@ fn reports_invalid_and_unclosed_fences() {
         ("unclosed-blockquote-wrong-depth.md", 3),
         ("unclosed-form-feed-suffix.md", 3),
         ("unclosed-mdx-vertical-tab-suffix.mdx", 4),
+        ("unclosed-mdx-form-feed-container-blank.mdx", 4),
+        ("unclosed-mdx-vertical-tab-container-blank.mdx", 4),
     ] {
         let unclosed = findings
             .iter()
