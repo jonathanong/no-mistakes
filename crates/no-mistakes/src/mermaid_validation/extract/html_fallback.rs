@@ -2,12 +2,58 @@ use std::ops::Range;
 
 use super::{is_mermaid_info, line_number, MermaidFence};
 
+#[path = "html_fallback/container.rs"]
+mod container;
+use container::ContainerPrefix;
+
+const STANDARD_HTML_TAGS: &str = concat!(
+    "a abbr acronym address applet area article aside audio b base basefont bdi bdo big ",
+    "blockquote body br button canvas caption center cite code col colgroup data datalist dd ",
+    "del details dfn dialog dir div dl dt em embed fieldset figcaption figure font footer form ",
+    "frame frameset h1 h2 h3 h4 h5 h6 head header hgroup hr html i iframe img input ins kbd ",
+    "label legend li link main map mark marquee menu menuitem meta meter nav nobr noembed ",
+    "noframes noscript object ol optgroup option output p param picture plaintext pre progress ",
+    "q rb rp rt rtc ruby s samp script search section select slot small source span strike ",
+    "strong style sub summary sup table tbody td template textarea tfoot th thead time title tr ",
+    "track tt u ul var video wbr xmp",
+);
+
 #[derive(Clone, Copy)]
 struct OpeningFence {
     marker: u8,
     length: usize,
     body_start: usize,
     is_mermaid: bool,
+    container: ContainerPrefix,
+}
+
+pub(super) fn looks_like_clear_mdx_jsx(source: &str, range: Range<usize>) -> bool {
+    let block = source[range].trim_start();
+    let Some(after_open) = block.strip_prefix('<') else {
+        return false;
+    };
+    if after_open.starts_with('>') {
+        return true;
+    }
+
+    let name_end = after_open
+        .find(|character: char| {
+            !character.is_ascii_alphanumeric() && !matches!(character, '_' | '-' | '.' | ':' | '$')
+        })
+        .unwrap_or(after_open.len());
+    let name = &after_open[..name_end];
+    let component_name = name
+        .chars()
+        .next()
+        .is_some_and(|character| character.is_ascii_uppercase())
+        && !STANDARD_HTML_TAGS
+            .split_ascii_whitespace()
+            .any(|tag| name.eq_ignore_ascii_case(tag));
+    let opening_tag = after_open
+        .split_once('>')
+        .map_or(after_open, |(opening, _)| opening);
+
+    component_name || opening_tag.contains('{')
 }
 
 pub(super) fn extract(source: &str, range: Range<usize>) -> Vec<MermaidFence> {
@@ -25,7 +71,7 @@ pub(super) fn extract(source: &str, range: Range<usize>) -> Vec<MermaidFence> {
         if opening.is_mermaid {
             let body_end = closing.map_or(limit, |(start, _)| start);
             fences.push(MermaidFence {
-                content: source[opening.body_start..body_end].to_string(),
+                content: body_content(source, opening, body_end),
                 fence_offset: cursor,
                 fence_line: line_number(source, cursor),
                 closed: closing.is_some(),
@@ -41,7 +87,7 @@ pub(super) fn extract(source: &str, range: Range<usize>) -> Vec<MermaidFence> {
 }
 
 fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence> {
-    let line = &source.as_bytes()[start..end];
+    let (line, container) = ContainerPrefix::from_opening_line(&source.as_bytes()[start..end]);
     let indent = line.iter().take_while(|byte| **byte == b' ').count();
     if indent > 3 || line.get(indent) == Some(&b'\t') {
         return None;
@@ -67,6 +113,7 @@ fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence>
         length,
         body_start: next_line_start(source, end, source.len()),
         is_mermaid: is_mermaid_info(info),
+        container,
     })
 }
 
@@ -74,7 +121,9 @@ fn closing_fence(source: &str, opening: OpeningFence, limit: usize) -> Option<(u
     let mut cursor = opening.body_start;
     while cursor < limit {
         let line_end = line_content_end(source, cursor, limit);
-        let line = &source.as_bytes()[cursor..line_end];
+        let line = opening
+            .container
+            .strip_line(&source.as_bytes()[cursor..line_end])?;
         let indent = line.iter().take_while(|byte| **byte == b' ').count();
         if indent <= 3 {
             let remainder = &line[indent..];
@@ -93,6 +142,21 @@ fn closing_fence(source: &str, opening: OpeningFence, limit: usize) -> Option<(u
         cursor = next_line_start(source, line_end, limit);
     }
     None
+}
+
+fn body_content(source: &str, opening: OpeningFence, end: usize) -> String {
+    let mut content = String::new();
+    let mut cursor = opening.body_start;
+    while cursor < end {
+        let line_end = line_content_end(source, cursor, end);
+        let raw = &source.as_bytes()[cursor..line_end];
+        let line = opening.container.strip_line(raw).unwrap_or(raw);
+        content.push_str(std::str::from_utf8(line).expect("source line must remain valid UTF-8"));
+        let next = next_line_start(source, line_end, end);
+        content.push_str(&source[line_end..next]);
+        cursor = next;
+    }
+    content
 }
 
 fn line_content_end(source: &str, start: usize, limit: usize) -> usize {

@@ -3,8 +3,8 @@ use serde::Serialize;
 
 mod extract;
 pub(crate) use extract::{
-    extract_mermaid_fences, extract_mermaid_fences_with_mdx_html_fallback, MermaidFence,
-    MermaidFenceCollector,
+    extract_mermaid_fences, extract_mermaid_fences_with_automatic_mdx_html_fallback,
+    extract_mermaid_fences_with_mdx_html_fallback, MermaidFence, MermaidFenceCollector,
 };
 
 const DEFAULT_FILE: &str = "<input>";
@@ -94,10 +94,10 @@ pub fn validate_markdown(content: &str, file: Option<&str>) -> MermaidValidation
             .and_then(|extension| extension.to_str())
             .is_some_and(|extension| extension.eq_ignore_ascii_case("mdx"))
     });
-    let fences = if is_mdx {
-        extract_mermaid_fences_with_mdx_html_fallback(content)
-    } else {
-        extract_mermaid_fences(content)
+    let fences = match (file, is_mdx) {
+        (_, true) => extract_mermaid_fences_with_mdx_html_fallback(content),
+        (None, false) => extract_mermaid_fences_with_automatic_mdx_html_fallback(content),
+        (Some(_), false) => extract_mermaid_fences(content),
     };
     validate_mermaid_fences(&Analyzer::new(), &fences, file.unwrap_or(DEFAULT_FILE))
 }

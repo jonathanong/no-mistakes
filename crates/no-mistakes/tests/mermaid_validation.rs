@@ -96,6 +96,42 @@ fn validates_a_fence_directly_inside_mdx_jsx() {
 }
 
 #[test]
+fn omitted_file_auto_detects_a_fence_inside_clear_mdx_jsx() {
+    let result = validate_markdown(&fixture("jsx-adjacent-invalid.mdx"), None);
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(
+        result.diagnostics[0].code,
+        MermaidValidationDiagnosticCode::InvalidSyntax
+    );
+    assert_eq!(result.diagnostics[0].file, "<input>");
+    assert_eq!(result.diagnostics[0].fence_line, 4);
+}
+
+#[test]
+fn omitted_file_preserves_standard_markdown_html_block_semantics() {
+    let result = validate_markdown(&fixture("standard-html-block.md"), None);
+
+    assert!(result.valid);
+    assert_eq!(result.diagram_count, 0);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
+fn validates_list_and_blockquote_fences_inside_mdx_jsx() {
+    let result = validate_markdown(
+        &fixture("jsx-containers-valid.mdx"),
+        Some("docs/containers.mdx"),
+    );
+
+    assert!(result.valid, "{:#?}", result.diagnostics);
+    assert_eq!(result.diagram_count, 2);
+    assert!(result.diagnostics.is_empty());
+}
+
+#[test]
 fn markdown_file_does_not_enable_mdx_jsx_recovery() {
     let result = validate_markdown(
         &fixture("jsx-adjacent-invalid.mdx"),

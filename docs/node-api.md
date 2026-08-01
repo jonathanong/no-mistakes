@@ -164,8 +164,11 @@ including `warnings: string[]` for configured checks that could not run.
 in-memory Markdown or MDX document without reading the filesystem. It resolves
 asynchronously with `{ valid, diagramCount, diagnostics }`; each diagnostic
 identifies the opening `fenceLine` and, when available, Merman's
-diagram-relative line, column, and diagram type. Use the configured
-`markdown-mermaid-validation` rule when validating tracked repository files.
+diagram-relative line, column, and diagram type. With no `file`, clear JSX
+component blocks are detected automatically without reinterpreting standard
+Markdown HTML blocks. Pass an `.mdx` file name to enable full MDX recovery. Use
+the configured `markdown-mermaid-validation` rule when validating tracked
+repository files.
 
 Each `analyzeProject()` report may use its report-specific options. Graph
 reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts

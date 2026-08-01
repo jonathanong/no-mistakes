@@ -7,6 +7,13 @@ mod fence_syntax;
 mod html_fallback;
 use fence_syntax::{has_closing_fence, line_end_with_ending, FenceDelimiter};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HtmlFallbackMode {
+    Disabled,
+    All,
+    ClearMdxJsx,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct MermaidFence {
     pub(crate) content: String,
@@ -28,7 +35,7 @@ struct ActiveFence {
 /// with its other facts instead of reparsing a file for each rule.
 pub(crate) struct MermaidFenceCollector<'source> {
     source: &'source str,
-    mdx_html_fallback: bool,
+    html_fallback: HtmlFallbackMode,
     active: Option<ActiveFence>,
     fences: Vec<MermaidFence>,
 }
@@ -37,7 +44,7 @@ impl<'source> MermaidFenceCollector<'source> {
     pub(crate) fn new(source: &'source str) -> Self {
         Self {
             source,
-            mdx_html_fallback: false,
+            html_fallback: HtmlFallbackMode::Disabled,
             active: None,
             fences: Vec::new(),
         }
@@ -46,7 +53,16 @@ impl<'source> MermaidFenceCollector<'source> {
     pub(crate) fn new_with_mdx_html_fallback(source: &'source str) -> Self {
         Self {
             source,
-            mdx_html_fallback: true,
+            html_fallback: HtmlFallbackMode::All,
+            active: None,
+            fences: Vec::new(),
+        }
+    }
+
+    pub(crate) fn new_with_automatic_mdx_html_fallback(source: &'source str) -> Self {
+        Self {
+            source,
+            html_fallback: HtmlFallbackMode::ClearMdxJsx,
             active: None,
             fences: Vec::new(),
         }
@@ -54,7 +70,11 @@ impl<'source> MermaidFenceCollector<'source> {
 
     pub(crate) fn observe(&mut self, event: &Event<'_>, range: Range<usize>) {
         match event {
-            Event::Start(Tag::HtmlBlock) if self.mdx_html_fallback => {
+            Event::Start(Tag::HtmlBlock)
+                if self.html_fallback == HtmlFallbackMode::All
+                    || (self.html_fallback == HtmlFallbackMode::ClearMdxJsx
+                        && html_fallback::looks_like_clear_mdx_jsx(self.source, range.clone())) =>
+            {
                 self.fences
                     .extend(html_fallback::extract(self.source, range));
             }
@@ -102,6 +122,15 @@ pub(crate) fn extract_mermaid_fences_with_mdx_html_fallback(source: &str) -> Vec
     extract_with_collector(
         source,
         MermaidFenceCollector::new_with_mdx_html_fallback(source),
+    )
+}
+
+pub(crate) fn extract_mermaid_fences_with_automatic_mdx_html_fallback(
+    source: &str,
+) -> Vec<MermaidFence> {
+    extract_with_collector(
+        source,
+        MermaidFenceCollector::new_with_automatic_mdx_html_fallback(source),
     )
 }
 

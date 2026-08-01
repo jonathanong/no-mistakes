@@ -41,6 +41,21 @@ fn validates_mdx_jsx_children_without_a_blank_line() {
 }
 
 #[test]
+fn auto_detects_mdx_jsx_when_the_optional_file_is_omitted() {
+    let options = json!({
+        "content": fixture("jsx-adjacent-invalid.mdx")
+    });
+    let output = validate_mermaid_markdown_json_impl(options.to_string()).unwrap();
+    let output: Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(output["valid"], false);
+    assert_eq!(output["diagramCount"], 1);
+    assert_eq!(output["diagnostics"][0]["code"], "invalid-syntax");
+    assert_eq!(output["diagnostics"][0]["file"], "<input>");
+    assert_eq!(output["diagnostics"][0]["fenceLine"], 4);
+}
+
+#[test]
 fn rejects_missing_content_and_unknown_options() {
     let missing_content = validate_mermaid_markdown_json_impl(json!({}).to_string()).unwrap_err();
     assert!(missing_content

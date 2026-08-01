@@ -53,4 +53,6 @@ be accepted until the corresponding Merman release is available.
 For in-memory content, the async Node API exposes
 `validateMermaidMarkdown({ content, file? })` and returns structured diagnostics
 without requiring a temporary Markdown file. Pass an `.mdx` file name to enable
-recovery of Markdown fences nested directly inside MDX JSX blocks.
+full recovery of Markdown fences nested directly inside MDX JSX blocks. When
+`file` is omitted, clear JSX component blocks are detected automatically while
+standard Markdown HTML blocks retain CommonMark semantics.
