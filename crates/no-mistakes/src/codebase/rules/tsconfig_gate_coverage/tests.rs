@@ -1,6 +1,7 @@
 use super::application::resolve_gate_projects_against_tracked;
 use super::workflow::{
-    default_working_directory, effective_working_directory, is_repo_relative_project_path,
+    ci_typechecked_projects, default_working_directory, effective_working_directory,
+    is_repo_relative_project_path,
 };
 use super::*;
 use crate::codebase::ci_workflows::{
@@ -109,7 +110,7 @@ fn workflow_defaults_step_directories_and_shell_cwds_are_resolved() {
 fn statically_disabled_or_nonblocking_workflow_commands_do_not_cover_projects() {
     let root = fixture_root("non-enforcing-workflow");
     let report = findings(&root, &config(&root));
-    assert_eq!(report.len(), 6, "{report:#?}");
+    assert_eq!(report.len(), 8, "{report:#?}");
     for project in [
         "disabled-job/tsconfig.json",
         "disabled-step/tsconfig.json",
@@ -117,6 +118,8 @@ fn statically_disabled_or_nonblocking_workflow_commands_do_not_cover_projects() 
         "nonblocking-step/tsconfig.json",
         "expression/tsconfig.json",
         "constant-nonblocking-step/tsconfig.json",
+        "failure-mode-mutated/tsconfig.json",
+        "non-posix-shell/tsconfig.json",
     ] {
         assert!(report.iter().any(|finding| {
             finding.file == project && finding.message.contains("no CI typecheck registration")
@@ -301,6 +304,43 @@ fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
                 value: Ok(incomplete),
             },
         ],
+    };
+    assert!(ci_typechecked_projects(&workflows).is_empty());
+}
+
+#[test]
+fn ci_scanner_honors_static_posix_shell_overrides_and_defaults() {
+    let workflow: Value = serde_yaml::from_str(
+        "defaults:\n  run:\n    shell: python\njobs:\n  workflow-default-python:\n    steps:\n      - run: tsc --noEmit --project workflow-default-python/tsconfig.json\n  job-default-bash-template:\n    defaults:\n      run:\n        shell: 'bash --noprofile --norc -eo pipefail {0}'\n    steps:\n      - run: tsc --noEmit --project job-default-bash-template/tsconfig.json\n  step-override-sh-template:\n    steps:\n      - shell: 'sh -e {0}'\n        run: tsc --noEmit --project step-override-sh-template/tsconfig.json\n  unsupported-template:\n    defaults:\n      run:\n        shell: bash\n    steps:\n      - shell: 'bash -c {0}'\n        run: tsc --noEmit --project unsupported-template/tsconfig.json\n  dynamic-shell:\n    steps:\n      - shell: ${{ matrix.shell }}\n        run: tsc --noEmit --project dynamic-shell/tsconfig.json\n",
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/shells.yml".into(),
+            value: Ok(workflow),
+        }],
+    };
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows),
+        BTreeSet::from([
+            "job-default-bash-template/tsconfig.json".to_string(),
+            "step-override-sh-template/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn ci_scanner_rejects_an_empty_shell_setting() {
+    let workflow: Value = serde_yaml::from_str(
+        "jobs:\n  empty-shell:\n    steps:\n      - shell: ''\n        run: tsc --noEmit --project app/tsconfig.json\n",
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/empty-shell.yml".into(),
+            value: Ok(workflow),
+        }],
     };
     assert!(ci_typechecked_projects(&workflows).is_empty());
 }

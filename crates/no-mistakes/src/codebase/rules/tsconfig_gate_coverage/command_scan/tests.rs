@@ -65,7 +65,55 @@ fn shell_scanner_rejects_reachability_control_commands_without_modeling_them() {
 }
 
 #[test]
+fn shell_scanner_rejects_failure_enforcement_mutations() {
+    for script in [
+        "set +e; tsc --noEmit --project app/tsconfig.json",
+        "set +eu; tsc --noEmit --project app/tsconfig.json",
+        "set +o errexit; tsc --noEmit --project app/tsconfig.json",
+        "tsc --noEmit --project app/tsconfig.json; set +e",
+    ] {
+        assert!(
+            scan_shell_for_typechecked_projects(script, ".").is_empty(),
+            "{script}"
+        );
+    }
+    assert_eq!(
+        scan_shell_for_typechecked_projects("set -e; tsc --noEmit", "."),
+        vec!["tsconfig.json"]
+    );
+}
+
+#[test]
 fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
+    assert_eq!(
+        scan_argv_for_typechecked_projects(
+            &[
+                "tsc".into(),
+                "--noEmit".into(),
+                "--module=NodeNext".into(),
+                "--pretty=true".into(),
+                "--skipLibCheck".into(),
+            ],
+            ".",
+        ),
+        vec!["tsconfig.json"]
+    );
+    for argv in [
+        vec!["tsc".into(), "--noEmit".into(), "--project=".into()],
+        vec![
+            "tsc".into(),
+            "--noEmit".into(),
+            "--module".into(),
+            "--skipLibCheck".into(),
+        ],
+        vec!["tsc".into(), "--noEmit".into(), "--pretty=".into()],
+        vec!["tsc".into(), "--noEmit".into(), "--pretty=maybe".into()],
+    ] {
+        assert!(
+            scan_argv_for_typechecked_projects(&argv, ".").is_empty(),
+            "{argv:?}"
+        );
+    }
     assert_eq!(
         scan_argv_for_typechecked_projects(
             &[
@@ -135,7 +183,20 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
 
 #[test]
 fn informational_or_init_tsc_modes_do_not_count_as_typechecks() {
-    for mode in ["--showConfig", "--help", "-h", "--version", "-v", "--init"] {
+    for mode in [
+        "--showConfig",
+        "--help",
+        "-h",
+        "--version",
+        "-v",
+        "--init",
+        "--noCheck",
+        "--noCheck=true",
+        "--listFilesOnly",
+        "--listFilesOnly=true",
+        "--ignoreConfig",
+        "--ignoreConfig=true",
+    ] {
         assert!(scan_argv_for_typechecked_projects(
             &[
                 "tsc".into(),
@@ -148,6 +209,47 @@ fn informational_or_init_tsc_modes_do_not_count_as_typechecks() {
         )
         .is_empty());
     }
+}
+
+#[test]
+fn default_project_requires_project_mode_without_source_inputs() {
+    for argv in [
+        vec!["tsc".into(), "--noEmit".into(), "src/main.ts".into()],
+        vec![
+            "tsc".into(),
+            "--noEmit".into(),
+            "--project".into(),
+            "app/tsconfig.json".into(),
+            "src/main.ts".into(),
+        ],
+        vec![
+            "tsc".into(),
+            "--noEmit".into(),
+            "--mystery".into(),
+            "value".into(),
+        ],
+    ] {
+        assert!(
+            scan_argv_for_typechecked_projects(&argv, ".").is_empty(),
+            "{argv:?}"
+        );
+    }
+
+    assert_eq!(
+        scan_argv_for_typechecked_projects(
+            &[
+                "tsc".into(),
+                "--noEmit".into(),
+                "--pretty".into(),
+                "false".into(),
+                "--module".into(),
+                "NodeNext".into(),
+                "--skipLibCheck".into(),
+            ],
+            ".",
+        ),
+        vec!["tsconfig.json"]
+    );
 }
 
 #[test]
@@ -235,10 +337,13 @@ fn token_scanner_covers_pnpm_and_project_argument_edge_cases() {
         assert!(scan_tokens(&tokens, ".").is_empty());
     }
     assert_eq!(
-        project_argument(&["tsc".into(), "--project=app/tsconfig.json".into()]),
+        project_argument(&["--noEmit".into(), "--project=app/tsconfig.json".into()]),
         Some("app/tsconfig.json".into())
     );
-    assert_eq!(project_argument(&tsc), Some("tsconfig.json".into()));
+    assert_eq!(
+        project_argument(&["--noEmit".into()]),
+        Some("tsconfig.json".into())
+    );
     assert_eq!(
         scan_tokens(
             &[

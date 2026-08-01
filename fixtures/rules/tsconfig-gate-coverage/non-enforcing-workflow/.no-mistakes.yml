@@ -28,6 +28,14 @@ checks:
       command: [tsc, --noEmit, --project, dynamic-expression/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-failure-mode-mutated
+      command: [tsc, --noEmit, --project, failure-mode-mutated/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-non-posix-shell
+      command: [tsc, --noEmit, --project, non-posix-shell/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

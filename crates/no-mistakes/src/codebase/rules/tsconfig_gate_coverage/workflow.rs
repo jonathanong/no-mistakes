@@ -10,6 +10,7 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
             continue;
         };
         let workflow_cwd = effective_working_directory(workflow, Some(".".to_string()));
+        let workflow_shell = effective_shell(workflow, None);
         let Some(jobs) = workflow.get("jobs").and_then(Value::as_mapping) else {
             continue;
         };
@@ -21,6 +22,7 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
                 continue;
             };
             let job_cwd = effective_working_directory(job, workflow_cwd.clone());
+            let job_shell = effective_shell(job, workflow_shell.clone());
             for step in steps {
                 if statically_not_enforcing(step) {
                     continue;
@@ -35,6 +37,9 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
                 let Some(run) = step.get("run").and_then(Value::as_str) else {
                     continue;
                 };
+                if !is_supported_posix_shell(effective_shell(step, job_shell.clone()).as_deref()) {
+                    continue;
+                }
                 for project in command_scan::scan_shell_for_typechecked_projects(run, &cwd) {
                     if is_repo_relative_project_path(&project) {
                         projects.insert(project);
@@ -72,6 +77,50 @@ pub(super) fn default_working_directory(value: &Value) -> Option<&str> {
         .and_then(|defaults| defaults.get("run"))
         .and_then(|run| run.get("working-directory"))
         .and_then(Value::as_str)
+}
+
+fn default_shell(value: &Value) -> Option<&str> {
+    value
+        .get("defaults")
+        .and_then(|defaults| defaults.get("run"))
+        .and_then(|run| run.get("shell"))
+        .and_then(Value::as_str)
+}
+
+/// Returns the most-specific static shell setting. `None` means GitHub
+/// Actions' implicit shell, which preserves the rule's existing behavior.
+fn effective_shell(value: &Value, fallback: Option<String>) -> Option<String> {
+    match value.get("shell").and_then(Value::as_str) {
+        Some(shell) => Some(shell.to_string()),
+        None => default_shell(value).map(str::to_string).or(fallback),
+    }
+}
+
+/// Accept GitHub Actions' implicit shell and static POSIX shell forms only.
+/// A custom template must invoke `bash` or `sh`, pass the generated script as
+/// `{0}`, and avoid command-string options such as `-c` that would not run it.
+fn is_supported_posix_shell(shell: Option<&str>) -> bool {
+    let Some(shell) = shell else {
+        return true;
+    };
+    let mut tokens = shell.split_ascii_whitespace();
+    let Some(command) = tokens.next() else {
+        return false;
+    };
+    if !matches!(command, "bash" | "sh") {
+        return false;
+    }
+    let args = tokens.collect::<Vec<_>>();
+    args.is_empty()
+        || args.last() == Some(&"{0}")
+            && args[..args.len() - 1]
+                .iter()
+                .all(|argument| is_safe_posix_shell_template_argument(argument))
+}
+
+fn is_safe_posix_shell_template_argument(argument: &str) -> bool {
+    matches!(argument, "pipefail" | "--noprofile" | "--norc" | "--posix")
+        || argument.starts_with('-') && !argument.trim_start_matches('-').contains('c')
 }
 
 pub(super) fn effective_working_directory(

@@ -1,5 +1,9 @@
 //! Static command recognition shared by workflow and configured local gates.
 
+mod tsc_arguments;
+
+use tsc_arguments::project_argument;
+
 /// Normalize one static repository-relative path into slash form.
 /// Parent traversals, absolute paths, backslashes, and shell expansion syntax
 /// are intentionally unresolved. A rule finding then asks the user to express
@@ -28,7 +32,7 @@ pub(crate) fn normalize_repo_relative(raw: &str) -> Option<String> {
     })
 }
 
-/// Scan a static workflow `run:` body for projects checked by `tsc --noEmit`.
+/// Scan a static workflow `run:` body for project-mode `tsc --noEmit` checks.
 ///
 /// Only sequential newline, `&&`, and `;` segments are recognized. Shell
 /// interpolation, substitutions, pipes, conditionals, and arbitrary wrappers
@@ -44,7 +48,7 @@ pub(crate) fn scan_shell_for_typechecked_projects(script: &str, initial_cwd: &st
         let Some(first) = tokens.first() else {
             continue;
         };
-        if is_unsupported_control_command(first) {
+        if is_unsupported_control_command(first) || disables_failure_enforcement(&tokens) {
             return Vec::new();
         }
         if first == "cd" {
@@ -74,6 +78,20 @@ fn is_unsupported_control_command(command: &str) -> bool {
     matches!(command, "exit" | "return" | "false")
 }
 
+/// A later `tsc` cannot be credited once a shell body changes its failure
+/// behavior. Modeling every shell option and its scope is deliberately out of
+/// scope for this static scanner, so reject the whole body instead.
+fn disables_failure_enforcement(tokens: &[String]) -> bool {
+    if tokens.first().is_none_or(|command| command != "set") {
+        return false;
+    }
+    match tokens.get(1).map(String::as_str) {
+        Some(option) if option.starts_with('+') && option.contains('e') => true,
+        Some("+o") => tokens.get(2).is_some_and(|option| option == "errexit"),
+        _ => false,
+    }
+}
+
 /// Scan one configured argv command. A shell script is accepted only for the
 /// explicit `bash|sh -c <literal>` form; all other argv commands are parsed as
 /// direct static command tokens.
@@ -88,54 +106,19 @@ pub(crate) fn scan_argv_for_typechecked_projects(argv: &[String], cwd: &str) -> 
 }
 
 fn scan_tokens(tokens: &[String], cwd: &str) -> Vec<String> {
-    let Some((command, command_cwd)) = command_and_cwd(tokens, cwd) else {
+    let Some((command, command_cwd, argument_start)) = command_and_cwd(tokens, cwd) else {
         return Vec::new();
     };
-    if !is_tsc(command)
-        || !tokens.iter().any(|token| token == "--noEmit")
-        || tokens.iter().any(|token| {
-            matches!(
-                token.as_str(),
-                "--showConfig" | "--help" | "-h" | "--version" | "-v" | "--init"
-            )
-        })
-    {
+    if !is_tsc(command) {
         return Vec::new();
     }
-    let Some(project) = project_argument(tokens) else {
+    let Some(project) = project_argument(&tokens[argument_start..]) else {
         return Vec::new();
     };
     join_relative(&command_cwd, &project).into_iter().collect()
 }
 
-/// `tsc` accepts one effective `--project` argument. Multiple or incomplete
-/// spellings are intentionally unresolved rather than guessed.
-fn project_argument(tokens: &[String]) -> Option<String> {
-    let mut project = None;
-    let mut index = 0;
-    while let Some(token) = tokens.get(index) {
-        let value = if let Some(value) = token.strip_prefix("--project=") {
-            Some(value.to_string())
-        } else if token == "-p" {
-            return None;
-        } else if token == "--project" {
-            let value = tokens.get(index + 1)?.clone();
-            index += 1;
-            Some(value)
-        } else {
-            None
-        };
-        if let Some(value) = value {
-            if project.replace(value).is_some() {
-                return None;
-            }
-        }
-        index += 1;
-    }
-    Some(project.unwrap_or_else(|| "tsconfig.json".to_string()))
-}
-
-fn command_and_cwd<'a>(tokens: &'a [String], cwd: &str) -> Option<(&'a str, String)> {
+fn command_and_cwd<'a>(tokens: &'a [String], cwd: &str) -> Option<(&'a str, String, usize)> {
     match tokens.first()?.as_str() {
         "pnpm" => {
             let mut index = 1;
@@ -150,9 +133,13 @@ fn command_and_cwd<'a>(tokens: &'a [String], cwd: &str) -> Option<(&'a str, Stri
                 command_cwd = join_relative(cwd, tokens.get(index + 1)?)?;
                 index += 2;
             }
-            (tokens.get(index)? == "exec").then_some((tokens.get(index + 1)?.as_str(), command_cwd))
+            (tokens.get(index)? == "exec").then_some((
+                tokens.get(index + 1)?.as_str(),
+                command_cwd,
+                index + 2,
+            ))
         }
-        command => Some((command, cwd.to_string())),
+        command => Some((command, cwd.to_string(), 1)),
     }
 }
 

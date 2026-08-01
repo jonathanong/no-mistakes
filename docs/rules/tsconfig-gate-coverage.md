@@ -27,6 +27,12 @@ default `tsconfig.json` relative to the effective working directory, sequential
 may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`.
 
+Workflow commands run only when their effective shell is GitHub Actions'
+implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
+`defaults.run.shell` plus a step-level `shell` override; static shell templates
+must invoke `bash` or `sh` and pass the script as `{0}`. Other shells (such as
+`python`, PowerShell, or `cmd`) and dynamic/custom shell forms do not count.
+
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
 step do not count as CI registrations because they cannot enforce a typecheck.
@@ -47,8 +53,9 @@ Dynamic shell expansion, command substitution, arbitrary wrapper scripts,
 paths outside the repository, and other unresolved command forms do not count
 as registrations. Express such a command statically if it is intended to
 provide this gate.
-Shell bodies containing `exit`, `return`, or `false` are also rejected as a
-whole because the rule does not model shell reachability.
+Shell bodies containing `exit`, `return`, `false`, or a failure-mode mutation
+such as `set +e` are also rejected as a whole because the rule does not model
+shell reachability or option state.
 
 Informational and setup commands (`--showConfig`, `--help`/`-h`,
 `--version`/`-v`, and `--init`) do not count, even when combined with
