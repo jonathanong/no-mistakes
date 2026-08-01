@@ -21,14 +21,27 @@ fn standalone_rule_wrapper_reads_saved_markdown_fixtures() {
         .join("../../fixtures/rules/markdown-mermaid-validation");
     let config =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    let files = ["invalid-state.md", "valid.md"]
-        .map(|name| root.join(name))
-        .to_vec();
+    let files = [
+        "invalid-state.md",
+        "invalid-uppercase.MD",
+        "invalid-mixed.MdX",
+        "valid.md",
+    ]
+    .map(|name| root.join(name))
+    .to_vec();
 
     let findings = check_with_files(&root, &config, &files).unwrap();
 
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "invalid-state.md");
+    assert_eq!(findings.len(), 3, "{findings:#?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "invalid-state.md"));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "invalid-uppercase.MD"));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "invalid-mixed.MdX"));
 }
 
 #[test]

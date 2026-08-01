@@ -74,11 +74,12 @@ fn reports_invalid_and_unclosed_fences() {
         .filter(|finding| finding["rule"] == "markdown-mermaid-validation")
         .collect::<Vec<_>>();
 
-    assert_eq!(findings.len(), 25, "{body}");
+    assert_eq!(findings.len(), 29, "{body}");
     for file in [
         "invalid-flowchart.md",
         "invalid-markdown.markdown",
         "invalid-mdx.mdx",
+        "invalid-uppercase.MD",
         "invalid-sequence.md",
         "invalid-state.md",
     ] {
@@ -105,6 +106,14 @@ fn reports_invalid_and_unclosed_fences() {
         .unwrap_or_else(|| panic!("missing jsx-adjacent-invalid.mdx: {body}"));
     assert_eq!(jsx_adjacent["line"], 4, "{jsx_adjacent:#?}");
     assert!(jsx_adjacent["message"]
+        .as_str()
+        .is_some_and(|message| message.contains("invalid Mermaid diagram")));
+    let mixed_case_mdx = findings
+        .iter()
+        .find(|finding| finding["file"] == "invalid-mixed.MdX")
+        .unwrap_or_else(|| panic!("missing mixed-case MDX fixture: {body}"));
+    assert_eq!(mixed_case_mdx["line"], 4, "{mixed_case_mdx:#?}");
+    assert!(mixed_case_mdx["message"]
         .as_str()
         .is_some_and(|message| message.contains("invalid Mermaid diagram")));
     for (file, lines) in [

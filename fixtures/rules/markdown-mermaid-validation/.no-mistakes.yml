@@ -1,5 +1,4 @@
 rules:
   - rule: markdown-mermaid-validation
     scope: repository
-    include: ["**/*.md", "**/*.markdown", "**/*.mdx"]
     exclude: ["excluded.md"]

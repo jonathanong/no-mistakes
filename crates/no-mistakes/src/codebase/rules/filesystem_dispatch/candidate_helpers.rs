@@ -64,10 +64,7 @@ pub(super) fn markdown_inventory_path_allowed(
 ) -> bool {
     // Baselines are JSON companions rather than documentation targets, so
     // retain them for the rule's tracked-baseline validation.
-    if path
-        .extension()
-        .is_none_or(|extension| !matches!(extension.to_str(), Some("md" | "markdown" | "mdx")))
-    {
+    if !super::super::markdown_scope::is_mermaid_document(path) {
         return true;
     }
     !crate::codebase::ts_source::is_under_skipped_dir(request_root, path, skip)

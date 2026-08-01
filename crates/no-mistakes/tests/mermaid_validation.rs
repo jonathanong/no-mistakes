@@ -295,6 +295,26 @@ fn non_one_ordered_list_markers_can_follow_other_mdx_block_boundaries() {
 }
 
 #[test]
+fn non_one_ordered_list_marker_can_follow_an_mdx_flow_jsx_boundary() {
+    let result = validate_markdown(
+        &fixture("jsx-flow-boundary-ordered-list.mdx"),
+        Some("docs/flow-boundary.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 2);
+    assert_eq!(result.diagnostics.len(), 2);
+    assert_eq!(
+        result
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.fence_line)
+            .collect::<Vec<_>>(),
+        vec![4, 13]
+    );
+}
+
+#[test]
 fn validates_mdx_list_lines_with_tab_overshoot() {
     let result = validate_markdown(
         &fixture("mdx-tab-overshoot-valid.mdx"),

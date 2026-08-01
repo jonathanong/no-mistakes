@@ -103,7 +103,11 @@ impl MarkdownFactMap {
 fn collect(path: &Path, source: Arc<str>, demand: FactDemand) -> MarkdownFacts {
     let mut table_count = 0;
     let mut link_destinations = Vec::new();
-    let mut mermaid_collector = if path.extension().is_some_and(|extension| extension == "mdx") {
+    let is_mdx = path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("mdx"));
+    let mut mermaid_collector = if is_mdx {
         MermaidFenceCollector::new_with_mdx_html_fallback(&source)
     } else {
         MermaidFenceCollector::new(&source)

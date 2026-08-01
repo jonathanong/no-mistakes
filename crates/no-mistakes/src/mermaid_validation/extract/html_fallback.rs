@@ -17,6 +17,7 @@ pub(super) use mdx_expression::MdxExpressionScanner;
 #[path = "html_fallback/mdx_jsx.rs"]
 mod mdx_jsx;
 pub(super) use mdx_jsx::looks_like_clear_mdx_jsx;
+use mdx_jsx::looks_like_mdx_flow_boundary;
 
 #[derive(Clone)]
 struct OpeningFence {
@@ -122,6 +123,7 @@ fn update_paragraph_state(line: &[u8], in_paragraph: &mut bool) {
     let first = line.iter().position(|byte| !matches!(byte, b' ' | b'\t'));
     match first.map(|index| line[index]) {
         None => *in_paragraph = false,
+        Some(b'<') if looks_like_mdx_flow_boundary(line) => *in_paragraph = false,
         Some(b'<') => {}
         Some(b'#') if is_atx_heading(line) => *in_paragraph = false,
         Some(b'*' | b'-' | b'_') if is_thematic_break(line) => *in_paragraph = false,

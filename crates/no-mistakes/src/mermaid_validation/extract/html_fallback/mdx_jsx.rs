@@ -12,6 +12,14 @@ const STANDARD_HTML_TAGS: &str = concat!(
     "track tt u ul var video wbr xmp",
 );
 
+const BLOCK_HTML_TAGS: &str = concat!(
+    "address article aside base basefont blockquote body caption center col colgroup dd details ",
+    "dialog dir div dl dt fieldset figcaption figure footer form frame frameset h1 h2 h3 h4 h5 ",
+    "h6 head header hr html iframe legend li link main menu menuitem nav noframes ol optgroup ",
+    "option p param pre script search section style summary table tbody td textarea tfoot th ",
+    "thead title tr track ul",
+);
+
 pub(crate) fn looks_like_clear_mdx_jsx(source: &str, range: Range<usize>) -> bool {
     let block = source[range].trim_start();
     let Some(after_open) = block.strip_prefix('<') else {
@@ -35,6 +43,33 @@ pub(crate) fn looks_like_clear_mdx_jsx(source: &str, range: Range<usize>) -> boo
             .split_ascii_whitespace()
             .any(|tag| name.eq_ignore_ascii_case(tag));
     component_name || has_unquoted_jsx_expression_brace(after_open)
+}
+
+pub(super) fn looks_like_mdx_flow_boundary(line: &[u8]) -> bool {
+    let indent = line.iter().take_while(|byte| **byte == b' ').count();
+    if indent > 3 || line.get(indent) == Some(&b'\t') {
+        return false;
+    }
+    let line = std::str::from_utf8(&line[indent..]).expect("MDX source line must remain UTF-8");
+    looks_like_clear_mdx_jsx(line, 0..line.len()) || looks_like_block_html_tag(line)
+}
+
+fn looks_like_block_html_tag(line: &str) -> bool {
+    let Some(after_open) = line.strip_prefix('<') else {
+        return false;
+    };
+    let after_open = after_open.strip_prefix('/').unwrap_or(after_open);
+    let name_end = after_open
+        .find(|character: char| !character.is_ascii_alphanumeric())
+        .unwrap_or(after_open.len());
+    let name = &after_open[..name_end];
+    let delimiter = after_open.as_bytes().get(name_end).copied();
+    if delimiter.is_some_and(|byte| !byte.is_ascii_whitespace() && !matches!(byte, b'/' | b'>')) {
+        return false;
+    }
+    BLOCK_HTML_TAGS
+        .split_ascii_whitespace()
+        .any(|tag| name.eq_ignore_ascii_case(tag))
 }
 
 pub(super) fn has_unquoted_jsx_expression_brace(opening: &str) -> bool {

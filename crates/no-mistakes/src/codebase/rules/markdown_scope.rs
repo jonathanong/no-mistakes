@@ -8,27 +8,39 @@ use lexical::lexical_normalized_slash_path;
 pub(crate) use lexical::lexical_relative_slash_path;
 
 pub(crate) fn markdown_files(files: &[PathBuf]) -> Vec<PathBuf> {
-    document_files_with_extensions(files, &["md"])
+    document_files_matching(files, |path| {
+        path.extension().and_then(|extension| extension.to_str()) == Some("md")
+    })
 }
 
 pub(crate) fn mermaid_document_files(files: &[PathBuf]) -> Vec<PathBuf> {
-    document_files_with_extensions(files, &["md", "markdown", "mdx"])
+    document_files_matching(files, is_mermaid_document)
 }
 
-fn document_files_with_extensions(files: &[PathBuf], extensions: &[&str]) -> Vec<PathBuf> {
+pub(crate) fn is_mermaid_document(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| {
+            ["md", "markdown", "mdx"]
+                .iter()
+                .any(|candidate| extension.eq_ignore_ascii_case(candidate))
+        })
+}
+
+fn document_files_matching(files: &[PathBuf], predicate: impl Fn(&Path) -> bool) -> Vec<PathBuf> {
     let mut markdown = files
         .iter()
-        .filter(|path| {
-            path.extension()
-                .and_then(|extension| extension.to_str())
-                .is_some_and(|extension| extensions.contains(&extension))
-        })
+        .filter(|path| predicate(path))
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<Vec<_>>();
     markdown.sort();
     markdown.dedup();
     markdown
 }
+
+#[cfg(test)]
+#[path = "markdown_scope/tests.rs"]
+mod tests;
 
 pub(crate) fn scope_roots(root: &Path, config: &NoMistakesConfig, rule: &RuleDef) -> Vec<PathBuf> {
     let mut roots = super::target_roots(root, config, rule)
