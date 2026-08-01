@@ -1,0 +1,10 @@
+name: CI
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project direct/tsconfig.json
+      - run: tsc --noEmit --project inherited/tsconfig.json
+      - run: tsc --noEmit --project override/tsconfig.json
+      - run: tsc --noEmit --project invalid/tsconfig.json

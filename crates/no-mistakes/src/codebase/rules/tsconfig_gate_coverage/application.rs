@@ -14,6 +14,7 @@ pub(super) fn scan_application(
     candidates: &BTreeSet<String>,
     ci_projects: &BTreeSet<String>,
     local_projects: &BTreeSet<String>,
+    non_enforcing: &BTreeSet<String>,
     config_file: &str,
 ) -> Vec<RuleFinding> {
     let ci_projects = resolve_gate_projects_against_tracked(ci_projects, tracked);
@@ -21,6 +22,15 @@ pub(super) fn scan_application(
     let (allowlist, mut findings) = validate_allowlist(opts, tracked, config_file);
     for project in candidates {
         if allowlist.contains(project) {
+            continue;
+        }
+        if non_enforcing.contains(project) {
+            findings.push(project_finding(
+                project,
+                format!(
+                    "{project}: effective compilerOptions.noCheck is true, so tsc cannot enforce ordinary type errors; remove or disable noCheck, or add a reasoned allowProjects entry"
+                ),
+            ));
             continue;
         }
         if !ci_projects.contains(project) {

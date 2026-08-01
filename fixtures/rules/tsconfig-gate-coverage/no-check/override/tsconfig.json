@@ -1,0 +1,6 @@
+{
+  "extends": "../base/base.json",
+  "compilerOptions": {
+    "noCheck": false
+  }
+}

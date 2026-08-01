@@ -191,7 +191,7 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
                         tsconfig_gate_coverage::PreparedInputs {
                             tracked_paths: snapshot.tracked_paths_for(root).as_ref(),
                             workflows,
-                            _sources: sources,
+                            sources,
                             config_path,
                         },
                     )

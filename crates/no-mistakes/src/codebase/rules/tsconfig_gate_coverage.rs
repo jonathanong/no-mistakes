@@ -6,6 +6,7 @@
 
 mod application;
 mod command_scan;
+mod no_check;
 mod workflow;
 
 use super::RuleFinding;
@@ -15,6 +16,7 @@ use crate::config::v2::schema::{CheckFileArgs, NoMistakesConfig};
 use anyhow::Result;
 use application::{scan_application, Options};
 use command_scan::scan_argv_for_typechecked_projects;
+use no_check::non_enforcing_tsconfigs;
 use rayon::prelude::*;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -31,10 +33,9 @@ pub const RULE_ID: &str = "tsconfig-gate-coverage";
 pub(crate) struct PreparedInputs<'a> {
     pub(crate) tracked_paths: &'a [PathBuf],
     pub(crate) workflows: &'a ParsedWorkflowSet,
-    /// The owner of the workflow reads. The prepared workflow loader must use
-    /// this store; retaining it here makes that ownership explicit at the rule
-    /// boundary without creating another source cache.
-    pub(crate) _sources: &'a crate::codebase::ts_source::SourceStore,
+    /// The owner of all rule source reads, including workflow documents and
+    /// effective `compilerOptions.noCheck` resolution for tracked tsconfigs.
+    pub(crate) sources: &'a crate::codebase::ts_source::SourceStore,
     /// The loaded config path, used for configuration diagnostics and
     /// suppressions. `None` renders as the conventional `.no-mistakes.yml`.
     pub(crate) config_path: Option<&'a Path>,
@@ -50,6 +51,7 @@ pub(crate) fn check_with_prepared(
     prepared: PreparedInputs<'_>,
 ) -> Result<Vec<RuleFinding>> {
     let tracked = tracked_tsconfigs(root, prepared.tracked_paths);
+    let non_enforcing = non_enforcing_tsconfigs(root, &tracked, prepared.sources);
     let ci_projects = ci_typechecked_projects(prepared.workflows);
     let local_projects = local_typechecked_projects(config);
     let config_file = config_file(root, prepared.config_path);
@@ -89,6 +91,7 @@ pub(crate) fn check_with_prepared(
                 &candidates,
                 &ci_projects,
                 &local_projects,
+                &non_enforcing,
                 &config_file,
             ))
         })

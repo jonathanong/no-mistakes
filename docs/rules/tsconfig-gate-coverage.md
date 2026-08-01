@@ -26,6 +26,8 @@ default `tsconfig.json` relative to the effective working directory, sequential
 `cd` commands, and `pnpm --dir <path> exec tsc`. Workflow working directories
 may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`.
+Only step-based jobs with a non-empty, static `runs-on` string or label array
+count; missing, dynamic, or reusable-workflow jobs do not.
 
 Workflow commands run only when their effective shell is GitHub Actions'
 implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
@@ -36,12 +38,21 @@ execution-preserving flags: `-e`, `-u`, `-x`, and Bash's `-o pipefail`,
 `bash --noprofile --norc -eo pipefail {0}` and `sh -e {0}` templates.
 Other shells (such as `python`, PowerShell, or `cmd`) and dynamic/custom shell
 forms do not count; neither do non-executing modes such as `bash -n {0}`.
+Implicit and built-in `bash`/`sh` shells propagate failures. Custom templates
+must include `-e` or `-o errexit` to credit a typecheck before a later command;
+without it, only a final `tsc` command counts.
 
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
 step do not count as CI registrations because they cannot enforce a typecheck.
 Other expressions in either field remain unresolved and are not evaluated by
 this static rule.
+
+A project whose effective local `compilerOptions.noCheck` is `true` does not
+count as typechecked, even when both commands are registered. Remove or disable
+`noCheck`, or document an intentional non-typechecking project with
+`allowProjects`. Local `extends` chains are resolved through the prepared source
+store; unresolved configs are left for `tsc` to reject.
 
 Counterexample: `packages/api/tsconfig.json` exists, but its `tsc --noEmit`
 command appears only in a local command catalog. CI can therefore miss type
@@ -61,9 +72,10 @@ Shell bodies containing `exit`, `return`, `false`, or a failure-mode mutation
 such as `set +e` are also rejected as a whole because the rule does not model
 shell reachability or option state.
 
-Informational and setup commands (`--showConfig`, `--help`/`-h`,
-`--version`/`-v`, and `--init`) do not count, even when combined with
-`--noEmit`, because they do not compile the project.
+Informational, setup, or config-bypassing commands (`--showConfig`,
+`--help`/`-h`, `--version`/`-v`, `--init`, `--noCheck`, `--listFilesOnly`, and
+`--ignoreConfig`) do not count, even when combined with `--noEmit`, because they
+do not fully typecheck the project.
 
 Findings use line 1 of the tsconfig, workflow, or configuration file. Use a
 top-of-file `no-mistakes-disable-file tsconfig-gate-coverage` directive only

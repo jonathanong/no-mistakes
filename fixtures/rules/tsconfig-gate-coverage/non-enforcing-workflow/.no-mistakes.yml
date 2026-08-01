@@ -36,6 +36,14 @@ checks:
       command: [tsc, --noEmit, --project, non-posix-shell/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-missing-runner
+      command: [tsc, --noEmit, --project, missing-runner/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-runner
+      command: [tsc, --noEmit, --project, dynamic-runner/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

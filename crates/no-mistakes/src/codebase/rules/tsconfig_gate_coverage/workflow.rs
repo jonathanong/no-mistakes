@@ -15,7 +15,7 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
             continue;
         };
         for job in jobs.values() {
-            if statically_not_enforcing(job) {
+            if statically_not_enforcing(job) || !has_static_runnable_runs_on(job) {
                 continue;
             }
             let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
@@ -37,18 +37,43 @@ pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet
                 let Some(run) = step.get("run").and_then(Value::as_str) else {
                     continue;
                 };
-                if !is_supported_posix_shell(effective_shell(step, job_shell.clone()).as_deref()) {
+                let Some(failure_enforced) =
+                    shell_failure_enforced(effective_shell(step, job_shell.clone()).as_deref())
+                else {
                     continue;
-                }
-                for project in command_scan::scan_shell_for_typechecked_projects(run, &cwd) {
-                    if is_repo_relative_project_path(&project) {
-                        projects.insert(project);
-                    }
+                };
+                let scanned_projects = if failure_enforced {
+                    command_scan::scan_shell_for_typechecked_projects(run, &cwd)
+                } else {
+                    command_scan::scan_workflow_shell_for_typechecked_projects(run, &cwd, false)
+                };
+                for project in scanned_projects {
+                    projects.insert(project);
                 }
             }
         }
     }
     projects
+}
+
+/// A CI job cannot provide a typecheck gate unless Actions can schedule it on
+/// a statically known runner. Reusable-workflow jobs use `uses:` rather than
+/// `steps:` and are already excluded by the step requirement above.
+fn has_static_runnable_runs_on(job: &Value) -> bool {
+    match job.get("runs-on") {
+        Some(Value::String(label)) => is_static_runner_label(label),
+        Some(Value::Sequence(labels)) => {
+            !labels.is_empty()
+                && labels
+                    .iter()
+                    .all(|label| label.as_str().is_some_and(is_static_runner_label))
+        }
+        _ => false,
+    }
+}
+
+fn is_static_runner_label(label: &str) -> bool {
+    !label.trim().is_empty() && !label.contains("${{")
 }
 
 /// A static disabled or non-blocking YAML node cannot enforce a typecheck.
@@ -96,30 +121,34 @@ fn effective_shell(value: &Value, fallback: Option<String>) -> Option<String> {
     }
 }
 
-/// Accept GitHub Actions' implicit shell and static POSIX shell forms only.
-/// A custom template must invoke `bash` or `sh`, pass the generated script as
-/// `{0}`, and use only flags that preserve normal script execution.
-fn is_supported_posix_shell(shell: Option<&str>) -> bool {
+/// Return whether a supported shell preserves failures for every command in a
+/// multi-command body. Built-in and implicit Actions shells provide `-e`; a
+/// custom template must express `-e` or `-o errexit` itself.
+fn shell_failure_enforced(shell: Option<&str>) -> Option<bool> {
     let Some(shell) = shell else {
-        return true;
+        return Some(true);
     };
     let mut tokens = shell.split_ascii_whitespace();
-    let Some(command) = tokens.next() else {
-        return false;
-    };
+    let command = tokens.next()?;
     if !matches!(command, "bash" | "sh") {
-        return false;
+        return None;
     }
     let args = tokens.collect::<Vec<_>>();
-    args.is_empty() || is_execution_preserving_shell_template(command, &args)
+    args.is_empty()
+        .then_some(true)
+        .or_else(|| execution_preserving_shell_template_failure_enforced(command, &args))
 }
 
-fn is_execution_preserving_shell_template(command: &str, arguments: &[&str]) -> bool {
+fn execution_preserving_shell_template_failure_enforced(
+    command: &str,
+    arguments: &[&str],
+) -> Option<bool> {
     if arguments.last() != Some(&"{0}") {
-        return false;
+        return None;
     }
     let options = &arguments[..arguments.len() - 1];
     let mut index = 0;
+    let mut failure_enforced = false;
     while let Some(option) = options.get(index) {
         match *option {
             "--noprofile" | "--norc" if command == "bash" => index += 1,
@@ -128,13 +157,21 @@ fn is_execution_preserving_shell_template(command: &str, arguments: &[&str]) -> 
                     && is_bash_pipefail_option(option)
                     && options.get(index + 1) == Some(&"pipefail") =>
             {
+                failure_enforced |= option.contains('e');
                 index += 2;
             }
-            option if is_execution_preserving_short_option(option) => index += 1,
-            _ => return false,
+            "-o" if options.get(index + 1) == Some(&"errexit") => {
+                failure_enforced = true;
+                index += 2;
+            }
+            option if let Some(enforced) = execution_preserving_short_option(option) => {
+                failure_enforced |= enforced;
+                index += 1;
+            }
+            _ => return None,
         }
     }
-    true
+    Some(failure_enforced)
 }
 
 fn is_bash_pipefail_option(option: &str) -> bool {
@@ -149,11 +186,10 @@ fn is_bash_pipefail_option(option: &str) -> bool {
 
 /// `-e`, `-u`, and `-x` only affect error handling or diagnostics. `-o` is
 /// handled separately so it can be limited to Bash's execution-safe pipefail.
-fn is_execution_preserving_short_option(option: &str) -> bool {
-    let Some(flags) = option.strip_prefix('-') else {
-        return false;
-    };
-    !flags.is_empty() && flags.chars().all(|flag| matches!(flag, 'e' | 'u' | 'x'))
+fn execution_preserving_short_option(option: &str) -> Option<bool> {
+    let flags = option.strip_prefix('-')?;
+    (!flags.is_empty() && flags.chars().all(|flag| matches!(flag, 'e' | 'u' | 'x')))
+        .then_some(flags.contains('e'))
 }
 
 pub(super) fn effective_working_directory(
@@ -164,10 +200,6 @@ pub(super) fn effective_working_directory(
         Some(raw) => command_scan::normalize_repo_relative(raw),
         None => fallback,
     }
-}
-
-pub(super) fn is_repo_relative_project_path(project: &str) -> bool {
-    command_scan::normalize_repo_relative(project).is_some()
 }
 
 pub(crate) fn workflow_load_findings(workflows: &ParsedWorkflowSet) -> Vec<RuleFinding> {

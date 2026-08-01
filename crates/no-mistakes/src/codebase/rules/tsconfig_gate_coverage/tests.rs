@@ -1,7 +1,6 @@
 use super::application::resolve_gate_projects_against_tracked;
 use super::workflow::{
     ci_typechecked_projects, default_working_directory, effective_working_directory,
-    is_repo_relative_project_path,
 };
 use super::*;
 use crate::codebase::ci_workflows::{
@@ -30,6 +29,19 @@ fn findings(root: &Path, config: &NoMistakesConfig) -> Vec<RuleFinding> {
     check(root, config).unwrap()
 }
 
+fn add_static_runners(workflow: &mut Value) {
+    let jobs = workflow
+        .get_mut("jobs")
+        .and_then(Value::as_mapping_mut)
+        .expect("workflow jobs mapping");
+    for job in jobs.values_mut() {
+        job.as_mapping_mut().expect("workflow job mapping").insert(
+            Value::String("runs-on".to_string()),
+            Value::String("ubuntu-latest".to_string()),
+        );
+    }
+}
+
 fn check(root: &Path, config: &NoMistakesConfig) -> anyhow::Result<Vec<RuleFinding>> {
     let paths = crate::codebase::ts_source::discover_files(root, &[]);
     let workflows = ParsedWorkflowSet::load(root, &config.ci);
@@ -40,7 +52,7 @@ fn check(root: &Path, config: &NoMistakesConfig) -> anyhow::Result<Vec<RuleFindi
         PreparedInputs {
             tracked_paths: &paths,
             workflows: &workflows,
-            _sources: &sources,
+            sources: &sources,
             config_path: Some(&root.join(".no-mistakes.yml")),
         },
     )
@@ -51,6 +63,65 @@ fn directory_project_arguments_cover_tracked_primary_tsconfig_in_ci_and_local_ch
     let root = fixture_root("pass");
     let report = findings(&root, &config(&root));
     assert!(report.is_empty(), "unexpected findings: {report:#?}");
+}
+
+#[test]
+fn no_check_tsconfigs_do_not_credit_ci_or_local_gates() {
+    let root = fixture_root("no-check");
+    let report = findings(&root, &config(&root));
+
+    assert_eq!(report.len(), 2, "{report:#?}");
+    for project in ["direct/tsconfig.json", "inherited/tsconfig.json"] {
+        let finding = report
+            .iter()
+            .find(|finding| finding.file == project)
+            .unwrap_or_else(|| panic!("missing {project} finding: {report:#?}"));
+        assert!(finding.message.contains("compilerOptions.noCheck is true"));
+    }
+    assert!(report.iter().all(|finding| !matches!(
+        finding.file.as_str(),
+        "override/tsconfig.json" | "invalid/tsconfig.json"
+    )));
+}
+
+#[test]
+fn unread_tsconfigs_defer_to_tsc_without_rereading_prepared_sources() {
+    let source = fixture_root("no-check");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let config = config(&root);
+    let paths = crate::codebase::ts_source::discover_files(&root, &[]);
+    let workflows = ParsedWorkflowSet::load(&root, &config.ci);
+    let sources = super::super::source_store_for_files(&paths);
+    std::fs::remove_file(root.join("override/tsconfig.json")).unwrap();
+
+    let prepared = PreparedInputs {
+        tracked_paths: &paths,
+        workflows: &workflows,
+        sources: &sources,
+        config_path: Some(&root.join(".no-mistakes.yml")),
+    };
+    let report = check_with_prepared(&root, &config, prepared).unwrap();
+    assert!(report
+        .iter()
+        .all(|finding| finding.file != "override/tsconfig.json"));
+    let reads_after_first_check = sources.physical_read_count();
+
+    let report = check_with_prepared(
+        &root,
+        &config,
+        PreparedInputs {
+            tracked_paths: &paths,
+            workflows: &workflows,
+            sources: &sources,
+            config_path: Some(&root.join(".no-mistakes.yml")),
+        },
+    )
+    .unwrap();
+    assert!(report
+        .iter()
+        .all(|finding| finding.file != "override/tsconfig.json"));
+    assert_eq!(sources.physical_read_count(), reads_after_first_check);
 }
 
 #[test]
@@ -107,10 +178,10 @@ fn workflow_defaults_step_directories_and_shell_cwds_are_resolved() {
 }
 
 #[test]
-fn statically_disabled_or_nonblocking_workflow_commands_do_not_cover_projects() {
+fn non_enforcing_or_non_runnable_workflow_commands_do_not_cover_projects() {
     let root = fixture_root("non-enforcing-workflow");
     let report = findings(&root, &config(&root));
-    assert_eq!(report.len(), 8, "{report:#?}");
+    assert_eq!(report.len(), 10, "{report:#?}");
     for project in [
         "disabled-job/tsconfig.json",
         "disabled-step/tsconfig.json",
@@ -120,6 +191,8 @@ fn statically_disabled_or_nonblocking_workflow_commands_do_not_cover_projects() 
         "constant-nonblocking-step/tsconfig.json",
         "failure-mode-mutated/tsconfig.json",
         "non-posix-shell/tsconfig.json",
+        "missing-runner/tsconfig.json",
+        "dynamic-runner/tsconfig.json",
     ] {
         assert!(report.iter().any(|finding| {
             finding.file == project && finding.message.contains("no CI typecheck registration")
@@ -257,8 +330,6 @@ fn pure_helpers_keep_config_and_workflow_boundaries_static() {
         ),
         "config/no-mistakes.yml"
     );
-    assert!(is_repo_relative_project_path("app/tsconfig.json"));
-    assert!(!is_repo_relative_project_path("../tsconfig.json"));
 }
 
 #[test]
@@ -292,7 +363,7 @@ fn workflow_load_errors_are_rendered_for_both_failure_kinds() {
 #[test]
 fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
     let incomplete: Value = serde_yaml::from_str(
-        "jobs:\n  no-steps: {}\n  incomplete:\n    steps:\n      - working-directory: ${{ matrix.dir }}\n        run: tsc --noEmit\n      - name: no command\n",
+        "jobs:\n  no-steps:\n    runs-on: ubuntu-latest\n  incomplete:\n    runs-on: ubuntu-latest\n    steps:\n      - working-directory: ${{ matrix.dir }}\n        run: tsc --noEmit\n      - name: no command\n",
     )
     .unwrap();
     let workflows = ParsedWorkflowSet {
@@ -312,10 +383,11 @@ fn ci_scanner_skips_workflow_shapes_without_static_runnable_steps() {
 
 #[test]
 fn ci_scanner_honors_static_posix_shell_overrides_and_defaults() {
-    let workflow: Value = serde_yaml::from_str(
+    let mut workflow: Value = serde_yaml::from_str(
         "defaults:\n  run:\n    shell: python\njobs:\n  workflow-default-python:\n    steps:\n      - run: tsc --noEmit --project workflow-default-python/tsconfig.json\n  job-default-bash-template:\n    defaults:\n      run:\n        shell: 'bash --noprofile --norc -eo pipefail {0}'\n    steps:\n      - run: tsc --noEmit --project job-default-bash-template/tsconfig.json\n  step-override-sh-template:\n    steps:\n      - shell: 'sh -e {0}'\n        run: tsc --noEmit --project step-override-sh-template/tsconfig.json\n  unsupported-template:\n    defaults:\n      run:\n        shell: bash\n    steps:\n      - shell: 'bash -c {0}'\n        run: tsc --noEmit --project unsupported-template/tsconfig.json\n  dynamic-shell:\n    steps:\n      - shell: ${{ matrix.shell }}\n        run: tsc --noEmit --project dynamic-shell/tsconfig.json\n",
     )
     .unwrap();
+    add_static_runners(&mut workflow);
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
             path: ".github/workflows/shells.yml".into(),
@@ -334,10 +406,11 @@ fn ci_scanner_honors_static_posix_shell_overrides_and_defaults() {
 
 #[test]
 fn ci_scanner_rejects_an_empty_shell_setting() {
-    let workflow: Value = serde_yaml::from_str(
+    let mut workflow: Value = serde_yaml::from_str(
         "jobs:\n  empty-shell:\n    steps:\n      - shell: ''\n        run: tsc --noEmit --project app/tsconfig.json\n",
     )
     .unwrap();
+    add_static_runners(&mut workflow);
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
             path: ".github/workflows/empty-shell.yml".into(),
@@ -349,10 +422,11 @@ fn ci_scanner_rejects_an_empty_shell_setting() {
 
 #[test]
 fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
-    let workflow: Value = serde_yaml::from_str(
+    let mut workflow: Value = serde_yaml::from_str(
         "jobs:\n  bare-bash:\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project bare-bash/tsconfig.json\n  bash-flags:\n    steps:\n      - shell: 'bash -eu -o pipefail {0}'\n        run: tsc --noEmit --project bash-flags/tsconfig.json\n  sh-flags:\n    steps:\n      - shell: 'sh -ux {0}'\n        run: tsc --noEmit --project sh-flags/tsconfig.json\n  syntax-check-only:\n    steps:\n      - shell: 'bash -n {0}'\n        run: tsc --noEmit --project syntax-check-only/tsconfig.json\n  version-only:\n    steps:\n      - shell: 'bash --version {0}'\n        run: tsc --noEmit --project version-only/tsconfig.json\n  shell-without-script-template:\n    steps:\n      - shell: 'bash -e'\n        run: tsc --noEmit --project shell-without-script-template/tsconfig.json\n  sh-pipefail:\n    steps:\n      - shell: 'sh -o pipefail {0}'\n        run: tsc --noEmit --project sh-pipefail/tsconfig.json\n  empty-short-flag:\n    steps:\n      - shell: 'bash - {0}'\n        run: tsc --noEmit --project empty-short-flag/tsconfig.json\n  bare-template-word:\n    steps:\n      - shell: 'bash pipefail {0}'\n        run: tsc --noEmit --project bare-template-word/tsconfig.json\n",
     )
     .unwrap();
+    add_static_runners(&mut workflow);
     let workflows = ParsedWorkflowSet {
         documents: vec![ParsedWorkflowDocument {
             path: ".github/workflows/template-flags.yml".into(),
@@ -371,6 +445,32 @@ fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
 }
 
 #[test]
+fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
+    let workflow: Value = serde_yaml::from_str(
+        "jobs:\n  implicit-shell:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project implicit-shell/tsconfig.json; echo later\n  builtin-bash:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project builtin-bash/tsconfig.json; echo later\n  custom-final-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: echo first; tsc --noEmit --project custom-final-typecheck/tsconfig.json\n  custom-masked-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: tsc --noEmit --project custom-masked-typecheck/tsconfig.json; echo later\n  custom-errexit:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash -e {0}'\n        run: tsc --noEmit --project custom-errexit/tsconfig.json; echo later\n  custom-errexit-option:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'sh -o errexit {0}'\n        run: tsc --noEmit --project custom-errexit-option/tsconfig.json; echo later\n  missing-runner:\n    steps:\n      - run: tsc --noEmit --project missing-runner/tsconfig.json\n  dynamic-runner:\n    runs-on: ${{ matrix.os }}\n    steps:\n      - run: tsc --noEmit --project dynamic-runner/tsconfig.json\n  label-array-runner:\n    runs-on: [self-hosted, linux]\n    steps:\n      - run: tsc --noEmit --project label-array-runner/tsconfig.json\n  dynamic-label-array-runner:\n    runs-on: [self-hosted, '${{ matrix.os }}']\n    steps:\n      - run: tsc --noEmit --project dynamic-label-array-runner/tsconfig.json\n",
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/runners-and-shells.yml".into(),
+            value: Ok(workflow),
+        }],
+    };
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows),
+        BTreeSet::from([
+            "builtin-bash/tsconfig.json".to_string(),
+            "custom-errexit-option/tsconfig.json".to_string(),
+            "custom-errexit/tsconfig.json".to_string(),
+            "custom-final-typecheck/tsconfig.json".to_string(),
+            "implicit-shell/tsconfig.json".to_string(),
+            "label-array-runner/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
 fn application_scan_combines_allowlist_and_missing_gate_findings() {
     let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
     let options = Options {
@@ -383,6 +483,7 @@ fn application_scan_combines_allowlist_and_missing_gate_findings() {
         &options,
         &tracked,
         &tracked,
+        &BTreeSet::new(),
         &BTreeSet::new(),
         &BTreeSet::new(),
         ".no-mistakes.yml",
@@ -416,6 +517,7 @@ fn blank_allowlist_reasons_do_not_claim_normalized_paths() {
         &options,
         &tracked,
         &tracked,
+        &BTreeSet::new(),
         &BTreeSet::new(),
         &BTreeSet::new(),
         ".no-mistakes.yml",

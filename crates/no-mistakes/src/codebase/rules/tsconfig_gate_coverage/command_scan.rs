@@ -45,6 +45,16 @@ pub(crate) fn scan_shell_for_typechecked_projects(script: &str, initial_cwd: &st
     shell::scan_shell_body_for_typechecked_projects(script, initial_cwd, true)
 }
 
+/// Scan a workflow shell body with the failure behavior selected by its
+/// effective GitHub Actions shell.
+pub(crate) fn scan_workflow_shell_for_typechecked_projects(
+    script: &str,
+    initial_cwd: &str,
+    failure_enforced: bool,
+) -> Vec<String> {
+    shell::scan_shell_body_for_typechecked_projects(script, initial_cwd, failure_enforced)
+}
+
 /// Scan one configured argv command. A shell script is accepted only for a
 /// static `bash|sh ... -c <literal>` form; all other argv commands are parsed
 /// as direct static command tokens.
