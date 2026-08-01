@@ -124,9 +124,8 @@ fn ts_fact_plan_and_context_for_plan_with_config_uses_explicit_config_path() {
 
 #[test]
 fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
-        "playwright-config-path-graph",
-    ));
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-config-path-graph"));
     let all_files = GraphFiles::discover(&root).all;
     let plan = GraphBuildPlan {
         playwright_routes: true,
@@ -156,6 +155,13 @@ fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
         paths_dir: root.clone(),
         base_url: None,
     };
+    assert!(
+        prepared
+            .playwright_fact_plan(&root, &tsconfig, &visible)
+            .unwrap()
+            .is_some(),
+        "prepared graph settings must build a reusable Playwright fact plan"
+    );
     let graph = DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
         &root,
         &tsconfig,
@@ -182,20 +188,14 @@ fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
 
 #[test]
 fn playwright_route_edges_use_explicit_config_path() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
-        "playwright-config-path-graph",
-    ));
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-config-path-graph"));
     let all_files = GraphFiles::discover(&root).all;
 
     assert!(collect_playwright_route_edges(&root, None, &all_files, None).is_empty());
 
     let custom_config = root.join("custom.no-mistakes.yml");
-    let edges = collect_playwright_route_edges(
-        &root,
-        Some(&custom_config),
-        &all_files,
-        None,
-    );
+    let edges = collect_playwright_route_edges(&root, Some(&custom_config), &all_files, None);
     let test = NodeId::File(root.join("tests/e2e/app.spec.ts"));
     let page = NodeId::File(root.join("web/app/page.tsx"));
     let layout = NodeId::File(root.join("web/app/layout.tsx"));

@@ -1,3 +1,4 @@
+#[macro_export]
 macro_rules! filesystem_rules {
     ($macro:ident) => {
         $macro! {

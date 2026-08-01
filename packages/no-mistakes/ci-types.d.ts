@@ -32,6 +32,8 @@ export interface ImpactedChecksOptions {
   changedFiles?: string[];
   changedFilesFile?: string;
   diff?: string;
+  /** Return configured generic commands only; skip test-framework discovery and selection. */
+  genericOnly?: boolean;
   /** Include ordered analysis phase timings in the returned report. */
   timings?: boolean;
 }

@@ -10,6 +10,8 @@ pub(super) struct PreparedInputs<'a> {
     pub(super) codebase_config: &'a no_mistakes::codebase::config::Config,
     pub(super) tsconfig: &'a TsConfig,
     pub(super) visible_paths: &'a VisiblePathSnapshot,
+    pub(super) workflow_documents:
+        Option<&'a std::sync::Arc<no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>>,
 }
 
 pub(super) fn prepare(
@@ -20,7 +22,7 @@ pub(super) fn prepare(
     playwright_fact_plan: &mut Option<PlaywrightFactPlan>,
     plan: &mut CheckFactPlan,
 ) -> Result<Option<PreparedGraphConfig>> {
-    let prepared_graph = graph_plan
+    let mut prepared_graph = graph_plan
         .map(|graph_plan| {
             no_mistakes::codebase::dependencies::graph::prepare_graph_config(
                 root,
@@ -31,6 +33,9 @@ pub(super) fn prepare(
             )
         })
         .transpose()?;
+    if let Some(prepared) = prepared_graph.as_mut() {
+        prepared.set_workflow_documents(inputs.workflow_documents.cloned());
+    }
     if let Some(graph_playwright) = prepared_graph
         .as_ref()
         .map(|graph| graph.playwright_fact_plan(root, inputs.tsconfig, inputs.visible_paths))

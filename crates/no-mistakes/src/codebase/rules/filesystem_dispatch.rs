@@ -1,6 +1,5 @@
 use anyhow::Result;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 
 use super::{
     agents_md_max_size, banned_paths, banned_renamed_files, config_path_references,
@@ -11,13 +10,14 @@ use super::{
     package_json_workspace_coverage, production_dependency_declarations, require_files_in_subdirs,
     require_test_per_subdir, required_companion_imports, required_local_docs, rust_rules_combined,
     shellcheck_runner, strict_package_layout, structured_config_policy, test_email_domain_policy,
-    tsconfig_alias_folder_mapping, vitest_ci_path_coverage, vitest_project_mapping,
-    vitest_test_correspondence, workspace_package_cycles,
+    tsconfig_alias_folder_mapping, tsconfig_gate_coverage, vitest_ci_path_coverage,
+    vitest_project_mapping, vitest_test_correspondence, workspace_package_cycles,
 };
 
 mod candidate_helpers;
 mod candidate_index;
 mod entrypoints;
+mod execute;
 mod inventory;
 mod preserved;
 mod run_rule;
@@ -34,8 +34,8 @@ use super::{
     REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
     STRICT_PACKAGE_LAYOUT, STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY,
-    TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING,
-    VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
+    TSCONFIG_ALIAS_FOLDER_MAPPING, TSCONFIG_GATE_COVERAGE, VITEST_CI_PATH_COVERAGE,
+    VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
 };
 pub use entrypoints::{
     run_filesystem_rules, run_filesystem_rules_with_config,
@@ -43,7 +43,7 @@ pub use entrypoints::{
     run_filesystem_rules_with_config_snapshot_and_vitest_catalog, run_filesystem_rules_with_files,
     run_filesystem_rules_with_visible_and_snapshot,
 };
-const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
+pub(super) const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 
 macro_rules! define_filesystem_rule_ids {
     ($($id:expr => $call:path),* $(,)?) => {
@@ -56,151 +56,15 @@ macro_rules! define_filesystem_rule_ids {
             RUST_NO_INLINE_ALLOWS,
             VITEST_PROJECT_MAPPING,
             VITEST_CI_PATH_COVERAGE,
+            TSCONFIG_GATE_COVERAGE,
         ];
     };
 }
 
-filesystem_rules!(define_filesystem_rule_ids);
-
-#[doc(hidden)]
-pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    files: &[PathBuf],
-    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
-    vitest_catalog: Option<&super::PreparedVitestProjectCatalog>,
-    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-) -> Result<Vec<RuleFinding>> {
-    let acc = Mutex::new(Vec::new());
-    let metadata_files = if rule_enabled(config, FORBIDDEN_WORKSPACE_CLOSURE)
-        || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
-    {
-        let mut metadata_files = files.to_vec();
-        metadata_files.extend(snapshot.paths_for(root).iter().cloned());
-        metadata_files.sort();
-        metadata_files.dedup();
-        metadata_files
-    } else {
-        Vec::new()
-    };
-    let candidates = candidate_index::RuleCandidateIndex::prepare_with_inventory(
-        root,
-        config,
-        files,
-        &snapshot.tracked_paths_from(files),
-        &metadata_files,
-        Some(inventory::tracked_inventory_with_markdown_project_roots(
-            root, config, snapshot,
-        )),
-    );
-    inventory::register_trusted_external_candidates(root, config, &candidates, &sources);
-    macro_rules! run_rules {
-        ($($id:expr => $call:path),* $(,)?) => {
-            rayon::scope(|s| {
-                $(
-                    if rule_enabled(config, $id) {
-                        s.spawn(|_| {
-                            let res = run_rule::run_rule_with_sources(
-                                $id,
-                                $call,
-                                root,
-                                config,
-                                candidates.candidates($id),
-                                &sources,
-                            );
-                            acc.lock().expect("mutex poisoned").push(($id, res));
-                        });
-                    }
-                )*
-                if rule_enabled(config, MARKDOWN_REACHABILITY) {
-                    s.spawn(|_| {
-                        let res = markdown_reachability::check_with_files_and_sources(
-                            root,
-                            config,
-                            candidates.candidates(MARKDOWN_REACHABILITY),
-                            &sources,
-                        );
-                        acc.lock()
-                            .expect("mutex poisoned")
-                            .push((MARKDOWN_REACHABILITY, res));
-                    });
-                }
-                if rule_enabled(config, MARKDOWN_STRUCTURE_BUDGET) {
-                    s.spawn(|_| {
-                        let res = markdown_structure_budget::check_with_files_and_sources(
-                            root,
-                            config,
-                            candidates.candidates(MARKDOWN_STRUCTURE_BUDGET),
-                            &sources,
-                        );
-                        acc.lock()
-                            .expect("mutex poisoned")
-                            .push((MARKDOWN_STRUCTURE_BUDGET, res));
-                    });
-                }
-                if registry::rust_rules_enabled(config) {
-                    s.spawn(|_| {
-                        let res = rust_rules_combined::check_with_files_and_sources(
-                            root,
-                            config,
-                            candidates.rust_candidates(),
-                            candidates.exclusive_rust_candidates(),
-                            &sources,
-                        );
-                        acc.lock().expect("mutex poisoned").push(("rust-rules-combined", res));
-                    });
-                }
-                if rule_enabled(config, VITEST_PROJECT_MAPPING) {
-                    s.spawn(|_| {
-                        let res = vitest_project_mapping::check_with_files_and_catalog(
-                            root,
-                            config,
-                            candidates.candidates(VITEST_PROJECT_MAPPING),
-                            vitest_catalog,
-                        );
-                        acc.lock()
-                            .expect("mutex poisoned")
-                            .push((VITEST_PROJECT_MAPPING, res));
-                    });
-                }
-                if rule_enabled(config, VITEST_CI_PATH_COVERAGE) {
-                    s.spawn(|_| {
-                        let res = vitest_ci_path_coverage::check_with_files_from_snapshot_catalog_and_sources(
-                            root,
-                            config,
-                            candidates.candidates(VITEST_CI_PATH_COVERAGE),
-                            snapshot,
-                            vitest_catalog,
-                            &sources,
-                        );
-                        acc.lock()
-                            .expect("mutex poisoned")
-                            .push((VITEST_CI_PATH_COVERAGE, res));
-                    });
-                }
-            });
-        };
-    }
-    filesystem_rules!(run_rules);
-    let mut results = acc.into_inner().expect("mutex poisoned");
-    results.sort_unstable_by_key(|(id, _)| *id);
-    let mut findings = Vec::new();
-    for (_, r) in results {
-        findings.extend(r?);
-    }
-    suppress_rule_findings_with_sources_except(
-        root,
-        &mut findings,
-        &sources,
-        &[
-            RUST_MAX_LINES_PER_FILE,
-            RUST_NO_INLINE_TESTS,
-            RUST_NO_INLINE_ALLOWS,
-        ],
-    );
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
+crate::filesystem_rules!(define_filesystem_rule_ids);
+pub use execute::{
+    run_filesystem_rules_with_config_snapshot_catalog_and_sources, PreparedFilesystemRuleInputs,
+};
 
 #[cfg(test)]
 mod tests;

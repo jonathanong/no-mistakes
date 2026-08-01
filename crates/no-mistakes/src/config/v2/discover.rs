@@ -151,6 +151,14 @@ fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         validate_globs(&rule.include, &format!("rules[{index}].include"))?;
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
+    for (index, command) in config.checks.commands.iter().enumerate() {
+        if command.always && command.file_args != super::schema::CheckFileArgs::None {
+            anyhow::bail!("checks.commands[{index}].always requires fileArgs: none");
+        }
+        if command.always && (!command.include.is_empty() || !command.exclude.is_empty()) {
+            anyhow::bail!("checks.commands[{index}].always requires empty include and exclude");
+        }
+    }
     targeted_triggers::validate(config, path)?;
     validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())

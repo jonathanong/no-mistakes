@@ -1,6 +1,9 @@
 #[test]
 fn aggregate_check_injects_prepared_config_into_every_domain() {
-    let runner = include_str!("../../check_runner.rs");
+    let runner = concat!(
+        include_str!("../../check_runner.rs"),
+        include_str!("../run_all.rs"),
+    );
     let prepared = include_str!("../prepared.rs");
     let forbidden_plan = include_str!("../forbidden_plan.rs");
     let parallel = include_str!("../../check_parallel.rs");
@@ -66,7 +69,10 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
 #[test]
 fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     let prepared = include_str!("../prepared.rs");
-    let runner = include_str!("../../check_runner.rs");
+    let runner = concat!(
+        include_str!("../../check_runner.rs"),
+        include_str!("../run_all.rs"),
+    );
     let discovery = include_str!("../../check_discovery.rs");
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
@@ -102,7 +108,10 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
 fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
     let prepared = include_str!("../prepared.rs");
     let tasks = check_task_sources();
-    let dispatcher = include_str!("../../codebase/rules/filesystem_dispatch.rs");
+    let dispatcher = concat!(
+        include_str!("../../codebase/rules/filesystem_dispatch.rs"),
+        include_str!("../../codebase/rules/filesystem_dispatch/execute.rs"),
+    );
     let catalog = include_str!("../../codebase/rules/vitest_project_catalog.rs");
     let mapping = include_str!("../../codebase/rules/vitest_project_mapping/project_sources.rs");
     let coverage = include_str!("../../codebase/rules/vitest_ci_path_coverage/projects.rs");
@@ -115,7 +124,14 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
     );
     assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_catalog_and_sources"));
     assert!(dispatcher.contains("check_with_files_and_catalog"));
-    assert!(dispatcher.contains("check_with_files_from_snapshot_catalog_and_sources"));
+    assert!(dispatcher.contains("check_with_files_from_snapshot_catalog_sources_and_workflows"));
+    assert_eq!(
+        prepared
+            .matches("ParsedWorkflowSet::load_from_snapshot_and_sources(")
+            .count(),
+        1
+    );
+    assert!(prepared.contains("TSCONFIG_GATE_COVERAGE"));
     assert_eq!(
         catalog
             .matches("load_projects_from_visible_with_catalog(")

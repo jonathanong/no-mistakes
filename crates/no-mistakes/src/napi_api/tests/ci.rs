@@ -87,6 +87,40 @@ fn impacted_checks_json_returns_checks() {
 }
 
 #[test]
+fn impacted_checks_json_generic_only_skips_test_frameworks() {
+    let root = impacted_checks_multi_framework_root();
+    let config = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/impacted-checks/generic-only.no-mistakes.yml");
+    let options = json!({
+        "root": root,
+        "config": config,
+        "changedFiles": ["src/value.ts"],
+        "genericOnly": true,
+        "timings": true,
+    })
+    .to_string();
+    let value: serde_json::Value =
+        serde_json::from_str(&impacted_checks_json_impl(options).unwrap()).unwrap();
+
+    assert!(value["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|check| check["kind"] == "generic"));
+    assert_eq!(value["warnings"], json!([]));
+    assert_eq!(value["fallback_triggered"], false);
+    assert_eq!(
+        value["timings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|timing| timing["phase"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["prepare", "generic-checks", "total"],
+    );
+}
+
+#[test]
 fn impacted_checks_json_timings_are_opt_in_and_ordered() {
     let root = impacted_checks_multi_framework_root();
     let changed_files = [

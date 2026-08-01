@@ -134,6 +134,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Which workflows define or reference this env var? | `no-mistakes ci env <VAR> --format json` |
 | What are the workflow edges, job runner/timeout/permission settings, env declarations, or static secret-name use sites? | `no-mistakes ci topology --format json` |
 | What local validation commands should I run for these changed files? | `no-mistakes impacted-checks <file...> --format paths` |
+| Which configured generic validation commands apply, without test selection? | `no-mistakes impacted-checks <file...> --generic-only --format json` |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |
 | What server routes exist? | `no-mistakes server routes` |

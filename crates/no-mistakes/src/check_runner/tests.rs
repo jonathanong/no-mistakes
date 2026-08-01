@@ -1,4 +1,4 @@
-use super::enabled::EnabledChecks;
+use super::enabled::{fact_plan, integration_configured, EnabledChecks};
 use super::*;
 use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;
@@ -90,6 +90,60 @@ fn empty_results_records_cli_side_channels() {
     assert!(results.rules.is_empty());
     assert!(results.integration.is_empty());
     assert!(results.codebase.is_empty());
+}
+
+#[test]
+fn run_all_returns_empty_results_when_no_check_domain_is_configured() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
+
+    let results = run_all(root, None, None).unwrap();
+
+    assert!(results.react.is_empty());
+    assert!(results.queues.is_empty());
+    assert!(results.rules.is_empty());
+    assert!(results.integration.is_empty());
+    assert!(results.codebase.is_empty());
+}
+
+#[test]
+fn run_all_contextualizes_playwright_fact_plan_preparation_failures() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-runner/invalid-playwright-fact-plan");
+
+    let error = match run_all(root, None, None) {
+        Ok(_) => panic!("missing Playwright config unexpectedly produced a check result"),
+        Err(error) => error,
+    };
+
+    assert!(
+        error
+            .to_string()
+            .contains("failed to prepare Playwright shared facts"),
+        "{error:#}"
+    );
+}
+
+#[test]
+fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
+    let config = no_mistakes::config::v2::NoMistakesConfig::default();
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &[]);
+    let task = crate::check_tasks::run_filesystem_rules_check(
+        &root,
+        &config,
+        false,
+        &[],
+        no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+            snapshot: &snapshot,
+            vitest_catalog: None,
+            sources: snapshot.source_store_for(&root),
+            workflow_documents: None,
+            config_path: None,
+        },
+    )
+    .unwrap();
+
+    assert!(task.findings.is_empty());
 }
 
 #[test]

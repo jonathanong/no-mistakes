@@ -39,5 +39,6 @@ pub(crate) struct ImpactedChecksOptions {
     pub(crate) changed_files: Vec<String>,
     pub(crate) changed_files_file: Option<String>,
     pub(crate) diff: Option<String>,
+    pub(crate) generic_only: bool,
     pub(crate) timings: bool,
 }

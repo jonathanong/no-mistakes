@@ -14,6 +14,8 @@ pub(crate) struct PreparedCheckInputs {
     pub(crate) tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     pub(crate) tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) vitest_projects: Option<no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
+    pub(crate) workflow_documents:
+        Option<Arc<no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>>,
 }
 
 pub(super) fn prepare_with_session(
@@ -119,6 +121,20 @@ pub(crate) fn prepare_from_shared(
             &tsconfig_catalog,
         )
     });
+    let workflow_documents = (config
+        .rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
+        || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
+        || config.rule_configured(no_mistakes::codebase::rules::FORBIDDEN_DEPENDENCIES))
+    .then(|| {
+        Arc::new(
+            no_mistakes::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
+                root,
+                &config.ci,
+                visible_paths.as_ref(),
+                &sources,
+            ),
+        )
+    });
     Ok(PreparedCheckInputs {
         visible_paths,
         inferred_roots,
@@ -129,5 +145,6 @@ pub(crate) fn prepare_from_shared(
         tsconfig,
         tsconfig_catalog,
         vitest_projects,
+        workflow_documents,
     })
 }

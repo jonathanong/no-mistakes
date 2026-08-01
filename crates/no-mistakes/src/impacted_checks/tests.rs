@@ -9,6 +9,7 @@ use crate::tests::TestFramework;
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod generic_checks;
 mod runner_isolation;
 mod timeout;
 
@@ -32,6 +33,13 @@ fn generic_only_fixture() -> PathBuf {
     )
 }
 
+fn generic_only_config() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/impacted-checks/generic-only.no-mistakes.yml"),
+    )
+}
+
 fn args(files: &[&str]) -> ImpactedChecksArgs {
     ImpactedChecksArgs {
         files: files.iter().map(PathBuf::from).collect(),
@@ -46,6 +54,7 @@ fn args(files: &[&str]) -> ImpactedChecksArgs {
         diff_content: None,
         format: None,
         json: false,
+        generic_only: false,
         timings: false,
     }
 }
@@ -68,6 +77,7 @@ fn fanout_args(root: &Path) -> ImpactedChecksArgs {
         diff_content: None,
         format: None,
         json: false,
+        generic_only: false,
         timings: false,
     }
 }
@@ -121,20 +131,6 @@ fn all_environments_skip_the_shared_graph() {
     assert_eq!(report.checks.len(), 4);
     assert!(report.fallback_triggered);
     assert_eq!(stats.framework_discoveries, 4);
-    assert_eq!(stats.graph_builds, 0);
-}
-
-#[test]
-fn generic_only_repository_skips_test_file_discovery_and_graph() {
-    let mut a = args(&["src/value.ts"]);
-    a.root = generic_only_fixture();
-    // Test-only inputs remain irrelevant when no test framework is present.
-    a.tsconfig = Some(a.root.join("missing-tsconfig.json"));
-
-    let (report, stats) = generate_impacted_checks_with_stats(&a).unwrap();
-
-    assert_eq!(command_strings(&report), vec!["eslint src/value.ts"]);
-    assert_eq!(stats.framework_discoveries, 0);
     assert_eq!(stats.graph_builds, 0);
 }
 
@@ -226,73 +222,6 @@ fn dedupe_checks_merges_files_for_same_command() {
     let out = dedupe_checks(vec![mk(&["b.ts"]), mk(&["a.ts"])]);
     assert_eq!(out.len(), 1);
     assert_eq!(out[0].files, vec!["a.ts".to_string(), "b.ts".to_string()]);
-}
-
-#[test]
-fn generic_checks_excludes_deleted_from_append() {
-    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
-    let mut config = NoMistakesConfig::default();
-    config.checks.commands = vec![
-        CheckCommandDef {
-            name: "eslint".to_string(),
-            include: vec!["**/*.ts".to_string()],
-            command: vec!["eslint".to_string()],
-            file_args: CheckFileArgs::Append,
-            ..Default::default()
-        },
-        CheckCommandDef {
-            name: "only-deleted".to_string(),
-            include: vec!["gone/**".to_string()],
-            command: vec!["lint".to_string()],
-            file_args: CheckFileArgs::Append,
-            ..Default::default()
-        },
-        CheckCommandDef {
-            name: "tsc".to_string(),
-            include: vec!["**/*.ts".to_string()],
-            command: vec!["tsc".to_string()],
-            file_args: CheckFileArgs::None,
-            ..Default::default()
-        },
-    ];
-    let changed = vec![
-        "a.ts".to_string(),
-        "b.ts".to_string(),
-        "gone/x.ts".to_string(),
-    ];
-    let deleted: BTreeSet<String> = ["a.ts".to_string(), "gone/x.ts".to_string()]
-        .into_iter()
-        .collect();
-    let checks = generic_checks(&config, &changed, &deleted).unwrap();
-    // Append: deleted files are dropped from the per-file args.
-    let eslint = checks.iter().find(|c| c.name == "eslint").unwrap();
-    assert_eq!(
-        eslint.command,
-        vec!["eslint".to_string(), "b.ts".to_string()]
-    );
-    // Append where every match is deleted: skipped entirely.
-    assert!(!checks.iter().any(|c| c.name == "only-deleted"));
-    // Whole-project check still triggers despite the deletion.
-    assert!(checks.iter().any(|c| c.name == "tsc"));
-}
-
-#[test]
-fn generic_checks_normalizes_dot_slash_globs() {
-    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
-    let mut config = NoMistakesConfig::default();
-    config.checks.commands = vec![CheckCommandDef {
-        name: "eslint".to_string(),
-        include: vec!["./src/**/*.ts".to_string()],
-        command: vec!["eslint".to_string()],
-        file_args: CheckFileArgs::Append,
-        ..Default::default()
-    }];
-    let checks = generic_checks(&config, &["src/foo.ts".to_string()], &BTreeSet::new()).unwrap();
-    assert_eq!(checks.len(), 1);
-    assert_eq!(
-        checks[0].command,
-        vec!["eslint".to_string(), "src/foo.ts".to_string()]
-    );
 }
 
 #[test]

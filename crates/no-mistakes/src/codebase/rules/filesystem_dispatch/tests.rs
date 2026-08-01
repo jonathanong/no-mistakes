@@ -69,6 +69,55 @@ fn dispatch_standalone_covers_all_rule_branches() {
 }
 
 #[test]
+fn prebuilt_snapshot_catalog_entrypoint_accepts_an_empty_catalog() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-runner/empty");
+    let config = crate::config::v2::NoMistakesConfig::default();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &[]);
+
+    let findings = run_filesystem_rules_with_config_snapshot_and_vitest_catalog(
+        &root,
+        &config,
+        &[],
+        &snapshot,
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn prepared_dispatch_rejects_tsconfig_gate_without_workflow_documents() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/tsconfig-gate-coverage/missing-ci");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &[]);
+
+    let error = super::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        &root,
+        &config,
+        &[],
+        PreparedFilesystemRuleInputs {
+            snapshot: &snapshot,
+            vitest_catalog: None,
+            sources: snapshot.source_store_for(&root),
+            workflow_documents: None,
+            config_path: Some(&config_path),
+        },
+    )
+    .unwrap_err();
+
+    assert!(
+        error
+            .to_string()
+            .contains("prepared workflow documents are required"),
+        "{error:#}"
+    );
+}
+
+#[test]
 fn pre_discovered_entrypoints_do_not_start_another_discovery_snapshot() {
     let entrypoints = include_str!("entrypoints.rs");
     assert_eq!(
@@ -294,9 +343,13 @@ fn aggregate_drops_exclusive_rust_sources_without_global_suppression_rereads() {
         &root,
         &config,
         &files,
-        &snapshot,
-        None,
-        std::sync::Arc::clone(&sources),
+        PreparedFilesystemRuleInputs {
+            snapshot: &snapshot,
+            vitest_catalog: None,
+            sources: std::sync::Arc::clone(&sources),
+            workflow_documents: None,
+            config_path: None,
+        },
     )
     .unwrap();
 
@@ -355,9 +408,13 @@ fn aggregate_finding_and_suppression_share_one_physical_read() {
         &root,
         &config,
         &files,
-        &snapshot,
-        None,
-        std::sync::Arc::clone(&sources),
+        PreparedFilesystemRuleInputs {
+            snapshot: &snapshot,
+            vitest_catalog: None,
+            sources: std::sync::Arc::clone(&sources),
+            workflow_documents: None,
+            config_path: None,
+        },
     )
     .unwrap();
 

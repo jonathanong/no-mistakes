@@ -4,6 +4,8 @@ pub struct PreparedGraphConfig {
     options: Option<GraphConfigOptions>,
     playwright_settings: Option<crate::playwright::config::Settings>,
     workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workflow_documents:
+        Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
 }
 
 impl PreparedGraphConfig {
@@ -36,6 +38,21 @@ impl PreparedGraphConfig {
     }
     pub(crate) fn workspace(&self) -> &crate::codebase::workspaces::IndexedWorkspaceMap {
         self.workspace.as_ref()
+    }
+
+    pub(crate) fn workflow_documents(
+        &self,
+    ) -> Option<&crate::codebase::ci_workflows::ParsedWorkflowSet> {
+        self.workflow_documents.as_deref()
+    }
+
+    /// Supply request-prepared workflow documents for graph projections.
+    #[doc(hidden)]
+    pub fn set_workflow_documents(
+        &mut self,
+        documents: Option<std::sync::Arc<crate::codebase::ci_workflows::ParsedWorkflowSet>>,
+    ) {
+        self.workflow_documents = documents;
     }
 
 }
@@ -126,6 +143,7 @@ fn prepare_graph_config_inner(
                 .unwrap_or_default(),
             )
         }),
+        workflow_documents: None,
     })
 }
 

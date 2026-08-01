@@ -55,10 +55,7 @@ pub(crate) fn build_why_args(
 ) -> AnyhowResult<crate::tests::WhyArgs> {
     let test = options.test.context("test is required")?;
     Ok(crate::tests::WhyArgs {
-        root: options
-            .root
-            .map(PathBuf::from)
-            .unwrap_or_else(|| ".".into()),
+        root: options.root.map(PathBuf::from).unwrap_or_else(|| ".".into()),
         config: options.config.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
         test: PathBuf::from(test),
@@ -100,7 +97,10 @@ pub(crate) fn build_impacted_checks_args(
 ) -> crate::impacted_checks::ImpactedChecksArgs {
     crate::impacted_checks::ImpactedChecksArgs {
         files: Vec::new(),
-        root: options.root.map(PathBuf::from).unwrap_or_else(|| ".".into()),
+        root: options
+            .root
+            .map(PathBuf::from)
+            .unwrap_or_else(|| ".".into()),
         config: options.config.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
         base: options.base,
@@ -112,6 +112,7 @@ pub(crate) fn build_impacted_checks_args(
         diff_content: options.diff,
         format: None,
         json: false,
+        generic_only: options.generic_only,
         // N-API timings are collected into the structured response by the
         // binding; they must never print CLI progress to the Node process.
         timings: false,

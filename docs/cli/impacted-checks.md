@@ -9,6 +9,7 @@ config block.
 no-mistakes impacted-checks src/api/handler.ts --format paths
 no-mistakes impacted-checks --base origin/main --json
 no-mistakes impacted-checks src/api/handler.ts --json --timings
+no-mistakes impacted-checks src/api/handler.ts --generic-only --format json
 ```
 
 ## Options
@@ -22,6 +23,7 @@ no-mistakes impacted-checks src/api/handler.ts --json --timings
 | `--changed-file` | Specific changed file (repeatable). |
 | `--changed-files` | File listing changed files, one per line. |
 | `--diff` | Unified diff file. |
+| `--generic-only` | Return configured `checks.commands` entries only; skip test-framework discovery and selection. |
 | `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
 | `--json` | Shorthand for `--format json`. |
 | `--timings` | Emit analysis phase durations to stderr. |
@@ -40,9 +42,17 @@ Changed files may also be passed as positional arguments.
   Playwright generic discovery could match its filename.
 - Each `checks.commands` entry whose `include` globs match a changed file
   produces a `generic` check. `fileArgs: append` adds the matched files as
-  trailing arguments; `fileArgs: none` runs the command once.
+  trailing arguments; `fileArgs: none` runs the command once. An `always: true`
+  command runs even when no files changed and must use `fileArgs: none` without
+  include/exclude globs.
 - Commands are deduped and sorted. If the test-plan engine triggers a
   full-suite fallback (e.g. a global config change), `fallback_triggered` is set.
+
+`--generic-only` still collects and normalizes changed files, but bypasses all
+configured test frameworks and the test-plan finish step. Its report contains
+only `generic` checks, an empty `warnings` array, and `fallback_triggered: false`.
+With timings enabled, its stable phases are `prepare`, `generic-checks`, and
+`total`.
 
 `--timings` emits one deterministic diagnostics block after analysis. Stable
 phase names include `prepare`,

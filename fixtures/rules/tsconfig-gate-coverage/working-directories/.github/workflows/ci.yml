@@ -1,0 +1,28 @@
+name: CI
+on: push
+defaults:
+  run:
+    working-directory: workflow-default
+jobs:
+  workflow-default:
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit
+  job-default:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: job-default
+    steps:
+      - run: pnpm exec tsc --noEmit
+  step-default:
+    runs-on: ubuntu-latest
+    steps:
+      - working-directory: step-default
+        run: tsc --noEmit
+  cd-project:
+    runs-on: ubuntu-latest
+    steps:
+      # Overrides the workflow default before the inline cd changes it again.
+      - working-directory: .
+        run: cd cd-project && tsc --noEmit

@@ -12,6 +12,7 @@ struct GraphEdgeBuildInputs<'a> {
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
     import_resolution_cache: Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
     visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
+    workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
 }
 
 fn parsed_imports_for_plan<'a>(

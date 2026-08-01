@@ -1,0 +1,17 @@
+checks:
+  commands:
+    - name: typecheck-allowed
+      command: [tsc, --noEmit, --project, allowed/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+    options:
+      allowProjects:
+        allowed/tsconfig.json: ""
+        gone/tsconfig.json: stale entry
+        ../outside/tsconfig.json: invalid path
+        docs/readme.json: not a tsconfig
+        ./collision/tsconfig.json: first spelling
+        collision/tsconfig.json: second spelling

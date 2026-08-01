@@ -1,0 +1,87 @@
+use super::{application::project_finding, command_scan, RuleFinding};
+use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
+use serde_yaml::Value;
+use std::collections::BTreeSet;
+use std::path::Path;
+
+pub(super) fn ci_typechecked_projects(
+    root: &Path,
+    workflows: &ParsedWorkflowSet,
+) -> BTreeSet<String> {
+    let mut projects = BTreeSet::new();
+    for document in &workflows.documents {
+        let Ok(workflow) = document.value.as_ref() else {
+            continue;
+        };
+        let workflow_cwd = effective_working_directory(workflow, Some(".".to_string()));
+        let Some(jobs) = workflow.get("jobs").and_then(Value::as_mapping) else {
+            continue;
+        };
+        for job in jobs.values() {
+            let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
+                continue;
+            };
+            let job_cwd = effective_working_directory(job, workflow_cwd.clone());
+            for step in steps {
+                let step_cwd = match step.get("working-directory").and_then(Value::as_str) {
+                    Some(raw) => command_scan::normalize_repo_relative(raw),
+                    None => job_cwd.clone(),
+                };
+                let Some(cwd) = step_cwd else {
+                    continue;
+                };
+                let Some(run) = step.get("run").and_then(Value::as_str) else {
+                    continue;
+                };
+                for project in command_scan::scan_shell_for_typechecked_projects(run, &cwd) {
+                    if is_project_inside_root(root, &project) {
+                        projects.insert(project);
+                    }
+                }
+            }
+        }
+    }
+    projects
+}
+
+pub(super) fn default_working_directory(value: &Value) -> Option<&str> {
+    value
+        .get("defaults")
+        .and_then(|defaults| defaults.get("run"))
+        .and_then(|run| run.get("working-directory"))
+        .and_then(Value::as_str)
+}
+
+pub(super) fn effective_working_directory(
+    value: &Value,
+    fallback: Option<String>,
+) -> Option<String> {
+    match default_working_directory(value) {
+        Some(raw) => command_scan::normalize_repo_relative(raw),
+        None => fallback,
+    }
+}
+
+pub(super) fn is_project_inside_root(_root: &Path, project: &str) -> bool {
+    command_scan::normalize_repo_relative(project).is_some()
+}
+
+pub(crate) fn workflow_load_findings(workflows: &ParsedWorkflowSet) -> Vec<RuleFinding> {
+    let mut findings = workflows
+        .documents
+        .iter()
+        .filter_map(|document| document.value.as_ref().err().map(|error| (document, error)))
+        .map(|(document, error)| {
+            let detail = match error.kind {
+                WorkflowDocumentErrorKind::Read => "could not read workflow file",
+                WorkflowDocumentErrorKind::Parse => "could not parse workflow YAML",
+            };
+            project_finding(
+                &document.path,
+                format!("{}: {detail}: {}", document.path, error.message),
+            )
+        })
+        .collect::<Vec<_>>();
+    findings.sort();
+    findings
+}
