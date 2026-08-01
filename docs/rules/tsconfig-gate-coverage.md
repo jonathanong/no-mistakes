@@ -47,6 +47,12 @@ Dynamic shell expansion, command substitution, arbitrary wrapper scripts,
 paths outside the repository, and other unresolved command forms do not count
 as registrations. Express such a command statically if it is intended to
 provide this gate.
+Shell bodies containing `exit`, `return`, or `false` are also rejected as a
+whole because the rule does not model shell reachability.
+
+Informational and setup commands (`--showConfig`, `--help`/`-h`,
+`--version`/`-v`, and `--init`) do not count, even when combined with
+`--noEmit`, because they do not compile the project.
 
 Findings use line 1 of the tsconfig, workflow, or configuration file. Use a
 top-of-file `no-mistakes-disable-file tsconfig-gate-coverage` directive only

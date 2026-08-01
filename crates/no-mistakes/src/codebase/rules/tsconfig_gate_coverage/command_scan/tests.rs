@@ -42,6 +42,29 @@ fn dynamic_and_indirect_commands_do_not_count() {
 }
 
 #[test]
+fn shell_scanner_rejects_reachability_control_commands_without_modeling_them() {
+    for script in [
+        "exit 0; tsc --noEmit --project app/tsconfig.json",
+        "false && tsc --noEmit --project app/tsconfig.json",
+        "return; tsc --noEmit --project app/tsconfig.json",
+        "tsc --noEmit --project app/tsconfig.json && exit 0",
+    ] {
+        assert!(
+            scan_shell_for_typechecked_projects(script, ".").is_empty(),
+            "{script}"
+        );
+    }
+
+    assert_eq!(
+        scan_shell_for_typechecked_projects(
+            "cd app && tsc --noEmit; cd tools && tsc --noEmit --project tsconfig.tools.json",
+            ".",
+        ),
+        vec!["app/tools/tsconfig.tools.json", "app/tsconfig.json"]
+    );
+}
+
+#[test]
 fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
     assert_eq!(
         scan_argv_for_typechecked_projects(
@@ -107,6 +130,23 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
         ],
     ] {
         assert!(scan_argv_for_typechecked_projects(&argv, ".").is_empty());
+    }
+}
+
+#[test]
+fn informational_or_init_tsc_modes_do_not_count_as_typechecks() {
+    for mode in ["--showConfig", "--help", "-h", "--version", "-v", "--init"] {
+        assert!(scan_argv_for_typechecked_projects(
+            &[
+                "tsc".into(),
+                "--noEmit".into(),
+                mode.into(),
+                "--project".into(),
+                "app/tsconfig.json".into(),
+            ],
+            ".",
+        )
+        .is_empty());
     }
 }
 

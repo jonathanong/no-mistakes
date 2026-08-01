@@ -32,7 +32,8 @@ pub(crate) fn normalize_repo_relative(raw: &str) -> Option<String> {
 ///
 /// Only sequential newline, `&&`, and `;` segments are recognized. Shell
 /// interpolation, substitutions, pipes, conditionals, and arbitrary wrappers
-/// are not evaluated.
+/// are not evaluated. A reachability-affecting control command rejects the
+/// whole body instead of trying to model shell execution.
 pub(crate) fn scan_shell_for_typechecked_projects(script: &str, initial_cwd: &str) -> Vec<String> {
     let mut cwd = normalize_repo_relative(initial_cwd);
     let mut projects = Vec::new();
@@ -43,6 +44,9 @@ pub(crate) fn scan_shell_for_typechecked_projects(script: &str, initial_cwd: &st
         let Some(first) = tokens.first() else {
             continue;
         };
+        if is_unsupported_control_command(first) {
+            return Vec::new();
+        }
         if first == "cd" {
             cwd = (tokens.len() == 2)
                 .then(|| {
@@ -63,6 +67,13 @@ pub(crate) fn scan_shell_for_typechecked_projects(script: &str, initial_cwd: &st
     projects
 }
 
+/// These shell builtins can make later commands unreachable. Supporting their
+/// control flow would require modeling shell semantics, so reject the entire
+/// static body conservatively rather than crediting a possibly skipped `tsc`.
+fn is_unsupported_control_command(command: &str) -> bool {
+    matches!(command, "exit" | "return" | "false")
+}
+
 /// Scan one configured argv command. A shell script is accepted only for the
 /// explicit `bash|sh -c <literal>` form; all other argv commands are parsed as
 /// direct static command tokens.
@@ -80,7 +91,15 @@ fn scan_tokens(tokens: &[String], cwd: &str) -> Vec<String> {
     let Some((command, command_cwd)) = command_and_cwd(tokens, cwd) else {
         return Vec::new();
     };
-    if !is_tsc(command) || !tokens.iter().any(|token| token == "--noEmit") {
+    if !is_tsc(command)
+        || !tokens.iter().any(|token| token == "--noEmit")
+        || tokens.iter().any(|token| {
+            matches!(
+                token.as_str(),
+                "--showConfig" | "--help" | "-h" | "--version" | "-v" | "--init"
+            )
+        })
+    {
         return Vec::new();
     }
     let Some(project) = project_argument(tokens) else {
