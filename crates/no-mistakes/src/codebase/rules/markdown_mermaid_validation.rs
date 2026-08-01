@@ -75,7 +75,18 @@ pub(crate) fn check_with_files_and_facts(
 
 #[cfg(not(feature = "mermaid-validation"))]
 fn feature_disabled_message() -> &'static str {
-    "markdown-mermaid-validation requires the default mermaid-validation Cargo feature; rebuild without --no-default-features or enable --features mermaid-validation"
+    "markdown-mermaid-validation requires the default mermaid-validation Cargo feature; this feature gate lets core and benchmark builds exclude the merman-analysis dependency; rebuild without --no-default-features or enable --features mermaid-validation"
+}
+
+#[cfg(all(test, not(feature = "mermaid-validation")))]
+mod feature_disabled_tests {
+    #[test]
+    fn message_explains_the_feature_boundary_and_fix() {
+        let message = super::feature_disabled_message();
+        assert!(message.contains("core and benchmark builds"));
+        assert!(message.contains("exclude the merman-analysis dependency"));
+        assert!(message.contains("--features mermaid-validation"));
+    }
 }
 
 #[cfg(feature = "mermaid-validation")]
