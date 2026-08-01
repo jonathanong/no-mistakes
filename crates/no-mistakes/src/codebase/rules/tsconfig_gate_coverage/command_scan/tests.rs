@@ -85,6 +85,10 @@ fn shell_scanner_rejects_failure_enforcement_mutations() {
         scan_shell_for_typechecked_projects("set -o errexit; tsc --noEmit", "."),
         vec!["tsconfig.json"]
     );
+    assert_eq!(
+        scan_shell_for_typechecked_projects("set -u; tsc --noEmit", "."),
+        vec!["tsconfig.json"]
+    );
 }
 
 #[test]
@@ -162,6 +166,10 @@ fn local_shell_parser_rejects_ambiguous_options_and_tracks_errexit() {
     );
     assert_eq!(
         local_shell_command(&to_argv(&["bash", "+e", "-c", "script"])),
+        Some(("script", false))
+    );
+    assert_eq!(
+        local_shell_command(&to_argv(&["bash", "+o", "errexit", "-c", "script"])),
         Some(("script", false))
     );
     assert_eq!(

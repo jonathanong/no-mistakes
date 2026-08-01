@@ -1,6 +1,7 @@
 use super::application::resolve_gate_projects_against_tracked;
 use super::workflow::{
     ci_typechecked_projects, default_working_directory, effective_working_directory,
+    test_runs_on_can_default_to_windows,
 };
 use super::*;
 use crate::codebase::ci_workflows::{
@@ -82,6 +83,34 @@ fn no_check_tsconfigs_do_not_credit_ci_or_local_gates() {
         finding.file.as_str(),
         "override/tsconfig.json" | "invalid/tsconfig.json"
     )));
+}
+
+#[test]
+fn no_check_resolution_defers_ambiguous_configs_and_resolves_local_extensionless_bases() {
+    let root = fixture_root("no-check-edge-cases");
+    let paths = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = super::super::source_store_for_files(&paths);
+    // Malformed, cyclic, missing, and package-based extends deliberately defer to tsc.
+    let tracked = BTreeSet::from([
+        "bad-array/tsconfig.json".to_string(),
+        "bad-compiler-options/tsconfig.json".to_string(),
+        "bad-extends/tsconfig.json".to_string(),
+        "bad-no-check/tsconfig.json".to_string(),
+        "cycle/tsconfig.json".to_string(),
+        "directory-base/tsconfig.json".to_string(),
+        "empty/tsconfig.json".to_string(),
+        "file-base/tsconfig.json".to_string(),
+        "missing-base/tsconfig.json".to_string(),
+        "package-base/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        non_enforcing_tsconfigs(&root, &tracked, &sources),
+        BTreeSet::from([
+            "directory-base/tsconfig.json".to_string(),
+            "file-base/tsconfig.json".to_string(),
+        ])
+    );
 }
 
 #[test]
@@ -323,6 +352,7 @@ fn pure_helpers_keep_config_and_workflow_boundaries_static() {
         effective_working_directory(&Value::Null, Some("fallback".into())),
         Some("fallback".into())
     );
+    assert!(!test_runs_on_can_default_to_windows(&Value::Null));
     assert_eq!(config_file(Path::new("/repo"), None), ".no-mistakes.yml");
     assert_eq!(
         config_file(
