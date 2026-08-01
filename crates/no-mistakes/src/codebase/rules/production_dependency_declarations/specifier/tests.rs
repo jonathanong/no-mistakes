@@ -30,6 +30,8 @@ fn is_scheme_prefixed_recognizes_a_colon_before_the_first_path_segment() {
     assert!(!is_scheme_prefixed("left-pad"));
     assert!(!is_scheme_prefixed("left-pad/lib/helper"));
     assert!(!is_scheme_prefixed("@acme/lib"));
+    // colons in later path segments must not be treated as a scheme prefix
+    assert!(!is_scheme_prefixed("left-pad/virtual:helper"));
 }
 
 #[test]
