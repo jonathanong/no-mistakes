@@ -203,9 +203,22 @@ fn markdown_repository_rules_use_the_full_tracked_inventory_not_untracked_files(
     let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
     let tracked_root = root.join("CLAUDE.md");
     let tracked_doc = root.join("docs/tracked.md");
+    let tracked_markdown = root.join("docs/tracked.markdown");
+    let tracked_mdx = root.join("docs/tracked.mdx");
     let untracked_doc = root.join("docs/untracked.md");
-    let files = vec![tracked_root.clone(), tracked_doc.clone(), untracked_doc];
-    let tracked_files = vec![tracked_root.clone(), tracked_doc.clone()];
+    let files = vec![
+        tracked_root.clone(),
+        tracked_doc.clone(),
+        tracked_markdown.clone(),
+        tracked_mdx.clone(),
+        untracked_doc,
+    ];
+    let tracked_files = vec![
+        tracked_root.clone(),
+        tracked_doc.clone(),
+        tracked_markdown.clone(),
+        tracked_mdx.clone(),
+    ];
     let repository_rule = |rule: &str| RuleDef {
         rule: rule.to_string(),
         scope: Some(RuleScope::Repository),
@@ -213,6 +226,7 @@ fn markdown_repository_rules_use_the_full_tracked_inventory_not_untracked_files(
     };
     let config = NoMistakesConfig {
         rules: vec![
+            repository_rule(super::super::MARKDOWN_MERMAID_VALIDATION),
             repository_rule(super::super::MARKDOWN_REACHABILITY),
             repository_rule(super::super::MARKDOWN_STRUCTURE_BUDGET),
         ],
@@ -228,12 +242,16 @@ fn markdown_repository_rules_use_the_full_tracked_inventory_not_untracked_files(
         Some(inventory),
     );
     assert_eq!(
+        index.candidates(super::super::MARKDOWN_MERMAID_VALIDATION),
+        tracked_files
+    );
+    assert_eq!(
         index.candidates(super::super::MARKDOWN_REACHABILITY),
         tracked_files
     );
     assert_eq!(
         index.candidates(super::super::MARKDOWN_STRUCTURE_BUDGET),
-        [tracked_root, tracked_doc]
+        [tracked_root, tracked_doc, tracked_markdown, tracked_mdx]
     );
 }
 

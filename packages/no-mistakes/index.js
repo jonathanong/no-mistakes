@@ -38,6 +38,7 @@ const jsonApis = createJsonApis({
   infraResourceRefs: "infraResourceRefsJson",
   infraTestFor: "infraTestForJson",
   lockfileDiff: "lockfileDiffJson",
+  validateMermaidMarkdown: "validateMermaidMarkdownJson",
   playwrightCheck: "playwrightCheckJson",
   playwrightEdges: "playwrightEdgesJson",
   playwrightRelated: "playwrightRelatedJson",
@@ -80,6 +81,7 @@ module.exports.infraOutputs = jsonApis.infraOutputs;
 module.exports.infraResourceRefs = jsonApis.infraResourceRefs;
 module.exports.infraTestFor = jsonApis.infraTestFor;
 module.exports.lockfileDiff = jsonApis.lockfileDiff;
+module.exports.validateMermaidMarkdown = jsonApis.validateMermaidMarkdown;
 module.exports.playwrightCheck = jsonApis.playwrightCheck;
 module.exports.playwrightEdges = jsonApis.playwrightEdges;
 module.exports.playwrightRelated = jsonApis.playwrightRelated;

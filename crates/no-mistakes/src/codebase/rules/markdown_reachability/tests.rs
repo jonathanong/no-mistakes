@@ -30,7 +30,10 @@ fn run(
         .map(|file| root.join(file))
         .collect::<Vec<_>>();
     let sources = super::super::source_store_for_files(&files);
-    check_with_files_and_sources(root, config, &files, &sources)
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_pulldown(super::super::markdown_scope::markdown_files(&files));
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    check_with_files_sources_and_facts(root, config, &files, &facts)
 }
 
 fn fixture(name: &str) -> PathBuf {

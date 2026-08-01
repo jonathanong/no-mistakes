@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use crate::codebase::rules::{
@@ -53,4 +54,25 @@ pub(super) fn normalized_paths(paths: &[PathBuf]) -> Cow<'_, [PathBuf]> {
     normalized.sort();
     normalized.dedup();
     Cow::Owned(normalized)
+}
+
+pub(super) fn markdown_inventory_path_allowed(
+    request_root: &Path,
+    path: &Path,
+    roots: &[PathBuf],
+    skip: &HashSet<&str>,
+) -> bool {
+    // Baselines are JSON companions rather than documentation targets, so
+    // retain them for the rule's tracked-baseline validation.
+    if path
+        .extension()
+        .is_none_or(|extension| !matches!(extension.to_str(), Some("md" | "markdown" | "mdx")))
+    {
+        return true;
+    }
+    !crate::codebase::ts_source::is_under_skipped_dir(request_root, path, skip)
+        && roots.iter().any(|root| {
+            path.starts_with(root)
+                && !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
+        })
 }

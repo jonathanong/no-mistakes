@@ -1,15 +1,17 @@
 use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{
-    rule_enabled, BANNED_PATHS, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_REACHABILITY,
-    MARKDOWN_STRUCTURE_BUDGET, PRODUCTION_DEPENDENCY_DECLARATIONS, RUST_MAX_LINES_PER_FILE,
-    RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS,
+    rule_enabled, BANNED_PATHS, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_MERMAID_VALIDATION,
+    MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET, PRODUCTION_DEPENDENCY_DECLARATIONS,
+    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS,
 };
 use crate::config::v2::NoMistakesConfig;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::candidate_helpers::{is_rust_path, normalized_paths, rule_can_consume_rust_source};
+use super::candidate_helpers::{
+    is_rust_path, markdown_inventory_path_allowed, normalized_paths, rule_can_consume_rust_source,
+};
 
 /// Immutable, request-scoped candidates for every enabled filesystem rule.
 ///
@@ -53,8 +55,18 @@ impl RuleCandidateIndex {
                             .rule_applications(rule_id)
                             .iter()
                             .any(|rule| rule.applies_to_repository()))
-                        || matches!(rule_id, MARKDOWN_REACHABILITY | MARKDOWN_STRUCTURE_BUDGET),
-                    matches!(rule_id, MARKDOWN_REACHABILITY | MARKDOWN_STRUCTURE_BUDGET),
+                        || matches!(
+                            rule_id,
+                            MARKDOWN_MERMAID_VALIDATION
+                                | MARKDOWN_REACHABILITY
+                                | MARKDOWN_STRUCTURE_BUDGET
+                        ),
+                    matches!(
+                        rule_id,
+                        MARKDOWN_MERMAID_VALIDATION
+                            | MARKDOWN_REACHABILITY
+                            | MARKDOWN_STRUCTURE_BUDGET
+                    ),
                 ))
                 .or_default()
                 .push(rule_id);
@@ -195,24 +207,6 @@ impl RuleCandidateIndex {
     pub(super) fn all_candidates(&self) -> impl Iterator<Item = &PathBuf> {
         self.by_rule.values().flat_map(|paths| paths.iter())
     }
-}
-
-fn markdown_inventory_path_allowed(
-    request_root: &Path,
-    path: &Path,
-    roots: &[PathBuf],
-    skip: &HashSet<&str>,
-) -> bool {
-    // Baselines are JSON companions rather than documentation targets, so
-    // retain them for the rule's tracked-baseline validation.
-    if path.extension().is_none_or(|extension| extension != "md") {
-        return true;
-    }
-    !crate::codebase::ts_source::is_under_skipped_dir(request_root, path, skip)
-        && roots.iter().any(|root| {
-            path.starts_with(root)
-                && !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
-        })
 }
 
 #[cfg(test)]

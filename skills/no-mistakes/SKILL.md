@@ -109,6 +109,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Is this export still used anywhere? (yes/no) | `no-mistakes dead-exports <file> [NAME...]` |
 | Where is this function called, and with what argument shapes? | `no-mistakes call-sites <file> SYMBOL` |
 | Do all imports in this file resolve? | `no-mistakes resolve-check <file>` |
+| Are configured Mermaid fences valid? | `no-mistakes check --format json` |
 | What must I update before changing this function signature? | `no-mistakes symbols <file> --mode signature-impact --symbol SYMBOL --format json` |
 | What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, shared-helper test discovery, test deletion, or queue call-disposition question? | Read `references/impact-recipes.md` |
 | Which tests should rerun for everything changed in a diff? | `no-mistakes tests plan vitest --from-git-diff <base>...<head> --format paths` |

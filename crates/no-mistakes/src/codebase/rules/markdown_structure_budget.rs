@@ -1,7 +1,6 @@
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
-use pulldown_cmark::{CodeBlockKind, Event, Options as MarkdownOptions, Parser, Tag};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -27,11 +26,11 @@ struct BaselineEntry {
     mermaid: usize,
 }
 
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &super::markdown_facts::MarkdownFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let markdown = super::markdown_scope::markdown_files(files);
     let mut findings = Vec::new();
@@ -54,13 +53,14 @@ pub(crate) fn check_with_files_and_sources(
                         path.display()
                     )
                 })?;
-            let Some(content) = super::read_source(sources, &path) else {
+            let Some(markdown) = facts.get(&path) else {
                 continue;
             };
             let baseline_key = super::markdown_scope::baseline_key(root, _scope_root, &path);
             let file = super::markdown_scope::finding_key(root, &path);
-            let (tables, mermaid) = counts(&content);
-            let oversized = line_count(&content) > max_lines || content.chars().count() > max_chars;
+            let tables = markdown.table_count;
+            let mermaid = markdown.mermaid_count;
+            let oversized = markdown.line_count > max_lines || markdown.char_count > max_chars;
             let current = BaselineEntry { tables, mermaid };
             if !seen.insert(baseline_key.clone()) {
                 anyhow::bail!(
@@ -89,54 +89,6 @@ pub(crate) fn check_with_files_and_sources(
     }
     super::sort_findings(&mut findings);
     Ok(findings)
-}
-/// Mirrors Rust's `str::lines` for LF and CRLF, while treating a lone CR as a
-/// line ending too. This avoids making CR-only Markdown evade the line budget.
-fn line_count(content: &str) -> usize {
-    if content.is_empty() {
-        return 0;
-    }
-    let bytes = content.as_bytes();
-    let mut count = 0;
-    let mut index = 0;
-    let mut ends_with_line_ending = false;
-    while index < bytes.len() {
-        match bytes[index] {
-            b'\n' => {
-                count += 1;
-                ends_with_line_ending = true;
-            }
-            b'\r' => {
-                count += 1;
-                ends_with_line_ending = true;
-                if bytes.get(index + 1) == Some(&b'\n') {
-                    index += 1;
-                }
-            }
-            _ => ends_with_line_ending = false,
-        }
-        index += 1;
-    }
-    count + usize::from(!ends_with_line_ending)
-}
-fn counts(content: &str) -> (usize, usize) {
-    let mut tables = 0;
-    let mut mermaid = 0;
-    for event in Parser::new_ext(content, MarkdownOptions::all()) {
-        match event {
-            Event::Start(Tag::Table(_)) => tables += 1,
-            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(info)))
-                if info
-                    .split_whitespace()
-                    .next()
-                    .is_some_and(|token| token.eq_ignore_ascii_case("mermaid")) =>
-            {
-                mermaid += 1
-            }
-            _ => {}
-        }
-    }
-    (tables, mermaid)
 }
 fn read_baseline(
     root: &Path,

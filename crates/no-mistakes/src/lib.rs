@@ -24,6 +24,7 @@ pub mod import_shape;
 pub mod imports;
 pub mod integration_tests;
 pub mod invocation;
+pub mod mermaid_validation;
 pub mod napi_api;
 pub mod perf_trace;
 pub mod playwright;

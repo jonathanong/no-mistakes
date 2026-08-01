@@ -5,7 +5,14 @@ analysis as the CLI. Use it when an agent or tool needs repeated structured
 queries without subprocess overhead.
 
 ```js
-const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require("no-mistakes");
+const {
+  analyzeProject,
+  dependents,
+  importUsages,
+  symbols,
+  testsPlan,
+  validateMermaidMarkdown,
+} = require("no-mistakes");
 
 (async () => {
   const impact = await dependents({
@@ -31,7 +38,12 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
     ],
   });
 
-  console.log({ impact, report });
+  const mermaid = await validateMermaidMarkdown({
+    content: "```mermaid\nflowchart LR\n  A --> B\n```",
+    file: "docs/design.md",
+  });
+
+  console.log({ impact, report, mermaid });
 })();
 ```
 
@@ -147,6 +159,13 @@ edges.
 
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
+
+`validateMermaidMarkdown({ content, file? })` validates Mermaid fences in an
+in-memory Markdown or MDX document without reading the filesystem. It resolves
+asynchronously with `{ valid, diagramCount, diagnostics }`; each diagnostic
+identifies the opening `fenceLine` and, when available, Merman's
+diagram-relative line, column, and diagram type. Use the configured
+`markdown-mermaid-validation` rule when validating tracked repository files.
 
 Each `analyzeProject()` report may use its report-specific options. Graph
 reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts

@@ -8,7 +8,10 @@ fn scan(
     files: &[PathBuf],
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let sources = crate::codebase::rules::source_store_for_files(files);
-    scan_with_sources(root, opts, files, &sources)
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_display_links(files.iter().cloned());
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    scan_with_facts(root, opts, files, &facts)
 }
 
 fn check_file(
@@ -17,7 +20,10 @@ fn check_file(
     extensions: &[&str],
 ) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    check_file_with_sources(root, path, extensions, &sources)
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_display_links([path.to_path_buf()]);
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    check_file_with_facts(root, path, extensions, &facts)
 }
 
 fn fixture(name: &str) -> PathBuf {

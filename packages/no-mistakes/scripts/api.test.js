@@ -94,6 +94,8 @@ test("programmatic API proxies object options through async native addon calls",
       fetchesJson: async (json) =>
         JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
       checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
+      validateMermaidMarkdownJson: async (json) =>
+        JSON.stringify({ command: "validateMermaidMarkdown", options: JSON.parse(json) }),
       testsPlanJson: async (json) =>
         JSON.stringify({ command: "testsPlan", options: JSON.parse(json) }),
       testsTargetsJson: async (json) =>
@@ -225,6 +227,13 @@ test("programmatic API proxies object options through async native addon calls",
     assert.equal((await api.resolveCheck({ file: "a.ts" })).command, "resolveCheck");
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
+    assert.deepEqual(
+      await api.validateMermaidMarkdown({ content: "diagram source", file: "docs/design.md" }),
+      {
+        command: "validateMermaidMarkdown",
+        options: { content: "diagram source", file: "docs/design.md" },
+      },
+    );
     assert.deepEqual(
       (await api.testsPlan({ framework: "swift", globalConfigFallback: false })).options,
       { framework: "swift", globalConfigFallback: false },
