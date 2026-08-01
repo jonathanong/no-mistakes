@@ -41,6 +41,9 @@ forms do not count; neither do non-executing modes such as `bash -n {0}`.
 Implicit and built-in `bash`/`sh` shells propagate failures. Custom templates
 must include `-e` or `-o errexit` to credit a typecheck before a later command;
 without it, only a final `tsc` command counts.
+An implicit shell does not count for statically Windows-labeled runners
+(`windows-*` or a self-hosted `windows` label), because GitHub Actions defaults
+those runners to PowerShell; specify a supported `bash` or `sh` shell instead.
 
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or

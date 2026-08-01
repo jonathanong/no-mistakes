@@ -44,6 +44,10 @@ checks:
       command: [tsc, --noEmit, --project, dynamic-runner/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-implicit-windows-shell
+      command: [tsc, --noEmit, --project, implicit-windows-shell/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

@@ -88,6 +88,21 @@ fn shell_scanner_rejects_failure_enforcement_mutations() {
 }
 
 #[test]
+fn shell_scanner_rejects_unsupported_working_directory_commands() {
+    for script in [
+        "pushd app; tsc --noEmit",
+        "tsc --noEmit; popd",
+        "dirs; tsc --noEmit",
+        "cd app ignored; tsc --noEmit",
+    ] {
+        assert!(
+            scan_shell_for_typechecked_projects(script, ".").is_empty(),
+            "{script}"
+        );
+    }
+}
+
+#[test]
 fn local_shell_gates_require_failure_propagation_or_a_final_typecheck() {
     for argv in [
         vec![
@@ -233,6 +248,21 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
         ),
         vec!["app/tsconfig.json"]
     );
+    for command in ["./scripts/tsc", "tools/tsc", "vendor/bin/tsc"] {
+        assert!(
+            scan_argv_for_typechecked_projects(
+                &[
+                    "pnpm".into(),
+                    "exec".into(),
+                    command.into(),
+                    "--noEmit".into(),
+                ],
+                ".",
+            )
+            .is_empty(),
+            "{command}"
+        );
+    }
     assert_eq!(
         scan_argv_for_typechecked_projects(
             &["tsc".into(), "--noEmit".into(), "--project=app".into()],

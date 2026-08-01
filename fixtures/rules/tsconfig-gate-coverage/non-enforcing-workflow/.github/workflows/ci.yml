@@ -54,3 +54,7 @@ jobs:
     runs-on: '${{ matrix.runner }}'
     steps:
       - run: tsc --noEmit --project dynamic-runner/tsconfig.json
+  implicit-windows-shell:
+    runs-on: windows-latest
+    steps:
+      - run: tsc --noEmit --project implicit-windows-shell/tsconfig.json

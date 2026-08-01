@@ -107,7 +107,12 @@ fn command_and_cwd<'a>(tokens: &'a [String], cwd: &str) -> Option<(&'a str, Stri
 }
 
 fn is_tsc(command: &str) -> bool {
-    command == "tsc" || command.ends_with("/tsc")
+    // `node_modules/.bin/tsc` is the project-local TypeScript shim. Do not
+    // trust arbitrary paths ending in `tsc`: they can be unrelated wrappers.
+    matches!(
+        command,
+        "tsc" | "node_modules/.bin/tsc" | "./node_modules/.bin/tsc"
+    )
 }
 
 fn join_relative(base: &str, raw: &str) -> Option<String> {

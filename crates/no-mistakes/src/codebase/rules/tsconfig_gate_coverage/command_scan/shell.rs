@@ -22,7 +22,10 @@ pub(super) fn scan_shell_body_for_typechecked_projects(
         let first = tokens
             .first()
             .expect("a nonblank static shell segment has at least one token");
-        if is_unsupported_control_command(first) || disables_failure_enforcement(&tokens) {
+        if is_unsupported_control_command(first)
+            || disables_failure_enforcement(&tokens)
+            || is_unsupported_working_directory_command(&tokens)
+        {
             return Vec::new();
         }
         failure_enforced |= enables_failure_enforcement(&tokens);
@@ -46,6 +49,20 @@ pub(super) fn scan_shell_body_for_typechecked_projects(
     projects.sort();
     projects.dedup();
     projects
+}
+
+/// The scanner tracks only `cd <static-relative-path>`. Directory-stack
+/// commands and malformed `cd` forms make a later command's cwd ambiguous, so
+/// reject the whole body instead of crediting it against the wrong tsconfig.
+fn is_unsupported_working_directory_command(tokens: &[String]) -> bool {
+    match tokens.first().map(String::as_str) {
+        Some("pushd" | "popd" | "dirs") => true,
+        Some("cd") => {
+            tokens.len() != 2
+                || normalize_repo_relative(tokens.get(1).expect("cd has an argument")).is_none()
+        }
+        _ => false,
+    }
 }
 
 fn contains_unsupported_multiline_shell_construct(script: &str) -> bool {
