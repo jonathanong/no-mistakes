@@ -270,6 +270,31 @@ fn non_one_ordered_list_marker_can_follow_an_mdx_atx_heading() {
 }
 
 #[test]
+fn non_one_ordered_list_marker_can_follow_an_mdx_thematic_break() {
+    let result = validate_markdown(
+        &fixture("jsx-thematic-break-ordered-list.mdx"),
+        Some("docs/thematic-list.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 1);
+    assert_eq!(result.diagnostics.len(), 1);
+    assert_eq!(result.diagnostics[0].fence_line, 4);
+}
+
+#[test]
+fn non_one_ordered_list_markers_can_follow_other_mdx_block_boundaries() {
+    let result = validate_markdown(
+        &fixture("jsx-block-boundary-ordered-lists.mdx"),
+        Some("docs/block-boundaries.mdx"),
+    );
+
+    assert!(!result.valid);
+    assert_eq!(result.diagram_count, 6);
+    assert_eq!(result.diagnostics.len(), 6);
+}
+
+#[test]
 fn validates_mdx_list_lines_with_tab_overshoot() {
     let result = validate_markdown(
         &fixture("mdx-tab-overshoot-valid.mdx"),

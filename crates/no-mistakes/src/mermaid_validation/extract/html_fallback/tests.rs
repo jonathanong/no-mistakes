@@ -122,3 +122,73 @@ fn recognizes_only_commonmark_atx_heading_shapes() {
         assert!(!is_atx_heading(paragraph), "{paragraph:?}");
     }
 }
+
+#[test]
+fn recognizes_only_commonmark_thematic_break_shapes() {
+    assert!(!is_thematic_break(b""));
+    for thematic_break in [
+        b"***".as_slice(),
+        b" * * * ",
+        b"  ---",
+        b"   _ _ _ _   ",
+        b"*\t*\t*\t",
+    ] {
+        assert!(is_thematic_break(thematic_break), "{thematic_break:?}");
+    }
+    for paragraph in [
+        b"**".as_slice(),
+        b"*-*",
+        b"--- content",
+        b"- - _",
+        b"    ***",
+    ] {
+        assert!(!is_thematic_break(paragraph), "{paragraph:?}");
+    }
+}
+
+#[test]
+fn recognizes_setext_and_container_block_boundaries() {
+    assert!(!is_setext_heading_underline(b""));
+    for underline in [b"=".as_slice(), b" ===  ", b"---\t"] {
+        assert!(is_setext_heading_underline(underline), "{underline:?}");
+    }
+    for prose in [b"= =".as_slice(), b"=-", b"=== title", b"    ==="] {
+        assert!(!is_setext_heading_underline(prose), "{prose:?}");
+    }
+
+    for container in [
+        b">quote".as_slice(),
+        b"  > quote",
+        b"- item",
+        b" * item",
+        b"1. item",
+        b"01) item",
+    ] {
+        assert!(starts_block_container(container, true), "{container:?}");
+    }
+    assert!(!starts_block_container(b"", false));
+    for prose in [
+        b"    > quote".as_slice(),
+        b"-",
+        b"-   ",
+        b"*not-a-list",
+        b"2. item",
+        b"1.item",
+        b"1.   ",
+        b"0000000001. item",
+    ] {
+        assert!(!starts_block_container(prose, true), "{prose:?}");
+    }
+
+    for container in [b"2. item".as_slice(), b"3)", b"-", b"-   "] {
+        assert!(starts_block_container(container, false), "{container:?}");
+    }
+    for paragraph in [b"2. item".as_slice(), b"1.", b"-", b"-   "] {
+        assert!(!starts_block_container(paragraph, true), "{paragraph:?}");
+    }
+
+    for code in [b"    code".as_slice(), b"\tcode", b" \tcode"] {
+        assert!(is_indented_code(code), "{code:?}");
+    }
+    assert!(!is_indented_code(b"   code"));
+}

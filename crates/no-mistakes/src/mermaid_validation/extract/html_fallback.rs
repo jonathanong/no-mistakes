@@ -5,6 +5,12 @@ use super::{fence_syntax::is_closing_fence_suffix, is_mermaid_info, line_number,
 #[path = "html_fallback/container.rs"]
 mod container;
 use container::ContainerPrefix;
+#[path = "html_fallback/block_boundary.rs"]
+mod block_boundary;
+use block_boundary::{
+    is_atx_heading, is_indented_code, is_setext_heading_underline, is_thematic_break,
+    starts_block_container,
+};
 #[path = "html_fallback/mdx_expression.rs"]
 mod mdx_expression;
 pub(super) use mdx_expression::MdxExpressionScanner;
@@ -110,28 +116,21 @@ fn opening_fence(source: &str, start: usize, end: usize) -> Option<OpeningFence>
 }
 
 fn update_paragraph_state(line: &[u8], in_paragraph: &mut bool) {
+    if is_indented_code(line) {
+        return;
+    }
     let first = line.iter().position(|byte| !matches!(byte, b' ' | b'\t'));
     match first.map(|index| line[index]) {
         None => *in_paragraph = false,
         Some(b'<') => {}
         Some(b'#') if is_atx_heading(line) => *in_paragraph = false,
+        Some(b'*' | b'-' | b'_') if is_thematic_break(line) => *in_paragraph = false,
+        Some(b'=' | b'-') if *in_paragraph && is_setext_heading_underline(line) => {
+            *in_paragraph = false;
+        }
+        Some(_) if starts_block_container(line, *in_paragraph) => *in_paragraph = false,
         Some(_) => *in_paragraph = true,
     }
-}
-
-fn is_atx_heading(line: &[u8]) -> bool {
-    let indent = line.iter().take_while(|byte| **byte == b' ').count();
-    if indent > 3 {
-        return false;
-    }
-    let hashes = line[indent..]
-        .iter()
-        .take_while(|byte| **byte == b'#')
-        .count();
-    (1..=6).contains(&hashes)
-        && line
-            .get(indent + hashes)
-            .is_none_or(|byte| matches!(byte, b' ' | b'\t'))
 }
 
 fn closing_fence(source: &str, opening: &OpeningFence, limit: usize) -> Option<(usize, usize)> {
