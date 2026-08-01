@@ -9,11 +9,6 @@ use runtime::{
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
-#[cfg(test)]
-pub(super) fn test_runs_on_can_default_to_windows(job: &Value) -> bool {
-    runs_on_can_default_to_windows(job)
-}
-
 pub(super) fn ci_typechecked_projects(workflows: &ParsedWorkflowSet) -> BTreeSet<String> {
     let mut projects = BTreeSet::new();
     for document in &workflows.documents {

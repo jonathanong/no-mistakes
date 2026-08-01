@@ -1,5 +1,8 @@
 use serde_yaml::Value;
 
+#[cfg(test)]
+mod tests;
+
 /// A CI job cannot provide a typecheck gate unless Actions can schedule it on
 /// a statically known runner. Reusable-workflow jobs use `uses:` rather than
 /// `steps:` and are excluded separately by the step requirement.
