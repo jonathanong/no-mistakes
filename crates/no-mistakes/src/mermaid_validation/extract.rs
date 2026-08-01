@@ -159,7 +159,8 @@ fn opening_delimiter(source: &str, offset: usize) -> Option<FenceDelimiter> {
     let line_end = source[line_start..]
         .find(['\n', '\r'])
         .map_or(source.len(), |index| line_start + index);
-    let line = fence_syntax::strip_blockquote_prefix(&source.as_bytes()[line_start..line_end]);
+    let (line, blockquote_depth) =
+        fence_syntax::strip_blockquote_prefix(&source.as_bytes()[line_start..line_end]);
 
     for index in 0..line.len() {
         let marker = line[index];
@@ -187,6 +188,7 @@ fn opening_delimiter(source: &str, offset: usize) -> Option<FenceDelimiter> {
             return Some(FenceDelimiter {
                 marker,
                 length,
+                blockquote_depth,
                 container_indent,
                 content_start: line_end_with_ending(source, line_end),
             });

@@ -2,6 +2,7 @@
 pub(super) struct FenceDelimiter {
     pub(super) marker: u8,
     pub(super) length: usize,
+    pub(super) blockquote_depth: usize,
     pub(super) container_indent: usize,
     pub(super) content_start: usize,
 }
@@ -18,6 +19,7 @@ pub(super) fn has_closing_fence(source: &str, delimiter: FenceDelimiter, block_e
             &source.as_bytes()[cursor..line_end],
             delimiter.marker,
             delimiter.length,
+            delimiter.blockquote_depth,
             delimiter.container_indent,
         ) {
             return true;
@@ -31,9 +33,13 @@ fn is_closing_fence_line(
     line: &[u8],
     marker: u8,
     opening_length: usize,
+    opening_blockquote_depth: usize,
     container_indent: usize,
 ) -> bool {
-    let line = strip_blockquote_prefix(line);
+    let (line, blockquote_depth) = strip_blockquote_prefix(line);
+    if blockquote_depth != opening_blockquote_depth {
+        return false;
+    }
     let (indent_bytes, indent_columns) = leading_indentation(line);
     if indent_columns > container_indent + 3 {
         return false;
@@ -60,12 +66,14 @@ fn leading_indentation(line: &[u8]) -> (usize, usize) {
     (bytes, columns)
 }
 
-pub(super) fn strip_blockquote_prefix(mut line: &[u8]) -> &[u8] {
+pub(super) fn strip_blockquote_prefix(mut line: &[u8]) -> (&[u8], usize) {
+    let mut depth = 0;
     loop {
         let spaces = line.iter().take_while(|byte| **byte == b' ').count();
         if spaces > 3 || line.get(spaces) != Some(&b'>') {
-            return line;
+            return (line, depth);
         }
+        depth += 1;
         line = &line[spaces + 1..];
         if line.first() == Some(&b' ') {
             line = &line[1..];

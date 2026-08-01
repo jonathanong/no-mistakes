@@ -78,6 +78,27 @@ fn tab_indented_fence_does_not_close_a_top_level_block() {
 }
 
 #[test]
+fn closing_fences_require_the_opening_blockquote_depth() {
+    for fixture_name in [
+        "unclosed-top-level-quoted-closer.md",
+        "unclosed-blockquote-wrong-depth.md",
+    ] {
+        let result = validate_markdown(&fixture(fixture_name), Some(fixture_name));
+
+        assert!(!result.valid, "{fixture_name}");
+        assert_eq!(result.diagram_count, 1, "{fixture_name}");
+        assert_eq!(result.diagnostics.len(), 1, "{fixture_name}");
+        assert_eq!(
+            result.diagnostics[0].code,
+            MermaidValidationDiagnosticCode::UnclosedFence,
+            "{fixture_name}"
+        );
+        assert_eq!(result.diagnostics[0].fence_line, 3, "{fixture_name}");
+        assert_eq!(result.diagnostics[0].diagram_line, None, "{fixture_name}");
+    }
+}
+
+#[test]
 fn validates_a_fence_directly_inside_mdx_jsx() {
     let result = validate_markdown(
         &fixture("jsx-adjacent-invalid.mdx"),
