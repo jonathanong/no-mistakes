@@ -125,6 +125,8 @@ fn statically_disabled_or_nonblocking_workflow_commands_do_not_cover_projects() 
             finding.file == project && finding.message.contains("no CI typecheck registration")
         }));
     }
+    // Unresolved expressions fail open as enforcing; the rule does not guess
+    // whether a dynamic condition will disable the gate at runtime.
     assert!(report
         .iter()
         .all(|finding| finding.file != "dynamic-expression/tsconfig.json"));

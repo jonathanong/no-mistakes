@@ -92,6 +92,8 @@ fn argv_scanner_handles_static_forms_and_rejects_ambiguous_projects() {
                 "--noEmit".into(),
                 "--module=NodeNext".into(),
                 "--pretty=true".into(),
+                "--incremental".into(),
+                "--composite=false".into(),
                 "--skipLibCheck".into(),
             ],
             ".",
