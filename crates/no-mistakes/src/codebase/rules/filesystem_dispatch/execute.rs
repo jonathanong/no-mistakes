@@ -15,6 +15,7 @@ struct RuleRunInputs<'a> {
     tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     config_path: Option<&'a Path>,
     candidates: &'a candidate_index::RuleCandidateIndex,
+    markdown_facts: &'a super::super::markdown_facts::MarkdownFactMap,
     acc: &'a ResultAccumulator,
 }
 
@@ -57,6 +58,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         )),
     );
     inventory::register_trusted_external_candidates(root, config, &candidates, &sources);
+    let markdown_facts = markdown_dispatch::prepare(root, config, &candidates, &sources)?;
     run_enabled_rules(&RuleRunInputs {
         root,
         config,
@@ -67,6 +69,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         tsconfig_gate_project_inputs,
         config_path,
         candidates: &candidates,
+        markdown_facts: &markdown_facts,
         acc: &acc,
     });
     let mut results = acc.into_inner().expect("mutex poisoned");
@@ -105,34 +108,10 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
         tsconfig_gate_project_inputs,
         config_path,
         candidates,
+        markdown_facts,
         acc,
     } = *inputs;
-    if rule_enabled(config, MARKDOWN_REACHABILITY) {
-        scope.spawn(|_| {
-            let result = markdown_reachability::check_with_files_and_sources(
-                root,
-                config,
-                candidates.candidates(MARKDOWN_REACHABILITY),
-                sources,
-            );
-            acc.lock()
-                .expect("mutex poisoned")
-                .push((MARKDOWN_REACHABILITY, result));
-        });
-    }
-    if rule_enabled(config, MARKDOWN_STRUCTURE_BUDGET) {
-        scope.spawn(|_| {
-            let result = markdown_structure_budget::check_with_files_and_sources(
-                root,
-                config,
-                candidates.candidates(MARKDOWN_STRUCTURE_BUDGET),
-                sources,
-            );
-            acc.lock()
-                .expect("mutex poisoned")
-                .push((MARKDOWN_STRUCTURE_BUDGET, result));
-        });
-    }
+    markdown_dispatch::spawn(scope, root, config, candidates, markdown_facts, acc);
     if registry::rust_rules_enabled(config) {
         scope.spawn(|_| {
             let result = rust_rules_combined::check_with_files_and_sources(

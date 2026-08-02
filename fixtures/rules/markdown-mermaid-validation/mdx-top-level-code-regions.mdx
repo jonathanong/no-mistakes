@@ -1,0 +1,22 @@
+{/* Mermaid-looking fences inside these top-level MDX code regions are ignored. */}
+export const esmExample =
+  `
+~~~mermaid
+sequenceDiagram
+  Alice->>
+~~~
+`;
+
+{
+  `
+~~~mermaid
+flowchart TD
+  Broken -->
+~~~
+  `
+}
+
+```mermaid
+flowchart TD
+  Parsed --> Diagram
+```

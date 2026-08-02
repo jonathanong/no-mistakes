@@ -30,7 +30,10 @@ fn run(
         .map(|file| root.join(file))
         .collect::<Vec<_>>();
     let sources = super::super::source_store_for_files(&files);
-    check_with_files_and_sources(root, config, &files, &sources)
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_pulldown(super::super::markdown_scope::markdown_files(&files));
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    check_with_files_sources_and_facts(root, config, &files, &facts)
 }
 
 fn fixture(name: &str) -> PathBuf {
@@ -38,6 +41,23 @@ fn fixture(name: &str) -> PathBuf {
         .join("../../fixtures/rules/markdown-reachability")
         .join(name)
 }
+
+#[test]
+fn reports_prepared_read_failures_instead_of_treating_them_as_leaf_nodes() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/markdown-read-failure");
+
+    let error = run(
+        &root,
+        &config("rootFilenames: [unreadable.md]", &["**/*.md"], &[]),
+        &["unreadable.md"],
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains(RULE_ID));
+    assert!(error.to_string().contains("could not read Markdown file"));
+}
+
 #[test]
 fn resolves_only_links_inside_root() {
     let root = Path::new("/repo");

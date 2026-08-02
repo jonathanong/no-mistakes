@@ -3,6 +3,31 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+use pulldown_cmark::{CodeBlockKind, Event, Options as MarkdownOptions, Parser, Tag};
+
+fn line_count(content: &str) -> usize {
+    super::super::markdown_facts::markdown_line_count(content)
+}
+
+fn counts(content: &str) -> (usize, usize) {
+    let mut tables = 0;
+    let mut mermaid = 0;
+    for event in Parser::new_ext(content, MarkdownOptions::all()) {
+        match event {
+            Event::Start(Tag::Table(_)) => tables += 1,
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(info)))
+                if info
+                    .split_whitespace()
+                    .next()
+                    .is_some_and(|token| token.eq_ignore_ascii_case("mermaid")) =>
+            {
+                mermaid += 1
+            }
+            _ => {}
+        }
+    }
+    (tables, mermaid)
+}
 
 fn config(options: &str, include: &[&str], exclude: &[&str]) -> NoMistakesConfig {
     NoMistakesConfig {
@@ -34,7 +59,10 @@ fn run(
         .map(|file| root.join(file))
         .collect::<Vec<_>>();
     let sources = super::super::source_store_for_files(&files);
-    check_with_files_and_sources(root, config, &files, &sources)
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_pulldown(super::super::markdown_scope::markdown_files(&files));
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    check_with_files_sources_and_facts(root, config, &files, &facts)
 }
 #[test]
 fn counts_gfm_tables_and_mermaid_fences() {
@@ -237,14 +265,19 @@ fn rejects_ambiguous_stale_external_baseline_keys() {
 }
 
 #[test]
-fn ignores_tracked_paths_without_a_source_snapshot() {
-    let root = fixture(".");
-    let findings = run(
+fn reports_read_failures_instead_of_a_stale_deleted_baseline() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/markdown-read-failure");
+    let error = run(
         &root,
-        &config("maxLines: 1", &["**/*.md"], &[]),
-        &["over-budget.md", "missing.md"],
+        &config(
+            "maxLines: 1\nbaselineFile: baseline.json",
+            &["**/*.md"],
+            &[],
+        ),
+        &["unreadable.md", "baseline.json"],
     )
-    .unwrap();
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "over-budget.md");
+    .unwrap_err();
+    assert!(error.to_string().contains(RULE_ID));
+    assert!(error.to_string().contains("could not read Markdown file"));
 }

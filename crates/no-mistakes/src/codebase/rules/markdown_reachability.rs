@@ -32,11 +32,11 @@ pub(crate) struct Options {
     baseline_file: Option<PathBuf>,
 }
 
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &super::markdown_facts::MarkdownFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let markdown = super::markdown_scope::markdown_files(all_files);
     let mut findings = Vec::new();
@@ -52,7 +52,7 @@ pub(crate) fn check_with_files_and_sources(
             roots: &roots,
             indexes: &indexes,
             max_depth,
-            sources,
+            facts,
         };
         let (states, target_names) =
             scoped_states(root, &scope_roots, &markdown, &target_paths, scope_options)?;

@@ -5,6 +5,9 @@ fn scoped_states_ignore_targets_without_a_matching_scope() {
     let root = fixture("paths");
     let targets = vec![root.join("lost.md")];
     let sources = super::super::super::source_store_for_files(&targets);
+    let mut plan = super::super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_pulldown(targets.clone());
+    let facts = super::super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
     let (states, names) = scoped_states(
         &root,
         &[root.join("docs")],
@@ -14,7 +17,7 @@ fn scoped_states_ignore_targets_without_a_matching_scope() {
             roots: &BTreeSet::from(["CLAUDE.md".to_string()]),
             indexes: &BTreeSet::from(["README.md".to_string()]),
             max_depth: DEFAULT_MAX_DEPTH,
-            sources: &sources,
+            facts: &facts,
         },
     )
     .unwrap();

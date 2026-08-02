@@ -1,0 +1,183 @@
+#[path = "common/saved_fixture.rs"]
+mod saved_fixture;
+
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+
+fn bin() -> PathBuf {
+    PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
+}
+
+fn fixture() -> tempfile::TempDir {
+    let fixture = saved_fixture::materialize("rules", "markdown-mermaid-validation");
+    assert!(git(
+        fixture.path(),
+        &["init", "-q", "--initial-branch=main"]
+    ));
+    assert!(git(fixture.path(), &["add", "."]));
+    fixture
+}
+
+fn git(root: &Path, args: &[&str]) -> bool {
+    Command::new("git")
+        .args(["-C", root.to_str().unwrap()])
+        .args(args)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_COMMON_DIR")
+        .env_remove("GIT_INDEX_FILE")
+        .env_remove("GIT_WORK_TREE")
+        .status()
+        .unwrap()
+        .success()
+}
+
+fn run(config: &str) -> Output {
+    let fixture = fixture();
+    let root = fixture.path();
+    Command::new(bin())
+        .args(["check", "--root"])
+        .arg(root)
+        .args([
+            "--config",
+            root.join(config).to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap()
+}
+
+fn stdout(output: &Output) -> String {
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+#[test]
+fn reports_invalid_and_unclosed_fences() {
+    let output = run(".no-mistakes.yml");
+    let body = stdout(&output);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "stdout: {body}\nstderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap_or_else(|error| {
+        panic!(
+            "expected JSON report: {error}; stdout: {body:?}; stderr: {:?}",
+            String::from_utf8_lossy(&output.stderr)
+        )
+    });
+    let findings = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["rule"] == "markdown-mermaid-validation")
+        .collect::<Vec<_>>();
+
+    assert_eq!(findings.len(), 32, "{body}");
+    for file in [
+        "invalid-flowchart.md",
+        "invalid-markdown.markdown",
+        "invalid-mdx.mdx",
+        "invalid-uppercase.MD",
+        "invalid-sequence.md",
+        "invalid-state.md",
+    ] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["file"] == file)
+            .unwrap_or_else(|| panic!("missing {file}: {body}"));
+        assert_eq!(finding["line"], 3, "{finding:#?}");
+        assert!(
+            finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("invalid Mermaid diagram")),
+            "{finding:#?}"
+        );
+    }
+    let multiple = findings
+        .iter()
+        .find(|finding| finding["file"] == "multiple.md")
+        .unwrap_or_else(|| panic!("missing multiple.md: {body}"));
+    assert_eq!(multiple["line"], 8, "{multiple:#?}");
+    let jsx_adjacent = findings
+        .iter()
+        .find(|finding| finding["file"] == "jsx-adjacent-invalid.mdx")
+        .unwrap_or_else(|| panic!("missing jsx-adjacent-invalid.mdx: {body}"));
+    assert_eq!(jsx_adjacent["line"], 4, "{jsx_adjacent:#?}");
+    assert!(jsx_adjacent["message"]
+        .as_str()
+        .is_some_and(|message| message.contains("invalid Mermaid diagram")));
+    let mixed_case_mdx = findings
+        .iter()
+        .find(|finding| finding["file"] == "invalid-mixed.MdX")
+        .unwrap_or_else(|| panic!("missing mixed-case MDX fixture: {body}"));
+    assert_eq!(mixed_case_mdx["line"], 4, "{mixed_case_mdx:#?}");
+    assert!(mixed_case_mdx["message"]
+        .as_str()
+        .is_some_and(|message| message.contains("invalid Mermaid diagram")));
+    for (file, lines) in [
+        ("jsx-thematic-break-ordered-list.mdx", &[4][..]),
+        (
+            "jsx-block-boundary-ordered-lists.mdx",
+            &[4, 12, 20, 28, 36, 45][..],
+        ),
+    ] {
+        let actual = findings
+            .iter()
+            .filter(|finding| finding["file"] == file)
+            .map(|finding| finding["line"].as_u64().expect("line must be numeric"))
+            .collect::<Vec<_>>();
+        assert_eq!(
+            actual, lines,
+            "missing block-boundary findings for {file}: {body}"
+        );
+    }
+    let jsx_after_non_mermaid = findings
+        .iter()
+        .find(|finding| finding["file"] == "jsx-non-mermaid-blank-line.mdx")
+        .unwrap_or_else(|| panic!("missing JSX fence after non-Mermaid fence: {body}"));
+    assert_eq!(
+        jsx_after_non_mermaid["line"], 8,
+        "{jsx_after_non_mermaid:#?}"
+    );
+    for (file, line) in [
+        ("unclosed.md", 3),
+        ("unclosed-tab-indented.md", 3),
+        ("unclosed-top-level-quoted-closer.md", 3),
+        ("unclosed-blockquote-wrong-depth.md", 3),
+        ("unclosed-form-feed-suffix.md", 3),
+        ("unclosed-mdx-vertical-tab-suffix.mdx", 4),
+        ("unclosed-mdx-form-feed-container-blank.mdx", 4),
+        ("unclosed-mdx-vertical-tab-container-blank.mdx", 4),
+        ("unclosed-mdx-blockquote-unmarked-blank.mdx", 4),
+    ] {
+        let unclosed = findings
+            .iter()
+            .find(|finding| finding["file"] == file)
+            .unwrap_or_else(|| panic!("missing {file}: {body}"));
+        assert_eq!(unclosed["line"], line, "{unclosed:#?}");
+        assert!(unclosed["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("unclosed Mermaid fence")));
+    }
+    for ignored in ["excluded.md", "ignored.md", "suppressed.md", "valid.md"] {
+        assert!(
+            findings.iter().all(|finding| finding["file"] != ignored),
+            "unexpected finding for {ignored}: {body}"
+        );
+    }
+}
+
+#[test]
+fn validation_is_opt_in() {
+    let output = run("no-rules.yml");
+    let body = stdout(&output);
+    assert!(
+        output.status.success(),
+        "stdout: {body}\nstderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(report["rules"], serde_json::json!([]), "{body}");
+}

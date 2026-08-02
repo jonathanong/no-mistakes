@@ -1,23 +1,22 @@
 use super::is_named;
 use crate::codebase::md_links;
-use pulldown_cmark::{Event, Options as MarkdownOptions, Parser, Tag};
+use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Component, Path, PathBuf};
 
 pub(super) fn link_graph(
     root: &Path,
     markdown: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &super::super::markdown_facts::MarkdownFactMap,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
-) -> BTreeMap<PathBuf, Vec<PathBuf>> {
+) -> Result<BTreeMap<PathBuf, Vec<PathBuf>>> {
     let known = markdown.iter().cloned().collect::<BTreeSet<_>>();
     markdown
         .iter()
-        .map(|path| {
-            let links = super::super::read_source(sources, path)
-                .map(|source| extract_local_links(root, path, &source, &known, remapper))
-                .unwrap_or_default();
-            (path.clone(), links)
+        .map(|path| -> Result<_> {
+            let facts = facts.get_for_rule(path, super::RULE_ID)?;
+            let links = extract_local_links(root, path, &facts.link_destinations, &known, remapper);
+            Ok((path.clone(), links))
         })
         .collect()
 }
@@ -25,17 +24,14 @@ pub(super) fn link_graph(
 fn extract_local_links(
     root: &Path,
     source: &Path,
-    content: &str,
+    destinations: &[String],
     known: &BTreeSet<PathBuf>,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Vec<PathBuf> {
     let mut paths = BTreeSet::new();
-    for event in Parser::new_ext(content, MarkdownOptions::all()) {
-        let Event::Start(Tag::Link { dest_url, .. }) = event else {
-            continue;
-        };
-        let destination = dest_url
-            .as_ref()
+    for destination in destinations {
+        let destination = destination
+            .as_str()
             .split(['#', '?'])
             .next()
             .unwrap_or_default();

@@ -56,9 +56,10 @@ no-mistakes playwright check --json
 no-mistakes check --format json
 ```
 
-`no-mistakes check` only runs rules configured in `.no-mistakes.yml`; for
-Storybook coverage, look for a configured `require-storybook-stories` rule or
-use `react usages` to confirm story imports directly.
+`no-mistakes check` only runs rules configured in `.no-mistakes.yml`. Look for
+`markdown-mermaid-validation` before relying on it to validate Mermaid fences;
+for Storybook coverage, look for a configured `require-storybook-stories` rule
+or use `react usages` to confirm story imports directly.
 
 ## Selector-root expansion preview
 

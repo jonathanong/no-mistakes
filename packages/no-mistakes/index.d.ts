@@ -16,6 +16,8 @@ import type {
   ImportUsagesResult,
   ImportersOptions,
   ImportersResult,
+  MermaidValidationOptions,
+  MermaidValidationResult,
   ResolveCheckOptions,
   ResolveCheckResult,
   GraphEdge,
@@ -87,6 +89,9 @@ export function resolveCheck(
 export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<unknown>;
 export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
 export function check(options?: WithInvocationOptions<ProjectOptions>): Promise<CheckReport>;
+export function validateMermaidMarkdown(
+  options: WithInvocationOptions<MermaidValidationOptions>,
+): Promise<MermaidValidationResult>;
 export function testsPlan(options: WithInvocationOptions<TestsPlanOptions>): Promise<TestPlan>;
 export function testsImpact(options: WithInvocationOptions<TestsImpactOptions>): Promise<TestPlan>;
 export function testsTargets(

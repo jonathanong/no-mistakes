@@ -10,7 +10,7 @@ pub(super) struct ScopeOptions<'a> {
     pub(super) roots: &'a BTreeSet<String>,
     pub(super) indexes: &'a BTreeSet<String>,
     pub(super) max_depth: usize,
-    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(super) facts: &'a super::super::markdown_facts::MarkdownFactMap,
 }
 
 pub(super) fn scoped_states(
@@ -44,7 +44,7 @@ pub(super) fn scoped_states(
             .get(&scope_root)
             .map(Vec::as_slice)
             .unwrap_or_default();
-        let graph = link_graph(&scope_root, scoped_markdown, options.sources, &remapper);
+        let graph = link_graph(&scope_root, scoped_markdown, options.facts, &remapper)?;
         let depths = shortest_depths(options.roots, &graph);
         for target in scoped_targets
             .into_iter()

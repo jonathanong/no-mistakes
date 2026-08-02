@@ -180,6 +180,54 @@ fn dispatcher_uses_scoped_baseline_inventory_for_markdown_rules() {
 }
 
 #[test]
+fn enabling_mermaid_validation_preserves_existing_markdown_findings() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/filesystem-dispatch/markdown-rules/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config_path = root.join(".no-mistakes.yml");
+    let baseline = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let mut additive = baseline.clone();
+    additive.rules.push(crate::config::v2::schema::RuleDef {
+        rule: MARKDOWN_MERMAID_VALIDATION.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+    let files = [
+        "docs/CLAUDE.md",
+        "docs/tracked.md",
+        "docs/over-budget.md",
+        "baselines/reachability.json",
+        "baselines/structure.json",
+    ]
+    .map(|file| root.join(file));
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let run = |config| {
+        run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+            &root,
+            config,
+            &files,
+            PreparedFilesystemRuleInputs {
+                snapshot: &snapshot,
+                vitest_catalog: None,
+                sources: snapshot.source_store_for(&root),
+                workflow_documents: None,
+                tsconfig_gate_project_inputs: None,
+                config_path: Some(&config_path),
+            },
+        )
+        .unwrap()
+    };
+
+    let expected = run(&baseline);
+    let actual = run(&additive)
+        .into_iter()
+        .filter(|finding| finding.rule != MARKDOWN_MERMAID_VALIDATION)
+        .collect::<Vec<_>>();
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
 fn standalone_filesystem_rules_share_one_discovered_file_list() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/check-runner/facts-and-filesystem/fixture");

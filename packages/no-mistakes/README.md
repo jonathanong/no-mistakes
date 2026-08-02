@@ -14,7 +14,7 @@ npx no-mistakes check --json
 
 Programmatic Node usage loads the same Rust analysis through N-API:
 
-```js
+````js
 const {
   dependencies,
   dependents,
@@ -35,6 +35,7 @@ const {
   serverContracts,
   reactAnalyze,
   reactCheck,
+  validateMermaidMarkdown,
 } = require("no-mistakes");
 
 (async () => {
@@ -83,6 +84,10 @@ const {
     // In monorepos, pass the workspace-scoped tsconfig (e.g. "web/tsconfig.json").
     tsconfig: "tsconfig.json",
   });
+  const mermaid = await validateMermaidMarkdown({
+    content: "```mermaid\nflowchart LR\n  A --> B\n```",
+    file: "docs/design.md",
+  });
   const localFlow = await flow({
     root: process.cwd(),
     target: "src/utils.mts#parseDate",
@@ -112,7 +117,7 @@ const {
     targets: ["app/**/*.tsx"],
   });
 })();
-```
+````
 
 CLI and Node analyses share a per-user machine-wide lock. CLI flags
 `--timeout`, `--lock-timeout`, and `--fail-on-lock` have Node equivalents

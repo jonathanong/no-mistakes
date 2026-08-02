@@ -1,6 +1,6 @@
 use super::{
-    candidate_index::RuleCandidateIndex, preserved, rule_enabled, MARKDOWN_REACHABILITY,
-    MARKDOWN_STRUCTURE_BUDGET,
+    candidate_index::RuleCandidateIndex, preserved, rule_enabled, MARKDOWN_MERMAID_VALIDATION,
+    MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
 };
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -14,7 +14,11 @@ pub(super) fn tracked_inventory_with_markdown_project_roots(
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Arc<Vec<PathBuf>> {
     let mut inventory = snapshot.tracked_paths_for(root).as_ref().clone();
-    for rule_id in [MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET] {
+    for rule_id in [
+        MARKDOWN_MERMAID_VALIDATION,
+        MARKDOWN_REACHABILITY,
+        MARKDOWN_STRUCTURE_BUDGET,
+    ] {
         if !rule_enabled(config, rule_id) {
             continue;
         }
@@ -36,7 +40,11 @@ pub(super) fn register_trusted_external_candidates(
     let trusted_roots = preserved::filesystem_rule_target_roots(
         root,
         config,
-        &[MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET],
+        &[
+            MARKDOWN_MERMAID_VALIDATION,
+            MARKDOWN_REACHABILITY,
+            MARKDOWN_STRUCTURE_BUDGET,
+        ],
     )
     .into_iter()
     .filter(|path| !path.starts_with(root))

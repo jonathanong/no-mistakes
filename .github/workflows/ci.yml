@@ -370,6 +370,7 @@ jobs:
         run: >-
           cargo codspeed build
           -p no-mistakes
+          --no-default-features
           --features test-instrumentation
           --bench core_analysis
           -m simulation
