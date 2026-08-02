@@ -83,8 +83,11 @@ cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 - Explicit configuration: route roots, queue factories, test projects, and
   global fallback behavior are opt-in configuration, not inferred conventions.
 
-## Link Lint
+## Harness Ecosystem
 
-```sh
-lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' CLAUDE.md
-```
+This is part of the following harness ecosystem:
+
+- [auto-harness](https://github.com/jonathanong/auto-harness) - non-interactive agent CLI orchestration across sandboxes
+- [agent-blackboard](https://github.com/jonathanong/agent-blackboard) - session-scoped telemetry for autonomous agents
+- [pr-shepherd](https://github.com/jonathanong/pr-shepherd) - autonomous pull request shepherd
+- [no-mistakes](https://github.com/jonathanong/no-mistakes) - deterministic AST-based codebase intelligence, test selection, and linting for agents
