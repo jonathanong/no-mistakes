@@ -139,7 +139,10 @@ directory, so sibling directories like `src/components` stay covered).
 With exactly one `type: nextjs` project configured, both resolve
 automatically. With more than one, each Playwright project needs an explicit
 binding — an unbound rule with several candidate apps is a configuration
-error, not a guess:
+error, not a guess. With zero `type: nextjs` projects and no discoverable
+`next.config.*` at all, no app can be resolved and both fall back to the
+pre-multi-app defaults instead (`frontendRoot` = `app`, `selectorRoots` =
+`[frontendRoot]`):
 
 ```yaml
 projects:

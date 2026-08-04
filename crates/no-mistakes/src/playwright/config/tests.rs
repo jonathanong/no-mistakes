@@ -211,8 +211,8 @@ fn cli_playwright_configs_override_file_settings() {
 #[test]
 fn duplicate_no_mistakes_configs_error() {
     let root = fixture_path(&["scan-config", "multiple-no-mistakes"]);
-    let err = load_settings(&root, None, &[], None)
-        .expect_err("expected duplicate config files to fail");
+    let err =
+        load_settings(&root, None, &[], None).expect_err("expected duplicate config files to fail");
     assert!(err.to_string().contains("multiple config files found"));
 }
 

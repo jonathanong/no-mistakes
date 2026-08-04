@@ -133,6 +133,15 @@ project needs an explicit binding to a specific app; leaving one unbound is a
 configuration error rather than a fallback to whichever project happened to
 sort first.
 
+When there is no `type: nextjs` project *and* no discoverable `next.config.*`
+at all — no frontend-app signal whatsoever — no app can be resolved, so none
+of the above applies. `frontendRoot` falls back to the bare `app` literal (or
+`<root>/app` when it exists), and `selectorRoots` falls back to matching
+`frontendRoot` exactly rather than the whole package — the same defaults
+`no-mistakes` used before per-app resolution existed. Configure a
+`type: nextjs` project (with an explicit `root:` if it can't be inferred) to
+get the wider, decoupled default described above.
+
 Bind via the rule's own `projects:` list — the default mechanism:
 
 ```yaml
