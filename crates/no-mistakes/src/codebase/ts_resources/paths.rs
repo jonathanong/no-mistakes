@@ -37,8 +37,7 @@ pub(super) fn static_new_module_url(new: &NewExpression<'_>) -> Option<ResourceP
 fn is_import_meta_url(argument: &Argument<'_>) -> bool {
     matches!(argument, Argument::StaticMemberExpression(member)
         if member.property.name == "url"
-            && matches!(&member.object, Expression::MetaProperty(meta)
-                if meta.meta.name == "import" && meta.property.name == "meta"))
+            && matches!(&member.object, Expression::ImportMeta(_)))
 }
 
 /// `new URL(relative, import.meta.url)` treats percent escapes as URL escapes,
