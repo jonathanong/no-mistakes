@@ -93,8 +93,7 @@ impl<'a> ResourceVisitor<'a> {
             Expression::CallExpression(call) => self.static_file_url_call(call),
             Expression::StaticMemberExpression(member)
                 if member.property.name == "dirname"
-                    && matches!(&member.object, Expression::MetaProperty(meta)
-                        if meta.meta.name == "import" && meta.property.name == "meta") =>
+                    && matches!(&member.object, Expression::ImportMeta(_)) =>
             {
                 Some(ResourcePath {
                     value: ".".to_string(),
