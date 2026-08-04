@@ -16,6 +16,12 @@ pub(super) struct PlaywrightSelectorEdgeInputs<'a> {
 /// instead supplies one `Settings` per app (see `PreparedGraphConfig`), so a
 /// multi-`type: nextjs`-app repository's selector edges aren't limited to a
 /// single arbitrarily-chosen app.
+///
+/// One app's analysis failing does not discard edges already found for other
+/// apps: it is skipped in favor of the others, the same tolerance the route
+/// collector (`collect_playwright_route_edges_from_snapshot`) already has —
+/// a single broken app's settings should not blank out an otherwise-working
+/// multi-app graph build.
 pub(super) fn collect_playwright_selector_edges_with_graph(
     root: &Path,
     config_path: Option<&Path>,
@@ -31,8 +37,11 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     }
     let mut edges = Vec::new();
     for settings in inputs.prepared_settings {
-        let analysis =
-            run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, Some(settings))?;
+        let Ok(analysis) =
+            run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, Some(settings))
+        else {
+            continue;
+        };
         edges.extend(selector_edges_from_analysis(
             root,
             inputs.all_files,

@@ -116,8 +116,9 @@ fn resolve_named_app(
                 crate::codebase::config::infer_nextjs_root_from_visible(root, visible_paths)
                     .ok_or_else(|| {
                         anyhow!(
-                            "cannot infer the Next.js app root for project `{name}`: no \
-                             single `next.config.*` file was found in the repository.\n\
+                            "cannot infer the Next.js app root for project `{name}`: the \
+                             repository has either no `next.config.*` file or more than \
+                             one, so a single app root can't be chosen.\n\
                              Set `projects.{name}.root` explicitly."
                         )
                     })?;
