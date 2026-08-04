@@ -13,3 +13,12 @@ Shared options: `--root`, `--config`, repeatable `--playwright-config`,
 `--project`, `--json`, `--assert-conditional-tests`,
 `--allow-skipped-tests`, `--assert-unique-test-ids`,
 and `--assert-unique-html-ids`.
+
+`--project <NAME>` selects a top-level Playwright config name (or, for a
+single unnamed config, a `projects[].name` inside it) — it does not select a
+frontend app. When the repository configures more than one `type: nextjs`
+project, set
+[`tests.playwright.apps.<project>.project`](../configuration/tests.md#multiple-frontend-apps)
+so these commands know which app `--project` exercises; without it, an
+ambiguous repository fails with an error naming the candidate apps instead of
+guessing.

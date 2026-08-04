@@ -106,6 +106,31 @@ fn test_targeted_rule_matches_repository_paths() {
     assert!(!filter.is_match(Path::new("/repo/src/app.ts")));
 }
 
+/// Regression for #624: a test-targeted rule that *also* names a project via
+/// `projects:` must confine matches to that project's root instead of
+/// treating `has_test_target` as "repository-wide regardless of `projects:`"
+/// — otherwise `projects: [web]` on `playwright-coverage` is a silent no-op
+/// and findings for every other project leak through unfiltered.
+#[test]
+fn test_targeted_rule_with_project_target_is_scoped_to_the_project() {
+    let root = Path::new("/repo");
+    let config = config();
+    let rule = RuleDef {
+        rule: "playwright-coverage".to_string(),
+        projects: vec!["web".to_string()],
+        tests: RuleTestTargets {
+            playwright: vec!["control".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    let filter = RulePathFilter::new(root, &config, &rule).unwrap();
+
+    assert!(filter.is_match(Path::new("/repo/web/src/Button.tsx")));
+    assert!(!filter.is_match(Path::new("/repo/backend/src/lib.ts")));
+}
+
 #[test]
 fn invalid_project_include_reports_context() {
     let root = Path::new("/repo");

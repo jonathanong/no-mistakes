@@ -1,0 +1,34 @@
+# The fix's default mechanism: `rules[].projects` binds each Playwright
+# project to the frontend app it exercises. Findings from both apps are
+# additive instead of one project's silently winning.
+projects:
+  control-web:
+    type: nextjs
+    root: services/control-web
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+
+rules:
+  - rule: playwright-coverage
+    projects: [control-web]
+    tests:
+      playwright: [control]
+  - rule: playwright-coverage
+    projects: [agent-web]
+    tests:
+      playwright: [agent]
+  - rule: playwright-unique-test-ids
+    projects: [control-web]
+    tests:
+      playwright: [control]
+  - rule: playwright-unique-test-ids
+    projects: [agent-web]
+    tests:
+      playwright: [agent]

@@ -117,6 +117,80 @@ gets a single target carrying that config's `--config` path, instead of a
 duplicate target for the broader config. Configs with sibling or identical
 `testDir`s, and explicit `projects` policies, still emit a target each.
 
+## Multiple frontend apps
+
+`playwright-coverage` and `playwright-unique-test-ids` resolve a Playwright
+project's route root (`frontendRoot`, defaulting to `<root>/src/app` then
+`<root>/app`, whichever exists) and selector root (`selectorRoots`,
+defaulting to the whole app package, not just the route directory — so
+sibling directories like `src/components` keep selector coverage) from the
+repository's `type: nextjs` projects.
+
+With exactly one `type: nextjs` project configured (or none, with a unique
+`next.config.*` discoverable at the repository root), this happens
+automatically. With more than one `type: nextjs` project, each Playwright
+project needs an explicit binding to a specific app; leaving one unbound is a
+configuration error rather than a fallback to whichever project happened to
+sort first.
+
+Bind via the rule's own `projects:` list — the default mechanism:
+
+```yaml
+projects:
+  control-web:
+    type: nextjs
+    root: services/web
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+rules:
+  - rule: playwright-coverage
+    projects: [control-web]
+    tests:
+      playwright: [control]
+  - rule: playwright-coverage
+    projects: [agent-web]
+    tests:
+      playwright: [agent]
+```
+
+Or bind per Playwright project directly under `tests.playwright.apps`, which
+does not require `rules[].projects` at all:
+
+```yaml
+tests:
+  playwright:
+    apps:
+      control:
+        project: control-web
+      agent:
+        project: agent-web
+```
+
+Each entry under `tests.playwright.apps.<name>` accepts:
+
+| Field | Meaning |
+| --- | --- |
+| `project` | The `.no-mistakes.yml` `projects:` key this Playwright project exercises. |
+| `frontendRoot` | Overrides the resolved app's route root for this Playwright project only. |
+| `selectorRoots` | Overrides the resolved app's selector roots for this Playwright project only. |
+| `rewrites` | Overrides the resolved app's rewrites for this Playwright project only. |
+| `ignoreRoutes` | Overrides `tests.playwright.ignoreRoutes` for this Playwright project only. |
+
+`tests.playwright.apps.<name>.project` takes precedence over `rules[].projects`
+when both are set. `frontendRoot`/`selectorRoots`/`rewrites`/`ignoreRoutes`
+set here take precedence over both the resolved app's defaults and the
+top-level `tests.playwright.frontendRoot`/`selectorRoots`/`ignoreRoutes`. A
+Playwright project can exercise at most one app; binding it to two (via
+conflicting `rules[].projects` lists, or a rule naming more than one app) is
+an error.
+
+`tests.playwright.projects` (the map of named Playwright-project test-file
+policies) and `tests.playwright.apps` (this frontend-app binding) are
+independent: the former scopes which test files belong to a Playwright
+project, the latter answers which frontend app that project exercises.
+
 ## `testIdAttribute`
 
 The attribute that `page.getByTestId(...)` resolves to when matching selector

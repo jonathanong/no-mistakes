@@ -1,0 +1,27 @@
+# Reproduces https://github.com/jonathanong/no-mistakes/issues/624 exactly:
+# two `type: nextjs` projects, each Playwright project scoped only via
+# `tests.playwright`, with no `projects:` binding and no `apps:` override.
+# `agent-web` sorts before `control-web`, which is what made `agent-web`
+# silently win every finding before this fix. Now this is a hard,
+# actionable error instead.
+projects:
+  control-web:
+    type: nextjs
+    root: services/control-web
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright: [control]
+  - rule: playwright-coverage
+    tests:
+      playwright: [agent]

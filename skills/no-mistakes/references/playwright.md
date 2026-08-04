@@ -101,7 +101,7 @@ Playwright coverage is driven by `tests.playwright` in `.no-mistakes.yml`:
 tests:
   playwright:
     configs: playwright.config.mts
-    frontendRoot: web/app    # required for route discovery in Next.js App Router
+    frontendRoot: web/app    # optional override; see "Frontend app resolution" below
     testIdAttribute: data-pw # the attribute getByTestId(...) resolves to
     selectors:
       testIds:
@@ -109,14 +109,14 @@ tests:
         - data-testid
       htmlIds: false
     selectorRoots:
-      - web/app
-      - web/components
+      - web
     selectorExclude:
       - '**/*.stories.tsx'
 ```
 
 `frontendRoot` sets the root directory for App Router route discovery;
-`selectorRoots` sets the directories scanned for test ID selectors.
+`selectorRoots` sets the directories scanned for test ID selectors. Neither is
+required — see "Frontend app resolution" below for the defaults.
 
 `testIdAttribute` sets the attribute that `page.getByTestId(...)` resolves to.
 Set it when your Playwright config builds its options through a helper (e.g.
@@ -126,3 +126,60 @@ either, `getByTestId`-based assertions against a non-`data-testid` attribute are
 reported as uncovered.
 Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/tests.md
 for the full schema.
+
+## Frontend app resolution
+
+`playwright-coverage` and `playwright-unique-test-ids` need to know which
+Next.js app a Playwright project exercises, to answer two questions:
+where its routes live (`frontendRoot`, defaulting to `<root>/src/app` then
+`<root>/app`, whichever exists) and where its testable selectors live
+(`selectorRoots`, defaulting to the whole app package — not just the route
+directory, so sibling directories like `src/components` stay covered).
+
+With exactly one `type: nextjs` project configured, both resolve
+automatically. With more than one, each Playwright project needs an explicit
+binding — an unbound rule with several candidate apps is a configuration
+error, not a guess:
+
+```yaml
+projects:
+  control-web:
+    type: nextjs
+    root: services/web
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+
+rules:
+  # Default: bind via the rule's own `projects:` list.
+  - rule: playwright-coverage
+    projects: [control-web]
+    tests:
+      playwright: [control]
+  - rule: playwright-coverage
+    projects: [agent-web]
+    tests:
+      playwright: [agent]
+```
+
+Or bind per Playwright project directly, which also works without any
+`rules[].projects` list:
+
+```yaml
+tests:
+  playwright:
+    apps:
+      control:
+        project: control-web
+      agent:
+        project: agent-web
+```
+
+`tests.playwright.apps.<name>` also accepts `frontendRoot`, `selectorRoots`,
+`rewrites`, and `ignoreRoutes` overrides scoped to that one Playwright
+project, taking precedence over both the resolved app's defaults and the
+top-level `tests.playwright.frontendRoot`/`selectorRoots`.

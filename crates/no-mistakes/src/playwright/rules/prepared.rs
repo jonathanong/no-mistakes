@@ -32,12 +32,16 @@ impl PreparedPlaywrightRules {
     pub(crate) fn report_view(
         &self,
         project: Option<&str>,
+        app: Option<&str>,
         scan_html_ids: bool,
     ) -> Option<(config::Settings, PlaywrightFactPlan)> {
         let settings = self
             .selections
             .iter()
-            .find(|selection| selection.settings.project.as_deref() == project)?
+            .find(|selection| {
+                selection.settings.project.as_deref() == project
+                    && selection.selection.app.as_deref() == app
+            })?
             .settings
             .clone();
         let mut fact_plan = self.fact_plan.clone();
@@ -57,18 +61,24 @@ pub(super) fn prepare_with_settings(
     tsconfig_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
     mut settings_for_project: impl FnMut(
         Option<String>,
+        Option<String>,
         &VisiblePathSnapshot,
     ) -> Result<config::Settings>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
-    let selections = rule_selections(config);
+    let root_paths = snapshot.paths_for(root);
+    let apps = crate::config::v2::frontend_apps(root, config, &root_paths)?;
+    let selections = rule_selections(config, &apps)?;
     if selections.is_empty() {
         return Ok(None);
     }
     let prepared_settings = selections
         .into_iter()
         .map(|selection| {
-            let settings =
-                settings_for_project(selection.playwright_project.clone(), snapshot.as_ref())?;
+            let settings = settings_for_project(
+                selection.playwright_project.clone(),
+                selection.app.clone(),
+                snapshot.as_ref(),
+            )?;
             Ok((selection, settings))
         })
         .collect::<Result<Vec<_>>>()?;

@@ -47,6 +47,11 @@ pub(crate) struct PlaywrightOptions {
     pub(crate) config: Option<String>,
     pub(crate) playwright_config: Vec<String>,
     pub(crate) project: Option<String>,
+    /// The `.no-mistakes.yml` `projects:` key of the frontend app to
+    /// analyze. Only needed when the repository configures more than one
+    /// `type: nextjs` project and `tests.playwright.apps.<project>.project`
+    /// is not set.
+    pub(crate) app: Option<String>,
     pub(crate) files: Vec<String>,
     pub(crate) assert_conditional_tests: bool,
     pub(crate) allow_skipped_tests: bool,

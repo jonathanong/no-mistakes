@@ -23,6 +23,7 @@ fn collect_playwright_route_edges_from_snapshot(
             config_path,
             &[],
             None,
+            None,
             snapshot,
         ) else {
             return Vec::new();

@@ -78,6 +78,7 @@ fn run_playwright_selector_analysis_from_snapshot(
             config_path,
             &[],
             None,
+            None,
             inputs.snapshot,
         )?;
         &loaded_settings

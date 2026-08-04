@@ -1,0 +1,20 @@
+# Used by `no-mistakes fetches`/`graph` regression tests: `control-web` has
+# a rewrite that `agent-web` does not. Each app's rewrites must only expand
+# virtual routes for that app's own route set — proving app A's rewrites
+# cannot synthesize a virtual route for app B.
+projects:
+  control-web:
+    type: nextjs
+    root: services/control-web
+    rewrites:
+      - source: "/control-alias"
+        destination: "/"
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]

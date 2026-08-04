@@ -138,7 +138,8 @@ fn selector_wrapper_config_rejects_missing_unknown_negative_and_conflicting_fiel
 
 #[test]
 fn nextjs_rewrites_parsed() {
-    let cfg = load_v2_config(&fixture("nextjs-rewrites"), None).unwrap();
+    let dir = fixture("nextjs-rewrites");
+    let cfg = load_v2_config(&dir, None).unwrap();
     let web = &cfg.projects["web"];
     assert_eq!(web.type_, Some(ProjectType::Nextjs));
     assert_eq!(web.rewrites.len(), 2);
@@ -156,8 +157,10 @@ fn nextjs_rewrites_parsed() {
             destination: "/content/reviews/:slug*".to_string(),
         }
     );
-    let view = ConfigView::new(&cfg);
-    assert_eq!(view.nextjs_rewrites().len(), 2);
+    let visible = crate::codebase::ts_source::discover_visible_paths(&dir);
+    let apps = super::frontend_apps::frontend_apps(&dir, &cfg, &visible).unwrap();
+    assert_eq!(apps.len(), 1);
+    assert_eq!(apps[0].rewrites.len(), 2);
 }
 
 #[test]

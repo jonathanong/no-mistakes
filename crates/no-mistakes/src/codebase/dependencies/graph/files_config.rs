@@ -56,10 +56,12 @@ fn graph_config_options_with_config(
     }
     .ok()?;
     let v2_config = load_v2_config(root, config_path).ok();
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
     Some(graph_config_options_from_loaded(
         root,
         &config,
         v2_config.as_ref()?,
+        &visible_paths,
     ))
 }
 
@@ -67,21 +69,34 @@ fn graph_config_options_from_loaded(
     root: &Path,
     config: &crate::codebase::config::Config,
     v2_config: &crate::config::v2::NoMistakesConfig,
+    visible_paths: &[PathBuf],
 ) -> GraphConfigOptions {
-    graph_config_options_from_loaded_with_test_filter(root, config, v2_config, None)
+    graph_config_options_from_loaded_with_test_filter(root, config, v2_config, visible_paths, None)
 }
 
 fn graph_config_options_from_loaded_with_test_filter(
     root: &Path,
     config: &crate::codebase::config::Config,
     v2_config: &crate::config::v2::NoMistakesConfig,
+    visible_paths: &[PathBuf],
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
 ) -> GraphConfigOptions {
     let project_route_globs = ConfigView::new(v2_config).server_route_globs();
     let test_filter = Some(test_filter.unwrap_or_else(|| {
         crate::codebase::test_filter::TestFileFilter::new(root, v2_config)
     }));
-    let rewrites = ConfigView::new(v2_config).nextjs_rewrites().to_vec();
+    // Union of every configured frontend app's rewrites. #624 was caused by
+    // this list being sourced from whichever `type: nextjs` project sorted
+    // first; a genuinely ambiguous app root (ok_or in `frontend_apps`) is
+    // treated as "that app contributes no rewrites" here rather than failing
+    // the whole graph build, since this is a best-effort convenience list,
+    // not a Playwright rule execution.
+    let rewrites = crate::config::v2::frontend_apps(root, v2_config, visible_paths)
+        .unwrap_or_default()
+        .into_iter()
+        .flat_map(|app| app.rewrites)
+        .collect::<Vec<_>>();
+    let rewrites = dedup_rewrites(rewrites);
     GraphConfigOptions {
         route: config.rule_options("route-consistency"),
         queue: config.rule_options("queue-dashboard-reachability"),
@@ -96,6 +111,14 @@ fn graph_config_options_from_loaded_with_test_filter(
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
     }
+}
+
+fn dedup_rewrites(
+    mut rewrites: Vec<crate::config::v2::schema::RewriteRule>,
+) -> Vec<crate::config::v2::schema::RewriteRule> {
+    rewrites.sort_by(|a, b| (&a.source, &a.destination).cmp(&(&b.source, &b.destination)));
+    rewrites.dedup_by(|a, b| a.source == b.source && a.destination == b.destination);
+    rewrites
 }
 
 fn graph_config_options_for_plan_with_config(

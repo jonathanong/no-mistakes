@@ -118,13 +118,20 @@ fn prepare_graph_config_inner(
     workspace: Option<std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>>,
 ) -> anyhow::Result<PreparedGraphConfig> {
     let options = graph_plan_needs_config(plan).then(|| {
-        graph_config_options_from_loaded_with_test_filter(root, codebase_config, config, test_filter)
+        graph_config_options_from_loaded_with_test_filter(
+            root,
+            codebase_config,
+            config,
+            &visible_paths.paths_for(root),
+            test_filter,
+        )
     });
     let playwright_settings = if plan.playwright_routes || plan.playwright_selectors {
         Some(crate::playwright::config::settings_from_loaded_v2(
             root,
             config,
             &[],
+            None,
             None,
             visible_paths,
         )?)

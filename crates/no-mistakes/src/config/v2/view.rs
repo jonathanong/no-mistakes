@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::schema::{NoMistakesConfig, Project, ProjectType, RewriteRule, RuleDef};
+use super::schema::{NoMistakesConfig, Project, ProjectType, RuleDef};
 
 /// A read-only lens over a [`NoMistakesConfig`] that surfaces the effective
 /// settings for a specific tool or domain without mutating the underlying
@@ -49,26 +49,6 @@ impl<'a> ConfigView<'a> {
         routes.sort();
         routes.dedup();
         routes
-    }
-
-    /// Rewrites configured on the first `nextjs` project.
-    pub fn nextjs_rewrites(&self) -> &[RewriteRule] {
-        self.config
-            .projects
-            .values()
-            .find(|p| p.type_ == Some(ProjectType::Nextjs))
-            .map(|p| p.rewrites.as_slice())
-            .unwrap_or(&[])
-    }
-
-    /// The first `nextjs` project's root path (or `"app"` if none configured).
-    pub fn nextjs_root(&self) -> &str {
-        self.config
-            .projects
-            .values()
-            .find(|p| p.type_ == Some(ProjectType::Nextjs))
-            .and_then(|p| p.root.as_deref())
-            .unwrap_or("app")
     }
 
     /// Playwright config file glob(s), or `None` when not configured.
@@ -137,11 +117,6 @@ impl<'a> ConfigView<'a> {
             .filter(|rule| rule.applies_to_project(project))
             .map(|rule| rule.rule.as_str())
             .collect()
-    }
-
-    /// Look up the first enabled rule application by rule ID.
-    pub fn rule(&self, id: &str) -> Option<&RuleDef> {
-        self.config.rule_applications(id).into_iter().next()
     }
 
     /// All rule applications enabled for a project.

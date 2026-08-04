@@ -86,6 +86,7 @@ pub(super) fn build_coverage_hints_from_prepared(
             config,
             &[],
             None,
+            None,
             &prepared.visible_paths,
         ) {
             Ok(settings) => {

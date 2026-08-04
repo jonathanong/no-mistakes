@@ -39,6 +39,7 @@ fn playwright_json(
         config: options.config.map(PathBuf::from),
         playwright_config: super::strings_to_paths(options.playwright_config),
         project: options.project,
+        app: options.app,
         files: super::strings_to_paths(options.files),
         assert_conditional_tests: options.assert_conditional_tests,
         allow_skipped_tests: options.allow_skipped_tests,

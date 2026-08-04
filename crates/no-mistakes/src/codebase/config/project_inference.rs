@@ -5,6 +5,7 @@ const NEXT_CONFIG_NAMES: &[&str] = &[
     "next.config.mjs",
     "next.config.ts",
     "next.config.mts",
+    "next.config.cjs",
 ];
 const REMIX_CONFIG_NAMES: &[&str] = &[
     "remix.config.js",
