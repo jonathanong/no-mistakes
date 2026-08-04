@@ -141,7 +141,16 @@ fn prepare_graph_config_inner(
     // `frontend_apps_or_default` never returns empty, so the pre-#624/#625
     // zero-signal fallback (`default_frontend_root`) still applies via the
     // single synthetic entry it produces.
-    let playwright_settings = if plan.playwright_routes || plan.playwright_selectors {
+    //
+    // Resolving apps is skipped entirely when `has_v2_playwright_settings` is
+    // false: every per-app `settings_from_loaded_v2` call would collapse to
+    // the same app-agnostic `settings_from_defaults` fallback regardless of
+    // which app (if any) is named, so resolving the app set first would only
+    // discard the result unused — wasted work for every non-Playwright repo
+    // that still configures `type: nextjs` projects for other reasons.
+    let playwright_settings = if !(plan.playwright_routes || plan.playwright_selectors) {
+        Vec::new()
+    } else if crate::playwright::config::has_v2_playwright_settings(config) {
         let apps = crate::config::v2::frontend_apps_or_default(
             root,
             config,
@@ -160,7 +169,14 @@ fn prepare_graph_config_inner(
             })
             .collect::<anyhow::Result<Vec<_>>>()?
     } else {
-        Vec::new()
+        vec![crate::playwright::config::settings_from_loaded_v2(
+            root,
+            config,
+            &[],
+            None,
+            None,
+            visible_paths,
+        )?]
     };
     Ok(PreparedGraphConfig {
         options,

@@ -322,6 +322,54 @@ fn prepare_graph_config_surfaces_an_unresolvable_frontend_app() {
     assert!(message.contains("projects.web.root"), "{message}");
 }
 
+/// A `type: nextjs` project whose root can't be inferred must NOT fail (or
+/// even attempt) frontend-app resolution when the repository has zero
+/// `tests.playwright.*` configuration and no rule binds a Playwright project
+/// to an app — `has_v2_playwright_settings` being false means every
+/// `settings_from_loaded_v2` call collapses to the app-agnostic
+/// `settings_from_defaults` fallback regardless of which app (if any) is
+/// named, so resolving the (here, unresolvable) app set first would only
+/// discard the result unused. Disagreement test for a review finding: before
+/// gating on `has_v2_playwright_settings`, `prepare_graph_config` called
+/// `frontend_apps_or_default` unconditionally whenever Playwright edges were
+/// requested, so this exact repository — real-world shape: `type: nextjs`
+/// projects configured for reasons unrelated to Playwright, no Playwright
+/// testing set up at all — failed the whole graph build outright.
+#[test]
+fn prepare_graph_config_skips_app_resolution_when_playwright_is_unconfigured() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "graph-nextjs-project-without-playwright",
+    ));
+    let plan = GraphBuildPlan {
+        playwright_routes: true,
+        playwright_selectors: true,
+        ..GraphBuildPlan::default()
+    };
+    let loaded = crate::config::v2::load_v2_config(&root, None).unwrap();
+    assert!(
+        !crate::playwright::config::has_v2_playwright_settings(&loaded),
+        "sanity check: this fixture must have zero tests.playwright.* signal"
+    );
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &loaded);
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+
+    let prepared = prepare_graph_config(&root, plan, &codebase_config, &loaded, &visible)
+        .expect("app resolution must be skipped, not attempted and failed");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    assert!(
+        prepared
+            .playwright_fact_plan(&root, &tsconfig, &visible)
+            .unwrap()
+            .is_some(),
+        "the app-agnostic bare-defaults Settings must still build a fact plan"
+    );
+}
+
 #[test]
 fn playwright_route_edges_use_explicit_config_path() {
     let root =

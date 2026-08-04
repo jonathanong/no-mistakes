@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 
 #[path = "load/helpers.rs"]
 pub(super) mod helpers;
-use helpers::{default_selector_attributes, has_v2_playwright_settings};
+use helpers::default_selector_attributes;
+pub(super) use helpers::has_v2_playwright_settings;
 
 #[path = "load/loaded_v2.rs"]
 mod loaded_v2;
