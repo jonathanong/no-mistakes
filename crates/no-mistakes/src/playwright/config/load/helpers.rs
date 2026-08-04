@@ -30,6 +30,10 @@ pub(super) fn playwright_configs_from_v2(
 
 pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
     is_v2_playwright_configured(&config.tests.playwright)
+        || config
+            .rules
+            .iter()
+            .any(|rule| !rule.tests.playwright.is_empty())
 }
 
 fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {

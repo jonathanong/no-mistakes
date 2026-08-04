@@ -37,6 +37,11 @@ pub(crate) struct PlaywrightReportOptions {
     pub(crate) config: Option<PathBuf>,
     pub(crate) playwright_config: Vec<PathBuf>,
     pub(crate) project: Option<String>,
+    /// The `.no-mistakes.yml` `projects:` key of the frontend app to analyze.
+    /// Only needed when the repository configures more than one
+    /// `type: nextjs` project and `tests.playwright.apps.<project>.project`
+    /// is not set; otherwise leave unset.
+    pub(crate) app: Option<String>,
     pub(crate) files: Vec<PathBuf>,
     pub(crate) assert_conditional_tests: bool,
     pub(crate) allow_skipped_tests: bool,
@@ -62,8 +67,9 @@ fn report_json_with_cache(
     let config_path = options.config.as_deref();
     let configs = &options.playwright_config;
     let project = options.project.clone();
+    let app = options.app.clone();
     let snapshot = fsutil::VisiblePathSnapshot::new(&root);
-    let settings = report_settings(&root, config_path, configs, project, &snapshot)?;
+    let settings = report_settings(&root, config_path, configs, project, app, &snapshot)?;
     let analysis = analysis::pipeline::analyze_with_policy_from_snapshot(
         &root,
         &settings,
@@ -108,9 +114,17 @@ pub(crate) fn report_settings(
     config_path: Option<&std::path::Path>,
     playwright_configs: &[PathBuf],
     project: Option<String>,
+    app: Option<String>,
     snapshot: &fsutil::VisiblePathSnapshot,
 ) -> Result<config::Settings> {
-    config::load_settings_from_visible(root, config_path, playwright_configs, project, snapshot)
+    config::load_settings_from_visible(
+        root,
+        config_path,
+        playwright_configs,
+        project,
+        app,
+        snapshot,
+    )
 }
 
 fn require_files(files: &[PathBuf]) -> Result<()> {

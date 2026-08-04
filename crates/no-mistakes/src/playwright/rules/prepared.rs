@@ -29,15 +29,29 @@ impl PreparedPlaywrightRules {
         self.fact_plan.clone()
     }
 
+    /// Look up the prepared selection for `project`. `app` is at most a
+    /// caller-supplied *filter*, not a required match: a caller with no
+    /// opinion (`app: None`, the common case — most callers never set the
+    /// N-API `app` option) must still hit the cache even though the
+    /// selection's own `app` was auto-resolved to a real name (e.g. the
+    /// sole configured frontend app). Requiring exact equality here would
+    /// silently miss every such lookup and fall back to a slower,
+    /// non-shared standalone resolution. When the caller does supply an
+    /// `app`, it must match — that guards against reusing one app's cached
+    /// settings for a request that explicitly named a different one.
     pub(crate) fn report_view(
         &self,
         project: Option<&str>,
+        app: Option<&str>,
         scan_html_ids: bool,
     ) -> Option<(config::Settings, PlaywrightFactPlan)> {
         let settings = self
             .selections
             .iter()
-            .find(|selection| selection.settings.project.as_deref() == project)?
+            .find(|selection| {
+                selection.settings.project.as_deref() == project
+                    && app.is_none_or(|app| selection.selection.app.as_deref() == Some(app))
+            })?
             .settings
             .clone();
         let mut fact_plan = self.fact_plan.clone();
@@ -57,18 +71,24 @@ pub(super) fn prepare_with_settings(
     tsconfig_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
     mut settings_for_project: impl FnMut(
         Option<String>,
+        Option<String>,
         &VisiblePathSnapshot,
     ) -> Result<config::Settings>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
-    let selections = rule_selections(config);
+    let root_paths = snapshot.paths_for(root);
+    let apps = crate::config::v2::frontend_apps(root, config, &root_paths)?;
+    let selections = rule_selections(config, &apps)?;
     if selections.is_empty() {
         return Ok(None);
     }
     let prepared_settings = selections
         .into_iter()
         .map(|selection| {
-            let settings =
-                settings_for_project(selection.playwright_project.clone(), snapshot.as_ref())?;
+            let settings = settings_for_project(
+                selection.playwright_project.clone(),
+                selection.app.clone(),
+                snapshot.as_ref(),
+            )?;
             Ok((selection, settings))
         })
         .collect::<Result<Vec<_>>>()?;
@@ -115,6 +135,9 @@ pub(super) fn prepare_with_settings(
         fact_plan,
     }))
 }
+
+#[cfg(test)]
+mod tests;
 
 fn add_settings_facts(
     root: &Path,

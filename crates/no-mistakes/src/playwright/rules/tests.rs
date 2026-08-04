@@ -4,6 +4,8 @@ use crate::config::v2::schema::{RuleDef, RuleScope, RuleTestTargets, StringOrLis
 use crate::playwright::test_support::fixture_path;
 use std::fs;
 
+mod multi_frontend_apps;
+
 fn config_with_rule(rule: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
@@ -333,7 +335,7 @@ fn rule_selections_merge_rules_by_playwright_target() {
         (PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, vec!["web"]),
     ]);
 
-    let selections = rule_selections(&config);
+    let selections = rule_selections(&config, &[]).unwrap();
 
     assert_eq!(selections.len(), 2);
     let web = selections
@@ -365,7 +367,7 @@ fn rule_selections_keep_unscoped_rules_global() {
         ..NoMistakesConfig::default()
     };
 
-    let selections = rule_selections(&config);
+    let selections = rule_selections(&config, &[]).unwrap();
 
     assert_eq!(selections.len(), 1);
     assert!(selections[0].playwright_project.is_none());

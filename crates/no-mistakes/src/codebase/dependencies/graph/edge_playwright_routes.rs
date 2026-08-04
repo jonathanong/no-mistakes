@@ -5,31 +5,53 @@
 mod playwright_route_layouts;
 use playwright_route_layouts::route_and_layout_edges;
 
+/// Build Playwright route-test edges for every resolved frontend app.
+/// `prepared_settings` empty means no app was prepared (e.g. an unprepared
+/// ad hoc caller) — fall back to loading exactly one `Settings` from disk,
+/// the pre-multi-app behavior. A prepared caller instead supplies one
+/// `Settings` per app (see `PreparedGraphConfig`), so a multi-`type:
+/// nextjs`-app repository's route edges aren't limited to a single
+/// arbitrarily-chosen app.
 fn collect_playwright_route_edges_from_snapshot(
     root: &Path,
     config_path: Option<&Path>,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
     snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
-    prepared_settings: Option<&crate::playwright::config::Settings>,
+    prepared_settings: &[crate::playwright::config::Settings],
+) -> Vec<Edge> {
+    if !prepared_settings.is_empty() {
+        let mut edges: Vec<Edge> = prepared_settings
+            .iter()
+            .flat_map(|settings| {
+                collect_playwright_route_edges_for_settings(root, all_files, facts, snapshot, settings)
+            })
+            .collect();
+        edges.sort();
+        edges.dedup();
+        return edges;
+    }
+    let Ok(settings) = crate::playwright::config::load_settings_from_visible(
+        root,
+        config_path,
+        &[],
+        None,
+        None,
+        snapshot,
+    ) else {
+        return Vec::new();
+    };
+    collect_playwright_route_edges_for_settings(root, all_files, facts, snapshot, &settings)
+}
+
+fn collect_playwright_route_edges_for_settings(
+    root: &Path,
+    all_files: &[PathBuf],
+    facts: Option<&dyn TsFactLookup>,
+    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
+    settings: &crate::playwright::config::Settings,
 ) -> Vec<Edge> {
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
-    let loaded_settings;
-    let settings = if let Some(settings) = prepared_settings {
-        settings
-    } else {
-        let Ok(settings) = crate::playwright::config::load_settings_from_visible(
-            root,
-            config_path,
-            &[],
-            None,
-            snapshot,
-        ) else {
-            return Vec::new();
-        };
-        loaded_settings = settings;
-        &loaded_settings
-    };
     let frontend_root = root.join(&settings.frontend_root);
     let compute_routes = || {
         let route_paths = snapshot.paths_for(&frontend_root);

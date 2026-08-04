@@ -27,40 +27,53 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
         cli.config.as_deref(),
         &visible_paths,
     )?;
-    let view = no_mistakes::config::v2::ConfigView::new(&v2);
-    let frontend_root = root.join(view.nextjs_root());
-    if !frontend_root.is_dir() {
-        anyhow::bail!(
-            "frontend root directory does not exist: {}",
-            frontend_root.display()
-        );
-    }
+    // Falls back to a single `<root>/app` app when nothing is configured or
+    // inferable, matching the pre-existing zero-signal default; a genuinely
+    // ambiguous multi-app repository with no binding still errors (see
+    // `frontend_apps`).
+    let apps = no_mistakes::config::v2::frontend_apps_or_default(&root, &v2, &visible_paths)?;
     let visible_files = visible_paths
         .iter()
         .map(|path| no_mistakes::codebase::ts_resolver::normalize_path(path))
         .collect::<HashSet<_>>();
     let stems = ["page", "route"];
-    let mut all_routes =
-        routes::collect_routes_from_visible_paths(&frontend_root, &visible_paths, &stems);
-    let virtual_routes = routes::rewrites::expand_rewrites(view.nextjs_rewrites(), &all_routes);
-    all_routes.extend(virtual_routes);
 
     let mut cache = Cache {
         files: HashMap::new(),
         imports: HashMap::new(),
     };
     let mut parsed_files = no_mistakes::fetch::ParsedFileCache::default();
-
     let target_specs = resolve_targets(base_root, &root, &cli.targets)?;
-    let (reports, matched_targets) = analyze_routes(
-        all_routes,
-        &target_specs,
-        &frontend_root,
-        &root,
-        &mut cache,
-        &mut parsed_files,
-        &visible_files,
-    )?;
+
+    let mut reports = Vec::new();
+    let mut matched_targets: HashSet<String> = HashSet::new();
+    for app in &apps {
+        let frontend_root = root.join(&app.route_root);
+        if !frontend_root.is_dir() {
+            anyhow::bail!(
+                "frontend root directory does not exist: {} (app: {})",
+                frontend_root.display(),
+                app.project.as_deref().unwrap_or("<default>"),
+            );
+        }
+        let route_paths = snapshot.paths_for(&frontend_root);
+        let mut all_routes =
+            routes::collect_routes_from_visible_paths(&frontend_root, &route_paths, &stems);
+        let virtual_routes = routes::rewrites::expand_rewrites(&app.rewrites, &all_routes);
+        all_routes.extend(virtual_routes);
+
+        let (app_reports, app_matched_targets) = analyze_routes(
+            all_routes,
+            &target_specs,
+            &frontend_root,
+            &root,
+            &mut cache,
+            &mut parsed_files,
+            &visible_files,
+        )?;
+        reports.extend(app_reports);
+        matched_targets.extend(app_matched_targets);
+    }
 
     verify_targets_matched(&target_specs, &matched_targets)?;
 

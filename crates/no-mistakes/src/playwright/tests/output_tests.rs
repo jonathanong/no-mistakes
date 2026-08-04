@@ -17,6 +17,7 @@ fn report_options(root: PathBuf) -> PlaywrightReportOptions {
         config: None,
         playwright_config: Vec::new(),
         project: None,
+        app: None,
         files: Vec::new(),
         assert_conditional_tests: false,
         allow_skipped_tests: false,

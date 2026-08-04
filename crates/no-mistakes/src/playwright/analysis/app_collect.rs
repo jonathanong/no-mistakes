@@ -80,3 +80,6 @@ pub(crate) fn collect_selector_source_files_from_visible(
 
     source_files.into_iter().collect()
 }
+
+#[cfg(test)]
+mod tests;

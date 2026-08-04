@@ -6,7 +6,7 @@ struct GraphEdgeBuildInputs<'a> {
     workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
     graph_files: &'a GraphFiles,
     config_options: Option<&'a GraphConfigOptions>,
-    playwright_settings: Option<&'a crate::playwright::config::Settings>,
+    playwright_settings: &'a [crate::playwright::config::Settings],
     config_path: Option<&'a Path>,
     dotnet_facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,

@@ -21,12 +21,14 @@ pub fn fact_plan_for_consumers(
     config: &NoMistakesConfig,
     consumers: PlaywrightFactConsumers,
 ) -> Result<Option<PlaywrightFactPlan>> {
-    let selections = rule_selections(config);
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
+    let root_paths = snapshot.paths_for(root);
+    let apps = crate::config::v2::frontend_apps(root, config, &root_paths)?;
+    let selections = rule_selections(config, &apps)?;
     if selections.is_empty() && !consumers.graph_selectors && !consumers.graph_routes {
         return Ok(None);
     }
 
-    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
     let mut prepared = selections
         .into_iter()
         .map(|selection| {
@@ -35,6 +37,7 @@ pub fn fact_plan_for_consumers(
                 config,
                 &[],
                 selection.playwright_project,
+                selection.app,
                 &snapshot,
             )?;
             Ok((settings, true, selection.unique_html_ids))
@@ -42,7 +45,7 @@ pub fn fact_plan_for_consumers(
         .collect::<Result<Vec<_>>>()?;
     if consumers.graph_selectors || consumers.graph_routes {
         prepared.push((
-            config::settings_from_loaded_v2(root, config, &[], None, &snapshot)?,
+            config::settings_from_loaded_v2(root, config, &[], None, None, &snapshot)?,
             consumers.graph_selectors,
             false,
         ));

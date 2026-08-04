@@ -1,13 +1,14 @@
 use anyhow::Result;
-use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
 
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 
 mod findings;
+mod glob_matcher;
 mod markdown;
 pub(crate) use findings::filter_findings;
+pub(crate) use glob_matcher::GlobMatcher;
 pub(crate) use markdown::filter_markdown_rule_files;
 
 pub(crate) fn filter_rule_files(
@@ -97,7 +98,16 @@ impl RulePathFilter {
 
         Ok(Self {
             root,
-            repository: rule.applies_to_repository() || has_test_target(rule),
+            // A test-target rule (`tests.playwright`/`tests.vitest`) with no
+            // `projects:` list is scoped to the whole config's default
+            // Playwright/vitest target, so it stays repository-wide. Once
+            // `projects:` is set, that list becomes authoritative — treating
+            // the rule as repository-wide regardless would make `projects:`
+            // scoping a no-op for `playwright-coverage` and friends, since
+            // `is_match` short-circuits true on the repository branch before
+            // the per-project filter below is ever consulted.
+            repository: rule.applies_to_repository()
+                || (has_test_target(rule) && rule.projects.is_empty()),
             allow_external_projects,
             projects,
             include,
@@ -160,56 +170,6 @@ impl ProjectPathFilter {
             || self.include.is_match(project_rel))
             && !self.exclude.is_match(repo_rel)
             && !self.exclude.is_match(project_rel)
-    }
-}
-
-pub(crate) struct GlobMatcher {
-    globset: Option<GlobSet>,
-}
-
-impl GlobMatcher {
-    pub(crate) fn new(patterns: &[String], context: &str) -> Result<Self> {
-        let mut builder = GlobSetBuilder::new();
-        let mut count = 0usize;
-        for pattern in patterns {
-            let normalized = pattern.trim_start_matches("./");
-            let glob_result = GlobBuilder::new(normalized)
-                .literal_separator(false)
-                .build();
-            let glob = match glob_result {
-                Ok(glob) => glob,
-                Err(error) => {
-                    return Err(anyhow::Error::new(error)
-                        .context(format!("{context} contains invalid glob `{pattern}`")));
-                }
-            };
-            builder.add(glob);
-            count += 1;
-        }
-        let globset = if count == 0 {
-            None
-        } else {
-            let result = builder.build();
-            let globset = match result {
-                Ok(globset) => globset,
-                Err(error) => {
-                    return Err(anyhow::Error::new(error)
-                        .context(format!("failed to build {context} glob set")));
-                }
-            };
-            Some(globset)
-        };
-        Ok(Self { globset })
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.globset.is_none()
-    }
-
-    pub(crate) fn is_match(&self, rel: &str) -> bool {
-        self.globset
-            .as_ref()
-            .is_some_and(|globset| globset.is_match(rel))
     }
 }
 

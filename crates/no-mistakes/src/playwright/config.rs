@@ -7,7 +7,7 @@ mod load;
 #[cfg(test)]
 pub(crate) mod test_support;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Settings {
     pub frontend_root: String,
     pub playwright_configs: Vec<PathBuf>,
@@ -36,6 +36,7 @@ pub(crate) fn load_settings_from_visible(
     cli_config: Option<&Path>,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     load::load_settings_from_visible(
@@ -43,6 +44,7 @@ pub(crate) fn load_settings_from_visible(
         cli_config,
         cli_playwright_configs,
         cli_project,
+        app,
         visible_paths,
     )
 }
@@ -52,6 +54,7 @@ pub(crate) fn settings_from_loaded_v2(
     config: &crate::config::v2::NoMistakesConfig,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     load::settings_from_loaded_v2(
@@ -59,6 +62,7 @@ pub(crate) fn settings_from_loaded_v2(
         config,
         cli_playwright_configs,
         cli_project,
+        app,
         visible_paths,
     )
 }

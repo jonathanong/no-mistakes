@@ -120,7 +120,7 @@ pub(super) fn collect_playwright_route_edges(
         all_files,
         facts,
         &snapshot,
-        None,
+        &[],
     )
 }
 
@@ -143,8 +143,9 @@ pub(super) fn run_playwright_selector_analysis(
             partial_graph,
             graph_tsconfig,
             snapshot: &snapshot,
-            prepared_settings: None,
+            prepared_settings: &[],
         },
+        None,
     )
 }
 

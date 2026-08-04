@@ -24,7 +24,11 @@ impl SharedCheckContext {
             .prepared
             .playwright
             .as_ref()?
-            .report_view(options.project.as_deref(), options.assert_unique_html_ids)?;
+            .report_view(
+                options.project.as_deref(),
+                options.app.as_deref(),
+                options.assert_unique_html_ids,
+            )?;
         Some(PreparedPlaywrightView {
             settings,
             fact_plan,

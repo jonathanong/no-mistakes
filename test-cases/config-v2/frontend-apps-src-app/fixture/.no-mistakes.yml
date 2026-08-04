@@ -1,0 +1,4 @@
+projects:
+  control-web:
+    type: nextjs
+    root: services/web

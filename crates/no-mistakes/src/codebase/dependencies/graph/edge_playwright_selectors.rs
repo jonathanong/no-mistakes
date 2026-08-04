@@ -7,20 +7,50 @@ pub(super) struct PlaywrightSelectorEdgeInputs<'a> {
     partial_graph: Option<&'a DepGraph>,
     graph_tsconfig: Option<&'a TsConfig>,
     snapshot: &'a crate::playwright::fsutil::VisiblePathSnapshot,
-    prepared_settings: Option<&'a crate::playwright::config::Settings>,
+    prepared_settings: &'a [crate::playwright::config::Settings],
 }
 
+/// Build selector edges for every resolved frontend app. `prepared_settings`
+/// empty means no app was prepared — fall back to loading exactly one
+/// `Settings` from disk, the pre-multi-app behavior. A prepared caller
+/// instead supplies one `Settings` per app (see `PreparedGraphConfig`), so a
+/// multi-`type: nextjs`-app repository's selector edges aren't limited to a
+/// single arbitrarily-chosen app.
+///
+/// One app's analysis failing does not discard edges already found for other
+/// apps: it is skipped in favor of the others, the same tolerance the route
+/// collector (`collect_playwright_route_edges_from_snapshot`) already has —
+/// a single broken app's settings should not blank out an otherwise-working
+/// multi-app graph build.
 pub(super) fn collect_playwright_selector_edges_with_graph(
     root: &Path,
     config_path: Option<&Path>,
     inputs: PlaywrightSelectorEdgeInputs<'_>,
 ) -> Result<Vec<Edge>> {
-    let analysis = run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs)?;
-    Ok(selector_edges_from_analysis(
-        root,
-        inputs.all_files,
-        &analysis,
-    ))
+    if inputs.prepared_settings.is_empty() {
+        let analysis = run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, None)?;
+        return Ok(selector_edges_from_analysis(
+            root,
+            inputs.all_files,
+            &analysis,
+        ));
+    }
+    let mut edges = Vec::new();
+    for settings in inputs.prepared_settings {
+        let Ok(analysis) =
+            run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, Some(settings))
+        else {
+            continue;
+        };
+        edges.extend(selector_edges_from_analysis(
+            root,
+            inputs.all_files,
+            &analysis,
+        ));
+    }
+    edges.sort();
+    edges.dedup();
+    Ok(edges)
 }
 
 fn selector_edges_from_analysis(
@@ -68,15 +98,17 @@ fn run_playwright_selector_analysis_from_snapshot(
     root: &Path,
     config_path: Option<&Path>,
     inputs: &PlaywrightSelectorEdgeInputs<'_>,
+    settings_for_app: Option<&crate::playwright::config::Settings>,
 ) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
     let loaded_settings;
-    let settings = if let Some(settings) = inputs.prepared_settings {
+    let settings = if let Some(settings) = settings_for_app {
         settings
     } else {
         loaded_settings = crate::playwright::config::load_settings_from_visible(
             root,
             config_path,
             &[],
+            None,
             None,
             inputs.snapshot,
         )?;

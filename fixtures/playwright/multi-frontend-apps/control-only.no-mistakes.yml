@@ -1,0 +1,22 @@
+# Isolated run: only `control-web` is registered, so there is no ambiguity
+# to resolve at all. Used to prove the combined `bound.no-mistakes.yml` run
+# is additive: combined findings must equal the union of this and
+# agent-only.no-mistakes.yml's findings.
+projects:
+  control-web:
+    type: nextjs
+    root: services/control-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright: [control]
+  - rule: playwright-unique-test-ids
+    tests:
+      playwright: [control]

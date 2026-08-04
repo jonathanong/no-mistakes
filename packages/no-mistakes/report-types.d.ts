@@ -5,6 +5,12 @@ export interface PlaywrightOptions {
   config?: string;
   playwrightConfig?: string[];
   project?: string;
+  /**
+   * The `.no-mistakes.yml` `projects:` key of the frontend app to analyze.
+   * Only needed when the repository configures more than one `type: nextjs`
+   * project and `tests.playwright.apps.<project>.project` is not set.
+   */
+  app?: string;
   files?: string[];
   assertConditionalTests?: boolean;
   allowSkippedTests?: boolean;

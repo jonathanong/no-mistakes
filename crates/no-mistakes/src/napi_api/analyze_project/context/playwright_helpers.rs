@@ -31,6 +31,7 @@ fn prepare_playwright_views(
                     traversal.config(),
                     &playwright_configs,
                     parsed.project.clone(),
+                    parsed.app.clone(),
                     traversal.visible_paths(),
                 )?;
                 let mut fact_plan = crate::playwright::analysis::pipeline::standalone_fact_plan(

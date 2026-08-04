@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use super::StringOrList;
+use super::{RewriteRule, StringOrList};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
@@ -50,6 +50,32 @@ pub struct PlaywrightTestConfig {
     pub selector_exclude: Vec<String>,
     pub navigation_helpers: Vec<String>,
     pub frontend_root: Option<String>,
+    pub ignore_routes: Option<Vec<String>>,
+    /// Explicit per-Playwright-project frontend app bindings, keyed by the
+    /// Playwright project name (the same name used in `rules[].tests.playwright`
+    /// and in `projects`/`selectors` above). Distinct from `projects`, which
+    /// scopes *test files*: `apps` answers "which frontend app does this
+    /// Playwright project exercise" so `playwright-coverage` and
+    /// `playwright-unique-test-ids` resolve routes/selectors against the right
+    /// app when a repository configures more than one `type: nextjs` project.
+    /// A Playwright project binds to at most one frontend app.
+    pub apps: BTreeMap<String, PlaywrightAppBinding>,
+}
+
+/// Explicit frontend-app binding for one Playwright project. Every field is
+/// optional and overrides the value [`crate::config::v2::frontend_apps`]
+/// would otherwise resolve for the bound app.
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct PlaywrightAppBinding {
+    /// The `.no-mistakes.yml` `projects:` key of the frontend app this
+    /// Playwright project exercises. Required when the repository configures
+    /// more than one `type: nextjs` project and this Playwright project is
+    /// not otherwise bound via a rule's `projects:` list.
+    pub project: Option<String>,
+    pub frontend_root: Option<String>,
+    pub selector_roots: Vec<String>,
+    pub rewrites: Vec<RewriteRule>,
     pub ignore_routes: Option<Vec<String>>,
 }
 

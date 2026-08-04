@@ -1,0 +1,24 @@
+# An intentional cross-app scan: a repository-scoped `playwright-unique-test-ids`
+# rule with no Playwright-project targeting, and `frontendRoot`/`selectorRoots`
+# explicitly set to the apps' shared parent directory. This is the "single
+# rule covers both" case — it deliberately spans both apps, so the duplicate
+# `data-pw="shared-cta"` value (present in both control-web and agent-web) is
+# expected to be flagged here, unlike the per-app-scoped runs.
+#
+# Deliberately does NOT register `control-web`/`agent-web` as `type: nextjs`
+# projects: this rule is selectors-only (no route coverage needed), and both
+# `frontendRoot` and `selectorRoots` are already fully explicit, so no
+# frontend-app resolution is needed at all — registering the two projects
+# here would just make an otherwise-unrelated field (`rewrites`, which this
+# rule never reads) force an ambiguity error.
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+    frontendRoot: services
+    selectorRoots: [services]
+
+rules:
+  - rule: playwright-unique-test-ids
+    scope: repository
