@@ -50,53 +50,87 @@ pub fn frontend_apps(
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
 ) -> Result<Vec<FrontendApp>> {
-    let nextjs_projects: Vec<(&str, &Project)> = config
+    let nextjs_projects = configured_nextjs_projects(config);
+    if nextjs_projects.is_empty() {
+        return Ok(inferred_anonymous_app(root, visible_paths)
+            .into_iter()
+            .collect());
+    }
+    nextjs_projects
+        .into_iter()
+        .map(|(name, project)| resolve_named_app(root, name, project, visible_paths))
+        .collect()
+}
+
+/// Same as [`frontend_apps`], but resolves each configured `type: nextjs`
+/// project independently: a project whose root can't be inferred is skipped
+/// rather than failing the whole call. Only for callers that treat the
+/// result as a best-effort convenience list (`no-mistakes graph`'s rewrite
+/// union) rather than the authoritative app set a Playwright rule needs to
+/// resolve against — those must keep using [`frontend_apps`], whose
+/// fail-fast `Result` is what makes an ambiguous/unresolvable app an actual
+/// configuration error instead of a silently smaller app set.
+pub fn frontend_apps_lenient(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+) -> Vec<FrontendApp> {
+    let nextjs_projects = configured_nextjs_projects(config);
+    if nextjs_projects.is_empty() {
+        return inferred_anonymous_app(root, visible_paths)
+            .into_iter()
+            .collect();
+    }
+    nextjs_projects
+        .into_iter()
+        .filter_map(|(name, project)| resolve_named_app(root, name, project, visible_paths).ok())
+        .collect()
+}
+
+fn configured_nextjs_projects(config: &NoMistakesConfig) -> Vec<(&str, &Project)> {
+    config
         .projects
         .iter()
         .filter(|(_, project)| project.type_ == Some(ProjectType::Nextjs))
         .map(|(name, project)| (name.as_str(), project))
-        .collect();
+        .collect()
+}
 
-    if nextjs_projects.is_empty() {
-        return Ok(
-            crate::codebase::config::infer_nextjs_root_from_visible(root, visible_paths)
-                .map(|package_root| {
-                    let package_root = relative_string(root, &package_root);
-                    vec![build_app(root, None, package_root, visible_paths, &[])]
-                })
-                .unwrap_or_default(),
-        );
-    }
+fn inferred_anonymous_app(root: &Path, visible_paths: &[PathBuf]) -> Option<FrontendApp> {
+    let package_root =
+        crate::codebase::config::infer_nextjs_root_from_visible(root, visible_paths)?;
+    let package_root = relative_string(root, &package_root);
+    Some(build_app(root, None, package_root, visible_paths, &[]))
+}
 
-    nextjs_projects
-        .into_iter()
-        .map(|(name, project)| {
-            let package_root = match project.root.as_deref() {
-                Some(configured) => configured.to_string(),
-                None => {
-                    let inferred = crate::codebase::config::infer_nextjs_root_from_visible(
-                        root,
-                        visible_paths,
-                    )
+fn resolve_named_app(
+    root: &Path,
+    name: &str,
+    project: &Project,
+    visible_paths: &[PathBuf],
+) -> Result<FrontendApp> {
+    let package_root = match project.root.as_deref() {
+        Some(configured) => configured.to_string(),
+        None => {
+            let inferred =
+                crate::codebase::config::infer_nextjs_root_from_visible(root, visible_paths)
                     .ok_or_else(|| {
                         anyhow!(
                             "cannot infer the Next.js app root for project `{name}`: no \
-                                     single `next.config.*` file was found in the repository.\n\
-                                     Set `projects.{name}.root` explicitly."
+                             single `next.config.*` file was found in the repository.\n\
+                             Set `projects.{name}.root` explicitly."
                         )
                     })?;
-                    relative_string(root, &inferred)
-                }
-            };
-            Ok(build_app(
-                root,
-                Some(name.to_string()),
-                package_root,
-                visible_paths,
-                &project.rewrites,
-            ))
-        })
-        .collect()
+            relative_string(root, &inferred)
+        }
+    };
+    Ok(build_app(
+        root,
+        Some(name.to_string()),
+        package_root,
+        visible_paths,
+        &project.rewrites,
+    ))
 }
 
 /// Same as [`frontend_apps`], but never returns an empty list: when nothing

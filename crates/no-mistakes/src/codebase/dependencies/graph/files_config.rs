@@ -87,12 +87,12 @@ fn graph_config_options_from_loaded_with_test_filter(
     }));
     // Union of every configured frontend app's rewrites. #624 was caused by
     // this list being sourced from whichever `type: nextjs` project sorted
-    // first; a genuinely ambiguous app root (ok_or in `frontend_apps`) is
-    // treated as "that app contributes no rewrites" here rather than failing
-    // the whole graph build, since this is a best-effort convenience list,
-    // not a Playwright rule execution.
-    let rewrites = crate::config::v2::frontend_apps(root, v2_config, visible_paths)
-        .unwrap_or_default()
+    // first. `frontend_apps_lenient` resolves each `type: nextjs` project
+    // independently and skips only the ones whose root can't be inferred,
+    // so one app's ambiguous root no longer discards every other app's
+    // rewrites too — this is a best-effort convenience list, not a
+    // Playwright rule execution, so per-app skip-on-error is intentional.
+    let rewrites = crate::config::v2::frontend_apps_lenient(root, v2_config, visible_paths)
         .into_iter()
         .flat_map(|app| app.rewrites)
         .collect::<Vec<_>>();

@@ -1,4 +1,4 @@
-use super::frontend_apps;
+use super::{frontend_apps, frontend_apps_lenient};
 use crate::codebase::ts_source::discover_visible_paths;
 use crate::config::v2::discover::load_v2_config;
 use crate::config::v2::schema::NoMistakesConfig;
@@ -125,4 +125,25 @@ fn multiple_nextjs_projects_resolve_independently() {
     assert_eq!(control.route_root, "services/control-web/src/app");
     assert_eq!(control.rewrites.len(), 1);
     assert_eq!(control.rewrites[0].source, "/control-posts/:slug*");
+}
+
+/// `frontend_apps` fails the whole call when any one of several `type:
+/// nextjs` projects can't resolve its root — the strict contract Playwright
+/// rule resolution needs. `frontend_apps_lenient` instead skips only the
+/// unresolvable project, so a best-effort consumer (`no-mistakes graph`'s
+/// rewrite union) keeps the valid app's rewrite instead of losing every
+/// app's rewrites to one sibling's ambiguity.
+#[test]
+fn lenient_resolution_skips_only_the_unresolvable_app() {
+    let dir = fixture("frontend-apps-partial-failure");
+    let cfg = load_v2_config(&dir, None).unwrap();
+    let visible = discover_visible_paths(&dir);
+
+    assert!(frontend_apps(&dir, &cfg, &visible).is_err());
+
+    let apps = frontend_apps_lenient(&dir, &cfg, &visible);
+    assert_eq!(apps.len(), 1);
+    assert_eq!(apps[0].project.as_deref(), Some("good-web"));
+    assert_eq!(apps[0].rewrites.len(), 1);
+    assert_eq!(apps[0].rewrites[0].source, "/good-posts/:slug*");
 }

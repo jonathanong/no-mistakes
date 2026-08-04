@@ -1,5 +1,5 @@
 use super::*;
-use crate::config::v2::schema::{Project, ProjectType, RewriteRule};
+use crate::config::v2::schema::{Project, ProjectType, RewriteRule, RuleDef, RuleTestTargets};
 use crate::playwright::fsutil::VisiblePathSnapshot;
 use std::collections::BTreeMap;
 
@@ -128,4 +128,35 @@ fn default_frontend_root_falls_back_to_the_bare_literal() {
     let root = Path::new("/repo");
 
     assert_eq!(default_frontend_root(root, "app", &[]), "app");
+}
+
+/// A rule's own `tests.playwright: [...]` list is enough to opt a repository
+/// into v2 app resolution, even with zero top-level `tests.playwright.*`
+/// settings — `rules[].projects` is the documented default binding
+/// mechanism, and it must not silently fall through to the bare-literal
+/// `settings_from_defaults` path just because no other Playwright setting
+/// happens to be configured.
+#[test]
+fn rule_scoped_playwright_target_alone_opts_into_v2_resolution() {
+    let config = NoMistakesConfig {
+        projects: BTreeMap::from([("web".to_string(), nextjs_project("web/src/app"))]),
+        rules: vec![RuleDef {
+            rule: "playwright-coverage".to_string(),
+            projects: vec!["web".to_string()],
+            tests: RuleTestTargets {
+                playwright: vec!["main".to_string()],
+                ..RuleTestTargets::default()
+            },
+            ..RuleDef::default()
+        }],
+        ..NoMistakesConfig::default()
+    };
+    let root = Path::new("/repo");
+    let snapshot = VisiblePathSnapshot::from_paths(root, &[]);
+
+    let settings =
+        settings_from_loaded_v2(root, &config, &[], None, Some("web".to_string()), &snapshot)
+            .unwrap();
+
+    assert_eq!(settings.frontend_root, "web/src/app");
 }

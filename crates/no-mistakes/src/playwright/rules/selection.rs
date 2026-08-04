@@ -142,6 +142,15 @@ fn resolve_selection_app(
         .and_then(|project| config.tests.playwright.apps.get(project))
         .and_then(|binding| binding.project.clone())
     {
+        if !app_names.is_empty() && !app_names.contains(explicit.as_str()) {
+            return Err(anyhow!(
+                "`tests.playwright.apps.{label}.project` names `{explicit}`, which is not a \
+                 configured `type: nextjs` project ({}).\nFix one of:\n  \
+                 - correct the name\n  \
+                 - add `projects.{explicit}` with `type: nextjs`",
+                app_names.iter().copied().collect::<Vec<_>>().join(", "),
+            ));
+        }
         return Ok(Some(explicit));
     }
 
@@ -153,8 +162,9 @@ fn resolve_selection_app(
         return match named.len() {
             0 => Err(anyhow!(
                 "rule `projects:` for Playwright project `{label}` ({}) does not name any \
-                 configured `type: nextjs` project; playwright-coverage and \
-                 playwright-unique-test-ids need a frontend app to analyze.",
+                 configured `type: nextjs` project; playwright-coverage, \
+                 playwright-unique-test-ids, playwright-unique-html-ids, and \
+                 playwright-prefer-test-id-locators need a frontend app to analyze.",
                 rule_bound_names
                     .iter()
                     .cloned()

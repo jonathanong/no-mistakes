@@ -1,0 +1,7 @@
+projects:
+  web:
+    type: nextjs
+
+tests:
+  playwright:
+    configs: playwright.config.mts

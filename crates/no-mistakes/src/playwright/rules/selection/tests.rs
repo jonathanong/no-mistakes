@@ -181,3 +181,30 @@ fn explicit_apps_binding_overrides_ambiguity() {
 
     assert_eq!(selections[0].app.as_deref(), Some("control-web"));
 }
+
+/// `tests.playwright.apps.<project>.project` naming a typo'd/unconfigured
+/// project must fail loudly instead of silently binding to a nonexistent
+/// app (which would fall through settings resolution to the ambiguity-free
+/// bare default, hiding the mistake).
+#[test]
+fn explicit_apps_binding_naming_an_unconfigured_project_is_an_error() {
+    let mut config = NoMistakesConfig {
+        rules: vec![rule(PLAYWRIGHT_COVERAGE, vec!["control"], vec![])],
+        ..NoMistakesConfig::default()
+    };
+    config.tests.playwright.apps.insert(
+        "control".to_string(),
+        PlaywrightAppBinding {
+            project: Some("typo-web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let apps = vec![app("agent-web"), app("control-web")];
+
+    let error = rule_selections(&config, &apps).unwrap_err();
+
+    let message = format!("{error:#}");
+    assert!(message.contains("typo-web"), "{message}");
+    assert!(message.contains("agent-web"), "{message}");
+    assert!(message.contains("control-web"), "{message}");
+}

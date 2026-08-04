@@ -29,6 +29,16 @@ impl PreparedPlaywrightRules {
         self.fact_plan.clone()
     }
 
+    /// Look up the prepared selection for `project`. `app` is at most a
+    /// caller-supplied *filter*, not a required match: a caller with no
+    /// opinion (`app: None`, the common case — most callers never set the
+    /// N-API `app` option) must still hit the cache even though the
+    /// selection's own `app` was auto-resolved to a real name (e.g. the
+    /// sole configured frontend app). Requiring exact equality here would
+    /// silently miss every such lookup and fall back to a slower,
+    /// non-shared standalone resolution. When the caller does supply an
+    /// `app`, it must match — that guards against reusing one app's cached
+    /// settings for a request that explicitly named a different one.
     pub(crate) fn report_view(
         &self,
         project: Option<&str>,
@@ -40,7 +50,7 @@ impl PreparedPlaywrightRules {
             .iter()
             .find(|selection| {
                 selection.settings.project.as_deref() == project
-                    && selection.selection.app.as_deref() == app
+                    && app.is_none_or(|app| selection.selection.app.as_deref() == Some(app))
             })?
             .settings
             .clone();
@@ -125,6 +135,9 @@ pub(super) fn prepare_with_settings(
         fact_plan,
     }))
 }
+
+#[cfg(test)]
+mod tests;
 
 fn add_settings_facts(
     root: &Path,
