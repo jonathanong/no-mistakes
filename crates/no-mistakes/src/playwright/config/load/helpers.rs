@@ -28,7 +28,7 @@ pub(super) fn playwright_configs_from_v2(
     find_default_playwright_configs_from_snapshot(root, visible_paths)
 }
 
-pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
+pub(crate) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
     is_v2_playwright_configured(&config.tests.playwright)
         || config
             .rules
