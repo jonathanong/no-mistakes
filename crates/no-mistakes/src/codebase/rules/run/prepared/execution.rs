@@ -1,6 +1,8 @@
 use super::*;
 
+mod graph_rules;
 mod helpers;
+use graph_rules::graph_rule_findings;
 use helpers::{storybook_findings, suppress_findings};
 
 pub(super) fn run(
@@ -155,51 +157,16 @@ pub(super) fn run(
             },
         )?);
     }
-    if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.forbidden_dependencies",
-            || {
-                forbidden_dependencies::check_with_prepared_facts_and_graph(
-                    root,
-                    config,
-                    config_path,
-                    shared,
-                    prepared_graph,
-                    inferred_roots,
-                    dependency_graph.expect("forbidden-dependencies requires canonical graph"),
-                )
-            },
-        )?);
-    }
-    findings.extend(required_entrypoint_reachability_findings(
+    findings.extend(graph_rule_findings(
         root,
         config,
+        config_path,
         shared,
+        prepared_graph,
         dependency_graph,
         inferred_roots,
     )?);
     suppress_findings(root, &mut findings, sources);
     sort_findings(&mut findings);
     Ok(findings)
-}
-
-fn required_entrypoint_reachability_findings(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    dependency_graph: Option<&DepGraph>,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-) -> Result<Vec<RuleFinding>> {
-    if !rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY) {
-        return Ok(Vec::new());
-    }
-    crate::perf_trace::trace("rules.required_entrypoint_reachability", || {
-        required_entrypoint_reachability::check_with_graph_and_inferred(
-            root,
-            config,
-            shared.graph_file_universe(),
-            dependency_graph.expect("required-entrypoint-reachability requires canonical graph"),
-            inferred_roots,
-        )
-    })
 }
