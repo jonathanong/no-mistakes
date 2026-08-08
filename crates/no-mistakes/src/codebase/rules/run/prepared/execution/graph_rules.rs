@@ -43,3 +43,6 @@ pub(super) fn graph_rule_findings(
     }
     Ok(findings)
 }
+
+#[cfg(test)]
+mod tests;

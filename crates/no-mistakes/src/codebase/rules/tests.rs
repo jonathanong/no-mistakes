@@ -362,6 +362,17 @@ fn run_check_surfaces_forbidden_dependencies_tsconfig_error() {
 }
 
 #[test]
+fn run_check_propagates_forbidden_dependencies_filter_error() {
+    let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let config = root.join("invalid-include.no-mistakes.yml");
+    let error = run_check(&root, Some(&config), Some(&root.join("tsconfig.json"))).unwrap_err();
+    assert!(
+        error.to_string().contains("include contains invalid glob"),
+        "unexpected error: {error:#}"
+    );
+}
+
+#[test]
 fn run_check_with_facts_executes_forbidden_dependencies_rule() {
     let root = fixture("codebase-analysis/forbidden-dependencies-basic");
     let tsconfig = root.join("tsconfig.json");

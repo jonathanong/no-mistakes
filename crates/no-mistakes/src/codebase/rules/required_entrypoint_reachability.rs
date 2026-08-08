@@ -139,10 +139,7 @@ fn check_rule_application(
         let mut reachable = graph
             .deps_of_in_file_universe(&roots, options.max_depth, Some(&allowed), file_universe)
             .into_iter()
-            .filter_map(|entry| match entry.node {
-                NodeId::File(path) => Some(path),
-                _ => None,
-            })
+            .filter_map(|entry| entry.node.as_file().map(Path::to_path_buf))
             .collect::<HashSet<_>>();
         reachable.extend(entrypoint_paths);
         let target = entrypoint_labels.join(",");

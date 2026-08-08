@@ -246,3 +246,19 @@ fn aggregate_runner_honors_file_suppression() {
 
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
+
+#[test]
+fn aggregate_runner_propagates_invalid_common_filters() {
+    let root = fixture();
+    let error = crate::codebase::rules::run_check(
+        &root,
+        Some(&root.join("invalid-include.no-mistakes.yml")),
+        Some(&root.join("tsconfig.json")),
+    )
+    .unwrap_err();
+
+    assert!(
+        error.to_string().contains("include contains invalid glob"),
+        "unexpected error: {error:#}"
+    );
+}

@@ -157,7 +157,7 @@ pub(super) fn run(
             },
         )?);
     }
-    findings.extend(graph_rule_findings(
+    let graph_findings = graph_rule_findings(
         root,
         config,
         config_path,
@@ -165,7 +165,8 @@ pub(super) fn run(
         prepared_graph,
         dependency_graph,
         inferred_roots,
-    )?);
+    );
+    findings.extend(graph_findings?);
     suppress_findings(root, &mut findings, sources);
     sort_findings(&mut findings);
     Ok(findings)
