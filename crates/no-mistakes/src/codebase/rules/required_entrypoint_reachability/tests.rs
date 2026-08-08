@@ -153,6 +153,28 @@ entrypoints: ["{}"]
 }
 
 #[test]
+fn rejects_an_absolute_entrypoint_outside_the_repository() {
+    let entrypoint = fixture().parent().unwrap().join("outside.ts");
+    assert!(!entrypoint.starts_with(fixture()));
+    let findings = run(vec![application(&format!(
+        r#"
+sourceGlobs: [sources/static.ts]
+entrypoints: ["{}"]
+"#,
+        entrypoint.display()
+    ))]);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(
+        findings[0].message,
+        format!(
+            "required-entrypoint-reachability: entrypoint `{}` does not exist",
+            entrypoint.display()
+        )
+    );
+}
+
+#[test]
 fn rejects_an_invalid_common_include_pattern() {
     let mut rule = application(
         r#"
