@@ -52,6 +52,7 @@ rules:
 | [`require-storybook-stories`](require-storybook-stories.md)                   | Require Storybook coverage for selected components.                             |
 | [`require-test-per-subdir`](require-test-per-subdir.md)                       | Require tests in each first-level subdirectory.                                 |
 | [`required-companion-imports`](required-companion-imports.md)                 | Require companion files to import their paired source.                          |
+| [`required-entrypoint-reachability`](required-entrypoint-reachability.md)     | Require selected sources to be runtime-reachable from configured entrypoints.   |
 | [`required-doc-section`](required-doc-section.md)                             | Require a heading in matching documentation files.                              |
 | [`required-local-docs`](required-local-docs.md)                               | Require local docs beside configured code directories.                          |
 | [`rust-max-lines-per-file`](rust-max-lines-per-file.md)                       | Cap Rust source/test file length.                                               |

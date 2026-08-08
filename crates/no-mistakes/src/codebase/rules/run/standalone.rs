@@ -1,6 +1,6 @@
 use super::{
-    any_codebase_rule_enabled, forbidden_dependencies, rule_enabled, PreparedRulesCheck,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
+    any_codebase_rule_enabled, canonical_graph_plan, rule_enabled, PreparedRulesCheck,
+    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
     SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::check_facts::{
@@ -35,9 +35,7 @@ pub(super) fn run_check(
         Arc::clone(&snapshot),
         Arc::new(prepared_tsconfig.clone()),
     )?;
-    let graph_plan = rule_enabled(&config, FORBIDDEN_DEPENDENCIES)
-        .then(|| forbidden_dependencies::graph_plan(&config))
-        .flatten();
+    let graph_plan = canonical_graph_plan(&config);
     let codebase_config =
         crate::codebase::config::config_from_loaded_v2(root, config_path, &config);
     let prepared_graph = graph_plan

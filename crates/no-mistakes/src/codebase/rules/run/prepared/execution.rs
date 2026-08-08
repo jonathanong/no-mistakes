@@ -24,16 +24,16 @@ pub(super) fn run(
     if !any_codebase_rule_enabled(config) {
         return Ok(Vec::new());
     }
-    if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config) {
+    if let Some(graph_plan) = canonical_graph_plan(config) {
         let (required_facts, _) = match prepared_graph {
             Some(prepared) => crate::codebase::dependencies::graph::
-                ts_fact_plan_and_context_for_plan_with_prepared(root, forbidden_plan, prepared),
+                ts_fact_plan_and_context_for_plan_with_prepared(root, graph_plan, prepared),
             None => crate::codebase::dependencies::graph::
-                ts_fact_plan_and_context_for_plan_with_config(root, forbidden_plan, config_path),
+                ts_fact_plan_and_context_for_plan_with_config(root, graph_plan, config_path),
         };
         if !shared.graph_plan().covers(required_facts) {
             anyhow::bail!(
-                "shared check facts are missing graph facts required by {FORBIDDEN_DEPENDENCIES}"
+                "shared check facts are missing graph facts required by configured codebase rules"
             );
         }
     }
@@ -167,6 +167,21 @@ pub(super) fn run(
                     prepared_graph,
                     inferred_roots,
                     dependency_graph.expect("forbidden-dependencies requires canonical graph"),
+                )
+            },
+        )?);
+    }
+    if rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY) {
+        findings.extend(crate::perf_trace::trace(
+            "rules.required_entrypoint_reachability",
+            || {
+                required_entrypoint_reachability::check_with_graph_and_inferred(
+                    root,
+                    config,
+                    shared.graph_file_universe(),
+                    dependency_graph
+                        .expect("required-entrypoint-reachability requires canonical graph"),
+                    inferred_roots,
                 )
             },
         )?);

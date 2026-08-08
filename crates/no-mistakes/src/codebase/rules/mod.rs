@@ -29,6 +29,7 @@ pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;
 pub mod require_test_per_subdir;
 pub mod required_companion_imports;
+pub mod required_entrypoint_reachability;
 pub mod required_local_docs;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
@@ -65,7 +66,8 @@ pub use filesystem_dispatch::{
     run_filesystem_rules_with_visible_and_snapshot,
 };
 pub use ids::*;
-pub(crate) use run::canonical_graph_plan;
+#[doc(hidden)]
+pub use run::canonical_graph_plan;
 #[doc(hidden)]
 pub use run::run_check_with_config_facts_playwright_and_graph;
 pub use run::{

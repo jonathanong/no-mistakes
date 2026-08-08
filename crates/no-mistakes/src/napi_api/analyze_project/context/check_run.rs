@@ -60,7 +60,7 @@ impl SharedCheckContext {
             && self.graph_files.is_empty()
             && !self.filesystem_rules_enabled
             && !self.playwright_rules_enabled
-            && !self.forbidden_deps_enabled
+            && !self.graph_rules_enabled
         {
             return Ok(crate::check_runner::empty_results([None]));
         }

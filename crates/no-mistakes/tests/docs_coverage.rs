@@ -111,6 +111,7 @@ fn no_mistakes_rules_have_docs() {
         rules::REQUIRE_FILES_IN_SUBDIRS,
         rules::REQUIRE_STORYBOOK_STORIES,
         rules::REQUIRE_TEST_PER_SUBDIR,
+        rules::REQUIRED_ENTRYPOINT_REACHABILITY,
         rules::REQUIRED_DOC_SECTION,
         rules::REQUIRED_LOCAL_DOCS,
         rules::RUST_MAX_LINES_PER_FILE,
