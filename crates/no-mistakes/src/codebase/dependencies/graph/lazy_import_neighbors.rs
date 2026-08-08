@@ -95,9 +95,19 @@ fn import_neighbors_from_facts(
                 workspace,
                 graph_files.visible(),
             );
+            if let Some(target) = classification.workspace_path() {
+                let target = graph_files.visible_path(target)?;
+                let kind = match imp.kind {
+                    ImportKind::Type => EdgeKind::WorkspaceTypeImport,
+                    ImportKind::RequireResolve => EdgeKind::RequireResolve,
+                    _ => EdgeKind::WorkspaceImport,
+                };
+                return (is_indexable(target) || kind == EdgeKind::RequireResolve)
+                    .then(|| (NodeId::File(target.to_path_buf()), kind));
+            }
             if let Some(target) = classification.preferred_path() {
                 let target = graph_files.visible_path(target)?;
-                return is_indexable(target)
+                return (is_indexable(target) || kind == EdgeKind::RequireResolve)
                     .then(|| (NodeId::File(target.to_path_buf()), kind));
             }
             if classification.is_unresolved_external() {

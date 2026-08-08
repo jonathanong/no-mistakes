@@ -102,6 +102,10 @@ impl CheckFactMap {
         self.view_with_supplemental(supplemental, graph_files)
     }
 
+    pub(crate) fn with_graph_file_universe(&self, graph_files: Vec<PathBuf>) -> Self {
+        self.view_with_supplemental(&Self::default(), graph_files)
+    }
+
     fn view_with_supplemental(&self, supplemental: &Self, graph_files: Vec<PathBuf>) -> Self {
         let mut ts = self.ts.clone();
         ts.extend(

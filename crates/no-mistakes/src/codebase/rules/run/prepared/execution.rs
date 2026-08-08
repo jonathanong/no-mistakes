@@ -1,6 +1,8 @@
 use super::*;
 
+mod graph_rules;
 mod helpers;
+use graph_rules::graph_rule_findings;
 use helpers::{storybook_findings, suppress_findings};
 
 pub(super) fn run(
@@ -24,16 +26,16 @@ pub(super) fn run(
     if !any_codebase_rule_enabled(config) {
         return Ok(Vec::new());
     }
-    if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config) {
+    if let Some(graph_plan) = canonical_graph_plan(config) {
         let (required_facts, _) = match prepared_graph {
             Some(prepared) => crate::codebase::dependencies::graph::
-                ts_fact_plan_and_context_for_plan_with_prepared(root, forbidden_plan, prepared),
+                ts_fact_plan_and_context_for_plan_with_prepared(root, graph_plan, prepared),
             None => crate::codebase::dependencies::graph::
-                ts_fact_plan_and_context_for_plan_with_config(root, forbidden_plan, config_path),
+                ts_fact_plan_and_context_for_plan_with_config(root, graph_plan, config_path),
         };
         if !shared.graph_plan().covers(required_facts) {
             anyhow::bail!(
-                "shared check facts are missing graph facts required by {FORBIDDEN_DEPENDENCIES}"
+                "shared check facts are missing graph facts required by configured codebase rules"
             );
         }
     }
@@ -155,22 +157,16 @@ pub(super) fn run(
             },
         )?);
     }
-    if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.forbidden_dependencies",
-            || {
-                forbidden_dependencies::check_with_prepared_facts_and_graph(
-                    root,
-                    config,
-                    config_path,
-                    shared,
-                    prepared_graph,
-                    inferred_roots,
-                    dependency_graph.expect("forbidden-dependencies requires canonical graph"),
-                )
-            },
-        )?);
-    }
+    let graph_findings = graph_rule_findings(
+        root,
+        config,
+        config_path,
+        shared,
+        prepared_graph,
+        dependency_graph,
+        inferred_roots,
+    );
+    findings.extend(graph_findings?);
     suppress_findings(root, &mut findings, sources);
     sort_findings(&mut findings);
     Ok(findings)

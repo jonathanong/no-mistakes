@@ -1,5 +1,5 @@
 use super::{
-    complete_domain_checks, empty_results, enabled, forbidden_plan, prepared, results, CheckResults,
+    complete_domain_checks, empty_results, enabled, graph_plan, prepared, results, CheckResults,
 };
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks;
@@ -29,11 +29,10 @@ pub(crate) fn run_all(
     let unique_exports_enabled = check_tasks::unique_exports_configured(config);
     let enabled = enabled::ConfiguredChecks::from_config(config);
     let filesystem_rules_enabled = check_tasks::filesystem_rules_configured(config);
-    let forbidden_deps_enabled = check_tasks::forbidden_dependencies_configured(config);
-    let forbidden_graph_plan = forbidden_deps_enabled
-        .then(|| no_mistakes::codebase::rules::forbidden_dependencies::graph_plan(config))
-        .flatten();
-    let playwright_consumers = forbidden_graph_plan
+    let canonical_graph_plan = no_mistakes::codebase::rules::canonical_graph_plan(config);
+    let graph_requires_full_file_universe =
+        no_mistakes::codebase::rules::canonical_graph_requires_full_file_universe(config);
+    let playwright_consumers = canonical_graph_plan
         .map(
             |plan| no_mistakes::playwright::rules::PlaywrightFactConsumers {
                 graph_selectors: plan.playwright_selectors,
@@ -76,21 +75,22 @@ pub(crate) fn run_all(
             ),
         ));
     }
-    let prepared_graph = forbidden_plan::prepare(
+    let prepared_graph = graph_plan::prepare(
         &root,
         config,
-        forbidden_plan::PreparedInputs {
+        graph_plan::PreparedInputs {
             codebase_config: &prepared.codebase_config,
             tsconfig: &prepared.tsconfig,
             visible_paths: prepared.visible_paths.as_ref(),
             workflow_documents: prepared.workflow_documents.as_ref(),
         },
-        forbidden_graph_plan,
+        canonical_graph_plan,
         &mut playwright_fact_plan,
         &mut plan,
     )?;
-    let needs_shared_facts =
-        forbidden_deps_enabled || playwright_fact_plan.is_some() || plan_requests_facts(&plan);
+    let needs_shared_facts = canonical_graph_plan.is_some()
+        || playwright_fact_plan.is_some()
+        || plan_requests_facts(&plan);
     if !needs_shared_facts
         && !filesystem_rules_enabled
         && !no_mistakes::playwright::rules::configured(config)
@@ -110,7 +110,8 @@ pub(crate) fn run_all(
             )
         },
     );
-    let needs_full_graph_files = forbidden_graph_plan.is_some() || playwright_fact_plan.is_some();
+    let needs_full_graph_files =
+        graph_requires_full_file_universe || playwright_fact_plan.is_some();
     let needs_graph_files =
         needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
     let (discovered, graph_files) = if needs_full_graph_files {

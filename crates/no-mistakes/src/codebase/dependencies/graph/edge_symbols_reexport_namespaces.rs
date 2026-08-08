@@ -86,14 +86,14 @@ impl ReexportNamespaceResolver<'_> {
                     self.graph_files.visible_path(&self.workspace.resolve_specifier_from_file_visible(
                         source, barrel, self.visible_files,
                     )?)?.to_path_buf(),
-                    EdgeKind::WorkspaceImport,
+                    workspace_symbol_edge_kind(export.is_type_only),
                 )
             };
-            let edge_kind = if kind == EdgeKind::TypeImport || export.is_type_only {
-                EdgeKind::TypeImport
-            } else {
-                source_kind
-            };
+            let edge_kind = with_type_only_edge_kind(
+                source_kind,
+                matches!(kind, EdgeKind::TypeImport | EdgeKind::WorkspaceTypeImport)
+                    || export.is_type_only,
+            );
             if reexported == "*" {
                 return Some((
                     NodeId::Symbol {

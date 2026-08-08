@@ -48,6 +48,29 @@ fn cross_boundary_workspace_and_symbol_contracts() {
         ],
     );
     assert!(file_paths(&subpath).contains(&"apps/web/pages/subpath.tsx".to_string()));
+    assert_eq!(
+        via_kinds(&subpath, "apps/web/pages/subpath.tsx"),
+        vec!["workspace-type-import"]
+    );
+
+    let workspace_require_resolve = run_json(
+        &root,
+        &[
+            "dependents",
+            "--tsconfig",
+            backend_tsconfig.as_ref(),
+            "--relationship",
+            "import-require",
+            "packages/core/src/index.mts",
+        ],
+    );
+    assert_eq!(
+        via_kinds(
+            &workspace_require_resolve,
+            "apps/backend/api/workspace-resolve.cjs"
+        ),
+        vec!["require-resolve"]
+    );
 
     let alias_deps = run_json(
         &root,

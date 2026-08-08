@@ -75,7 +75,7 @@ fn imported_symbol_map(
             ImportedSymbolTarget::Symbol {
                 file: target,
                 symbol: import.imported.clone(),
-                kind: EdgeKind::WorkspaceImport,
+                kind: workspace_symbol_edge_kind(import.is_type_only),
             }
         } else if workspace.recognizes_specifier_from(&import.source, path) {
             continue;
@@ -130,7 +130,7 @@ fn namespace_import_map(
             ImportedSymbolTarget::Symbol {
                 file,
                 symbol: "*".to_string(),
-                kind: EdgeKind::WorkspaceImport,
+                kind: workspace_symbol_edge_kind(import.is_type_only),
             }
         } else if workspace.recognizes_specifier_from(&import.source, path) {
             continue;
@@ -173,5 +173,23 @@ fn symbol_edge_kind(is_type_only: bool) -> EdgeKind {
         EdgeKind::TypeImport
     } else {
         EdgeKind::Import
+    }
+}
+
+fn workspace_symbol_edge_kind(is_type_only: bool) -> EdgeKind {
+    if is_type_only {
+        EdgeKind::WorkspaceTypeImport
+    } else {
+        EdgeKind::WorkspaceImport
+    }
+}
+
+fn with_type_only_edge_kind(kind: EdgeKind, is_type_only: bool) -> EdgeKind {
+    if !is_type_only {
+        kind
+    } else if matches!(kind, EdgeKind::WorkspaceImport | EdgeKind::WorkspaceTypeImport) {
+        EdgeKind::WorkspaceTypeImport
+    } else {
+        EdgeKind::TypeImport
     }
 }

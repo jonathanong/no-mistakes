@@ -31,9 +31,7 @@ fn prepared_config_globs_only_expand_aggregate_candidates() {
 fn aggregate_rule_uses_prepared_config_without_standalone_discovery() {
     let source = include_str!("../with_facts.rs");
 
-    assert!(
-        source.contains("config::prepare_from_visible(root, config, shared.graph_file_universe())")
-    );
+    assert!(source.contains("config::prepare_from_visible(root, config, &files)"));
     assert!(!source.contains("config::test_filter("));
     assert!(!source.contains("config::precompute_setup_data("));
     assert!(!source.contains("discover_files("));

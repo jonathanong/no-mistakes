@@ -36,7 +36,7 @@ fn collect_import_edges(
                     );
                     if let Some(target) = classification.resolver_path() {
                         let target = graph_files.visible_path(target)?;
-                        return is_indexable(target).then(|| {
+                        return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(|| {
                             (
                                 NodeId::File((*path).clone()),
                                 NodeId::File(target.to_path_buf()),
@@ -67,6 +67,7 @@ fn collect_asset_edges(
                 .imports
                 .iter()
                 .filter(|imp| import_is_reachable(imp, facts, reachable))
+                .filter(|imp| !matches!(imp.kind, ImportKind::Type | ImportKind::RequireResolve))
                 .filter(|imp| imp.specifier.starts_with('.') || imp.specifier.starts_with('/'))
                 .filter_map(|imp| {
                     resolver.resolve(&imp.specifier, path).and_then(|target| {
@@ -113,10 +114,15 @@ fn collect_workspace_edges(
                         .workspace_path()
                         .and_then(|entry| graph_files.visible_path(entry))
                         .map(|entry| {
+                            let kind = match imp.kind {
+                                ImportKind::Type => EdgeKind::WorkspaceTypeImport,
+                                ImportKind::RequireResolve => EdgeKind::RequireResolve,
+                                _ => EdgeKind::WorkspaceImport,
+                            };
                             (
                                 NodeId::File((*path).clone()),
                                 NodeId::File(entry.to_path_buf()),
-                                EdgeKind::WorkspaceImport,
+                                kind,
                             )
                         })
                 })

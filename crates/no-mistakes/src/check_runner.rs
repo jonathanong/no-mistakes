@@ -1,5 +1,5 @@
 pub(crate) mod enabled;
-mod forbidden_plan;
+mod graph_plan;
 pub(crate) mod prepared;
 mod results;
 mod run_all;

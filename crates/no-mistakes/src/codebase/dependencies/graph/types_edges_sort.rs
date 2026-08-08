@@ -7,6 +7,7 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::DynamicImport
         | EdgeKind::RouteImport
         | EdgeKind::Require
+        | EdgeKind::RequireResolve
         | EdgeKind::TestOf
         | EdgeKind::RouteRef
         | EdgeKind::QueueEnqueue
@@ -15,6 +16,7 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::Layout
         | EdgeKind::MarkdownLink
         | EdgeKind::WorkspaceImport
+        | EdgeKind::WorkspaceTypeImport
         | EdgeKind::PackageDependency
         | EdgeKind::CiInvocation => core(kind),
         EdgeKind::HttpCall
@@ -59,6 +61,8 @@ const fn core(kind: EdgeKind) -> (u8, u8) {
         EdgeKind::WorkspaceImport => (12, 0),
         EdgeKind::PackageDependency => (13, 0),
         EdgeKind::CiInvocation => (14, 0),
+        EdgeKind::RequireResolve => (37, 0),
+        EdgeKind::WorkspaceTypeImport => (38, 0),
         _ => panic!("core edge group is exhaustive"),
     }
 }

@@ -182,10 +182,6 @@ pub(crate) fn queues_configured(config: &NoMistakesConfig) -> bool {
         .any(|project| !project.queues.enqueues.is_empty() || !project.queues.workers.is_empty())
 }
 
-pub(crate) fn forbidden_dependencies_configured(config: &NoMistakesConfig) -> bool {
-    rule_configured(config, rules::FORBIDDEN_DEPENDENCIES)
-}
-
 pub(crate) fn unique_exports_configured(config: &NoMistakesConfig) -> bool {
     rule_configured(config, unique_exports::RULE_ID)
 }

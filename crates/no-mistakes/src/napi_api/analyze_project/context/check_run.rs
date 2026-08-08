@@ -60,10 +60,14 @@ impl SharedCheckContext {
             && self.graph_files.is_empty()
             && !self.filesystem_rules_enabled
             && !self.playwright_rules_enabled
-            && !self.forbidden_deps_enabled
+            && !self.graph_rules_enabled
         {
             return Ok(crate::check_runner::empty_results([None]));
         }
+        let scoped_facts = self
+            .graph_plan
+            .map(|_| facts.with_graph_file_universe(self.graph_files.clone()));
+        let facts = scoped_facts.as_ref().unwrap_or(facts);
         let config = &self.prepared.config;
         let sources = self.prepared.visible_paths.source_store_for(&self.root);
         let (react, queues, rules, integration, codebase, filesystem_rules) =
