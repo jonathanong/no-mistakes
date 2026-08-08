@@ -1,4 +1,13 @@
 use super::*;
+
+fn check_with_graph(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    graph: &DepGraph,
+) -> Result<Vec<RuleFinding>> {
+    check_with_graph_and_inferred(root, config, files, graph, None)
+}
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use std::path::{Path, PathBuf};
 

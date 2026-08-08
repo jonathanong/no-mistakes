@@ -23,16 +23,6 @@ pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
         .then(GraphBuildPlan::imports_and_workspace)
 }
 
-#[cfg(test)]
-pub(crate) fn check_with_graph(
-    root: &Path,
-    config: &NoMistakesConfig,
-    files: &[PathBuf],
-    graph: &DepGraph,
-) -> Result<Vec<RuleFinding>> {
-    check_with_graph_and_inferred(root, config, files, graph, None)
-}
-
 pub(crate) fn check_with_graph_and_inferred(
     root: &Path,
     config: &NoMistakesConfig,
