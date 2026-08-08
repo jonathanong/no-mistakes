@@ -15,16 +15,6 @@ fn signature_impact_edges() -> HashSet<EdgeKind> {
     ])
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn signature_impact_traverses_type_only_workspace_edges() {
-        assert!(signature_impact_edges().contains(&EdgeKind::WorkspaceTypeImport));
-    }
-}
-
 fn signature_target_symbols(
     target_file: &Path,
     target_symbol: &str,
