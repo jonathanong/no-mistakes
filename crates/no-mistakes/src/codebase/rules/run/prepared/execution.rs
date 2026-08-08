@@ -171,22 +171,35 @@ pub(super) fn run(
             },
         )?);
     }
-    if rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.required_entrypoint_reachability",
-            || {
-                required_entrypoint_reachability::check_with_graph_and_inferred(
-                    root,
-                    config,
-                    shared.graph_file_universe(),
-                    dependency_graph
-                        .expect("required-entrypoint-reachability requires canonical graph"),
-                    inferred_roots,
-                )
-            },
-        )?);
-    }
+    findings.extend(required_entrypoint_reachability_findings(
+        root,
+        config,
+        shared,
+        dependency_graph,
+        inferred_roots,
+    )?);
     suppress_findings(root, &mut findings, sources);
     sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn required_entrypoint_reachability_findings(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    dependency_graph: Option<&DepGraph>,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+) -> Result<Vec<RuleFinding>> {
+    if !rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY) {
+        return Ok(Vec::new());
+    }
+    crate::perf_trace::trace("rules.required_entrypoint_reachability", || {
+        required_entrypoint_reachability::check_with_graph_and_inferred(
+            root,
+            config,
+            shared.graph_file_universe(),
+            dependency_graph.expect("required-entrypoint-reachability requires canonical graph"),
+            inferred_roots,
+        )
+    })
 }
