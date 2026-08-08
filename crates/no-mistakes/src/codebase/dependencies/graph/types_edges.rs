@@ -15,6 +15,8 @@ pub enum EdgeKind {
     RouteImport,
     /// CommonJS `require("...")` call.
     Require,
+    /// CommonJS `require.resolve("...")` lookup, which resolves but does not load a module.
+    RequireResolve,
     /// Test correspondence: `foo.mts` ↔ `foo.test.mts`.
     TestOf,
     /// Frontend/backend route reference: ref_file → route_def_file.
@@ -31,6 +33,8 @@ pub enum EdgeKind {
     MarkdownLink,
     /// Cross-workspace package import (via npm workspace resolution).
     WorkspaceImport,
+    /// Type-only cross-workspace package import.
+    WorkspaceTypeImport,
     /// Dependency declared in a package.json dependency field.
     PackageDependency,
     /// CI workflow invokes a binary: `*.yml` → `src/bin/*.rs`.
@@ -112,6 +116,7 @@ impl EdgeKind {
             Self::DynamicImport => Some("dynamic-import"),
             Self::RouteImport => Some("route-import"),
             Self::Require => Some("require"),
+            Self::RequireResolve => Some("require-resolve"),
             Self::TestOf => Some("test"),
             Self::RouteRef => Some("route"),
             Self::QueueEnqueue => Some("queue-enqueue"),
@@ -120,6 +125,7 @@ impl EdgeKind {
             Self::Layout => Some("layout"),
             Self::MarkdownLink => Some("md"),
             Self::WorkspaceImport => Some("workspace"),
+            Self::WorkspaceTypeImport => Some("workspace-type-import"),
             Self::PackageDependency => Some("package"),
             Self::CiInvocation => Some("ci"),
             Self::WorkflowJob => Some("workflow-job"),

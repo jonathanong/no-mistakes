@@ -33,6 +33,8 @@ fn run(rules: Vec<RuleDef>) -> Vec<RuleFinding> {
 
 fn try_run(mut rules: Vec<RuleDef>) -> Result<Vec<RuleFinding>> {
     let root = fixture();
+    let mut config = NoMistakesConfig::default();
+    config.rules.append(&mut rules);
     let files = crate::codebase::dependencies::graph::GraphFiles::discover(&root)
         .all()
         .to_vec();
@@ -46,12 +48,10 @@ fn try_run(mut rules: Vec<RuleDef>) -> Result<Vec<RuleFinding>> {
     let graph = DepGraph::build_with_plan_and_files(
         &root,
         &tsconfig,
-        GraphBuildPlan::imports_and_workspace(),
+        graph_plan(&config).expect("reachability graph plan"),
         &graph_files,
     )
     .unwrap();
-    let mut config = NoMistakesConfig::default();
-    config.rules.append(&mut rules);
     check_with_graph(&root, &config, &files, &graph)
 }
 
@@ -65,11 +65,65 @@ sourceGlobs:
   - sources/required.ts
   - sources/named.ts
   - sources/star.ts
+  - sources/config.json
+  - packages/runtime/index.ts
 entrypoints: [entrypoints/api.ts]
 "#,
     )]);
 
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn rejects_type_only_workspace_imports() {
+    let findings = run(vec![application(
+        r#"
+sourceGlobs: [packages/runtime/index.ts]
+entrypoints: [entrypoints/type-workspace.ts]
+"#,
+    )]);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/runtime/index.ts");
+}
+
+#[test]
+fn rejects_require_resolve_lookups() {
+    let findings = run(vec![application(
+        r#"
+sourceGlobs: [sources/static.ts]
+entrypoints: [entrypoints/require-resolve.ts]
+"#,
+    )]);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "sources/static.ts");
+}
+
+#[test]
+fn rejects_require_resolve_asset_lookups() {
+    let findings = run(vec![application(
+        r#"
+sourceGlobs: [sources/config.json]
+entrypoints: [entrypoints/require-resolve-asset.ts]
+"#,
+    )]);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "sources/config.json");
+}
+
+#[test]
+fn rejects_require_resolve_workspace_lookups() {
+    let findings = run(vec![application(
+        r#"
+sourceGlobs: [packages/runtime/index.ts]
+entrypoints: [entrypoints/require-resolve-workspace.ts]
+"#,
+    )]);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/runtime/index.ts");
 }
 
 #[test]

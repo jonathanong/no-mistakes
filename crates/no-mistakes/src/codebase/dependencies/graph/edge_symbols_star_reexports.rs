@@ -111,11 +111,10 @@ fn collect_concrete_star_reexport(
     if reexported_symbol == "default" || shadowed_exports.contains(&export_key) {
         return;
     }
-    let kind = if target_export.is_type_only || reexport_kind.export_is_type_only {
-        EdgeKind::TypeImport
-    } else {
-        reexport_kind.source_kind
-    };
+    let kind = with_type_only_edge_kind(
+        reexport_kind.source_kind,
+        target_export.is_type_only || reexport_kind.export_is_type_only,
+    );
     candidates.push(StarReexportCandidate {
         target: target.to_path_buf(),
         symbol: reexported_symbol,
@@ -147,11 +146,13 @@ fn collect_nested_star_reexport(
     let Some((nested, nested_kind)) = nested else {
         return;
     };
-    let source_kind = if reexport_kind.source_kind == EdgeKind::TypeImport || export.is_type_only {
-        EdgeKind::TypeImport
-    } else {
-        nested_kind
-    };
+    let source_kind = with_type_only_edge_kind(
+        nested_kind,
+        matches!(
+            reexport_kind.source_kind,
+            EdgeKind::TypeImport | EdgeKind::WorkspaceTypeImport
+        ) || export.is_type_only,
+    );
     let kind = StarReexportKind {
         export_is_type_only: reexport_kind.export_is_type_only || export.is_type_only,
         source_kind,
@@ -183,7 +184,7 @@ fn resolve_star_source(
             .workspace
             .resolve_specifier_from_file_visible(source, from, inputs.visible_files)
             .and_then(|target| inputs.graph_files.visible_path(&target).map(Path::to_path_buf))
-            .map(|target| (target, EdgeKind::WorkspaceImport))
+            .map(|target| (target, workspace_symbol_edge_kind(is_type_only)))
     }
 }
 

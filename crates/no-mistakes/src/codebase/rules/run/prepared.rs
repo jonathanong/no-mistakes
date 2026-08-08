@@ -55,6 +55,15 @@ pub fn canonical_graph_plan(
     needed.then_some(plan)
 }
 
+/// Whether configured graph-backed rules require files outside the filesystem check scope.
+#[doc(hidden)]
+pub fn canonical_graph_requires_full_file_universe(
+    config: &crate::config::v2::NoMistakesConfig,
+) -> bool {
+    required_entrypoint_reachability::graph_plan(config).is_some()
+        || forbidden_dependencies::graph_plan(config).is_some()
+}
+
 pub fn run_check_with_config_and_facts_and_playwright(
     inputs: PreparedRulesCheck<'_>,
 ) -> Result<Vec<RuleFinding>> {

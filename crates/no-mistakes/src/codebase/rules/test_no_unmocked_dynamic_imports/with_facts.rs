@@ -63,15 +63,10 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
     session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 ) -> Result<Vec<RuleFinding>> {
     let files = shared.files().to_vec();
-    let visible_files = shared
-        .graph_file_universe()
-        .iter()
-        .cloned()
-        .collect::<HashSet<_>>();
-    // This is the graph's canonical lexical namespace for the complete
-    // prepared universe. Reuse it for every scoped resolver result rather
-    // than rebuilding symlink mappings per import.
-    let graph_files = GraphFiles::from_files(shared.graph_file_universe().to_vec());
+    let visible_files = files.iter().cloned().collect::<HashSet<_>>();
+    // Dynamic-import policy is filesystem-scoped even when another consumer
+    // shares a graph built from the complete repository universe.
+    let graph_files = GraphFiles::from_files(files.clone());
     let resolver = ScopedImportResolver::new_in_session(tsconfig_catalog, &visible_files, session);
     let manual_mocks =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.manual_mocks", || {
@@ -79,7 +74,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
         });
     let prepared =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.prepare_config", || {
-            config::prepare_from_visible(root, config, shared.graph_file_universe())
+            config::prepare_from_visible(root, config, &files)
         })?;
     let test_files = matching_test_files_with_filter(root, &files, prepared.test_filter());
     let setup_data = prepared.setup_data();

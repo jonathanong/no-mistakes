@@ -30,6 +30,8 @@ pub(crate) fn run_all(
     let enabled = enabled::ConfiguredChecks::from_config(config);
     let filesystem_rules_enabled = check_tasks::filesystem_rules_configured(config);
     let canonical_graph_plan = no_mistakes::codebase::rules::canonical_graph_plan(config);
+    let graph_requires_full_file_universe =
+        no_mistakes::codebase::rules::canonical_graph_requires_full_file_universe(config);
     let playwright_consumers = canonical_graph_plan
         .map(
             |plan| no_mistakes::playwright::rules::PlaywrightFactConsumers {
@@ -108,7 +110,8 @@ pub(crate) fn run_all(
             )
         },
     );
-    let needs_full_graph_files = canonical_graph_plan.is_some() || playwright_fact_plan.is_some();
+    let needs_full_graph_files =
+        graph_requires_full_file_universe || playwright_fact_plan.is_some();
     let needs_graph_files =
         needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
     let (discovered, graph_files) = if needs_full_graph_files {

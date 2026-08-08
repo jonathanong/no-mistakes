@@ -56,6 +56,8 @@ impl SharedCheckContext {
         let filesystem_rules_enabled = filesystem_rules_configured(config);
         let playwright_rules_enabled = crate::playwright::rules::configured(config);
         let graph_plan = crate::codebase::rules::canonical_graph_plan(config);
+        let graph_requires_full_file_universe =
+            crate::codebase::rules::canonical_graph_requires_full_file_universe(config);
         let graph_rules_enabled = graph_plan.is_some();
         let mut playwright_fact_plan = prepared
             .playwright
@@ -140,7 +142,8 @@ impl SharedCheckContext {
         );
         let needs_shared_facts =
             plan_requests_facts(&plan) || playwright_fact_plan.is_some() || graph_rules_enabled;
-        let needs_full_graph_files = graph_plan.is_some() || playwright_facts_enabled;
+        let needs_full_graph_files =
+            graph_requires_full_file_universe || playwright_facts_enabled;
         let needs_graph_files =
             needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
         let (discovered, graph_files) = if needs_full_graph_files {

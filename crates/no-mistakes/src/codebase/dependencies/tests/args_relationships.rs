@@ -75,6 +75,7 @@ fn import_maps_to_all_import_forms() {
     assert!(set.contains(&EdgeKind::TypeImport));
     assert!(set.contains(&EdgeKind::DynamicImport));
     assert!(set.contains(&EdgeKind::Require));
+    assert!(set.contains(&EdgeKind::RequireResolve));
     assert!(!set.contains(&EdgeKind::TestOf));
 }
 
@@ -103,6 +104,7 @@ fn granular_imports_map_to_respective_edge_kinds() {
     assert!(!require_set.contains(&EdgeKind::TypeImport));
     assert!(!require_set.contains(&EdgeKind::DynamicImport));
     assert!(require_set.contains(&EdgeKind::Require));
+    assert!(require_set.contains(&EdgeKind::RequireResolve));
 }
 
 #[test]
@@ -134,6 +136,7 @@ fn granular_import_cli_flags_parsed() {
 fn workspace_maps_to_workspace_import() {
     let set = relationship_filter(&[RelationshipArg::Workspace]).unwrap();
     assert!(set.contains(&EdgeKind::WorkspaceImport));
+    assert!(set.contains(&EdgeKind::WorkspaceTypeImport));
 }
 
 #[test]

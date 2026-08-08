@@ -28,6 +28,38 @@ fn queue_fixture() -> PathBuf {
     )
 }
 
+fn check_runner_fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/check-runner")
+            .join(name)
+            .join("fixture"),
+    )
+}
+
+fn analyze_project_check_result(root: &PathBuf) -> Value {
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "config": ".no-mistakes.yml",
+            "reports": [{ "type": "check" }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    serde_json::from_str::<Value>(&output).unwrap()["reports"][0]["result"].clone()
+}
+
+fn standalone_check_result(root: &PathBuf) -> Value {
+    serde_json::from_str(
+        &crate::napi_api::check_json_impl(
+            json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+        )
+        .unwrap(),
+    )
+    .unwrap()
+}
+
 #[test]
 fn analyze_project_value_impl_accepts_parsed_options() {
     let output = analyze_project_value_impl(json!({
@@ -40,6 +72,37 @@ fn analyze_project_value_impl_accepts_parsed_options() {
         serde_json::from_str::<Value>(&output).unwrap()["reports"],
         json!([])
     );
+}
+
+#[test]
+fn analyze_project_dynamic_import_check_respects_filesystem_skips_with_standalone_parity() {
+    let root = check_runner_fixture("dynamic-import-respects-filesystem-skip");
+    let result = analyze_project_check_result(&root);
+
+    assert_eq!(result, standalone_check_result(&root));
+    let finding = result["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["file"] == "tests/scoped.test.ts")
+        .expect("skipped dynamic import remains reportable as unresolved");
+    assert_eq!(finding["import"], "../skipped/target");
+    assert!(finding.get("target").is_none());
+}
+
+#[test]
+fn analyze_project_reachability_check_uses_full_graph_with_standalone_parity() {
+    let root = check_runner_fixture("required-reachability-ignores-filesystem-skip");
+    let result = analyze_project_check_result(&root);
+
+    assert_eq!(result, standalone_check_result(&root));
+    assert!(result["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "required-entrypoint-reachability"
+            && finding["file"] == "sources/unreachable.ts"
+            && finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("not runtime-reachable"))
+    }));
 }
 
 #[test]

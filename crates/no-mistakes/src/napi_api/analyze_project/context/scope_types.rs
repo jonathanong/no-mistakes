@@ -11,6 +11,7 @@ struct PreparedScope {
     import_usages: HashMap<String, crate::codebase::import_usages::PreparedImportUsages>,
     server: Option<crate::server_routes::PreparedServerAnalysis>,
     check: Option<SharedCheckContext>,
+    check_uses_traversal_graph: bool,
     playwright: HashMap<String, PreparedPlaywrightView>,
     queue_reports: HashMap<String, crate::queue::ProjectReport>,
     queue_indexed_reports: HashMap<String, crate::queue::PreparedProjectReport>,

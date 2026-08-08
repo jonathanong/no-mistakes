@@ -4,6 +4,7 @@ fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::TypeImport.as_str(), "type-import");
     assert_eq!(EdgeKind::DynamicImport.as_str(), "dynamic-import");
     assert_eq!(EdgeKind::Require.as_str(), "require");
+    assert_eq!(EdgeKind::RequireResolve.as_str(), "require-resolve");
     assert_eq!(EdgeKind::TestOf.as_str(), "test");
     assert_eq!(
         EdgeKind::VitestSetup(
@@ -19,6 +20,10 @@ fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::Layout.as_str(), "layout");
     assert_eq!(EdgeKind::MarkdownLink.as_str(), "md");
     assert_eq!(EdgeKind::WorkspaceImport.as_str(), "workspace");
+    assert_eq!(
+        EdgeKind::WorkspaceTypeImport.as_str(),
+        "workspace-type-import"
+    );
     assert_eq!(EdgeKind::PackageDependency.as_str(), "package");
     assert_eq!(EdgeKind::CiInvocation.as_str(), "ci");
     assert_eq!(EdgeKind::HttpCall.as_str(), "http");
@@ -43,6 +48,7 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::DynamicImport,
         EdgeKind::RouteImport,
         EdgeKind::Require,
+        EdgeKind::RequireResolve,
         EdgeKind::TestOf,
         EdgeKind::VitestSetup(
             crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
@@ -57,6 +63,7 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::Layout,
         EdgeKind::MarkdownLink,
         EdgeKind::WorkspaceImport,
+        EdgeKind::WorkspaceTypeImport,
         EdgeKind::PackageDependency,
         EdgeKind::CiInvocation,
         EdgeKind::HttpCall,
@@ -87,6 +94,7 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::DynamicImport => {}
             EdgeKind::RouteImport => {}
             EdgeKind::Require => {}
+            EdgeKind::RequireResolve => {}
             EdgeKind::TestOf => {}
             EdgeKind::VitestSetup(_) => {}
             EdgeKind::RouteRef => {}
@@ -96,6 +104,7 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::Layout => {}
             EdgeKind::MarkdownLink => {}
             EdgeKind::WorkspaceImport => {}
+            EdgeKind::WorkspaceTypeImport => {}
             EdgeKind::PackageDependency => {}
             EdgeKind::CiInvocation => {}
             EdgeKind::HttpCall => {}

@@ -20,7 +20,7 @@ pub(crate) struct Options {
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config
         .rule_configured(RULE_ID)
-        .then(GraphBuildPlan::imports_and_workspace)
+        .then(|| GraphBuildPlan::from_allowed(Some(&runtime_edge_kinds())))
 }
 
 pub(crate) fn check_with_graph_and_inferred(
@@ -181,6 +181,7 @@ fn runtime_edge_kinds() -> HashSet<EdgeKind> {
         EdgeKind::DynamicImport,
         EdgeKind::Require,
         EdgeKind::WorkspaceImport,
+        EdgeKind::AssetImport,
     ]
     .into_iter()
     .collect()

@@ -89,8 +89,11 @@ fn collect_direct_reexport_edge(
         inputs.visible_files,
     ) {
         let Some(target) = inputs.graph_files.visible_path(&target) else { return; };
+        let kind = workspace_symbol_edge_kind(
+            export.is_type_only || target_export_is_type(target, imported, inputs.facts),
+        );
         if imported == "*" {
-            edges.push((from, NodeId::File(target.to_path_buf()), EdgeKind::WorkspaceImport));
+            edges.push((from, NodeId::File(target.to_path_buf()), kind));
             return;
         }
         edges.push((
@@ -99,7 +102,7 @@ fn collect_direct_reexport_edge(
                 file: target.to_path_buf(),
                 symbol: imported.clone(),
             },
-            EdgeKind::WorkspaceImport,
+            kind,
         ));
     } else if !inputs
         .workspace

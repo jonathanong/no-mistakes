@@ -22,13 +22,14 @@ registries must each expose the selected sources.
 `sourceGlobs` uses repository-relative paths and, for project-scoped rules,
 project-relative paths. Every pattern must match at least one file after the
 application's common `include` and `exclude` filters. `entrypoints` are literal
-repository-relative file paths and must exist in the analyzed file set.
+repository-relative file paths or absolute paths within the repository, and must exist in the
+analyzed file set.
 
 Reachability follows runtime value edges only: static imports, runtime dynamic
-imports, `require()` calls, local workspace-package imports, and named or star
-re-exports. Type-only imports and re-exports do not satisfy the rule. When set,
-`maxDepth` limits dependency hops from each entrypoint; a direct import is depth
-1. Omitting it allows transitive traversal at any depth.
+imports, `require()` calls, local workspace-package imports, non-code asset imports, and named or
+star re-exports. Type-only imports, type-only re-exports, and `require.resolve()` lookups do not
+satisfy the rule. When set, `maxDepth` limits dependency hops from each entrypoint; a direct import
+is depth 1. Omitting it allows transitive traversal at any depth.
 
 Counterexample: a worker module matches `workers/**/*.ts`, but no configured
 worker-registration entrypoint imports or re-exports it. A type-only import of
