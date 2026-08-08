@@ -84,6 +84,7 @@ include!("extra_gitignore_pass3.rs");
 include!("types.rs");
 include!("vitest_setup.rs");
 
+mod edge_kind_semantics;
 mod finalization;
 mod selector_fact_plan;
 mod selector_optimization;
