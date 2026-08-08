@@ -27,7 +27,11 @@ fn application(options: &str) -> RuleDef {
     }
 }
 
-fn run(mut rules: Vec<RuleDef>) -> Vec<RuleFinding> {
+fn run(rules: Vec<RuleDef>) -> Vec<RuleFinding> {
+    try_run(rules).unwrap()
+}
+
+fn try_run(mut rules: Vec<RuleDef>) -> Result<Vec<RuleFinding>> {
     let root = fixture();
     let files = crate::codebase::dependencies::graph::GraphFiles::discover(&root)
         .all()
@@ -48,7 +52,7 @@ fn run(mut rules: Vec<RuleDef>) -> Vec<RuleFinding> {
     .unwrap();
     let mut config = NoMistakesConfig::default();
     config.rules.append(&mut rules);
-    check_with_graph(&root, &config, &files, &graph).unwrap()
+    check_with_graph(&root, &config, &files, &graph)
 }
 
 #[test]
@@ -131,6 +135,37 @@ entrypoints: [entrypoints/missing.ts]
             "required-entrypoint-reachability: sourceGlobs pattern `sources/no-match-a.ts` matched no files",
             "required-entrypoint-reachability: sourceGlobs pattern `sources/no-match-b.ts` matched no files",
         ]
+    );
+}
+
+#[test]
+fn accepts_an_absolute_entrypoint_inside_the_repository() {
+    let entrypoint = fixture().join("entrypoints/api.ts");
+    let findings = run(vec![application(&format!(
+        r#"
+sourceGlobs: [sources/static.ts]
+entrypoints: ["{}"]
+"#,
+        entrypoint.display()
+    ))]);
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn rejects_an_invalid_common_include_pattern() {
+    let mut rule = application(
+        r#"
+sourceGlobs: [sources/static.ts]
+entrypoints: [entrypoints/api.ts]
+"#,
+    );
+    rule.include = vec!["[".to_string()];
+
+    let error = try_run(vec![rule]).unwrap_err();
+    assert!(
+        error.to_string().contains("include contains invalid glob"),
+        "unexpected error: {error:#}"
     );
 }
 
