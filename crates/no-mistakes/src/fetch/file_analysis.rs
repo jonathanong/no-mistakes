@@ -55,6 +55,7 @@ pub(crate) fn analyze_file_from_visible(
 }
 
 pub(crate) struct VisibleFileAnalysis<'a> {
+    pub session: &'a crate::codebase::analysis_session::AnalysisSession,
     pub root: &'a Path,
     pub visited: &'a mut HashSet<(PathBuf, bool, bool)>,
     pub fetches: &'a mut Vec<FetchOccurrence>,
@@ -69,6 +70,7 @@ pub(crate) fn analyze_file_from_visible_with_facts(
     context: &mut VisibleFileAnalysis<'_>,
 ) -> Result<bool> {
     let VisibleFileAnalysis {
+        session,
         root,
         visited,
         fetches,
@@ -94,7 +96,13 @@ pub(crate) fn analyze_file_from_visible_with_facts(
         return Ok(cached_fetches.is_client);
     }
 
-    let facts = parsed_files.load(&abs_path, root, &mut cache.imports, visible_files)?;
+    let facts = parsed_files.load_with_session(
+        session,
+        &abs_path,
+        root,
+        &mut cache.imports,
+        visible_files,
+    )?;
     let is_client = !inherited_is_route_handler
         && !facts.has_use_server_directive
         && (inherited_is_client || facts.has_use_client_directive);
@@ -112,6 +120,7 @@ pub(crate) fn analyze_file_from_visible_with_facts(
             &import,
             (is_client, inherited_is_route_handler),
             &mut VisibleFileAnalysis {
+                session,
                 root,
                 visited,
                 fetches: &mut file_fetches,

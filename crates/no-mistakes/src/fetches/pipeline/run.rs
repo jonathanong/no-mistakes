@@ -12,6 +12,17 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(
+        no_mistakes::diagnostics::current(),
+    );
+    run_with_base_root_and_session(base_root, cli, &session)
+}
+
+pub(crate) fn run_with_base_root_and_session(
+    base_root: &Path,
+    cli: &Cli,
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
+) -> Result<FinalReport> {
     let requested_root = base_root.join(&cli.root);
     let root = requested_root
         .canonicalize()
@@ -20,13 +31,9 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
         anyhow::bail!("root directory does not exist: {}", root.display());
     }
 
-    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let snapshot = session.visible_paths(&root);
     let visible_paths = snapshot.paths_for(&root);
-    let v2 = no_mistakes::config::v2::load_v2_config_from_visible(
-        &root,
-        cli.config.as_deref(),
-        &visible_paths,
-    )?;
+    let v2 = session.config(&root, cli.config.as_deref())?;
     // Falls back to a single `<root>/app` app when nothing is configured or
     // inferable, matching the pre-existing zero-signal default; a genuinely
     // ambiguous multi-app repository with no binding still errors (see
@@ -64,12 +71,15 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
 
         let (app_reports, app_matched_targets) = analyze_routes(
             all_routes,
-            &target_specs,
-            &frontend_root,
-            &root,
-            &mut cache,
-            &mut parsed_files,
-            &visible_files,
+            AnalyzeRoutesContext {
+                target_specs: &target_specs,
+                frontend_root: &frontend_root,
+                root: &root,
+                cache: &mut cache,
+                session: &session,
+                parsed_files: &mut parsed_files,
+                visible_files: &visible_files,
+            },
         )?;
         reports.extend(app_reports);
         matched_targets.extend(app_matched_targets);
@@ -99,15 +109,29 @@ fn resolve_targets(base_root: &Path, root: &Path, targets: &[String]) -> Result<
     Ok(target_specs)
 }
 
+struct AnalyzeRoutesContext<'a> {
+    target_specs: &'a [TargetSpec],
+    frontend_root: &'a Path,
+    root: &'a Path,
+    cache: &'a mut Cache,
+    session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
+    parsed_files: &'a mut no_mistakes::fetch::ParsedFileCache,
+    visible_files: &'a HashSet<std::path::PathBuf>,
+}
+
 fn analyze_routes(
     all_routes: Vec<routes::Route>,
-    target_specs: &[TargetSpec],
-    frontend_root: &Path,
-    root: &Path,
-    cache: &mut Cache,
-    parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
-    visible_files: &HashSet<std::path::PathBuf>,
+    context: AnalyzeRoutesContext<'_>,
 ) -> Result<(Vec<RouteReport>, HashSet<String>)> {
+    let AnalyzeRoutesContext {
+        target_specs,
+        frontend_root,
+        root,
+        cache,
+        session,
+        parsed_files,
+        visible_files,
+    } = context;
     let mut reports = Vec::new();
     let mut matched_targets: HashSet<String> = HashSet::new();
 
@@ -127,6 +151,7 @@ fn analyze_routes(
             target_specs,
             &wrapper_files,
             cache,
+            session,
             parsed_files,
             root,
             visible_files,
@@ -140,14 +165,16 @@ fn analyze_routes(
             continue;
         }
 
-        let fetches = no_mistakes::fetch::collect_route_fetches_from_visible_with_facts(
-            &route,
-            frontend_root,
-            root,
-            cache,
-            parsed_files,
-            visible_files,
-        )?;
+        let fetches =
+            no_mistakes::fetch::collect_route_fetches_from_visible_with_facts_and_session(
+                session,
+                &route,
+                frontend_root,
+                root,
+                cache,
+                parsed_files,
+                visible_files,
+            )?;
 
         reports.push(RouteReport {
             route: route.pattern,

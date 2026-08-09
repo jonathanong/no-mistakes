@@ -1,5 +1,5 @@
 use crate::fetches::cli::Cli;
-use crate::fetches::pipeline::run::run_with_base_root;
+use crate::fetches::pipeline::run::{run_with_base_root, run_with_base_root_and_session};
 use no_mistakes::cli::Format;
 use std::fs;
 use std::path::PathBuf;
@@ -54,6 +54,33 @@ fn target_matching_and_fetch_analysis_parse_each_fixture_file_once() {
     assert_eq!(report.routes[0].api_calls[0].path, "/api/users");
     assert_eq!(counts.len(), 2);
     assert!(counts.values().all(|count| *count == 1), "{counts:?}");
+}
+
+#[test]
+fn prepared_fetch_run_reuses_the_session_for_target_matching_and_traversal() {
+    let root = fixture("nextjs-fetches", "parse-sharing");
+    let cli = Cli {
+        root: PathBuf::from("."),
+        config: None,
+        format: Format::Human,
+        json: false,
+        targets: vec!["app/users.ts".to_string()],
+    };
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(observer));
+
+    let report = run_with_base_root_and_session(&root, &cli, &session).unwrap();
+
+    assert_eq!(report.routes.len(), 1);
+    let work = session.work_snapshot();
+    assert!(
+        work.source_reads.values().all(|count| *count == 1),
+        "source reads must be memoized by the request session: {work:?}"
+    );
+    assert!(
+        work.parse_attempts.values().all(|count| *count == 1),
+        "target matching and traversal must share parsed facts: {work:?}"
+    );
 }
 
 #[test]

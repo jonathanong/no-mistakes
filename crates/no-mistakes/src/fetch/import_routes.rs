@@ -38,6 +38,30 @@ pub fn route_reaches_target_from_visible_with_facts(
     parsed_files: &mut ParsedFileCache,
     visible_files: &HashSet<PathBuf>,
 ) -> Result<bool> {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    route_reaches_target_from_visible_with_facts_and_session(
+        &session,
+        path,
+        target,
+        root,
+        visited,
+        import_cache,
+        parsed_files,
+        visible_files,
+    )
+}
+
+#[doc(hidden)]
+pub fn route_reaches_target_from_visible_with_facts_and_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    path: &Path,
+    target: &Path,
+    root: &Path,
+    visited: &mut HashSet<PathBuf>,
+    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+    parsed_files: &mut ParsedFileCache,
+    visible_files: &HashSet<PathBuf>,
+) -> Result<bool> {
     let abs_target = crate::codebase::ts_resolver::normalize_path(target);
     route_reaches_target_with_facts_inner(
         path,
@@ -45,6 +69,7 @@ pub fn route_reaches_target_from_visible_with_facts(
         root,
         visited,
         import_cache,
+        session,
         parsed_files,
         visible_files,
     )
@@ -56,6 +81,7 @@ fn route_reaches_target_with_facts_inner(
     root: &Path,
     visited: &mut HashSet<PathBuf>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     parsed_files: &mut ParsedFileCache,
     visible_files: &HashSet<PathBuf>,
 ) -> Result<bool> {
@@ -67,7 +93,8 @@ fn route_reaches_target_with_facts_inner(
         return Ok(false);
     }
 
-    let facts = parsed_files.load(&abs_path, root, import_cache, visible_files)?;
+    let facts =
+        parsed_files.load_with_session(session, &abs_path, root, import_cache, visible_files)?;
     for import in facts.imports {
         if route_reaches_target_with_facts_inner(
             &import,
@@ -75,6 +102,7 @@ fn route_reaches_target_with_facts_inner(
             root,
             visited,
             import_cache,
+            session,
             parsed_files,
             visible_files,
         )? {

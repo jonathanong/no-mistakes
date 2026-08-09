@@ -9,6 +9,7 @@ pub(crate) fn check_route_matches(
     target_specs: &[TargetSpec],
     wrapper_files: &[PathBuf],
     cache: &mut Cache,
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
     root: &Path,
     visible_files: &HashSet<PathBuf>,
@@ -33,6 +34,7 @@ pub(crate) fn check_route_matches(
                 target_file,
                 root,
                 cache,
+                session,
                 parsed_files,
                 visible_files,
             )?;
@@ -54,6 +56,7 @@ pub(crate) fn check_route_matches(
                     target_file,
                     root,
                     cache,
+                    session,
                     parsed_files,
                     visible_files,
                 )?;
@@ -79,11 +82,13 @@ fn reaches_target(
     target_file: &Path,
     root: &Path,
     cache: &mut Cache,
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
     visible_files: &HashSet<PathBuf>,
 ) -> Result<bool> {
     let mut visited_targets = HashSet::new();
-    no_mistakes::fetch::route_reaches_target_from_visible_with_facts(
+    no_mistakes::fetch::route_reaches_target_from_visible_with_facts_and_session(
+        session,
         source_file,
         target_file,
         root,
