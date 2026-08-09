@@ -1,5 +1,6 @@
 use no_mistakes::codebase::{rules, unique_exports};
 use no_mistakes::playwright::rules as playwright_rules;
+use std::collections::{BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
 
 fn repo_root() -> PathBuf {
@@ -10,74 +11,136 @@ fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|err| panic!("{}: {err}", path.display()))
 }
 
-fn joined_docs(dir: &Path) -> String {
-    let mut body = String::new();
-    let mut paths = std::fs::read_dir(dir)
-        .unwrap()
-        .map(|entry| entry.unwrap().path())
-        .collect::<Vec<_>>();
-    paths.sort();
-    for path in paths {
-        if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
-            body.push_str(&read(&path));
-            body.push('\n');
-        }
-    }
-    body
-}
-
 #[test]
-fn cli_leaf_commands_have_docs() {
+fn cli_commands_have_docs() {
     let root = repo_root();
-    let cli_docs = joined_docs(&root.join("docs/cli"));
-    let commands = [
-        "dependencies",
-        "dependents",
-        "related",
-        "symbols",
-        "importers",
-        "exports-of",
-        "dead-exports",
-        "call-sites",
-        "resolve-check",
-        "fetches",
-        "flow",
-        "check",
-        "tests-plan",
-        "tests-targets",
-        "tests-impact",
-        "tests-why",
-        "tests-comment",
-        "tests-graph",
-        "playwright-check",
-        "playwright-edges",
-        "playwright-related",
-        "playwright-tests",
-        "react-analyze",
-        "react-check",
-        "react-usages",
-        "queues-edges",
-        "queues-related",
-        "queues-check",
-        "server-routes",
-        "server-edges",
-        "server-related",
-        "server-contracts",
-        "ci-impact",
-        "ci-env",
-        "ci-topology",
-        "impacted-checks",
-        "infra-resource-refs",
-        "infra-outputs",
-        "infra-test-for",
-        "swift-importers",
-        "swift-test-targets",
-    ];
+    let source = read(&root.join("crates/no-mistakes/src/main.rs"));
+    let index = read(&root.join("docs/cli/README.md"));
+    let command_block = source
+        .split_once("enum Command {")
+        .and_then(|(_, rest)| rest.split_once("\n}\n"))
+        .map(|(block, _)| block)
+        .expect("main.rs must define a closed Command enum");
+    assert!(
+        !command_block.lines().any(|line| line.contains("name =")),
+        "a clap command name override needs an explicit docs-coverage mapping"
+    );
+
+    let commands = command_block
+        .lines()
+        .filter_map(|line| {
+            let name = line.trim().split_once('(')?.0;
+            if name.is_empty() || name.starts_with('#') || name.starts_with("///") {
+                return None;
+            }
+            Some(kebab_case(name))
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        !commands.is_empty(),
+        "Command enum inventory must not be empty"
+    );
+
     for command in commands {
         let file = format!("{command}.md");
         let path = root.join("docs/cli").join(&file);
         assert!(path.exists(), "missing CLI doc {}", path.display());
-        assert!(cli_docs.contains(&file), "docs/cli/*.md must link {file}");
+        assert!(
+            index.contains(&format!("({file})")),
+            "docs/cli/README.md must index {file}"
+        );
+    }
+
+    // Every leaf page must be reachable from the CLI index or its command
+    // group page. Follow only links rooted under docs/cli so an orphan page
+    // cannot make itself appear reachable by containing its own filename.
+    let cli_dir = root.join("docs/cli");
+    let linked_pages = reachable_cli_pages(&cli_dir);
+    for entry in std::fs::read_dir(root.join("docs/cli")).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().and_then(|ext| ext.to_str()) != Some("md")
+            || path.file_name().and_then(|name| name.to_str()) == Some("README.md")
+        {
+            continue;
+        }
+        let file = path.file_name().unwrap().to_string_lossy();
+        assert!(
+            linked_pages.contains(file.as_ref()),
+            "CLI page {file} is not linked by a CLI index or command group"
+        );
+    }
+}
+
+fn reachable_cli_pages(cli_dir: &Path) -> BTreeSet<String> {
+    let cli_dir = cli_dir.canonicalize().unwrap();
+    let mut seen = BTreeSet::new();
+    let mut pending = VecDeque::from([cli_dir.join("README.md")]);
+    while let Some(path) = pending.pop_front() {
+        let Ok(relative) = path.strip_prefix(&cli_dir) else {
+            continue;
+        };
+        let relative = relative.to_string_lossy().into_owned();
+        if !seen.insert(relative) {
+            continue;
+        }
+        let body = read(&path);
+        let mut remaining = body.as_str();
+        while let Some(start) = remaining.find("](") {
+            remaining = &remaining[start + 2..];
+            let Some(end) = remaining.find(')') else {
+                break;
+            };
+            let target = remaining[..end].split('#').next().unwrap_or_default();
+            remaining = &remaining[end + 1..];
+            if target.is_empty() || target.starts_with("http") {
+                continue;
+            }
+            let target_path = path.parent().unwrap().join(target);
+            if target_path.extension().and_then(|ext| ext.to_str()) != Some("md") {
+                continue;
+            }
+            let Ok(target_path) = target_path.canonicalize() else {
+                continue;
+            };
+            if target_path.starts_with(&cli_dir) {
+                pending.push_back(target_path);
+            }
+        }
+    }
+    seen
+}
+
+fn kebab_case(value: &str) -> String {
+    let mut result = String::new();
+    for (index, character) in value.chars().enumerate() {
+        if character.is_uppercase() && index != 0 {
+            result.push('-');
+        }
+        result.extend(character.to_lowercase());
+    }
+    result
+}
+
+#[test]
+fn node_runtime_exports_have_api_docs() {
+    let root = repo_root();
+    let source = read(&root.join("packages/no-mistakes/index.js"));
+    let docs = read(&root.join("docs/node-api.md"));
+    let exports = source
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("module.exports."))
+        .filter_map(|assignment| assignment.split_once(' ').map(|(name, _)| name))
+        .collect::<Vec<_>>();
+    assert!(
+        !exports.is_empty(),
+        "runtime export inventory must not be empty"
+    );
+    for export in exports {
+        assert!(
+            docs.lines()
+                .any(|line| line.starts_with('|') && line.contains(&format!("`{export}`"))),
+            "docs/node-api.md must map runtime export `{export}`"
+        );
     }
 }
 

@@ -48,6 +48,10 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`resolve-check`](resolve-check.md) | Whether all imports in a file resolve. |
 | [`fetches`](fetches.md) | Next.js routes mapped to static fetch API calls. |
 | [`flow`](flow.md) | Compact dependency/symbol flow around one file or export. |
+| [`data-pw`](data-pw.md) | Find selector-attribute usages of a value across source and tests. |
+| [`effects`](effects.md) | Find configured transitive effect call sites from an entry file. |
+| [`rsc-callers`](rsc-callers.md) | Find server components/pages that import a component. |
+| [`registry-extension`](registry-extension.md) | Summarize how entries register in a registry file. |
 | [`check`](check.md) | Configured project-wide checks. |
 | [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |
 | [`tests`](tests.md) | Test plan, impact, explanation, comments, and graphs. |
@@ -59,6 +63,9 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`impacted-checks`](impacted-checks.md) | Minimal local validation commands for changed files. |
 | [`infra`](infra.md) | Terraform/OpenTofu resource, module, and output relationships. |
 | [`swift`](swift.md) | Swift package importers and covering test targets. |
+
+The [graph reference](graph.md) explains shared options and relationship
+filters used by the graph commands.
 
 ## Shared Output Formats
 

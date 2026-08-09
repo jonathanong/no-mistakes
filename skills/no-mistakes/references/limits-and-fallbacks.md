@@ -4,18 +4,20 @@ These patterns need extra care when using the module-graph tools. When you hit a
 
 ## baseUrl-only imports
 
-`compilerOptions.baseUrl` resolves bare specifiers not listed in `paths`. The tool only reads `paths`, not `baseUrl`.
+`compilerOptions.baseUrl` resolves bare specifiers that are not listed in
+`paths`. The resolver follows that setting, including extension and index-file
+candidates. Prefer `paths` for explicit aliases, especially when an alias is
+shared across workspace packages.
 
 ```json
 {
   "compilerOptions": {
     "baseUrl": "./src"
-    // import 'utils' resolves to './src/utils.ts' via baseUrl — NOT supported
+    // import 'utils' resolves to './src/utils.ts' via baseUrl
   }
 }
 ```
 
-**Workaround:** use `rg 'from .utils.' src/` — these imports still appear as literal strings.
 
 ## Dynamic import()
 
