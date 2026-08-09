@@ -45,7 +45,9 @@ pub(super) fn extract_call_first_string_argument(
     let mut matched = false;
     let mut has_non_static_argument = false;
     for call in &file_facts.call_sites {
-        if call.callee != spec.target {
+        // Optional calls are not guaranteed invocations of the configured
+        // target, but other call-site consumers still need to report them.
+        if call.is_optional || call.callee != spec.target {
             continue;
         }
         matched = true;

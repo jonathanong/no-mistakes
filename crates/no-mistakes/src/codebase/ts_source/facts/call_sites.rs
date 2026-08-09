@@ -10,6 +10,8 @@ use oxc_syntax::scope::ScopeFlags;
 #[derive(Debug, Clone)]
 pub struct CallSiteFact {
     pub callee: String,
+    /// Whether invocation is conditional through an optional call or member chain.
+    pub is_optional: bool,
     pub line: u32,
     pub caller: Option<String>,
     pub static_arg_source: Option<String>,
@@ -34,16 +36,10 @@ struct CallSiteVisitor<'a> {
     sites: Vec<CallSiteFact>,
 }
 
-fn callee_name(call: &CallExpression<'_>) -> Option<String> {
-    // Optional calls are not guaranteed invocations of the configured target.
-    // Keep finite-set extraction deterministic by recording only direct calls.
-    if call.optional {
-        return None;
-    }
-    let callee = &call.callee;
+fn callee_name(callee: &Expression<'_>) -> Option<String> {
     match callee {
         Expression::Identifier(identifier) => Some(identifier.name.to_string()),
-        Expression::StaticMemberExpression(member) if !member.optional => match &member.object {
+        Expression::StaticMemberExpression(member) => match &member.object {
             Expression::Identifier(object) => Some(format!(
                 "{}.{}",
                 object.name.as_str(),
@@ -96,9 +92,15 @@ impl<'a> Visit<'a> for CallSiteVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Some(callee) = callee_name(call) {
+        if let Some(callee) = callee_name(&call.callee) {
+            let is_optional = call.optional
+                || matches!(
+                    &call.callee,
+                    Expression::StaticMemberExpression(member) if member.optional
+                );
             self.sites.push(CallSiteFact {
                 callee,
+                is_optional,
                 line: byte_offset_to_line(self.source, call.span.start as usize),
                 caller: self.scope.last().cloned(),
                 static_arg_source: static_first_string_arg_source(call, self.source),
