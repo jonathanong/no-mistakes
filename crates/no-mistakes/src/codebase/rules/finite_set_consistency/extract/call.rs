@@ -49,8 +49,12 @@ pub(super) fn extract_call_first_string_argument(
             continue;
         }
         matched = true;
-        if let Some(value) = &call.static_arg {
-            values.insert(value.clone());
+        if let Some(value) = call
+            .static_arg_source
+            .as_deref()
+            .and_then(super::super::ts_array::quoted_string_literal)
+        {
+            values.insert(value);
         } else {
             has_non_static_argument = true;
         }

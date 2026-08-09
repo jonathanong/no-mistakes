@@ -1,6 +1,7 @@
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::{Argument, CallExpression, Expression, Function, Program};
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
 
 /// A direct identifier or one-level static member call recorded during the
@@ -11,7 +12,7 @@ pub struct CallSiteFact {
     pub callee: String,
     pub line: u32,
     pub caller: Option<String>,
-    pub static_arg: Option<String>,
+    pub static_arg_source: Option<String>,
     pub arg_count: usize,
     pub has_spread: bool,
     pub args: Vec<&'static str>,
@@ -48,23 +49,13 @@ fn callee_name(callee: &Expression<'_>) -> Option<String> {
     }
 }
 
-fn static_first_string_arg(call: &CallExpression<'_>) -> Option<String> {
-    match call.arguments.first()? {
-        Argument::StringLiteral(string) => Some(string.value.to_string()),
-        Argument::TemplateLiteral(template) if template.expressions.is_empty() => Some(
-            template
-                .quasis
-                .iter()
-                .map(|quasi| {
-                    quasi
-                        .value
-                        .cooked
-                        .as_ref()
-                        .unwrap_or(&quasi.value.raw)
-                        .as_str()
-                })
-                .collect(),
-        ),
+fn static_first_string_arg_source(call: &CallExpression<'_>, source: &str) -> Option<String> {
+    let argument = call.arguments.first()?;
+    match argument {
+        Argument::StringLiteral(_) => Some(crate::ast::span_text(source, argument.span()).into()),
+        Argument::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(crate::ast::span_text(source, argument.span()).into())
+        }
         _ => None,
     }
 }
@@ -104,7 +95,7 @@ impl<'a> Visit<'a> for CallSiteVisitor<'a> {
                 callee,
                 line: byte_offset_to_line(self.source, call.span.start as usize),
                 caller: self.scope.last().cloned(),
-                static_arg: static_first_string_arg(call),
+                static_arg_source: static_first_string_arg_source(call, self.source),
                 arg_count: call.arguments.len(),
                 has_spread: call
                     .arguments

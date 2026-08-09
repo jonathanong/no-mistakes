@@ -215,6 +215,14 @@ fn call_first_string_arguments_exclude_synthetic_method_edges() {
 }
 
 #[test]
+fn call_first_string_arguments_normalize_escapes_like_registry_literals() {
+    let findings =
+        check_call_literal_fixture("escaped-literals", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn call_first_string_arguments_fail_closed_for_non_literal_arguments() {
     let findings =
         check_call_literal_fixture("non-literal", "ai_agents.upsertJobScheduler").unwrap();
