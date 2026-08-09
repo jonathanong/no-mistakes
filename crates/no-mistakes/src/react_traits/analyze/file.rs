@@ -117,6 +117,7 @@ fn analyze_program_inner(
                     file: f.file.clone(),
                     exported_name: f.cached_function.clone(),
                     shape: Some(format!("{} {}", f.method, f.path)),
+                    line: f.line,
                 })
                 .collect();
 

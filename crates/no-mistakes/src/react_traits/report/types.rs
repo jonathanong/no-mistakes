@@ -37,6 +37,10 @@ pub struct FetchCall {
     pub file: String,
     pub exported_name: Option<String>,
     pub shape: Option<String>,
+    /// Source location retained for check suppression. It is intentionally not
+    /// part of the public analyze report, preserving that report's schema.
+    #[serde(skip)]
+    pub line: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +116,10 @@ pub struct Violation {
     pub file: String,
     pub rule: String,
     pub detail: Option<String>,
+    /// Internal location for the aggregate check suppression adapter. Direct
+    /// React check output remains byte-for-byte compatible.
+    #[serde(skip)]
+    pub line: Option<usize>,
 }
 
 #[derive(Default, Deserialize)]

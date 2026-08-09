@@ -82,4 +82,9 @@ export { handler as GET };
 ```
 
 Top-of-file opt-outs use `no-mistakes-disable-file`. Line suppressions require
-rules to report line numbers.
+rules to report line numbers. `no-mistakes check --include-suppressed` is an
+opt-in audit view: it adds a deterministic `suppressed` array containing the
+domain, rule ID, finding location/reason, and matching directive kind/line.
+Unknown rule IDs, malformed directives, and unused directives are ignored;
+they never hide a finding. File directives apply even when a finding has no
+line, while line and next-line directives require an exact finding location.

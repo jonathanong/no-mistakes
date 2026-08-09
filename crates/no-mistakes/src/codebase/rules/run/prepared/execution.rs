@@ -22,6 +22,7 @@ pub(super) fn run(
         prepared_tsconfig_catalog,
         inferred_roots,
         sources,
+        defer_suppression,
     } = inputs;
     if !any_codebase_rule_enabled(config) {
         return Ok(Vec::new());
@@ -167,7 +168,9 @@ pub(super) fn run(
         inferred_roots,
     );
     findings.extend(graph_findings?);
-    suppress_findings(root, &mut findings, sources);
+    if !defer_suppression {
+        suppress_findings(root, &mut findings, sources);
+    }
     sort_findings(&mut findings);
     Ok(findings)
 }

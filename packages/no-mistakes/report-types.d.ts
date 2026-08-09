@@ -30,6 +30,20 @@ export interface CheckReport {
   codebase: unknown[];
   warnings: string[];
   advisories: unknown[];
+  /** Present only when `includeSuppressed` is requested and directives matched. */
+  suppressed?: SuppressedFinding[];
+}
+
+export interface SuppressedFinding {
+  domain: "react" | "queues" | "rules" | "integration" | "codebase";
+  rule: string;
+  file: string;
+  line?: number;
+  reason: string;
+  directive: {
+    kind: "file" | "line" | "nextLine";
+    line: number;
+  };
 }
 
 export interface QueueReport {

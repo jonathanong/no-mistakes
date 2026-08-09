@@ -104,6 +104,7 @@ impl SharedCheckContext {
                     .prepared
                     .tsconfig_gate_project_inputs
                     .as_ref(),
+                defer_suppression: false,
             });
         let completed = crate::check_runner::complete_domain_checks((
             react,
@@ -149,6 +150,7 @@ impl SharedCheckContext {
             codebase: completed.codebase.findings,
             warnings,
             advisories,
+            suppressed: Vec::new(),
         })
     }
 }

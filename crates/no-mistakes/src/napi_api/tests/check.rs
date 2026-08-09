@@ -46,6 +46,32 @@ fn check_json_returns_global_check_report() {
 }
 
 #[test]
+fn check_json_optionally_accounts_for_suppressed_ordinary_rule_findings() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-accounting");
+    let baseline = check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let baseline: serde_json::Value = serde_json::from_str(&baseline).unwrap();
+    assert!(baseline.get("suppressed").is_none());
+    assert!(baseline["codebase"].as_array().is_some_and(Vec::is_empty));
+
+    let audit = check_json_impl(
+        json!({
+            "root": root,
+            "includeSuppressed": true,
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let audit: serde_json::Value = serde_json::from_str(&audit).unwrap();
+    assert_eq!(audit["codebase"], json!([]));
+    assert_eq!(audit["suppressed"][0]["domain"], "codebase");
+    assert_eq!(audit["suppressed"][0]["rule"], "unique-exports");
+    assert_eq!(audit["suppressed"][0]["line"], 2);
+    assert_eq!(audit["suppressed"][0]["directive"]["kind"], "nextLine");
+    assert_eq!(audit["suppressed"][0]["directive"]["line"], 1);
+}
+
+#[test]
 fn check_json_returns_warnings_for_skipped_configured_check() {
     let options = json!({
         "root": fixture_root("test-no-unmocked-dynamic-imports-unknown-vitest-project"),

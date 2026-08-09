@@ -39,10 +39,11 @@ pub(crate) fn fetches_json_impl(options_json: String) -> napi::Result<String> {
 pub(crate) fn check_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<ProjectOptions>(&options_json)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let results = crate::check_runner::run_all(
+    let results = crate::check_runner::run_all_with_suppressed(
         root,
         options.config.map(PathBuf::from),
         options.tsconfig.map(PathBuf::from),
+        options.include_suppressed,
     )
     .map_err(to_napi_error)?;
     to_pretty_json(&crate::check_runner::json_value(&results))

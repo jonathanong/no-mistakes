@@ -101,6 +101,7 @@ pub(super) fn run_check(
         prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
         inferred_roots: Some(&inferred_roots),
         sources: Some(&sources),
+        defer_suppression: false,
     })
 }
 

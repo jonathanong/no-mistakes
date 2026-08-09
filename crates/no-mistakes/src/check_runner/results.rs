@@ -18,6 +18,7 @@ pub(crate) struct FinalizeInput<'a> {
     pub(crate) discover_duration: Duration,
     pub(crate) facts_duration: Duration,
     pub(crate) completed: CompletedDomainChecks,
+    pub(crate) include_suppressed: bool,
 }
 
 pub(crate) struct CheckResults {
@@ -28,6 +29,7 @@ pub(crate) struct CheckResults {
     pub(crate) codebase: Vec<UniqueExportFinding>,
     pub(crate) warnings: Vec<String>,
     pub(crate) advisories: Vec<RuleFinding>,
+    pub(crate) suppressed: Vec<no_mistakes::codebase::rules::SuppressedFinding>,
     pub(crate) timings: Vec<(&'static str, Duration)>,
 }
 
@@ -63,12 +65,13 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         discover_duration,
         facts_duration,
         completed,
+        include_suppressed,
     } = input;
-    let react = completed.react;
-    let queues = completed.queues;
+    let mut react = completed.react;
+    let mut queues = completed.queues;
     let mut rules = completed.rules;
-    let integration = completed.integration;
-    let codebase = completed.codebase;
+    let mut integration = completed.integration;
+    let mut codebase = completed.codebase;
     let filesystem_rules = completed.filesystem_rules;
     let warnings = [
         react_warning,
@@ -83,6 +86,82 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .flatten()
     .collect();
     rules.findings.extend(filesystem_rules.findings);
+    let mut suppressed = Vec::new();
+    suppressed.extend(
+        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
+            root,
+            &mut react.findings,
+            sources,
+            |finding| no_mistakes::codebase::rules::SuppressionTarget {
+                domain: "react",
+                rule: &finding.rule,
+                file: &finding.file,
+                line: finding.line,
+                reason: finding
+                    .detail
+                    .as_deref()
+                    .unwrap_or("component fetch assertion failed"),
+            },
+        ),
+    );
+    suppressed.extend(
+        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
+            root,
+            &mut queues.findings,
+            sources,
+            |finding| no_mistakes::codebase::rules::SuppressionTarget {
+                domain: "queues",
+                rule: "queues-check",
+                file: &finding.file,
+                line: Some(finding.line),
+                reason: &finding.message,
+            },
+        ),
+    );
+    suppressed.extend(
+        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
+            root,
+            &mut rules.findings,
+            sources,
+            |finding| no_mistakes::codebase::rules::SuppressionTarget {
+                domain: "rules",
+                rule: &finding.rule,
+                file: &finding.file,
+                line: Some(finding.line),
+                reason: &finding.message,
+            },
+        ),
+    );
+    suppressed.extend(
+        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
+            root,
+            &mut integration.findings,
+            sources,
+            |finding| no_mistakes::codebase::rules::SuppressionTarget {
+                domain: "integration",
+                rule: "integration-test-no-mocks",
+                file: &finding.file,
+                line: Some(finding.line as usize),
+                reason: &finding.message,
+            },
+        ),
+    );
+    suppressed.extend(
+        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
+            root,
+            &mut codebase.findings,
+            sources,
+            |finding| no_mistakes::codebase::rules::SuppressionTarget {
+                domain: "codebase",
+                rule: &finding.rule,
+                file: &finding.file,
+                line: Some(finding.line as usize),
+                reason: &finding.message,
+            },
+        ),
+    );
+    suppressed.sort();
+    suppressed.dedup();
     let advisories = if filesystem_rules_enabled {
         no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_and_sources(
             root,
@@ -111,6 +190,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         codebase: codebase.findings,
         warnings,
         advisories,
+        suppressed: include_suppressed.then_some(suppressed).unwrap_or_default(),
     })
 }
 
@@ -124,6 +204,7 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         codebase: Vec::new(),
         warnings,
         advisories: Vec::new(),
+        suppressed: Vec::new(),
         timings: vec![
             ("discover", Duration::ZERO),
             ("parse_extract", Duration::ZERO),
@@ -146,6 +227,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         codebase,
         warnings,
         advisories,
+        suppressed,
         timings,
     } = results;
     let _ = timings;
@@ -158,6 +240,10 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         "warnings": warnings,
         "advisories": advisories,
     });
+    if !suppressed.is_empty() {
+        value["suppressed"] = serde_json::to_value(suppressed)
+            .expect("suppression accounting serialization never fails");
+    }
     // Dependency feature unification can switch serde_json maps from sorted
     // storage to insertion-ordered storage. Keep the public report stable in
     // either configuration, including keys in nested finding objects.

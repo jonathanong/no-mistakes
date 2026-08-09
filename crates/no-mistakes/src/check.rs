@@ -29,6 +29,10 @@ pub(crate) struct CheckArgs {
     /// Shorthand for --format json.
     #[arg(long, global = true, conflicts_with = "format")]
     json: bool,
+    /// Include deterministic accounting for findings hidden by no-mistakes
+    /// suppression directives. Disabled by default to preserve existing output.
+    #[arg(long, global = true)]
+    include_suppressed: bool,
     /// Legacy programmatic timing switch. CLI timing flags are root-global.
     #[arg(skip)]
     timings: bool,
@@ -48,7 +52,12 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     );
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &cwd);
-    let results = check_runner::run_all(root, args.config, args.tsconfig)?;
+    let results = check_runner::run_all_with_suppressed(
+        root,
+        args.config,
+        args.tsconfig,
+        args.include_suppressed,
+    )?;
     record_missing_check_timings(&results);
     no_mistakes::invocation::commit_timeout()?;
     for warning in &results.warnings {

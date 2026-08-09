@@ -8,10 +8,20 @@ use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured};
 use std::path::PathBuf;
 
+#[allow(dead_code)]
 pub(crate) fn run_all(
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,
+) -> Result<CheckResults> {
+    run_all_with_suppressed(root, config_path, tsconfig_path, false)
+}
+
+pub(crate) fn run_all_with_suppressed(
+    root: PathBuf,
+    config_path: Option<PathBuf>,
+    tsconfig_path: Option<PathBuf>,
+    include_suppressed: bool,
 ) -> Result<CheckResults> {
     let root = root.canonicalize().unwrap_or(root);
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(
@@ -165,6 +175,7 @@ pub(crate) fn run_all(
             vitest_projects: prepared.vitest_projects.as_ref(),
             workflow_documents: prepared.workflow_documents.as_deref(),
             tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
+            defer_suppression: true,
         });
     no_mistakes::invocation::check_timeout()?;
     results::finalize_domain_checks(results::FinalizeInput {
@@ -184,5 +195,6 @@ pub(crate) fn run_all(
             codebase,
             filesystem_rules,
         ))?,
+        include_suppressed,
     })
 }

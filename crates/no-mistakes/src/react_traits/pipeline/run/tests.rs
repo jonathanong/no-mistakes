@@ -149,6 +149,7 @@ fn aggregate_children_skips_repeated_refs_and_unreadable_children() {
         file: child.file.clone(),
         exported_name: None,
         shape: None,
+        line: 1,
     });
     let mut cache = HashMap::from([(root.join("app/components/Child.tsx"), vec![child])]);
     let agg = aggregate_children(&parent, &mut cache, &root, &mut HashSet::new());

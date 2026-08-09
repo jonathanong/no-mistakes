@@ -52,6 +52,7 @@ pub(crate) struct DomainCheckInputs<'a> {
         Option<&'a no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>,
     pub(crate) tsconfig_gate_project_inputs:
         Option<&'a no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
+    pub(crate) defer_suppression: bool,
 }
 
 pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
@@ -82,6 +83,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let vitest_projects = inputs.vitest_projects;
     let workflow_documents = inputs.workflow_documents;
     let tsconfig_gate_project_inputs = inputs.tsconfig_gate_project_inputs;
+    let defer_suppression = inputs.defer_suppression;
 
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
@@ -122,6 +124,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 prepared_tsconfig_catalog,
                                 inferred_roots: Some(inferred_roots),
                                 sources: Some(&rule_sources),
+                                defer_suppression,
                             },
                             dependency_graph.as_deref(),
                         )

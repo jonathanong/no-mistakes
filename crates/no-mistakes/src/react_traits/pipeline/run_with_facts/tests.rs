@@ -75,6 +75,7 @@ fn run_analyze_inner_with_facts_uses_root_matches_and_cached_children() {
         file: child.file.clone(),
         exported_name: None,
         shape: None,
+        line: 1,
     });
     let shared = facts(vec![(parent_path, vec![parent]), (child_path, vec![child])]);
     let file_config = FileConfig {

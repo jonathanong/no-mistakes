@@ -31,6 +31,9 @@ pub struct PreparedRulesCheck<'a> {
     pub prepared_tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+    /// Aggregate `check` defers suppression until every domain can share one
+    /// SourceStore-aware adapter and produce optional accounting.
+    pub defer_suppression: bool,
 }
 
 /// Shared-config entry point used by the aggregate `check` command.
