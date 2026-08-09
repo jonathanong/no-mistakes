@@ -128,16 +128,15 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let sources = snapshot.source_store_for(&root);
-    let function_call_files =
-        finite_set_consistency::required_function_call_fact_files(&root, config);
-    let facts = (!function_call_files.is_empty()).then(|| {
+    let call_site_files = finite_set_consistency::required_call_site_fact_files(&root, config);
+    let facts = (!call_site_files.is_empty()).then(|| {
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             &root,
-            function_call_files,
+            call_site_files,
             Vec::new(),
             crate::codebase::check_facts::CheckFactPlan {
                 graph: crate::codebase::ts_source::facts::TsFactPlan {
-                    function_calls: true,
+                    call_sites: true,
                     ..Default::default()
                 },
                 ..Default::default()

@@ -100,7 +100,7 @@ pub(crate) fn check_with_files_sources_and_facts(
 /// Request boundaries use this before collection so the finite-set rule can
 /// borrow the shared fact map instead of parsing its configured files itself.
 #[doc(hidden)]
-pub fn required_function_call_fact_files(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+pub fn required_call_site_fact_files(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
     let mut paths = config
         .rule_applications(RULE_ID)
         .into_iter()

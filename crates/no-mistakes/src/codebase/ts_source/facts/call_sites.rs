@@ -3,13 +3,15 @@ use oxc_ast::ast::{Argument, CallExpression, Expression, Function, Program};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 
-/// A direct identifier call recorded during the shared TypeScript fact pass.
-/// Query consumers select the relevant callee names without reparsing callers.
+/// A direct identifier or one-level static member call recorded during the
+/// shared TypeScript fact pass. Query consumers select the relevant callee
+/// names without reparsing callers.
 #[derive(Debug, Clone)]
 pub struct CallSiteFact {
     pub callee: String,
     pub line: u32,
     pub caller: Option<String>,
+    pub static_arg: Option<String>,
     pub arg_count: usize,
     pub has_spread: bool,
     pub args: Vec<&'static str>,
@@ -31,9 +33,38 @@ struct CallSiteVisitor<'a> {
     sites: Vec<CallSiteFact>,
 }
 
-fn callee_name<'a>(callee: &'a Expression<'a>) -> Option<&'a str> {
+fn callee_name(callee: &Expression<'_>) -> Option<String> {
     match callee {
-        Expression::Identifier(identifier) => Some(identifier.name.as_str()),
+        Expression::Identifier(identifier) => Some(identifier.name.to_string()),
+        Expression::StaticMemberExpression(member) => match &member.object {
+            Expression::Identifier(object) => Some(format!(
+                "{}.{}",
+                object.name.as_str(),
+                member.property.name.as_str()
+            )),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+fn static_first_string_arg(call: &CallExpression<'_>) -> Option<String> {
+    match call.arguments.first()? {
+        Argument::StringLiteral(string) => Some(string.value.to_string()),
+        Argument::TemplateLiteral(template) if template.expressions.is_empty() => Some(
+            template
+                .quasis
+                .iter()
+                .map(|quasi| {
+                    quasi
+                        .value
+                        .cooked
+                        .as_ref()
+                        .unwrap_or(&quasi.value.raw)
+                        .as_str()
+                })
+                .collect(),
+        ),
         _ => None,
     }
 }
@@ -70,9 +101,10 @@ impl<'a> Visit<'a> for CallSiteVisitor<'a> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Some(callee) = callee_name(&call.callee) {
             self.sites.push(CallSiteFact {
-                callee: callee.to_string(),
+                callee,
                 line: byte_offset_to_line(self.source, call.span.start as usize),
                 caller: self.scope.last().cloned(),
+                static_arg: static_first_string_arg(call),
                 arg_count: call.arguments.len(),
                 has_spread: call
                     .arguments

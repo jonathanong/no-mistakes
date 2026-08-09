@@ -52,9 +52,10 @@ Supported set kinds are `ts-string-union`, `ts-const-object-keys`,
 call in the configured file. The argument must be a quoted string or an
 expression-free template literal. `target` is an exact syntactic callee name,
 such as `ai_agents.upsertJobScheduler`; identifier and one-level static member
-calls are supported. Calls through aliases, computed or optional properties,
-multi-hop member expressions, interpolated templates, and other dynamic
-expressions are not inferred.
+calls are supported. Calls on local or parameter receivers are included, while
+function and method declarations are not calls and are excluded. Calls through
+aliases, computed or optional properties, multi-hop member expressions,
+interpolated templates, and other dynamic expressions are not inferred.
 
 This extractor is fail-closed: a configured target with no matching calls, or
 a matching call whose first argument is not a static string, produces a

@@ -44,7 +44,7 @@ pub(super) fn extract_call_first_string_argument(
     }
     let mut matched = false;
     let mut has_non_static_argument = false;
-    for call in &file_facts.function_calls {
+    for call in &file_facts.call_sites {
         if call.callee != spec.target {
             continue;
         }
