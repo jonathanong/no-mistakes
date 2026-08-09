@@ -293,7 +293,7 @@ fn import_fact_kinds_map_to_edge_kinds() {
     import.kind = ImportKind::Require;
     assert_eq!(edge_kind_for_import(&import), EdgeKind::Require);
     import.kind = ImportKind::RequireResolve;
-    assert_eq!(edge_kind_for_import(&import), EdgeKind::Require);
+    assert_eq!(edge_kind_for_import(&import), EdgeKind::RequireResolve);
 }
 
 #[test]

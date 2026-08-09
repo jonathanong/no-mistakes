@@ -183,7 +183,7 @@ fn run_check_with_facts_reports_missing_setup_fact_shapes() {
     let test = root.join("tests/setup-good.test.mts");
     let setup = root.join("tests/setup-vitest.mts");
     let mut shared = crate::codebase::check_facts::CheckFactMap {
-        files: vec![test.clone()],
+        files: vec![test.clone(), setup.clone()],
         graph_files: vec![test.clone(), setup.clone()],
         graph_files_complete: true,
         graph_plan: crate::codebase::ts_source::facts::TsFactPlan::imports(),

@@ -48,6 +48,29 @@ fn rule_enabled_accepts_project_rule_without_top_level_options() {
 }
 
 #[test]
+fn full_graph_universe_is_explicit_per_graph_rule() {
+    fn configured(rule: &str) -> crate::config::v2::NoMistakesConfig {
+        let mut config = crate::config::v2::NoMistakesConfig::default();
+        config.rules.push(RuleDef {
+            rule: rule.to_string(),
+            scope: Some(RuleScope::Repository),
+            ..Default::default()
+        });
+        config
+    }
+
+    assert!(!canonical_graph_requires_full_file_universe(&configured(
+        TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    )));
+    assert!(canonical_graph_requires_full_file_universe(&configured(
+        FORBIDDEN_DEPENDENCIES,
+    )));
+    assert!(canonical_graph_requires_full_file_universe(&configured(
+        REQUIRED_ENTRYPOINT_REACHABILITY,
+    )));
+}
+
+#[test]
 fn run_check_returns_empty_when_rule_is_not_enabled() {
     let root = std::path::Path::new("/tmp/no-mistakes-empty-rules");
     let findings = run_check(root, None, None).unwrap();
@@ -359,6 +382,17 @@ fn run_check_surfaces_forbidden_dependencies_tsconfig_error() {
     let missing_tsconfig = root.join("does-not-exist.tsconfig.json");
     let error = run_check(&root, None, Some(&missing_tsconfig)).unwrap_err();
     assert!(format!("{error:#}").contains("does-not-exist.tsconfig.json"));
+}
+
+#[test]
+fn run_check_propagates_forbidden_dependencies_filter_error() {
+    let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let config = root.join("invalid-include.no-mistakes.yml");
+    let error = run_check(&root, Some(&config), Some(&root.join("tsconfig.json"))).unwrap_err();
+    assert!(
+        error.to_string().contains("include contains invalid glob"),
+        "unexpected error: {error:#}"
+    );
 }
 
 #[test]

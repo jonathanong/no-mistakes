@@ -24,6 +24,7 @@ pub use super::require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;
 pub use super::require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;
 pub use super::require_test_per_subdir::RULE_ID as REQUIRE_TEST_PER_SUBDIR;
 pub use super::required_companion_imports::RULE_ID as REQUIRED_COMPANION_IMPORTS;
+pub use super::required_entrypoint_reachability::RULE_ID as REQUIRED_ENTRYPOINT_REACHABILITY;
 pub use super::required_local_docs::REQUIRED_DOC_SECTION_RULE_ID as REQUIRED_DOC_SECTION;
 pub use super::required_local_docs::RULE_ID as REQUIRED_LOCAL_DOCS;
 pub use super::rust_max_lines_per_file::RULE_ID as RUST_MAX_LINES_PER_FILE;

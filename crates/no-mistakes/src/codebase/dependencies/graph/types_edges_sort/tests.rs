@@ -7,6 +7,8 @@ fn public_sort_key_delegates_all_groups_and_non_vitest_detail_is_none() {
     assert_eq!(EdgeKind::HttpCall.sort_key(), (15, 0));
     assert_eq!(EdgeKind::SwiftImport.sort_key(), (21, 0));
     assert_eq!(EdgeKind::WorkflowJob.sort_key(), (30, 0));
+    assert_eq!(EdgeKind::RequireResolve.sort_key(), (37, 0));
+    assert_eq!(EdgeKind::WorkspaceTypeImport.sort_key(), (38, 0));
     assert_eq!(
         EdgeKind::VitestSetup(VitestSetupField::GlobalSetup).sort_key(),
         (36, 1)

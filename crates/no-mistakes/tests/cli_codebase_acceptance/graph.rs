@@ -16,6 +16,7 @@ fn import_forms_report_expected_edge_kinds() {
         ("import-type.mts", "type-import"),
         ("dynamic.mts", "dynamic-import"),
         ("require.js", "require"),
+        ("require-resolve.js", "require-resolve"),
         ("reexport.mts", "import"),
     ];
 
@@ -38,6 +39,7 @@ fn import_forms_report_expected_edge_kinds() {
             "import-type.mts",
             "inline-type.mts",
             "reexport.mts",
+            "require-resolve.js",
             "require.js",
             "static.mts",
             "type-only.mts",
@@ -48,6 +50,10 @@ fn import_forms_report_expected_edge_kinds() {
         vec!["dynamic-import"]
     );
     assert_eq!(via_kinds(&dependents, "require.js"), vec!["require"]);
+    assert_eq!(
+        via_kinds(&dependents, "require-resolve.js"),
+        vec!["require-resolve"]
+    );
     assert_eq!(
         via_kinds(&dependents, "inline-type.mts"),
         vec!["type-import"]

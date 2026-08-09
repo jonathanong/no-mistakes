@@ -88,6 +88,14 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(!plan.process);
     assert!(!plan.assets);
     assert!(!plan.react);
+
+    let require_resolve_only: HashSet<_> = [EdgeKind::RequireResolve].into();
+    let plan = GraphBuildPlan::from_allowed(Some(&require_resolve_only));
+    assert!(plan.imports);
+    assert!(plan.workspace);
+
+    let workspace_type_only: HashSet<_> = [EdgeKind::WorkspaceTypeImport].into();
+    assert!(GraphBuildPlan::from_allowed(Some(&workspace_type_only)).workspace);
 }
 
 #[test]

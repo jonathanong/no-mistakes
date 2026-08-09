@@ -174,7 +174,9 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         | EdgeKind::DynamicImport
         | EdgeKind::RouteImport
         | EdgeKind::Require
-        | EdgeKind::WorkspaceImport => "dependency",
+        | EdgeKind::RequireResolve
+        | EdgeKind::WorkspaceImport
+        | EdgeKind::WorkspaceTypeImport => "dependency",
         EdgeKind::PackageDependency => "package-json dependency",
         EdgeKind::RouteRef | EdgeKind::RouteTest => "route",
         EdgeKind::Layout => "layout",

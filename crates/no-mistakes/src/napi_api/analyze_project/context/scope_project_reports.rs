@@ -15,20 +15,17 @@ impl PreparedScope {
                 self.react_report(&request.report_type, &parsed)
             }
             "check" => {
-                let dependency_graph = if self
+                let check = self
                     .check
                     .as_ref()
-                    .and_then(SharedCheckContext::graph_plan)
-                    .is_some()
+                    .context("check analysis was not prepared")?;
+                let dependency_graph = if check.graph_plan().is_some()
+                    && self.check_uses_traversal_graph
                 {
                     Some(self.traversal.canonical_graph()?)
                 } else {
                     None
                 };
-                let check = self
-                    .check
-                    .as_ref()
-                    .context("check analysis was not prepared")?;
                 Ok(crate::check_runner::json_value(&check.run(
                     &self.facts,
                     dependency_graph.as_ref(),

@@ -1,0 +1,9 @@
+filesystem:
+  skipDirectories:
+    - sources
+rules:
+  - rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      sourceGlobs: [sources/*.ts]
+      entrypoints: [entrypoints/runtime.ts]

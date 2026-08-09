@@ -11,6 +11,7 @@ fn signature_impact_edges() -> HashSet<EdgeKind> {
         EdgeKind::DynamicImport,
         EdgeKind::Require,
         EdgeKind::WorkspaceImport,
+        EdgeKind::WorkspaceTypeImport,
     ])
 }
 

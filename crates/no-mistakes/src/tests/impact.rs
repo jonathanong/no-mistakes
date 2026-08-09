@@ -312,9 +312,9 @@ fn push_registry_hints(
     };
     let target_rel = relative_path(root, target);
     for (dependent, kind) in dependents {
-        // A type-only reference does not "register" a runtime entry, so it must
-        // not produce a registry hint.
-        if *kind == EdgeKind::TypeImport {
+        // Type-only references and `require.resolve` lookups do not register a
+        // runtime entry, so they must not produce registry hints.
+        if !is_runtime_registration_edge(kind) {
             continue;
         }
         if let NodeId::File(dep_path) = dependent {
@@ -333,6 +333,32 @@ fn push_registry_hints(
                 });
             }
         }
+    }
+}
+
+fn is_runtime_registration_edge(kind: &EdgeKind) -> bool {
+    !matches!(
+        kind,
+        EdgeKind::TypeImport | EdgeKind::WorkspaceTypeImport | EdgeKind::RequireResolve
+    )
+}
+
+#[cfg(test)]
+mod registry_edge_tests {
+    use super::*;
+
+    #[test]
+    fn registry_hints_ignore_non_runtime_dependency_edges() {
+        for kind in [
+            EdgeKind::TypeImport,
+            EdgeKind::WorkspaceTypeImport,
+            EdgeKind::RequireResolve,
+        ] {
+            assert!(!is_runtime_registration_edge(&kind));
+        }
+        assert!(is_runtime_registration_edge(&EdgeKind::Import));
+        assert!(is_runtime_registration_edge(&EdgeKind::WorkspaceImport));
+        assert!(is_runtime_registration_edge(&EdgeKind::Require));
     }
 }
 

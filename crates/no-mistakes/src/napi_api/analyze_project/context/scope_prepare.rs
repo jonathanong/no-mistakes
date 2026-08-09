@@ -19,6 +19,10 @@ impl PreparedScopePlan {
         let (import_usages, import_usage_files) =
             prepare_import_usage_views(options, &root, &session)?;
         let build_plan = graph_build_plan(options)?;
+        let has_non_check_report = options
+            .reports
+            .iter()
+            .any(|request| request.report_type != "check");
         let framework_plan = framework_preparation_plan(options, build_plan)?;
         let include_check_plan = options
             .reports
@@ -117,13 +121,19 @@ impl PreparedScopePlan {
             files.sort();
             files.dedup();
         }
-        check_plan
-            .graph_context
-            .set_visible_files(traversal.graph_files().visible().iter().cloned());
         let graph_files = check
             .as_ref()
-            .map(|check| check.graph_files().to_vec())
-            .unwrap_or_default();
+            .map(|check| {
+                if has_non_check_report {
+                    traversal.graph_files().visible().iter().cloned().collect()
+                } else {
+                    check.graph_files().to_vec()
+                }
+            })
+            .unwrap_or_else(|| traversal.graph_files().visible().iter().cloned().collect());
+        check_plan
+            .graph_context
+            .set_visible_files(graph_files.iter().cloned());
         let primary_paths = files
             .iter()
             .chain(graph_files.iter())

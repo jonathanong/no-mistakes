@@ -1,9 +1,10 @@
 use super::{
     forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching, require_storybook_stories,
-    rule_enabled, server_route_client_boundary, sort_findings, suppress_rule_findings,
-    suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports, RuleFinding,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
-    SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    required_entrypoint_reachability, rule_enabled, server_route_client_boundary, sort_findings,
+    suppress_rule_findings, suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports,
+    RuleFinding, FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
+    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -11,9 +12,9 @@ use std::path::Path;
 mod prepared;
 mod standalone;
 
-pub(crate) use prepared::canonical_graph_plan;
 #[doc(hidden)]
 pub use prepared::run_check_with_config_facts_playwright_and_graph;
+pub use prepared::{canonical_graph_plan, canonical_graph_requires_full_file_universe};
 pub use prepared::{run_check_with_config_and_facts_and_playwright, PreparedRulesCheck};
 
 pub fn run_check(
@@ -122,4 +123,5 @@ fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bo
         || rule_enabled(config, REQUIRE_STORYBOOK_STORIES)
         || crate::playwright::rules::configured(config)
         || rule_enabled(config, FORBIDDEN_DEPENDENCIES)
+        || rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY)
 }

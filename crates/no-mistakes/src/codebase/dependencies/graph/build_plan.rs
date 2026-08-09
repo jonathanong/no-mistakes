@@ -86,9 +86,12 @@ impl GraphBuildPlan {
             imports: allowed.contains(&EdgeKind::Import)
                 || allowed.contains(&EdgeKind::TypeImport)
                 || allowed.contains(&EdgeKind::DynamicImport)
-                || allowed.contains(&EdgeKind::Require),
+                || allowed.contains(&EdgeKind::Require)
+                || allowed.contains(&EdgeKind::RequireResolve),
             route_imports: allowed.contains(&EdgeKind::RouteImport),
-            workspace: allowed.contains(&EdgeKind::WorkspaceImport),
+            workspace: allowed.contains(&EdgeKind::WorkspaceImport)
+                || allowed.contains(&EdgeKind::WorkspaceTypeImport)
+                || allowed.contains(&EdgeKind::RequireResolve),
             package: allowed.contains(&EdgeKind::PackageDependency),
             tests: allowed.contains(&EdgeKind::TestOf)
                 || allowed.contains(&EdgeKind::VitestSetup(VitestSetupField::SetupFiles))

@@ -16,11 +16,19 @@ impl PreparedScopePlan {
         // Config facts were prepared before the batch. Seed them before the
         // canonical graph so invalidation retains Playwright occurrences.
         self.traversal.seed_cached_program_facts(&self.configs);
+        let traversal_graph_files = self.traversal.graph_files().visible();
+        let graph_fact_files = graph_facts.graph_file_universe();
+        let check_shares_traversal_graph_universe = graph_fact_files.len()
+            == traversal_graph_files.len()
+            && graph_fact_files
+                .iter()
+                .all(|path| traversal_graph_files.contains(path));
         if self
             .check
             .as_ref()
             .and_then(SharedCheckContext::graph_plan)
             .is_some()
+            && check_shares_traversal_graph_universe
         {
             self.traversal
                 .prepare_canonical_graph_with_check_facts(&graph_facts)?;
@@ -43,6 +51,7 @@ impl PreparedScopePlan {
             import_usages: self.import_usages,
             server,
             check: self.check,
+            check_uses_traversal_graph: check_shares_traversal_graph_universe,
             playwright: self.playwright,
             queue_reports: HashMap::new(),
             queue_indexed_reports: HashMap::new(),

@@ -3,7 +3,8 @@ fn edge_kind_for_import(import: &ExtractedImport) -> EdgeKind {
         ImportKind::Static => EdgeKind::Import,
         ImportKind::Type => EdgeKind::TypeImport,
         ImportKind::Dynamic => EdgeKind::DynamicImport,
-        ImportKind::Require | ImportKind::RequireResolve => EdgeKind::Require,
+        ImportKind::Require => EdgeKind::Require,
+        ImportKind::RequireResolve => EdgeKind::RequireResolve,
     }
 }
 

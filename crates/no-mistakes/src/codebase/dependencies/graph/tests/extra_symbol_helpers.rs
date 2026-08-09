@@ -130,7 +130,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
                 file: workspace_target.clone(),
                 symbol: "parse".to_string()
             },
-            EdgeKind::WorkspaceImport
+            EdgeKind::WorkspaceTypeImport
         )
     );
     assert_eq!(
@@ -192,7 +192,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
                 file: workspace_target,
                 symbol: "member".to_string()
             },
-            EdgeKind::TypeImport
+            EdgeKind::WorkspaceTypeImport
         ))
     );
     assert!(resolve_imported_callee(

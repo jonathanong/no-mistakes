@@ -1,0 +1,5 @@
+{
+  "name": "required-entrypoint-reachability-fixture",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

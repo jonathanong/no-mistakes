@@ -1,0 +1,7 @@
+rules:
+  - rule: required-entrypoint-reachability
+    scope: repository
+    include: ['[']
+    options:
+      sourceGlobs: [sources/static.ts]
+      entrypoints: [entrypoints/api.ts]

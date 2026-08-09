@@ -49,12 +49,17 @@ fn import_target_with_graph_files(
         ImportKind::Static => EdgeKind::Import,
         ImportKind::Type => EdgeKind::TypeImport,
         ImportKind::Dynamic => EdgeKind::DynamicImport,
-        ImportKind::Require | ImportKind::RequireResolve => EdgeKind::Require,
+        ImportKind::Require => EdgeKind::Require,
+        ImportKind::RequireResolve => EdgeKind::RequireResolve,
     };
     if let Some(target) = resolver.resolve(specifier, path) {
         let target = graph_files.visible_path(&target)?;
         let edge_kind = if is_indexable(target) {
             edge_kind
+        } else if kind == ImportKind::Type {
+            return None;
+        } else if kind == ImportKind::RequireResolve {
+            EdgeKind::RequireResolve
         } else {
             EdgeKind::AssetImport
         };
@@ -64,7 +69,12 @@ fn import_target_with_graph_files(
         workspace.resolve_specifier_from_file_visible(specifier, path, visible_files)
     {
         let target = graph_files.visible_path(&target)?;
-        return Some((NodeId::File(target.to_path_buf()), EdgeKind::WorkspaceImport));
+        let edge_kind = match kind {
+            ImportKind::Type => EdgeKind::WorkspaceTypeImport,
+            ImportKind::RequireResolve => EdgeKind::RequireResolve,
+            _ => EdgeKind::WorkspaceImport,
+        };
+        return Some((NodeId::File(target.to_path_buf()), edge_kind));
     }
     if workspace.recognizes_specifier_from(specifier, path) {
         return None;
