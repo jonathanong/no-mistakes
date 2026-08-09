@@ -7,6 +7,9 @@ mod vitest_setup;
 #[path = "cli_tests_impact/vitest_commonjs_projects.rs"]
 mod vitest_commonjs_projects;
 
+#[path = "cli_tests_impact/direct_owner_coverage.rs"]
+mod direct_owner_coverage;
+
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }

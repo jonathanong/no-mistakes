@@ -353,6 +353,37 @@ fn batch_report_sorts_deduplicates_and_unions_paths() {
 }
 
 #[test]
+fn batch_renders_file_blocks_and_exercises_both_exit_paths() {
+    let failing = batch_report(
+        compute_many(&ResolveCheckArgs {
+            files: vec![PathBuf::from("broken.ts"), PathBuf::from("consumer.ts")],
+            root: Some(fixture_root()),
+            tsconfig: None,
+            format: None,
+            json: false,
+        })
+        .unwrap(),
+    );
+    let passing = batch_report(compute_many(&args("consumer.ts")).unwrap());
+
+    // Batch human and Markdown each keep individual file findings distinct.
+    let mut human = Vec::new();
+    render(&failing, Format::Human, &mut human).unwrap();
+    let human = String::from_utf8(human).unwrap();
+    assert!(human.contains("broken.ts\n"));
+    assert!(human.contains("\nconsumer.ts\n"));
+
+    let mut markdown = Vec::new();
+    render(&failing, Format::Md, &mut markdown).unwrap();
+    let markdown = String::from_utf8(markdown).unwrap();
+    assert!(markdown.contains("## broken.ts"));
+    assert!(markdown.contains("## consumer.ts"));
+
+    assert_eq!(failing.exit_code(), 1.into());
+    assert_eq!(passing.exit_code(), 0.into());
+}
+
+#[test]
 fn batch_validates_all_inputs_before_fact_collection() {
     let result = compute_many(&ResolveCheckArgs {
         files: vec![PathBuf::from("consumer.ts"), PathBuf::from("missing.ts")],

@@ -153,6 +153,50 @@ mod tests {
         );
     }
 
+    #[test]
+    fn explain_renders_empty_fallback_and_resource_without_call_sites() {
+        let selected_plan = TestPlan {
+            changed_files: Vec::new(),
+            selected_tests: vec![selected(
+                "resource.test.ts",
+                Confidence::Low,
+                "resource.txt",
+                "resource",
+                Some(ImpactEdgeDetail::Resource {
+                    consumer_file: "resource.test.ts".to_string(),
+                    call_sites: Vec::new(),
+                }),
+            )],
+            groups: Vec::new(),
+            warnings: vec![Warning {
+                r#type: "fallback-warning".to_string(),
+                message: "needs attention".to_string(),
+                file: "config.ts".to_string(),
+                line: None,
+            }],
+            fallback_triggered: true,
+            fallback_reason: Some("configuration changed".to_string()),
+        };
+        assert!(
+            super::super::render(&selected_plan, PlanFormat::Explain, "tests plan")
+                .unwrap()
+                .contains("Path: `resource.txt` ➔ [resource (resource.test.ts)]")
+        );
+
+        let empty_plan = TestPlan {
+            changed_files: Vec::new(),
+            selected_tests: Vec::new(),
+            groups: Vec::new(),
+            warnings: Vec::new(),
+            fallback_triggered: false,
+            fallback_reason: None,
+        };
+        assert_eq!(
+            super::super::render(&empty_plan, PlanFormat::Explain, "tests plan").unwrap(),
+            "Test plan: 0 selected test(s)\nFallback: not triggered\n\nNo tests selected.\n"
+        );
+    }
+
     fn selected(
         test_file: &str,
         confidence: Confidence,
