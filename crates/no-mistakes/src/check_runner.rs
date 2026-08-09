@@ -1,4 +1,5 @@
 pub(crate) mod enabled;
+pub(crate) mod finite_set_plan;
 mod graph_plan;
 pub(crate) mod prepared;
 mod results;

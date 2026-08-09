@@ -69,7 +69,9 @@ macro_rules! define_filesystem_rule_ids {
 
 crate::filesystem_rules!(define_filesystem_rule_ids);
 pub use execute::{
-    run_filesystem_rules_with_config_snapshot_catalog_and_sources, PreparedFilesystemRuleInputs,
+    run_filesystem_rules_with_config_snapshot_catalog_and_sources,
+    run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts,
+    PreparedFilesystemRuleInputs,
 };
 
 #[cfg(test)]

@@ -45,20 +45,21 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::WORKSPACE_PACKAGE_CYCLES,
 ];
 
-pub(crate) fn run_filesystem_rules_check(
+pub(crate) fn run_filesystem_rules_check_with_facts(
     root: &Path,
     config: &NoMistakesConfig,
     enabled: bool,
     files: &[PathBuf],
     prepared: rules::filesystem_dispatch::PreparedFilesystemRuleInputs<'_>,
+    facts: Option<&no_mistakes::codebase::check_facts::CheckFactMap>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.filesystem_rules",
         no_mistakes::diagnostics::TimingKind::Parallel,
         || -> Result<_> {
             Ok(if enabled {
-                rules::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
-                    root, config, files, prepared,
+                rules::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
+                    root, config, files, prepared, facts,
                 )?
             } else {
                 Vec::new()

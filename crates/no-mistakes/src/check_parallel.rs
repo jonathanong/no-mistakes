@@ -1,5 +1,5 @@
 use crate::check_tasks::{
-    run_codebase_check_with_catalog, run_filesystem_rules_check, run_integration_check,
+    run_codebase_check_with_catalog, run_filesystem_rules_check_with_facts, run_integration_check,
     run_queue_check, run_react_check, run_rules_check, CheckTask,
 };
 use no_mistakes::codebase::check_facts::CheckFactMap;
@@ -164,7 +164,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                     no_mistakes::diagnostics::with_observer(
                                         observer.clone(),
                                         || {
-                                            run_filesystem_rules_check(
+                                            run_filesystem_rules_check_with_facts(
                                                 root,
                                                 config,
                                                 filesystem_rules_enabled,
@@ -177,6 +177,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                     tsconfig_gate_project_inputs,
                                                     config_path: config_path.as_deref(),
                                                 },
+                                                Some(facts),
                                             )
                                         },
                                     )

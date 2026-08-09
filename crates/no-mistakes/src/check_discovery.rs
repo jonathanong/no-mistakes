@@ -25,6 +25,23 @@ pub(crate) fn discover_check_file_views_from_snapshot(
     )
 }
 
+pub(crate) fn select_graph_files(
+    views: views::CheckFileViews,
+    needs_shared_facts: bool,
+    graph_requires_full_file_universe: bool,
+    playwright_facts_configured: bool,
+    dynamic_import_rules: bool,
+) -> (Vec<PathBuf>, Vec<PathBuf>) {
+    let needs_full_graph_files = graph_requires_full_file_universe || playwright_facts_configured;
+    if needs_full_graph_files {
+        return (views.filesystem, views.graph);
+    }
+    if needs_shared_facts && dynamic_import_rules {
+        return (views.filesystem.clone(), views.filesystem);
+    }
+    (views.filesystem, Vec::new())
+}
+
 fn visible_file_paths(
     snapshot: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
     root: &Path,

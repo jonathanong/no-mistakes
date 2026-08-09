@@ -6,19 +6,31 @@ pub(super) use super::ts_array::{extract_ts_array_literal, extract_ts_const_arra
 use super::ts_union;
 pub(super) use super::yaml::extract_yaml_sequence;
 use super::SetSpec;
+use super::TS_CALL_FIRST_STRING_ARGUMENT;
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use regex::Regex;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+mod call;
 mod path;
+use call::extract_call_first_string_argument;
 pub(super) use path::extract_path_regex_set;
 
 #[derive(Debug, Clone)]
 pub(super) struct ExtractedSet {
     pub(super) file: String,
     pub(super) values: BTreeSet<String>,
+    pub(super) issues: Vec<ExtractionIssue>,
+}
+
+#[derive(Debug, Clone)]
+pub(super) struct ExtractionIssue {
+    pub(super) file: String,
+    pub(super) message: String,
+    pub(super) target: Option<String>,
 }
 
 pub(super) fn extract_set_with_sources(
@@ -27,13 +39,19 @@ pub(super) fn extract_set_with_sources(
     files: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&dyn TsFactLookup>,
 ) -> Result<ExtractedSet> {
     if spec.kind == "path-regex-capture" {
         return extract_path_regex_set(root, spec, files, target_roots);
     }
     let paths = resolve_spec_files(root, &spec.file, target_roots);
     let mut values = BTreeSet::new();
+    let mut issues = Vec::new();
     for path in &paths {
+        if spec.kind == TS_CALL_FIRST_STRING_ARGUMENT {
+            extract_call_first_string_argument(root, path, spec, facts, &mut values, &mut issues);
+            continue;
+        }
         let source = sources
             .read_path(path)
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
@@ -59,10 +77,15 @@ pub(super) fn extract_set_with_sources(
     Ok(ExtractedSet {
         file: relative_slash_path(root, path),
         values,
+        issues,
     })
 }
 
-fn resolve_spec_files(root: &Path, file: &str, target_roots: &[PathBuf]) -> Vec<PathBuf> {
+pub(super) fn resolve_spec_files(
+    root: &Path,
+    file: &str,
+    target_roots: &[PathBuf],
+) -> Vec<PathBuf> {
     let repo_path = root.join(file);
     if repo_path.exists() {
         return vec![repo_path];

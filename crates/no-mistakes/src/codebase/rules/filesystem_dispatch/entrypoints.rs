@@ -1,4 +1,4 @@
-use super::{preserved, FILESYSTEM_RULE_IDS};
+use super::{finite_set_consistency, preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{rule_enabled, RuleFinding};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -128,6 +128,24 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let sources = snapshot.source_store_for(&root);
+    let function_call_files =
+        finite_set_consistency::required_function_call_fact_files(&root, config);
+    let facts = (!function_call_files.is_empty()).then(|| {
+        crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
+            &root,
+            function_call_files,
+            Vec::new(),
+            crate::codebase::check_facts::CheckFactPlan {
+                graph: crate::codebase::ts_source::facts::TsFactPlan {
+                    function_calls: true,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            None,
+            std::sync::Arc::clone(&sources),
+        )
+    });
     let workflows =
         rule_enabled(config, crate::codebase::rules::TSCONFIG_GATE_COVERAGE).then(|| {
             crate::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
@@ -148,7 +166,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
             )
         })
         .transpose()?;
-    super::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+    super::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
         &root,
         config,
         files,
@@ -160,6 +178,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
             tsconfig_gate_project_inputs: project_inputs.as_ref(),
             config_path,
         },
+        facts.as_ref(),
     )
 }
 

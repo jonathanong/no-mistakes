@@ -12,7 +12,7 @@ mod filesystem;
 #[cfg(test)]
 mod tests;
 
-pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check};
+pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
 
 pub(crate) struct CheckTask<T> {
     pub(crate) findings: T,

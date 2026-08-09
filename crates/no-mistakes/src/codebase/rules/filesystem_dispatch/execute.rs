@@ -11,6 +11,7 @@ struct RuleRunInputs<'a> {
     snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+    facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
     workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
     tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     config_path: Option<&'a Path>,
@@ -36,6 +37,24 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     config: &crate::config::v2::NoMistakesConfig,
     files: &[PathBuf],
     prepared: PreparedFilesystemRuleInputs<'_>,
+) -> Result<Vec<RuleFinding>> {
+    run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
+        root, config, files, prepared, None,
+    )
+}
+
+/// Run filesystem rules using request-scoped facts prepared by the caller.
+///
+/// The optional lookup keeps standalone filesystem callers lightweight while
+/// allowing aggregate CLI and N-API checks to share their one TS fact pass
+/// with AST-backed filesystem rules.
+#[doc(hidden)]
+pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    prepared: PreparedFilesystemRuleInputs<'_>,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
     let PreparedFilesystemRuleInputs {
         snapshot,
@@ -65,6 +84,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         snapshot,
         vitest_catalog,
         sources: &sources,
+        facts,
         workflow_documents,
         tsconfig_gate_project_inputs,
         config_path,
@@ -93,7 +113,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
 }
 
 fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
-    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = run_rule::run_rule_with_sources($id, $call, inputs.root, inputs.config, inputs.candidates.candidates($id), inputs.sources); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; spawn_special_rules(scope, inputs); }); }; }
+    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = run_rule::run_rule_with_sources($id, $call, inputs.root, inputs.config, inputs.candidates.candidates($id), inputs.sources, inputs.facts); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; spawn_special_rules(scope, inputs); }); }; }
     crate::filesystem_rules!(run_rules);
 }
 
@@ -104,6 +124,7 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
         snapshot,
         vitest_catalog,
         sources,
+        facts: _,
         workflow_documents,
         tsconfig_gate_project_inputs,
         config_path,

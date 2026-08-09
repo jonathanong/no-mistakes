@@ -29,7 +29,7 @@ impl SharedCheckContext {
         workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     ) -> Result<Self> {
         use crate::check_runner::enabled::{
-            fact_plan, integration_configured, plan_requests_facts, ConfiguredChecks, EnabledChecks,
+            fact_plan, integration_configured, ConfiguredChecks, EnabledChecks,
         };
         use crate::check_tasks::{
             filesystem_rules_configured, queues_configured, unique_exports_configured,
@@ -132,6 +132,13 @@ impl SharedCheckContext {
             plan.graph.include(fact_plan);
             plan.graph_context = fact_context;
         }
+        let fact_demand = crate::check_runner::finite_set_plan::prepare(
+            &root,
+            config,
+            &mut plan,
+            graph_rules_enabled,
+            playwright_fact_plan.is_some(),
+        );
         let skip_directories = config.filesystem.skip_directories.clone();
         let views = crate::check_discovery::discover_check_file_views_from_snapshot(
             &root,
@@ -140,8 +147,7 @@ impl SharedCheckContext {
             unique_exports_enabled,
             prepared.visible_paths.as_ref(),
         );
-        let needs_shared_facts =
-            plan_requests_facts(&plan) || playwright_fact_plan.is_some() || graph_rules_enabled;
+        let needs_shared_facts = fact_demand.needs_shared_facts();
         let needs_full_graph_files =
             graph_requires_full_file_universe || playwright_facts_enabled;
         let needs_graph_files =
@@ -158,7 +164,7 @@ impl SharedCheckContext {
             (views.filesystem, Vec::new())
         };
         let fact_files = if needs_shared_facts {
-            discovered.clone()
+            fact_demand.merge(discovered.clone())
         } else {
             Default::default()
         };

@@ -1,0 +1,55 @@
+use no_mistakes::codebase::check_facts::CheckFactPlan;
+use no_mistakes::config::v2::NoMistakesConfig;
+use std::path::{Path, PathBuf};
+
+pub(crate) struct PreparedFactDemand {
+    function_call_files: Vec<PathBuf>,
+    needs_other_facts: bool,
+}
+
+impl PreparedFactDemand {
+    pub(crate) fn needs_shared_facts(&self) -> bool {
+        self.needs_other_facts || !self.function_call_files.is_empty()
+    }
+
+    pub(crate) fn merge(self, discovered: Vec<PathBuf>) -> Vec<PathBuf> {
+        if !self.needs_other_facts {
+            return self.function_call_files;
+        }
+        let mut files = discovered;
+        files.extend(self.function_call_files);
+        files.sort();
+        files.dedup();
+        files
+    }
+}
+
+pub(crate) fn prepare(
+    root: &Path,
+    config: &NoMistakesConfig,
+    plan: &mut CheckFactPlan,
+    graph_configured: bool,
+    playwright_configured: bool,
+) -> PreparedFactDemand {
+    let needs_other_facts =
+        graph_configured || playwright_configured || super::enabled::plan_requests_facts(plan);
+    let files =
+        no_mistakes::codebase::rules::finite_set_consistency::required_function_call_fact_files(
+            root, config,
+        );
+    if !files.is_empty() {
+        plan.graph.function_calls = true;
+    }
+    PreparedFactDemand {
+        function_call_files: files,
+        needs_other_facts,
+    }
+}
+
+pub(crate) fn no_analysis_requested(
+    needs_shared_facts: bool,
+    filesystem_rules_configured: bool,
+    playwright_rules_configured: bool,
+) -> bool {
+    !needs_shared_facts && !filesystem_rules_configured && !playwright_rules_configured
+}
