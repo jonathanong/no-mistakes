@@ -2,9 +2,9 @@ use super::{
     deadline_checked_paths, discover_files, discover_files_from_visible, discover_source_files,
     discover_source_files_from_visible, discover_visible_paths, format_parse_diagnostic,
     git_visible_files, has_disable_comment, has_disable_file_comment, has_disable_line_comment,
-    is_skipped_dir, is_test_file, line_number, normalize_discovery_path, parse_git_tagged_paths,
-    relative_slash_path, starts_with_use_client, static_property_key_name, unwrap_ts_wrappers,
-    walk_files, FrozenPathRemapper,
+    is_skipped_dir, is_test_file, line_number, matching_disable_directive,
+    normalize_discovery_path, parse_git_tagged_paths, relative_slash_path, starts_with_use_client,
+    static_property_key_name, unwrap_ts_wrappers, walk_files, FrozenPathRemapper,
 };
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, ObjectPropertyKind, Statement};
@@ -17,6 +17,34 @@ use tempfile::TempDir;
 mod discovery_preserve;
 mod gitignore;
 mod source_and_discovery;
+
+#[test]
+fn matching_disable_directive_reports_exact_supported_provenance() {
+    assert_eq!(
+        matching_disable_directive(
+            "/* notice */\n// no-mistakes-disable-file my-rule\nconst value = 1",
+            Some(3),
+            "my-rule",
+        ),
+        Some(super::DisableDirective::File { line: 2 })
+    );
+    assert_eq!(
+        matching_disable_directive(
+            "value(); // no-mistakes-disable-line my-rule",
+            Some(1),
+            "my-rule"
+        ),
+        Some(super::DisableDirective::Line { line: 1 })
+    );
+    assert_eq!(
+        matching_disable_directive(
+            "// no-mistakes-disable-next-line my-rule\nvalue()",
+            Some(2),
+            "my-rule"
+        ),
+        Some(super::DisableDirective::NextLine { line: 1 })
+    );
+}
 
 #[test]
 fn frozen_path_remapper_keeps_symlink_namespace_deterministic() {

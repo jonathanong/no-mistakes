@@ -135,10 +135,42 @@ pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> 
 /// - `// no-mistakes-disable-file <rule_id>: <reason>`
 /// - `// no-mistakes-disable-file <rule_id> <reason>`
 pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
+    disable_file_directive_line(source, rule_id).is_some()
+}
+
+/// Returns exact provenance for a supported suppression directive.
+///
+/// This is the single directive parser used by both filtering and the
+/// aggregate check audit report, so accounting cannot fabricate a line number.
+pub fn matching_disable_directive(
+    source: &str,
+    finding_line: Option<u32>,
+    rule_id: &str,
+) -> Option<DisableDirective> {
+    if let Some(line) = disable_file_directive_line(source, rule_id) {
+        return Some(DisableDirective::File { line });
+    }
+    let line = finding_line?;
+    if has_disable_line_comment(source, line, rule_id) {
+        return Some(DisableDirective::Line { line });
+    }
+    has_disable_comment(source, line, rule_id).then_some(DisableDirective::NextLine {
+        line: line.saturating_sub(1),
+    })
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum DisableDirective {
+    File { line: u32 },
+    Line { line: u32 },
+    NextLine { line: u32 },
+}
+
+fn disable_file_directive_line(source: &str, rule_id: &str) -> Option<u32> {
     let mut in_block_comment = false;
     let mut saw_hash_attribute = false;
 
-    for line in source.trim_start_matches('\u{FEFF}').lines() {
+    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
         let mut rest = line.trim();
 
         loop {
@@ -167,23 +199,23 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
             let comment_prefix_is_slash = rest.starts_with("//");
             saw_hash_attribute |= hash_attribute_comment_line(rest);
             let Some(rest) = leading_comment_text(rest) else {
-                return false;
+                return None;
             };
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
                 break;
             };
             if saw_hash_attribute && comment_prefix_is_slash {
-                return false;
+                return None;
             }
             let rule_part = after_directive.trim();
             if rule_part_matches(rule_part, rule_id) {
-                return true;
+                return Some((index + 1) as u32);
             }
             break;
         }
     }
 
-    false
+    None
 }
 
 fn hash_attribute_comment_line(line: &str) -> bool {

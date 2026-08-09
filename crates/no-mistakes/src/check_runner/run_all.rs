@@ -111,7 +111,9 @@ pub(crate) fn run_all_with_suppressed(
         filesystem_rules_enabled,
         no_mistakes::playwright::rules::configured(config),
     ) {
-        return Ok(empty_results([None]));
+        let mut results = empty_results([None]);
+        results.include_suppressed = include_suppressed;
+        return Ok(results);
     }
     let (views, discover_duration) = no_mistakes::diagnostics::measure_if_enabled(
         "discovery",

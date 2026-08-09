@@ -30,6 +30,7 @@ pub(crate) struct CheckResults {
     pub(crate) warnings: Vec<String>,
     pub(crate) advisories: Vec<RuleFinding>,
     pub(crate) suppressed: Vec<no_mistakes::codebase::rules::SuppressedFinding>,
+    pub(crate) include_suppressed: bool,
     pub(crate) timings: Vec<(&'static str, Duration)>,
 }
 
@@ -191,6 +192,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         warnings,
         advisories,
         suppressed: include_suppressed.then_some(suppressed).unwrap_or_default(),
+        include_suppressed,
     })
 }
 
@@ -205,6 +207,7 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         warnings,
         advisories: Vec::new(),
         suppressed: Vec::new(),
+        include_suppressed: false,
         timings: vec![
             ("discover", Duration::ZERO),
             ("parse_extract", Duration::ZERO),
@@ -228,6 +231,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         warnings,
         advisories,
         suppressed,
+        include_suppressed,
         timings,
     } = results;
     let _ = timings;
@@ -240,7 +244,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         "warnings": warnings,
         "advisories": advisories,
     });
-    if !suppressed.is_empty() {
+    if *include_suppressed {
         value["suppressed"] = serde_json::to_value(suppressed)
             .expect("suppression accounting serialization never fails");
     }

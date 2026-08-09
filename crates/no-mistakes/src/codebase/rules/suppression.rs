@@ -205,49 +205,24 @@ fn matching_directive(
     rule: &str,
     line: Option<usize>,
 ) -> Option<SuppressionDirective> {
-    if crate::codebase::ts_source::has_disable_file_comment(source, rule) {
-        return Some(SuppressionDirective {
+    use crate::codebase::ts_source::DisableDirective;
+
+    match crate::codebase::ts_source::matching_disable_directive(
+        source,
+        line.and_then(|line| u32::try_from(line).ok()),
+        rule,
+    )? {
+        DisableDirective::File { line } => Some(SuppressionDirective {
             kind: SuppressionDirectiveKind::File,
-            line: file_directive_line(source, rule),
-        });
-    }
-    let line = u32::try_from(line?).ok()?;
-    if crate::codebase::ts_source::has_disable_line_comment(source, line, rule) {
-        return Some(SuppressionDirective {
+            line: line as usize,
+        }),
+        DisableDirective::Line { line } => Some(SuppressionDirective {
             kind: SuppressionDirectiveKind::Line,
             line: line as usize,
-        });
-    }
-    crate::codebase::ts_source::has_disable_comment(source, line, rule).then_some(
-        SuppressionDirective {
+        }),
+        DisableDirective::NextLine { line } => Some(SuppressionDirective {
             kind: SuppressionDirectiveKind::NextLine,
-            line: line.saturating_sub(1) as usize,
-        },
-    )
-}
-
-fn file_directive_line(source: &str, rule: &str) -> usize {
-    source
-        .trim_start_matches('\u{FEFF}')
-        .lines()
-        .enumerate()
-        .find_map(|(index, line)| {
-            let trimmed = line.trim();
-            let directive = trimmed
-                .strip_prefix("//")
-                .or_else(|| trimmed.strip_prefix('#'))
-                .or_else(|| trimmed.strip_prefix("--"))?
-                .trim();
-            let rest = directive.strip_prefix("no-mistakes-disable-file ")?;
-            directive_rule_part_matches(rest.trim(), rule).then_some(index + 1)
-        })
-        // `has_disable_file_comment` already established that a valid directive
-        // exists. This fallback is only for unusual leading block-comment forms.
-        .unwrap_or(1)
-}
-
-fn directive_rule_part_matches(rule_part: &str, rule: &str) -> bool {
-    rule_part.strip_prefix(rule).is_some_and(|suffix| {
-        suffix.is_empty() || suffix.starts_with(':') || suffix.starts_with(char::is_whitespace)
-    })
+            line: line as usize,
+        }),
+    }
 }

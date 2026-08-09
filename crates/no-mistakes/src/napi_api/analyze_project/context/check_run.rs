@@ -151,6 +151,7 @@ impl SharedCheckContext {
             warnings,
             advisories,
             suppressed: Vec::new(),
+            include_suppressed: false,
         })
     }
 }

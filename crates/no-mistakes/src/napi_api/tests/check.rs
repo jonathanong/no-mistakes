@@ -72,6 +72,52 @@ fn check_json_optionally_accounts_for_suppressed_ordinary_rule_findings() {
 }
 
 #[test]
+fn check_json_audit_mode_includes_an_empty_suppression_array() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
+    let baseline = check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let baseline: serde_json::Value = serde_json::from_str(&baseline).unwrap();
+    assert!(baseline.get("suppressed").is_none());
+
+    let audit =
+        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let audit: serde_json::Value = serde_json::from_str(&audit).unwrap();
+    assert_eq!(audit["suppressed"], json!([]));
+}
+
+#[test]
+fn check_json_accounts_for_react_queue_and_integration_adapters() {
+    let fixtures = [
+        ("suppression-react", "react", "assert-no-fetch", "nextLine"),
+        ("suppression-queues", "queues", "queues-check", "file"),
+        (
+            "suppression-integration",
+            "integration",
+            "integration-test-no-mocks",
+            "file",
+        ),
+    ];
+    for (fixture, domain, rule, directive_kind) in fixtures {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/check")
+            .join(fixture);
+        let output =
+            check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string())
+                .unwrap();
+        let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+        assert!(
+            value["suppressed"]
+                .as_array()
+                .is_some_and(|findings| findings.iter().any(|finding| {
+                    finding["domain"] == domain
+                        && finding["rule"] == rule
+                        && finding["directive"]["kind"] == directive_kind
+                })),
+            "{fixture}: {value}"
+        );
+    }
+}
+
+#[test]
 fn check_json_returns_warnings_for_skipped_configured_check() {
     let options = json!({
         "root": fixture_root("test-no-unmocked-dynamic-imports-unknown-vitest-project"),
