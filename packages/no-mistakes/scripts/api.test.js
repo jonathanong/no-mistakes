@@ -470,6 +470,14 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
 });
 
+test("resolveCheck declarations mirror its mutually exclusive runtime inputs", () => {
+  const declarations = readFileSync(join(packageRoot, "query-types.d.ts"), "utf8");
+
+  assert.match(declarations, /ResolveCheckOptions = QueryFileOptions & \{\n  files\?: never;/);
+  assert.match(declarations, /files: \[string, \.\.\.string\[\]\];/);
+  assert.match(declarations, /file\?: never;/);
+});
+
 test("test plan declarations require current results but accept saved legacy plan documents", () => {
   const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
 

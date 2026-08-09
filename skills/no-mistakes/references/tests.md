@@ -57,8 +57,9 @@ Key flags:
   diff cannot be parsed; does not trigger for ordinary source files that happen
   to have no test dependents.
 - `--format paths|json|explain` — `paths` for shell substitution, `json` for
-  agents, and `explain` for deterministic confidence, dependency-path, edge
-  provenance, fallback, and warning output.
+  agents, and `explain` for deterministic changed-file inventory (including
+  files with no selected tests), confidence, dependency-path, edge provenance,
+  fallback, and warning output.
 - `--direct-test-owner` — requires a framework; selects changed framework-owned
   tests plus only tests one reverse canonical graph edge away, with normal
   execution targets. It bypasses test-plan groups, environment include/exclude,

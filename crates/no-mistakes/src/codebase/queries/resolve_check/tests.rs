@@ -416,6 +416,26 @@ fn batch_validates_all_inputs_before_fact_collection() {
 }
 
 #[test]
+fn batch_rejects_existing_unsupported_targets_without_panicking() {
+    let error = compute_many(&ResolveCheckArgs {
+        files: vec![
+            PathBuf::from("consumer.ts"),
+            PathBuf::from("unsupported.json"),
+        ],
+        root: Some(fixture_root()),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .err()
+    .expect("an unsupported input must return an error");
+
+    assert!(error
+        .to_string()
+        .contains("unsupported JavaScript/TypeScript file"));
+}
+
+#[test]
 fn resolve_format_precedence() {
     assert_eq!(
         resolve_format(true, Some(Format::Human), true),

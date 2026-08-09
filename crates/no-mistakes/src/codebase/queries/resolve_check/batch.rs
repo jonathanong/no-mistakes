@@ -1,7 +1,7 @@
 use super::{
     is_declaration_file, kind_str, ImportRow, ResolveCheckArgs, ResolveCheckReport, Status,
 };
-use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
+use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport, ImportKind};
 use crate::codebase::queries::render::Report;
 use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::Result;
@@ -71,6 +71,29 @@ fn compute_target(
     })
 }
 
+fn target_imports<'a>(
+    target: &super::super::shared::Target,
+    facts: &'a crate::codebase::ts_source::facts::TsFactMap,
+) -> Result<&'a [ExtractedImport]> {
+    let facts = facts
+        .get(&target.abs_file)
+        .ok_or_else(|| anyhow::anyhow!("missing facts for {}", target.abs_file.display()))?;
+    if let Some(error) = &facts.operational_error {
+        anyhow::bail!("{error}");
+    }
+    if facts.fatal_parse_error {
+        anyhow::bail!(
+            "failed to parse {}: {}",
+            target.abs_file.display(),
+            facts
+                .parse_error
+                .as_deref()
+                .unwrap_or("parser panicked without a diagnostic")
+        );
+    }
+    Ok(&facts.imports)
+}
+
 /// Collect the union import demand once, then classify independent inputs in
 /// parallel against their nearest (or explicit) tsconfig. The source facts are
 /// recovered parser facts, retaining imports from syntactically malformed
@@ -84,17 +107,17 @@ pub(super) fn compute_many(args: &ResolveCheckArgs) -> Result<Vec<ResolveCheckRe
     if let Some(target) = targets.first() {
         target.validate_explicit_tsconfig()?;
     }
+    for target in &targets {
+        anyhow::ensure!(
+            is_indexable(&target.abs_file),
+            "unsupported JavaScript/TypeScript file: {}",
+            target.abs_file.display()
+        );
+    }
     let facts = super::super::reverse::collect_target_import_facts(&targets[0], &targets);
     let mut reports = targets
         .par_iter()
-        .map(|target| {
-            // The collector returns one success-or-failure fact for every
-            // requested target, so absence would violate its prepared-input contract.
-            let facts = facts
-                .get(&target.abs_file)
-                .expect("target import facts must exist for every resolved input");
-            compute_target(target, &facts.imports)
-        })
+        .map(|target| compute_target(target, target_imports(target, &facts)?))
         .collect::<Result<Vec<_>>>()?;
     reports.sort_by(|left, right| left.file.cmp(&right.file));
     Ok(reports)
@@ -170,3 +193,6 @@ impl Report for BatchResolveCheckReport {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests;

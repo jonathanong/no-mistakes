@@ -124,6 +124,7 @@ pub(crate) fn collect_file_facts_from_program(
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
     let stored_source = should_store_source(plan).then(|| std::sync::Arc::<str>::from(source));
     let ts = TsFileFacts {
+        operational_error: None,
         source: stored_source.as_deref().map(std::sync::Arc::<str>::from),
         parse_error: None,
         fatal_parse_error: false,

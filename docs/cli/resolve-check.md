@@ -43,4 +43,5 @@ Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 
 Node API: `resolveCheck({ file, ... })` returns the single-file result;
 `resolveCheck({ files, ... })` always returns the batch result, including for a
-one-element `files` array.
+one-element `files` array. Provide exactly one of `file` or a nonempty `files`
+array.

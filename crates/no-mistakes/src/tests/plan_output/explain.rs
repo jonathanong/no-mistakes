@@ -18,6 +18,18 @@ pub(super) fn render(plan: &TestPlan, output: &mut String) -> Result<()> {
         writeln!(output, "Fallback: not triggered")?;
     }
 
+    let mut changed_files = plan.changed_files.iter().collect::<Vec<_>>();
+    changed_files.sort();
+    changed_files.dedup();
+    writeln!(output, "\nChanged files ({}):", changed_files.len())?;
+    if changed_files.is_empty() {
+        writeln!(output, "- None")?;
+    } else {
+        for changed_file in changed_files {
+            writeln!(output, "- {changed_file}")?;
+        }
+    }
+
     let mut selected = plan.selected_tests.iter().collect::<Vec<_>>();
     selected.sort_by(|left, right| left.test_file.cmp(&right.test_file));
     if selected.is_empty() {
@@ -67,14 +79,23 @@ pub(super) fn render(plan: &TestPlan, output: &mut String) -> Result<()> {
 }
 
 fn path(reason: &ImpactReason) -> String {
+    if reason.path.len() == 1 && reason.via.iter().any(|via| via == "self") {
+        return format!("`{}` (self-selected)", reason.path[0]);
+    }
+
     let mut rendered = Vec::with_capacity(reason.path.len().saturating_mul(2));
     for (index, node) in reason.path.iter().enumerate() {
         rendered.push(format!("`{node}`"));
-        if let Some(via) = reason.via.get(index) {
-            rendered.push(format!(
-                "[{}]",
-                display_via(via, reason.via_details.get(index).and_then(Option::as_ref))
-            ));
+        // Edge labels belong between adjacent path nodes. A self-selection
+        // reason has one node and is rendered above as node provenance rather
+        // than as an edge leading nowhere.
+        if index + 1 < reason.path.len() {
+            if let Some(via) = reason.via.get(index) {
+                rendered.push(format!(
+                    "[{}]",
+                    display_via(via, reason.via_details.get(index).and_then(Option::as_ref))
+                ));
+            }
         }
     }
     rendered.join(" ➔ ")
@@ -111,7 +132,7 @@ mod tests {
     #[test]
     fn explain_is_deterministic_and_renders_provenance() {
         let plan = TestPlan {
-            changed_files: Vec::new(),
+            changed_files: vec!["z.ts".to_string(), "a.ts".to_string()],
             selected_tests: vec![
                 selected(
                     "z.test.ts",
@@ -149,14 +170,40 @@ mod tests {
 
         assert_eq!(
             super::super::render(&plan, PlanFormat::Explain, "tests plan").unwrap(),
-            "Test plan: 2 selected test(s)\nFallback: not triggered\n\nTest: a.test.ts\nConfidence: 🟢 High\nReason: a.ts\n  Path: `a.ts` ➔ [resource (a.test.ts: read-file line 4)] ➔ `a.test.ts`\n\nTest: z.test.ts\nConfidence: 🟡 Medium\nReason: z.ts\n  Path: `z.ts` ➔ [vitest-setup (setupFiles)] ➔ `z.test.ts`\n\nWarnings (1):\n- dynamic-import (a.ts:3): might not resolve\n"
+            "Test plan: 2 selected test(s)\nFallback: not triggered\n\nChanged files (2):\n- a.ts\n- z.ts\n\nTest: a.test.ts\nConfidence: 🟢 High\nReason: a.ts\n  Path: `a.ts` ➔ [resource (a.test.ts: read-file line 4)] ➔ `a.test.ts`\n\nTest: z.test.ts\nConfidence: 🟡 Medium\nReason: z.ts\n  Path: `z.ts` ➔ [vitest-setup (setupFiles)] ➔ `z.test.ts`\n\nWarnings (1):\n- dynamic-import (a.ts:3): might not resolve\n"
         );
+    }
+
+    #[test]
+    fn explain_renders_self_selection_without_a_dangling_edge() {
+        let plan = TestPlan {
+            changed_files: vec!["src/unit.test.ts".to_string()],
+            selected_tests: vec![SelectedTest {
+                test_file: "src/unit.test.ts".to_string(),
+                confidence: Confidence::High,
+                targets: Vec::new(),
+                reasons: vec![ImpactReason {
+                    changed_file: "src/unit.test.ts".to_string(),
+                    path: vec!["src/unit.test.ts".to_string()],
+                    via: vec!["self".to_string()],
+                    via_details: Vec::new(),
+                }],
+            }],
+            groups: Vec::new(),
+            warnings: Vec::new(),
+            fallback_triggered: false,
+            fallback_reason: None,
+        };
+
+        let rendered = super::super::render(&plan, PlanFormat::Explain, "tests plan").unwrap();
+        assert!(rendered.contains("Path: `src/unit.test.ts` (self-selected)"));
+        assert!(!rendered.contains("`src/unit.test.ts` ➔ [self]"));
     }
 
     #[test]
     fn explain_renders_empty_fallback_and_resource_without_call_sites() {
         let selected_plan = TestPlan {
-            changed_files: Vec::new(),
+            changed_files: vec!["resource.txt".to_string(), "unmatched.ts".to_string()],
             selected_tests: vec![selected(
                 "resource.test.ts",
                 Confidence::Low,
@@ -177,11 +224,11 @@ mod tests {
             fallback_triggered: true,
             fallback_reason: Some("configuration changed".to_string()),
         };
-        assert!(
-            super::super::render(&selected_plan, PlanFormat::Explain, "tests plan")
-                .unwrap()
-                .contains("Path: `resource.txt` ➔ [resource (resource.test.ts)]")
-        );
+        let rendered =
+            super::super::render(&selected_plan, PlanFormat::Explain, "tests plan").unwrap();
+        assert!(rendered.contains("- resource.txt\n- unmatched.ts"));
+        assert!(rendered
+            .contains("Path: `resource.txt` ➔ [resource (resource.test.ts)] ➔ `resource.test.ts`"));
 
         let empty_plan = TestPlan {
             changed_files: Vec::new(),
@@ -193,7 +240,7 @@ mod tests {
         };
         assert_eq!(
             super::super::render(&empty_plan, PlanFormat::Explain, "tests plan").unwrap(),
-            "Test plan: 0 selected test(s)\nFallback: not triggered\n\nNo tests selected.\n"
+            "Test plan: 0 selected test(s)\nFallback: not triggered\n\nChanged files (0):\n- None\n\nNo tests selected.\n"
         );
     }
 

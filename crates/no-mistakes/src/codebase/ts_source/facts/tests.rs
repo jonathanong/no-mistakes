@@ -200,17 +200,25 @@ fn collected_fact_map_retains_its_plan_and_read_errors() {
 
     assert!(facts.plan().covers(plan));
     assert!(facts[&missing]
+        .operational_error
+        .as_deref()
+        .is_some_and(|error| error.contains("failed to read")));
+    assert!(facts[&missing]
         .parse_error
         .as_deref()
         .is_some_and(|error| error.contains("failed to read")));
 }
 
 #[test]
-fn failed_collection_result_becomes_parse_error_facts() {
+fn failed_collection_result_becomes_operational_error_facts() {
     let facts = super::collect::test_support::facts_from_collection_result(Err(anyhow::anyhow!(
         "synthetic parse failure"
     )));
 
+    assert_eq!(
+        facts.operational_error.as_deref(),
+        Some("synthetic parse failure")
+    );
     assert_eq!(
         facts.parse_error.as_deref(),
         Some("synthetic parse failure")
@@ -394,6 +402,10 @@ fn collect_ts_facts_skips_non_indexable_files_and_preserves_read_errors() {
     assert_eq!(facts.len(), 2);
     assert_eq!(facts[&ts].imports.len(), 1);
     assert!(facts[&ts].symbols.is_none());
+    assert!(facts[&missing]
+        .operational_error
+        .as_deref()
+        .is_some_and(|error| error.contains("failed to read")));
     assert!(facts[&missing]
         .parse_error
         .as_deref()

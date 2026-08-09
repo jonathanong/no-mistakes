@@ -123,7 +123,7 @@ fn tests_plan_explain_renders_confidence_and_dependency_paths() {
     assert!(output.status.success());
     assert_eq!(
         stdout(&output),
-        "Test plan: 2 selected test(s)\nFallback: not triggered\n\nTest: a.test.mts\nConfidence: 🟢 High\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `b.mts` ➔ [dependency] ➔ `a.mts` ➔ [dependency] ➔ `a.test.mts`\n\nTest: dynamic.test.mts\nConfidence: 🟡 Medium\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `dynamic.mts` ➔ [dependency] ➔ `dynamic.test.mts`\n\nWarnings (1):\n- dynamic-import (dynamic.mts): Dynamic import in `dynamic.mts` might not be fully resolved.\n"
+        "Test plan: 2 selected test(s)\nFallback: not triggered\n\nChanged files (1):\n- c.mts\n\nTest: a.test.mts\nConfidence: 🟢 High\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `b.mts` ➔ [dependency] ➔ `a.mts` ➔ [dependency] ➔ `a.test.mts`\n\nTest: dynamic.test.mts\nConfidence: 🟡 Medium\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `dynamic.mts` ➔ [dependency] ➔ `dynamic.test.mts`\n\nWarnings (1):\n- dynamic-import (dynamic.mts): Dynamic import in `dynamic.mts` might not be fully resolved.\n"
     );
 }
 
