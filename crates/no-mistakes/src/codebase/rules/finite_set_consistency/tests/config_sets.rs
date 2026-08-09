@@ -215,6 +215,17 @@ fn call_first_string_arguments_exclude_synthetic_method_edges() {
 }
 
 #[test]
+fn call_first_string_arguments_exclude_optional_chain_calls() {
+    let findings =
+        check_call_literal_fixture("optional-chain", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0]
+        .message
+        .contains("found no calls matching target 'ai_agents.upsertJobScheduler'"));
+}
+
+#[test]
 fn call_first_string_arguments_normalize_escapes_like_registry_literals() {
     let findings =
         check_call_literal_fixture("escaped-literals", "ai_agents.upsertJobScheduler").unwrap();

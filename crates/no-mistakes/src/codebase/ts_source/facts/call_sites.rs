@@ -34,10 +34,16 @@ struct CallSiteVisitor<'a> {
     sites: Vec<CallSiteFact>,
 }
 
-fn callee_name(callee: &Expression<'_>) -> Option<String> {
+fn callee_name(call: &CallExpression<'_>) -> Option<String> {
+    // Optional calls are not guaranteed invocations of the configured target.
+    // Keep finite-set extraction deterministic by recording only direct calls.
+    if call.optional {
+        return None;
+    }
+    let callee = &call.callee;
     match callee {
         Expression::Identifier(identifier) => Some(identifier.name.to_string()),
-        Expression::StaticMemberExpression(member) => match &member.object {
+        Expression::StaticMemberExpression(member) if !member.optional => match &member.object {
             Expression::Identifier(object) => Some(format!(
                 "{}.{}",
                 object.name.as_str(),
@@ -90,7 +96,7 @@ impl<'a> Visit<'a> for CallSiteVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Some(callee) = callee_name(&call.callee) {
+        if let Some(callee) = callee_name(call) {
             self.sites.push(CallSiteFact {
                 callee,
                 line: byte_offset_to_line(self.source, call.span.start as usize),

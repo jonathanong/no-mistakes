@@ -38,8 +38,16 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     files: &[PathBuf],
     prepared: PreparedFilesystemRuleInputs<'_>,
 ) -> Result<Vec<RuleFinding>> {
+    // This legacy prepared entrypoint still owns the one request-scoped fact
+    // pass for callers that did not supply one. Reuse its source store so the
+    // finite-set rule can borrow call facts without reading or parsing again.
+    let facts = super::entrypoints::prepare_call_site_facts(root, config, &prepared.sources);
     run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
-        root, config, files, prepared, None,
+        root,
+        config,
+        files,
+        prepared,
+        facts.as_ref(),
     )
 }
 
