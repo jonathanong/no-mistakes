@@ -1,6 +1,7 @@
 mod comments;
 mod comparison;
 mod extract;
+mod extraction_completeness;
 mod literals;
 mod markdown;
 mod object;
@@ -15,7 +16,7 @@ use anyhow::Result;
 use extract::extract_set_with_sources;
 use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "finite-set-consistency";
@@ -150,14 +151,23 @@ fn scan(
             })
         })
         .collect::<Vec<_>>();
+    let incomplete_sets = sets
+        .iter()
+        .filter(|(_, set)| extraction_completeness::has_unsuppressed_issues(root, set, sources))
+        .map(|(name, _)| name.as_str())
+        .collect::<BTreeSet<_>>();
     for comparison in &opts.comparisons {
         let (Some(left), Some(right)) = (sets.get(&comparison.left), sets.get(&comparison.right))
         else {
             continue;
         };
         // An incomplete extraction cannot answer a set comparison soundly.
-        // Report the precise extraction issue without cascading mismatches.
-        if !left.issues.is_empty() || !right.issues.is_empty() {
+        // Suppressed extraction issues are intentionally not incomplete: the
+        // static values retained by the extractor can still be compared, and
+        // the shared suppression pass will remove the issue itself later.
+        if incomplete_sets.contains(comparison.left.as_str())
+            || incomplete_sets.contains(comparison.right.as_str())
+        {
             continue;
         }
         comparison::compare(left, right, comparison, &mut findings);

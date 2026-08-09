@@ -45,6 +45,7 @@ fn callee_name(callee: &Expression<'_>) -> Option<String> {
                 object.name.as_str(),
                 member.property.name.as_str()
             )),
+            Expression::ThisExpression(_) => Some(format!("this.{}", member.property.name)),
             _ => None,
         },
         _ => None,

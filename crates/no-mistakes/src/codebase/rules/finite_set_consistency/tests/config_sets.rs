@@ -211,6 +211,13 @@ fn call_first_string_arguments_include_calls_on_local_member_receivers() {
 }
 
 #[test]
+fn call_first_string_arguments_include_calls_on_this_member_receivers() {
+    let findings = check_call_literal_fixture("this-receiver", "this.register").unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn call_first_string_arguments_exclude_synthetic_method_edges() {
     let findings = check_call_literal_fixture("synthetic-method", "register").unwrap();
 

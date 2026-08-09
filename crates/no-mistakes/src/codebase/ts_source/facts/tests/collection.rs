@@ -74,6 +74,27 @@ fn call_site_facts_preserve_optional_member_calls() {
 }
 
 #[test]
+fn call_site_facts_render_one_level_this_member_calls() {
+    let file = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../fixtures/rules/finite-set-consistency/call-literals/this-receiver/schedules.mts",
+    );
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan {
+            call_sites: true,
+            ..TsFactPlan::default()
+        },
+    );
+
+    let call_site = facts[&file]
+        .call_sites
+        .iter()
+        .find(|site| site.callee == "this.register")
+        .expect("this member call site");
+    assert_eq!(call_site.static_arg_source.as_deref(), Some("\"job\""));
+}
+
+#[test]
 fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
     let file = fixture("imports.ts");
     let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(

@@ -17,6 +17,32 @@ fn call_first_string_arguments_allow_line_suppression_at_the_dynamic_call() {
 }
 
 #[test]
+fn suppressed_dynamic_calls_do_not_skip_static_set_comparisons() {
+    let root = call_literal_fixture_root("suppressed-static-mismatch");
+    let files = vec![root.join("schedules.mts"), root.join("registry.mts")];
+
+    let findings = crate::codebase::rules::filesystem_dispatch::run_filesystem_rules_with_config(
+        &root,
+        &call_literal_config("ai_agents.upsertJobScheduler"),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings.iter().all(|finding| finding.line == 1));
+    assert!(findings.iter().any(|finding| {
+        finding
+            .message
+            .contains("registryIds contains `reconcileBackgroundResponses`")
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding
+            .message
+            .contains("registryIds contains `reconcileRuntimeGenerations`")
+    }));
+}
+
+#[test]
 fn call_first_string_arguments_accept_parenthesized_string_literals() {
     let findings =
         check_call_literal_fixture("parenthesized-literals", "ai_agents.upsertJobScheduler")
