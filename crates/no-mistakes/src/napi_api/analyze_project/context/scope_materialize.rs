@@ -1,8 +1,9 @@
 impl PreparedScopePlan {
-    fn fact_requests(&self) -> [crate::codebase::check_facts::BatchCheckFactRequest; 2] {
+    fn fact_requests(&self) -> [crate::codebase::check_facts::BatchCheckFactRequest; 3] {
         [
             self.primary.batch_request(&self.root),
             self.supplemental.batch_request(&self.root),
+            self.supplemental_call_sites.batch_request(&self.root),
         ]
     }
 
@@ -10,8 +11,10 @@ impl PreparedScopePlan {
         mut self,
         facts: crate::codebase::check_facts::CheckFactMap,
         symbol_facts: crate::codebase::check_facts::CheckFactMap,
+        call_site_facts: crate::codebase::check_facts::CheckFactMap,
     ) -> Result<PreparedScope> {
         let graph_facts = facts.graph_view_with_supplemental(&symbol_facts);
+        let check_facts = facts.fact_view_with_supplemental(&call_site_facts);
         self.traversal.use_check_facts(&graph_facts);
         // Config facts were prepared before the batch. Seed them before the
         // canonical graph so invalidation retains Playwright occurrences.
@@ -47,6 +50,7 @@ impl PreparedScopePlan {
             options: self.options,
             traversal: self.traversal,
             facts,
+            check_facts,
             symbol_facts,
             import_usages: self.import_usages,
             server,

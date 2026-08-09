@@ -26,6 +26,7 @@ pub(in super::super) fn extract_path_regex_set(
             false => spec.file.clone(),
         },
         values,
+        issues: Vec::new(),
     })
 }
 

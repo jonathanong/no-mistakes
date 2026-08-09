@@ -39,6 +39,10 @@ impl SharedCheckContext {
         &self.fact_files
     }
 
+    fn supplemental_call_site_files(&self) -> &[PathBuf] {
+        &self.supplemental_call_site_files
+    }
+
     fn graph_files(&self) -> &[PathBuf] {
         &self.graph_files
     }

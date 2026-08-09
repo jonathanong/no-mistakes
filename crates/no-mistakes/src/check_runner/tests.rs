@@ -105,7 +105,7 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
     let config = no_mistakes::config::v2::NoMistakesConfig::default();
     let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &[]);
-    let task = crate::check_tasks::run_filesystem_rules_check(
+    let task = crate::check_tasks::run_filesystem_rules_check_with_facts(
         &root,
         &config,
         false,
@@ -118,6 +118,7 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
             tsconfig_gate_project_inputs: None,
             config_path: None,
         },
+        None,
     )
     .unwrap();
 

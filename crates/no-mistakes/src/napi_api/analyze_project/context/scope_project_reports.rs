@@ -27,7 +27,7 @@ impl PreparedScope {
                     None
                 };
                 Ok(crate::check_runner::json_value(&check.run(
-                    &self.facts,
+                    &self.check_facts,
                     dependency_graph.as_ref(),
                     self.traversal.session_arc(),
                 )?))

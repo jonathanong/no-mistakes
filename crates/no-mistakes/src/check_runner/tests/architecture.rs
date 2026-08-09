@@ -31,7 +31,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
         "queue::analyze_project_with_prepared_facts_and_catalog_and_session",
         "integration_tests::check_with_prepared_facts_catalog_and_session",
         "unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session",
-        "run_filesystem_rules_with_config_snapshot_catalog_and_sources",
+        "run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts",
     ] {
         assert!(
             tasks.contains(shared_entrypoint),
@@ -122,7 +122,7 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
         prepared.matches("prepare_vitest_project_catalog(").count(),
         1
     );
-    assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_catalog_and_sources"));
+    assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts"));
     assert!(dispatcher.contains("check_with_files_and_catalog"));
     assert!(dispatcher.contains("check_with_files_from_snapshot_catalog_sources_and_workflows"));
     assert_eq!(

@@ -1,11 +1,11 @@
 use super::{
-    complete_domain_checks, empty_results, enabled, graph_plan, prepared, results, CheckResults,
+    complete_domain_checks, empty_results, enabled, fact_collection, finite_set_plan, graph_plan,
+    prepared, results, CheckResults,
 };
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks;
 use anyhow::{Context, Result};
-use enabled::{fact_plan, integration_configured, plan_requests_facts};
-use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_playwright_sources_and_session;
+use enabled::{fact_plan, integration_configured};
 use std::path::PathBuf;
 
 pub(crate) fn run_all(
@@ -88,13 +88,19 @@ pub(crate) fn run_all(
         &mut playwright_fact_plan,
         &mut plan,
     )?;
-    let needs_shared_facts = canonical_graph_plan.is_some()
-        || playwright_fact_plan.is_some()
-        || plan_requests_facts(&plan);
-    if !needs_shared_facts
-        && !filesystem_rules_enabled
-        && !no_mistakes::playwright::rules::configured(config)
-    {
+    let fact_demand = finite_set_plan::prepare(
+        &root,
+        config,
+        &mut plan,
+        canonical_graph_plan.is_some(),
+        playwright_fact_plan.is_some(),
+    );
+    let needs_shared_facts = fact_demand.needs_shared_facts();
+    if finite_set_plan::no_analysis_requested(
+        needs_shared_facts,
+        filesystem_rules_enabled,
+        no_mistakes::playwright::rules::configured(config),
+    ) {
         return Ok(empty_results([None]));
     }
     let (views, discover_duration) = no_mistakes::diagnostics::measure_if_enabled(
@@ -110,43 +116,27 @@ pub(crate) fn run_all(
             )
         },
     );
-    let needs_full_graph_files =
-        graph_requires_full_file_universe || playwright_fact_plan.is_some();
-    let needs_graph_files =
-        needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
-    let (discovered, graph_files) = if needs_full_graph_files {
-        (views.filesystem, views.graph)
-    } else if needs_graph_files {
-        let graph_files = views.filesystem.clone();
-        (views.filesystem, graph_files)
-    } else {
-        (views.filesystem, Vec::new())
-    };
-    let sources = prepared.visible_paths.source_store_for(&root);
-    let ((fs_files, facts), facts_duration) = no_mistakes::diagnostics::measure_if_enabled(
-        "parse",
-        no_mistakes::diagnostics::TimingKind::Serial,
-        || {
-            if needs_shared_facts {
-                let fs = if filesystem_rules_enabled {
-                    discovered.clone()
-                } else {
-                    Vec::new()
-                };
-                let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
-                    &session,
-                    &root,
-                    (discovered, graph_files),
-                    plan,
-                    playwright_fact_plan,
-                    std::sync::Arc::clone(&sources),
-                );
-                (fs, facts)
-            } else {
-                (discovered, Default::default())
-            }
-        },
+    let (discovered, graph_files) = crate::check_discovery::select_graph_files(
+        views,
+        needs_shared_facts,
+        graph_requires_full_file_universe,
+        playwright_fact_plan.is_some(),
+        enabled.dynamic_import_rules,
     );
+    let sources = prepared.visible_paths.source_store_for(&root);
+    let ((fs_files, facts), facts_duration) =
+        fact_collection::collect(fact_collection::CollectInput {
+            session: &session,
+            root: &root,
+            discovered,
+            graph_files,
+            needs_shared_facts,
+            filesystem_rules_enabled,
+            fact_demand: &fact_demand,
+            plan,
+            playwright_fact_plan,
+            sources: std::sync::Arc::clone(&sources),
+        });
     no_mistakes::invocation::check_timeout()?;
     let (react, queues, rules, integration, codebase, filesystem_rules) =
         run_domain_checks(DomainCheckInputs {

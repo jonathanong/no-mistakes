@@ -14,6 +14,7 @@ include!("context/check_prepare.rs");
 include!("context/check_run.rs");
 include!("context/scope_types.rs");
 include!("context/scope_prepare.rs");
+include!("context/supplemental_call_sites.rs");
 include!("context/scope_materialize.rs");
 include!("context/traversal_report_keys.rs");
 include!("context/scope_graph_reports.rs");

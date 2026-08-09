@@ -47,6 +47,19 @@ fn collects_sites_with_callers_and_spread() {
 }
 
 #[test]
+fn collects_optional_identifier_calls() {
+    let fixture = crate::codebase::queries::test_support::materialize_root_fixture(
+        "optional-identifier-call",
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let report = compute(&args(root, "target.ts", "used")).unwrap();
+
+    assert_eq!(report.call_sites.len(), 1);
+    assert_eq!(report.call_sites[0].file, "consumer.ts");
+    assert_eq!(report.call_sites[0].line, 3);
+}
+
+#[test]
 fn covers_every_argument_shape() {
     let json = run_json(args(fixture_root("queries-shapes"), "target.ts", "f")).unwrap();
     let value: serde_json::Value = serde_json::from_str(&json).unwrap();

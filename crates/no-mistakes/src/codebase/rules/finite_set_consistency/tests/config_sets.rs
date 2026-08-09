@@ -3,12 +3,16 @@ use super::extract::{
     extract_ts_const_array_property, extract_yaml_sequence, ExtractedSet,
 };
 use super::*;
+use crate::codebase::rules::RuleFinding;
 use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
+    schema::{Project, RuleDef, RuleScope},
     NoMistakesConfig,
 };
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+#[path = "call_literals_regressions.rs"]
+mod call_literals_regressions;
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -16,6 +20,53 @@ fn fixture_root(name: &str) -> PathBuf {
             .join("../../test-cases/rules/finite-set-consistency")
             .join(name),
     )
+}
+
+fn call_literal_fixture_root(case: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals")
+            .join(case),
+    )
+}
+
+fn check_call_literal_fixture(case: &str, target: &str) -> anyhow::Result<Vec<RuleFinding>> {
+    let root = call_literal_fixture_root(case);
+    let files = vec![root.join("schedules.mts"), root.join("registry.mts")];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let config = call_literal_config(target);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        required_call_site_fact_files(&root, &config),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                call_sites: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    );
+    check_with_files_sources_and_facts(&root, &config, &files, &sources, Some(&facts))
+}
+
+fn call_literal_config(target: &str) -> NoMistakesConfig {
+    config(&format!(
+        r#"
+sets:
+  - name: schedulerIds
+    file: schedules.mts
+    kind: ts-call-first-string-argument
+    target: "{target}"
+  - name: registryIds
+    file: registry.mts
+    kind: ts-const-array-property
+    target: AI_AGENTS_SCHEDULED_JOBS
+    property: id
+comparisons:
+  - left: schedulerIds
+    right: registryIds
+"#
+    ))
 }
 
 fn config(yaml: &str) -> NoMistakesConfig {
@@ -60,6 +111,222 @@ fn extracts_yaml_ts_array_and_markdown_sets() {
         extract_markdown_table_code_cells(&docs),
         BTreeSet::from(["@acme/api".to_string(), "@acme/web".to_string()])
     );
+}
+
+#[test]
+fn call_first_string_arguments_match_registry_ids() {
+    let findings = check_call_literal_fixture("valid", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn prepared_call_facts_parse_each_source_once() {
+    let root = call_literal_fixture_root("prepared-once");
+    crate::ast::begin_parse_count(&root);
+    let findings =
+        check_call_literal_fixture("prepared-once", "ai_agents.upsertJobScheduler").unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert_eq!(counts.get(&root.join("schedules.mts")), Some(&1));
+    assert!(
+        !counts.contains_key(&root.join("registry.mts")),
+        "{counts:?}"
+    );
+    assert!(counts.values().all(|count| *count == 1), "{counts:?}");
+}
+
+#[test]
+fn standalone_dispatcher_prepares_only_call_source_once() {
+    let root = call_literal_fixture_root("standalone-once");
+    let files = vec![root.join("schedules.mts"), root.join("registry.mts")];
+    crate::ast::begin_parse_count(&root);
+    let findings = crate::codebase::rules::filesystem_dispatch::run_filesystem_rules_with_config(
+        &root,
+        &call_literal_config("ai_agents.upsertJobScheduler"),
+        &files,
+    )
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert_eq!(counts.get(&root.join("schedules.mts")), Some(&1));
+    assert_eq!(counts.len(), 1, "{counts:?}");
+}
+
+#[test]
+fn call_fact_demand_resolves_each_configured_project_once() {
+    let root = call_literal_fixture_root("project-scope");
+    let mut config = call_literal_config("ai_agents.upsertJobScheduler");
+    config.projects.insert(
+        "app-a".to_string(),
+        Project {
+            root: Some("packages/app-a".to_string()),
+            ..Default::default()
+        },
+    );
+    config.projects.insert(
+        "app-b".to_string(),
+        Project {
+            root: Some("packages/app-b".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["app-a".to_string(), "app-b".to_string()];
+
+    assert_eq!(
+        required_call_site_fact_files(&root, &config),
+        vec![
+            root.join("packages/app-a/schedules.mts"),
+            root.join("packages/app-b/schedules.mts"),
+        ]
+    );
+}
+
+#[test]
+fn call_first_string_arguments_catch_missing_scheduler_registry_entries() {
+    let findings =
+        check_call_literal_fixture("missing-registry", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = &findings[0];
+    assert_eq!(finding.rule, RULE_ID);
+    assert!(
+        finding
+            .message
+            .contains("schedulerIds contains `reconcileRuntimeGenerations`")
+            && finding.message.contains("registryIds does not"),
+        "{finding:?}"
+    );
+}
+
+#[test]
+fn call_first_string_arguments_include_calls_on_local_member_receivers() {
+    let findings =
+        check_call_literal_fixture("local-receiver", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn call_first_string_arguments_include_calls_on_this_member_receivers() {
+    let findings = check_call_literal_fixture("this-receiver", "this.register").unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn call_first_string_arguments_exclude_synthetic_method_edges() {
+    let findings = check_call_literal_fixture("synthetic-method", "register").unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn call_first_string_arguments_exclude_optional_chain_calls() {
+    let findings =
+        check_call_literal_fixture("optional-chain", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0]
+        .message
+        .contains("found no calls matching target 'ai_agents.upsertJobScheduler'"));
+}
+
+#[test]
+fn call_first_string_arguments_normalize_escapes_like_registry_literals() {
+    let findings =
+        check_call_literal_fixture("escaped-literals", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn call_first_string_arguments_fail_closed_for_non_literal_arguments() {
+    let findings =
+        check_call_literal_fixture("non-literal", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = &findings[0];
+    assert_eq!(finding.rule, RULE_ID);
+    assert!(
+        finding.message.contains(
+            "finite set 'schedulerIds' requires every 'ai_agents.upsertJobScheduler' call to have a static first string argument"
+        ),
+        "{finding:?}"
+    );
+    assert_eq!(
+        finding.line, 8,
+        "the finding must point at the dynamic call"
+    );
+}
+
+#[test]
+fn call_first_string_arguments_reject_missing_spread_and_interpolated_arguments() {
+    let findings =
+        check_call_literal_fixture("dynamic-arguments", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert!(findings.iter().all(|finding| {
+        finding.rule == RULE_ID
+            && finding.message.contains(
+                "finite set 'schedulerIds' requires every 'ai_agents.upsertJobScheduler' call to have a static first string argument"
+            )
+    }));
+}
+
+#[test]
+fn call_first_string_arguments_fail_closed_for_unknown_targets() {
+    let findings = check_call_literal_fixture("wrong-target", "ai_agents.scheduleJob").unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, RULE_ID);
+    assert!(findings[0]
+        .message
+        .contains("found no calls matching target 'ai_agents.scheduleJob'"));
+}
+
+#[test]
+fn call_first_string_arguments_require_a_target() {
+    let findings = check_call_literal_fixture("valid", "").unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, RULE_ID);
+    assert!(findings[0]
+        .message
+        .contains("finite set 'schedulerIds' requires a non-empty target"));
+}
+
+#[test]
+fn call_first_string_arguments_require_prepared_facts() {
+    let root = call_literal_fixture_root("valid");
+    let files = vec![root.join("schedules.mts"), root.join("registry.mts")];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let findings = check_with_files_and_sources(
+        &root,
+        &call_literal_config("ai_agents.upsertJobScheduler"),
+        &files,
+        &sources,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0]
+        .message
+        .contains("has no prepared TypeScript facts"));
+}
+
+#[test]
+fn call_first_string_arguments_report_prepared_parse_errors() {
+    let findings =
+        check_call_literal_fixture("parse-error", "ai_agents.upsertJobScheduler").unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0]
+        .message
+        .contains("configured file failed to parse"));
 }
 
 #[test]
@@ -237,10 +504,12 @@ fn comparison_modes_cover_defaults_custom_messages_and_unknown_modes() {
     let left = ExtractedSet {
         file: "left.ts".to_string(),
         values: BTreeSet::from(["api".to_string(), "web".to_string()]),
+        issues: Vec::new(),
     };
     let right = ExtractedSet {
         file: "right.md".to_string(),
         values: BTreeSet::from(["api".to_string()]),
+        issues: Vec::new(),
     };
 
     let mut findings = Vec::new();

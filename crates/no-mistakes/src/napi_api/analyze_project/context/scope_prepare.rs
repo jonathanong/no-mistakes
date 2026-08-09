@@ -154,6 +154,12 @@ impl PreparedScopePlan {
         supplemental_report_files.sort();
         supplemental_report_files.dedup();
         let sources = traversal.source_store();
+        let supplemental_call_sites = supplemental_call_site_plan(
+            check.as_ref(),
+            &files,
+            &graph_files,
+            std::sync::Arc::clone(&sources),
+        );
         let mut supplemental_plan = report_plan;
         supplemental_plan.dynamic_imports |= check_plan.dynamic_imports;
         supplemental_plan.source |= check_plan.source;
@@ -174,8 +180,11 @@ impl PreparedScopePlan {
                 graph_files: Vec::new(),
                 plan: supplemental_plan,
                 playwright: None,
-                sources,
+                sources: std::sync::Arc::clone(&sources),
             },
+            // Configured finite-set call sources can intentionally sit outside
+            // the discovered check scope, so the helper keeps them fact-only.
+            supplemental_call_sites,
             configs,
             import_usages,
             check,

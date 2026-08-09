@@ -11,14 +11,19 @@ pub(super) fn run_rule_with_sources(
     config: &crate::config::v2::NoMistakesConfig,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
     match rule_id {
         AGENTS_MD_MAX_SIZE => {
             agents_md_max_size::check_with_files_and_sources(root, config, files, sources)
         }
-        FINITE_SET_CONSISTENCY => {
-            finite_set_consistency::check_with_files_and_sources(root, config, files, sources)
-        }
+        FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files_sources_and_facts(
+            root,
+            config,
+            files,
+            sources,
+            facts.map(|facts| facts as &dyn crate::codebase::dependencies::graph::TsFactLookup),
+        ),
         FORBIDDEN_WORKSPACE_CLOSURE => {
             forbidden_workspace_closure::check_with_files_and_sources(root, config, files, sources)
         }

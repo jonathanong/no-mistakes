@@ -103,7 +103,10 @@ impl AnalyzeProjectContext {
             let supplemental = collected
                 .next()
                 .expect("supplemental scope facts are collected");
-            scopes.insert(key, plan.materialize(facts, supplemental)?);
+            let call_site_facts = collected
+                .next()
+                .expect("supplemental call-site facts are collected");
+            scopes.insert(key, plan.materialize(facts, supplemental, call_site_facts)?);
         }
         // Every effective scope may seed facts from programs parsed while the
         // scope plans were prepared. Retain those programs until all scopes
