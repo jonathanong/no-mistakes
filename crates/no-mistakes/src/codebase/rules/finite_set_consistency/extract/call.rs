@@ -12,6 +12,7 @@ pub(super) fn extract_call_first_string_argument(
     if spec.target.is_empty() {
         issues.push(ExtractionIssue {
             file,
+            line: 1,
             message: format!(
                 "finite set '{}' requires a non-empty target for kind '{}'",
                 spec.name, TS_CALL_FIRST_STRING_ARGUMENT
@@ -23,6 +24,7 @@ pub(super) fn extract_call_first_string_argument(
     let Some(file_facts) = facts.and_then(|facts| facts.get_ts_facts(path)) else {
         issues.push(ExtractionIssue {
             file,
+            line: 1,
             message: format!(
                 "finite set '{}' has no prepared TypeScript facts for its configured file",
                 spec.name
@@ -31,9 +33,27 @@ pub(super) fn extract_call_first_string_argument(
         });
         return;
     };
+    if !facts.is_some_and(|facts| {
+        facts.covers_ts_fact_plan(crate::codebase::ts_source::facts::TsFactPlan {
+            call_sites: true,
+            ..Default::default()
+        })
+    }) {
+        issues.push(ExtractionIssue {
+            file,
+            line: 1,
+            message: format!(
+                "finite set '{}' has prepared TypeScript facts that do not cover call-site facts for its configured file",
+                spec.name
+            ),
+            target: Some(spec.target.clone()),
+        });
+        return;
+    }
     if let Some(error) = &file_facts.parse_error {
         issues.push(ExtractionIssue {
             file,
+            line: 1,
             message: format!(
                 "finite set '{}' cannot extract calls because the configured file failed to parse: {error}",
                 spec.name
@@ -43,7 +63,7 @@ pub(super) fn extract_call_first_string_argument(
         return;
     }
     let mut matched = false;
-    let mut has_non_static_argument = false;
+    let mut first_non_static_line = None;
     for call in &file_facts.call_sites {
         // Optional calls are not guaranteed invocations of the configured
         // target, but other call-site consumers still need to report them.
@@ -57,13 +77,14 @@ pub(super) fn extract_call_first_string_argument(
             .and_then(super::super::ts_array::quoted_string_literal)
         {
             values.insert(value);
-        } else {
-            has_non_static_argument = true;
+        } else if first_non_static_line.is_none() {
+            first_non_static_line = Some(call.line as usize);
         }
     }
     if !matched {
         issues.push(ExtractionIssue {
             file,
+            line: 1,
             message: format!(
                 "finite set '{}' found no calls matching target '{}'",
                 spec.name, spec.target
@@ -72,9 +93,10 @@ pub(super) fn extract_call_first_string_argument(
         });
         return;
     }
-    if has_non_static_argument {
+    if let Some(line) = first_non_static_line {
         issues.push(ExtractionIssue {
             file,
+            line,
             message: format!(
                 "finite set '{}' requires every '{}' call to have a static first string argument",
                 spec.name, spec.target

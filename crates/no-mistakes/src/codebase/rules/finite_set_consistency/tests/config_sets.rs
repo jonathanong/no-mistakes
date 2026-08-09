@@ -11,6 +11,9 @@ use crate::config::v2::{
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+#[path = "call_literals_regressions.rs"]
+mod call_literals_regressions;
+
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -246,6 +249,10 @@ fn call_first_string_arguments_fail_closed_for_non_literal_arguments() {
             "finite set 'schedulerIds' requires every 'ai_agents.upsertJobScheduler' call to have a static first string argument"
         ),
         "{finding:?}"
+    );
+    assert_eq!(
+        finding.line, 8,
+        "the finding must point at the dynamic call"
     );
 }
 

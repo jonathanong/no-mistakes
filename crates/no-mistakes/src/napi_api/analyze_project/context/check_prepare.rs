@@ -6,6 +6,7 @@ struct SharedCheckContext {
     plan: crate::codebase::check_facts::CheckFactPlan,
     playwright_fact_plan: Option<crate::codebase::check_facts::PlaywrightFactPlan>,
     fact_files: Vec<PathBuf>,
+    supplemental_call_site_files: Vec<PathBuf>,
     graph_files: Vec<PathBuf>,
     fs_files: Vec<PathBuf>,
     prepared_graph: Option<crate::codebase::dependencies::graph::PreparedGraphConfig>,
@@ -155,10 +156,11 @@ impl SharedCheckContext {
             enabled.dynamic_import_rules,
         );
         let fact_files = if needs_shared_facts {
-            fact_demand.merge(discovered.clone())
+            fact_demand.primary_files(discovered.clone())
         } else {
             Default::default()
         };
+        let supplemental_call_site_files = fact_demand.supplemental_call_site_files(&fact_files);
         let fs_files = if filesystem_rules_enabled {
             discovered
         } else {
@@ -172,6 +174,7 @@ impl SharedCheckContext {
             plan,
             playwright_fact_plan,
             fact_files,
+            supplemental_call_site_files,
             graph_files,
             fs_files,
             prepared_graph,

@@ -102,6 +102,39 @@ fn collect_check_facts_skips_non_indexable_files_with_minimal_plan() {
 }
 
 #[test]
+fn fact_view_with_supplemental_preserves_the_primary_file_and_graph_universes() {
+    let primary = fixture_path("src/everything.tsx");
+    let supplemental = fixture_path("src/invalid.ts");
+    let primary_facts = CheckFactMap {
+        files: vec![primary.clone()],
+        graph_files: vec![primary.clone()],
+        graph_files_complete: true,
+        ..CheckFactMap::default()
+    };
+    let supplemental_facts = CheckFactMap {
+        files: vec![supplemental.clone()],
+        graph_files: vec![supplemental.clone()],
+        graph_files_complete: true,
+        ts: std::collections::HashMap::from([(
+            supplemental.clone(),
+            std::sync::Arc::new(super::CheckFileFacts::default()),
+        )]),
+        graph_plan: crate::codebase::ts_source::facts::TsFactPlan {
+            call_sites: true,
+            ..Default::default()
+        },
+        ..CheckFactMap::default()
+    };
+
+    let view = primary_facts.fact_view_with_supplemental(&supplemental_facts);
+
+    assert_eq!(view.files(), std::slice::from_ref(&primary));
+    assert_eq!(view.graph_file_universe(), &[primary]);
+    assert!(view.ts.contains_key(&supplemental));
+    assert!(view.graph_plan().call_sites);
+}
+
+#[test]
 fn collect_check_facts_records_parse_error_details() {
     let root = fixture_path("");
     let file = fixture_path("src/invalid.ts");

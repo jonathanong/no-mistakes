@@ -102,6 +102,17 @@ impl CheckFactMap {
         self.view_with_supplemental(supplemental, graph_files)
     }
 
+    /// Add prepared facts without admitting their source paths to the primary
+    /// file or graph universes.
+    ///
+    /// This is used for configured, out-of-scope fact consumers such as
+    /// finite-set call sources. They need their facts to be addressable, but
+    /// must not widen filesystem-scoped checks or canonical graph traversal.
+    #[doc(hidden)]
+    pub fn fact_view_with_supplemental(&self, supplemental: &Self) -> Self {
+        self.view_with_supplemental(supplemental, self.graph_files.clone())
+    }
+
     pub(crate) fn with_graph_file_universe(&self, graph_files: Vec<PathBuf>) -> Self {
         self.view_with_supplemental(&Self::default(), graph_files)
     }

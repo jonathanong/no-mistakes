@@ -12,15 +12,29 @@ impl PreparedFactDemand {
         self.needs_other_facts || !self.call_site_files.is_empty()
     }
 
-    pub(crate) fn merge(self, discovered: Vec<PathBuf>) -> Vec<PathBuf> {
-        if !self.needs_other_facts {
-            return self.call_site_files;
+    /// Files needed by the request's primary shared-facts consumers.
+    ///
+    /// Configured finite-set call sources are deliberately excluded here. A
+    /// call source can be under `filesystem.skipDirectories`; retain only
+    /// call sources that discovery already admitted to the primary scope.
+    pub(crate) fn primary_files(&self, discovered: Vec<PathBuf>) -> Vec<PathBuf> {
+        if self.needs_other_facts {
+            return discovered;
         }
-        let mut files = discovered;
-        files.extend(self.call_site_files);
-        files.sort();
-        files.dedup();
-        files
+        self.call_site_files
+            .iter()
+            .filter(|path| discovered.contains(path))
+            .cloned()
+            .collect()
+    }
+
+    /// Call-source files absent from the ordinary shared-facts scope.
+    pub(crate) fn supplemental_call_site_files(&self, primary_files: &[PathBuf]) -> Vec<PathBuf> {
+        self.call_site_files
+            .iter()
+            .filter(|path| !primary_files.contains(path))
+            .cloned()
+            .collect()
     }
 }
 

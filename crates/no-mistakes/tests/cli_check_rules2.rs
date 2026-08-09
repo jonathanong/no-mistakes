@@ -232,6 +232,36 @@ rules:
 }
 
 #[test]
+fn finite_set_call_sources_under_skipped_directories_stay_out_of_other_checks() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+
+    assert!(!out.status.success(), "the finite-set mismatch should fail");
+    assert!(json["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "finite-set-consistency" && finding["target"] == "missing"
+    }));
+    // `generated/` is a configured finite-set input, but it is outside the
+    // dynamic-import check's filesystem scope.
+    assert!(json["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|finding| { finding["rule"] != "test-no-unmocked-dynamic-imports" }));
+}
+
+#[test]
 fn vitest_ci_path_coverage_appears_in_cli_json() {
     let root = rule_fixture_scenario("vitest-ci-path-coverage", "fixture");
     let out = check_fixture_config(&root, ".no-mistakes.yml");

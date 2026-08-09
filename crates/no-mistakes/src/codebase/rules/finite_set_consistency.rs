@@ -143,7 +143,7 @@ fn scan(
             set.issues.iter().map(|issue| RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: issue.file.clone(),
-                line: 1,
+                line: issue.line,
                 message: issue.message.clone(),
                 import: None,
                 target: issue.target.clone(),

@@ -29,6 +29,7 @@ pub(super) struct ExtractedSet {
 #[derive(Debug, Clone)]
 pub(super) struct ExtractionIssue {
     pub(super) file: String,
+    pub(super) line: usize,
     pub(super) message: String,
     pub(super) target: Option<String>,
 }

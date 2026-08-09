@@ -1,12 +1,11 @@
 use super::{
-    complete_domain_checks, empty_results, enabled, finite_set_plan, graph_plan, prepared, results,
-    CheckResults,
+    complete_domain_checks, empty_results, enabled, fact_collection, finite_set_plan, graph_plan,
+    prepared, results, CheckResults,
 };
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks;
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured};
-use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_playwright_sources_and_session;
 use std::path::PathBuf;
 
 pub(crate) fn run_all(
@@ -125,31 +124,19 @@ pub(crate) fn run_all(
         enabled.dynamic_import_rules,
     );
     let sources = prepared.visible_paths.source_store_for(&root);
-    let ((fs_files, facts), facts_duration) = no_mistakes::diagnostics::measure_if_enabled(
-        "parse",
-        no_mistakes::diagnostics::TimingKind::Serial,
-        || {
-            if needs_shared_facts {
-                let fs = if filesystem_rules_enabled {
-                    discovered.clone()
-                } else {
-                    Vec::new()
-                };
-                let fact_files = fact_demand.merge(discovered);
-                let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
-                    &session,
-                    &root,
-                    (fact_files, graph_files),
-                    plan,
-                    playwright_fact_plan,
-                    std::sync::Arc::clone(&sources),
-                );
-                (fs, facts)
-            } else {
-                (discovered, Default::default())
-            }
-        },
-    );
+    let ((fs_files, facts), facts_duration) =
+        fact_collection::collect(fact_collection::CollectInput {
+            session: &session,
+            root: &root,
+            discovered,
+            graph_files,
+            needs_shared_facts,
+            filesystem_rules_enabled,
+            fact_demand: &fact_demand,
+            plan,
+            playwright_fact_plan,
+            sources: std::sync::Arc::clone(&sources),
+        });
     no_mistakes::invocation::check_timeout()?;
     let (react, queues, rules, integration, codebase, filesystem_rules) =
         run_domain_checks(DomainCheckInputs {
