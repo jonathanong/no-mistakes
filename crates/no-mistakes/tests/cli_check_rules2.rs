@@ -252,6 +252,11 @@ fn finite_set_call_sources_under_skipped_directories_stay_out_of_other_checks() 
     assert!(json["rules"].as_array().unwrap().iter().any(|finding| {
         finding["rule"] == "finite-set-consistency" && finding["target"] == "missing"
     }));
+    // The skipped generated source is also a graph root. Its configured
+    // call-site demand must not replace graph import facts with a sparse view.
+    assert!(json["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "forbidden-dependencies" && finding["target"] == "src/lazy.mts"
+    }));
     // `generated/` is a configured finite-set input, but it is outside the
     // dynamic-import check's filesystem scope.
     assert!(json["rules"]

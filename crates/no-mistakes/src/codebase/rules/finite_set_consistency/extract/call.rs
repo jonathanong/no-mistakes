@@ -63,7 +63,6 @@ pub(super) fn extract_call_first_string_argument(
         return;
     }
     let mut matched = false;
-    let mut first_non_static_line = None;
     for call in &file_facts.call_sites {
         // Optional calls are not guaranteed invocations of the configured
         // target, but other call-site consumers still need to report them.
@@ -77,8 +76,16 @@ pub(super) fn extract_call_first_string_argument(
             .and_then(super::super::ts_array::quoted_string_literal)
         {
             values.insert(value);
-        } else if first_non_static_line.is_none() {
-            first_non_static_line = Some(call.line as usize);
+        } else {
+            issues.push(ExtractionIssue {
+                file: file.clone(),
+                line: call.line as usize,
+                message: format!(
+                    "finite set '{}' requires every '{}' call to have a static first string argument",
+                    spec.name, spec.target
+                ),
+                target: Some(spec.target.clone()),
+            });
         }
     }
     if !matched {
@@ -87,18 +94,6 @@ pub(super) fn extract_call_first_string_argument(
             line: 1,
             message: format!(
                 "finite set '{}' found no calls matching target '{}'",
-                spec.name, spec.target
-            ),
-            target: Some(spec.target.clone()),
-        });
-        return;
-    }
-    if let Some(line) = first_non_static_line {
-        issues.push(ExtractionIssue {
-            file,
-            line,
-            message: format!(
-                "finite set '{}' requires every '{}' call to have a static first string argument",
                 spec.name, spec.target
             ),
             target: Some(spec.target.clone()),

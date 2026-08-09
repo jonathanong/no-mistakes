@@ -160,7 +160,8 @@ impl SharedCheckContext {
         } else {
             Default::default()
         };
-        let supplemental_call_site_files = fact_demand.supplemental_call_site_files(&fact_files);
+        let supplemental_call_site_files =
+            fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
         let fs_files = if filesystem_rules_enabled {
             discovered
         } else {

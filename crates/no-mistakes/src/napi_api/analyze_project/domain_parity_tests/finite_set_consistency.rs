@@ -67,8 +67,14 @@ fn supplemental_skipped_call_sources_preserve_check_scope_and_parse_once() {
     assert!(result["rules"].as_array().unwrap().iter().any(|finding| {
         finding["rule"] == "finite-set-consistency" && finding["target"] == "missing"
     }));
-    // The generated call source is available to finite-set extraction only;
-    // it must not become a test file for the unrelated dynamic-import rule.
+    // `generated/` is skipped for ordinary checks but retained by the graph
+    // rule. Its graph import facts must not be overwritten by the
+    // finite-set call-site-only supplemental collection.
+    assert!(result["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "forbidden-dependencies" && finding["target"] == "src/lazy.mts"
+    }));
+    // The generated call source stays outside ordinary filesystem-check scope;
+    // graph and finite-set demand must not make it a dynamic-import test file.
     assert!(result["rules"].as_array().unwrap().iter().all(|finding| {
         finding["rule"] != "test-no-unmocked-dynamic-imports"
     }));
@@ -76,5 +82,10 @@ fn supplemental_skipped_call_sources_preserve_check_scope_and_parse_once() {
         counts.get(&root.join("generated/schedules.test.mts")),
         Some(&1),
         "supplemental call sources should share the request parse session: {counts:#?}"
+    );
+    assert_eq!(
+        counts.get(&root.join("src/lazy.mts")),
+        Some(&1),
+        "graph-only facts should share the request parse session: {counts:#?}"
     );
 }

@@ -12,6 +12,16 @@ fn call_first_string_arguments_allow_line_suppression_at_the_dynamic_call() {
     )
     .unwrap();
 
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 9);
+}
+
+#[test]
+fn call_first_string_arguments_accept_parenthesized_string_literals() {
+    let findings =
+        check_call_literal_fixture("parenthesized-literals", "ai_agents.upsertJobScheduler")
+            .unwrap();
+
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 

@@ -1,15 +1,17 @@
 fn supplemental_call_site_plan(
     check: Option<&SharedCheckContext>,
     primary_files: &[PathBuf],
+    graph_files: &[PathBuf],
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> ScopeFactPlan {
     let files = check
         .map(|check| check.supplemental_call_site_files().to_vec())
         .unwrap_or_default()
         .into_iter()
-        // Playwright report inputs are already primary facts. Do not collect a
-        // second variant when a configured call source is one of those inputs.
-        .filter(|path| !primary_files.contains(path))
+        // Playwright report inputs are already primary facts. Graph-only
+        // inputs likewise already have richer import facts. Do not collect a
+        // sparse call-site-only variant for either kind of source.
+        .filter(|path| !primary_files.contains(path) && !graph_files.contains(path))
         .collect();
     ScopeFactPlan {
         files,

@@ -53,10 +53,32 @@ fn callee_name(callee: &Expression<'_>) -> Option<String> {
 
 fn static_first_string_arg_source(call: &CallExpression<'_>, source: &str) -> Option<String> {
     let argument = call.arguments.first()?;
+    static_string_arg_source(argument, source)
+}
+
+fn static_string_arg_source(argument: &Argument<'_>, source: &str) -> Option<String> {
     match argument {
+        Argument::ParenthesizedExpression(parenthesized) => {
+            static_string_expression_source(&parenthesized.expression, source)
+        }
         Argument::StringLiteral(_) => Some(crate::ast::span_text(source, argument.span()).into()),
         Argument::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(crate::ast::span_text(source, argument.span()).into())
+        }
+        _ => None,
+    }
+}
+
+fn static_string_expression_source(expression: &Expression<'_>, source: &str) -> Option<String> {
+    match expression {
+        Expression::ParenthesizedExpression(parenthesized) => {
+            static_string_expression_source(&parenthesized.expression, source)
+        }
+        Expression::StringLiteral(_) => {
+            Some(crate::ast::span_text(source, expression.span()).into())
+        }
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(crate::ast::span_text(source, expression.span()).into())
         }
         _ => None,
     }

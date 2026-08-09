@@ -261,15 +261,13 @@ fn call_first_string_arguments_reject_missing_spread_and_interpolated_arguments(
     let findings =
         check_call_literal_fixture("dynamic-arguments", "ai_agents.upsertJobScheduler").unwrap();
 
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    let finding = &findings[0];
-    assert_eq!(finding.rule, RULE_ID);
-    assert!(
-        finding.message.contains(
-            "finite set 'schedulerIds' requires every 'ai_agents.upsertJobScheduler' call to have a static first string argument"
-        ),
-        "{finding:?}"
-    );
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert!(findings.iter().all(|finding| {
+        finding.rule == RULE_ID
+            && finding.message.contains(
+                "finite set 'schedulerIds' requires every 'ai_agents.upsertJobScheduler' call to have a static first string argument"
+            )
+    }));
 }
 
 #[test]

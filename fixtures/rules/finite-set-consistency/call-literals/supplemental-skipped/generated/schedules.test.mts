@@ -1,4 +1,5 @@
 import { test } from "vitest";
+import "../src/lazy.mts";
 
 const ai_agents = {
   upsertJobScheduler(_id: string) {},

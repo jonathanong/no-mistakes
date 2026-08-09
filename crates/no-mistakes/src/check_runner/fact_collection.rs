@@ -44,7 +44,7 @@ pub(crate) fn collect(
                 };
                 let fact_files = fact_demand.primary_files(discovered);
                 let supplemental_call_site_files =
-                    fact_demand.supplemental_call_site_files(&fact_files);
+                    fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
                 let facts = collect_check_facts(
                     session,
                     root,

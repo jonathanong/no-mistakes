@@ -5,6 +5,12 @@ tests:
   vitest:
     configs: vitest.config.mts
 rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [generated/schedules.test.mts]
+      forbiddenFiles: [src/lazy.mts]
+      relationships: [import]
   - rule: finite-set-consistency
     scope: repository
     options:

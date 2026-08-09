@@ -28,11 +28,19 @@ impl PreparedFactDemand {
             .collect()
     }
 
-    /// Call-source files absent from the ordinary shared-facts scope.
-    pub(crate) fn supplemental_call_site_files(&self, primary_files: &[PathBuf]) -> Vec<PathBuf> {
+    /// Call-source files absent from the request's primary fact and graph scopes.
+    ///
+    /// A graph-only source has richer graph facts (for example, imports) than
+    /// the call-site-only supplemental variant. Recollecting it here would
+    /// sparsely overwrite that entry when the fact maps are combined.
+    pub(crate) fn supplemental_call_site_files(
+        &self,
+        primary_files: &[PathBuf],
+        graph_files: &[PathBuf],
+    ) -> Vec<PathBuf> {
         self.call_site_files
             .iter()
-            .filter(|path| !primary_files.contains(path))
+            .filter(|path| !primary_files.contains(path) && !graph_files.contains(path))
             .cloned()
             .collect()
     }
