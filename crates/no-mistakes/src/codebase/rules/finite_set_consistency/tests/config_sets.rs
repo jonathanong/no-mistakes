@@ -186,13 +186,16 @@ fn call_fact_demand_resolves_each_configured_project_once() {
 fn call_first_string_arguments_catch_missing_scheduler_registry_entries() {
     let findings =
         check_call_literal_fixture("missing-registry", "ai_agents.upsertJobScheduler").unwrap();
-    let body = format!("{findings:?}");
 
-    assert_eq!(findings.len(), 1, "{body}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = &findings[0];
+    assert_eq!(finding.rule, RULE_ID);
     assert!(
-        body.contains("schedulerIds contains `reconcileRuntimeGenerations`")
-            && body.contains("registryIds does not"),
-        "{body}"
+        finding
+            .message
+            .contains("schedulerIds contains `reconcileRuntimeGenerations`")
+            && finding.message.contains("registryIds does not"),
+        "{finding:?}"
     );
 }
 
@@ -200,18 +203,15 @@ fn call_first_string_arguments_catch_missing_scheduler_registry_entries() {
 fn call_first_string_arguments_fail_closed_for_non_literal_arguments() {
     let findings =
         check_call_literal_fixture("non-literal", "ai_agents.upsertJobScheduler").unwrap();
-    let body = format!("{findings:?}");
 
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = &findings[0];
+    assert_eq!(finding.rule, RULE_ID);
     assert!(
-        !findings.is_empty(),
-        "non-literal call was silently accepted: {body}"
-    );
-    assert_eq!(findings.len(), 1, "{body}");
-    assert!(
-        body.contains(
+        finding.message.contains(
             "finite set 'schedulerIds' requires every 'ai_agents.upsertJobScheduler' call to have a static first string argument"
         ),
-        "{body}"
+        "{finding:?}"
     );
 }
 
@@ -219,45 +219,38 @@ fn call_first_string_arguments_fail_closed_for_non_literal_arguments() {
 fn call_first_string_arguments_reject_missing_spread_and_interpolated_arguments() {
     let findings =
         check_call_literal_fixture("dynamic-arguments", "ai_agents.upsertJobScheduler").unwrap();
-    let body = format!("{findings:?}");
 
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = &findings[0];
+    assert_eq!(finding.rule, RULE_ID);
     assert!(
-        !findings.is_empty(),
-        "dynamic calls were silently accepted: {body}"
-    );
-    assert_eq!(findings.len(), 1, "{body}");
-    assert!(
-        body.contains(
+        finding.message.contains(
             "finite set 'schedulerIds' requires every 'ai_agents.upsertJobScheduler' call to have a static first string argument"
         ),
-        "{body}"
+        "{finding:?}"
     );
 }
 
 #[test]
 fn call_first_string_arguments_fail_closed_for_unknown_targets() {
     let findings = check_call_literal_fixture("wrong-target", "ai_agents.scheduleJob").unwrap();
-    let body = format!("{findings:?}");
 
-    assert!(
-        !findings.is_empty(),
-        "unknown target was silently accepted: {body}"
-    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, RULE_ID);
+    assert!(findings[0]
+        .message
+        .contains("found no calls matching target 'ai_agents.scheduleJob'"));
 }
 
 #[test]
 fn call_first_string_arguments_require_a_target() {
     let findings = check_call_literal_fixture("valid", "").unwrap();
-    let body = format!("{findings:?}");
 
-    assert!(
-        !findings.is_empty(),
-        "empty target was silently accepted: {body}"
-    );
-    assert!(
-        body.contains("finite set 'schedulerIds' requires a non-empty target"),
-        "{body}"
-    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].rule, RULE_ID);
+    assert!(findings[0]
+        .message
+        .contains("finite set 'schedulerIds' requires a non-empty target"));
 }
 
 #[test]

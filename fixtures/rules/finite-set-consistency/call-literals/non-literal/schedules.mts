@@ -4,5 +4,6 @@ const ai_agents = {
 
 const runtimeGenerationId = "reconcileRuntimeGenerations";
 ai_agents.upsertJobScheduler("reconcileAutoDispatchJudgements");
+// The variable argument intentionally verifies fail-closed static-ID extraction.
 ai_agents.upsertJobScheduler(runtimeGenerationId);
 ai_agents.upsertJobScheduler(`reconcileBackgroundResponses`);

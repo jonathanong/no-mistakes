@@ -63,7 +63,6 @@ impl SharedCheckContext {
             .playwright
             .as_ref()
             .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
-        let playwright_facts_enabled = playwright_fact_plan.is_some();
         let integration_enabled = integration_configured(config);
         let react_enabled = prepared.react.enabled();
         let mut plan = fact_plan(EnabledChecks {
@@ -148,21 +147,13 @@ impl SharedCheckContext {
             prepared.visible_paths.as_ref(),
         );
         let needs_shared_facts = fact_demand.needs_shared_facts();
-        let needs_full_graph_files =
-            graph_requires_full_file_universe || playwright_facts_enabled;
-        let needs_graph_files =
-            needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
-        let (discovered, graph_files) = if needs_full_graph_files {
-            (views.filesystem, views.graph)
-        } else if needs_graph_files {
-            // The dynamic-import rule traverses the same filesystem-scoped
-            // visible universe it analyzes. Supplying that universe explicitly
-            // keeps prepared graph construction strict without a fallback parse.
-            let graph_files = views.filesystem.clone();
-            (views.filesystem, graph_files)
-        } else {
-            (views.filesystem, Vec::new())
-        };
+        let (discovered, graph_files) = crate::check_discovery::select_graph_files(
+            views,
+            needs_shared_facts,
+            graph_requires_full_file_universe,
+            playwright_fact_plan.is_some(),
+            enabled.dynamic_import_rules,
+        );
         let fact_files = if needs_shared_facts {
             fact_demand.merge(discovered.clone())
         } else {

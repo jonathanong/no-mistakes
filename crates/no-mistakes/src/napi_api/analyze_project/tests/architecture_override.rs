@@ -355,6 +355,16 @@ fn inherited_and_report_relative_tsconfigs_anchor_to_their_own_roots() {
 fn inherited_and_report_relative_configs_anchor_to_their_own_roots() {
     let top_root = fixture(&["fixtures", "codebase", "forbidden-playwright-cached-error"]);
     let report_root = top_root.join("fixture");
+    let standalone = parse_json(
+        crate::napi_api::check_json_impl(
+            json!({
+                "root": report_root,
+                "config": "route.no-mistakes.yml"
+            })
+            .to_string(),
+        )
+        .unwrap(),
+    );
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let output = {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
@@ -383,6 +393,13 @@ fn inherited_and_report_relative_configs_anchor_to_their_own_roots() {
     let results = report_results(&parse_json(output));
 
     assert_eq!(results[0], results[1]);
+    assert_eq!(results[0], standalone);
+    assert!(
+        standalone["rules"]
+            .as_array()
+            .is_some_and(|findings| !findings.is_empty()),
+        "fixture must expose its forbidden Playwright route: {standalone:#?}"
+    );
     let work = observer.snapshot().work;
     assert_eq!(work["analysis.requests"], 1, "{work:#?}");
     assert_eq!(work["discovery.roots"], 1, "{work:#?}");
