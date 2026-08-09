@@ -87,7 +87,7 @@ fn check_json_audit_mode_includes_an_empty_suppression_array() {
 #[test]
 fn check_json_accounts_for_react_queue_and_integration_adapters() {
     let fixtures = [
-        ("suppression-react", "react", "assert-no-fetch", "nextLine"),
+        ("suppression-react", "react", "assert-no-fetch", "file"),
         ("suppression-queues", "queues", "queues-check", "file"),
         (
             "suppression-integration",

@@ -37,9 +37,6 @@ pub struct FetchCall {
     pub file: String,
     pub exported_name: Option<String>,
     pub shape: Option<String>,
-    /// Source location retained for check suppression. It is intentionally not
-    /// part of the public analyze report, preserving that report's schema.
-    #[serde(skip)]
     pub line: usize,
 }
 

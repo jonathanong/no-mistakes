@@ -35,12 +35,10 @@ pub(super) fn collect_source_files_from_facts(
             anyhow::bail!("missing source facts for {}", path.display());
         };
         let disabled = has_disable_file_comment(&source, RULE_ID);
-        if !disabled {
-            if let Some(error) = &facts.parse_error {
+        let symbols = if let Some(error) = &facts.parse_error {
+            if !disabled {
                 anyhow::bail!("failed to parse {}: {error}", path.display());
             }
-        }
-        let symbols = if disabled {
             Default::default()
         } else {
             let Some(symbols) = facts.symbols.clone() else {

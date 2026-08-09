@@ -1,9 +1,8 @@
 pub(super) use super::origin::find_target_export_origin;
 use super::origin::{origin_for_export, resolve_export_source};
-use super::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile, RULE_ID};
+use super::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile};
 use crate::codebase::symbols::export_kind_str;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolverFacade};
-use crate::codebase::ts_source::has_disable_comment;
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
@@ -31,13 +30,6 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
         memo.insert(path, out.clone());
         return out;
     };
-    if file.disabled {
-        visiting.remove(&path);
-        let out = Vec::new();
-        memo.insert(path, out.clone());
-        return out;
-    }
-
     let mut out = Vec::new();
     for export in &file.symbols.exports {
         if should_skip_export(file, export) {
@@ -132,6 +124,5 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
 
 pub(super) fn should_skip_export(file: &SourceFile, export: &Export) -> bool {
     export.name == "default"
-        || has_disable_comment(&file.source, export.line, RULE_ID)
         || super::nextjs::is_framework_export(&file.rel, &export.name, file.is_nextjs_project)
 }

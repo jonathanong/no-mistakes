@@ -23,6 +23,7 @@ pub struct UniqueExportFinding {
 pub(super) struct SourceFile {
     pub(super) path: PathBuf,
     pub(super) rel: String,
+    #[allow(dead_code)] // retained for standalone diagnostics and fixture construction
     pub(super) source: String,
     pub(super) symbols: std::sync::Arc<FileSymbols>,
     pub(super) disabled: bool,
