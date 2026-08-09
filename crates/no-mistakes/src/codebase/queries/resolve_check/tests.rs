@@ -384,6 +384,22 @@ fn batch_renders_file_blocks_and_exercises_both_exit_paths() {
 }
 
 #[test]
+fn batch_json_honors_an_explicit_tsconfig() {
+    let root = fixture_root();
+    let output = run_json(ResolveCheckArgs {
+        files: vec![PathBuf::from("consumer.ts"), PathBuf::from("broken.ts")],
+        root: Some(root.clone()),
+        tsconfig: Some(root.join("tsconfig.json")),
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(value["results"].as_array().unwrap().len(), 2);
+    assert_eq!(value["unresolvedFiles"], serde_json::json!(["broken.ts"]));
+}
+
+#[test]
 fn batch_validates_all_inputs_before_fact_collection() {
     let result = compute_many(&ResolveCheckArgs {
         files: vec![PathBuf::from("consumer.ts"), PathBuf::from("missing.ts")],

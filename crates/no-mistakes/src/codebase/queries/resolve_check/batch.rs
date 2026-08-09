@@ -4,7 +4,7 @@ use super::{
 use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
 use crate::codebase::queries::render::Report;
 use crate::codebase::ts_resolver::ImportResolver;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use rayon::prelude::*;
 use serde::Serialize;
 use std::collections::BTreeSet;
@@ -88,9 +88,11 @@ pub(super) fn compute_many(args: &ResolveCheckArgs) -> Result<Vec<ResolveCheckRe
     let mut reports = targets
         .par_iter()
         .map(|target| {
-            let facts = facts.get(&target.abs_file).with_context(|| {
-                format!("collecting imports from {}", target.abs_file.display())
-            })?;
+            // The collector returns one success-or-failure fact for every
+            // requested target, so absence would violate its prepared-input contract.
+            let facts = facts
+                .get(&target.abs_file)
+                .expect("target import facts must exist for every resolved input");
             compute_target(target, &facts.imports)
         })
         .collect::<Result<Vec<_>>>()?;

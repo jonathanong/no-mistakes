@@ -68,6 +68,12 @@ fn resolve_check_json_files_uses_batch_schema() {
 }
 
 #[test]
+fn resolve_check_json_files_rejects_empty_paths() {
+    let error = resolve_check_json_impl(json!({ "files": [""] }).to_string()).unwrap_err();
+    assert!(error.reason.contains("files must not contain an empty path"));
+}
+
+#[test]
 fn pass4b_query_cli_and_napi_reports_share_gitignore_visibility() {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
     crate::test_support::git_init(fixture.path());
