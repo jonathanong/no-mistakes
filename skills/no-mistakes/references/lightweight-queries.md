@@ -71,7 +71,7 @@ indirection.
 no-mistakes call-sites src/api.mts handler --format json
 ```
 
-## `resolve-check <file>`
+## `resolve-check <file> [file...]`
 
 Whether every import in the file resolves. Fully local, sub-second. Each import
 is `resolved`, `external` (npm/builtin/subpath), or `unresolved` (a broken
@@ -80,4 +80,10 @@ relative or aliased import). Exits non-zero when any are unresolved. Pass
 
 ```bash
 no-mistakes resolve-check src/new-feature.test.ts --format json
+no-mistakes resolve-check src/new-feature.test.ts src/changed-module.ts --format json
 ```
+
+One input returns the historical per-file result. Multiple inputs return sorted
+`results`, an `allResolve` summary, and sorted `unresolvedFiles`; duplicate
+paths are checked once. The batch uses one visible-file inventory and one
+parallel union import-fact pass.

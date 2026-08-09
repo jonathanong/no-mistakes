@@ -1,0 +1,175 @@
+use super::TestPlan;
+use crate::tests::{ImpactEdgeDetail, ImpactReason};
+use anyhow::Result;
+use std::fmt::Write;
+
+pub(super) fn render(plan: &TestPlan, output: &mut String) -> Result<()> {
+    writeln!(
+        output,
+        "Test plan: {} selected test(s)",
+        plan.selected_tests.len()
+    )?;
+    if plan.fallback_triggered {
+        writeln!(output, "Fallback: triggered")?;
+        if let Some(reason) = &plan.fallback_reason {
+            writeln!(output, "Fallback reason: {reason}")?;
+        }
+    } else {
+        writeln!(output, "Fallback: not triggered")?;
+    }
+
+    let mut selected = plan.selected_tests.iter().collect::<Vec<_>>();
+    selected.sort_by(|left, right| left.test_file.cmp(&right.test_file));
+    if selected.is_empty() {
+        writeln!(output, "\nNo tests selected.")?;
+    }
+    for test in selected {
+        writeln!(output, "\nTest: {}", test.test_file)?;
+        writeln!(output, "Confidence: {}", test.confidence.display_emoji())?;
+        let mut reasons = test.reasons.iter().collect::<Vec<_>>();
+        reasons.sort_by(|left, right| {
+            (&left.changed_file, &left.path, &left.via)
+                .cmp(&(&right.changed_file, &right.path, &right.via))
+                .then_with(|| {
+                    format!("{:?}", left.via_details).cmp(&format!("{:?}", right.via_details))
+                })
+        });
+        for reason in reasons {
+            writeln!(output, "Reason: {}", reason.changed_file)?;
+            writeln!(output, "  Path: {}", path(reason))?;
+        }
+    }
+
+    let mut warnings = plan.warnings.iter().collect::<Vec<_>>();
+    warnings.sort_by(|left, right| {
+        (&left.file, left.line, &left.r#type, &left.message).cmp(&(
+            &right.file,
+            right.line,
+            &right.r#type,
+            &right.message,
+        ))
+    });
+    if !warnings.is_empty() {
+        writeln!(output, "\nWarnings ({}):", warnings.len())?;
+        for warning in warnings {
+            let location = warning.line.map_or_else(
+                || warning.file.clone(),
+                |line| format!("{}:{line}", warning.file),
+            );
+            writeln!(
+                output,
+                "- {} ({location}): {}",
+                warning.r#type, warning.message
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn path(reason: &ImpactReason) -> String {
+    let mut rendered = Vec::with_capacity(reason.path.len().saturating_mul(2));
+    for (index, node) in reason.path.iter().enumerate() {
+        rendered.push(format!("`{node}`"));
+        if let Some(via) = reason.via.get(index) {
+            rendered.push(format!(
+                "[{}]",
+                display_via(via, reason.via_details.get(index).and_then(Option::as_ref))
+            ));
+        }
+    }
+    rendered.join(" ➔ ")
+}
+
+fn display_via(via: &str, detail: Option<&ImpactEdgeDetail>) -> String {
+    match detail {
+        Some(ImpactEdgeDetail::VitestSetup { field }) => format!("{via} ({field})"),
+        Some(ImpactEdgeDetail::Resource {
+            consumer_file,
+            call_sites,
+        }) if !call_sites.is_empty() => {
+            format!(
+                "{via} ({consumer_file}: {})",
+                call_sites
+                    .iter()
+                    .map(|site| format!("{} line {}", site.call_kind, site.line))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        }
+        Some(ImpactEdgeDetail::Resource { consumer_file, .. }) => {
+            format!("{via} ({consumer_file})")
+        }
+        None => via.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{Confidence, PlanFormat, ResourceCallSite, SelectedTest, Warning};
+
+    #[test]
+    fn explain_is_deterministic_and_renders_provenance() {
+        let plan = TestPlan {
+            changed_files: Vec::new(),
+            selected_tests: vec![
+                selected(
+                    "z.test.ts",
+                    Confidence::Medium,
+                    "z.ts",
+                    "vitest-setup",
+                    Some(ImpactEdgeDetail::VitestSetup {
+                        field: "setupFiles".to_string(),
+                    }),
+                ),
+                selected(
+                    "a.test.ts",
+                    Confidence::High,
+                    "a.ts",
+                    "resource",
+                    Some(ImpactEdgeDetail::Resource {
+                        consumer_file: "a.test.ts".to_string(),
+                        call_sites: vec![ResourceCallSite {
+                            call_kind: "read-file".to_string(),
+                            line: 4,
+                        }],
+                    }),
+                ),
+            ],
+            groups: Vec::new(),
+            warnings: vec![Warning {
+                r#type: "dynamic-import".to_string(),
+                message: "might not resolve".to_string(),
+                file: "a.ts".to_string(),
+                line: Some(3),
+            }],
+            fallback_triggered: false,
+            fallback_reason: None,
+        };
+
+        assert_eq!(
+            super::super::render(&plan, PlanFormat::Explain, "tests plan").unwrap(),
+            "Test plan: 2 selected test(s)\nFallback: not triggered\n\nTest: a.test.ts\nConfidence: 🟢 High\nReason: a.ts\n  Path: `a.ts` ➔ [resource (a.test.ts: read-file line 4)] ➔ `a.test.ts`\n\nTest: z.test.ts\nConfidence: 🟡 Medium\nReason: z.ts\n  Path: `z.ts` ➔ [vitest-setup (setupFiles)] ➔ `z.test.ts`\n\nWarnings (1):\n- dynamic-import (a.ts:3): might not resolve\n"
+        );
+    }
+
+    fn selected(
+        test_file: &str,
+        confidence: Confidence,
+        changed_file: &str,
+        via: &str,
+        detail: Option<ImpactEdgeDetail>,
+    ) -> SelectedTest {
+        SelectedTest {
+            test_file: test_file.to_string(),
+            confidence,
+            targets: Vec::new(),
+            reasons: vec![ImpactReason {
+                changed_file: changed_file.to_string(),
+                path: vec![changed_file.to_string(), test_file.to_string()],
+                via: vec![via.to_string()],
+                via_details: vec![detail],
+            }],
+        }
+    }
+}

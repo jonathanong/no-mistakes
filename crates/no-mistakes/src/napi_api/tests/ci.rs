@@ -84,6 +84,24 @@ fn impacted_checks_json_returns_checks() {
         .unwrap()
         .iter()
         .any(|check| check["name"] == "vitest"));
+    assert!(value.get("empty_result").is_none());
+}
+
+#[test]
+fn impacted_checks_json_classifies_empty_results_without_stderr_side_effects() {
+    let no_files = json!({ "root": impacted_checks_root() }).to_string();
+    let no_files: serde_json::Value =
+        serde_json::from_str(&impacted_checks_json_impl(no_files).unwrap()).unwrap();
+    assert_eq!(no_files["empty_result"]["code"], "no-changed-files");
+
+    let no_checks = json!({
+        "root": impacted_checks_root(),
+        "changedFiles": ["src/style.css"],
+    })
+    .to_string();
+    let no_checks: serde_json::Value =
+        serde_json::from_str(&impacted_checks_json_impl(no_checks).unwrap()).unwrap();
+    assert_eq!(no_checks["empty_result"]["code"], "no-impacted-checks");
 }
 
 #[test]

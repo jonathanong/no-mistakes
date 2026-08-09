@@ -104,6 +104,89 @@ fn tests_plan_json_outputs_impacted_tests() {
 }
 
 #[test]
+fn tests_plan_explain_renders_confidence_and_dependency_paths() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "c.mts",
+        "--format",
+        "explain",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(
+        stdout(&output),
+        "Test plan: 2 selected test(s)\nFallback: not triggered\n\nTest: a.test.mts\nConfidence: 🟢 High\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `b.mts` ➔ [dependency] ➔ `a.mts` ➔ [dependency] ➔ `a.test.mts`\n\nTest: dynamic.test.mts\nConfidence: 🟡 Medium\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `dynamic.mts` ➔ [dependency] ➔ `dynamic.test.mts`\n\nWarnings (1):\n- dynamic-import (dynamic.mts): Dynamic import in `dynamic.mts` might not be fully resolved.\n"
+    );
+}
+
+#[test]
+fn tests_plan_direct_test_owner_selects_only_one_reverse_edge_and_attaches_targets() {
+    let root = fixture("test-plan-config");
+    let output = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "source.ts",
+        "--environment",
+        "all",
+        "--direct-test-owner",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
+    assert_eq!(plan["groups"][0]["type"], "direct-test-owner");
+    assert_eq!(plan["groups"][0]["limit"], serde_json::Value::Null);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+    let test = &plan["selected_tests"][0];
+    assert_eq!(test["test_file"], "source.test.mts");
+    assert_eq!(
+        test["reasons"][0]["path"],
+        serde_json::json!(["source.ts", "source.test.mts"])
+    );
+    assert_eq!(test["reasons"][0]["via"], serde_json::json!(["dependency"]));
+    assert_eq!(test["targets"][0]["runner"], "vitest");
+}
+
+#[test]
+fn tests_plan_direct_test_owner_requires_framework_and_rejects_limits() {
+    let root = fixture("test-plan-config");
+    let missing_framework = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--direct-test-owner",
+    ]);
+    assert!(!missing_framework.status.success());
+    let missing_framework = String::from_utf8_lossy(&missing_framework.stderr);
+    assert!(missing_framework.contains("required arguments"));
+    assert!(missing_framework.contains("<FRAMEWORK>"));
+
+    let limit = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--direct-test-owner",
+        "--limit-files",
+        "1",
+    ]);
+    assert!(!limit.status.success());
+    assert!(String::from_utf8_lossy(&limit.stderr).contains("cannot be used with"));
+}
+
+#[test]
 fn tests_plan_commands_format_requires_execution_targets() {
     let root = fixture("tests-impact");
     let output = run(&[

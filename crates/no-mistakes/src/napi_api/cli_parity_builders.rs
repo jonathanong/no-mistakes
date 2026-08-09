@@ -1,11 +1,19 @@
-pub(crate) fn build_plan_args(
-    options: TestsPlanOptions,
-) -> AnyhowResult<crate::tests::PlanArgs> {
+pub(crate) fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::tests::PlanArgs> {
     let framework = options
         .framework
         .as_deref()
         .map(parse_test_framework)
         .transpose()?;
+    if options.direct_test_owner && framework.is_none() {
+        bail!("directTestOwner requires framework");
+    }
+    if options.direct_test_owner
+        && (options.limit_percent.is_some()
+            || options.limit_files.is_some()
+            || options.global_config_fallback.is_some())
+    {
+        bail!("directTestOwner conflicts with limitPercent, limitFiles, and globalConfigFallback");
+    }
 
     let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
 
@@ -35,6 +43,7 @@ pub(crate) fn build_plan_args(
         limit_percent: options.limit_percent,
         limit_files: options.limit_files,
         global_config_fallback: options.global_config_fallback,
+        direct_test_owner: options.direct_test_owner,
         format: Some(crate::tests::PlanFormat::Json),
         json: true,
     })
@@ -50,12 +59,13 @@ pub(crate) fn parse_test_framework(value: &str) -> AnyhowResult<crate::tests::Te
     }
 }
 
-pub(crate) fn build_why_args(
-    options: TestsWhyOptions,
-) -> AnyhowResult<crate::tests::WhyArgs> {
+pub(crate) fn build_why_args(options: TestsWhyOptions) -> AnyhowResult<crate::tests::WhyArgs> {
     let test = options.test.context("test is required")?;
     Ok(crate::tests::WhyArgs {
-        root: options.root.map(PathBuf::from).unwrap_or_else(|| ".".into()),
+        root: options
+            .root
+            .map(PathBuf::from)
+            .unwrap_or_else(|| ".".into()),
         config: options.config.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
         test: PathBuf::from(test),
@@ -116,6 +126,7 @@ pub(crate) fn build_impacted_checks_args(
         // N-API timings are collected into the structured response by the
         // binding; they must never print CLI progress to the Node process.
         timings: false,
+        diagnose_empty: false,
     }
 }
 

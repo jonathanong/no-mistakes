@@ -60,6 +60,20 @@ Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and
 `--json`.
 
+`--format explain` renders a deterministic, human-readable plan: selected test
+confidence, every changed-file path, edge kinds, edge provenance when available,
+fallback state, and warnings. Use JSON when another program needs the same
+structured fields.
+
+`--direct-test-owner` requires an explicit framework and performs a bounded
+owner query instead of configured planning. It selects changed tests owned by
+that framework plus only framework-owned tests connected by exactly one reverse
+canonical graph edge, then attaches their execution targets. It ignores the
+selected environment's groups, includes/excludes, limits, samples, and fallback
+policy; `--limit-percent`, `--limit-files`, and `--global-config-fallback`
+therefore conflict with it. Its result contains one `direct-test-owner` group
+and never reports a fallback.
+
 Configured `fullSuiteTriggers.projects` entries may use `{ paths, targets }` to
 select only the named Vitest or Playwright runner projects. These selections
 report `configured-trigger`, keep `fallback_triggered` false, and are filtered

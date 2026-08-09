@@ -1,0 +1,4 @@
+/* Deliberately outside the configured TS/test globs: this yields no checks. */
+.fixture-style {
+  color: black;
+}

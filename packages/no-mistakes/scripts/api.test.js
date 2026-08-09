@@ -225,6 +225,10 @@ test("programmatic API proxies object options through async native addon calls",
       "foo",
     );
     assert.equal((await api.resolveCheck({ file: "a.ts" })).command, "resolveCheck");
+    assert.deepEqual((await api.resolveCheck({ files: ["a.ts", "b.ts"] })).options.files, [
+      "a.ts",
+      "b.ts",
+    ]);
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
     assert.deepEqual(
@@ -479,6 +483,7 @@ test("test plan declarations require current results but accept saved legacy pla
     /export type SavedTestPlan = Omit<TestPlan, "changed_files"> & \{\n  changed_files\?: string\[\];\n\};/,
   );
   assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
+  assert.match(declarations, /directTestOwner\?: boolean;/);
 });
 
 test("graph declarations expose GitHub Actions workflow relationships and virtual nodes", () => {

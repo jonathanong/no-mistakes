@@ -27,6 +27,7 @@ fn resource_plan_args(root: &Path, changed: PathBuf) -> PlanArgs {
         limit_percent: None,
         limit_files: None,
         global_config_fallback: None,
+        direct_test_owner: false,
         format: None,
         json: true,
     }
@@ -70,10 +71,7 @@ fn markdown_and_workflow_resources_impact_their_vitest_test() {
     let fixture = resource_fixture_root();
     let root = fixture.path().canonicalize().unwrap();
 
-    for changed in [
-        "docs/release-policy.md",
-        ".github/workflows/release.yml",
-    ] {
+    for changed in ["docs/release-policy.md", ".github/workflows/release.yml"] {
         let mut args = resource_plan_args(&root, root.join(changed));
         args.framework = Some(crate::tests::TestFramework::Vitest);
         let plan = generate_plan(&args).unwrap();
@@ -293,7 +291,12 @@ fn readdir_and_nested_glob_resource_changes_select_only_their_consumers() {
         // The human paths contract intentionally stays test-only even when
         // the JSON reason carries resource-edge debug data.
         assert_eq!(
-            crate::tests::plan_output::render(&plan, PlanFormat::Paths, "tests plan").unwrap(),
+            crate::tests::plan_output::render(
+                &plan,
+                crate::tests::PlanFormat::Paths,
+                "tests plan",
+            )
+            .unwrap(),
             format!("{expected_test}\n")
         );
     }

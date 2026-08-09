@@ -54,6 +54,20 @@ fn resolve_check_json_reports_unresolved() {
 }
 
 #[test]
+fn resolve_check_json_files_uses_batch_schema() {
+    let options = json!({
+        "files": ["consumer.ts"],
+        "root": fixture_root("queries"),
+    })
+    .to_string();
+    let output = resolve_check_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(value["allResolve"], true);
+    assert_eq!(value["results"][0]["file"], "consumer.ts");
+    assert!(value.get("imports").is_none());
+}
+
+#[test]
 fn pass4b_query_cli_and_napi_reports_share_gitignore_visibility() {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
     crate::test_support::git_init(fixture.path());
@@ -61,17 +75,16 @@ fn pass4b_query_cli_and_napi_reports_share_gitignore_visibility() {
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let root_string = root.display().to_string();
 
-    let cli_exports = crate::codebase::queries::exports_of::run_json(
-        crate::codebase::queries::ExportsOfArgs {
+    let cli_exports =
+        crate::codebase::queries::exports_of::run_json(crate::codebase::queries::ExportsOfArgs {
             file: PathBuf::from("query/source.ts"),
             no_importers: true,
             root: Some(root.clone()),
             tsconfig: None,
             format: Some(crate::cli::Format::Json),
             json: true,
-        },
-    )
-    .unwrap();
+        })
+        .unwrap();
     let napi_exports = exports_of_json_impl(
         json!({
             "file": "query/source.ts",
@@ -92,7 +105,7 @@ fn pass4b_query_cli_and_napi_reports_share_gitignore_visibility() {
 
     let cli_resolve = crate::codebase::queries::resolve_check::run_json(
         crate::codebase::queries::ResolveCheckArgs {
-            file: PathBuf::from("query/source.ts"),
+            files: vec![PathBuf::from("query/source.ts")],
             root: Some(root),
             tsconfig: None,
             format: Some(crate::cli::Format::Json),
@@ -123,4 +136,12 @@ fn query_impls_require_inputs() {
     let missing_export =
         call_sites_json_impl(json!({ "file": "util.ts" }).to_string()).unwrap_err();
     assert!(missing_export.reason.contains("exportName is required"));
+
+    let resolve_ambiguous = resolve_check_json_impl(
+        json!({ "file": "consumer.ts", "files": ["consumer.ts"] }).to_string(),
+    )
+    .unwrap_err();
+    assert!(resolve_ambiguous
+        .reason
+        .contains("exactly one of file or files is required"));
 }

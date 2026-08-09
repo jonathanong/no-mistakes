@@ -23,6 +23,7 @@ fn framework_args(root: &Path, framework: TestFramework) -> PlanArgs {
         limit_percent: None,
         limit_files: None,
         global_config_fallback: None,
+        direct_test_owner: false,
         format: None,
         json: false,
     }

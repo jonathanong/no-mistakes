@@ -115,11 +115,18 @@ export interface ImpactedChecksTiming {
   duration_ms: number;
 }
 
+export interface ImpactedChecksEmptyResult {
+  code: "no-changed-files" | "no-impacted-checks";
+  message: string;
+}
+
 export interface ImpactedChecksReport {
   changed_files: string[];
   checks: CheckCommand[];
   warnings: Array<{ type: string; message: string; file: string }>;
   fallback_triggered: boolean;
+  /** Present only when no changed files or impacted checks were found. */
+  empty_result?: ImpactedChecksEmptyResult;
   /** Present only when `timings: true` was requested. */
   timings?: ImpactedChecksTiming[];
 }

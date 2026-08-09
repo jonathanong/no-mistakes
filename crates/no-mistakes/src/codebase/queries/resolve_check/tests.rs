@@ -18,7 +18,7 @@ fn named_fixture(name: &str) -> PathBuf {
 
 fn args(file: &str) -> ResolveCheckArgs {
     ResolveCheckArgs {
-        file: PathBuf::from(file),
+        files: vec![PathBuf::from(file)],
         root: Some(fixture_root()),
         tsconfig: None,
         format: None,
@@ -68,7 +68,7 @@ fn pass4b_resolve_check_skips_ignored_candidate_for_visible_fallback() {
     crate::test_support::git_add_all(fixture.path());
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("query/source.ts"),
+        files: vec![PathBuf::from("query/source.ts")],
         root: Some(root),
         tsconfig: None,
         format: None,
@@ -88,7 +88,7 @@ fn tags_every_import_kind_and_absolute_path() {
     let root = named_fixture("queries-kinds");
     // Absolute file path exercises the absolute branch of input resolution.
     let report = compute(&ResolveCheckArgs {
-        file: root.join("imports.ts"),
+        files: vec![root.join("imports.ts")],
         root: Some(root.clone()),
         tsconfig: None,
         format: None,
@@ -111,7 +111,7 @@ fn tags_require_resolve_import_kind() {
 fn type_import_of_declaration_module_resolves() {
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("dts-user.ts"),
+        files: vec![PathBuf::from("dts-user.ts")],
         root: Some(root),
         tsconfig: None,
         format: None,
@@ -127,7 +127,7 @@ fn type_import_of_declaration_index_resolves() {
     // `./decl` resolves to `decl/index.d.ts`.
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("decl-user.ts"),
+        files: vec![PathBuf::from("decl-user.ts")],
         root: Some(root),
         tsconfig: None,
         format: None,
@@ -143,7 +143,7 @@ fn type_import_of_declaration_index_resolves() {
 
 fn kinds_compute(file: &str) -> ResolveCheckReport {
     compute(&ResolveCheckArgs {
-        file: PathBuf::from(file),
+        files: vec![PathBuf::from(file)],
         root: Some(named_fixture("queries-kinds")),
         tsconfig: None,
         format: None,
@@ -156,7 +156,7 @@ fn kinds_compute(file: &str) -> ResolveCheckReport {
 fn exact_alias_to_declaration_resolves() {
     // `@types` (exact path alias) backed only by `types.d.ts`.
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("user.ts"),
+        files: vec![PathBuf::from("user.ts")],
         root: Some(named_fixture("queries-alias")),
         tsconfig: None,
         format: None,
@@ -193,7 +193,7 @@ fn value_import_of_declaration_module_is_unresolved() {
     // A non-type import of a `.d.ts`-only module needs an emitted runtime module.
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("dts-value-user.ts"),
+        files: vec![PathBuf::from("dts-value-user.ts")],
         root: Some(root),
         tsconfig: None,
         format: None,
@@ -209,7 +209,7 @@ fn type_import_via_js_resolves_to_declaration() {
     // `import type { Foo } from './types.js'` resolves to `types.d.ts`.
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("dts-js-user.ts"),
+        files: vec![PathBuf::from("dts-js-user.ts")],
         root: Some(root),
         tsconfig: None,
         format: None,
@@ -262,7 +262,7 @@ fn esm_js_specifier_resolves_to_ts_source() {
     // `./dep.js` resolves to the `dep.ts` source (NodeNext/ESM convention).
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("esm-user.ts"),
+        files: vec![PathBuf::from("esm-user.ts")],
         root: Some(root),
         tsconfig: None,
         format: None,
@@ -277,7 +277,7 @@ fn esm_js_specifier_resolves_to_ts_source() {
 fn tsx_file_parses() {
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
-        file: PathBuf::from("widget.tsx"),
+        files: vec![PathBuf::from("widget.tsx")],
         root: Some(root),
         tsconfig: None,
         format: None,
@@ -316,6 +316,56 @@ fn paths_lists_resolved_targets() {
     let mut buf = Vec::new();
     render(&report, Format::Paths, &mut buf).unwrap();
     assert_eq!(String::from_utf8(buf).unwrap(), "util.ts\n");
+}
+
+#[test]
+fn batch_report_sorts_deduplicates_and_unions_paths() {
+    let args = ResolveCheckArgs {
+        // The duplicate and intentionally reversed order protect the request
+        // boundary: callers receive one deterministic result per real file.
+        files: vec![
+            PathBuf::from("consumer.ts"),
+            PathBuf::from("broken.ts"),
+            PathBuf::from("consumer.ts"),
+        ],
+        root: Some(fixture_root()),
+        tsconfig: None,
+        format: None,
+        json: false,
+    };
+    let report = batch_report(compute_many(&args).unwrap());
+    let json = serde_json::to_value(&report).unwrap();
+    assert_eq!(json["allResolve"], false);
+    assert_eq!(json["unresolvedFiles"], serde_json::json!(["broken.ts"]));
+    assert_eq!(
+        json["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|result| result["file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["broken.ts", "consumer.ts"]
+    );
+
+    let mut paths = Vec::new();
+    render(&report, Format::Paths, &mut paths).unwrap();
+    assert_eq!(String::from_utf8(paths).unwrap(), "util.ts\n");
+}
+
+#[test]
+fn batch_validates_all_inputs_before_fact_collection() {
+    let result = compute_many(&ResolveCheckArgs {
+        files: vec![PathBuf::from("consumer.ts"), PathBuf::from("missing.ts")],
+        root: Some(fixture_root()),
+        tsconfig: None,
+        format: None,
+        json: false,
+    });
+    let error = match result {
+        Ok(_) => panic!("an invalid batch input must fail before analysis"),
+        Err(error) => error,
+    };
+    assert!(error.to_string().contains("not a file: missing.ts"));
 }
 
 #[test]

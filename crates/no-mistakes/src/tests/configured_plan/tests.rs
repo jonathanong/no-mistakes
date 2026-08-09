@@ -26,6 +26,7 @@ fn vitest_setup_args(root: PathBuf, changed_file: Vec<PathBuf>) -> PlanArgs {
         limit_percent: None,
         limit_files: None,
         global_config_fallback: Some(false),
+        direct_test_owner: false,
         format: None,
         json: false,
     }
@@ -379,6 +380,7 @@ fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes()
         limit_percent: None,
         limit_files: None,
         global_config_fallback: None,
+        direct_test_owner: false,
         format: None,
         json: false,
     };
@@ -465,6 +467,7 @@ fn explicit_ignored_changed_sources_impact_visible_tests_without_ignored_shadows
             limit_percent: None,
             limit_files: None,
             global_config_fallback: None,
+            direct_test_owner: false,
             format: None,
             json: false,
         })

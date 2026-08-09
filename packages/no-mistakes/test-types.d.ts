@@ -24,6 +24,8 @@ export interface TestsPlanOptions {
   limitPercent?: number;
   limitFiles?: number;
   globalConfigFallback?: boolean;
+  /** Select changed framework-owned tests plus tests one reverse graph edge away. Requires framework. */
+  directTestOwner?: boolean;
 }
 
 export interface TestsImpactOptions {

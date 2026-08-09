@@ -47,6 +47,27 @@ fn resolve_target_rejects_missing_file_or_directory() {
 }
 
 #[test]
+fn resolve_targets_share_the_request_visible_file_set() {
+    let root = query_fixture_root();
+    let targets = resolve_targets(
+        &[PathBuf::from("consumer.ts"), PathBuf::from("broken.ts")],
+        Some(&root),
+        None,
+    )
+    .unwrap();
+
+    // The repository-sized set is a request projection, not per-file work.
+    assert!(Arc::ptr_eq(
+        &targets[0].visible_files,
+        &targets[1].visible_files
+    ));
+    assert!(std::ptr::eq(
+        targets[0].visible_files(),
+        targets[1].visible_files()
+    ));
+}
+
+#[test]
 fn reverse_preparation_is_lazy_and_reuses_the_target_tsconfig_source() {
     let root = query_fixture_root();
     let target = resolve_target(Path::new("consumer.ts"), Some(&root), None).unwrap();

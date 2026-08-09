@@ -2,6 +2,28 @@ use super::ReverseAnalysis;
 use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::queries::shared::{ReversePrepared, Target};
 
+/// Collect the import projection for a prepared group of lightweight-query
+/// targets in one request-owned fact pass.
+pub(crate) fn collect_target_import_facts(
+    owner: &Target,
+    targets: &[Target],
+) -> crate::codebase::ts_source::facts::TsFactMap {
+    let files = targets
+        .iter()
+        .map(|target| target.abs_file.clone())
+        .collect::<Vec<_>>();
+    crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
+        &owner.session,
+        &files,
+        crate::codebase::ts_source::facts::TsFactPlan {
+            imports: true,
+            ..Default::default()
+        },
+        &crate::codebase::ts_source::facts::TsFactContext::default(),
+        &owner.sources,
+    )
+}
+
 /// Build the reverse import index for the whole project in one parallel scan.
 /// Cheaper than a full `DepGraph` — it only resolves import/re-export edges.
 pub(crate) fn build_reverse_analysis(target: &Target) -> anyhow::Result<ReverseAnalysis> {

@@ -46,6 +46,7 @@ pub(crate) fn plan_args_for(
         limit_percent: None,
         limit_files: None,
         global_config_fallback: None,
+        direct_test_owner: false,
         format: None,
         json: false,
     }

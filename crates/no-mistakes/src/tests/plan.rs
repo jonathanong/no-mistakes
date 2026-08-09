@@ -1,14 +1,12 @@
 use crate::tests::{
     push_resource_diagnostics, via_details_from_edges, warning_key, Confidence, ImpactEdgeDetail,
-    ImpactReason, PlanArgs, PlanFormat, ResourceCallSite, SelectedTest, TestPlan, Warning,
-    WarningKey,
+    ImpactReason, PlanArgs, ResourceCallSite, SelectedTest, TestPlan, Warning, WarningKey,
 };
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
-use std::process::ExitCode;
 
 include!("plan_extra_inputs.rs");
 
@@ -17,23 +15,10 @@ mod plan_vitest_setup;
 
 mod changed_inventory;
 pub(crate) use changed_inventory::generate_plan_with_prepared;
-
-pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
-    let plan = generate_plan(&args)?;
-
-    let format = if args.json {
-        PlanFormat::Json
-    } else {
-        args.format.unwrap_or(PlanFormat::Json)
-    };
-    let output = super::plan_output::render(&plan, format, "tests plan")?;
-    crate::invocation::commit_timeout()?;
-    print!("{output}");
-
-    Ok(ExitCode::SUCCESS)
-}
-
-const _: fn(PlanArgs) -> Result<ExitCode> = run;
+mod global_config;
+mod run;
+pub(crate) use global_config::global_config_trigger;
+pub(crate) use run::run;
 
 include!("plan/generate.rs");
 
@@ -50,6 +35,11 @@ fn generate_plan_with_prepared_inner(
     let lockfile_analysis = &prepared.lockfile_analysis;
 
     if let Some(framework) = args.framework {
+        if args.direct_test_owner {
+            return super::configured_plan::generate_direct_test_owner_plan_with_prepared(
+                framework, prepared,
+            );
+        }
         // Compute lockfile changed packages for BFS tracing in framework plans — same
         // structure as the non-framework §4b path below. Parseable lockfile diffs no
         // longer force an unconditional full-suite fallback; we wire the packages into
@@ -58,7 +48,7 @@ fn generate_plan_with_prepared_inner(
         // Full-suite selection still requires the effective global fallback opt-in.
         let forced_fallback = prepared
             .framework_config_trigger(framework)
-            .or_else(|| global_config_trigger_excluding_v2_config(root, &collected.files))
+            .or_else(|| global_config::excluding_v2_config(root, &collected.files))
             .or_else(|| {
                 if lockfile_analysis.fallback_triggered {
                     lockfile_analysis
@@ -109,7 +99,7 @@ fn generate_plan_with_prepared_inner(
 
     if let Some((reason, trigger_file)) = fallback_reason {
         let relative_changed = relative_path(root, &trigger_file);
-        let all_test_files = discover_all_tests_from_prepared(prepared);
+        let all_test_files = global_config::discover_all_tests_from_prepared(prepared);
         let mut selected_tests = Vec::new();
         for test in all_test_files {
             let rel_test = relative_path(root, &test);
@@ -398,7 +388,7 @@ fn generate_plan_with_prepared_inner(
             "`{}` changed a transitive dependency; falling back to full test suite",
             file
         );
-        let all_test_files = discover_all_tests_from_prepared(prepared);
+        let all_test_files = global_config::discover_all_tests_from_prepared(prepared);
         let mut selected_tests: Vec<SelectedTest> = all_test_files
             .into_iter()
             .map(|test| {
@@ -484,98 +474,6 @@ fn generate_plan_with_prepared_inner(
         fallback_triggered: vitest_fallback_reason.is_some(),
         fallback_reason: vitest_fallback_reason,
     })
-}
-
-pub(crate) fn global_config_trigger(
-    root: &Path,
-    changed_files: &[PathBuf],
-) -> Option<(String, PathBuf)> {
-    changed_files.iter().find_map(|file| {
-        let relative_changed = relative_path(root, file);
-        is_global_config_path(root, file, &relative_changed).then(|| {
-            (
-                format!("Global configuration file changed: {}", relative_changed),
-                file.clone(),
-            )
-        })
-    })
-}
-
-/// Framework plans compare `.no-mistakes.yml`/`.yaml` at both endpoints, so
-/// an unrelated framework's formatting-only edit does not invalidate them.
-/// All other historical global configuration triggers retain their existing
-/// unconditional behavior.
-fn global_config_trigger_excluding_v2_config(
-    root: &Path,
-    changed_files: &[PathBuf],
-) -> Option<(String, PathBuf)> {
-    changed_files.iter().find_map(|file| {
-        let relative_changed = relative_path(root, file);
-        (!matches!(
-            relative_changed.as_str(),
-            ".no-mistakes.yml" | ".no-mistakes.yaml"
-        ) && is_global_config_path(root, file, &relative_changed))
-        .then(|| {
-            (
-                format!("Global configuration file changed: {relative_changed}"),
-                file.clone(),
-            )
-        })
-    })
-}
-
-fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
-    if matches!(
-        relative,
-        "package.json" | "tsconfig.json" | ".no-mistakes.yml" | ".no-mistakes.yaml"
-    ) {
-        return true;
-    }
-
-    let Some(name) = absolute.file_name().and_then(|name| name.to_str()) else {
-        return false;
-    };
-    if !matches!(
-        name,
-        "next.config.js"
-            | "next.config.mjs"
-            | "next.config.ts"
-            | "next.config.mts"
-            | "proxy.js"
-            | "proxy.mjs"
-            | "proxy.ts"
-            | "proxy.mts"
-            | "middleware.js"
-            | "middleware.mjs"
-            | "middleware.ts"
-            | "middleware.mts"
-    ) {
-        return false;
-    }
-
-    let Some(parent) = absolute.parent() else {
-        return false;
-    };
-    parent == root || next_project_root(parent)
-}
-
-fn discover_all_tests_from_prepared(
-    prepared: &super::prepared_plan::PreparedTestPlanRequest,
-) -> Vec<PathBuf> {
-    no_mistakes::codebase::ts_source::discover_files_from_visible(
-        &prepared.root,
-        &prepared.config.filesystem.skip_directories,
-        prepared.root_visible_paths(),
-    )
-    .into_iter()
-    .filter(|file| {
-        prepared
-            .visible_paths
-            .classification_for(&prepared.root, file)
-            .is_some_and(|classification| classification.target_is_file())
-    })
-    .filter(|file| prepared.test_filter().is_match(&prepared.root, file))
-    .collect()
 }
 
 include!("plan_bfs.rs");

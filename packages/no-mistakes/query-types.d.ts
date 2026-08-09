@@ -98,11 +98,20 @@ export interface CallSitesResult {
 
 export type ResolveCheckOptions = QueryFileOptions;
 
+/** Batch form of `resolveCheck`; `files` always returns the batch schema. */
+export interface ResolveCheckFilesOptions {
+  files: string[];
+  /** Project root. Defaults to the current working directory. */
+  root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
+  tsconfig?: string;
+}
+
 export type ImportResolutionStatus = "resolved" | "unresolved" | "external";
 
 export interface ResolveCheckImport {
   specifier: string;
-  kind: "static" | "type" | "dynamic" | "require";
+  kind: "static" | "type" | "dynamic" | "require" | "require-resolve";
   status: ImportResolutionStatus;
   /** Root-relative resolved target, when the import resolves locally. */
   resolved?: string;
@@ -113,4 +122,10 @@ export interface ResolveCheckResult {
   allResolve: boolean;
   imports: ResolveCheckImport[];
   unresolved: string[];
+}
+
+export interface ResolveCheckBatchResult {
+  allResolve: boolean;
+  unresolvedFiles: string[];
+  results: ResolveCheckResult[];
 }

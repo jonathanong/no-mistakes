@@ -111,6 +111,17 @@ pub(crate) struct PlanArgs {
     #[arg(long = "global-config-fallback")]
     pub(crate) global_config_fallback: Option<bool>,
 
+    /// Select changed framework-owned tests plus tests one reverse graph edge away.
+    ///
+    /// This intentionally bypasses configured test-plan groups, limits, sampling,
+    /// and fallback policy. A framework is required so test ownership is explicit.
+    #[arg(
+        long = "direct-test-owner",
+        requires = "framework",
+        conflicts_with_all = ["limit_percent", "limit_files", "global_config_fallback"]
+    )]
+    pub(crate) direct_test_owner: bool,
+
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
     pub(crate) format: Option<PlanFormat>,
@@ -225,6 +236,7 @@ pub(crate) enum PlanFormat {
     Json,
     Paths,
     Commands,
+    Explain,
     Markdown,
     Md,
 }

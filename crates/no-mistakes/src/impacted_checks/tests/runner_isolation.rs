@@ -27,6 +27,7 @@ fn impacted_checks_reuse_one_parse_pass_without_cross_runner_tests() {
         json: false,
         generic_only: false,
         timings: false,
+        diagnose_empty: false,
     };
 
     crate::ast::begin_parse_count(&root);

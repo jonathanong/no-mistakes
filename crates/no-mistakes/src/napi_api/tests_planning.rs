@@ -2,6 +2,7 @@
 
 include!("tests_planning/vitest_config_extends.rs");
 include!("tests_planning/changed_files.rs");
+include!("tests_planning/direct_test_owner.rs");
 
 #[test]
 fn tests_plan_json_union_applies_vitest_setup_fallback() {
@@ -18,9 +19,11 @@ fn tests_plan_json_union_applies_vitest_setup_fallback() {
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(plan["fallback_triggered"], true);
-    assert!(plan["warnings"].as_array().unwrap().iter().any(|warning| {
-        warning["type"] == "vitest-setup-dynamic"
-    }));
+    assert!(plan["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|warning| { warning["type"] == "vitest-setup-dynamic" }));
     assert_eq!(
         plan["selected_tests"]
             .as_array()

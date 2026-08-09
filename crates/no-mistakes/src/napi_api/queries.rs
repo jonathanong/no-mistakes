@@ -63,7 +63,8 @@ struct CallSitesOptions {
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct ResolveCheckOptions {
-    file: String,
+    file: Option<String>,
+    files: Option<Vec<String>>,
     root: Option<String>,
     tsconfig: Option<String>,
 }
@@ -136,13 +137,36 @@ pub(crate) fn call_sites_json_impl(options_json: String) -> napi::Result<String>
 
 pub(crate) fn resolve_check_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<ResolveCheckOptions>(&options_json)?;
-    require_file(&options.file)?;
-    crate::codebase::queries::resolve_check::run_json(ResolveCheckArgs {
-        file: PathBuf::from(options.file),
+    let (files, batch) = match (options.file, options.files) {
+        (Some(file), None) => {
+            require_file(&file)?;
+            (vec![PathBuf::from(file)], false)
+        }
+        (None, Some(files)) if !files.is_empty() => {
+            if files.iter().any(|file| file.trim().is_empty()) {
+                return Err(napi::Error::from_reason(
+                    "files must not contain an empty path",
+                ));
+            }
+            (files.into_iter().map(PathBuf::from).collect(), true)
+        }
+        _ => {
+            return Err(napi::Error::from_reason(
+                "exactly one of file or files is required",
+            ))
+        }
+    };
+    let args = ResolveCheckArgs {
+        files,
         root: options.root.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
         format: Some(Format::Json),
         json: true,
-    })
+    };
+    if batch {
+        crate::codebase::queries::resolve_check::run_json_batch(args)
+    } else {
+        crate::codebase::queries::resolve_check::run_json(args)
+    }
     .map_err(to_napi_error)
 }

@@ -10,6 +10,7 @@ no-mistakes impacted-checks src/api/handler.ts --format paths
 no-mistakes impacted-checks --base origin/main --json
 no-mistakes impacted-checks src/api/handler.ts --json --timings
 no-mistakes impacted-checks src/api/handler.ts --generic-only --format json
+no-mistakes impacted-checks --diagnose-empty --format human
 ```
 
 ## Options
@@ -28,6 +29,7 @@ no-mistakes impacted-checks src/api/handler.ts --generic-only --format json
 | `--json` | Shorthand for `--format json`. |
 | `--timings` | Emit analysis phase durations to stderr. |
 | `--verbose-timings` | Also emit deterministic one-pass work counters; implies timings. |
+| `--diagnose-empty` | On a successful empty result, emit `note[<code>]: <message>` to stderr. |
 
 Changed files may also be passed as positional arguments.
 
@@ -47,6 +49,12 @@ Changed files may also be passed as positional arguments.
   include/exclude globs.
 - Commands are deduped and sorted. If the test-plan engine triggers a
   full-suite fallback (e.g. a global config change), `fallback_triggered` is set.
+
+When a successful report contains no checks, JSON/YAML include an `empty_result`
+object with a stable `code` (`no-changed-files` or `no-impacted-checks`) and
+human-readable `message`. The field is omitted from reports with checks. The
+CLI is silent by default; `--diagnose-empty` opts into the exact stderr note
+`note[<code>]: <message>`. This never changes stdout or the exit status.
 
 `--generic-only` still collects and normalizes changed files, but bypasses all
 configured test frameworks and the test-plan finish step. Its report contains

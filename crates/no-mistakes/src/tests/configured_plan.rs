@@ -13,6 +13,7 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
 mod dep_triggers;
+mod direct_test_owner;
 mod discovery;
 mod environment;
 mod fallback;
@@ -27,6 +28,7 @@ mod tests;
 pub(super) mod vitest_setup_fallback;
 mod vitest_setup_groups;
 use dep_triggers::dependency_triggers;
+pub(crate) use direct_test_owner::generate_direct_test_owner_plan_with_prepared;
 pub(crate) use discovery::discover_framework_tests_from_prepared;
 use environment::{
     configured_environment, configured_groups, effective_global_config_fallback, framework_name,
