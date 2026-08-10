@@ -18,10 +18,11 @@ pub fn matching_disable_directive(
         return Some(DisableDirective::File { line });
     }
     let line = finding_line?;
-    if super::has_disable_line_comment(source, line, rule_id) {
-        return Some(DisableDirective::Line { line });
+    if super::has_disable_comment(source, line, rule_id) {
+        return Some(DisableDirective::NextLine {
+            line: line.saturating_sub(1),
+        });
     }
-    super::has_disable_comment(source, line, rule_id).then_some(DisableDirective::NextLine {
-        line: line.saturating_sub(1),
-    })
+    super::has_disable_line_comment(source, line, rule_id)
+        .then_some(DisableDirective::Line { line })
 }

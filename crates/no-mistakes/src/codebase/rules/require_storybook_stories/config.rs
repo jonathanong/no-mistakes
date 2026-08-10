@@ -10,6 +10,7 @@ pub(super) fn effective_story_patterns(
     project_root: &Path,
     config: &NoMistakesConfig,
     opts: &Options,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<String> {
     if !opts.stories.is_empty() {
         return opts.stories.clone();
@@ -18,7 +19,7 @@ pub(super) fn effective_story_patterns(
     if let Some(configs) = config.tests.storybook.configs.as_ref() {
         for config_path in configs.values() {
             let config_path = resolve_storybook_config_path(root, project_root, &config_path);
-            let Ok(source) = std::fs::read_to_string(&config_path) else {
+            let Some(source) = crate::codebase::rules::read_source(sources, &config_path) else {
                 continue;
             };
             let base = config_path.parent().unwrap_or(project_root);

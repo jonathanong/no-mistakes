@@ -6,7 +6,7 @@ use crate::config::v2::schema::{RuleDef, RuleScope};
 
 fn scan_test_file(root: &Path, path: &Path, work: &RustWork) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    scan::scan_file_with_deferred_suppression(root, path, work, false, &sources, false)
+    scan::scan_file_with_deferred_suppression(root, path, work, &sources, false)
 }
 
 fn config_with_rule(rule: &str) -> NoMistakesConfig {
@@ -47,8 +47,7 @@ fn scan_file_returns_empty_for_unreadable_file() {
 
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&missing));
     assert!(
-        scan_file_with_deferred_suppression(&root, &missing, &work, true, &sources, false)
-            .is_empty()
+        scan_file_with_deferred_suppression(&root, &missing, &work, &sources, false).is_empty()
     );
 }
 
@@ -103,7 +102,7 @@ fn exclusive_sources_are_not_retained_and_overlapping_sources_are_memoized() {
         false,
     )
     .unwrap();
-    assert_eq!(exclusive_sources.physical_read_count(), 0);
+    assert_eq!(exclusive_sources.physical_read_count(), 1);
 
     let overlapping_sources = crate::codebase::rules::source_store_for_files(&files);
     let overlapping = check_with_files_sources_and_deferred_suppression(

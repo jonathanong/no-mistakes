@@ -1,2 +1,1 @@
-// no-mistakes-disable-file unique-exports: compatibility export
-export const shared = 1;
+export const shared = 1; // no-mistakes-disable-line unique-exports: compatibility export

@@ -123,7 +123,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 prepared_tsconfig,
                                 prepared_tsconfig_catalog,
                                 inferred_roots: Some(inferred_roots),
-                                sources: Some(&rule_sources),
+                                sources: rule_sources.as_ref(),
                                 defer_suppression,
                             },
                             dependency_graph.as_deref(),

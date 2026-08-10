@@ -32,7 +32,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    exclusive_files: &[PathBuf],
+    _exclusive_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
@@ -44,14 +44,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     let mut findings: Vec<RuleFinding> = work
         .par_iter()
         .flat_map(|(path, work)| {
-            scan::scan_file_with_deferred_suppression(
-                root,
-                path,
-                work,
-                exclusive_files.binary_search(path).is_ok(),
-                sources,
-                defer_suppression,
-            )
+            scan::scan_file_with_deferred_suppression(root, path, work, sources, defer_suppression)
         })
         .collect();
     super::sort_findings(&mut findings);

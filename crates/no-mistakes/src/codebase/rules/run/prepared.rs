@@ -1,11 +1,10 @@
 use super::{
     any_codebase_rule_enabled, forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching,
     require_storybook_stories, required_entrypoint_reachability, rule_enabled,
-    server_route_client_boundary, sort_findings, suppress_rule_findings,
-    suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports, RuleFinding,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
-    REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
-    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    server_route_client_boundary, sort_findings, suppress_rule_findings_with_sources,
+    test_no_unmocked_dynamic_imports, RuleFinding, FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES,
+    NEXTJS_NO_CACHING, REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES,
+    SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use anyhow::Result;
@@ -30,7 +29,10 @@ pub struct PreparedRulesCheck<'a> {
     pub prepared_tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
     pub prepared_tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+    /// The request-owned source store. Aggregate callers must pass the same
+    /// store used for discovery and fact collection; standalone callers build
+    /// one store for their own request before entering this prepared path.
+    pub sources: &'a crate::codebase::ts_source::SourceStore,
     /// Aggregate `check` defers suppression until every domain can share one
     /// SourceStore-aware adapter and produce optional accounting.
     pub defer_suppression: bool,

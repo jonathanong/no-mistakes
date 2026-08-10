@@ -30,7 +30,7 @@ export interface CheckReport {
   codebase: unknown[];
   warnings: string[];
   advisories: unknown[];
-  /** Present only when `includeSuppressed` is requested and directives matched. */
+  /** Present when `includeSuppressed` is requested; empty when no directives matched. */
   suppressed?: SuppressedFinding[];
 }
 

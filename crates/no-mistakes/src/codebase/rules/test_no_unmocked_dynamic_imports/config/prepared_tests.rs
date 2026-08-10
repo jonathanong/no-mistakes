@@ -17,7 +17,9 @@ fn prepared_config_globs_only_expand_aggregate_candidates() {
 
     // `jest.config.mjs` also exists and matches the configured glob. Omitting it
     // from the aggregate candidates must keep its matcher and setup files out.
-    let prepared = prepare_from_visible(&root, &config, &[selected_config]).unwrap();
+    let sources =
+        crate::codebase::rules::source_store_for_files(std::slice::from_ref(&selected_config));
+    let prepared = prepare_from_visible(&root, &config, &[selected_config], &sources).unwrap();
 
     assert!(prepared
         .test_filter()
@@ -31,7 +33,7 @@ fn prepared_config_globs_only_expand_aggregate_candidates() {
 fn aggregate_rule_uses_prepared_config_without_standalone_discovery() {
     let source = include_str!("../with_facts.rs");
 
-    assert!(source.contains("config::prepare_from_visible(root, config, &files)"));
+    assert!(source.contains("config::prepare_from_visible(root, config, &files, sources)"));
     assert!(!source.contains("config::test_filter("));
     assert!(!source.contains("config::precompute_setup_data("));
     assert!(!source.contains("discover_files("));
@@ -47,7 +49,8 @@ fn pass4b_prepared_setup_files_drop_ignored_candidate_and_keep_visible_fallback(
     let mut config = NoMistakesConfig::default();
     config.tests.vitest.configs = Some(StringOrList::One("dynamic/vitest.config.ts".to_string()));
 
-    let prepared = prepare_from_visible(&root, &config, &visible).unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&visible);
+    let prepared = prepare_from_visible(&root, &config, &visible, &sources).unwrap();
 
     assert_eq!(
         prepared.setup_data()[0].setup_files,

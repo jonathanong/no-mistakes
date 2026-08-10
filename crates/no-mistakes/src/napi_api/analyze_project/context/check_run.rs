@@ -56,10 +56,9 @@ impl SharedCheckContext {
         facts: &crate::codebase::check_facts::CheckFactMap,
         dependency_graph: Option<&std::sync::Arc<crate::codebase::dependencies::graph::DepGraph>>,
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+        include_suppressed: bool,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
-        use crate::codebase::rules::agents_md_max_size::advisories_with_files_and_sources;
-
         if self.fact_files.is_empty()
             && self.graph_files.is_empty()
             && !self.filesystem_rules_enabled
@@ -104,7 +103,7 @@ impl SharedCheckContext {
                     .prepared
                     .tsconfig_gate_project_inputs
                     .as_ref(),
-                defer_suppression: false,
+                defer_suppression: true,
             });
         let completed = crate::check_runner::complete_domain_checks((
             react,
@@ -114,44 +113,19 @@ impl SharedCheckContext {
             codebase,
             filesystem_rules,
         ))?;
-        let mut rules = completed.rules.findings;
-        rules.extend(completed.filesystem_rules.findings);
-        let warnings = [
-            completed.react.warning,
-            completed.queues.warning,
-            completed.rules.warning,
-            completed.integration.warning,
-            completed.codebase.warning,
-            completed.filesystem_rules.warning,
-        ]
-        .into_iter()
-        .flatten()
-        .collect();
-        let advisories = if self.filesystem_rules_enabled {
-            advisories_with_files_and_sources(&self.root, config, &self.fs_files, &sources)?
-        } else {
-            Vec::new()
-        };
-        Ok(crate::check_runner::CheckResults {
-            timings: vec![
-                ("discover", std::time::Duration::ZERO),
-                ("parse_extract", std::time::Duration::ZERO),
-                ("react", completed.react.duration),
-                ("queues", completed.queues.duration),
-                ("rules", completed.rules.duration),
-                ("integration", completed.integration.duration),
-                ("codebase", completed.codebase.duration),
-                ("filesystem_rules", completed.filesystem_rules.duration),
-            ],
-            react: completed.react.findings,
-            queues: completed.queues.findings,
-            rules,
-            integration: completed.integration.findings,
-            codebase: completed.codebase.findings,
-            warnings,
-            advisories,
-            suppressed: Vec::new(),
-            include_suppressed: false,
-        })
+        crate::check_runner::results::finalize_domain_checks(
+            crate::check_runner::results::FinalizeInput {
+                root: &self.root,
+                config,
+                filesystem_files: &self.fs_files,
+                sources: &sources,
+                filesystem_rules_enabled: self.filesystem_rules_enabled,
+                react_warning: None,
+                discover_duration: std::time::Duration::ZERO,
+                facts_duration: std::time::Duration::ZERO,
+                completed,
+                include_suppressed,
+            },
+        )
     }
 }

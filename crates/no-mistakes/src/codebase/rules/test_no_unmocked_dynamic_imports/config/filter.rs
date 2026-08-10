@@ -48,12 +48,26 @@ pub(super) fn test_filter_from_config_files(
     config: &NoMistakesConfig,
     config_files: &[ConfigFile],
 ) -> Result<TestFilter> {
+    test_filter_from_config_files_with_sources(root, config, config_files, None)
+}
+
+pub(super) fn test_filter_from_config_files_with_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    config_files: &[ConfigFile],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Result<TestFilter> {
     let (mut includes, mut excludes) = rule_test_project_globs(root, config)?;
     let has_rule_target_includes = !includes.is_empty();
     let mut include_regex = Vec::new();
     let mut config_includes = Vec::new();
     for config_file in config_files {
-        let source = std::fs::read_to_string(&config_file.path)?;
+        let source = match sources {
+            Some(sources) => crate::codebase::rules::read_source(sources, &config_file.path)
+                .ok_or_else(|| anyhow::anyhow!("failed to read {}", config_file.path.display()))?
+                .to_string(),
+            None => std::fs::read_to_string(&config_file.path)?,
+        };
         let base = config_file.path.parent().unwrap_or(root);
         config_includes.extend(super::normalize_matcher_patterns(
             root,

@@ -3,7 +3,7 @@ use super::origin::{origin_for_export, resolve_export_source};
 use super::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile, RULE_ID};
 use crate::codebase::symbols::export_kind_str;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolverFacade};
-use crate::codebase::ts_source::has_disable_comment;
+use crate::codebase::ts_source::{has_disable_comment, has_disable_line_comment};
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
@@ -62,8 +62,9 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     occurrence.file = file.rel.clone();
                     occurrence.line = export.line;
                     occurrence.kind = export_kind_str(&export.kind).to_string();
-                    occurrence.suppressed =
-                        file.disabled || has_disable_comment(&file.source, export.line, RULE_ID);
+                    occurrence.suppressed = file.disabled
+                        || has_disable_comment(&file.source, export.line, RULE_ID)
+                        || has_disable_line_comment(&file.source, export.line, RULE_ID);
                     if !super::nextjs::is_framework_export(
                         &occurrence.file,
                         &occurrence.name,
@@ -111,7 +112,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     kind: export_kind_str(&export.kind).to_string(),
                     origin,
                     suppressed: file.disabled
-                        || has_disable_comment(&file.source, export.line, RULE_ID),
+                        || has_disable_comment(&file.source, export.line, RULE_ID)
+                        || has_disable_line_comment(&file.source, export.line, RULE_ID),
                 });
             }
             _ => {
@@ -124,7 +126,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     kind: export_kind_str(&export.kind).to_string(),
                     origin: origin_for_export(file, export, bucket),
                     suppressed: file.disabled
-                        || has_disable_comment(&file.source, export.line, RULE_ID),
+                        || has_disable_comment(&file.source, export.line, RULE_ID)
+                        || has_disable_line_comment(&file.source, export.line, RULE_ID),
                 });
             }
         }

@@ -3,7 +3,7 @@ use super::*;
 mod graph_rules;
 mod helpers;
 use graph_rules::graph_rule_findings;
-use helpers::{storybook_findings, suppress_findings};
+use helpers::{storybook_findings, suppress_findings, StorybookFindingsRequest};
 
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,
@@ -80,6 +80,8 @@ pub(super) fn run(
         None
     };
     let mut findings = Vec::new();
+    // Aggregate callers derive this once and pass Some(inferred_roots) through
+    // every prepared rule adapter.
     if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
         findings.extend(crate::perf_trace::trace(
             "rules.test_no_unmocked_dynamic_imports",
@@ -93,6 +95,7 @@ pub(super) fn run(
                         graph: dependency_graph
                             .expect("dynamic-import rule requires canonical graph"),
                         session: &session,
+                        sources,
                         defer_suppression,
                     },
                 )
@@ -129,15 +132,16 @@ pub(super) fn run(
         )?);
     }
     if rule_enabled(config, REQUIRE_STORYBOOK_STORIES) {
-        findings.extend(storybook_findings(
+        findings.extend(storybook_findings(StorybookFindingsRequest {
             root,
             config,
             prepared_tsconfig_catalog,
             shared,
             inferred_roots,
-            &session,
+            session: &session,
             defer_suppression,
-        )?);
+            sources,
+        })?);
     }
     if crate::playwright::rules::configured(config) {
         findings.extend(crate::perf_trace::trace(

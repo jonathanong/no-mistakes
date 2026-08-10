@@ -87,8 +87,8 @@ pub use suppression::{
     suppress_domain_findings_with_sources, SuppressedFinding, SuppressionTarget,
 };
 pub(crate) use suppression::{
-    suppress_rule_findings, suppress_rule_findings_with_source,
-    suppress_rule_findings_with_sources, suppress_rule_findings_with_sources_except,
+    suppress_rule_findings_with_source, suppress_rule_findings_with_sources,
+    suppress_rule_findings_with_sources_except,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]

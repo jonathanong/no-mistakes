@@ -318,6 +318,24 @@ fn check_json_records_react_next_line_directive_at_the_fetch_location() {
 }
 
 #[test]
+fn check_json_uses_filter_precedence_for_overlapping_directives() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-directive-precedence");
+    let output =
+        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let finding = value["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["domain"] == "react")
+        .unwrap_or_else(|| panic!("missing React suppression: {value}"));
+    assert_eq!(finding["line"], 4);
+    assert_eq!(finding["directive"]["kind"], "nextLine");
+    assert_eq!(finding["directive"]["line"], 3);
+}
+
+#[test]
 fn check_json_keeps_unsuppressed_duplicate_when_suppressed_export_sorts_first() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-unique-canonical");
@@ -331,9 +349,14 @@ fn check_json_keeps_unsuppressed_duplicate_when_suppressed_export_sorts_first() 
     )
     .unwrap();
     assert!(audit["codebase"].as_array().is_some_and(Vec::is_empty));
-    assert!(audit["suppressed"].as_array().is_some_and(|items| items
-        .iter()
-        .any(|item| { item["rule"] == "unique-exports" && item["file"] == "src/a.ts" })));
+    assert!(audit["suppressed"]
+        .as_array()
+        .is_some_and(|items| items.iter().any(|item| {
+            item["rule"] == "unique-exports"
+                && item["file"] == "src/a.ts"
+                && item["directive"]["kind"] == "line"
+                && item["directive"]["line"] == 1
+        })));
 }
 
 #[test]

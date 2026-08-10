@@ -1,8 +1,8 @@
 use super::{
     forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching, require_storybook_stories,
     required_entrypoint_reachability, rule_enabled, server_route_client_boundary, sort_findings,
-    suppress_rule_findings, suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports,
-    RuleFinding, FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports, RuleFinding,
+    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
     REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
     TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
@@ -76,7 +76,7 @@ pub fn run_check_with_facts_and_playwright(
         prepared_tsconfig: &prepared_tsconfig,
         prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
         inferred_roots: None,
-        sources: Some(&sources),
+        sources: &sources,
         defer_suppression: false,
     })
 }

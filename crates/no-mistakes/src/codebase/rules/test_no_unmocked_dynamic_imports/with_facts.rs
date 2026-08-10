@@ -60,6 +60,7 @@ pub(crate) struct PreparedFactsGraphRequest<'a> {
     pub(crate) shared: &'a CheckFactMap,
     pub(crate) graph: &'a DepGraph,
     pub(crate) session: &'a std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    pub(crate) sources: &'a crate::codebase::ts_source::SourceStore,
     pub(crate) defer_suppression: bool,
 }
 
@@ -73,6 +74,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
         shared,
         graph,
         session,
+        sources,
         defer_suppression,
     } = request;
     let files = shared.files().to_vec();
@@ -87,7 +89,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
         });
     let prepared =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.prepare_config", || {
-            config::prepare_from_visible(root, config, &files)
+            config::prepare_from_visible(root, config, &files, sources)
         })?;
     let test_files = matching_test_files_with_filter(root, &files, prepared.test_filter());
     let setup_data = prepared.setup_data();

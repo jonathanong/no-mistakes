@@ -22,6 +22,7 @@ struct RuleCheck<'a> {
     resolver: &'a dyn ImportResolution,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
+    sources: &'a crate::codebase::ts_source::SourceStore,
 }
 
 pub(super) fn check_with_resolver(
@@ -31,6 +32,7 @@ pub(super) fn check_with_resolver(
     resolver: &dyn ImportResolution,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let root = normalize_path(root);
     let mut findings = Vec::new();
@@ -56,6 +58,7 @@ pub(super) fn check_with_resolver(
             resolver,
             inferred_roots,
             defer_suppression,
+            sources,
         })?);
     }
     sort_findings(&mut findings);
@@ -72,13 +75,14 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         resolver,
         inferred_roots,
         defer_suppression,
+        sources,
     } = inputs;
     let opts: Options = rule.rule_options();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;
     let include = GlobMatcher::new(&opts.include)?;
     let exclude = GlobMatcher::new(&opts.exclude)?;
-    let story_patterns = effective_story_patterns(root, project_root, config, &opts);
+    let story_patterns = effective_story_patterns(root, project_root, config, &opts, sources);
     let stories = GlobMatcher::new(&story_patterns)?;
     let allow_files = GlobMatcher::new(opts.allow_files.keys())?;
     let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, config);

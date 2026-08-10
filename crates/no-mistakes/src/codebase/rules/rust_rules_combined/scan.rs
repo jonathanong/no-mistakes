@@ -4,22 +4,9 @@ pub(super) fn scan_file_with_deferred_suppression(
     root: &Path,
     path: &Path,
     work: &RustWork,
-    exclusive: bool,
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    if exclusive {
-        let Ok(content) = std::fs::read_to_string(path) else {
-            return Vec::new();
-        };
-        return scan_file_with_source_and_deferred_suppression(
-            root,
-            path,
-            work,
-            &content,
-            defer_suppression,
-        );
-    }
     let Some(content) = super::super::read_source(sources, path) else {
         return Vec::new();
     };

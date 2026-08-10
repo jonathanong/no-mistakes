@@ -91,6 +91,28 @@ fn analyze_project_dynamic_import_check_respects_filesystem_skips_with_standalon
 }
 
 #[test]
+fn analyze_project_check_applies_shared_suppression_accounting() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/suppression-react");
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [{ "type": "check", "includeSuppressed": true }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let result: Value = serde_json::from_str(&output).unwrap();
+    let report = &result["reports"][0]["result"];
+    assert!(report["react"].as_array().is_some_and(Vec::is_empty));
+    assert!(report["suppressed"].as_array().is_some_and(|items| {
+        items
+            .iter()
+            .any(|item| item["domain"] == "react" && item["rule"] == "assert-no-fetch")
+    }));
+}
+
+#[test]
 fn analyze_project_reachability_check_uses_full_graph_with_standalone_parity() {
     let root = check_runner_fixture("required-reachability-ignores-filesystem-skip");
     let result = analyze_project_check_result(&root);

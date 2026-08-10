@@ -8,10 +8,6 @@ pub use accounting::{
     SuppressionDirectiveKind, SuppressionTarget,
 };
 
-pub(crate) fn suppress_rule_findings(root: &Path, findings: &mut Vec<RuleFinding>) {
-    suppress_rule_findings_inner(root, findings, None, &[]);
-}
-
 pub(crate) fn suppress_rule_findings_with_sources_except(
     root: &Path,
     findings: &mut Vec<RuleFinding>,
@@ -33,7 +29,7 @@ pub(crate) fn suppress_rule_findings_with_source(findings: &mut Vec<RuleFinding>
     findings.retain(|finding| !finding_is_suppressed(source, finding));
 }
 
-fn suppress_rule_findings_inner(
+pub(super) fn suppress_rule_findings_inner(
     root: &Path,
     findings: &mut Vec<RuleFinding>,
     request_sources: Option<&crate::codebase::ts_source::SourceStore>,

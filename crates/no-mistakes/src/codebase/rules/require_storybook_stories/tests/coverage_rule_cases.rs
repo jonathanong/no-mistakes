@@ -153,12 +153,20 @@ fn config_helpers_cover_tsconfig_and_storybook_fallbacks() {
 
     let mut missing = crate::config::v2::NoMistakesConfig::default();
     missing.tests.storybook.configs = Some(StringOrList::One(".storybook/missing.ts".to_string()));
-    let patterns =
-        config::effective_story_patterns(&root, &root, &missing, &types::Options::default());
+    let missing_sources = crate::codebase::rules::source_store_for_files(&visible);
+    let patterns = config::effective_story_patterns(
+        &root,
+        &root,
+        &missing,
+        &types::Options::default(),
+        &missing_sources,
+    );
     assert_eq!(patterns, vec!["**/*.stories.{ts,tsx,js,jsx}"]);
 
     let story_root = fixture("defaults");
     let config_path = story_root.join(".storybook/main.ts");
+    let absolute_sources =
+        crate::codebase::rules::source_store_for_files(std::slice::from_ref(&config_path));
     let mut absolute = crate::config::v2::NoMistakesConfig::default();
     absolute.tests.storybook.configs =
         Some(StringOrList::One(config_path.to_string_lossy().to_string()));
@@ -167,10 +175,14 @@ fn config_helpers_cover_tsconfig_and_storybook_fallbacks() {
         &story_root,
         &absolute,
         &types::Options::default(),
+        &absolute_sources,
     );
     assert_eq!(patterns, vec!["storybook/**/*.stories.tsx"]);
 
     let fallback_root = fixture("single-story-config");
+    let fallback_config_path = fallback_root.join(".storybook/main.ts");
+    let fallback_sources =
+        crate::codebase::rules::source_store_for_files(std::slice::from_ref(&fallback_config_path));
     let mut root_relative = crate::config::v2::NoMistakesConfig::default();
     root_relative.tests.storybook.configs =
         Some(StringOrList::One(".storybook/main.ts".to_string()));
@@ -179,6 +191,7 @@ fn config_helpers_cover_tsconfig_and_storybook_fallbacks() {
         &fallback_root.join("web"),
         &root_relative,
         &types::Options::default(),
+        &fallback_sources,
     );
     assert_eq!(
         patterns,

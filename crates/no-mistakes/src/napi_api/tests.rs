@@ -388,6 +388,9 @@ fn react_json_functions_return_reports() {
         .iter()
         .find(|entry| entry["name"] == "FetchingComponent")
         .expect("fixture must expose its fetching component");
+    assert!(fetching["fetches"]
+        .as_array()
+        .is_some_and(|fetches| !fetches.is_empty()));
     // Suppression needs the internal source location, but React analysis must
     // not gain a location field without an explicit public DTO change.
     assert!(fetching["fetches"][0].get("line").is_none());
@@ -457,6 +460,15 @@ fn invalid_options_return_napi_errors() {
     let error = tests_comment_markdown_impl(json!({ "plan": "does-not-exist.json" }).to_string())
         .unwrap_err();
     assert!(error.reason.contains("Failed to read plan"));
+}
+
+#[test]
+fn project_options_default_include_suppressed_when_omitted() {
+    let options = parse_options::<ProjectOptions>(
+        &json!({ "root": fixture_root("simple"), "files": ["a.mts"] }).to_string(),
+    )
+    .unwrap();
+    assert!(!options.include_suppressed);
 }
 
 #[test]

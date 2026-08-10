@@ -28,6 +28,7 @@ pub(crate) fn check_with_prepared_facts_and_session(
             session.clone(),
         )
     })?;
+    let sources = crate::codebase::rules::source_store_for_files(shared.files());
     check_with_prepared_facts_graph_and_session(PreparedFactsGraphRequest {
         root,
         config,
@@ -35,6 +36,7 @@ pub(crate) fn check_with_prepared_facts_and_session(
         shared,
         graph: &graph,
         session,
+        sources: &sources,
         defer_suppression: false,
     })
 }
