@@ -380,7 +380,7 @@ fn combined_rust_rules_emit_all_configured_findings() {
 }
 
 #[test]
-fn aggregate_drops_exclusive_rust_sources_without_global_suppression_rereads() {
+fn aggregate_reads_rust_sources_once_without_global_suppression_rereads() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
@@ -389,6 +389,11 @@ fn aggregate_drops_exclusive_rust_sources_without_global_suppression_rereads() {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let files = snapshot.paths_for(&root);
     let sources = snapshot.source_store_for(&root);
+    // Aggregate fact collection warms this request-owned store before the
+    // filesystem dispatcher. The Rust rules must reuse that source and avoid
+    // a second read for final suppression accounting.
+    sources.read_path(&root.join("src/lib.rs")).unwrap();
+    assert_eq!(sources.physical_read_count(), 1);
 
     let findings = run_filesystem_rules_with_config_snapshot_catalog_and_sources(
         &root,
@@ -407,7 +412,7 @@ fn aggregate_drops_exclusive_rust_sources_without_global_suppression_rereads() {
     .unwrap();
 
     assert_eq!(findings.len(), 3, "{findings:#?}");
-    assert_eq!(sources.physical_read_count(), 0);
+    assert_eq!(sources.physical_read_count(), 1);
 }
 
 #[test]

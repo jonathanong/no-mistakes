@@ -27,7 +27,7 @@ type BatchedReactUsagesOptions = Pick<
   Required<Pick<ProjectOptions, "target">>;
 type BatchedCheckOptions = Pick<
   ProjectOptions,
-  "root" | "tsconfig" | "config" | "includeSuppressed"
+  "root" | "tsconfig" | "config" | "include" | "includeSuppressed"
 >;
 
 export type AnalyzeProjectReportRequest =

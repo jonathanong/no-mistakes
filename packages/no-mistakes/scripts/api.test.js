@@ -485,7 +485,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed"[\s\S]*?>/,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "include" \| "includeSuppressed"[\s\S]*?>/,
   );
   assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
   assert.match(

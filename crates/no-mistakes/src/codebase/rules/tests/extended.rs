@@ -122,7 +122,12 @@ fn dynamic_import_check_uses_authoritative_source_fact_for_suppression() {
             ..Default::default()
         },
     );
-    let physical_source = std::fs::read_to_string(&test).unwrap();
+    let physical_source = facts
+        .ts
+        .get(&test)
+        .and_then(|file_facts| file_facts.source.as_deref())
+        .expect("collected source fact for the physical fixture")
+        .to_owned();
     // The prepared source is the request snapshot. Its directive differs from
     // disk so a lower-level reread would incorrectly restore these findings.
     let snapshot_source =
