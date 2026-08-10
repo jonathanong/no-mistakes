@@ -21,13 +21,7 @@ fn walk_expression(expr: &Expression, v: &mut dyn Visitor) {
             walk_member_expression(a.left.as_member_expression(), v);
             walk_expression(&a.right, v);
         }
-        Expression::ArrowFunctionExpression(a) => {
-            if let Some(expression) = a.body.as_expression() {
-                walk_expression(expression, v);
-            } else if let Some(statements) = crate::ast::arrow_function_body_statements(&a.body) {
-                walk_statements(statements, v);
-            }
-        }
+        Expression::ArrowFunctionExpression(a) => walk_arrow_function_expression(a, v),
         Expression::FunctionExpression(f) => {
             walk_function_body(f.body.as_deref(), v);
         }
@@ -61,6 +55,19 @@ fn walk_expression(expr: &Expression, v: &mut dyn Visitor) {
         Expression::JSXElement(elem) => walk_jsx_element(elem, v),
         Expression::JSXFragment(frag) => walk_jsx_children(&frag.children, v),
         _ => {}
+    }
+}
+
+fn walk_arrow_function_expression(
+    arrow: &oxc_ast::ast::ArrowFunctionExpression,
+    v: &mut dyn Visitor,
+) {
+    if let Some(expression) = arrow.body.as_expression() {
+        walk_expression(expression, v);
+        return;
+    }
+    if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+        walk_statements(statements, v);
     }
 }
 
