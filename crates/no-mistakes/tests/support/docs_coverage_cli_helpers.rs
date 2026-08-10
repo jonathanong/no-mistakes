@@ -1,55 +1,111 @@
 use std::collections::{BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use syn::{Item, Meta, Type};
 
 pub(super) fn rust_sources(dir: &Path) -> Vec<PathBuf> {
-    let mut paths = Vec::new();
-    for entry in std::fs::read_dir(dir).unwrap() {
-        let path = entry.unwrap().path();
-        if path.is_dir() {
-            paths.extend(rust_sources(&path));
-        } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
-            paths.push(path);
-        }
-    }
+    let repo = git_repo_root(dir);
+    let output = Command::new("git")
+        .args([
+            "-C",
+            repo.to_str().expect("repository root must be UTF-8"),
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "--",
+            "crates/no-mistakes/src",
+        ])
+        .output()
+        .expect("git ls-files must be available for docs coverage");
+    assert!(
+        output.status.success(),
+        "git ls-files failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let mut paths = String::from_utf8(output.stdout)
+        .expect("git ls-files output must be UTF-8")
+        .lines()
+        .filter_map(|relative| {
+            let path = repo.join(relative);
+            (path.extension().and_then(|ext| ext.to_str()) == Some("rs")
+                && std::fs::symlink_metadata(&path)
+                    .map(|metadata| metadata.file_type().is_file())
+                    .unwrap_or(false))
+            .then_some(path)
+        })
+        .collect::<Vec<_>>();
     paths.sort();
     paths
 }
 
+fn git_repo_root(dir: &Path) -> PathBuf {
+    let output = Command::new("git")
+        .args([
+            "-C",
+            dir.to_str().expect("source directory must be UTF-8"),
+            "rev-parse",
+            "--show-toplevel",
+        ])
+        .output()
+        .expect("git rev-parse must be available for docs coverage");
+    assert!(
+        output.status.success(),
+        "git rev-parse failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    PathBuf::from(
+        String::from_utf8(output.stdout)
+            .expect("git repository root must be UTF-8")
+            .trim(),
+    )
+}
+
 pub(super) fn subcommand_enums(source: &str) -> Vec<(String, String)> {
-    let mut result = Vec::new();
-    let mut search_from = 0;
-    while let Some(relative) = source[search_from..].find("#[command(subcommand)]") {
-        let attribute_start = search_from + relative;
-        let after_attribute = attribute_start + "#[command(subcommand)]".len();
-        let field_end = source[after_attribute..]
-            .find('}')
-            .map(|offset| after_attribute + offset)
-            .unwrap_or(source.len());
-        let field = &source[after_attribute..field_end];
-        let Some(command_field) = field.find("command:") else {
-            search_from = after_attribute;
-            continue;
-        };
-        let enum_name = field[command_field + "command:".len()..]
-            .split([',', ';', '}'])
-            .next()
-            .unwrap()
-            .trim()
-            .to_string();
-        let parent = source[..attribute_start]
-            .rfind("struct ")
-            .and_then(|offset| {
-                source[offset + "struct ".len()..]
-                    .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-                    .next()
+    syn::parse_file(source)
+        .expect("Rust sources must parse before extracting clap commands")
+        .items
+        .into_iter()
+        .filter_map(|item| {
+            let Item::Struct(item) = item else {
+                return None;
+            };
+            let parent = item.ident.to_string();
+            let fields = match item.fields {
+                syn::Fields::Named(fields) => fields.named,
+                _ => return None,
+            };
+            fields.into_iter().find_map(|field| {
+                if !field.attrs.iter().any(is_subcommand_attribute) {
+                    return None;
+                }
+                let Type::Path(path) = field.ty else {
+                    panic!("clap subcommand field must have a named type");
+                };
+                Some((
+                    parent.clone(),
+                    path.path
+                        .segments
+                        .last()
+                        .expect("clap subcommand type must have a path")
+                        .ident
+                        .to_string(),
+                ))
             })
-            .filter(|name| !name.is_empty())
-            .unwrap_or_else(|| panic!("clap subcommand attribute has no containing struct"))
-            .to_string();
-        result.push((parent, enum_name));
-        search_from = after_attribute;
-    }
-    result
+        })
+        .collect()
+}
+
+fn is_subcommand_attribute(attribute: &syn::Attribute) -> bool {
+    let Meta::List(list) = &attribute.meta else {
+        return false;
+    };
+    attribute.path().is_ident("command")
+        && list
+            .tokens
+            .to_string()
+            .split(',')
+            .any(|part| part.trim() == "subcommand")
 }
 
 pub(super) fn enum_block<'a>(source: &'a str, enum_name: &str) -> Option<&'a str> {
@@ -162,4 +218,15 @@ pub(super) fn kebab_case(value: &str) -> String {
         result.extend(character.to_lowercase());
     }
     result
+}
+
+#[test]
+fn parses_multiline_subcommand_fixture() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/docs-coverage/multiline-subcommand/fixture.rs");
+    let source = std::fs::read_to_string(&fixture).unwrap();
+    assert_eq!(
+        subcommand_enums(&source),
+        vec![("FixtureArgs".to_string(), "FixtureCommand".to_string())]
+    );
 }
