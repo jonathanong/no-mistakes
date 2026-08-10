@@ -79,6 +79,7 @@ fn print_violations_outputs_violations() {
         rule: "assert-no-fetch".to_string(),
         detail: Some("GET /api/users".to_string()),
         line: Some(1),
+        suppression_lines: vec![1],
     }];
     print_violations(&violations);
 }
@@ -91,6 +92,7 @@ fn print_violations_no_detail() {
         rule: "assert-no-fetch".to_string(),
         detail: None,
         line: None,
+        suppression_lines: Vec::new(),
     }];
     print_violations(&violations);
 }

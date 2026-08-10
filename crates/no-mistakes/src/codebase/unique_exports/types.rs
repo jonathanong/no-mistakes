@@ -79,6 +79,9 @@ pub(super) struct ExportOccurrence {
     pub(super) line: u32,
     pub(super) kind: String,
     pub(super) origin: ExportOrigin,
+    /// Deferred aggregate analysis needs this to keep a suppressed occurrence
+    /// from becoming the canonical export for a visible duplicate.
+    pub(super) suppressed: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]

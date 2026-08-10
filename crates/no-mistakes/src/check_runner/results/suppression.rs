@@ -31,21 +31,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         codebase,
     } = input;
     let mut suppressed = Vec::new();
-    suppressed.extend(suppress_domain_findings_with_sources(
-        root,
-        react,
-        sources,
-        |finding| SuppressionTarget {
-            domain: "react",
-            rule: &finding.rule,
-            file: &finding.file,
-            line: finding.line,
-            reason: finding
-                .detail
-                .as_deref()
-                .unwrap_or("component fetch assertion failed"),
-        },
-    ));
+    suppress_react(root, sources, react, &mut suppressed);
     suppressed.extend(suppress_domain_findings_with_sources(
         root,
         queues,
@@ -87,6 +73,56 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
     suppressed.sort();
     suppressed.dedup();
     suppressed
+}
+
+/// A component-level React diagnostic covers every local fetch. Preserve its
+/// single stable public finding unless all of those fetches are suppressed.
+fn suppress_react(
+    root: &std::path::Path,
+    sources: &SourceStore,
+    findings: &mut Vec<react_traits::Violation>,
+    suppressed: &mut Vec<SuppressedFinding>,
+) {
+    findings.retain(|finding| {
+        let lines = if finding.suppression_lines.is_empty() {
+            vec![finding.line]
+        } else {
+            finding
+                .suppression_lines
+                .iter()
+                .copied()
+                .map(Some)
+                .collect()
+        };
+        let mut locations = lines
+            .into_iter()
+            .map(|line| react_traits::Violation {
+                line,
+                suppression_lines: Vec::new(),
+                ..finding.clone()
+            })
+            .collect::<Vec<_>>();
+        suppressed.extend(suppress_domain_findings_with_sources(
+            root,
+            &mut locations,
+            sources,
+            react_target,
+        ));
+        !locations.is_empty()
+    });
+}
+
+fn react_target(finding: &react_traits::Violation) -> SuppressionTarget<'_> {
+    SuppressionTarget {
+        domain: "react",
+        rule: &finding.rule,
+        file: &finding.file,
+        line: finding.line,
+        reason: finding
+            .detail
+            .as_deref()
+            .unwrap_or("component fetch assertion failed"),
+    }
 }
 
 fn suppress_rules(

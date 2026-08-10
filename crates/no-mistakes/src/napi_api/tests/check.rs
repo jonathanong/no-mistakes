@@ -147,6 +147,59 @@ fn check_json_records_react_next_line_directive_at_the_fetch_location() {
 }
 
 #[test]
+fn check_json_keeps_unsuppressed_duplicate_when_suppressed_export_sorts_first() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-unique-canonical");
+    let baseline: serde_json::Value =
+        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
+            .unwrap();
+    assert!(baseline["codebase"].as_array().is_some_and(Vec::is_empty));
+
+    let audit: serde_json::Value = serde_json::from_str(
+        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
+    )
+    .unwrap();
+    assert!(audit["codebase"].as_array().is_some_and(Vec::is_empty));
+    assert!(audit["suppressed"].as_array().is_some_and(|items| items
+        .iter()
+        .any(|item| { item["rule"] == "unique-exports" && item["file"] == "src/a.ts" })));
+}
+
+#[test]
+fn check_json_does_not_hide_later_react_fetch_after_first_is_suppressed() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-react-multiple");
+    let output =
+        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert!(!value["react"].as_array().unwrap().is_empty(), "{value}");
+    assert!(value["suppressed"].as_array().is_some_and(|items| items
+        .iter()
+        .any(|item| { item["domain"] == "react" && item["line"] == 3 })));
+}
+
+#[test]
+fn check_json_accounts_for_suppressed_combined_rust_rule() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-rust-combined");
+    let baseline: serde_json::Value =
+        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
+            .unwrap();
+    assert!(baseline["rules"].as_array().is_some_and(Vec::is_empty));
+
+    let audit: serde_json::Value = serde_json::from_str(
+        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
+    )
+    .unwrap();
+    assert!(audit["rules"].as_array().is_some_and(Vec::is_empty));
+    assert!(audit["suppressed"]
+        .as_array()
+        .is_some_and(|items| items.iter().any(|item| {
+            item["domain"] == "filesystem" && item["rule"] == "rust-no-inline-allows"
+        })));
+}
+
+#[test]
 fn check_json_returns_warnings_for_skipped_configured_check() {
     let options = json!({
         "root": fixture_root("test-no-unmocked-dynamic-imports-unknown-vitest-project"),

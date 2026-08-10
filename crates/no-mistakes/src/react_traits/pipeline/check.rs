@@ -119,6 +119,7 @@ fn assert_no_fetch_violations(
                 rule: "assert-no-fetch".to_string(),
                 detail: facts.fetches.first().and_then(|f| f.shape.clone()),
                 line: facts.fetches.first().map(|f| f.line),
+                suppression_lines: facts.fetches.iter().map(|fetch| fetch.line).collect(),
             });
         }
     }

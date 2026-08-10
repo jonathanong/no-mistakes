@@ -12,6 +12,7 @@ struct RuleRunInputs<'a> {
     vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
+    defer_suppression: bool,
     workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
     tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     config_path: Option<&'a Path>,
@@ -97,6 +98,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
         vitest_catalog,
         sources: &sources,
         facts,
+        defer_suppression,
         workflow_documents,
         tsconfig_gate_project_inputs,
         config_path,
@@ -127,7 +129,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
 }
 
 fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
-    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = run_rule::run_rule_with_sources($id, $call, inputs.root, inputs.config, inputs.candidates.candidates($id), inputs.sources, inputs.facts); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; spawn_special_rules(scope, inputs); }); }; }
+    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = run_rule::run_rule_with_sources($id, $call, inputs.root, inputs.config, inputs.candidates.candidates($id), inputs.sources, inputs.facts, inputs.defer_suppression); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; spawn_special_rules(scope, inputs); }); }; }
     crate::filesystem_rules!(run_rules);
 }
 
@@ -139,6 +141,7 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
         vitest_catalog,
         sources,
         facts: _,
+        defer_suppression,
         workflow_documents,
         tsconfig_gate_project_inputs,
         config_path,
@@ -148,13 +151,14 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
     } = *inputs;
     markdown_dispatch::spawn(scope, root, config, candidates, markdown_facts, acc);
     if registry::rust_rules_enabled(config) {
-        scope.spawn(|_| {
-            let result = rust_rules_combined::check_with_files_and_sources(
+        scope.spawn(move |_| {
+            let result = rust_rules_combined::check_with_files_sources_and_deferred_suppression(
                 root,
                 config,
                 candidates.rust_candidates(),
                 candidates.exclusive_rust_candidates(),
                 sources,
+                defer_suppression,
             );
             acc.lock()
                 .expect("mutex poisoned")

@@ -120,6 +120,11 @@ pub struct Violation {
     /// React check output remains byte-for-byte compatible.
     #[serde(skip)]
     pub line: Option<usize>,
+    /// All local fetch locations represented by this component-level
+    /// diagnostic. Aggregate suppression uses these without changing the
+    /// stable direct React report schema.
+    #[serde(skip)]
+    pub suppression_lines: Vec<usize>,
 }
 
 #[derive(Default, Deserialize)]

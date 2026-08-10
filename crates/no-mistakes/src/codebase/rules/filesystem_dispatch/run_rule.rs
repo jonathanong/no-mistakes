@@ -12,6 +12,7 @@ pub(super) fn run_rule_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+    _defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     match rule_id {
         AGENTS_MD_MAX_SIZE => {

@@ -62,6 +62,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     occurrence.file = file.rel.clone();
                     occurrence.line = export.line;
                     occurrence.kind = export_kind_str(&export.kind).to_string();
+                    occurrence.suppressed =
+                        file.disabled || has_disable_comment(&file.source, export.line, RULE_ID);
                     if !super::nextjs::is_framework_export(
                         &occurrence.file,
                         &occurrence.name,
@@ -108,6 +110,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     line: export.line,
                     kind: export_kind_str(&export.kind).to_string(),
                     origin,
+                    suppressed: file.disabled
+                        || has_disable_comment(&file.source, export.line, RULE_ID),
                 });
             }
             _ => {
@@ -119,6 +123,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     line: export.line,
                     kind: export_kind_str(&export.kind).to_string(),
                     origin: origin_for_export(file, export, bucket),
+                    suppressed: file.disabled
+                        || has_disable_comment(&file.source, export.line, RULE_ID),
                 });
             }
         }

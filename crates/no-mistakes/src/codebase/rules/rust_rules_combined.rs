@@ -35,6 +35,24 @@ pub(crate) fn check_with_files_and_sources(
     exclusive_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_deferred_suppression(
+        root,
+        config,
+        all_files,
+        exclusive_files,
+        sources,
+        false,
+    )
+}
+
+pub(crate) fn check_with_files_sources_and_deferred_suppression(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    exclusive_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
     let mut work = BTreeMap::<PathBuf, RustWork>::new();
     add_max_lines_work(root, config, all_files, &mut work)?;
     add_inline_tests_work(root, config, all_files, &mut work)?;
@@ -43,12 +61,13 @@ pub(crate) fn check_with_files_and_sources(
     let mut findings: Vec<RuleFinding> = work
         .par_iter()
         .flat_map(|(path, work)| {
-            scan::scan_file(
+            scan::scan_file_with_deferred_suppression(
                 root,
                 path,
                 work,
                 exclusive_files.binary_search(path).is_ok(),
                 sources,
+                defer_suppression,
             )
         })
         .collect();

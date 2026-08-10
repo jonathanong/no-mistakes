@@ -31,8 +31,18 @@ pub(super) fn unique_export_findings(
         if unique_occurrences.len() < 2 {
             continue;
         }
-        let first = &unique_occurrences[0];
-        for duplicate in unique_occurrences.iter().skip(1) {
+        // In aggregate mode preserve standalone semantics: a suppressed
+        // occurrence must not turn an unsuppressed export into a duplicate.
+        // Still emit the suppressed occurrence so finalization can account for
+        // its directive.
+        let first = unique_occurrences
+            .iter()
+            .find(|occurrence| !occurrence.suppressed)
+            .unwrap_or(&unique_occurrences[0]);
+        for duplicate in unique_occurrences
+            .iter()
+            .filter(|item| !std::ptr::eq(*item, first))
+        {
             findings.push(UniqueExportFinding {
                 rule: RULE_ID.to_string(),
                 file: duplicate.file.clone(),
