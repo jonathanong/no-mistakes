@@ -121,6 +121,10 @@ fn call_bindings_require_unique_scalar_names() {
         "secrets:\n  token: '${{ secrets.TOKEN }}'",
         "secrets:\n  token: '${{ needs.setup.outputs.token }}'",
         "secrets:\n  token: '${{ github.token }}'",
+        "secrets:\n  token: \"${{ strategy['job-total'] }}\"",
+        "secrets:\n  token: '${{ matrix.token }}'",
+        "secrets:\n  token: '${{ inputs.token }}'",
+        "secrets:\n  token: '${{ vars.TOKEN }}'",
     ] {
         assert!(call_bindings_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -135,7 +139,7 @@ fn call_bindings_require_unique_scalar_names() {
         "secrets:\n  Token: one\n  token: two",
         "secrets:\n  token: '${{ success() }}'",
         "secrets:\n  token: '${{ steps.setup.outputs.token }}'",
-        "secrets:\n  token: '${{ inputs.token }}'",
+        "secrets:\n  token: '${{ env.TOKEN }}'",
     ] {
         assert!(!call_bindings_shape_valid(&job(yaml)), "{yaml}");
     }
