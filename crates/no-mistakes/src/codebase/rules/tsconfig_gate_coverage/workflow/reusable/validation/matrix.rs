@@ -32,17 +32,27 @@ pub(crate) fn zero_instance_matrix(job: &Value) -> bool {
 }
 
 pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
-    let Some(matrix) = job
-        .get("strategy")
-        .and_then(|strategy| strategy.get("matrix"))
-        .and_then(Value::as_mapping)
-    else {
+    let Some(strategy) = job.get("strategy") else {
         return true;
+    };
+    let Some(strategy) = strategy.as_mapping() else {
+        return false;
+    };
+    let Some(matrix) = strategy.get("matrix") else {
+        return true;
+    };
+    let Some(matrix) = matrix.as_mapping() else {
+        return matrix.as_str().is_some_and(is_complete_expression);
     };
     match static_matrix_job_count(matrix) {
         Some(count) => count <= 256,
         None => true,
     }
+}
+
+fn is_complete_expression(value: &str) -> bool {
+    let value = value.trim();
+    value.starts_with("${{") && value.ends_with("}}")
 }
 
 fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> Option<Vec<(String, Vec<Value>)>> {

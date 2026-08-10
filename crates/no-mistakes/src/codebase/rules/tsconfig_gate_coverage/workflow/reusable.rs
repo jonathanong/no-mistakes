@@ -18,9 +18,9 @@ mod validation;
 use model::{ActivationKey, ActivationMemo, ScanContext, WorkflowDocument};
 use steps::scan_job_steps;
 use validation::{
-    call_bindings_shape_valid, canonical_local_call_target, canonical_remote_call_target,
-    reusable_call_job_shape_valid, scan_job_shape_valid, valid_job_dependencies,
-    workflow_call_shape_valid, zero_instance_matrix,
+    call_bindings_shape_valid, reusable_call_job_shape_valid, scan_job_shape_valid,
+    valid_job_dependencies, validated_reusable_target, workflow_call_shape_valid,
+    zero_instance_matrix,
 };
 
 pub(super) fn collect_ci_projects_with_stats(
@@ -147,10 +147,10 @@ fn scan_activation_uncached(
             None => None,
         };
         let callee_projects = if let Some(target) = call_target {
-            if target.starts_with("./") && !canonical_local_call_target(target) {
+            let edge = workflow_values::call_edge(&job_id, target, job);
+            if !memo.register_target(validated_reusable_target(&edge)?) {
                 return None;
             }
-            let edge = workflow_values::call_edge(&job_id, target, job);
             if edge.local {
                 let callee_path = edge.to.as_deref().unwrap_or_default();
                 let callee = context.workflows.get(callee_path)?;
@@ -172,9 +172,6 @@ fn scan_activation_uncached(
                     memo,
                 )?)
             } else {
-                if !canonical_remote_call_target(target) {
-                    return None;
-                }
                 None
             }
         } else {

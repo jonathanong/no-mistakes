@@ -16,6 +16,12 @@ fn uncertain_or_malformed_matrices_fail_open() {
     assert!(!zero_instance_matrix(&job(
         "strategy:\n  matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'"
     )));
+    assert!(!matrix_shape_valid(&job("strategy: []")));
+    assert!(matrix_shape_valid(&job("strategy:\n  fail-fast: false")));
+    assert!(!matrix_shape_valid(&job("strategy:\n  matrix: static")));
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix: ' ${{ fromJSON(needs.setup.outputs.matrix) }} '"
+    )));
 }
 
 #[test]

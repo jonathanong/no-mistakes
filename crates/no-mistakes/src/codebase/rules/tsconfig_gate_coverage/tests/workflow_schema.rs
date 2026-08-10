@@ -56,6 +56,10 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             ".github/workflows/malformed-remote-bindings.yml",
             "on: push\njobs:\n  remote:\n    uses: owner/repository/.github/workflows/typecheck.yml@main\n    with: true\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project remote-sibling/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/malformed-strategy.yml",
+            "on: push\njobs:\n  malformed:\n    strategy: []\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-strategy/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-strategy-sibling/tsconfig.json\n",
+        ),
     ];
     let tracked = [
         "declaration",
@@ -68,6 +72,8 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "ambiguous",
         "ambiguous-sibling",
         "remote-sibling",
+        "malformed-strategy",
+        "malformed-strategy-sibling",
     ]
     .into_iter()
     .map(|project| format!("{project}/tsconfig.json"))

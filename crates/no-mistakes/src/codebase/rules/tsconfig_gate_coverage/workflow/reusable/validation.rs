@@ -1,6 +1,9 @@
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::model::ReusableTarget;
+use crate::codebase::workflow_topology::model::WorkflowCallEdge;
+
 mod contracts;
 mod jobs;
 mod matrix;
@@ -45,6 +48,16 @@ pub(super) fn canonical_remote_call_target(target: &str) -> bool {
                 && canonical_workflow_filename(filename)
     );
     valid && segments.next().is_none()
+}
+
+pub(super) fn validated_reusable_target(edge: &WorkflowCallEdge) -> Option<ReusableTarget> {
+    if edge.local {
+        let path = edge.to.clone()?;
+        canonical_local_call_target(&edge.target).then_some(ReusableTarget::Local(path))
+    } else {
+        canonical_remote_call_target(&edge.target)
+            .then(|| ReusableTarget::Remote(edge.target.clone()))
+    }
 }
 
 fn canonical_workflow_filename(filename: &str) -> bool {

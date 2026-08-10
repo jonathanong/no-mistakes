@@ -27,6 +27,13 @@ pub(super) struct ActivationKey {
 pub(super) struct ActivationMemo {
     entries: BTreeMap<ActivationKey, Option<BTreeSet<String>>>,
     computations: usize,
+    targets: BTreeSet<ReusableTarget>,
+}
+
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
+pub(super) enum ReusableTarget {
+    Local(String),
+    Remote(String),
 }
 
 impl ActivationMemo {
@@ -48,5 +55,10 @@ impl ActivationMemo {
 
     pub(super) fn computations(&self) -> usize {
         self.computations
+    }
+
+    pub(super) fn register_target(&mut self, target: ReusableTarget) -> bool {
+        self.targets.insert(target);
+        self.targets.len() <= 50
     }
 }
