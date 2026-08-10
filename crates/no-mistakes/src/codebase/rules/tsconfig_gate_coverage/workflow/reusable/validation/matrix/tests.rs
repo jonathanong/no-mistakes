@@ -33,6 +33,8 @@ fn dynamic_matrix_requires_one_nonempty_expression() {
     for yaml in [
         "strategy:\n  matrix: '${{ }}'",
         "strategy:\n  matrix: '${{ true }}${{ false }}'",
+        "strategy:\n  matrix: '${{ true }}}'",
+        "strategy:\n  matrix: '${{{ true }}'",
     ] {
         assert!(!matrix_shape_valid(&job(yaml)), "{yaml}");
     }

@@ -80,7 +80,14 @@ fn malformed_secret_bindings_are_rejected() {
 
 #[test]
 fn malformed_complete_expressions_do_not_bypass_input_types() {
-    for value in ["${{ }}", "${{ true }}${{ false }}"] {
+    for value in [
+        "${{ }}",
+        "${{ true }}${{ false }}",
+        "${{ true }}}",
+        "${{{ true }}",
+        "${{ true } invalid }}",
+        "${{ 'unterminated }}",
+    ] {
         assert!(!binding_matches_type(
             &Value::String(value.to_string()),
             WorkflowCallInputType::Boolean
@@ -88,6 +95,14 @@ fn malformed_complete_expressions_do_not_bypass_input_types() {
     }
     assert!(binding_matches_type(
         &Value::String("${{ needs.detect.outputs.enabled }}".to_string()),
+        WorkflowCallInputType::Boolean
+    ));
+    assert!(binding_matches_type(
+        &Value::String("${{ format('{0}', inputs.enabled) }}".to_string()),
+        WorkflowCallInputType::Boolean
+    ));
+    assert!(binding_matches_type(
+        &Value::String("${{ format('it''s {0}', inputs.enabled) }}".to_string()),
         WorkflowCallInputType::Boolean
     ));
 }

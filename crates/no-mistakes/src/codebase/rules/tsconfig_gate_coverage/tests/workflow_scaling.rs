@@ -113,6 +113,15 @@ fn reusable_workflow_limit_counts_unique_targets_once() {
     )
     .is_empty());
 
+    let zero_matrix_overflow = format!(
+        "{fifty}  zero-matrix-overflow:\n    strategy:\n      matrix: {{}}\n    uses: owner/repository/.github/workflows/overflow.yml@main\n"
+    );
+    assert!(scan(
+        vec![remote_limit_root(&zero_matrix_overflow)],
+        "unique/tsconfig.json"
+    )
+    .is_empty());
+
     let repeated = remote_calls(60, |_| "shared.yml".to_string());
     assert_eq!(
         scan(vec![remote_limit_root(&repeated)], "unique/tsconfig.json"),
