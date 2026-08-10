@@ -80,6 +80,10 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             ".github/workflows/malformed-action.yml",
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout\n      - run: tsc --noEmit --project malformed-action/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-action-sibling/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/missing-steps.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project missing-steps-sibling/tsconfig.json\n",
+        ),
     ];
     let tracked = [
         "declaration",
@@ -98,6 +102,7 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "sequence-misspelled-trigger",
         "malformed-action",
         "malformed-action-sibling",
+        "missing-steps-sibling",
     ]
     .into_iter()
     .map(|project| format!("{project}/tsconfig.json"))

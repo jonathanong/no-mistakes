@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 pub(crate) fn steps_shape_valid(job: &Value) -> bool {
     let Some(steps) = job.get("steps") else {
-        return true;
+        return job.get("uses").is_some();
     };
     steps.as_sequence().is_some_and(|steps| {
         steps.iter().all(|step| {

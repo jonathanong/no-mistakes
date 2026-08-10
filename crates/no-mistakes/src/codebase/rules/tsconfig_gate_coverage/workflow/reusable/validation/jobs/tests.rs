@@ -6,6 +6,10 @@ fn job(yaml: &str) -> Value {
 
 #[test]
 fn steps_cannot_mix_action_and_shell_commands() {
+    assert!(!steps_shape_valid(&job("runs-on: ubuntu-latest")));
+    assert!(steps_shape_valid(&job(
+        "uses: owner/repository/.github/workflows/checks.yml@main"
+    )));
     assert!(steps_shape_valid(&job("steps:\n  - run: echo ok")));
     assert!(steps_shape_valid(&job("steps:\n  - uses: owner/action@v1")));
     for yaml in [
