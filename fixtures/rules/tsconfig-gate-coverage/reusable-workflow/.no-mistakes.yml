@@ -1,0 +1,25 @@
+checks:
+  commands:
+    - name: typecheck-backend
+      command: [pnpm, exec, tsc, --noEmit, --project, backend/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-email
+      command: [pnpm, exec, tsc, --noEmit, --project, email-templates/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-web
+      command: [pnpm, exec, tsc, --noEmit, --project, web/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-lambdas
+      command: [pnpm, exec, tsc, --noEmit, --project, lambdas/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-cloudflare
+      command: [pnpm, exec, tsc, --noEmit, --project, cloudflare-worker/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

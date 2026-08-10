@@ -27,14 +27,20 @@ working directory, sequential `cd` commands, and
 `pnpm --dir <path> exec tsc`. Workflow working directories
 may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`.
-Only step-based jobs with a non-empty, static `runs-on` string or label array
-count; missing, dynamic, or reusable-workflow jobs do not.
+Step-based jobs need a non-empty, static `runs-on` string or label array.
+Static local reusable-workflow jobs (`uses: ./.github/workflows/*.yml`) are
+followed transitively and their step-based jobs are evaluated under the direct
+caller's file triggers. Remote, dynamic, missing, non-callable, and cyclic
+calls do not provide coverage. One complete, enforcing, acyclic caller path is
+sufficient; partial coverage from separate caller paths is never combined.
 The containing workflow must declare at least one file-triggered `push`,
 `pull_request`, or `pull_request_target` event whose path filters allow every
 visible TypeScript/JavaScript source selected by that project's
 `files`/`include`/`exclude` settings. Projects with no known source files fall
 back to the tracked tsconfig path. Manual, scheduled, reusable, empty, tag-only, and
-path-filtered-out workflows cannot provide a repository typecheck gate. For
+path-filtered-out workflows cannot provide a repository typecheck gate on
+their own. A `workflow_call` workflow can provide one when reached from an
+applicable caller. For
 example, `paths: [app/tsconfig.json]` cannot cover `app/src/index.ts`; add
 `app/**` or an
 unfiltered applicable event.
@@ -61,8 +67,12 @@ explicit supported shell.
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
 step do not count as CI registrations because they cannot enforce a typecheck.
-Other expressions in either field remain unresolved and are not evaluated by
-this static rule.
+For reusable calls, the rule also resolves exact boolean input references and
+negations/comparisons in call-job, callee-job, and step conditions. Literal
+call inputs, declared boolean defaults, omitted booleans (GitHub's `false`
+default), and exact `${{ inputs.name }}` forwarding are propagated through
+transitive calls. Other expressions remain unresolved and fail open as
+potentially runnable, preserving the rule's behavior for dynamic conditions.
 
 A job blocked by a statically skipped `needs` dependency, including a
 transitive dependency, does not count. Exact `always()` and `!cancelled()` job

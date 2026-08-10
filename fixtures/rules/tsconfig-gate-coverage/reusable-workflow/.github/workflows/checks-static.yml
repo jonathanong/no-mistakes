@@ -1,0 +1,34 @@
+name: Static checks
+on:
+  workflow_call:
+    inputs:
+      backend:
+        type: boolean
+      web:
+        type: boolean
+      lambdas:
+        type: boolean
+      cloudflare:
+        type: boolean
+jobs:
+  backend:
+    if: inputs.backend
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project backend/tsconfig.json
+      - run: pnpm exec tsc --noEmit --project email-templates/tsconfig.json
+  web:
+    if: inputs.web
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project web/tsconfig.json
+  lambdas:
+    if: inputs.lambdas
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project lambdas/tsconfig.json
+  cloudflare:
+    if: inputs.cloudflare
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project cloudflare-worker/tsconfig.json

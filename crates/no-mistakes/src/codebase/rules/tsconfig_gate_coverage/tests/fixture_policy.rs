@@ -24,6 +24,13 @@ fn workflow_paths_must_cover_every_source_selected_by_the_project() {
 }
 
 #[test]
+fn reusable_workflow_callers_cover_filaments_style_static_typecheck_jobs() {
+    let root = fixture_root("reusable-workflow");
+    let report = findings(&root, &config(&root));
+    assert!(report.is_empty(), "unexpected findings: {report:#?}");
+}
+
+#[test]
 fn no_check_tsconfigs_do_not_credit_ci_or_local_gates() {
     let root = fixture_root("no-check");
     let report = findings(&root, &config(&root));

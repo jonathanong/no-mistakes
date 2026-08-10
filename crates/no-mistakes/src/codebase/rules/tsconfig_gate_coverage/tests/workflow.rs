@@ -92,3 +92,279 @@ fn ci_scanner_excludes_jobs_blocked_by_static_needs() {
         ])
     );
 }
+
+#[test]
+fn ci_scanner_follows_local_reusable_workflows_from_file_triggered_callers() {
+    let document = |path: &str, yaml: &str| ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    };
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on:\n  push:\n    paths: [app/**]\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n",
+            ),
+            document(
+                ".github/workflows/checks.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project app/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        tracked
+    );
+}
+
+#[test]
+fn ci_scanner_resolves_boolean_inputs_through_transitive_reusable_calls() {
+    let document = |path: &str, yaml: &str| ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    };
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: pull_request\njobs:\n  checks:\n    uses: ./.github/workflows/middle.yml\n    with:\n      enabled: true\n",
+            ),
+            document(
+                ".github/workflows/middle.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\njobs:\n  leaf:\n    if: '${{ inputs.enabled }}'\n    uses: ./.github/workflows/leaf.yml\n    with:\n      enabled: '${{ inputs.enabled }}'\n",
+            ),
+            document(
+                ".github/workflows/leaf.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n      defaulted:\n        type: boolean\n        default: true\n      omitted:\n        type: boolean\njobs:\n  enabled-job:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - if: '${{ inputs.enabled }}'\n        run: tsc --noEmit --project enabled/tsconfig.json\n  defaulted-job:\n    if: inputs.defaulted\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project defaulted/tsconfig.json\n  false-comparison:\n    if: inputs.enabled == false\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project false-comparison/tsconfig.json\n  omitted-job:\n    if: inputs.omitted\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project omitted/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "defaulted/tsconfig.json".to_string(),
+        "enabled/tsconfig.json".to_string(),
+        "false-comparison/tsconfig.json".to_string(),
+        "omitted/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from([
+            "defaulted/tsconfig.json".to_string(),
+            "enabled/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn ci_scanner_requires_one_complete_acyclic_enforcing_reusable_path() {
+    let document = |path: &str, yaml: &str| ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    };
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/valid.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/leaf.yml\n",
+            ),
+            document(
+                ".github/workflows/skipped.yml",
+                "on: push\njobs:\n  setup:\n    if: false\n  checks:\n    needs: setup\n    uses: ./.github/workflows/skipped-leaf.yml\n",
+            ),
+            document(
+                ".github/workflows/invalid.yml",
+                "on: push\njobs:\n  missing:\n    uses: ./.github/workflows/missing.yml\n  remote:\n    uses: owner/repo/.github/workflows/checks.yml@main\n  non-callable:\n    uses: ./.github/workflows/non-callable.yml\n  cycle:\n    uses: ./.github/workflows/cycle-a.yml\n",
+            ),
+            document(
+                ".github/workflows/leaf.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/skipped-leaf.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project skipped/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/non-callable.yml",
+                "on: workflow_dispatch\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project non-callable/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/cycle-a.yml",
+                "on: workflow_call\njobs:\n  next:\n    uses: ./.github/workflows/cycle-b.yml\n",
+            ),
+            document(
+                ".github/workflows/cycle-b.yml",
+                "on: workflow_call\njobs:\n  next:\n    uses: ./.github/workflows/cycle-a.yml\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project cyclic/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "cyclic/tsconfig.json",
+        "non-callable/tsconfig.json",
+        "skipped/tsconfig.json",
+        "valid/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from([
+            "cyclic/tsconfig.json".to_string(),
+            "valid/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn ci_scanner_does_not_union_partial_trigger_coverage_across_callers() {
+    let document = |path: &str, yaml: &str| ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    };
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/a.yml",
+                "on:\n  push:\n    paths: [app/a.ts]\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n",
+            ),
+            document(
+                ".github/workflows/b.yml",
+                "on:\n  push:\n    paths: [app/b.ts]\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n",
+            ),
+            document(
+                ".github/workflows/checks.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project app/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+    let project_inputs = BTreeMap::from([(
+        "app/tsconfig.json".to_string(),
+        BTreeSet::from(["app/a.ts".to_string(), "app/b.ts".to_string()]),
+    )]);
+
+    assert!(ci_typechecked_projects(&workflows, &tracked, &project_inputs).is_empty());
+}
+
+#[test]
+fn ci_scanner_fails_open_for_dynamic_inputs_but_rejects_static_false_callers() {
+    let document = |path: &str, yaml: &str| ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    };
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  dynamic:\n    uses: ./.github/workflows/dynamic.yml\n    with:\n      enabled: '${{ needs.detect.outputs.enabled }}'\n  disabled:\n    if: false\n    uses: ./.github/workflows/disabled.yml\n  nonblocking:\n    continue-on-error: '${{ true }}'\n    uses: ./.github/workflows/nonblocking.yml\n",
+            ),
+            document(
+                ".github/workflows/dynamic.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\njobs:\n  typecheck:\n    if: inputs.enabled == true\n    runs-on: ubuntu-latest\n    steps:\n      - if: inputs.enabled != false\n        run: tsc --noEmit --project dynamic/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/disabled.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project disabled/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/nonblocking.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project nonblocking/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "disabled/tsconfig.json",
+        "dynamic/tsconfig.json",
+        "nonblocking/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from(["dynamic/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn ci_scanner_validates_call_inputs_and_normalizes_boolean_condition_spacing() {
+    let document = |path: &str, yaml: &str| ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    };
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  valid:\n    uses: ./.github/workflows/valid.yml\n    with:\n      enabled: false\n  quoted-mismatch:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: 'true'\n  missing-required:\n    uses: ./.github/workflows/strict.yml\n  unknown-input:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: true\n      extra: true\n  invalid-default:\n    uses: ./.github/workflows/invalid-default.yml\n",
+            ),
+            document(
+                ".github/workflows/valid.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\njobs:\n  negated:\n    if: '${{ ! inputs.enabled }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project negated/tsconfig.json\n  compared:\n    if: '${{ inputs.enabled==false }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compared/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/strict.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        required: true\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/invalid-default.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        default: 'true'\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-default/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/mixed.yml",
+                "on:\n  push:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        default: true\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct-default/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "compared/tsconfig.json",
+        "direct-default/tsconfig.json",
+        "invalid-default/tsconfig.json",
+        "invalid/tsconfig.json",
+        "negated/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from([
+            "compared/tsconfig.json".to_string(),
+            "negated/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn reusable_callees_own_their_working_directories_and_shells() {
+    let document = |path: &str, yaml: &str| ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    };
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\ndefaults:\n  run:\n    working-directory: caller-only\n    shell: python {0}\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n",
+            ),
+            document(
+                ".github/workflows/checks.yml",
+                "on: workflow_call\ndefaults:\n  run:\n    working-directory: callee-app\n    shell: bash --noprofile --norc -eo pipefail {0}\njobs:\n  valid:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit\n  unsupported-shell:\n    runs-on: ubuntu-latest\n    defaults:\n      run:\n        working-directory: rejected\n        shell: python {0}\n    steps:\n      - run: tsc --noEmit\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "callee-app/tsconfig.json".to_string(),
+        "rejected/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from(["callee-app/tsconfig.json".to_string()])
+    );
+}
