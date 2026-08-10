@@ -21,6 +21,7 @@ struct RuleCheck<'a> {
     shared: &'a CheckFactMap,
     resolver: &'a dyn ImportResolution,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 }
 
 pub(super) fn check_with_resolver(
@@ -29,6 +30,7 @@ pub(super) fn check_with_resolver(
     shared: &CheckFactMap,
     resolver: &dyn ImportResolution,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let root = normalize_path(root);
     let mut findings = Vec::new();
@@ -53,6 +55,7 @@ pub(super) fn check_with_resolver(
             shared,
             resolver,
             inferred_roots,
+            defer_suppression,
         })?);
     }
     sort_findings(&mut findings);
@@ -68,6 +71,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         shared,
         resolver,
         inferred_roots,
+        defer_suppression,
     } = inputs;
     let opts: Options = rule.rule_options();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
@@ -87,6 +91,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         &include,
         &exclude,
         &test_filter,
+        defer_suppression,
     )
     .into_iter()
     .filter(|component| rule_filter.is_match(&component.file))
@@ -141,8 +146,9 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         }
         if opts.allow_components.contains_key(&component.key)
             || allow_files.is_match(&component.project_file)
-            || file_disabled(shared, &component.file)
-            || component_disabled(shared, &component.file, component.line)
+            || (!defer_suppression
+                && (file_disabled(shared, &component.file)
+                    || component_disabled(shared, &component.file, component.line)))
         {
             continue;
         }

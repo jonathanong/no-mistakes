@@ -384,6 +384,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         &include,
         &exclude,
         &test_filter,
+        false,
     );
     assert_eq!(
         selected

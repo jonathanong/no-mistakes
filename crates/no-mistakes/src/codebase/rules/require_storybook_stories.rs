@@ -22,6 +22,7 @@ use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_componen
 use findings::{namespace_import_findings, stale_or_blank_allow_findings};
 pub(crate) use prepared::{
     check_with_prepared_facts_and_inferred_and_session, check_with_prepared_facts_and_session,
+    check_with_prepared_facts_for_aggregate,
 };
 use selection::{component_disabled, file_disabled, selected_components};
 use types::{GlobMatcher, Options};
@@ -101,7 +102,7 @@ fn check_with_facts_and_catalog(
         &visible_files,
         &session,
     );
-    runner::check_with_resolver(root, config, shared, &resolver, inferred_roots)
+    runner::check_with_resolver(root, config, shared, &resolver, inferred_roots, false)
 }
 
 fn tsconfig_catalog(

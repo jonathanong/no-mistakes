@@ -19,6 +19,7 @@ pub(crate) fn check_with_prepared_facts_and_session(
         shared,
         None,
         session,
+        false,
     )
 }
 
@@ -37,6 +38,27 @@ pub(crate) fn check_with_prepared_facts_and_inferred_and_session(
         shared,
         Some(inferred_roots),
         session,
+        false,
+    )
+}
+
+pub(crate) fn check_with_prepared_facts_for_aggregate(
+    root: &Path,
+    config: &NoMistakesConfig,
+    prepared_tsconfig_catalog: &TsConfigCatalog,
+    shared: &CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    session: &AnalysisSession,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
+    check_with_optional_inferred(
+        root,
+        config,
+        prepared_tsconfig_catalog,
+        shared,
+        inferred_roots,
+        session,
+        defer_suppression,
     )
 }
 
@@ -47,6 +69,7 @@ fn check_with_optional_inferred(
     shared: &CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     session: &AnalysisSession,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let visible_files = shared
         .files()
@@ -55,5 +78,12 @@ fn check_with_optional_inferred(
         .collect::<HashSet<_>>();
     let resolver =
         ScopedImportResolver::new_in_session(prepared_tsconfig_catalog, &visible_files, session);
-    check_with_resolver(root, config, shared, &resolver, inferred_roots)
+    check_with_resolver(
+        root,
+        config,
+        shared,
+        &resolver,
+        inferred_roots,
+        defer_suppression,
+    )
 }

@@ -7,26 +7,17 @@ pub(super) fn storybook_findings(
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    match inferred_roots {
-        Some(inferred_roots) => {
-            require_storybook_stories::check_with_prepared_facts_and_inferred_and_session(
-                root,
-                config,
-                prepared_tsconfig_catalog,
-                shared,
-                inferred_roots,
-                session,
-            )
-        }
-        None => require_storybook_stories::check_with_prepared_facts_and_session(
-            root,
-            config,
-            prepared_tsconfig_catalog,
-            shared,
-            session,
-        ),
-    }
+    require_storybook_stories::check_with_prepared_facts_for_aggregate(
+        root,
+        config,
+        prepared_tsconfig_catalog,
+        shared,
+        inferred_roots,
+        session,
+        defer_suppression,
+    )
 }
 
 pub(super) fn suppress_findings(

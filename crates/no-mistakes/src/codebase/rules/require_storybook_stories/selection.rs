@@ -20,6 +20,7 @@ pub(super) fn selected_components(
     include: &GlobMatcher,
     exclude: &GlobMatcher,
     test_filter: &crate::codebase::test_filter::TestFileFilter,
+    defer_suppression: bool,
 ) -> Vec<Component> {
     let mut components = Vec::new();
     let scoped_files = shared.files().iter().collect::<HashSet<_>>();
@@ -61,7 +62,7 @@ pub(super) fn selected_components(
                 continue;
             }
             let line = export_line(facts, &component.name).unwrap_or(1) as usize;
-            if component_disabled(shared, path, line) {
+            if !defer_suppression && component_disabled(shared, path, line) {
                 continue;
             }
             components.push(Component {

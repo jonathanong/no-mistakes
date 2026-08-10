@@ -134,6 +134,7 @@ pub(super) fn run(
             shared,
             inferred_roots,
             &session,
+            defer_suppression,
         )?);
     }
     if crate::playwright::rules::configured(config) {
