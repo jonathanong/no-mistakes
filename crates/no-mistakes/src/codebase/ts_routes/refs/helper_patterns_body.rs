@@ -1,6 +1,5 @@
 fn evaluate_helper_body<'a>(
     body: &'a oxc_ast::ast::FunctionBody<'a>,
-    expression_body: bool,
     defs: &HashMap<&'a str, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
@@ -30,16 +29,6 @@ fn evaluate_helper_body<'a>(
                         depth + 1,
                     ));
                 }
-                break;
-            }
-            Statement::ExpressionStatement(expr_stmt) if expression_body => {
-                returns.extend(evaluate_route_expression(
-                    &expr_stmt.expression,
-                    defs,
-                    imported_helpers,
-                    env,
-                    depth + 1,
-                ));
                 break;
             }
             Statement::ExpressionStatement(expr_stmt) => {

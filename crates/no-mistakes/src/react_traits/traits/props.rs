@@ -99,28 +99,24 @@ fn has_function_params(program: &Program<'_>, span: Span) -> bool {
                 }
                 _ => {}
             },
-            Statement::ExportNamedDeclaration(e) => {
-                if let Some(decl) = &e.declaration {
-                    match decl {
-                        Declaration::FunctionDeclaration(f)
-                            if !f.params.items.is_empty() && overlaps(f.span, span) =>
-                        {
+            Statement::ExportDeclaration(e) => match &e.declaration {
+                Declaration::FunctionDeclaration(f)
+                    if !f.params.items.is_empty() && overlaps(f.span, span) =>
+                {
+                    return true;
+                }
+                Declaration::VariableDeclaration(v) => {
+                    for d in &v.declarations {
+                        if !overlaps(d.span, span) {
+                            continue;
+                        }
+                        if expr_or_wrapped_has_params(&d.init) {
                             return true;
                         }
-                        Declaration::VariableDeclaration(v) => {
-                            for d in &v.declarations {
-                                if !overlaps(d.span, span) {
-                                    continue;
-                                }
-                                if expr_or_wrapped_has_params(&d.init) {
-                                    return true;
-                                }
-                            }
-                        }
-                        _ => {}
                     }
                 }
-            }
+                _ => {}
+            },
             // Non-exported top-level decls whose span was used as the component span
             // (e.g. `const Page = (props) => ...; export default Page;`)
             Statement::VariableDeclaration(v) => {

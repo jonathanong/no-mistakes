@@ -2,12 +2,13 @@ use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Argument, BindingPattern, BlockStatement, CallExpression, CatchClause, Class, ClassElement,
-    ExportAllDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
-    ExportNamedDeclaration, ExportSpecifier, Expression, FormalParameters, IdentifierReference,
-    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
-    MethodDefinition, ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind,
-    Program, Statement, StaticMemberExpression, TSEnumDeclaration, TSImportType,
-    TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
+    ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
+    ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
+    Expression, FormalParameters, IdentifierReference, ImportDeclaration,
+    ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement, MethodDefinition,
+    ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program, Statement,
+    StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
+    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
     TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
     VariableDeclarator,
 };
@@ -118,6 +119,7 @@ impl ImportExtractor {
 include!("extract_entrypoints.rs");
 include!("extract_export_names.rs");
 include!("extract_visit.rs");
+include!("extract_visit_exports.rs");
 include!("extract_collector_methods.rs");
 include!("extract_visit_aggregates.rs");
 include!("extract_visit_object_references.rs");

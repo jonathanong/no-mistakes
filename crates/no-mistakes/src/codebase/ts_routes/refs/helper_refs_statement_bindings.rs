@@ -15,16 +15,16 @@ fn register_helper_bindings_from_statement(
         Statement::ClassDeclaration(class) => {
             remove_shadowed_helper_class_binding(class, bindings);
         }
-        Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-            Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) => {
+        Statement::ExportDeclaration(export) => match &export.declaration {
+            oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
                 remove_shadowed_helper_var_bindings(var_decl, bindings, local_helpers);
             }
-            Some(oxc_ast::ast::Declaration::FunctionDeclaration(func))
+            oxc_ast::ast::Declaration::FunctionDeclaration(func)
                 if !function_declaration_is_route_helper(func, local_helpers) =>
             {
                 remove_shadowed_helper_function_binding(func, bindings, local_helpers);
             }
-            Some(oxc_ast::ast::Declaration::ClassDeclaration(class)) => {
+            oxc_ast::ast::Declaration::ClassDeclaration(class) => {
                 remove_shadowed_helper_class_binding(class, bindings);
             }
             _ => {}

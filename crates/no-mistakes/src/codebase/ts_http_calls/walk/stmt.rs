@@ -35,11 +35,7 @@ pub(super) fn collect_from_stmt(
                 }
             }
         }
-        Statement::ExportNamedDeclaration(e) => {
-            if let Some(decl) = &e.declaration {
-                collect_from_decl(decl, source, prefixes, out);
-            }
-        }
+        Statement::ExportDeclaration(e) => collect_from_decl(&e.declaration, source, prefixes, out),
         Statement::ExportDefaultDeclaration(e) => {
             collect_from_expr_kind(&e.declaration, source, prefixes, out);
         }
@@ -156,8 +152,12 @@ fn collect_from_expr_kind(
             }
         }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(a) => {
-            for s in &a.body.statements {
-                collect_from_stmt(s, source, prefixes, out);
+            if let Some(expression) = a.body.as_expression() {
+                collect_from_expr(expression, source, prefixes, out);
+            } else {
+                for s in crate::ast::arrow_function_body_statements(&a.body).unwrap_or_default() {
+                    collect_from_stmt(s, source, prefixes, out);
+                }
             }
         }
         _ => {}

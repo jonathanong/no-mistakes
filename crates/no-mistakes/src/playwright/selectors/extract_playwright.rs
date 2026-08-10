@@ -103,7 +103,9 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
         if let Some(rest) = &arrow.params.rest {
             collect_binding_names(&rest.rest.argument, &mut shadowed);
         }
-        collect_function_scope_declarations(&arrow.body.statements, &mut shadowed);
+        if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+            collect_function_scope_declarations(statements, &mut shadowed);
+        }
         self.with_shadow_scope(shadowed, |visitor| {
             walk::walk_arrow_function_expression(visitor, arrow)
         });

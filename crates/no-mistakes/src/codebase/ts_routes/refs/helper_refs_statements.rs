@@ -167,7 +167,7 @@ fn collect_helper_refs_from_statement<'a>(
                 refs,
             );
         }
-        Statement::ExportNamedDeclaration(export) => collect_helper_refs_from_named_export(
+        Statement::ExportDeclaration(export) => collect_helper_refs_from_named_export(
             export,
             source,
             file,

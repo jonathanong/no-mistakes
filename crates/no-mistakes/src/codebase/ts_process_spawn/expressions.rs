@@ -83,8 +83,12 @@ fn collect_from_expr(
             collect_from_expr(&a.argument, source, file_path, root, visible_files, out)
         }
         Expression::ArrowFunctionExpression(a) => {
-            for s in &a.body.statements {
-                collect_from_stmt(s, source, file_path, root, visible_files, out);
+            if let Some(expression) = a.body.as_expression() {
+                collect_from_expr(expression, source, file_path, root, visible_files, out);
+            } else {
+                for s in crate::ast::arrow_function_body_statements(&a.body).unwrap_or_default() {
+                    collect_from_stmt(s, source, file_path, root, visible_files, out);
+                }
             }
         }
         Expression::ObjectExpression(obj) => {

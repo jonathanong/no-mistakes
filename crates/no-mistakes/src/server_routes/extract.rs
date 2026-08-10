@@ -101,20 +101,23 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
         &mut self,
         export: &oxc_ast::ast::ExportNamedDeclaration<'a>,
     ) {
-        if let Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) = &export.declaration
-        {
-            for decl in &var_decl.declarations {
-                if let Some(name) = helpers::binding_name(&decl.id) {
-                    self.facts.exports.insert(name.clone(), name);
-                }
-            }
-        }
         for specifier in &export.specifiers {
             let exported = module_export_name(&specifier.exported);
             let local = module_export_name(&specifier.local);
             self.facts.exports.insert(exported, local);
         }
         walk::walk_export_named_declaration(self, export);
+    }
+
+    fn visit_export_declaration(&mut self, export: &oxc_ast::ast::ExportDeclaration<'a>) {
+        if let oxc_ast::ast::Declaration::VariableDeclaration(var_decl) = &export.declaration {
+            for decl in &var_decl.declarations {
+                if let Some(name) = helpers::binding_name(&decl.id) {
+                    self.facts.exports.insert(name.clone(), name);
+                }
+            }
+        }
+        walk::walk_export_declaration(self, export);
     }
 
     fn visit_export_default_declaration(

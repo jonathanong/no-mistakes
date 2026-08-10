@@ -125,6 +125,28 @@ fn configured_mounts_and_client_calls_share_canonical_relationships() {
 }
 
 #[test]
+fn named_concise_arrow_handler_preserves_contract_query_params() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("named-concise-handler"));
+    let root = fixture.path().canonicalize().unwrap();
+    let prepared = prepare_analysis(&root, None).unwrap();
+    let routes = analyze_project_with_prepared(&prepared, &[]).unwrap();
+    let contracts = analyze_contracts_with_prepared(&prepared, &routes, &[]).unwrap();
+
+    assert!(contracts
+        .routes
+        .iter()
+        .any(|route| route.route == "/search" && route.query_params == ["term"]));
+    assert!(contracts
+        .client_refs
+        .iter()
+        .any(|client| { client.route == "/search" && client.query_params == ["term", "unused"] }));
+    assert!(contracts.mismatches.iter().any(|mismatch| {
+        mismatch.matched_route == "/search" && mismatch.missing_params == ["unused"]
+    }));
+}
+
+#[test]
 fn filters_exclude_client_call_sources_without_broadening_route_definitions() {
     let fixture =
         crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));

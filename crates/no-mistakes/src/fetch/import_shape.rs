@@ -1,6 +1,4 @@
-use oxc_ast::ast::{
-    Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
-};
+use oxc_ast::ast::{ExportFromDeclaration, ImportDeclarationSpecifier, ImportOrExportKind};
 
 pub fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration) -> bool {
     if import.import_kind == ImportOrExportKind::Type {
@@ -29,21 +27,9 @@ pub fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration) -> bool {
     false
 }
 
-pub fn is_runtime_export(export: &ExportNamedDeclaration) -> bool {
+pub fn is_runtime_export(export: &ExportFromDeclaration) -> bool {
     if export.export_kind == ImportOrExportKind::Type {
         return false;
-    }
-
-    match &export.declaration {
-        Some(Declaration::VariableDeclaration(d)) => return !d.declare,
-        Some(Declaration::FunctionDeclaration(d)) => return !d.declare,
-        Some(Declaration::ClassDeclaration(d)) => return !d.declare,
-        Some(Declaration::TSEnumDeclaration(d)) => return !d.declare,
-        Some(Declaration::TSModuleDeclaration(d)) => return !d.declare,
-        Some(Declaration::TSImportEqualsDeclaration(d)) => {
-            return d.import_kind == ImportOrExportKind::Value
-        }
-        Some(_) | None => {}
     }
 
     if export.specifiers.is_empty() {

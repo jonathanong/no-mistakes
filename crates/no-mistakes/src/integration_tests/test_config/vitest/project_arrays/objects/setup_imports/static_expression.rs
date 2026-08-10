@@ -1,5 +1,7 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{ArrayExpressionElement, Expression, Program, Statement};
+use oxc_ast::ast::{
+    ArrayExpressionElement, BindingPattern, Declaration, Expression, Program, Statement,
+};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Imports only replace their use-site declaration when their exported value
@@ -43,29 +45,28 @@ pub(super) fn exported_setup_expression<'a>(
     exported: &str,
 ) -> Option<&'a Expression<'a>> {
     for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
-            continue;
-        };
-        if export.export_kind.is_type() || export.source.is_some() {
-            continue;
-        }
-        for specifier in &export.specifiers {
-            if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
-                return bindings.get(specifier.local.name().as_str()).copied();
-            }
-        }
-        if let Some(oxc_ast::ast::Declaration::VariableDeclaration(declaration)) =
-            &export.declaration
-        {
-            for declarator in &declaration.declarations {
-                let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id
-                else {
-                    continue;
-                };
-                if identifier.name == exported {
-                    return declarator.init.as_ref();
+        match statement {
+            Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
+                for specifier in &export.specifiers {
+                    if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
+                        return bindings.get(specifier.local.name().as_str()).copied();
+                    }
                 }
             }
+            Statement::ExportDeclaration(export) => {
+                let Declaration::VariableDeclaration(declaration) = &export.declaration else {
+                    continue;
+                };
+                for declarator in &declaration.declarations {
+                    let BindingPattern::BindingIdentifier(identifier) = &declarator.id else {
+                        continue;
+                    };
+                    if identifier.name == exported {
+                        return declarator.init.as_ref();
+                    }
+                }
+            }
+            _ => {}
         }
     }
     if exported == "default" {

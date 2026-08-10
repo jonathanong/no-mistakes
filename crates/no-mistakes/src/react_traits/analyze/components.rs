@@ -1,7 +1,9 @@
 mod extract;
 mod helpers;
 
-use extract::{collect_local_vars, extract_default_export, extract_named_export};
+use extract::{
+    collect_local_vars, extract_default_export, extract_named_declaration, extract_named_export,
+};
 pub(crate) use helpers::is_class_component;
 pub(crate) use helpers::is_component_expr;
 use oxc_ast::ast::{Program, Statement};
@@ -33,6 +35,9 @@ pub(crate) fn extract_components(program: &Program<'_>) -> Vec<ComponentDef> {
             }
             Statement::ExportNamedDeclaration(export) => {
                 extract_named_export(export, &local_vars, &mut components);
+            }
+            Statement::ExportDeclaration(export) => {
+                extract_named_declaration(&export.declaration, &mut components);
             }
             _ => {}
         }

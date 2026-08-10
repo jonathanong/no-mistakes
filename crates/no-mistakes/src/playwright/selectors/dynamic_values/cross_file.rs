@@ -86,36 +86,31 @@ pub(crate) fn collect_static_export_values(program: &Program<'_>) -> StaticExpor
     let mut facts = StaticExportValues::default();
     for statement in &program.body {
         match statement {
-            Statement::ExportNamedDeclaration(export) => {
-                let Some(declaration) = &export.declaration else {
-                    continue;
-                };
-                match declaration {
-                    Declaration::VariableDeclaration(variable) => {
-                        for declarator in &variable.declarations {
-                            let Some(name) = binding_ident_name(&declarator.id) else {
-                                continue;
-                            };
-                            let mut values = Vec::new();
-                            collect_from_named_declaration(declaration, &name, &mut values);
-                            if !values.is_empty() {
-                                facts.named.insert(name, values);
-                            }
-                        }
-                    }
-                    Declaration::FunctionDeclaration(function) => {
-                        let Some(name) = function.id.as_ref().map(|id| id.name.to_string()) else {
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                Declaration::VariableDeclaration(variable) => {
+                    for declarator in &variable.declarations {
+                        let Some(name) = binding_ident_name(&declarator.id) else {
                             continue;
                         };
                         let mut values = Vec::new();
-                        collect_from_named_declaration(declaration, &name, &mut values);
+                        collect_from_named_declaration(&export.declaration, &name, &mut values);
                         if !values.is_empty() {
                             facts.named.insert(name, values);
                         }
                     }
-                    _ => {}
                 }
-            }
+                Declaration::FunctionDeclaration(function) => {
+                    let Some(name) = function.id.as_ref().map(|id| id.name.to_string()) else {
+                        continue;
+                    };
+                    let mut values = Vec::new();
+                    collect_from_named_declaration(&export.declaration, &name, &mut values);
+                    if !values.is_empty() {
+                        facts.named.insert(name, values);
+                    }
+                }
+                _ => {}
+            },
             Statement::ExportDefaultDeclaration(export) => {
                 collect_from_default_export(&export.declaration, &mut facts.default);
             }
@@ -195,10 +190,8 @@ fn collect_exported_values(
 
     for stmt in &program.body {
         match stmt {
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(decl) = &export.declaration {
-                    collect_from_named_declaration(decl, exported_name, &mut values);
-                }
+            Statement::ExportDeclaration(export) => {
+                collect_from_named_declaration(&export.declaration, exported_name, &mut values);
             }
             Statement::ExportDefaultDeclaration(export) if is_default => {
                 collect_from_default_export(&export.declaration, &mut values);

@@ -141,22 +141,15 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_export_named_declaration(&mut self, export: &ExportNamedDeclaration<'a>) {
-        if let Some(source) = &export.source {
-            let kind = export_named_declaration_kind(export);
-            self.push_reexport(source.value.as_str(), kind, export.span.start as usize);
-        } else if !export.export_kind.is_type() {
-            for specifier in &export.specifiers {
-                if specifier.export_kind.is_type() {
-                    continue;
-                }
-                if let Some(name) = module_export_name_name(&specifier.local) {
-                    self.exported_functions.insert(name.to_string());
-                }
-            }
-        }
-        self.export_depth += 1;
-        walk::walk_export_named_declaration(self, export);
-        self.export_depth -= 1;
+        self.collect_local_export_specifiers(export);
+    }
+
+    fn visit_export_declaration(&mut self, export: &ExportDeclaration<'a>) {
+        self.walk_inline_export_declaration(export);
+    }
+
+    fn visit_export_from_declaration(&mut self, export: &ExportFromDeclaration<'a>) {
+        self.walk_sourced_export_declaration(export);
     }
 
     fn visit_export_all_declaration(&mut self, export: &ExportAllDeclaration<'a>) {

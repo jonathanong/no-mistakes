@@ -102,15 +102,14 @@ fn extract_web_server_entry(
 }
 
 fn collect_from_export_named(
-    e: &ExportNamedDeclaration,
+    e: &oxc_ast::ast::ExportDeclaration,
     source: &str,
     file_path: &Path,
     root: &Path,
     visible_files: Option<&std::collections::HashSet<PathBuf>>,
     out: &mut Vec<SpawnEdge>,
 ) {
-    let Some(decl) = &e.declaration else { return };
-    match decl {
+    match &e.declaration {
         oxc_ast::ast::Declaration::VariableDeclaration(v) => {
             for d in &v.declarations {
                 collect_from_optional_expr(

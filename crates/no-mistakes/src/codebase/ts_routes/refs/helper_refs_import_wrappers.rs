@@ -35,18 +35,14 @@ fn imported_helper_wrapper_from_expression(
     imports: &[RouteHelperImport],
 ) -> Option<RouteHelperImport> {
     match expr {
-        Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
-            arrow
-                .body
-                .statements
-                .first()
-                .and_then(|stmt| match stmt { Statement::ExpressionStatement(expr_stmt) => Some(&expr_stmt.expression), _ => None })
-                .and_then(|expr| match expr {
-                    Expression::CallExpression(call) => Some(call),
-                    _ => None,
-                })
-                .and_then(|call| import_for_helper_call(local, call, imports))
-        }
+        Expression::ArrowFunctionExpression(arrow) if arrow.body.is_expression() => arrow
+            .body
+            .as_expression()
+            .and_then(|expr| match expr {
+                Expression::CallExpression(call) => Some(call),
+                _ => None,
+            })
+            .and_then(|call| import_for_helper_call(local, call, imports)),
         Expression::FunctionExpression(func) => {
             import_for_helper_call(local, single_return_call(func.body.as_ref()?)?, imports)
         }

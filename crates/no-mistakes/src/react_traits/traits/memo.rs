@@ -59,8 +59,8 @@ fn is_wrapped_in_memo(program: &Program<'_>, def: &ComponentDef) -> bool {
                     }
                 }
             }
-            Statement::ExportNamedDeclaration(e) if def.name != "default" => {
-                if let Some(Declaration::VariableDeclaration(v)) = &e.declaration {
+            Statement::ExportDeclaration(e) if def.name != "default" => {
+                if let Declaration::VariableDeclaration(v) = &e.declaration {
                     for d in &v.declarations {
                         if let BindingPattern::BindingIdentifier(id) = &d.id {
                             if id.name.as_ref() == def.name {

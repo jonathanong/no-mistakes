@@ -49,26 +49,31 @@ pub(super) fn workspace_exported_options(
                     .unwrap_or_else(|| Ok(Vec::new()));
             }
             Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
-                if let Some(declaration) = &export.declaration {
-                    if let Some(expression) = exported_declaration_expression(declaration, exported)
-                    {
-                        return workspace_expression_options(expression, ctx);
-                    }
-                }
                 for specifier in &export.specifiers {
                     if specifier.export_kind.is_type() || specifier.exported.name() != exported {
                         continue;
                     }
-                    if let Some(source) = &export.source {
+                    return workspace_local_options(specifier.local.name().as_str(), ctx);
+                }
+            }
+            Statement::ExportDeclaration(export) => {
+                if let Some(expression) =
+                    exported_declaration_expression(&export.declaration, exported)
+                {
+                    return workspace_expression_options(expression, ctx);
+                }
+            }
+            Statement::ExportFromDeclaration(export) if !export.export_kind.is_type() => {
+                for specifier in &export.specifiers {
+                    if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
                         return imported_workspace_options(
                             &ImportBinding {
-                                source: source.value.to_string(),
+                                source: export.source.value.to_string(),
                                 imported: specifier.local.name().to_string(),
                             },
                             ctx,
                         );
                     }
-                    return workspace_local_options(specifier.local.name().as_str(), ctx);
                 }
             }
             Statement::ExportAllDeclaration(export)

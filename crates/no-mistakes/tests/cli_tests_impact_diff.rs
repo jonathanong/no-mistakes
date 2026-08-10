@@ -57,7 +57,8 @@ fn test_plan_diff_file_finds_impacted_tests() {
 fn test_plan_diff_command_runs_and_parses() {
     let root = fixture("tests-impact-diff");
     let diff_path = root.join("sample.diff");
-    let cmd = format!("cat {}", diff_path.to_str().unwrap());
+    let quoted_diff_path = diff_path.to_string_lossy().replace('\'', "'\\''");
+    let cmd = format!("cat '{quoted_diff_path}'");
     let output = run(&[
         "tests",
         "plan",

@@ -23,7 +23,7 @@ fn collect_helper_refs_from_var_declaration<'a>(
 }
 
 fn collect_helper_refs_from_named_export<'a>(
-    export: &'a oxc_ast::ast::ExportNamedDeclaration<'a>,
+    export: &'a oxc_ast::ast::ExportDeclaration<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -31,8 +31,8 @@ fn collect_helper_refs_from_named_export<'a>(
     local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
-    match export.declaration.as_ref() {
-        Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) => {
+    match &export.declaration {
+        oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
             collect_helper_refs_from_var_declaration(
                 var_decl,
                 source,
@@ -43,7 +43,7 @@ fn collect_helper_refs_from_named_export<'a>(
                 refs,
             );
         }
-        Some(oxc_ast::ast::Declaration::FunctionDeclaration(func)) => {
+        oxc_ast::ast::Declaration::FunctionDeclaration(func) => {
             collect_helper_refs_from_function_body(
                 func,
                 source,

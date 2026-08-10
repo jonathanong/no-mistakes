@@ -1,6 +1,6 @@
 use super::super::{is_class_component, is_component_expr, is_component_name};
 use oxc_ast::ast::{
-    BindingPattern, Declaration, ExportNamedDeclaration, Program, Statement, VariableDeclaration,
+    BindingPattern, Declaration, ExportDeclaration, Program, Statement, VariableDeclaration,
 };
 use oxc_span::Span;
 use std::collections::HashMap;
@@ -30,7 +30,7 @@ pub(in super::super) fn collect_local_vars<'a>(program: &'a Program<'a>) -> Hash
                     local_vars.insert(id.name.as_ref(), c.span);
                 }
             }
-            Statement::ExportNamedDeclaration(export) => {
+            Statement::ExportDeclaration(export) => {
                 collect_local_export_declaration(export, &mut local_vars);
             }
             _ => {}
@@ -40,13 +40,10 @@ pub(in super::super) fn collect_local_vars<'a>(program: &'a Program<'a>) -> Hash
 }
 
 fn collect_local_export_declaration<'a>(
-    export: &'a ExportNamedDeclaration<'a>,
+    export: &'a ExportDeclaration<'a>,
     local_vars: &mut HashMap<&'a str, Span>,
 ) {
-    let Some(decl) = &export.declaration else {
-        return;
-    };
-    match decl {
+    match &export.declaration {
         Declaration::FunctionDeclaration(f) => {
             if let Some(id) =
                 f.id.as_ref()

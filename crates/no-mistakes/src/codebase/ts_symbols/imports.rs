@@ -9,6 +9,10 @@ fn process_statement(
         Statement::ExportNamedDeclaration(export) => {
             process_export_named_declaration(export, source, local_type_names, out)
         }
+        Statement::ExportDeclaration(export) => process_export_declaration(export, source, out),
+        Statement::ExportFromDeclaration(export) => {
+            process_export_from_declaration(export, source, out)
+        }
         Statement::ExportDefaultDeclaration(export) => {
             process_export_default_declaration(export, source, out)
         }

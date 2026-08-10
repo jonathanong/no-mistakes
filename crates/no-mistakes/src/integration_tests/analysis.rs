@@ -84,15 +84,15 @@ impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
                     }
                 }
                 Statement::ExportNamedDeclaration(export) => {
-                    if let Some(declaration) = &export.declaration {
-                        self.collect_export_declaration(declaration);
-                    }
                     for specifier in &export.specifiers {
                         self.result.exports.insert(
                             module_export_name(&specifier.exported),
                             module_export_name(&specifier.local),
                         );
                     }
+                }
+                Statement::ExportDeclaration(export) => {
+                    self.collect_export_declaration(&export.declaration);
                 }
                 Statement::ExportDefaultDeclaration(export) => self.collect_default_export(export),
                 _ => {}

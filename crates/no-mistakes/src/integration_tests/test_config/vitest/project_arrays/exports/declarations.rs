@@ -8,21 +8,9 @@ pub(super) fn named_export_options(
     exported: &str,
     ctx: &mut Ctx<'_, '_>,
 ) -> Option<Result<Vec<Options>>> {
-    if let Some(declaration) = &export.declaration {
-        return declaration_options(declaration, exported, ctx);
-    }
     for specifier in &export.specifiers {
         if specifier.export_kind.is_type() || specifier.exported.name() != exported {
             continue;
-        }
-        if let Some(source) = &export.source {
-            return Some(imported_options(
-                &super::super::ImportBinding {
-                    source: source.value.to_string(),
-                    imported: specifier.local.name().to_string(),
-                },
-                ctx,
-            ));
         }
         let local = specifier.local.name().to_string();
         if let Some(expression) = ctx.bindings.get(&local).copied() {
@@ -39,7 +27,7 @@ pub(super) fn named_export_options(
     None
 }
 
-fn declaration_options(
+pub(super) fn declaration_options(
     declaration: &Declaration<'_>,
     exported: &str,
     ctx: &mut Ctx<'_, '_>,
@@ -61,6 +49,27 @@ fn declaration_options(
         }
         _ => None,
     }
+}
+
+pub(super) fn export_from_options(
+    export: &oxc_ast::ast::ExportFromDeclaration<'_>,
+    exported: &str,
+    ctx: &mut Ctx<'_, '_>,
+) -> Option<Result<Vec<Options>>> {
+    if export.export_kind.is_type() {
+        return None;
+    }
+    export.specifiers.iter().find_map(|specifier| {
+        (!specifier.export_kind.is_type() && specifier.exported.name() == exported).then(|| {
+            imported_options(
+                &super::super::ImportBinding {
+                    source: export.source.value.to_string(),
+                    imported: specifier.local.name().to_string(),
+                },
+                ctx,
+            )
+        })
+    })
 }
 
 pub(super) fn default_function_options(

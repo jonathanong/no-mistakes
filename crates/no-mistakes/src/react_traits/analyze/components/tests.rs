@@ -21,7 +21,11 @@ fn load_fixture(name: &str) -> (PathBuf, String) {
 
 fn check_names(name: &str) -> Vec<String> {
     let (path, source) = load_fixture(name);
-    ast::with_program(&path, &source, |program, _| {
+    check_names_from_path(&path, &source)
+}
+
+fn check_names_from_path(path: &Path, source: &str) -> Vec<String> {
+    ast::with_program(path, source, |program, _| {
         extract_components(program)
             .into_iter()
             .map(|c| c.name)
@@ -118,6 +122,18 @@ fn export_const_arrow_lowercase_ignored() {
 fn export_const_memo_wrapped() {
     let names = check_names("export-const-memo-wrapped");
     assert_eq!(names, vec!["Foo"]);
+}
+
+#[test]
+fn inline_export_declaration_fixture_detects_components() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/react-traits/oxc-export-declaration-components/test.tsx");
+    let source = std::fs::read_to_string(&path).expect("fixture must be readable");
+
+    assert_eq!(
+        check_names_from_path(&path, &source),
+        vec!["InlineFunction", "InlineArrow"]
+    );
 }
 
 #[test]

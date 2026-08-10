@@ -3,8 +3,8 @@ fn collect_const_string_bindings(stmts: &[Statement]) -> HashMap<String, String>
     for stmt in stmts {
         let var_decl = match stmt {
             Statement::VariableDeclaration(v) => v,
-            Statement::ExportNamedDeclaration(e) => {
-                if let Some(oxc_ast::ast::Declaration::VariableDeclaration(v)) = &e.declaration {
+            Statement::ExportDeclaration(e) => {
+                if let oxc_ast::ast::Declaration::VariableDeclaration(v) = &e.declaration {
                     v
                 } else {
                     continue;
@@ -112,8 +112,8 @@ fn find_queue_name_in_stmt(
             }
             None
         }
-        Statement::ExportNamedDeclaration(e) => {
-            if let Some(oxc_ast::ast::Declaration::VariableDeclaration(v)) = &e.declaration {
+        Statement::ExportDeclaration(e) => {
+            if let oxc_ast::ast::Declaration::VariableDeclaration(v) = &e.declaration {
                 for d in &v.declarations {
                     if let Some(init) = &d.init {
                         if let Some(name) = find_queue_name_in_expr(

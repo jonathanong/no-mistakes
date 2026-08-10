@@ -8,8 +8,8 @@ pub(super) fn top_level_function_bodies<'a>(program: &'a Program<'a>) -> FnMap<'
         .filter_map(|statement| {
             let function = match statement {
                 Statement::FunctionDeclaration(function) => Some(function),
-                Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-                    Some(Declaration::FunctionDeclaration(function)) => Some(function),
+                Statement::ExportDeclaration(export) => match &export.declaration {
+                    Declaration::FunctionDeclaration(function) => Some(function),
                     _ => None,
                 },
                 _ => None,

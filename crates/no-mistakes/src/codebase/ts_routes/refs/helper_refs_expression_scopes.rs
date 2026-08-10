@@ -11,15 +11,9 @@ fn collect_helper_refs_from_arrow_body<'a>(
     let mut scoped_helper_bindings = helper_bindings.clone();
     remove_shadowed_parameters(&arrow.params, &mut scoped_bindings);
     remove_shadowed_helper_parameters(&arrow.params, &mut scoped_helper_bindings);
-    collect_router_bindings_for_scope(&arrow.body.statements, &mut scoped_bindings);
-    collect_scope_helper_bindings(
-        &arrow.body.statements,
-        &mut scoped_helper_bindings,
-        local_helpers,
-    );
-    for stmt in &arrow.body.statements {
-        collect_helper_refs_from_statement(
-            stmt,
+    if let Some(expression) = arrow.body.as_expression() {
+        collect_helper_refs_from_expression(
+            expression,
             source,
             file,
             &mut scoped_bindings,
@@ -27,6 +21,20 @@ fn collect_helper_refs_from_arrow_body<'a>(
             local_helpers,
             refs,
         );
+    } else if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+        collect_router_bindings_for_scope(statements, &mut scoped_bindings);
+        collect_scope_helper_bindings(statements, &mut scoped_helper_bindings, local_helpers);
+        for stmt in statements {
+            collect_helper_refs_from_statement(
+                stmt,
+                source,
+                file,
+                &mut scoped_bindings,
+                &mut scoped_helper_bindings,
+                local_helpers,
+                refs,
+            );
+        }
     }
 }
 

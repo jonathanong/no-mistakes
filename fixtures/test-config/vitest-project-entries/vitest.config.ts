@@ -1,4 +1,6 @@
 import importedProjects from './projects/imported-projects'
+import conciseProjectEntries from './projects/imported-concise-project-entries'
+import blockProjectEntries from './projects/imported-block-project-entries'
 import importedExclusions from './projects/imported-exclusions'
 import defaultFunctionExclusions from './projects/default-function-exclusions'
 import defaultFunctionIdentifierExclusions from './projects/default-function-identifier-exclusions'
@@ -28,6 +30,10 @@ export default {
     projects: [
       ...spreadProjects,
       ...importedProjects,
+      // Preserve concise default-export helpers when an imported project array calls them.
+      ...conciseProjectEntries(),
+      // Block-arrow exports must follow the same imported-project path.
+      ...blockProjectEntries(),
       ...overlappingProjects,
       ...recursiveProjects,
       { name: 'inline-z' },

@@ -38,6 +38,19 @@ impl ServerRouteVisitor<'_> {
         }
         params
     }
+
+    pub(super) fn query_params_from_expression_body(
+        &self,
+        parameters: &FormalParameters<'_>,
+        expression: &Expression<'_>,
+        named_handlers: &HashMap<String, BTreeSet<String>>,
+    ) -> BTreeSet<String> {
+        let mut params = BTreeSet::new();
+        let mut state = QueryParamState::default();
+        collect_query_params_from_formal_parameters(parameters, &mut params);
+        collect_query_params_from_expression(expression, &mut params, named_handlers, &mut state);
+        params
+    }
 }
 
 fn collect_query_params_from_arg(
@@ -64,8 +77,24 @@ fn collect_query_params_from_handler_expression(
         Expression::ArrowFunctionExpression(arrow) => {
             let mut state = QueryParamState::default();
             collect_query_params_from_formal_parameters(&arrow.params, params);
-            for statement in &arrow.body.statements {
-                collect_query_params_from_statement(statement, params, named_handlers, &mut state);
+            if let Some(expression) = arrow.body.as_expression() {
+                collect_query_params_from_expression(
+                    expression,
+                    params,
+                    named_handlers,
+                    &mut state,
+                );
+            } else {
+                for statement in
+                    crate::ast::arrow_function_body_statements(&arrow.body).unwrap_or_default()
+                {
+                    collect_query_params_from_statement(
+                        statement,
+                        params,
+                        named_handlers,
+                        &mut state,
+                    );
+                }
             }
         }
         Expression::FunctionExpression(function) => {

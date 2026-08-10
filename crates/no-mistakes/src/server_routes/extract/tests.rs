@@ -150,6 +150,7 @@ fn extract_file_collects_named_handler_query_params() {
     assert_eq!(route_params("/destructured"), vec!["namedParam"]);
     assert_eq!(route_params("/inline-destructured"), vec!["inlineParam"]);
     assert_eq!(route_params("/exported"), vec!["exported"]);
+    assert_eq!(route_params("/exported-function"), vec!["exportedFunction"]);
     assert_eq!(route_params("/defaulted"), vec!["defaulted"]);
 }
 

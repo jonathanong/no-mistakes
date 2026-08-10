@@ -9,14 +9,13 @@ fn evaluate_helper_def<'a>(
         return Vec::new();
     }
     let mut env = helper_param_env(def.params, defs, imported_helpers, provided, depth);
-    let patterns = evaluate_helper_body(
-        def.body,
-        def.expression_body,
-        defs,
-        imported_helpers,
-        &mut env,
-        depth,
-    );
+    let patterns = match (def.body, def.expression) {
+        (Some(body), None) => evaluate_helper_body(body, defs, imported_helpers, &mut env, depth),
+        (None, Some(expression)) => {
+            evaluate_route_expression(expression, defs, imported_helpers, &env, depth)
+        }
+        _ => Vec::new(),
+    };
     normalize_helper_patterns(patterns)
 }
 

@@ -49,7 +49,7 @@ fn collect_query_params_from_statement(
         Statement::TryStatement(statement) => {
             collect_query_params_from_try_statement(statement, params, named_handlers, state);
         }
-        Statement::ExportNamedDeclaration(export) => {
+        Statement::ExportDeclaration(export) => {
             collect_query_params_from_export_named_declaration(export, params, named_handlers);
         }
         _ => {}
@@ -147,14 +147,11 @@ fn collect_query_params_from_try_statement(
 }
 
 fn collect_query_params_from_export_named_declaration(
-    export: &oxc_ast::ast::ExportNamedDeclaration<'_>,
+    export: &oxc_ast::ast::ExportDeclaration<'_>,
     params: &mut BTreeSet<String>,
     named_handlers: &HashMap<String, BTreeSet<String>>,
 ) {
-    let Some(declaration) = &export.declaration else {
-        return;
-    };
-    match declaration {
+    match &export.declaration {
         oxc_ast::ast::Declaration::VariableDeclaration(declaration) => {
             let mut state = QueryParamState::default();
             collect_query_params_from_variable_declaration(declaration, params, named_handlers, &mut state);

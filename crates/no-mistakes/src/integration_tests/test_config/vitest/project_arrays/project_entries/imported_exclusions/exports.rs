@@ -41,30 +41,30 @@ pub(super) fn exported_expression<'a>(
             }
         })
     } else {
-        program.body.iter().find_map(|statement| {
-            let Statement::ExportNamedDeclaration(export) = statement else {
-                return None;
-            };
-            if export.export_kind.is_type() || export.source.is_some() {
-                return None;
-            }
-            if let Some(Declaration::VariableDeclaration(declaration)) = &export.declaration {
-                for declarator in &declaration.declarations {
-                    let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) =
-                        &declarator.id
-                    else {
-                        continue;
-                    };
-                    if identifier.name == exported {
-                        return declarator.init.as_ref();
+        program.body.iter().find_map(|statement| match statement {
+            Statement::ExportDeclaration(export) => {
+                if let Declaration::VariableDeclaration(declaration) = &export.declaration {
+                    for declarator in &declaration.declarations {
+                        let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) =
+                            &declarator.id
+                        else {
+                            continue;
+                        };
+                        if identifier.name == exported {
+                            return declarator.init.as_ref();
+                        }
                     }
                 }
+                None
             }
-            export.specifiers.iter().find_map(|specifier| {
-                (!specifier.export_kind.is_type() && specifier.exported.name() == exported)
-                    .then(|| bindings.get(specifier.local.name().as_str()).copied())
-                    .flatten()
-            })
+            Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
+                export.specifiers.iter().find_map(|specifier| {
+                    (!specifier.export_kind.is_type() && specifier.exported.name() == exported)
+                        .then(|| bindings.get(specifier.local.name().as_str()).copied())
+                        .flatten()
+                })
+            }
+            _ => None,
         })
     };
     esm_expression.or_else(|| commonjs_exported_expression(program, exported, bindings))
@@ -93,25 +93,26 @@ pub(super) fn exported_function_body<'a>(
         }
     }
     for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
-            continue;
-        };
-        if export.export_kind.is_type() || export.source.is_some() {
-            continue;
-        }
-        if let Some(Declaration::FunctionDeclaration(function)) = &export.declaration {
-            if function
-                .id
-                .as_ref()
-                .is_some_and(|identifier| identifier.name == exported)
-            {
-                return function.body.as_deref();
+        match statement {
+            Statement::ExportDeclaration(export) => {
+                if let Declaration::FunctionDeclaration(function) = &export.declaration {
+                    if function
+                        .id
+                        .as_ref()
+                        .is_some_and(|identifier| identifier.name == exported)
+                    {
+                        return function.body.as_deref();
+                    }
+                }
             }
-        }
-        for specifier in &export.specifiers {
-            if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
-                return functions.get(specifier.local.name().as_str()).copied();
+            Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => {
+                for specifier in &export.specifiers {
+                    if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
+                        return functions.get(specifier.local.name().as_str()).copied();
+                    }
+                }
             }
+            _ => {}
         }
     }
     None

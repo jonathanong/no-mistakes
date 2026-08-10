@@ -39,7 +39,10 @@ fn expression_import(
         Expression::NewExpression(new) => new_expression_import(new, imports),
         // Imported factory call, e.g. `register(makeFoo())`: resolve the callee.
         Expression::CallExpression(call) => expression_import(&call.callee, imports),
-        Expression::ArrowFunctionExpression(arrow) => dynamic_import(&arrow.body),
+        Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_expression() {
+            Some(expression) => dynamic_import_expression(expression),
+            None => crate::ast::arrow_function_body(&arrow.body).and_then(dynamic_import),
+        },
         Expression::FunctionExpression(function) => {
             function.body.as_deref().and_then(dynamic_import)
         }
@@ -69,12 +72,24 @@ fn new_expression_import(
 fn dynamic_import(body: &oxc_ast::ast::FunctionBody<'_>) -> Option<EntryImport> {
     let mut finder = ImportExprFinder { specifier: None };
     finder.visit_function_body(body);
-    finder.specifier.map(|specifier| EntryImport {
-        specifier,
-        symbol: None,
-        local: String::new(),
-        kind: "dynamic".to_string(),
-    })
+    finder.into_entry_import()
+}
+
+fn dynamic_import_expression(expression: &Expression<'_>) -> Option<EntryImport> {
+    let mut finder = ImportExprFinder { specifier: None };
+    finder.visit_expression(expression);
+    finder.into_entry_import()
+}
+
+impl ImportExprFinder {
+    fn into_entry_import(self) -> Option<EntryImport> {
+        self.specifier.map(|specifier| EntryImport {
+            specifier,
+            symbol: None,
+            local: String::new(),
+            kind: "dynamic".to_string(),
+        })
+    }
 }
 
 struct ImportExprFinder {

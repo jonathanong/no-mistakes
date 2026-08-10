@@ -1,6 +1,6 @@
 use anyhow::Result;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::Program;
+use oxc_ast::ast::{ArrowFunctionBody, FunctionBody, Program, Statement};
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
 use std::cell::RefCell;
@@ -30,6 +30,23 @@ impl Drop for RequestParseCacheGuard {
 
 pub(crate) fn current_request_parse_cache() -> Option<ParsedProgramCache> {
     REQUEST_PARSE_CACHES.with(|caches| caches.borrow().last().cloned())
+}
+
+/// Oxc 0.143 represents concise arrow bodies as expressions rather than an
+/// empty `FunctionBody`. Callers that scan statements must ignore those bodies.
+pub(crate) fn arrow_function_body<'a>(
+    body: &'a ArrowFunctionBody<'a>,
+) -> Option<&'a FunctionBody<'a>> {
+    match body {
+        ArrowFunctionBody::FunctionBody(body) => Some(body),
+        _ => None,
+    }
+}
+
+pub(crate) fn arrow_function_body_statements<'a>(
+    body: &'a ArrowFunctionBody<'a>,
+) -> Option<&'a [Statement<'a>]> {
+    arrow_function_body(body).map(|body| body.statements.as_slice())
 }
 
 pub(crate) fn request_parse_cache_active() -> bool {

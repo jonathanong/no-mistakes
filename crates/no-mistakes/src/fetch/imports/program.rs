@@ -34,13 +34,11 @@ fn collect_imports_from_program_inner<'a>(
                     imports.push(resolved);
                 }
             }
-            Statement::ExportNamedDeclaration(export) if is_runtime_export(export) => {
-                if let Some(source) = &export.source {
-                    if let Some(resolved) = resolve_import_with_visibility(
-                        abs_path, source.value.as_str(), visible_files,
-                    ) {
-                        imports.push(resolved);
-                    }
+            Statement::ExportFromDeclaration(export) if is_runtime_export(export) => {
+                if let Some(resolved) = resolve_import_with_visibility(
+                    abs_path, export.source.value.as_str(), visible_files,
+                ) {
+                    imports.push(resolved);
                 }
             }
             Statement::ExportAllDeclaration(export)

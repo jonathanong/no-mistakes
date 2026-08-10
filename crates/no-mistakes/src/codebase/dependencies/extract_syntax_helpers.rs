@@ -78,7 +78,7 @@ fn import_declaration_kind(import: &ImportDeclaration<'_>) -> ImportKind {
     }
 }
 
-fn export_named_declaration_kind(export: &ExportNamedDeclaration<'_>) -> ImportKind {
+fn export_named_declaration_kind(export: &ExportFromDeclaration<'_>) -> ImportKind {
     if export.export_kind.is_type() || all_export_specifiers_are_type(&export.specifiers) {
         ImportKind::Type
     } else {

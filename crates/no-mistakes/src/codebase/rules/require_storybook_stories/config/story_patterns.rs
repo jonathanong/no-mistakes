@@ -54,7 +54,13 @@ fn story_patterns_from_expression(expression: &Expression<'_>, source: &str) -> 
             .into_iter()
             .collect(),
         Expression::ArrowFunctionExpression(arrow) => {
-            story_patterns_from_statements(&arrow.body.statements, source)
+            if let Some(expression) = arrow.body.as_expression() {
+                story_patterns_from_expression(expression, source)
+            } else {
+                crate::ast::arrow_function_body_statements(&arrow.body)
+                    .map(|statements| story_patterns_from_statements(statements, source))
+                    .unwrap_or_default()
+            }
         }
         Expression::FunctionExpression(function) => function
             .body

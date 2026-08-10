@@ -52,8 +52,13 @@ fn collect_from_expr(expr: &Expression, source: &str, prefixes: &[&str], out: &m
         }
         Expression::AwaitExpression(a) => collect_from_expr(&a.argument, source, prefixes, out),
         Expression::ArrowFunctionExpression(arrow) => {
-            for s in &arrow.body.statements {
-                stmt::collect_from_stmt(s, source, prefixes, out);
+            if let Some(expression) = arrow.body.as_expression() {
+                collect_from_expr(expression, source, prefixes, out);
+            } else {
+                for s in crate::ast::arrow_function_body_statements(&arrow.body).unwrap_or_default()
+                {
+                    stmt::collect_from_stmt(s, source, prefixes, out);
+                }
             }
         }
         Expression::ConditionalExpression(cond) => {
