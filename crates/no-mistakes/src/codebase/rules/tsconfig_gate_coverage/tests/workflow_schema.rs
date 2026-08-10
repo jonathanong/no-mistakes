@@ -1,0 +1,55 @@
+use super::*;
+
+fn workflow(path: &str, yaml: &str) -> ParsedWorkflowDocument {
+    ParsedWorkflowDocument {
+        path: path.to_string(),
+        value: Ok(serde_yaml::from_str(yaml).unwrap()),
+    }
+}
+
+#[test]
+fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/declaration-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/declaration-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project declaration/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/declaration-callee.yml",
+            "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        required: 'true'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project declaration/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/jobs-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/jobs-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project jobs/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/jobs-callee.yml",
+            "on: workflow_call\njobs: []\n",
+        ),
+        workflow(
+            ".github/workflows/cycle.yml",
+            "on: push\njobs:\n  first:\n    needs: second\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project cycle/tsconfig.json\n  second:\n    needs: first\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo blocked\n",
+        ),
+        workflow(
+            ".github/workflows/excluded.yml",
+            "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        target: [linux]\n        exclude:\n          - target: linux\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project excluded/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/partial.yml",
+            "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        target: [linux, macos]\n        exclude:\n          - target: linux\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project partial/tsconfig.json\n",
+        ),
+    ];
+    let tracked = ["declaration", "jobs", "cycle", "excluded", "partial"]
+        .into_iter()
+        .map(|project| format!("{project}/tsconfig.json"))
+        .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(
+            &ParsedWorkflowSet { documents },
+            &tracked,
+            &project_inputs(&tracked)
+        ),
+        BTreeSet::from(["partial/tsconfig.json".to_string()])
+    );
+}

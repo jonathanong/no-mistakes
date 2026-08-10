@@ -1,4 +1,11 @@
 use serde_yaml::Value;
+use std::collections::{BTreeMap, BTreeSet};
+
+mod contracts;
+mod matrix;
+
+pub(super) use contracts::workflow_call_shape_valid;
+pub(super) use matrix::zero_instance_matrix;
 
 pub(super) fn canonical_local_call_target(target: &str) -> bool {
     target
@@ -61,41 +68,57 @@ pub(super) fn reusable_call_job_shape_valid(job: &Value) -> bool {
     })
 }
 
-pub(super) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
-    let Some(contract) = on.and_then(|on| on.get("workflow_call")) else {
-        return true;
-    };
-    let Value::Mapping(contract) = contract else {
-        return matches!(contract, Value::Null);
-    };
-    contract
-        .keys()
-        .all(|key| matches!(key.as_str(), Some("inputs" | "secrets" | "outputs")))
-        && ["inputs", "secrets", "outputs"].into_iter().all(|field| {
-            contract.get(field).is_none_or(|declarations| {
-                declarations.as_mapping().is_some_and(|mapping| {
-                    mapping.values().all(|declaration| declaration.is_mapping())
-                })
-            })
-        })
+pub(super) fn valid_job_dependencies(jobs: &serde_yaml::Mapping) -> bool {
+    let mut dependencies = BTreeMap::new();
+    for (job_id, job) in jobs {
+        let Some(job_id) =
+            crate::codebase::workflow_topology::value_primitives::string_value(Some(job_id))
+                .map(|job_id| job_id.to_lowercase())
+        else {
+            return false;
+        };
+        let Some(job) = job.as_mapping() else {
+            return false;
+        };
+        if job.get("needs").is_some_and(|needs| {
+            !matches!(needs, Value::String(_))
+                && !needs
+                    .as_sequence()
+                    .is_some_and(|items| items.iter().all(Value::is_string))
+        }) {
+            return false;
+        }
+        let needs =
+            crate::codebase::workflow_topology::value_primitives::string_list(job.get("needs"))
+                .into_iter()
+                .map(|need| need.to_lowercase())
+                .collect::<BTreeSet<_>>();
+        if dependencies.insert(job_id, needs).is_some() {
+            return false;
+        }
+    }
+    if dependencies
+        .values()
+        .flatten()
+        .any(|need| !dependencies.contains_key(need))
+    {
+        return false;
+    }
+    while !dependencies.is_empty() {
+        let ready = dependencies
+            .iter()
+            .filter(|(_, needs)| needs.iter().all(|need| !dependencies.contains_key(need)))
+            .map(|(job_id, _)| job_id.clone())
+            .collect::<Vec<_>>();
+        if ready.is_empty() {
+            return false;
+        }
+        for job_id in ready {
+            dependencies.remove(&job_id);
+        }
+    }
+    true
 }
 
-pub(super) fn zero_instance_matrix(job: &Value) -> bool {
-    let Some(matrix) = job
-        .get("strategy")
-        .and_then(|strategy| strategy.get("matrix"))
-        .and_then(Value::as_mapping)
-    else {
-        return false;
-    };
-    let empty_axis = matrix.iter().any(|(name, values)| {
-        !matches!(name.as_str(), Some("include" | "exclude"))
-            && values.as_sequence().is_some_and(Vec::is_empty)
-    });
-    let includes_instance = match matrix.get("include") {
-        Some(Value::Sequence(items)) => !items.is_empty(),
-        Some(_) => return false,
-        None => false,
-    };
-    empty_axis && !includes_instance
-}
+#[cfg(test)]
+mod tests;

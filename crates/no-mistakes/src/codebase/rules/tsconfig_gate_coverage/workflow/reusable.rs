@@ -19,7 +19,7 @@ use model::{ActivationKey, ActivationMemo, ScanContext, WorkflowDocument};
 use steps::scan_job_steps;
 use validation::{
     canonical_local_call_target, canonical_remote_call_target, reusable_call_job_shape_valid,
-    workflow_call_shape_valid, zero_instance_matrix,
+    valid_job_dependencies, workflow_call_shape_valid, zero_instance_matrix,
 };
 
 pub(super) fn collect_ci_projects(
@@ -123,9 +123,10 @@ fn scan_activation_uncached(
     let depth = active_paths.len();
     let workflow_cwd = effective_working_directory(document.value, Some(".".to_string()));
     let workflow_shell = effective_shell(document.value, None);
-    let Some(jobs) = document.value.get("jobs").and_then(Value::as_mapping) else {
-        return Some(BTreeSet::new());
-    };
+    let jobs = document.value.get("jobs").and_then(Value::as_mapping)?;
+    if jobs.is_empty() || !valid_job_dependencies(jobs) {
+        return None;
+    }
     let skipped_jobs = statically_skipped_jobs(jobs, inputs);
     let mut projects = BTreeSet::new();
     for (job_id, job) in jobs {

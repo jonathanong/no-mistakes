@@ -18,6 +18,7 @@ mod no_check;
 mod workflow;
 mod workflow_contracts;
 mod workflow_scaling;
+mod workflow_schema;
 
 fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {
     tracked
