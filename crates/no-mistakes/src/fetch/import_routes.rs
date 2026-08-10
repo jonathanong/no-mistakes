@@ -39,16 +39,24 @@ pub fn route_reaches_target_from_visible_with_facts(
     visible_files: &HashSet<PathBuf>,
 ) -> Result<bool> {
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    route_reaches_target_from_visible_with_facts_and_session(
-        &session,
-        path,
-        target,
+    let mut facts = RouteTargetFacts {
         root,
         visited,
         import_cache,
         parsed_files,
         visible_files,
-    )
+    };
+    route_reaches_target_from_visible_with_facts_and_session(&session, path, target, &mut facts)
+}
+
+/// Prepared state shared by a route-to-target traversal.
+#[doc(hidden)]
+pub struct RouteTargetFacts<'a> {
+    pub root: &'a Path,
+    pub visited: &'a mut HashSet<PathBuf>,
+    pub import_cache: &'a mut HashMap<PathBuf, Vec<PathBuf>>,
+    pub parsed_files: &'a mut ParsedFileCache,
+    pub visible_files: &'a HashSet<PathBuf>,
 }
 
 #[doc(hidden)]
@@ -56,56 +64,38 @@ pub fn route_reaches_target_from_visible_with_facts_and_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     path: &Path,
     target: &Path,
-    root: &Path,
-    visited: &mut HashSet<PathBuf>,
-    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    parsed_files: &mut ParsedFileCache,
-    visible_files: &HashSet<PathBuf>,
+    facts: &mut RouteTargetFacts<'_>,
 ) -> Result<bool> {
     let abs_target = crate::codebase::ts_resolver::normalize_path(target);
-    route_reaches_target_with_facts_inner(
-        path,
-        &abs_target,
-        root,
-        visited,
-        import_cache,
-        session,
-        parsed_files,
-        visible_files,
-    )
+    route_reaches_target_with_facts_inner(session, path, &abs_target, facts)
 }
 
 fn route_reaches_target_with_facts_inner(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     path: &Path,
     abs_target: &Path,
-    root: &Path,
-    visited: &mut HashSet<PathBuf>,
-    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    parsed_files: &mut ParsedFileCache,
-    visible_files: &HashSet<PathBuf>,
+    facts: &mut RouteTargetFacts<'_>,
 ) -> Result<bool> {
     let abs_path = crate::codebase::ts_resolver::normalize_path(path);
     if abs_path == abs_target {
         return Ok(true);
     }
-    if !visible_files.contains(&abs_path) || !visited.insert(abs_path.clone()) {
+    if !facts.visible_files.contains(&abs_path) || !facts.visited.insert(abs_path.clone()) {
         return Ok(false);
     }
 
-    let facts =
-        parsed_files.load_with_session(session, &abs_path, root, import_cache, visible_files)?;
-    for import in facts.imports {
-        if route_reaches_target_with_facts_inner(
-            &import,
-            abs_target,
-            root,
-            visited,
-            import_cache,
+    let imports = facts
+        .parsed_files
+        .load_with_session(
             session,
-            parsed_files,
-            visible_files,
-        )? {
+            &abs_path,
+            facts.root,
+            facts.import_cache,
+            facts.visible_files,
+        )?
+        .imports;
+    for import in imports {
+        if route_reaches_target_with_facts_inner(session, &import, abs_target, facts)? {
             return Ok(true);
         }
     }

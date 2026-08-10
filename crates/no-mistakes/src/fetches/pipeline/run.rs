@@ -3,7 +3,7 @@ use crate::fetches::analyze::routes::collect_layout_chain_files_from_visible;
 use crate::fetches::cli::Cli;
 use crate::fetches::pipeline::aggregate::build_final_report;
 use crate::fetches::pipeline::cache::Cache;
-use crate::fetches::pipeline::route_analysis::check_route_matches;
+use crate::fetches::pipeline::route_analysis::{check_route_matches, RouteMatchContext};
 use crate::fetches::pipeline::target::{resolve_target_file, TargetSpec};
 use crate::fetches::report::types::{FinalReport, RouteReport};
 use anyhow::Result;
@@ -76,7 +76,7 @@ pub(crate) fn run_with_base_root_and_session(
                 frontend_root: &frontend_root,
                 root: &root,
                 cache: &mut cache,
-                session: &session,
+                session,
                 parsed_files: &mut parsed_files,
                 visible_files: &visible_files,
             },
@@ -150,11 +150,13 @@ fn analyze_routes(
             &route,
             target_specs,
             &wrapper_files,
-            cache,
-            session,
-            parsed_files,
-            root,
-            visible_files,
+            RouteMatchContext {
+                cache,
+                session,
+                parsed_files,
+                root,
+                visible_files,
+            },
         )?;
 
         for t in newly_matched {

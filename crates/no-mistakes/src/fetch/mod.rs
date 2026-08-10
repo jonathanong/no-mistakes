@@ -18,7 +18,7 @@ pub use file_facts::ParsedFileCache;
 #[doc(hidden)]
 pub use import_routes::{
     route_reaches_target_from_visible_with_facts,
-    route_reaches_target_from_visible_with_facts_and_session,
+    route_reaches_target_from_visible_with_facts_and_session, RouteTargetFacts,
 };
 #[doc(hidden)]
 pub use route_analysis::{
