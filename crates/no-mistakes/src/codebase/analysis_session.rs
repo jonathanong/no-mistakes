@@ -5,10 +5,10 @@ use crate::codebase::ts_source::{FileInventory, SourceStore, VisiblePathSnapshot
 use crate::diagnostics::InvocationObserver;
 use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, OnceLock};
 
 mod io;
 mod parsing;
@@ -25,7 +25,7 @@ pub struct AnalysisSession {
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
     resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
-    registry_extension_reports: Mutex<HashMap<RegistryExtensionKey, RegistryExtensionCell>>,
+    registry_extension_reports: DashMap<RegistryExtensionKey, RegistryExtensionCell>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
 }
 
@@ -74,7 +74,7 @@ impl AnalysisSession {
             datasets: DashMap::new(),
             supplemental_sources,
             resolver_caches: DashMap::new(),
-            registry_extension_reports: Mutex::new(HashMap::new()),
+            registry_extension_reports: DashMap::new(),
             parse_attempts: collect_keyed_work.then(DashMap::new),
         })
     }
@@ -203,9 +203,10 @@ impl AnalysisSession {
             .unwrap_or_else(|| Arc::clone(&self.supplemental_sources))
     }
 
-    /// Memoize an owned registry-extension report for one request/root/file
-    /// projection. The report cannot borrow the OXC program, so callers can
-    /// reuse it without parsing the same source again.
+    /// Memoize a request-owned registry-extension report projection for one
+    /// root/file pair. This is not a canonical TS fact because it is the
+    /// query's rendered report, but it owns no OXC data and can therefore be
+    /// reused without parsing the same source again.
     pub(crate) fn registry_extension_report(
         &self,
         root: &Path,
@@ -216,16 +217,13 @@ impl AnalysisSession {
             root: normalize_path(root),
             path: normalize_path(path),
         };
-        let cell = {
-            let mut reports = self
-                .registry_extension_reports
-                .lock()
-                .expect("registry-extension report cache mutex poisoned");
-            Arc::clone(
-                reports
-                    .entry(key)
-                    .or_insert_with(|| Arc::new(OnceLock::new())),
-            )
+        let cell = match self.registry_extension_reports.entry(key) {
+            Entry::Occupied(entry) => Arc::clone(entry.get()),
+            Entry::Vacant(entry) => {
+                let cell = Arc::new(OnceLock::new());
+                entry.insert(Arc::clone(&cell));
+                cell
+            }
         };
         cell.get_or_init(|| {
             build()
