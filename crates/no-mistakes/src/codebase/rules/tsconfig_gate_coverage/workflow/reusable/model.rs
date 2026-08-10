@@ -1,4 +1,4 @@
-use super::super::conditions::InputState;
+use super::super::conditions::{InputState, SecretState};
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 use crate::codebase::workflow_topology::model::WorkflowCallContract;
 use serde_yaml::Value;
@@ -17,10 +17,34 @@ pub(super) struct ScanContext<'a> {
 }
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub(super) struct ActivationState {
+    pub(super) inputs: InputState,
+    pub(super) secrets: SecretState,
+    pub(super) active_paths: BTreeSet<String>,
+}
+
+impl ActivationState {
+    pub(super) fn direct(inputs: InputState) -> Self {
+        Self {
+            inputs,
+            secrets: SecretState::direct(),
+            active_paths: BTreeSet::new(),
+        }
+    }
+
+    pub(super) fn callee(&self, inputs: InputState, secrets: SecretState) -> Self {
+        Self {
+            inputs,
+            secrets,
+            active_paths: self.active_paths.clone(),
+        }
+    }
+}
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) struct ActivationKey {
     pub(super) path: String,
-    pub(super) inputs: InputState,
-    pub(super) active_paths: BTreeSet<String>,
+    pub(super) state: ActivationState,
 }
 
 #[derive(Default)]

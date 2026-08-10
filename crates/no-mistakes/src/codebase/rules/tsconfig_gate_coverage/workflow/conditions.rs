@@ -2,6 +2,7 @@ use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod contracts;
+mod functions;
 mod input_value;
 mod inputs;
 mod literals;
@@ -9,7 +10,7 @@ mod logical;
 
 use input_value::{comparison_literal, input_name};
 pub(super) use inputs::{
-    callee_inputs, callee_secrets_valid, direct_inputs, inputs_with_matrix_values,
+    callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, SecretState,
 };
 use literals::{
     hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
@@ -114,6 +115,9 @@ fn expression_bool_with_status(
     if let Some(value) = status_function_bool(expression, success) {
         return value;
     }
+    if let Some(value) = functions::static_function_bool(expression, inputs, success) {
+        return value;
+    }
     if let Some(value) = quoted_string_bool(expression) {
         return value;
     }
@@ -160,7 +164,11 @@ fn resolve_input_expression(
     StaticBool::Unknown
 }
 
-fn condition_value(operand: &str, inputs: &InputState, success: StaticBool) -> Option<StaticValue> {
+pub(super) fn condition_value(
+    operand: &str,
+    inputs: &InputState,
+    success: StaticBool,
+) -> Option<StaticValue> {
     if let Some(value) = status_function_bool(operand.trim(), success) {
         return match value {
             StaticBool::False => Some(StaticValue::Bool(false)),

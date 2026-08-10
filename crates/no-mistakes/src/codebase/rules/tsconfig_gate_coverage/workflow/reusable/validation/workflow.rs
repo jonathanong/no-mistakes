@@ -1,8 +1,12 @@
+mod concurrency;
+
 use serde_yaml::{Mapping, Value};
 
 use super::super::super::expressions::{
     interpolated_expression_contexts_available, interpolated_expression_valid,
 };
+
+pub(super) use concurrency::{job_concurrency_shape_valid, workflow_concurrency_shape_valid};
 
 pub(crate) fn workflow_shape_valid(workflow: &Value) -> bool {
     let Some(workflow) = workflow.as_mapping() else {
@@ -13,8 +17,8 @@ pub(crate) fn workflow_shape_valid(workflow: &Value) -> bool {
         && run_name_field_valid(workflow)
         && scalar_mapping_valid(workflow.get("env"))
         && permissions_shape_valid(workflow.get("permissions"))
-        && defaults_shape_valid(workflow.get("defaults"))
-        && concurrency_shape_valid(workflow.get("concurrency"))
+        && workflow_defaults_shape_valid(workflow.get("defaults"))
+        && workflow_concurrency_shape_valid(workflow.get("concurrency"))
 }
 
 fn only_workflow_keys(workflow: &Mapping) -> bool {
@@ -48,10 +52,10 @@ fn run_name_field_valid(workflow: &Mapping) -> bool {
     })
 }
 
-fn valid_nonempty_interpolated_string(value: &Value) -> bool {
-    value
-        .as_str()
-        .is_some_and(|value| !value.is_empty() && interpolated_expression_valid(value))
+fn valid_nonempty_literal_string(value: &Value) -> bool {
+    value.as_str().is_some_and(|value| {
+        !value.is_empty() && !value.contains("${{") && interpolated_expression_valid(value)
+    })
 }
 
 pub(super) fn scalar_mapping_valid(value: Option<&Value>) -> bool {
@@ -118,7 +122,9 @@ fn permission_value_valid(scope: &Value, value: &str) -> bool {
     }
 }
 
-pub(super) fn defaults_shape_valid(value: Option<&Value>) -> bool {
+/// GitHub does not evaluate expressions in workflow-level `defaults.run`.
+/// Job-level defaults have separate context rules and retain their own validator.
+pub(super) fn workflow_defaults_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|defaults| {
             defaults.len() == 1
@@ -129,30 +135,28 @@ pub(super) fn defaults_shape_valid(value: Option<&Value>) -> bool {
                                 key.as_str()
                                     .is_some_and(|key| matches!(key, "shell" | "working-directory"))
                             })
-                            && run.values().all(valid_nonempty_interpolated_string)
+                            && run.values().all(valid_nonempty_literal_string)
                     })
                 })
         })
     })
 }
 
-pub(super) fn concurrency_shape_valid(value: Option<&Value>) -> bool {
+pub(super) fn job_defaults_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
-        valid_nonempty_interpolated_string(value)
-            || value.as_mapping().is_some_and(|concurrency| {
-                concurrency.keys().all(|key| {
-                    key.as_str()
-                        .is_some_and(|key| matches!(key, "group" | "cancel-in-progress"))
-                }) && concurrency
-                    .get("group")
-                    .is_some_and(valid_nonempty_interpolated_string)
-                    && concurrency.get("cancel-in-progress").is_none_or(|value| {
-                        value.is_bool()
-                            || value
-                                .as_str()
-                                .is_some_and(super::super::super::complete_expression)
+        value.as_mapping().is_some_and(|defaults| {
+            defaults.len() == 1
+                && defaults.get("run").is_some_and(|run| {
+                    run.as_mapping().is_some_and(|run| {
+                        !run.is_empty()
+                            && run.keys().all(|key| {
+                                key.as_str()
+                                    .is_some_and(|key| matches!(key, "shell" | "working-directory"))
+                            })
+                            && run.values().all(valid_nonempty_literal_string)
                     })
-            })
+                })
+        })
     })
 }
 

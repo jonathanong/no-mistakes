@@ -188,7 +188,10 @@ fn malformed_secret_bindings_are_rejected() {
         "secrets:\n  token: first\n  TOKEN: second",
     ] {
         let call_job: Value = serde_yaml::from_str(source).expect("valid test YAML");
-        assert!(!callee_secrets_valid(&contract, &call_job), "{source}");
+        assert!(
+            callee_secrets(&contract, &call_job, &SecretState::direct()).is_none(),
+            "{source}"
+        );
     }
 }
 

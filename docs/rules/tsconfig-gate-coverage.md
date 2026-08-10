@@ -84,8 +84,10 @@ determines the result. Literal call inputs, declared defaults, omitted values,
 and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
 values through transitive calls. This lets the rule resolve exact string
 equality/inequality and number equality/inequality or relational comparisons,
-as well as input truthiness. Expressions whose result remains dynamic fail open
-as potentially runnable. Exact
+as well as input truthiness. Static `contains`, `startsWith`, and `endsWith`
+calls are also resolved using GitHub's string coercion; missing properties
+coerce to an empty string. Expressions whose result remains dynamic fail open
+as potentially runnable.
 For static matrices, `${{ matrix.name }}` bindings, step conditions, and job or
 step `continue-on-error` expressions are evaluated once per generated
 combination after `exclude` and ordered `include` expansion. Execution and
@@ -95,7 +97,17 @@ and fail open as potentially enforcing.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
-the workflow from providing coverage.
+the workflow from providing coverage. Workflow and job `defaults.run` values
+must be static. Workflow concurrency expressions may use `github`, `inputs`,
+and `vars`; job concurrency additionally permits `needs`, `strategy`, and
+`matrix`.
+
+Reusable-workflow secret validation follows each call edge. A directly
+triggered workflow can inherit its available repository or organization
+secrets; `secrets: inherit` preserves that availability through nested calls,
+while an explicit secret mapping narrows it to the destination names supplied
+by that mapping. Required secrets must therefore be available at the immediate
+caller boundary rather than being inferred from an earlier ancestor.
 
 The rule evaluates the successful gate path: `success()`, `always()`, and
 `!cancelled()` are runnable there, while `failure()` and `cancelled()` are not.

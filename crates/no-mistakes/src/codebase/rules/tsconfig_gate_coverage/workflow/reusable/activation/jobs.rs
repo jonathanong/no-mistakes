@@ -1,11 +1,11 @@
 use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    callee_inputs, callee_secrets_valid, inputs_with_matrix_values, statically_not_enforcing,
+    callee_inputs, callee_secrets, inputs_with_matrix_values, statically_not_enforcing,
     statically_skipped_jobs, InputState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
-    ActivationMemo, ScanContext,
+    ActivationMemo, ActivationState, ScanContext,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
@@ -64,7 +64,7 @@ pub(super) struct JobScanner<'a, 'workflow> {
     triggers: &'a CompiledTriggers,
     workflow_cwd: Option<String>,
     workflow_shell: Option<String>,
-    active_paths: &'a BTreeSet<String>,
+    state: &'a ActivationState,
     context: &'a ScanContext<'workflow>,
     memo: &'a mut ActivationMemo,
 }
@@ -75,7 +75,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         triggers: &'a CompiledTriggers,
         workflow_cwd: Option<String>,
         workflow_shell: Option<String>,
-        active_paths: &'a BTreeSet<String>,
+        state: &'a ActivationState,
         context: &'a ScanContext<'workflow>,
         memo: &'a mut ActivationMemo,
     ) -> Self {
@@ -84,7 +84,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             triggers,
             workflow_cwd,
             workflow_shell,
-            active_paths,
+            state,
             context,
             memo,
         }
@@ -121,7 +121,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
     ) -> Option<BTreeSet<String>> {
         let edge = workflow_values::call_edge(job_id, target, job);
         if !self.memo.register_target(validated_reusable_target(&edge)?)
-            || self.active_paths.len() >= 10
+            || self.state.active_paths.len() >= 10
         {
             return None;
         }
@@ -134,18 +134,16 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             return None;
         }
         let contract = callee.call_contract.as_ref()?;
-        if !callee_secrets_valid(contract, job) {
-            return None;
-        }
+        let callee_secrets = callee_secrets(contract, job, &self.state.secrets)?;
         let mut projects = BTreeSet::new();
         for inputs in inputs {
             let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
+            let callee_state = self.state.callee(callee_inputs, callee_secrets.clone());
             let callee_projects = scan_activation(
                 callee_path,
                 callee,
                 self.triggers,
-                &callee_inputs,
-                self.active_paths,
+                &callee_state,
                 self.context,
                 self.memo,
             )?;

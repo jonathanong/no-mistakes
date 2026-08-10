@@ -66,6 +66,16 @@ pub(super) fn comparison_literal(operand: &str) -> Option<StaticValue> {
 }
 
 impl StaticValue {
+    pub(super) fn function_string(&self) -> Option<String> {
+        match self {
+            Self::Bool(value) => Some(value.to_string()),
+            Self::String(value) => Some(value.clone()),
+            Self::Number(value) => expression_number(value).map(|value| value.to_string()),
+            Self::Null => Some(String::new()),
+            Self::Unknown => None,
+        }
+    }
+
     pub(super) fn truthiness(self) -> StaticBool {
         match self {
             Self::Bool(value) => StaticBool::from(value),

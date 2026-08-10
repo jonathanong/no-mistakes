@@ -1,5 +1,5 @@
 use super::super::workflow::{
-    concurrency_shape_valid, defaults_shape_valid, permissions_shape_valid,
+    job_concurrency_shape_valid, job_defaults_shape_valid, permissions_shape_valid,
 };
 use super::bindings::call_bindings_mapping_shape_valid;
 use super::fields::{
@@ -56,10 +56,10 @@ pub(crate) fn step_job_shape_valid(job: &Value) -> bool {
             && condition_field_valid(job.get("if"), JOB_CONDITION_CONTEXTS, false)
             && permissions_shape_valid(job.get("permissions"))
             && environment_shape_valid(job.get("environment"))
-            && concurrency_shape_valid(job.get("concurrency"))
+            && job_concurrency_shape_valid(job.get("concurrency"))
             && outputs_shape_valid(job.get("outputs"))
             && scalar_mapping_valid(job.get("env"))
-            && defaults_shape_valid(job.get("defaults"))
+            && job_defaults_shape_valid(job.get("defaults"))
             && super::fields::number_or_expression_field_valid(job, "timeout-minutes")
             && bool_or_expression_field_valid(job, "continue-on-error")
             && container_shape_valid(job.get("container"))
@@ -80,7 +80,7 @@ pub(crate) fn reusable_call_job_shape_valid(job: &Value) -> bool {
             && string_field_valid(job, "name")
             && condition_field_valid(job.get("if"), JOB_CONDITION_CONTEXTS, false)
             && permissions_shape_valid(job.get("permissions"))
-            && concurrency_shape_valid(job.get("concurrency"))
+            && job_concurrency_shape_valid(job.get("concurrency"))
             && strategy_shape_valid(job.get("strategy"))
             && call_bindings_mapping_shape_valid(job)
     })

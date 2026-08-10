@@ -7,8 +7,10 @@ use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod bindings;
+mod secrets;
 mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
+pub(crate) use secrets::{callee_secrets, SecretState};
 use values::{default_value, nonboolean_binding_value};
 
 pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
@@ -131,42 +133,6 @@ fn inputs_from_contract(
         parent.get(EVENT_NAME_KEY)?.clone(),
     );
     Some(inputs)
-}
-
-pub(crate) fn callee_secrets_valid(contract: &WorkflowCallContract, call_job: &Value) -> bool {
-    if !workflow_call_contract_valid(contract) {
-        return false;
-    }
-    if call_job.get("secrets").and_then(Value::as_str) == Some("inherit") {
-        return true;
-    }
-    let bindings = match call_job.get("secrets") {
-        Some(Value::Mapping(mapping)) => match normalized_bindings(mapping) {
-            Some(bindings) => bindings,
-            None => return false,
-        },
-        Some(_) => return false,
-        None => BTreeMap::new(),
-    };
-    let declared_names: BTreeSet<String> = contract
-        .secrets
-        .keys()
-        .map(|name| normalized_name(name))
-        .collect();
-    if bindings.keys().any(|name| !declared_names.contains(name)) {
-        return false;
-    }
-    if bindings.values().any(|value| {
-        !matches!(
-            *value,
-            Value::Null | Value::Bool(_) | Value::Number(_) | Value::String(_)
-        )
-    }) {
-        return false;
-    }
-    contract.secrets.iter().all(|(name, declaration)| {
-        !declaration.required || bindings.contains_key(&normalized_name(name))
-    })
 }
 
 #[cfg(test)]

@@ -1,9 +1,8 @@
-use super::super::conditions::InputState;
 use super::super::effective_working_directory;
 use super::super::runtime::{
     container_runner_support, effective_shell, has_static_runnable_runs_on, ContainerRunnerSupport,
 };
-use super::model::{ActivationKey, ActivationMemo, ScanContext, WorkflowDocument};
+use super::model::{ActivationKey, ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
 use super::validation::{
     call_bindings_shape_valid, reusable_call_job_shape_valid, valid_job_dependencies,
     workflow_shape_valid,
@@ -19,32 +18,22 @@ pub(super) fn scan_activation(
     path: &str,
     document: &WorkflowDocument<'_>,
     triggers: &CompiledTriggers,
-    inputs: &InputState,
-    active_paths: &BTreeSet<String>,
+    state: &ActivationState,
     context: &ScanContext<'_>,
     memo: &mut ActivationMemo,
 ) -> Option<BTreeSet<String>> {
-    if active_paths.contains(path) {
+    if state.active_paths.contains(path) {
         return None;
     }
     let key = ActivationKey {
         path: path.to_string(),
-        inputs: inputs.clone(),
-        active_paths: active_paths.clone(),
+        state: state.clone(),
     };
     if let Some(result) = memo.get(&key) {
         return result.clone();
     }
     memo.record_computation();
-    let result = scan_activation_uncached(
-        path,
-        document,
-        triggers,
-        inputs,
-        active_paths,
-        context,
-        memo,
-    );
+    let result = scan_activation_uncached(path, document, triggers, state, context, memo);
     memo.insert(key, result.clone());
     result
 }
@@ -53,13 +42,12 @@ fn scan_activation_uncached(
     path: &str,
     document: &WorkflowDocument<'_>,
     triggers: &CompiledTriggers,
-    inputs: &InputState,
-    active_paths: &BTreeSet<String>,
+    state: &ActivationState,
     context: &ScanContext<'_>,
     memo: &mut ActivationMemo,
 ) -> Option<BTreeSet<String>> {
-    let mut active_paths = active_paths.clone();
-    active_paths.insert(path.to_string());
+    let mut state = state.clone();
+    state.active_paths.insert(path.to_string());
     if !workflow_shape_valid(document.value) {
         return None;
     }
@@ -69,13 +57,13 @@ fn scan_activation_uncached(
     if jobs.is_empty() || !valid_job_dependencies(jobs) {
         return None;
     }
-    let job_states = JobStates::new(jobs, inputs)?;
+    let job_states = JobStates::new(jobs, &state.inputs)?;
     JobScanner::new(
         &job_states,
         triggers,
         workflow_cwd,
         workflow_shell,
-        &active_paths,
+        &state,
         context,
         memo,
     )

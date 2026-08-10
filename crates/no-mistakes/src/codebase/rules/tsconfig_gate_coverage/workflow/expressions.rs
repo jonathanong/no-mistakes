@@ -1,6 +1,10 @@
+mod calls;
 mod contexts;
 mod lexer;
 mod syntax;
+
+pub(crate) use calls::condition_function_call;
+pub(crate) use lexer::Function;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum StaticExpressionType {

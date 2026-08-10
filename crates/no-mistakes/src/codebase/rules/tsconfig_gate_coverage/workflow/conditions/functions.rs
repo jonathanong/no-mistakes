@@ -1,0 +1,82 @@
+use super::{comparison_literal, condition_value, input_name, InputState, StaticBool, StaticValue};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
+    condition_function_call, Function,
+};
+
+pub(super) fn static_function_bool(
+    expression: &str,
+    inputs: &InputState,
+    success: StaticBool,
+) -> Option<StaticBool> {
+    let call = condition_function_call(expression)?;
+    if call.arguments.len() != 2 {
+        return None;
+    }
+    let search = function_argument_value(call.arguments[0], inputs, success)?.function_string()?;
+    let item = function_argument_value(call.arguments[1], inputs, success)?.function_string()?;
+    let matched = match call.function {
+        Function::Contains => contains_ignore_ascii_case(&search, &item)?,
+        Function::StartsWith => starts_with_ignore_ascii_case(&search, &item)?,
+        Function::EndsWith => ends_with_ignore_ascii_case(&search, &item)?,
+        _ => return None,
+    };
+    Some(StaticBool::from(matched))
+}
+
+fn function_argument_value(
+    expression: &str,
+    inputs: &InputState,
+    success: StaticBool,
+) -> Option<StaticValue> {
+    if let Some(name) = input_name(expression) {
+        // The boolean/equality condition path intentionally models a missing
+        // input as `false`; GitHub's string functions instead coerce a missing
+        // property through null to the empty string.
+        return Some(
+            inputs
+                .get(&name.to_lowercase())
+                .cloned()
+                .unwrap_or_else(|| StaticValue::String(String::new())),
+        );
+    }
+    condition_value(expression, inputs, success).or_else(|| comparison_literal(expression))
+}
+
+// GitHub's documented functions compare case-insensitively. This analyzer only
+// models ASCII strings, whose case mapping is unambiguous; non-ASCII literals
+// remain unknown so they cannot create unsupported coverage credit.
+fn contains_ignore_ascii_case(search: &str, item: &str) -> Option<bool> {
+    search.is_ascii().then_some(())?;
+    item.is_ascii().then_some(())?;
+    if item.is_empty() {
+        return Some(true);
+    }
+    Some(
+        search
+            .as_bytes()
+            .windows(item.len())
+            .any(|candidate| candidate.eq_ignore_ascii_case(item.as_bytes())),
+    )
+}
+
+fn starts_with_ignore_ascii_case(search: &str, item: &str) -> Option<bool> {
+    search.is_ascii().then_some(())?;
+    item.is_ascii().then_some(())?;
+    Some(
+        search
+            .as_bytes()
+            .get(..item.len())
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case(item.as_bytes())),
+    )
+}
+
+fn ends_with_ignore_ascii_case(search: &str, item: &str) -> Option<bool> {
+    search.is_ascii().then_some(())?;
+    item.is_ascii().then_some(())?;
+    Some(
+        search
+            .as_bytes()
+            .get(search.len().saturating_sub(item.len())..)
+            .is_some_and(|suffix| suffix.eq_ignore_ascii_case(item.as_bytes())),
+    )
+}

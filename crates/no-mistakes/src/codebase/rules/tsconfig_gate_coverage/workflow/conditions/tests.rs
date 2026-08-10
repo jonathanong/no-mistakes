@@ -137,6 +137,70 @@ fn literal_comparisons_resolve_without_context_values() {
 }
 
 #[test]
+fn deterministic_string_functions_resolve_static_arguments() {
+    let inputs = InputState::from([("label".into(), StaticValue::String("Release".into()))]);
+    for (expression, expected) in [
+        ("contains('Hello world', 'LLO')", StaticBool::True),
+        ("contains('Hello world', 'nope')", StaticBool::False),
+        ("startsWith(inputs.label, 're')", StaticBool::True),
+        ("startsWith(inputs.label, 'lease')", StaticBool::False),
+        ("endsWith('release.TS', '.ts')", StaticBool::True),
+        ("endsWith('release.TS', '.js')", StaticBool::False),
+        ("contains(true, 'RUE')", StaticBool::True),
+        ("startsWith(0x10, '16')", StaticBool::True),
+        ("endsWith(null, '')", StaticBool::True),
+        ("contains('it''s, nested', 'S, N')", StaticBool::True),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
+fn deterministic_string_functions_fail_open_for_dynamic_or_unmodeled_arguments() {
+    let inputs = InputState::new();
+    for expression in [
+        "contains(github.ref, 'main')",
+        "contains(format('a,{0}', 'b'), 'a,b')",
+        "startsWith('M\u{00f6}na', 'm')",
+        "endsWith('release', github.ref)",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::Unknown,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
+fn missing_inputs_coerce_to_empty_strings_only_for_string_functions() {
+    let inputs = InputState::from([("present".into(), StaticValue::String("release".into()))]);
+    for (expression, expected) in [
+        ("contains(inputs.missing, 'false')", StaticBool::False),
+        ("startsWith(inputs.missing, 'f')", StaticBool::False),
+        ("endsWith(inputs.missing, 'e')", StaticBool::False),
+        ("contains(inputs.missing, '')", StaticBool::True),
+        ("startsWith(inputs.missing, '')", StaticBool::True),
+        ("endsWith(inputs.missing, '')", StaticBool::True),
+        ("contains(inputs.present, 'LEASE')", StaticBool::True),
+        ("startsWith(inputs.present, 'RE')", StaticBool::True),
+        ("endsWith(inputs.present, 'ASE')", StaticBool::True),
+        ("inputs.missing == false", StaticBool::True),
+        ("inputs.missing", StaticBool::False),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn literal_relational_comparisons_resolve_without_context_values() {
     let inputs = InputState::new();
     for (expression, expected) in [

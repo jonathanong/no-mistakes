@@ -20,7 +20,7 @@ pub(super) enum Token {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(super) enum Function {
+pub(crate) enum Function {
     Contains,
     StartsWith,
     EndsWith,

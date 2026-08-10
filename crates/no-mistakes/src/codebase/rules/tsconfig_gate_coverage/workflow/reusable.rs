@@ -14,7 +14,7 @@ mod validation;
 
 use activation::scan_activation;
 use events::source_change_event_eligible;
-use model::{ActivationMemo, ScanContext, WorkflowDocument};
+use model::{ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
 pub(super) fn collect_ci_projects_with_stats(
@@ -71,8 +71,7 @@ pub(super) fn collect_ci_projects_with_stats(
                 path,
                 document,
                 &triggers,
-                &inputs,
-                &BTreeSet::new(),
+                &ActivationState::direct(inputs),
                 &context,
                 &mut memo,
             ) {
@@ -88,5 +87,7 @@ pub(super) fn collect_ci_projects_with_stats(
 mod input_tests;
 #[cfg(test)]
 mod review_tests;
+#[cfg(test)]
+mod secret_tests;
 #[cfg(test)]
 mod tests;

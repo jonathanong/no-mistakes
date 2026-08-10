@@ -49,6 +49,67 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
 }
 
 #[test]
+fn workflow_defaults_and_concurrency_follow_workflow_context_rules() {
+    for yaml in [
+        "defaults:\n  run:\n    shell: bash\n    working-directory: packages/app",
+        "concurrency: checks-${{ github.ref }}",
+        "concurrency:\n  group: checks-${{ vars.ENVIRONMENT }}\n  cancel-in-progress: '${{ inputs.cancel }}'",
+    ] {
+        let value = workflow(yaml);
+        assert!(
+            workflow_shape_valid(&value),
+            "workflow-level value should be valid: {yaml}"
+        );
+    }
+
+    for yaml in [
+        "defaults:\n  run:\n    shell: '${{ github.ref }}'",
+        "defaults:\n  run:\n    working-directory: 'packages/${{ inputs.package }}'",
+        "concurrency: checks-${{ needs.setup.outputs.key }}",
+        "concurrency:\n  group: checks-${{ matrix.package }}",
+        "concurrency:\n  group: checks\n  cancel-in-progress: '${{ secrets.CANCEL }}'",
+    ] {
+        let value = workflow(yaml);
+        assert!(
+            !workflow_shape_valid(&value),
+            "workflow-level value should be invalid: {yaml}"
+        );
+    }
+}
+
+#[test]
+fn job_defaults_and_concurrency_follow_job_context_rules() {
+    for yaml in [
+        "defaults:\n  run:\n    shell: bash\n    working-directory: packages/app",
+        "concurrency: checks-${{ github.ref }}",
+        "concurrency:\n  group: checks-${{ needs.setup.outputs.key }}\n  cancel-in-progress: '${{ matrix.cancel }}'",
+        "concurrency:\n  group: checks-${{ strategy.job-index }}\n  cancel-in-progress: '${{ inputs.cancel }}'",
+        "concurrency: checks-${{ vars.ENVIRONMENT }}",
+    ] {
+        let value = workflow(yaml);
+        assert!(
+            job_defaults_shape_valid(value.get("defaults"))
+                && job_concurrency_shape_valid(value.get("concurrency")),
+            "job-level value should be valid: {yaml}"
+        );
+    }
+
+    for yaml in [
+        "defaults:\n  run:\n    shell: '${{ github.ref }}'",
+        "defaults:\n  run:\n    working-directory: 'packages/${{ matrix.package }}'",
+        "concurrency: checks-${{ env.CI }}",
+        "concurrency:\n  group: checks\n  cancel-in-progress: '${{ secrets.CANCEL }}'",
+    ] {
+        let value = workflow(yaml);
+        assert!(
+            !job_defaults_shape_valid(value.get("defaults"))
+                || !job_concurrency_shape_valid(value.get("concurrency")),
+            "job-level value should be invalid: {yaml}"
+        );
+    }
+}
+
+#[test]
 fn permissions_follow_the_actions_scope_and_access_schema() {
     assert!(!permission_value_valid(&Value::Number(1.into()), "read"));
     for yaml in [

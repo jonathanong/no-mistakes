@@ -236,3 +236,73 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         BTreeSet::from(["partial/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn workflow_level_expression_schema_errors_do_not_credit_typechecks() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/dynamic-defaults.yml",
+            "on: push\ndefaults:\n  run:\n    working-directory: 'packages/${{ inputs.package }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-defaults/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/unavailable-concurrency.yml",
+            "on: push\nconcurrency:\n  group: checks-${{ needs.setup.outputs.key }}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unavailable-concurrency/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid.yml",
+            "on: push\nconcurrency:\n  group: checks-${{ github.ref }}\n  cancel-in-progress: '${{ vars.CANCEL }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
+        ),
+    ];
+    let tracked = [
+        "dynamic-defaults/tsconfig.json",
+        "unavailable-concurrency/tsconfig.json",
+        "valid/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(
+            &ParsedWorkflowSet { documents },
+            &tracked,
+            &project_inputs(&tracked),
+        ),
+        BTreeSet::from(["valid/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn job_level_expression_schema_errors_do_not_credit_typechecks() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/dynamic-job-defaults.yml",
+            "on: push\njobs:\n  typecheck:\n    defaults:\n      run:\n        shell: '${{ github.ref }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-job-defaults/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/unavailable-job-concurrency.yml",
+            "on: push\njobs:\n  typecheck:\n    concurrency: checks-${{ secrets.TOKEN }}\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unavailable-job-concurrency/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-job-contexts.yml",
+            "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    outputs:\n      key: value\n    steps:\n      - run: echo setup\n  typecheck:\n    needs: setup\n    concurrency:\n      group: checks-${{ needs.setup.outputs.key }}\n      cancel-in-progress: '${{ github.ref_protected }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid-job-contexts/tsconfig.json\n",
+        ),
+    ];
+    let tracked = [
+        "dynamic-job-defaults/tsconfig.json",
+        "unavailable-job-concurrency/tsconfig.json",
+        "valid-job-contexts/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(
+            &ParsedWorkflowSet { documents },
+            &tracked,
+            &project_inputs(&tracked),
+        ),
+        BTreeSet::from(["valid-job-contexts/tsconfig.json".to_string()])
+    );
+}

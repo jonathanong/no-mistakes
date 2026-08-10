@@ -50,3 +50,43 @@ fn reusable_conditions_resolve_literal_comparisons_and_negated_parenthesized_inp
         ])
     );
 }
+
+#[test]
+fn reusable_conditions_resolve_static_string_functions_across_call_inputs() {
+    let parsed = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/callee.yml\n    with: {label: Release-Candidate}\n",
+            ),
+            document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      label: {type: string, required: true}\njobs:\n  contains-true:\n    if: contains(inputs.label, 'LEASE-CAN')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project contains-true/tsconfig.json\n  starts-true:\n    if: startsWith(inputs.label, 'release')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project starts-true/tsconfig.json\n  ends-true:\n    if: endsWith(inputs.label, 'CANDIDATE')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project ends-true/tsconfig.json\n  contains-false:\n    if: contains(inputs.label, 'nightly')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project contains-false/tsconfig.json\n  starts-false:\n    if: startsWith(inputs.label, 'candidate')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project starts-false/tsconfig.json\n  ends-false:\n    if: endsWith(inputs.label, '.ts')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project ends-false/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "contains-true/tsconfig.json",
+        "starts-true/tsconfig.json",
+        "ends-true/tsconfig.json",
+        "contains-false/tsconfig.json",
+        "starts-false/tsconfig.json",
+        "ends-false/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect::<BTreeSet<_>>();
+    let project_inputs = tracked
+        .iter()
+        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
+        .collect();
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
+        BTreeSet::from([
+            "contains-true/tsconfig.json".to_string(),
+            "ends-true/tsconfig.json".to_string(),
+            "starts-true/tsconfig.json".to_string(),
+        ])
+    );
+}
