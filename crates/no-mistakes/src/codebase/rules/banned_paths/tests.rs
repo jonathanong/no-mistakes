@@ -117,7 +117,7 @@ rules:
       bannedPaths:
         - glob: build/project.patch
 "#,
-        external_root.display()
+        external_root.display().to_string().replace('\'', "''")
     ))
     .unwrap();
     let files = vec![
