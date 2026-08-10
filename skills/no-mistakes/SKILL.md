@@ -233,7 +233,8 @@ The shipped Node declarations expose precise DTOs for `fetches()`, `queues()`,
 `reactAnalyze()`, and `check()` in `packages/no-mistakes/report-types.d.ts`.
 Use those typed report fields instead of treating report collections as
 `unknown[]`; omitted serialized Rust fields are optional and nullable fields are
-represented as `string | null`.
+represented as `string | null`. Check callers can request the additive
+`suppressed` directive-audit collection with `includeSuppressed: true`.
 
 ## Graph Options
 

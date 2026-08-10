@@ -201,6 +201,8 @@ export interface ProjectOptions {
   roots?: string[];
   depth?: number;
   assertNoFetch?: boolean;
+  /** Add deterministic accounting for findings hidden by no-mistakes directives. */
+  includeSuppressed?: boolean;
   direction?: "deps" | "dependents" | "both";
   /** `reactUsages` target component (`path` or `path#Symbol`). */
   target?: string;

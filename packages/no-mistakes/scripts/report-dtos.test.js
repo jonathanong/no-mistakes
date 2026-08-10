@@ -64,6 +64,12 @@ test("Node report declarations name every fixture collection precisely", () => {
   assert.match(declarations, /children: ReactComponentRef\[\];/);
   assert.match(declarations, /inheritedFromChildren\?: ReactAggregatedFacts;/);
   assert.match(declarations, /detail: string \| null;/);
+  assert.match(declarations, /suppressed\?: SuppressedFinding\[\];/);
+  assert.match(
+    declarations,
+    /domain: "react" \| "queues" \| "rules" \| "filesystem" \| "integration" \| "codebase" \| "advisories";/,
+  );
+  assert.match(declarations, /kind: "file" \| "line" \| "nextLine";/);
   assert.match(declarations, /rawJob: string \| null;/);
   assert.match(declarations, /exportedName: string \| null;/);
   assert.doesNotMatch(declarations, /queues: unknown\[\]/);

@@ -49,6 +49,16 @@ const checkReport: CheckReport = {
   codebase: [],
   warnings: [],
   advisories: [],
+  suppressed: [{
+    domain: "advisories",
+    rule: "agents-md-max-size",
+    file: "GUIDANCE.md",
+    reason: "intentional fixture exception",
+    directive: {
+      kind: "nextLine",
+      line: 1,
+    },
+  }],
 };
 
 void fetchReport;

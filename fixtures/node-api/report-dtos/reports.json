@@ -147,6 +147,19 @@
       "message": "duplicate export"
     }],
     "warnings": [],
-    "advisories": []
+    "advisories": [],
+    "suppressed": [
+      {
+        "domain": "advisories",
+        "rule": "agents-md-max-size",
+        "file": "GUIDANCE.md",
+        "line": 1,
+        "reason": "intentional fixture exception",
+        "directive": {
+          "kind": "nextLine",
+          "line": 1
+        }
+      }
+    ]
   }
 }
