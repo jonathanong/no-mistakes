@@ -41,6 +41,22 @@ fn check_json_skips_file_disabled_parse_errors_without_losing_other_dynamic_impo
 }
 
 #[test]
+fn check_json_accounts_for_each_same_line_dynamic_import_suppression() {
+    let (baseline, audit) = baseline_and_audit("aggregate-dynamic-import-same-line");
+    assert!(baseline["rules"].as_array().is_some_and(Vec::is_empty));
+    let suppressed_findings = audit["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| {
+            finding["domain"] == "rules" && finding["rule"] == "test-no-unmocked-dynamic-imports"
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(suppressed_findings.len(), 2, "{audit}");
+    assert_eq!(suppressed_findings[0], suppressed_findings[1]);
+}
+
+#[test]
 fn check_json_reads_explicit_gitignored_test_configs_through_request_sources() {
     let root = static_check_fixture("aggregate-dynamic-import-gitignored-config");
     let output = check_json_impl(json!({ "root": root }).to_string()).unwrap();

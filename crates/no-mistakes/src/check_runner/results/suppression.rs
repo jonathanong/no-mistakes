@@ -77,7 +77,6 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         },
     ));
     suppressed.sort();
-    suppressed.dedup();
     suppressed
 }
 

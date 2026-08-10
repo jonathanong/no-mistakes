@@ -93,6 +93,5 @@ pub fn suppress_domain_findings_with_sources<T>(
         false
     });
     suppressed.sort();
-    suppressed.dedup();
     suppressed
 }
