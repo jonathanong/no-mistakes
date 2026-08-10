@@ -5,7 +5,8 @@
 Deterministic AST-based codebase intelligence for AI agents.
 
 `no-mistakes` answers structural questions about TypeScript, JavaScript,
-React, Next.js, Playwright, queue, server-route, and Rust repository code
+React, Next.js, Playwright, queue, server-route, CI-workflow,
+Terraform/OpenTofu, and Swift code
 without running the application or calling an AI model. It is built for agents
 that need small, reliable answers they can feed into follow-up edits and tests.
 

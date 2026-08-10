@@ -56,9 +56,18 @@ const {
 | `related` | `related(options)` |
 | `symbols` | `symbols(options)` |
 | `import-usages` | `importUsages(options)` |
+| `importers` | `importers(options)` |
+| `exports-of` | `exportsOf(options)` |
+| `dead-exports` | `deadExports(options)` |
+| `call-sites` | `callSites(options)` |
+| `resolve-check` | `resolveCheck(options)` |
 | `fetches` | `fetches(options)` |
 | `flow` | `flow(options)` |
 | `check` | `check(options)` |
+| `data-pw` | `dataPw(options)` |
+| `effects` | `effects(options)` |
+| `rsc-callers` | `rscCallers(options)` |
+| `registry-extension` | `registryExtension(options)` |
 | `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, or `swift` |
 | `tests targets` | `testsTargets(options)` |
 | `tests impact` | `testsImpact(options)` |
@@ -76,6 +85,67 @@ const {
 | `ci env` | `ciEnv(options)` |
 | `ci topology` | `ciTopology(options)` |
 | `impacted-checks` | `impactedChecks(options)` |
+
+The following inventory is the complete runtime export surface. Keeping this
+list exhaustive makes a newly added function visible to agents even when it
+does not have a one-to-one CLI command:
+
+| Runtime export | API |
+| --- | --- |
+| `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
+| `version` | `version()` |
+| `analyzeProject` | `analyzeProject(options)` |
+| `callSites` | `callSites(options)` |
+| `check` | `check(options)` |
+| `ciEnv` | `ciEnv(options)` |
+| `ciImpact` | `ciImpact(options)` |
+| `ciTopology` | `ciTopology(options)` |
+| `dataPw` | `dataPw(options)` |
+| `deadExports` | `deadExports(options)` |
+| `dependencies` | `dependencies(options)` |
+| `dependents` | `dependents(options)` |
+| `effects` | `effects(options)` |
+| `exportsOf` | `exportsOf(options)` |
+| `fetches` | `fetches(options)` |
+| `flow` | `flow(options)` |
+| `impactedChecks` | `impactedChecks(options)` |
+| `importUsages` | `importUsages(options)` |
+| `importers` | `importers(options)` |
+| `infraOutputs` | `infraOutputs(options)` |
+| `infraResourceRefs` | `infraResourceRefs(options)` |
+| `infraTestFor` | `infraTestFor(options)` |
+| `lockfileDiff` | `lockfileDiff(options)` |
+| `validateMermaidMarkdown` | `validateMermaidMarkdown(options)` |
+| `playwrightCheck` | `playwrightCheck(options)` |
+| `playwrightEdges` | `playwrightEdges(options)` |
+| `playwrightRelated` | `playwrightRelated(options)` |
+| `playwrightTests` | `playwrightTests(options)` |
+| `reactAnalyze` | `reactAnalyze(options)` |
+| `reactCheck` | `reactCheck(options)` |
+| `reactUsages` | `reactUsages(options)` |
+| `registryExtension` | `registryExtension(options)` |
+| `related` | `related(options)` |
+| `resolveCheck` | `resolveCheck(options)` |
+| `rscCallers` | `rscCallers(options)` |
+| `swiftImporters` | `swiftImporters(options)` |
+| `swiftTestTargets` | `swiftTestTargets(options)` |
+| `symbols` | `symbols(options)` |
+| `testsComment` | `testsComment(options)` |
+| `testsGraphMermaid` | `testsGraphMermaid(options)` |
+| `queueCheck` | `queueCheck(options)` |
+| `queueEdges` | `queueEdges(options)` |
+| `queueRelated` | `queueRelated(options)` |
+| `queues` | `queues(options)` |
+| `serverContracts` | `serverContracts(options)` |
+| `serverRouteEdges` | `serverRouteEdges(options)` |
+| `serverRouteList` | `serverRouteList(options)` |
+| `serverRouteRelated` | `serverRouteRelated(options)` |
+| `serverRoutes` | `serverRoutes(options)` |
+| `testsGraph` | `testsGraph(options)` |
+| `testsImpact` | `testsImpact(options)` |
+| `testsPlan` | `testsPlan(options)` |
+| `testsTargets` | `testsTargets(options)` |
+| `testsWhy` | `testsWhy(options)` |
 
 `testsTargets()` and test-plan targets set `workspace: true` when a Vitest
 workspace/project-array source must be passed with `--workspace`; the emitted

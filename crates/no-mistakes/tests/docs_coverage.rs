@@ -1,6 +1,13 @@
 use no_mistakes::codebase::{rules, unique_exports};
 use no_mistakes::playwright::rules as playwright_rules;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+#[path = "support/docs_coverage_cli_helpers.rs"]
+mod cli_docs_helpers;
+use cli_docs_helpers::{
+    enum_block, enum_variants, kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
+};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -10,74 +17,206 @@ fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|err| panic!("{}: {err}", path.display()))
 }
 
-fn joined_docs(dir: &Path) -> String {
-    let mut body = String::new();
-    let mut paths = std::fs::read_dir(dir)
-        .unwrap()
-        .map(|entry| entry.unwrap().path())
-        .collect::<Vec<_>>();
-    paths.sort();
-    for path in paths {
-        if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
-            body.push_str(&read(&path));
-            body.push('\n');
+#[test]
+fn cli_commands_have_docs() {
+    let root = repo_root();
+    let cli_dir = root.join("docs/cli");
+    let index = read(&cli_dir.join("README.md"));
+    let source_dir = root.join("crates/no-mistakes/src");
+
+    // Inventory every clap subcommand field from source. This includes the
+    // top-level `Command` enum and nested enums such as `TestsCommand`; a
+    // guard that only knows about main.rs can silently lose `tests plan` and
+    // other leaf pages when a command is added or its page is deleted.
+    let mut inventories = Vec::new();
+    for source_path in rust_sources(&source_dir) {
+        let source = read(&source_path);
+        for (parent, enum_name) in subcommand_enums(&source) {
+            let block = enum_block(&source, &enum_name).unwrap_or_else(|| {
+                panic!(
+                    "{}: clap subcommand type `{enum_name}` must have an enum body",
+                    source_path.display()
+                )
+            });
+            assert!(
+                !block.lines().any(|line| line.contains("name =")),
+                "{}: a clap command name override needs an explicit docs-coverage mapping",
+                source_path.display()
+            );
+            let variants = enum_variants(block);
+            assert!(
+                !variants.is_empty(),
+                "{}: {enum_name} command inventory must not be empty",
+                source_path.display()
+            );
+            inventories.push((parent, variants));
         }
     }
-    body
+    assert!(
+        !inventories.is_empty(),
+        "source inventory must find at least one clap subcommand enum"
+    );
+
+    for (parent, variants) in inventories {
+        let Some(prefix) = parent.strip_suffix("Args").map(kebab_case) else {
+            // `Cli` is the one top-level parser struct; its command pages are
+            // rooted directly at docs/cli and have no group prefix.
+            assert_eq!(parent, "Cli", "unexpected clap parser struct `{parent}`");
+            for variant in variants {
+                assert_cli_page(&cli_dir, &index, &variant, None, 1);
+            }
+            continue;
+        };
+
+        let group_file = format!("{prefix}.md");
+        let group_path = cli_dir.join(&group_file);
+        assert!(
+            group_path.exists(),
+            "missing CLI group doc {}",
+            group_path.display()
+        );
+        assert!(
+            index.contains(&format!("({group_file})")),
+            "docs/cli/README.md must index {group_file}"
+        );
+
+        let variant_count = variants.len();
+        for variant in variants {
+            assert_cli_page(
+                &cli_dir,
+                &read(&group_path),
+                &variant,
+                Some(&prefix),
+                variant_count,
+            );
+        }
+    }
+
+    // Every leaf page must be reachable from the CLI index or its command
+    // group page. Follow only links rooted under docs/cli so an orphan page
+    // cannot make itself appear reachable by containing its own filename.
+    let linked_pages = reachable_cli_pages(&cli_dir);
+    for entry in std::fs::read_dir(root.join("docs/cli")).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().and_then(|ext| ext.to_str()) != Some("md")
+            || path.file_name().and_then(|name| name.to_str()) == Some("README.md")
+        {
+            continue;
+        }
+        let file = path.file_name().unwrap().to_string_lossy();
+        assert!(
+            linked_pages.contains(file.as_ref()),
+            "CLI page {file} is not linked by a CLI index or command group"
+        );
+    }
+}
+
+fn assert_cli_page(
+    cli_dir: &Path,
+    parent_body: &str,
+    variant: &str,
+    prefix: Option<&str>,
+    variant_count: usize,
+) {
+    let variant = kebab_case(variant);
+    let (file, indexed_by_parent) = match prefix {
+        Some(prefix) => {
+            let leaf_file = format!("{prefix}-{variant}.md");
+            let leaf_path = cli_dir.join(&leaf_file);
+            if leaf_path.exists() {
+                (leaf_file, true)
+            } else {
+                // A one-command group may document its only leaf directly on
+                // the group page (currently `lockfile diff`). If a second
+                // variant is added, the caller's per-variant lookup will no
+                // longer permit this fallback without a dedicated leaf page.
+                let group_file = format!("{prefix}.md");
+                assert_cli_group_has_one_leaf(parent_body, prefix, &group_file, variant_count);
+                (group_file, false)
+            }
+        }
+        None => (format!("{variant}.md"), true),
+    };
+    let path = cli_dir.join(&file);
+    assert!(path.exists(), "missing CLI doc {}", path.display());
+    if indexed_by_parent {
+        assert!(
+            parent_body.contains(&format!("({file})")),
+            "CLI group doc must index {file}"
+        );
+    }
+}
+
+fn assert_cli_group_has_one_leaf(
+    parent_body: &str,
+    prefix: &str,
+    group_file: &str,
+    variant_count: usize,
+) {
+    assert_eq!(
+        variant_count, 1,
+        "{group_file} has multiple subcommands; every leaf needs a dedicated CLI page"
+    );
+    let linked_children = parent_body
+        .lines()
+        .filter_map(|line| {
+            let target = line.split_once("](")?.1.split_once(')')?.0;
+            Some(target.to_string())
+        })
+        .filter(|target| target.ends_with(".md") && target.starts_with(&format!("{prefix}-")))
+        .count();
+    assert_eq!(
+        linked_children, 0,
+        "{group_file} has linked leaf pages; missing {prefix}-<command>.md must be fixed explicitly"
+    );
 }
 
 #[test]
-fn cli_leaf_commands_have_docs() {
+fn node_runtime_exports_have_api_docs() {
     let root = repo_root();
-    let cli_docs = joined_docs(&root.join("docs/cli"));
-    let commands = [
-        "dependencies",
-        "dependents",
-        "related",
-        "symbols",
-        "importers",
-        "exports-of",
-        "dead-exports",
-        "call-sites",
-        "resolve-check",
-        "fetches",
-        "flow",
-        "check",
-        "tests-plan",
-        "tests-targets",
-        "tests-impact",
-        "tests-why",
-        "tests-comment",
-        "tests-graph",
-        "playwright-check",
-        "playwright-edges",
-        "playwright-related",
-        "playwright-tests",
-        "react-analyze",
-        "react-check",
-        "react-usages",
-        "queues-edges",
-        "queues-related",
-        "queues-check",
-        "server-routes",
-        "server-edges",
-        "server-related",
-        "server-contracts",
-        "ci-impact",
-        "ci-env",
-        "ci-topology",
-        "impacted-checks",
-        "infra-resource-refs",
-        "infra-outputs",
-        "infra-test-for",
-        "swift-importers",
-        "swift-test-targets",
-    ];
-    for command in commands {
-        let file = format!("{command}.md");
-        let path = root.join("docs/cli").join(&file);
-        assert!(path.exists(), "missing CLI doc {}", path.display());
-        assert!(cli_docs.contains(&file), "docs/cli/*.md must link {file}");
+    let source = read(&root.join("packages/no-mistakes/index.js"));
+    let docs = read(&root.join("docs/node-api.md"));
+    let exports = source
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("module.exports."))
+        .filter_map(|assignment| assignment.split_once(' ').map(|(name, _)| name))
+        .collect::<Vec<_>>();
+    assert!(
+        !exports.is_empty(),
+        "runtime export inventory must not be empty"
+    );
+    let runtime_inventory = docs
+        .split_once("| Runtime export | API |\n")
+        .and_then(|(_, rest)| rest.split_once("\n\n").map(|(table, _)| table))
+        .expect("docs/node-api.md must contain a complete runtime export inventory table");
+    let source_exports = exports.iter().copied().collect::<BTreeSet<_>>();
+    let documented_rows = runtime_inventory
+        .lines()
+        .filter_map(|line| {
+            line.strip_prefix("| `")?
+                .split_once("` |")
+                .map(|(name, api)| (name, api.trim().trim_end_matches('|').trim()))
+        })
+        .collect::<Vec<_>>();
+    for (export, api) in &documented_rows {
+        assert!(
+            !api.is_empty(),
+            "runtime export `{export}` needs an API mapping"
+        );
+    }
+    let documented_exports = documented_rows
+        .iter()
+        .map(|(name, _)| *name)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        documented_exports, source_exports,
+        "runtime export inventory must exactly match packages/no-mistakes/index.js"
+    );
+    for export in source_exports {
+        assert!(
+            runtime_inventory.contains(&format!("| `{export}` |")),
+            "docs/node-api.md must map runtime export `{export}`"
+        );
     }
 }
 

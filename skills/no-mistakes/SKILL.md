@@ -170,6 +170,19 @@ no-mistakes symbols src/api.mts --include both --format json
 no-mistakes import-usages --root . --filter 'src/**' --format json
 no-mistakes symbols src/api.mts --mode signature-impact --symbol handler --format json
 
+# Reuse one prepared analysis for related reports
+node --input-type=module - <<'NODE'
+import { analyzeProject } from "no-mistakes";
+const report = await analyzeProject({
+  root: process.cwd(),
+  reports: [
+    { type: "dependencies", files: ["src/api.mts"] },
+    { type: "symbols", files: ["src/api.mts"], include: "both" },
+  ],
+});
+console.log(report);
+NODE
+
 # Playwright coverage gate before finishing Next.js / Playwright work
 no-mistakes playwright check --json
 no-mistakes playwright related web/app/users/page.tsx --json
@@ -228,7 +241,7 @@ reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
 - `--test vitest|playwright|cargo|dotnet|swift` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|all`.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
   `--verbose-timings` (stderr), and `--jobs`.
@@ -263,7 +276,9 @@ member usage.
 
 ## Hard Limits
 
-- `baseUrl`-only imports are not resolved; use `compilerOptions.paths`.
+- `baseUrl`-only imports are resolved when `compilerOptions.baseUrl` is set.
+  Prefer `compilerOptions.paths` for explicit aliases, especially when an
+  alias should be shared across workspace packages.
 - Dynamic `import()` and `require()` are tracked only with literals.
 - `route-import` is deliberately conservative: it includes runtime static
   imports/re-exports and literal dynamic imports inside functions, but excludes
