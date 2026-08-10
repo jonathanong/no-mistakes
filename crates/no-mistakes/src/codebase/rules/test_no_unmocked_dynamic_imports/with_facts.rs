@@ -61,6 +61,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
     shared: &CheckFactMap,
     graph: &DepGraph,
     session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let files = shared.files().to_vec();
     let visible_files = files.iter().cloned().collect::<HashSet<_>>();
@@ -102,7 +103,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                     let Some(source) = file_facts.source.as_deref() else {
                         anyhow::bail!("missing source facts for {}", file.display());
                     };
-                    if has_disable_file_comment(source, RULE_ID) {
+                    if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
                         return Ok(PerTestResult {
                             direct_findings: Vec::new(),
                             reachable_findings: Vec::new(),
@@ -144,12 +145,14 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                             findings: &mut local_findings,
                         };
                         for import in &facts.dynamic_imports {
-                            if !has_disable_comment(source, import.line as u32, RULE_ID) {
+                            if defer_suppression
+                                || !has_disable_comment(source, import.line as u32, RULE_ID)
+                            {
                                 check_dynamic_import(&mut check_context, import.clone());
                             }
                         }
                     }
-                    let reachable = reachable::collect(
+                    let reachable = reachable::collect_with_deferred_suppression(
                         reachable::ReachableContext {
                             root,
                             config,
@@ -163,6 +166,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                         &file,
                         &mocks,
                         &dependency_cache,
+                        defer_suppression,
                     )?;
                     Ok(PerTestResult {
                         direct_findings: local_findings,

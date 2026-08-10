@@ -20,6 +20,7 @@ pub const RULE_ID: &str = "server-route-client-boundary";
 pub(crate) struct FileFacts {
     has_server_route_shape: bool,
     client_call_lines: Vec<usize>,
+    disabled: bool,
 }
 
 pub(crate) fn extract_program(
@@ -29,11 +30,8 @@ pub(crate) fn extract_program(
 ) -> FileFacts {
     FileFacts {
         has_server_route_shape: ast::has_server_like_route_call_from_program(path, source, program),
-        client_call_lines: if has_disable_file_comment(source, RULE_ID) {
-            Vec::new()
-        } else {
-            ast::client_call_lines_from_program(source, program)
-        },
+        client_call_lines: ast::client_call_lines_from_program(source, program),
+        disabled: has_disable_file_comment(source, RULE_ID),
     }
 }
 
@@ -59,7 +57,7 @@ pub(crate) fn check_with_facts(
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, None)
+    check_with_optional_inferred(root, config, shared, None, false)
 }
 
 pub(crate) fn check_with_facts_and_inferred(
@@ -68,7 +66,17 @@ pub(crate) fn check_with_facts_and_inferred(
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: &crate::codebase::config::InferredRoots,
 ) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, Some(inferred_roots))
+    check_with_optional_inferred(root, config, shared, Some(inferred_roots), false)
+}
+
+pub(crate) fn check_with_facts_for_aggregate(
+    root: &Path,
+    config: &NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
+    check_with_optional_inferred(root, config, shared, inferred_roots, defer_suppression)
 }
 
 fn check_with_optional_inferred(
@@ -76,6 +84,7 @@ fn check_with_optional_inferred(
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut facts = Vec::new();
@@ -95,6 +104,7 @@ fn check_with_optional_inferred(
         |item| item.path,
         |item| item.facts,
         inferred_roots,
+        defer_suppression,
     )
 }
 
@@ -105,6 +115,7 @@ pub(super) fn check_items<T>(
     path_for: impl Fn(&T) -> &Path + Sync,
     facts_for: impl Fn(&T) -> &FileFacts + Sync,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>>
 where
     T: Sync,
@@ -153,6 +164,9 @@ where
                 })
                 .flat_map(|item| {
                     let path = path_for(item);
+                    if !defer_suppression && facts_for(item).disabled {
+                        return Vec::new();
+                    }
                     client_findings_for_file(root, path, facts_for(item))
                 })
                 .collect::<Vec<_>>(),

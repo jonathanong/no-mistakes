@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
     let sources = crate::codebase::rules::source_store_for_files(files);
-    scan_with_sources(root, opts, files, &sources)
+    scan_with_sources(root, opts, files, &sources, false)
 }
 
 pub(super) fn scan_with_sources(
@@ -15,6 +15,7 @@ pub(super) fn scan_with_sources(
     opts: &Options,
     files: &[PathBuf],
     sources: &SourceStore,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let max_lines = opts.max_lines.unwrap_or(DEFAULT_MAX_LINES);
     let max_chars = opts.max_chars.unwrap_or(DEFAULT_MAX_CHARS);
@@ -24,7 +25,14 @@ pub(super) fn scan_with_sources(
             let Some(content) = crate::codebase::rules::read_source(sources, path) else {
                 return Vec::new();
             };
-            check_content(path, root, max_lines, max_chars, &content)
+            check_content_with_deferred_suppression(
+                path,
+                root,
+                max_lines,
+                max_chars,
+                &content,
+                defer_suppression,
+            )
         })
         .collect();
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
@@ -57,7 +65,18 @@ pub(super) fn check_content(
     max_chars: usize,
     content: &str,
 ) -> Vec<RuleFinding> {
-    if has_disable_file_comment(content, RULE_ID) {
+    check_content_with_deferred_suppression(path, root, max_lines, max_chars, content, false)
+}
+
+fn check_content_with_deferred_suppression(
+    path: &Path,
+    root: &Path,
+    max_lines: usize,
+    max_chars: usize,
+    content: &str,
+    defer_suppression: bool,
+) -> Vec<RuleFinding> {
+    if !defer_suppression && has_disable_file_comment(content, RULE_ID) {
         return Vec::new();
     }
     let file = relative_slash_path(root, path);

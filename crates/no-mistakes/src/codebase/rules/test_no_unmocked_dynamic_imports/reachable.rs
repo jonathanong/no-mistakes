@@ -33,6 +33,16 @@ pub(super) fn collect(
     mocks: &HashSet<PathBuf>,
     dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
 ) -> Result<ReachableResult> {
+    collect_with_deferred_suppression(ctx, test_file, mocks, dependency_cache, false)
+}
+
+pub(super) fn collect_with_deferred_suppression(
+    ctx: ReachableContext<'_>,
+    test_file: &Path,
+    mocks: &HashSet<PathBuf>,
+    dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
+    defer_suppression: bool,
+) -> Result<ReachableResult> {
     let test_reachable = dependency_cache
         .entry(test_file.to_path_buf())
         .or_insert_with(|| {
@@ -74,7 +84,7 @@ pub(super) fn collect(
                 file_facts.source.as_deref(),
                 file_facts.dynamic_imports.as_ref(),
             ) {
-                if has_disable_file_comment(source, RULE_ID) {
+                if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
                     continue;
                 }
                 let mut local_findings = Vec::new();
@@ -90,7 +100,9 @@ pub(super) fn collect(
                     findings: &mut local_findings,
                 };
                 for import in &facts.dynamic_imports {
-                    if !has_disable_comment(source, import.line as u32, RULE_ID) {
+                    if defer_suppression
+                        || !has_disable_comment(source, import.line as u32, RULE_ID)
+                    {
                         collect_outcome(
                             &mut result,
                             evaluate_dynamic_import(&check_context, import.clone()),
@@ -101,7 +113,7 @@ pub(super) fn collect(
             }
         }
         let cached = get_or_cache_file(file, ctx.file_cache)?;
-        if has_disable_file_comment(&cached.source, RULE_ID) {
+        if !defer_suppression && has_disable_file_comment(&cached.source, RULE_ID) {
             continue;
         }
         let mut local_findings = Vec::new();
@@ -117,7 +129,9 @@ pub(super) fn collect(
             findings: &mut local_findings,
         };
         for import in &cached.dynamic_imports {
-            if has_disable_comment(&cached.source, import.line as u32, RULE_ID) {
+            if !defer_suppression
+                && has_disable_comment(&cached.source, import.line as u32, RULE_ID)
+            {
                 continue;
             }
             collect_outcome(

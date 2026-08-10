@@ -9,7 +9,7 @@ pub(crate) fn check_with_facts(
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, None)
+    check_with_optional_inferred(root, config, shared, None, false)
 }
 
 pub(crate) fn check_with_facts_and_inferred(
@@ -18,7 +18,17 @@ pub(crate) fn check_with_facts_and_inferred(
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: &crate::codebase::config::InferredRoots,
 ) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, Some(inferred_roots))
+    check_with_optional_inferred(root, config, shared, Some(inferred_roots), false)
+}
+
+pub(crate) fn check_with_facts_for_aggregate(
+    root: &Path,
+    config: &NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
+    check_with_optional_inferred(root, config, shared, inferred_roots, defer_suppression)
 }
 
 fn check_with_optional_inferred(
@@ -26,6 +36,7 @@ fn check_with_optional_inferred(
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let target_roots = target_roots(&root, config, inferred_roots);
@@ -55,6 +66,7 @@ fn check_with_optional_inferred(
         |item| item.path,
         |item| item.source,
         inferred_roots,
+        defer_suppression,
     )
 }
 
@@ -98,6 +110,7 @@ pub(super) fn check_files(
         |item| item.path.as_path(),
         |item| item.source.as_ref(),
         None,
+        false,
     )
 }
 
@@ -108,6 +121,7 @@ fn check_items<T>(
     path_for: impl Fn(&T) -> &Path + Sync,
     source_for: impl Fn(&T) -> &str + Sync,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>>
 where
     T: Sync,
@@ -135,7 +149,9 @@ where
                     let source = source_for(item);
                     filter
                         .is_match(path)
-                        .then(|| finding_for_file(root, &target_roots, path, source))
+                        .then(|| {
+                            finding_for_file(root, &target_roots, path, source, defer_suppression)
+                        })
                         .flatten()
                 })
                 .collect::<Vec<_>>(),

@@ -36,5 +36,6 @@ pub(crate) fn check_with_prepared_facts_and_session(
         shared,
         &graph,
         session,
+        false,
     )
 }

@@ -92,44 +92,39 @@ pub(super) fn run(
                     shared,
                     dependency_graph.expect("dynamic-import rule requires canonical graph"),
                     &session,
+                    defer_suppression,
                 )
             },
         )?);
     }
     if rule_enabled(config, SERVER_ROUTE_CLIENT_BOUNDARY) {
-        let boundary_findings = match inferred_roots {
-            Some(inferred_roots) => server_route_client_boundary::check_with_facts_and_inferred(
-                root,
-                config,
-                shared,
-                inferred_roots,
-            ),
-            None => server_route_client_boundary::check_with_facts(root, config, shared),
-        }?;
+        let boundary_findings = server_route_client_boundary::check_with_facts_for_aggregate(
+            root,
+            config,
+            shared,
+            inferred_roots,
+            defer_suppression,
+        )?;
         findings.extend(boundary_findings);
     }
     if rule_enabled(config, NEXTJS_NO_API_ROUTES) {
-        let api_route_findings = match inferred_roots {
-            Some(inferred_roots) => nextjs_no_api_routes::check_with_facts_and_inferred(
-                root,
-                config,
-                shared,
-                inferred_roots,
-            ),
-            None => nextjs_no_api_routes::check_with_facts(root, config, shared),
-        }?;
+        let api_route_findings = nextjs_no_api_routes::check_with_facts_for_aggregate(
+            root,
+            config,
+            shared,
+            inferred_roots,
+            defer_suppression,
+        )?;
         findings.extend(api_route_findings);
     }
     if rule_enabled(config, NEXTJS_NO_CACHING) {
-        findings.extend(match inferred_roots {
-            Some(inferred_roots) => nextjs_no_caching::check_with_facts_and_inferred(
-                root,
-                config,
-                shared,
-                inferred_roots,
-            ),
-            None => nextjs_no_caching::check_with_facts(root, config, shared),
-        }?);
+        findings.extend(nextjs_no_caching::check_with_facts_for_aggregate(
+            root,
+            config,
+            shared,
+            inferred_roots,
+            defer_suppression,
+        )?);
     }
     if rule_enabled(config, REQUIRE_STORYBOOK_STORIES) {
         findings.extend(storybook_findings(
