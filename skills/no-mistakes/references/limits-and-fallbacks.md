@@ -9,7 +9,7 @@ These patterns need extra care when using the module-graph tools. When you hit a
 candidates. Prefer `paths` for explicit aliases, especially when an alias is
 shared across workspace packages.
 
-```json
+```jsonc
 {
   "compilerOptions": {
     "baseUrl": "./src"
