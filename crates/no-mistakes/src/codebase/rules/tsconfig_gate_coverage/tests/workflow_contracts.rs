@@ -38,9 +38,34 @@ fn skipped_local_calls_still_require_valid_contracts() {
             ".github/workflows/backslash.yml",
             "on: push\njobs:\n  invalid-call:\n    uses: './.github/workflows/subdir\\..\\callee.yml'\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project backslash/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/invalid-remote.yml",
+            "on: push\njobs:\n  invalid-call:\n    uses: owner/repo/.github/workflows/checks.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-remote/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-remote.yml",
+            "on: push\njobs:\n  opaque-call:\n    uses: owner/repo/.github/workflows/checks.yml@main\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid-remote/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/empty-ref.yml",
+            "on: push\njobs:\n  invalid-call:\n    uses: owner/repo/.github/workflows/checks.yml@\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project empty-ref/tsconfig.json\n",
+        ),
     ];
 
-    assert!(scanned(documents, &["sibling", "noncanonical", "backslash"]).is_empty());
+    assert_eq!(
+        scanned(
+            documents,
+            &[
+                "sibling",
+                "noncanonical",
+                "backslash",
+                "invalid-remote",
+                "empty-ref",
+                "valid-remote"
+            ]
+        ),
+        BTreeSet::from(["valid-remote/tsconfig.json".to_string()])
+    );
 }
 
 #[test]
@@ -140,7 +165,7 @@ fn malformed_contract_containers_and_empty_matrices_earn_no_credit() {
         ),
         workflow(
             ".github/workflows/malformed-callee.yml",
-            "on:\n  workflow_call:\n    secrets: invalid\njobs: {}\n",
+            "on:\n  workflow_call:\n    input: {}\njobs: {}\n",
         ),
         workflow(
             ".github/workflows/caller.yml",

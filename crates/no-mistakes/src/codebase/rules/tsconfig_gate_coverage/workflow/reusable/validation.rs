@@ -10,6 +10,36 @@ pub(super) fn canonical_local_call_target(target: &str) -> bool {
         })
 }
 
+pub(super) fn canonical_remote_call_target(target: &str) -> bool {
+    let Some((path, reference)) = target.rsplit_once('@') else {
+        return false;
+    };
+    if reference.is_empty() || path.contains('@') {
+        return false;
+    }
+    let mut segments = path.split('/');
+    let valid = matches!(
+        (
+            segments.next(),
+            segments.next(),
+            segments.next(),
+            segments.next(),
+            segments.next(),
+        ),
+        (Some(owner), Some(repository), Some(".github"), Some("workflows"), Some(filename))
+            if !owner.is_empty()
+                && !repository.is_empty()
+                && canonical_workflow_filename(filename)
+    );
+    valid && segments.next().is_none()
+}
+
+fn canonical_workflow_filename(filename: &str) -> bool {
+    !filename.is_empty()
+        && !filename.contains(['/', '\\'])
+        && (filename.ends_with(".yml") || filename.ends_with(".yaml"))
+}
+
 pub(super) fn reusable_call_job_shape_valid(job: &Value) -> bool {
     job.as_mapping().is_some_and(|mapping| {
         mapping.keys().all(|key| {
@@ -38,13 +68,16 @@ pub(super) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
     let Value::Mapping(contract) = contract else {
         return matches!(contract, Value::Null);
     };
-    ["inputs", "secrets", "outputs"].into_iter().all(|field| {
-        contract.get(field).is_none_or(|declarations| {
-            declarations
-                .as_mapping()
-                .is_some_and(|mapping| mapping.values().all(|declaration| declaration.is_mapping()))
+    contract
+        .keys()
+        .all(|key| matches!(key.as_str(), Some("inputs" | "secrets" | "outputs")))
+        && ["inputs", "secrets", "outputs"].into_iter().all(|field| {
+            contract.get(field).is_none_or(|declarations| {
+                declarations.as_mapping().is_some_and(|mapping| {
+                    mapping.values().all(|declaration| declaration.is_mapping())
+                })
+            })
         })
-    })
 }
 
 pub(super) fn zero_instance_matrix(job: &Value) -> bool {

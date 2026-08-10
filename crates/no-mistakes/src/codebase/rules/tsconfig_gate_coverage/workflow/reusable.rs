@@ -5,32 +5,22 @@ use super::conditions::{
 use super::runtime::{effective_shell, has_static_runnable_runs_on};
 use super::{effective_working_directory, ParsedWorkflowSet};
 use crate::codebase::ci_graph::{parse::parse_workflow_value, triggers::CompiledTriggers};
-use crate::codebase::workflow_topology::{model::WorkflowCallContract, workflow_values};
+use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 
+mod model;
 mod steps;
 mod validation;
 
+use model::{ActivationKey, ActivationMemo, ScanContext, WorkflowDocument};
 use steps::scan_job_steps;
 use validation::{
-    canonical_local_call_target, reusable_call_job_shape_valid, workflow_call_shape_valid,
-    zero_instance_matrix,
+    canonical_local_call_target, canonical_remote_call_target, reusable_call_job_shape_valid,
+    workflow_call_shape_valid, zero_instance_matrix,
 };
-
-struct WorkflowDocument<'a> {
-    value: &'a Value,
-    call_contract: Option<WorkflowCallContract>,
-    call_contract_shape_valid: bool,
-}
-
-struct ScanContext<'a> {
-    workflows: BTreeMap<String, WorkflowDocument<'a>>,
-    tracked: &'a BTreeSet<String>,
-    project_source_inputs: &'a ProjectSourceInputs,
-}
 
 pub(super) fn collect_ci_projects(
     parsed: &ParsedWorkflowSet,
@@ -67,6 +57,7 @@ pub(super) fn collect_ci_projects(
             continue;
         }
         let triggers = CompiledTriggers::new(&trigger_model);
+        let mut memo = ActivationMemo::new();
         let Some(inputs) = direct_inputs(document.call_contract.as_ref()) else {
             continue;
         };
@@ -76,8 +67,8 @@ pub(super) fn collect_ci_projects(
             &triggers,
             &inputs,
             &BTreeSet::new(),
-            1,
             &context,
+            &mut memo,
         ) {
             projects.extend(activation_projects);
         }
@@ -91,14 +82,45 @@ fn scan_activation(
     triggers: &CompiledTriggers,
     inputs: &InputState,
     active_paths: &BTreeSet<String>,
-    depth: usize,
     context: &ScanContext<'_>,
+    memo: &mut ActivationMemo,
 ) -> Option<BTreeSet<String>> {
     if active_paths.contains(path) {
         return None;
     }
+    let key = ActivationKey {
+        path: path.to_string(),
+        inputs: inputs.clone(),
+        active_paths: active_paths.clone(),
+    };
+    if let Some(result) = memo.get(&key) {
+        return result.clone();
+    }
+    let result = scan_activation_uncached(
+        path,
+        document,
+        triggers,
+        inputs,
+        active_paths,
+        context,
+        memo,
+    );
+    memo.insert(key, result.clone());
+    result
+}
+
+fn scan_activation_uncached(
+    path: &str,
+    document: &WorkflowDocument<'_>,
+    triggers: &CompiledTriggers,
+    inputs: &InputState,
+    active_paths: &BTreeSet<String>,
+    context: &ScanContext<'_>,
+    memo: &mut ActivationMemo,
+) -> Option<BTreeSet<String>> {
     let mut active_paths = active_paths.clone();
     active_paths.insert(path.to_string());
+    let depth = active_paths.len();
     let workflow_cwd = effective_working_directory(document.value, Some(".".to_string()));
     let workflow_shell = effective_shell(document.value, None);
     let Some(jobs) = document.value.get("jobs").and_then(Value::as_mapping) else {
@@ -136,10 +158,13 @@ fn scan_activation(
                     triggers,
                     &callee_inputs,
                     &active_paths,
-                    depth + 1,
                     context,
+                    memo,
                 )?)
             } else {
+                if !canonical_remote_call_target(target) {
+                    return None;
+                }
                 None
             }
         } else {
@@ -147,7 +172,7 @@ fn scan_activation(
         };
         if job_id
             .as_str()
-            .is_some_and(|job_id| skipped_jobs.contains(job_id))
+            .is_some_and(|job_id| skipped_jobs.contains(&job_id.to_lowercase()))
             || statically_not_enforcing(job, inputs)
             || zero_instance_matrix(job)
         {

@@ -32,8 +32,8 @@ pub(super) fn statically_skipped_jobs(
                     job.get("needs"),
                 )
                 .iter()
-                .any(|need| skipped.contains(need));
-            if (directly_disabled || blocked_by_need) && skipped.insert(job_id.to_string()) {
+                .any(|need| skipped.contains(&need.to_lowercase()));
+            if (directly_disabled || blocked_by_need) && skipped.insert(job_id.to_lowercase()) {
                 changed = true;
             }
         }
