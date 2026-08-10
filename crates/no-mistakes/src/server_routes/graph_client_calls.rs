@@ -10,14 +10,19 @@ fn client_call_relationships(
         .iter()
         .flat_map(|(path, file_facts)| {
             file_facts.route_refs.iter().flat_map(move |reference| {
-                routes.iter().filter_map(move |route| {
-                    crate::codebase::ts_routes::matcher::matches(&reference.pattern, &route.route)
-                        .then(|| RelationshipEdge {
+                routes
+                    .iter()
+                    .filter(move |route| {
+                        crate::codebase::ts_routes::matcher::matches(
+                            &reference.pattern,
+                            &route.route,
+                        )
+                    })
+                    .map(move |route| RelationshipEdge {
                             from: RelationshipNode::File(path.clone()),
                             to: RelationshipNode::Route(route.route.clone()),
                             kind: EdgeKind::ClientCall,
                         })
-                })
             })
         })
         .collect()
