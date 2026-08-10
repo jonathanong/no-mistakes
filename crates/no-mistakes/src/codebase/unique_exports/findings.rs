@@ -1,7 +1,9 @@
-use super::types::{ExportBucket, ExportOccurrence, UniqueExportFinding, UniqueExportsOptions};
+use super::types::{
+    ExportBucket, ExportOccurrence, ExportOrigin, UniqueExportFinding, UniqueExportsOptions,
+};
 use super::RULE_ID;
 use anyhow::Result;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 pub(super) fn unique_export_findings(
     occurrences: Vec<ExportOccurrence>,
@@ -23,18 +25,25 @@ pub(super) fn unique_export_findings(
     let mut findings = Vec::new();
     for ((name, bucket), mut occurrences) in buckets {
         occurrences.sort_by(|a, b| (&a.file, a.line, &a.kind).cmp(&(&b.file, b.line, &b.kind)));
-        let mut origins = BTreeSet::new();
-        let unique_occurrences = occurrences
-            .into_iter()
-            .filter(|occurrence| origins.insert(occurrence.origin.clone()))
-            .collect::<Vec<_>>();
+        let mut unique_occurrences: Vec<ExportOccurrence> = Vec::new();
+        let mut origin_indices: BTreeMap<ExportOrigin, usize> = BTreeMap::new();
+        for occurrence in occurrences {
+            let origin = occurrence.origin.clone();
+            if let Some(index) = origin_indices.get(&origin).copied() {
+                if unique_occurrences[index].suppressed && !occurrence.suppressed {
+                    unique_occurrences[index] = occurrence;
+                }
+            } else {
+                let index = unique_occurrences.len();
+                origin_indices.insert(origin, index);
+                unique_occurrences.push(occurrence);
+            }
+        }
         if unique_occurrences.len() < 2 {
             continue;
         }
         // In aggregate mode preserve standalone semantics: a suppressed
         // occurrence must not turn an unsuppressed export into a duplicate.
-        // Still emit the suppressed occurrence so finalization can account for
-        // its directive.
         let first = unique_occurrences
             .iter()
             .find(|occurrence| !occurrence.suppressed)

@@ -255,7 +255,18 @@ fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     // Keep per-rule variant selection out of the aggregate coordinator so its
     // complexity remains bounded as additional rules are introduced.
     assert!(execution.contains("mod helpers;"));
-    assert!(execution.contains("use helpers::{storybook_findings, suppress_findings};"));
+    // Keep this structural: the helper request type may grow with prepared
+    // inputs without invalidating the coordinator ownership assertion.
+    for symbol in [
+        "storybook_findings",
+        "suppress_findings",
+        "StorybookFindingsRequest",
+    ] {
+        assert!(
+            execution.contains(symbol),
+            "expanded helper import must include {symbol}"
+        );
+    }
     assert!(helpers.contains("pub(super) fn storybook_findings("));
     assert!(helpers.contains("check_with_prepared_facts_for_aggregate"));
     assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);

@@ -109,6 +109,37 @@ fn run_check_with_facts_executes_valid_shared_facts() {
 }
 
 #[test]
+fn dynamic_import_check_uses_authoritative_source_fact_for_suppression() {
+    let root = dynamic_import_fixture();
+    let test = root.join("tests/bad.test.mts");
+    let mut facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            dynamic_imports: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+    let physical_source = std::fs::read_to_string(&test).unwrap();
+    // The prepared source is the request snapshot. Its directive differs from
+    // disk so a lower-level reread would incorrectly restore these findings.
+    let snapshot_source =
+        format!("// no-mistakes-disable-file test-no-unmocked-dynamic-imports\n{physical_source}");
+    facts.ts.insert(
+        test,
+        dynamic_import_test_facts(&root.join("tests/bad.test.mts"), &snapshot_source),
+    );
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings =
+        test_no_unmocked_dynamic_imports::check_with_facts(&root, &config, None, &facts).unwrap();
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file == "tests/bad.test.mts"));
+}
+
+#[test]
 fn run_check_with_facts_resolves_setup_mocks() {
     let root = dynamic_import_fixture();
     let test = root.join("tests/setup-good.test.mts");

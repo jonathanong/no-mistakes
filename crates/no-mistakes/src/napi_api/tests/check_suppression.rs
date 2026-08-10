@@ -207,6 +207,26 @@ fn check_json_deduplicates_same_origin_even_when_one_barrel_is_suppressed() {
 }
 
 #[test]
+fn check_json_prefers_unsuppressed_same_origin_representative() {
+    let (baseline, audit) = baseline_and_audit("suppression-unique-canonical");
+    assert!(baseline["codebase"].as_array().is_some_and(|items| {
+        items
+            .iter()
+            .any(|item| item["exportName"] == "collision" && item["file"] == "src/collision-c.ts")
+    }));
+    assert!(audit["codebase"].as_array().is_some_and(|items| {
+        items
+            .iter()
+            .any(|item| item["exportName"] == "collision" && item["file"] == "src/collision-c.ts")
+    }));
+    assert!(audit["suppressed"].as_array().is_some_and(|items| {
+        !items
+            .iter()
+            .any(|item| item["rule"] == "unique-exports" && item["file"] == "src/collision-a.ts")
+    }));
+}
+
+#[test]
 fn check_json_keeps_inherited_react_suppressions_distinct_by_parent_component() {
     let (baseline, audit) = baseline_and_audit("suppression-react-inherited-parents");
     assert!(baseline["react"].as_array().is_some_and(Vec::is_empty));
