@@ -39,6 +39,18 @@ fn target_imports_propagates_prepared_fact_failures() {
         .to_string()
         .contains("failed to parse"));
 
+    let fatal_parse_without_diagnostic = TsFactMap::from([(
+        target.abs_file.clone(),
+        TsFileFacts {
+            fatal_parse_error: true,
+            ..TsFileFacts::default()
+        },
+    )]);
+    assert!(target_imports(&target, &fatal_parse_without_diagnostic)
+        .unwrap_err()
+        .to_string()
+        .contains("parser panicked without a diagnostic"));
+
     let missing = TsFactMap::default();
     assert!(target_imports(&target, &missing)
         .unwrap_err()

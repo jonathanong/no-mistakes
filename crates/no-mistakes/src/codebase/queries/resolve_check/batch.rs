@@ -104,9 +104,10 @@ pub(super) fn compute_many(args: &ResolveCheckArgs) -> Result<Vec<ResolveCheckRe
         args.root.as_deref(),
         args.tsconfig.as_deref(),
     )?;
-    if let Some(target) = targets.first() {
-        target.validate_explicit_tsconfig()?;
-    }
+    // `resolve_targets` rejects an empty request before preparing its session.
+    // Indexing here keeps that boundary invariant explicit and avoids a second,
+    // unreachable empty-batch branch in the analysis layer.
+    targets[0].validate_explicit_tsconfig()?;
     for target in &targets {
         anyhow::ensure!(
             is_indexable(&target.abs_file),
