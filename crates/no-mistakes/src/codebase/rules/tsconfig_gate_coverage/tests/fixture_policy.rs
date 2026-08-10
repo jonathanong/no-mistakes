@@ -27,7 +27,25 @@ fn workflow_paths_must_cover_every_source_selected_by_the_project() {
 fn reusable_workflow_callers_cover_filaments_style_static_typecheck_jobs() {
     let root = fixture_root("reusable-workflow");
     let report = findings(&root, &config(&root));
-    assert!(report.is_empty(), "unexpected findings: {report:#?}");
+    assert_eq!(report.len(), 2, "{report:#?}");
+    assert!(
+        report
+            .iter()
+            .all(|finding| finding.file == "caller-only/tsconfig.json"),
+        "{report:#?}"
+    );
+    assert!(
+        report
+            .iter()
+            .any(|finding| finding.message.contains("no CI typecheck registration")),
+        "{report:#?}"
+    );
+    assert!(
+        report
+            .iter()
+            .any(|finding| finding.message.contains("no local typecheck registration")),
+        "{report:#?}"
+    );
 }
 
 #[test]

@@ -25,6 +25,7 @@ pub(super) fn scan_job_steps(
     };
     let job_cwd = effective_working_directory(job, workflow_cwd);
     let job_shell = effective_shell(job, workflow_shell);
+    let implicit_shell_can_be_windows = runs_on_can_default_to_windows(job);
     let mut projects = BTreeSet::new();
     for step in steps {
         if statically_not_enforcing(step, inputs) {
@@ -41,7 +42,7 @@ pub(super) fn scan_job_steps(
             continue;
         };
         let shell = effective_shell(step, job_shell.clone());
-        if shell.is_none() && runs_on_can_default_to_windows(job) {
+        if shell.is_none() && implicit_shell_can_be_windows {
             continue;
         }
         let Some(failure_enforced) = shell_failure_enforced(shell.as_deref()) else {

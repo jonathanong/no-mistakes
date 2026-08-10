@@ -5,6 +5,8 @@ use crate::codebase::workflow_topology::model::{
 use serde_yaml::Value;
 
 pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> InputState {
+    // A workflow invoked directly by a repository event receives the declared
+    // false/default values that GitHub assigns when workflow_call is not used.
     contract
         .into_iter()
         .flat_map(|contract| &contract.inputs)

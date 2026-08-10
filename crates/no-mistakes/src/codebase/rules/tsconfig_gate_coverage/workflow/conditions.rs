@@ -47,8 +47,8 @@ fn continues_after_skipped_need(job: &Value) -> bool {
         .and_then(Value::as_str)
         .is_some_and(|expression| {
             matches!(
-                expression.trim(),
-                "always()" | "${{ always() }}" | "!cancelled()" | "${{ !cancelled() }}"
+                strip_expression(expression.trim()),
+                "always()" | "!cancelled()"
             )
         })
 }

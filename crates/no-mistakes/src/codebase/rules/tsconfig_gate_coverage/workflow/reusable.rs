@@ -57,16 +57,14 @@ pub(super) fn collect_ci_projects(
         }
         let triggers = CompiledTriggers::new(&trigger_model);
         let inputs = direct_inputs(document.call_contract.as_ref());
-        if let Some(activation_projects) = scan_activation(
+        projects.extend(scan_activation(
             path,
             document,
             &triggers,
             &inputs,
             &BTreeSet::new(),
             &context,
-        ) {
-            projects.extend(activation_projects);
-        }
+        ));
     }
     projects
 }
@@ -78,16 +76,16 @@ fn scan_activation(
     inputs: &InputState,
     active_paths: &BTreeSet<String>,
     context: &ScanContext<'_>,
-) -> Option<BTreeSet<String>> {
+) -> BTreeSet<String> {
     if active_paths.contains(path) {
-        return None;
+        return BTreeSet::new();
     }
     let mut active_paths = active_paths.clone();
     active_paths.insert(path.to_string());
     let workflow_cwd = effective_working_directory(document.value, Some(".".to_string()));
     let workflow_shell = effective_shell(document.value, None);
     let Some(jobs) = document.value.get("jobs").and_then(Value::as_mapping) else {
-        return Some(BTreeSet::new());
+        return BTreeSet::new();
     };
     let skipped_jobs = statically_skipped_jobs(jobs, inputs);
     let mut projects = BTreeSet::new();
@@ -114,16 +112,14 @@ fn scan_activation(
             let Some(callee_inputs) = callee_inputs(Some(contract), job, inputs) else {
                 continue;
             };
-            if let Some(callee_projects) = scan_activation(
+            projects.extend(scan_activation(
                 callee_path,
                 callee,
                 triggers,
                 &callee_inputs,
                 &active_paths,
                 context,
-            ) {
-                projects.extend(callee_projects);
-            }
+            ));
             continue;
         }
         if !has_static_runnable_runs_on(job) {
@@ -138,5 +134,5 @@ fn scan_activation(
             context,
         ));
     }
-    Some(projects)
+    projects
 }
