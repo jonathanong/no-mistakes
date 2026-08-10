@@ -1,10 +1,12 @@
-use super::scan::{scan_file, scan_file_with_source};
+use super::scan::{
+    scan_file_with_deferred_suppression, scan_file_with_source_and_deferred_suppression,
+};
 use super::*;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 
 fn scan_test_file(root: &Path, path: &Path, work: &RustWork) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    scan::scan_file(root, path, work, false, &sources)
+    scan::scan_file_with_deferred_suppression(root, path, work, false, &sources, false)
 }
 
 fn config_with_rule(rule: &str) -> NoMistakesConfig {
@@ -44,7 +46,10 @@ fn scan_file_returns_empty_for_unreadable_file() {
     };
 
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&missing));
-    assert!(scan_file(&root, &missing, &work, true, &sources).is_empty());
+    assert!(
+        scan_file_with_deferred_suppression(&root, &missing, &work, true, &sources, false)
+            .is_empty()
+    );
 }
 
 #[test]
@@ -72,7 +77,10 @@ fn combined_scan_applies_line_suppression_before_releasing_source() {
     };
     let source = "// no-mistakes-disable-next-line rust-no-inline-allows\n#[allow(dead_code)]\nfn hidden() {}\n";
 
-    assert!(scan_file_with_source(&root, &path, &work, source).is_empty());
+    assert!(
+        scan_file_with_source_and_deferred_suppression(&root, &path, &work, source, false)
+            .is_empty()
+    );
 }
 
 #[test]
@@ -86,13 +94,27 @@ fn exclusive_sources_are_not_retained_and_overlapping_sources_are_memoized() {
     let files = vec![path];
 
     let exclusive_sources = crate::codebase::rules::source_store_for_files(&files);
-    let exclusive =
-        check_with_files_and_sources(&root, &config, &files, &files, &exclusive_sources).unwrap();
+    let exclusive = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config,
+        &files,
+        &files,
+        &exclusive_sources,
+        false,
+    )
+    .unwrap();
     assert_eq!(exclusive_sources.physical_read_count(), 0);
 
     let overlapping_sources = crate::codebase::rules::source_store_for_files(&files);
-    let overlapping =
-        check_with_files_and_sources(&root, &config, &files, &[], &overlapping_sources).unwrap();
+    let overlapping = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config,
+        &files,
+        &[],
+        &overlapping_sources,
+        false,
+    )
+    .unwrap();
     assert_eq!(overlapping_sources.physical_read_count(), 1);
     assert_eq!(exclusive, overlapping);
 }

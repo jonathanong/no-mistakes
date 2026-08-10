@@ -1,4 +1,4 @@
-use super::check_with_prepared_facts_graph_and_session;
+use super::{check_with_prepared_facts_graph_and_session, PreparedFactsGraphRequest};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::ts_resolver::{TsConfig, TsConfigCatalog};
@@ -28,14 +28,13 @@ pub(crate) fn check_with_prepared_facts_and_session(
             session.clone(),
         )
     })?;
-    check_with_prepared_facts_graph_and_session(
+    check_with_prepared_facts_graph_and_session(PreparedFactsGraphRequest {
         root,
         config,
-        tsconfig,
         tsconfig_catalog,
         shared,
-        &graph,
+        graph: &graph,
         session,
-        false,
-    )
+        defer_suppression: false,
+    })
 }

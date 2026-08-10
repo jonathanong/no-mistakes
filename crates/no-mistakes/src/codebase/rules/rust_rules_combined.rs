@@ -28,23 +28,6 @@ pub(super) struct RustWork {
     pub(super) inline_allows: bool,
 }
 
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    exclusive_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    check_with_files_sources_and_deferred_suppression(
-        root,
-        config,
-        all_files,
-        exclusive_files,
-        sources,
-        false,
-    )
-}
-
 pub(crate) fn check_with_files_sources_and_deferred_suppression(
     root: &Path,
     config: &NoMistakesConfig,

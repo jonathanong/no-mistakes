@@ -58,17 +58,7 @@ pub(super) fn scan_advisories_with_sources(
     Ok(advisories)
 }
 
-pub(super) fn check_content(
-    path: &Path,
-    root: &Path,
-    max_lines: usize,
-    max_chars: usize,
-    content: &str,
-) -> Vec<RuleFinding> {
-    check_content_with_deferred_suppression(path, root, max_lines, max_chars, content, false)
-}
-
-fn check_content_with_deferred_suppression(
+pub(super) fn check_content_with_deferred_suppression(
     path: &Path,
     root: &Path,
     max_lines: usize,

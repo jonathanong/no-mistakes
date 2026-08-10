@@ -85,14 +85,16 @@ pub(super) fn run(
             "rules.test_no_unmocked_dynamic_imports",
             || {
                 test_no_unmocked_dynamic_imports::check_with_prepared_facts_graph_and_session(
-                    root,
-                    config,
-                    prepared_tsconfig,
-                    prepared_tsconfig_catalog,
-                    shared,
-                    dependency_graph.expect("dynamic-import rule requires canonical graph"),
-                    &session,
-                    defer_suppression,
+                    test_no_unmocked_dynamic_imports::PreparedFactsGraphRequest {
+                        root,
+                        config,
+                        tsconfig_catalog: prepared_tsconfig_catalog,
+                        shared,
+                        graph: dependency_graph
+                            .expect("dynamic-import rule requires canonical graph"),
+                        session: &session,
+                        defer_suppression,
+                    },
                 )
             },
         )?);

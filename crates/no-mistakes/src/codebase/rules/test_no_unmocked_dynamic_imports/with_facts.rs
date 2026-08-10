@@ -53,16 +53,28 @@ pub fn check_with_prepared_facts(
     check_with_prepared_facts_and_session(root, config, tsconfig, &catalog, shared, &session)
 }
 
+pub(crate) struct PreparedFactsGraphRequest<'a> {
+    pub(crate) root: &'a Path,
+    pub(crate) config: &'a NoMistakesConfig,
+    pub(crate) tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
+    pub(crate) shared: &'a CheckFactMap,
+    pub(crate) graph: &'a DepGraph,
+    pub(crate) session: &'a std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    pub(crate) defer_suppression: bool,
+}
+
 pub(crate) fn check_with_prepared_facts_graph_and_session(
-    root: &Path,
-    config: &NoMistakesConfig,
-    _tsconfig: &TsConfig,
-    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
-    shared: &CheckFactMap,
-    graph: &DepGraph,
-    session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
-    defer_suppression: bool,
+    request: PreparedFactsGraphRequest<'_>,
 ) -> Result<Vec<RuleFinding>> {
+    let PreparedFactsGraphRequest {
+        root,
+        config,
+        tsconfig_catalog,
+        shared,
+        graph,
+        session,
+        defer_suppression,
+    } = request;
     let files = shared.files().to_vec();
     let visible_files = files.iter().cloned().collect::<HashSet<_>>();
     // Dynamic-import policy is filesystem-scoped even when another consumer

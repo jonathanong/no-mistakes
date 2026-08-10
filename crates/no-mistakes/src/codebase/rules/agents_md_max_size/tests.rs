@@ -1,4 +1,4 @@
-use super::agents_md_max_size_budget::{check_content, count_lines};
+use super::agents_md_max_size_budget::{check_content_with_deferred_suppression, count_lines};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -14,7 +14,7 @@ fn check_file(
     let Ok(content) = std::fs::read_to_string(path) else {
         return Vec::new();
     };
-    check_content(path, root, max_lines, max_chars, &content)
+    check_content_with_deferred_suppression(path, root, max_lines, max_chars, &content, false)
 }
 
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {

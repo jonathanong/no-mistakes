@@ -17,9 +17,10 @@ pub(crate) use standalone::{
     check_inner, matching_test_files_with_filter, remap_resolved_path, resolve_mock_specifiers,
 };
 use std::path::Path;
-pub(crate) use with_facts::check_with_prepared_facts_graph_and_session;
 pub use with_facts::{check_with_facts, check_with_prepared_facts};
-
+pub(crate) use with_facts::{
+    check_with_prepared_facts_graph_and_session, PreparedFactsGraphRequest,
+};
 pub const RULE_ID: &str = "test-no-unmocked-dynamic-imports";
 
 pub fn check(

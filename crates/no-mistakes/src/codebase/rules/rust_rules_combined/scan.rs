@@ -1,15 +1,5 @@
 use super::*;
 
-pub(super) fn scan_file(
-    root: &Path,
-    path: &Path,
-    work: &RustWork,
-    exclusive: bool,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    scan_file_with_deferred_suppression(root, path, work, exclusive, sources, false)
-}
-
 pub(super) fn scan_file_with_deferred_suppression(
     root: &Path,
     path: &Path,
@@ -34,15 +24,6 @@ pub(super) fn scan_file_with_deferred_suppression(
         return Vec::new();
     };
     scan_file_with_source_and_deferred_suppression(root, path, work, &content, defer_suppression)
-}
-
-pub(super) fn scan_file_with_source(
-    root: &Path,
-    path: &Path,
-    work: &RustWork,
-    content: &str,
-) -> Vec<RuleFinding> {
-    scan_file_with_source_and_deferred_suppression(root, path, work, content, false)
 }
 
 pub(super) fn scan_file_with_source_and_deferred_suppression(
