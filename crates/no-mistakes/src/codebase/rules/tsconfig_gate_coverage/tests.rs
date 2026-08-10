@@ -18,6 +18,7 @@ mod fixture_policy;
 mod no_check;
 mod workflow;
 mod workflow_contracts;
+mod workflow_inputs;
 mod workflow_scaling;
 mod workflow_schema;
 

@@ -69,7 +69,7 @@ fn skipped_local_calls_still_require_valid_contracts() {
 }
 
 #[test]
-fn direct_activations_reject_invalid_workflow_call_input_declarations() {
+fn direct_activations_reject_invalid_or_falsy_workflow_call_input_declarations() {
     let documents = vec![
         workflow(
             ".github/workflows/missing-type.yml",
@@ -90,7 +90,7 @@ fn direct_activations_reject_invalid_workflow_call_input_declarations() {
             documents,
             &["missing-type", "wrong-default", "valid-string"]
         ),
-        BTreeSet::from(["valid-string/tsconfig.json".to_string()])
+        BTreeSet::new()
     );
 }
 

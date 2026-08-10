@@ -1,4 +1,4 @@
-use super::contracts::{input_contract_valid, normalized_name, unique_contract_names};
+use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
 use super::{expression_bool, InputState, StaticBool};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
@@ -12,25 +12,14 @@ pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> Option<I
     let Some(contract) = contract else {
         return Some(InputState::new());
     };
-    if !input_contract_valid(contract) || !unique_contract_names(contract.secrets.keys()) {
+    if !workflow_call_contract_valid(contract) {
         return None;
     }
     Some(
         contract
             .inputs
-            .iter()
-            .map(|(name, declaration)| {
-                let state = match declaration
-                    .input_type
-                    .expect("validated workflow_call input type")
-                {
-                    WorkflowCallInputType::Boolean => StaticBool::False,
-                    WorkflowCallInputType::Number | WorkflowCallInputType::String => {
-                        StaticBool::Unknown
-                    }
-                };
-                (normalized_name(name), state)
-            })
+            .keys()
+            .map(|name| (normalized_name(name), StaticBool::False))
             .collect(),
     )
 }
@@ -102,9 +91,9 @@ fn inputs_from_contract(
                                 StaticBool::False
                             }
                         }),
-                    WorkflowCallInputType::Number | WorkflowCallInputType::String => {
-                        StaticBool::Unknown
-                    }
+                    WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
+                        .map(|value| nonboolean_binding_state(value))
+                        .unwrap_or_else(|| default_falsy_state(declaration.default.as_ref())),
                 };
                 (normalized_name(name), state)
             })
@@ -113,7 +102,7 @@ fn inputs_from_contract(
 }
 
 pub(crate) fn callee_secrets_valid(contract: &WorkflowCallContract, call_job: &Value) -> bool {
-    if !unique_contract_names(contract.secrets.keys()) {
+    if !workflow_call_contract_valid(contract) {
         return false;
     }
     if call_job.get("secrets").and_then(Value::as_str) == Some("inherit") {
@@ -185,3 +174,41 @@ fn binding_bool(value: &Value, parent: &InputState) -> StaticBool {
         expression_bool(value.as_str().unwrap_or_default(), parent)
     }
 }
+
+fn default_falsy_state(default: Option<&JsonScalar>) -> StaticBool {
+    if default.map(json_scalar_is_falsy).unwrap_or(true) {
+        StaticBool::False
+    } else {
+        StaticBool::TruthyNonBoolean
+    }
+}
+
+fn nonboolean_binding_state(value: &Value) -> StaticBool {
+    if value
+        .as_str()
+        .is_some_and(|text| is_complete_expression(text.trim()))
+    {
+        StaticBool::Unknown
+    } else if yaml_scalar_is_falsy(value) {
+        StaticBool::False
+    } else {
+        StaticBool::TruthyNonBoolean
+    }
+}
+
+fn json_scalar_is_falsy(value: &JsonScalar) -> bool {
+    match value {
+        JsonScalar::Bool(value) => !value,
+        JsonScalar::Number(value) => value.as_f64() == Some(0.0),
+        JsonScalar::Text(value) => value.is_empty(),
+    }
+}
+
+fn yaml_scalar_is_falsy(value: &Value) -> bool {
+    value.as_str().is_some_and(str::is_empty)
+        || value.as_f64() == Some(0.0)
+        || value.as_bool() == Some(false)
+}
+
+#[cfg(test)]
+mod tests;

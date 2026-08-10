@@ -10,6 +10,7 @@ pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
 pub(super) enum StaticBool {
     False,
     True,
+    TruthyNonBoolean,
     Unknown,
 }
 
@@ -99,28 +100,45 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
             return if equal { value } else { value.negate() };
         }
     }
-    if let Some(name) = expression.strip_prefix("inputs.") {
+    if let Some(name) = input_name(expression) {
         return inputs
-            .get(&name.trim().to_lowercase())
+            .get(&name.to_lowercase())
             .copied()
-            .unwrap_or(StaticBool::False);
+            .unwrap_or(StaticBool::False)
+            .truthiness();
     }
     if let Some(name) = expression
         .strip_prefix('!')
         .map(str::trim)
-        .and_then(|operand| operand.strip_prefix("inputs."))
+        .and_then(input_name)
     {
         return inputs
-            .get(&name.trim().to_lowercase())
+            .get(&name.to_lowercase())
             .copied()
             .unwrap_or(StaticBool::False)
+            .truthiness()
             .negate();
     }
     StaticBool::Unknown
 }
 
 fn input_name(operand: &str) -> Option<&str> {
-    operand.trim().strip_prefix("inputs.").map(str::trim)
+    let operand = operand.trim();
+    if let Some(name) = operand.strip_prefix("inputs.") {
+        return Some(name.trim());
+    }
+    let bracketed = operand
+        .strip_prefix("inputs")?
+        .trim_start()
+        .strip_prefix('[')?
+        .trim_start();
+    let quote = bracketed.chars().next()?;
+    if quote != '\'' {
+        return None;
+    }
+    let name = bracketed.strip_prefix(quote)?;
+    let (name, suffix) = name.split_once(quote)?;
+    (suffix.trim() == "]").then_some(name)
 }
 
 fn bool_literal(operand: &str) -> Option<bool> {
@@ -132,15 +150,26 @@ fn bool_literal(operand: &str) -> Option<bool> {
 }
 
 impl StaticBool {
+    fn truthiness(self) -> Self {
+        match self {
+            Self::TruthyNonBoolean => Self::True,
+            value => value,
+        }
+    }
+
     fn negate(self) -> Self {
         match self {
             Self::False => Self::True,
             Self::True => Self::False,
+            Self::TruthyNonBoolean => Self::False,
             Self::Unknown => Self::Unknown,
         }
     }
 
     fn equals(self, expected: bool) -> Self {
+        if self == Self::TruthyNonBoolean {
+            return Self::Unknown;
+        }
         if expected {
             self
         } else {
