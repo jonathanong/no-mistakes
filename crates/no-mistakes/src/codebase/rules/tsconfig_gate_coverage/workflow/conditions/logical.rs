@@ -16,6 +16,21 @@ pub(super) fn compound_bool(expression: &str, inputs: &InputState) -> Option<Sta
     outer_parentheses_body(expression).map(|body| expression_bool(body, inputs))
 }
 
+pub(super) fn comparison_operands(expression: &str) -> Option<(&str, &str, bool)> {
+    let equal = top_level_operator(expression, b"==");
+    let not_equal = top_level_operator(expression, b"!=");
+    let (index, equal) = match (equal, not_equal) {
+        (Some(index), None) => (index, true),
+        (None, Some(index)) => (index, false),
+        _ => return None,
+    };
+    let right = &expression[index + 2..];
+    if top_level_operator(right, b"==").is_some() || top_level_operator(right, b"!=").is_some() {
+        return None;
+    }
+    Some((&expression[..index], right, equal))
+}
+
 fn and(left: StaticBool, right: StaticBool) -> StaticBool {
     match (left.truthiness(), right.truthiness()) {
         (StaticBool::False, _) | (_, StaticBool::False) => StaticBool::False,

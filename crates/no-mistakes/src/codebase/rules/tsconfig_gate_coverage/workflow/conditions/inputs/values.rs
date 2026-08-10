@@ -1,30 +1,52 @@
-use super::{JsonScalar, StaticBool, Value};
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputState;
+use super::{JsonScalar, Value, WorkflowCallInputType};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    input_value::comparison_literal, InputState, StaticValue,
+};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     complete_expression_type, StaticExpressionType,
 };
 
-pub(super) fn default_falsy_state(default: Option<&JsonScalar>) -> StaticBool {
-    if default.map(json_scalar_is_falsy).unwrap_or(true) {
-        StaticBool::False
-    } else {
-        StaticBool::TruthyNonBoolean
+pub(super) fn default_value(
+    default: Option<&JsonScalar>,
+    input_type: WorkflowCallInputType,
+) -> StaticValue {
+    match (input_type, default) {
+        (WorkflowCallInputType::String, Some(JsonScalar::Text(value))) => {
+            StaticValue::String(value.clone())
+        }
+        (WorkflowCallInputType::Number, Some(JsonScalar::Number(value))) => {
+            StaticValue::Number(value.to_string())
+        }
+        (WorkflowCallInputType::String, None) => StaticValue::String(String::new()),
+        (WorkflowCallInputType::Number, None) => StaticValue::Number("0".to_string()),
+        _ => StaticValue::Unknown,
     }
 }
 
-pub(super) fn nonboolean_binding_state(value: &Value, parent: &InputState) -> StaticBool {
-    if let Some(state) = forwarded_input_state(value, parent) {
-        state
-    } else if let Some(expression) = value.as_str().and_then(static_expression_truthiness) {
-        expression
-    } else if yaml_scalar_is_falsy(value) {
-        StaticBool::False
-    } else {
-        StaticBool::TruthyNonBoolean
+pub(super) fn nonboolean_binding_value(
+    value: &Value,
+    parent: &InputState,
+    input_type: WorkflowCallInputType,
+) -> StaticValue {
+    if let Some(value) = forwarded_input_value(value, parent) {
+        return value;
+    }
+    if let Some(value) = value.as_str().and_then(static_expression_value) {
+        return value;
+    }
+    if value.as_str().is_some_and(|value| value.contains("${{")) {
+        return StaticValue::Unknown;
+    }
+    match (input_type, value) {
+        (WorkflowCallInputType::String, Value::String(value)) => StaticValue::String(value.clone()),
+        (WorkflowCallInputType::Number, Value::Number(value)) => {
+            StaticValue::Number(value.to_string())
+        }
+        _ => StaticValue::Unknown,
     }
 }
 
-fn forwarded_input_state(value: &Value, parent: &InputState) -> Option<StaticBool> {
+pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Option<StaticValue> {
     let body = value
         .as_str()?
         .trim()
@@ -32,63 +54,17 @@ fn forwarded_input_state(value: &Value, parent: &InputState) -> Option<StaticBoo
         .strip_suffix("}}")?
         .trim();
     let name = body.strip_prefix("inputs.")?.trim();
-    parent.get(&name.to_lowercase()).copied()
+    parent.get(&name.to_lowercase()).cloned()
 }
 
-fn static_expression_truthiness(text: &str) -> Option<StaticBool> {
+fn static_expression_value(text: &str) -> Option<StaticValue> {
     let expression_type = complete_expression_type(text.trim())?;
-    let mut body = text.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
-    while body.starts_with('(') && body.ends_with(')') {
-        body = body[1..body.len() - 1].trim();
-    }
+    let body = text.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
     match expression_type {
-        StaticExpressionType::Dynamic => Some(StaticBool::Unknown),
-        StaticExpressionType::Null => Some(StaticBool::False),
-        StaticExpressionType::Boolean => match body {
-            "false" => Some(StaticBool::False),
-            "true" => Some(StaticBool::TruthyNonBoolean),
-            _ => Some(StaticBool::Unknown),
-        },
-        StaticExpressionType::String => body.strip_prefix('\'')?.strip_suffix('\'').map(|value| {
-            if value.is_empty() {
-                StaticBool::False
-            } else {
-                StaticBool::TruthyNonBoolean
-            }
-        }),
-        StaticExpressionType::Number => Some(number_truthiness(body)),
+        StaticExpressionType::Dynamic => Some(StaticValue::Unknown),
+        StaticExpressionType::Null
+        | StaticExpressionType::Boolean
+        | StaticExpressionType::String
+        | StaticExpressionType::Number => comparison_literal(body),
     }
-}
-
-fn number_truthiness(value: &str) -> StaticBool {
-    let unsigned = value.strip_prefix('-').unwrap_or(value);
-    if let Some(hex) = unsigned
-        .strip_prefix("0x")
-        .or_else(|| unsigned.strip_prefix("0X"))
-    {
-        return if hex.bytes().all(|byte| byte == b'0') {
-            StaticBool::False
-        } else {
-            StaticBool::TruthyNonBoolean
-        };
-    }
-    if value.parse::<f64>() == Ok(0.0) {
-        StaticBool::False
-    } else {
-        StaticBool::TruthyNonBoolean
-    }
-}
-
-fn json_scalar_is_falsy(value: &JsonScalar) -> bool {
-    match value {
-        JsonScalar::Bool(value) => !value,
-        JsonScalar::Number(value) => value.as_f64() == Some(0.0),
-        JsonScalar::Text(value) => value.is_empty(),
-    }
-}
-
-fn yaml_scalar_is_falsy(value: &Value) -> bool {
-    value.as_str().is_some_and(str::is_empty)
-        || value.as_f64() == Some(0.0)
-        || value.as_bool() == Some(false)
 }

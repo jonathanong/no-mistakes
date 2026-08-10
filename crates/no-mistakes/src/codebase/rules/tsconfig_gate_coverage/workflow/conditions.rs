@@ -2,10 +2,12 @@ use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod contracts;
+mod input_value;
 mod inputs;
 mod literals;
 mod logical;
 
+use input_value::comparison_literal;
 pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
 use literals::{
     continues_after_skipped_need, hexadecimal_bool, number_bool, quoted_string_bool,
@@ -20,7 +22,16 @@ pub(super) enum StaticBool {
     Unknown,
 }
 
-pub(super) type InputState = BTreeMap<String, StaticBool>;
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub(super) enum StaticValue {
+    Bool(bool),
+    String(String),
+    Number(String),
+    Null,
+    Unknown,
+}
+
+pub(super) type InputState = BTreeMap<String, StaticValue>;
 
 pub(super) fn statically_skipped_jobs(
     jobs: &serde_yaml::Mapping,
@@ -93,28 +104,26 @@ fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
 }
 
 fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool {
-    for (operator, equal) in [("==", true), ("!=", false)] {
-        if let Some((left, right)) = expression.split_once(operator) {
-            let (name, expected) = match (input_name(left), bool_literal(right)) {
-                (Some(name), Some(expected)) => (name, expected),
-                _ => match (bool_literal(left), input_name(right)) {
-                    (Some(expected), Some(name)) => (name, expected),
-                    _ => return StaticBool::Unknown,
-                },
-            };
-            let value = inputs
-                .get(&name.to_lowercase())
-                .copied()
-                .unwrap_or(StaticBool::False)
-                .equals(expected);
-            return if equal { value } else { value.negate() };
-        }
+    if let Some((left, right, equal)) = logical::comparison_operands(expression) {
+        let (name, expected) = match (input_name(left), comparison_literal(right)) {
+            (Some(name), Some(expected)) => (name, expected),
+            _ => match (comparison_literal(left), input_name(right)) {
+                (Some(expected), Some(name)) => (name, expected),
+                _ => return StaticBool::Unknown,
+            },
+        };
+        let value = inputs
+            .get(&name.to_lowercase())
+            .cloned()
+            .unwrap_or(StaticValue::Bool(false))
+            .equals(&expected);
+        return if equal { value } else { value.negate() };
     }
     if let Some(name) = input_name(expression) {
         return inputs
             .get(&name.to_lowercase())
-            .copied()
-            .unwrap_or(StaticBool::False)
+            .cloned()
+            .unwrap_or(StaticValue::Bool(false))
             .truthiness();
     }
     if let Some(name) = expression
@@ -124,8 +133,8 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
     {
         return inputs
             .get(&name.to_lowercase())
-            .copied()
-            .unwrap_or(StaticBool::False)
+            .cloned()
+            .unwrap_or(StaticValue::Bool(false))
             .truthiness()
             .negate();
     }
@@ -152,16 +161,6 @@ fn input_name(operand: &str) -> Option<&str> {
     (suffix.trim() == "]" && contracts::valid_identifier(name)).then_some(name)
 }
 
-fn bool_literal(operand: &str) -> Option<bool> {
-    if operand.trim().eq_ignore_ascii_case("true") {
-        Some(true)
-    } else if operand.trim().eq_ignore_ascii_case("false") {
-        Some(false)
-    } else {
-        None
-    }
-}
-
 impl StaticBool {
     fn truthiness(self) -> Self {
         match self {
@@ -176,17 +175,6 @@ impl StaticBool {
             Self::True => Self::False,
             Self::TruthyNonBoolean => Self::False,
             Self::Unknown => Self::Unknown,
-        }
-    }
-
-    fn equals(self, expected: bool) -> Self {
-        if self == Self::TruthyNonBoolean {
-            return Self::Unknown;
-        }
-        if expected {
-            self
-        } else {
-            self.negate()
         }
     }
 }

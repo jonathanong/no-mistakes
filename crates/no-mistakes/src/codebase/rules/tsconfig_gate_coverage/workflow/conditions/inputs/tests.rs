@@ -2,63 +2,136 @@ use super::*;
 use crate::codebase::workflow_topology::model::{WorkflowCallInput, WorkflowCallSecret};
 
 #[test]
-fn nonboolean_default_truthiness_handles_every_scalar_variant() {
-    assert_eq!(default_falsy_state(None), StaticBool::False);
+fn nonboolean_defaults_preserve_scalar_values() {
     assert_eq!(
-        default_falsy_state(Some(&JsonScalar::Bool(false))),
-        StaticBool::False
+        default_value(None, WorkflowCallInputType::String),
+        StaticValue::String(String::new())
     );
     assert_eq!(
-        default_falsy_state(Some(&JsonScalar::Bool(true))),
-        StaticBool::TruthyNonBoolean
+        default_value(None, WorkflowCallInputType::Number),
+        StaticValue::Number("0".into())
     );
     assert_eq!(
-        default_falsy_state(Some(&JsonScalar::Number(serde_json::Number::from(0)))),
-        StaticBool::False
+        default_value(
+            Some(&JsonScalar::Number(serde_json::Number::from(2))),
+            WorkflowCallInputType::Number
+        ),
+        StaticValue::Number("2".into())
     );
     assert_eq!(
-        default_falsy_state(Some(&JsonScalar::Text(String::new()))),
-        StaticBool::False
+        default_value(
+            Some(&JsonScalar::Text("release".into())),
+            WorkflowCallInputType::String
+        ),
+        StaticValue::String("release".into())
     );
 }
 
 #[test]
-fn complete_literal_bindings_preserve_nonboolean_truthiness() {
-    for (value, expected) in [
-        ("${{ '' }}", StaticBool::False),
-        ("${{ 'value' }}", StaticBool::TruthyNonBoolean),
-        ("${{ 0 }}", StaticBool::False),
-        ("${{ (0) }}", StaticBool::False),
-        ("${{ -0x0 }}", StaticBool::False),
-        ("${{ ('') }}", StaticBool::False),
-        ("${{ 1 }}", StaticBool::TruthyNonBoolean),
-        ("${{ inputs.value }}", StaticBool::Unknown),
+fn complete_literal_bindings_preserve_nonboolean_values() {
+    for (value, input_type, expected) in [
+        (
+            "${{ '' }}",
+            WorkflowCallInputType::String,
+            StaticValue::String(String::new()),
+        ),
+        (
+            "${{ 'value' }}",
+            WorkflowCallInputType::String,
+            StaticValue::String("value".into()),
+        ),
+        (
+            "${{ 0 }}",
+            WorkflowCallInputType::Number,
+            StaticValue::Number("0".into()),
+        ),
+        (
+            "${{ (0) }}",
+            WorkflowCallInputType::Number,
+            StaticValue::Number("0".into()),
+        ),
+        (
+            "${{ -0x0 }}",
+            WorkflowCallInputType::Number,
+            StaticValue::Number("-0x0".into()),
+        ),
+        (
+            "${{ 1 }}",
+            WorkflowCallInputType::Number,
+            StaticValue::Number("1".into()),
+        ),
+        (
+            "${{ inputs.value }}",
+            WorkflowCallInputType::String,
+            StaticValue::Unknown,
+        ),
     ] {
         assert_eq!(
-            nonboolean_binding_state(&Value::String(value.into()), &InputState::new()),
+            nonboolean_binding_value(&Value::String(value.into()), &InputState::new(), input_type),
+            expected
+        );
+    }
+    assert_eq!(
+        nonboolean_binding_value(
+            &Value::String("release-${{ github.ref_name }}".into()),
+            &InputState::new(),
+            WorkflowCallInputType::String,
+        ),
+        StaticValue::Unknown
+    );
+}
+
+#[test]
+fn direct_input_bindings_preserve_parent_nonboolean_values() {
+    let parent = InputState::from([
+        ("empty".to_string(), StaticValue::String(String::new())),
+        ("zero".to_string(), StaticValue::Number("0".into())),
+        ("full".to_string(), StaticValue::String("release".into())),
+        ("dynamic".to_string(), StaticValue::Unknown),
+    ]);
+
+    for (binding, expected) in [
+        ("${{ inputs.empty }}", StaticValue::String(String::new())),
+        ("${{ inputs.zero }}", StaticValue::Number("0".into())),
+        ("${{ inputs.full }}", StaticValue::String("release".into())),
+        ("${{ inputs.dynamic }}", StaticValue::Unknown),
+    ] {
+        assert_eq!(
+            nonboolean_binding_value(
+                &Value::String(binding.into()),
+                &parent,
+                WorkflowCallInputType::String
+            ),
             expected
         );
     }
 }
 
 #[test]
-fn direct_input_bindings_preserve_parent_nonboolean_truthiness() {
+fn exact_forwarding_requires_compatible_input_types() {
     let parent = InputState::from([
-        ("empty".to_string(), StaticBool::False),
-        ("zero".to_string(), StaticBool::False),
-        ("full".to_string(), StaticBool::TruthyNonBoolean),
-        ("dynamic".to_string(), StaticBool::Unknown),
+        ("boolean".into(), StaticValue::Bool(true)),
+        ("number".into(), StaticValue::Number("2".into())),
+        ("string".into(), StaticValue::String("release".into())),
+        ("dynamic".into(), StaticValue::Unknown),
     ]);
-
-    for (binding, expected) in [
-        ("${{ inputs.empty }}", StaticBool::False),
-        ("${{ inputs.zero }}", StaticBool::False),
-        ("${{ inputs.full }}", StaticBool::TruthyNonBoolean),
-        ("${{ inputs.dynamic }}", StaticBool::Unknown),
+    for (name, input_type, expected) in [
+        ("boolean", WorkflowCallInputType::Boolean, true),
+        ("boolean", WorkflowCallInputType::Number, false),
+        ("number", WorkflowCallInputType::Number, true),
+        ("number", WorkflowCallInputType::String, false),
+        ("string", WorkflowCallInputType::String, true),
+        ("string", WorkflowCallInputType::Boolean, false),
+        ("dynamic", WorkflowCallInputType::Boolean, true),
     ] {
         assert_eq!(
-            nonboolean_binding_state(&Value::String(binding.into()), &parent),
-            expected
+            binding_matches_type(
+                &Value::String(format!("${{{{ inputs.{name} }}}}")),
+                input_type,
+                &parent,
+            ),
+            expected,
+            "{name:?} forwarded into {input_type:?}"
         );
     }
 }
@@ -132,20 +205,24 @@ fn malformed_complete_expressions_do_not_bypass_input_types() {
     ] {
         assert!(!binding_matches_type(
             &Value::String(value.to_string()),
-            WorkflowCallInputType::Boolean
+            WorkflowCallInputType::Boolean,
+            &InputState::new()
         ));
     }
     assert!(binding_matches_type(
         &Value::String("${{ needs.detect.outputs.enabled }}".to_string()),
-        WorkflowCallInputType::Boolean
+        WorkflowCallInputType::Boolean,
+        &InputState::new()
     ));
     assert!(binding_matches_type(
         &Value::String("${{ format('{0}', inputs.enabled) }}".to_string()),
-        WorkflowCallInputType::Boolean
+        WorkflowCallInputType::Boolean,
+        &InputState::new()
     ));
     assert!(binding_matches_type(
         &Value::String("${{ format('it''s {0}', inputs.enabled) }}".to_string()),
-        WorkflowCallInputType::Boolean
+        WorkflowCallInputType::Boolean,
+        &InputState::new()
     ));
 }
 
@@ -154,7 +231,8 @@ fn reusable_call_input_bindings_allow_only_available_contexts() {
     // Numeric literals are not contexts, including the `x1` suffix of hex.
     assert!(binding_matches_type(
         &Value::String("${{ 0x1 }}".to_string()),
-        WorkflowCallInputType::Number
+        WorkflowCallInputType::Number,
+        &InputState::new()
     ));
     for value in [
         "${{ github.ref }}",
@@ -166,7 +244,8 @@ fn reusable_call_input_bindings_allow_only_available_contexts() {
     ] {
         assert!(binding_matches_type(
             &Value::String(value.to_string()),
-            WorkflowCallInputType::Boolean
+            WorkflowCallInputType::Boolean,
+            &InputState::new()
         ));
     }
     for value in [
@@ -181,11 +260,22 @@ fn reusable_call_input_bindings_allow_only_available_contexts() {
         assert!(
             !binding_matches_type(
                 &Value::String(value.to_string()),
-                WorkflowCallInputType::Boolean
+                WorkflowCallInputType::Boolean,
+                &InputState::new()
             ),
             "{value}"
         );
     }
+    assert!(binding_matches_type(
+        &Value::String("release-${{ github.ref_name }}".into()),
+        WorkflowCallInputType::String,
+        &InputState::new()
+    ));
+    assert!(!binding_matches_type(
+        &Value::String("release-${{ secrets.TOKEN }}".into()),
+        WorkflowCallInputType::String,
+        &InputState::new()
+    ));
 }
 
 #[test]
@@ -198,7 +288,8 @@ fn statically_typed_expression_bindings_must_match_declared_inputs() {
     ] {
         assert!(!binding_matches_type(
             &Value::String(value.to_string()),
-            input_type
+            input_type,
+            &InputState::new()
         ));
     }
     for (value, input_type) in [
@@ -212,7 +303,8 @@ fn statically_typed_expression_bindings_must_match_declared_inputs() {
     ] {
         assert!(binding_matches_type(
             &Value::String(value.to_string()),
-            input_type
+            input_type,
+            &InputState::new()
         ));
     }
 }

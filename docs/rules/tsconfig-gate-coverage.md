@@ -72,8 +72,9 @@ negations/comparisons in call-job, callee-job, and step conditions. It also
 short-circuits logical `&&` and `||` expressions when a known input operand
 determines the result. Literal call inputs, declared defaults, omitted values,
 and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
-truthiness through transitive calls. Expressions whose result remains dynamic
-fail open as potentially runnable.
+values through transitive calls. This lets the rule resolve exact string and
+number equality/inequality comparisons as well as input truthiness. Expressions
+whose result remains dynamic fail open as potentially runnable.
 
 A job blocked by a statically skipped `needs` dependency, including a
 transitive dependency, does not count. Exact `always()` and `!cancelled()` job

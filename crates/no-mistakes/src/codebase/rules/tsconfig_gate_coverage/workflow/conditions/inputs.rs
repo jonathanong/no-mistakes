@@ -1,19 +1,15 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
-use super::{expression_bool, InputState, StaticBool};
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
-    complete_expression_contexts_available, complete_expression_type, StaticExpressionType,
-};
+use super::{InputState, StaticValue};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
 };
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod bindings;
 mod values;
-use values::{default_falsy_state, nonboolean_binding_state};
-
-const REUSABLE_CALL_INPUT_CONTEXTS: &[&str] =
-    &["github", "needs", "strategy", "matrix", "inputs", "vars"];
+use bindings::{binding_bool, binding_matches_type, normalized_bindings};
+use values::{default_value, nonboolean_binding_value};
 
 pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> Option<InputState> {
     // A workflow invoked directly by a repository event receives the declared
@@ -28,7 +24,7 @@ pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> Option<I
         contract
             .inputs
             .keys()
-            .map(|name| (normalized_name(name), StaticBool::False))
+            .map(|name| (normalized_name(name), StaticValue::Bool(false)))
             .collect(),
     )
 }
@@ -75,7 +71,7 @@ fn inputs_from_contract(
         if binding.is_none() && declaration.required {
             return None;
         }
-        if binding.is_some_and(|binding| !binding_matches_type(binding, input_type)) {
+        if binding.is_some_and(|binding| !binding_matches_type(binding, input_type, parent)) {
             return None;
         }
     }
@@ -84,25 +80,25 @@ fn inputs_from_contract(
             .inputs
             .iter()
             .map(|(name, declaration)| {
+                let input_type = declaration
+                    .input_type
+                    .expect("validated workflow_call input type");
                 let binding = binding_map
                     .as_ref()
                     .and_then(|mapping| mapping.get(&normalized_name(name)));
-                let state = match declaration
-                    .input_type
-                    .expect("validated workflow_call input type")
-                {
+                let state = match input_type {
                     WorkflowCallInputType::Boolean => binding
                         .map(|value| binding_bool(value, parent))
                         .unwrap_or_else(|| {
                             if let Some(JsonScalar::Bool(value)) = declaration.default.as_ref() {
-                                StaticBool::from(*value)
+                                StaticValue::Bool(*value)
                             } else {
-                                StaticBool::False
+                                StaticValue::Bool(false)
                             }
                         }),
                     WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
-                        .map(|value| nonboolean_binding_state(value, parent))
-                        .unwrap_or_else(|| default_falsy_state(declaration.default.as_ref())),
+                        .map(|value| nonboolean_binding_value(value, parent, input_type))
+                        .unwrap_or_else(|| default_value(declaration.default.as_ref(), input_type)),
                 };
                 (normalized_name(name), state)
             })
@@ -144,52 +140,6 @@ pub(crate) fn callee_secrets_valid(contract: &WorkflowCallContract, call_job: &V
     contract.secrets.iter().all(|(name, declaration)| {
         !declaration.required || bindings.contains_key(&normalized_name(name))
     })
-}
-
-fn normalized_bindings(mapping: &serde_yaml::Mapping) -> Option<BTreeMap<String, &Value>> {
-    let mut bindings = BTreeMap::new();
-    for (name, value) in mapping {
-        let name = normalized_name(name.as_str()?);
-        if bindings.insert(name, value).is_some() {
-            return None;
-        }
-    }
-    Some(bindings)
-}
-
-fn binding_matches_type(value: &Value, input_type: WorkflowCallInputType) -> bool {
-    if let Some(expression_type) = value
-        .as_str()
-        .and_then(|text| complete_expression_type(text.trim()))
-    {
-        return complete_expression_contexts_available(
-            value.as_str().expect("expression binding must be a string"),
-            REUSABLE_CALL_INPUT_CONTEXTS,
-        ) && matches!(
-            (input_type, expression_type),
-            (_, StaticExpressionType::Dynamic)
-                | (
-                    WorkflowCallInputType::Boolean,
-                    StaticExpressionType::Boolean
-                )
-                | (WorkflowCallInputType::Number, StaticExpressionType::Number)
-                | (WorkflowCallInputType::String, StaticExpressionType::String)
-        );
-    }
-    matches!(
-        (input_type, value),
-        (WorkflowCallInputType::Boolean, Value::Bool(_))
-            | (WorkflowCallInputType::Number, Value::Number(_))
-            | (WorkflowCallInputType::String, Value::String(_))
-    )
-}
-
-fn binding_bool(value: &Value, parent: &InputState) -> StaticBool {
-    if let Some(value) = value.as_bool() {
-        StaticBool::from(value)
-    } else {
-        expression_bool(value.as_str().unwrap_or_default(), parent)
-    }
 }
 
 #[cfg(test)]

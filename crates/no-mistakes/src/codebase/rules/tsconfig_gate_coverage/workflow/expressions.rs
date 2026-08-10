@@ -129,6 +129,14 @@ pub(super) fn condition_expression_valid(value: &str) -> bool {
 }
 
 pub(super) fn interpolated_expression_valid(value: &str) -> bool {
+    interpolated_expression_valid_for_contexts(value, None)
+}
+
+pub(super) fn interpolated_expression_contexts_available(value: &str, allowed: &[&str]) -> bool {
+    interpolated_expression_valid_for_contexts(value, Some(allowed))
+}
+
+fn interpolated_expression_valid_for_contexts(value: &str, allowed: Option<&[&str]>) -> bool {
     let mut remaining = value;
     loop {
         let Some(start) = remaining.find("${{") else {
@@ -138,9 +146,11 @@ pub(super) fn interpolated_expression_valid(value: &str) -> bool {
         let Some(end) = interpolated_expression_end(body) else {
             return false;
         };
-        if lexer::tokenize(body[..end].trim())
+        let expression = body[..end].trim();
+        if lexer::tokenize(expression)
             .and_then(|tokens| syntax::parse(&tokens))
             .is_none()
+            || allowed.is_some_and(|allowed| !root_contexts_available(expression, allowed))
         {
             return false;
         }

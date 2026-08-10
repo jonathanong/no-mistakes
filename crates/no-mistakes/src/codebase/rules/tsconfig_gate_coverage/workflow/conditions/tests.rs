@@ -1,14 +1,9 @@
-use super::StaticBool;
-use super::{static_bool, InputState};
+use super::{static_bool, InputState, StaticBool, StaticValue};
 use serde_yaml::Value;
 
 #[test]
 fn truthy_nonboolean_values_preserve_expression_semantics() {
     assert_eq!(StaticBool::TruthyNonBoolean.negate(), StaticBool::False);
-    assert_eq!(
-        StaticBool::TruthyNonBoolean.equals(true),
-        StaticBool::Unknown
-    );
 }
 
 #[test]
@@ -37,8 +32,8 @@ fn statically_resolves_falsy_condition_literals() {
 #[test]
 fn compound_conditions_short_circuit_known_input_truthiness() {
     let inputs = InputState::from([
-        ("disabled".into(), StaticBool::False),
-        ("enabled".into(), StaticBool::True),
+        ("disabled".into(), StaticValue::Bool(false)),
+        ("enabled".into(), StaticValue::Bool(true)),
     ]);
     for expression in [
         "inputs.disabled && github.ref == 'refs/heads/main'",
@@ -80,12 +75,40 @@ fn compound_conditions_short_circuit_known_input_truthiness() {
 
 #[test]
 fn boolean_input_comparisons_accept_case_insensitive_literals() {
-    let inputs = InputState::from([("enabled".into(), StaticBool::True)]);
+    let inputs = InputState::from([("enabled".into(), StaticValue::Bool(true))]);
     for (expression, expected) in [
         ("inputs.enabled == FALSE", StaticBool::False),
         ("TRUE == inputs.enabled", StaticBool::True),
         ("inputs.enabled != TRUE", StaticBool::False),
         ("FALSE != inputs.enabled", StaticBool::True),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
+fn input_comparisons_preserve_static_scalar_values() {
+    let inputs = InputState::from([
+        ("label".into(), StaticValue::String("Release".into())),
+        ("count".into(), StaticValue::Number("2".into())),
+        ("dynamic".into(), StaticValue::Unknown),
+    ]);
+    for (expression, expected) in [
+        ("inputs.label == 'release'", StaticBool::True),
+        ("'RELEASE' != inputs.label", StaticBool::False),
+        ("inputs.count == 2", StaticBool::True),
+        ("inputs.count != 1e2", StaticBool::True),
+        ("0 != inputs.count", StaticBool::True),
+        ("inputs.count == '2'", StaticBool::True),
+        ("inputs.label == 0", StaticBool::False),
+        ("inputs.dynamic == 'release'", StaticBool::Unknown),
+        ("inputs.count == NaN", StaticBool::Unknown),
+        ("inputs.count == inf", StaticBool::Unknown),
+        ("inputs.label == 'release == candidate'", StaticBool::False),
     ] {
         assert_eq!(
             static_bool(Some(&Value::String(expression.into())), &inputs),
