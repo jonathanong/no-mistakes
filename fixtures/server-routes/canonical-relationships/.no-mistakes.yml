@@ -1,0 +1,12 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    routes:
+      - "**/*.ts"
+tests:
+  vitest:
+    projects:
+      backend:
+        include:
+          - "backend/**/*.test.ts"

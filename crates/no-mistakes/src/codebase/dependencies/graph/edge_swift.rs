@@ -5,27 +5,36 @@ struct SwiftRouteDefInputs<'a> {
     all_files: &'a [PathBuf],
     config_options: &'a GraphConfigOptions,
     ts_facts: Option<&'a dyn TsFactLookup>,
+    session: &'a crate::codebase::analysis_session::AnalysisSession,
 }
 
-fn collect_swift_edges_with_facts(
-    root: &Path,
-    tsconfig: &TsConfig,
-    tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
-    all_files: &[PathBuf],
-    config_options: Option<&GraphConfigOptions>,
-    ts_facts: Option<&dyn TsFactLookup>,
-    prepared_facts: Option<&crate::codebase::swift::SwiftFactMap>,
-) -> Vec<Edge> {
-    let Some(config_options) = config_options else {
+struct SwiftEdgeInputs<'a> {
+    root: &'a Path,
+    tsconfig: &'a TsConfig,
+    tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
+    all_files: &'a [PathBuf],
+    config_options: Option<&'a GraphConfigOptions>,
+    ts_facts: Option<&'a dyn TsFactLookup>,
+    prepared_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
+    session: &'a crate::codebase::analysis_session::AnalysisSession,
+}
+
+fn collect_swift_edges_with_facts(inputs: SwiftEdgeInputs<'_>) -> Vec<Edge> {
+    let Some(config_options) = inputs.config_options else {
         return Vec::new();
     };
     if config_options.swift_packages.is_empty() {
         return Vec::new();
     }
-    let owned_facts = prepared_facts.is_none().then(|| {
-        crate::codebase::swift::collect_swift_facts(root, all_files, &config_options.swift_packages)
+    let owned_facts = inputs.prepared_facts.is_none().then(|| {
+        crate::codebase::swift::collect_swift_facts(
+            inputs.root,
+            inputs.all_files,
+            &config_options.swift_packages,
+        )
     });
-    let facts = prepared_facts
+    let facts = inputs
+        .prepared_facts
         .or(owned_facts.as_ref())
         .expect("Swift facts are prepared or collected");
     if facts.files.is_empty() {
@@ -38,12 +47,13 @@ fn collect_swift_edges_with_facts(
     collect_swift_package_edges(facts, &mut edges);
     collect_swift_http_edges(
         SwiftRouteDefInputs {
-            root,
-            tsconfig,
-            tsconfig_catalog,
-            all_files,
+            root: inputs.root,
+            tsconfig: inputs.tsconfig,
+            tsconfig_catalog: inputs.tsconfig_catalog,
+            all_files: inputs.all_files,
             config_options,
-            ts_facts,
+            ts_facts: inputs.ts_facts,
+            session: inputs.session,
         },
         facts,
         &mut edges,
@@ -132,6 +142,7 @@ fn swift_route_defs(inputs: &SwiftRouteDefInputs<'_>) -> Vec<(PathBuf, String)> 
     let all_files = inputs.all_files;
     let config_options = inputs.config_options;
     let facts = inputs.ts_facts;
+    let session = inputs.session;
     let mut route_defs = Vec::new();
     if let (Some(backend_pattern), Some(register_object)) = (
         resolved_backend_pattern(config_options),
@@ -149,15 +160,16 @@ fn swift_route_defs(inputs: &SwiftRouteDefInputs<'_>) -> Vec<(PathBuf, String)> 
         }
     }
     if let Some(route_globset) = config_options.project_route_globset.as_ref() {
-        route_defs.extend(collect_project_server_route_defs(
+        route_defs.extend(collect_project_server_route_defs(ProjectRouteDefInputs {
             root,
             all_files,
             tsconfig,
             tsconfig_catalog,
             route_globset,
             facts,
-            config_options.test_filter.as_ref(),
-        ));
+            test_filter: config_options.test_filter.as_ref(),
+            session,
+        }));
     }
     route_defs.extend(collect_next_route_handler_defs(
         root,

@@ -31,10 +31,12 @@ pub struct PreparedServerAnalysis {
     pub(crate) tsconfig: TsConfig,
     pub(crate) config: Option<crate::config::v2::NoMistakesConfig>,
     pub(crate) facts: crate::codebase::ts_source::facts::TsFactMap,
+    pub(crate) client_relationships: PreparedClientRelationships,
     pub(crate) session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 }
 
 include!("graph_prepare.rs");
+include!("graph_client_relationships.rs");
 
 pub fn analyze_project(
     root: &Path,
@@ -74,12 +76,7 @@ pub fn analyze_project_with_prepared_indexed(
 fn analyze_project_with_prepared_inner<T>(
     prepared: &PreparedServerAnalysis,
     filters: &[String],
-    builder: impl FnOnce(
-        &Path,
-        &HashMap<PathBuf, FileFacts>,
-        &TsConfig,
-        &crate::codebase::analysis_session::AnalysisSession,
-    ) -> T,
+    builder: impl FnOnce(&PreparedServerAnalysis, &HashMap<PathBuf, FileFacts>, &[PathBuf]) -> T,
 ) -> anyhow::Result<T> {
     let root = &prepared.root;
     let config_route_filter = prepared
@@ -92,6 +89,7 @@ fn analyze_project_with_prepared_inner<T>(
         .as_ref()
         .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
     let filter = build_filter(filters)?;
+    let client_paths = client_source_paths(prepared, filter.as_ref(), test_filter.as_ref());
     let mut facts = HashMap::new();
     for path in prepared.source_files.iter() {
         let rel = path.strip_prefix(root).unwrap_or(path);
@@ -116,65 +114,10 @@ fn analyze_project_with_prepared_inner<T>(
             }
         }
     }
-    Ok(builder(root, &facts, &prepared.tsconfig, &prepared.session))
+    Ok(builder(prepared, &facts, &client_paths))
 }
 
-pub(crate) fn route_defs_from_files_with_catalog(
-    root: &Path,
-    files: &[PathBuf],
-    tsconfig: &TsConfig,
-    tsconfig_catalog: Option<&TsConfigCatalog>,
-) -> Vec<(PathBuf, String)> {
-    let root = root.canonicalize().unwrap_or(root.to_path_buf());
-    let facts = collect_file_facts(files, &root);
-    build_route_defs(&root, &facts, tsconfig, tsconfig_catalog)
-}
-
-pub(crate) fn route_defs_from_prepared_facts_with_catalog(
-    root: &Path,
-    tsconfig: &TsConfig,
-    tsconfig_catalog: Option<&TsConfigCatalog>,
-    prepared: impl IntoIterator<Item = (PathBuf, FileFacts)>,
-) -> Vec<(PathBuf, String)> {
-    let root = root.canonicalize().unwrap_or(root.to_path_buf());
-    let facts = prepared.into_iter().collect();
-    build_route_defs(&root, &facts, tsconfig, tsconfig_catalog)
-}
-
-fn build_route_defs(
-    root: &Path,
-    facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
-    tsconfig_catalog: Option<&TsConfigCatalog>,
-) -> Vec<(PathBuf, String)> {
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let report = if let Some(catalog) = tsconfig_catalog {
-        let resolver = ScopedImportResolver::from_visible(catalog, &visible);
-        build_report_with_resolver(root, facts, &resolver)
-    } else {
-        build_report(root, facts, tsconfig)
-    };
-    report
-        .routes
-        .into_iter()
-        .map(|route| (root.join(route.file), route.route))
-        .collect()
-}
-
-fn collect_file_facts(files: &[PathBuf], root: &Path) -> HashMap<PathBuf, FileFacts> {
-    let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
-        files,
-        crate::codebase::ts_source::facts::TsFactPlan {
-            server_routes: true,
-            ..Default::default()
-        },
-        &crate::codebase::ts_source::facts::TsFactContext::new(root),
-    );
-    facts
-        .into_iter()
-        .filter_map(|(path, facts)| facts.server_routes.clone().map(|routes| (path, routes)))
-        .collect()
-}
+include!("graph_route_defs.rs");
 
 include!("graph_report.rs");
 

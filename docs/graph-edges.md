@@ -9,9 +9,9 @@ serialized in JSON/YAML/text output through the `via` field.
 The canonical in-memory edge index is also used by `queues edges|related` and
 `server edges|related`. Those commands retain their existing public edge DTOs:
 queue edges are file -> virtual job -> processor/worker relationships, while
-server edges are route-file -> normalized-route relationships. Server-route
-nodes are intentionally not added to unfiltered `dependencies --relationship
-all` output.
+server edges are route-file -> normalized-route relationships plus static
+client-call -> normalized-route relationships. Server-route nodes are
+intentionally not added to unfiltered `dependencies --relationship all` output.
 
 ## Supported Edges
 
@@ -31,6 +31,8 @@ all` output.
 | `test` | `TestOf` | `test` | test file -> corresponding source file | [`codebase-intel/packages/api/src/index.test.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/index.test.mts) |
 | `vitest-setup` | `VitestSetup` | `test` | Vitest test file -> its effective `setupFiles` or `globalSetup` module; edge detail identifies the field | `fixtures/test-plan/vitest-setup-dependencies` |
 | `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx) |
+| `server-route` | server `ServerRoute` DTO kind | `server edges`, `server related` | configured server route file -> normalized route node | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships) |
+| `client-call` | server `ClientCall` DTO kind | `server edges`, `server related` | static direct or local/imported route-helper client reference -> configured normalized route node; client sources honor filters and configured test exclusion | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships) |
 | `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts) |
 | `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts) |
 | `queue-worker` | `QueueWorker` | `queue` | virtual queue job node -> worker/processor file | [`codebase-intel/packages/api/src/worker.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/worker.mts) |
@@ -56,6 +58,11 @@ all` output.
 | `terraform-ref` | `TerraformReference` | `terraform` | Terraform file referencing `<type>.<name>` -> file declaring that resource/data source | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 | `terraform-module` | `TerraformModuleRef` | `terraform` | Terraform file with a `module` block -> files in the module's local source directory | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 | `terraform-output` | `TerraformOutputRef` | `terraform` | Terraform file referencing `module.<name>.<output>` -> file declaring that output | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
+
+For `server edges` and `server related`, filters limit client-call source files;
+they do not narrow the prepared resolver/fact universe used to follow a static
+local or imported route helper. Server-route definitions remain constrained by
+their configured roots, mounts, test exclusions, and any explicit filter.
 
 ## Relationship Filters
 

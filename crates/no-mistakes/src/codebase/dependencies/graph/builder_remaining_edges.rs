@@ -81,8 +81,11 @@ fn collect_remaining_edges(
         if plan.routes {
             let edges = collect_route_edges_with_graph_files(
                 root,
-                edge_inputs.tsconfig,
-                edge_inputs.tsconfig_catalog,
+                RouteGraphResolution {
+                    tsconfig: edge_inputs.tsconfig,
+                    tsconfig_catalog: edge_inputs.tsconfig_catalog,
+                    session: resolution.session,
+                },
                 resolver,
                 graph_files,
                 facts,
@@ -157,7 +160,7 @@ fn collect_remaining_edges(
         merge_dotnet_edges(edge_inputs, forward, reverse);
     });
     crate::perf_trace::trace("graph.swift", || {
-        merge_swift_edges(edge_inputs, facts, forward, reverse);
+        merge_swift_edges(edge_inputs, facts, resolution.session, forward, reverse);
     });
     crate::perf_trace::trace("graph.terraform", || {
         merge_terraform_edges(edge_inputs, forward, reverse);

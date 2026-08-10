@@ -21,6 +21,21 @@ impl<'a> ImportResolver<'a> {
         )
     }
 
+    /// Build an owned resolver whose visibility and result cache belong to one
+    /// request-scoped analysis session.
+    pub(crate) fn new_owned_in_session(
+        tsconfig: std::sync::Arc<TsConfig>,
+        visible: std::sync::Arc<HashSet<PathBuf>>,
+        session: &crate::codebase::analysis_session::AnalysisSession,
+    ) -> ImportResolver<'static> {
+        let mut resolver = Self::new_owned(tsconfig);
+        resolver.cache = session.resolver_cache(resolver.tsconfig(), Some(&visible));
+        resolver.visible = Some(ResolverVisible::Owned(visible));
+        resolver.session_scoped = true;
+        resolver.observer = session.observer().cloned();
+        resolver
+    }
+
     fn from_config(
         tsconfig: ResolverTsConfig<'a>,
         observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,

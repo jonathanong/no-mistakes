@@ -155,7 +155,20 @@ pub(super) fn collect_swift_edges(
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
-    collect_swift_edges_with_facts(root, tsconfig, None, all_files, config_options, None, None)
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let Some(config_options) = config_options else {
+        return Vec::new();
+    };
+    collect_swift_edges_with_facts(SwiftEdgeInputs {
+        root,
+        tsconfig,
+        tsconfig_catalog: None,
+        all_files,
+        config_options: Some(config_options),
+        ts_facts: None,
+        prepared_facts: None,
+        session: &session,
+    })
 }
 
 pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {

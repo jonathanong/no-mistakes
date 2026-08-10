@@ -100,25 +100,18 @@ fn configured_project_routes_reuse_prepared_server_facts() {
     assert!(facts[&root.join("src/client.ts")].server_routes.is_none());
     assert!(facts[&root.join("backend/api/ignored.test.ts")].server_routes.is_none());
 
-    let standalone = collect_project_server_route_defs(
-        &root,
-        &all_files,
-        &tsconfig,
-        None,
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let reused = collect_project_server_route_defs(ProjectRouteDefInputs {
+        root: &root,
+        all_files: &all_files,
+        tsconfig: &tsconfig,
+        tsconfig_catalog: None,
         route_globset,
-        None,
-        options.test_filter.as_ref(),
-    );
-    let reused = collect_project_server_route_defs(
-        &root,
-        &all_files,
-        &tsconfig,
-        None,
-        route_globset,
-        Some(&facts),
-        options.test_filter.as_ref(),
-    );
-    assert_eq!(reused, standalone);
+        facts: Some(&facts),
+        test_filter: options.test_filter.as_ref(),
+        session: &session,
+    });
+    assert!(reused.contains(&(root.join("backend/api/users.ts"), "/api/users/*".into())));
 
     crate::ast::begin_parse_count(&root);
     let graph = DepGraph::build_with_plan(&root, &tsconfig, plan).unwrap();
@@ -158,27 +151,19 @@ fn prepared_project_route_facts_preserve_imported_mounts_and_test_exclusions() {
         effective_ts_fact_plan(plan, Some(&options)),
         &ts_fact_context_from_options(&root, plan, Some(&options)),
     );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
-    let standalone = collect_project_server_route_defs(
-        &root,
-        &all_files,
-        &tsconfig,
-        None,
+    let reused = collect_project_server_route_defs(ProjectRouteDefInputs {
+        root: &root,
+        all_files: &all_files,
+        tsconfig: &tsconfig,
+        tsconfig_catalog: None,
         route_globset,
-        None,
-        options.test_filter.as_ref(),
-    );
-    let reused = collect_project_server_route_defs(
-        &root,
-        &all_files,
-        &tsconfig,
-        None,
-        route_globset,
-        Some(&facts),
-        options.test_filter.as_ref(),
-    );
+        facts: Some(&facts),
+        test_filter: options.test_filter.as_ref(),
+        session: &session,
+    });
 
-    assert_eq!(reused, standalone);
     assert!(reused.contains(&(root.join("backend/api/admin-router.ts"), "/api/admin/*".into())));
     assert!(reused.iter().all(|(file, route)| {
         file != &root.join("backend/api/ignored.test.ts") && route != "/api/test-only"
@@ -223,16 +208,18 @@ fn workspace_project_routes_resolve_mount_aliases_with_the_owning_tsconfig() {
     let all_files = shared.graph_files().all.clone();
     let tsconfig = shared.tsconfig().clone();
     let tsconfig_catalog = shared.tsconfig_catalog_arc();
+    let session = shared.session_arc();
     let facts = shared.facts();
-    let route_defs = collect_project_server_route_defs(
-        &root,
-        &all_files,
-        &tsconfig,
-        Some(&tsconfig_catalog),
-        options.project_route_globset.as_ref().unwrap(),
-        Some(facts),
-        options.test_filter.as_ref(),
-    );
+    let route_defs = collect_project_server_route_defs(ProjectRouteDefInputs {
+        root: &root,
+        all_files: &all_files,
+        tsconfig: &tsconfig,
+        tsconfig_catalog: Some(&tsconfig_catalog),
+        route_globset: options.project_route_globset.as_ref().unwrap(),
+        facts: Some(facts),
+        test_filter: options.test_filter.as_ref(),
+        session: &session,
+    });
     assert!(route_defs.contains(&(admin_router.clone(), "/api/admin/*".into())));
 
     let graph = shared.canonical_graph().unwrap();

@@ -38,12 +38,15 @@ pub fn prepare_analysis(
             &sources,
         );
     crate::invocation::check_timeout()?;
+    let client_relationships =
+        PreparedClientRelationships::new(&source_files, &tsconfig, &session);
     Ok(PreparedServerAnalysis {
         root,
         source_files: std::sync::Arc::new(source_files),
         tsconfig,
         config,
         facts,
+        client_relationships,
         session,
     })
 }
@@ -84,12 +87,15 @@ pub fn prepare_analysis_with_shared_facts_and_session(
         }),
         shared.graph_plan(),
     );
+    let source_files = source_files.to_vec();
+    let client_relationships = PreparedClientRelationships::new(&source_files, tsconfig, &session);
     PreparedServerAnalysis {
         root: root.to_path_buf(),
-        source_files: std::sync::Arc::new(source_files.to_vec()),
+        source_files: std::sync::Arc::new(source_files),
         tsconfig: tsconfig.clone(),
         config: Some(config.clone()),
         facts,
+        client_relationships,
         session,
     }
 }
