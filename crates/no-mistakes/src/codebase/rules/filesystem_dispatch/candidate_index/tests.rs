@@ -327,6 +327,7 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
             workflow_documents: None,
             tsconfig_gate_project_inputs: None,
             config_path: None,
+            defer_suppression: false,
         },
     )
     .unwrap();

@@ -73,7 +73,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let mut rules = completed.rules;
     let mut integration = completed.integration;
     let mut codebase = completed.codebase;
-    let filesystem_rules = completed.filesystem_rules;
+    let mut filesystem_rules = completed.filesystem_rules;
     let warnings = [
         react_warning,
         react.warning,
@@ -86,7 +86,6 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .into_iter()
     .flatten()
     .collect();
-    rules.findings.extend(filesystem_rules.findings);
     let mut suppressed = Vec::new();
     suppressed.extend(
         no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
@@ -136,6 +135,20 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     suppressed.extend(
         no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
             root,
+            &mut filesystem_rules.findings,
+            sources,
+            |finding| no_mistakes::codebase::rules::SuppressionTarget {
+                domain: "filesystem",
+                rule: &finding.rule,
+                file: &finding.file,
+                line: Some(finding.line),
+                reason: &finding.message,
+            },
+        ),
+    );
+    suppressed.extend(
+        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
+            root,
             &mut integration.findings,
             sources,
             |finding| no_mistakes::codebase::rules::SuppressionTarget {
@@ -163,6 +176,10 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     );
     suppressed.sort();
     suppressed.dedup();
+    // The public `rules` list has historically contained both codebase and
+    // filesystem findings in that domain order. Preserve it while retaining
+    // the distinct adapter identity in optional suppression accounting.
+    rules.findings.extend(filesystem_rules.findings);
     let advisories = if filesystem_rules_enabled {
         no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_and_sources(
             root,

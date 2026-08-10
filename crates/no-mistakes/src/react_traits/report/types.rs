@@ -37,6 +37,9 @@ pub struct FetchCall {
     pub file: String,
     pub exported_name: Option<String>,
     pub shape: Option<String>,
+    /// Internal location for aggregate-check suppression. Direct React reports
+    /// intentionally retain their established JSON schema.
+    #[serde(skip)]
     pub line: usize,
 }
 

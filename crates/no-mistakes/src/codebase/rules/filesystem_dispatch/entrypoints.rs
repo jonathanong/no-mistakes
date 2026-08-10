@@ -160,6 +160,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
             workflow_documents: workflows.as_ref(),
             tsconfig_gate_project_inputs: project_inputs.as_ref(),
             config_path,
+            defer_suppression: false,
         },
         facts.as_ref(),
     )

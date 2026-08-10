@@ -29,6 +29,9 @@ pub struct PreparedFilesystemRuleInputs<'a> {
     pub workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
     pub tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     pub config_path: Option<&'a Path>,
+    /// Aggregate `check` applies SourceStore-backed suppression once after all
+    /// domains finish so it can report optional directive accounting.
+    pub defer_suppression: bool,
 }
 
 #[doc(hidden)]
@@ -71,6 +74,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
         workflow_documents,
         tsconfig_gate_project_inputs,
         config_path,
+        defer_suppression,
     } = prepared;
     let acc = Mutex::new(Vec::new());
     let metadata_files = metadata::metadata_files(root, config, files, snapshot);
@@ -106,16 +110,18 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     for (_, result) in results {
         findings.extend(result?);
     }
-    suppress_rule_findings_with_sources_except(
-        root,
-        &mut findings,
-        &sources,
-        &[
-            RUST_MAX_LINES_PER_FILE,
-            RUST_NO_INLINE_TESTS,
-            RUST_NO_INLINE_ALLOWS,
-        ],
-    );
+    if !defer_suppression {
+        suppress_rule_findings_with_sources_except(
+            root,
+            &mut findings,
+            &sources,
+            &[
+                RUST_MAX_LINES_PER_FILE,
+                RUST_NO_INLINE_TESTS,
+                RUST_NO_INLINE_ALLOWS,
+            ],
+        );
+    }
     super::super::sort_findings(&mut findings);
     Ok(findings)
 }

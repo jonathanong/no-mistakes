@@ -35,7 +35,7 @@ export interface CheckReport {
 }
 
 export interface SuppressedFinding {
-  domain: "react" | "queues" | "rules" | "integration" | "codebase";
+  domain: "react" | "queues" | "rules" | "filesystem" | "integration" | "codebase";
   rule: string;
   file: string;
   line?: number;

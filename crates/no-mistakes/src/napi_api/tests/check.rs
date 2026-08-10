@@ -87,8 +87,14 @@ fn check_json_audit_mode_includes_an_empty_suppression_array() {
 #[test]
 fn check_json_accounts_for_react_queue_and_integration_adapters() {
     let fixtures = [
-        ("suppression-react", "react", "assert-no-fetch", "file"),
+        ("suppression-react", "react", "assert-no-fetch", "nextLine"),
         ("suppression-queues", "queues", "queues-check", "file"),
+        (
+            "suppression-filesystem",
+            "filesystem",
+            "no-empty-or-comments-only-files",
+            "file",
+        ),
         (
             "suppression-integration",
             "integration",
@@ -115,6 +121,24 @@ fn check_json_accounts_for_react_queue_and_integration_adapters() {
             "{fixture}: {value}"
         );
     }
+}
+
+#[test]
+fn check_json_records_react_next_line_directive_at_the_fetch_location() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/suppression-react");
+    let output =
+        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let finding = value["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| finding["domain"] == "react")
+        .unwrap_or_else(|| panic!("missing React suppression: {value}"));
+    assert_eq!(finding["line"], 3);
+    assert_eq!(finding["directive"]["kind"], "nextLine");
+    assert_eq!(finding["directive"]["line"], 2);
 }
 
 #[test]

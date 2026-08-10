@@ -382,11 +382,15 @@ fn react_json_functions_return_reports() {
     .to_string();
     let output = react_analyze_json_impl(options).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
-    assert!(value
+    let fetching = value
         .as_array()
         .unwrap()
         .iter()
-        .any(|entry| entry["name"] == "FetchingComponent"));
+        .find(|entry| entry["name"] == "FetchingComponent")
+        .expect("fixture must expose its fetching component");
+    // Suppression needs the internal source location, but React analysis must
+    // not gain a location field without an explicit public DTO change.
+    assert!(fetching["fetches"][0].get("line").is_none());
 
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

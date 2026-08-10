@@ -179,6 +179,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                     workflow_documents,
                                                     tsconfig_gate_project_inputs,
                                                     config_path: config_path.as_deref(),
+                                                    defer_suppression,
                                                 },
                                                 Some(facts),
                                             )
