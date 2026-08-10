@@ -64,7 +64,8 @@ Key flags:
   tests plus only tests one reverse canonical graph edge away, with normal
   execution targets. It bypasses test-plan groups, environment include/exclude,
   limits, sampling, and fallback. Do not combine it with limit or global
-  fallback overrides.
+  fallback overrides. Canonical graph warnings are still reported when dynamic
+  resource calls could make reverse ownership incomplete.
 
 `fullSuiteTriggers.projects` can scope a configured trigger to runner projects:
 

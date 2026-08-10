@@ -1,7 +1,9 @@
 import type { SymbolEntrypoint } from "./traversal-types";
 
-export interface TestsPlanOptions {
-  framework?: "vitest" | "playwright" | "dotnet" | "swift";
+type TestPlanFramework = "vitest" | "playwright" | "dotnet" | "swift";
+
+interface TestsPlanOptionsBase {
+  framework?: TestPlanFramework;
   /** Project root. Defaults to the current working directory. */
   root?: string;
   /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
@@ -24,9 +26,28 @@ export interface TestsPlanOptions {
   limitPercent?: number;
   limitFiles?: number;
   globalConfigFallback?: boolean;
-  /** Select changed framework-owned tests plus tests one reverse graph edge away. Requires framework. */
-  directTestOwner?: boolean;
 }
+
+/**
+ * Options for `testsPlan()`. Direct-owner plans intentionally bypass normal
+ * test-plan policy, so their incompatible options are rejected at compile time.
+ */
+export type TestsPlanOptions =
+  | (Omit<
+      TestsPlanOptionsBase,
+      "framework" | "limitPercent" | "limitFiles" | "globalConfigFallback"
+    > & {
+      /** Select changed framework-owned tests plus tests one reverse graph edge away. */
+      directTestOwner: true;
+      framework: TestPlanFramework;
+      limitPercent?: never;
+      limitFiles?: never;
+      globalConfigFallback?: never;
+    })
+  | (TestsPlanOptionsBase & {
+      /** Set to true only with an explicit framework and without policy overrides. */
+      directTestOwner?: false;
+    });
 
 export interface TestsImpactOptions {
   /** Project root. Defaults to the current working directory. */

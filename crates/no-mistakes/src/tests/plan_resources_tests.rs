@@ -255,6 +255,35 @@ fn dynamic_resource_consumer_warns_without_creating_a_resource_reason() {
 }
 
 #[test]
+fn direct_test_owner_keeps_changed_resource_diagnostics_without_another_graph_pass() {
+    let fixture = resource_fixture_root();
+    let root = fixture.path().canonicalize().unwrap();
+    let mut args = resource_plan_args(&root, root.join("extractor-dynamic.ts"));
+    // Direct owner diagnostics must cover every changed input, not only the
+    // first file that happens to select a framework-owned test.
+    args.changed_file.push(root.join("dynamic-pattern.ts"));
+    args.framework = Some(crate::tests::TestFramework::Vitest);
+    args.direct_test_owner = true;
+    let prepared = crate::tests::prepared_plan::PreparedTestPlanRequest::prepare(&args).unwrap();
+
+    let plan = crate::tests::plan::generate_plan_with_prepared(&args, &prepared, None).unwrap();
+
+    assert_eq!(prepared.graph_build_count(), 1);
+    assert_eq!(prepared.framework_discovery_count(), 1);
+    assert_eq!(
+        plan.warnings
+            .iter()
+            .map(|warning| (warning.r#type.as_str(), warning.file.as_str(), warning.line))
+            .collect::<Vec<_>>(),
+        [
+            ("dynamic-resource-pattern", "dynamic-pattern.ts", Some(4)),
+            ("dynamic-resource-path", "extractor-dynamic.ts", Some(4)),
+            ("dynamic-resource-cwd", "extractor-dynamic.ts", Some(6)),
+        ]
+    );
+}
+
+#[test]
 fn readdir_and_nested_glob_resource_changes_select_only_their_consumers() {
     let fixture = resource_fixture_root();
     let root = fixture.path().canonicalize().unwrap();

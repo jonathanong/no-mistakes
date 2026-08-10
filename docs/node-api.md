@@ -119,7 +119,13 @@ away. This bypasses test-plan environment policy (including groups, limits,
 samples, fallback, and include/exclude filtering), attaches normal execution
 targets, and returns a `direct-test-owner` group with `fallback_triggered:
 false`. `limitPercent`, `limitFiles`, and `globalConfigFallback` conflict with
-this option.
+this option. The returned warnings retain canonical graph diagnostics for
+dynamic resource calls in changed files, so incomplete reverse ownership is
+visible to API consumers.
+
+The TypeScript declaration models this as a discriminated option: direct-owner
+plans require `framework`, while ordinary plans omit `directTestOwner` or set it
+to `false`.
 
 `testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to

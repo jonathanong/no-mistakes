@@ -2,6 +2,7 @@ use super::finalize::{attach_targets, sorted_selected_tests, sorted_warnings};
 use super::vitest_setup_fallback;
 use super::{relative_path, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult};
 use crate::tests::configured_plan_candidates::merge_selected;
+use crate::tests::{push_resource_diagnostics, warning_key, Warning, WarningKey};
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::NodeId;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -106,22 +107,44 @@ pub(crate) fn generate_direct_test_owner_plan_with_prepared(
             limit: None,
         }],
         selected_tests,
-        warnings: sorted_warnings(
-            prepared
-                .tsconfig_warnings()
-                .into_iter()
-                .chain(vitest_setup_fallback::framework_warnings(
-                    framework,
-                    root,
-                    prepared.vitest_projects(),
-                ))
-                .collect(),
-        ),
+        warnings: direct_owner_warnings(framework, prepared, graph),
         fallback_triggered: false,
         fallback_reason: None,
     };
     attach_targets(&mut plan, root, &discovered_tests);
     Ok(plan)
+}
+
+/// Reuse the prepared graph's canonical resource diagnostics. Direct-owner
+/// plans intentionally skip configured-plan candidate traversal, but dynamic
+/// resource calls in changed files are still incomplete reverse-owner facts.
+/// The graph and its fact pass have already been initialized above.
+fn direct_owner_warnings(
+    framework: TestFramework,
+    prepared: &super::super::prepared_plan::PreparedTestPlanRequest,
+    graph: &no_mistakes::codebase::dependencies::graph::DepGraph,
+) -> Vec<Warning> {
+    let mut warnings = prepared.tsconfig_warnings();
+    let mut warnings_seen: HashSet<WarningKey> = warnings.iter().map(warning_key).collect();
+    for changed in prepared
+        .changed_files
+        .iter()
+        .chain(prepared.collected.deleted.iter())
+    {
+        push_resource_diagnostics(
+            graph,
+            &prepared.root,
+            changed,
+            &mut warnings,
+            &mut warnings_seen,
+        );
+    }
+    warnings.extend(vitest_setup_fallback::framework_warnings(
+        framework,
+        &prepared.root,
+        prepared.vitest_projects(),
+    ));
+    sorted_warnings(warnings)
 }
 
 fn insert_selection(

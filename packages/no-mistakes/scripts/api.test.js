@@ -491,7 +491,10 @@ test("test plan declarations require current results but accept saved legacy pla
     /export type SavedTestPlan = Omit<TestPlan, "changed_files"> & \{\n  changed_files\?: string\[\];\n\};/,
   );
   assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
-  assert.match(declarations, /directTestOwner\?: boolean;/);
+  assert.match(declarations, /export type TestsPlanOptions =/);
+  assert.match(declarations, /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/);
+  assert.match(declarations, /limitPercent\?: never;[\s\S]*limitFiles\?: never;/);
+  assert.match(declarations, /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false;/);
 });
 
 test("graph declarations expose GitHub Actions workflow relationships and virtual nodes", () => {

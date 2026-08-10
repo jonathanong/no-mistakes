@@ -49,3 +49,47 @@ fn tests_plan_json_direct_test_owner_requires_framework_and_rejects_policy_overr
     .unwrap_err();
     assert!(limit.to_string().contains("directTestOwner conflicts"));
 }
+
+#[test]
+fn tests_plan_json_direct_test_owner_reports_changed_resource_diagnostics() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/test-plan/resource-impact");
+    let output = tests_plan_json_impl(
+        json!({
+            "root": root,
+            "framework": "vitest",
+            "changedFiles": ["extractor-dynamic.ts"],
+            "directTestOwner": true,
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["groups"][0]["type"], "direct-test-owner");
+    assert_eq!(
+        plan["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|warning| {
+                (
+                    warning["type"].as_str(),
+                    warning["file"].as_str(),
+                    warning["line"].as_u64(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                Some("dynamic-resource-path"),
+                Some("extractor-dynamic.ts"),
+                Some(4),
+            ),
+            (
+                Some("dynamic-resource-cwd"),
+                Some("extractor-dynamic.ts"),
+                Some(6),
+            ),
+        ]
+    );
+}
