@@ -42,11 +42,11 @@ fn optional_walk_helpers_visit_present_nodes() {
         .body
         .iter()
         .find_map(|stmt| match stmt {
-            Statement::ExportNamedDeclaration(export) => Some(export),
+            Statement::ExportDeclaration(export) => Some(export),
             _ => None,
         })
-        .expect("fixture must contain a named export");
-    walk_optional_declaration(export.declaration.as_ref(), &mut count);
+        .expect("fixture must contain an inline export");
+    walk_declaration(&export.declaration, &mut count);
 
     let var_decl = program
         .body

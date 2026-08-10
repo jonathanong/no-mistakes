@@ -18,8 +18,8 @@ pub(in crate::integration_tests) fn top_level_object_bindings<'a>(
     for statement in &program.body {
         let declaration = match statement {
             Statement::VariableDeclaration(declaration) => Some(declaration),
-            Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-                Some(Declaration::VariableDeclaration(declaration)) => Some(declaration),
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                Declaration::VariableDeclaration(declaration) => Some(declaration),
                 _ => None,
             },
             _ => None,

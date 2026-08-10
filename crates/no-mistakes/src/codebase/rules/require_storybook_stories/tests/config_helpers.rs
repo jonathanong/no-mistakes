@@ -174,9 +174,7 @@ export default {
     let expression_patterns = config::extract_storybook_story_patterns(
         r#"
 export default {
-  stories: () => {
-    ("../expression/**/*.stories.tsx");
-  },
+  stories: () => "../expression/**/*.stories.tsx",
 };
 "#,
     );

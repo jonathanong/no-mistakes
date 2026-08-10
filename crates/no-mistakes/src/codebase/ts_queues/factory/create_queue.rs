@@ -81,31 +81,25 @@ fn check_stmt_for_create_queue(
             }
             None
         }
-        Statement::ExportNamedDeclaration(export) => {
-            if let Some(decl) = &export.declaration {
-                match decl {
-                    oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
-                        for d in &var_decl.declarations {
-                            if let Some(init) = &d.init {
-                                if let Some(line) = check_expr_for_create_queue(
-                                    init,
-                                    source,
-                                    bindings,
-                                    factory_specifier,
-                                    factory_function,
-                                ) {
-                                    return Some(line);
-                                }
-                            }
+        Statement::ExportDeclaration(export) => match &export.declaration {
+            oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
+                for d in &var_decl.declarations {
+                    if let Some(init) = &d.init {
+                        if let Some(line) = check_expr_for_create_queue(
+                            init,
+                            source,
+                            bindings,
+                            factory_specifier,
+                            factory_function,
+                        ) {
+                            return Some(line);
                         }
-                        None
                     }
-                    _ => None,
                 }
-            } else {
                 None
             }
-        }
+            _ => None,
+        },
         _ => None,
     }
 }

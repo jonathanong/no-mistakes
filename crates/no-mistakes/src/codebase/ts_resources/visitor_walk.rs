@@ -30,7 +30,9 @@ impl<'a> ResourceVisitor<'a> {
     ) {
         self.push_function(name);
         self.shadow_parameters(&arrow.params);
-        self.predeclare_var_bindings_in_statements(&arrow.body.statements);
+        if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+            self.predeclare_var_bindings_in_statements(statements);
+        }
         walk::walk_arrow_function_expression(self, arrow);
         self.pop_function();
     }

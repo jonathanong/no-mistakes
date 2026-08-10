@@ -24,9 +24,13 @@ fn collect_from_expression<'a>(
         Expression::ArrowFunctionExpression(arrow) => {
             let mut scoped_bindings = router_bindings.clone();
             remove_shadowed_parameters(&arrow.params, &mut scoped_bindings);
-            collect_router_bindings_for_scope(&arrow.body.statements, &mut scoped_bindings);
-            for s in &arrow.body.statements {
-                collect_from_statement(s, source, file, &mut scoped_bindings, refs);
+            if let Some(expression) = arrow.body.as_expression() {
+                collect_from_expression(expression, source, file, &mut scoped_bindings, refs);
+            } else if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+                collect_router_bindings_for_scope(statements, &mut scoped_bindings);
+                for s in statements {
+                    collect_from_statement(s, source, file, &mut scoped_bindings, refs);
+                }
             }
         }
         Expression::FunctionExpression(func) => {

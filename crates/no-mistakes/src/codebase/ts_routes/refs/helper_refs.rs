@@ -41,10 +41,9 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     }
                 }
             }
-            Statement::ExportNamedDeclaration(export)
-                if export.source.is_some() && !export.export_kind.is_type() =>
+            Statement::ExportFromDeclaration(export) if !export.export_kind.is_type() =>
             {
-                let source = export.source.as_ref().expect("checked source").value.as_str();
+                let source = export.source.value.as_str();
                 for specifier in &export.specifiers {
                     if specifier.export_kind.is_type() {
                         continue;
@@ -72,8 +71,7 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     default_aliases.push(alias.to_string());
                 }
             }
-            Statement::ExportNamedDeclaration(export)
-                if export.source.is_none() && export.declaration.is_none() && !export.export_kind.is_type() =>
+            Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() =>
             {
                 for specifier in &export.specifiers {
                     if !specifier.export_kind.is_type() {
@@ -84,12 +82,9 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     }
                 }
             }
-            Statement::ExportNamedDeclaration(export)
-                if export.source.is_none() && !export.export_kind.is_type() =>
+            Statement::ExportDeclaration(export) =>
             {
-                if let Some(declaration) = export.declaration.as_ref() {
-                    imports.extend(exported_imported_helper_wrapper(declaration, &imports));
-                }
+                imports.extend(exported_imported_helper_wrapper(&export.declaration, &imports));
             }
             _ => {}
         }

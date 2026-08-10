@@ -23,9 +23,7 @@ mod root_options;
 mod root_spreads;
 mod string_projects;
 
-use expression_options::{
-    expression_options, expression_statement_options, helper_expression_options, imported_options,
-};
+use expression_options::{expression_options, helper_expression_options, imported_options};
 use function_returns::body_return_options;
 use functions::top_level_function_bodies;
 use imports::{direct_literal_require_binding, import_bindings, ImportBinding};

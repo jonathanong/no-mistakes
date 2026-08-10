@@ -20,6 +20,7 @@ include!("patterns.rs");
 include!("helper_bindings.rs");
 include!("helper_bindings_namespace_aliases.rs");
 include!("helper_patterns.rs");
+include!("helper_patterns_defs.rs");
 include!("helper_patterns_aliases.rs");
 include!("helper_patterns_assign.rs");
 include!("helper_patterns_env.rs");

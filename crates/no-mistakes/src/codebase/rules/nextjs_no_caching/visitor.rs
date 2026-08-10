@@ -93,12 +93,11 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn check_export(&mut self, export: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
+    fn check_export(&mut self, export: &oxc_ast::ast::ExportDeclaration<'a>) {
         if !self.segment_config {
             return;
         }
-        let Some(Declaration::VariableDeclaration(var_decl)) = export.declaration.as_ref() else {
-            self.check_export_specifiers(export);
+        let Declaration::VariableDeclaration(var_decl) = &export.declaration else {
             return;
         };
         for decl in &var_decl.declarations {
@@ -115,9 +114,6 @@ impl<'a> NextjsCachingVisitor<'a> {
     }
 
     fn check_export_specifiers(&mut self, export: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
-        if export.source.is_some() {
-            return;
-        }
         for specifier in &export.specifiers {
             if let Some(message) = self
                 .segment_config_bindings
@@ -183,8 +179,13 @@ impl<'a> Visit<'a> for NextjsCachingVisitor<'a> {
         &mut self,
         export: &oxc_ast::ast::ExportNamedDeclaration<'a>,
     ) {
-        self.check_export(export);
+        self.check_export_specifiers(export);
         walk::walk_export_named_declaration(self, export);
+    }
+
+    fn visit_export_declaration(&mut self, export: &oxc_ast::ast::ExportDeclaration<'a>) {
+        self.check_export(export);
+        walk::walk_export_declaration(self, export);
     }
 
     fn visit_export_default_declaration(

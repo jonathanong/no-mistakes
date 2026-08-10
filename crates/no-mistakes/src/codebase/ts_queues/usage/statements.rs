@@ -15,9 +15,8 @@ fn scan_stmt(
                 }
             }
         }
-        Statement::ExportNamedDeclaration(e) => {
-            if let Some(decl) = &e.declaration {
-                match decl {
+        Statement::ExportDeclaration(e) => {
+                match &e.declaration {
                     oxc_ast::ast::Declaration::VariableDeclaration(v) => {
                         for d in &v.declarations {
                             if let Some(init) = &d.init {
@@ -30,7 +29,6 @@ fn scan_stmt(
                     }
                     _ => {}
                 }
-            }
         }
         Statement::ReturnStatement(r) => {
             if let Some(expr) = &r.argument {

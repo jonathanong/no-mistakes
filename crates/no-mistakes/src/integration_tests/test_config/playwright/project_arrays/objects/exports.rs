@@ -58,10 +58,14 @@ fn exported_object_options(
                     if specifier.export_kind.is_type() || specifier.exported.name() != exported {
                         continue;
                     }
-                    if let Some(reexport_source) = &export.source {
+                }
+            }
+            Statement::ExportFromDeclaration(export) if !export.export_kind.is_type() => {
+                for specifier in &export.specifiers {
+                    if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
                         return imported_object_options_from(
                             &ImportBinding {
-                                source: reexport_source.value.to_string(),
+                                source: export.source.value.to_string(),
                                 imported: specifier.local.name().to_string(),
                             },
                             path,
@@ -130,7 +134,7 @@ fn imported_reexport(program: &oxc_ast::ast::Program<'_>, exported: &str) -> Opt
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.export_kind.is_type() || export.source.is_some() {
+        if export.export_kind.is_type() {
             continue;
         }
         for specifier in &export.specifiers {
@@ -156,10 +160,10 @@ fn named_export_object<'a>(
         }
     }
     for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
+        let Statement::ExportDeclaration(export) = statement else {
             continue;
         };
-        let Some(Declaration::VariableDeclaration(declaration)) = &export.declaration else {
+        let Declaration::VariableDeclaration(declaration) = &export.declaration else {
             continue;
         };
         for declarator in &declaration.declarations {
@@ -175,9 +179,6 @@ fn named_export_object<'a>(
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.source.is_some() {
-            continue;
-        }
         for specifier in &export.specifiers {
             if specifier.export_kind.is_type() || specifier.exported.name() != exported {
                 continue;

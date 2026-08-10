@@ -17,14 +17,10 @@ fn collect_from_default_export(kind: &ExportDefaultDeclarationKind<'_>, values: 
             }
         }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            if arrow.expression {
-                for s in &arrow.body.statements {
-                    if let Statement::ExpressionStatement(expr_stmt) = s {
-                        values.extend(collect_string_leaves(&expr_stmt.expression));
-                    }
-                }
-            } else {
-                collect_returns_from_function_body(&arrow.body.statements, values);
+            if let Some(expression) = arrow.body.as_expression() {
+                values.extend(collect_string_leaves(expression));
+            } else if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+                collect_returns_from_function_body(statements, values);
             }
         }
         _ => {}

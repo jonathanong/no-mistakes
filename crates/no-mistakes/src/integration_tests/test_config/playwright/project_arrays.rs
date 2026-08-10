@@ -2,7 +2,6 @@ use super::{shared, Options};
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
-use oxc_ast::ast::Statement::ExpressionStatement;
 use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, Expression, FunctionBody, ObjectExpression, Program,
     Statement,
@@ -141,25 +140,18 @@ pub(super) fn helper_expression_options(
 ) -> Result<Vec<Options>> {
     let expression = unwrap_ts_wrappers(expression);
     match expression {
-        Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
-            expression_statement_options(&arrow.body, ctx)
-        }
-        Expression::ArrowFunctionExpression(arrow) => body_return_options(&arrow.body, ctx),
+        Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_expression() {
+            Some(expression) => expression_options(expression, ctx),
+            None => crate::ast::arrow_function_body(&arrow.body)
+                .map(|body| body_return_options(body, ctx))
+                .unwrap_or_else(|| Ok(Vec::new())),
+        },
         Expression::FunctionExpression(function) => match function.body.as_deref() {
             Some(body) => body_return_options(body, ctx),
             None => Ok(Vec::new()),
         },
         _ => expression_options(expression, ctx),
     }
-}
-
-#[rustfmt::skip]
-pub(super) fn expression_statement_options(
-    body: &FunctionBody<'_>,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<Vec<Options>> {
-    let Some(ExpressionStatement(statement)) = body.statements.first() else { return Ok(Vec::new()) };
-    expression_options(&statement.expression, ctx)
 }
 
 pub(in crate::integration_tests::test_config::playwright::project_arrays) fn imported_options(

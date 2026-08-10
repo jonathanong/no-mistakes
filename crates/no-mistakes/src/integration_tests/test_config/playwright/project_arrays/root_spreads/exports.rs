@@ -6,21 +6,18 @@ pub(in crate::integration_tests::test_config::playwright::project_arrays) fn sou
     exported: &str,
 ) -> Option<ImportBinding> {
     for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
+        let Statement::ExportFromDeclaration(export) = statement else {
             continue;
         };
         if export.export_kind.is_type() {
             continue;
         }
-        let Some(source) = &export.source else {
-            continue;
-        };
         for specifier in &export.specifiers {
             if specifier.export_kind.is_type() || specifier.exported.name() != exported {
                 continue;
             }
             return Some(ImportBinding {
-                source: source.value.to_string(),
+                source: export.source.value.to_string(),
                 imported: specifier.local.name().to_string(),
             });
         }
@@ -37,7 +34,7 @@ pub(in crate::integration_tests::test_config::playwright::project_arrays) fn imp
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.export_kind.is_type() || export.source.is_some() {
+        if export.export_kind.is_type() {
             continue;
         }
         for specifier in &export.specifiers {
@@ -60,10 +57,10 @@ pub(in crate::integration_tests::test_config::playwright::project_arrays) fn nam
     bindings: &super::super::ExprMap<'a>,
 ) -> Option<&'a ObjectExpression<'a>> {
     for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
+        let Statement::ExportDeclaration(export) = statement else {
             continue;
         };
-        let Some(Declaration::VariableDeclaration(declaration)) = &export.declaration else {
+        let Declaration::VariableDeclaration(declaration) = &export.declaration else {
             continue;
         };
         for declarator in &declaration.declarations {
@@ -82,9 +79,6 @@ pub(in crate::integration_tests::test_config::playwright::project_arrays) fn nam
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.source.is_some() {
-            continue;
-        }
         for specifier in &export.specifiers {
             if specifier.export_kind.is_type() || specifier.exported.name() != exported {
                 continue;

@@ -115,8 +115,8 @@ fn is_component_direct_lazy(program: &Program<'_>, span: Span) -> bool {
                     }
                 }
             }
-            Statement::ExportNamedDeclaration(e) => {
-                if let Some(Declaration::VariableDeclaration(v)) = &e.declaration {
+            Statement::ExportDeclaration(e) => {
+                if let Declaration::VariableDeclaration(v) = &e.declaration {
                     for d in &v.declarations {
                         if overlaps(d.span, span) {
                             if let Some(init) = &d.init {

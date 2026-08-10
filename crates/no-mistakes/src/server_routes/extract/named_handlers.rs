@@ -42,31 +42,27 @@ impl<'a> ServerRouteVisitor<'a> {
                     self.collect_named_handler_from_declarator(declarator, handlers);
                 }
             }
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(declaration) = &export.declaration {
-                    match declaration {
-                        oxc_ast::ast::Declaration::FunctionDeclaration(function) => {
-                            if let Some(id) = &function.id {
-                                if let Some(body) = &function.body {
-                                    handlers.insert(
-                                        id.name.to_string(),
-                                        HandlerShape {
-                                            params: &function.params,
-                                            body: &body.statements,
-                                        },
-                                    );
-                                }
-                            }
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                oxc_ast::ast::Declaration::FunctionDeclaration(function) => {
+                    if let Some(id) = &function.id {
+                        if let Some(body) = &function.body {
+                            handlers.insert(
+                                id.name.to_string(),
+                                HandlerShape {
+                                    params: &function.params,
+                                    body: &body.statements,
+                                },
+                            );
                         }
-                        oxc_ast::ast::Declaration::VariableDeclaration(declaration) => {
-                            for declarator in &declaration.declarations {
-                                self.collect_named_handler_from_declarator(declarator, handlers);
-                            }
-                        }
-                        _ => {}
                     }
                 }
-            }
+                oxc_ast::ast::Declaration::VariableDeclaration(declaration) => {
+                    for declarator in &declaration.declarations {
+                        self.collect_named_handler_from_declarator(declarator, handlers);
+                    }
+                }
+                _ => {}
+            },
             Statement::ExportDefaultDeclaration(export) => {
                 if let ExportDefaultDeclarationKind::FunctionDeclaration(function) =
                     &export.declaration
@@ -100,10 +96,12 @@ impl<'a> ServerRouteVisitor<'a> {
             return;
         };
         let handler = match init {
-            Expression::ArrowFunctionExpression(arrow) => Some(HandlerShape {
-                params: &arrow.params,
-                body: &arrow.body.statements,
-            }),
+            Expression::ArrowFunctionExpression(arrow) => {
+                crate::ast::arrow_function_body_statements(&arrow.body).map(|body| HandlerShape {
+                    params: &arrow.params,
+                    body,
+                })
+            }
             Expression::FunctionExpression(function) => {
                 function.body.as_ref().map(|body| HandlerShape {
                     params: &function.params,

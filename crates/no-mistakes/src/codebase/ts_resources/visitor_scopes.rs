@@ -89,10 +89,8 @@ impl<'a> ResourceVisitor<'a> {
                 }
                 Statement::FunctionDeclaration(function) => self.predeclare_function(function),
                 Statement::ClassDeclaration(class) => self.predeclare_class(class),
-                Statement::ExportNamedDeclaration(export) => {
-                    if let Some(declaration) = &export.declaration {
-                        self.predeclare_declaration(declaration);
-                    }
+                Statement::ExportDeclaration(export) => {
+                    self.predeclare_declaration(&export.declaration)
                 }
                 _ => {}
             }

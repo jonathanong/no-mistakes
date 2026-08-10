@@ -188,7 +188,9 @@ impl<'a> Visit<'a> for DynamicValuesVisitor {
     ) {
         let scope = arrow.body.span();
         self.scope_stack.push(scope);
-        self.collect_from_statements(&arrow.body.statements);
+        if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+            self.collect_from_statements(statements);
+        }
         oxc_ast_visit::walk::walk_arrow_function_expression(self, arrow);
         self.scope_stack.pop();
     }

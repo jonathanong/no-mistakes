@@ -1,18 +1,18 @@
 use super::{
-    array_options, body_return_options, expression_options, expression_statement_options,
-    helper_expression_options, import_bindings, imported_options, top_level_function_bodies, Ctx,
+    array_options, body_return_options, expression_options, helper_expression_options,
+    import_bindings, imported_options, top_level_function_bodies, Ctx,
 };
-use crate::ast;
 use crate::integration_tests::test_config::playwright::Options;
 use crate::integration_tests::test_config::shared;
 use anyhow::Result;
-use oxc_ast::ast::{
-    AssignmentTarget, ExportDefaultDeclarationKind, Expression, Program, Statement,
-};
+use oxc_ast::ast::{ExportDefaultDeclarationKind, Program, Statement};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod commonjs;
 mod declarations;
+use commonjs::commonjs_default_expression;
+use declarations::{declaration_options, export_from_options};
 
 pub(super) fn exported_options(
     program: &Program<'_>,
@@ -54,6 +54,17 @@ fn exported_options_lookup(
                 if let Some(options) =
                     declarations::named_export_options(export, exported, &mut ctx)
                 {
+                    return options.map(Some);
+                }
+            }
+            Statement::ExportDeclaration(export) => {
+                if let Some(options) = declaration_options(&export.declaration, exported, &mut ctx)
+                {
+                    return options.map(Some);
+                }
+            }
+            Statement::ExportFromDeclaration(export) => {
+                if let Some(options) = export_from_options(export, exported, &mut ctx) {
                     return options.map(Some);
                 }
             }
@@ -118,30 +129,6 @@ fn imported_options_lookup(
     result
 }
 
-fn commonjs_default_expression<'a>(expression: &'a Expression<'a>) -> Option<&'a Expression<'a>> {
-    let Expression::AssignmentExpression(assignment) = expression else {
-        return None;
-    };
-    if assignment_target_path(&assignment.left)
-        .as_deref()
-        .is_none_or(|parts| parts != ["module", "exports"])
-    {
-        return None;
-    }
-    Some(&assignment.right)
-}
-
-fn assignment_target_path(target: &AssignmentTarget<'_>) -> Option<Vec<String>> {
-    match target {
-        AssignmentTarget::StaticMemberExpression(member) => {
-            let mut parts = ast::expression_path(&member.object)?;
-            parts.push(member.property.name.to_string());
-            Some(parts)
-        }
-        _ => None,
-    }
-}
-
 fn default_export_options(
     export: &ExportDefaultDeclarationKind<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -150,11 +137,13 @@ fn default_export_options(
         ExportDefaultDeclarationKind::Identifier(identifier) => {
             default_identifier_options(identifier.name.as_str(), ctx)
         }
-        ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) if arrow.expression => {
-            expression_statement_options(&arrow.body, ctx)
-        }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            body_return_options(&arrow.body, ctx)
+            match arrow.body.as_expression() {
+                Some(expression) => expression_options(expression, ctx),
+                None => crate::ast::arrow_function_body(&arrow.body)
+                    .map(|body| body_return_options(body, ctx))
+                    .unwrap_or_else(|| Ok(Vec::new())),
+            }
         }
         ExportDefaultDeclarationKind::CallExpression(call) if call.arguments.is_empty() => {
             super::calls::call_options(&call.callee, ctx)

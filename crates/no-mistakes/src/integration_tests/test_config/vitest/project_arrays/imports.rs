@@ -135,13 +135,10 @@ pub(in crate::integration_tests::test_config::vitest) fn import_sources(
             {
                 Some(import.source.value.to_string())
             }
-            Statement::ExportNamedDeclaration(export)
+            Statement::ExportFromDeclaration(export)
                 if crate::fetch::import_shape::is_runtime_export(export) =>
             {
-                export
-                    .source
-                    .as_ref()
-                    .map(|source| source.value.to_string())
+                Some(export.source.value.to_string())
             }
             Statement::ExportAllDeclaration(export) if !export.export_kind.is_type() => {
                 Some(export.source.value.to_string())

@@ -78,6 +78,40 @@ fn get_entries_supports_symbol_dependents() {
 // ── Integration: build graph from fixture ──────────────────────────────
 
 #[test]
+fn export_from_fixture_preserves_import_and_reexport_graph_edges() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase/dependencies/oxc-export-from-reexport");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = build_graph(&root, &tsconfig);
+
+    let dependencies = graph.deps_of(&[NodeId::File(root.join("consumer.mts"))], None, None);
+    let dependency_names = dependencies
+        .iter()
+        .filter_map(|entry| entry.node.as_file())
+        .filter_map(|path| path.file_name())
+        .filter_map(|name| name.to_str())
+        .collect::<Vec<_>>();
+    assert!(dependency_names.contains(&"barrel.mts"));
+    assert!(dependency_names.contains(&"source.mts"));
+
+    let dependents = graph.dependents_of(&[NodeId::File(root.join("source.mts"))], None, None);
+    let dependent_names = dependents
+        .iter()
+        .filter_map(|entry| entry.node.as_file())
+        .filter_map(|path| path.file_name())
+        .filter_map(|name| name.to_str())
+        .collect::<Vec<_>>();
+    assert!(dependent_names.contains(&"barrel.mts"));
+    assert!(dependent_names.contains(&"consumer.mts"));
+}
+
+#[test]
 fn get_entries_supports_plain_dependents_without_symbol_facts() {
     let root = fixture_root("simple");
     let entrypoints = resolve_entrypoints(&[PathBuf::from("b.mts")], &root, &root);

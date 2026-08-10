@@ -35,15 +35,12 @@ pub(super) fn extend_callable_exclusions(
     excluded: &mut GlobalStringProjectExclusions,
 ) {
     match unwrap_ts_wrappers(expression) {
-        Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
-            let Some(Statement::ExpressionStatement(statement)) = arrow.body.statements.first()
-            else {
-                return;
-            };
-            extend_expression_exclusions(&statement.expression, ctx, excluded);
-        }
         Expression::ArrowFunctionExpression(arrow) => {
-            extend_function_body_exclusions(&arrow.body, ctx, excluded);
+            if let Some(expression) = arrow.body.as_expression() {
+                extend_expression_exclusions(expression, ctx, excluded);
+            } else if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
+                extend_function_body_exclusions(body, ctx, excluded);
+            }
         }
         Expression::FunctionExpression(function) => {
             if let Some(body) = &function.body {

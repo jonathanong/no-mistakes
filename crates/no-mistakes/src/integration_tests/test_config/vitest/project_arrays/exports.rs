@@ -1,6 +1,6 @@
 use super::{
-    array_options, body_return_options, expression_statement_options, helper_expression_options,
-    import_bindings, imported_options, top_level_function_bodies, Ctx,
+    array_options, body_return_options, helper_expression_options, import_bindings,
+    imported_options, top_level_function_bodies, Ctx,
 };
 use crate::integration_tests::test_config::vitest::shared;
 use crate::integration_tests::test_config::vitest::Options;
@@ -13,7 +13,9 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) mod common
 mod declarations;
 mod workspace;
 use commonjs::commonjs_exported_expression;
-use declarations::{default_function_options, named_export_options};
+use declarations::{
+    declaration_options, default_function_options, export_from_options, named_export_options,
+};
 pub(super) use workspace::workspace_default_options;
 
 pub(super) fn exported_options(
@@ -54,6 +56,17 @@ fn exported_options_lookup(
                     continue;
                 }
                 if let Some(options) = named_export_options(export, exported, &mut ctx) {
+                    return options.map(Some);
+                }
+            }
+            Statement::ExportDeclaration(export) => {
+                if let Some(options) = declaration_options(&export.declaration, exported, &mut ctx)
+                {
+                    return options.map(Some);
+                }
+            }
+            Statement::ExportFromDeclaration(export) => {
+                if let Some(options) = export_from_options(export, exported, &mut ctx) {
                     return options.map(Some);
                 }
             }
@@ -128,11 +141,13 @@ fn default_export_options(
         ExportDefaultDeclarationKind::Identifier(identifier) => {
             default_identifier_options(identifier.name.as_str(), ctx)
         }
-        ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) if arrow.expression => {
-            expression_statement_options(&arrow.body, ctx)
-        }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            body_return_options(&arrow.body, ctx)
+            match arrow.body.as_expression() {
+                Some(expression) => super::expression_options(expression, ctx),
+                None => crate::ast::arrow_function_body(&arrow.body)
+                    .map(|body| body_return_options(body, ctx))
+                    .unwrap_or_else(|| Ok(Vec::new())),
+            }
         }
         ExportDefaultDeclarationKind::CallExpression(call) if call.arguments.is_empty() => {
             super::calls::call_options(&call.callee, ctx)

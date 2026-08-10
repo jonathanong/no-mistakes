@@ -34,7 +34,7 @@ fn collect_from_stmt(
                 }
             }
         }
-        Statement::ExportNamedDeclaration(e) => {
+        Statement::ExportDeclaration(e) => {
             collect_from_export_named(e, source, file_path, root, visible_files, out);
         }
         Statement::ExportDefaultDeclaration(e) => {
@@ -102,8 +102,12 @@ fn collect_from_export_default(
             }
         }
         oxc_ast::ast::ExportDefaultDeclarationKind::ArrowFunctionExpression(a) => {
-            for s in &a.body.statements {
-                collect_from_stmt(s, source, file_path, root, visible_files, out);
+            if let Some(expression) = a.body.as_expression() {
+                collect_from_expr(expression, source, file_path, root, visible_files, out);
+            } else {
+                for s in crate::ast::arrow_function_body_statements(&a.body).unwrap_or_default() {
+                    collect_from_stmt(s, source, file_path, root, visible_files, out);
+                }
             }
         }
         oxc_ast::ast::ExportDefaultDeclarationKind::CallExpression(call)

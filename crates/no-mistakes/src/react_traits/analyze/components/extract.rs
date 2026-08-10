@@ -90,14 +90,13 @@ pub(super) fn extract_named_export(
     local_vars: &HashMap<&str, Span>,
     components: &mut Vec<ComponentDef>,
 ) {
-    if let Some(decl) = &export.declaration {
-        extract_named_declaration(decl, components);
-    } else {
-        extract_named_specifiers(export, local_vars, components);
-    }
+    extract_named_specifiers(export, local_vars, components);
 }
 
-fn extract_named_declaration(decl: &Declaration<'_>, components: &mut Vec<ComponentDef>) {
+pub(super) fn extract_named_declaration(
+    decl: &Declaration<'_>,
+    components: &mut Vec<ComponentDef>,
+) {
     match decl {
         Declaration::FunctionDeclaration(f) => {
             if let Some(id) =

@@ -107,20 +107,17 @@ pub(crate) fn collect_local_components(program: &Program<'_>) -> HashMap<String,
                 }
                 _ => {}
             },
-            Statement::ExportNamedDeclaration(e) if e.source.is_none() => {
-                if let Some(decl) = &e.declaration {
-                    collect_inline_export(decl, &mut map);
-                } else {
-                    // `export { Foo, Bar as Baz }` — local symbol -> exported name
-                    for spec in &e.specifiers {
-                        let local = spec.local.name().as_ref().to_string();
-                        let exported = spec.exported.name().as_ref().to_string();
-                        if is_component_name(&local) {
-                            map.insert(local, exported);
-                        }
+            Statement::ExportNamedDeclaration(e) => {
+                // `export { Foo, Bar as Baz }` — local symbol -> exported name
+                for spec in &e.specifiers {
+                    let local = spec.local.name().as_ref().to_string();
+                    let exported = spec.exported.name().as_ref().to_string();
+                    if is_component_name(&local) {
+                        map.insert(local, exported);
                     }
                 }
             }
+            Statement::ExportDeclaration(e) => collect_inline_export(&e.declaration, &mut map),
             _ => {}
         }
     }

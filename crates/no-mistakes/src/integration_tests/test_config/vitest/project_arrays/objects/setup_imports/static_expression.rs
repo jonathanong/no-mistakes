@@ -46,25 +46,12 @@ pub(super) fn exported_setup_expression<'a>(
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.export_kind.is_type() || export.source.is_some() {
+        if export.export_kind.is_type() {
             continue;
         }
         for specifier in &export.specifiers {
             if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
                 return bindings.get(specifier.local.name().as_str()).copied();
-            }
-        }
-        if let Some(oxc_ast::ast::Declaration::VariableDeclaration(declaration)) =
-            &export.declaration
-        {
-            for declarator in &declaration.declarations {
-                let oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) = &declarator.id
-                else {
-                    continue;
-                };
-                if identifier.name == exported {
-                    return declarator.init.as_ref();
-                }
             }
         }
     }
