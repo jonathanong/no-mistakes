@@ -1,0 +1,147 @@
+{
+  "fetches": {
+    "summary": {
+      "totalRoutes": 1,
+      "routesWithApiCalls": 1,
+      "totalApiCalls": 1,
+      "uniqueApiCalls": 1,
+      "duplicateApiCalls": 0,
+      "dynamicApiCalls": 0,
+      "cachedApiCalls": 0,
+      "clientApiCalls": 0,
+      "serverApiCalls": 1,
+      "rscApiCalls": 1,
+      "conditionalApiCalls": 0,
+      "parallelApiCalls": 0,
+      "errorHandledApiCalls": 1
+    },
+    "routes": [
+      {
+        "route": "/users",
+        "file": "app/users/page.tsx",
+        "apiCalls": [
+          {
+            "path": "/api/users",
+            "rawPath": "/api/users",
+            "method": "GET",
+            "file": "app/users/page.tsx",
+            "line": 7,
+            "side": "server",
+            "rsc": true,
+            "cached": false,
+            "cacheKind": "none",
+            "dynamic": false,
+            "unsupported": false,
+            "conditional": false,
+            "inPromiseAll": false,
+            "errorHandled": true,
+            "sourceType": "page"
+          }
+        ]
+      }
+    ],
+    "duplicates": [],
+    "unsupported": []
+  },
+  "queues": {
+    "producers": [
+      {
+        "file": "src/publish.ts",
+        "line": 4,
+        "queueFile": "src/queue.ts",
+        "queueName": "emails",
+        "job": "send",
+        "rawJob": null,
+        "library": "bullmq"
+      }
+    ],
+    "workers": [
+      {
+        "file": "src/worker.ts",
+        "line": 8,
+        "processorFile": "src/process.ts",
+        "queueFile": "src/queue.ts",
+        "queueName": "emails",
+        "jobs": ["send"],
+        "wildcard": false,
+        "library": "bullmq"
+      }
+    ],
+    "jobs": [
+      {
+        "queueFile": "src/queue.ts",
+        "queueName": "emails",
+        "job": "send"
+      }
+    ],
+    "edges": [
+      {
+        "from": "src/publish.ts",
+        "to": "src/queue.ts#send",
+        "kind": "queue-enqueue"
+      }
+    ],
+    "diagnostics": [],
+    "check": []
+  },
+  "reactAnalyze": [
+    {
+      "name": "UsersPage",
+      "file": "app/users/page.tsx",
+      "environment": "server",
+      "hasState": false,
+      "hasProps": false,
+      "passesProps": false,
+      "usesMemo": false,
+      "usesContextProvider": false,
+      "usesSuspense": false,
+      "fetches": [
+        {
+          "file": "app/users/page.tsx",
+          "exportedName": "default",
+          "shape": "fetch('/api/users')"
+        }
+      ],
+      "dependencies": ["app/UserCard.tsx"],
+      "children": [{"name": "UserCard", "file": "app/UserCard.tsx"}],
+      "inheritedFromChildren": {
+        "hasState": false,
+        "hasProps": true,
+        "passesProps": false,
+        "usesMemo": false,
+        "usesContextProvider": false,
+        "usesSuspense": false,
+        "hasFetch": false
+      }
+    }
+  ],
+  "check": {
+    "react": [],
+    "queues": [],
+    "rules": [{
+      "rule": "example-rule",
+      "file": "src/example.ts",
+      "line": 3,
+      "message": "example",
+      "target": "src/other.ts"
+    }],
+    "integration": [{
+      "framework": "vitest",
+      "suite": "unit",
+      "file": "src/example.test.ts",
+      "line": 5,
+      "describePath": ["example"],
+      "message": "example"
+    }],
+    "codebase": [{
+      "rule": "unique-exports",
+      "file": "src/example.ts",
+      "line": 1,
+      "exportName": "Example",
+      "exportKind": "value",
+      "message": "duplicate export"
+    }],
+    "warnings": [],
+    "advisories": []
+  }
+}

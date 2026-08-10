@@ -24,12 +24,12 @@ export interface PlaywrightRelatedOptions extends PlaywrightOptions {
 
 export interface CheckReport {
   react: ReactViolation[];
-  queues: unknown[];
-  rules: unknown[];
-  integration: unknown[];
-  codebase: unknown[];
+  queues: QueueCheckFinding[];
+  rules: RuleFinding[];
+  integration: IntegrationFinding[];
+  codebase: UniqueExportFinding[];
   warnings: string[];
-  advisories: unknown[];
+  advisories: RuleFinding[];
   /** Present when `includeSuppressed` is requested; empty when no directives matched. */
   suppressed?: SuppressedFinding[];
 }
@@ -48,13 +48,96 @@ export interface SuppressedFinding {
   };
 }
 
+export interface RuleFinding {
+  rule: string;
+  file: string;
+  line: number;
+  message: string;
+  import?: string;
+  target?: string;
+}
+
+export interface IntegrationFinding {
+  framework: string;
+  suite: string;
+  file: string;
+  line: number;
+  testName?: string;
+  describePath?: string[];
+  integration?: string;
+  message: string;
+}
+
+export interface UniqueExportFinding {
+  rule: string;
+  file: string;
+  line: number;
+  exportName: string;
+  exportKind: string;
+  message: string;
+}
+
 export interface QueueReport {
-  producers: unknown[];
-  workers: unknown[];
-  jobs: unknown[];
-  edges: unknown[];
-  diagnostics: unknown[];
-  check: unknown[];
+  producers: QueueProducer[];
+  workers: QueueWorker[];
+  jobs: QueueJobNode[];
+  edges: QueueEdge[];
+  diagnostics: QueueDiagnostic[];
+  check: QueueCheckFinding[];
+}
+
+export interface QueueJobNode {
+  queueFile: string;
+  queueName: string;
+  job: string;
+}
+
+export interface QueueProducer {
+  file: string;
+  line: number;
+  queueFile: string | null;
+  queueName: string | null;
+  job: string | null;
+  rawJob: string | null;
+  library: string | null;
+}
+
+export interface QueueWorker {
+  file: string;
+  line: number;
+  processorFile: string | null;
+  queueFile: string | null;
+  queueName: string | null;
+  jobs: string[];
+  wildcard: boolean;
+  library: string | null;
+}
+
+export type QueueEdgeKind = "queue-enqueue" | "queue-worker";
+
+export interface QueueEdge {
+  from: string;
+  to: string;
+  kind: QueueEdgeKind;
+}
+
+export type QueueDiagnosticSeverity = "warning" | "error";
+
+export interface QueueDiagnostic {
+  severity: QueueDiagnosticSeverity;
+  file: string;
+  line: number;
+  message: string;
+}
+
+export interface QueueCheckFinding {
+  kind: string;
+  file: string;
+  line: number;
+  queueFile: string | null;
+  queueName: string | null;
+  job: string | null;
+  message: string;
 }
 
 export interface GraphEdge {
@@ -198,8 +281,28 @@ export interface FetchSummary {
 export interface FetchReport {
   summary: FetchSummary;
   routes: FetchRouteReport[];
-  duplicates: unknown[];
-  unsupported: unknown[];
+  duplicates: DuplicateApiCall[];
+  unsupported: UnsupportedApiCall[];
+}
+
+export interface DuplicateApiCall {
+  key: string;
+  count: number;
+  occurrences: ApiCallOccurrence[];
+}
+
+export interface ApiCallOccurrence {
+  route: string;
+  file: string;
+  line: number;
+}
+
+export interface UnsupportedApiCall {
+  route: string;
+  file: string;
+  line: number;
+  reason: string;
+  rawPath: string;
 }
 
 export interface ReactComponentFacts {
@@ -212,17 +315,38 @@ export interface ReactComponentFacts {
   usesMemo: boolean;
   usesContextProvider: boolean;
   usesSuspense: boolean;
-  fetches: unknown[];
+  fetches: ReactFetchCall[];
   dependencies: string[];
-  children: unknown[];
-  inheritedFromChildren?: unknown;
+  children: ReactComponentRef[];
+  inheritedFromChildren?: ReactAggregatedFacts;
+}
+
+export interface ReactFetchCall {
+  file: string;
+  exportedName: string | null;
+  shape: string | null;
+}
+
+export interface ReactComponentRef {
+  name: string;
+  file: string;
+}
+
+export interface ReactAggregatedFacts {
+  hasState: boolean;
+  hasProps: boolean;
+  passesProps: boolean;
+  usesMemo: boolean;
+  usesContextProvider: boolean;
+  usesSuspense: boolean;
+  hasFetch: boolean;
 }
 
 export interface ReactViolation {
   component: string;
   file: string;
   rule: string;
-  detail?: string;
+  detail: string | null;
 }
 
 export interface ReactCallsite {
