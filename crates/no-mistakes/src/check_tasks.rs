@@ -154,7 +154,7 @@ pub(crate) fn run_codebase_check_with_catalog(
         no_mistakes::diagnostics::TimingKind::Parallel,
         || -> Result<_> {
             Ok(if enabled {
-                unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session(
+                unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check(
                     root,
                     config,
                     prepared_tsconfig_catalog,

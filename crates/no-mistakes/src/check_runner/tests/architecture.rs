@@ -30,7 +30,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
         "run_check_with_config_facts_playwright_and_graph",
         "queue::analyze_project_with_prepared_facts_and_catalog_and_session",
         "integration_tests::check_with_prepared_facts_catalog_and_session",
-        "unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session",
+        "unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check",
         "run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts",
     ] {
         assert!(

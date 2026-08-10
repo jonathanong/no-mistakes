@@ -42,7 +42,7 @@ impl<R: ImportResolverFacade> OriginSearch<'_, R> {
             self.visiting.remove(&target);
             return None;
         };
-        if file.disabled {
+        if file.disabled && !file.defer_suppression {
             self.visiting.remove(&target);
             return None;
         }

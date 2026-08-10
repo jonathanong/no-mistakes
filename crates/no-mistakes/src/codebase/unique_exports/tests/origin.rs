@@ -24,12 +24,27 @@ fn source_file(root: &Path, rel: &str, source: &str) -> SourceFile {
     SourceFile {
         path: root.join(rel),
         rel: rel.to_string(),
+        source: source.to_string(),
         symbols: crate::codebase::ts_symbols::extract_symbols(source, false)
             .unwrap()
             .into(),
         disabled: false,
+        defer_suppression: false,
         is_nextjs_project: false,
     }
+}
+
+fn suppression_origin_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase/unique-exports-suppressed-origin")
+}
+
+fn fixture_source_file(root: &Path, rel: &str, defer_suppression: bool) -> SourceFile {
+    let source = std::fs::read_to_string(root.join(rel)).unwrap();
+    let mut file = source_file(root, rel, &source);
+    file.disabled = crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID);
+    file.defer_suppression = defer_suppression;
+    file
 }
 
 fn find_origin(
@@ -96,4 +111,30 @@ export type { MissingType } from './missing'\n",
 
     let missing_type = find_origin(&reexport_path, "MissingType", &files, &resolver, &workspace);
     assert_eq!(missing_type.bucket, ExportBucket::Type);
+}
+
+#[test]
+fn deferred_suppression_preserves_reexport_origin_identity() {
+    let root = suppression_origin_fixture();
+    let source = fixture_source_file(&root, "src/source.ts", true);
+    let barrel = fixture_source_file(&root, "src/barrel.ts", true);
+    let barrel_path = barrel.path.clone();
+    let files = HashMap::from([(source.path.clone(), source), (barrel.path.clone(), barrel)]);
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tsconfig);
+
+    let origin = find_origin(
+        &barrel_path,
+        "Shared",
+        &files,
+        &resolver,
+        &WorkspaceMap::default(),
+    );
+
+    assert_eq!(origin.file, "src/source.ts");
 }

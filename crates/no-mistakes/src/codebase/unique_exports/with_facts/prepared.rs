@@ -7,6 +7,9 @@ use crate::codebase::unique_exports::{UniqueExportFinding, RULE_ID};
 use anyhow::Result;
 use std::path::Path;
 
+mod aggregate;
+pub use aggregate::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check;
+
 #[derive(Clone, Copy, Default)]
 pub(super) struct PreparedResolution<'a> {
     pub(super) tsconfig_path: Option<&'a Path>,
@@ -32,6 +35,7 @@ pub fn analyze_project_with_config_and_facts(
         shared,
         None,
         &session,
+        false,
     )
 }
 
@@ -53,6 +57,7 @@ pub fn analyze_project_with_prepared_facts(
         shared,
         None,
         &session,
+        false,
     )
 }
 
@@ -94,6 +99,7 @@ pub fn analyze_project_with_prepared_facts_and_inferred_and_session(
         shared,
         Some(inferred_roots),
         session,
+        false,
     )
 }
 
@@ -117,6 +123,7 @@ pub fn analyze_project_with_prepared_facts_catalog_and_inferred_and_session(
         shared,
         Some(inferred_roots),
         session,
+        false,
     )
 }
 
@@ -127,6 +134,7 @@ fn analyze_project_with_optional_prepared_facts(
     shared: &CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     session: &AnalysisSession,
+    defer_suppression: bool,
 ) -> Result<Vec<UniqueExportFinding>> {
     let normalized_root = normalize_path(root);
     let root = normalized_root.as_path();
@@ -154,6 +162,7 @@ fn analyze_project_with_optional_prepared_facts(
                 shared,
                 project_roots,
                 options,
+                defer_suppression,
                 inferred_roots,
             })?);
         }
@@ -178,6 +187,7 @@ fn analyze_project_with_optional_prepared_facts(
         shared,
         project_roots,
         options: config.rule_options(RULE_ID),
+        defer_suppression,
         inferred_roots,
     })
 }

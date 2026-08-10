@@ -17,6 +17,7 @@ pub use prepared::{
 pub use prepared::{
     analyze_project_with_prepared_facts_and_inferred_and_session,
     analyze_project_with_prepared_facts_catalog_and_inferred_and_session,
+    analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check,
 };
 
 pub fn analyze_project_with_facts(
@@ -42,6 +43,7 @@ struct ProjectRootsAnalysis<'a> {
     shared: &'a CheckFactMap,
     project_roots: Vec<std::path::PathBuf>,
     options: UniqueExportsOptions,
+    defer_suppression: bool,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
 }
 
@@ -56,6 +58,7 @@ fn analyze_project_roots_with_facts(
         shared,
         project_roots,
         options,
+        defer_suppression,
         inferred_roots,
     } = inputs;
     if project_roots.is_empty() {
@@ -94,7 +97,12 @@ fn analyze_project_roots_with_facts(
         .collect::<HashSet<_>>();
     let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
         .unwrap_or_default();
-    let source_files = super::scan::collect_source_files_from_facts(root, &symbol_files, shared)?;
+    let source_files = super::scan::collect_source_files_from_facts(
+        root,
+        &symbol_files,
+        shared,
+        defer_suppression,
+    )?;
     if let Some(catalog) = resolution.catalog {
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
             catalog,

@@ -26,6 +26,7 @@ pub use with_facts::{
 pub use with_facts::{
     analyze_project_with_prepared_facts_and_inferred_and_session,
     analyze_project_with_prepared_facts_catalog_and_inferred_and_session,
+    analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check,
 };
 
 pub const RULE_ID: &str = "unique-exports";

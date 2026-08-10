@@ -24,6 +24,7 @@ pub(super) fn collect_source_files_from_facts(
     root: &Path,
     files: &[PathBuf],
     shared: &crate::codebase::check_facts::CheckFactMap,
+    defer_suppression: bool,
 ) -> Result<Vec<SourceFile>> {
     let nextjs_projects = NextJsProjectLookup::new(root, files, shared.files());
     let mut source_files = Vec::new();
@@ -49,7 +50,9 @@ pub(super) fn collect_source_files_from_facts(
         source_files.push(SourceFile {
             path: normalize_path(path),
             rel: relative_slash_path(root, path),
+            source: source.to_string(),
             disabled,
+            defer_suppression,
             is_nextjs_project: nextjs_projects.contains_file(path),
             symbols,
         });
