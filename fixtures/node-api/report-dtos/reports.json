@@ -116,7 +116,12 @@
     }
   ],
   "check": {
-    "react": [],
+    "react": [{
+      "component": "UsersPage",
+      "file": "app/users/page.tsx",
+      "rule": "no-fetch",
+      "detail": null
+    }],
     "queues": [],
     "rules": [{
       "rule": "example-rule",

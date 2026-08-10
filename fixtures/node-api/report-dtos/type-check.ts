@@ -37,7 +37,12 @@ const queueReport: QueueReport = {
 };
 const componentFacts: ReactComponentFacts[] = [];
 const checkReport: CheckReport = {
-  react: [],
+  react: [{
+    component: "Example",
+    file: "src/example.ts",
+    rule: "example-rule",
+    detail: null,
+  }],
   queues: [],
   rules: [],
   integration: [],

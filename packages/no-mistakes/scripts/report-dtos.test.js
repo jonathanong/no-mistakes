@@ -63,6 +63,9 @@ test("Node report declarations name every fixture collection precisely", () => {
   assert.match(declarations, /fetches: ReactFetchCall\[\];/);
   assert.match(declarations, /children: ReactComponentRef\[\];/);
   assert.match(declarations, /inheritedFromChildren\?: ReactAggregatedFacts;/);
+  assert.match(declarations, /detail: string \| null;/);
+  assert.match(declarations, /rawJob: string \| null;/);
+  assert.match(declarations, /exportedName: string \| null;/);
   assert.doesNotMatch(declarations, /queues: unknown\[\]/);
   assert.doesNotMatch(declarations, /duplicates: unknown\[\]/);
   assert.doesNotMatch(declarations, /fetches: unknown\[\]/);
