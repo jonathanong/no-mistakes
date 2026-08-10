@@ -23,6 +23,25 @@ fn nonboolean_default_truthiness_handles_every_scalar_variant() {
 }
 
 #[test]
+fn complete_literal_bindings_preserve_nonboolean_truthiness() {
+    for (value, expected) in [
+        ("${{ '' }}", StaticBool::False),
+        ("${{ 'value' }}", StaticBool::TruthyNonBoolean),
+        ("${{ 0 }}", StaticBool::False),
+        ("${{ (0) }}", StaticBool::False),
+        ("${{ -0x0 }}", StaticBool::False),
+        ("${{ ('') }}", StaticBool::False),
+        ("${{ 1 }}", StaticBool::TruthyNonBoolean),
+        ("${{ inputs.value }}", StaticBool::Unknown),
+    ] {
+        assert_eq!(
+            nonboolean_binding_state(&Value::String(value.into())),
+            expected
+        );
+    }
+}
+
+#[test]
 fn malformed_call_input_bindings_are_rejected() {
     let missing_type = WorkflowCallContract {
         inputs: BTreeMap::from([(

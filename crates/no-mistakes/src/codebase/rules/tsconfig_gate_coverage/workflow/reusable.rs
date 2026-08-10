@@ -75,4 +75,6 @@ pub(super) fn collect_ci_projects_with_stats(
 }
 
 #[cfg(test)]
+mod input_tests;
+#[cfg(test)]
 mod tests;
