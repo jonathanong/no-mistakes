@@ -64,7 +64,7 @@ fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> Option<Vec<(String, Vec<
             let values = values.as_sequence()?;
             values
                 .iter()
-                .all(|value| !matches!(value, Value::Mapping(_) | Value::Sequence(_)))
+                .all(|value| !matches!(value, Value::Sequence(_)))
                 .then(|| (name.to_string(), values.clone()))
         })
         .collect::<Option<Vec<_>>>()?;

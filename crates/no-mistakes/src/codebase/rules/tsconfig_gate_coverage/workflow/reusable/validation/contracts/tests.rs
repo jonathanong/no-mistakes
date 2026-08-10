@@ -6,6 +6,8 @@ fn on(yaml: &str) -> Value {
 
 #[test]
 fn contract_shape_validates_every_declaration_kind() {
+    assert!(workflow_call_shape_valid(Some(&Value::Bool(true))));
+    assert!(!workflow_call_trigger_keys_valid(&Value::Bool(true)));
     assert!(workflow_call_shape_valid(Some(&on(
         "workflow_call:\n  outputs:\n    result:\n      value: '${{ jobs.build.outputs.result }}'\n      description: result"
     ))));

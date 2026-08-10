@@ -17,6 +17,7 @@ fn uncertain_or_malformed_matrices_fail_open() {
         "strategy:\n  matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'"
     )));
     assert!(!matrix_shape_valid(&job("strategy: []")));
+    assert!(!matrix_shape_valid(&job("strategy:\n  matrix: false")));
     assert!(matrix_shape_valid(&job("strategy:\n  fail-fast: false")));
     assert!(!matrix_shape_valid(&job("strategy:\n  matrix: static")));
     assert!(matrix_shape_valid(&job(
@@ -65,6 +66,14 @@ fn static_matrix_shape_enforces_the_github_job_limit() {
         .join(", ");
     assert!(!matrix_shape_valid(&job(&format!(
         "strategy:\n  matrix:\n    value: [{values}]\n    include:\n      - value: 256"
+    ))));
+
+    let objects = (0..257)
+        .map(|value| format!("{{id: {value}}}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    assert!(!matrix_shape_valid(&job(&format!(
+        "strategy:\n  matrix:\n    target: [{objects}]"
     ))));
     assert!(matrix_shape_valid(&job(
         "strategy:\n  matrix:\n    value: [1, 2]\n    exclude:\n      - value: 1\n    include:\n      - value: 1\n      - value: 2\n        label: retained"

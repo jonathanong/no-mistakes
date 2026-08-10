@@ -50,6 +50,14 @@ fn skipped_local_calls_still_require_valid_contracts() {
             ".github/workflows/empty-ref.yml",
             "on: push\njobs:\n  invalid-call:\n    uses: owner/repo/.github/workflows/checks.yml@\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project empty-ref/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/expression-ref.yml",
+            "on: push\njobs:\n  invalid-call:\n    uses: owner/repo/.github/workflows/checks.yml@${{ github.sha }}\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project expression-ref/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/static-invalid-ref.yml",
+            "on: push\njobs:\n  invalid-call:\n    uses: owner/repo/.github/workflows/checks.yml@main branch\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project static-invalid-ref/tsconfig.json\n",
+        ),
     ];
 
     assert_eq!(
@@ -61,7 +69,9 @@ fn skipped_local_calls_still_require_valid_contracts() {
                 "backslash",
                 "invalid-remote",
                 "empty-ref",
-                "valid-remote"
+                "valid-remote",
+                "expression-ref",
+                "static-invalid-ref"
             ]
         ),
         BTreeSet::from(["valid-remote/tsconfig.json".to_string()])

@@ -60,6 +60,26 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             ".github/workflows/malformed-strategy.yml",
             "on: push\njobs:\n  malformed:\n    strategy: []\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-strategy/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-strategy-sibling/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/misspelled-trigger-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/misspelled-trigger-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project misspelled-trigger/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/misspelled-trigger-callee.yml",
+            "on:\n  workflow_call:\n  workflow_dispath:\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project misspelled-trigger/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/sequence-misspelled-trigger-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/sequence-misspelled-trigger-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project sequence-misspelled-trigger/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/sequence-misspelled-trigger-callee.yml",
+            "on: [workflow_call, workflow_dispath]\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project sequence-misspelled-trigger/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/malformed-action.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout\n      - run: tsc --noEmit --project malformed-action/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-action-sibling/tsconfig.json\n",
+        ),
     ];
     let tracked = [
         "declaration",
@@ -74,6 +94,10 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "remote-sibling",
         "malformed-strategy",
         "malformed-strategy-sibling",
+        "misspelled-trigger",
+        "sequence-misspelled-trigger",
+        "malformed-action",
+        "malformed-action-sibling",
     ]
     .into_iter()
     .map(|project| format!("{project}/tsconfig.json"))

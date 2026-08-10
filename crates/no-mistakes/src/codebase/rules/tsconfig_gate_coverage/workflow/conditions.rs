@@ -125,7 +125,8 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
 fn input_name(operand: &str) -> Option<&str> {
     let operand = operand.trim();
     if let Some(name) = operand.strip_prefix("inputs.") {
-        return Some(name.trim());
+        let name = name.trim();
+        return contracts::valid_identifier(name).then_some(name);
     }
     let bracketed = operand
         .strip_prefix("inputs")?
@@ -138,7 +139,7 @@ fn input_name(operand: &str) -> Option<&str> {
     }
     let name = bracketed.strip_prefix(quote)?;
     let (name, suffix) = name.split_once(quote)?;
-    (suffix.trim() == "]").then_some(name)
+    (suffix.trim() == "]" && contracts::valid_identifier(name)).then_some(name)
 }
 
 fn bool_literal(operand: &str) -> Option<bool> {

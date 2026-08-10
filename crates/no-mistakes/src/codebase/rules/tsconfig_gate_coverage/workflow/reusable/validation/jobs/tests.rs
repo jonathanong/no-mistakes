@@ -21,6 +21,26 @@ fn steps_cannot_mix_action_and_shell_commands() {
 }
 
 #[test]
+fn action_steps_require_static_canonical_targets() {
+    for yaml in [
+        "steps:\n  - uses: actions/checkout@v4",
+        "steps:\n  - uses: owner/action/subdirectory@main",
+        "steps:\n  - uses: ./.github/actions/check",
+        "steps:\n  - uses: docker://alpine:3.8",
+    ] {
+        assert!(steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "steps:\n  - uses: actions/checkout",
+        "steps:\n  - uses: actions/checkout@${{ github.ref }}",
+        "steps:\n  - uses: ./../outside",
+        "steps:\n  - uses: docker://",
+    ] {
+        assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn call_bindings_require_unique_scalar_names() {
     for yaml in [
         "uses: owner/repo/.github/workflows/a.yml@main",

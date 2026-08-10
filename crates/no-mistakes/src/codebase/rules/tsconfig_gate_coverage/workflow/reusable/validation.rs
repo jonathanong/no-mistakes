@@ -30,7 +30,7 @@ pub(super) fn canonical_remote_call_target(target: &str) -> bool {
     let Some((path, reference)) = target.rsplit_once('@') else {
         return false;
     };
-    if reference.is_empty() || path.contains('@') {
+    if !valid_remote_reference(reference) || path.contains('@') {
         return false;
     }
     let mut segments = path.split('/');
@@ -48,6 +48,19 @@ pub(super) fn canonical_remote_call_target(target: &str) -> bool {
                 && canonical_workflow_filename(filename)
     );
     valid && segments.next().is_none()
+}
+
+fn valid_remote_reference(reference: &str) -> bool {
+    !reference.is_empty()
+        && reference != "@"
+        && !reference.contains("${{")
+        && !reference.starts_with(['/', '.'])
+        && !reference.ends_with(['/', '.'])
+        && !reference.contains([' ', '~', '^', ':', '?', '*', '[', '\\'])
+        && !reference.contains("..")
+        && !reference.contains("@{")
+        && !reference.contains("//")
+        && reference.bytes().all(|byte| byte >= 0x20 && byte != 0x7f)
 }
 
 pub(super) fn validated_reusable_target(edge: &WorkflowCallEdge) -> Option<ReusableTarget> {
