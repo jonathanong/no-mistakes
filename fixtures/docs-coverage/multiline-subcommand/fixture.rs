@@ -1,3 +1,4 @@
+// Syntax-parser fixture: this source shape intentionally need not compile.
 use clap::{Args, Subcommand};
 
 #[derive(Args)]

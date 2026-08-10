@@ -1,7 +1,7 @@
 use std::collections::{BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use syn::{Item, Meta, Type};
+use syn::{GenericArgument, Item, Meta, PathArguments, Type};
 
 pub(super) fn rust_sources(dir: &Path) -> Vec<PathBuf> {
     let repo = git_repo_root(dir);
@@ -62,38 +62,60 @@ fn git_repo_root(dir: &Path) -> PathBuf {
 }
 
 pub(super) fn subcommand_enums(source: &str) -> Vec<(String, String)> {
-    syn::parse_file(source)
-        .expect("Rust sources must parse before extracting clap commands")
-        .items
-        .into_iter()
-        .filter_map(|item| {
-            let Item::Struct(item) = item else {
+    let file =
+        syn::parse_file(source).expect("Rust sources must parse before extracting clap commands");
+    let mut result = Vec::new();
+    collect_subcommand_enums(&file.items, &mut result);
+    result
+}
+
+fn collect_subcommand_enums(items: &[Item], result: &mut Vec<(String, String)>) {
+    for item in items {
+        match item {
+            Item::Struct(item) => {
+                let parent = item.ident.to_string();
+                let syn::Fields::Named(fields) = &item.fields else {
+                    continue;
+                };
+                if let Some(field) = fields
+                    .named
+                    .iter()
+                    .find(|field| field.attrs.iter().any(is_subcommand_attribute))
+                {
+                    result.push((
+                        parent,
+                        subcommand_type_name(&field.ty)
+                            .expect("clap subcommand field must have a named type"),
+                    ));
+                }
+            }
+            Item::Mod(item) => {
+                if let Some((_, nested_items)) = &item.content {
+                    collect_subcommand_enums(nested_items, result);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn subcommand_type_name(ty: &Type) -> Option<String> {
+    let Type::Path(path) = ty else {
+        return None;
+    };
+    let segment = path.path.segments.last()?;
+    if segment.ident == "Option" {
+        let PathArguments::AngleBracketed(arguments) = &segment.arguments else {
+            return None;
+        };
+        return arguments.args.iter().find_map(|argument| {
+            let GenericArgument::Type(inner) = argument else {
                 return None;
             };
-            let parent = item.ident.to_string();
-            let fields = match item.fields {
-                syn::Fields::Named(fields) => fields.named,
-                _ => return None,
-            };
-            fields.into_iter().find_map(|field| {
-                if !field.attrs.iter().any(is_subcommand_attribute) {
-                    return None;
-                }
-                let Type::Path(path) = field.ty else {
-                    panic!("clap subcommand field must have a named type");
-                };
-                Some((
-                    parent.clone(),
-                    path.path
-                        .segments
-                        .last()
-                        .expect("clap subcommand type must have a path")
-                        .ident
-                        .to_string(),
-                ))
-            })
-        })
-        .collect()
+            subcommand_type_name(inner)
+        });
+    }
+    Some(segment.ident.to_string())
 }
 
 fn is_subcommand_attribute(attribute: &syn::Attribute) -> bool {
@@ -228,5 +250,16 @@ fn parses_multiline_subcommand_fixture() {
     assert_eq!(
         subcommand_enums(&source),
         vec![("FixtureArgs".to_string(), "FixtureCommand".to_string())]
+    );
+}
+
+#[test]
+fn parses_inline_optional_subcommand_fixture() {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/docs-coverage/inline-optional-subcommand/fixture.rs");
+    let source = std::fs::read_to_string(&fixture).unwrap();
+    assert_eq!(
+        subcommand_enums(&source),
+        vec![("OptionalArgs".to_string(), "OptionalCommand".to_string())]
     );
 }
