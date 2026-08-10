@@ -41,31 +41,16 @@ pub(super) const PULL_REQUEST_ACTIVITY_TYPES: &[&str] = &[
     "auto_merge_disabled",
 ];
 
-pub(super) fn activity_type_config_valid(trigger: &str, config: &Value) -> bool {
-    config.as_mapping().is_some_and(|mapping| {
-        mapping.len() <= 1
-            && mapping.get("types").is_some_and(|types| {
-                string_sequence_values_valid(types, activity_types_for(trigger))
-            })
-            || mapping.is_empty()
-    })
-}
-
-pub(super) fn string_sequence_values_valid(value: &Value, allowed: &[&str]) -> bool {
-    non_empty_literal_string_sequence(value)
-        && value.as_sequence().is_some_and(|values| {
-            values
-                .iter()
-                .all(|value| value.as_str().is_some_and(|value| allowed.contains(&value)))
-        })
-}
-
-fn activity_types_for(trigger: &str) -> &'static [&'static str] {
-    match trigger {
-        "branch_protection_rule" => &["created", "edited", "deleted"],
-        "check_run" => &["created", "rerequested", "completed", "requested_action"],
-        "check_suite" => &["completed"],
-        "discussion" => &[
+const ACTIVITY_TYPES: &[(&str, &[&str])] = &[
+    ("branch_protection_rule", &["created", "edited", "deleted"]),
+    (
+        "check_run",
+        &["created", "rerequested", "completed", "requested_action"],
+    ),
+    ("check_suite", &["completed"]),
+    (
+        "discussion",
+        &[
             "created",
             "edited",
             "deleted",
@@ -80,8 +65,12 @@ fn activity_types_for(trigger: &str) -> &'static [&'static str] {
             "answered",
             "unanswered",
         ],
-        "discussion_comment" | "issue_comment" | "label" => &["created", "edited", "deleted"],
-        "issues" => &[
+    ),
+    ("discussion_comment", &["created", "edited", "deleted"]),
+    ("issue_comment", &["created", "edited", "deleted"]),
+    (
+        "issues",
+        &[
             "opened",
             "edited",
             "deleted",
@@ -103,11 +92,21 @@ fn activity_types_for(trigger: &str) -> &'static [&'static str] {
             "field_added",
             "field_removed",
         ],
-        "milestone" => &["created", "closed", "opened", "edited", "deleted"],
-        "pull_request_review" => &["submitted", "edited", "dismissed"],
-        "pull_request_review_comment" => &["created", "edited", "deleted"],
-        "registry_package" => &["published", "updated"],
-        "release" => &[
+    ),
+    ("label", &["created", "edited", "deleted"]),
+    (
+        "milestone",
+        &["created", "closed", "opened", "edited", "deleted"],
+    ),
+    ("pull_request_review", &["submitted", "edited", "dismissed"]),
+    (
+        "pull_request_review_comment",
+        &["created", "edited", "deleted"],
+    ),
+    ("registry_package", &["published", "updated"]),
+    (
+        "release",
+        &[
             "published",
             "unpublished",
             "created",
@@ -116,6 +115,34 @@ fn activity_types_for(trigger: &str) -> &'static [&'static str] {
             "prereleased",
             "released",
         ],
-        _ => &[],
-    }
+    ),
+];
+
+pub(super) fn activity_type_config_valid(trigger: &str, config: &Value) -> bool {
+    config.as_mapping().is_some_and(|mapping| {
+        mapping.len() <= 1
+            && mapping.get("types").is_some_and(|types| {
+                string_sequence_values_valid(types, activity_types_for(trigger))
+            })
+            || mapping.is_empty()
+    })
 }
+
+pub(super) fn string_sequence_values_valid(value: &Value, allowed: &[&str]) -> bool {
+    non_empty_literal_string_sequence(value)
+        && value.as_sequence().is_some_and(|values| {
+            values
+                .iter()
+                .all(|value| value.as_str().is_some_and(|value| allowed.contains(&value)))
+        })
+}
+
+fn activity_types_for(trigger: &str) -> &'static [&'static str] {
+    ACTIVITY_TYPES
+        .iter()
+        .find_map(|(name, types)| (*name == trigger).then_some(*types))
+        .unwrap_or(&[])
+}
+
+#[cfg(test)]
+mod tests;
