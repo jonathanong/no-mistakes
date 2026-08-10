@@ -55,6 +55,20 @@ pub fn configured_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<s
     roots
 }
 
+#[doc(hidden)]
+pub fn authorize_configured_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    sources: &crate::codebase::ts_source::SourceStore,
+) {
+    config::authorize_configured_sources(
+        root,
+        config,
+        &configured_project_roots(root, config),
+        sources,
+    );
+}
+
 pub fn check(
     root: &Path,
     config: &NoMistakesConfig,
@@ -70,6 +84,7 @@ pub fn check(
         &visible_paths,
     );
     let sources = snapshot.source_store_for(root);
+    authorize_configured_sources(root, config, &sources);
     let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
         &session,
         root,

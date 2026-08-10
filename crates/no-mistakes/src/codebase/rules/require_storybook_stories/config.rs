@@ -5,6 +5,28 @@ use std::path::{Path, PathBuf};
 mod story_patterns;
 pub(super) use story_patterns::{extract_storybook_story_patterns, project_relative_pattern};
 
+pub(super) fn authorize_configured_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    project_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) {
+    let Some(configs) = config.tests.storybook.configs.as_ref() else {
+        return;
+    };
+    for config_path in configs.values() {
+        for project_root in project_roots {
+            let path = resolve_storybook_config_path(root, project_root, &config_path);
+            if path.is_file() {
+                // Explicit config paths may be ignored or outside the visible
+                // inventory. SourceStore's bounded supplemental cache records
+                // this exact request-authorized path without a second store.
+                let _ = sources.read_path(&path);
+            }
+        }
+    }
+}
+
 pub(super) fn effective_story_patterns(
     root: &Path,
     project_root: &Path,

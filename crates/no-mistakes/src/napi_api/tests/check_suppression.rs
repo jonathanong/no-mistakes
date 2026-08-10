@@ -100,6 +100,13 @@ fn check_json_preserves_storybook_file_and_component_reports_when_auditing_suppr
 }
 
 #[test]
+fn check_json_honors_ignored_explicit_storybook_config_patterns() {
+    let (baseline, audit) = baseline_and_audit("aggregate-require-storybook-explicit-config");
+    assert!(baseline["rules"].as_array().is_some_and(Vec::is_empty));
+    assert!(audit["rules"].as_array().is_some_and(Vec::is_empty));
+}
+
+#[test]
 fn check_json_audit_mode_includes_an_empty_suppression_array() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
     let baseline = check_json_impl(json!({ "root": root }).to_string()).unwrap();
