@@ -134,7 +134,7 @@ fn assert_cli_page(
                 (group_file, false)
             }
         }
-        None => (format!("{variant}.md"), false),
+        None => (format!("{variant}.md"), true),
     };
     let path = cli_dir.join(&file);
     assert!(path.exists(), "missing CLI doc {}", path.display());
@@ -184,10 +184,13 @@ fn node_runtime_exports_have_api_docs() {
         !exports.is_empty(),
         "runtime export inventory must not be empty"
     );
+    let runtime_inventory = docs
+        .split_once("| Runtime export | API |\n")
+        .and_then(|(_, rest)| rest.split_once("\n\n").map(|(table, _)| table))
+        .expect("docs/node-api.md must contain a complete runtime export inventory table");
     for export in exports {
         assert!(
-            docs.lines()
-                .any(|line| line.starts_with('|') && line.contains(&format!("`{export}`"))),
+            runtime_inventory.contains(&format!("| `{export}` |")),
             "docs/node-api.md must map runtime export `{export}`"
         );
     }
