@@ -1,0 +1,18 @@
+{
+  "roots": ["entry.ts"],
+  "files": [
+    {
+      "path": "dependency.ts",
+      "depth": 1,
+      "via": ["import"]
+    }
+  ],
+  "diagnostics": [],
+  "tsconfig_provenance": [
+    {
+      "importer": "entry.ts",
+      "config": null,
+      "forced": false
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 "use strict";
 
-const native = require("./bin/no-mistakes.node");
+// CI real-addon tests point this at the freshly compiled cdylib without
+// overwriting the package's checked-in install placeholder.
+const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 const planning = require("./planning");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
 
