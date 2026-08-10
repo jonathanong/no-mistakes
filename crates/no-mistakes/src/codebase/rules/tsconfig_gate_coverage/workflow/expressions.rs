@@ -1,5 +1,5 @@
 mod lexer;
-mod parser;
+mod syntax;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum StaticExpressionType {
@@ -13,7 +13,7 @@ pub(super) enum StaticExpressionType {
 pub(super) fn complete_expression_type(value: &str) -> Option<StaticExpressionType> {
     let value = value.trim();
     let body = value.strip_prefix("${{")?.strip_suffix("}}")?.trim();
-    parser::parse(&lexer::tokenize(body)?)
+    syntax::parse(&lexer::tokenize(body)?)
 }
 
 pub(super) fn condition_expression_valid(value: &str) -> bool {
@@ -22,7 +22,7 @@ pub(super) fn condition_expression_valid(value: &str) -> bool {
         complete_expression_type(value).is_some()
     } else {
         lexer::tokenize(value)
-            .and_then(|tokens| parser::parse(&tokens))
+            .and_then(|tokens| syntax::parse(&tokens))
             .is_some()
     }
 }

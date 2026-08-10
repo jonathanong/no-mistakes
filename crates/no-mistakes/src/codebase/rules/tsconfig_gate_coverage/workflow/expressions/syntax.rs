@@ -1,15 +1,15 @@
 use super::{lexer::Token, StaticExpressionType};
 
 pub(super) fn parse(tokens: &[Token]) -> Option<StaticExpressionType> {
-    Parser::new(tokens).parse()
+    ExpressionSyntax::new(tokens).parse()
 }
 
-struct Parser<'a> {
+struct ExpressionSyntax<'a> {
     tokens: &'a [Token],
     index: usize,
 }
 
-impl<'a> Parser<'a> {
+impl<'a> ExpressionSyntax<'a> {
     fn new(tokens: &'a [Token]) -> Self {
         Self { tokens, index: 0 }
     }
