@@ -1,16 +1,17 @@
-use super::checker::{evaluate_dynamic_import, DynamicCheckContext, DynamicImportKey};
-use super::{ast, runtime_deps, RULE_ID};
+use super::ast;
+use super::checker::DynamicImportKey;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_resolver::ImportResolution;
-use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
 use dashmap::DashMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+mod deferred;
 
 pub(super) struct CachedFileFacts {
     pub(super) source: String,
@@ -33,7 +34,7 @@ pub(super) fn collect(
     mocks: &HashSet<PathBuf>,
     dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
 ) -> Result<ReachableResult> {
-    collect_with_deferred_suppression(ctx, test_file, mocks, dependency_cache, false)
+    deferred::collect(ctx, test_file, mocks, dependency_cache, false)
 }
 
 pub(super) fn collect_with_deferred_suppression(
@@ -43,104 +44,7 @@ pub(super) fn collect_with_deferred_suppression(
     dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     defer_suppression: bool,
 ) -> Result<ReachableResult> {
-    let test_reachable = dependency_cache
-        .entry(test_file.to_path_buf())
-        .or_insert_with(|| {
-            Arc::new(runtime_deps(
-                ctx.graph,
-                test_file.to_path_buf(),
-                ctx.file_universe,
-            ))
-        })
-        .clone();
-    let mut result = ReachableResult {
-        findings: Vec::new(),
-        covered: HashSet::new(),
-    };
-    for file in test_reachable.iter() {
-        if !crate::codebase::dependencies::extract::is_indexable(file)
-            || is_under_skipped_dir(ctx.root, ctx.config, file)
-        {
-            continue;
-        }
-        // A reachable file that is itself a mocked target never executes its own body
-        // (the mock factory fully replaces it), so its internal imports must not be
-        // scanned. Without this, a typed mock specifier's `import(...)` carrier (or any
-        // other coincidental dynamic-import edge to a mocked module) makes the mocked
-        // module's own dependencies look "reachable" and produces false positives. See #506.
-        if mocks.contains(file) {
-            continue;
-        }
-        if let Some(shared) = ctx.shared {
-            // Canonical graphs may contain supplemental roots requested by another report.
-            // A missing entry is outside this check's prepared scope and must not widen it.
-            let Some(file_facts) = shared.ts.get(file) else {
-                continue;
-            };
-            if file_facts.parse_error.is_some() {
-                continue;
-            }
-            if let (Some(source), Some(facts)) = (
-                file_facts.source.as_deref(),
-                file_facts.dynamic_imports.as_ref(),
-            ) {
-                if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
-                    continue;
-                }
-                let mut local_findings = Vec::new();
-                let check_context = DynamicCheckContext {
-                    root: ctx.root,
-                    file,
-                    resolver: ctx.resolver,
-                    graph: ctx.graph,
-                    graph_files: ctx.graph_files,
-                    file_universe: ctx.file_universe,
-                    mocks,
-                    dependency_cache,
-                    findings: &mut local_findings,
-                };
-                for import in &facts.dynamic_imports {
-                    if defer_suppression
-                        || !has_disable_comment(source, import.line as u32, RULE_ID)
-                    {
-                        collect_outcome(
-                            &mut result,
-                            evaluate_dynamic_import(&check_context, import.clone()),
-                        );
-                    }
-                }
-                continue;
-            }
-        }
-        let cached = get_or_cache_file(file, ctx.file_cache)?;
-        if !defer_suppression && has_disable_file_comment(&cached.source, RULE_ID) {
-            continue;
-        }
-        let mut local_findings = Vec::new();
-        let check_context = DynamicCheckContext {
-            root: ctx.root,
-            file,
-            resolver: ctx.resolver,
-            graph: ctx.graph,
-            graph_files: ctx.graph_files,
-            file_universe: ctx.file_universe,
-            mocks,
-            dependency_cache,
-            findings: &mut local_findings,
-        };
-        for import in &cached.dynamic_imports {
-            if !defer_suppression
-                && has_disable_comment(&cached.source, import.line as u32, RULE_ID)
-            {
-                continue;
-            }
-            collect_outcome(
-                &mut result,
-                evaluate_dynamic_import(&check_context, import.clone()),
-            );
-        }
-    }
-    Ok(result)
+    deferred::collect(ctx, test_file, mocks, dependency_cache, defer_suppression)
 }
 
 fn collect_outcome(result: &mut ReachableResult, outcome: super::checker::DynamicImportOutcome) {
