@@ -35,7 +35,14 @@ export interface CheckReport {
 }
 
 export interface SuppressedFinding {
-  domain: "react" | "queues" | "rules" | "filesystem" | "integration" | "codebase";
+  domain:
+    | "react"
+    | "queues"
+    | "rules"
+    | "filesystem"
+    | "integration"
+    | "codebase"
+    | "advisories";
   rule: string;
   file: string;
   line?: number;

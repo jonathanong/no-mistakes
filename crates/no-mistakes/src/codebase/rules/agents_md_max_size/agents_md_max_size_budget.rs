@@ -45,13 +45,30 @@ pub(super) fn scan_advisories_with_sources(
     files: &[PathBuf],
     sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    scan_advisories_with_sources_deferred(root, opts, files, sources, false)
+}
+
+pub(super) fn scan_advisories_with_sources_deferred(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
     let max_chars = opts.max_chars.unwrap_or(DEFAULT_MAX_CHARS);
     let threshold = opts.advisory_chars_remaining.unwrap_or_default();
     let mut advisories: Vec<RuleFinding> = files
         .par_iter()
         .filter_map(|path| {
             let content = crate::codebase::rules::read_source(sources, path)?;
-            check_advisory_content(path, root, max_chars, threshold, &content)
+            check_advisory_content(
+                path,
+                root,
+                max_chars,
+                threshold,
+                &content,
+                defer_suppression,
+            )
         })
         .collect();
     advisories.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
@@ -107,8 +124,9 @@ fn check_advisory_content(
     max_chars: usize,
     threshold: usize,
     content: &str,
+    defer_suppression: bool,
 ) -> Option<RuleFinding> {
-    if has_disable_file_comment(content, RULE_ID) {
+    if !defer_suppression && has_disable_file_comment(content, RULE_ID) {
         return None;
     }
     let char_count = content.chars().count();

@@ -204,6 +204,17 @@ test("programmatic API proxies object options through async native addon calls",
         },
       },
     );
+    assert.deepEqual(
+      await api.analyzeProject({
+        reports: [{ type: "check", includeSuppressed: true }],
+      }),
+      {
+        command: "analyzeProject",
+        options: {
+          reports: [{ type: "check", includeSuppressed: true }],
+        },
+      },
+    );
     assert.equal(
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
       "both",
@@ -474,7 +485,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<ProjectOptions, "root" \| "tsconfig" \| "config">/,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed"[\s\S]*?>/,
   );
   assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
   assert.match(

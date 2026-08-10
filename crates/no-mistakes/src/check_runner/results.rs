@@ -78,6 +78,16 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let mut integration = completed.integration;
     let mut codebase = completed.codebase;
     let mut filesystem_rules = completed.filesystem_rules;
+    let mut advisories = if filesystem_rules_enabled {
+        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_sources_and_deferred_suppression(
+            root,
+            config,
+            filesystem_files,
+            sources,
+        )?
+    } else {
+        Vec::new()
+    };
     let warnings = [
         react_warning,
         react.warning,
@@ -99,21 +109,12 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         filesystem: &mut filesystem_rules.findings,
         integration: &mut integration.findings,
         codebase: &mut codebase.findings,
+        advisories: &mut advisories,
     });
     // The public `rules` list has historically contained both codebase and
     // filesystem findings in that domain order. Preserve it while retaining
     // the distinct adapter identity in optional suppression accounting.
     rules.findings.extend(filesystem_rules.findings);
-    let advisories = if filesystem_rules_enabled {
-        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_and_sources(
-            root,
-            config,
-            filesystem_files,
-            sources,
-        )?
-    } else {
-        Vec::new()
-    };
     Ok(CheckResults {
         timings: vec![
             ("discover", discover_duration),

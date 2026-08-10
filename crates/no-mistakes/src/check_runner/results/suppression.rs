@@ -17,6 +17,7 @@ pub(super) struct Inputs<'a> {
     pub(super) filesystem: &'a mut Vec<RuleFinding>,
     pub(super) integration: &'a mut Vec<IntegrationFinding>,
     pub(super) codebase: &'a mut Vec<UniqueExportFinding>,
+    pub(super) advisories: &'a mut Vec<RuleFinding>,
 }
 
 pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
@@ -29,6 +30,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         filesystem,
         integration,
         codebase,
+        advisories,
     } = input;
     let mut suppressed = Vec::new();
     suppress_react(root, sources, react, &mut suppressed);
@@ -46,6 +48,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
     ));
     suppress_rules(root, sources, rules, "rules", &mut suppressed);
     suppress_rules(root, sources, filesystem, "filesystem", &mut suppressed);
+    suppress_rules(root, sources, advisories, "advisories", &mut suppressed);
     suppressed.extend(suppress_domain_findings_with_sources(
         root,
         integration,

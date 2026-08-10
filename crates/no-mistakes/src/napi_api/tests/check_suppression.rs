@@ -3,6 +3,25 @@ use serde_json::json;
 use std::path::PathBuf;
 
 #[test]
+fn check_json_accounts_for_suppressed_near_limit_advisories() {
+    let (baseline, audit) = baseline_and_audit("aggregate-agents-md-advisory-suppression");
+    assert!(baseline["advisories"].as_array().is_some_and(Vec::is_empty));
+    assert!(audit["suppressed"].as_array().is_some_and(|findings| {
+        findings.iter().any(|finding| {
+            finding["domain"] == "advisories"
+                && finding["rule"] == "agents-md-max-size"
+                && finding["file"] == "GUIDANCE.md"
+                && finding["line"] == 1
+                && finding["directive"]["kind"] == "file"
+                && finding["directive"]["line"] == 1
+                && finding["reason"]
+                    .as_str()
+                    .is_some_and(|reason| reason.contains("remaining"))
+        })
+    }));
+}
+
+#[test]
 fn check_json_skips_file_disabled_parse_errors_without_losing_other_dynamic_imports() {
     let (baseline, audit) =
         baseline_and_audit("aggregate-test-no-unmocked-dynamic-imports-disabled-parse-error");
