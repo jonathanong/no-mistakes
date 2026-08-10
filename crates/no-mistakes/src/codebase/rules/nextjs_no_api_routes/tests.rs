@@ -202,7 +202,7 @@ fn route_matching_rejects_paths_outside_target_roots() {
     let target_roots = vec![root.join("web")];
     let outside = root.join("other/app/api/users/route.ts");
 
-    assert!(finding_for_file(&root, &target_roots, &outside, "").is_none());
+    assert!(finding_for_file(&root, &target_roots, &outside, "", false).is_none());
     assert!(!is_nextjs_api_route(&outside, &target_roots));
 }
 
@@ -212,6 +212,6 @@ fn route_matching_rejects_non_route_paths_inside_target_roots() {
     let target_roots = vec![root.join("web")];
     let inside = root.join("web/app/page.tsx");
 
-    assert!(finding_for_file(&root, &target_roots, &inside, "").is_none());
+    assert!(finding_for_file(&root, &target_roots, &inside, "", false).is_none());
     assert!(!is_nextjs_api_route(&inside, &target_roots));
 }
