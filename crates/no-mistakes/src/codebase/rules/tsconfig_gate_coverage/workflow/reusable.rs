@@ -12,12 +12,18 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 
 mod steps;
+mod validation;
 
 use steps::scan_job_steps;
+use validation::{
+    canonical_local_call_target, reusable_call_job_shape_valid, workflow_call_shape_valid,
+    zero_instance_matrix,
+};
 
 struct WorkflowDocument<'a> {
     value: &'a Value,
     call_contract: Option<WorkflowCallContract>,
+    call_contract_shape_valid: bool,
 }
 
 struct ScanContext<'a> {
@@ -41,6 +47,7 @@ pub(super) fn collect_ci_projects(
                 WorkflowDocument {
                     value,
                     call_contract: workflow_values::parse_workflow_call(value.get("on")),
+                    call_contract_shape_valid: workflow_call_shape_valid(value.get("on")),
                 },
             ))
         })
@@ -52,6 +59,9 @@ pub(super) fn collect_ci_projects(
     };
     let mut projects = BTreeSet::new();
     for (path, document) in &context.workflows {
+        if !document.call_contract_shape_valid {
+            continue;
+        }
         let trigger_model = parse_workflow_value(document.value, path);
         if trigger_model.triggers.events.is_empty() {
             continue;
@@ -112,6 +122,9 @@ fn scan_activation(
             if edge.local {
                 let callee_path = edge.to.as_deref().unwrap_or_default();
                 let callee = context.workflows.get(callee_path)?;
+                if !callee.call_contract_shape_valid {
+                    return None;
+                }
                 let contract = callee.call_contract.as_ref()?;
                 if depth == 10 || !callee_secrets_valid(contract, job) {
                     return None;
@@ -136,6 +149,7 @@ fn scan_activation(
             .as_str()
             .is_some_and(|job_id| skipped_jobs.contains(job_id))
             || statically_not_enforcing(job, inputs)
+            || zero_instance_matrix(job)
         {
             continue;
         }
@@ -156,35 +170,4 @@ fn scan_activation(
         ));
     }
     Some(projects)
-}
-
-fn canonical_local_call_target(target: &str) -> bool {
-    target
-        .strip_prefix("./.github/workflows/")
-        .is_some_and(|filename| {
-            !filename.is_empty()
-                && !filename.contains('/')
-                && (filename.ends_with(".yml") || filename.ends_with(".yaml"))
-        })
-}
-
-fn reusable_call_job_shape_valid(job: &Value) -> bool {
-    job.as_mapping().is_some_and(|mapping| {
-        mapping.keys().all(|key| {
-            key.as_str().is_some_and(|key| {
-                matches!(
-                    key,
-                    "name"
-                        | "uses"
-                        | "with"
-                        | "secrets"
-                        | "strategy"
-                        | "needs"
-                        | "if"
-                        | "concurrency"
-                        | "permissions"
-                )
-            })
-        })
-    })
 }

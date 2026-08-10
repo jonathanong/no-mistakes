@@ -34,9 +34,13 @@ fn skipped_local_calls_still_require_valid_contracts() {
             ".github/workflows/noncanonical.yml",
             "on: push\njobs:\n  invalid-call:\n    uses: ./.github/workflows/subdir/../callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project noncanonical/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/backslash.yml",
+            "on: push\njobs:\n  invalid-call:\n    uses: './.github/workflows/subdir\\..\\callee.yml'\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project backslash/tsconfig.json\n",
+        ),
     ];
 
-    assert!(scanned(documents, &["sibling", "noncanonical"]).is_empty());
+    assert!(scanned(documents, &["sibling", "noncanonical", "backslash"]).is_empty());
 }
 
 #[test]
@@ -116,5 +120,61 @@ fn compact_boolean_bindings_and_literal_first_comparisons_are_static() {
             &["compact-false", "reversed-false", "reversed-true"]
         ),
         BTreeSet::from(["reversed-true/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn malformed_contract_containers_and_empty_matrices_earn_no_credit() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/malformed-direct.yml",
+            "on:\n  push:\n  workflow_call:\n    inputs: [invalid]\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-direct/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-empty-contract.yml",
+            "on:\n  push:\n  workflow_call:\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid-empty-contract/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/malformed-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/malformed-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-local/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/malformed-callee.yml",
+            "on:\n  workflow_call:\n    secrets: invalid\njobs: {}\n",
+        ),
+        workflow(
+            ".github/workflows/caller.yml",
+            "on: push\njobs:\n  empty-call:\n    strategy:\n      matrix:\n        target: []\n    uses: ./.github/workflows/callee.yml\n  internal-call:\n    uses: ./.github/workflows/internal.yml\n  include-restores:\n    strategy:\n      matrix:\n        target: []\n        include:\n          - target: linux\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project include-restores/tsconfig.json\n  dynamic-include:\n    strategy:\n      matrix:\n        target: []\n        include: '${{ fromJSON(needs.setup.outputs.matrix) }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-include/tsconfig.json\n  valid:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/callee.yml",
+            "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project empty-call/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/internal.yml",
+            "on: workflow_call\njobs:\n  empty-job:\n    strategy:\n      matrix:\n        target: []\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project empty-job/tsconfig.json\n",
+        ),
+    ];
+
+    assert_eq!(
+        scanned(
+            documents,
+            &[
+                "malformed-direct",
+                "malformed-local",
+                "empty-call",
+                "empty-job",
+                "valid-empty-contract",
+                "include-restores",
+                "dynamic-include",
+                "valid"
+            ]
+        ),
+        BTreeSet::from([
+            "dynamic-include/tsconfig.json".to_string(),
+            "include-restores/tsconfig.json".to_string(),
+            "valid-empty-contract/tsconfig.json".to_string(),
+            "valid/tsconfig.json".to_string(),
+        ])
     );
 }
