@@ -5,7 +5,7 @@ use super::{
 use crate::integration_tests::test_config::playwright::Options;
 use crate::integration_tests::test_config::shared;
 use anyhow::Result;
-use oxc_ast::ast::{ExportDefaultDeclarationKind, Program, Statement};
+use oxc_ast::ast::{ArrowFunctionBody, ExportDefaultDeclarationKind, Program, Statement};
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -137,14 +137,10 @@ fn default_export_options(
         ExportDefaultDeclarationKind::Identifier(identifier) => {
             default_identifier_options(identifier.name.as_str(), ctx)
         }
-        ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            match arrow.body.as_expression() {
-                Some(expression) => expression_options(expression, ctx),
-                None => crate::ast::arrow_function_body(&arrow.body)
-                    .map(|body| body_return_options(body, ctx))
-                    .unwrap_or_else(|| Ok(Vec::new())),
-            }
-        }
+        ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => match &arrow.body {
+            ArrowFunctionBody::FunctionBody(body) => body_return_options(body, ctx),
+            _ => expression_options(arrow.body.to_expression(), ctx),
+        },
         ExportDefaultDeclarationKind::CallExpression(call) if call.arguments.is_empty() => {
             super::calls::call_options(&call.callee, ctx)
         }

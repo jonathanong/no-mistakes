@@ -32,17 +32,22 @@ impl<'a> ServerRouteVisitor<'a> {
     ) {
         match statement {
             Statement::FunctionDeclaration(function) => {
-                if let Some(id) = &function.id {
-                    if let Some(body) = &function.body {
-                        handlers.insert(
-                            id.name.to_string(),
-                            HandlerShape {
-                                params: &function.params,
-                                body: HandlerBody::Statements(&body.statements),
-                            },
-                        );
-                    }
-                }
+                // Ambient functions use TSDeclareFunction; this variant is named and bodied.
+                let id = function
+                    .id
+                    .as_ref()
+                    .expect("non-default function declarations are named");
+                let body = function
+                    .body
+                    .as_ref()
+                    .expect("non-ambient function declarations have bodies");
+                handlers.insert(
+                    id.name.to_string(),
+                    HandlerShape {
+                        params: &function.params,
+                        body: HandlerBody::Statements(&body.statements),
+                    },
+                );
             }
             Statement::VariableDeclaration(declaration) => {
                 for declarator in &declaration.declarations {
@@ -51,17 +56,21 @@ impl<'a> ServerRouteVisitor<'a> {
             }
             Statement::ExportDeclaration(export) => match &export.declaration {
                 oxc_ast::ast::Declaration::FunctionDeclaration(function) => {
-                    if let Some(id) = &function.id {
-                        if let Some(body) = &function.body {
-                            handlers.insert(
-                                id.name.to_string(),
-                                HandlerShape {
-                                    params: &function.params,
-                                    body: HandlerBody::Statements(&body.statements),
-                                },
-                            );
-                        }
-                    }
+                    let id = function
+                        .id
+                        .as_ref()
+                        .expect("non-default function declarations are named");
+                    let body = function
+                        .body
+                        .as_ref()
+                        .expect("non-ambient function declarations have bodies");
+                    handlers.insert(
+                        id.name.to_string(),
+                        HandlerShape {
+                            params: &function.params,
+                            body: HandlerBody::Statements(&body.statements),
+                        },
+                    );
                 }
                 oxc_ast::ast::Declaration::VariableDeclaration(declaration) => {
                     for declarator in &declaration.declarations {

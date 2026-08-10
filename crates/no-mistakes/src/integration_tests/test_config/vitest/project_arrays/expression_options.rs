@@ -4,7 +4,7 @@ use super::{
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
-use oxc_ast::ast::Expression;
+use oxc_ast::ast::{ArrowFunctionBody, Expression};
 
 pub(super) fn expression_options(
     expression: &Expression<'_>,
@@ -51,11 +51,9 @@ pub(super) fn helper_expression_options(
 ) -> Result<Vec<Options>> {
     let expression = unwrap_ts_wrappers(expression);
     match expression {
-        Expression::ArrowFunctionExpression(arrow) => match arrow.body.as_expression() {
-            Some(expression) => expression_options(expression, ctx),
-            None => crate::ast::arrow_function_body(&arrow.body)
-                .map(|body| body_return_options(body, ctx))
-                .unwrap_or_else(|| Ok(Vec::new())),
+        Expression::ArrowFunctionExpression(arrow) => match &arrow.body {
+            ArrowFunctionBody::FunctionBody(body) => body_return_options(body, ctx),
+            _ => expression_options(arrow.body.to_expression(), ctx),
         },
         Expression::FunctionExpression(function) => function
             .body
