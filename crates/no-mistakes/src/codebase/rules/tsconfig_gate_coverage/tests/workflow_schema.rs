@@ -85,12 +85,12 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project missing-steps-sibling/tsconfig.json\n",
         ),
         workflow(
-            ".github/workflows/ordinary-misspelled-trigger-caller.yml",
-            "on:\n  push:\n  pussh:\njobs:\n  typecheck:\n    uses: ./.github/workflows/ordinary-misspelled-trigger-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project ordinary-misspelled-trigger-sibling/tsconfig.json\n",
+            ".github/workflows/webhook-only-trigger-caller.yml",
+            "on:\n  push:\n  repository:\njobs:\n  typecheck:\n    uses: ./.github/workflows/webhook-only-trigger-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project webhook-only-trigger-sibling/tsconfig.json\n",
         ),
         workflow(
-            ".github/workflows/ordinary-misspelled-trigger-callee.yml",
-            "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project ordinary-misspelled-trigger/tsconfig.json\n",
+            ".github/workflows/webhook-only-trigger-callee.yml",
+            "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project webhook-only-trigger/tsconfig.json\n",
         ),
         workflow(
             ".github/workflows/uppercase-inherit.yml",
@@ -127,8 +127,8 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "malformed-action",
         "malformed-action-sibling",
         "missing-steps-sibling",
-        "ordinary-misspelled-trigger",
-        "ordinary-misspelled-trigger-sibling",
+        "webhook-only-trigger",
+        "webhook-only-trigger-sibling",
         "uppercase-inherit-sibling",
         "empty-expression-sibling",
         "concatenated-expression-sibling",
