@@ -315,3 +315,84 @@ fn statically_typed_expression_bindings_must_match_declared_inputs() {
         ));
     }
 }
+
+#[test]
+fn static_values_cover_event_matrix_and_untyped_scalar_paths() {
+    let parent = InputState::from([
+        (
+            "\0github.event_name".into(),
+            StaticValue::String("push".into()),
+        ),
+        ("\0matrix.enabled".into(), StaticValue::Bool(true)),
+    ]);
+
+    assert_eq!(
+        super::values::forwarded_input_value(
+            &Value::String("${{ github.event_name }}".into()),
+            &parent,
+        ),
+        Some(StaticValue::String("push".into()))
+    );
+    assert_eq!(
+        super::values::forwarded_input_value(
+            &Value::String("${{ matrix.enabled }}".into()),
+            &parent,
+        ),
+        Some(StaticValue::Bool(true))
+    );
+    for (value, expected) in [
+        (Value::Bool(true), Some(StaticValue::Bool(true))),
+        (
+            Value::Number(2.into()),
+            Some(StaticValue::Number("2".into())),
+        ),
+        (Value::Null, Some(StaticValue::Null)),
+        (
+            Value::String("${{ github.ref }}".into()),
+            Some(StaticValue::Unknown),
+        ),
+        (Value::Sequence(Vec::new()), None),
+    ] {
+        assert_eq!(
+            super::values::matrix_axis_value(&value),
+            expected,
+            "{value:?}"
+        );
+    }
+    assert_eq!(
+        nonboolean_binding_value(&Value::Bool(true), &parent, WorkflowCallInputType::String,),
+        StaticValue::Unknown
+    );
+    assert_eq!(
+        default_value(Some(&JsonScalar::Bool(true)), WorkflowCallInputType::String,),
+        StaticValue::Unknown
+    );
+}
+
+#[test]
+fn boolean_bindings_reject_forwarded_nonbooleans_and_evaluate_conditions() {
+    let parent = InputState::from([
+        ("label".into(), StaticValue::String("release".into())),
+        ("enabled".into(), StaticValue::Bool(true)),
+        ("dynamic".into(), StaticValue::Unknown),
+    ]);
+    assert_eq!(
+        super::bindings::binding_bool(&Value::String("${{ inputs.label }}".into()), &parent,),
+        StaticValue::Unknown
+    );
+    assert_eq!(
+        super::bindings::binding_bool(&Value::String("${{ inputs.dynamic }}".into()), &parent,),
+        StaticValue::Unknown
+    );
+    assert_eq!(
+        super::bindings::binding_bool(
+            &Value::String("${{ inputs.enabled && true }}".into()),
+            &parent,
+        ),
+        StaticValue::Bool(true)
+    );
+    assert_eq!(
+        super::bindings::binding_bool(&Value::Number(1.into()), &parent),
+        StaticValue::Bool(false)
+    );
+}

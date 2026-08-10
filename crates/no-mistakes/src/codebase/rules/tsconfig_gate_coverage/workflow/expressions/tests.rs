@@ -1,4 +1,8 @@
-use super::{complete_expression_type, interpolated_expression_valid, StaticExpressionType};
+use super::{
+    complete_expression_contexts_available, complete_expression_type, condition_expression_valid,
+    condition_has_status_function, interpolated_expression_contexts_available,
+    interpolated_expression_valid, StaticExpressionType,
+};
 
 #[test]
 fn parses_supported_github_expression_shapes() {
@@ -118,5 +122,59 @@ fn validates_interpolated_expression_strings() {
         "${{ arbitrary() }}",
     ] {
         assert!(!interpolated_expression_valid(value), "{value}");
+    }
+}
+
+#[test]
+fn context_and_status_helpers_reject_malformed_or_unavailable_expressions() {
+    assert!(!complete_expression_contexts_available(
+        "literal",
+        &["github"]
+    ));
+    assert!(!complete_expression_contexts_available(
+        "${{ 'unterminated }}",
+        &["github"]
+    ));
+    assert!(!complete_expression_contexts_available(
+        "${{ secrets.TOKEN }}",
+        &["github"]
+    ));
+    assert!(complete_expression_contexts_available(
+        "${{ github.ref }}",
+        &["github"]
+    ));
+    assert!(!condition_expression_valid("${{ true"));
+    assert!(condition_has_status_function("${{ success() }}"));
+    assert!(!condition_has_status_function(
+        "contains('success()', 'success')"
+    ));
+    assert!(!condition_has_status_function("${{ success()"));
+    assert!(interpolated_expression_contexts_available(
+        "literal ${{ 'it''s valid' }}",
+        &["github"]
+    ));
+    assert!(!interpolated_expression_contexts_available(
+        "${{ success() }}",
+        &["github"]
+    ));
+}
+
+#[test]
+fn rejects_unterminated_context_strings_and_malformed_numeric_literals() {
+    assert!(!super::contexts::root_contexts_available(
+        "'unterminated",
+        &["github"]
+    ));
+    assert_eq!(super::lexer::numeric_literal_end(b"12.", 0), None);
+    assert_eq!(super::lexer::numeric_literal_end(b"1e+", 0), None);
+}
+
+#[test]
+fn rejects_unclosed_accessors_and_function_arguments() {
+    for expression in [
+        "${{ inputs['enabled' }}",
+        "${{ contains('value' 'needle') }}",
+    ] {
+        assert_eq!(complete_expression_type(expression), None, "{expression}");
     }
 }

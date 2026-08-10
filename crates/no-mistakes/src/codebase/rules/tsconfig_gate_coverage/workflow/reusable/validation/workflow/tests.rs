@@ -12,6 +12,9 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
     assert!(workflow_shape_valid(&workflow(
         "on: push\nenv: {}\njobs: {}"
     )));
+    assert!(workflow_shape_valid(&workflow(
+        "on: push\nenv: {ENABLED: true, RETRIES: 2}\nconcurrency:\n  group: checks\n  cancel-in-progress: '${{ inputs.cancel }}'\njobs: {}"
+    )));
     for run_name in ["''", "'   '"] {
         assert!(workflow_shape_valid(&workflow(&format!(
             "on: push\nrun-name: {run_name}\njobs: {{}}"
@@ -23,6 +26,8 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
         "on: push\nname: [checks]\njobs: {}",
         "on: push\nrun-name: '${{ secrets.TOKEN }}'\njobs: {}",
         "on: push\nenv: []\njobs: {}",
+        "on: push\nenv:\n  1: value\njobs: {}",
+        "on: push\nenv:\n  BROKEN: null\njobs: {}",
         "on: push\nenv:\n  BROKEN: '${{ }}'\njobs: {}",
         "on: push\ndefaults: []\njobs: {}",
         "on: push\ndefaults:\n  run: []\njobs: {}",
@@ -37,6 +42,7 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
         "on: push\nconcurrency:\n  group: [checks]\njobs: {}",
         "on: push\nconcurrency:\n  group: ''\njobs: {}",
         "on: push\nconcurrency:\n  group: 'checks-${{ }}'\njobs: {}",
+        "on: push\nconcurrency:\n  group: checks\n  cancel-in-progress: invalid\njobs: {}",
     ] {
         assert!(!workflow_shape_valid(&workflow(yaml)), "{yaml}");
     }
@@ -44,6 +50,7 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
 
 #[test]
 fn permissions_follow_the_actions_scope_and_access_schema() {
+    assert!(!permission_value_valid(&Value::Number(1.into()), "read"));
     for yaml in [
         "on: push\npermissions: read-all\njobs: {}",
         "on: push\npermissions: write-all\njobs: {}",
@@ -57,6 +64,7 @@ fn permissions_follow_the_actions_scope_and_access_schema() {
         "on: push\npermissions: none\njobs: {}",
         "on: push\npermissions: []\njobs: {}",
         "on: push\npermissions:\n  bogus: read\njobs: {}",
+        "on: push\npermissions:\n  1: read\njobs: {}",
         "on: push\npermissions:\n  contents: invalid\njobs: {}",
         "on: push\npermissions:\n  id-token: read\njobs: {}",
         "on: push\npermissions:\n  models: write\njobs: {}",

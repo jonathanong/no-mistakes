@@ -33,9 +33,7 @@ fn cron_field_valid(field: &str, position: usize) -> bool {
 
 fn cron_field_part_valid(part: &str, position: usize) -> bool {
     let mut step_parts = part.split('/');
-    let Some(base) = step_parts.next() else {
-        return false;
-    };
+    let base = step_parts.next().expect("split always returns one part");
     let Some(step) = step_parts.next() else {
         return cron_atom_or_range_valid(base, position);
     };
@@ -50,9 +48,7 @@ fn cron_atom_or_range_valid(base: &str, position: usize) -> bool {
         return true;
     }
     let mut range_parts = base.split('-');
-    let Some(start) = range_parts.next() else {
-        return false;
-    };
+    let start = range_parts.next().expect("split always returns one part");
     let Some(end) = range_parts.next() else {
         return cron_atom_valid(start, position);
     };
@@ -96,3 +92,6 @@ fn cron_number_in_range(number: &str, position: usize, atom: bool) -> bool {
     let minimum = if atom { [0, 0, 1, 1, 0][position] } else { 1 };
     (minimum..=maximum).contains(&number)
 }
+
+#[cfg(test)]
+mod tests;

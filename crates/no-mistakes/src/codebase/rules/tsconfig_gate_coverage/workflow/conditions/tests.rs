@@ -184,3 +184,85 @@ fn skipped_needs_continue_only_for_statically_true_status_conditions() {
         );
     }
 }
+
+#[test]
+fn comparisons_cover_null_coercion_unicode_and_bracketed_inputs() {
+    let inputs = InputState::from([
+        ("enabled".into(), StaticValue::Bool(true)),
+        ("empty".into(), StaticValue::String(String::new())),
+        ("count".into(), StaticValue::Number("not-a-number".into())),
+        ("café".into(), StaticValue::String("café".into())),
+    ]);
+
+    for (expression, expected) in [
+        ("inputs['enabled'] == 1", StaticBool::True),
+        ("inputs.empty == null", StaticBool::True),
+        ("inputs.enabled == '1'", StaticBool::True),
+        ("inputs.count == 1", StaticBool::Unknown),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+    assert_eq!(
+        StaticValue::String("café".into()).equals(&StaticValue::String("café".into())),
+        StaticBool::True
+    );
+    assert_eq!(
+        StaticValue::String("café".into()).equals(&StaticValue::String("CAFÉ".into())),
+        StaticBool::Unknown
+    );
+    assert_eq!(
+        StaticValue::Null.equals(&StaticValue::Null),
+        StaticBool::True
+    );
+}
+
+#[test]
+fn malformed_logical_and_literal_expressions_remain_unknown() {
+    let inputs = InputState::new();
+    for expression in [
+        "true == false == true",
+        "(true) && false)",
+        "'unterminated",
+        "0x",
+        "0xnothex",
+        "github.ref == 'main'",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::Unknown,
+            "{expression}"
+        );
+    }
+    assert_eq!(
+        static_bool(Some(&Value::String("'nonempty'".into())), &inputs),
+        StaticBool::TruthyNonBoolean
+    );
+}
+
+#[test]
+fn literal_and_parenthesized_condition_helpers_cover_static_paths() {
+    let inputs = InputState::new();
+    assert_eq!(StaticBool::TruthyNonBoolean.truthiness(), StaticBool::True);
+    assert_eq!(StaticValue::Null.truthiness(), StaticBool::False);
+    assert_eq!(
+        super::hexadecimal_bool("0x1"),
+        Some(StaticBool::TruthyNonBoolean)
+    );
+    assert_eq!(super::number_bool(Some(2.0)), StaticBool::TruthyNonBoolean);
+    assert_eq!(super::number_bool(None), StaticBool::Unknown);
+    for expression in ["(true)", "((true))", "(true"] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            if expression.ends_with(')') {
+                StaticBool::True
+            } else {
+                StaticBool::Unknown
+            },
+            "{expression}"
+        );
+    }
+}

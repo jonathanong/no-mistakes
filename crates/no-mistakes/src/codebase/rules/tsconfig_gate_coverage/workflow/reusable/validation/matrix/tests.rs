@@ -75,6 +75,7 @@ fn dynamic_matrices_fail_open_and_malformed_shapes_fail_closed() {
         "strategy:\n  matrix: {}",
         "strategy:\n  matrix:\n    target: []",
         "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    include: []",
+        "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    include: [invalid]",
         "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    exclude: []",
         "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    include: []",
         "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    include: true",
@@ -125,6 +126,9 @@ fn static_matrix_shape_enforces_the_github_job_limit() {
         .join(", ");
     assert!(!matrix_shape_valid(&job(&format!(
         "strategy:\n  matrix:\n    value: [{values}]"
+    ))));
+    assert!(!matrix_shape_valid(&job(&format!(
+        "strategy:\n  matrix:\n    value: [{values}]\n    include:\n      - label: ignored-after-limit"
     ))));
     assert!(matrix_shape_valid(&job(
         "strategy:\n  matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'"
@@ -197,4 +201,70 @@ fn bounded_static_matrix_enumeration_rejects_unresolved_literal_expansions() {
     );
 
     assert!(!matrix_shape_valid(&job(&matrix)));
+}
+
+#[test]
+fn uniform_values_fail_closed_for_unresolvable_expansion_and_malformed_includes() {
+    for yaml in [
+        "strategy:\n  matrix:\n    target: []",
+        "strategy:\n  matrix:\n    target: '${{ fromJSON(inputs.targets) }}'",
+        "strategy:\n  matrix:\n    target: [linux]\n    exclude: '${{ fromJSON(inputs.exclusions) }}'",
+        "strategy:\n  matrix:\n    target: [linux]\n    include: '${{ fromJSON(inputs.inclusions) }}'",
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - 1: invalid-key",
+    ] {
+        assert!(uniform_static_matrix_values(&job(yaml)).is_empty(), "{yaml}");
+    }
+
+    let axes = (0..20)
+        .map(|index| format!("    axis{index}: [false, true]"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        uniform_static_matrix_values(&job(&format!("strategy:\n  matrix:\n{axes}"))).is_empty()
+    );
+}
+
+#[test]
+fn uniform_values_apply_includes_and_handle_empty_combinations() {
+    let applied = uniform_static_matrix_values(&job(
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - label: retained",
+    ));
+    assert_eq!(
+        applied.get("target"),
+        Some(&Value::String("linux".to_string()))
+    );
+    assert_eq!(
+        applied.get("label"),
+        Some(&Value::String("retained".to_string()))
+    );
+
+    let all_excluded = uniform_static_matrix_values(&job(
+        "strategy:\n  matrix:\n    target: [linux]\n    exclude:\n      - target: linux",
+    ));
+    assert!(all_excluded.is_empty());
+}
+
+#[test]
+fn traversal_exhaustion_and_nonmatching_includes_are_conservative() {
+    let axes = vec![(
+        "target".to_string(),
+        vec![Value::String("linux".to_string())],
+    )];
+    let include = serde_yaml::from_str::<Value>("target: macos")
+        .unwrap()
+        .as_mapping()
+        .unwrap()
+        .clone();
+    let mut values = BTreeMap::new();
+    let mut exhausted = 0;
+    assert_eq!(
+        traversal::has_applicable_combination(&axes, &[], &include, 0, &mut values, &mut exhausted,),
+        None
+    );
+
+    let mut states = 8;
+    assert_eq!(
+        traversal::has_applicable_combination(&axes, &[], &include, 0, &mut values, &mut states,),
+        Some(false)
+    );
 }
