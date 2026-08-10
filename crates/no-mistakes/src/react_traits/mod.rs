@@ -16,4 +16,6 @@ pub use report::text::{
     print_results, print_results_md, print_usages, print_usages_md, print_violations,
     print_violations_md,
 };
-pub use report::types::{AggregatedFacts, Callsite, ComponentFacts, UsagesReport, Violation};
+pub use report::types::{
+    AggregatedFacts, Callsite, ComponentFacts, ReactSuppressionTarget, UsagesReport, Violation,
+};

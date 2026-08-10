@@ -156,7 +156,6 @@ fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'
                 root,
                 config,
                 candidates.rust_candidates(),
-                candidates.exclusive_rust_candidates(),
                 sources,
                 defer_suppression,
             );

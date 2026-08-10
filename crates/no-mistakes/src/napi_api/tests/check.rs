@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::json;
 
+#[path = "check_suppression.rs"]
+mod check_suppression;
+
 fn static_check_fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check")
@@ -185,20 +188,6 @@ fn check_json_preserves_direct_and_reachable_dynamic_import_reports_when_auditin
 }
 
 #[test]
-fn check_json_skips_file_disabled_parse_errors_without_losing_other_dynamic_imports() {
-    let (baseline, audit) =
-        baseline_and_audit("aggregate-test-no-unmocked-dynamic-imports-disabled-parse-error");
-    assert!(baseline["warnings"].as_array().is_some_and(Vec::is_empty));
-    assert!(baseline["rules"].as_array().is_some_and(|findings| {
-        findings.iter().any(|finding| {
-            finding["rule"] == "test-no-unmocked-dynamic-imports"
-                && finding["file"] == "tests/direct.test.mts"
-        })
-    }));
-    assert_eq!(audit["suppressed"], json!([]));
-}
-
-#[test]
 fn check_json_preserves_server_boundary_report_when_auditing_suppression() {
     let (_, audit) = baseline_and_audit("aggregate-server-route-client-boundary");
     assert_suppression(
@@ -217,60 +206,14 @@ fn check_json_preserves_server_boundary_report_when_auditing_suppression() {
 
 #[test]
 fn check_json_preserves_agents_size_report_when_auditing_suppression() {
-    let (_, audit) = baseline_and_audit("aggregate-agents-md-max-size");
-    assert_suppression(
-        &audit,
-        &json!({
-            "domain": "filesystem",
-            "rule": "agents-md-max-size",
-            "file": "AGENTS.md",
-            "line": 1,
-            "directiveKind": "file",
-            "directiveLine": 1,
-            "reason": "3 lines (max 2) - trim to keep agent context lean",
-        }),
-    );
-}
-
-#[test]
-fn check_json_preserves_storybook_file_and_component_reports_when_auditing_suppression() {
-    let (_, audit) = baseline_and_audit("aggregate-require-storybook-stories");
-    assert_suppression(
-        &audit,
-        &json!({
-            "domain": "rules",
-            "rule": "require-storybook-stories",
-            "file": "web/components/ComponentSuppressed.tsx",
-            "line": 2,
-            "directiveKind": "nextLine",
-            "directiveLine": 1,
-            "reason": "React component `ComponentSuppressed` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
-        }),
-    );
-    assert_suppression(
-        &audit,
-        &json!({
-            "domain": "rules",
-            "rule": "require-storybook-stories",
-            "file": "web/components/FileSuppressed.tsx",
-            "line": 2,
-            "directiveKind": "file",
-            "directiveLine": 1,
-            "reason": "React component `FileSuppressed` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
-        }),
-    );
-}
-
-#[test]
-fn check_json_audit_mode_includes_an_empty_suppression_array() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
-    let baseline = check_json_impl(json!({ "root": root }).to_string()).unwrap();
-    let baseline: serde_json::Value = serde_json::from_str(&baseline).unwrap();
-    assert!(baseline.get("suppressed").is_none());
-
-    let audit =
-        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
-    let audit: serde_json::Value = serde_json::from_str(&audit).unwrap();
+    let (baseline, audit) = baseline_and_audit("aggregate-agents-md-max-size");
+    assert!(baseline["rules"].as_array().is_some_and(|items| {
+        items.iter().any(|item| {
+            item["rule"] == "agents-md-max-size"
+                && item["file"] == "AGENTS.md"
+                && item["message"] == "3 lines (max 2) - trim to keep agent context lean"
+        })
+    }));
     assert_eq!(audit["suppressed"], json!([]));
 }
 
@@ -350,30 +293,6 @@ fn check_json_uses_filter_precedence_for_overlapping_directives() {
 }
 
 #[test]
-fn check_json_keeps_unsuppressed_duplicate_when_suppressed_export_sorts_first() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/check/suppression-unique-canonical");
-    let baseline: serde_json::Value =
-        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
-            .unwrap();
-    assert!(baseline["codebase"].as_array().is_some_and(Vec::is_empty));
-
-    let audit: serde_json::Value = serde_json::from_str(
-        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
-    )
-    .unwrap();
-    assert!(audit["codebase"].as_array().is_some_and(Vec::is_empty));
-    assert!(audit["suppressed"]
-        .as_array()
-        .is_some_and(|items| items.iter().any(|item| {
-            item["rule"] == "unique-exports"
-                && item["file"] == "src/a.ts"
-                && item["directive"]["kind"] == "line"
-                && item["directive"]["line"] == 1
-        })));
-}
-
-#[test]
 fn check_json_does_not_hide_later_react_fetch_after_first_is_suppressed() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-react-multiple");
@@ -383,7 +302,10 @@ fn check_json_does_not_hide_later_react_fetch_after_first_is_suppressed() {
     assert!(!value["react"].as_array().unwrap().is_empty(), "{value}");
     assert!(value["suppressed"].as_array().is_some_and(|items| items
         .iter()
-        .any(|item| { item["domain"] == "react" && item["line"] == 3 })));
+        .any(|item| { item["domain"] == "react" && item["line"] == 5 })));
+    assert!(value["react"]
+        .as_array()
+        .is_some_and(|items| { items.iter().any(|item| item["file"] == "app/Fetcher.tsx") }));
 }
 
 #[test]

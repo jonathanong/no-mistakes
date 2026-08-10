@@ -139,6 +139,14 @@ fn merge_component(agg: &mut AggregatedFacts, facts: &ComponentFacts) {
     agg.uses_context_provider |= facts.uses_context_provider;
     agg.uses_suspense |= facts.uses_suspense;
     agg.has_fetch |= !facts.fetches.is_empty();
+    agg.fetch_lines
+        .extend(facts.fetches.iter().map(|fetch| fetch.line));
+    agg.fetch_locations.extend(
+        facts
+            .fetches
+            .iter()
+            .map(|fetch| (fetch.file.clone(), fetch.line)),
+    );
 }
 
 fn merge_aggregate(agg: &mut AggregatedFacts, child: &AggregatedFacts) {
@@ -149,6 +157,9 @@ fn merge_aggregate(agg: &mut AggregatedFacts, child: &AggregatedFacts) {
     agg.uses_memo |= child.uses_memo;
     agg.has_props |= child.has_props;
     agg.passes_props |= child.passes_props;
+    agg.fetch_lines.extend(child.fetch_lines.iter().copied());
+    agg.fetch_locations
+        .extend(child.fetch_locations.iter().cloned());
 }
 
 #[cfg(test)]

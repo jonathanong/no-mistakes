@@ -62,9 +62,13 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     occurrence.file = file.rel.clone();
                     occurrence.line = export.line;
                     occurrence.kind = export_kind_str(&export.kind).to_string();
-                    occurrence.suppressed = file.disabled
+                    let current_suppressed = file.disabled
                         || has_disable_comment(&file.source, export.line, RULE_ID)
                         || has_disable_line_comment(&file.source, export.line, RULE_ID);
+                    if current_suppressed {
+                        occurrence.suppression_location = Some((file.rel.clone(), export.line));
+                    }
+                    occurrence.suppressed |= current_suppressed;
                     if !super::nextjs::is_framework_export(
                         &occurrence.file,
                         &occurrence.name,
@@ -92,6 +96,21 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                         .map(|origin| origin.bucket)
                         .unwrap_or_else(|| ExportBucket::from_export(export))
                 };
+                let origin_suppressed = resolved_origin
+                    .as_ref()
+                    .is_some_and(|origin| origin.suppressed);
+                let current_suppressed = file.disabled
+                    || has_disable_comment(&file.source, export.line, RULE_ID)
+                    || has_disable_line_comment(&file.source, export.line, RULE_ID);
+                let suppression_location = if current_suppressed {
+                    Some((file.rel.clone(), export.line))
+                } else if origin_suppressed {
+                    resolved_origin
+                        .as_ref()
+                        .and_then(|origin| origin.suppression_location.clone())
+                } else {
+                    None
+                };
                 let origin = resolved_origin
                     .map(|origin| {
                         if export.is_type_only {
@@ -111,9 +130,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     line: export.line,
                     kind: export_kind_str(&export.kind).to_string(),
                     origin,
-                    suppressed: file.disabled
-                        || has_disable_comment(&file.source, export.line, RULE_ID)
-                        || has_disable_line_comment(&file.source, export.line, RULE_ID),
+                    suppressed: current_suppressed || origin_suppressed,
+                    suppression_location,
                 });
             }
             _ => {
@@ -128,6 +146,10 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     suppressed: file.disabled
                         || has_disable_comment(&file.source, export.line, RULE_ID)
                         || has_disable_line_comment(&file.source, export.line, RULE_ID),
+                    suppression_location: (file.disabled
+                        || has_disable_comment(&file.source, export.line, RULE_ID)
+                        || has_disable_line_comment(&file.source, export.line, RULE_ID))
+                    .then(|| (file.rel.clone(), export.line)),
                 });
             }
         }
@@ -140,6 +162,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
 
 pub(super) fn should_skip_export(file: &SourceFile, export: &Export) -> bool {
     export.name == "default"
-        || (!file.defer_suppression && has_disable_comment(&file.source, export.line, RULE_ID))
+        || (!file.defer_suppression
+            && (has_disable_comment(&file.source, export.line, RULE_ID)
+                || has_disable_line_comment(&file.source, export.line, RULE_ID)))
         || super::nextjs::is_framework_export(&file.rel, &export.name, file.is_nextjs_project)
 }

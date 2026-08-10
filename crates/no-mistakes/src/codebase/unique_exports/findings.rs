@@ -45,8 +45,16 @@ pub(super) fn unique_export_findings(
         {
             findings.push(UniqueExportFinding {
                 rule: RULE_ID.to_string(),
-                file: duplicate.file.clone(),
-                line: duplicate.line,
+                file: duplicate
+                    .suppression_location
+                    .as_ref()
+                    .map(|(file, _)| file.clone())
+                    .unwrap_or_else(|| duplicate.file.clone()),
+                line: duplicate
+                    .suppression_location
+                    .as_ref()
+                    .map(|(_, line)| *line)
+                    .unwrap_or(duplicate.line),
                 export_name: name.clone(),
                 export_kind: bucket.as_str().to_string(),
                 message: format!(

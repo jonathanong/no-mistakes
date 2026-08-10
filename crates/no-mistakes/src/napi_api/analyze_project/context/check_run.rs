@@ -65,7 +65,9 @@ impl SharedCheckContext {
             && !self.playwright_rules_enabled
             && !self.graph_rules_enabled
         {
-            return Ok(crate::check_runner::empty_results([None]));
+            let mut results = crate::check_runner::empty_results([None]);
+            results.include_suppressed = include_suppressed;
+            return Ok(results);
         }
         let scoped_facts = self
             .graph_plan

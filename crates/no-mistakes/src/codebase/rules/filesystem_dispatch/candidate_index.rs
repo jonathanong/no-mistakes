@@ -5,13 +5,11 @@ use crate::codebase::rules::{
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS,
 };
 use crate::config::v2::NoMistakesConfig;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::candidate_helpers::{
-    is_rust_path, markdown_inventory_path_allowed, normalized_paths, rule_can_consume_rust_source,
-};
+use super::candidate_helpers::{is_rust_path, markdown_inventory_path_allowed, normalized_paths};
 
 /// Immutable, request-scoped candidates for every enabled filesystem rule.
 ///
@@ -21,7 +19,6 @@ use super::candidate_helpers::{
 pub(super) struct RuleCandidateIndex {
     by_rule: BTreeMap<&'static str, Arc<Vec<PathBuf>>>,
     rust: Arc<Vec<PathBuf>>,
-    exclusive_rust: Arc<Vec<PathBuf>>,
 }
 
 impl RuleCandidateIndex {
@@ -164,28 +161,9 @@ impl RuleCandidateIndex {
         .collect::<Vec<_>>();
         rust.sort();
         rust.dedup();
-        let rust_rule_ids = [
-            RUST_MAX_LINES_PER_FILE,
-            RUST_NO_INLINE_TESTS,
-            RUST_NO_INLINE_ALLOWS,
-        ];
-        let non_rust = by_rule
-            .iter()
-            .filter(|(rule_id, _)| {
-                !rust_rule_ids.contains(rule_id) && rule_can_consume_rust_source(rule_id)
-            })
-            .flat_map(|(_, paths)| paths.iter().filter(|path| is_rust_path(path)).cloned())
-            .collect::<HashSet<_>>();
-        let exclusive_rust = rust
-            .iter()
-            .filter(|path| !non_rust.contains(*path))
-            .cloned()
-            .collect();
-
         Self {
             by_rule,
             rust: Arc::new(rust),
-            exclusive_rust: Arc::new(exclusive_rust),
         }
     }
 
@@ -198,10 +176,6 @@ impl RuleCandidateIndex {
 
     pub(super) fn rust_candidates(&self) -> &[PathBuf] {
         &self.rust
-    }
-
-    pub(super) fn exclusive_rust_candidates(&self) -> &[PathBuf] {
-        &self.exclusive_rust
     }
 
     pub(super) fn all_candidates(&self) -> impl Iterator<Item = &PathBuf> {

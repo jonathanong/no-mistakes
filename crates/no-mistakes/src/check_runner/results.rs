@@ -9,6 +9,8 @@ use no_mistakes::react_traits;
 use std::time::Duration;
 
 mod suppression;
+#[cfg(test)]
+mod suppression_tests;
 
 pub(crate) struct FinalizeInput<'a> {
     pub(crate) root: &'a std::path::Path,

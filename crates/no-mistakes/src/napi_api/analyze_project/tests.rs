@@ -113,6 +113,21 @@ fn analyze_project_check_applies_shared_suppression_accounting() {
 }
 
 #[test]
+fn analyze_project_empty_check_includes_empty_suppression_array_in_audit_mode() {
+    let root = check_runner_fixture("empty");
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [{ "type": "check", "includeSuppressed": true }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let result: Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(result["reports"][0]["result"]["suppressed"], json!([]));
+}
+
+#[test]
 fn analyze_project_reachability_check_uses_full_graph_with_standalone_parity() {
     let root = check_runner_fixture("required-reachability-ignores-filesystem-skip");
     let result = analyze_project_check_result(&root);

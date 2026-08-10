@@ -30,6 +30,15 @@ fn finding_names(findings: &[UniqueExportFinding]) -> Vec<(String, String)> {
 }
 
 #[test]
+fn standalone_unique_exports_honors_same_line_suppression_in_static_fixture() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-unique-canonical");
+    let findings = analyze_project(&root, None, None).unwrap();
+    assert!(findings.iter().any(|finding| finding.file == "src/c.ts"));
+    assert!(!findings.iter().any(|finding| finding.file == "src/a.ts"));
+}
+
+#[test]
 fn pass4b_unique_origin_skips_ignored_local_and_workspace_candidates() {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
     crate::test_support::git_init(fixture.path());

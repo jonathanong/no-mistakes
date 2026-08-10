@@ -80,6 +80,7 @@ fn print_violations_outputs_violations() {
         detail: Some("GET /api/users".to_string()),
         line: Some(1),
         suppression_lines: vec![1],
+        suppression_targets: Vec::new(),
     }];
     print_violations(&violations);
 }
@@ -93,6 +94,7 @@ fn print_violations_no_detail() {
         detail: None,
         line: None,
         suppression_lines: Vec::new(),
+        suppression_targets: Vec::new(),
     }];
     print_violations(&violations);
 }

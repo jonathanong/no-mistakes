@@ -1,4 +1,6 @@
-use crate::react_traits::report::types::{FileConfig, RootConfig, Violation};
+use crate::react_traits::report::types::{
+    FileConfig, ReactSuppressionTarget, RootConfig, Violation,
+};
 use anyhow::Result;
 use std::path::Path;
 
@@ -113,13 +115,44 @@ fn assert_no_fetch_violations(
                 .as_ref()
                 .is_some_and(|agg| agg.has_fetch);
         if has_fetch {
+            let inherited_lines = facts
+                .inherited_from_children
+                .as_ref()
+                .map(|agg| agg.fetch_lines.clone())
+                .unwrap_or_default();
+            let mut suppression_lines: Vec<usize> =
+                facts.fetches.iter().map(|fetch| fetch.line).collect();
+            suppression_lines.extend(inherited_lines.iter().copied());
+            let inherited_locations = facts
+                .inherited_from_children
+                .as_ref()
+                .map(|agg| agg.fetch_locations.clone())
+                .unwrap_or_default();
+            let mut suppression_targets = facts
+                .fetches
+                .iter()
+                .map(|fetch| ReactSuppressionTarget {
+                    file: fetch.file.clone(),
+                    line: fetch.line,
+                })
+                .collect::<Vec<_>>();
+            suppression_targets.extend(
+                inherited_locations
+                    .into_iter()
+                    .map(|(file, line)| ReactSuppressionTarget { file, line }),
+            );
             violations.push(Violation {
                 component: facts.name.clone(),
                 file: facts.file.clone(),
                 rule: "assert-no-fetch".to_string(),
                 detail: facts.fetches.first().and_then(|f| f.shape.clone()),
-                line: facts.fetches.first().map(|f| f.line),
-                suppression_lines: facts.fetches.iter().map(|fetch| fetch.line).collect(),
+                line: facts
+                    .fetches
+                    .first()
+                    .map(|fetch| fetch.line)
+                    .or_else(|| inherited_lines.first().copied()),
+                suppression_lines,
+                suppression_targets,
             });
         }
     }

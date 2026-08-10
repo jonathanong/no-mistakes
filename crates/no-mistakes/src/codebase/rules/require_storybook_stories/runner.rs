@@ -8,6 +8,7 @@ use super::{
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::rules::{path_filter::RulePathFilter, sort_findings};
 use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
+use crate::codebase::ts_source::matching_disable_directive;
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 use anyhow::{bail, Result};
 use std::collections::HashSet;
@@ -103,6 +104,11 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
     .filter(|component| rule_filter.is_match(&component.file))
     .collect::<Vec<_>>();
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
+    let suppression_filtered_component_keys: HashSet<String> = components
+        .iter()
+        .filter(|component| !component_is_suppressed(root, shared, component))
+        .map(|component| component.key.clone())
+        .collect();
     let all_component_keys = all_react_component_keys(project_root, shared);
     let story_files = reachable_story_files(
         project_root,
@@ -135,7 +141,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         root,
         project_root,
         &opts,
-        &component_keys,
+        &suppression_filtered_component_keys,
         &allow_files,
         shared,
     ));
@@ -173,4 +179,24 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
 
     findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
     Ok(findings)
+}
+
+fn component_is_suppressed(
+    root: &Path,
+    shared: &CheckFactMap,
+    component: &super::types::Component,
+) -> bool {
+    let component_path = normalize_path(&component.file);
+    let rooted_component_path = normalize_path(&root.join(&component.file));
+    shared
+        .ts
+        .iter()
+        .find(|(path, _)| {
+            let path = normalize_path(path);
+            path == component_path || path == rooted_component_path
+        })
+        .and_then(|(_, facts)| facts.source.as_deref())
+        .is_some_and(|source| {
+            matching_disable_directive(source, Some(component.line as u32), RULE_ID).is_some()
+        })
 }

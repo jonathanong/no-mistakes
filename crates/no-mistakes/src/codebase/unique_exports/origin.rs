@@ -1,5 +1,6 @@
 use super::{ExportBucket, ExportOrigin, SourceFile};
 use crate::codebase::ts_resolver::ImportResolverFacade;
+use crate::codebase::ts_source::{has_disable_comment, has_disable_line_comment};
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
@@ -85,7 +86,8 @@ impl<R: ImportResolverFacade> OriginSearch<'_, R> {
                 self.workspace,
                 self.remapper,
             )
-            .and_then(|resolved| self.find(&resolved, imported)),
+            .and_then(|resolved| self.find(&resolved, imported))
+            .map(|origin| self.with_current_suppression(file, export, origin)),
             _ if export.name == imported => Some(origin_for_export(
                 file,
                 export,
@@ -114,20 +116,40 @@ impl<R: ImportResolverFacade> OriginSearch<'_, R> {
         };
         if export.is_type_only {
             if let Some(origin) = resolved_origin {
-                Some(ExportOrigin {
-                    bucket: ExportBucket::Type,
-                    ..origin
-                })
+                Some(self.with_current_suppression(
+                    file,
+                    export,
+                    ExportOrigin {
+                        bucket: ExportBucket::Type,
+                        ..origin
+                    },
+                ))
             } else {
                 Some(origin_for_export(file, export, ExportBucket::Type))
             }
         } else {
-            if resolved_origin.is_some() {
-                resolved_origin
+            if let Some(origin) = resolved_origin {
+                Some(self.with_current_suppression(file, export, origin))
             } else {
                 Some(origin_for_export(file, export, ExportBucket::Value))
             }
         }
+    }
+
+    fn with_current_suppression(
+        &self,
+        file: &SourceFile,
+        export: &Export,
+        mut origin: ExportOrigin,
+    ) -> ExportOrigin {
+        if file.disabled
+            || has_disable_comment(&file.source, export.line, super::RULE_ID)
+            || has_disable_line_comment(&file.source, export.line, super::RULE_ID)
+        {
+            origin.suppressed = true;
+            origin.suppression_location = Some((file.rel.clone(), export.line));
+        }
+        origin
     }
 }
 
@@ -141,6 +163,13 @@ pub(super) fn origin_for_export(
         line: export.line,
         name: export.name.clone(),
         bucket,
+        suppressed: file.disabled
+            || has_disable_comment(&file.source, export.line, super::RULE_ID)
+            || has_disable_line_comment(&file.source, export.line, super::RULE_ID),
+        suppression_location: (file.disabled
+            || has_disable_comment(&file.source, export.line, super::RULE_ID)
+            || has_disable_line_comment(&file.source, export.line, super::RULE_ID))
+        .then(|| (file.rel.clone(), export.line)),
     }
 }
 

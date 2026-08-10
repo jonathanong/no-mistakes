@@ -13,3 +13,5 @@ rules:
       stories:
         - stories/**/*.stories.tsx
       includeAllReactNamedExports: true
+      allow_components:
+        "components/FileSuppressed.tsx#FileSuppressed": "covered by the parent application shell"

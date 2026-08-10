@@ -77,31 +77,43 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
 
 /// A component-level React diagnostic covers every local fetch. Preserve its
 /// single stable public finding unless all of those fetches are suppressed.
-fn suppress_react(
+pub(super) fn suppress_react(
     root: &std::path::Path,
     sources: &SourceStore,
     findings: &mut Vec<react_traits::Violation>,
     suppressed: &mut Vec<SuppressedFinding>,
 ) {
     findings.retain(|finding| {
-        let lines = if finding.suppression_lines.is_empty() {
-            vec![finding.line]
-        } else {
+        let mut locations = if !finding.suppression_targets.is_empty() {
+            finding
+                .suppression_targets
+                .iter()
+                .map(|target| react_traits::Violation {
+                    file: target.file.clone(),
+                    line: Some(target.line),
+                    suppression_lines: Vec::new(),
+                    suppression_targets: Vec::new(),
+                    ..finding.clone()
+                })
+                .collect()
+        } else if !finding.suppression_lines.is_empty() {
             finding
                 .suppression_lines
                 .iter()
-                .copied()
-                .map(Some)
+                .map(|line| react_traits::Violation {
+                    line: Some(*line),
+                    suppression_lines: Vec::new(),
+                    suppression_targets: Vec::new(),
+                    ..finding.clone()
+                })
                 .collect()
-        };
-        let mut locations = lines
-            .into_iter()
-            .map(|line| react_traits::Violation {
-                line,
+        } else {
+            vec![react_traits::Violation {
                 suppression_lines: Vec::new(),
+                suppression_targets: Vec::new(),
                 ..finding.clone()
-            })
-            .collect::<Vec<_>>();
+            }]
+        };
         suppressed.extend(suppress_domain_findings_with_sources(
             root,
             &mut locations,

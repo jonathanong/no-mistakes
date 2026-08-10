@@ -170,6 +170,14 @@ fn aggregate_children_inner(
             agg.uses_context_provider |= child_facts.uses_context_provider;
             agg.uses_suspense |= child_facts.uses_suspense;
             agg.has_fetch |= !child_facts.fetches.is_empty();
+            agg.fetch_lines
+                .extend(child_facts.fetches.iter().map(|fetch| fetch.line));
+            agg.fetch_locations.extend(
+                child_facts
+                    .fetches
+                    .iter()
+                    .map(|fetch| (fetch.file.clone(), fetch.line)),
+            );
             let child_agg =
                 aggregate_children_inner(&child_facts, file_cache, root, visible_files, visited);
             agg.has_state |= child_agg.has_state;
@@ -179,6 +187,8 @@ fn aggregate_children_inner(
             agg.uses_memo |= child_agg.uses_memo;
             agg.has_props |= child_agg.has_props;
             agg.passes_props |= child_agg.passes_props;
+            agg.fetch_lines.extend(child_agg.fetch_lines);
+            agg.fetch_locations.extend(child_agg.fetch_locations);
         }
     }
     agg

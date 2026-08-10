@@ -83,7 +83,7 @@ fn combined_scan_applies_line_suppression_before_releasing_source() {
 }
 
 #[test]
-fn exclusive_sources_are_not_retained_and_overlapping_sources_are_memoized() {
+fn combined_sources_are_memoized_for_all_rust_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
@@ -97,7 +97,6 @@ fn exclusive_sources_are_not_retained_and_overlapping_sources_are_memoized() {
         &root,
         &config,
         &files,
-        &files,
         &exclusive_sources,
         false,
     )
@@ -109,7 +108,6 @@ fn exclusive_sources_are_not_retained_and_overlapping_sources_are_memoized() {
         &root,
         &config,
         &files,
-        &[],
         &overlapping_sources,
         false,
     )

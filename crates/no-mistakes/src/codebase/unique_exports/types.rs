@@ -82,6 +82,9 @@ pub(super) struct ExportOccurrence {
     /// Deferred aggregate analysis needs this to keep a suppressed occurrence
     /// from becoming the canonical export for a visible duplicate.
     pub(super) suppressed: bool,
+    /// The source location whose directive suppressed this occurrence. Origin
+    /// directives must remain auditable even when a re-export is the duplicate.
+    pub(super) suppression_location: Option<(String, u32)>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -90,4 +93,6 @@ pub(super) struct ExportOrigin {
     pub(super) line: u32,
     pub(super) name: String,
     pub(super) bucket: ExportBucket,
+    pub(super) suppressed: bool,
+    pub(super) suppression_location: Option<(String, u32)>,
 }

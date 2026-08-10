@@ -1,5 +1,8 @@
 use super::RuleFinding;
-use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
+use crate::codebase::check_facts::{
+    collect_check_facts_with_graph_files_playwright_sources_and_session, CheckFactMap,
+    CheckFactPlan,
+};
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
 use std::collections::HashSet;
@@ -56,16 +59,20 @@ pub fn check(
     config: &NoMistakesConfig,
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let snapshot = session.visible_paths(root);
     let visible_paths = snapshot.paths_for(root);
     let files = crate::codebase::ts_source::discover_files_from_visible(
         root,
         &config.filesystem.skip_directories,
         &visible_paths,
     );
-    let facts = crate::codebase::check_facts::collect_check_facts(
+    let sources = snapshot.source_store_for(root);
+    let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
+        &session,
         root,
-        files,
+        (files, Vec::new()),
         CheckFactPlan {
             react: true,
             symbols: true,
@@ -74,10 +81,11 @@ pub fn check(
             source: true,
             ..Default::default()
         },
+        None,
+        std::sync::Arc::clone(&sources),
     );
-    let sources = snapshot.source_store_for(root);
     let catalog = tsconfig_catalog(root, config, tsconfig_path, &visible_paths, &sources)?;
-    check_with_facts_and_catalog(root, config, &facts, &catalog, None, &sources)
+    check_with_facts_and_catalog(root, config, &facts, &catalog, None, &sources, &session)
 }
 
 fn check_with_facts_and_catalog(
@@ -87,9 +95,8 @@ fn check_with_facts_and_catalog(
     catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     sources: &crate::codebase::ts_source::SourceStore,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<Vec<RuleFinding>> {
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let visible_files = shared
         .files()
         .iter()
@@ -98,7 +105,7 @@ fn check_with_facts_and_catalog(
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         catalog,
         &visible_files,
-        &session,
+        session,
     );
     runner::check_with_resolver(
         root,

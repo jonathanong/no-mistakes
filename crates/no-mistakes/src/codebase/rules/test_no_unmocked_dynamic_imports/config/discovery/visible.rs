@@ -105,8 +105,8 @@ fn expand_config_patterns_from_visible(
                 }
             }
         } else {
-            let path = root.join(pattern);
-            if path.exists() {
+            let path = crate::codebase::ts_resolver::normalize_path(&root.join(pattern));
+            if path.is_file() {
                 configs.push(ConfigFile { path, runner });
             }
         }
