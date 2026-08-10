@@ -77,6 +77,7 @@ fn analyze_project_with_prepared_inner<T>(
     builder: impl FnOnce(
         &Path,
         &HashMap<PathBuf, FileFacts>,
+        &crate::codebase::ts_source::facts::TsFactMap,
         &TsConfig,
         &crate::codebase::analysis_session::AnalysisSession,
     ) -> T,
@@ -116,7 +117,13 @@ fn analyze_project_with_prepared_inner<T>(
             }
         }
     }
-    Ok(builder(root, &facts, &prepared.tsconfig, &prepared.session))
+    Ok(builder(
+        root,
+        &facts,
+        &prepared.facts,
+        &prepared.tsconfig,
+        &prepared.session,
+    ))
 }
 
 pub(crate) fn route_defs_from_files_with_catalog(
@@ -150,7 +157,7 @@ fn build_route_defs(
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
     let report = if let Some(catalog) = tsconfig_catalog {
         let resolver = ScopedImportResolver::from_visible(catalog, &visible);
-        build_report_with_resolver(root, facts, &resolver)
+        build_report_with_resolver(root, facts, &Default::default(), &resolver)
     } else {
         build_report(root, facts, tsconfig)
     };

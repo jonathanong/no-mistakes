@@ -35,6 +35,14 @@ fn fixture(category: &str, name: &str) -> String {
     .to_string()
 }
 
+fn saved_fixture(category: &str, name: &str) -> tempfile::TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures")
+        .join(category)
+        .join(name);
+    crate::test_support::materialize_saved_fixture(&source)
+}
+
 #[test]
 fn version_returns_crate_version() {
     assert_eq!(version_impl(), env!("CARGO_PKG_VERSION"));
@@ -331,6 +339,37 @@ fn server_route_json_returns_reports_edges_and_related() {
     let related: serde_json::Value =
         serde_json::from_str(&server_route_related_json_impl(options).unwrap()).unwrap();
     assert!(related.as_array().is_some());
+}
+
+#[test]
+fn server_route_napi_projects_configured_client_call_edges() {
+    let fixture = saved_fixture("server-routes", "canonical-relationships");
+    let root = fixture.path().display().to_string();
+    let options = json!({ "root": root }).to_string();
+    let edges: serde_json::Value =
+        serde_json::from_str(&server_route_edges_json_impl(options).unwrap()).unwrap();
+    assert!(edges.as_array().unwrap().iter().any(|edge| {
+        edge["from"] == "backend/client.ts"
+            && edge["to"] == "/api/v1/users/*"
+            && edge["kind"] == "client-call"
+    }));
+
+    let options = json!({
+        "root": fixture.path(),
+        "roots": ["backend/client.ts"],
+        "direction": "deps"
+    })
+    .to_string();
+    let related: serde_json::Value =
+        serde_json::from_str(&server_route_related_json_impl(options).unwrap()).unwrap();
+    assert_eq!(
+        related,
+        json!([{
+            "from": "backend/client.ts",
+            "to": "/api/v1/users/*",
+            "kind": "client-call"
+        }])
+    );
 }
 
 #[test]

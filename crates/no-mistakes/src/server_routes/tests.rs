@@ -12,6 +12,12 @@ fn fixture(name: &str) -> PathBuf {
         .join("fixture")
 }
 
+fn root_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/server-routes")
+        .join(name)
+}
+
 fn gitignore_fixture() -> tempfile::TempDir {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
     crate::test_support::git_init(fixture.path());
@@ -30,6 +36,57 @@ fn express_project_reports_route_edges() {
         .edges
         .iter()
         .any(|edge| edge.from == "backend/api/users.ts" && edge.to == "/api/v1/users/*"));
+}
+
+#[test]
+fn configured_mounts_and_client_calls_share_canonical_relationships() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
+    let root = fixture.path().canonicalize().unwrap();
+    let prepared = prepare_analysis(&root, None).unwrap();
+    assert_eq!(
+        prepared.facts[&root.join("backend/client.ts")]
+            .route_refs
+            .len(),
+        1,
+        "client references must be collected in the route session"
+    );
+    let report = analyze_project_with_prepared(&prepared, &[]).unwrap();
+    let route = "/api/v1/users/*".to_string();
+    let server_edge = Edge {
+        from: "backend/api/users.ts".to_string(),
+        to: route.clone(),
+        kind: EdgeKind::ServerRoute,
+    };
+    let client_edge = Edge {
+        from: "backend/client.ts".to_string(),
+        to: route.clone(),
+        kind: EdgeKind::ClientCall,
+    };
+    assert!(report.edges.contains(&server_edge));
+    assert!(report.edges.contains(&client_edge));
+
+    let indexed = analyze_project_with_prepared_indexed(&prepared, &[]).unwrap();
+    assert_eq!(indexed.edge_view(&[], None), report.edges);
+    assert_eq!(
+        indexed.related(&["backend/client.ts".to_string()], RelatedDirection::Deps),
+        vec![client_edge]
+    );
+    assert_eq!(
+        indexed.related(&[route], RelatedDirection::Dependents),
+        vec![
+            Edge {
+                from: "/api/v1/users/*".to_string(),
+                to: "backend/api/users.ts".to_string(),
+                kind: EdgeKind::ServerRoute,
+            },
+            Edge {
+                from: "/api/v1/users/*".to_string(),
+                to: "backend/client.ts".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+        ]
+    );
 }
 
 #[test]

@@ -28,13 +28,17 @@ pub struct ServerRoute {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EdgeKind {
+    /// Route definition file -> normalized HTTP route virtual node.
     ServerRoute,
+    /// Static client route reference -> normalized HTTP route virtual node.
+    ClientCall,
 }
 
 impl fmt::Display for EdgeKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             EdgeKind::ServerRoute => f.write_str("server-route"),
+            EdgeKind::ClientCall => f.write_str("client-call"),
         }
     }
 }
