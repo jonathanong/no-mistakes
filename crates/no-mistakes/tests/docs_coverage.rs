@@ -1,5 +1,6 @@
 use no_mistakes::codebase::{rules, unique_exports};
 use no_mistakes::playwright::rules as playwright_rules;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 #[path = "support/docs_coverage_cli_helpers.rs"]
@@ -188,7 +189,20 @@ fn node_runtime_exports_have_api_docs() {
         .split_once("| Runtime export | API |\n")
         .and_then(|(_, rest)| rest.split_once("\n\n").map(|(table, _)| table))
         .expect("docs/node-api.md must contain a complete runtime export inventory table");
-    for export in exports {
+    let source_exports = exports.iter().copied().collect::<BTreeSet<_>>();
+    let documented_exports = runtime_inventory
+        .lines()
+        .filter_map(|line| {
+            line.strip_prefix("| `")?
+                .split_once("` |")
+                .map(|(name, _)| name)
+        })
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        documented_exports, source_exports,
+        "runtime export inventory must exactly match packages/no-mistakes/index.js"
+    );
+    for export in source_exports {
         assert!(
             runtime_inventory.contains(&format!("| `{export}` |")),
             "docs/node-api.md must map runtime export `{export}`"
