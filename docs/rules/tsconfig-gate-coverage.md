@@ -68,11 +68,12 @@ Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
 step do not count as CI registrations because they cannot enforce a typecheck.
 For reusable calls, the rule also resolves exact boolean input references and
-negations/comparisons in call-job, callee-job, and step conditions. Literal
-call inputs, declared boolean defaults, omitted booleans (GitHub's `false`
-default), and exact `${{ inputs.name }}` forwarding are propagated through
-transitive calls. Other expressions remain unresolved and fail open as
-potentially runnable, preserving the rule's behavior for dynamic conditions.
+negations/comparisons in call-job, callee-job, and step conditions. It also
+short-circuits logical `&&` and `||` expressions when a known input operand
+determines the result. Literal call inputs, declared defaults, omitted values,
+and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
+truthiness through transitive calls. Expressions whose result remains dynamic
+fail open as potentially runnable.
 
 A job blocked by a statically skipped `needs` dependency, including a
 transitive dependency, does not count. Exact `always()` and `!cancelled()` job

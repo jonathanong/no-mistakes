@@ -66,6 +66,7 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
     assert!(scan_job_shape_valid(&mixed_expressions));
 
     for yaml in [
+        "steps:\n  - run: echo invalid",
         "runs-on: true\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\npermissions: bogus\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nenv: [invalid]\nsteps:\n  - run: echo invalid",

@@ -1,4 +1,5 @@
 use super::{JsonScalar, StaticBool, Value};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputState;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     complete_expression_type, StaticExpressionType,
 };
@@ -11,14 +12,27 @@ pub(super) fn default_falsy_state(default: Option<&JsonScalar>) -> StaticBool {
     }
 }
 
-pub(super) fn nonboolean_binding_state(value: &Value) -> StaticBool {
-    if let Some(expression) = value.as_str().and_then(static_expression_truthiness) {
+pub(super) fn nonboolean_binding_state(value: &Value, parent: &InputState) -> StaticBool {
+    if let Some(state) = forwarded_input_state(value, parent) {
+        state
+    } else if let Some(expression) = value.as_str().and_then(static_expression_truthiness) {
         expression
     } else if yaml_scalar_is_falsy(value) {
         StaticBool::False
     } else {
         StaticBool::TruthyNonBoolean
     }
+}
+
+fn forwarded_input_state(value: &Value, parent: &InputState) -> Option<StaticBool> {
+    let body = value
+        .as_str()?
+        .trim()
+        .strip_prefix("${{")?
+        .strip_suffix("}}")?
+        .trim();
+    let name = body.strip_prefix("inputs.")?.trim();
+    parent.get(&name.to_lowercase()).copied()
 }
 
 fn static_expression_truthiness(text: &str) -> Option<StaticBool> {

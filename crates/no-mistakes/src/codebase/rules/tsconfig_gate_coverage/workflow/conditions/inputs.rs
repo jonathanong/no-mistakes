@@ -98,7 +98,7 @@ fn inputs_from_contract(
                             }
                         }),
                     WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
-                        .map(|value| nonboolean_binding_state(value))
+                        .map(|value| nonboolean_binding_state(value, parent))
                         .unwrap_or_else(|| default_falsy_state(declaration.default.as_ref())),
                 };
                 (normalized_name(name), state)

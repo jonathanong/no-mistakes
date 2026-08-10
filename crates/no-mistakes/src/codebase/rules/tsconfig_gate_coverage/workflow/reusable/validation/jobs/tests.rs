@@ -62,6 +62,24 @@ fn steps_require_known_keys_and_matching_value_shapes() {
 }
 
 #[test]
+fn step_ids_must_be_unique_case_insensitive_identifiers() {
+    for yaml in [
+        "steps:\n  - id: build\n    run: cargo build\n  - id: test\n    run: cargo test",
+        "steps:\n  - id: Build_1-check\n    run: cargo test",
+    ] {
+        assert!(steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "steps:\n  - id: build\n    run: cargo build\n  - id: build\n    run: cargo test",
+        "steps:\n  - id: Build\n    run: cargo build\n  - id: build\n    run: cargo test",
+        "steps:\n  - id: 1build\n    run: cargo build",
+        "steps:\n  - id: build step\n    run: cargo build",
+    ] {
+        assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn action_steps_require_static_canonical_targets() {
     for yaml in [
         "steps:\n  - uses: actions/checkout@v4",

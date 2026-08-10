@@ -68,7 +68,7 @@ fn ci_scanner_validates_contract_identifiers_outputs_and_bracket_input_reference
             ),
             workflow_document(
                 ".github/workflows/bracket.yml",
-                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\njobs:\n  direct:\n    if: inputs['enabled']\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-direct/tsconfig.json\n  negated:\n    if: \"! inputs [ 'enabled' ]\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-negated/tsconfig.json\n  compared:\n    if: inputs['enabled'] == false\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-compared/tsconfig.json\n  malformed:\n    if: inputs[enabled]\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-malformed/tsconfig.json\n  logical:\n    # Do not mistake a compound expression for one input reference.\n    if: inputs.enabled || github.event_name == 'push'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project logical/tsconfig.json\n",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\njobs:\n  direct:\n    if: inputs['enabled']\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-direct/tsconfig.json\n  negated:\n    if: \"! inputs [ 'enabled' ]\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-negated/tsconfig.json\n  compared:\n    if: inputs['enabled'] == false\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-compared/tsconfig.json\n  malformed:\n    if: inputs[enabled]\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project bracket-malformed/tsconfig.json\n  logical:\n    # Do not mistake a compound expression for one input reference.\n    if: inputs.enabled || github.event_name == 'push'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project logical/tsconfig.json\n  short-circuited:\n    if: inputs.enabled && github.event_name == 'push'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project short-circuited/tsconfig.json\n",
             ),
             workflow_document(
                 ".github/workflows/invalid-input.yml",
@@ -114,6 +114,7 @@ fn ci_scanner_validates_contract_identifiers_outputs_and_bracket_input_reference
         "invalid-output/tsconfig.json",
         "logical/tsconfig.json",
         "output-collision/tsconfig.json",
+        "short-circuited/tsconfig.json",
     ]
     .into_iter()
     .map(str::to_string)

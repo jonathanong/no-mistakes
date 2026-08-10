@@ -35,7 +35,29 @@ fn complete_literal_bindings_preserve_nonboolean_truthiness() {
         ("${{ inputs.value }}", StaticBool::Unknown),
     ] {
         assert_eq!(
-            nonboolean_binding_state(&Value::String(value.into())),
+            nonboolean_binding_state(&Value::String(value.into()), &InputState::new()),
+            expected
+        );
+    }
+}
+
+#[test]
+fn direct_input_bindings_preserve_parent_nonboolean_truthiness() {
+    let parent = InputState::from([
+        ("empty".to_string(), StaticBool::False),
+        ("zero".to_string(), StaticBool::False),
+        ("full".to_string(), StaticBool::TruthyNonBoolean),
+        ("dynamic".to_string(), StaticBool::Unknown),
+    ]);
+
+    for (binding, expected) in [
+        ("${{ inputs.empty }}", StaticBool::False),
+        ("${{ inputs.zero }}", StaticBool::False),
+        ("${{ inputs.full }}", StaticBool::TruthyNonBoolean),
+        ("${{ inputs.dynamic }}", StaticBool::Unknown),
+    ] {
+        assert_eq!(
+            nonboolean_binding_state(&Value::String(binding.into()), &parent),
             expected
         );
     }

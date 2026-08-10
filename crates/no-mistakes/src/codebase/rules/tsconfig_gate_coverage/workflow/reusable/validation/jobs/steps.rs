@@ -4,6 +4,7 @@ use super::fields::{
 };
 use super::values::{only_keys, scalar_mapping_valid};
 use serde_yaml::{Mapping, Value};
+use std::collections::BTreeSet;
 
 const RUN_STEP_KEYS: &[&str] = &[
     "name",
@@ -37,7 +38,29 @@ pub(crate) fn steps_shape_valid(job: &Value) -> bool {
             && steps
                 .iter()
                 .all(|step| step.as_mapping().is_some_and(step_shape_valid))
+            && step_ids_valid(steps)
     })
+}
+
+fn step_ids_valid(steps: &[Value]) -> bool {
+    let mut ids = BTreeSet::new();
+    steps.iter().all(|step| {
+        step.as_mapping()
+            .and_then(|step| step.get("id"))
+            .is_none_or(|id| {
+                id.as_str()
+                    .is_some_and(|id| valid_step_id(id) && ids.insert(id.to_ascii_lowercase()))
+            })
+    })
+}
+
+fn valid_step_id(id: &str) -> bool {
+    let mut characters = id.chars();
+    characters
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic() || first == '_')
+        && characters
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'))
 }
 
 fn step_shape_valid(step: &Mapping) -> bool {

@@ -45,6 +45,7 @@ const REUSABLE_CALL_JOB_KEYS: &[&str] = &[
 pub(crate) fn step_job_shape_valid(job: &Value) -> bool {
     job.as_mapping().is_some_and(|job| {
         only_keys(job, STEP_JOB_KEYS)
+            && job.get("runs-on").is_some()
             && runs_on_shape_valid(job.get("runs-on"))
             && string_field_valid(job, "name")
             && condition_field_valid(job.get("if"))

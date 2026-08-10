@@ -33,3 +33,47 @@ fn statically_resolves_falsy_condition_literals() {
         );
     }
 }
+
+#[test]
+fn compound_conditions_short_circuit_known_input_truthiness() {
+    let inputs = InputState::from([
+        ("disabled".into(), StaticBool::False),
+        ("enabled".into(), StaticBool::True),
+    ]);
+    for expression in [
+        "inputs.disabled && github.ref == 'refs/heads/main'",
+        "github.ref == 'refs/heads/main' && inputs.disabled",
+        "(inputs.disabled && github.ref == 'refs/heads/main')",
+        "(inputs.enabled || false) && inputs.disabled",
+        "github.ref == 'literal && text' && inputs.disabled",
+        "contains('literal || text', 'literal') && inputs.disabled",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::False,
+            "{expression}"
+        );
+    }
+    for expression in [
+        "inputs.enabled || github.ref == 'refs/heads/main'",
+        "github.ref == 'refs/heads/main' || inputs.enabled",
+        "inputs.enabled || false && inputs.disabled",
+        "inputs['ENABLED'] || github.ref == 'refs/heads/main'",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::True,
+            "{expression}"
+        );
+    }
+    for expression in [
+        "inputs.disabled || github.ref == 'refs/heads/main'",
+        "inputs.enabled && github.ref == 'refs/heads/main'",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::Unknown,
+            "{expression}"
+        );
+    }
+}

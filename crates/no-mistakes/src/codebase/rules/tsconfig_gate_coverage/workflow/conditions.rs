@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 mod contracts;
 mod inputs;
 mod literals;
+mod logical;
 
 pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
 use literals::{
@@ -65,6 +66,11 @@ fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticBool {
 
 fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
     let expression = strip_expression(expression.trim());
+    if super::expressions::condition_expression_valid(expression) {
+        if let Some(value) = logical::compound_bool(expression, inputs) {
+            return value;
+        }
+    }
     if expression.is_empty() || expression.eq_ignore_ascii_case("false") {
         return StaticBool::False;
     }

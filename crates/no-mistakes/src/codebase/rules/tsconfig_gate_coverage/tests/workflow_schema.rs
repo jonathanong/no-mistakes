@@ -85,6 +85,14 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project missing-steps-sibling/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/missing-runs-on-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/missing-runs-on-callee.yml\n",
+        ),
+        workflow(
+            ".github/workflows/missing-runs-on-callee.yml",
+            "on: workflow_call\njobs:\n  malformed:\n    steps:\n      - run: echo invalid\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project missing-runs-on-sibling/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/webhook-only-trigger-caller.yml",
             "on:\n  push:\n  repository:\njobs:\n  typecheck:\n    uses: ./.github/workflows/webhook-only-trigger-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project webhook-only-trigger-sibling/tsconfig.json\n",
         ),
@@ -145,6 +153,14 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  invalid:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n        bogus: true\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unknown-step-key-sibling/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/duplicate-step-id-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/duplicate-step-id-callee.yml\n",
+        ),
+        workflow(
+            ".github/workflows/duplicate-step-id-callee.yml",
+            "on: workflow_call\njobs:\n  invalid:\n    runs-on: ubuntu-latest\n    steps:\n      - id: Build\n        run: echo invalid\n      - id: build\n        run: echo invalid\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project duplicate-step-id-sibling/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/scalar-matrix-axis.yml",
             "on: push\njobs:\n  invalid:\n    strategy:\n      matrix:\n        os: ubuntu-latest\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project scalar-matrix-sibling/tsconfig.json\n",
         ),
@@ -175,6 +191,7 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "malformed-action",
         "malformed-action-sibling",
         "missing-steps-sibling",
+        "missing-runs-on-sibling",
         "webhook-only-trigger",
         "webhook-only-trigger-sibling",
         "uppercase-inherit-sibling",
@@ -189,6 +206,7 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "empty-steps-sibling",
         "unknown-job-key-sibling",
         "unknown-step-key-sibling",
+        "duplicate-step-id-sibling",
         "scalar-matrix-sibling",
         "malformed-step-condition-sibling",
         "invalid-remote-repository-sibling",
