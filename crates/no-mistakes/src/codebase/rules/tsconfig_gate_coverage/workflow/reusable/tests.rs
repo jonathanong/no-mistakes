@@ -161,3 +161,113 @@ fn zero_instance_matrix_needs_skip_dependents_unless_they_continue_explicitly() 
         ])
     );
 }
+
+#[test]
+fn tenth_depth_remote_reusable_call_invalidates_sibling_projects() {
+    let mut documents = vec![workflow_document(
+        ".github/workflows/level-0.yml",
+        "on: push\njobs:\n  call:\n    uses: ./.github/workflows/level-1.yml\n",
+    )];
+    for level in 1..10 {
+        let yaml = if level == 9 {
+            "on: workflow_call\njobs:\n  remote:\n    uses: octocat/repo/.github/workflows/checks.yml@v1\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project sibling/tsconfig.json\n".to_string()
+        } else {
+            format!(
+                "on: workflow_call\njobs:\n  call:\n    uses: ./.github/workflows/level-{}.yml\n",
+                level + 1
+            )
+        };
+        documents.push(workflow_document(
+            &format!(".github/workflows/level-{level}.yml"),
+            &yaml,
+        ));
+    }
+    let workflows = ParsedWorkflowSet { documents };
+    let tracked = BTreeSet::from(["sibling/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
+fn skipped_reusable_calls_still_reject_cycles_before_sibling_projects() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on: push\njobs:\n  skipped-call:\n    if: false\n    uses: ./.github/workflows/first.yml\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project sibling/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/first.yml",
+                "on: workflow_call\njobs:\n  call:\n    uses: ./.github/workflows/second.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/second.yml",
+                "on: workflow_call\njobs:\n  call:\n    uses: ./.github/workflows/first.yml\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["sibling/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
+fn skipped_acyclic_reusable_calls_validate_without_crediting_callee_projects() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on: push\njobs:\n  skipped-call:\n    if: false\n    uses: ./.github/workflows/callee.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/callee.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project callee/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["callee/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
+fn uniform_matrix_values_control_steps_within_the_same_job() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  disabled:\n    strategy:\n      matrix:\n        enabled: [false]\n    runs-on: ubuntu-latest\n    steps:\n      - if: '${{ matrix.enabled }}'\n        run: tsc --noEmit --project disabled-condition/tsconfig.json\n      - continue-on-error: '${{ matrix.enabled }}'\n        run: tsc --noEmit --project disabled-continue/tsconfig.json\n  enabled:\n    strategy:\n      matrix:\n        enabled: [true, true]\n        platform: [linux, macos]\n    runs-on: ubuntu-latest\n    steps:\n      - if: '${{ matrix.enabled }}'\n        run: tsc --noEmit --project enabled-condition/tsconfig.json\n      - continue-on-error: '${{ matrix.enabled }}'\n        run: tsc --noEmit --project enabled-continue/tsconfig.json\n  mixed:\n    strategy:\n      matrix:\n        enabled: [false, true]\n    runs-on: ubuntu-latest\n    steps:\n      - if: '${{ matrix.enabled }}'\n        run: tsc --noEmit --project mixed-condition/tsconfig.json\n      - continue-on-error: '${{ matrix.enabled }}'\n        run: tsc --noEmit --project mixed-continue/tsconfig.json\n  job-continue-disabled:\n    strategy:\n      matrix:\n        enabled: [false]\n    continue-on-error: '${{ matrix.enabled }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project job-continue-disabled/tsconfig.json\n  job-continue-enabled:\n    strategy:\n      matrix:\n        enabled: [true]\n    continue-on-error: '${{ matrix.enabled }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project job-continue-enabled/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "disabled-condition/tsconfig.json".to_string(),
+        "disabled-continue/tsconfig.json".to_string(),
+        "enabled-condition/tsconfig.json".to_string(),
+        "enabled-continue/tsconfig.json".to_string(),
+        "mixed-condition/tsconfig.json".to_string(),
+        "mixed-continue/tsconfig.json".to_string(),
+        "job-continue-disabled/tsconfig.json".to_string(),
+        "job-continue-enabled/tsconfig.json".to_string(),
+    ]);
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from([
+            "disabled-continue/tsconfig.json".to_string(),
+            "enabled-condition/tsconfig.json".to_string(),
+            "job-continue-disabled/tsconfig.json".to_string(),
+            "mixed-condition/tsconfig.json".to_string(),
+            "mixed-continue/tsconfig.json".to_string(),
+        ])
+    );
+}

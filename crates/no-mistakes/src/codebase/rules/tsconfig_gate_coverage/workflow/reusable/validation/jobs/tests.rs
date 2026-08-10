@@ -90,6 +90,12 @@ fn hash_files_is_available_only_in_step_conditions() {
     assert!(super::step_job_shape_valid(&job(
         "runs-on: ubuntu-latest\nsteps:\n  - if: hashFiles('**/pnpm-lock.yaml') != ''\n    run: echo valid"
     )));
+    assert!(!super::step_job_shape_valid(&job(
+        "if: '${{ matrix.enabled }}'\nruns-on: ubuntu-latest\nstrategy:\n  matrix:\n    enabled: [true]\nsteps:\n  - run: echo invalid"
+    )));
+    assert!(super::step_job_shape_valid(&job(
+        "continue-on-error: '${{ matrix.enabled }}'\nruns-on: ubuntu-latest\nstrategy:\n  matrix:\n    enabled: [true]\nsteps:\n  - run: echo valid"
+    )));
 }
 
 #[test]

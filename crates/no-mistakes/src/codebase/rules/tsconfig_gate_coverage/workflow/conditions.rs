@@ -41,16 +41,17 @@ fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
 
 pub(super) fn statically_skipped_jobs(
     jobs: &serde_yaml::Mapping,
-    inputs: &InputState,
     initial_skipped: &BTreeSet<String>,
+    matrix_inputs: impl Fn(&Value) -> InputState,
 ) -> BTreeSet<String> {
     let mut skipped = initial_skipped.clone();
     loop {
         let mut changed = false;
         for (job_id, job) in jobs {
             let job_id = super::normalized_job_id(job_id).expect("validated scalar job ID");
-            let directly_disabled = static_bool(job.get("if"), inputs) == StaticBool::False;
-            let blocked_by_need = !continues_after_skipped_need(job, inputs)
+            let inputs = matrix_inputs(job);
+            let directly_disabled = static_bool(job.get("if"), &inputs) == StaticBool::False;
+            let blocked_by_need = !continues_after_skipped_need(job, &inputs)
                 && crate::codebase::workflow_topology::value_primitives::string_list(
                     job.get("needs"),
                 )
@@ -142,24 +143,15 @@ fn resolve_input_expression(
         let value = actual.equals(&expected);
         return if equal { value } else { value.negate() };
     }
-    if let Some(name) = input_name(expression) {
-        return inputs
-            .get(&name.to_lowercase())
-            .cloned()
-            .unwrap_or(StaticValue::Bool(false))
-            .truthiness();
+    if let Some(value) = condition_input_value(expression, inputs) {
+        return value.truthiness();
     }
-    if let Some(name) = expression
+    if let Some(value) = expression
         .strip_prefix('!')
         .map(str::trim)
-        .and_then(input_name)
+        .and_then(|operand| condition_input_value(operand, inputs))
     {
-        return inputs
-            .get(&name.to_lowercase())
-            .cloned()
-            .unwrap_or(StaticValue::Bool(false))
-            .truthiness()
-            .negate();
+        return value.truthiness().negate();
     }
     StaticBool::Unknown
 }
@@ -175,13 +167,26 @@ fn condition_value(operand: &str, inputs: &InputState, success: StaticBool) -> O
     if operand.trim().eq_ignore_ascii_case("github.event_name") {
         return event_name_value(inputs);
     }
-    let name = input_name(operand)?;
-    Some(
-        inputs
-            .get(&name.to_lowercase())
-            .cloned()
-            .unwrap_or(StaticValue::Bool(false)),
-    )
+    condition_input_value(operand, inputs)
+}
+
+fn condition_input_value(operand: &str, inputs: &InputState) -> Option<StaticValue> {
+    if let Some(name) = input_name(operand) {
+        return Some(
+            inputs
+                .get(&name.to_lowercase())
+                .cloned()
+                .unwrap_or(StaticValue::Bool(false)),
+        );
+    }
+    let name = operand.trim().strip_prefix("matrix.")?.trim();
+    contracts::valid_identifier(name)
+        .then(|| {
+            inputs
+                .get(&format!("{}{}", inputs::MATRIX_VALUE_PREFIX, name))
+                .cloned()
+        })
+        .flatten()
 }
 
 fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {

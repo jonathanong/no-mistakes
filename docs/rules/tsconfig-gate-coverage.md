@@ -33,6 +33,9 @@ followed transitively and their step-based jobs are evaluated under the direct
 caller's file triggers. Remote, dynamic, missing, non-callable, and cyclic
 calls do not provide coverage. One complete, enforcing, acyclic caller path is
 sufficient; partial coverage from separate caller paths is never combined.
+Every declared reusable call, including a statically skipped call, still
+participates in cycle, nesting-depth, and unique-target validation; skipped
+callees are validated without crediting their commands.
 The containing workflow must declare at least one file-triggered `push`,
 `pull_request`, or `pull_request_target` event whose path filters allow every
 visible TypeScript/JavaScript source selected by that project's
@@ -82,9 +85,10 @@ and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
 values through transitive calls. This lets the rule resolve exact string and
 number equality/inequality comparisons as well as input truthiness. Expressions
 whose result remains dynamic fail open as potentially runnable. Exact
-`${{ matrix.name }}` bindings also preserve a scalar value when every generated
-static matrix combination has the same value after `exclude` and `include`
-expansion; non-uniform or dynamic matrices remain unresolved.
+`${{ matrix.name }}` bindings, step conditions, and job or step
+`continue-on-error` expressions also preserve a scalar value when every
+generated static matrix combination has the same value after `exclude` and
+`include` expansion; non-uniform or dynamic matrices remain unresolved.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents

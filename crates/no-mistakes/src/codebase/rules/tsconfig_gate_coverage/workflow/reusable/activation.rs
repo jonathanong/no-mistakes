@@ -73,7 +73,9 @@ fn scan_activation_uncached(
         return None;
     }
     let zero_instance_jobs = zero_instance_job_ids(jobs)?;
-    let skipped_jobs = statically_skipped_jobs(jobs, inputs, &zero_instance_jobs);
+    let skipped_jobs = statically_skipped_jobs(jobs, &zero_instance_jobs, |job| {
+        inputs_with_matrix_values(inputs, &uniform_static_matrix_values(job))
+    });
     let mut projects = BTreeSet::new();
     for (job_id, job) in jobs {
         if !scan_job_shape_valid(job) {
@@ -81,12 +83,17 @@ fn scan_activation_uncached(
         }
         let job_id = super::super::normalized_job_id(job_id)?;
         let call_target = reusable_call_target(job)?;
+        let matrix_values = uniform_static_matrix_values(job);
+        let matrix_inputs = inputs_with_matrix_values(inputs, &matrix_values);
         let job_skipped = skipped_jobs.contains(&job_id)
-            || statically_not_enforcing(job, inputs)
+            || statically_not_enforcing(job, &matrix_inputs)
             || zero_instance_matrix(job);
         let callee_projects = if let Some(target) = call_target {
             let edge = workflow_values::call_edge(&job_id, target, job);
             if !memo.register_target(validated_reusable_target(&edge)?) {
+                return None;
+            }
+            if active_paths.len() >= 10 {
                 return None;
             }
             if edge.local {
@@ -96,25 +103,24 @@ fn scan_activation_uncached(
                     return None;
                 }
                 let contract = callee.call_contract.as_ref()?;
-                if active_paths.len() == 10 || !callee_secrets_valid(contract, job) {
+                if !callee_secrets_valid(contract, job) {
                     return None;
                 }
-                let matrix_values = uniform_static_matrix_values(job);
-                let matrix_inputs = inputs_with_matrix_values(inputs, &matrix_values);
                 let callee_inputs = callee_inputs(Some(contract), job, &matrix_inputs)?;
-                if job_skipped {
-                    Some(BTreeSet::new())
+                let callee_projects = scan_activation(
+                    callee_path,
+                    callee,
+                    triggers,
+                    &callee_inputs,
+                    &active_paths,
+                    context,
+                    memo,
+                )?;
+                Some(if job_skipped {
+                    BTreeSet::new()
                 } else {
-                    Some(scan_activation(
-                        callee_path,
-                        callee,
-                        triggers,
-                        &callee_inputs,
-                        &active_paths,
-                        context,
-                        memo,
-                    )?)
-                }
+                    callee_projects
+                })
             } else {
                 None
             }
@@ -132,7 +138,7 @@ fn scan_activation_uncached(
             projects.extend(scan_job_steps(
                 job,
                 triggers,
-                inputs,
+                &matrix_inputs,
                 workflow_cwd.clone(),
                 workflow_shell.clone(),
                 context,
