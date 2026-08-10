@@ -7,8 +7,31 @@ fn collect_route_edges(
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
     let graph_files = GraphFiles::from_files(all_files.to_vec());
+    let plan = GraphBuildPlan {
+        routes: true,
+        ..GraphBuildPlan::default()
+    };
+    let prepared_facts = facts.is_none().then(|| {
+        collect_ts_facts_with_context(
+            all_files,
+            effective_ts_fact_plan(plan, config_options),
+            &ts_fact_context_from_options(root, plan, config_options),
+        )
+    });
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     super::collect_route_edges_with_graph_files(
-        root, tsconfig, None, resolver, &graph_files, facts, config_options,
+        root,
+        super::RouteGraphResolution {
+            tsconfig,
+            tsconfig_catalog: None,
+            session: &session,
+        },
+        resolver,
+        &graph_files,
+        facts.or(prepared_facts
+            .as_ref()
+            .map(|facts| facts as &dyn TsFactLookup)),
+        config_options,
     )
 }
 

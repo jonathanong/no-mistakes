@@ -1,7 +1,12 @@
+struct RouteGraphResolution<'a> {
+    tsconfig: &'a TsConfig,
+    tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
+    session: &'a crate::codebase::analysis_session::AnalysisSession,
+}
+
 fn collect_route_edges_with_graph_files(
     root: &Path,
-    tsconfig: &TsConfig,
-    tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
+    resolution: RouteGraphResolution<'_>,
     resolver: &dyn ImportResolution,
     graph_files: &GraphFiles,
     facts: Option<&dyn TsFactLookup>,
@@ -53,15 +58,16 @@ fn collect_route_edges_with_graph_files(
         };
     all_defs.extend(backend_defs);
     if has_project_routes {
-        all_defs.extend(collect_project_server_route_defs(
+        all_defs.extend(collect_project_server_route_defs(ProjectRouteDefInputs {
             root,
-            graph_files.all(),
-            tsconfig,
-            tsconfig_catalog,
-            project_route_globset.expect("project route globset checked above"),
+            all_files: graph_files.all(),
+            tsconfig: resolution.tsconfig,
+            tsconfig_catalog: resolution.tsconfig_catalog,
+            route_globset: project_route_globset.expect("project route globset checked above"),
             facts,
-            config_options.test_filter.as_ref(),
-        ));
+            test_filter: config_options.test_filter.as_ref(),
+            session: resolution.session,
+        }));
     }
     if !opts.frontend_root.is_empty() {
         let frontend_abs = root.join(&opts.frontend_root);

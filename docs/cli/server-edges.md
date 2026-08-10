@@ -13,4 +13,8 @@ fallback is inferred. Client-call sources honor `--filter` and configured test
 exclusions; static local and imported route-helper calls are resolved from the
 same prepared facts.
 
+Filters select client-call source files, not helper modules: an included client
+can still resolve a static local or imported helper omitted by the filter.
+Configured route roots and mounts continue to define server-route definitions.
+
 Node API: `serverRouteEdges(options)`.

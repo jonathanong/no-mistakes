@@ -141,6 +141,46 @@ fn filters_exclude_client_call_sources_without_broadening_route_definitions() {
 }
 
 #[test]
+fn filtered_client_sources_keep_imported_helper_resolution() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
+    let root = fixture.path().canonicalize().unwrap();
+    // `hrefs.ts` is intentionally omitted: filters select client callers,
+    // while the prepared resolver still sees imported helper modules.
+    let filters = [
+        "backend/api/users.ts".to_string(),
+        "backend/client.ts".to_string(),
+        "backend/index.ts".to_string(),
+    ];
+    let prepared = prepare_analysis(&root, None).unwrap();
+    let indexed = analyze_project_with_prepared_indexed(&prepared, &filters).unwrap();
+    let expected = vec![
+        Edge {
+            from: "backend/client.ts".to_string(),
+            to: "/api/v1/imported/*".to_string(),
+            kind: EdgeKind::ClientCall,
+        },
+        Edge {
+            from: "backend/client.ts".to_string(),
+            to: "/api/v1/local/*".to_string(),
+            kind: EdgeKind::ClientCall,
+        },
+        Edge {
+            from: "backend/client.ts".to_string(),
+            to: "/api/v1/users/*".to_string(),
+            kind: EdgeKind::ClientCall,
+        },
+    ];
+    assert_eq!(
+        indexed.related(&["backend/client.ts".to_string()], RelatedDirection::Deps),
+        expected
+    );
+    assert!(indexed.edge_view(&[], None).iter().all(|edge| {
+        edge.from != "backend/excluded-client.ts" && edge.to != "backend/excluded-client.ts"
+    }));
+}
+
+#[test]
 fn hono_project_reports_prefixed_routes() {
     let report = analyze_project(&fixture("hono"), None, &[]).unwrap();
     assert!(report

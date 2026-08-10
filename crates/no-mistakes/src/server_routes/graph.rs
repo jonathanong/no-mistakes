@@ -31,11 +31,12 @@ pub struct PreparedServerAnalysis {
     pub(crate) tsconfig: TsConfig,
     pub(crate) config: Option<crate::config::v2::NoMistakesConfig>,
     pub(crate) facts: crate::codebase::ts_source::facts::TsFactMap,
+    pub(crate) client_relationships: PreparedClientRelationships,
     pub(crate) session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 }
 
 include!("graph_prepare.rs");
-include!("graph_client_facts.rs");
+include!("graph_client_relationships.rs");
 
 pub fn analyze_project(
     root: &Path,
@@ -75,13 +76,7 @@ pub fn analyze_project_with_prepared_indexed(
 fn analyze_project_with_prepared_inner<T>(
     prepared: &PreparedServerAnalysis,
     filters: &[String],
-    builder: impl FnOnce(
-        &Path,
-        &HashMap<PathBuf, FileFacts>,
-        &crate::codebase::ts_source::facts::TsFactMap,
-        &TsConfig,
-        &crate::codebase::analysis_session::AnalysisSession,
-    ) -> T,
+    builder: impl FnOnce(&PreparedServerAnalysis, &HashMap<PathBuf, FileFacts>, &[PathBuf]) -> T,
 ) -> anyhow::Result<T> {
     let root = &prepared.root;
     let config_route_filter = prepared
@@ -94,7 +89,7 @@ fn analyze_project_with_prepared_inner<T>(
         .as_ref()
         .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
     let filter = build_filter(filters)?;
-    let client_facts = client_facts_from_prepared(prepared, filter.as_ref(), test_filter.as_ref());
+    let client_paths = client_source_paths(prepared, filter.as_ref(), test_filter.as_ref());
     let mut facts = HashMap::new();
     for path in prepared.source_files.iter() {
         let rel = path.strip_prefix(root).unwrap_or(path);
@@ -119,13 +114,7 @@ fn analyze_project_with_prepared_inner<T>(
             }
         }
     }
-    Ok(builder(
-        root,
-        &facts,
-        &client_facts,
-        &prepared.tsconfig,
-        &prepared.session,
-    ))
+    Ok(builder(prepared, &facts, &client_paths))
 }
 
 include!("graph_route_defs.rs");

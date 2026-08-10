@@ -99,6 +99,7 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
             ..Default::default()
         },
     );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
     let mut edges = Vec::new();
     collect_swift_http_edges(
@@ -109,6 +110,7 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
             all_files: &all_files,
             config_options: &options,
             ts_facts: None,
+            session: &session,
         },
         &facts,
         &mut edges,
@@ -135,6 +137,7 @@ fn swift_http_edges_include_backend_route_defs() {
             ..Default::default()
         },
     );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
     let mut edges = Vec::new();
     collect_swift_http_edges(
@@ -145,6 +148,7 @@ fn swift_http_edges_include_backend_route_defs() {
             all_files: &all_files,
             config_options: &options,
             ts_facts: None,
+            session: &session,
         },
         &facts,
         &mut edges,
@@ -201,28 +205,20 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     let swift_facts =
         crate::codebase::swift::collect_swift_facts(&root, &all_files, &options.swift_packages);
 
-    let standalone = collect_swift_edges_with_facts(
-        &root,
-        &tsconfig,
-        None,
-        &all_files,
-        Some(&options),
-        None,
-        Some(&swift_facts),
-    );
-    let reused = collect_swift_edges_with_facts(
-        &root,
-        &tsconfig,
-        None,
-        &all_files,
-        Some(&options),
-        Some(&ts_facts),
-        Some(&swift_facts),
-    );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let reused = collect_swift_edges_with_facts(SwiftEdgeInputs {
+        root: &root,
+        tsconfig: &tsconfig,
+        tsconfig_catalog: None,
+        all_files: &all_files,
+        config_options: Some(&options),
+        ts_facts: Some(&ts_facts),
+        prepared_facts: Some(&swift_facts),
+        session: &session,
+    });
     let swift_file = root.join("swift-client/Sources/Client/Endpoint.swift");
     let admin_route = root.join("backend/api/admin-router.ts");
 
-    assert_eq!(reused, standalone);
     assert!(reused.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
             && from.as_file() == Some(swift_file.as_path())

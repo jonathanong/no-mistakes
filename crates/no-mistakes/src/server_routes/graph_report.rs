@@ -1,53 +1,55 @@
-pub(super) fn build_report(
-    root: &Path,
-    facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
-) -> ProjectReport {
-    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    build_report_with_session(root, facts, &Default::default(), tsconfig, &session)
-}
-
 fn build_report_with_session(
-    root: &Path,
+    prepared: &PreparedServerAnalysis,
     facts: &HashMap<PathBuf, FileFacts>,
-    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    client_paths: &[PathBuf],
 ) -> ProjectReport {
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
-    build_report_with_resolver(root, facts, client_facts, tsconfig, session, &resolver)
+    let resolver = ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
+    build_report_with_resolver(
+        &prepared.root,
+        facts,
+        Some(ClientRelationshipInputs {
+            source_paths: client_paths,
+            facts: &prepared.facts,
+            prepared: &prepared.client_relationships,
+        }),
+        &resolver,
+    )
 }
 
-fn build_report_with_resolver(
+pub(super) fn build_report_with_resolver(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    client_inputs: Option<ClientRelationshipInputs<'_>>,
     resolver: &dyn ImportResolution,
 ) -> ProjectReport {
-    build_report_and_relationships(root, facts, client_facts, tsconfig, session, resolver).0
+    build_report_and_relationships(root, facts, client_inputs, resolver).0
 }
 
 pub(super) fn build_prepared_report(
-    root: &Path,
+    prepared: &PreparedServerAnalysis,
     facts: &HashMap<PathBuf, FileFacts>,
-    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    client_paths: &[PathBuf],
 ) -> PreparedProjectReport {
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
-    let (report, relationships) =
-        build_report_and_relationships(root, facts, client_facts, tsconfig, session, &resolver);
+    let resolver = ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
+    let (report, relationships) = build_report_and_relationships(
+        &prepared.root,
+        facts,
+        Some(ClientRelationshipInputs {
+            source_paths: client_paths,
+            facts: &prepared.facts,
+            prepared: &prepared.client_relationships,
+        }),
+        &resolver,
+    );
     PreparedProjectReport {
         report,
         relationships: PreparedRelationshipIndex::from_edges(
             relationships
                 .into_iter()
                 .map(|edge| CanonicalEdge::new(edge.from, edge.to, edge.kind)),
-            |node| public_node(root, node),
+            |node| public_node(&prepared.root, node),
         ),
     }
 }
@@ -55,9 +57,7 @@ pub(super) fn build_prepared_report(
 fn build_report_and_relationships(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    client_inputs: Option<ClientRelationshipInputs<'_>>,
     resolver: &dyn ImportResolution,
 ) -> (ProjectReport, Vec<RelationshipEdge>) {
     let mut routes = Vec::new();
@@ -90,12 +90,9 @@ fn build_report_and_relationships(
     }
     routes.sort();
     routes.dedup();
-    relationships.extend(client_call_relationships(
-        client_facts,
-        tsconfig,
-        session,
-        &routes,
-    ));
+    if let Some(inputs) = client_inputs {
+        relationships.extend(client_call_relationships(inputs, &routes));
+    }
     relationships.sort();
     relationships.dedup();
     let mut edges = relationships

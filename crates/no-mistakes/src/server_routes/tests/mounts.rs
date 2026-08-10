@@ -162,15 +162,18 @@ fn report_builder_includes_diagnostics_and_dynamic_summary() {
         framework: Framework::Express,
     });
 
-    let report = graph::build_report(
-        &root,
-        &HashMap::from([(file, facts)]),
-        &crate::codebase::ts_resolver::TsConfig {
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
             dir: root.clone(),
             paths_dir: root.clone(),
             paths: Vec::new(),
             base_url: None,
-        },
+        };
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    let report = graph::build_report_with_resolver(
+        &root,
+        &HashMap::from([(file, facts)]),
+        None,
+        &resolver,
     );
     assert_eq!(report.diagnostics[0].file, "api.ts");
     assert_eq!(report.diagnostics[0].line, 3);

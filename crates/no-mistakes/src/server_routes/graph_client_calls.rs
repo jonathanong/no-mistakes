@@ -2,19 +2,14 @@
 /// from server facts. This produces client -> route edges once; route reports
 /// and related traversal only project the prepared index.
 fn client_call_relationships(
-    facts: &crate::codebase::ts_source::facts::TsFactMap,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    inputs: ClientRelationshipInputs<'_>,
     routes: &[ServerRoute],
 ) -> Vec<RelationshipEdge> {
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(
-        visible.iter().cloned().collect(),
-    );
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
-    facts
-        .iter()
-        .flat_map(|(path, file_facts)| {
+    let mut relationships = Vec::new();
+    for path in inputs.source_paths {
+        let Some(file_facts) = inputs.facts.get(path) else {
+            continue;
+        };
             let mut references: Vec<_> = file_facts
                 .route_refs
                 .iter()
@@ -24,28 +19,27 @@ fn client_call_relationships(
                 crate::codebase::dependencies::graph::route_helper_ref_patterns_with_lines(
                     path,
                     file_facts,
-                    facts,
-                    &resolver,
-                    &graph_files,
+                    inputs.facts,
+                    &inputs.prepared.resolver,
+                    &inputs.prepared.graph_files,
                 )
                 .into_iter()
                 .map(|(_, pattern)| pattern),
             );
-            references.into_iter().flat_map(move |reference| {
+        for reference in references {
+            relationships.extend(
                 routes
                     .iter()
-                    .filter(move |route| {
-                        crate::codebase::ts_routes::matcher::matches(
-                            &reference,
-                            &route.route,
-                        )
+                    .filter(|route| {
+                        crate::codebase::ts_routes::matcher::matches(&reference, &route.route)
                     })
-                    .map(move |route| RelationshipEdge {
-                            from: RelationshipNode::File(path.clone()),
-                            to: RelationshipNode::Route(route.route.clone()),
-                            kind: EdgeKind::ClientCall,
-                        })
-            })
-        })
-        .collect()
+                    .map(|route| RelationshipEdge {
+                        from: RelationshipNode::File(path.clone()),
+                        to: RelationshipNode::Route(route.route.clone()),
+                        kind: EdgeKind::ClientCall,
+                    }),
+            );
+        }
+    }
+    relationships
 }

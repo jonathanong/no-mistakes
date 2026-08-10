@@ -59,6 +59,11 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `terraform-module` | `TerraformModuleRef` | `terraform` | Terraform file with a `module` block -> files in the module's local source directory | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 | `terraform-output` | `TerraformOutputRef` | `terraform` | Terraform file referencing `module.<name>.<output>` -> file declaring that output | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 
+For `server edges` and `server related`, filters limit client-call source files;
+they do not narrow the prepared resolver/fact universe used to follow a static
+local or imported route helper. Server-route definitions remain constrained by
+their configured roots, mounts, test exclusions, and any explicit filter.
+
 ## Relationship Filters
 
 `--relationship` accepts these values:

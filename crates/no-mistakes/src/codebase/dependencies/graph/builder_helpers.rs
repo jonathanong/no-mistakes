@@ -68,6 +68,7 @@ fn merge_http_process_edges(
 fn merge_swift_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     ts_facts: Option<&dyn TsFactLookup>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
@@ -75,15 +76,16 @@ fn merge_swift_edges(
         return;
     }
 
-    let swift_edges = collect_swift_edges_with_facts(
-        inputs.root,
-        inputs.tsconfig,
-        inputs.tsconfig_catalog,
-        &inputs.graph_files.all,
-        inputs.config_options,
+    let swift_edges = collect_swift_edges_with_facts(SwiftEdgeInputs {
+        root: inputs.root,
+        tsconfig: inputs.tsconfig,
+        tsconfig_catalog: inputs.tsconfig_catalog,
+        all_files: &inputs.graph_files.all,
+        config_options: inputs.config_options,
         ts_facts,
-        inputs.swift_facts,
-    );
+        prepared_facts: inputs.swift_facts,
+        session,
+    });
     for (from, to, _) in &swift_edges {
         forward.entry(from.clone()).or_default();
         forward.entry(to.clone()).or_default();
