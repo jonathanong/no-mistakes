@@ -8,12 +8,16 @@ use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 
+mod provenance;
+use provenance::suppress_rules_with_sources;
+
 pub(super) struct Inputs<'a> {
     pub(super) root: &'a std::path::Path,
     pub(super) sources: &'a SourceStore,
     pub(super) react: &'a mut Vec<react_traits::Violation>,
     pub(super) queues: &'a mut Vec<CheckFinding>,
     pub(super) rules: &'a mut Vec<RuleFinding>,
+    pub(super) rule_suppression_sources: &'a [Option<String>],
     pub(super) filesystem: &'a mut Vec<RuleFinding>,
     pub(super) integration: &'a mut Vec<IntegrationFinding>,
     pub(super) codebase: &'a mut Vec<UniqueExportFinding>,
@@ -27,6 +31,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         react,
         queues,
         rules,
+        rule_suppression_sources,
         filesystem,
         integration,
         codebase,
@@ -47,7 +52,14 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
             identity: None,
         },
     ));
-    suppress_rules(root, sources, rules, "rules", &mut suppressed);
+    suppress_rules_with_sources(
+        root,
+        sources,
+        rules,
+        rule_suppression_sources,
+        "rules",
+        &mut suppressed,
+    );
     suppress_rules(root, sources, filesystem, "filesystem", &mut suppressed);
     suppress_rules(root, sources, advisories, "advisories", &mut suppressed);
     suppressed.extend(suppress_domain_findings_with_sources(

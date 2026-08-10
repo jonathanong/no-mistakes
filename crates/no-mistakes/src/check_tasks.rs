@@ -16,6 +16,7 @@ pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_ch
 
 pub(crate) struct CheckTask<T> {
     pub(crate) findings: T,
+    pub(crate) suppression_sources: Vec<Option<String>>,
     pub(crate) warning: Option<String>,
     pub(crate) duration: Duration,
 }
@@ -45,6 +46,7 @@ pub(crate) fn run_react_check(
     );
     Ok(CheckTask {
         findings,
+        suppression_sources: Vec::new(),
         warning,
         duration,
     })
@@ -78,6 +80,7 @@ pub(crate) fn run_queue_check(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        suppression_sources: Vec::new(),
         warning: None,
         duration,
     })
@@ -87,19 +90,24 @@ pub(crate) fn run_rules_check(
     inputs: rules::PreparedRulesCheck<'_>,
     dependency_graph: Option<&no_mistakes::codebase::dependencies::graph::DepGraph>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
-    let ((findings, warning), duration) = no_mistakes::diagnostics::measure_if_enabled(
-        "analysis.rules",
-        no_mistakes::diagnostics::TimingKind::Parallel,
-        || match rules::run_check_with_config_facts_playwright_and_graph(inputs, dependency_graph) {
-            Ok(findings) => (findings, None),
-            Err(err) => (
-                Vec::new(),
-                Some(format!("warning: rules check skipped: {err:#}")),
-            ),
-        },
-    );
+    let (((findings, suppression_sources), warning), duration) =
+        no_mistakes::diagnostics::measure_if_enabled(
+            "analysis.rules",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+            || match rules::run_check_with_config_facts_playwright_and_graph_with_suppression(
+                inputs,
+                dependency_graph,
+            ) {
+                Ok(findings) => ((findings.findings, findings.suppression_sources), None),
+                Err(err) => (
+                    (Vec::new(), Vec::new()),
+                    Some(format!("warning: rules check skipped: {err:#}")),
+                ),
+            },
+        );
     Ok(CheckTask {
         findings,
+        suppression_sources,
         warning,
         duration,
     })
@@ -135,6 +143,7 @@ pub(crate) fn run_integration_check(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        suppression_sources: Vec::new(),
         warning: None,
         duration,
     })
@@ -170,6 +179,7 @@ pub(crate) fn run_codebase_check_with_catalog(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        suppression_sources: Vec::new(),
         warning: None,
         duration,
     })

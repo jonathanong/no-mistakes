@@ -8,7 +8,7 @@ use helpers::{storybook_findings, suppress_findings, StorybookFindingsRequest};
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<PreparedRuleFindings> {
     let PreparedRulesCheck {
         session,
         root,
@@ -25,7 +25,10 @@ pub(super) fn run(
         defer_suppression,
     } = inputs;
     if !any_codebase_rule_enabled(config) {
-        return Ok(Vec::new());
+        return Ok(PreparedRuleFindings {
+            findings: Vec::new(),
+            suppression_sources: Vec::new(),
+        });
     }
     if let Some(graph_plan) = canonical_graph_plan(config) {
         let (required_facts, _) = match prepared_graph {
@@ -80,13 +83,14 @@ pub(super) fn run(
         None
     };
     let mut findings = Vec::new();
+    let mut suppression_sources = Vec::new();
     // Aggregate callers derive this once and pass Some(inferred_roots) through
     // every prepared rule adapter.
     if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        findings.extend(crate::perf_trace::trace(
+        let dynamic_findings = crate::perf_trace::trace(
             "rules.test_no_unmocked_dynamic_imports",
             || {
-                test_no_unmocked_dynamic_imports::check_with_prepared_facts_graph_and_session(
+                test_no_unmocked_dynamic_imports::check_with_prepared_facts_graph_and_session_with_suppression(
                     test_no_unmocked_dynamic_imports::PreparedFactsGraphRequest {
                         root,
                         config,
@@ -100,7 +104,9 @@ pub(super) fn run(
                     },
                 )
             },
-        )?);
+        )?;
+        suppression_sources.extend(dynamic_findings.suppression_sources);
+        findings.extend(dynamic_findings.findings);
     }
     if rule_enabled(config, SERVER_ROUTE_CLIENT_BOUNDARY) {
         let boundary_findings = server_route_client_boundary::check_with_facts_for_aggregate(
@@ -110,6 +116,7 @@ pub(super) fn run(
             inferred_roots,
             defer_suppression,
         )?;
+        suppression_sources.extend(std::iter::repeat_n(None, boundary_findings.len()));
         findings.extend(boundary_findings);
     }
     if rule_enabled(config, NEXTJS_NO_API_ROUTES) {
@@ -120,19 +127,22 @@ pub(super) fn run(
             inferred_roots,
             defer_suppression,
         )?;
+        suppression_sources.extend(std::iter::repeat_n(None, api_route_findings.len()));
         findings.extend(api_route_findings);
     }
     if rule_enabled(config, NEXTJS_NO_CACHING) {
-        findings.extend(nextjs_no_caching::check_with_facts_for_aggregate(
+        let caching_findings = nextjs_no_caching::check_with_facts_for_aggregate(
             root,
             config,
             shared,
             inferred_roots,
             defer_suppression,
-        )?);
+        )?;
+        suppression_sources.extend(std::iter::repeat_n(None, caching_findings.len()));
+        findings.extend(caching_findings);
     }
     if rule_enabled(config, REQUIRE_STORYBOOK_STORIES) {
-        findings.extend(storybook_findings(StorybookFindingsRequest {
+        let storybook_findings = storybook_findings(StorybookFindingsRequest {
             root,
             config,
             prepared_tsconfig_catalog,
@@ -141,12 +151,13 @@ pub(super) fn run(
             session: &session,
             defer_suppression,
             sources,
-        })?);
+        })?;
+        suppression_sources.extend(std::iter::repeat_n(None, storybook_findings.len()));
+        findings.extend(storybook_findings);
     }
     if crate::playwright::rules::configured(config) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.playwright",
-            || match prepared_playwright {
+        let playwright_findings =
+            crate::perf_trace::trace("rules.playwright", || match prepared_playwright {
                 Some(prepared) => crate::playwright::rules::check_with_prepared_facts(
                     root,
                     config_path,
@@ -157,8 +168,9 @@ pub(super) fn run(
                 None => {
                     crate::playwright::rules::check_with_facts(root, config_path, config, shared)
                 }
-            },
-        )?);
+            })?;
+        suppression_sources.extend(std::iter::repeat_n(None, playwright_findings.len()));
+        findings.extend(playwright_findings);
     }
     let graph_findings = graph_rule_findings(
         root,
@@ -169,10 +181,21 @@ pub(super) fn run(
         dependency_graph,
         inferred_roots,
     );
-    findings.extend(graph_findings?);
+    let graph_findings = graph_findings?;
+    suppression_sources.extend(std::iter::repeat_n(None, graph_findings.len()));
+    findings.extend(graph_findings);
     if !defer_suppression {
         suppress_findings(root, &mut findings, sources);
     }
-    sort_findings(&mut findings);
-    Ok(findings)
+    let mut paired = findings
+        .into_iter()
+        .zip(suppression_sources)
+        .collect::<Vec<_>>();
+    paired.sort_by(|(a, _), (b, _)| a.cmp(b));
+    paired.dedup_by(|(a, source_a), (b, source_b)| a == b && source_a == source_b);
+    let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
+    Ok(PreparedRuleFindings {
+        findings,
+        suppression_sources,
+    })
 }

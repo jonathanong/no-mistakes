@@ -1,6 +1,6 @@
 use super::{
     forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching, require_storybook_stories,
-    required_entrypoint_reachability, rule_enabled, server_route_client_boundary, sort_findings,
+    required_entrypoint_reachability, rule_enabled, server_route_client_boundary,
     suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports, RuleFinding,
     FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
     REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
@@ -13,7 +13,15 @@ mod prepared;
 mod standalone;
 
 #[doc(hidden)]
+pub struct PreparedRuleFindings {
+    pub findings: Vec<RuleFinding>,
+    pub suppression_sources: Vec<Option<String>>,
+}
+
+#[doc(hidden)]
 pub use prepared::run_check_with_config_facts_playwright_and_graph;
+#[doc(hidden)]
+pub use prepared::run_check_with_config_facts_playwright_and_graph_with_suppression;
 pub use prepared::{canonical_graph_plan, canonical_graph_requires_full_file_universe};
 pub use prepared::{run_check_with_config_and_facts_and_playwright, PreparedRulesCheck};
 

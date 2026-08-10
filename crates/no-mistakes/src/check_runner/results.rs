@@ -75,6 +75,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let mut react = completed.react;
     let mut queues = completed.queues;
     let mut rules = completed.rules;
+    let rule_suppression_sources = rules.suppression_sources.as_slice();
     let mut integration = completed.integration;
     let mut codebase = completed.codebase;
     let mut filesystem_rules = completed.filesystem_rules;
@@ -106,6 +107,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         react: &mut react.findings,
         queues: &mut queues.findings,
         rules: &mut rules.findings,
+        rule_suppression_sources,
         filesystem: &mut filesystem_rules.findings,
         integration: &mut integration.findings,
         codebase: &mut codebase.findings,

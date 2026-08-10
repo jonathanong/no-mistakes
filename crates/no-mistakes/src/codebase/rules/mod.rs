@@ -69,6 +69,8 @@ pub use filesystem_dispatch::{
 };
 pub use ids::*;
 #[doc(hidden)]
+pub use run::run_check_with_config_facts_playwright_and_graph_with_suppression;
+#[doc(hidden)]
 pub use run::{
     canonical_graph_plan, canonical_graph_requires_full_file_universe,
     run_check_with_config_facts_playwright_and_graph,
@@ -84,7 +86,8 @@ pub(crate) use file_matching::matching_files;
 pub(crate) use source_access::{read_source, source_store_for_files};
 #[doc(hidden)]
 pub use suppression::{
-    suppress_domain_findings_with_sources, SuppressedFinding, SuppressionTarget,
+    suppress_domain_findings_with_source_files, suppress_domain_findings_with_sources,
+    SuppressedFinding, SuppressionTarget,
 };
 pub(crate) use suppression::{
     suppress_rule_findings_with_source, suppress_rule_findings_with_sources,

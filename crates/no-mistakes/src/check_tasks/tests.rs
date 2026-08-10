@@ -33,6 +33,7 @@ pub(crate) fn run_codebase_check(
     );
     Ok(CheckTask {
         findings: findings?,
+        suppression_sources: Vec::new(),
         warning: None,
         duration,
     })

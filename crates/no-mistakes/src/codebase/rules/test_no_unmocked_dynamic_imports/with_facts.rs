@@ -24,6 +24,12 @@ struct PerTestResult {
     direct_findings: Vec<RuleFinding>,
     reachable_findings: Vec<reachable::ReachableFinding>,
     covered_reachable_imports: HashSet<super::checker::DynamicImportKey>,
+    reachable_suppression_file: Option<String>,
+}
+
+pub(crate) struct PreparedDynamicFindings {
+    pub(crate) findings: Vec<RuleFinding>,
+    pub(crate) suppression_sources: Vec<Option<String>>,
 }
 
 pub fn check_with_facts(
@@ -85,6 +91,12 @@ pub(crate) struct PreparedFactsGraphRequest<'a> {
 pub(crate) fn check_with_prepared_facts_graph_and_session(
     request: PreparedFactsGraphRequest<'_>,
 ) -> Result<Vec<RuleFinding>> {
+    Ok(check_with_prepared_facts_graph_and_session_with_suppression(request)?.findings)
+}
+
+pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
+    request: PreparedFactsGraphRequest<'_>,
+) -> Result<PreparedDynamicFindings> {
     let PreparedFactsGraphRequest {
         root,
         config,
@@ -153,18 +165,34 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
     for result in &per_test {
         covered_reachable_imports.extend(result.covered_reachable_imports.iter().cloned());
     }
-    let mut findings: Vec<RuleFinding> = per_test
+    let mut findings = Vec::new();
+    let mut suppression_sources = Vec::new();
+    for result in per_test {
+        let reachable_suppression_file = result.reachable_suppression_file;
+        for finding in result.direct_findings {
+            findings.push(finding);
+            suppression_sources.push(None);
+        }
+        for entry in result.reachable_findings {
+            if covered_reachable_imports.contains(&entry.key) {
+                continue;
+            }
+            findings.push(entry.finding);
+            suppression_sources.push(reachable_suppression_file.clone());
+        }
+    }
+    // Keep the internal provenance aligned with findings after deterministic
+    // ordering. Public findings retain their helper location; only the
+    // suppression source lookup may use the originating disabled test.
+    let mut paired = findings
         .into_iter()
-        .flat_map(|result| {
-            result.direct_findings.into_iter().chain(
-                result
-                    .reachable_findings
-                    .into_iter()
-                    .filter(|entry| !covered_reachable_imports.contains(&entry.key))
-                    .map(|entry| entry.finding),
-            )
-        })
-        .collect();
-    findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
-    Ok(findings)
+        .zip(suppression_sources)
+        .collect::<Vec<_>>();
+    paired
+        .sort_by(|(a, _), (b, _)| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
+    let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
+    Ok(PreparedDynamicFindings {
+        findings,
+        suppression_sources,
+    })
 }

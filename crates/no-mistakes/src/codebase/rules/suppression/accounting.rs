@@ -56,16 +56,30 @@ pub fn suppress_domain_findings_with_sources<T>(
     sources: &crate::codebase::ts_source::SourceStore,
     describe: impl Fn(&T) -> SuppressionTarget<'_>,
 ) -> Vec<SuppressedFinding> {
+    suppress_domain_findings_with_source_files(root, findings, sources, describe, |_| None)
+}
+
+/// Retain findings while reading suppression directives from an internal
+/// provenance path. The public finding location remains the target location.
+#[doc(hidden)]
+pub fn suppress_domain_findings_with_source_files<T>(
+    root: &Path,
+    findings: &mut Vec<T>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    describe: impl Fn(&T) -> SuppressionTarget<'_>,
+    source_file: impl Fn(&T) -> Option<&str>,
+) -> Vec<SuppressedFinding> {
     let lexical_root = crate::codebase::ts_source::normalize_discovery_path(root);
     let mut cached_sources = HashMap::new();
     let mut suppressed = Vec::new();
     findings.retain(|finding| {
         let target = describe(finding);
+        let source_file = source_file(finding).unwrap_or(target.file);
         let source = cached_sources
-            .entry(target.file.to_string())
+            .entry(source_file.to_string())
             .or_insert_with(|| {
                 let (candidate, is_absolute) =
-                    finding_source_candidate(&lexical_root, target.file, true)?;
+                    finding_source_candidate(&lexical_root, source_file, true)?;
                 let path = if is_absolute {
                     sources.trusted_regular_path(&candidate)
                 } else {

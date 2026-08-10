@@ -112,6 +112,8 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
     Ok(PerTestResult {
         direct_findings,
         reachable_findings: reachable.findings,
+        reachable_suppression_file: file_disabled
+            .then(|| crate::codebase::ts_source::relative_slash_path(root, &file)),
         covered_reachable_imports: if file_disabled {
             HashSet::new()
         } else {

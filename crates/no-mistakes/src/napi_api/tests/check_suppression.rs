@@ -41,6 +41,46 @@ fn check_json_skips_file_disabled_parse_errors_without_losing_other_dynamic_impo
 }
 
 #[test]
+fn check_json_preserves_reachable_suppression_provenance_for_disabled_tests() {
+    let (baseline, audit) =
+        baseline_and_audit("aggregate-test-no-unmocked-dynamic-imports-reachable-provenance");
+    assert!(baseline["rules"].as_array().is_some_and(|findings| {
+        findings.iter().any(|finding| {
+            finding["rule"] == "test-no-unmocked-dynamic-imports"
+                && finding["file"] == "src/helper.mts"
+        })
+    }));
+    let suppressed = audit["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| {
+            finding["domain"] == "rules" && finding["rule"] == "test-no-unmocked-dynamic-imports"
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(suppressed.len(), 1, "{audit}");
+    assert_eq!(suppressed[0]["file"], "src/helper.mts");
+    assert_eq!(suppressed[0]["directive"]["kind"], "file");
+    assert_eq!(suppressed[0]["directive"]["line"], 1);
+}
+
+#[test]
+fn check_json_audits_reachable_findings_from_disabled_tests() {
+    let (baseline, audit) =
+        baseline_and_audit("aggregate-test-no-unmocked-dynamic-imports-reachable-disabled-only");
+    assert!(baseline["rules"].as_array().is_some_and(Vec::is_empty));
+    assert!(audit["suppressed"].as_array().is_some_and(|findings| {
+        findings.iter().any(|finding| {
+            finding["domain"] == "rules"
+                && finding["rule"] == "test-no-unmocked-dynamic-imports"
+                && finding["file"] == "src/helper.mts"
+                && finding["directive"]["kind"] == "file"
+                && finding["directive"]["line"] == 1
+        })
+    }));
+}
+
+#[test]
 fn check_json_accounts_for_each_same_line_dynamic_import_suppression() {
     let (baseline, audit) = baseline_and_audit("aggregate-dynamic-import-same-line");
     assert!(baseline["rules"].as_array().is_some_and(Vec::is_empty));
