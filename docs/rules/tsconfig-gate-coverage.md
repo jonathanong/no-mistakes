@@ -92,11 +92,15 @@ For static matrices, `${{ matrix.name }}` bindings, step conditions, and job or
 step `continue-on-error` expressions are evaluated once per generated
 combination after `exclude` and ordered `include` expansion. Execution and
 failure tolerance therefore stay correlated: a typecheck that runs only in an
-allowed-to-fail combination does not count. Dynamic matrices remain unresolved
-and fail open as potentially enforcing, but a root matrix expression whose
-parser result is guaranteed scalar is rejected because Actions requires an
-object. Dot and single-quoted bracket property access share the same normalized
-parser for conditions and reusable-input forwarding.
+allowed-to-fail combination does not count. Literal complete expressions in
+static `include` and `exclude` entries retain their YAML scalar types; an entry
+whose value remains dynamic stops static enumeration conservatively. A missing
+property in a statically known matrix coerces to an empty string. Dynamic
+matrices and their properties remain unresolved and fail open as potentially
+enforcing, but a root matrix expression whose parser result is guaranteed
+scalar is rejected because Actions requires an object. Dot and single-quoted
+bracket property access share the same normalized parser for conditions and
+reusable-input forwarding.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
@@ -105,10 +109,13 @@ must be static. Workflow concurrency expressions may use `github`, `inputs`,
 and `vars`; job concurrency additionally permits `needs`, `strategy`, and
 `matrix`. Job and step `continue-on-error` expressions, plus environment names
 and URLs, use their own GitHub context/function sets; status functions are not
-accepted in `continue-on-error`. Workflow-dispatch choice options/defaults and
-container/service port declarations must also match their field-specific
-GitHub types and static Docker shape. Complete expressions in supported port
-components remain dynamic rather than being rejected as malformed mappings.
+accepted in `continue-on-error`. Strategy `fail-fast` expressions use the
+documented strategy contexts and must be boolean when their result type is
+statically known; `max-parallel` must similarly be a positive integer.
+Workflow-dispatch choice options/defaults and container/service port
+declarations must also match their field-specific GitHub types and static
+Docker shape. Complete expressions in supported port components remain dynamic
+rather than being rejected as malformed mappings.
 
 Reusable-workflow secret validation follows each call edge. A directly
 triggered workflow can inherit its available repository or organization

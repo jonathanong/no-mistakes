@@ -5,32 +5,40 @@ use super::{
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
+#[derive(Debug, PartialEq)]
+pub(in super::super::super) enum MatrixCombinations {
+    Static(Vec<BTreeMap<String, Value>>),
+    Dynamic(Vec<BTreeMap<String, Value>>),
+}
+
 pub(in super::super::super) fn static_matrix_combinations(
     job: &Value,
-) -> Option<Vec<BTreeMap<String, Value>>> {
+) -> Option<MatrixCombinations> {
     let Some(matrix) = job
         .get("strategy")
         .and_then(|strategy| strategy.get("matrix"))
     else {
-        return Some(vec![BTreeMap::new()]);
+        return Some(MatrixCombinations::Static(vec![BTreeMap::new()]));
     };
     let Some(matrix) = matrix.as_mapping() else {
         return super::matrix_expression_may_be_mapping(matrix.as_str()?)
-            .then(|| vec![BTreeMap::new()]);
+            .then_some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
     };
     let axes = match static_matrix_axes(matrix) {
         StaticMatrixAxes::Static(axes) => axes,
-        StaticMatrixAxes::Dynamic => return Some(vec![BTreeMap::new()]),
+        StaticMatrixAxes::Dynamic => {
+            return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]))
+        }
         StaticMatrixAxes::Invalid => return None,
     };
     let exclusions = match static_mappings(matrix.get("exclude")) {
         StaticMappings::Static(exclusions) => exclusions,
-        StaticMappings::Dynamic => return Some(vec![BTreeMap::new()]),
+        StaticMappings::Dynamic => return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()])),
         StaticMappings::Invalid => return None,
     };
     let includes = match static_mappings(matrix.get("include")) {
         StaticMappings::Static(includes) => includes,
-        StaticMappings::Dynamic => return Some(vec![BTreeMap::new()]),
+        StaticMappings::Dynamic => return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()])),
         StaticMappings::Invalid => return None,
     };
     let mut originals = Vec::new();
@@ -50,8 +58,8 @@ pub(in super::super::super) fn static_matrix_combinations(
     for include in includes {
         let mut applied = false;
         for (index, original) in originals.iter().enumerate() {
-            if include_compatible(include, original, &axes) {
-                for (name, value) in include {
+            if include_compatible(&include, original, &axes) {
+                for (name, value) in &include {
                     combinations[index].insert(name.as_str()?.to_string(), value.clone());
                 }
                 applied = true;
@@ -65,12 +73,22 @@ pub(in super::super::super) fn static_matrix_combinations(
             combinations.push(included);
         }
     }
-    Some(combinations)
+    Some(MatrixCombinations::Static(combinations))
+}
+
+impl std::ops::Deref for MatrixCombinations {
+    type Target = Vec<BTreeMap<String, Value>>;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Static(values) | Self::Dynamic(values) => values,
+        }
+    }
 }
 
 fn collect_combinations(
     axes: &[(String, Vec<Value>)],
-    exclusions: &[&serde_yaml::Mapping],
+    exclusions: &[serde_yaml::Mapping],
     index: usize,
     assigned: &mut BTreeMap<String, Value>,
     combinations: &mut Vec<BTreeMap<String, Value>>,

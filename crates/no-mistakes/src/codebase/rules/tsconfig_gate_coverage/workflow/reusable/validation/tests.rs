@@ -104,6 +104,30 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
 }
 
 #[test]
+fn scanner_rejects_strategy_fields_with_unavailable_contexts_or_invalid_scalars() {
+    for yaml in [
+        "runs-on: ubuntu-latest\nstrategy: {fail-fast: '${{ github.ref == ''refs/heads/main'' }}', max-parallel: '${{ needs.setup.outputs.parallel }}'}\nsteps:\n  - run: tsc --noEmit",
+        "uses: ./.github/workflows/checks.yml\nstrategy: {fail-fast: '${{ inputs.fail_fast }}', max-parallel: '${{ vars.MAX_PARALLEL }}'}",
+    ] {
+        let job = serde_yaml::from_str::<Value>(yaml).unwrap();
+        assert!(scan_job_shape_valid(&job), "{yaml}");
+    }
+
+    for yaml in [
+        "runs-on: ubuntu-latest\nstrategy: {fail-fast: '${{ matrix.enabled }}'}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nstrategy: {max-parallel: '${{ secrets.PARALLEL }}'}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nstrategy: {fail-fast: 'true'}\nsteps:\n  - run: echo invalid",
+        "uses: ./.github/workflows/checks.yml\nstrategy: {max-parallel: 1.5}",
+        "runs-on: ubuntu-latest\nstrategy: {fail-fast: \"${{ format('{0}', github.ref) }}\"}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nstrategy: {max-parallel: '${{ contains(github.ref, ''main'') }}'}\nsteps:\n  - run: echo invalid",
+        "uses: ./.github/workflows/checks.yml\nstrategy: {max-parallel: '${{ true }}'}",
+    ] {
+        let job = serde_yaml::from_str::<Value>(yaml).unwrap();
+        assert!(!scan_job_shape_valid(&job), "{yaml}");
+    }
+}
+
+#[test]
 fn remote_reusable_targets_require_github_owner_and_repository_names() {
     assert!(canonical_remote_call_target(
         "octo-org/example_repo.name/.github/workflows/checks.yml@v1"

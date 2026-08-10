@@ -25,6 +25,10 @@ fn complete_expression(value: &str) -> bool {
     expressions::complete_expression_type(value).is_some()
 }
 
+fn complete_literal_expression_value(value: &str) -> Option<Value> {
+    expressions::complete_literal_expression_value(value)
+}
+
 fn complete_expression_may_be_mapping(value: &str) -> bool {
     expressions::complete_expression_may_produce_mapping(value)
 }

@@ -14,10 +14,18 @@ pub(crate) use secrets::{callee_secrets, SecretState};
 use values::{default_value, nonboolean_binding_value};
 
 pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
+const DYNAMIC_MATRIX_KEY: &str = "\0matrix.dynamic";
+
+#[derive(Clone, Copy)]
+pub(crate) enum MatrixState {
+    Static,
+    Dynamic,
+}
 
 pub(crate) fn inputs_with_matrix_values(
     parent: &InputState,
     matrix_values: &BTreeMap<String, Value>,
+    matrix_state: MatrixState,
 ) -> InputState {
     let mut inputs = parent.clone();
     for (name, value) in matrix_values {
@@ -28,7 +36,14 @@ pub(crate) fn inputs_with_matrix_values(
             );
         }
     }
+    if matches!(matrix_state, MatrixState::Dynamic) {
+        inputs.insert(DYNAMIC_MATRIX_KEY.to_string(), StaticValue::Unknown);
+    }
     inputs
+}
+
+pub(super) fn matrix_property_is_dynamic(inputs: &InputState) -> bool {
+    inputs.contains_key(DYNAMIC_MATRIX_KEY)
 }
 
 pub(crate) fn direct_inputs(
@@ -138,5 +153,7 @@ fn inputs_from_contract(
     Some(inputs)
 }
 
+#[cfg(test)]
+mod matrix_tests;
 #[cfg(test)]
 mod tests;

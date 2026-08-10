@@ -2,7 +2,7 @@ use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     callee_inputs, callee_secrets, inputs_with_matrix_values, statically_not_enforcing,
-    statically_skipped_jobs, InputState,
+    statically_skipped_jobs, InputState, MatrixState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
     ActivationMemo, ActivationState, ScanContext,
@@ -10,7 +10,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
     scan_job_shape_valid, static_matrix_combinations, validated_reusable_target,
-    zero_instance_matrix,
+    zero_instance_matrix, MatrixCombinations,
 };
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
@@ -29,10 +29,19 @@ impl JobStates {
             .map(|(job_id, job)| {
                 let job_id = super::super::super::normalized_job_id(job_id)?;
                 let combinations = static_matrix_combinations(job)?;
-                let inputs = combinations
-                    .iter()
-                    .map(|values| inputs_with_matrix_values(inputs, values))
-                    .collect();
+                let inputs = match combinations {
+                    MatrixCombinations::Static(combinations) => combinations
+                        .iter()
+                        .map(|values| {
+                            inputs_with_matrix_values(inputs, values, MatrixState::Static)
+                        })
+                        .collect(),
+                    MatrixCombinations::Dynamic(_) => vec![inputs_with_matrix_values(
+                        inputs,
+                        &BTreeMap::new(),
+                        MatrixState::Dynamic,
+                    )],
+                };
                 Some((job_id, inputs))
             })
             .collect::<Option<BTreeMap<_, Vec<_>>>>()?;

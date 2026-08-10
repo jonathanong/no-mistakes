@@ -50,6 +50,43 @@ fn static_matrix_combinations_follow_exclude_and_include_expansion() {
 }
 
 #[test]
+fn literal_expression_mapping_values_match_typed_matrix_values() {
+    let matrix = job(
+        "strategy:\n  matrix:\n    boolean: [true]\n    number: [7]\n    string: [release]\n    nullable: [null]\n    exclude:\n      - boolean: '${{ true }}'\n        number: '${{ 7 }}'\n        string: \"${{ 'release' }}\"\n        nullable: '${{ null }}'",
+    );
+    assert!(zero_instance_matrix(&matrix));
+    assert!(matches!(
+        static_matrix_combinations(&matrix),
+        Some(MatrixCombinations::Static(values)) if values.is_empty()
+    ));
+
+    let included = job(
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - target: \"${{ 'linux' }}\"\n        enabled: '${{ false }}'\n        attempts: '${{ 2 }}'\n        optional: '${{ null }}'",
+    );
+    assert_eq!(
+        static_matrix_combinations(&included),
+        Some(MatrixCombinations::Static(vec![BTreeMap::from([
+            ("attempts".to_string(), Value::Number(2.into())),
+            ("enabled".to_string(), Value::Bool(false)),
+            ("optional".to_string(), Value::Null),
+            ("target".to_string(), Value::String("linux".to_string())),
+        ])]))
+    );
+}
+
+#[test]
+fn dynamic_mapping_expressions_do_not_enumerate_static_combinations() {
+    let matrix = job(
+        "strategy:\n  matrix:\n    target: [linux]\n    exclude:\n      - target: '${{ inputs.target }}'",
+    );
+    assert!(!zero_instance_matrix(&matrix));
+    assert!(matches!(
+        static_matrix_combinations(&matrix),
+        Some(MatrixCombinations::Dynamic(_))
+    ));
+}
+
+#[test]
 fn dynamic_matrices_fail_open_and_malformed_shapes_fail_closed() {
     assert!(!zero_instance_matrix(&job("strategy:\n  matrix: {}")));
     assert!(!zero_instance_matrix(&job(
@@ -87,6 +124,9 @@ fn dynamic_matrices_fail_open_and_malformed_shapes_fail_closed() {
         "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    include: true",
         "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    exclude: []",
         "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    exclude: invalid",
+        "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    include: '${{ true }}'",
+        "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    exclude: '${{ null }}'",
+        "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    include: \"${{ contains('matrix', 'm') }}\"",
     ] {
         assert!(!matrix_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -148,9 +188,11 @@ fn root_matrix_expression_requires_a_dynamic_result() {
         let yaml = format!("strategy:\n  matrix: \"${{{{ {expression} }}}}\"");
         let dynamic = job(&yaml);
         assert!(matrix_shape_valid(&dynamic), "{expression}");
-        assert_eq!(
-            static_matrix_combinations(&dynamic),
-            Some(vec![BTreeMap::new()]),
+        assert!(
+            matches!(
+                static_matrix_combinations(&dynamic),
+                Some(MatrixCombinations::Dynamic(_))
+            ),
             "{expression}"
         );
     }
@@ -251,7 +293,10 @@ fn combinations_distinguish_dynamic_expansion_and_malformed_includes() {
         "strategy:\n  matrix:\n    target: [linux]\n    exclude: '${{ fromJSON(inputs.exclusions) }}'",
         "strategy:\n  matrix:\n    target: [linux]\n    include: '${{ fromJSON(inputs.inclusions) }}'",
     ] {
-        assert_eq!(static_matrix_combinations(&job(yaml)), Some(vec![BTreeMap::new()]), "{yaml}");
+        assert!(matches!(
+            static_matrix_combinations(&job(yaml)),
+            Some(MatrixCombinations::Dynamic(_))
+        ), "{yaml}");
     }
     assert!(static_matrix_combinations(&job("strategy:\n  matrix:\n    target: []")).is_none());
     for yaml in [

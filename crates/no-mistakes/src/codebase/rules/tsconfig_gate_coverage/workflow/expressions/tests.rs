@@ -1,9 +1,12 @@
 use super::{
     complete_expression_contexts_available, complete_expression_may_produce_mapping,
-    complete_expression_type, condition_expression_valid, condition_has_status_function,
-    interpolated_expression_contexts_available, interpolated_expression_valid,
-    StaticExpressionType,
+    complete_expression_type, complete_literal_expression_value, condition_expression_valid,
+    condition_has_status_function, interpolated_expression_contexts_available,
+    interpolated_expression_valid, StaticExpressionType,
 };
+use serde_yaml::Value;
+
+mod static_types;
 
 #[test]
 fn parses_supported_github_expression_shapes() {
@@ -104,6 +107,28 @@ fn classifies_static_literals() {
         complete_expression_type("${{ true == false }}"),
         Some(StaticExpressionType::Boolean)
     );
+}
+
+#[test]
+fn resolves_only_complete_literal_expressions_to_yaml_values() {
+    for (expression, expected) in [
+        ("${{ true }}", Value::Bool(true)),
+        ("${{ (7) }}", Value::Number(7.into())),
+        ("${{ 'release' }}", Value::String("release".to_string())),
+        ("${{ null }}", Value::Null),
+    ] {
+        assert_eq!(
+            complete_literal_expression_value(expression),
+            Some(expected)
+        );
+    }
+    for expression in ["${{ inputs.target }}", "${{ true || false }}", "${{ }}"] {
+        assert_eq!(
+            complete_literal_expression_value(expression),
+            None,
+            "{expression}"
+        );
+    }
 }
 
 #[test]

@@ -217,12 +217,12 @@ fn malformed_complete_expressions_do_not_bypass_input_types() {
         WorkflowCallInputType::Boolean,
         &InputState::new()
     ));
-    assert!(binding_matches_type(
+    assert!(!binding_matches_type(
         &Value::String("${{ format('{0}', inputs.enabled) }}".to_string()),
         WorkflowCallInputType::Boolean,
         &InputState::new()
     ));
-    assert!(binding_matches_type(
+    assert!(!binding_matches_type(
         &Value::String("${{ format('it''s {0}', inputs.enabled) }}".to_string()),
         WorkflowCallInputType::Boolean,
         &InputState::new()
@@ -241,7 +241,6 @@ fn reusable_call_input_bindings_allow_only_available_contexts() {
         "${{ github.ref }}",
         "${{ needs.setup.outputs.enabled }}",
         "${{ strategy.job-index }}",
-        "${{ matrix.node }}",
         "${{ inputs.enabled }}",
         "${{ vars.TYPECHECK_MODE }}",
     ] {
@@ -251,6 +250,18 @@ fn reusable_call_input_bindings_allow_only_available_contexts() {
             &InputState::new()
         ));
     }
+    // A syntactically valid but unavailable matrix property resolves to an
+    // empty string, so it cannot bind to a boolean input.
+    assert!(!binding_matches_type(
+        &Value::String("${{ matrix.node }}".to_string()),
+        WorkflowCallInputType::Boolean,
+        &InputState::new()
+    ));
+    assert!(binding_matches_type(
+        &Value::String("${{ matrix.node }}".to_string()),
+        WorkflowCallInputType::String,
+        &InputState::new()
+    ));
     for value in [
         "${{ secrets.TOKEN }}",
         "${{ secrets.TOKEN == 'enabled' }}",

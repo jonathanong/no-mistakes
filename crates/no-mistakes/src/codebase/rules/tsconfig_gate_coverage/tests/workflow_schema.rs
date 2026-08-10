@@ -256,6 +256,52 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
 }
 
 #[test]
+fn literal_expression_exclusions_create_a_zero_instance_workflow_boundary() {
+    let tracked = BTreeSet::from(["excluded-expression/tsconfig.json".to_string()]);
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow(
+            ".github/workflows/excluded-expression.yml",
+            "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        enabled: [true]\n        exclude:\n          - enabled: '${{ true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project excluded-expression/tsconfig.json\n",
+        )],
+    };
+    assert!(ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)).is_empty());
+}
+
+#[test]
+fn scalar_literal_matrix_mapping_expressions_earn_no_coverage() {
+    let tracked = BTreeSet::from([
+        "scalar-include/tsconfig.json".to_string(),
+        "scalar-exclude/tsconfig.json".to_string(),
+        "scalar-function/tsconfig.json".to_string(),
+        "valid-include/tsconfig.json".to_string(),
+    ]);
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow(
+                ".github/workflows/scalar-include.yml",
+                "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        target: [linux]\n        include: '${{ true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project scalar-include/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/scalar-exclude.yml",
+                "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        target: [linux]\n        exclude: '${{ null }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project scalar-exclude/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/scalar-function.yml",
+                "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        target: [linux]\n        include: \"${{ contains('matrix', 'm') }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project scalar-function/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/valid-include.yml",
+                "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        target: [linux]\n        include:\n          - target: macos\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid-include/tsconfig.json\n",
+            ),
+        ],
+    };
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from(["valid-include/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn workflow_level_expression_schema_errors_do_not_credit_typechecks() {
     let documents = vec![
         workflow(

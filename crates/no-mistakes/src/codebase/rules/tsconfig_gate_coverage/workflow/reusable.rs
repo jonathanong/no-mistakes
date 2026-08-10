@@ -8,6 +8,10 @@ use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 
 mod activation;
 mod events;
+#[cfg(test)]
+mod matrix_property_tests;
+#[cfg(test)]
+mod memo_tests;
 mod model;
 mod steps;
 mod validation;
@@ -55,13 +59,15 @@ pub(super) fn collect_ci_projects_with_stats(
         if trigger_model.triggers.events.is_empty() {
             continue;
         }
-        let mut memo = ActivationMemo::new();
         for event_name in trigger_model
             .triggers
             .events
             .keys()
             .filter(|event| source_change_event_eligible(document.value, event))
         {
+            // A direct workflow's call graph may be the same for multiple events,
+            // but its path-filtered coverage is event-specific.
+            let mut memo = ActivationMemo::new();
             let triggers = CompiledTriggers::for_event(&trigger_model, event_name)
                 .expect("event came from the trigger model");
             let Some(inputs) = direct_inputs(document.call_contract.as_ref(), event_name) else {
@@ -77,8 +83,8 @@ pub(super) fn collect_ci_projects_with_stats(
             ) {
                 projects.extend(activation_projects);
             }
+            computations += memo.computations();
         }
-        computations += memo.computations();
     }
     (projects, computations)
 }

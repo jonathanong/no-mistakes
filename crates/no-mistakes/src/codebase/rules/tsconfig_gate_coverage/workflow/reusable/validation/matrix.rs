@@ -1,10 +1,12 @@
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
+mod mappings;
+use mappings::{static_mappings, StaticMappings};
 mod traversal;
 use traversal::{count_unexcluded, has_applicable_combination};
 mod combinations;
-pub(in super::super) use combinations::static_matrix_combinations;
+pub(in super::super) use combinations::{static_matrix_combinations, MatrixCombinations};
 
 const MATRIX_JOB_LIMIT: usize = 256;
 const STATIC_MATRIX_ENUMERATION_LIMIT: usize = (MATRIX_JOB_LIMIT + 1) * 64;
@@ -17,12 +19,6 @@ enum StaticMatrixAxes {
 
 enum StaticMatrixJobCount {
     Known(usize),
-    Dynamic,
-    Invalid,
-}
-
-enum StaticMappings<'a> {
-    Static(Vec<&'a serde_yaml::Mapping>),
     Dynamic,
     Invalid,
 }
@@ -166,7 +162,7 @@ fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCoun
         let Some(applicable) = has_applicable_combination(
             &axes,
             &exclusions,
-            include,
+            &include,
             0,
             &mut values,
             &mut states_remaining,
@@ -178,22 +174,6 @@ fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCoun
         }
     }
     StaticMatrixJobCount::Known(count)
-}
-
-fn static_mappings(value: Option<&Value>) -> StaticMappings<'_> {
-    match value {
-        Some(Value::Sequence(items)) if !items.is_empty() => items
-            .iter()
-            .map(Value::as_mapping)
-            .collect::<Option<_>>()
-            .map_or(StaticMappings::Invalid, StaticMappings::Static),
-        Some(Value::Sequence(_)) => StaticMappings::Invalid,
-        Some(Value::String(expression)) if super::super::super::complete_expression(expression) => {
-            StaticMappings::Dynamic
-        }
-        Some(_) => StaticMappings::Invalid,
-        None => StaticMappings::Static(Vec::new()),
-    }
 }
 
 #[cfg(test)]

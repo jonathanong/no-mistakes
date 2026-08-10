@@ -1,4 +1,4 @@
-use super::{StaticBool, StaticValue};
+use super::{InputState, StaticBool, StaticValue};
 
 pub(super) fn input_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "inputs")
@@ -6,6 +6,24 @@ pub(super) fn input_name(operand: &str) -> Option<&str> {
 
 pub(super) fn matrix_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "matrix")
+}
+
+pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticValue {
+    inputs
+        .get(&format!(
+            "{}{}",
+            super::inputs::MATRIX_VALUE_PREFIX,
+            name.to_lowercase()
+        ))
+        .cloned()
+        // GitHub resolves a missing matrix property to the empty string.
+        .unwrap_or_else(|| {
+            if super::inputs::matrix_property_is_dynamic(inputs) {
+                StaticValue::Unknown
+            } else {
+                StaticValue::String(String::new())
+            }
+        })
 }
 
 fn context_property_name<'a>(operand: &'a str, context: &str) -> Option<&'a str> {

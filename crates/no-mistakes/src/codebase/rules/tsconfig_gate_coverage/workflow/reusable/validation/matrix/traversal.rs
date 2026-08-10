@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 
 pub(super) fn count_unexcluded(
     axes: &[(String, Vec<Value>)],
-    exclusions: &[&serde_yaml::Mapping],
+    exclusions: &[serde_yaml::Mapping],
     index: usize,
     values: &mut BTreeMap<String, Value>,
     limit: usize,
@@ -53,7 +53,7 @@ pub(super) fn exclusion_matches_assigned(
 
 pub(super) fn has_applicable_combination(
     axes: &[(String, Vec<Value>)],
-    exclusions: &[&serde_yaml::Mapping],
+    exclusions: &[serde_yaml::Mapping],
     include: &serde_yaml::Mapping,
     index: usize,
     values: &mut BTreeMap<String, Value>,

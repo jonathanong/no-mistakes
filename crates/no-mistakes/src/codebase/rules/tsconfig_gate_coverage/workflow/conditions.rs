@@ -8,9 +8,10 @@ mod inputs;
 mod literals;
 mod logical;
 
-use input_value::{comparison_literal, input_name, matrix_name};
+use input_value::{comparison_literal, input_name, matrix_name, matrix_property_value};
 pub(super) use inputs::{
-    callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, SecretState,
+    callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, MatrixState,
+    SecretState,
 };
 use literals::{
     hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
@@ -192,13 +193,7 @@ fn condition_input_value(operand: &str, inputs: &InputState) -> Option<StaticVal
         );
     }
     let name = matrix_name(operand)?;
-    inputs
-        .get(&format!(
-            "{}{}",
-            inputs::MATRIX_VALUE_PREFIX,
-            name.to_lowercase()
-        ))
-        .cloned()
+    Some(matrix_property_value(name, inputs))
 }
 
 fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
@@ -211,5 +206,7 @@ fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
         })
 }
 
+#[cfg(test)]
+mod matrix_tests;
 #[cfg(test)]
 mod tests;

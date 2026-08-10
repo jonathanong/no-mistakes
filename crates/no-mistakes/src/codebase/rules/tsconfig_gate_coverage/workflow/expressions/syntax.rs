@@ -1,5 +1,7 @@
 use super::{lexer::Token, StaticExpressionType};
 
+mod result_type;
+
 pub(super) fn parse(tokens: &[Token]) -> Option<StaticExpressionType> {
     ExpressionSyntax::new(tokens)
         .parse()
@@ -53,8 +55,7 @@ impl<'a> ExpressionSyntax<'a> {
         let mut expression = self.parse_and()?;
         while self.take(Token::Or) {
             let right = self.parse_and()?;
-            expression =
-                Expression::dynamic(expression.may_produce_mapping || right.may_produce_mapping);
+            expression = result_type::logical_result(expression, right);
         }
         Some(expression)
     }
@@ -63,8 +64,7 @@ impl<'a> ExpressionSyntax<'a> {
         let mut expression = self.parse_comparison()?;
         while self.take(Token::And) {
             let right = self.parse_comparison()?;
-            expression =
-                Expression::dynamic(expression.may_produce_mapping || right.may_produce_mapping);
+            expression = result_type::logical_result(expression, right);
         }
         Some(expression)
     }
@@ -100,9 +100,10 @@ impl<'a> ExpressionSyntax<'a> {
                 function
                     .accepts_argument_count(arguments.len())
                     .then_some(())?;
-                self.parse_accessors(Expression::dynamic(function_may_produce_mapping(
-                    function, &arguments,
-                )))
+                self.parse_accessors(Expression {
+                    static_type: result_type::function_static_type(function, &arguments),
+                    may_produce_mapping: function_may_produce_mapping(function, &arguments),
+                })
             }
             Token::LeftParen => {
                 let expression = self.parse_or()?;
@@ -112,17 +113,19 @@ impl<'a> ExpressionSyntax<'a> {
         }
     }
 
-    fn parse_accessors(&mut self, expression: Expression) -> Option<Expression> {
+    fn parse_accessors(&mut self, mut expression: Expression) -> Option<Expression> {
         loop {
             if self.take(Token::Dot) {
                 if !self.take(Token::Identifier) && !self.take(Token::Star) {
                     return None;
                 }
+                expression = Expression::dynamic(true);
             } else if self.take(Token::LeftBracket) {
                 self.parse_or()?;
                 if !self.take(Token::RightBracket) {
                     return None;
                 }
+                expression = Expression::dynamic(true);
             } else {
                 return Some(expression);
             }
