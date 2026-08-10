@@ -64,11 +64,16 @@ fn check_json_optionally_accounts_for_suppressed_ordinary_rule_findings() {
     .unwrap();
     let audit: serde_json::Value = serde_json::from_str(&audit).unwrap();
     assert_eq!(audit["codebase"], json!([]));
+    assert_eq!(audit["suppressed"].as_array().unwrap().len(), 2);
     assert_eq!(audit["suppressed"][0]["domain"], "codebase");
     assert_eq!(audit["suppressed"][0]["rule"], "unique-exports");
     assert_eq!(audit["suppressed"][0]["line"], 2);
     assert_eq!(audit["suppressed"][0]["directive"]["kind"], "nextLine");
     assert_eq!(audit["suppressed"][0]["directive"]["line"], 1);
+    assert_eq!(audit["suppressed"][1]["file"], "src/c.ts");
+    assert_eq!(audit["suppressed"][1]["line"], 1);
+    assert_eq!(audit["suppressed"][1]["directive"]["kind"], "line");
+    assert_eq!(audit["suppressed"][1]["directive"]["line"], 1);
 }
 
 #[test]
