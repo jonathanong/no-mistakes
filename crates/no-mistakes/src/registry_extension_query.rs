@@ -81,16 +81,17 @@ pub(crate) fn run_with_session(
     } else {
         root.join(registry_file)
     };
-    let source = session
-        .read_source(&path)
-        .map_err(|error| anyhow::anyhow!("cannot read {}: {error}", path.display()))?;
-    let rel = relative_slash_path(root, &path);
-
-    session
-        .with_program(&path, &source, |program, source| {
-            analyze(program, source, rel)
-        })
-        .map_err(|error| anyhow::anyhow!("{error}"))?
+    session.registry_extension_report(root, &path, || {
+        let source = session
+            .read_source(&path)
+            .map_err(|error| anyhow::anyhow!("cannot read {}: {error}", path.display()))?;
+        let rel = relative_slash_path(root, &path);
+        session
+            .with_program(&path, &source, |program, source| {
+                analyze(program, source, rel)
+            })
+            .map_err(|error| anyhow::anyhow!("{error}"))?
+    })
 }
 
 fn analyze(

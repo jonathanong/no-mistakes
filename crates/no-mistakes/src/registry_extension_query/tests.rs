@@ -48,6 +48,22 @@ fn prepared_run_reuses_one_source_read_and_parse_attempt() {
 }
 
 #[test]
+fn prepared_run_memoizes_parse_failures_with_the_same_error() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer));
+    let file = fixture().join("unparseable.ts");
+
+    let first = run_with_session(&session, &fixture(), Path::new("unparseable.ts")).unwrap_err();
+    let second = run_with_session(&session, &fixture(), Path::new("unparseable.ts")).unwrap_err();
+
+    assert_eq!(first.to_string(), second.to_string());
+    let work = session.work_snapshot();
+    let file = crate::codebase::ts_resolver::normalize_path(&file);
+    assert_eq!(work.source_reads[&file], 1);
+    assert_eq!(work.parse_attempts[&file], 1);
+}
+
+#[test]
 fn detects_container_array() {
     let report = report("container-array.ts");
     assert_eq!(report.pattern_kind, "container-array");

@@ -5,10 +5,10 @@ use crate::codebase::ts_source::{FileInventory, SourceStore, VisiblePathSnapshot
 use crate::diagnostics::InvocationObserver;
 use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 
 mod io;
 mod parsing;
@@ -25,12 +25,22 @@ pub struct AnalysisSession {
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
     resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
+    registry_extension_reports: Mutex<HashMap<RegistryExtensionKey, RegistryExtensionCell>>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
 }
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
 type DatasetCell = OnceLock<Arc<AnalysisDataset>>;
 type SourceReadResult = Result<Arc<str>, SourceReadError>;
+type RegistryExtensionResult =
+    Result<Arc<crate::registry_extension_query::RegistryExtensionReport>, Arc<str>>;
+type RegistryExtensionCell = Arc<OnceLock<RegistryExtensionResult>>;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+struct RegistryExtensionKey {
+    root: PathBuf,
+    path: PathBuf,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceReadError {
@@ -64,6 +74,7 @@ impl AnalysisSession {
             datasets: DashMap::new(),
             supplemental_sources,
             resolver_caches: DashMap::new(),
+            registry_extension_reports: Mutex::new(HashMap::new()),
             parse_attempts: collect_keyed_work.then(DashMap::new),
         })
     }
@@ -190,6 +201,40 @@ impl AnalysisSession {
         matching_dataset
             .map(|(root, cell)| self.dataset_from_cell(&root, &cell).sources_for(&root))
             .unwrap_or_else(|| Arc::clone(&self.supplemental_sources))
+    }
+
+    /// Memoize an owned registry-extension report for one request/root/file
+    /// projection. The report cannot borrow the OXC program, so callers can
+    /// reuse it without parsing the same source again.
+    pub(crate) fn registry_extension_report(
+        &self,
+        root: &Path,
+        path: &Path,
+        build: impl FnOnce() -> anyhow::Result<crate::registry_extension_query::RegistryExtensionReport>,
+    ) -> anyhow::Result<crate::registry_extension_query::RegistryExtensionReport> {
+        let key = RegistryExtensionKey {
+            root: normalize_path(root),
+            path: normalize_path(path),
+        };
+        let cell = {
+            let mut reports = self
+                .registry_extension_reports
+                .lock()
+                .expect("registry-extension report cache mutex poisoned");
+            Arc::clone(
+                reports
+                    .entry(key)
+                    .or_insert_with(|| Arc::new(OnceLock::new())),
+            )
+        };
+        cell.get_or_init(|| {
+            build()
+                .map(Arc::new)
+                .map_err(|error| Arc::<str>::from(format!("{error:#}")))
+        })
+        .clone()
+        .map(|report| (*report).clone())
+        .map_err(|error| anyhow::anyhow!(error))
     }
 }
 

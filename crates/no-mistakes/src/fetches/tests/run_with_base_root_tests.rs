@@ -72,7 +72,23 @@ fn prepared_fetch_run_reuses_the_session_for_target_matching_and_traversal() {
     let report = run_with_base_root_and_session(&root, &cli, &session).unwrap();
 
     assert_eq!(report.routes.len(), 1);
+    assert_eq!(report.routes[0].api_calls.len(), 1);
+    assert_eq!(report.routes[0].api_calls[0].path, "/api/users");
     let work = session.work_snapshot();
+    let expected_paths = ["app/page.tsx", "app/users.ts"]
+        .into_iter()
+        .map(|path| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(path)))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        work.source_reads.keys().cloned().collect::<Vec<_>>(),
+        expected_paths,
+        "target matching and traversal must read the expected prepared sources: {work:?}"
+    );
+    assert_eq!(
+        work.parse_attempts.keys().cloned().collect::<Vec<_>>(),
+        expected_paths,
+        "target matching and traversal must parse the expected prepared sources: {work:?}"
+    );
     assert!(
         work.source_reads.values().all(|count| *count == 1),
         "source reads must be memoized by the request session: {work:?}"
