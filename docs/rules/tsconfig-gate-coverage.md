@@ -81,7 +81,10 @@ determines the result. Literal call inputs, declared defaults, omitted values,
 and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
 values through transitive calls. This lets the rule resolve exact string and
 number equality/inequality comparisons as well as input truthiness. Expressions
-whose result remains dynamic fail open as potentially runnable.
+whose result remains dynamic fail open as potentially runnable. Exact
+`${{ matrix.name }}` bindings also preserve a scalar value when every generated
+static matrix combination has the same value after `exclude` and `include`
+expansion; non-uniform or dynamic matrices remain unresolved.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
@@ -93,10 +96,11 @@ This prevents failure-handler or cancellation-only typechecks from satisfying
 the required CI gate.
 
 A job blocked by a statically skipped `needs` dependency, including a
-transitive dependency, does not count. Exact `always()` and `!cancelled()` job
-conditions explicitly continue after a skipped need. A dependency with
-`continue-on-error: true` is non-enforcing itself but is not treated as
-skipped for downstream jobs.
+transitive dependency, does not count. A job condition that contains a status
+check such as `always()` or `!cancelled()` can explicitly continue after a
+skipped need when the whole condition is statically true. A dependency with
+`continue-on-error: true` is non-enforcing itself but is not treated as skipped
+for downstream jobs.
 
 A project whose effective local `compilerOptions.noCheck` is `true` does not
 count as typechecked, even when both commands are registered. Remove or disable

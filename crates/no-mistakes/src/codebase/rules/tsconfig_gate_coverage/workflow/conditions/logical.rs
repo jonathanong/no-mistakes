@@ -1,19 +1,24 @@
-use super::{expression_bool, InputState, StaticBool};
+use super::{expression_bool_with_status, InputState, StaticBool};
 
-pub(super) fn compound_bool(expression: &str, inputs: &InputState) -> Option<StaticBool> {
+pub(super) fn compound_bool(
+    expression: &str,
+    inputs: &InputState,
+    success: StaticBool,
+) -> Option<StaticBool> {
     if let Some(index) = top_level_operator(expression, b"||") {
         return Some(or(
-            expression_bool(&expression[..index], inputs),
-            expression_bool(&expression[index + 2..], inputs),
+            expression_bool_with_status(&expression[..index], inputs, success),
+            expression_bool_with_status(&expression[index + 2..], inputs, success),
         ));
     }
     if let Some(index) = top_level_operator(expression, b"&&") {
         return Some(and(
-            expression_bool(&expression[..index], inputs),
-            expression_bool(&expression[index + 2..], inputs),
+            expression_bool_with_status(&expression[..index], inputs, success),
+            expression_bool_with_status(&expression[index + 2..], inputs, success),
         ));
     }
-    outer_parentheses_body(expression).map(|body| expression_bool(body, inputs))
+    outer_parentheses_body(expression)
+        .map(|body| expression_bool_with_status(body, inputs, success))
 }
 
 pub(super) fn comparison_operands(expression: &str) -> Option<(&str, &str, bool)> {

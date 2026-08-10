@@ -12,11 +12,16 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
     assert!(workflow_shape_valid(&workflow(
         "on: push\nenv: {}\njobs: {}"
     )));
+    for run_name in ["''", "'   '"] {
+        assert!(workflow_shape_valid(&workflow(&format!(
+            "on: push\nrun-name: {run_name}\njobs: {{}}"
+        ))));
+    }
 
     for yaml in [
         "on: push\nbogus: true\njobs: {}",
         "on: push\nname: [checks]\njobs: {}",
-        "on: push\nrun-name: ''\njobs: {}",
+        "on: push\nrun-name: '${{ secrets.TOKEN }}'\njobs: {}",
         "on: push\nenv: []\njobs: {}",
         "on: push\nenv:\n  BROKEN: '${{ }}'\njobs: {}",
         "on: push\ndefaults: []\njobs: {}",

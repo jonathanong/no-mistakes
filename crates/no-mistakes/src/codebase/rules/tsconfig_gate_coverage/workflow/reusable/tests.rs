@@ -43,6 +43,14 @@ fn malformed_workflow_level_fields_earn_no_coverage() {
                 ".github/workflows/callee.yml",
                 "on:\n  workflow_call:\n    outputs:\n      result:\n        value: 'result-${{ }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project callee/tsconfig.json\n",
             ),
+            workflow_document(
+                ".github/workflows/context-caller.yml",
+                "on: push\njobs:\n  call:\n    uses: ./.github/workflows/context-callee.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/context-callee.yml",
+                "on:\n  workflow_call:\n    outputs:\n      result:\n        value: '${{ secrets.TOKEN }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project output-context/tsconfig.json\n",
+            ),
         ],
     };
     let tracked = BTreeSet::from([
@@ -51,6 +59,7 @@ fn malformed_workflow_level_fields_earn_no_coverage() {
         "empty-fields/tsconfig.json".to_string(),
         "broken-expression/tsconfig.json".to_string(),
         "callee/tsconfig.json".to_string(),
+        "output-context/tsconfig.json".to_string(),
     ]);
 
     assert!(
@@ -134,16 +143,21 @@ fn zero_instance_matrix_needs_skip_dependents_unless_they_continue_explicitly() 
     let workflows = ParsedWorkflowSet {
         documents: vec![workflow_document(
             ".github/workflows/checks.yml",
-            "on: push\njobs:\n  setup:\n    strategy:\n      matrix:\n        target: [ubuntu-latest]\n        exclude:\n          - target: ubuntu-latest\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo skipped\n  blocked:\n    needs: setup\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project blocked/tsconfig.json\n  continues:\n    needs: setup\n    if: '${{ always() }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project continues/tsconfig.json\n",
+            "on: push\njobs:\n  setup:\n    strategy:\n      matrix:\n        target: [ubuntu-latest]\n        exclude:\n          - target: ubuntu-latest\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo skipped\n  blocked:\n    needs: setup\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project blocked/tsconfig.json\n  implicit-success:\n    needs: setup\n    if: true\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project implicit/tsconfig.json\n  continues:\n    needs: setup\n    if: '${{ always() }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project continues/tsconfig.json\n  compound-continues:\n    needs: setup\n    if: '${{ always() && true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound/tsconfig.json\n",
         )],
     };
     let tracked = BTreeSet::from([
         "blocked/tsconfig.json".to_string(),
+        "implicit/tsconfig.json".to_string(),
         "continues/tsconfig.json".to_string(),
+        "compound/tsconfig.json".to_string(),
     ]);
 
     assert_eq!(
         collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
-        BTreeSet::from(["continues/tsconfig.json".to_string()])
+        BTreeSet::from([
+            "compound/tsconfig.json".to_string(),
+            "continues/tsconfig.json".to_string(),
+        ])
     );
 }

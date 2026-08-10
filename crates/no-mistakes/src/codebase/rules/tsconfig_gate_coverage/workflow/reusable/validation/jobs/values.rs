@@ -83,12 +83,9 @@ pub(super) fn services_shape_valid(value: Option<&Value>) -> bool {
             !services.is_empty()
                 && services.iter().all(|(name, service)| {
                     name.as_str().is_some_and(|name| !name.is_empty())
-                        && (service
-                            .as_str()
-                            .is_some_and(valid_nonempty_interpolated_string)
-                            || service
-                                .as_mapping()
-                                .is_some_and(container_mapping_shape_valid))
+                        && service
+                            .as_mapping()
+                            .is_some_and(container_mapping_shape_valid)
                 })
         })
     })

@@ -1,5 +1,25 @@
 use super::{StaticBool, StaticValue};
 
+pub(super) fn input_name(operand: &str) -> Option<&str> {
+    let operand = operand.trim();
+    if let Some(name) = operand.strip_prefix("inputs.") {
+        let name = name.trim();
+        return super::contracts::valid_identifier(name).then_some(name);
+    }
+    let bracketed = operand
+        .strip_prefix("inputs")?
+        .trim_start()
+        .strip_prefix('[')?
+        .trim_start();
+    let quote = bracketed.chars().next()?;
+    if quote != '\'' {
+        return None;
+    }
+    let name = bracketed.strip_prefix(quote)?;
+    let (name, suffix) = name.split_once(quote)?;
+    (suffix.trim() == "]" && super::contracts::valid_identifier(name)).then_some(name)
+}
+
 impl StaticBool {
     pub(super) fn truthiness(self) -> Self {
         match self {

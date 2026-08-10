@@ -40,7 +40,7 @@ pub(super) fn count_unexcluded(
     Some(count)
 }
 
-fn exclusion_matches_assigned(
+pub(super) fn exclusion_matches_assigned(
     exclusion: &serde_yaml::Mapping,
     values: &BTreeMap<String, Value>,
 ) -> bool {
@@ -93,7 +93,7 @@ pub(super) fn has_applicable_combination(
     Some(false)
 }
 
-fn consume_state(states_remaining: &mut usize) -> bool {
+pub(super) fn consume_state(states_remaining: &mut usize) -> bool {
     let Some(next) = states_remaining.checked_sub(1) else {
         return false;
     };

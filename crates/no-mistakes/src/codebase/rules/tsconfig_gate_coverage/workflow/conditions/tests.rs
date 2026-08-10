@@ -1,4 +1,4 @@
-use super::{static_bool, InputState, StaticBool, StaticValue};
+use super::{continues_after_skipped_need, static_bool, InputState, StaticBool, StaticValue};
 use serde_yaml::Value;
 
 #[test]
@@ -147,6 +147,39 @@ fn status_conditions_model_the_successful_gate_path() {
         assert_eq!(
             static_bool(Some(&Value::String(expression.into())), &inputs),
             StaticBool::True,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
+fn skipped_needs_continue_only_for_statically_true_status_conditions() {
+    let inputs = InputState::new();
+    let job = |expression: &str| {
+        Value::Mapping(serde_yaml::Mapping::from_iter([(
+            Value::String("if".into()),
+            Value::String(format!("${{{{ {expression} }}}}")),
+        )]))
+    };
+    for expression in [
+        "always() && true",
+        "true && always()",
+        "!cancelled() && true",
+    ] {
+        assert!(
+            continues_after_skipped_need(&job(expression), &inputs),
+            "{expression}"
+        );
+    }
+    for expression in [
+        "always() && success()",
+        "!cancelled() && success()",
+        "always() && false",
+        "contains('always()', 'always')",
+        "true",
+    ] {
+        assert!(
+            !continues_after_skipped_need(&job(expression), &inputs),
             "{expression}"
         );
     }

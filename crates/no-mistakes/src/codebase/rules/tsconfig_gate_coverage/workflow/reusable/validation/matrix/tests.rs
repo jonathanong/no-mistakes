@@ -5,6 +5,45 @@ fn job(yaml: &str) -> Value {
 }
 
 #[test]
+fn uniform_matrix_values_follow_exclude_and_include_expansion() {
+    for (yaml, expected) in [
+        (
+            "strategy:\n  matrix:\n    enabled: [false]",
+            Some(Value::Bool(false)),
+        ),
+        (
+            "strategy:\n  matrix:\n    enabled: [true, true]\n    os: [linux, macos]",
+            Some(Value::Bool(true)),
+        ),
+        (
+            "strategy:\n  matrix:\n    enabled: [false, true]\n    exclude:\n      - enabled: true",
+            Some(Value::Bool(false)),
+        ),
+        (
+            "strategy:\n  matrix:\n    include:\n      - enabled: false\n      - enabled: false",
+            Some(Value::Bool(false)),
+        ),
+    ] {
+        assert_eq!(
+            uniform_static_matrix_values(&job(yaml)).get("enabled"),
+            expected.as_ref(),
+            "{yaml}"
+        );
+    }
+    for yaml in [
+        "strategy:\n  matrix:\n    enabled: [false, true]",
+        "strategy:\n  matrix:\n    enabled: [false]\n    include:\n      - enabled: true",
+        "strategy:\n  matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'",
+        "strategy:\n  matrix:\n    enabled: ['${{ inputs.enabled }}']",
+    ] {
+        assert!(
+            !uniform_static_matrix_values(&job(yaml)).contains_key("enabled"),
+            "{yaml}"
+        );
+    }
+}
+
+#[test]
 fn dynamic_matrices_fail_open_and_malformed_shapes_fail_closed() {
     assert!(!zero_instance_matrix(&job("strategy:\n  matrix: {}")));
     assert!(!zero_instance_matrix(&job(

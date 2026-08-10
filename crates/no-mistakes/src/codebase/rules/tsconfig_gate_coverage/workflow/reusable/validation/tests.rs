@@ -60,7 +60,7 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
     assert!(scan_job_shape_valid(&reusable_job));
 
     let mixed_expressions = serde_yaml::from_str::<Value>(
-        "name: check ${{ github.ref }}\nruns-on: ubuntu-${{ matrix.version }}\nenv: {REF: 'refs/${{ github.ref_name }}'}\noutputs: {result: 'result-${{ steps.run.outputs.value }}'}\nenvironment: {name: 'preview-${{ github.ref_name }}'}\ncontainer: 'node:${{ matrix.node }}'\nservices: {postgres: 'postgres:${{ matrix.postgres }}'}\nsteps:\n  - name: run ${{ github.ref_name }}\n    working-directory: app/${{ matrix.package }}\n    shell: bash\n    run: tsc --noEmit --project ${{ matrix.project }}",
+        "name: check ${{ github.ref }}\nruns-on: ubuntu-${{ matrix.version }}\nenv: {REF: 'refs/${{ github.ref_name }}'}\noutputs: {result: 'result-${{ steps.run.outputs.value }}'}\nenvironment: {name: 'preview-${{ github.ref_name }}'}\ncontainer: 'node:${{ matrix.node }}'\nservices: {postgres: {image: 'postgres:${{ matrix.postgres }}'}}\nsteps:\n  - name: run ${{ github.ref_name }}\n    working-directory: app/${{ matrix.package }}\n    shell: bash\n    run: tsc --noEmit --project ${{ matrix.project }}",
     )
     .unwrap();
     assert!(scan_job_shape_valid(&mixed_expressions));
@@ -85,6 +85,7 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
         "runs-on: ubuntu-latest\nenvironment: {url: 'https://example.test'}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\ncontainer: {image: node:22, ports: [null]}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nservices: {postgres: {image: postgres:16, volumes: [false]}}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nservices: {postgres: postgres:16}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nservices: {}\nsteps:\n  - run: tsc --noEmit",
         "runs-on: ubuntu-latest\nstrategy: {max-parallel: 0}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nstrategy: {}\nsteps:\n  - run: tsc --noEmit",

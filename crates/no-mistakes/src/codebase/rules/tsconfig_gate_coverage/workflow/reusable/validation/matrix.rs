@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 
 mod traversal;
 use traversal::{count_unexcluded, has_applicable_combination};
+mod uniform;
 
 const MATRIX_JOB_LIMIT: usize = 256;
 const STATIC_MATRIX_ENUMERATION_LIMIT: usize = (MATRIX_JOB_LIMIT + 1) * 64;
@@ -59,6 +60,10 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
         StaticMatrixJobCount::Dynamic => true,
         StaticMatrixJobCount::Invalid => false,
     }
+}
+
+pub(crate) fn uniform_static_matrix_values(job: &Value) -> BTreeMap<String, Value> {
+    uniform::values(job)
 }
 
 fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {

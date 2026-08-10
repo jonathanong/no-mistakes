@@ -1,6 +1,6 @@
 use serde_yaml::Value;
 
-use super::super::super::expressions::interpolated_expression_valid;
+use super::super::super::expressions::interpolated_expression_contexts_available;
 
 mod triggers;
 
@@ -63,11 +63,12 @@ fn secret_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
 }
 
 fn output_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
+    const OUTPUT_CONTEXTS: &[&str] = &["github", "jobs", "vars", "inputs"];
     only_keys(declaration, &["value", "description"])
         && declaration
             .get("value")
             .and_then(Value::as_str)
-            .is_some_and(interpolated_expression_valid)
+            .is_some_and(|value| interpolated_expression_contexts_available(value, OUTPUT_CONTEXTS))
         && string_field_valid(declaration, "description")
 }
 

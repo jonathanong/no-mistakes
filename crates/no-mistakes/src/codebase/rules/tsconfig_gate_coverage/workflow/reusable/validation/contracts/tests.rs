@@ -70,6 +70,11 @@ fn contract_shape_validates_every_declaration_kind() {
     assert!(!workflow_call_shape_valid(Some(&on(
         "workflow_call:\n  outputs:\n    result:\n      value: 'result-${{ }}'"
     ))));
+    for unavailable in ["secrets.TOKEN", "steps.build.outputs.result"] {
+        assert!(!workflow_call_shape_valid(Some(&on(&format!(
+            "workflow_call:\n  outputs:\n    result:\n      value: '${{{{ {unavailable} }}}}'"
+        )))));
+    }
     assert!(!workflow_call_shape_valid(Some(&on(
         "workflow_call:\n  secrets:\n    token:\n      required: yes"
     ))));
@@ -96,6 +101,7 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "workflow_run:\n  workflows: [CI]\n  types: [completed]",
         "repository_dispatch:\n  types: [refresh]",
         "issues:\n  types: [opened]",
+        "check_suite:\n  types: [completed]",
         "image_version:\n  names: [app]\n  versions: ['1.*']",
         "schedule:\n  - cron: '*/15 0-23 1,15 JAN-MAR MON-FRI'",
         "workflow_dispatch:\n  inputs:\n    deploy:\n      type: boolean\n      required: true",
@@ -127,6 +133,8 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "repository_dispatch:\n  types: ['${{ github.event.action }}']",
         "issues:\n  unknown: true",
         "issues:\n  types: [not_an_issue_event]",
+        "check_suite:\n  types: [requested]",
+        "check_suite:\n  types: [rerequested]",
         "pull_request:\n  types: [not_a_pull_request_event]",
         "merge_group:\n  types: [completed]",
         "workflow_run:\n  workflows: [CI]\n  types: [not_a_workflow_run_event]",
@@ -148,4 +156,15 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
     ] {
         assert!(!workflow_call_shape_valid(Some(&on(malformed))), "{malformed}");
     }
+    let twenty_five_inputs = (0..25)
+        .map(|index| format!("    input-{index}:\n      type: string"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(workflow_call_shape_valid(Some(&on(&format!(
+        "workflow_dispatch:\n  inputs:\n{twenty_five_inputs}"
+    )))));
+    let twenty_six_inputs = format!("{twenty_five_inputs}\n    input-25:\n      type: string");
+    assert!(!workflow_call_shape_valid(Some(&on(&format!(
+        "workflow_dispatch:\n  inputs:\n{twenty_six_inputs}"
+    )))));
 }

@@ -1,16 +1,4 @@
 use super::StaticBool;
-use serde_yaml::Value;
-
-pub(super) fn continues_after_skipped_need(job: &Value) -> bool {
-    job.get("if")
-        .and_then(Value::as_str)
-        .is_some_and(|expression| {
-            matches!(
-                strip_expression(expression.trim()),
-                "always()" | "!cancelled()"
-            )
-        })
-}
 
 pub(super) fn hexadecimal_bool(expression: &str) -> Option<StaticBool> {
     let expression = expression.strip_prefix('-').unwrap_or(expression);
@@ -52,18 +40,20 @@ pub(super) fn strip_expression(expression: &str) -> &str {
         .unwrap_or(expression)
 }
 
-pub(super) fn status_function_bool(expression: &str) -> Option<StaticBool> {
+pub(super) fn status_function_bool(expression: &str, success: StaticBool) -> Option<StaticBool> {
     let expression = expression.trim();
     if let Some(operand) = expression.strip_prefix('!') {
-        return status_function_bool(operand).map(StaticBool::negate);
+        return status_function_bool(operand, success).map(StaticBool::negate);
     }
     if let Some(operand) = expression
         .strip_prefix('(')
         .and_then(|operand| operand.strip_suffix(')'))
     {
-        return status_function_bool(operand);
+        return status_function_bool(operand, success);
     }
-    if expression.eq_ignore_ascii_case("success()") || expression.eq_ignore_ascii_case("always()") {
+    if expression.eq_ignore_ascii_case("success()") {
+        Some(success)
+    } else if expression.eq_ignore_ascii_case("always()") {
         Some(StaticBool::True)
     } else if expression.eq_ignore_ascii_case("failure()")
         || expression.eq_ignore_ascii_case("cancelled()")

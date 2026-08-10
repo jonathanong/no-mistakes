@@ -68,6 +68,14 @@ pub(super) fn binding_matches_type(
 pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {
     if let Some(value) = value.as_bool() {
         StaticValue::Bool(value)
+    } else if let Some(value) = forwarded_input_value(value, parent) {
+        match value {
+            StaticValue::Bool(value) => StaticValue::Bool(value),
+            StaticValue::Unknown => StaticValue::Unknown,
+            StaticValue::String(_) | StaticValue::Number(_) | StaticValue::Null => {
+                StaticValue::Unknown
+            }
+        }
     } else {
         match expression_bool(value.as_str().unwrap_or_default(), parent) {
             StaticBool::False => StaticValue::Bool(false),

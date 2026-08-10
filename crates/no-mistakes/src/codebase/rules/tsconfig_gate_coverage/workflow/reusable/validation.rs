@@ -13,7 +13,7 @@ pub(super) use contracts::workflow_call_shape_valid;
 pub(super) use jobs::{
     call_bindings_shape_valid, reusable_call_job_shape_valid, steps_shape_valid,
 };
-pub(super) use matrix::zero_instance_matrix;
+pub(super) use matrix::{uniform_static_matrix_values, zero_instance_matrix};
 pub(super) use workflow::workflow_shape_valid;
 
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {

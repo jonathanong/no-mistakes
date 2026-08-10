@@ -50,6 +50,32 @@ pub(super) fn condition_expression_valid(value: &str) -> bool {
     }
 }
 
+pub(super) fn condition_has_status_function(value: &str) -> bool {
+    let value = value.trim();
+    let body = if value.starts_with("${{") || value.ends_with("}}") {
+        value
+            .strip_prefix("${{")
+            .and_then(|body| body.strip_suffix("}}"))
+            .map(str::trim)
+    } else {
+        Some(value)
+    };
+    body.and_then(lexer::tokenize).is_some_and(|tokens| {
+        syntax::parse(&tokens).is_some()
+            && tokens.iter().any(|token| {
+                matches!(
+                    token,
+                    lexer::Token::Function(
+                        lexer::Function::Success
+                            | lexer::Function::Failure
+                            | lexer::Function::Always
+                            | lexer::Function::Cancelled
+                    )
+                )
+            })
+    })
+}
+
 pub(super) fn condition_expression_contexts_available(
     value: &str,
     allowed: &[&str],

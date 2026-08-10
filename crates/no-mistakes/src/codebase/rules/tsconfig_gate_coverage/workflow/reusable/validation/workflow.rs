@@ -1,6 +1,8 @@
 use serde_yaml::{Mapping, Value};
 
-use super::super::super::expressions::interpolated_expression_valid;
+use super::super::super::expressions::{
+    interpolated_expression_contexts_available, interpolated_expression_valid,
+};
 
 pub(crate) fn workflow_shape_valid(workflow: &Value) -> bool {
     let Some(workflow) = workflow.as_mapping() else {
@@ -8,7 +10,7 @@ pub(crate) fn workflow_shape_valid(workflow: &Value) -> bool {
     };
     only_workflow_keys(workflow)
         && string_field_valid(workflow, "name")
-        && nonempty_string_field_valid(workflow, "run-name")
+        && run_name_field_valid(workflow)
         && scalar_mapping_valid(workflow.get("env"))
         && permissions_shape_valid(workflow.get("permissions"))
         && defaults_shape_valid(workflow.get("defaults"))
@@ -37,10 +39,13 @@ fn string_field_valid(workflow: &Mapping, field: &str) -> bool {
     workflow.get(field).is_none_or(Value::is_string)
 }
 
-fn nonempty_string_field_valid(workflow: &Mapping, field: &str) -> bool {
-    workflow
-        .get(field)
-        .is_none_or(valid_nonempty_interpolated_string)
+fn run_name_field_valid(workflow: &Mapping) -> bool {
+    const RUN_NAME_CONTEXTS: &[&str] = &["github", "inputs", "vars"];
+    workflow.get("run-name").is_none_or(|value| {
+        value.as_str().is_some_and(|value| {
+            interpolated_expression_contexts_available(value, RUN_NAME_CONTEXTS)
+        })
+    })
 }
 
 fn valid_nonempty_interpolated_string(value: &Value) -> bool {

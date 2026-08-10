@@ -11,12 +11,13 @@ pub(super) fn workflow_dispatch_config_valid(config: &Value) -> bool {
 
 fn workflow_dispatch_inputs_valid(inputs: &Value) -> bool {
     inputs.as_mapping().is_some_and(|inputs| {
-        inputs.iter().all(|(name, declaration)| {
-            name.is_string()
-                && declaration
-                    .as_mapping()
-                    .is_some_and(workflow_dispatch_input_valid)
-        })
+        inputs.len() <= 25
+            && inputs.iter().all(|(name, declaration)| {
+                name.is_string()
+                    && declaration
+                        .as_mapping()
+                        .is_some_and(workflow_dispatch_input_valid)
+            })
     })
 }
 

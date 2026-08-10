@@ -11,6 +11,21 @@ mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
 use values::{default_value, nonboolean_binding_value};
 
+pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
+
+pub(crate) fn inputs_with_matrix_values(
+    parent: &InputState,
+    matrix_values: &BTreeMap<String, Value>,
+) -> InputState {
+    let mut inputs = parent.clone();
+    for (name, value) in matrix_values {
+        if let Some(value) = values::matrix_axis_value(value) {
+            inputs.insert(format!("{MATRIX_VALUE_PREFIX}{name}"), value);
+        }
+    }
+    inputs
+}
+
 pub(crate) fn direct_inputs(
     contract: Option<&WorkflowCallContract>,
     event_name: &str,

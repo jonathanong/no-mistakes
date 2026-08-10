@@ -7,11 +7,12 @@ mod inputs;
 mod literals;
 mod logical;
 
-use input_value::comparison_literal;
-pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
+use input_value::{comparison_literal, input_name};
+pub(super) use inputs::{
+    callee_inputs, callee_secrets_valid, direct_inputs, inputs_with_matrix_values,
+};
 use literals::{
-    continues_after_skipped_need, hexadecimal_bool, number_bool, quoted_string_bool,
-    status_function_bool, strip_expression,
+    hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -49,7 +50,7 @@ pub(super) fn statically_skipped_jobs(
         for (job_id, job) in jobs {
             let job_id = super::normalized_job_id(job_id).expect("validated scalar job ID");
             let directly_disabled = static_bool(job.get("if"), inputs) == StaticBool::False;
-            let blocked_by_need = !continues_after_skipped_need(job)
+            let blocked_by_need = !continues_after_skipped_need(job, inputs)
                 && crate::codebase::workflow_topology::value_primitives::string_list(
                     job.get("needs"),
                 )
@@ -81,9 +82,17 @@ fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticBool {
 }
 
 fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
+    expression_bool_with_status(expression, inputs, StaticBool::True)
+}
+
+fn expression_bool_with_status(
+    expression: &str,
+    inputs: &InputState,
+    success: StaticBool,
+) -> StaticBool {
     let expression = strip_expression(expression.trim());
     if super::expressions::condition_expression_valid(expression) {
-        if let Some(value) = logical::compound_bool(expression, inputs) {
+        if let Some(value) = logical::compound_bool(expression, inputs, success) {
             return value;
         }
     }
@@ -96,7 +105,7 @@ fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
     if expression.eq_ignore_ascii_case("null") {
         return StaticBool::False;
     }
-    if let Some(value) = status_function_bool(expression) {
+    if let Some(value) = status_function_bool(expression, success) {
         return value;
     }
     if let Some(value) = quoted_string_bool(expression) {
@@ -108,14 +117,24 @@ fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
     if let Ok(value) = expression.parse::<f64>() {
         return number_bool(Some(value));
     }
-    resolve_input_expression(expression, inputs)
+    resolve_input_expression(expression, inputs, success)
 }
 
-fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool {
+fn resolve_input_expression(
+    expression: &str,
+    inputs: &InputState,
+    success: StaticBool,
+) -> StaticBool {
     if let Some((left, right, equal)) = logical::comparison_operands(expression) {
-        let (actual, expected) = match (condition_value(left, inputs), comparison_literal(right)) {
+        let (actual, expected) = match (
+            condition_value(left, inputs, success),
+            comparison_literal(right),
+        ) {
             (Some(actual), Some(expected)) => (actual, expected),
-            _ => match (comparison_literal(left), condition_value(right, inputs)) {
+            _ => match (
+                comparison_literal(left),
+                condition_value(right, inputs, success),
+            ) {
                 (Some(expected), Some(actual)) => (actual, expected),
                 _ => return StaticBool::Unknown,
             },
@@ -145,8 +164,8 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
     StaticBool::Unknown
 }
 
-fn condition_value(operand: &str, inputs: &InputState) -> Option<StaticValue> {
-    if let Some(value) = status_function_bool(operand.trim()) {
+fn condition_value(operand: &str, inputs: &InputState, success: StaticBool) -> Option<StaticValue> {
+    if let Some(value) = status_function_bool(operand.trim(), success) {
         return match value {
             StaticBool::False => Some(StaticValue::Bool(false)),
             StaticBool::True => Some(StaticValue::Bool(true)),
@@ -165,24 +184,14 @@ fn condition_value(operand: &str, inputs: &InputState) -> Option<StaticValue> {
     )
 }
 
-fn input_name(operand: &str) -> Option<&str> {
-    let operand = operand.trim();
-    if let Some(name) = operand.strip_prefix("inputs.") {
-        let name = name.trim();
-        return contracts::valid_identifier(name).then_some(name);
-    }
-    let bracketed = operand
-        .strip_prefix("inputs")?
-        .trim_start()
-        .strip_prefix('[')?
-        .trim_start();
-    let quote = bracketed.chars().next()?;
-    if quote != '\'' {
-        return None;
-    }
-    let name = bracketed.strip_prefix(quote)?;
-    let (name, suffix) = name.split_once(quote)?;
-    (suffix.trim() == "]" && contracts::valid_identifier(name)).then_some(name)
+fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
+    job.get("if")
+        .and_then(Value::as_str)
+        .is_some_and(|expression| {
+            super::expressions::condition_has_status_function(expression)
+                && expression_bool_with_status(expression, inputs, StaticBool::False)
+                    == StaticBool::True
+        })
 }
 
 #[cfg(test)]
