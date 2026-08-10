@@ -12,16 +12,22 @@ use crate::codebase::ts_symbols::ExportKind;
 use std::collections::HashSet;
 use std::path::Path;
 
+pub(super) struct SelectionOptions<'a> {
+    pub(super) options: &'a Options,
+    pub(super) defer_suppression: bool,
+}
+
 pub(super) fn selected_components(
     root: &Path,
     project_root: &Path,
     shared: &CheckFactMap,
-    opts: &Options,
+    selection: SelectionOptions<'_>,
     include: &GlobMatcher,
     exclude: &GlobMatcher,
     test_filter: &crate::codebase::test_filter::TestFileFilter,
-    defer_suppression: bool,
 ) -> Vec<Component> {
+    let opts = selection.options;
+    let defer_suppression = selection.defer_suppression;
     let mut components = Vec::new();
     let scoped_files = shared.files().iter().collect::<HashSet<_>>();
     for (path, facts) in &shared.ts {
@@ -49,7 +55,7 @@ pub(super) fn selected_components(
         let Some(react) = facts.react.as_ref() else {
             continue;
         };
-        if should_skip_file(facts, opts, explicit) {
+        if should_skip_file(facts, opts, explicit, defer_suppression) {
             continue;
         }
         for component in react.components.iter() {
@@ -82,11 +88,18 @@ pub(super) fn selected_components(
     components
 }
 
-fn should_skip_file(facts: &CheckFileFacts, opts: &Options, explicit: bool) -> bool {
+fn should_skip_file(
+    facts: &CheckFileFacts,
+    opts: &Options,
+    explicit: bool,
+    defer_suppression: bool,
+) -> bool {
     let Some(source) = facts.source.as_deref() else {
         return false;
     };
-    has_disable_file_comment(source, RULE_ID)
+    // Aggregate checks must retain file-disabled components until the shared
+    // suppression projection records their findings in the optional audit.
+    (!defer_suppression && has_disable_file_comment(source, RULE_ID))
         || (!explicit && !opts.required_props.is_empty() && !source_has_required_prop(source, opts))
 }
 

@@ -380,11 +380,13 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         &root,
         project_root,
         &shared,
-        &opts,
+        selection::SelectionOptions {
+            options: &opts,
+            defer_suppression: false,
+        },
         &include,
         &exclude,
         &test_filter,
-        false,
     );
     assert_eq!(
         selected

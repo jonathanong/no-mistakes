@@ -20,10 +20,7 @@ use config::effective_story_patterns;
 use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};
 use findings::{namespace_import_findings, stale_or_blank_allow_findings};
-pub(crate) use prepared::{
-    check_with_prepared_facts_and_inferred_and_session, check_with_prepared_facts_and_session,
-    check_with_prepared_facts_for_aggregate,
-};
+pub(crate) use prepared::check_with_prepared_facts_for_aggregate;
 use selection::{component_disabled, file_disabled, selected_components};
 use types::{GlobMatcher, Options};
 

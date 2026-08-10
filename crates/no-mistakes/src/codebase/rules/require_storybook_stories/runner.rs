@@ -87,11 +87,13 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         root,
         project_root,
         shared,
-        &opts,
+        super::selection::SelectionOptions {
+            options: &opts,
+            defer_suppression,
+        },
         &include,
         &exclude,
         &test_filter,
-        defer_suppression,
     )
     .into_iter()
     .filter(|component| rule_filter.is_match(&component.file))

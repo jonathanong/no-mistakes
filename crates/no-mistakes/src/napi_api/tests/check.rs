@@ -1,6 +1,51 @@
 use super::*;
 use serde_json::json;
 
+fn static_check_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check")
+        .join(name)
+}
+
+fn baseline_and_audit(name: &str) -> (serde_json::Value, serde_json::Value) {
+    let root = static_check_fixture(name);
+    let baseline: serde_json::Value =
+        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
+            .unwrap();
+    let audit: serde_json::Value = serde_json::from_str(
+        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
+    )
+    .unwrap();
+    let mut comparable = audit.clone();
+    comparable
+        .as_object_mut()
+        .expect("check report is an object")
+        .remove("suppressed");
+    assert_eq!(baseline, comparable, "audit changed a visible report field");
+    (baseline, audit)
+}
+
+fn assert_suppression(audit: &serde_json::Value, expected: &serde_json::Value) {
+    let domain = expected["domain"].as_str().unwrap();
+    let rule = expected["rule"].as_str().unwrap();
+    let file = expected["file"].as_str().unwrap();
+    let line = expected["line"].as_u64().unwrap();
+    let finding = audit["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| {
+            finding["domain"] == domain
+                && finding["rule"] == rule
+                && finding["file"] == file
+                && finding["line"] == line
+        })
+        .unwrap_or_else(|| panic!("missing suppression {domain}/{rule} {file}:{line}: {audit}"));
+    assert_eq!(finding["reason"], expected["reason"]);
+    assert_eq!(finding["directive"]["kind"], expected["directiveKind"]);
+    assert_eq!(finding["directive"]["line"], expected["directiveLine"]);
+}
+
 #[test]
 fn check_json_reports_tracked_artifacts_below_source_skip_directories() {
     let fixture = crate::test_support::materialize_gitignore_fixture("banned-paths-source-skips");
@@ -74,6 +119,132 @@ fn check_json_optionally_accounts_for_suppressed_ordinary_rule_findings() {
     assert_eq!(audit["suppressed"][1]["line"], 1);
     assert_eq!(audit["suppressed"][1]["directive"]["kind"], "line");
     assert_eq!(audit["suppressed"][1]["directive"]["line"], 1);
+}
+
+#[test]
+fn check_json_preserves_nextjs_caching_report_when_auditing_suppression() {
+    let (_, audit) = baseline_and_audit("aggregate-nextjs-no-caching");
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "rules",
+            "rule": "nextjs-no-caching",
+            "file": "web/app/page.ts",
+            "line": 3,
+            "directiveKind": "nextLine",
+            "directiveLine": 2,
+            "reason": "fetch cache: \"force-cache\" is disabled; use uncached request-time data",
+        }),
+    );
+}
+
+#[test]
+fn check_json_preserves_nextjs_api_report_when_auditing_suppression() {
+    let (_, audit) = baseline_and_audit("aggregate-nextjs-no-api-routes");
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "rules",
+            "rule": "nextjs-no-api-routes",
+            "file": "web/pages/api/legacy.ts",
+            "line": 1,
+            "directiveKind": "line",
+            "directiveLine": 1,
+            "reason": "Next.js API/server routes are disabled; move server endpoints out of the Next.js app",
+        }),
+    );
+}
+
+#[test]
+fn check_json_preserves_direct_and_reachable_dynamic_import_reports_when_auditing() {
+    let (_, audit) = baseline_and_audit("aggregate-test-no-unmocked-dynamic-imports");
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "rules",
+            "rule": "test-no-unmocked-dynamic-imports",
+            "file": "src/reachable.mts",
+            "line": 3,
+            "directiveKind": "nextLine",
+            "directiveLine": 2,
+            "reason": "dynamic import dependency `src/leaf.mts` must be mocked",
+        }),
+    );
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "rules",
+            "rule": "test-no-unmocked-dynamic-imports",
+            "file": "tests/direct.test.mts",
+            "line": 5,
+            "directiveKind": "nextLine",
+            "directiveLine": 4,
+            "reason": "dynamic import dependency `src/leaf.mts` must be mocked",
+        }),
+    );
+}
+
+#[test]
+fn check_json_preserves_server_boundary_report_when_auditing_suppression() {
+    let (_, audit) = baseline_and_audit("aggregate-server-route-client-boundary");
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "rules",
+            "rule": "server-route-client-boundary",
+            "file": "backend/api/client.ts",
+            "line": 4,
+            "directiveKind": "file",
+            "directiveLine": 1,
+            "reason": "client HTTP call is in a server route folder; move request clients out of route definition folders or narrow server route globs so AST route extraction stays unambiguous",
+        }),
+    );
+}
+
+#[test]
+fn check_json_preserves_agents_size_report_when_auditing_suppression() {
+    let (_, audit) = baseline_and_audit("aggregate-agents-md-max-size");
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "filesystem",
+            "rule": "agents-md-max-size",
+            "file": "AGENTS.md",
+            "line": 1,
+            "directiveKind": "file",
+            "directiveLine": 1,
+            "reason": "3 lines (max 2) - trim to keep agent context lean",
+        }),
+    );
+}
+
+#[test]
+fn check_json_preserves_storybook_file_and_component_reports_when_auditing_suppression() {
+    let (_, audit) = baseline_and_audit("aggregate-require-storybook-stories");
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "rules",
+            "rule": "require-storybook-stories",
+            "file": "web/components/ComponentSuppressed.tsx",
+            "line": 2,
+            "directiveKind": "nextLine",
+            "directiveLine": 1,
+            "reason": "React component `ComponentSuppressed` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+        }),
+    );
+    assert_suppression(
+        &audit,
+        &json!({
+            "domain": "rules",
+            "rule": "require-storybook-stories",
+            "file": "web/components/FileSuppressed.tsx",
+            "line": 2,
+            "directiveKind": "file",
+            "directiveLine": 1,
+            "reason": "React component `FileSuppressed` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `require-storybook-stories`, or add a documented no-mistakes disable comment.",
+        }),
+    );
 }
 
 #[test]

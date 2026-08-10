@@ -3,6 +3,14 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
 use std::collections::HashMap;
 
+fn check_with_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    facts: &CheckFactMap,
+) -> anyhow::Result<Vec<RuleFinding>> {
+    check_with_facts_for_aggregate(root, config, facts, None, false)
+}
+
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/no-nextjs-api-routes/fixture")

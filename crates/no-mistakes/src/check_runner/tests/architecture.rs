@@ -257,7 +257,7 @@ fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     assert!(execution.contains("mod helpers;"));
     assert!(execution.contains("use helpers::{storybook_findings, suppress_findings};"));
     assert!(helpers.contains("pub(super) fn storybook_findings("));
-    assert!(helpers.contains("check_with_prepared_facts_and_inferred_and_session"));
+    assert!(helpers.contains("check_with_prepared_facts_for_aggregate"));
     assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);
     assert!(storybook_block.contains("prepared_tsconfig_catalog"));
     assert!(!storybook_block.contains("prepared_tsconfig,"));

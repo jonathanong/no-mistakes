@@ -8,10 +8,7 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod aggregate;
-#[allow(unused_imports)]
-pub(crate) use aggregate::{
-    check_with_facts, check_with_facts_and_inferred, check_with_facts_for_aggregate,
-};
+pub(crate) use aggregate::check_with_facts_for_aggregate;
 
 pub const RULE_ID: &str = "nextjs-no-api-routes";
 

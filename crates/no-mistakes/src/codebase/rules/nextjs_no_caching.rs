@@ -37,23 +37,6 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     check_files(&root, config, &files)
 }
 
-pub(crate) fn check_with_facts(
-    root: &Path,
-    config: &NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, None, false)
-}
-
-pub(crate) fn check_with_facts_and_inferred(
-    root: &Path,
-    config: &NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    inferred_roots: &crate::codebase::config::InferredRoots,
-) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, Some(inferred_roots), false)
-}
-
 pub(crate) fn check_with_facts_for_aggregate(
     root: &Path,
     config: &NoMistakesConfig,

@@ -1,4 +1,13 @@
 use super::*;
+use crate::codebase::check_facts::CheckFactMap;
+
+fn check_with_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    facts: &CheckFactMap,
+) -> anyhow::Result<Vec<RuleFinding>> {
+    check_with_facts_for_aggregate(root, config, facts, None, false)
+}
 use crate::config::v2::schema::{Project, ProjectType, RuleDef, RuleScope};
 
 fn fixture(name: &str) -> PathBuf {
