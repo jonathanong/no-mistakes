@@ -105,6 +105,9 @@ fn scan_activation(
             None => None,
         };
         let callee_projects = if let Some(target) = call_target {
+            if target.starts_with("./") && !canonical_local_call_target(target) {
+                return None;
+            }
             let edge = workflow_values::call_edge(job_id.as_str().unwrap_or(""), target, job);
             if edge.local {
                 let callee_path = edge.to.as_deref().unwrap_or_default();
@@ -153,6 +156,16 @@ fn scan_activation(
         ));
     }
     Some(projects)
+}
+
+fn canonical_local_call_target(target: &str) -> bool {
+    target
+        .strip_prefix("./.github/workflows/")
+        .is_some_and(|filename| {
+            !filename.is_empty()
+                && !filename.contains('/')
+                && (filename.ends_with(".yml") || filename.ends_with(".yaml"))
+        })
 }
 
 fn reusable_call_job_shape_valid(job: &Value) -> bool {

@@ -30,9 +30,13 @@ fn skipped_local_calls_still_require_valid_contracts() {
             ".github/workflows/callee.yml",
             "on:\n  workflow_call:\n    inputs:\n      required:\n        type: boolean\n        required: true\njobs: {}\n",
         ),
+        workflow(
+            ".github/workflows/noncanonical.yml",
+            "on: push\njobs:\n  invalid-call:\n    uses: ./.github/workflows/subdir/../callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project noncanonical/tsconfig.json\n",
+        ),
     ];
 
-    assert!(scanned(documents, &["sibling"]).is_empty());
+    assert!(scanned(documents, &["sibling", "noncanonical"]).is_empty());
 }
 
 #[test]
@@ -90,5 +94,27 @@ fn undeclared_inputs_are_false_while_declared_nonbooleans_are_unknown() {
             "equal-false/tsconfig.json".to_string(),
             "negated/tsconfig.json".to_string(),
         ])
+    );
+}
+
+#[test]
+fn compact_boolean_bindings_and_literal_first_comparisons_are_static() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/caller.yml",
+            "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/callee.yml\n    with:\n      disabled: '${{false}}'\n      enabled: '${{true}}'\n",
+        ),
+        workflow(
+            ".github/workflows/callee.yml",
+            "on:\n  workflow_call:\n    inputs:\n      disabled:\n        type: boolean\n        required: true\n      enabled:\n        type: boolean\n        required: true\njobs:\n  compact-false:\n    if: inputs.disabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compact-false/tsconfig.json\n  reversed-false:\n    if: false == inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project reversed-false/tsconfig.json\n  reversed-true:\n    if: true == inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project reversed-true/tsconfig.json\n",
+        ),
+    ];
+
+    assert_eq!(
+        scanned(
+            documents,
+            &["compact-false", "reversed-false", "reversed-true"]
+        ),
+        BTreeSet::from(["reversed-true/tsconfig.json".to_string()])
     );
 }

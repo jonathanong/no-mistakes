@@ -68,10 +68,10 @@ fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticBool {
 }
 
 fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
-    match expression.trim() {
-        "${{ false }}" => StaticBool::False,
-        "${{ true }}" => StaticBool::True,
-        expression => resolve_input_expression(strip_expression(expression), inputs),
+    match strip_expression(expression.trim()) {
+        "false" => StaticBool::False,
+        "true" => StaticBool::True,
+        expression => resolve_input_expression(expression, inputs),
     }
 }
 
@@ -86,16 +86,15 @@ fn strip_expression(expression: &str) -> &str {
 fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool {
     for (operator, equal) in [("==", true), ("!=", false)] {
         if let Some((left, right)) = expression.split_once(operator) {
-            let Some(name) = left.trim().strip_prefix("inputs.") else {
-                return StaticBool::Unknown;
-            };
-            let expected = match right.trim() {
-                "true" => true,
-                "false" => false,
-                _ => return StaticBool::Unknown,
+            let (name, expected) = match (input_name(left), bool_literal(right)) {
+                (Some(name), Some(expected)) => (name, expected),
+                _ => match (bool_literal(left), input_name(right)) {
+                    (Some(expected), Some(name)) => (name, expected),
+                    _ => return StaticBool::Unknown,
+                },
             };
             let value = inputs
-                .get(&name.trim().to_lowercase())
+                .get(&name.to_lowercase())
                 .copied()
                 .unwrap_or(StaticBool::False)
                 .equals(expected);
@@ -120,6 +119,18 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
             .negate();
     }
     StaticBool::Unknown
+}
+
+fn input_name(operand: &str) -> Option<&str> {
+    operand.trim().strip_prefix("inputs.").map(str::trim)
+}
+
+fn bool_literal(operand: &str) -> Option<bool> {
+    match operand.trim() {
+        "true" => Some(true),
+        "false" => Some(false),
+        _ => None,
+    }
 }
 
 impl StaticBool {
