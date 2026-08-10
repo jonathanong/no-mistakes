@@ -92,7 +92,7 @@ the workflow from providing coverage.
 
 The rule evaluates the successful gate path: `success()`, `always()`, and
 `!cancelled()` are runnable there, while `failure()` and `cancelled()` are not.
-This prevents failure-handler or cancellation-only typechecks from satisfying
+This prevents failure-handler or cancellation-only type checks from satisfying
 the required CI gate.
 
 A job blocked by a statically skipped `needs` dependency, including a
