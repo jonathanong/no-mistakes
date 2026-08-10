@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::workflow_topology::model::{WorkflowCallInput, WorkflowCallSecret};
 
 #[test]
 fn nonboolean_default_truthiness_handles_every_scalar_variant() {
@@ -19,4 +20,60 @@ fn nonboolean_default_truthiness_handles_every_scalar_variant() {
         default_falsy_state(Some(&JsonScalar::Text(String::new()))),
         StaticBool::False
     );
+}
+
+#[test]
+fn malformed_call_input_bindings_are_rejected() {
+    let missing_type = WorkflowCallContract {
+        inputs: BTreeMap::from([(
+            "enabled".to_string(),
+            WorkflowCallInput {
+                input_type: None,
+                required: false,
+                default: None,
+                description: None,
+            },
+        )]),
+        ..WorkflowCallContract::default()
+    };
+    let call_job: Value = serde_yaml::from_str("with: true").expect("valid test YAML");
+
+    assert!(inputs_from_contract(&missing_type, None, &InputState::new()).is_none());
+
+    let valid = WorkflowCallContract {
+        inputs: BTreeMap::from([(
+            "enabled".to_string(),
+            WorkflowCallInput {
+                input_type: Some(WorkflowCallInputType::Boolean),
+                required: false,
+                default: None,
+                description: None,
+            },
+        )]),
+        ..WorkflowCallContract::default()
+    };
+    assert!(callee_inputs(Some(&valid), &call_job, &InputState::new()).is_none());
+}
+
+#[test]
+fn malformed_secret_bindings_are_rejected() {
+    let contract = WorkflowCallContract {
+        secrets: BTreeMap::from([(
+            "token".to_string(),
+            WorkflowCallSecret {
+                required: false,
+                description: None,
+            },
+        )]),
+        ..WorkflowCallContract::default()
+    };
+
+    for source in [
+        "secrets: true",
+        "secrets:\n  token: []",
+        "secrets:\n  token: first\n  TOKEN: second",
+    ] {
+        let call_job: Value = serde_yaml::from_str(source).expect("valid test YAML");
+        assert!(!callee_secrets_valid(&contract, &call_job), "{source}");
+    }
 }
