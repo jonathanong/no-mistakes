@@ -44,3 +44,19 @@ fn step_jobs_reject_unknown_keys() {
     .unwrap();
     assert!(!step_job_shape_valid(&unknown));
 }
+
+#[test]
+fn remote_reusable_targets_require_github_owner_and_repository_names() {
+    assert!(canonical_remote_call_target(
+        "octo-org/example_repo.name/.github/workflows/checks.yml@v1"
+    ));
+    for target in [
+        "octo_org/repository/.github/workflows/checks.yml@v1",
+        "-octo/repository/.github/workflows/checks.yml@v1",
+        "octo-/repository/.github/workflows/checks.yml@v1",
+        "octo/repo?itory/.github/workflows/checks.yml@v1",
+        "octo/../.github/workflows/checks.yml@v1",
+    ] {
+        assert!(!canonical_remote_call_target(target), "{target}");
+    }
+}

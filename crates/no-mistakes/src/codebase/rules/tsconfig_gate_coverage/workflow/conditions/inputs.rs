@@ -1,10 +1,16 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
 use super::{expression_bool, InputState, StaticBool};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
+    complete_expression_type, StaticExpressionType,
+};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
 };
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
+
+mod values;
+use values::{default_falsy_state, nonboolean_binding_state};
 
 pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> Option<InputState> {
     // A workflow invoked directly by a repository event receives the declared
@@ -149,11 +155,20 @@ fn normalized_bindings(mapping: &serde_yaml::Mapping) -> Option<BTreeMap<String,
 }
 
 fn binding_matches_type(value: &Value, input_type: WorkflowCallInputType) -> bool {
-    if value
+    if let Some(expression_type) = value
         .as_str()
-        .is_some_and(|text| is_complete_expression(text.trim()))
+        .and_then(|text| complete_expression_type(text.trim()))
     {
-        return true;
+        return matches!(
+            (input_type, expression_type),
+            (_, StaticExpressionType::Dynamic)
+                | (
+                    WorkflowCallInputType::Boolean,
+                    StaticExpressionType::Boolean
+                )
+                | (WorkflowCallInputType::Number, StaticExpressionType::Number)
+                | (WorkflowCallInputType::String, StaticExpressionType::String)
+        );
     }
     matches!(
         (input_type, value),
@@ -163,51 +178,12 @@ fn binding_matches_type(value: &Value, input_type: WorkflowCallInputType) -> boo
     )
 }
 
-fn is_complete_expression(value: &str) -> bool {
-    super::super::complete_expression(value)
-}
-
 fn binding_bool(value: &Value, parent: &InputState) -> StaticBool {
     if let Some(value) = value.as_bool() {
         StaticBool::from(value)
     } else {
         expression_bool(value.as_str().unwrap_or_default(), parent)
     }
-}
-
-fn default_falsy_state(default: Option<&JsonScalar>) -> StaticBool {
-    if default.map(json_scalar_is_falsy).unwrap_or(true) {
-        StaticBool::False
-    } else {
-        StaticBool::TruthyNonBoolean
-    }
-}
-
-fn nonboolean_binding_state(value: &Value) -> StaticBool {
-    if value
-        .as_str()
-        .is_some_and(|text| is_complete_expression(text.trim()))
-    {
-        StaticBool::Unknown
-    } else if yaml_scalar_is_falsy(value) {
-        StaticBool::False
-    } else {
-        StaticBool::TruthyNonBoolean
-    }
-}
-
-fn json_scalar_is_falsy(value: &JsonScalar) -> bool {
-    match value {
-        JsonScalar::Bool(value) => !value,
-        JsonScalar::Number(value) => value.as_f64() == Some(0.0),
-        JsonScalar::Text(value) => value.is_empty(),
-    }
-}
-
-fn yaml_scalar_is_falsy(value: &Value) -> bool {
-    value.as_str().is_some_and(str::is_empty)
-        || value.as_f64() == Some(0.0)
-        || value.as_bool() == Some(false)
 }
 
 #[cfg(test)]

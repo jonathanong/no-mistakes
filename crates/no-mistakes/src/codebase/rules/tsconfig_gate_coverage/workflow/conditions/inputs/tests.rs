@@ -86,6 +86,7 @@ fn malformed_complete_expressions_do_not_bypass_input_types() {
         "${{ true }}}",
         "${{{ true }}",
         "${{ true } invalid }}",
+        "${{ true && }}",
         "${{ 'unterminated }}",
     ] {
         assert!(!binding_matches_type(
@@ -105,4 +106,33 @@ fn malformed_complete_expressions_do_not_bypass_input_types() {
         &Value::String("${{ format('it''s {0}', inputs.enabled) }}".to_string()),
         WorkflowCallInputType::Boolean
     ));
+}
+
+#[test]
+fn statically_typed_expression_bindings_must_match_declared_inputs() {
+    for (value, input_type) in [
+        ("${{ 'false' }}", WorkflowCallInputType::Boolean),
+        ("${{ 1 }}", WorkflowCallInputType::Boolean),
+        ("${{ false }}", WorkflowCallInputType::String),
+        ("${{ '1' }}", WorkflowCallInputType::Number),
+    ] {
+        assert!(!binding_matches_type(
+            &Value::String(value.to_string()),
+            input_type
+        ));
+    }
+    for (value, input_type) in [
+        ("${{ false }}", WorkflowCallInputType::Boolean),
+        ("${{ 1 }}", WorkflowCallInputType::Number),
+        ("${{ 'value' }}", WorkflowCallInputType::String),
+        (
+            "${{ needs.setup.outputs.value }}",
+            WorkflowCallInputType::Boolean,
+        ),
+    ] {
+        assert!(binding_matches_type(
+            &Value::String(value.to_string()),
+            input_type
+        ));
+    }
 }

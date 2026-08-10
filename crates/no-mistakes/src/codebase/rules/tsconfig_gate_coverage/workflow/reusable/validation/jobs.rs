@@ -7,18 +7,58 @@ pub(crate) fn steps_shape_valid(job: &Value) -> bool {
     };
     steps.as_sequence().is_some_and(|steps| {
         !steps.is_empty()
-            && steps.iter().all(|step| {
-                step.as_mapping().is_some_and(|step| {
-                    matches!(
-                        (step.get("run"), step.get("uses")),
-                        (Some(Value::String(command)), None) if !command.is_empty()
-                    ) || matches!(
-                        (step.get("run"), step.get("uses")),
-                        (None, Some(Value::String(target))) if action_target_valid(target)
-                    )
-                })
-            })
+            && steps
+                .iter()
+                .all(|step| step.as_mapping().is_some_and(step_shape_valid))
     })
+}
+
+fn step_shape_valid(step: &Mapping) -> bool {
+    match (step.get("run"), step.get("uses")) {
+        (Some(Value::String(command)), None) if !command.is_empty() => {
+            only_keys(step, RUN_STEP_KEYS) && shared_step_fields_valid(step)
+        }
+        (None, Some(Value::String(target))) if action_target_valid(target) => {
+            only_keys(step, ACTION_STEP_KEYS)
+                && shared_step_fields_valid(step)
+                && scalar_mapping_valid(step.get("with"))
+        }
+        _ => false,
+    }
+}
+
+const RUN_STEP_KEYS: &[&str] = &[
+    "name",
+    "id",
+    "if",
+    "run",
+    "working-directory",
+    "shell",
+    "env",
+    "continue-on-error",
+    "timeout-minutes",
+];
+
+const ACTION_STEP_KEYS: &[&str] = &[
+    "name",
+    "id",
+    "if",
+    "uses",
+    "with",
+    "env",
+    "continue-on-error",
+    "timeout-minutes",
+];
+
+fn shared_step_fields_valid(step: &Mapping) -> bool {
+    string_field_valid(step, "name")
+        && string_field_valid(step, "id")
+        && condition_field_valid(step.get("if"))
+        && string_field_valid(step, "working-directory")
+        && string_field_valid(step, "shell")
+        && scalar_mapping_valid(step.get("env"))
+        && bool_or_expression_field_valid(step, "continue-on-error")
+        && number_or_expression_field_valid(step, "timeout-minutes")
 }
 
 fn action_target_valid(target: &str) -> bool {
@@ -63,6 +103,60 @@ fn binding_mapping_valid(value: Option<&Value>) -> bool {
         return false;
     };
     unique_scalar_bindings(mapping)
+}
+
+fn scalar_mapping_valid(value: Option<&Value>) -> bool {
+    let Some(value) = value else {
+        return true;
+    };
+    value.as_mapping().is_some_and(|mapping| {
+        mapping.iter().all(|(name, value)| {
+            name.is_string()
+                && matches!(value, Value::Bool(_) | Value::Number(_) | Value::String(_))
+        })
+    })
+}
+
+fn only_keys(mapping: &Mapping, allowed: &[&str]) -> bool {
+    mapping
+        .keys()
+        .all(|key| key.as_str().is_some_and(|key| allowed.contains(&key)))
+}
+
+fn string_field_valid(mapping: &Mapping, field: &str) -> bool {
+    mapping.get(field).is_none() || mapping.get(field).is_some_and(Value::is_string)
+}
+
+pub(super) fn condition_field_valid(value: Option<&Value>) -> bool {
+    value.is_none()
+        || value.is_some_and(|value| {
+            value.is_bool()
+                || value
+                    .as_str()
+                    .is_some_and(super::super::super::expressions::condition_expression_valid)
+        })
+}
+
+fn bool_or_expression_field_valid(mapping: &Mapping, field: &str) -> bool {
+    mapping.get(field).is_none()
+        || mapping.get(field).is_some_and(|value| {
+            value.as_bool().is_some()
+                || value
+                    .as_str()
+                    .is_some_and(super::super::super::complete_expression)
+        })
+}
+
+fn number_or_expression_field_valid(mapping: &Mapping, field: &str) -> bool {
+    mapping.get(field).is_none()
+        || mapping.get(field).is_some_and(|value| {
+            value
+                .as_u64()
+                .is_some_and(|minutes| (1..=360).contains(&minutes))
+                || value
+                    .as_str()
+                    .is_some_and(super::super::super::complete_expression)
+        })
 }
 
 fn unique_scalar_bindings(mapping: &Mapping) -> bool {

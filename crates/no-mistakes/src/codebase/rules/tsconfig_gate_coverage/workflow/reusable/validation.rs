@@ -15,6 +15,7 @@ pub(super) use matrix::zero_instance_matrix;
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {
     matrix::matrix_shape_valid(job)
         && steps_shape_valid(job)
+        && jobs::condition_field_valid(job.get("if"))
         && (job.get("uses").is_some() || step_job_shape_valid(job))
 }
 
@@ -73,11 +74,31 @@ pub(super) fn canonical_remote_call_target(target: &str) -> bool {
             segments.next(),
         ),
         (Some(owner), Some(repository), Some(".github"), Some("workflows"), Some(filename))
-            if !owner.is_empty()
-                && !repository.is_empty()
+            if valid_remote_owner(owner)
+                && valid_remote_repository(repository)
                 && canonical_workflow_filename(filename)
     );
     valid && segments.next().is_none()
+}
+
+fn valid_remote_owner(owner: &str) -> bool {
+    !owner.is_empty()
+        && owner.len() <= 39
+        && !owner.starts_with('-')
+        && !owner.ends_with('-')
+        && !owner.contains("--")
+        && owner
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+}
+
+fn valid_remote_repository(repository: &str) -> bool {
+    !repository.is_empty()
+        && repository.len() <= 100
+        && !matches!(repository, "." | "..")
+        && repository
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
 }
 
 fn valid_remote_reference(reference: &str) -> bool {

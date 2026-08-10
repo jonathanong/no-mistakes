@@ -105,6 +105,18 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  call:\n    uses: ./.github/workflows/malformed-expression-callee.yml\n    with:\n      enabled: '${{ true }}${{ false }}'\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project concatenated-expression-sibling/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/incomplete-expression-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/malformed-expression-callee.yml\n    with:\n      enabled: '${{ true && }}'\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project incomplete-expression-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/literal-type-expression-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/malformed-expression-callee.yml\n    with:\n      enabled: \"${{ 'false' }}\"\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project literal-type-expression-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/literal-postfix-expression-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/malformed-expression-callee.yml\n    with:\n      enabled: '${{ 1.foo }}'\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project literal-postfix-expression-sibling/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/malformed-expression-callee.yml",
             "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        required: true\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-expression-callee/tsconfig.json\n",
         ),
@@ -127,6 +139,22 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         workflow(
             ".github/workflows/unknown-job-key.yml",
             "on: push\njobs:\n  invalid:\n    bogus: true\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unknown-job-key-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/unknown-step-key.yml",
+            "on: push\njobs:\n  invalid:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n        bogus: true\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unknown-step-key-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/scalar-matrix-axis.yml",
+            "on: push\njobs:\n  invalid:\n    strategy:\n      matrix:\n        os: ubuntu-latest\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project scalar-matrix-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/malformed-step-condition.yml",
+            "on: push\njobs:\n  invalid:\n    runs-on: ubuntu-latest\n    steps:\n      - if: '${{ }}'\n        run: echo invalid\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-step-condition-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/invalid-remote-repository.yml",
+            "on: push\njobs:\n  invalid:\n    uses: octo/../.github/workflows/checks.yml@main\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-remote-repository-sibling/tsconfig.json\n",
         ),
     ];
     let tracked = [
@@ -152,11 +180,18 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "uppercase-inherit-sibling",
         "empty-expression-sibling",
         "concatenated-expression-sibling",
+        "incomplete-expression-sibling",
+        "literal-type-expression-sibling",
+        "literal-postfix-expression-sibling",
         "malformed-expression-callee",
         "malformed-trigger-config",
         "malformed-trigger-config-sibling",
         "empty-steps-sibling",
         "unknown-job-key-sibling",
+        "unknown-step-key-sibling",
+        "scalar-matrix-sibling",
+        "malformed-step-condition-sibling",
+        "invalid-remote-repository-sibling",
     ]
     .into_iter()
     .map(|project| format!("{project}/tsconfig.json"))

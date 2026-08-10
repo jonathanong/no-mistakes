@@ -26,6 +26,35 @@ fn steps_cannot_mix_action_and_shell_commands() {
 }
 
 #[test]
+fn steps_require_known_keys_and_matching_value_shapes() {
+    for yaml in [
+        "steps:\n  - name: run\n    id: run\n    if: true\n    run: echo ok\n    working-directory: app\n    shell: bash\n    env: {NODE_ENV: test}\n    continue-on-error: false\n    timeout-minutes: 5",
+        "steps:\n  - name: action\n    id: action\n    if: '${{ always() }}'\n    uses: actions/checkout@v4\n    with: {fetch-depth: 0}\n    env: {NODE_ENV: test}\n    continue-on-error: '${{ false }}'\n    timeout-minutes: '${{ inputs.timeout }}'",
+    ] {
+        assert!(steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "steps:\n  - run: echo invalid\n    bogus: true",
+        "steps:\n  - name: false\n    run: echo invalid",
+        "steps:\n  - if: []\n    run: echo invalid",
+        "steps:\n  - if: '${{ }}'\n    run: echo invalid",
+        "steps:\n  - if: 'true &&'\n    run: echo invalid",
+        "steps:\n  - run: echo invalid\n    working-directory: true",
+        "steps:\n  - run: echo invalid\n    shell: true",
+        "steps:\n  - run: echo invalid\n    env: [invalid]",
+        "steps:\n  - run: echo invalid\n    continue-on-error: []",
+        "steps:\n  - run: echo invalid\n    timeout-minutes: five",
+        "steps:\n  - run: echo invalid\n    timeout-minutes: 0",
+        "steps:\n  - run: echo invalid\n    timeout-minutes: 1.5",
+        "steps:\n  - run: echo invalid\n    timeout-minutes: 361",
+        "steps:\n  - uses: actions/checkout@v4\n    with: true",
+        "steps:\n  - uses: actions/checkout@v4\n    shell: bash",
+    ] {
+        assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn action_steps_require_static_canonical_targets() {
     for yaml in [
         "steps:\n  - uses: actions/checkout@v4",

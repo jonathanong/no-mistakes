@@ -1,4 +1,5 @@
 mod conditions;
+mod expressions;
 mod reusable;
 mod runtime;
 
@@ -21,32 +22,7 @@ fn normalized_job_id(value: &Value) -> Option<String> {
 }
 
 fn complete_expression(value: &str) -> bool {
-    let value = value.trim();
-    let Some(body) = value
-        .strip_prefix("${{")
-        .and_then(|body| body.strip_suffix("}}"))
-    else {
-        return false;
-    };
-    let body = body.trim();
-    !body.is_empty() && expression_body_delimiters_valid(body)
-}
-
-fn expression_body_delimiters_valid(body: &str) -> bool {
-    let mut characters = body.chars().peekable();
-    let mut in_string = false;
-    while let Some(character) = characters.next() {
-        if character == '\'' {
-            if in_string && characters.peek() == Some(&'\'') {
-                characters.next();
-            } else {
-                in_string = !in_string;
-            }
-        } else if !in_string && matches!(character, '{' | '}') {
-            return false;
-        }
-    }
-    !in_string
+    expressions::complete_expression_type(value).is_some()
 }
 
 pub(super) fn ci_typechecked_projects_with_stats(

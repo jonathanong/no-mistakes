@@ -5,7 +5,7 @@ fn job(yaml: &str) -> Value {
 }
 
 #[test]
-fn uncertain_or_malformed_matrices_fail_open() {
+fn dynamic_matrices_fail_open_and_malformed_shapes_fail_closed() {
     assert!(zero_instance_matrix(&job("strategy:\n  matrix: {}")));
     assert!(!zero_instance_matrix(&job(
         "strategy:\n  matrix:\n    target:\n      - [nested]"
@@ -22,6 +22,22 @@ fn uncertain_or_malformed_matrices_fail_open() {
     assert!(!matrix_shape_valid(&job("strategy:\n  matrix: static")));
     assert!(matrix_shape_valid(&job(
         "strategy:\n  matrix: ' ${{ fromJSON(needs.setup.outputs.matrix) }} '"
+    )));
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix:\n    os: '${{ fromJSON(needs.setup.outputs.operating_systems) }}'"
+    )));
+    for yaml in [
+        "strategy:\n  matrix:\n    os: ubuntu-latest",
+        "strategy:\n  matrix:\n    os: true",
+        "strategy:\n  matrix:\n    os: {name: ubuntu-latest}",
+        "strategy:\n  matrix:\n    1: [ubuntu-latest]",
+        "strategy:\n  matrix:\n    os: [ubuntu-latest]\n    include: true",
+        "strategy:\n  matrix:\n    os: [ubuntu-latest]\n    exclude: [invalid]",
+    ] {
+        assert!(!matrix_shape_valid(&job(yaml)), "{yaml}");
+    }
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix:\n    os: [ubuntu-latest]\n    include: '${{ fromJSON(needs.setup.outputs.include) }}'"
     )));
 }
 
@@ -100,7 +116,7 @@ fn include_matching_does_not_leak_prior_axis_assignments() {
     let matrix = job(
         "strategy:\n  matrix:\n    a: [1, 2]\n    b: [1, 2]\n    exclude:\n      - {a: 1, b: 1}\n      - {a: 1, b: 2}\n      - {a: 2, b: 2}\n    include:\n      - {label: retained}",
     );
-    assert_eq!(
+    assert!(matches!(
         static_matrix_job_count(
             matrix
                 .get("strategy")
@@ -108,6 +124,19 @@ fn include_matching_does_not_leak_prior_axis_assignments() {
                 .and_then(Value::as_mapping)
                 .unwrap()
         ),
-        Some(1)
+        StaticMatrixJobCount::Known(1)
+    ));
+}
+
+#[test]
+fn bounded_static_matrix_enumeration_rejects_unresolved_literal_expansions() {
+    let axes = (0..20)
+        .map(|index| format!("    axis{index}: [false, true]"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let matrix = format!(
+        "strategy:\n  matrix:\n{axes}\n    exclude:\n      - axis19: false\n      - axis19: true"
     );
+
+    assert!(!matrix_shape_valid(&job(&matrix)));
 }

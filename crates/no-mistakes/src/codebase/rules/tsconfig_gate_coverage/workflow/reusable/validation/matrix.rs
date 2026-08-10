@@ -1,6 +1,30 @@
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
+mod traversal;
+use traversal::{count_unexcluded, has_applicable_combination};
+
+const MATRIX_JOB_LIMIT: usize = 256;
+const STATIC_MATRIX_ENUMERATION_LIMIT: usize = (MATRIX_JOB_LIMIT + 1) * 64;
+
+enum StaticMatrixAxes {
+    Static(Vec<(String, Vec<Value>)>),
+    Dynamic,
+    Invalid,
+}
+
+enum StaticMatrixJobCount {
+    Known(usize),
+    Dynamic,
+    Invalid,
+}
+
+enum StaticMappings<'a> {
+    Static(Vec<&'a serde_yaml::Mapping>),
+    Dynamic,
+    Invalid,
+}
+
 pub(crate) fn zero_instance_matrix(job: &Value) -> bool {
     let Some(matrix) = job
         .get("strategy")
@@ -9,26 +33,10 @@ pub(crate) fn zero_instance_matrix(job: &Value) -> bool {
     else {
         return false;
     };
-    let includes_instance = match matrix.get("include") {
-        Some(Value::Sequence(items)) => !items.is_empty(),
-        Some(_) => return false,
-        None => false,
-    };
-    if includes_instance {
-        return false;
-    }
-    let Some(axes) = static_matrix_axes(matrix) else {
-        return false;
-    };
-    if axes.is_empty() {
-        return true;
-    }
-    let exclusions: &[Value] = match matrix.get("exclude") {
-        Some(Value::Sequence(exclusions)) if exclusions.iter().all(Value::is_mapping) => exclusions,
-        Some(_) => return false,
-        None => &[],
-    };
-    !has_unexcluded_combination(&axes, exclusions, 0, &mut BTreeMap::new())
+    matches!(
+        static_matrix_job_count(matrix),
+        StaticMatrixJobCount::Known(0)
+    )
 }
 
 pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
@@ -47,141 +55,107 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
             .is_some_and(super::super::super::complete_expression);
     };
     match static_matrix_job_count(matrix) {
-        Some(count) => count <= 256,
-        None => true,
+        StaticMatrixJobCount::Known(count) => count <= MATRIX_JOB_LIMIT,
+        StaticMatrixJobCount::Dynamic => true,
+        StaticMatrixJobCount::Invalid => false,
     }
 }
 
-fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> Option<Vec<(String, Vec<Value>)>> {
-    let axes = mapping
-        .iter()
-        .filter(|(name, _)| !matches!(name.as_str(), Some("include" | "exclude")))
-        .map(|(name, values)| {
-            let name = name.as_str()?;
-            let values = values.as_sequence()?;
-            values
-                .iter()
-                .all(|value| !matches!(value, Value::Sequence(_)))
-                .then(|| (name.to_string(), values.clone()))
-        })
-        .collect::<Option<Vec<_>>>()?;
-    Some(axes)
-}
-
-fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> Option<usize> {
-    let axes = static_matrix_axes(mapping)?;
-    let exclusions = sequence_of_mappings(mapping.get("exclude"))?;
-    let includes = sequence_of_mappings(mapping.get("include"))?;
-    let mut values = BTreeMap::new();
-    let mut count = count_unexcluded(&axes, &exclusions, 0, &mut values, 257);
-    for include in includes {
-        values.clear();
-        if !has_applicable_combination(&axes, &exclusions, include, 0, &mut values) {
-            count = count.saturating_add(1).min(257);
-        }
-    }
-    Some(count)
-}
-
-fn sequence_of_mappings(value: Option<&Value>) -> Option<Vec<&serde_yaml::Mapping>> {
-    match value {
-        Some(Value::Sequence(items)) => items.iter().map(Value::as_mapping).collect(),
-        Some(_) => None,
-        None => Some(Vec::new()),
-    }
-}
-
-fn count_unexcluded(
-    axes: &[(String, Vec<Value>)],
-    exclusions: &[&serde_yaml::Mapping],
-    index: usize,
-    values: &mut BTreeMap<String, Value>,
-    limit: usize,
-) -> usize {
-    if exclusions
-        .iter()
-        .any(|exclusion| exclusion_matches_assigned(exclusion, values))
-    {
-        return 0;
-    }
-    let Some((name, choices)) = axes.get(index) else {
-        return usize::from(!axes.is_empty());
-    };
-    let mut count = 0_usize;
-    for choice in choices {
-        values.insert(name.clone(), choice.clone());
-        count += count_unexcluded(axes, exclusions, index + 1, values, limit - count);
-        if count >= limit {
-            break;
-        }
-    }
-    values.remove(name);
-    count
-}
-
-fn exclusion_matches_assigned(
-    exclusion: &serde_yaml::Mapping,
-    values: &BTreeMap<String, Value>,
-) -> bool {
-    exclusion.iter().all(|(name, value)| {
-        name.as_str()
-            .and_then(|name| values.get(name))
-            .is_some_and(|actual| actual == value)
-    })
-}
-
-fn has_applicable_combination(
-    axes: &[(String, Vec<Value>)],
-    exclusions: &[&serde_yaml::Mapping],
-    include: &serde_yaml::Mapping,
-    index: usize,
-    values: &mut BTreeMap<String, Value>,
-) -> bool {
-    if exclusions
-        .iter()
-        .any(|exclusion| exclusion_matches_assigned(exclusion, values))
-    {
-        return false;
-    }
-    let Some((name, choices)) = axes.get(index) else {
-        return !axes.is_empty();
-    };
-    let included_value = include.get(name);
-    for choice in choices {
-        if included_value.is_some_and(|included| included != choice) {
+fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
+    let mut axes = Vec::new();
+    let mut dynamic = false;
+    for (name, values) in mapping {
+        if matches!(name.as_str(), Some("include" | "exclude")) {
             continue;
         }
-        values.insert(name.clone(), choice.clone());
-        let applicable = has_applicable_combination(axes, exclusions, include, index + 1, values);
-        values.remove(name);
-        if applicable {
-            return true;
+        let Some(name) = name.as_str() else {
+            return StaticMatrixAxes::Invalid;
+        };
+        match values {
+            Value::Sequence(values)
+                if values
+                    .iter()
+                    .all(|value| !matches!(value, Value::Sequence(_))) =>
+            {
+                axes.push((name.to_string(), values.clone()));
+            }
+            Value::String(expression) if super::super::super::complete_expression(expression) => {
+                dynamic = true;
+            }
+            Value::Sequence(_) => dynamic = true,
+            _ => return StaticMatrixAxes::Invalid,
         }
     }
-    false
+    if dynamic {
+        StaticMatrixAxes::Dynamic
+    } else {
+        StaticMatrixAxes::Static(axes)
+    }
 }
 
-fn has_unexcluded_combination(
-    axes: &[(String, Vec<Value>)],
-    exclusions: &[Value],
-    index: usize,
-    values: &mut BTreeMap<String, Value>,
-) -> bool {
-    let Some((name, choices)) = axes.get(index) else {
-        return !exclusions.iter().any(|exclusion| {
-            exclusion.as_mapping().is_some_and(|fields| {
-                fields.iter().all(|(name, value)| {
-                    name.as_str()
-                        .and_then(|name| values.get(name))
-                        .is_some_and(|actual| actual == value)
-                })
-            })
-        });
+fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCount {
+    let axes = match static_matrix_axes(mapping) {
+        StaticMatrixAxes::Static(axes) => axes,
+        StaticMatrixAxes::Dynamic => return StaticMatrixJobCount::Dynamic,
+        StaticMatrixAxes::Invalid => return StaticMatrixJobCount::Invalid,
     };
-    choices.iter().any(|choice| {
-        values.insert(name.clone(), choice.clone());
-        has_unexcluded_combination(axes, exclusions, index + 1, values)
-    })
+    let exclusions = match static_mappings(mapping.get("exclude")) {
+        StaticMappings::Static(mappings) => mappings,
+        StaticMappings::Dynamic => return StaticMatrixJobCount::Dynamic,
+        StaticMappings::Invalid => return StaticMatrixJobCount::Invalid,
+    };
+    let includes = match static_mappings(mapping.get("include")) {
+        StaticMappings::Static(mappings) => mappings,
+        StaticMappings::Dynamic => return StaticMatrixJobCount::Dynamic,
+        StaticMappings::Invalid => return StaticMatrixJobCount::Invalid,
+    };
+    let mut values = BTreeMap::new();
+    let mut states_remaining = STATIC_MATRIX_ENUMERATION_LIMIT;
+    let Some(mut count) = count_unexcluded(
+        &axes,
+        &exclusions,
+        0,
+        &mut values,
+        MATRIX_JOB_LIMIT + 1,
+        &mut states_remaining,
+    ) else {
+        return StaticMatrixJobCount::Invalid;
+    };
+    for include in includes {
+        if count > MATRIX_JOB_LIMIT {
+            break;
+        }
+        values.clear();
+        let Some(applicable) = has_applicable_combination(
+            &axes,
+            &exclusions,
+            include,
+            0,
+            &mut values,
+            &mut states_remaining,
+        ) else {
+            return StaticMatrixJobCount::Invalid;
+        };
+        if !applicable {
+            count = count.saturating_add(1).min(MATRIX_JOB_LIMIT + 1);
+        }
+    }
+    StaticMatrixJobCount::Known(count)
+}
+
+fn static_mappings(value: Option<&Value>) -> StaticMappings<'_> {
+    match value {
+        Some(Value::Sequence(items)) => items
+            .iter()
+            .map(Value::as_mapping)
+            .collect::<Option<_>>()
+            .map_or(StaticMappings::Invalid, StaticMappings::Static),
+        Some(Value::String(expression)) if super::super::super::complete_expression(expression) => {
+            StaticMappings::Dynamic
+        }
+        Some(_) => StaticMappings::Invalid,
+        None => StaticMappings::Static(Vec::new()),
+    }
 }
 
 #[cfg(test)]
