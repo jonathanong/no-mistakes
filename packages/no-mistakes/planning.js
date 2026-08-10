@@ -1,6 +1,6 @@
 "use strict";
 
-const native = require("./bin/no-mistakes.node");
+const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 
 async function callJson(fn, options) {
   return JSON.parse(await fn(JSON.stringify(options || {})));

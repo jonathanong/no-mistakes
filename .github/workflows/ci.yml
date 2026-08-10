@@ -187,14 +187,32 @@ jobs:
           node-version: 24
           cache: npm
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        with:
+          toolchain: "1.96.0"
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+
       - name: Install npm dependencies
         run: npm ci --ignore-scripts
 
       - name: Build JavaScript packages
         run: npm run build:js
 
+      - name: Build N-API addon
+        run: |
+          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
+          cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
+
       - name: Run npm tests
         run: npm run test:ci --ignore-scripts
+
+      - name: Run real N-API API test
+        run: >-
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
+          npx vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
 
       - name: Upload JavaScript coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
