@@ -26,6 +26,19 @@ fn uncertain_or_malformed_matrices_fail_open() {
 }
 
 #[test]
+fn dynamic_matrix_requires_one_nonempty_expression() {
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'"
+    )));
+    for yaml in [
+        "strategy:\n  matrix: '${{ }}'",
+        "strategy:\n  matrix: '${{ true }}${{ false }}'",
+    ] {
+        assert!(!matrix_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn static_matrix_shape_enforces_the_github_job_limit() {
     assert!(matrix_shape_valid(&job(
         "strategy:\n  matrix:\n    a: [1, 2]\n    b: [3, 4]"

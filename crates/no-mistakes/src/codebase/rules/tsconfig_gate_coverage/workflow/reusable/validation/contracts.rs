@@ -4,11 +4,11 @@ pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
     let Some(on) = on else {
         return true;
     };
-    if !has_workflow_call_trigger(on) {
-        return true;
-    }
     if !workflow_call_trigger_keys_valid(on) {
         return false;
+    }
+    if !has_workflow_call_trigger(on) {
+        return true;
     }
     let Some(contract) = on.get("workflow_call") else {
         return true;
@@ -37,7 +37,7 @@ fn has_workflow_call_trigger(on: &Value) -> bool {
 
 fn workflow_call_trigger_keys_valid(on: &Value) -> bool {
     match on {
-        Value::String(_) => true,
+        Value::String(trigger) => KNOWN_WORKFLOW_TRIGGERS.contains(&trigger.as_str()),
         Value::Sequence(triggers) => triggers.iter().all(|trigger| {
             trigger
                 .as_str()

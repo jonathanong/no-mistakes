@@ -77,3 +77,17 @@ fn malformed_secret_bindings_are_rejected() {
         assert!(!callee_secrets_valid(&contract, &call_job), "{source}");
     }
 }
+
+#[test]
+fn malformed_complete_expressions_do_not_bypass_input_types() {
+    for value in ["${{ }}", "${{ true }}${{ false }}"] {
+        assert!(!binding_matches_type(
+            &Value::String(value.to_string()),
+            WorkflowCallInputType::Boolean
+        ));
+    }
+    assert!(binding_matches_type(
+        &Value::String("${{ needs.detect.outputs.enabled }}".to_string()),
+        WorkflowCallInputType::Boolean
+    ));
+}

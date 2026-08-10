@@ -59,6 +59,7 @@ fn call_bindings_require_unique_scalar_names() {
         "with:\n  arg: []",
         "with:\n  Name: yes\n  name: no",
         "secrets: all",
+        "secrets: INHERIT",
         "secrets: []",
         "secrets:\n  token: null",
         "secrets:\n  Token: one\n  token: two",

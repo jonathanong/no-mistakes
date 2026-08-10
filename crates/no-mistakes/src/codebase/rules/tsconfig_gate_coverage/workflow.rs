@@ -20,6 +20,18 @@ fn normalized_job_id(value: &Value) -> Option<String> {
         .map(|job_id| job_id.to_lowercase())
 }
 
+fn complete_expression(value: &str) -> bool {
+    let value = value.trim();
+    let Some(body) = value
+        .strip_prefix("${{")
+        .and_then(|body| body.strip_suffix("}}"))
+    else {
+        return false;
+    };
+    let body = body.trim();
+    !body.is_empty() && !body.contains("${{") && !body.contains("}}")
+}
+
 pub(super) fn ci_typechecked_projects_with_stats(
     workflows: &ParsedWorkflowSet,
     tracked: &BTreeSet<String>,

@@ -42,17 +42,14 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
         return true;
     };
     let Some(matrix) = matrix.as_mapping() else {
-        return matrix.as_str().is_some_and(is_complete_expression);
+        return matrix
+            .as_str()
+            .is_some_and(super::super::super::complete_expression);
     };
     match static_matrix_job_count(matrix) {
         Some(count) => count <= 256,
         None => true,
     }
-}
-
-fn is_complete_expression(value: &str) -> bool {
-    let value = value.trim();
-    value.starts_with("${{") && value.ends_with("}}")
 }
 
 fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> Option<Vec<(String, Vec<Value>)>> {

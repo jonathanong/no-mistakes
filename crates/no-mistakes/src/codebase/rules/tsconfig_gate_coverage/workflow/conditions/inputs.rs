@@ -164,7 +164,7 @@ fn binding_matches_type(value: &Value, input_type: WorkflowCallInputType) -> boo
 }
 
 fn is_complete_expression(value: &str) -> bool {
-    value.starts_with("${{") && value.ends_with("}}")
+    super::super::complete_expression(value)
 }
 
 fn binding_bool(value: &Value, parent: &InputState) -> StaticBool {

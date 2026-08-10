@@ -49,7 +49,7 @@ fn action_target_valid(target: &str) -> bool {
 pub(crate) fn call_bindings_shape_valid(job: &Value) -> bool {
     binding_mapping_valid(job.get("with"))
         && match job.get("secrets") {
-            Some(Value::String(value)) => value.eq_ignore_ascii_case("inherit"),
+            Some(Value::String(value)) => value == "inherit",
             value => binding_mapping_valid(value),
         }
 }

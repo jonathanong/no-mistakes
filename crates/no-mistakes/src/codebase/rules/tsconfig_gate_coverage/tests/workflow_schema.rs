@@ -84,6 +84,30 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             ".github/workflows/missing-steps.yml",
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project missing-steps-sibling/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/ordinary-misspelled-trigger-caller.yml",
+            "on:\n  push:\n  pussh:\njobs:\n  typecheck:\n    uses: ./.github/workflows/ordinary-misspelled-trigger-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project ordinary-misspelled-trigger-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/ordinary-misspelled-trigger-callee.yml",
+            "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project ordinary-misspelled-trigger/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/uppercase-inherit.yml",
+            "on: push\njobs:\n  remote:\n    uses: owner/repository/.github/workflows/typecheck.yml@main\n    secrets: INHERIT\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project uppercase-inherit-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/empty-expression-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/malformed-expression-callee.yml\n    with:\n      enabled: '${{ }}'\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project empty-expression-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/concatenated-expression-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/malformed-expression-callee.yml\n    with:\n      enabled: '${{ true }}${{ false }}'\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project concatenated-expression-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/malformed-expression-callee.yml",
+            "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        required: true\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-expression-callee/tsconfig.json\n",
+        ),
     ];
     let tracked = [
         "declaration",
@@ -103,6 +127,12 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "malformed-action",
         "malformed-action-sibling",
         "missing-steps-sibling",
+        "ordinary-misspelled-trigger",
+        "ordinary-misspelled-trigger-sibling",
+        "uppercase-inherit-sibling",
+        "empty-expression-sibling",
+        "concatenated-expression-sibling",
+        "malformed-expression-callee",
     ]
     .into_iter()
     .map(|project| format!("{project}/tsconfig.json"))
