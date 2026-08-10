@@ -1,5 +1,6 @@
 use super::conditions::{
-    callee_inputs, direct_inputs, statically_not_enforcing, statically_skipped_jobs, InputState,
+    callee_inputs, callee_secrets_valid, direct_inputs, statically_not_enforcing,
+    statically_skipped_jobs, InputState,
 };
 use super::runtime::{effective_shell, has_static_runnable_runs_on};
 use super::{effective_working_directory, ParsedWorkflowSet};
@@ -56,15 +57,20 @@ pub(super) fn collect_ci_projects(
             continue;
         }
         let triggers = CompiledTriggers::new(&trigger_model);
-        let inputs = direct_inputs(document.call_contract.as_ref());
-        projects.extend(scan_activation(
+        let Some(inputs) = direct_inputs(document.call_contract.as_ref()) else {
+            continue;
+        };
+        if let Some(activation_projects) = scan_activation(
             path,
             document,
             &triggers,
             &inputs,
             &BTreeSet::new(),
+            1,
             &context,
-        ));
+        ) {
+            projects.extend(activation_projects);
+        }
     }
     projects
 }
@@ -75,17 +81,18 @@ fn scan_activation(
     triggers: &CompiledTriggers,
     inputs: &InputState,
     active_paths: &BTreeSet<String>,
+    depth: usize,
     context: &ScanContext<'_>,
-) -> BTreeSet<String> {
+) -> Option<BTreeSet<String>> {
     if active_paths.contains(path) {
-        return BTreeSet::new();
+        return None;
     }
     let mut active_paths = active_paths.clone();
     active_paths.insert(path.to_string());
     let workflow_cwd = effective_working_directory(document.value, Some(".".to_string()));
     let workflow_shell = effective_shell(document.value, None);
     let Some(jobs) = document.value.get("jobs").and_then(Value::as_mapping) else {
-        return BTreeSet::new();
+        return Some(BTreeSet::new());
     };
     let skipped_jobs = statically_skipped_jobs(jobs, inputs);
     let mut projects = BTreeSet::new();
@@ -103,23 +110,22 @@ fn scan_activation(
                 continue;
             }
             let callee_path = edge.to.as_deref().unwrap_or_default();
-            let Some(callee) = context.workflows.get(callee_path) else {
-                continue;
-            };
-            let Some(contract) = callee.call_contract.as_ref() else {
-                continue;
-            };
-            let Some(callee_inputs) = callee_inputs(Some(contract), job, inputs) else {
-                continue;
-            };
-            projects.extend(scan_activation(
+            let callee = context.workflows.get(callee_path)?;
+            let contract = callee.call_contract.as_ref()?;
+            if depth == 10 || !callee_secrets_valid(contract, job) {
+                return None;
+            }
+            let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
+            let callee_projects = scan_activation(
                 callee_path,
                 callee,
                 triggers,
                 &callee_inputs,
                 &active_paths,
+                depth + 1,
                 context,
-            ));
+            )?;
+            projects.extend(callee_projects);
             continue;
         }
         if !has_static_runnable_runs_on(job) {
@@ -134,5 +140,5 @@ fn scan_activation(
             context,
         ));
     }
-    projects
+    Some(projects)
 }

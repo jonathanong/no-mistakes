@@ -203,11 +203,101 @@ fn ci_scanner_requires_one_complete_acyclic_enforcing_reusable_path() {
 
     assert_eq!(
         ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
-        BTreeSet::from([
-            "cyclic/tsconfig.json".to_string(),
-            "valid/tsconfig.json".to_string(),
-        ])
+        BTreeSet::from(["valid/tsconfig.json".to_string()])
     );
+}
+
+#[test]
+fn ci_scanner_requires_valid_case_insensitive_reusable_call_contracts() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/valid.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with:\n      ENABLED: true\n    secrets:\n      token: '${{ secrets.TOKEN }}'\n",
+            ),
+            workflow_document(
+                ".github/workflows/missing-required.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    secrets: inherit\n",
+            ),
+            workflow_document(
+                ".github/workflows/unknown-secret.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with:\n      enabled: true\n    secrets:\n      other: '${{ secrets.TOKEN }}'\n",
+            ),
+            workflow_document(
+                ".github/workflows/ambiguous-input.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with:\n      enabled: true\n      ENABLED: true\n    secrets: inherit\n",
+            ),
+            workflow_document(
+                ".github/workflows/non-scalar-secret.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with:\n      enabled: true\n    secrets:\n      token: [not-a-secret]\n",
+            ),
+            workflow_document(
+                ".github/workflows/required-default.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/required-default-callee.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/input-collision.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/input-collision-callee.yml\n    with:\n      enabled: true\n",
+            ),
+            workflow_document(
+                ".github/workflows/secret-collision.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/secret-collision-callee.yml\n    secrets: inherit\n",
+            ),
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on:\n  workflow_call:\n    inputs:\n      Enabled:\n        type: boolean\n        required: true\n    secrets:\n      Token:\n        required: true\njobs:\n  typecheck:\n    if: inputs.eNaBlEd\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/required-default-callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        required: true\n        default: true\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project required-default/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/input-collision-callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      Enabled:\n        type: boolean\n      enabled:\n        type: boolean\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project input-collision/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/secret-collision-callee.yml",
+                "on:\n  workflow_call:\n    secrets:\n      Token:\n        required: true\n      token:\n        required: true\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project secret-collision/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "input-collision/tsconfig.json".to_string(),
+        "required-default/tsconfig.json".to_string(),
+        "secret-collision/tsconfig.json".to_string(),
+        "valid/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from(["valid/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn ci_scanner_rejects_reusable_workflow_calls_beyond_ten_levels() {
+    let mut documents = vec![workflow_document(
+        ".github/workflows/root.yml",
+        "on: push\njobs:\n  call:\n    uses: ./.github/workflows/1.yml\n",
+    )];
+    for level in 1..=10 {
+        let jobs = if level == 10 {
+            "jobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project deep/tsconfig.json\n".to_string()
+        } else {
+            format!(
+                "jobs:\n  call:\n    uses: ./.github/workflows/{}.yml\n",
+                level + 1
+            )
+        };
+        documents.push(workflow_document(
+            &format!(".github/workflows/{level}.yml"),
+            &format!("on: workflow_call\n{jobs}"),
+        ));
+    }
+    let workflows = ParsedWorkflowSet { documents };
+    let tracked = BTreeSet::from(["deep/tsconfig.json".to_string()]);
+
+    assert!(ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)).is_empty());
 }
 
 #[test]
@@ -281,7 +371,11 @@ fn ci_scanner_validates_call_inputs_and_normalizes_boolean_condition_spacing() {
         documents: vec![
             workflow_document(
                 ".github/workflows/caller.yml",
-                "on: push\njobs:\n  valid:\n    uses: ./.github/workflows/valid.yml\n    with:\n      enabled: false\n  quoted-mismatch:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: 'true'\n  missing-required:\n    uses: ./.github/workflows/strict.yml\n  nonmapping-with:\n    uses: ./.github/workflows/strict.yml\n    with: true\n  unknown-input:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: true\n      extra: true\n  invalid-default:\n    uses: ./.github/workflows/invalid-default.yml\n",
+                "on: push\njobs:\n  quoted-mismatch:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: 'true'\n  missing-required:\n    uses: ./.github/workflows/strict.yml\n  nonmapping-with:\n    uses: ./.github/workflows/strict.yml\n    with: true\n  unknown-input:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: true\n      extra: true\n  invalid-default:\n    uses: ./.github/workflows/invalid-default.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/valid-caller.yml",
+                "on: push\njobs:\n  valid:\n    uses: ./.github/workflows/valid.yml\n    with:\n      enabled: false\n",
             ),
             workflow_document(
                 ".github/workflows/valid.yml",

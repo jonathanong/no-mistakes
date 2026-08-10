@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod inputs;
 
-pub(super) use inputs::{callee_inputs, direct_inputs};
+pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -94,7 +94,7 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
                 _ => return StaticBool::Unknown,
             };
             let value = inputs
-                .get(name.trim())
+                .get(&name.trim().to_lowercase())
                 .copied()
                 .unwrap_or(StaticBool::Unknown)
                 .equals(expected);
@@ -103,7 +103,7 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
     }
     if let Some(name) = expression.strip_prefix("inputs.") {
         return inputs
-            .get(name.trim())
+            .get(&name.trim().to_lowercase())
             .copied()
             .unwrap_or(StaticBool::Unknown);
     }
@@ -113,7 +113,7 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
         .and_then(|operand| operand.strip_prefix("inputs."))
     {
         return inputs
-            .get(name.trim())
+            .get(&name.trim().to_lowercase())
             .copied()
             .unwrap_or(StaticBool::Unknown)
             .negate();
