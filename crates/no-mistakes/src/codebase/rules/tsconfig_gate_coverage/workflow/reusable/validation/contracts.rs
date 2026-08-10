@@ -1,13 +1,18 @@
 use serde_yaml::Value;
 
+use super::super::super::expressions::interpolated_expression_valid;
+
+mod triggers;
+
+use triggers::{
+    has_workflow_call_trigger, workflow_call_trigger_keys_valid, workflow_trigger_configs_valid,
+};
+
 pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
     let Some(on) = on else {
         return true;
     };
-    if !workflow_call_trigger_keys_valid(on) {
-        return false;
-    }
-    if !workflow_trigger_configs_valid(on) {
+    if !workflow_call_trigger_keys_valid(on) || !workflow_trigger_configs_valid(on) {
         return false;
     }
     if !has_workflow_call_trigger(on) {
@@ -26,96 +31,6 @@ pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
         && declaration_group_valid(contract.get("secrets"), secret_declaration_valid)
         && declaration_group_valid(contract.get("outputs"), output_declaration_valid)
 }
-
-fn workflow_trigger_configs_valid(on: &Value) -> bool {
-    match on {
-        Value::Mapping(triggers) => triggers.iter().all(|(trigger, config)| {
-            if trigger.as_str() == Some("schedule") {
-                return schedule_config_valid(config);
-            }
-            matches!(config, Value::Null | Value::Mapping(_))
-        }),
-        _ => true,
-    }
-}
-
-fn schedule_config_valid(config: &Value) -> bool {
-    config.as_sequence().is_some_and(|entries| {
-        !entries.is_empty()
-            && entries.iter().all(|entry| {
-                entry.as_mapping().is_some_and(|entry| {
-                    entry.len() == 1
-                        && entry
-                            .get("cron")
-                            .and_then(Value::as_str)
-                            .is_some_and(|cron| !cron.trim().is_empty())
-                })
-            })
-    })
-}
-
-fn has_workflow_call_trigger(on: &Value) -> bool {
-    match on {
-        Value::String(trigger) => trigger == "workflow_call",
-        Value::Sequence(triggers) => triggers
-            .iter()
-            .any(|trigger| trigger.as_str() == Some("workflow_call")),
-        Value::Mapping(triggers) => triggers.get("workflow_call").is_some(),
-        _ => false,
-    }
-}
-
-fn workflow_call_trigger_keys_valid(on: &Value) -> bool {
-    match on {
-        Value::String(trigger) => KNOWN_WORKFLOW_TRIGGERS.contains(&trigger.as_str()),
-        Value::Sequence(triggers) => triggers.iter().all(|trigger| {
-            trigger
-                .as_str()
-                .is_some_and(|trigger| KNOWN_WORKFLOW_TRIGGERS.contains(&trigger))
-        }),
-        Value::Mapping(triggers) => triggers.keys().all(|key| {
-            key.as_str()
-                .is_some_and(|trigger| KNOWN_WORKFLOW_TRIGGERS.contains(&trigger))
-        }),
-        _ => false,
-    }
-}
-
-const KNOWN_WORKFLOW_TRIGGERS: &[&str] = &[
-    "branch_protection_rule",
-    "check_run",
-    "check_suite",
-    "create",
-    "delete",
-    "deployment",
-    "deployment_status",
-    "discussion",
-    "discussion_comment",
-    "fork",
-    "gollum",
-    "image_version",
-    "issue_comment",
-    "issues",
-    "label",
-    "merge_group",
-    "milestone",
-    "page_build",
-    "public",
-    "pull_request",
-    "pull_request_review",
-    "pull_request_review_comment",
-    "pull_request_target",
-    "push",
-    "registry_package",
-    "release",
-    "repository_dispatch",
-    "schedule",
-    "status",
-    "watch",
-    "workflow_call",
-    "workflow_dispatch",
-    "workflow_run",
-];
 
 fn declaration_group_valid(
     declarations: Option<&Value>,
@@ -149,7 +64,10 @@ fn secret_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
 
 fn output_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
     only_keys(declaration, &["value", "description"])
-        && declaration.get("value").is_some_and(Value::is_string)
+        && declaration
+            .get("value")
+            .and_then(Value::as_str)
+            .is_some_and(interpolated_expression_valid)
         && string_field_valid(declaration, "description")
 }
 

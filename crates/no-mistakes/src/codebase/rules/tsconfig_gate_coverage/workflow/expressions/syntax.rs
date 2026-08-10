@@ -61,10 +61,12 @@ impl<'a> ExpressionSyntax<'a> {
             Token::Number => Some(StaticExpressionType::Number),
             Token::String => Some(StaticExpressionType::String),
             Token::Null => Some(StaticExpressionType::Null),
-            Token::Identifier => {
-                if self.take(Token::LeftParen) {
-                    self.parse_arguments()?;
-                }
+            Token::Identifier => self.parse_accessors(),
+            Token::Function(function) => {
+                self.take(Token::LeftParen).then_some(())?;
+                function
+                    .accepts_argument_count(self.parse_arguments()?)
+                    .then_some(())?;
                 self.parse_accessors()
             }
             Token::LeftParen => {
@@ -92,14 +94,16 @@ impl<'a> ExpressionSyntax<'a> {
         }
     }
 
-    fn parse_arguments(&mut self) -> Option<()> {
+    fn parse_arguments(&mut self) -> Option<usize> {
         if self.take(Token::RightParen) {
-            return Some(());
+            return Some(0);
         }
+        let mut count = 0;
         loop {
             self.parse_or()?;
+            count += 1;
             if self.take(Token::RightParen) {
-                return Some(());
+                return Some(count);
             }
             if !self.take(Token::Comma) {
                 return None;

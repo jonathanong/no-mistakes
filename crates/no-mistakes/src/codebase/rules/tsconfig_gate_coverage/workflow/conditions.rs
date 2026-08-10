@@ -3,8 +3,13 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod contracts;
 mod inputs;
+mod literals;
 
 pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
+use literals::{
+    continues_after_skipped_need, hexadecimal_bool, number_bool, quoted_string_bool,
+    strip_expression,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -19,8 +24,9 @@ pub(super) type InputState = BTreeMap<String, StaticBool>;
 pub(super) fn statically_skipped_jobs(
     jobs: &serde_yaml::Mapping,
     inputs: &InputState,
+    initial_skipped: &BTreeSet<String>,
 ) -> BTreeSet<String> {
-    let mut skipped = BTreeSet::new();
+    let mut skipped = initial_skipped.clone();
     loop {
         let mut changed = false;
         for (job_id, job) in jobs {
@@ -42,17 +48,6 @@ pub(super) fn statically_skipped_jobs(
     }
 }
 
-fn continues_after_skipped_need(job: &Value) -> bool {
-    job.get("if")
-        .and_then(Value::as_str)
-        .is_some_and(|expression| {
-            matches!(
-                strip_expression(expression.trim()),
-                "always()" | "!cancelled()"
-            )
-        })
-}
-
 pub(super) fn statically_not_enforcing(value: &Value, inputs: &InputState) -> bool {
     static_bool(value.get("if"), inputs) == StaticBool::False
         || static_bool(value.get("continue-on-error"), inputs) == StaticBool::True
@@ -61,25 +56,34 @@ pub(super) fn statically_not_enforcing(value: &Value, inputs: &InputState) -> bo
 fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticBool {
     match value {
         Some(Value::Bool(value)) => StaticBool::from(*value),
+        Some(Value::Number(value)) => number_bool(value.as_f64()),
+        Some(Value::Null) => StaticBool::False,
         Some(Value::String(expression)) => expression_bool(expression, inputs),
         _ => StaticBool::Unknown,
     }
 }
 
 fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
-    match strip_expression(expression.trim()) {
-        "false" => StaticBool::False,
-        "true" => StaticBool::True,
-        expression => resolve_input_expression(expression, inputs),
+    let expression = strip_expression(expression.trim());
+    if expression.is_empty() || expression.eq_ignore_ascii_case("false") {
+        return StaticBool::False;
     }
-}
-
-fn strip_expression(expression: &str) -> &str {
-    expression
-        .strip_prefix("${{")
-        .and_then(|body| body.strip_suffix("}}"))
-        .map(str::trim)
-        .unwrap_or(expression)
+    if expression.eq_ignore_ascii_case("true") {
+        return StaticBool::True;
+    }
+    if expression.eq_ignore_ascii_case("null") {
+        return StaticBool::False;
+    }
+    if let Some(value) = quoted_string_bool(expression) {
+        return value;
+    }
+    if let Some(value) = hexadecimal_bool(expression) {
+        return value;
+    }
+    if let Ok(value) = expression.parse::<f64>() {
+        return number_bool(Some(value));
+    }
+    resolve_input_expression(expression, inputs)
 }
 
 fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool {

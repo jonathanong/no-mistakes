@@ -36,13 +36,63 @@ fn step_jobs_reject_unknown_keys() {
         "runs-on: ubuntu-latest\nsteps:\n  - run: echo valid\ntimeout-minutes: 5",
     )
     .unwrap();
-    assert!(step_job_shape_valid(&valid));
+    assert!(jobs::step_job_shape_valid(&valid));
 
     let unknown = serde_yaml::from_str::<Value>(
         "runs-on: ubuntu-latest\nsteps:\n  - run: echo invalid\nbogus: true",
     )
     .unwrap();
-    assert!(!step_job_shape_valid(&unknown));
+    assert!(!jobs::step_job_shape_valid(&unknown));
+}
+
+#[test]
+fn job_schema_validates_run_and_reusable_call_field_values() {
+    let run_job = serde_yaml::from_str::<Value>(
+        "runs-on: [self-hosted, linux]\npermissions:\n  contents: read\nenv: {NODE_ENV: test}\ndefaults:\n  run: {shell: bash}\nconcurrency: {group: checks, cancel-in-progress: false}\noutputs: {result: '${{ steps.run.outputs.result }}'}\nenvironment: {name: staging, url: 'https://example.test'}\ntimeout-minutes: 5\ncontinue-on-error: false\ncontainer:\n  image: node:22\n  credentials: {username: octo, password: '${{ secrets.TOKEN }}'}\n  env: {CI: true}\n  ports: [8080]\n  volumes: ['/data']\n  options: --cpus 1\nservices:\n  postgres:\n    image: postgres:16\n    env: {POSTGRES_PASSWORD: postgres}\nstrategy:\n  fail-fast: false\n  max-parallel: 2\n  matrix: {node: [22]}\nsteps:\n  - id: run\n    run: echo ok",
+    )
+    .unwrap();
+    assert!(scan_job_shape_valid(&run_job));
+
+    let reusable_job = serde_yaml::from_str::<Value>(
+        "name: checks\nuses: ./.github/workflows/checks.yml\nwith: {node: 22}\nsecrets: inherit\npermissions: read-all\nconcurrency: checks\nstrategy:\n  matrix: {node: [22]}",
+    )
+    .unwrap();
+    assert!(scan_job_shape_valid(&reusable_job));
+
+    let mixed_expressions = serde_yaml::from_str::<Value>(
+        "name: check ${{ github.ref }}\nruns-on: ubuntu-${{ matrix.version }}\nenv: {REF: 'refs/${{ github.ref_name }}'}\noutputs: {result: 'result-${{ steps.run.outputs.value }}'}\nenvironment: {name: 'preview-${{ github.ref_name }}'}\ncontainer: 'node:${{ matrix.node }}'\nservices: {postgres: 'postgres:${{ matrix.postgres }}'}\nsteps:\n  - name: run ${{ github.ref_name }}\n    working-directory: app/${{ matrix.package }}\n    shell: bash\n    run: tsc --noEmit --project ${{ matrix.project }}",
+    )
+    .unwrap();
+    assert!(scan_job_shape_valid(&mixed_expressions));
+
+    for yaml in [
+        "runs-on: true\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\npermissions: bogus\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nenv: [invalid]\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nenv: {}\nsteps:\n  - run: tsc --noEmit",
+        "runs-on: ubuntu-latest\ndefaults: {run: {shell: []}}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nconcurrency: {group: []}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\noutputs: {result: true}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\noutputs: {}\nsteps:\n  - run: tsc --noEmit",
+        "runs-on: ubuntu-latest\nenvironment: {url: 'https://example.test'}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ncontainer: {image: node:22, ports: [null]}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nservices: {postgres: {image: postgres:16, volumes: [false]}}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nservices: {}\nsteps:\n  - run: tsc --noEmit",
+        "runs-on: ubuntu-latest\nstrategy: {max-parallel: 0}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nstrategy: {}\nsteps:\n  - run: tsc --noEmit",
+        "runs-on: ubuntu-latest\nsteps:\n  - env: {}\n    run: tsc --noEmit",
+        "runs-on: ubuntu-latest\nsteps:\n  - run: 'tsc --noEmit ${{ }}'",
+        "runs-on: ubuntu-latest\nenv: {REF: '${{ }}'}\nsteps:\n  - run: tsc --noEmit",
+        "runs-on: ubuntu-latest\noutputs: {result: '${{ }}'}\nsteps:\n  - run: tsc --noEmit",
+        "runs-on: ubuntu-latest\ncontainer: 'node:${{ }}'\nsteps:\n  - run: tsc --noEmit",
+        "uses: ./.github/workflows/checks.yml\nwith: {ref: '${{ }}'}",
+        "uses: 1",
+        "uses: ./.github/workflows/checks.yml\npermissions: bogus",
+        "uses: ./.github/workflows/checks.yml\nconcurrency: {group: []}",
+    ] {
+        let job = serde_yaml::from_str::<Value>(yaml).unwrap();
+        assert!(!scan_job_shape_valid(&job), "{yaml}");
+    }
 }
 
 #[test]

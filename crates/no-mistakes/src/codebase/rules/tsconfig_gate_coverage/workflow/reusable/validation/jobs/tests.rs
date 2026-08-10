@@ -1,4 +1,5 @@
 use super::*;
+use serde_yaml::Value;
 
 fn job(yaml: &str) -> Value {
     serde_yaml::from_str(yaml).unwrap()
@@ -30,6 +31,7 @@ fn steps_require_known_keys_and_matching_value_shapes() {
     for yaml in [
         "steps:\n  - name: run\n    id: run\n    if: true\n    run: echo ok\n    working-directory: app\n    shell: bash\n    env: {NODE_ENV: test}\n    continue-on-error: false\n    timeout-minutes: 5",
         "steps:\n  - name: action\n    id: action\n    if: '${{ always() }}'\n    uses: actions/checkout@v4\n    with: {fetch-depth: 0}\n    env: {NODE_ENV: test}\n    continue-on-error: '${{ false }}'\n    timeout-minutes: '${{ inputs.timeout }}'",
+        "steps:\n  - name: action ${{ github.ref }}\n    uses: actions/checkout@v4\n    with: {ref: 'refs/${{ github.ref_name }}'}\n    env: {NODE_ENV: '${{ github.ref_name }}'}",
     ] {
         assert!(steps_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -39,6 +41,11 @@ fn steps_require_known_keys_and_matching_value_shapes() {
         "steps:\n  - if: []\n    run: echo invalid",
         "steps:\n  - if: '${{ }}'\n    run: echo invalid",
         "steps:\n  - if: 'true &&'\n    run: echo invalid",
+        "steps:\n  - if: '${{ contains() }}'\n    run: echo invalid",
+        "steps:\n  - if: '${{ always(1) }}'\n    run: echo invalid",
+        "steps:\n  - if: '${{ hashFiles() }}'\n    run: echo invalid",
+        "steps:\n  - run: 'echo ${{ }}'",
+        "steps:\n  - uses: actions/checkout@v4\n    with: {ref: '${{ }}'}",
         "steps:\n  - run: echo invalid\n    working-directory: true",
         "steps:\n  - run: echo invalid\n    shell: true",
         "steps:\n  - run: echo invalid\n    env: [invalid]",

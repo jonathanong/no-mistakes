@@ -1,4 +1,4 @@
-use super::{complete_expression_type, StaticExpressionType};
+use super::{complete_expression_type, interpolated_expression_valid, StaticExpressionType};
 
 #[test]
 fn parses_supported_github_expression_shapes() {
@@ -30,6 +30,56 @@ fn rejects_incomplete_or_concatenated_expressions() {
         "${{ 1.foo }}",
         "${{ true() }}",
         "${{ 'x'[0] }}",
+        "${{ arbitrary() }}",
+        "${{ github.ref() }}",
+    ] {
+        assert_eq!(complete_expression_type(expression), None, "{expression}");
+    }
+}
+
+#[test]
+fn accepts_only_documented_github_expression_functions_case_insensitively() {
+    for expression in [
+        "${{ CONTAINS('abc', 'a') }}",
+        "${{ startsWith(github.ref, 'refs/') }}",
+        "${{ endsWith(github.ref, '/main') }}",
+        "${{ format('{0}', github.ref) }}",
+        "${{ join(matrix.values, ',') }}",
+        "${{ toJSON(github) }}",
+        "${{ fromJSON(inputs.payload) }}",
+        "${{ hashFiles('**/package-lock.json') }}",
+        "${{ case(github.ref == 'refs/heads/main', 'production', 'development') }}",
+        "${{ success() }}",
+        "${{ failure() }}",
+        "${{ always() }}",
+        "${{ cancelled() }}",
+    ] {
+        assert!(
+            complete_expression_type(expression).is_some(),
+            "{expression}"
+        );
+    }
+}
+
+#[test]
+fn rejects_documented_functions_with_invalid_arities() {
+    for expression in [
+        "${{ contains() }}",
+        "${{ contains('only-one') }}",
+        "${{ startsWith('a', 'b', 'c') }}",
+        "${{ endsWith() }}",
+        "${{ format('format-without-replacement') }}",
+        "${{ join() }}",
+        "${{ join(one, two, three) }}",
+        "${{ toJSON() }}",
+        "${{ fromJSON() }}",
+        "${{ hashFiles() }}",
+        "${{ case(true, 'matched') }}",
+        "${{ case(true, 'matched', false, 'other') }}",
+        "${{ success(1) }}",
+        "${{ failure(1) }}",
+        "${{ always(1) }}",
+        "${{ cancelled(1) }}",
     ] {
         assert_eq!(complete_expression_type(expression), None, "{expression}");
     }
@@ -49,4 +99,24 @@ fn classifies_static_literals() {
         complete_expression_type("${{ true == false }}"),
         Some(StaticExpressionType::Boolean)
     );
+}
+
+#[test]
+fn validates_interpolated_expression_strings() {
+    for value in [
+        "literal name",
+        "build ${{ github.ref }}",
+        "${{ github.repository }} checks ${{ github.ref }}",
+        "${{ format('{0}}}', github.ref) }}",
+    ] {
+        assert!(interpolated_expression_valid(value), "{value}");
+    }
+    for value in [
+        "${{ }}",
+        "build ${{ github.ref",
+        "build github.ref }}",
+        "${{ arbitrary() }}",
+    ] {
+        assert!(!interpolated_expression_valid(value), "{value}");
+    }
 }

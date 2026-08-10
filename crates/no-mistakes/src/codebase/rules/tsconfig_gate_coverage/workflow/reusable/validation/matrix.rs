@@ -72,6 +72,7 @@ fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
             return StaticMatrixAxes::Invalid;
         };
         match values {
+            Value::Sequence(values) if values.is_empty() => return StaticMatrixAxes::Invalid,
             Value::Sequence(values)
                 if values
                     .iter()
@@ -95,20 +96,37 @@ fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
 
 fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCount {
     let axes = match static_matrix_axes(mapping) {
-        StaticMatrixAxes::Static(axes) => axes,
-        StaticMatrixAxes::Dynamic => return StaticMatrixJobCount::Dynamic,
+        axes @ (StaticMatrixAxes::Static(_) | StaticMatrixAxes::Dynamic) => axes,
         StaticMatrixAxes::Invalid => return StaticMatrixJobCount::Invalid,
     };
     let exclusions = match static_mappings(mapping.get("exclude")) {
-        StaticMappings::Static(mappings) => mappings,
-        StaticMappings::Dynamic => return StaticMatrixJobCount::Dynamic,
+        mappings @ (StaticMappings::Static(_) | StaticMappings::Dynamic) => mappings,
         StaticMappings::Invalid => return StaticMatrixJobCount::Invalid,
     };
     let includes = match static_mappings(mapping.get("include")) {
-        StaticMappings::Static(mappings) => mappings,
-        StaticMappings::Dynamic => return StaticMatrixJobCount::Dynamic,
+        mappings @ (StaticMappings::Static(_) | StaticMappings::Dynamic) => mappings,
         StaticMappings::Invalid => return StaticMatrixJobCount::Invalid,
     };
+    let (axes, exclusions, includes) = match (axes, exclusions, includes) {
+        (StaticMatrixAxes::Dynamic, _, _)
+        | (_, StaticMappings::Dynamic, _)
+        | (_, _, StaticMappings::Dynamic) => {
+            return StaticMatrixJobCount::Dynamic;
+        }
+        (
+            StaticMatrixAxes::Static(axes),
+            StaticMappings::Static(exclusions),
+            StaticMappings::Static(includes),
+        ) => (axes, exclusions, includes),
+        (StaticMatrixAxes::Invalid, _, _)
+        | (_, StaticMappings::Invalid, _)
+        | (_, _, StaticMappings::Invalid) => {
+            return StaticMatrixJobCount::Invalid;
+        }
+    };
+    if axes.is_empty() && includes.is_empty() {
+        return StaticMatrixJobCount::Invalid;
+    }
     let mut values = BTreeMap::new();
     let mut states_remaining = STATIC_MATRIX_ENUMERATION_LIMIT;
     let Some(mut count) = count_unexcluded(
@@ -145,11 +163,12 @@ fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCoun
 
 fn static_mappings(value: Option<&Value>) -> StaticMappings<'_> {
     match value {
-        Some(Value::Sequence(items)) => items
+        Some(Value::Sequence(items)) if !items.is_empty() => items
             .iter()
             .map(Value::as_mapping)
             .collect::<Option<_>>()
             .map_or(StaticMappings::Invalid, StaticMappings::Static),
+        Some(Value::Sequence(_)) => StaticMappings::Invalid,
         Some(Value::String(expression)) if super::super::super::complete_expression(expression) => {
             StaticMappings::Dynamic
         }

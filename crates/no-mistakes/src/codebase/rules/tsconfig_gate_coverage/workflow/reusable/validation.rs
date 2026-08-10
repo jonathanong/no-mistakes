@@ -7,44 +7,24 @@ use crate::codebase::workflow_topology::model::WorkflowCallEdge;
 mod contracts;
 mod jobs;
 mod matrix;
+mod workflow;
 
 pub(super) use contracts::workflow_call_shape_valid;
-pub(super) use jobs::{call_bindings_shape_valid, steps_shape_valid};
+pub(super) use jobs::{
+    call_bindings_shape_valid, reusable_call_job_shape_valid, steps_shape_valid,
+};
 pub(super) use matrix::zero_instance_matrix;
+pub(super) use workflow::workflow_shape_valid;
 
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {
     matrix::matrix_shape_valid(job)
         && steps_shape_valid(job)
         && jobs::condition_field_valid(job.get("if"))
-        && (job.get("uses").is_some() || step_job_shape_valid(job))
-}
-
-fn step_job_shape_valid(job: &Value) -> bool {
-    job.as_mapping().is_some_and(|mapping| {
-        mapping.keys().all(|key| {
-            key.as_str().is_some_and(|key| {
-                matches!(
-                    key,
-                    "name"
-                        | "permissions"
-                        | "needs"
-                        | "if"
-                        | "runs-on"
-                        | "environment"
-                        | "concurrency"
-                        | "outputs"
-                        | "env"
-                        | "defaults"
-                        | "steps"
-                        | "timeout-minutes"
-                        | "continue-on-error"
-                        | "container"
-                        | "services"
-                        | "strategy"
-                )
-            })
-        })
-    })
+        && if job.get("uses").is_some() {
+            reusable_call_job_shape_valid(job)
+        } else {
+            jobs::step_job_shape_valid(job)
+        }
 }
 
 pub(super) fn canonical_local_call_target(target: &str) -> bool {
@@ -128,27 +108,6 @@ fn canonical_workflow_filename(filename: &str) -> bool {
     !filename.is_empty()
         && !filename.contains(['/', '\\'])
         && (filename.ends_with(".yml") || filename.ends_with(".yaml"))
-}
-
-pub(super) fn reusable_call_job_shape_valid(job: &Value) -> bool {
-    job.as_mapping().is_some_and(|mapping| {
-        mapping.keys().all(|key| {
-            key.as_str().is_some_and(|key| {
-                matches!(
-                    key,
-                    "name"
-                        | "uses"
-                        | "with"
-                        | "secrets"
-                        | "strategy"
-                        | "needs"
-                        | "if"
-                        | "concurrency"
-                        | "permissions"
-                )
-            })
-        })
-    })
 }
 
 pub(super) fn valid_job_dependencies(jobs: &serde_yaml::Mapping) -> bool {

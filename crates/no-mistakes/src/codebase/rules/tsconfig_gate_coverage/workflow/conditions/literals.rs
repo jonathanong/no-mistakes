@@ -1,0 +1,53 @@
+use super::StaticBool;
+use serde_yaml::Value;
+
+pub(super) fn continues_after_skipped_need(job: &Value) -> bool {
+    job.get("if")
+        .and_then(Value::as_str)
+        .is_some_and(|expression| {
+            matches!(
+                strip_expression(expression.trim()),
+                "always()" | "!cancelled()"
+            )
+        })
+}
+
+pub(super) fn hexadecimal_bool(expression: &str) -> Option<StaticBool> {
+    let expression = expression.strip_prefix('-').unwrap_or(expression);
+    let digits = expression
+        .strip_prefix("0x")
+        .or_else(|| expression.strip_prefix("0X"))?;
+    if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+    Some(if digits.bytes().all(|byte| byte == b'0') {
+        StaticBool::False
+    } else {
+        StaticBool::TruthyNonBoolean
+    })
+}
+
+pub(super) fn number_bool(value: Option<f64>) -> StaticBool {
+    match value {
+        Some(0.0) => StaticBool::False,
+        Some(_) => StaticBool::TruthyNonBoolean,
+        None => StaticBool::Unknown,
+    }
+}
+
+pub(super) fn quoted_string_bool(expression: &str) -> Option<StaticBool> {
+    let body = expression.strip_prefix('\'')?.strip_suffix('\'')?;
+    Some(if body.is_empty() {
+        StaticBool::False
+    } else {
+        StaticBool::TruthyNonBoolean
+    })
+}
+
+pub(super) fn strip_expression(expression: &str) -> &str {
+    expression
+        .strip_prefix("${{")
+        .and_then(|body| body.strip_suffix("}}"))
+        .map(str::trim)
+        .unwrap_or(expression)
+}

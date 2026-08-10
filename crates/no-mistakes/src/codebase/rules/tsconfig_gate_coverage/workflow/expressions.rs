@@ -27,5 +27,46 @@ pub(super) fn condition_expression_valid(value: &str) -> bool {
     }
 }
 
+pub(super) fn interpolated_expression_valid(value: &str) -> bool {
+    let mut remaining = value;
+    loop {
+        let Some(start) = remaining.find("${{") else {
+            return !remaining.contains("}}");
+        };
+        let body = &remaining[start + "${{".len()..];
+        let Some(end) = interpolated_expression_end(body) else {
+            return false;
+        };
+        if lexer::tokenize(body[..end].trim())
+            .and_then(|tokens| syntax::parse(&tokens))
+            .is_none()
+        {
+            return false;
+        }
+        remaining = &body[end + "}}".len()..];
+    }
+}
+
+fn interpolated_expression_end(value: &str) -> Option<usize> {
+    let bytes = value.as_bytes();
+    let mut index = 0;
+    let mut in_string = false;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\'' => {
+                if in_string && bytes.get(index + 1) == Some(&b'\'') {
+                    index += 2;
+                } else {
+                    in_string = !in_string;
+                    index += 1;
+                }
+            }
+            b'}' if !in_string && bytes.get(index + 1) == Some(&b'}') => return Some(index),
+            _ => index += 1,
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests;

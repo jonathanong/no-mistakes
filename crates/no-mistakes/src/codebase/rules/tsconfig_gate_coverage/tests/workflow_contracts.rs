@@ -179,7 +179,15 @@ fn malformed_contract_containers_and_empty_matrices_earn_no_credit() {
         ),
         workflow(
             ".github/workflows/caller.yml",
-            "on: push\njobs:\n  empty-call:\n    strategy:\n      matrix:\n        target: []\n    uses: ./.github/workflows/callee.yml\n  internal-call:\n    uses: ./.github/workflows/internal.yml\n  include-restores:\n    strategy:\n      matrix:\n        target: []\n        include:\n          - target: linux\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project include-restores/tsconfig.json\n  dynamic-include:\n    strategy:\n      matrix:\n        target: []\n        include: '${{ fromJSON(needs.setup.outputs.matrix) }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-include/tsconfig.json\n  valid:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
+            "on: push\njobs:\n  empty-call:\n    strategy:\n      matrix:\n        target: []\n    uses: ./.github/workflows/callee.yml\n  internal-call:\n    uses: ./.github/workflows/internal.yml\n",
+        ),
+        workflow(
+            ".github/workflows/include-only.yml",
+            "on: push\njobs:\n  include-restores:\n    strategy:\n      matrix:\n        include:\n          - target: linux\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project include-restores/tsconfig.json\n  dynamic-include:\n    strategy:\n      matrix:\n        include: '${{ fromJSON(needs.setup.outputs.matrix) }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-include/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid.yml",
+            "on: push\njobs:\n  valid:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
         ),
         workflow(
             ".github/workflows/callee.yml",

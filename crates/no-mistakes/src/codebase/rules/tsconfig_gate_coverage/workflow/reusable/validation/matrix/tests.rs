@@ -6,7 +6,7 @@ fn job(yaml: &str) -> Value {
 
 #[test]
 fn dynamic_matrices_fail_open_and_malformed_shapes_fail_closed() {
-    assert!(zero_instance_matrix(&job("strategy:\n  matrix: {}")));
+    assert!(!zero_instance_matrix(&job("strategy:\n  matrix: {}")));
     assert!(!zero_instance_matrix(&job(
         "strategy:\n  matrix:\n    target:\n      - [nested]"
     )));
@@ -33,12 +33,31 @@ fn dynamic_matrices_fail_open_and_malformed_shapes_fail_closed() {
         "strategy:\n  matrix:\n    1: [ubuntu-latest]",
         "strategy:\n  matrix:\n    os: [ubuntu-latest]\n    include: true",
         "strategy:\n  matrix:\n    os: [ubuntu-latest]\n    exclude: [invalid]",
+        "strategy:\n  matrix: {}",
+        "strategy:\n  matrix:\n    target: []",
+        "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    include: []",
+        "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    exclude: []",
+        "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    include: []",
+        "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    include: true",
+        "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    exclude: []",
+        "strategy:\n  matrix:\n    target: '${{ fromJSON(needs.setup.outputs.targets) }}'\n    exclude: invalid",
     ] {
         assert!(!matrix_shape_valid(&job(yaml)), "{yaml}");
     }
     assert!(matrix_shape_valid(&job(
         "strategy:\n  matrix:\n    os: [ubuntu-latest]\n    include: '${{ fromJSON(needs.setup.outputs.include) }}'"
     )));
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix:\n    include:\n      - target: ubuntu-latest"
+    )));
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix:\n    include: '${{ fromJSON(needs.setup.outputs.include) }}'"
+    )));
+    let all_excluded = job(
+        "strategy:\n  matrix:\n    target: [ubuntu-latest]\n    exclude:\n      - target: ubuntu-latest",
+    );
+    assert!(matrix_shape_valid(&all_excluded));
+    assert!(zero_instance_matrix(&all_excluded));
 }
 
 #[test]
