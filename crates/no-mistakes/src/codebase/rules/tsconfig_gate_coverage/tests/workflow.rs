@@ -433,7 +433,7 @@ fn ci_scanner_validates_call_inputs_and_normalizes_boolean_condition_spacing() {
             ),
             workflow_document(
                 ".github/workflows/valid.yml",
-                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\njobs:\n  negated:\n    if: '${{ ! inputs.enabled }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project negated/tsconfig.json\n  compared:\n    if: '${{ inputs.enabled==false }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compared/tsconfig.json\n  invalid-comparison:\n    if: '${{ inputs.enabled == maybe }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-comparison/tsconfig.json\n  42:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-job/tsconfig.json\n",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\njobs:\n  negated:\n    if: '${{ ! inputs.enabled }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project negated/tsconfig.json\n  compared:\n    if: '${{ inputs.enabled==false }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compared/tsconfig.json\n  invalid-comparison:\n    if: '${{ inputs.enabled == maybe }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-comparison/tsconfig.json\n  numeric-job:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-job/tsconfig.json\n",
             ),
             workflow_document(
                 ".github/workflows/strict.yml",

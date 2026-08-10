@@ -23,9 +23,7 @@ pub(super) fn statically_skipped_jobs(
     loop {
         let mut changed = false;
         for (job_id, job) in jobs {
-            let Some(job_id) = job_id.as_str() else {
-                continue;
-            };
+            let job_id = super::normalized_job_id(job_id).expect("validated scalar job ID");
             let directly_disabled = static_bool(job.get("if"), inputs) == StaticBool::False;
             let blocked_by_need = !continues_after_skipped_need(job)
                 && crate::codebase::workflow_topology::value_primitives::string_list(
@@ -33,7 +31,7 @@ pub(super) fn statically_skipped_jobs(
                 )
                 .iter()
                 .any(|need| skipped.contains(&need.to_lowercase()));
-            if (directly_disabled || blocked_by_need) && skipped.insert(job_id.to_lowercase()) {
+            if (directly_disabled || blocked_by_need) && skipped.insert(job_id) {
                 changed = true;
             }
         }

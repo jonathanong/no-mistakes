@@ -71,12 +71,12 @@ pub(super) fn reusable_call_job_shape_valid(job: &Value) -> bool {
 pub(super) fn valid_job_dependencies(jobs: &serde_yaml::Mapping) -> bool {
     let mut dependencies = BTreeMap::new();
     for (job_id, job) in jobs {
-        let Some(job_id) =
-            crate::codebase::workflow_topology::value_primitives::string_value(Some(job_id))
-                .map(|job_id| job_id.to_lowercase())
-        else {
+        let Some(job_id) = super::super::normalized_job_id(job_id) else {
             return false;
         };
+        if !valid_job_id(&job_id) {
+            return false;
+        }
         let Some(job) = job.as_mapping() else {
             return false;
         };
@@ -118,6 +118,15 @@ pub(super) fn valid_job_dependencies(jobs: &serde_yaml::Mapping) -> bool {
         }
     }
     true
+}
+
+fn valid_job_id(job_id: &str) -> bool {
+    let mut characters = job_id.chars();
+    characters
+        .next()
+        .is_some_and(|first| first.is_ascii_alphabetic() || first == '_')
+        && characters
+            .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'))
 }
 
 #[cfg(test)]

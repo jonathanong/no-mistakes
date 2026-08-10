@@ -12,7 +12,20 @@ pub(super) fn ci_typechecked_projects(
     tracked: &BTreeSet<String>,
     project_source_inputs: &super::ProjectSourceInputs,
 ) -> BTreeSet<String> {
-    reusable::collect_ci_projects(workflows, tracked, project_source_inputs)
+    ci_typechecked_projects_with_stats(workflows, tracked, project_source_inputs).0
+}
+
+fn normalized_job_id(value: &Value) -> Option<String> {
+    crate::codebase::workflow_topology::value_primitives::string_value(Some(value))
+        .map(|job_id| job_id.to_lowercase())
+}
+
+pub(super) fn ci_typechecked_projects_with_stats(
+    workflows: &ParsedWorkflowSet,
+    tracked: &BTreeSet<String>,
+    project_source_inputs: &super::ProjectSourceInputs,
+) -> (BTreeSet<String>, usize) {
+    reusable::collect_ci_projects_with_stats(workflows, tracked, project_source_inputs)
 }
 
 pub(super) fn default_working_directory(value: &Value) -> Option<&str> {

@@ -30,7 +30,10 @@ fn declaration_group_valid(
 
 fn input_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
     only_keys(declaration, &["type", "required", "default", "description"])
-        && string_field_valid(declaration, "type")
+        && declaration
+            .get("type")
+            .and_then(Value::as_str)
+            .is_some_and(|input_type| matches!(input_type, "boolean" | "number" | "string"))
         && bool_field_valid(declaration, "required")
         && scalar_field_valid(declaration, "default")
         && string_field_valid(declaration, "description")
@@ -44,7 +47,7 @@ fn secret_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
 
 fn output_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
     only_keys(declaration, &["value", "description"])
-        && string_field_valid(declaration, "value")
+        && declaration.get("value").is_some_and(Value::is_string)
         && string_field_valid(declaration, "description")
 }
 

@@ -22,11 +22,11 @@ use validation::{
     valid_job_dependencies, workflow_call_shape_valid, zero_instance_matrix,
 };
 
-pub(super) fn collect_ci_projects(
+pub(super) fn collect_ci_projects_with_stats(
     parsed: &ParsedWorkflowSet,
     tracked: &BTreeSet<String>,
     project_source_inputs: &ProjectSourceInputs,
-) -> BTreeSet<String> {
+) -> (BTreeSet<String>, usize) {
     let workflows = parsed
         .documents
         .iter()
@@ -48,6 +48,7 @@ pub(super) fn collect_ci_projects(
         project_source_inputs,
     };
     let mut projects = BTreeSet::new();
+    let mut computations = 0;
     for (path, document) in &context.workflows {
         if !document.call_contract_shape_valid {
             continue;
@@ -72,8 +73,9 @@ pub(super) fn collect_ci_projects(
         ) {
             projects.extend(activation_projects);
         }
+        computations += memo.computations();
     }
-    projects
+    (projects, computations)
 }
 
 fn scan_activation(
@@ -96,6 +98,7 @@ fn scan_activation(
     if let Some(result) = memo.get(&key) {
         return result.clone();
     }
+    memo.record_computation();
     let result = scan_activation_uncached(
         path,
         document,
@@ -130,6 +133,7 @@ fn scan_activation_uncached(
     let skipped_jobs = statically_skipped_jobs(jobs, inputs);
     let mut projects = BTreeSet::new();
     for (job_id, job) in jobs {
+        let job_id = super::normalized_job_id(job_id)?;
         let call_target = match job.get("uses") {
             Some(Value::String(target)) if reusable_call_job_shape_valid(job) => {
                 Some(target.as_str())
@@ -141,7 +145,7 @@ fn scan_activation_uncached(
             if target.starts_with("./") && !canonical_local_call_target(target) {
                 return None;
             }
-            let edge = workflow_values::call_edge(job_id.as_str().unwrap_or(""), target, job);
+            let edge = workflow_values::call_edge(&job_id, target, job);
             if edge.local {
                 let callee_path = edge.to.as_deref().unwrap_or_default();
                 let callee = context.workflows.get(callee_path)?;
@@ -171,9 +175,7 @@ fn scan_activation_uncached(
         } else {
             None
         };
-        if job_id
-            .as_str()
-            .is_some_and(|job_id| skipped_jobs.contains(&job_id.to_lowercase()))
+        if skipped_jobs.contains(&job_id)
             || statically_not_enforcing(job, inputs)
             || zero_instance_matrix(job)
         {

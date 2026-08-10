@@ -18,4 +18,13 @@ fn contract_shape_validates_every_declaration_kind() {
     assert!(!workflow_call_shape_valid(Some(&on(
         "workflow_call:\n  inputs:\n    enabled:\n      type: boolean\n      unknown: true"
     ))));
+    assert!(!workflow_call_shape_valid(Some(&on(
+        "workflow_call:\n  inputs:\n    enabled:\n      description: missing type"
+    ))));
+    assert!(!workflow_call_shape_valid(Some(&on(
+        "workflow_call:\n  inputs:\n    enabled:\n      type: invalid"
+    ))));
+    assert!(!workflow_call_shape_valid(Some(&on(
+        "workflow_call:\n  outputs:\n    result:\n      description: missing value"
+    ))));
 }

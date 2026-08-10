@@ -1,6 +1,7 @@
 use super::application::resolve_gate_projects_against_tracked;
 use super::workflow::{
-    ci_typechecked_projects, default_working_directory, effective_working_directory,
+    ci_typechecked_projects, ci_typechecked_projects_with_stats, default_working_directory,
+    effective_working_directory,
 };
 use super::*;
 use crate::codebase::ci_workflows::{

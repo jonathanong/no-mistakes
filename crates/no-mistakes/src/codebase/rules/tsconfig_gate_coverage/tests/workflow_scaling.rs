@@ -16,6 +16,18 @@ fn scan(documents: Vec<ParsedWorkflowDocument>, project: &str) -> BTreeSet<Strin
     )
 }
 
+fn scan_with_stats(
+    documents: Vec<ParsedWorkflowDocument>,
+    project: &str,
+) -> (BTreeSet<String>, usize) {
+    let tracked = BTreeSet::from([project.to_string()]);
+    ci_typechecked_projects_with_stats(
+        &ParsedWorkflowSet { documents },
+        &tracked,
+        &project_inputs(&tracked),
+    )
+}
+
 #[test]
 fn repeated_reusable_activations_share_results() {
     let mut documents = vec![workflow(
@@ -42,10 +54,13 @@ fn repeated_reusable_activations_share_results() {
         ));
     }
 
+    // Root plus eight reusable levels reaches depth 9, leaving one level before the limit.
+    let (projects, computations) = scan_with_stats(documents, "shared/tsconfig.json");
     assert_eq!(
-        scan(documents, "shared/tsconfig.json"),
+        projects,
         BTreeSet::from(["shared/tsconfig.json".to_string()])
     );
+    assert_eq!(computations, 9);
 }
 
 #[test]

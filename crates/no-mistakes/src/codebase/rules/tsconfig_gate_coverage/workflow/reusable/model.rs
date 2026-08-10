@@ -23,4 +23,30 @@ pub(super) struct ActivationKey {
     pub(super) active_paths: BTreeSet<String>,
 }
 
-pub(super) type ActivationMemo = BTreeMap<ActivationKey, Option<BTreeSet<String>>>;
+#[derive(Default)]
+pub(super) struct ActivationMemo {
+    entries: BTreeMap<ActivationKey, Option<BTreeSet<String>>>,
+    computations: usize,
+}
+
+impl ActivationMemo {
+    pub(super) fn new() -> Self {
+        Self::default()
+    }
+
+    pub(super) fn get(&self, key: &ActivationKey) -> Option<&Option<BTreeSet<String>>> {
+        self.entries.get(key)
+    }
+
+    pub(super) fn record_computation(&mut self) {
+        self.computations += 1;
+    }
+
+    pub(super) fn insert(&mut self, key: ActivationKey, result: Option<BTreeSet<String>>) {
+        self.entries.insert(key, result);
+    }
+
+    pub(super) fn computations(&self) -> usize {
+        self.computations
+    }
+}
