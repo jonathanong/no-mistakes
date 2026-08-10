@@ -1,16 +1,24 @@
 use super::{StaticBool, StaticValue};
 
 pub(super) fn input_name(operand: &str) -> Option<&str> {
+    context_property_name(operand, "inputs")
+}
+
+pub(super) fn matrix_name(operand: &str) -> Option<&str> {
+    context_property_name(operand, "matrix")
+}
+
+fn context_property_name<'a>(operand: &'a str, context: &str) -> Option<&'a str> {
     let operand = operand.trim();
-    if let Some(name) = operand.strip_prefix("inputs.") {
+    let remainder = operand
+        .get(..context.len())
+        .filter(|prefix| prefix.eq_ignore_ascii_case(context))
+        .and_then(|_| operand.get(context.len()..))?;
+    if let Some(name) = remainder.trim_start().strip_prefix('.') {
         let name = name.trim();
         return super::contracts::valid_identifier(name).then_some(name);
     }
-    let bracketed = operand
-        .strip_prefix("inputs")?
-        .trim_start()
-        .strip_prefix('[')?
-        .trim_start();
+    let bracketed = remainder.trim_start().strip_prefix('[')?.trim_start();
     let quote = bracketed.chars().next()?;
     if quote != '\'' {
         return None;

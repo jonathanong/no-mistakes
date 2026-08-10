@@ -122,6 +122,41 @@ fn dynamic_matrix_requires_one_nonempty_expression() {
 }
 
 #[test]
+fn root_matrix_expression_requires_a_dynamic_result() {
+    for expression in [
+        "true",
+        "42",
+        "'matrix'",
+        "null",
+        "contains('matrix', 'm')",
+        "startsWith('matrix', 'm')",
+        "success()",
+        "toJSON(github)",
+        "true || false",
+    ] {
+        let yaml = format!("strategy:\n  matrix: \"${{{{ {expression} }}}}\"");
+        let job = job(&yaml);
+        assert!(!matrix_shape_valid(&job), "{expression}");
+        assert!(static_matrix_combinations(&job).is_none(), "{expression}");
+    }
+
+    for expression in [
+        "fromJSON(needs.setup.outputs.matrix)",
+        "needs.setup.outputs.matrix",
+        "case(inputs.enabled, fromJSON(inputs.matrix), needs.setup.outputs.matrix)",
+    ] {
+        let yaml = format!("strategy:\n  matrix: \"${{{{ {expression} }}}}\"");
+        let dynamic = job(&yaml);
+        assert!(matrix_shape_valid(&dynamic), "{expression}");
+        assert_eq!(
+            static_matrix_combinations(&dynamic),
+            Some(vec![BTreeMap::new()]),
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn static_matrix_shape_enforces_the_github_job_limit() {
     assert!(matrix_shape_valid(&job(
         "strategy:\n  matrix:\n    a: [1, 2]\n    b: [3, 4]"

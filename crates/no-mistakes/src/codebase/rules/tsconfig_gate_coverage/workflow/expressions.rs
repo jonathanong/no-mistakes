@@ -21,6 +21,20 @@ pub(super) fn complete_expression_type(value: &str) -> Option<StaticExpressionTy
     syntax::parse(&lexer::tokenize(body)?)
 }
 
+pub(super) fn complete_expression_may_produce_mapping(value: &str) -> bool {
+    let value = value.trim();
+    let Some(body) = value
+        .strip_prefix("${{")
+        .and_then(|value| value.strip_suffix("}}"))
+        .map(str::trim)
+    else {
+        return false;
+    };
+    lexer::tokenize(body)
+        .and_then(|tokens| syntax::may_produce_mapping(&tokens))
+        .unwrap_or(false)
+}
+
 /// Returns whether every root context referenced by a complete expression is
 /// available at a workflow key. GitHub evaluates context availability before
 /// the expression itself, so syntactically valid unavailable contexts must not

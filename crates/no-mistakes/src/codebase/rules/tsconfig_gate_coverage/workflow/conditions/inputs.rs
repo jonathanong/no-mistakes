@@ -22,7 +22,10 @@ pub(crate) fn inputs_with_matrix_values(
     let mut inputs = parent.clone();
     for (name, value) in matrix_values {
         if let Some(value) = values::matrix_axis_value(value) {
-            inputs.insert(format!("{MATRIX_VALUE_PREFIX}{name}"), value);
+            inputs.insert(
+                format!("{MATRIX_VALUE_PREFIX}{}", name.to_lowercase()),
+                value,
+            );
         }
     }
     inputs

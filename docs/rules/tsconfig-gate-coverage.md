@@ -93,7 +93,10 @@ step `continue-on-error` expressions are evaluated once per generated
 combination after `exclude` and ordered `include` expansion. Execution and
 failure tolerance therefore stay correlated: a typecheck that runs only in an
 allowed-to-fail combination does not count. Dynamic matrices remain unresolved
-and fail open as potentially enforcing.
+and fail open as potentially enforcing, but a root matrix expression whose
+parser result is guaranteed scalar is rejected because Actions requires an
+object. Dot and single-quoted bracket property access share the same normalized
+parser for conditions and reusable-input forwarding.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents

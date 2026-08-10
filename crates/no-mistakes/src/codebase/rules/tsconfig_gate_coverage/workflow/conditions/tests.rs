@@ -337,6 +337,43 @@ fn comparisons_cover_null_coercion_unicode_and_bracketed_inputs() {
 }
 
 #[test]
+fn bracketed_matrix_properties_match_dot_access() {
+    let inputs = InputState::from([
+        ("enabled".into(), StaticValue::Bool(true)),
+        ("\0matrix.enabled".into(), StaticValue::Bool(true)),
+    ]);
+    for expression in [
+        "matrix.enabled",
+        "matrix.ENABLED",
+        "matrix['enabled']",
+        "matrix [ 'ENABLED' ]",
+        "MATRIX . ENABLED",
+        "MATRIX [ 'ENABLED' ]",
+        "INPUTS . ENABLED",
+        "INPUTS [ 'ENABLED' ]",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::True,
+            "{expression}"
+        );
+    }
+    for expression in [
+        "matrix[\"enabled\"]",
+        "matrix['enabled'].nested",
+        "matrix['enabled']['nested']",
+        "matrix['not valid']",
+        "matrix[enabled]",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::Unknown,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn malformed_logical_and_literal_expressions_remain_unknown() {
     let inputs = InputState::new();
     for expression in [

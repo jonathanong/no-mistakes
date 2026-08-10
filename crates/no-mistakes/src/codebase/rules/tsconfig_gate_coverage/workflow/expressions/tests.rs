@@ -1,7 +1,8 @@
 use super::{
-    complete_expression_contexts_available, complete_expression_type, condition_expression_valid,
-    condition_has_status_function, interpolated_expression_contexts_available,
-    interpolated_expression_valid, StaticExpressionType,
+    complete_expression_contexts_available, complete_expression_may_produce_mapping,
+    complete_expression_type, condition_expression_valid, condition_has_status_function,
+    interpolated_expression_contexts_available, interpolated_expression_valid,
+    StaticExpressionType,
 };
 
 #[test]
@@ -103,6 +104,36 @@ fn classifies_static_literals() {
         complete_expression_type("${{ true == false }}"),
         Some(StaticExpressionType::Boolean)
     );
+}
+
+#[test]
+fn distinguishes_mapping_candidates_from_guaranteed_scalars() {
+    for expression in [
+        "${{ true }}",
+        "${{ 42 }}",
+        "${{ 'matrix' }}",
+        "${{ null }}",
+        "${{ contains('matrix', 'm') }}",
+        "${{ startsWith('matrix', 'm') }}",
+        "${{ success() }}",
+        "${{ toJSON(github) }}",
+        "${{ true || false }}",
+    ] {
+        assert!(
+            !complete_expression_may_produce_mapping(expression),
+            "{expression}"
+        );
+    }
+    for expression in [
+        "${{ fromJSON(needs.setup.outputs.matrix) }}",
+        "${{ needs.setup.outputs.matrix }}",
+        "${{ case(inputs.enabled, fromJSON(inputs.matrix), needs.setup.outputs.matrix) }}",
+    ] {
+        assert!(
+            complete_expression_may_produce_mapping(expression),
+            "{expression}"
+        );
+    }
 }
 
 #[test]

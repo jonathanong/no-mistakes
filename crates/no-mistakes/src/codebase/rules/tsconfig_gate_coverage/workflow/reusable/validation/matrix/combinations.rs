@@ -15,7 +15,7 @@ pub(in super::super::super) fn static_matrix_combinations(
         return Some(vec![BTreeMap::new()]);
     };
     let Some(matrix) = matrix.as_mapping() else {
-        return super::super::super::super::complete_expression(matrix.as_str()?)
+        return super::matrix_expression_may_be_mapping(matrix.as_str()?)
             .then(|| vec![BTreeMap::new()]);
     };
     let axes = match static_matrix_axes(matrix) {

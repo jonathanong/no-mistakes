@@ -54,13 +54,17 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
     let Some(matrix) = matrix.as_mapping() else {
         return matrix
             .as_str()
-            .is_some_and(super::super::super::complete_expression);
+            .is_some_and(matrix_expression_may_be_mapping);
     };
     match static_matrix_job_count(matrix) {
         StaticMatrixJobCount::Known(count) => count <= MATRIX_JOB_LIMIT,
         StaticMatrixJobCount::Dynamic => true,
         StaticMatrixJobCount::Invalid => false,
     }
+}
+
+fn matrix_expression_may_be_mapping(value: &str) -> bool {
+    super::super::super::complete_expression_may_be_mapping(value)
 }
 
 fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {

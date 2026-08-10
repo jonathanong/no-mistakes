@@ -1,7 +1,37 @@
 use super::{lexer::Token, StaticExpressionType};
 
 pub(super) fn parse(tokens: &[Token]) -> Option<StaticExpressionType> {
-    ExpressionSyntax::new(tokens).parse()
+    ExpressionSyntax::new(tokens)
+        .parse()
+        .map(|expression| expression.static_type)
+}
+
+pub(super) fn may_produce_mapping(tokens: &[Token]) -> Option<bool> {
+    ExpressionSyntax::new(tokens)
+        .parse()
+        .map(|expression| expression.may_produce_mapping)
+}
+
+#[derive(Clone, Copy)]
+struct Expression {
+    static_type: StaticExpressionType,
+    may_produce_mapping: bool,
+}
+
+impl Expression {
+    const fn scalar(static_type: StaticExpressionType) -> Self {
+        Self {
+            static_type,
+            may_produce_mapping: false,
+        }
+    }
+
+    const fn dynamic(may_produce_mapping: bool) -> Self {
+        Self {
+            static_type: StaticExpressionType::Dynamic,
+            may_produce_mapping,
+        }
+    }
 }
 
 struct ExpressionSyntax<'a> {
@@ -14,70 +44,75 @@ impl<'a> ExpressionSyntax<'a> {
         Self { tokens, index: 0 }
     }
 
-    fn parse(mut self) -> Option<StaticExpressionType> {
-        let expression_type = self.parse_or()?;
-        (self.index == self.tokens.len()).then_some(expression_type)
+    fn parse(mut self) -> Option<Expression> {
+        let expression = self.parse_or()?;
+        (self.index == self.tokens.len()).then_some(expression)
     }
 
-    fn parse_or(&mut self) -> Option<StaticExpressionType> {
-        let mut expression_type = self.parse_and()?;
+    fn parse_or(&mut self) -> Option<Expression> {
+        let mut expression = self.parse_and()?;
         while self.take(Token::Or) {
-            self.parse_and()?;
-            expression_type = StaticExpressionType::Dynamic;
+            let right = self.parse_and()?;
+            expression =
+                Expression::dynamic(expression.may_produce_mapping || right.may_produce_mapping);
         }
-        Some(expression_type)
+        Some(expression)
     }
 
-    fn parse_and(&mut self) -> Option<StaticExpressionType> {
-        let mut expression_type = self.parse_comparison()?;
+    fn parse_and(&mut self) -> Option<Expression> {
+        let mut expression = self.parse_comparison()?;
         while self.take(Token::And) {
-            self.parse_comparison()?;
-            expression_type = StaticExpressionType::Dynamic;
+            let right = self.parse_comparison()?;
+            expression =
+                Expression::dynamic(expression.may_produce_mapping || right.may_produce_mapping);
         }
-        Some(expression_type)
+        Some(expression)
     }
 
-    fn parse_comparison(&mut self) -> Option<StaticExpressionType> {
-        let mut expression_type = self.parse_unary()?;
+    fn parse_comparison(&mut self) -> Option<Expression> {
+        let mut expression = self.parse_unary()?;
         while self.take(Token::Comparison) {
             self.parse_unary()?;
-            expression_type = StaticExpressionType::Boolean;
+            expression = Expression::scalar(StaticExpressionType::Boolean);
         }
-        Some(expression_type)
+        Some(expression)
     }
 
-    fn parse_unary(&mut self) -> Option<StaticExpressionType> {
+    fn parse_unary(&mut self) -> Option<Expression> {
         if self.take(Token::Bang) {
             self.parse_unary()?;
-            Some(StaticExpressionType::Boolean)
+            Some(Expression::scalar(StaticExpressionType::Boolean))
         } else {
             self.parse_primary()
         }
     }
 
-    fn parse_primary(&mut self) -> Option<StaticExpressionType> {
+    fn parse_primary(&mut self) -> Option<Expression> {
         match self.next()? {
-            Token::Boolean => Some(StaticExpressionType::Boolean),
-            Token::Number => Some(StaticExpressionType::Number),
-            Token::String => Some(StaticExpressionType::String),
-            Token::Null => Some(StaticExpressionType::Null),
-            Token::Identifier => self.parse_accessors(),
+            Token::Boolean => Some(Expression::scalar(StaticExpressionType::Boolean)),
+            Token::Number => Some(Expression::scalar(StaticExpressionType::Number)),
+            Token::String => Some(Expression::scalar(StaticExpressionType::String)),
+            Token::Null => Some(Expression::scalar(StaticExpressionType::Null)),
+            Token::Identifier => self.parse_accessors(Expression::dynamic(true)),
             Token::Function(function) => {
                 self.take(Token::LeftParen).then_some(())?;
+                let arguments = self.parse_arguments()?;
                 function
-                    .accepts_argument_count(self.parse_arguments()?)
+                    .accepts_argument_count(arguments.len())
                     .then_some(())?;
-                self.parse_accessors()
+                self.parse_accessors(Expression::dynamic(function_may_produce_mapping(
+                    function, &arguments,
+                )))
             }
             Token::LeftParen => {
-                let expression_type = self.parse_or()?;
-                self.take(Token::RightParen).then_some(expression_type)
+                let expression = self.parse_or()?;
+                self.take(Token::RightParen).then_some(expression)
             }
             _ => None,
         }
     }
 
-    fn parse_accessors(&mut self) -> Option<StaticExpressionType> {
+    fn parse_accessors(&mut self, expression: Expression) -> Option<Expression> {
         loop {
             if self.take(Token::Dot) {
                 if !self.take(Token::Identifier) && !self.take(Token::Star) {
@@ -89,21 +124,20 @@ impl<'a> ExpressionSyntax<'a> {
                     return None;
                 }
             } else {
-                return Some(StaticExpressionType::Dynamic);
+                return Some(expression);
             }
         }
     }
 
-    fn parse_arguments(&mut self) -> Option<usize> {
+    fn parse_arguments(&mut self) -> Option<Vec<Expression>> {
         if self.take(Token::RightParen) {
-            return Some(0);
+            return Some(Vec::new());
         }
-        let mut count = 0;
+        let mut arguments = Vec::new();
         loop {
-            self.parse_or()?;
-            count += 1;
+            arguments.push(self.parse_or()?);
             if self.take(Token::RightParen) {
-                return Some(count);
+                return Some(arguments);
             }
             if !self.take(Token::Comma) {
                 return None;
@@ -124,5 +158,30 @@ impl<'a> ExpressionSyntax<'a> {
         let token = *self.tokens.get(self.index)?;
         self.index += 1;
         Some(token)
+    }
+}
+
+fn function_may_produce_mapping(
+    function: super::lexer::Function,
+    arguments: &[Expression],
+) -> bool {
+    use super::lexer::Function;
+
+    match function {
+        Function::FromJson => true,
+        Function::Case => arguments.iter().enumerate().any(|(index, argument)| {
+            (index % 2 == 1 || index + 1 == arguments.len()) && argument.may_produce_mapping
+        }),
+        Function::Contains
+        | Function::StartsWith
+        | Function::EndsWith
+        | Function::Format
+        | Function::Join
+        | Function::ToJson
+        | Function::HashFiles
+        | Function::Success
+        | Function::Failure
+        | Function::Always
+        | Function::Cancelled => false,
     }
 }

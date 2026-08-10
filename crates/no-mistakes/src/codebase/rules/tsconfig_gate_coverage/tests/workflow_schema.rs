@@ -324,3 +324,69 @@ fn job_level_expression_schema_errors_do_not_credit_typechecks() {
         BTreeSet::from(["valid-job-contexts/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn scalar_root_matrix_expressions_do_not_credit_typechecks() {
+    let scalar_expressions = [
+        "true",
+        "42",
+        "'matrix'",
+        "null",
+        "contains('matrix', 'm')",
+        "startsWith('matrix', 'm')",
+        "success()",
+        "toJSON(github)",
+        "true || false",
+    ];
+    let mut documents = scalar_expressions
+        .iter()
+        .enumerate()
+        .map(|(index, expression)| {
+            let project = format!("scalar-matrix-{index}");
+            workflow(
+                &format!(".github/workflows/{project}.yml"),
+                &format!(
+                    "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix: \"${{{{ {expression} }}}}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project {project}/tsconfig.json\n"
+                ),
+            )
+        })
+        .collect::<Vec<_>>();
+    for (name, expression) in [
+        ("dynamic-from-json", "fromJSON(needs.setup.outputs.matrix)"),
+        ("dynamic-property", "needs.setup.outputs.matrix"),
+        (
+            "dynamic-case",
+            "case(inputs.enabled, fromJSON(inputs.matrix), needs.setup.outputs.matrix)",
+        ),
+    ] {
+        documents.push(workflow(
+            &format!(".github/workflows/{name}.yml"),
+            &format!(
+                "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix: \"${{{{ {expression} }}}}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project {name}/tsconfig.json\n"
+            ),
+        ));
+    }
+    let tracked = scalar_expressions
+        .iter()
+        .enumerate()
+        .map(|(index, _)| format!("scalar-matrix-{index}/tsconfig.json"))
+        .chain(
+            ["dynamic-from-json", "dynamic-property", "dynamic-case"]
+                .into_iter()
+                .map(|name| format!("{name}/tsconfig.json")),
+        )
+        .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(
+            &ParsedWorkflowSet { documents },
+            &tracked,
+            &project_inputs(&tracked),
+        ),
+        BTreeSet::from([
+            "dynamic-case/tsconfig.json".to_string(),
+            "dynamic-from-json/tsconfig.json".to_string(),
+            "dynamic-property/tsconfig.json".to_string(),
+        ])
+    );
+}

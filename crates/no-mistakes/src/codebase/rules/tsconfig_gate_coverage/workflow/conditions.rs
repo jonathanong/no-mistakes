@@ -8,7 +8,7 @@ mod inputs;
 mod literals;
 mod logical;
 
-use input_value::{comparison_literal, input_name};
+use input_value::{comparison_literal, input_name, matrix_name};
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, SecretState,
 };
@@ -191,14 +191,14 @@ fn condition_input_value(operand: &str, inputs: &InputState) -> Option<StaticVal
                 .unwrap_or(StaticValue::Bool(false)),
         );
     }
-    let name = operand.trim().strip_prefix("matrix.")?.trim();
-    contracts::valid_identifier(name)
-        .then(|| {
-            inputs
-                .get(&format!("{}{}", inputs::MATRIX_VALUE_PREFIX, name))
-                .cloned()
-        })
-        .flatten()
+    let name = matrix_name(operand)?;
+    inputs
+        .get(&format!(
+            "{}{}",
+            inputs::MATRIX_VALUE_PREFIX,
+            name.to_lowercase()
+        ))
+        .cloned()
 }
 
 fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {

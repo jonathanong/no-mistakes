@@ -1,7 +1,9 @@
 use super::MATRIX_VALUE_PREFIX;
 use super::{JsonScalar, Value, WorkflowCallInputType};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    event_name_value, input_value::comparison_literal, InputState, StaticValue,
+    event_name_value,
+    input_value::{comparison_literal, input_name, matrix_name},
+    InputState, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     complete_expression_type, StaticExpressionType,
@@ -57,10 +59,12 @@ pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Optio
     if body.eq_ignore_ascii_case("github.event_name") {
         return event_name_value(parent);
     }
-    if let Some(name) = body.strip_prefix("matrix.") {
-        return parent.get(&format!("{MATRIX_VALUE_PREFIX}{name}")).cloned();
+    if let Some(name) = matrix_name(body) {
+        return parent
+            .get(&format!("{MATRIX_VALUE_PREFIX}{}", name.to_lowercase()))
+            .cloned();
     }
-    let name = body.strip_prefix("inputs.")?.trim();
+    let name = input_name(body)?;
     parent.get(&name.to_lowercase()).cloned()
 }
 
