@@ -7,6 +7,9 @@ pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
     if !workflow_call_trigger_keys_valid(on) {
         return false;
     }
+    if !workflow_trigger_configs_valid(on) {
+        return false;
+    }
     if !has_workflow_call_trigger(on) {
         return true;
     }
@@ -22,6 +25,33 @@ pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
         && declaration_group_valid(contract.get("inputs"), input_declaration_valid)
         && declaration_group_valid(contract.get("secrets"), secret_declaration_valid)
         && declaration_group_valid(contract.get("outputs"), output_declaration_valid)
+}
+
+fn workflow_trigger_configs_valid(on: &Value) -> bool {
+    match on {
+        Value::Mapping(triggers) => triggers.iter().all(|(trigger, config)| {
+            if trigger.as_str() == Some("schedule") {
+                return schedule_config_valid(config);
+            }
+            matches!(config, Value::Null | Value::Mapping(_))
+        }),
+        _ => true,
+    }
+}
+
+fn schedule_config_valid(config: &Value) -> bool {
+    config.as_sequence().is_some_and(|entries| {
+        !entries.is_empty()
+            && entries.iter().all(|entry| {
+                entry.as_mapping().is_some_and(|entry| {
+                    entry.len() == 1
+                        && entry
+                            .get("cron")
+                            .and_then(Value::as_str)
+                            .is_some_and(|cron| !cron.trim().is_empty())
+                })
+            })
+    })
 }
 
 fn has_workflow_call_trigger(on: &Value) -> bool {

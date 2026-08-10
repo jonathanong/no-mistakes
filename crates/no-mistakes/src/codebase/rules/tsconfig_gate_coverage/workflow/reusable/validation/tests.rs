@@ -29,3 +29,18 @@ fn dependency_validation_rejects_malformed_and_unresolvable_jobs() {
         "jobs:\n  bad:\n    needs: missing"
     )));
 }
+
+#[test]
+fn step_jobs_reject_unknown_keys() {
+    let valid = serde_yaml::from_str::<Value>(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: echo valid\ntimeout-minutes: 5",
+    )
+    .unwrap();
+    assert!(step_job_shape_valid(&valid));
+
+    let unknown = serde_yaml::from_str::<Value>(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: echo invalid\nbogus: true",
+    )
+    .unwrap();
+    assert!(!step_job_shape_valid(&unknown));
+}

@@ -14,6 +14,7 @@ fn steps_cannot_mix_action_and_shell_commands() {
     assert!(steps_shape_valid(&job("steps:\n  - uses: owner/action@v1")));
     for yaml in [
         "steps: invalid",
+        "steps: []",
         "steps:\n  - name: inert",
         "steps:\n  - run: ''",
         "steps:\n  - run: []",

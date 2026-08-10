@@ -108,6 +108,26 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             ".github/workflows/malformed-expression-callee.yml",
             "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        required: true\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-expression-callee/tsconfig.json\n",
         ),
+        workflow(
+            ".github/workflows/malformed-trigger-config.yml",
+            "on:\n  push: []\njobs:\n  call:\n    uses: ./.github/workflows/malformed-trigger-config-callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-trigger-config-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/malformed-trigger-config-callee.yml",
+            "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-trigger-config/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/empty-steps-caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/empty-steps-callee.yml\n",
+        ),
+        workflow(
+            ".github/workflows/empty-steps-callee.yml",
+            "on: workflow_call\njobs:\n  empty:\n    runs-on: ubuntu-latest\n    steps: []\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project empty-steps-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/unknown-job-key.yml",
+            "on: push\njobs:\n  invalid:\n    bogus: true\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unknown-job-key-sibling/tsconfig.json\n",
+        ),
     ];
     let tracked = [
         "declaration",
@@ -133,6 +153,10 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "empty-expression-sibling",
         "concatenated-expression-sibling",
         "malformed-expression-callee",
+        "malformed-trigger-config",
+        "malformed-trigger-config-sibling",
+        "empty-steps-sibling",
+        "unknown-job-key-sibling",
     ]
     .into_iter()
     .map(|project| format!("{project}/tsconfig.json"))

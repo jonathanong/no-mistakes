@@ -13,7 +13,37 @@ pub(super) use jobs::{call_bindings_shape_valid, steps_shape_valid};
 pub(super) use matrix::zero_instance_matrix;
 
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {
-    matrix::matrix_shape_valid(job) && steps_shape_valid(job)
+    matrix::matrix_shape_valid(job)
+        && steps_shape_valid(job)
+        && (job.get("uses").is_some() || step_job_shape_valid(job))
+}
+
+fn step_job_shape_valid(job: &Value) -> bool {
+    job.as_mapping().is_some_and(|mapping| {
+        mapping.keys().all(|key| {
+            key.as_str().is_some_and(|key| {
+                matches!(
+                    key,
+                    "name"
+                        | "permissions"
+                        | "needs"
+                        | "if"
+                        | "runs-on"
+                        | "environment"
+                        | "concurrency"
+                        | "outputs"
+                        | "env"
+                        | "defaults"
+                        | "steps"
+                        | "timeout-minutes"
+                        | "continue-on-error"
+                        | "container"
+                        | "services"
+                        | "strategy"
+                )
+            })
+        })
+    })
 }
 
 pub(super) fn canonical_local_call_target(target: &str) -> bool {

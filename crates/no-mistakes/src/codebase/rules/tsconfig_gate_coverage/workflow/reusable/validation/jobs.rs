@@ -6,17 +6,18 @@ pub(crate) fn steps_shape_valid(job: &Value) -> bool {
         return job.get("uses").is_some();
     };
     steps.as_sequence().is_some_and(|steps| {
-        steps.iter().all(|step| {
-            step.as_mapping().is_some_and(|step| {
-                matches!(
-                    (step.get("run"), step.get("uses")),
-                    (Some(Value::String(command)), None) if !command.is_empty()
-                ) || matches!(
-                    (step.get("run"), step.get("uses")),
-                    (None, Some(Value::String(target))) if action_target_valid(target)
-                )
+        !steps.is_empty()
+            && steps.iter().all(|step| {
+                step.as_mapping().is_some_and(|step| {
+                    matches!(
+                        (step.get("run"), step.get("uses")),
+                        (Some(Value::String(command)), None) if !command.is_empty()
+                    ) || matches!(
+                        (step.get("run"), step.get("uses")),
+                        (None, Some(Value::String(target))) if action_target_valid(target)
+                    )
+                })
             })
-        })
     })
 }
 

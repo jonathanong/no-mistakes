@@ -33,6 +33,28 @@ fn contract_shape_validates_every_declaration_kind() {
     assert!(!workflow_call_shape_valid(Some(&on(
         "push:\nworkflow_dispath:"
     ))));
+    for malformed in ["push: []", "push: true", "push: invalid"] {
+        assert!(
+            !workflow_call_shape_valid(Some(&on(malformed))),
+            "{malformed}"
+        );
+    }
+    assert!(workflow_call_shape_valid(Some(&on(
+        "push:\nschedule:\n  - cron: '0 0 * * *'"
+    ))));
+    for malformed in [
+        "schedule:",
+        "schedule: []",
+        "schedule:\n  - {}",
+        "schedule:\n  - cron: true",
+        "schedule:\n  - cron: ''",
+        "schedule:\n  - cron: '0 0 * * *'\n    unknown: true",
+    ] {
+        assert!(
+            !workflow_call_shape_valid(Some(&on(malformed))),
+            "{malformed}"
+        );
+    }
     assert!(workflow_call_shape_valid(Some(&on(
         "workflow_call:\n  outputs:\n    result:\n      value: '${{ jobs.build.outputs.result }}'\n      description: result"
     ))));
