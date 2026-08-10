@@ -8,6 +8,8 @@ fn document(path: &str, yaml: &str) -> ParsedWorkflowDocument {
     }
 }
 
+mod conditions;
+
 #[test]
 fn literal_expression_bindings_preserve_truthiness_across_reusable_calls() {
     let parsed = ParsedWorkflowSet {
@@ -159,12 +161,12 @@ fn incompatible_exact_input_forwarding_invalidates_the_reusable_path() {
 }
 
 #[test]
-fn uniform_static_matrix_bindings_preserve_input_values() {
+fn matrix_bindings_preserve_correlated_input_values() {
     let parsed = ParsedWorkflowSet {
         documents: vec![
             document(
                 ".github/workflows/caller.yml",
-                "on: push\njobs:\n  disabled:\n    strategy:\n      matrix:\n        enabled: [false]\n    uses: ./.github/workflows/disabled.yml\n    with:\n      enabled: '${{ matrix.enabled }}'\n  enabled:\n    strategy:\n      matrix:\n        enabled: [true, true]\n        platform: [linux, macos]\n    uses: ./.github/workflows/enabled.yml\n    with:\n      enabled: '${{ matrix.enabled }}'\n",
+                "on: push\njobs:\n  disabled:\n    strategy:\n      matrix:\n        enabled: [false]\n    uses: ./.github/workflows/disabled.yml\n    with:\n      enabled: '${{ matrix.enabled }}'\n  enabled:\n    strategy:\n      matrix:\n        enabled: [true, true]\n        platform: [linux, macos]\n    uses: ./.github/workflows/enabled.yml\n    with:\n      enabled: '${{ matrix.enabled }}'\n  mixed:\n    strategy:\n      matrix:\n        enabled: [false, true]\n    uses: ./.github/workflows/mixed.yml\n    with:\n      enabled: '${{ matrix.enabled }}'\n  excluded:\n    strategy:\n      matrix:\n        enabled: [false, true]\n        exclude:\n          - enabled: true\n    uses: ./.github/workflows/excluded.yml\n    with:\n      enabled: '${{ matrix.enabled }}'\n",
             ),
             document(
                 ".github/workflows/disabled.yml",
@@ -174,11 +176,21 @@ fn uniform_static_matrix_bindings_preserve_input_values() {
                 ".github/workflows/enabled.yml",
                 "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project enabled-matrix/tsconfig.json\n",
             ),
+            document(
+                ".github/workflows/mixed.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project mixed-matrix/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/excluded.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project excluded-matrix/tsconfig.json\n",
+            ),
         ],
     };
     let tracked = BTreeSet::from([
         "disabled-matrix/tsconfig.json".to_string(),
         "enabled-matrix/tsconfig.json".to_string(),
+        "mixed-matrix/tsconfig.json".to_string(),
+        "excluded-matrix/tsconfig.json".to_string(),
     ]);
     let project_inputs = tracked
         .iter()
@@ -187,6 +199,9 @@ fn uniform_static_matrix_bindings_preserve_input_values() {
 
     assert_eq!(
         collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
-        BTreeSet::from(["enabled-matrix/tsconfig.json".to_string()])
+        BTreeSet::from([
+            "enabled-matrix/tsconfig.json".to_string(),
+            "mixed-matrix/tsconfig.json".to_string(),
+        ])
     );
 }

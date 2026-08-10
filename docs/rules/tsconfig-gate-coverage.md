@@ -82,13 +82,16 @@ negations/comparisons in call-job, callee-job, and step conditions. It also
 short-circuits logical `&&` and `||` expressions when a known input operand
 determines the result. Literal call inputs, declared defaults, omitted values,
 and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
-values through transitive calls. This lets the rule resolve exact string and
-number equality/inequality comparisons as well as input truthiness. Expressions
-whose result remains dynamic fail open as potentially runnable. Exact
-`${{ matrix.name }}` bindings, step conditions, and job or step
-`continue-on-error` expressions also preserve a scalar value when every
-generated static matrix combination has the same value after `exclude` and
-`include` expansion; non-uniform or dynamic matrices remain unresolved.
+values through transitive calls. This lets the rule resolve exact string
+equality/inequality and number equality/inequality or relational comparisons,
+as well as input truthiness. Expressions whose result remains dynamic fail open
+as potentially runnable. Exact
+For static matrices, `${{ matrix.name }}` bindings, step conditions, and job or
+step `continue-on-error` expressions are evaluated once per generated
+combination after `exclude` and ordered `include` expansion. Execution and
+failure tolerance therefore stay correlated: a typecheck that runs only in an
+allowed-to-fail combination does not count. Dynamic matrices remain unresolved
+and fail open as potentially enforcing.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents

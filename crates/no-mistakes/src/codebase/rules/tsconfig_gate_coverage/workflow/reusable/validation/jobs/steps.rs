@@ -116,5 +116,5 @@ fn action_target_valid(target: &str) -> bool {
             .next()
             .is_some_and(|repository| !repository.is_empty())
         && segments.all(|segment| !segment.is_empty())
-        && !reference.is_empty()
+        && super::super::valid_remote_reference(reference)
 }

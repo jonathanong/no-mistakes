@@ -13,7 +13,7 @@ pub(super) use contracts::workflow_call_shape_valid;
 pub(super) use jobs::{
     call_bindings_shape_valid, reusable_call_job_shape_valid, steps_shape_valid,
 };
-pub(super) use matrix::{uniform_static_matrix_values, zero_instance_matrix};
+pub(super) use matrix::{static_matrix_combinations, zero_instance_matrix};
 pub(super) use workflow::workflow_shape_valid;
 
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {
@@ -80,7 +80,7 @@ fn valid_remote_repository(repository: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
 }
 
-fn valid_remote_reference(reference: &str) -> bool {
+pub(super) fn valid_remote_reference(reference: &str) -> bool {
     !reference.is_empty()
         && reference != "@"
         && !reference.contains("${{")
@@ -90,6 +90,9 @@ fn valid_remote_reference(reference: &str) -> bool {
         && !reference.contains("..")
         && !reference.contains("@{")
         && !reference.contains("//")
+        && !reference
+            .split('/')
+            .any(|component| component.ends_with(".lock"))
         && reference.bytes().all(|byte| byte >= 0x20 && byte != 0x7f)
 }
 

@@ -5,7 +5,7 @@ fn job(yaml: &str) -> Value {
 }
 
 #[test]
-fn uniform_matrix_values_follow_exclude_and_include_expansion() {
+fn static_matrix_combinations_follow_exclude_and_include_expansion() {
     for (yaml, expected) in [
         (
             "strategy:\n  matrix:\n    enabled: [false]",
@@ -24,9 +24,11 @@ fn uniform_matrix_values_follow_exclude_and_include_expansion() {
             Some(Value::Bool(false)),
         ),
     ] {
-        assert_eq!(
-            uniform_static_matrix_values(&job(yaml)).get("enabled"),
-            expected.as_ref(),
+        let combinations = static_matrix_combinations(&job(yaml)).unwrap();
+        assert!(
+            combinations
+                .iter()
+                .all(|combination| combination.get("enabled") == expected.as_ref()),
             "{yaml}"
         );
     }
@@ -37,7 +39,11 @@ fn uniform_matrix_values_follow_exclude_and_include_expansion() {
         "strategy:\n  matrix:\n    enabled: ['${{ inputs.enabled }}']",
     ] {
         assert!(
-            !uniform_static_matrix_values(&job(yaml)).contains_key("enabled"),
+            static_matrix_combinations(&job(yaml))
+                .unwrap()
+                .iter()
+                .any(|combination| !combination.contains_key("enabled"))
+                || static_matrix_combinations(&job(yaml)).unwrap().len() > 1,
             "{yaml}"
         );
     }
@@ -204,43 +210,53 @@ fn bounded_static_matrix_enumeration_rejects_unresolved_literal_expansions() {
 }
 
 #[test]
-fn uniform_values_fail_closed_for_unresolvable_expansion_and_malformed_includes() {
+fn combinations_distinguish_dynamic_expansion_and_malformed_includes() {
     for yaml in [
-        "strategy:\n  matrix:\n    target: []",
         "strategy:\n  matrix:\n    target: '${{ fromJSON(inputs.targets) }}'",
         "strategy:\n  matrix:\n    target: [linux]\n    exclude: '${{ fromJSON(inputs.exclusions) }}'",
         "strategy:\n  matrix:\n    target: [linux]\n    include: '${{ fromJSON(inputs.inclusions) }}'",
-        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - 1: invalid-key",
     ] {
-        assert!(uniform_static_matrix_values(&job(yaml)).is_empty(), "{yaml}");
+        assert_eq!(static_matrix_combinations(&job(yaml)), Some(vec![BTreeMap::new()]), "{yaml}");
     }
+    assert!(static_matrix_combinations(&job("strategy:\n  matrix:\n    target: []")).is_none());
+    for yaml in [
+        "strategy:\n  matrix:\n    target: ['${{ broken']",
+        "strategy:\n  matrix:\n    target: [linux]\n    exclude: [invalid]",
+        "strategy:\n  matrix:\n    target: [linux]\n    include: [invalid]",
+    ] {
+        assert!(static_matrix_combinations(&job(yaml)).is_none(), "{yaml}");
+    }
+    assert!(static_matrix_combinations(&job(
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - 1: invalid-key"
+    ))
+    .is_none());
 
     let axes = (0..20)
         .map(|index| format!("    axis{index}: [false, true]"))
         .collect::<Vec<_>>()
         .join("\n");
-    assert!(
-        uniform_static_matrix_values(&job(&format!("strategy:\n  matrix:\n{axes}"))).is_empty()
-    );
+    assert!(static_matrix_combinations(&job(&format!("strategy:\n  matrix:\n{axes}"))).is_none());
 }
 
 #[test]
-fn uniform_values_apply_includes_and_handle_empty_combinations() {
-    let applied = uniform_static_matrix_values(&job(
+fn combinations_apply_includes_and_handle_empty_combinations() {
+    let applied = static_matrix_combinations(&job(
         "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - label: retained",
-    ));
+    ))
+    .unwrap();
     assert_eq!(
-        applied.get("target"),
+        applied[0].get("target"),
         Some(&Value::String("linux".to_string()))
     );
     assert_eq!(
-        applied.get("label"),
+        applied[0].get("label"),
         Some(&Value::String("retained".to_string()))
     );
 
-    let all_excluded = uniform_static_matrix_values(&job(
+    let all_excluded = static_matrix_combinations(&job(
         "strategy:\n  matrix:\n    target: [linux]\n    exclude:\n      - target: linux",
-    ));
+    ))
+    .unwrap();
     assert!(all_excluded.is_empty());
 }
 

@@ -118,3 +118,15 @@ fn remote_reusable_targets_require_github_owner_and_repository_names() {
         assert!(!canonical_remote_call_target(target), "{target}");
     }
 }
+
+#[test]
+fn remote_references_reject_lock_components() {
+    for reference in [
+        "foo.lock",
+        "refs/heads/foo.lock",
+        "release/foo.lock/candidate",
+    ] {
+        assert!(!valid_remote_reference(reference), "{reference}");
+    }
+    assert!(valid_remote_reference("release/foo.locked"));
+}

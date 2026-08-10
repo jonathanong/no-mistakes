@@ -119,6 +119,58 @@ fn input_comparisons_preserve_static_scalar_values() {
 }
 
 #[test]
+fn literal_comparisons_resolve_without_context_values() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        ("1 == 2", StaticBool::False),
+        ("'production' == 'staging'", StaticBool::False),
+        ("1 == 1", StaticBool::True),
+        ("'production' == 'production'", StaticBool::True),
+        ("'it''s' == 'it''s'", StaticBool::True),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
+fn literal_relational_comparisons_resolve_without_context_values() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        ("1 < 0", StaticBool::False),
+        ("1 <= 0", StaticBool::False),
+        ("0 > 1", StaticBool::False),
+        ("0 >= 1", StaticBool::False),
+        ("0 < 1", StaticBool::True),
+        ("0 <= 0", StaticBool::True),
+        ("1 > 0", StaticBool::True),
+        ("1 >= 1", StaticBool::True),
+        ("github.run_number > 0", StaticBool::Unknown),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
+fn negated_parenthesized_inputs_resolve_at_any_supported_depth() {
+    let inputs = InputState::from([("enabled".into(), StaticValue::Bool(true))]);
+    for expression in ["!(inputs.enabled)", "!((inputs.enabled))"] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::False,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn status_conditions_model_the_successful_gate_path() {
     let inputs = InputState::new();
     for expression in [

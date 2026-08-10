@@ -42,16 +42,21 @@ fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
 pub(super) fn statically_skipped_jobs(
     jobs: &serde_yaml::Mapping,
     initial_skipped: &BTreeSet<String>,
-    matrix_inputs: impl Fn(&Value) -> InputState,
+    matrix_inputs: impl Fn(&Value, &Value) -> Vec<InputState>,
 ) -> BTreeSet<String> {
     let mut skipped = initial_skipped.clone();
     loop {
         let mut changed = false;
-        for (job_id, job) in jobs {
-            let job_id = super::normalized_job_id(job_id).expect("validated scalar job ID");
-            let inputs = matrix_inputs(job);
-            let directly_disabled = static_bool(job.get("if"), &inputs) == StaticBool::False;
-            let blocked_by_need = !continues_after_skipped_need(job, &inputs)
+        for (raw_job_id, job) in jobs {
+            let job_id = super::normalized_job_id(raw_job_id).expect("validated scalar job ID");
+            let inputs = matrix_inputs(raw_job_id, job);
+            let directly_disabled = !inputs.is_empty()
+                && inputs
+                    .iter()
+                    .all(|inputs| static_bool(job.get("if"), inputs) == StaticBool::False);
+            let blocked_by_need = !inputs
+                .iter()
+                .any(|inputs| continues_after_skipped_need(job, inputs))
                 && crate::codebase::workflow_topology::value_primitives::string_list(
                     job.get("needs"),
                 )
@@ -126,32 +131,31 @@ fn resolve_input_expression(
     inputs: &InputState,
     success: StaticBool,
 ) -> StaticBool {
-    if let Some((left, right, equal)) = logical::comparison_operands(expression) {
-        let (actual, expected) = match (
-            condition_value(left, inputs, success),
-            comparison_literal(right),
-        ) {
-            (Some(actual), Some(expected)) => (actual, expected),
-            _ => match (
-                comparison_literal(left),
-                condition_value(right, inputs, success),
-            ) {
-                (Some(expected), Some(actual)) => (actual, expected),
-                _ => return StaticBool::Unknown,
-            },
+    if let Some((left, right, comparison)) = logical::comparison_operands(expression) {
+        let Some(actual) =
+            condition_value(left, inputs, success).or_else(|| comparison_literal(left))
+        else {
+            return StaticBool::Unknown;
         };
-        let value = actual.equals(&expected);
-        return if equal { value } else { value.negate() };
+        let Some(expected) =
+            condition_value(right, inputs, success).or_else(|| comparison_literal(right))
+        else {
+            return StaticBool::Unknown;
+        };
+        return match comparison {
+            logical::Comparison::Equal => actual.equals(&expected),
+            logical::Comparison::NotEqual => actual.equals(&expected).negate(),
+            logical::Comparison::LessThan => actual.less_than(&expected),
+            logical::Comparison::LessThanOrEqual => actual.less_than_or_equal(&expected),
+            logical::Comparison::GreaterThan => expected.less_than(&actual),
+            logical::Comparison::GreaterThanOrEqual => expected.less_than_or_equal(&actual),
+        };
     }
     if let Some(value) = condition_input_value(expression, inputs) {
         return value.truthiness();
     }
-    if let Some(value) = expression
-        .strip_prefix('!')
-        .map(str::trim)
-        .and_then(|operand| condition_input_value(operand, inputs))
-    {
-        return value.truthiness().negate();
+    if let Some(operand) = expression.strip_prefix('!').map(str::trim) {
+        return expression_bool_with_status(operand, inputs, success).negate();
     }
     StaticBool::Unknown
 }

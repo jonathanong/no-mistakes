@@ -59,10 +59,7 @@ pub(super) fn comparison_literal(operand: &str) -> Option<StaticValue> {
     if operand.eq_ignore_ascii_case("null") {
         return Some(StaticValue::Null);
     }
-    if let Some(body) = operand
-        .strip_prefix('\'')
-        .and_then(|body| body.strip_suffix('\''))
-    {
+    if let Some(body) = super::literals::quoted_string_body(operand) {
         return Some(StaticValue::String(body.replace("''", "'")));
     }
     expression_number(operand).map(|_| StaticValue::Number(operand.to_string()))
@@ -107,6 +104,20 @@ impl StaticValue {
                 }
             }
             (Self::Null, Self::Null) => StaticBool::True,
+            _ => StaticBool::Unknown,
+        }
+    }
+
+    pub(super) fn less_than(self, expected: &Self) -> StaticBool {
+        match (self.loose_number(), expected.clone().loose_number()) {
+            (Some(actual), Some(expected)) => StaticBool::from(actual < expected),
+            _ => StaticBool::Unknown,
+        }
+    }
+
+    pub(super) fn less_than_or_equal(self, expected: &Self) -> StaticBool {
+        match (self.loose_number(), expected.clone().loose_number()) {
+            (Some(actual), Some(expected)) => StaticBool::from(actual <= expected),
             _ => StaticBool::Unknown,
         }
     }

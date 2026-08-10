@@ -1,27 +1,37 @@
-use super::traversal::{consume_state, exclusion_matches_assigned};
 use super::{
     static_mappings, static_matrix_axes, StaticMappings, StaticMatrixAxes,
     STATIC_MATRIX_ENUMERATION_LIMIT,
 };
-use serde_yaml::{Mapping, Value};
+use serde_yaml::Value;
 use std::collections::BTreeMap;
 
-pub(super) fn values(job: &Value) -> BTreeMap<String, Value> {
+pub(in super::super::super) fn static_matrix_combinations(
+    job: &Value,
+) -> Option<Vec<BTreeMap<String, Value>>> {
     let Some(matrix) = job
         .get("strategy")
         .and_then(|strategy| strategy.get("matrix"))
-        .and_then(Value::as_mapping)
     else {
-        return BTreeMap::new();
+        return Some(vec![BTreeMap::new()]);
     };
-    let StaticMatrixAxes::Static(axes) = static_matrix_axes(matrix) else {
-        return BTreeMap::new();
+    let Some(matrix) = matrix.as_mapping() else {
+        return super::super::super::super::complete_expression(matrix.as_str()?)
+            .then(|| vec![BTreeMap::new()]);
     };
-    let StaticMappings::Static(exclusions) = static_mappings(matrix.get("exclude")) else {
-        return BTreeMap::new();
+    let axes = match static_matrix_axes(matrix) {
+        StaticMatrixAxes::Static(axes) => axes,
+        StaticMatrixAxes::Dynamic => return Some(vec![BTreeMap::new()]),
+        StaticMatrixAxes::Invalid => return None,
     };
-    let StaticMappings::Static(includes) = static_mappings(matrix.get("include")) else {
-        return BTreeMap::new();
+    let exclusions = match static_mappings(matrix.get("exclude")) {
+        StaticMappings::Static(exclusions) => exclusions,
+        StaticMappings::Dynamic => return Some(vec![BTreeMap::new()]),
+        StaticMappings::Invalid => return None,
+    };
+    let includes = match static_mappings(matrix.get("include")) {
+        StaticMappings::Static(includes) => includes,
+        StaticMappings::Dynamic => return Some(vec![BTreeMap::new()]),
+        StaticMappings::Invalid => return None,
     };
     let mut originals = Vec::new();
     let mut assigned = BTreeMap::new();
@@ -34,7 +44,7 @@ pub(super) fn values(job: &Value) -> BTreeMap<String, Value> {
         &mut originals,
         &mut states_remaining,
     ) {
-        return BTreeMap::new();
+        return None;
     }
     let mut combinations = originals.clone();
     for include in includes {
@@ -42,42 +52,36 @@ pub(super) fn values(job: &Value) -> BTreeMap<String, Value> {
         for (index, original) in originals.iter().enumerate() {
             if include_compatible(include, original, &axes) {
                 for (name, value) in include {
-                    let Some(name) = name.as_str() else {
-                        return BTreeMap::new();
-                    };
-                    combinations[index].insert(name.to_string(), value.clone());
+                    combinations[index].insert(name.as_str()?.to_string(), value.clone());
                 }
                 applied = true;
             }
         }
         if !applied {
-            let Some(included) = include
+            let included = include
                 .iter()
                 .map(|(name, value)| Some((name.as_str()?.to_string(), value.clone())))
-                .collect::<Option<BTreeMap<_, _>>>()
-            else {
-                return BTreeMap::new();
-            };
+                .collect::<Option<BTreeMap<_, _>>>()?;
             combinations.push(included);
         }
     }
-    uniform_values(&combinations)
+    Some(combinations)
 }
 
 fn collect_combinations(
     axes: &[(String, Vec<Value>)],
-    exclusions: &[&Mapping],
+    exclusions: &[&serde_yaml::Mapping],
     index: usize,
     assigned: &mut BTreeMap<String, Value>,
     combinations: &mut Vec<BTreeMap<String, Value>>,
     states_remaining: &mut usize,
 ) -> bool {
-    if !consume_state(states_remaining) {
+    if !super::traversal::consume_state(states_remaining) {
         return false;
     }
     if exclusions
         .iter()
-        .any(|exclusion| exclusion_matches_assigned(exclusion, assigned))
+        .any(|exclusion| super::traversal::exclusion_matches_assigned(exclusion, assigned))
     {
         return true;
     }
@@ -105,7 +109,7 @@ fn collect_combinations(
 }
 
 fn include_compatible(
-    include: &Mapping,
+    include: &serde_yaml::Mapping,
     original: &BTreeMap<String, Value>,
     axes: &[(String, Vec<Value>)],
 ) -> bool {
@@ -114,27 +118,4 @@ fn include_compatible(
             .get(name)
             .is_none_or(|value| original.get(name) == Some(value))
     })
-}
-
-fn uniform_values(combinations: &[BTreeMap<String, Value>]) -> BTreeMap<String, Value> {
-    let Some(first) = combinations.first() else {
-        return BTreeMap::new();
-    };
-    first
-        .iter()
-        .filter(|(name, value)| {
-            static_scalar(value)
-                && combinations
-                    .iter()
-                    .all(|combination| combination.get(*name) == Some(*value))
-        })
-        .map(|(name, value)| (name.clone(), value.clone()))
-        .collect()
-}
-
-fn static_scalar(value: &Value) -> bool {
-    matches!(value, Value::Bool(_) | Value::Number(_) | Value::Null)
-        || value
-            .as_str()
-            .is_some_and(|value| !value.trim().starts_with("${{") && !value.trim().ends_with("}}"))
 }

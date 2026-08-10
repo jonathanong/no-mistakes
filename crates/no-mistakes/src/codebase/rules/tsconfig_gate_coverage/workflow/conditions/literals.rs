@@ -24,12 +24,27 @@ pub(super) fn number_bool(value: Option<f64>) -> StaticBool {
 }
 
 pub(super) fn quoted_string_bool(expression: &str) -> Option<StaticBool> {
-    let body = expression.strip_prefix('\'')?.strip_suffix('\'')?;
+    let body = quoted_string_body(expression)?;
     Some(if body.is_empty() {
         StaticBool::False
     } else {
         StaticBool::TruthyNonBoolean
     })
+}
+
+pub(super) fn quoted_string_body(expression: &str) -> Option<&str> {
+    let body = expression.strip_prefix('\'')?.strip_suffix('\'')?;
+    let bytes = body.as_bytes();
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'\'' {
+            (bytes.get(index + 1) == Some(&b'\'')).then_some(())?;
+            index += 2;
+        } else {
+            index += 1;
+        }
+    }
+    Some(body)
 }
 
 pub(super) fn strip_expression(expression: &str) -> &str {

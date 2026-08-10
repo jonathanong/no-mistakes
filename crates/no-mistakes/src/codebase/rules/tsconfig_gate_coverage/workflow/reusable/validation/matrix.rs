@@ -3,7 +3,8 @@ use std::collections::BTreeMap;
 
 mod traversal;
 use traversal::{count_unexcluded, has_applicable_combination};
-mod uniform;
+mod combinations;
+pub(in super::super) use combinations::static_matrix_combinations;
 
 const MATRIX_JOB_LIMIT: usize = 256;
 const STATIC_MATRIX_ENUMERATION_LIMIT: usize = (MATRIX_JOB_LIMIT + 1) * 64;
@@ -62,10 +63,6 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
     }
 }
 
-pub(crate) fn uniform_static_matrix_values(job: &Value) -> BTreeMap<String, Value> {
-    uniform::values(job)
-}
-
 fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
     let mut axes = Vec::new();
     let mut dynamic = false;
@@ -77,11 +74,24 @@ fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
             return StaticMatrixAxes::Invalid;
         };
         match values {
+            Value::Sequence(values)
+                if values.iter().any(|value| {
+                    value.as_str().is_some_and(|value| {
+                        value.trim().starts_with("${{")
+                            && !super::super::super::complete_expression(value)
+                    })
+                }) =>
+            {
+                return StaticMatrixAxes::Invalid;
+            }
             Value::Sequence(values) if values.is_empty() => return StaticMatrixAxes::Invalid,
             Value::Sequence(values)
-                if values
-                    .iter()
-                    .all(|value| !matches!(value, Value::Sequence(_))) =>
+                if values.iter().all(|value| {
+                    !matches!(value, Value::Sequence(_))
+                        && !value
+                            .as_str()
+                            .is_some_and(|value| value.trim().starts_with("${{"))
+                }) =>
             {
                 axes.push((name.to_string(), values.clone()));
             }

@@ -1,22 +1,19 @@
-use super::super::conditions::{
-    callee_inputs, callee_secrets_valid, inputs_with_matrix_values, statically_not_enforcing,
-    statically_skipped_jobs, InputState,
-};
+use super::super::conditions::InputState;
 use super::super::effective_working_directory;
 use super::super::runtime::{
     container_runner_support, effective_shell, has_static_runnable_runs_on, ContainerRunnerSupport,
 };
 use super::model::{ActivationKey, ActivationMemo, ScanContext, WorkflowDocument};
-use super::steps::scan_job_steps;
 use super::validation::{
-    call_bindings_shape_valid, reusable_call_job_shape_valid, scan_job_shape_valid,
-    uniform_static_matrix_values, valid_job_dependencies, validated_reusable_target,
-    workflow_shape_valid, zero_instance_matrix,
+    call_bindings_shape_valid, reusable_call_job_shape_valid, valid_job_dependencies,
+    workflow_shape_valid,
 };
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
-use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
+
+mod jobs;
+use jobs::{JobScanner, JobStates};
 
 pub(super) fn scan_activation(
     path: &str,
@@ -72,87 +69,17 @@ fn scan_activation_uncached(
     if jobs.is_empty() || !valid_job_dependencies(jobs) {
         return None;
     }
-    let zero_instance_jobs = zero_instance_job_ids(jobs)?;
-    let skipped_jobs = statically_skipped_jobs(jobs, &zero_instance_jobs, |job| {
-        inputs_with_matrix_values(inputs, &uniform_static_matrix_values(job))
-    });
-    let mut projects = BTreeSet::new();
-    for (job_id, job) in jobs {
-        if !scan_job_shape_valid(job) {
-            return None;
-        }
-        let job_id = super::super::normalized_job_id(job_id)?;
-        let call_target = reusable_call_target(job)?;
-        let matrix_values = uniform_static_matrix_values(job);
-        let matrix_inputs = inputs_with_matrix_values(inputs, &matrix_values);
-        let job_skipped = skipped_jobs.contains(&job_id)
-            || statically_not_enforcing(job, &matrix_inputs)
-            || zero_instance_matrix(job);
-        let callee_projects = if let Some(target) = call_target {
-            let edge = workflow_values::call_edge(&job_id, target, job);
-            if !memo.register_target(validated_reusable_target(&edge)?) {
-                return None;
-            }
-            if active_paths.len() >= 10 {
-                return None;
-            }
-            if edge.local {
-                let callee_path = edge.to.as_deref().unwrap_or_default();
-                let callee = context.workflows.get(callee_path)?;
-                if !callee.call_contract_shape_valid {
-                    return None;
-                }
-                let contract = callee.call_contract.as_ref()?;
-                if !callee_secrets_valid(contract, job) {
-                    return None;
-                }
-                let callee_inputs = callee_inputs(Some(contract), job, &matrix_inputs)?;
-                let callee_projects = scan_activation(
-                    callee_path,
-                    callee,
-                    triggers,
-                    &callee_inputs,
-                    &active_paths,
-                    context,
-                    memo,
-                )?;
-                Some(if job_skipped {
-                    BTreeSet::new()
-                } else {
-                    callee_projects
-                })
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-        if job_skipped {
-            continue;
-        }
-        if call_target.is_some() {
-            projects.extend(callee_projects.unwrap_or_default());
-            continue;
-        }
-        if step_job_runner_supported(job) {
-            projects.extend(scan_job_steps(
-                job,
-                triggers,
-                &matrix_inputs,
-                workflow_cwd.clone(),
-                workflow_shell.clone(),
-                context,
-            ));
-        }
-    }
-    Some(projects)
-}
-
-fn zero_instance_job_ids(jobs: &serde_yaml::Mapping) -> Option<BTreeSet<String>> {
-    jobs.iter()
-        .filter(|(_, job)| zero_instance_matrix(job))
-        .map(|(job_id, _)| super::super::normalized_job_id(job_id))
-        .collect()
+    let job_states = JobStates::new(jobs, inputs)?;
+    JobScanner::new(
+        &job_states,
+        triggers,
+        workflow_cwd,
+        workflow_shell,
+        &active_paths,
+        context,
+        memo,
+    )
+    .scan(jobs)
 }
 
 fn reusable_call_target(job: &Value) -> Option<Option<&str>> {

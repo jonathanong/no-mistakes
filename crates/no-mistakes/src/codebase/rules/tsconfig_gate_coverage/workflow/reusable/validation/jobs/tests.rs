@@ -103,6 +103,8 @@ fn action_steps_require_static_canonical_targets() {
     for yaml in [
         "steps:\n  - uses: actions/checkout@v4",
         "steps:\n  - uses: owner/action/subdirectory@main",
+        "steps:\n  - uses: owner/action@release/2026.08",
+        "steps:\n  - uses: owner/action@de0fac2e4500dabe0009e67214ff5f5447ce83dd",
         "steps:\n  - uses: ./.github/actions/check",
         "steps:\n  - uses: docker://alpine:3.8",
     ] {
@@ -111,6 +113,10 @@ fn action_steps_require_static_canonical_targets() {
     for yaml in [
         "steps:\n  - uses: actions/checkout",
         "steps:\n  - uses: actions/checkout@${{ github.ref }}",
+        "steps:\n  - uses: actions/checkout@bad..ref",
+        "steps:\n  - uses: actions/checkout@main branch",
+        "steps:\n  - uses: actions/checkout@refs//heads/main",
+        "steps:\n  - uses: actions/checkout@release.lock",
         "steps:\n  - uses: ./../outside",
         "steps:\n  - uses: docker://",
     ] {

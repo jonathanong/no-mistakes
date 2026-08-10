@@ -271,3 +271,22 @@ fn uniform_matrix_values_control_steps_within_the_same_job() {
         ])
     );
 }
+
+#[test]
+fn matrix_values_stay_correlated_across_job_and_step_conditions() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  experimental:\n    strategy:\n      matrix:\n        experimental: [true, false]\n    continue-on-error: '${{ matrix.experimental }}'\n    runs-on: ubuntu-latest\n    steps:\n      - if: '${{ matrix.experimental }}'\n        run: tsc --noEmit --project experimental/tsconfig.json\n  stable:\n    strategy:\n      matrix:\n        experimental: [true, false]\n    runs-on: ubuntu-latest\n    steps:\n      - if: '${{ !matrix.experimental }}'\n        run: tsc --noEmit --project stable/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "experimental/tsconfig.json".to_string(),
+        "stable/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["stable/tsconfig.json".to_string()])
+    );
+}

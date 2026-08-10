@@ -81,6 +81,14 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout\n      - run: tsc --noEmit --project malformed-action/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-action-sibling/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/invalid-action-ref.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@bad..ref\n      - run: tsc --noEmit --project invalid-action-ref/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-action-ref-sibling/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/invalid-action-lock-ref.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@refs/heads/release.lock\n      - run: tsc --noEmit --project invalid-action-lock-ref/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-action-lock-ref-sibling/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/missing-steps.yml",
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project missing-steps-sibling/tsconfig.json\n",
         ),
@@ -190,6 +198,10 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "sequence-misspelled-trigger",
         "malformed-action",
         "malformed-action-sibling",
+        "invalid-action-ref",
+        "invalid-action-ref-sibling",
+        "invalid-action-lock-ref",
+        "invalid-action-lock-ref-sibling",
         "missing-steps-sibling",
         "missing-runs-on-sibling",
         "webhook-only-trigger",
