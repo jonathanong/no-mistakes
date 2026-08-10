@@ -18,8 +18,9 @@ mod validation;
 use model::{ActivationKey, ActivationMemo, ScanContext, WorkflowDocument};
 use steps::scan_job_steps;
 use validation::{
-    canonical_local_call_target, canonical_remote_call_target, reusable_call_job_shape_valid,
-    valid_job_dependencies, workflow_call_shape_valid, zero_instance_matrix,
+    call_bindings_shape_valid, canonical_local_call_target, canonical_remote_call_target,
+    reusable_call_job_shape_valid, scan_job_shape_valid, valid_job_dependencies,
+    workflow_call_shape_valid, zero_instance_matrix,
 };
 
 pub(super) fn collect_ci_projects_with_stats(
@@ -123,7 +124,6 @@ fn scan_activation_uncached(
 ) -> Option<BTreeSet<String>> {
     let mut active_paths = active_paths.clone();
     active_paths.insert(path.to_string());
-    let depth = active_paths.len();
     let workflow_cwd = effective_working_directory(document.value, Some(".".to_string()));
     let workflow_shell = effective_shell(document.value, None);
     let jobs = document.value.get("jobs").and_then(Value::as_mapping)?;
@@ -133,9 +133,14 @@ fn scan_activation_uncached(
     let skipped_jobs = statically_skipped_jobs(jobs, inputs);
     let mut projects = BTreeSet::new();
     for (job_id, job) in jobs {
+        if !scan_job_shape_valid(job) {
+            return None;
+        }
         let job_id = super::normalized_job_id(job_id)?;
         let call_target = match job.get("uses") {
-            Some(Value::String(target)) if reusable_call_job_shape_valid(job) => {
+            Some(Value::String(target))
+                if reusable_call_job_shape_valid(job) && call_bindings_shape_valid(job) =>
+            {
                 Some(target.as_str())
             }
             Some(_) => return None,
@@ -153,7 +158,7 @@ fn scan_activation_uncached(
                     return None;
                 }
                 let contract = callee.call_contract.as_ref()?;
-                if depth == 10 || !callee_secrets_valid(contract, job) {
+                if active_paths.len() == 10 || !callee_secrets_valid(contract, job) {
                     return None;
                 }
                 let callee_inputs = callee_inputs(Some(contract), job, inputs)?;

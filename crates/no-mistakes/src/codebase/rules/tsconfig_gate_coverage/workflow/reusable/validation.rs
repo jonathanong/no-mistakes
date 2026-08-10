@@ -2,10 +2,16 @@ use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod contracts;
+mod jobs;
 mod matrix;
 
 pub(super) use contracts::workflow_call_shape_valid;
+pub(super) use jobs::{call_bindings_shape_valid, steps_shape_valid};
 pub(super) use matrix::zero_instance_matrix;
+
+pub(super) fn scan_job_shape_valid(job: &Value) -> bool {
+    matrix::matrix_shape_valid(job) && steps_shape_valid(job)
+}
 
 pub(super) fn canonical_local_call_target(target: &str) -> bool {
     target
