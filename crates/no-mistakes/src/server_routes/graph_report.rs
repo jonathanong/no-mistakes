@@ -10,34 +10,37 @@ pub(super) fn build_report(
 fn build_report_with_session(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    all_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
     tsconfig: &TsConfig,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> ProjectReport {
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
     let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
-    build_report_with_resolver(root, facts, all_facts, &resolver)
+    build_report_with_resolver(root, facts, client_facts, tsconfig, session, &resolver)
 }
 
 fn build_report_with_resolver(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    all_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    tsconfig: &TsConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     resolver: &dyn ImportResolution,
 ) -> ProjectReport {
-    build_report_and_relationships(root, facts, all_facts, resolver).0
+    build_report_and_relationships(root, facts, client_facts, tsconfig, session, resolver).0
 }
 
 pub(super) fn build_prepared_report(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    all_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
     tsconfig: &TsConfig,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> PreparedProjectReport {
     let visible = facts.keys().cloned().collect::<HashSet<_>>();
     let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
-    let (report, relationships) = build_report_and_relationships(root, facts, all_facts, &resolver);
+    let (report, relationships) =
+        build_report_and_relationships(root, facts, client_facts, tsconfig, session, &resolver);
     PreparedProjectReport {
         report,
         relationships: PreparedRelationshipIndex::from_edges(
@@ -52,7 +55,9 @@ pub(super) fn build_prepared_report(
 fn build_report_and_relationships(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    all_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    client_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    tsconfig: &TsConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     resolver: &dyn ImportResolution,
 ) -> (ProjectReport, Vec<RelationshipEdge>) {
     let mut routes = Vec::new();
@@ -85,7 +90,12 @@ fn build_report_and_relationships(
     }
     routes.sort();
     routes.dedup();
-    relationships.extend(client_call_relationships(facts, all_facts, &routes));
+    relationships.extend(client_call_relationships(
+        client_facts,
+        tsconfig,
+        session,
+        &routes,
+    ));
     relationships.sort();
     relationships.dedup();
     let mut edges = relationships

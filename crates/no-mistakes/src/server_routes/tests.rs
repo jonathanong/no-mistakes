@@ -44,6 +44,11 @@ fn configured_mounts_and_client_calls_share_canonical_relationships() {
         crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
     let root = fixture.path().canonicalize().unwrap();
     let prepared = prepare_analysis(&root, None).unwrap();
+    assert!(crate::codebase::test_filter::TestFileFilter::new(
+        &root,
+        prepared.config.as_ref().unwrap(),
+    )
+    .is_match(&root, &root.join("backend/client.test.ts")));
     assert_eq!(
         prepared.facts[&root.join("backend/client.ts")]
             .route_refs
@@ -58,19 +63,44 @@ fn configured_mounts_and_client_calls_share_canonical_relationships() {
         to: route.clone(),
         kind: EdgeKind::ServerRoute,
     };
-    let client_edge = Edge {
-        from: "backend/client.ts".to_string(),
-        to: route.clone(),
-        kind: EdgeKind::ClientCall,
-    };
     assert!(report.edges.contains(&server_edge));
-    assert!(report.edges.contains(&client_edge));
+    assert!(report
+        .edges
+        .iter()
+        .all(|edge| edge.from != "backend/client.test.ts"));
+    for route in ["/api/v1/imported/*", "/api/v1/local/*", "/api/v1/users/*"] {
+        assert!(
+            report.edges.contains(&Edge {
+                from: "backend/client.ts".to_string(),
+                to: route.to_string(),
+                kind: EdgeKind::ClientCall,
+            }),
+            "missing {route}: {:?}",
+            report.edges
+        );
+    }
 
     let indexed = analyze_project_with_prepared_indexed(&prepared, &[]).unwrap();
     assert_eq!(indexed.edge_view(&[], None), report.edges);
     assert_eq!(
         indexed.related(&["backend/client.ts".to_string()], RelatedDirection::Deps),
-        vec![client_edge]
+        vec![
+            Edge {
+                from: "backend/client.ts".to_string(),
+                to: "/api/v1/imported/*".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+            Edge {
+                from: "backend/client.ts".to_string(),
+                to: "/api/v1/local/*".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+            Edge {
+                from: "backend/client.ts".to_string(),
+                to: "/api/v1/users/*".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+        ]
     );
     assert_eq!(
         indexed.related(&[route], RelatedDirection::Dependents),
@@ -85,8 +115,29 @@ fn configured_mounts_and_client_calls_share_canonical_relationships() {
                 to: "backend/client.ts".to_string(),
                 kind: EdgeKind::ClientCall,
             },
+            Edge {
+                from: "/api/v1/users/*".to_string(),
+                to: "backend/excluded-client.ts".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
         ]
     );
+}
+
+#[test]
+fn filters_exclude_client_call_sources_without_broadening_route_definitions() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
+    let root = fixture.path().canonicalize().unwrap();
+    let report = analyze_project(&root, None, &["backend/api/users.ts".to_string()]).unwrap();
+    assert!(report
+        .edges
+        .iter()
+        .all(|edge| edge.kind == EdgeKind::ServerRoute));
+    assert!(report
+        .edges
+        .iter()
+        .any(|edge| edge.from == "backend/api/users.ts"));
 }
 
 #[test]

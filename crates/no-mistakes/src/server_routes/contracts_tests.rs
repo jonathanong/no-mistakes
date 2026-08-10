@@ -31,12 +31,16 @@ fn prepared_routes_and_contracts_share_one_union_fact_parse() {
 
     let graph = include_str!("graph.rs");
     let graph_prepare = include_str!("graph_prepare.rs");
+    let graph_route_defs = include_str!("graph_route_defs.rs");
     let contracts_source = include_str!("contracts.rs");
     // Match the shared prefix so session-aware variants remain covered by the
     // aggregate-count guard instead of silently escaping it after a rename.
     assert_eq!(
         graph.matches("collect_ts_facts_with_context").count()
             + graph_prepare
+                .matches("collect_ts_facts_with_context")
+                .count()
+            + graph_route_defs
                 .matches("collect_ts_facts_with_context")
                 .count(),
         2

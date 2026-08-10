@@ -1,20 +1,42 @@
-/// Match static client route references against the configured route definitions
-/// already expanded from server facts. This produces client -> route edges once;
-/// route reports and related traversal only project the prepared index.
+/// Match configured client sources against route definitions already expanded
+/// from server facts. This produces client -> route edges once; route reports
+/// and related traversal only project the prepared index.
 fn client_call_relationships(
-    _route_facts: &HashMap<PathBuf, FileFacts>,
-    all_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    facts: &crate::codebase::ts_source::facts::TsFactMap,
+    tsconfig: &TsConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     routes: &[ServerRoute],
 ) -> Vec<RelationshipEdge> {
-    all_facts
+    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        visible.iter().cloned().collect(),
+    );
+    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
+    facts
         .iter()
         .flat_map(|(path, file_facts)| {
-            file_facts.route_refs.iter().flat_map(move |reference| {
+            let mut references: Vec<_> = file_facts
+                .route_refs
+                .iter()
+                .map(|reference| reference.pattern.clone())
+                .collect();
+            references.extend(
+                crate::codebase::dependencies::graph::route_helper_ref_patterns_with_lines(
+                    path,
+                    file_facts,
+                    facts,
+                    &resolver,
+                    &graph_files,
+                )
+                .into_iter()
+                .map(|(_, pattern)| pattern),
+            );
+            references.into_iter().flat_map(move |reference| {
                 routes
                     .iter()
                     .filter(move |route| {
                         crate::codebase::ts_routes::matcher::matches(
-                            &reference.pattern,
+                            &reference,
                             &route.route,
                         )
                     })

@@ -3,4 +3,10 @@ projects:
     type: server
     root: backend
     routes:
-      - **/*.ts
+      - "**/*.ts"
+tests:
+  vitest:
+    projects:
+      backend:
+        include:
+          - "backend/**/*.test.ts"
