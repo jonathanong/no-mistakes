@@ -49,7 +49,8 @@ resolving to an empty plan.
 JSON plans include `changed_files`, the sorted, deduplicated, root-relative
 inventory prepared by that invocation. It is present even when no tests are
 selected and retains deleted paths plus both sides of detected renames and
-copies. Non-JSON formats continue to render selected tests only.
+copies. Non-JSON formats other than `explain` continue to render selected tests
+only.
 
 Manual `--changed-file` and `--changed-files` entries must remain within
 `--root`, both lexically and after resolving an existing symlink. A symlink to
@@ -59,6 +60,25 @@ analysis follows the resolved target.
 Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and
 `--json`.
+
+`--format explain` renders a deterministic, human-readable plan: the normalized
+changed-file inventory (including files that selected no tests), selected test
+confidence, edge kinds, edge provenance when available, fallback state, and
+warnings. Self-selected tests are rendered as node provenance rather than a
+dangling edge. Use JSON when another program needs the same structured fields.
+
+`--direct-test-owner` requires an explicit framework and performs a bounded
+owner query instead of configured planning. It selects changed tests owned by
+that framework plus only framework-owned tests connected by exactly one reverse
+canonical graph edge, then attaches their execution targets. It ignores the
+selected environment's groups, includes/excludes, limits, samples, and fallback
+policy; `--entrypoint`, `--limit-percent`, `--limit-files`, and
+`--global-config-fallback` therefore conflict with it. Direct-owner selection
+is intentionally bounded to changed files and one reverse canonical graph edge;
+use `no-mistakes tests impact --entrypoint <FILE>` for explicit entrypoint
+traversal. Its result contains one `direct-test-owner` group and never reports
+a fallback. It still reports canonical graph warnings for dynamic resource calls
+in changed files, because they can make reverse owner selection incomplete.
 
 Configured `fullSuiteTriggers.projects` entries may use `{ paths, targets }` to
 select only the named Vitest or Playwright runner projects. These selections

@@ -51,6 +51,10 @@ pub struct TsFactPlan {
 
 #[derive(Debug, Clone, Default)]
 pub struct TsFileFacts {
+    /// A source read or collector failure. Consumers that need a complete
+    /// answer must surface this instead of treating the empty facts as a
+    /// successful analysis result.
+    pub operational_error: Option<String>,
     /// Parser diagnostic for this source file. Facts may contain the parser's
     /// recovered AST, but consumers that require sound syntax can reject it.
     pub parse_error: Option<String>,

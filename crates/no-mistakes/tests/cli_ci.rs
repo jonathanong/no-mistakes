@@ -77,6 +77,64 @@ fn impacted_checks_lists_commands() {
 }
 
 #[test]
+fn impacted_checks_empty_diagnostics_are_opt_in_and_format_stable() {
+    let root = case("impacted-checks/basic");
+    for (file, code) in [
+        (None, "no-changed-files"),
+        (Some("src/style.css"), "no-impacted-checks"),
+    ] {
+        for format in ["json", "yml", "paths", "md", "human"] {
+            let mut args = vec![
+                "impacted-checks",
+                "--root",
+                root.to_str().unwrap(),
+                "--format",
+                format,
+            ];
+            if let Some(file) = file {
+                args.push(file);
+            }
+            let silent = run(&args);
+            assert!(silent.status.success(), "{}", stderr(&silent));
+            assert!(stderr(&silent).is_empty());
+
+            let mut diagnosed_args = args.clone();
+            diagnosed_args.push("--diagnose-empty");
+            let diagnosed = run(&diagnosed_args);
+            assert!(diagnosed.status.success(), "{}", stderr(&diagnosed));
+            assert_eq!(diagnosed.stdout, silent.stdout);
+            let message = if code == "no-changed-files" {
+                "No changed files were provided."
+            } else {
+                "No checks matched the changed files."
+            };
+            assert_eq!(stderr(&diagnosed), format!("note[{code}]: {message}\n"));
+        }
+    }
+}
+
+#[test]
+fn impacted_checks_diagnose_empty_does_not_mask_failures() {
+    let root = case("impacted-checks/multi-framework");
+    let config = root.join("invalid.no-mistakes.yml");
+    let output = run(&[
+        "impacted-checks",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+        "--diagnose-empty",
+        "--format",
+        "json",
+    ]);
+    assert!(!output.status.success());
+    assert!(stdout(&output).is_empty());
+    let err = stderr(&output);
+    assert!(err.contains("invalid.no-mistakes.yml"), "{err}");
+    assert!(!err.contains("note["), "{err}");
+}
+
+#[test]
 fn impacted_checks_generic_only_skips_test_commands() {
     let root = case("impacted-checks/multi-framework");
     let config = case("../fixtures/impacted-checks/generic-only.no-mistakes.yml");

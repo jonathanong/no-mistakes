@@ -6,6 +6,9 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+mod targets;
+pub(crate) use targets::resolve_targets;
+
 /// Resolved root, tsconfig, and the single absolute target file. Shared setup
 /// for every lightweight query command so `--root`/`--tsconfig` fallback and
 /// path normalization behave identically (and match `SymbolIndex` keys, which
@@ -18,7 +21,7 @@ pub(crate) struct Target {
     pub sources: Arc<crate::codebase::ts_source::SourceStore>,
     dataset: Arc<crate::codebase::analysis_dataset::AnalysisDataset>,
     explicit_tsconfig: Option<PathBuf>,
-    visible_files: OnceLock<HashSet<PathBuf>>,
+    visible_files: Arc<OnceLock<HashSet<PathBuf>>>,
     tsconfig: OnceLock<std::result::Result<TsConfig, String>>,
 }
 
@@ -35,38 +38,8 @@ pub(crate) fn resolve_target(
     root: Option<&Path>,
     tsconfig: Option<&Path>,
 ) -> Result<Target> {
-    let cwd = std::env::current_dir().context("reading current directory")?;
-    let root = normalize_path(&crate::cli::resolve_root(
-        root.unwrap_or_else(|| Path::new(".")),
-        &cwd,
-    ));
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    let dataset = session.dataset(&root);
-    let snapshot = dataset.visible_paths_arc();
-    let sources = dataset.sources_for(&root);
-    let abs_file = resolve_input_file(file, &root, &cwd);
-    // Reject a missing target or a directory up front so a typo or stale path
-    // is an explicit error rather than an empty (and misleading) result.
-    anyhow::ensure!(abs_file.is_file(), "not a file: {}", file.display());
-    let explicit_tsconfig = tsconfig.map(|path| {
-        normalize_path(&if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            root.join(path)
-        })
-    });
-    Ok(Target {
-        root,
-        visible_paths: snapshot,
-        abs_file,
-        session,
-        sources,
-        dataset,
-        explicit_tsconfig,
-        visible_files: OnceLock::new(),
-        tsconfig: OnceLock::new(),
-    })
+    let files = vec![file.to_path_buf()];
+    Ok(resolve_targets(&files, root, tsconfig)?.remove(0))
 }
 
 impl Target {

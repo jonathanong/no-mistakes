@@ -175,6 +175,33 @@ fn resolve_check_exit_codes() {
 }
 
 #[test]
+fn resolve_check_batch_is_deterministic_and_reports_partial_failure() {
+    let root = fixture("queries");
+    let output = run(&[
+        "resolve-check",
+        "consumer.ts",
+        "broken.ts",
+        "consumer.ts",
+        "--root",
+        root.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(output.status.code(), Some(1));
+    let value = json(&output);
+    assert_eq!(value["allResolve"], false);
+    assert_eq!(value["unresolvedFiles"], serde_json::json!(["broken.ts"]));
+    assert_eq!(
+        value["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|result| result["file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["broken.ts", "consumer.ts"]
+    );
+}
+
+#[test]
 fn human_output_is_readable() {
     let root = fixture("queries");
     let output = run(&[

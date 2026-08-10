@@ -113,6 +113,22 @@ changed-file inventory prepared by that same call, relative to the request root.
 The field is present even when no tests are selected and retains deleted paths
 plus both sides of detected renames and copies.
 
+Set `directTestOwner: true` with an explicit `framework` to select only changed
+framework-owned tests and framework-owned tests one reverse canonical graph edge
+away. This bypasses test-plan environment policy (including groups, limits,
+samples, fallback, and include/exclude filtering), attaches normal execution
+targets, and returns a `direct-test-owner` group with `fallback_triggered:
+false`. `limitPercent`, `limitFiles`, and `globalConfigFallback` conflict with
+this option. `entrypoints` also conflicts with it: direct-owner selection is
+bounded to changed files and one reverse canonical graph edge, so use
+`testsImpact()` for explicit entrypoint traversal. The returned warnings retain
+canonical graph diagnostics for dynamic resource calls in changed files, so
+incomplete reverse ownership is visible to API consumers.
+
+The TypeScript declaration models this as a discriminated option: direct-owner
+plans require `framework`, while ordinary plans omit `directTestOwner` or set it
+to `false`.
+
 `testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests. Vitest plans also use this surface for a
@@ -230,6 +246,11 @@ Timing entries use stable phase identifiers and fractional-millisecond
 durations. The lazy `graph` phase is present only when dependency analysis is
 needed. The property is omitted by default. Unlike CLI `--timings`, Node timing
 collection does not print progress to stderr.
+
+If no checks are selected, the report includes `empty_result` with a stable
+`code` (`no-changed-files` or `no-impacted-checks`) and a human-readable
+`message`. It is omitted from reports containing checks. The async API remains
+stderr-free, including for empty results.
 
 Set `genericOnly: true` to return only configured `checks.commands` entries.
 It preserves changed-file collection but skips test-framework discovery and

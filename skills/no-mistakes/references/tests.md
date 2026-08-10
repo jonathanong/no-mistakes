@@ -56,7 +56,17 @@ Key flags:
   config file changes (package.json, tsconfig.json, etc.) or when a lockfile
   diff cannot be parsed; does not trigger for ordinary source files that happen
   to have no test dependents.
-- `--format paths|json` — `paths` for shell substitution, `json` for agents.
+- `--format paths|json|explain` — `paths` for shell substitution, `json` for
+  agents, and `explain` for deterministic changed-file inventory (including
+  files with no selected tests), confidence, dependency-path, edge provenance,
+  fallback, and warning output.
+- `--direct-test-owner` — requires a framework; selects changed framework-owned
+  tests plus only tests one reverse canonical graph edge away, with normal
+  execution targets. It bypasses test-plan groups, environment include/exclude,
+  limits, sampling, fallback, and explicit entrypoint traversal. Do not combine
+  it with `--entrypoint`, limit, or global fallback overrides; use `tests impact`
+  for an explicit entrypoint query. Canonical graph warnings are still reported
+  when dynamic resource calls could make reverse ownership incomplete.
 
 `fullSuiteTriggers.projects` can scope a configured trigger to runner projects:
 
@@ -169,6 +179,10 @@ Impacted tests for specific changed files (no `testPlan` config required).
 ```sh
 no-mistakes tests impact src/utils.mts --format paths
 ```
+
+Formats: `json`, `paths`, `commands`, `markdown`, and `md`. Use `tests plan
+--format explain` when changed-file provenance needs a human-readable
+explanation; `tests impact` does not accept `explain`.
 
 Traversal follows `next/dynamic(() => import('./Foo'))` boundaries (Foo's tests
 surface at `medium` confidence). Two opt-in `tests.impact` config knobs refine

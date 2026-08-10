@@ -111,6 +111,14 @@ pub(crate) struct PlanArgs {
     #[arg(long = "global-config-fallback")]
     pub(crate) global_config_fallback: Option<bool>,
 
+    /// Select changed framework-owned tests plus tests one reverse graph edge away.
+    ///
+    /// This intentionally bypasses configured test-plan groups, limits, sampling,
+    /// fallback policy, and explicit entrypoint traversal. A framework is required
+    /// so test ownership is explicit.
+    #[arg(long = "direct-test-owner")]
+    pub(crate) direct_test_owner: bool,
+
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
     pub(crate) format: Option<PlanFormat>,
@@ -148,7 +156,7 @@ pub(crate) struct ImpactArgs {
 
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
-    pub(crate) format: Option<PlanFormat>,
+    pub(crate) format: Option<ImpactFormat>,
 
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
@@ -225,8 +233,30 @@ pub(crate) enum PlanFormat {
     Json,
     Paths,
     Commands,
+    Explain,
     Markdown,
     Md,
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ImpactFormat {
+    Json,
+    Paths,
+    Commands,
+    Markdown,
+    Md,
+}
+
+impl From<ImpactFormat> for PlanFormat {
+    fn from(format: ImpactFormat) -> Self {
+        match format {
+            ImpactFormat::Json => Self::Json,
+            ImpactFormat::Paths => Self::Paths,
+            ImpactFormat::Commands => Self::Commands,
+            ImpactFormat::Markdown => Self::Markdown,
+            ImpactFormat::Md => Self::Md,
+        }
+    }
 }
 
 #[derive(Args, Debug, Clone)]
@@ -275,3 +305,6 @@ pub(crate) enum GraphFormat {
     Mermaid,
     Json,
 }
+
+#[cfg(test)]
+mod tests;

@@ -3,6 +3,8 @@ use crate::tests::{PlanFormat, TestPlan};
 use anyhow::Result;
 use std::fmt::Write;
 
+mod explain;
+
 pub(crate) fn render(plan: &TestPlan, format: PlanFormat, command_name: &str) -> Result<String> {
     let mut output = String::new();
     match format {
@@ -18,6 +20,7 @@ pub(crate) fn render(plan: &TestPlan, format: PlanFormat, command_name: &str) ->
                 writeln!(output, "{command}")?;
             }
         }
+        PlanFormat::Explain => explain::render(plan, &mut output)?,
         PlanFormat::Markdown | PlanFormat::Md => {
             writeln!(output, "{}", render_markdown_plan(plan))?;
         }

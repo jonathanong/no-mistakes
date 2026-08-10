@@ -46,3 +46,45 @@ fn resource_change_plan_json_keeps_resource_call_site_provenance() {
         serde_json::json!([{"call_kind": "read-file-sync", "line": 3}])
     );
 }
+
+#[test]
+fn direct_test_owner_plan_reports_changed_resource_diagnostics() {
+    let fixture = gitignore_fixture::materialize_saved("../test-plan/resource-impact");
+    let root = fixture.path();
+    let output = Command::new(bin())
+        .args(["tests", "plan", "vitest", "--root"])
+        .arg(root)
+        .args([
+            "--changed-file",
+            "extractor-dynamic.ts",
+            "--direct-test-owner",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let plan: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(plan["groups"][0]["type"], "direct-test-owner");
+    assert_eq!(
+        plan["warnings"],
+        serde_json::json!([
+            {
+                "type": "dynamic-resource-path",
+                "message": "Dynamic filesystem resource path in `extractor-dynamic.ts` at line 4 cannot be resolved statically; use a literal path or configure a test target trigger.",
+                "file": "extractor-dynamic.ts",
+                "line": 4,
+            },
+            {
+                "type": "dynamic-resource-cwd",
+                "message": "Dynamic filesystem resource cwd in `extractor-dynamic.ts` at line 6 cannot be resolved statically; use a literal cwd or configure a test target trigger.",
+                "file": "extractor-dynamic.ts",
+                "line": 6,
+            },
+        ])
+    );
+}

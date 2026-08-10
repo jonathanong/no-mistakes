@@ -67,6 +67,9 @@ pub struct ImpactedChecksArgs {
     /// Legacy programmatic timing switch. CLI timing flags are root-global.
     #[arg(skip)]
     pub(crate) timings: bool,
+    /// Explain a successful empty result on stderr.
+    #[arg(long, default_value_t = false)]
+    pub(crate) diagnose_empty: bool,
 }
 
 /// The elapsed time for one `impacted-checks` analysis phase.
@@ -92,6 +95,15 @@ pub struct CheckCommand {
     pub files: Vec<String>,
 }
 
+/// Why an impacted-checks report contains no checks.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct ImpactedChecksEmptyResult {
+    /// Stable machine-readable reason code.
+    pub code: String,
+    /// Human-readable explanation of the empty result.
+    pub message: String,
+}
+
 /// The category of a [`CheckCommand`].
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -113,6 +125,9 @@ pub struct ImpactedChecksReport {
     pub warnings: Vec<Warning>,
     /// True when a full-suite fallback was triggered (e.g. global config change).
     pub fallback_triggered: bool,
+    /// Present only when the successful report has no changed files or checks.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub empty_result: Option<ImpactedChecksEmptyResult>,
 }
 
 pub fn run(args: ImpactedChecksArgs) -> Result<ExitCode> {
@@ -133,7 +148,14 @@ pub fn run(args: ImpactedChecksArgs) -> Result<ExitCode> {
         &mut stdout.lock(),
         crate::invocation::check_timeout,
     )
-    .map(|()| ExitCode::SUCCESS)
+    .map(|()| {
+        if args.diagnose_empty {
+            if let Some(empty_result) = &report.empty_result {
+                eprintln!("note[{}]: {}", empty_result.code, empty_result.message);
+            }
+        }
+        ExitCode::SUCCESS
+    })
 }
 
 const _: fn(ImpactedChecksArgs) -> Result<ExitCode> = run;

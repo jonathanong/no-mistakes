@@ -19,7 +19,9 @@ import type {
   MermaidValidationOptions,
   MermaidValidationResult,
   ResolveCheckOptions,
+  ResolveCheckFilesOptions,
   ResolveCheckResult,
+  ResolveCheckBatchResult,
   GraphEdge,
   PlaywrightOptions,
   PlaywrightRelatedOptions,
@@ -86,6 +88,9 @@ export function callSites(
 export function resolveCheck(
   options: WithInvocationOptions<ResolveCheckOptions>,
 ): Promise<ResolveCheckResult>;
+export function resolveCheck(
+  options: WithInvocationOptions<ResolveCheckFilesOptions>,
+): Promise<ResolveCheckBatchResult>;
 export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<unknown>;
 export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
 export function check(options?: WithInvocationOptions<ProjectOptions>): Promise<CheckReport>;

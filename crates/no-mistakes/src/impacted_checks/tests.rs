@@ -9,6 +9,7 @@ use crate::tests::TestFramework;
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod coverage;
 mod generic_checks;
 mod runner_isolation;
 mod timeout;
@@ -56,6 +57,7 @@ fn args(files: &[&str]) -> ImpactedChecksArgs {
         json: false,
         generic_only: false,
         timings: false,
+        diagnose_empty: false,
     }
 }
 
@@ -79,6 +81,7 @@ fn fanout_args(root: &Path) -> ImpactedChecksArgs {
         json: false,
         generic_only: false,
         timings: false,
+        diagnose_empty: false,
     }
 }
 
@@ -185,6 +188,63 @@ fn renders_every_format() {
 }
 
 #[test]
+fn empty_results_are_classified_and_rendered_in_every_format() {
+    let no_files = generate_impacted_checks(&args(&[])).unwrap();
+    assert_eq!(
+        no_files.empty_result,
+        Some(ImpactedChecksEmptyResult {
+            code: "no-changed-files".to_string(),
+            message: "No changed files were provided.".to_string(),
+        })
+    );
+    let no_checks = generate_impacted_checks(&args(&["src/style.css"])).unwrap();
+    assert_eq!(
+        no_checks
+            .empty_result
+            .as_ref()
+            .map(|empty| empty.code.as_str()),
+        Some("no-impacted-checks")
+    );
+    assert!(generate_impacted_checks(&args(&["src/foo.ts"]))
+        .unwrap()
+        .empty_result
+        .is_none());
+
+    for report in [&no_files, &no_checks] {
+        assert!(render(report, Format::Json)
+            .unwrap()
+            .contains("empty_result"));
+        assert!(render(report, Format::Yml)
+            .unwrap()
+            .contains("empty_result:"));
+        assert!(render(report, Format::Paths).unwrap().is_empty());
+        assert!(render(report, Format::Md)
+            .unwrap()
+            .contains("No checks for the changed files."));
+        assert!(render(report, Format::Human)
+            .unwrap()
+            .contains("No checks for the changed files."));
+    }
+}
+
+#[test]
+fn empty_result_diagnosis_does_not_add_analysis_work() {
+    let mut empty = args(&[]);
+    empty.root = multi_framework_fixture();
+    let (report, stats) = generate_impacted_checks_with_stats(&empty).unwrap();
+    assert_eq!(
+        report.empty_result.as_ref().unwrap().code,
+        "no-changed-files"
+    );
+    // Empty-result classification is a projection over the prepared report;
+    // it must not trigger another framework discovery or graph build.
+    assert_eq!(stats.framework_discoveries, 4);
+    // The configured plan itself needs one graph even for an empty changed set;
+    // classification must not build a second one.
+    assert_eq!(stats.graph_builds, 1);
+}
+
+#[test]
 fn renders_empty_warnings_and_fallback() {
     let report = ImpactedChecksReport {
         changed_files: Vec::new(),
@@ -196,6 +256,7 @@ fn renders_empty_warnings_and_fallback() {
             line: None,
         }],
         fallback_triggered: true,
+        empty_result: None,
     };
     let human = render(&report, Format::Human).unwrap();
     assert!(human.contains("No checks for the changed files"));

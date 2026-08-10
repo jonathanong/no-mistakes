@@ -10,10 +10,17 @@ pub(super) fn facts_from_collection_result(result: anyhow::Result<TsFileFacts>) 
         Ok(facts) => facts,
         // Indexable extensions are expected to have an OXC source type.
         // Reaching this branch means that allowlist and OXC support drifted.
-        Err(error) => TsFileFacts {
-            parse_error: Some(error.to_string()),
-            ..TsFileFacts::default()
-        },
+        Err(error) => {
+            let error = error.to_string();
+            TsFileFacts {
+                // Keep both channels populated: operational_error is the
+                // request-level collection failure, while parse_error is the
+                // legacy diagnostic channel consumed by existing projections.
+                operational_error: Some(error.clone()),
+                parse_error: Some(error),
+                ..TsFileFacts::default()
+            }
+        }
     }
 }
 
@@ -27,8 +34,12 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     let source = match sources.read_path(path) {
         Ok(source) => source,
         Err(error) => {
+            let error = format!("failed to read {}: {error}", path.display());
             return Some(TsFileFacts {
-                parse_error: Some(format!("failed to read {}: {error}", path.display())),
+                // A read failure is both operational and parser-visible so
+                // old graph/report consumers retain their diagnostic details.
+                operational_error: Some(error.clone()),
+                parse_error: Some(error),
                 ..TsFileFacts::default()
             });
         }
@@ -118,6 +129,7 @@ pub(crate) fn collect_file_facts_from_program(
         Default::default()
     };
     TsFileFacts {
+        operational_error: None,
         parse_error,
         fatal_parse_error: false,
         source: plan.source.then(|| std::sync::Arc::<str>::from(source)),

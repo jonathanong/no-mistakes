@@ -45,7 +45,7 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`exports-of`](exports-of.md) | A file's named exports and who imports each. |
 | [`dead-exports`](dead-exports.md) | Whether any file still imports the given exports. |
 | [`call-sites`](call-sites.md) | Call sites of an exported function with argument shapes. |
-| [`resolve-check`](resolve-check.md) | Whether all imports in a file resolve. |
+| [`resolve-check`](resolve-check.md) | Whether all imports in one or more files resolve. |
 | [`fetches`](fetches.md) | Next.js routes mapped to static fetch API calls. |
 | [`flow`](flow.md) | Compact dependency/symbol flow around one file or export. |
 | [`check`](check.md) | Configured project-wide checks. |

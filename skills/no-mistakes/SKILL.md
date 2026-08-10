@@ -108,7 +108,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | What does this file export, and who imports each export? | `no-mistakes exports-of <file>` |
 | Is this export still used anywhere? (yes/no) | `no-mistakes dead-exports <file> [NAME...]` |
 | Where is this function called, and with what argument shapes? | `no-mistakes call-sites <file> SYMBOL` |
-| Do all imports in this file resolve? | `no-mistakes resolve-check <file>` |
+| Do all imports in these files resolve? | `no-mistakes resolve-check <file> [file...]` |
 | Are configured Mermaid fences valid? | `no-mistakes check --format json` |
 | What must I update before changing this function signature? | `no-mistakes symbols <file> --mode signature-impact --symbol SYMBOL --format json` |
 | What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, shared-helper test discovery, test deletion, or queue call-disposition question? | Read `references/impact-recipes.md` |
@@ -136,6 +136,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | What are the workflow edges, job runner/timeout/permission settings, env declarations, or static secret-name use sites? | `no-mistakes ci topology --format json` |
 | What local validation commands should I run for these changed files? | `no-mistakes impacted-checks <file...> --format paths` |
 | Which configured generic validation commands apply, without test selection? | `no-mistakes impacted-checks <file...> --generic-only --format json` |
+| Why is an impacted-checks result empty? | Inspect `empty_result` in JSON/YAML, or opt into `no-mistakes impacted-checks --diagnose-empty` for a stderr note. |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |
 | What server routes exist? | `no-mistakes server routes` |
@@ -191,6 +192,12 @@ traversal/output work counts are needed. Both are stderr-only, verbose implies
 timings, and parallel phase lines are explicitly non-additive. Ordinary runs do
 not start diagnostic clocks. `impacted-checks` reuses one in-memory graph across
 configured test frameworks.
+
+An empty `impacted-checks` report includes `empty_result` with the stable code
+`no-changed-files` or `no-impacted-checks`; reports with checks omit the field.
+The CLI is silent by default. Use `--diagnose-empty` when an agent needs the
+exact `note[<code>]: <message>` explanation on stderr. The async Node API
+returns the structured field and never writes diagnostics to stderr.
 
 All analysis invocations share a per-user machine-wide lock. By default,
 `--lock-timeout 30` waits up to 30 seconds to acquire it and `--timeout 30`

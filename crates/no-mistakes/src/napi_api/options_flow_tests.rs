@@ -38,6 +38,7 @@ pub(crate) struct TestsPlanOptions {
     pub(crate) limit_percent: Option<f64>,
     pub(crate) limit_files: Option<usize>,
     pub(crate) global_config_fallback: Option<bool>,
+    pub(crate) direct_test_owner: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]

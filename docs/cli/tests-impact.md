@@ -12,6 +12,9 @@ test set without parsing a git diff. Impact traversal is file-scoped today;
 not narrow the result.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
+Supported formats are `json`, `paths`, `commands`, `markdown`, and `md`.
+`explain` is reserved for `tests plan`, whose changed-file provenance gives
+that output its meaning.
 
 When Vitest configuration is malformed or unavailable, its optional setup
 fallback is skipped so unrelated native test impact can still be reported. A
