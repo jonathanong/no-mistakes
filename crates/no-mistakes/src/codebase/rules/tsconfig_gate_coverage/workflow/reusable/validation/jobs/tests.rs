@@ -119,6 +119,8 @@ fn call_bindings_require_unique_scalar_names() {
         "with:\n  enabled: true",
         "secrets: inherit",
         "secrets:\n  token: '${{ secrets.TOKEN }}'",
+        "secrets:\n  token: '${{ needs.setup.outputs.token }}'",
+        "secrets:\n  token: '${{ github.token }}'",
     ] {
         assert!(call_bindings_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -131,6 +133,9 @@ fn call_bindings_require_unique_scalar_names() {
         "secrets: []",
         "secrets:\n  token: null",
         "secrets:\n  Token: one\n  token: two",
+        "secrets:\n  token: '${{ success() }}'",
+        "secrets:\n  token: '${{ steps.setup.outputs.token }}'",
+        "secrets:\n  token: '${{ inputs.token }}'",
     ] {
         assert!(!call_bindings_shape_valid(&job(yaml)), "{yaml}");
     }

@@ -124,3 +124,26 @@ fn event_sensitive_inputs_stay_correlated_with_each_events_path_filters() {
         BTreeSet::from(["other/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn unavailable_reusable_secret_expressions_earn_no_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/callee.yml\n    secrets:\n      token: '${{ success() }}'\n",
+            ),
+            document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    secrets:\n      token: {required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid-secret/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["invalid-secret/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
