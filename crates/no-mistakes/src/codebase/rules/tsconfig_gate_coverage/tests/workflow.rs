@@ -169,6 +169,14 @@ fn ci_scanner_requires_one_complete_acyclic_enforcing_reusable_path() {
                 "on: push\njobs:\n  missing:\n    uses: ./.github/workflows/missing.yml\n  remote:\n    uses: owner/repo/.github/workflows/checks.yml@main\n  non-callable:\n    uses: ./.github/workflows/non-callable.yml\n  cycle:\n    uses: ./.github/workflows/cycle-a.yml\n",
             ),
             workflow_document(
+                ".github/workflows/cycle-root.yml",
+                "on: push\njobs:\n  cycle:\n    uses: ./.github/workflows/cycle-a.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/remote.yml",
+                "on: push\njobs:\n  remote:\n    uses: owner/repo/.github/workflows/checks.yml@main\n",
+            ),
+            workflow_document(
                 ".github/workflows/leaf.yml",
                 "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
             ),
@@ -244,6 +252,18 @@ fn ci_scanner_requires_valid_case_insensitive_reusable_call_contracts() {
                 "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/secret-collision-callee.yml\n    secrets: inherit\n",
             ),
             workflow_document(
+                ".github/workflows/duplicate-secret-binding.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with:\n      enabled: true\n    secrets:\n      Token: '${{ secrets.TOKEN }}'\n      token: '${{ secrets.TOKEN }}'\n",
+            ),
+            workflow_document(
+                ".github/workflows/nonmapping-secret.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with:\n      enabled: true\n    secrets: true\n",
+            ),
+            workflow_document(
+                ".github/workflows/direct-input-collision.yml",
+                "on:\n  push:\n  workflow_call:\n    inputs:\n      Enabled:\n        type: boolean\n      enabled:\n        type: boolean\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct-input-collision/tsconfig.json\n",
+            ),
+            workflow_document(
                 ".github/workflows/invalid-call-job.yml",
                 "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/invalid-call-job-callee.yml\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n",
             ),
@@ -272,6 +292,7 @@ fn ci_scanner_requires_valid_case_insensitive_reusable_call_contracts() {
     let tracked = BTreeSet::from([
         "input-collision/tsconfig.json".to_string(),
         "invalid-call-job/tsconfig.json".to_string(),
+        "direct-input-collision/tsconfig.json".to_string(),
         "required-default/tsconfig.json".to_string(),
         "secret-collision/tsconfig.json".to_string(),
         "valid/tsconfig.json".to_string(),
@@ -387,8 +408,24 @@ fn ci_scanner_validates_call_inputs_and_normalizes_boolean_condition_spacing() {
     let workflows = ParsedWorkflowSet {
         documents: vec![
             workflow_document(
-                ".github/workflows/caller.yml",
-                "on: push\njobs:\n  quoted-mismatch:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: 'true'\n  missing-required:\n    uses: ./.github/workflows/strict.yml\n  nonmapping-with:\n    uses: ./.github/workflows/strict.yml\n    with: true\n  unknown-input:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: true\n      extra: true\n  invalid-default:\n    uses: ./.github/workflows/invalid-default.yml\n",
+                ".github/workflows/quoted-mismatch.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: 'true'\n",
+            ),
+            workflow_document(
+                ".github/workflows/missing-required.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/strict.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/nonmapping-with.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/strict.yml\n    with: true\n",
+            ),
+            workflow_document(
+                ".github/workflows/unknown-input.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/strict.yml\n    with:\n      enabled: true\n      extra: true\n",
+            ),
+            workflow_document(
+                ".github/workflows/invalid-default-caller.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/invalid-default.yml\n",
             ),
             workflow_document(
                 ".github/workflows/valid-caller.yml",
