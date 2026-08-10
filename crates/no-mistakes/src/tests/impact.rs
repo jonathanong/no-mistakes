@@ -21,7 +21,9 @@ pub(crate) fn run(args: ImpactArgs) -> Result<ExitCode> {
     let format = if args.json {
         PlanFormat::Json
     } else {
-        args.format.unwrap_or(PlanFormat::Json)
+        args.format
+            .map(PlanFormat::from)
+            .unwrap_or(PlanFormat::Json)
     };
     let output = super::plan_output::render(&plan, format, "tests impact")?;
     crate::invocation::commit_timeout()?;

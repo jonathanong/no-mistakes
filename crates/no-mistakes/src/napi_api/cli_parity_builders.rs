@@ -102,7 +102,7 @@ pub(crate) fn build_impact_args(
             .unwrap_or_else(|| ".".into()),
         config: options.config.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
-        format: Some(crate::tests::PlanFormat::Json),
+        format: Some(crate::tests::ImpactFormat::Json),
         json: true,
     })
 }

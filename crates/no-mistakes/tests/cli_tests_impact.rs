@@ -204,6 +204,25 @@ fn tests_impact_commands_format_requires_execution_targets() {
 }
 
 #[test]
+fn tests_impact_rejects_plan_only_explain_format() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "impact",
+        "--root",
+        root.to_str().unwrap(),
+        "c.mts",
+        "--format",
+        "explain",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("invalid value 'explain'"), "{stderr}");
+    assert!(stdout(&output).is_empty());
+}
+
+#[test]
 fn tests_plan_ignores_deleted_changed_files() {
     let root = fixture("tests-impact");
     let output = run(&[

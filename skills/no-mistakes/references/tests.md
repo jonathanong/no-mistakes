@@ -180,6 +180,10 @@ Impacted tests for specific changed files (no `testPlan` config required).
 no-mistakes tests impact src/utils.mts --format paths
 ```
 
+Formats: `json`, `paths`, `commands`, `markdown`, and `md`. Use `tests plan
+--format explain` when changed-file provenance needs a human-readable
+explanation; `tests impact` does not accept `explain`.
+
 Traversal follows `next/dynamic(() => import('./Foo'))` boundaries (Foo's tests
 surface at `medium` confidence). Two opt-in `tests.impact` config knobs refine
 output: `alwaysIncludeTests` surfaces suite-excluded stub tests (e.g.
