@@ -104,9 +104,7 @@ fn scan_activation(
             if !edge.local {
                 continue;
             }
-            let Some(callee_path) = edge.to.as_deref() else {
-                continue;
-            };
+            let callee_path = edge.to.as_deref().unwrap_or_default();
             let Some(callee) = context.workflows.get(callee_path) else {
                 continue;
             };

@@ -69,10 +69,12 @@ fn inputs_from_contract(
                     binding_map.and_then(|mapping| mapping.get(Value::String(name.clone())));
                 let state = binding
                     .map(|value| binding_bool(value, parent))
-                    .unwrap_or_else(|| match declaration.default.as_ref() {
-                        Some(JsonScalar::Bool(value)) => StaticBool::from(*value),
-                        Some(_) => StaticBool::Unknown,
-                        None => StaticBool::False,
+                    .unwrap_or_else(|| {
+                        if let Some(JsonScalar::Bool(value)) = declaration.default.as_ref() {
+                            StaticBool::from(*value)
+                        } else {
+                            StaticBool::False
+                        }
                     });
                 (name.clone(), state)
             })
@@ -109,11 +111,9 @@ fn is_complete_expression(value: &str) -> bool {
 }
 
 fn binding_bool(value: &Value, parent: &InputState) -> StaticBool {
-    match value {
-        Value::Bool(value) => StaticBool::from(*value),
-        Value::String(expression) if is_complete_expression(expression.trim()) => {
-            expression_bool(expression, parent)
-        }
-        _ => StaticBool::Unknown,
+    if let Some(value) = value.as_bool() {
+        StaticBool::from(value)
+    } else {
+        expression_bool(value.as_str().unwrap_or_default(), parent)
     }
 }
