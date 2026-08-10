@@ -97,6 +97,13 @@ fn scan_activation(
     let skipped_jobs = statically_skipped_jobs(jobs, inputs);
     let mut projects = BTreeSet::new();
     for (job_id, job) in jobs {
+        let call_target = match job.get("uses") {
+            Some(Value::String(target)) if reusable_call_job_shape_valid(job) => {
+                Some(target.as_str())
+            }
+            Some(_) => return None,
+            None => None,
+        };
         if job_id
             .as_str()
             .is_some_and(|job_id| skipped_jobs.contains(job_id))
@@ -104,7 +111,7 @@ fn scan_activation(
         {
             continue;
         }
-        if let Some(target) = job.get("uses").and_then(Value::as_str) {
+        if let Some(target) = call_target {
             let edge = workflow_values::call_edge(job_id.as_str().unwrap_or(""), target, job);
             if !edge.local {
                 continue;
@@ -141,4 +148,25 @@ fn scan_activation(
         ));
     }
     Some(projects)
+}
+
+fn reusable_call_job_shape_valid(job: &Value) -> bool {
+    job.as_mapping().is_some_and(|mapping| {
+        mapping.keys().all(|key| {
+            key.as_str().is_some_and(|key| {
+                matches!(
+                    key,
+                    "name"
+                        | "uses"
+                        | "with"
+                        | "secrets"
+                        | "strategy"
+                        | "needs"
+                        | "if"
+                        | "concurrency"
+                        | "permissions"
+                )
+            })
+        })
+    })
 }

@@ -244,6 +244,10 @@ fn ci_scanner_requires_valid_case_insensitive_reusable_call_contracts() {
                 "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/secret-collision-callee.yml\n    secrets: inherit\n",
             ),
             workflow_document(
+                ".github/workflows/invalid-call-job.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/invalid-call-job-callee.yml\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo invalid\n",
+            ),
+            workflow_document(
                 ".github/workflows/checks.yml",
                 "on:\n  workflow_call:\n    inputs:\n      Enabled:\n        type: boolean\n        required: true\n    secrets:\n      Token:\n        required: true\njobs:\n  typecheck:\n    if: inputs.eNaBlEd\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid/tsconfig.json\n",
             ),
@@ -259,10 +263,15 @@ fn ci_scanner_requires_valid_case_insensitive_reusable_call_contracts() {
                 ".github/workflows/secret-collision-callee.yml",
                 "on:\n  workflow_call:\n    secrets:\n      Token:\n        required: true\n      token:\n        required: true\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project secret-collision/tsconfig.json\n",
             ),
+            workflow_document(
+                ".github/workflows/invalid-call-job-callee.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-call-job/tsconfig.json\n",
+            ),
         ],
     };
     let tracked = BTreeSet::from([
         "input-collision/tsconfig.json".to_string(),
+        "invalid-call-job/tsconfig.json".to_string(),
         "required-default/tsconfig.json".to_string(),
         "secret-collision/tsconfig.json".to_string(),
         "valid/tsconfig.json".to_string(),
@@ -332,8 +341,16 @@ fn ci_scanner_fails_open_for_dynamic_inputs_but_rejects_static_false_callers() {
     let workflows = ParsedWorkflowSet {
         documents: vec![
             workflow_document(
-                ".github/workflows/caller.yml",
-                "on: push\njobs:\n  dynamic:\n    uses: ./.github/workflows/dynamic.yml\n    with:\n      enabled: '${{ needs.detect.outputs.enabled }}'\n  disabled:\n    if: false\n    uses: ./.github/workflows/disabled.yml\n  nonblocking:\n    continue-on-error: '${{ true }}'\n    uses: ./.github/workflows/nonblocking.yml\n",
+                ".github/workflows/dynamic-caller.yml",
+                "on: push\njobs:\n  dynamic:\n    uses: ./.github/workflows/dynamic.yml\n    with:\n      enabled: '${{ needs.detect.outputs.enabled }}'\n",
+            ),
+            workflow_document(
+                ".github/workflows/disabled-caller.yml",
+                "on: push\njobs:\n  disabled:\n    if: false\n    uses: ./.github/workflows/disabled.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/nonblocking-caller.yml",
+                "on: push\njobs:\n  nonblocking:\n    continue-on-error: '${{ true }}'\n    uses: ./.github/workflows/nonblocking.yml\n",
             ),
             workflow_document(
                 ".github/workflows/dynamic.yml",
