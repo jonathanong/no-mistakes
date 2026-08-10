@@ -52,15 +52,14 @@ fn valid_nonempty_interpolated_string(value: &Value) -> bool {
 pub(super) fn scalar_mapping_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|mapping| {
-            !mapping.is_empty()
-                && mapping.iter().all(|(name, value)| {
-                    name.is_string()
-                        && match value {
-                            Value::String(value) => interpolated_expression_valid(value),
-                            Value::Bool(_) | Value::Number(_) => true,
-                            _ => false,
-                        }
-                })
+            mapping.iter().all(|(name, value)| {
+                name.is_string()
+                    && match value {
+                        Value::String(value) => interpolated_expression_valid(value),
+                        Value::Bool(_) | Value::Number(_) => true,
+                        _ => false,
+                    }
+            })
         })
     })
 }

@@ -9,13 +9,15 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
     assert!(workflow_shape_valid(&workflow(
         "name: checks\nrun-name: 'checks-${{ github.ref }}'\non: push\npermissions: read-all\nenv:\n  NODE_ENV: 'test-${{ github.ref }}'\ndefaults:\n  run:\n    shell: bash\n    working-directory: app\nconcurrency:\n  group: 'checks-${{ github.ref }}'\n  cancel-in-progress: true\njobs: {}",
     )));
+    assert!(workflow_shape_valid(&workflow(
+        "on: push\nenv: {}\njobs: {}"
+    )));
 
     for yaml in [
         "on: push\nbogus: true\njobs: {}",
         "on: push\nname: [checks]\njobs: {}",
         "on: push\nrun-name: ''\njobs: {}",
         "on: push\nenv: []\njobs: {}",
-        "on: push\nenv: {}\njobs: {}",
         "on: push\nenv:\n  BROKEN: '${{ }}'\njobs: {}",
         "on: push\ndefaults: []\njobs: {}",
         "on: push\ndefaults:\n  run: []\njobs: {}",

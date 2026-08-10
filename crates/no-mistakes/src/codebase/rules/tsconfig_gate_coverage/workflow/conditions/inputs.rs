@@ -1,7 +1,7 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
 use super::{expression_bool, InputState, StaticBool};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
-    complete_expression_type, StaticExpressionType,
+    complete_expression_contexts_available, complete_expression_type, StaticExpressionType,
 };
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
@@ -11,6 +11,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod values;
 use values::{default_falsy_state, nonboolean_binding_state};
+
+const REUSABLE_CALL_INPUT_CONTEXTS: &[&str] =
+    &["github", "needs", "strategy", "matrix", "inputs", "vars"];
 
 pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> Option<InputState> {
     // A workflow invoked directly by a repository event receives the declared
@@ -159,7 +162,10 @@ fn binding_matches_type(value: &Value, input_type: WorkflowCallInputType) -> boo
         .as_str()
         .and_then(|text| complete_expression_type(text.trim()))
     {
-        return matches!(
+        return complete_expression_contexts_available(
+            value.as_str().expect("expression binding must be a string"),
+            REUSABLE_CALL_INPUT_CONTEXTS,
+        ) && matches!(
             (input_type, expression_type),
             (_, StaticExpressionType::Dynamic)
                 | (

@@ -150,6 +150,45 @@ fn malformed_complete_expressions_do_not_bypass_input_types() {
 }
 
 #[test]
+fn reusable_call_input_bindings_allow_only_available_contexts() {
+    // Numeric literals are not contexts, including the `x1` suffix of hex.
+    assert!(binding_matches_type(
+        &Value::String("${{ 0x1 }}".to_string()),
+        WorkflowCallInputType::Number
+    ));
+    for value in [
+        "${{ github.ref }}",
+        "${{ needs.setup.outputs.enabled }}",
+        "${{ strategy.job-index }}",
+        "${{ matrix.node }}",
+        "${{ inputs.enabled }}",
+        "${{ vars.TYPECHECK_MODE }}",
+    ] {
+        assert!(binding_matches_type(
+            &Value::String(value.to_string()),
+            WorkflowCallInputType::Boolean
+        ));
+    }
+    for value in [
+        "${{ secrets.TOKEN }}",
+        "${{ secrets.TOKEN == 'enabled' }}",
+        "${{ env.TYPECHECK_MODE }}",
+        "${{ job.status }}",
+        "${{ jobs.typecheck.outputs.enabled }}",
+        "${{ runner.os }}",
+        "${{ steps.setup.outputs.enabled }}",
+    ] {
+        assert!(
+            !binding_matches_type(
+                &Value::String(value.to_string()),
+                WorkflowCallInputType::Boolean
+            ),
+            "{value}"
+        );
+    }
+}
+
+#[test]
 fn statically_typed_expression_bindings_must_match_declared_inputs() {
     for (value, input_type) in [
         ("${{ 'false' }}", WorkflowCallInputType::Boolean),

@@ -10,6 +10,7 @@ on:
         type: boolean
       cloudflare:
         type: boolean
+env: {}
 jobs:
   backend:
     if: inputs.backend

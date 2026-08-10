@@ -65,7 +65,7 @@ pub(super) fn tokenize(body: &str) -> Option<Vec<Token>> {
                 tokens.push(Token::String);
             }
             b'0'..=b'9' | b'-' if numbers::starts(bytes, index) => {
-                index = numbers::end(bytes, index)?;
+                index = numeric_literal_end(bytes, index)?;
                 tokens.push(Token::Number);
             }
             byte if identifier_start(byte) => {
@@ -140,6 +140,10 @@ pub(super) fn tokenize(body: &str) -> Option<Vec<Token>> {
         }
     }
     (!tokens.is_empty()).then_some(tokens)
+}
+
+pub(super) fn numeric_literal_end(bytes: &[u8], index: usize) -> Option<usize> {
+    numbers::starts(bytes, index).then(|| numbers::end(bytes, index))?
 }
 
 // GitHub's expression-function reference enumerates this closed set and their

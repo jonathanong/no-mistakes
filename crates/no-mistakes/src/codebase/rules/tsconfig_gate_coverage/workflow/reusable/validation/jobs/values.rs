@@ -5,10 +5,9 @@ use super::fields::string_field_valid;
 pub(super) fn scalar_mapping_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|mapping| {
-            !mapping.is_empty()
-                && mapping.iter().all(|(name, value)| {
-                    name.is_string() && super::fields::scalar_value_valid(value)
-                })
+            mapping
+                .iter()
+                .all(|(name, value)| name.is_string() && super::fields::scalar_value_valid(value))
         })
     })
 }

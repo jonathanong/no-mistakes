@@ -105,6 +105,29 @@ fn direct_activations_reject_invalid_or_falsy_workflow_call_input_declarations()
 }
 
 #[test]
+fn unavailable_contexts_in_reusable_call_inputs_earn_no_credit() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/callee.yml\n    with:\n      token: '${{ secrets.TOKEN }}'\n",
+        ),
+        workflow(
+            ".github/workflows/callee.yml",
+            "on:\n  workflow_call:\n    inputs:\n      token:\n        type: string\n        required: true\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unavailable-context/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/direct.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct/tsconfig.json\n",
+        ),
+    ];
+
+    assert_eq!(
+        scanned(documents, &["unavailable-context", "direct"]),
+        BTreeSet::from(["direct/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn undeclared_inputs_are_false_while_declared_nonbooleans_are_unknown() {
     let documents = vec![
         workflow(

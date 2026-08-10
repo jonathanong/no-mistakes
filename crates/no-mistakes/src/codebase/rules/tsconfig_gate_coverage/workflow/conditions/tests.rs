@@ -77,3 +77,20 @@ fn compound_conditions_short_circuit_known_input_truthiness() {
         );
     }
 }
+
+#[test]
+fn boolean_input_comparisons_accept_case_insensitive_literals() {
+    let inputs = InputState::from([("enabled".into(), StaticBool::True)]);
+    for (expression, expected) in [
+        ("inputs.enabled == FALSE", StaticBool::False),
+        ("TRUE == inputs.enabled", StaticBool::True),
+        ("inputs.enabled != TRUE", StaticBool::False),
+        ("FALSE != inputs.enabled", StaticBool::True),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}

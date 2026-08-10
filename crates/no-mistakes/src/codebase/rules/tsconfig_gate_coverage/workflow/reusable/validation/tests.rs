@@ -66,11 +66,18 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
     assert!(scan_job_shape_valid(&mixed_expressions));
 
     for yaml in [
+        "runs-on: ubuntu-latest\nenv: {}\nsteps:\n  - run: tsc --noEmit",
+        "runs-on: ubuntu-latest\nsteps:\n  - env: {}\n    run: tsc --noEmit",
+    ] {
+        let job = serde_yaml::from_str::<Value>(yaml).unwrap();
+        assert!(scan_job_shape_valid(&job), "{yaml}");
+    }
+
+    for yaml in [
         "steps:\n  - run: echo invalid",
         "runs-on: true\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\npermissions: bogus\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nenv: [invalid]\nsteps:\n  - run: echo invalid",
-        "runs-on: ubuntu-latest\nenv: {}\nsteps:\n  - run: tsc --noEmit",
         "runs-on: ubuntu-latest\ndefaults: {run: {shell: []}}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nconcurrency: {group: []}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\noutputs: {result: true}\nsteps:\n  - run: echo invalid",
@@ -81,7 +88,6 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
         "runs-on: ubuntu-latest\nservices: {}\nsteps:\n  - run: tsc --noEmit",
         "runs-on: ubuntu-latest\nstrategy: {max-parallel: 0}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nstrategy: {}\nsteps:\n  - run: tsc --noEmit",
-        "runs-on: ubuntu-latest\nsteps:\n  - env: {}\n    run: tsc --noEmit",
         "runs-on: ubuntu-latest\nsteps:\n  - run: 'tsc --noEmit ${{ }}'",
         "runs-on: ubuntu-latest\nenv: {REF: '${{ }}'}\nsteps:\n  - run: tsc --noEmit",
         "runs-on: ubuntu-latest\noutputs: {result: '${{ }}'}\nsteps:\n  - run: tsc --noEmit",

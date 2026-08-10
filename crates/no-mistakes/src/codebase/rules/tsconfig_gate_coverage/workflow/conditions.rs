@@ -153,10 +153,12 @@ fn input_name(operand: &str) -> Option<&str> {
 }
 
 fn bool_literal(operand: &str) -> Option<bool> {
-    match operand.trim() {
-        "true" => Some(true),
-        "false" => Some(false),
-        _ => None,
+    if operand.trim().eq_ignore_ascii_case("true") {
+        Some(true)
+    } else if operand.trim().eq_ignore_ascii_case("false") {
+        Some(false)
+    } else {
+        None
     }
 }
 
