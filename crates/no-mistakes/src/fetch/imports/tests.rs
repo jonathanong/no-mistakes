@@ -1,6 +1,7 @@
 use super::*;
 use crate::ast;
 use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 
 #[test]
 fn test_collect_runtime_imports_from_program() {
@@ -170,6 +171,37 @@ fn pass4a_ignored_import_candidate_does_not_shadow_visible_route_fallback() {
         &target,
         &mut HashSet::new(),
         &mut HashMap::new(),
+        &visible_files,
+    )
+    .unwrap();
+
+    assert!(reaches);
+}
+
+#[test]
+fn visible_facts_route_traversal_compatibility_wrapper_reaches_an_import() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/fetch/visible-facts-route-wrapper"),
+    );
+    let route = root.join("route.ts");
+    let target = root.join("target.ts");
+    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+    let mut visited = HashSet::new();
+    let mut import_cache = HashMap::new();
+    let mut parsed_files = crate::fetch::ParsedFileCache::default();
+
+    // Keep this on the legacy wrapper: session-aware pipeline tests cover the
+    // prepared path, while this protects the compatibility adapter itself.
+    let reaches = crate::fetch::import_routes::route_reaches_target_from_visible_with_facts(
+        &route,
+        &target,
+        &root,
+        &mut visited,
+        &mut import_cache,
+        &mut parsed_files,
         &visible_files,
     )
     .unwrap();

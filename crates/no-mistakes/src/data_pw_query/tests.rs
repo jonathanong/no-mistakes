@@ -143,6 +143,26 @@ fn finds_source_and_test_usages() {
 }
 
 #[test]
+fn prepared_run_reuses_one_visible_inventory_and_source_store() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer));
+    let include = DataPwInclude::default();
+
+    let first =
+        run_with_session(&session, &fixture(), None, "search-bar", &[], &[], &include).unwrap();
+    let second =
+        run_with_session(&session, &fixture(), None, "search-bar", &[], &[], &include).unwrap();
+
+    assert_eq!(first, second);
+    let work = session.work_snapshot();
+    assert!(!work.source_reads.is_empty());
+    assert!(
+        work.source_reads.values().all(|count| *count == 1),
+        "source reads must be memoized by the request session: {work:?}"
+    );
+}
+
+#[test]
 fn expired_deadline_returns_timeout_instead_of_a_partial_report() {
     let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();
 
@@ -268,6 +288,7 @@ fn is_skip_dir_honors_defaults_and_config() {
 
 #[test]
 fn scan_file_ignores_unreadable_path() {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let regex = compile_selector_attribute_value_regex(&["data-pw".to_string()]).unwrap();
     let globs = build_globset(&[]).unwrap();
     let scan = ScanConfig {
@@ -283,6 +304,7 @@ fn scan_file_ignores_unreadable_path() {
         Path::new("/no/such/file.tsx"),
         "x.tsx",
         &scan,
+        &session,
         &crate::invocation::check_timeout,
     )
     .unwrap();
@@ -291,6 +313,7 @@ fn scan_file_ignores_unreadable_path() {
 
 #[test]
 fn parallel_scan_propagates_a_deadline_that_expires_inside_a_worker() {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let root = fixture();
     let regex = compile_selector_attribute_value_regex(&["data-pw".to_string()]).unwrap();
     let globs = build_globset(&[]).unwrap();
@@ -321,6 +344,7 @@ fn parallel_scan_propagates_a_deadline_that_expires_inside_a_worker() {
         &[root.join("app/search.tsx")],
         &root,
         &scan,
+        &session,
         &expire_mid_scan,
     )
     .unwrap_err();

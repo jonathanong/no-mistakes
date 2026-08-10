@@ -32,9 +32,8 @@ fn discover_files_from_visible_paths(
                 .is_ok_and(|rel| !rel_path_under_skip_dir(rel, extra_skip))
         })
         .filter(|path| has_source_extension(path))
-        // `WalkDir`'s default (non-link-following) file type never reports a
-        // symlink as a file, so match that here rather than `Path::is_file`,
-        // which follows the link.
+        // Keep the scanner's non-link-following discovery semantics. Source
+        // text itself is still read only through the request SourceStore.
         .filter(|path| std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_file()))
         .cloned()
         .collect()
@@ -87,14 +86,16 @@ fn scan_files(
     files: &[PathBuf],
     root: &Path,
     scan: &ScanConfig<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<Vec<(FileKind, DataPwHit)>> {
-    scan_files_with_timeout_check(files, root, scan, &crate::invocation::check_timeout)
+    scan_files_with_timeout_check(files, root, scan, session, &crate::invocation::check_timeout)
 }
 
 fn scan_files_with_timeout_check(
     files: &[PathBuf],
     root: &Path,
     scan: &ScanConfig<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     check_timeout: &(impl Fn() -> Result<()> + Sync),
 ) -> Result<Vec<(FileKind, DataPwHit)>> {
     files
@@ -102,7 +103,7 @@ fn scan_files_with_timeout_check(
         .try_fold(Vec::new, |mut hits, path| -> Result<_> {
             check_timeout()?;
             let rel = relative_slash_path(root, path);
-            hits.extend(scan_file(path, &rel, scan, check_timeout)?);
+            hits.extend(scan_file(path, &rel, scan, session, check_timeout)?);
             Ok(hits)
         })
         .try_reduce(Vec::new, |mut left, mut right| -> Result<_> {
@@ -115,6 +116,7 @@ fn scan_file(
     path: &Path,
     rel: &str,
     scan: &ScanConfig,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     check_timeout: &(impl Fn() -> Result<()> + Sync),
 ) -> Result<Vec<(FileKind, DataPwHit)>> {
     check_timeout()?;
@@ -141,7 +143,7 @@ fn scan_file(
     } else {
         FileKind::Source
     };
-    let Ok(source) = std::fs::read_to_string(path) else {
+    let Ok(source) = session.read_source(path) else {
         return Ok(Vec::new());
     };
     let mut hits = Vec::new();

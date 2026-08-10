@@ -22,8 +22,9 @@ use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Serialize;
 
+use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::ts_source::relative_slash_path;
-use crate::config::v2::{load_v2_config_from_visible, ConfigView};
+use crate::config::v2::ConfigView;
 use crate::playwright::selectors::compile_selector_attribute_value_regex;
 
 const SOURCE_EXTENSIONS: &[&str] = &["tsx", "ts", "jsx", "js", "mts", "cts", "mjs", "cjs"];
@@ -116,14 +117,36 @@ pub fn run(
     scan_override: &[String],
     include: &DataPwInclude,
 ) -> Result<DataPwReport> {
+    let session = AnalysisSession::new(crate::diagnostics::current());
+    run_with_session(
+        &session,
+        root,
+        config_path,
+        value,
+        attribute_override,
+        scan_override,
+        include,
+    )
+}
+
+/// Run the query using the caller-owned request analysis session.
+pub(crate) fn run_with_session(
+    session: &AnalysisSession,
+    root: &Path,
+    config_path: Option<&Path>,
+    value: &str,
+    attribute_override: &[String],
+    scan_override: &[String],
+    include: &DataPwInclude,
+) -> Result<DataPwReport> {
     // VisiblePathSnapshot returns lexically normalized paths. Normalize the
     // matching boundary once too so roots containing `.`/`..` still produce
     // relative report paths and pass the visibility filter.
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let snapshot = session.visible_paths(&root);
     let visible_paths = snapshot.paths_for(&root);
     crate::invocation::check_timeout()?;
-    let config = load_v2_config_from_visible(&root, config_path, &visible_paths)?;
+    let config = session.config(&root, config_path)?;
     let view = ConfigView::new(&config);
 
     let attributes: Vec<String> = if attribute_override.is_empty() {
@@ -177,7 +200,7 @@ pub fn run(
     };
 
     let files = discover_files_from_visible_paths(&root, &visible_paths, view.skip_directories());
-    let hits = scan_files(&files, &root, &scan)?;
+    let hits = scan_files(&files, &root, &scan, session)?;
 
     let mut source: Vec<DataPwHit> = Vec::new();
     let mut test: Vec<DataPwHit> = Vec::new();

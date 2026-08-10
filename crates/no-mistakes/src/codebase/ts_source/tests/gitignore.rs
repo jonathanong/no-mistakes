@@ -69,10 +69,6 @@ fn pass5a_visible_adapters_preserve_fixture_backed_discovery_output() {
 fn pass5a_public_wrappers_create_one_request_snapshot() {
     let cases = [
         (
-            include_str!("../../../fetches/pipeline/run.rs"),
-            "pub(crate) fn run_with_base_root(",
-        ),
-        (
             include_str!("../../../queue/graph.rs"),
             "pub fn analyze_project(",
         ),
@@ -92,7 +88,6 @@ fn pass5a_public_wrappers_create_one_request_snapshot() {
             include_str!("../../../react_traits/pipeline/check.rs"),
             "pub fn check_enabled(",
         ),
-        (include_str!("../../../data_pw_query.rs"), "pub fn run("),
         (include_str!("../../../ci.rs"), "pub fn impact_report("),
         (include_str!("../../../ci.rs"), "pub fn env_report("),
         (
@@ -124,6 +119,55 @@ fn pass5a_public_wrappers_create_one_request_snapshot() {
             "{signature} must create exactly one request snapshot"
         );
     }
+}
+
+#[test]
+fn pass5a_session_owned_queries_do_not_restart_discovery_or_source_reads() {
+    let data_pw = include_str!("../../../data_pw_query.rs");
+    let data_pw_run = function_body(data_pw, "pub fn run(");
+    let data_pw_prepared = function_body(data_pw, "pub(crate) fn run_with_session(");
+    assert_eq!(data_pw_run.matches("AnalysisSession::new").count(), 1);
+    assert!(!data_pw_run.contains("VisiblePathSnapshot::new"));
+    for forbidden in [
+        "VisiblePathSnapshot::new",
+        "load_v2_config(",
+        "discover_visible_paths(",
+    ] {
+        assert!(
+            !data_pw_prepared.contains(forbidden),
+            "data-pw prepared run: {forbidden}"
+        );
+    }
+    let data_pw_scan = include_str!("../../../data_pw_query/scan.rs");
+    assert!(data_pw_scan.contains("session.read_source(path)"));
+    assert!(!data_pw_scan.contains("std::fs::read_to_string"));
+
+    let registry = include_str!("../../../registry_extension_query.rs");
+    let registry_run = function_body(registry, "pub fn run(");
+    let registry_prepared = function_body(registry, "pub(crate) fn run_with_session(");
+    assert_eq!(registry_run.matches("AnalysisSession::new").count(), 1);
+    assert!(!registry_run.contains("std::fs::read_to_string"));
+    assert!(registry_prepared.contains(".read_source(&path)"));
+    assert!(registry_prepared.contains(".with_program"));
+
+    let fetches = include_str!("../../../fetches/pipeline/run.rs");
+    let fetch_run = function_body(fetches, "pub(crate) fn run_with_base_root(");
+    let fetch_prepared = function_body(fetches, "pub(crate) fn run_with_base_root_and_session(");
+    assert_eq!(fetch_run.matches("AnalysisSession::new").count(), 1);
+    for forbidden in [
+        "VisiblePathSnapshot::new",
+        "load_v2_config(",
+        "discover_visible_paths(",
+    ] {
+        assert!(
+            !fetch_prepared.contains(forbidden),
+            "fetches prepared run: {forbidden}"
+        );
+    }
+    let fetch_facts = include_str!("../../../fetch/file_facts.rs");
+    assert!(fetch_facts.contains(".read_source(&abs_path)"));
+    assert!(fetch_facts.contains(".with_program"));
+    assert!(!fetch_facts.contains("std::fs::read_to_string"));
 }
 
 #[test]

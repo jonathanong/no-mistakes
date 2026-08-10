@@ -25,8 +25,9 @@ pub struct ParsedFileCache {
 }
 
 impl ParsedFileCache {
-    pub(crate) fn load(
+    pub(crate) fn load_with_session(
         &mut self,
+        session: &crate::codebase::analysis_session::AnalysisSession,
         path: &Path,
         root: &Path,
         import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
@@ -38,8 +39,10 @@ impl ParsedFileCache {
         }
 
         let result = (|| {
-            let source = std::fs::read_to_string(&abs_path)?;
-            crate::ast::with_program(&abs_path, &source, |program, _| {
+            let source = session
+                .read_source(&abs_path)
+                .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+            session.with_program(&abs_path, &source, |program, _| {
                 ParsedFileFacts::from_program(
                     &abs_path,
                     root,
