@@ -16,6 +16,7 @@ use std::collections::BTreeMap;
 mod fixture_policy;
 mod no_check;
 mod workflow;
+mod workflow_contracts;
 
 fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {
     tracked

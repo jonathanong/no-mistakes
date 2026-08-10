@@ -104,6 +104,31 @@ fn scan_activation(
             Some(_) => return None,
             None => None,
         };
+        let callee_projects = if let Some(target) = call_target {
+            let edge = workflow_values::call_edge(job_id.as_str().unwrap_or(""), target, job);
+            if edge.local {
+                let callee_path = edge.to.as_deref().unwrap_or_default();
+                let callee = context.workflows.get(callee_path)?;
+                let contract = callee.call_contract.as_ref()?;
+                if depth == 10 || !callee_secrets_valid(contract, job) {
+                    return None;
+                }
+                let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
+                Some(scan_activation(
+                    callee_path,
+                    callee,
+                    triggers,
+                    &callee_inputs,
+                    &active_paths,
+                    depth + 1,
+                    context,
+                )?)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
         if job_id
             .as_str()
             .is_some_and(|job_id| skipped_jobs.contains(job_id))
@@ -111,28 +136,8 @@ fn scan_activation(
         {
             continue;
         }
-        if let Some(target) = call_target {
-            let edge = workflow_values::call_edge(job_id.as_str().unwrap_or(""), target, job);
-            if !edge.local {
-                continue;
-            }
-            let callee_path = edge.to.as_deref().unwrap_or_default();
-            let callee = context.workflows.get(callee_path)?;
-            let contract = callee.call_contract.as_ref()?;
-            if depth == 10 || !callee_secrets_valid(contract, job) {
-                return None;
-            }
-            let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
-            let callee_projects = scan_activation(
-                callee_path,
-                callee,
-                triggers,
-                &callee_inputs,
-                &active_paths,
-                depth + 1,
-                context,
-            )?;
-            projects.extend(callee_projects);
+        if call_target.is_some() {
+            projects.extend(callee_projects.unwrap_or_default());
             continue;
         }
         if !has_static_runnable_runs_on(job) {

@@ -1,3 +1,4 @@
+use super::contracts::{input_contract_valid, normalized_name, unique_contract_names};
 use super::{expression_bool, InputState, StaticBool};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
@@ -11,17 +12,25 @@ pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> Option<I
     let Some(contract) = contract else {
         return Some(InputState::new());
     };
-    if !unique_contract_names(contract.inputs.keys()) {
+    if !input_contract_valid(contract) || !unique_contract_names(contract.secrets.keys()) {
         return None;
     }
     Some(
         contract
             .inputs
             .iter()
-            .filter(|(_, declaration)| {
-                declaration.input_type == Some(WorkflowCallInputType::Boolean)
+            .map(|(name, declaration)| {
+                let state = match declaration
+                    .input_type
+                    .expect("validated workflow_call input type")
+                {
+                    WorkflowCallInputType::Boolean => StaticBool::False,
+                    WorkflowCallInputType::Number | WorkflowCallInputType::String => {
+                        StaticBool::Unknown
+                    }
+                };
+                (normalized_name(name), state)
             })
-            .map(|(name, _)| (normalized_name(name), StaticBool::False))
             .collect(),
     )
 }
@@ -39,7 +48,7 @@ fn inputs_from_contract(
     bindings: Option<&Value>,
     parent: &InputState,
 ) -> Option<InputState> {
-    if !unique_contract_names(contract.inputs.keys()) {
+    if !input_contract_valid(contract) {
         return None;
     }
     let binding_map = match bindings {
@@ -59,18 +68,13 @@ fn inputs_from_contract(
         return None;
     }
     for (name, declaration) in &contract.inputs {
-        let input_type = declaration.input_type?;
+        let input_type = declaration
+            .input_type
+            .expect("validated workflow_call input type");
         let binding = binding_map
             .as_ref()
             .and_then(|mapping| mapping.get(&normalized_name(name)));
         if binding.is_none() && declaration.required {
-            return None;
-        }
-        if declaration
-            .default
-            .as_ref()
-            .is_some_and(|default| !default_matches_type(default, input_type))
-        {
             return None;
         }
         if binding.is_some_and(|binding| !binding_matches_type(binding, input_type)) {
@@ -81,22 +85,27 @@ fn inputs_from_contract(
         contract
             .inputs
             .iter()
-            .filter(|(_, declaration)| {
-                declaration.input_type == Some(WorkflowCallInputType::Boolean)
-            })
             .map(|(name, declaration)| {
                 let binding = binding_map
                     .as_ref()
                     .and_then(|mapping| mapping.get(&normalized_name(name)));
-                let state = binding
-                    .map(|value| binding_bool(value, parent))
-                    .unwrap_or_else(|| {
-                        if let Some(JsonScalar::Bool(value)) = declaration.default.as_ref() {
-                            StaticBool::from(*value)
-                        } else {
-                            StaticBool::False
-                        }
-                    });
+                let state = match declaration
+                    .input_type
+                    .expect("validated workflow_call input type")
+                {
+                    WorkflowCallInputType::Boolean => binding
+                        .map(|value| binding_bool(value, parent))
+                        .unwrap_or_else(|| {
+                            if let Some(JsonScalar::Bool(value)) = declaration.default.as_ref() {
+                                StaticBool::from(*value)
+                            } else {
+                                StaticBool::False
+                            }
+                        }),
+                    WorkflowCallInputType::Number | WorkflowCallInputType::String => {
+                        StaticBool::Unknown
+                    }
+                };
                 (normalized_name(name), state)
             })
             .collect(),
@@ -148,24 +157,6 @@ fn normalized_bindings(mapping: &serde_yaml::Mapping) -> Option<BTreeMap<String,
         }
     }
     Some(bindings)
-}
-
-fn unique_contract_names<'a>(mut names: impl Iterator<Item = &'a String>) -> bool {
-    let mut normalized = BTreeSet::new();
-    names.all(|name| normalized.insert(normalized_name(name)))
-}
-
-fn normalized_name(name: &str) -> String {
-    name.to_lowercase()
-}
-
-fn default_matches_type(value: &JsonScalar, input_type: WorkflowCallInputType) -> bool {
-    matches!(
-        (input_type, value),
-        (WorkflowCallInputType::Boolean, JsonScalar::Bool(_))
-            | (WorkflowCallInputType::Number, JsonScalar::Number(_))
-            | (WorkflowCallInputType::String, JsonScalar::Text(_))
-    )
 }
 
 fn binding_matches_type(value: &Value, input_type: WorkflowCallInputType) -> bool {

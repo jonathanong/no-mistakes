@@ -1,6 +1,7 @@
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod contracts;
 mod inputs;
 
 pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
@@ -96,7 +97,7 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
             let value = inputs
                 .get(&name.trim().to_lowercase())
                 .copied()
-                .unwrap_or(StaticBool::Unknown)
+                .unwrap_or(StaticBool::False)
                 .equals(expected);
             return if equal { value } else { value.negate() };
         }
@@ -105,7 +106,7 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
         return inputs
             .get(&name.trim().to_lowercase())
             .copied()
-            .unwrap_or(StaticBool::Unknown);
+            .unwrap_or(StaticBool::False);
     }
     if let Some(name) = expression
         .strip_prefix('!')
@@ -115,7 +116,7 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
         return inputs
             .get(&name.trim().to_lowercase())
             .copied()
-            .unwrap_or(StaticBool::Unknown)
+            .unwrap_or(StaticBool::False)
             .negate();
     }
     StaticBool::Unknown
