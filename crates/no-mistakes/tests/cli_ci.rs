@@ -129,7 +129,9 @@ fn impacted_checks_diagnose_empty_does_not_mask_failures() {
     ]);
     assert!(!output.status.success());
     assert!(stdout(&output).is_empty());
-    assert!(!stderr(&output).contains("note["));
+    let err = stderr(&output);
+    assert!(err.contains("invalid.no-mistakes.yml"), "{err}");
+    assert!(!err.contains("note["), "{err}");
 }
 
 #[test]

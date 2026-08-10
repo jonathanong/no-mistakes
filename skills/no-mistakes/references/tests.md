@@ -63,9 +63,10 @@ Key flags:
 - `--direct-test-owner` — requires a framework; selects changed framework-owned
   tests plus only tests one reverse canonical graph edge away, with normal
   execution targets. It bypasses test-plan groups, environment include/exclude,
-  limits, sampling, and fallback. Do not combine it with limit or global
-  fallback overrides. Canonical graph warnings are still reported when dynamic
-  resource calls could make reverse ownership incomplete.
+  limits, sampling, fallback, and explicit entrypoint traversal. Do not combine
+  it with `--entrypoint`, limit, or global fallback overrides; use `tests impact`
+  for an explicit entrypoint query. Canonical graph warnings are still reported
+  when dynamic resource calls could make reverse ownership incomplete.
 
 `fullSuiteTriggers.projects` can scope a configured trigger to runner projects:
 

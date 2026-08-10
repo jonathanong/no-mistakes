@@ -74,6 +74,12 @@ fn resolve_check_json_files_rejects_empty_paths() {
 }
 
 #[test]
+fn resolve_check_json_files_rejects_an_empty_list_with_an_agent_friendly_error() {
+    let error = resolve_check_json_impl(json!({ "files": [] }).to_string()).unwrap_err();
+    assert_eq!(error.reason, "files must contain at least one path");
+}
+
+#[test]
 fn pass4b_query_cli_and_napi_reports_share_gitignore_visibility() {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
     crate::test_support::git_init(fixture.path());

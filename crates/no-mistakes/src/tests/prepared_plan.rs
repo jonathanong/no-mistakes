@@ -435,7 +435,14 @@ impl PreparedTestPlanRequest {
 
 fn resolve_args(args: &PlanArgs) -> Result<PlanArgs> {
     if args.direct_test_owner && args.framework.is_none() {
-        anyhow::bail!("--direct-test-owner requires a framework");
+        anyhow::bail!(
+            "--direct-test-owner requires a framework (for example, --framework vitest) because direct ownership requires framework-specific test ownership"
+        );
+    }
+    if args.direct_test_owner && !args.entrypoints.is_empty() {
+        anyhow::bail!(
+            "--direct-test-owner conflicts with --entrypoint: direct-owner selection only follows changed files and one reverse canonical graph edge; use `tests impact` for explicit entrypoint traversal"
+        );
     }
     if args.direct_test_owner
         && (args.limit_percent.is_some()
@@ -443,7 +450,7 @@ fn resolve_args(args: &PlanArgs) -> Result<PlanArgs> {
             || args.global_config_fallback.is_some())
     {
         anyhow::bail!(
-            "--direct-test-owner conflicts with --limit-percent, --limit-files, and --global-config-fallback"
+            "--direct-test-owner conflicts with --limit-percent, --limit-files, and --global-config-fallback; remove those policy overrides because direct ownership bypasses configured plan policy"
         );
     }
     if args.from_git_diff.is_some() && (args.base.is_some() || args.head.is_some()) {

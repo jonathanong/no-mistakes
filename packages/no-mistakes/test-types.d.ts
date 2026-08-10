@@ -40,6 +40,8 @@ export type TestsPlanOptions =
       /** Select changed framework-owned tests plus tests one reverse graph edge away. */
       directTestOwner: true;
       framework: TestPlanFramework;
+      /** Direct-owner selection is bounded to changed files; use testsImpact for explicit entrypoints. */
+      entrypoints?: never;
       limitPercent?: never;
       limitFiles?: never;
       globalConfigFallback?: never;

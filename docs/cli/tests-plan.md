@@ -72,11 +72,13 @@ owner query instead of configured planning. It selects changed tests owned by
 that framework plus only framework-owned tests connected by exactly one reverse
 canonical graph edge, then attaches their execution targets. It ignores the
 selected environment's groups, includes/excludes, limits, samples, and fallback
-policy; `--limit-percent`, `--limit-files`, and `--global-config-fallback`
-therefore conflict with it. Its result contains one `direct-test-owner` group
-and never reports a fallback. It still reports canonical graph warnings for
-dynamic resource calls in changed files, because they can make reverse owner
-selection incomplete.
+policy; `--entrypoint`, `--limit-percent`, `--limit-files`, and
+`--global-config-fallback` therefore conflict with it. Direct-owner selection
+is intentionally bounded to changed files and one reverse canonical graph edge;
+use `no-mistakes tests impact --entrypoint <FILE>` for explicit entrypoint
+traversal. Its result contains one `direct-test-owner` group and never reports
+a fallback. It still reports canonical graph warnings for dynamic resource calls
+in changed files, because they can make reverse owner selection incomplete.
 
 Configured `fullSuiteTriggers.projects` entries may use `{ paths, targets }` to
 select only the named Vitest or Playwright runner projects. These selections

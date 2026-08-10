@@ -33,9 +33,9 @@ fn tests_plan_json_direct_test_owner_requires_framework_and_rejects_policy_overr
         .to_string(),
     )
     .unwrap_err();
-    assert!(missing_framework
-        .to_string()
-        .contains("directTestOwner requires framework"));
+    let missing_framework = missing_framework.to_string();
+    assert!(missing_framework.contains("directTestOwner requires framework"));
+    assert!(missing_framework.contains("framework: \"vitest\""));
 
     let limit = tests_plan_json_impl(
         json!({
@@ -47,7 +47,24 @@ fn tests_plan_json_direct_test_owner_requires_framework_and_rejects_policy_overr
         .to_string(),
     )
     .unwrap_err();
-    assert!(limit.to_string().contains("directTestOwner conflicts"));
+    let limit = limit.to_string();
+    assert!(limit.contains("directTestOwner conflicts"));
+    assert!(limit.contains("remove those policy overrides"));
+
+    let entrypoints = tests_plan_json_impl(
+        json!({
+            "root": fixture_root("test-plan-config"),
+            "framework": "vitest",
+            "directTestOwner": true,
+            "entrypoints": ["source.ts"],
+        })
+        .to_string(),
+    )
+    .unwrap_err();
+    assert!(entrypoints
+        .to_string()
+        .contains("directTestOwner conflicts with entrypoints"));
+    assert!(entrypoints.to_string().contains("testsImpact"));
 }
 
 #[test]

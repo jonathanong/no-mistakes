@@ -30,6 +30,21 @@ fn framework_args(root: &Path, framework: TestFramework) -> PlanArgs {
 }
 
 #[test]
+fn direct_test_owner_rejects_explicit_entrypoints_before_preparing_analysis() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/test-plan-config/fixture");
+    let mut args = framework_args(&root, TestFramework::Vitest);
+    args.direct_test_owner = true;
+    args.entrypoints = vec!["source.ts".to_string()];
+
+    let error = super::resolve_args(&args).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("--direct-test-owner conflicts with --entrypoint"));
+    assert!(error.to_string().contains("tests impact"));
+}
+
+#[test]
 fn non_framework_plan_reuses_prepared_runner_config_facts_and_filter() {
     let source = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

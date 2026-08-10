@@ -5,14 +5,23 @@ pub(crate) fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::
         .map(parse_test_framework)
         .transpose()?;
     if options.direct_test_owner && framework.is_none() {
-        bail!("directTestOwner requires framework");
+        bail!(
+            "directTestOwner requires framework (for example, framework: \"vitest\") because direct ownership requires framework-specific test ownership"
+        );
+    }
+    if options.direct_test_owner && !options.entrypoints.is_empty() {
+        bail!(
+            "directTestOwner conflicts with entrypoints: direct-owner selection only follows changed files and one reverse canonical graph edge; use testsImpact for explicit entrypoint traversal"
+        );
     }
     if options.direct_test_owner
         && (options.limit_percent.is_some()
             || options.limit_files.is_some()
             || options.global_config_fallback.is_some())
     {
-        bail!("directTestOwner conflicts with limitPercent, limitFiles, and globalConfigFallback");
+        bail!(
+            "directTestOwner conflicts with limitPercent, limitFiles, and globalConfigFallback; remove those policy overrides because direct ownership bypasses configured plan policy"
+        );
     }
 
     let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);

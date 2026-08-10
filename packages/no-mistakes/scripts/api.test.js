@@ -89,8 +89,16 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "deadExports", options: JSON.parse(json) }),
       callSitesJson: async (json) =>
         JSON.stringify({ command: "callSites", options: JSON.parse(json) }),
-      resolveCheckJson: async (json) =>
-        JSON.stringify({ command: "resolveCheck", options: JSON.parse(json) }),
+      resolveCheckJson: async (json) => {
+        const options = JSON.parse(json);
+        if (Array.isArray(options.files) && options.files.length === 0) {
+          throw new Error("files must contain at least one path");
+        }
+        if (Object.hasOwn(options, "file") && Object.hasOwn(options, "files")) {
+          throw new Error("exactly one of file or files is required");
+        }
+        return JSON.stringify({ command: "resolveCheck", options });
+      },
       fetchesJson: async (json) =>
         JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
       checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
@@ -229,6 +237,11 @@ test("programmatic API proxies object options through async native addon calls",
       "a.ts",
       "b.ts",
     ]);
+    await assert.rejects(api.resolveCheck({ files: [] }), /files must contain at least one path/);
+    await assert.rejects(
+      api.resolveCheck({ file: "a.ts", files: ["b.ts"] }),
+      /exactly one of file or files is required/,
+    );
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
     assert.deepEqual(
@@ -493,6 +506,7 @@ test("test plan declarations require current results but accept saved legacy pla
   assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
   assert.match(declarations, /export type TestsPlanOptions =/);
   assert.match(declarations, /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/);
+  assert.match(declarations, /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/);
   assert.match(declarations, /limitPercent\?: never;[\s\S]*limitFiles\?: never;/);
   assert.match(declarations, /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false;/);
 });

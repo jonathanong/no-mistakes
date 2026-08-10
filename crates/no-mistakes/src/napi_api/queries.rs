@@ -142,7 +142,12 @@ pub(crate) fn resolve_check_json_impl(options_json: String) -> napi::Result<Stri
             require_file(&file)?;
             (vec![PathBuf::from(file)], false)
         }
-        (None, Some(files)) if !files.is_empty() => {
+        (None, Some(files)) => {
+            if files.is_empty() {
+                return Err(napi::Error::from_reason(
+                    "files must contain at least one path",
+                ));
+            }
             if files.iter().any(|file| file.trim().is_empty()) {
                 return Err(napi::Error::from_reason(
                     "files must not contain an empty path",

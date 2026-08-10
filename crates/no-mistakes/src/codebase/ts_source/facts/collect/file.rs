@@ -13,6 +13,9 @@ pub(super) fn facts_from_collection_result(result: anyhow::Result<TsFileFacts>) 
         Err(error) => {
             let error = error.to_string();
             TsFileFacts {
+                // Keep both channels populated: operational_error is the
+                // request-level collection failure, while parse_error is the
+                // legacy diagnostic channel consumed by existing projections.
                 operational_error: Some(error.clone()),
                 parse_error: Some(error),
                 ..TsFileFacts::default()
@@ -33,6 +36,8 @@ pub(super) fn collect_file_facts_with_sources_and_session(
         Err(error) => {
             let error = format!("failed to read {}: {error}", path.display());
             return Some(TsFileFacts {
+                // A read failure is both operational and parser-visible so
+                // old graph/report consumers retain their diagnostic details.
                 operational_error: Some(error.clone()),
                 parse_error: Some(error),
                 ..TsFileFacts::default()

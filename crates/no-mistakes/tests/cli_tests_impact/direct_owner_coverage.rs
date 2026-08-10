@@ -29,3 +29,52 @@ fn tests_plan_direct_test_owner_keeps_a_changed_owned_test_as_self() {
     );
     assert_eq!(plan["selected_tests"][0]["targets"][0]["runner"], "vitest");
 }
+
+#[test]
+fn tests_plan_direct_test_owner_requires_framework_and_rejects_limits() {
+    let root = fixture("test-plan-config");
+    let missing_framework = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--direct-test-owner",
+    ]);
+    assert!(!missing_framework.status.success());
+    let missing_framework = String::from_utf8_lossy(&missing_framework.stderr);
+    assert!(missing_framework.contains("required arguments"));
+    assert!(missing_framework.contains("<FRAMEWORK>"));
+
+    let limit = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--direct-test-owner",
+        "--limit-files",
+        "1",
+    ]);
+    assert!(!limit.status.success());
+    assert!(String::from_utf8_lossy(&limit.stderr).contains("cannot be used with"));
+
+    let entrypoint = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "source.ts",
+        "--direct-test-owner",
+        "--entrypoint",
+        "source.ts",
+    ]);
+    assert!(!entrypoint.status.success());
+    let stderr = String::from_utf8_lossy(&entrypoint.stderr);
+    assert!(
+        stderr.contains("--direct-test-owner conflicts with --entrypoint"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("tests impact"), "{stderr}");
+}
