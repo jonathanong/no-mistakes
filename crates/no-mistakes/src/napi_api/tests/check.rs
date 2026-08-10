@@ -185,6 +185,20 @@ fn check_json_preserves_direct_and_reachable_dynamic_import_reports_when_auditin
 }
 
 #[test]
+fn check_json_skips_file_disabled_parse_errors_without_losing_other_dynamic_imports() {
+    let (baseline, audit) =
+        baseline_and_audit("aggregate-test-no-unmocked-dynamic-imports-disabled-parse-error");
+    assert!(baseline["warnings"].as_array().is_some_and(Vec::is_empty));
+    assert!(baseline["rules"].as_array().is_some_and(|findings| {
+        findings.iter().any(|finding| {
+            finding["rule"] == "test-no-unmocked-dynamic-imports"
+                && finding["file"] == "tests/direct.test.mts"
+        })
+    }));
+    assert_eq!(audit["suppressed"], json!([]));
+}
+
+#[test]
 fn check_json_preserves_server_boundary_report_when_auditing_suppression() {
     let (_, audit) = baseline_and_audit("aggregate-server-route-client-boundary");
     assert_suppression(

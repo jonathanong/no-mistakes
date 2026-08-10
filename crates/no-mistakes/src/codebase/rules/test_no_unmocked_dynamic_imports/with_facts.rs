@@ -22,6 +22,7 @@ mod tsconfig_catalog;
 
 pub(crate) use graph::check_with_prepared_facts_and_session;
 
+#[derive(Default)]
 struct PerTestResult {
     direct_findings: Vec<RuleFinding>,
     reachable_findings: Vec<reachable::ReachableFinding>,
@@ -117,12 +118,12 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                     let Some(source) = file_facts.source.as_deref() else {
                         anyhow::bail!("missing source facts for {}", file.display());
                     };
-                    if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
-                        return Ok(PerTestResult {
-                            direct_findings: Vec::new(),
-                            reachable_findings: Vec::new(),
-                            covered_reachable_imports: HashSet::new(),
-                        });
+                    // A file-disabled parse error cannot yield findings for
+                    // audit mode, but must not abort unrelated test files.
+                    if has_disable_file_comment(source, RULE_ID)
+                        && (file_facts.parse_error.is_some() || !defer_suppression)
+                    {
+                        return Ok(PerTestResult::default());
                     }
                     if let Some(error) = &file_facts.parse_error {
                         anyhow::bail!("failed to parse {}: {error}", file.display());
