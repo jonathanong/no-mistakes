@@ -6,8 +6,9 @@ Print files related through server route edges.
 no-mistakes server related src/routes/users.mts --direction both --format paths
 ```
 
-Use this to connect mounted routers, route modules, server entrypoints, and
-static local client calls through the normalized route node.
+Use this to connect mounted routers, route modules, server entrypoints, direct
+client calls, and calls through local or imported route helpers via the
+normalized route node.
 
 Key option: `--direction deps|dependents|both`.
 
