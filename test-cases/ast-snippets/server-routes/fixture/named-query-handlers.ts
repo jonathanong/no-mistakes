@@ -17,6 +17,11 @@ export const exportedList = function (req, res) {
   res.send("ok");
 };
 
+export function exportedFunction(req, res) {
+  req.query.exportedFunction;
+  res.send("ok");
+}
+
 function delegated(req, res) {
   list(req, res);
   res.send("ok");
@@ -39,4 +44,5 @@ app.get("/inline-destructured", ({ query: { inlineParam } }, res) => {
   res.send("ok");
 });
 app.get("/exported", exportedList);
+app.get("/exported-function", exportedFunction);
 app.get("/defaulted", defaulted);

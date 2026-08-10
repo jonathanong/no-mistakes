@@ -1,12 +1,19 @@
 use super::{helpers::binding_name, ServerRouteVisitor};
 use oxc_ast::ast::{
-    ExportDefaultDeclarationKind, Expression, FormalParameters, Statement, VariableDeclarator,
+    ArrowFunctionBody, ExportDefaultDeclarationKind, Expression, FormalParameters, Statement,
+    VariableDeclarator,
 };
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 struct HandlerShape<'a> {
     params: &'a FormalParameters<'a>,
-    body: &'a [Statement<'a>],
+    body: HandlerBody<'a>,
+}
+
+#[derive(Clone, Copy)]
+enum HandlerBody<'a> {
+    Statements(&'a [Statement<'a>]),
+    Expression(&'a Expression<'a>),
 }
 
 impl<'a> ServerRouteVisitor<'a> {
@@ -31,7 +38,7 @@ impl<'a> ServerRouteVisitor<'a> {
                             id.name.to_string(),
                             HandlerShape {
                                 params: &function.params,
-                                body: &body.statements,
+                                body: HandlerBody::Statements(&body.statements),
                             },
                         );
                     }
@@ -50,7 +57,7 @@ impl<'a> ServerRouteVisitor<'a> {
                                 id.name.to_string(),
                                 HandlerShape {
                                     params: &function.params,
-                                    body: &body.statements,
+                                    body: HandlerBody::Statements(&body.statements),
                                 },
                             );
                         }
@@ -73,7 +80,7 @@ impl<'a> ServerRouteVisitor<'a> {
                                 id.name.to_string(),
                                 HandlerShape {
                                     params: &function.params,
-                                    body: &body.statements,
+                                    body: HandlerBody::Statements(&body.statements),
                                 },
                             );
                         }
@@ -97,7 +104,13 @@ impl<'a> ServerRouteVisitor<'a> {
         };
         let handler = match init {
             Expression::ArrowFunctionExpression(arrow) => {
-                crate::ast::arrow_function_body_statements(&arrow.body).map(|body| HandlerShape {
+                let body = match &arrow.body {
+                    ArrowFunctionBody::FunctionBody(body) => {
+                        HandlerBody::Statements(&body.statements)
+                    }
+                    _ => HandlerBody::Expression(arrow.body.to_expression()),
+                };
+                Some(HandlerShape {
                     params: &arrow.params,
                     body,
                 })
@@ -105,7 +118,7 @@ impl<'a> ServerRouteVisitor<'a> {
             Expression::FunctionExpression(function) => {
                 function.body.as_ref().map(|body| HandlerShape {
                     params: &function.params,
-                    body: &body.statements,
+                    body: HandlerBody::Statements(&body.statements),
                 })
             }
             _ => None,
@@ -133,8 +146,14 @@ impl<'a> ServerRouteVisitor<'a> {
             let mut changed = false;
 
             for (name, handler) in handlers {
-                let params: BTreeSet<String> =
-                    self.query_params_from_function(handler.params, handler.body, &prior);
+                let params = match handler.body {
+                    HandlerBody::Statements(body) => {
+                        self.query_params_from_function(handler.params, body, &prior)
+                    }
+                    HandlerBody::Expression(expression) => {
+                        self.query_params_from_expression_body(handler.params, expression, &prior)
+                    }
+                };
                 if prior.get(name) != Some(&params) {
                     changed = true;
                 }
