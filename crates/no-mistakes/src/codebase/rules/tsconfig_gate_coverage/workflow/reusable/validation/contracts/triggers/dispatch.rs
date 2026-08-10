@@ -37,7 +37,7 @@ fn workflow_dispatch_input_valid(declaration: &Mapping) -> bool {
         })
         && declaration
             .get("options")
-            .is_none_or(non_empty_scalar_sequence)
+            .is_none_or(non_empty_string_sequence)
         && workflow_dispatch_input_values_valid(declaration)
 }
 
@@ -52,11 +52,15 @@ fn workflow_dispatch_input_values_valid(declaration: &Mapping) -> bool {
             declaration.get("options").is_none() && default.is_none_or(Value::is_number)
         }
         Some("choice") => declaration.get("options").is_some_and(|options| {
-            non_empty_scalar_sequence(options)
+            non_empty_string_sequence(options)
                 && default.is_none_or(|default| {
-                    options
-                        .as_sequence()
-                        .is_some_and(|options| options.contains(default))
+                    default.as_str().is_some_and(|default| {
+                        options.as_sequence().is_some_and(|options| {
+                            options
+                                .iter()
+                                .any(|option| option.as_str() == Some(default))
+                        })
+                    })
                 })
         }),
         Some("environment" | "string") | None => {
@@ -66,12 +70,12 @@ fn workflow_dispatch_input_values_valid(declaration: &Mapping) -> bool {
     }
 }
 
-fn non_empty_scalar_sequence(value: &Value) -> bool {
+fn non_empty_string_sequence(value: &Value) -> bool {
     value.as_sequence().is_some_and(|values| {
         !values.is_empty()
             && values
                 .iter()
-                .all(|value| matches!(value, Value::Bool(_) | Value::Number(_) | Value::String(_)))
+                .all(|value| value.as_str().is_some_and(|value| !value.is_empty()))
     })
 }
 

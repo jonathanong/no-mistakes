@@ -106,6 +106,8 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "schedule:\n  - cron: '*/15 0-23 1,15 JAN-MAR MON-FRI'",
         "workflow_dispatch:\n  inputs:\n    deploy:\n      type: boolean\n      required: true",
         "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice\n      options: [staging, production]",
+        "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice\n      options: [staging, production]\n      default: staging",
+        "workflow_dispatch:\n  inputs:\n    deploy:\n      type: boolean\n      default: false\n    count:\n      type: number\n      default: 2\n    label:\n      type: string\n      default: release\n    target:\n      type: environment\n      default: production",
         "workflow_dispatch: {}",
     ] {
         assert!(workflow_call_shape_valid(Some(&on(valid))), "{valid}");
@@ -147,6 +149,10 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "workflow_dispatch:\n  inputs:\n    deploy:\n      type: boolean\n      default: text",
         "workflow_dispatch:\n  inputs:\n    count:\n      type: number\n      default: text",
         "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice\n      options: [staging]\n      default: production",
+        "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice\n      options: ['', production]",
+        "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice\n      options: [staging, 1]",
+        "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice\n      options: [staging, production]\n      default: true",
+        "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice\n      options: [staging, production]\n      default: 1",
         "schedule:\n  - cron: nope",
         "schedule:\n  - cron: '0 0 * *'",
         "schedule:\n  - cron: '60 0 * * *'",

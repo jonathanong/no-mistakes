@@ -99,6 +99,45 @@ fn hash_files_is_available_only_in_step_conditions() {
 }
 
 #[test]
+fn continue_on_error_uses_its_field_specific_contexts() {
+    assert!(super::step_job_shape_valid(&job(
+        "continue-on-error: '${{ matrix.experimental }}'\nruns-on: ubuntu-latest\nsteps:\n  - run: echo valid"
+    )));
+    assert!(!super::step_job_shape_valid(&job(
+        "continue-on-error: '${{ steps.setup.outputs.allowed }}'\nruns-on: ubuntu-latest\nsteps:\n  - run: echo invalid"
+    )));
+    assert!(!super::step_job_shape_valid(&job(
+        "continue-on-error: '${{ failure() }}'\nruns-on: ubuntu-latest\nsteps:\n  - run: echo invalid"
+    )));
+    for yaml in [
+        "steps:\n  - continue-on-error: '${{ steps.setup.outputs.allowed }}'\n    run: echo valid",
+        "steps:\n  - continue-on-error: '${{ secrets.ALLOW_FAILURES || hashFiles(''**/pnpm-lock.yaml'') != '''' }}'\n    run: echo valid",
+    ] {
+        assert!(steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+    let invalid_step_status =
+        "steps:\n  - continue-on-error: '${{ failure() }}'\n    run: echo invalid";
+    assert!(
+        !steps_shape_valid(&job(invalid_step_status)),
+        "{invalid_step_status}"
+    );
+}
+
+#[test]
+fn environments_use_distinct_name_and_url_contexts() {
+    assert!(super::step_job_shape_valid(&job(
+        "runs-on: ubuntu-latest\nenvironment:\n  name: '${{ matrix.deployment }}'\n  url: '${{ steps.deploy.outputs.url }}'\nsteps:\n  - run: echo valid"
+    )));
+    for yaml in [
+        "runs-on: ubuntu-latest\nenvironment: '${{ secrets.DEPLOY_ENV }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nenvironment: {name: '${{ steps.deploy.outputs.name }}'}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nenvironment: {name: staging, url: '${{ secrets.DEPLOY_URL }}'}\nsteps:\n  - run: echo invalid",
+    ] {
+        assert!(!super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn action_steps_require_static_canonical_targets() {
     for yaml in [
         "steps:\n  - uses: actions/checkout@v4",

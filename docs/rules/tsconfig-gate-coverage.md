@@ -100,7 +100,12 @@ read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
 the workflow from providing coverage. Workflow and job `defaults.run` values
 must be static. Workflow concurrency expressions may use `github`, `inputs`,
 and `vars`; job concurrency additionally permits `needs`, `strategy`, and
-`matrix`.
+`matrix`. Job and step `continue-on-error` expressions, plus environment names
+and URLs, use their own GitHub context/function sets; status functions are not
+accepted in `continue-on-error`. Workflow-dispatch choice options/defaults and
+container/service port declarations must also match their field-specific
+GitHub types and static Docker shape. Complete expressions in supported port
+components remain dynamic rather than being rejected as malformed mappings.
 
 Reusable-workflow secret validation follows each call edge. A directly
 triggered workflow can inherit its available repository or organization

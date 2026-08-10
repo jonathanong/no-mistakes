@@ -26,6 +26,14 @@ pub(super) fn complete_expression_type(value: &str) -> Option<StaticExpressionTy
 /// the expression itself, so syntactically valid unavailable contexts must not
 /// make a reusable-call binding appear executable.
 pub(super) fn complete_expression_contexts_available(value: &str, allowed: &[&str]) -> bool {
+    complete_expression_contexts_with_hash_files_available(value, allowed, false)
+}
+
+pub(super) fn complete_expression_contexts_with_hash_files_available(
+    value: &str,
+    allowed: &[&str],
+    hash_files_available: bool,
+) -> bool {
     let value = value.trim();
     let Some(body) = value
         .strip_prefix("${{")
@@ -40,7 +48,7 @@ pub(super) fn complete_expression_contexts_available(value: &str, allowed: &[&st
     };
     syntax::parse(&tokens).is_some()
         && contexts::root_contexts_available(body, allowed)
-        && special_functions_available(&tokens, false, false)
+        && special_functions_available(&tokens, hash_files_available, false)
 }
 
 pub(super) fn condition_expression_valid(value: &str) -> bool {

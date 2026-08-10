@@ -4,7 +4,7 @@ use super::super::workflow::{
 use super::bindings::call_bindings_mapping_shape_valid;
 use super::fields::{
     bool_or_expression_field_valid, condition_field_valid, strategy_shape_valid,
-    string_field_valid, JOB_CONDITION_CONTEXTS,
+    string_field_valid, JOB_CONDITION_CONTEXTS, JOB_CONTINUE_ON_ERROR_CONTEXTS,
 };
 use super::values::{
     container_shape_valid, environment_shape_valid, only_keys, outputs_shape_valid,
@@ -61,7 +61,12 @@ pub(crate) fn step_job_shape_valid(job: &Value) -> bool {
             && scalar_mapping_valid(job.get("env"))
             && job_defaults_shape_valid(job.get("defaults"))
             && super::fields::number_or_expression_field_valid(job, "timeout-minutes")
-            && bool_or_expression_field_valid(job, "continue-on-error")
+            && bool_or_expression_field_valid(
+                job,
+                "continue-on-error",
+                JOB_CONTINUE_ON_ERROR_CONTEXTS,
+                false,
+            )
             && container_shape_valid(job.get("container"))
             && services_shape_valid(job.get("services"))
             && ((job.get("container").is_none() && job.get("services").is_none())

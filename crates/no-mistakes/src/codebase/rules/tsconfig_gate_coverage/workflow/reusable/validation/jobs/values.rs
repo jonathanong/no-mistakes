@@ -1,7 +1,15 @@
 use serde_yaml::{Mapping, Value};
 
-use super::super::super::super::expressions::interpolated_expression_valid;
+use super::super::super::super::expressions::{
+    interpolated_expression_contexts_available, interpolated_expression_valid,
+};
 use super::fields::string_field_valid;
+
+const ENVIRONMENT_NAME_CONTEXTS: &[&str] =
+    &["github", "inputs", "vars", "needs", "strategy", "matrix"];
+const ENVIRONMENT_URL_CONTEXTS: &[&str] = &[
+    "github", "inputs", "vars", "needs", "strategy", "matrix", "job", "runner", "env", "steps",
+];
 pub(super) fn scalar_mapping_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|mapping| {
@@ -36,18 +44,16 @@ pub(super) fn runs_on_shape_valid(value: Option<&Value>) -> bool {
 
 pub(super) fn environment_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
-        value
-            .as_str()
-            .is_some_and(valid_nonempty_interpolated_string)
+        value.as_str().is_some_and(valid_environment_name)
             || value.as_mapping().is_some_and(|environment| {
                 only_keys(environment, &["name", "url"])
                     && environment
                         .get("name")
                         .and_then(Value::as_str)
-                        .is_some_and(valid_nonempty_interpolated_string)
-                    && environment.get("url").is_none_or(|url| {
-                        url.as_str().is_some_and(valid_nonempty_interpolated_string)
-                    })
+                        .is_some_and(valid_environment_name)
+                    && environment
+                        .get("url")
+                        .is_none_or(|url| url.as_str().is_some_and(valid_environment_url))
             })
     })
 }
@@ -101,7 +107,7 @@ fn container_mapping_shape_valid(container: &Mapping) -> bool {
         .is_some_and(valid_nonempty_interpolated_string)
         && credentials_shape_valid(container.get("credentials"))
         && scalar_mapping_valid(container.get("env"))
-        && scalar_sequence_valid(container.get("ports"))
+        && super::ports::port_sequence_valid(container.get("ports"))
         && string_sequence_valid(container.get("volumes"))
         && string_field_valid(container, "options")
 }
@@ -122,14 +128,6 @@ fn credentials_shape_valid(value: Option<&Value>) -> bool {
     })
 }
 
-fn scalar_sequence_valid(value: Option<&Value>) -> bool {
-    value.is_none_or(|value| {
-        value
-            .as_sequence()
-            .is_some_and(|items| items.iter().all(super::fields::scalar_value_valid))
-    })
-}
-
 fn string_sequence_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_sequence().is_some_and(|items| {
@@ -143,4 +141,14 @@ fn string_sequence_valid(value: Option<&Value>) -> bool {
 
 fn valid_nonempty_interpolated_string(value: &str) -> bool {
     !value.is_empty() && interpolated_expression_valid(value)
+}
+
+fn valid_environment_name(value: &str) -> bool {
+    valid_nonempty_interpolated_string(value)
+        && interpolated_expression_contexts_available(value, ENVIRONMENT_NAME_CONTEXTS)
+}
+
+fn valid_environment_url(value: &str) -> bool {
+    valid_nonempty_interpolated_string(value)
+        && interpolated_expression_contexts_available(value, ENVIRONMENT_URL_CONTEXTS)
 }

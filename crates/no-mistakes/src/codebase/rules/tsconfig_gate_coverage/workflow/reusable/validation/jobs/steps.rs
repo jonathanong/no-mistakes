@@ -1,6 +1,6 @@
 use super::fields::{
     bool_or_expression_field_valid, condition_field_valid, number_or_expression_field_valid,
-    string_field_valid, STEP_CONDITION_CONTEXTS,
+    string_field_valid, STEP_CONDITION_CONTEXTS, STEP_CONTINUE_ON_ERROR_CONTEXTS,
 };
 use super::values::{only_keys, scalar_mapping_valid};
 use serde_yaml::{Mapping, Value};
@@ -89,7 +89,12 @@ fn shared_step_fields_valid(step: &Mapping) -> bool {
         && string_field_valid(step, "working-directory")
         && string_field_valid(step, "shell")
         && scalar_mapping_valid(step.get("env"))
-        && bool_or_expression_field_valid(step, "continue-on-error")
+        && bool_or_expression_field_valid(
+            step,
+            "continue-on-error",
+            STEP_CONTINUE_ON_ERROR_CONTEXTS,
+            true,
+        )
         && number_or_expression_field_valid(step, "timeout-minutes")
 }
 

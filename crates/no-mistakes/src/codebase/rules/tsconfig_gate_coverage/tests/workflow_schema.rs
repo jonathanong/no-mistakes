@@ -89,6 +89,18 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@refs/heads/release.lock\n      - run: tsc --noEmit --project invalid-action-lock-ref/tsconfig.json\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-action-lock-ref-sibling/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/invalid-container-ports.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    container: {image: node:22, ports: [true]}\n    steps:\n      - run: tsc --noEmit --project invalid-container-ports/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/invalid-service-ports.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    services: {postgres: {image: postgres:16, ports: [false]}}\n    steps:\n      - run: tsc --noEmit --project invalid-service-ports/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-ports.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    container: {image: node:22, ports: [8080, '8081:80']}\n    services: {postgres: {image: postgres:16, ports: ['127.0.0.1:5432:5432/tcp']}}\n    steps:\n      - run: tsc --noEmit --project valid-ports/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/missing-steps.yml",
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project missing-steps-sibling/tsconfig.json\n",
         ),
@@ -202,6 +214,9 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "invalid-action-ref-sibling",
         "invalid-action-lock-ref",
         "invalid-action-lock-ref-sibling",
+        "invalid-container-ports",
+        "invalid-service-ports",
+        "valid-ports",
         "missing-steps-sibling",
         "missing-runs-on-sibling",
         "webhook-only-trigger",
@@ -233,7 +248,10 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             &tracked,
             &project_inputs(&tracked)
         ),
-        BTreeSet::from(["partial/tsconfig.json".to_string()])
+        BTreeSet::from([
+            "partial/tsconfig.json".to_string(),
+            "valid-ports/tsconfig.json".to_string(),
+        ])
     );
 }
 

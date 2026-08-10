@@ -1,5 +1,7 @@
 use super::*;
 
+mod dispatch;
+
 fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {
     tracked
         .iter()
