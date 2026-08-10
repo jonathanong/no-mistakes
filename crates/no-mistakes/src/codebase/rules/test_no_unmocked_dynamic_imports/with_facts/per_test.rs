@@ -5,7 +5,7 @@ use super::PerTestResult;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::ts_resolver::ScopedImportResolver;
-use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
+use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use dashmap::DashMap;
@@ -23,6 +23,7 @@ pub(super) struct Request<'a> {
     pub(super) manual_mocks: &'a HashSet<PathBuf>,
     pub(super) setup_data: &'a [config::ConfigSetupData],
     pub(super) shared: &'a CheckFactMap,
+    pub(super) sources: &'a SourceStore,
     pub(super) dependency_cache: &'a DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     pub(super) defer_suppression: bool,
 }
@@ -38,16 +39,17 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         manual_mocks,
         setup_data,
         shared,
+        sources,
         dependency_cache,
         defer_suppression,
     } = request;
     let Some(file_facts) = shared.ts.get(&file) else {
         anyhow::bail!("missing shared facts for {}", file.display());
     };
-    let Some(source) = file_facts.source.as_deref() else {
-        anyhow::bail!("missing source facts for {}", file.display());
-    };
-    let file_disabled = has_disable_file_comment(source, RULE_ID);
+    let source = sources
+        .read_path(&file)
+        .map_err(|error| anyhow::anyhow!("failed to read {}: {error}", file.display()))?;
+    let file_disabled = has_disable_file_comment(&source, RULE_ID);
     // A file-disabled parse error cannot yield findings for audit mode, but
     // must not abort unrelated test files.
     if file_disabled && (file_facts.parse_error.is_some() || !defer_suppression) {
@@ -88,7 +90,7 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
             findings: &mut direct_findings,
         };
         for import in &facts.dynamic_imports {
-            if defer_suppression || !has_disable_comment(source, import.line as u32, RULE_ID) {
+            if defer_suppression || !has_disable_comment(&source, import.line as u32, RULE_ID) {
                 check_dynamic_import(&mut check_context, import.clone());
             }
         }

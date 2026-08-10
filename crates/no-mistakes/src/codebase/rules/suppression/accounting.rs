@@ -14,6 +14,9 @@ pub struct SuppressionTarget<'a> {
     pub file: &'a str,
     pub line: Option<usize>,
     pub reason: &'a str,
+    /// Internal identity used when multiple public findings share a source
+    /// location. It is intentionally omitted from the serialized contract.
+    pub identity: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]
@@ -81,7 +84,10 @@ pub fn suppress_domain_findings_with_sources<T>(
             rule: target.rule.to_string(),
             file: target.file.to_string(),
             line: target.line,
-            reason: target.reason.to_string(),
+            reason: target.identity.map_or_else(
+                || target.reason.to_string(),
+                |identity| format!("{} (component {identity})", target.reason),
+            ),
             directive,
         });
         false

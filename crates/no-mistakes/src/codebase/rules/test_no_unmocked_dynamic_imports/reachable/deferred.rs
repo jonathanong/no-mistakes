@@ -48,37 +48,40 @@ pub(super) fn collect(
             if file_facts.parse_error.is_some() {
                 continue;
             }
-            if let (Some(source), Some(facts)) = (
-                file_facts.source.as_deref(),
-                file_facts.dynamic_imports.as_ref(),
-            ) {
-                if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
-                    continue;
-                }
-                let mut local_findings = Vec::new();
-                let check_context = DynamicCheckContext {
-                    root: ctx.root,
-                    file,
-                    resolver: ctx.resolver,
-                    graph: ctx.graph,
-                    graph_files: ctx.graph_files,
-                    file_universe: ctx.file_universe,
-                    mocks,
-                    dependency_cache,
-                    findings: &mut local_findings,
-                };
-                for import in &facts.dynamic_imports {
-                    if defer_suppression
-                        || !has_disable_comment(source, import.line as u32, RULE_ID)
-                    {
-                        collect_outcome(
-                            &mut result,
-                            evaluate_dynamic_import(&check_context, import.clone()),
-                        );
-                    }
-                }
+            // A prepared request is authoritative, including incomplete or
+            // failed entries. Falling back to disk would violate one-pass
+            // ownership and can produce findings from facts outside the
+            // request's declared inventory.
+            let Some(source) = file_facts.source.as_deref() else {
+                continue;
+            };
+            let Some(facts) = file_facts.dynamic_imports.as_ref() else {
+                continue;
+            };
+            if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
                 continue;
             }
+            let mut local_findings = Vec::new();
+            let check_context = DynamicCheckContext {
+                root: ctx.root,
+                file,
+                resolver: ctx.resolver,
+                graph: ctx.graph,
+                graph_files: ctx.graph_files,
+                file_universe: ctx.file_universe,
+                mocks,
+                dependency_cache,
+                findings: &mut local_findings,
+            };
+            for import in &facts.dynamic_imports {
+                if defer_suppression || !has_disable_comment(source, import.line as u32, RULE_ID) {
+                    collect_outcome(
+                        &mut result,
+                        evaluate_dynamic_import(&check_context, import.clone()),
+                    );
+                }
+            }
+            continue;
         }
         let cached = get_or_cache_file(file, ctx.file_cache)?;
         if !defer_suppression && has_disable_file_comment(&cached.source, RULE_ID) {

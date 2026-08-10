@@ -174,3 +174,52 @@ fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports
         })
     }));
 }
+
+#[test]
+fn check_json_deduplicates_same_origin_even_when_one_barrel_is_suppressed() {
+    let (baseline, audit) = baseline_and_audit("suppression-unique-canonical");
+    for output in [&baseline, &audit] {
+        assert!(output["codebase"]
+            .as_array()
+            .is_some_and(|items| { !items.iter().any(|item| item["exportName"] == "identity") }));
+    }
+    assert!(audit["suppressed"].as_array().is_some_and(|items| {
+        !items
+            .iter()
+            .any(|item| item["rule"] == "unique-exports" && item["file"] == "src/identity-b.ts")
+    }));
+}
+
+#[test]
+fn check_json_keeps_inherited_react_suppressions_distinct_by_parent_component() {
+    let (baseline, audit) = baseline_and_audit("suppression-react-inherited-parents");
+    assert!(baseline["react"].as_array().is_some_and(Vec::is_empty));
+    let inherited = audit["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["domain"] == "react")
+        .collect::<Vec<_>>();
+    // The child also has a direct suppressed diagnostic; the two inherited
+    // records below are the invariant this fixture protects.
+    assert_eq!(inherited.len(), 3, "{audit}");
+    let parents = inherited
+        .iter()
+        .filter(|item| {
+            item["reason"]
+                .as_str()
+                .is_some_and(|reason| reason.contains("Parent"))
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(parents.len(), 2, "{audit}");
+    assert!(parents.iter().any(|item| {
+        item["reason"]
+            .as_str()
+            .is_some_and(|reason| reason.contains("ParentA"))
+    }));
+    assert!(parents.iter().any(|item| {
+        item["reason"]
+            .as_str()
+            .is_some_and(|reason| reason.contains("ParentB"))
+    }));
+}

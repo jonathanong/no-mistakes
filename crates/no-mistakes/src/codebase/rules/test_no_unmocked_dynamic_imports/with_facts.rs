@@ -140,6 +140,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
                             manual_mocks: &manual_mocks,
                             setup_data,
                             shared,
+                            sources,
                             dependency_cache: &dependency_cache,
                             defer_suppression,
                         },

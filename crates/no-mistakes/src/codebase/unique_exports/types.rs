@@ -87,7 +87,7 @@ pub(super) struct ExportOccurrence {
     pub(super) suppression_location: Option<(String, u32)>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone)]
 pub(super) struct ExportOrigin {
     pub(super) file: String,
     pub(super) line: u32,
@@ -95,4 +95,30 @@ pub(super) struct ExportOrigin {
     pub(super) bucket: ExportBucket,
     pub(super) suppressed: bool,
     pub(super) suppression_location: Option<(String, u32)>,
+}
+
+impl ExportOrigin {
+    fn identity(&self) -> (&str, u32, &str, ExportBucket) {
+        (&self.file, self.line, &self.name, self.bucket)
+    }
+}
+
+impl PartialEq for ExportOrigin {
+    fn eq(&self, other: &Self) -> bool {
+        self.identity() == other.identity()
+    }
+}
+
+impl Eq for ExportOrigin {}
+
+impl PartialOrd for ExportOrigin {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for ExportOrigin {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.identity().cmp(&other.identity())
+    }
 }

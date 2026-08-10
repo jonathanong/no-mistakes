@@ -16,6 +16,7 @@ mod findings;
 mod prepared;
 mod runner;
 mod selection;
+mod suppression;
 mod types;
 
 use colocated_tests::covered_components as colocated_test_covered_components;
