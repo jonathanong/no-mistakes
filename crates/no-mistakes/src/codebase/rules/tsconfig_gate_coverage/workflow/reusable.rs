@@ -7,11 +7,13 @@ use std::collections::BTreeSet;
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 
 mod activation;
+mod events;
 mod model;
 mod steps;
 mod validation;
 
 use activation::scan_activation;
+use events::source_change_event_eligible;
 use model::{ActivationMemo, ScanContext, WorkflowDocument};
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
@@ -53,21 +55,29 @@ pub(super) fn collect_ci_projects_with_stats(
         if trigger_model.triggers.events.is_empty() {
             continue;
         }
-        let triggers = CompiledTriggers::new(&trigger_model);
         let mut memo = ActivationMemo::new();
-        let Some(inputs) = direct_inputs(document.call_contract.as_ref()) else {
-            continue;
-        };
-        if let Some(activation_projects) = scan_activation(
-            path,
-            document,
-            &triggers,
-            &inputs,
-            &BTreeSet::new(),
-            &context,
-            &mut memo,
-        ) {
-            projects.extend(activation_projects);
+        for event_name in trigger_model
+            .triggers
+            .events
+            .keys()
+            .filter(|event| source_change_event_eligible(document.value, event))
+        {
+            let triggers = CompiledTriggers::for_event(&trigger_model, event_name)
+                .expect("event came from the trigger model");
+            let Some(inputs) = direct_inputs(document.call_contract.as_ref(), event_name) else {
+                continue;
+            };
+            if let Some(activation_projects) = scan_activation(
+                path,
+                document,
+                &triggers,
+                &inputs,
+                &BTreeSet::new(),
+                &context,
+                &mut memo,
+            ) {
+                projects.extend(activation_projects);
+            }
         }
         computations += memo.computations();
     }
@@ -76,5 +86,7 @@ pub(super) fn collect_ci_projects_with_stats(
 
 #[cfg(test)]
 mod input_tests;
+#[cfg(test)]
+mod review_tests;
 #[cfg(test)]
 mod tests;

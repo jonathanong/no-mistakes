@@ -19,7 +19,6 @@ pub(super) use workflow::workflow_shape_valid;
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {
     matrix::matrix_shape_valid(job)
         && steps_shape_valid(job)
-        && jobs::condition_field_valid(job.get("if"))
         && if job.get("uses").is_some() {
             reusable_call_job_shape_valid(job)
         } else {

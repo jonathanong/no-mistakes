@@ -2,8 +2,13 @@ use super::values::only_keys;
 use serde_yaml::{Mapping, Value};
 
 use super::super::super::super::expressions::{
-    condition_expression_valid, interpolated_expression_valid,
+    condition_expression_contexts_available, interpolated_expression_valid,
 };
+
+pub(super) const JOB_CONDITION_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
+pub(super) const STEP_CONDITION_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "steps", "inputs",
+];
 
 pub(super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
@@ -32,9 +37,20 @@ pub(super) fn string_field_valid(mapping: &Mapping, field: &str) -> bool {
         .is_none_or(|value| value.as_str().is_some_and(interpolated_expression_valid))
 }
 
-pub(crate) fn condition_field_valid(value: Option<&Value>) -> bool {
+pub(crate) fn condition_field_valid(
+    value: Option<&Value>,
+    allowed_contexts: &[&str],
+    hash_files_available: bool,
+) -> bool {
     value.is_none_or(|value| {
-        value.is_bool() || value.as_str().is_some_and(condition_expression_valid)
+        value.is_bool()
+            || value.as_str().is_some_and(|value| {
+                condition_expression_contexts_available(
+                    value,
+                    allowed_contexts,
+                    hash_files_available,
+                )
+            })
     })
 }
 

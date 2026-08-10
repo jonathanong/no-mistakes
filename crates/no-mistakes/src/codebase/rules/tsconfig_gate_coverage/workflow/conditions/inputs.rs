@@ -1,5 +1,5 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
-use super::{InputState, StaticValue};
+use super::{InputState, StaticValue, EVENT_NAME_KEY};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
 };
@@ -11,22 +11,31 @@ mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
 use values::{default_value, nonboolean_binding_value};
 
-pub(crate) fn direct_inputs(contract: Option<&WorkflowCallContract>) -> Option<InputState> {
+pub(crate) fn direct_inputs(
+    contract: Option<&WorkflowCallContract>,
+    event_name: &str,
+) -> Option<InputState> {
     // A workflow invoked directly by a repository event receives the declared
     // false/default values that GitHub assigns when workflow_call is not used.
     let Some(contract) = contract else {
-        return Some(InputState::new());
+        return Some(InputState::from([(
+            EVENT_NAME_KEY.to_string(),
+            StaticValue::String(event_name.to_string()),
+        )]));
     };
     if !workflow_call_contract_valid(contract) {
         return None;
     }
-    Some(
-        contract
-            .inputs
-            .keys()
-            .map(|name| (normalized_name(name), StaticValue::Bool(false)))
-            .collect(),
-    )
+    let mut inputs: InputState = contract
+        .inputs
+        .keys()
+        .map(|name| (normalized_name(name), StaticValue::Bool(false)))
+        .collect();
+    inputs.insert(
+        EVENT_NAME_KEY.to_string(),
+        StaticValue::String(event_name.to_string()),
+    );
+    Some(inputs)
 }
 
 pub(crate) fn callee_inputs(
@@ -75,35 +84,38 @@ fn inputs_from_contract(
             return None;
         }
     }
-    Some(
-        contract
-            .inputs
-            .iter()
-            .map(|(name, declaration)| {
-                let input_type = declaration
-                    .input_type
-                    .expect("validated workflow_call input type");
-                let binding = binding_map
-                    .as_ref()
-                    .and_then(|mapping| mapping.get(&normalized_name(name)));
-                let state = match input_type {
-                    WorkflowCallInputType::Boolean => binding
-                        .map(|value| binding_bool(value, parent))
-                        .unwrap_or_else(|| {
-                            if let Some(JsonScalar::Bool(value)) = declaration.default.as_ref() {
-                                StaticValue::Bool(*value)
-                            } else {
-                                StaticValue::Bool(false)
-                            }
-                        }),
-                    WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
-                        .map(|value| nonboolean_binding_value(value, parent, input_type))
-                        .unwrap_or_else(|| default_value(declaration.default.as_ref(), input_type)),
-                };
-                (normalized_name(name), state)
-            })
-            .collect(),
-    )
+    let mut inputs: InputState = contract
+        .inputs
+        .iter()
+        .map(|(name, declaration)| {
+            let input_type = declaration
+                .input_type
+                .expect("validated workflow_call input type");
+            let binding = binding_map
+                .as_ref()
+                .and_then(|mapping| mapping.get(&normalized_name(name)));
+            let state = match input_type {
+                WorkflowCallInputType::Boolean => binding
+                    .map(|value| binding_bool(value, parent))
+                    .unwrap_or_else(|| {
+                        if let Some(JsonScalar::Bool(value)) = declaration.default.as_ref() {
+                            StaticValue::Bool(*value)
+                        } else {
+                            StaticValue::Bool(false)
+                        }
+                    }),
+                WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
+                    .map(|value| nonboolean_binding_value(value, parent, input_type))
+                    .unwrap_or_else(|| default_value(declaration.default.as_ref(), input_type)),
+            };
+            (normalized_name(name), state)
+        })
+        .collect();
+    inputs.insert(
+        EVENT_NAME_KEY.to_string(),
+        parent.get(EVENT_NAME_KEY)?.clone(),
+    );
+    Some(inputs)
 }
 
 pub(crate) fn callee_secrets_valid(contract: &WorkflowCallContract, call_job: &Value) -> bool {

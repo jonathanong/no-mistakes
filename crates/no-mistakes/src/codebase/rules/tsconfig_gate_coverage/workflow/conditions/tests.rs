@@ -117,3 +117,37 @@ fn input_comparisons_preserve_static_scalar_values() {
         );
     }
 }
+
+#[test]
+fn status_conditions_model_the_successful_gate_path() {
+    let inputs = InputState::new();
+    for expression in [
+        "failure()",
+        "${{ cancelled() }}",
+        "!success()",
+        "!!failure()",
+        "!(success())",
+        "failure() == true",
+        "cancelled() || false",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::False,
+            "{expression}"
+        );
+    }
+    for expression in [
+        "success()",
+        "${{ always() }}",
+        "!cancelled()",
+        "!!success()",
+        "!(failure())",
+        "failure() != true",
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            StaticBool::True,
+            "{expression}"
+        );
+    }
+}

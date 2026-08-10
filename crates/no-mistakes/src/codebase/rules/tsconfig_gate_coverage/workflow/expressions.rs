@@ -1,3 +1,4 @@
+mod contexts;
 mod lexer;
 mod syntax;
 
@@ -29,92 +30,13 @@ pub(super) fn complete_expression_contexts_available(value: &str, allowed: &[&st
     else {
         return false;
     };
-    syntax::parse(&match lexer::tokenize(body) {
+    let tokens = match lexer::tokenize(body) {
         Some(tokens) => tokens,
         None => return false,
-    })
-    .is_some()
-        && root_contexts_available(body, allowed)
-}
-
-fn root_contexts_available(expression: &str, allowed: &[&str]) -> bool {
-    let bytes = expression.as_bytes();
-    let mut index = 0;
-    let mut previous_non_whitespace = None;
-    while index < bytes.len() {
-        if bytes[index].is_ascii_whitespace() {
-            index += 1;
-            continue;
-        }
-        if bytes[index] == b'\'' {
-            let Some(end) = quoted_string_end(bytes, index + 1) else {
-                return false;
-            };
-            index = end;
-            previous_non_whitespace = Some(b'\'');
-            continue;
-        }
-        if let Some(end) = lexer::numeric_literal_end(bytes, index) {
-            previous_non_whitespace = bytes.get(end.saturating_sub(1)).copied();
-            index = end;
-            continue;
-        }
-        if identifier_start(bytes[index]) {
-            let start = index;
-            index += 1;
-            while index < bytes.len() && identifier_continue(bytes[index]) {
-                index += 1;
-            }
-            let identifier = &expression[start..index];
-            let next = bytes[index..]
-                .iter()
-                .copied()
-                .find(|byte| !byte.is_ascii_whitespace());
-            let is_property = previous_non_whitespace == Some(b'.');
-            let is_function = next == Some(b'(');
-            let is_literal = matches!(
-                identifier.to_ascii_lowercase().as_str(),
-                "true" | "false" | "null"
-            );
-            if !is_property
-                && !is_function
-                && !is_literal
-                && !allowed
-                    .iter()
-                    .any(|context| identifier.eq_ignore_ascii_case(context))
-            {
-                return false;
-            }
-            previous_non_whitespace = Some(bytes[index - 1]);
-            continue;
-        }
-        previous_non_whitespace = Some(bytes[index]);
-        index += 1;
-    }
-    true
-}
-
-fn quoted_string_end(bytes: &[u8], mut index: usize) -> Option<usize> {
-    while index < bytes.len() {
-        if bytes[index] == b'\'' {
-            if bytes.get(index + 1) == Some(&b'\'') {
-                index += 2;
-            } else {
-                return Some(index + 1);
-            }
-        } else {
-            index += 1;
-        }
-    }
-    None
-}
-
-fn identifier_start(byte: u8) -> bool {
-    byte.is_ascii_alphabetic() || byte == b'_'
-}
-
-fn identifier_continue(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-')
+    };
+    syntax::parse(&tokens).is_some()
+        && contexts::root_contexts_available(body, allowed)
+        && special_functions_available(&tokens, false, false)
 }
 
 pub(super) fn condition_expression_valid(value: &str) -> bool {
@@ -126,6 +48,30 @@ pub(super) fn condition_expression_valid(value: &str) -> bool {
             .and_then(|tokens| syntax::parse(&tokens))
             .is_some()
     }
+}
+
+pub(super) fn condition_expression_contexts_available(
+    value: &str,
+    allowed: &[&str],
+    hash_files_available: bool,
+) -> bool {
+    let expression = value.trim();
+    let expression = if expression.starts_with("${{") || expression.ends_with("}}") {
+        expression
+            .strip_prefix("${{")
+            .and_then(|body| body.strip_suffix("}}"))
+            .map(str::trim)
+    } else {
+        Some(expression)
+    };
+    expression.is_some_and(|expression| {
+        let Some(tokens) = lexer::tokenize(expression) else {
+            return false;
+        };
+        syntax::parse(&tokens).is_some()
+            && contexts::root_contexts_available(expression, allowed)
+            && special_functions_available(&tokens, hash_files_available, true)
+    })
 }
 
 pub(super) fn interpolated_expression_valid(value: &str) -> bool {
@@ -147,15 +93,35 @@ fn interpolated_expression_valid_for_contexts(value: &str, allowed: Option<&[&st
             return false;
         };
         let expression = body[..end].trim();
-        if lexer::tokenize(expression)
-            .and_then(|tokens| syntax::parse(&tokens))
-            .is_none()
-            || allowed.is_some_and(|allowed| !root_contexts_available(expression, allowed))
+        let Some(tokens) = lexer::tokenize(expression) else {
+            return false;
+        };
+        if syntax::parse(&tokens).is_none()
+            || allowed
+                .is_some_and(|allowed| !contexts::root_contexts_available(expression, allowed))
+            || (allowed.is_some() && !special_functions_available(&tokens, false, false))
         {
             return false;
         }
         remaining = &body[end + "}}".len()..];
     }
+}
+
+fn special_functions_available(
+    tokens: &[lexer::Token],
+    hash_files_available: bool,
+    status_functions_available: bool,
+) -> bool {
+    tokens.iter().all(|token| match token {
+        lexer::Token::Function(lexer::Function::HashFiles) => hash_files_available,
+        lexer::Token::Function(
+            lexer::Function::Success
+            | lexer::Function::Failure
+            | lexer::Function::Always
+            | lexer::Function::Cancelled,
+        ) => status_functions_available,
+        _ => true,
+    })
 }
 
 fn interpolated_expression_end(value: &str) -> Option<usize> {

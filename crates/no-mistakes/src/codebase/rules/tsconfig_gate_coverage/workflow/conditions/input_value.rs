@@ -1,5 +1,33 @@
 use super::{StaticBool, StaticValue};
 
+impl StaticBool {
+    pub(super) fn truthiness(self) -> Self {
+        match self {
+            Self::TruthyNonBoolean => Self::True,
+            value => value,
+        }
+    }
+
+    pub(super) fn negate(self) -> Self {
+        match self {
+            Self::False => Self::True,
+            Self::True => Self::False,
+            Self::TruthyNonBoolean => Self::False,
+            Self::Unknown => Self::Unknown,
+        }
+    }
+}
+
+impl From<bool> for StaticBool {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::True
+        } else {
+            Self::False
+        }
+    }
+}
+
 pub(super) fn comparison_literal(operand: &str) -> Option<StaticValue> {
     let operand = strip_parentheses(operand.trim());
     if operand.eq_ignore_ascii_case("true") {

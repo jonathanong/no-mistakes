@@ -1,6 +1,6 @@
 use super::{JsonScalar, Value, WorkflowCallInputType};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    input_value::comparison_literal, InputState, StaticValue,
+    event_name_value, input_value::comparison_literal, InputState, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     complete_expression_type, StaticExpressionType,
@@ -53,6 +53,9 @@ pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Optio
         .strip_prefix("${{")?
         .strip_suffix("}}")?
         .trim();
+    if body.eq_ignore_ascii_case("github.event_name") {
+        return event_name_value(parent);
+    }
     let name = body.strip_prefix("inputs.")?.trim();
     parent.get(&name.to_lowercase()).cloned()
 }

@@ -1,4 +1,4 @@
-use serde_yaml::Value;
+use serde_yaml::{Mapping, Value};
 
 #[cfg(test)]
 mod tests;
@@ -65,6 +65,49 @@ fn is_posix_runner_label(label: &str) -> bool {
                 .get(..os.len() + 1)
                 .is_some_and(|prefix| prefix.eq_ignore_ascii_case(&format!("{os}-")))
     })
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(super) enum ContainerRunnerSupport {
+    Linux,
+    NonLinux,
+    Unknown,
+}
+
+pub(super) fn container_runner_support(job: &Mapping) -> ContainerRunnerSupport {
+    let labels = match job.get("runs-on") {
+        Some(Value::String(label)) => vec![label.as_str()],
+        Some(Value::Sequence(labels)) => labels.iter().filter_map(Value::as_str).collect(),
+        _ => return ContainerRunnerSupport::Unknown,
+    };
+    if labels
+        .iter()
+        .any(|label| is_windows_runner_label(label) || is_macos_runner_label(label))
+    {
+        ContainerRunnerSupport::NonLinux
+    } else if labels.iter().any(|label| is_linux_runner_label(label)) {
+        ContainerRunnerSupport::Linux
+    } else {
+        ContainerRunnerSupport::Unknown
+    }
+}
+
+fn is_linux_runner_label(label: &str) -> bool {
+    let label = label.trim();
+    ["linux", "ubuntu"].iter().any(|os| {
+        label.eq_ignore_ascii_case(os)
+            || label
+                .get(..os.len() + 1)
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case(&format!("{os}-")))
+    })
+}
+
+fn is_macos_runner_label(label: &str) -> bool {
+    let label = label.trim();
+    label.eq_ignore_ascii_case("macos")
+        || label
+            .get(.."macos-".len())
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("macos-"))
 }
 
 fn default_shell(value: &Value) -> Option<&str> {

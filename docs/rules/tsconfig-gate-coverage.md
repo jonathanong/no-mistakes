@@ -37,10 +37,14 @@ The containing workflow must declare at least one file-triggered `push`,
 `pull_request`, or `pull_request_target` event whose path filters allow every
 visible TypeScript/JavaScript source selected by that project's
 `files`/`include`/`exclude` settings. Projects with no known source files fall
-back to the tracked tsconfig path. Manual, scheduled, reusable, empty, tag-only, and
-path-filtered-out workflows cannot provide a repository typecheck gate on
-their own. A `workflow_call` workflow can provide one when reached from an
-applicable caller. For
+back to the tracked tsconfig path. Input values and path coverage are evaluated
+for each direct caller event independently, so coverage from different events
+is never combined. An explicitly activity-filtered `pull_request` or
+`pull_request_target` event must include `synchronize`, the event that runs when
+source commits are added to an open pull request. Manual, scheduled, reusable,
+empty, tag-only, and path-filtered-out workflows cannot provide a repository
+typecheck gate on their own. A `workflow_call` workflow can provide one when
+reached from an applicable caller. For
 example, `paths: [app/tsconfig.json]` cannot cover `app/src/index.ts`; add
 `app/**` or an
 unfiltered applicable event.
@@ -63,6 +67,9 @@ those runners to PowerShell; specify a supported `bash` or `sh` shell instead.
 A bare `self-hosted` label is also rejected with an implicit shell because its
 operating system is not statically known; add a `linux`/`macos` label or an
 explicit supported shell.
+Jobs that declare `container` or `services` count only with a statically Linux
+runner label. GitHub does not support those fields on Windows or macOS runners,
+and an unknown custom runner label cannot prove the required Linux host.
 
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
@@ -75,6 +82,15 @@ and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
 values through transitive calls. This lets the rule resolve exact string and
 number equality/inequality comparisons as well as input truthiness. Expressions
 whose result remains dynamic fail open as potentially runnable.
+Condition expressions must also use contexts available at their location.
+For example, job conditions cannot read `secrets`, while step conditions can
+read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
+the workflow from providing coverage.
+
+The rule evaluates the successful gate path: `success()`, `always()`, and
+`!cancelled()` are runnable there, while `failure()` and `cancelled()` are not.
+This prevents failure-handler or cancellation-only typechecks from satisfying
+the required CI gate.
 
 A job blocked by a statically skipped `needs` dependency, including a
 transitive dependency, does not count. Exact `always()` and `!cancelled()` job

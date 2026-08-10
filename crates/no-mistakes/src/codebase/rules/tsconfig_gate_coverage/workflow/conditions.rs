@@ -11,7 +11,7 @@ use input_value::comparison_literal;
 pub(super) use inputs::{callee_inputs, callee_secrets_valid, direct_inputs};
 use literals::{
     continues_after_skipped_need, hexadecimal_bool, number_bool, quoted_string_bool,
-    strip_expression,
+    status_function_bool, strip_expression,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -32,6 +32,11 @@ pub(super) enum StaticValue {
 }
 
 pub(super) type InputState = BTreeMap<String, StaticValue>;
+const EVENT_NAME_KEY: &str = "\0github.event_name";
+
+fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(EVENT_NAME_KEY).cloned()
+}
 
 pub(super) fn statically_skipped_jobs(
     jobs: &serde_yaml::Mapping,
@@ -91,6 +96,9 @@ fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
     if expression.eq_ignore_ascii_case("null") {
         return StaticBool::False;
     }
+    if let Some(value) = status_function_bool(expression) {
+        return value;
+    }
     if let Some(value) = quoted_string_bool(expression) {
         return value;
     }
@@ -105,18 +113,14 @@ fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
 
 fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool {
     if let Some((left, right, equal)) = logical::comparison_operands(expression) {
-        let (name, expected) = match (input_name(left), comparison_literal(right)) {
-            (Some(name), Some(expected)) => (name, expected),
-            _ => match (comparison_literal(left), input_name(right)) {
-                (Some(expected), Some(name)) => (name, expected),
+        let (actual, expected) = match (condition_value(left, inputs), comparison_literal(right)) {
+            (Some(actual), Some(expected)) => (actual, expected),
+            _ => match (comparison_literal(left), condition_value(right, inputs)) {
+                (Some(expected), Some(actual)) => (actual, expected),
                 _ => return StaticBool::Unknown,
             },
         };
-        let value = inputs
-            .get(&name.to_lowercase())
-            .cloned()
-            .unwrap_or(StaticValue::Bool(false))
-            .equals(&expected);
+        let value = actual.equals(&expected);
         return if equal { value } else { value.negate() };
     }
     if let Some(name) = input_name(expression) {
@@ -141,6 +145,26 @@ fn resolve_input_expression(expression: &str, inputs: &InputState) -> StaticBool
     StaticBool::Unknown
 }
 
+fn condition_value(operand: &str, inputs: &InputState) -> Option<StaticValue> {
+    if let Some(value) = status_function_bool(operand.trim()) {
+        return match value {
+            StaticBool::False => Some(StaticValue::Bool(false)),
+            StaticBool::True => Some(StaticValue::Bool(true)),
+            StaticBool::TruthyNonBoolean | StaticBool::Unknown => None,
+        };
+    }
+    if operand.trim().eq_ignore_ascii_case("github.event_name") {
+        return event_name_value(inputs);
+    }
+    let name = input_name(operand)?;
+    Some(
+        inputs
+            .get(&name.to_lowercase())
+            .cloned()
+            .unwrap_or(StaticValue::Bool(false)),
+    )
+}
+
 fn input_name(operand: &str) -> Option<&str> {
     let operand = operand.trim();
     if let Some(name) = operand.strip_prefix("inputs.") {
@@ -159,34 +183,6 @@ fn input_name(operand: &str) -> Option<&str> {
     let name = bracketed.strip_prefix(quote)?;
     let (name, suffix) = name.split_once(quote)?;
     (suffix.trim() == "]" && contracts::valid_identifier(name)).then_some(name)
-}
-
-impl StaticBool {
-    fn truthiness(self) -> Self {
-        match self {
-            Self::TruthyNonBoolean => Self::True,
-            value => value,
-        }
-    }
-
-    fn negate(self) -> Self {
-        match self {
-            Self::False => Self::True,
-            Self::True => Self::False,
-            Self::TruthyNonBoolean => Self::False,
-            Self::Unknown => Self::Unknown,
-        }
-    }
-}
-
-impl From<bool> for StaticBool {
-    fn from(value: bool) -> Self {
-        if value {
-            Self::True
-        } else {
-            Self::False
-        }
-    }
 }
 
 #[cfg(test)]

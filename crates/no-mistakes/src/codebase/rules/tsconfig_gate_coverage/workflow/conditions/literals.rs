@@ -51,3 +51,25 @@ pub(super) fn strip_expression(expression: &str) -> &str {
         .map(str::trim)
         .unwrap_or(expression)
 }
+
+pub(super) fn status_function_bool(expression: &str) -> Option<StaticBool> {
+    let expression = expression.trim();
+    if let Some(operand) = expression.strip_prefix('!') {
+        return status_function_bool(operand).map(StaticBool::negate);
+    }
+    if let Some(operand) = expression
+        .strip_prefix('(')
+        .and_then(|operand| operand.strip_suffix(')'))
+    {
+        return status_function_bool(operand);
+    }
+    if expression.eq_ignore_ascii_case("success()") || expression.eq_ignore_ascii_case("always()") {
+        Some(StaticBool::True)
+    } else if expression.eq_ignore_ascii_case("failure()")
+        || expression.eq_ignore_ascii_case("cancelled()")
+    {
+        Some(StaticBool::False)
+    } else {
+        None
+    }
+}

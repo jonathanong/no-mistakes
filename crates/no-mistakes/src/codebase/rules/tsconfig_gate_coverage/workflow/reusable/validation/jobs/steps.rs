@@ -1,6 +1,6 @@
 use super::fields::{
     bool_or_expression_field_valid, condition_field_valid, number_or_expression_field_valid,
-    string_field_valid,
+    string_field_valid, STEP_CONDITION_CONTEXTS,
 };
 use super::values::{only_keys, scalar_mapping_valid};
 use serde_yaml::{Mapping, Value};
@@ -85,7 +85,7 @@ fn step_shape_valid(step: &Mapping) -> bool {
 fn shared_step_fields_valid(step: &Mapping) -> bool {
     string_field_valid(step, "name")
         && string_field_valid(step, "id")
-        && condition_field_valid(step.get("if"))
+        && condition_field_valid(step.get("if"), STEP_CONDITION_CONTEXTS, true)
         && string_field_valid(step, "working-directory")
         && string_field_valid(step, "shell")
         && scalar_mapping_valid(step.get("env"))

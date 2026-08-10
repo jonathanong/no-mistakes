@@ -3,7 +3,9 @@ use super::super::conditions::{
     InputState,
 };
 use super::super::effective_working_directory;
-use super::super::runtime::{effective_shell, has_static_runnable_runs_on};
+use super::super::runtime::{
+    container_runner_support, effective_shell, has_static_runnable_runs_on, ContainerRunnerSupport,
+};
 use super::model::{ActivationKey, ActivationMemo, ScanContext, WorkflowDocument};
 use super::steps::scan_job_steps;
 use super::validation::{
@@ -131,7 +133,7 @@ fn scan_activation_uncached(
             projects.extend(callee_projects.unwrap_or_default());
             continue;
         }
-        if has_static_runnable_runs_on(job) {
+        if step_job_runner_supported(job) {
             projects.extend(scan_job_steps(
                 job,
                 triggers,
@@ -143,4 +145,15 @@ fn scan_activation_uncached(
         }
     }
     Some(projects)
+}
+
+fn step_job_runner_supported(job: &Value) -> bool {
+    if !has_static_runnable_runs_on(job) {
+        return false;
+    }
+    let requires_linux_runner = job.get("container").is_some() || job.get("services").is_some();
+    !requires_linux_runner
+        || job
+            .as_mapping()
+            .is_some_and(|job| container_runner_support(job) == ContainerRunnerSupport::Linux)
 }

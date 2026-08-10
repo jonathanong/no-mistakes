@@ -256,6 +256,8 @@ fn reusable_call_input_bindings_allow_only_available_contexts() {
         "${{ jobs.typecheck.outputs.enabled }}",
         "${{ runner.os }}",
         "${{ steps.setup.outputs.enabled }}",
+        "${{ hashFiles('**/pnpm-lock.yaml') }}",
+        "${{ success() }}",
     ] {
         assert!(
             !binding_matches_type(
@@ -273,6 +275,11 @@ fn reusable_call_input_bindings_allow_only_available_contexts() {
     ));
     assert!(!binding_matches_type(
         &Value::String("release-${{ secrets.TOKEN }}".into()),
+        WorkflowCallInputType::String,
+        &InputState::new()
+    ));
+    assert!(!binding_matches_type(
+        &Value::String("release-${{ hashFiles('**/pnpm-lock.yaml') }}".into()),
         WorkflowCallInputType::String,
         &InputState::new()
     ));

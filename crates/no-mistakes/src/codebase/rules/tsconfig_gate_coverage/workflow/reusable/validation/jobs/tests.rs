@@ -32,6 +32,8 @@ fn steps_require_known_keys_and_matching_value_shapes() {
         "steps:\n  - name: run\n    id: run\n    if: true\n    run: echo ok\n    working-directory: app\n    shell: bash\n    env: {NODE_ENV: test}\n    continue-on-error: false\n    timeout-minutes: 5",
         "steps:\n  - name: action\n    id: action\n    if: '${{ always() }}'\n    uses: actions/checkout@v4\n    with: {fetch-depth: 0}\n    env: {NODE_ENV: test}\n    continue-on-error: '${{ false }}'\n    timeout-minutes: '${{ inputs.timeout }}'",
         "steps:\n  - name: action ${{ github.ref }}\n    uses: actions/checkout@v4\n    with: {ref: 'refs/${{ github.ref_name }}'}\n    env: {NODE_ENV: '${{ github.ref_name }}'}",
+        "steps:\n  - if: env.RUN && runner.os && steps.setup.outputs.enabled\n    run: echo valid",
+        "steps:\n  - if: hashFiles('**/pnpm-lock.yaml') != ''\n    run: echo valid",
     ] {
         assert!(steps_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -44,6 +46,7 @@ fn steps_require_known_keys_and_matching_value_shapes() {
         "steps:\n  - if: '${{ contains() }}'\n    run: echo invalid",
         "steps:\n  - if: '${{ always(1) }}'\n    run: echo invalid",
         "steps:\n  - if: '${{ hashFiles() }}'\n    run: echo invalid",
+        "steps:\n  - if: secrets.TYPECHECK\n    run: echo invalid",
         "steps:\n  - run: 'echo ${{ }}'",
         "steps:\n  - uses: actions/checkout@v4\n    with: {ref: '${{ }}'}",
         "steps:\n  - run: echo invalid\n    working-directory: true",
@@ -77,6 +80,16 @@ fn step_ids_must_be_unique_case_insensitive_identifiers() {
     ] {
         assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
     }
+}
+
+#[test]
+fn hash_files_is_available_only_in_step_conditions() {
+    assert!(!super::step_job_shape_valid(&job(
+        "if: hashFiles('**/pnpm-lock.yaml') != ''\nruns-on: ubuntu-latest\nsteps:\n  - run: echo invalid"
+    )));
+    assert!(super::step_job_shape_valid(&job(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: hashFiles('**/pnpm-lock.yaml') != ''\n    run: echo valid"
+    )));
 }
 
 #[test]
