@@ -128,7 +128,8 @@ pub fn high_fanout_finalization_signature(
 /// Run every configured `check` domain and serialize the stable public report.
 pub fn check_json(root: &Path) -> Result<String> {
     crate::ast::with_request_parse_cache(|| {
-        let results = crate::check_runner::run_all(root.to_path_buf(), None, None)?;
+        let results =
+            crate::check_runner::run_all_with_suppressed(root.to_path_buf(), None, None, false)?;
         Ok(serde_json::to_string(&crate::check_runner::json_value(
             &results,
         ))?)

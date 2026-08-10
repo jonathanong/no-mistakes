@@ -52,6 +52,7 @@ pub mod workspace_package_cycles;
 pub mod filesystem_dispatch;
 pub(crate) mod path_filter;
 mod run;
+mod source_access;
 mod suppression;
 
 use serde::Serialize;
@@ -68,11 +69,10 @@ pub use filesystem_dispatch::{
 };
 pub use ids::*;
 #[doc(hidden)]
-pub use run::canonical_graph_plan;
-#[doc(hidden)]
-pub use run::canonical_graph_requires_full_file_universe;
-#[doc(hidden)]
-pub use run::run_check_with_config_facts_playwright_and_graph;
+pub use run::{
+    canonical_graph_plan, canonical_graph_requires_full_file_universe,
+    run_check_with_config_facts_playwright_and_graph,
+};
 pub use run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,
     run_check_with_facts_and_playwright, PreparedRulesCheck,
@@ -81,6 +81,7 @@ pub use run::{
 pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestProjectCatalog};
 
 pub(crate) use file_matching::matching_files;
+pub(crate) use source_access::{read_source, source_store_for_files};
 #[doc(hidden)]
 pub use suppression::{
     suppress_domain_findings_with_sources, SuppressedFinding, SuppressionTarget,
@@ -89,21 +90,6 @@ pub(crate) use suppression::{
     suppress_rule_findings, suppress_rule_findings_with_source,
     suppress_rule_findings_with_sources, suppress_rule_findings_with_sources_except,
 };
-
-pub(crate) fn source_store_for_files(
-    files: &[PathBuf],
-) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
-    std::sync::Arc::new(crate::codebase::ts_source::SourceStore::new(
-        std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(files)),
-    ))
-}
-
-pub(crate) fn read_source(
-    sources: &crate::codebase::ts_source::SourceStore,
-    path: &Path,
-) -> Option<std::sync::Arc<str>> {
-    sources.read_path(path).ok()
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]

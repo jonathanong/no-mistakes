@@ -21,6 +21,14 @@ mod prepared_parser_cache;
 mod prepared_tsconfig;
 mod tsconfig_catalog;
 
+fn run_all(
+    root: PathBuf,
+    config_path: Option<PathBuf>,
+    tsconfig_path: Option<PathBuf>,
+) -> anyhow::Result<CheckResults> {
+    super::run_all_with_suppressed(root, config_path, tsconfig_path, false)
+}
+
 fn aggregate_html_id_rule_composition(name: &str) -> Vec<RuleFinding> {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/playwright/html-id-rule-composition")

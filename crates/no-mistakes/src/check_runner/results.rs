@@ -8,6 +8,8 @@ use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 use std::time::Duration;
 
+mod suppression;
+
 pub(crate) struct FinalizeInput<'a> {
     pub(crate) root: &'a std::path::Path,
     pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
@@ -86,96 +88,16 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .into_iter()
     .flatten()
     .collect();
-    let mut suppressed = Vec::new();
-    suppressed.extend(
-        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
-            root,
-            &mut react.findings,
-            sources,
-            |finding| no_mistakes::codebase::rules::SuppressionTarget {
-                domain: "react",
-                rule: &finding.rule,
-                file: &finding.file,
-                line: finding.line,
-                reason: finding
-                    .detail
-                    .as_deref()
-                    .unwrap_or("component fetch assertion failed"),
-            },
-        ),
-    );
-    suppressed.extend(
-        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
-            root,
-            &mut queues.findings,
-            sources,
-            |finding| no_mistakes::codebase::rules::SuppressionTarget {
-                domain: "queues",
-                rule: "queues-check",
-                file: &finding.file,
-                line: Some(finding.line),
-                reason: &finding.message,
-            },
-        ),
-    );
-    suppressed.extend(
-        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
-            root,
-            &mut rules.findings,
-            sources,
-            |finding| no_mistakes::codebase::rules::SuppressionTarget {
-                domain: "rules",
-                rule: &finding.rule,
-                file: &finding.file,
-                line: Some(finding.line),
-                reason: &finding.message,
-            },
-        ),
-    );
-    suppressed.extend(
-        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
-            root,
-            &mut filesystem_rules.findings,
-            sources,
-            |finding| no_mistakes::codebase::rules::SuppressionTarget {
-                domain: "filesystem",
-                rule: &finding.rule,
-                file: &finding.file,
-                line: Some(finding.line),
-                reason: &finding.message,
-            },
-        ),
-    );
-    suppressed.extend(
-        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
-            root,
-            &mut integration.findings,
-            sources,
-            |finding| no_mistakes::codebase::rules::SuppressionTarget {
-                domain: "integration",
-                rule: "integration-test-no-mocks",
-                file: &finding.file,
-                line: Some(finding.line as usize),
-                reason: &finding.message,
-            },
-        ),
-    );
-    suppressed.extend(
-        no_mistakes::codebase::rules::suppress_domain_findings_with_sources(
-            root,
-            &mut codebase.findings,
-            sources,
-            |finding| no_mistakes::codebase::rules::SuppressionTarget {
-                domain: "codebase",
-                rule: &finding.rule,
-                file: &finding.file,
-                line: Some(finding.line as usize),
-                reason: &finding.message,
-            },
-        ),
-    );
-    suppressed.sort();
-    suppressed.dedup();
+    let suppressed = suppression::apply(suppression::Inputs {
+        root,
+        sources,
+        react: &mut react.findings,
+        queues: &mut queues.findings,
+        rules: &mut rules.findings,
+        filesystem: &mut filesystem_rules.findings,
+        integration: &mut integration.findings,
+        codebase: &mut codebase.findings,
+    });
     // The public `rules` list has historically contained both codebase and
     // filesystem findings in that domain order. Preserve it while retaining
     // the distinct adapter identity in optional suppression accounting.
@@ -208,7 +130,11 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         codebase: codebase.findings,
         warnings,
         advisories,
-        suppressed: include_suppressed.then_some(suppressed).unwrap_or_default(),
+        suppressed: if include_suppressed {
+            suppressed
+        } else {
+            Vec::new()
+        },
         include_suppressed,
     })
 }

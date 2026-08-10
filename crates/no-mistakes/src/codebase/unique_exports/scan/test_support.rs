@@ -30,7 +30,6 @@ pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec
                 rel: relative_slash_path(root, path),
                 disabled,
                 is_nextjs_project: nextjs_projects.contains_file(path),
-                source,
                 symbols: symbols.into(),
             })
         })

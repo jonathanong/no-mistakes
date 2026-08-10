@@ -8,15 +8,6 @@ use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured};
 use std::path::PathBuf;
 
-#[allow(dead_code)]
-pub(crate) fn run_all(
-    root: PathBuf,
-    config_path: Option<PathBuf>,
-    tsconfig_path: Option<PathBuf>,
-) -> Result<CheckResults> {
-    run_all_with_suppressed(root, config_path, tsconfig_path, false)
-}
-
 pub(crate) fn run_all_with_suppressed(
     root: PathBuf,
     config_path: Option<PathBuf>,
