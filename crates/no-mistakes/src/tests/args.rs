@@ -116,15 +116,7 @@ pub(crate) struct PlanArgs {
     /// This intentionally bypasses configured test-plan groups, limits, sampling,
     /// fallback policy, and explicit entrypoint traversal. A framework is required
     /// so test ownership is explicit.
-    #[arg(
-        long = "direct-test-owner",
-        requires = "framework",
-        conflicts_with_all = [
-            "limit_percent",
-            "limit_files",
-            "global_config_fallback"
-        ]
-    )]
+    #[arg(long = "direct-test-owner")]
     pub(crate) direct_test_owner: bool,
 
     /// Output format.

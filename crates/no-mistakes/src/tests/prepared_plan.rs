@@ -436,7 +436,7 @@ impl PreparedTestPlanRequest {
 fn resolve_args(args: &PlanArgs) -> Result<PlanArgs> {
     if args.direct_test_owner && args.framework.is_none() {
         anyhow::bail!(
-            "--direct-test-owner requires a framework (for example, --framework vitest) because direct ownership requires framework-specific test ownership"
+            "--direct-test-owner requires a framework (for example, `tests plan vitest --direct-test-owner`) because direct ownership requires framework-specific test ownership"
         );
     }
     if args.direct_test_owner && !args.entrypoints.is_empty() {

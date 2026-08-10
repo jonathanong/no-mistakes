@@ -42,8 +42,18 @@ fn tests_plan_direct_test_owner_requires_framework_and_rejects_limits() {
     ]);
     assert!(!missing_framework.status.success());
     let missing_framework = String::from_utf8_lossy(&missing_framework.stderr);
-    assert!(missing_framework.contains("required arguments"));
-    assert!(missing_framework.contains("<FRAMEWORK>"));
+    assert!(
+        missing_framework.contains("--direct-test-owner requires a framework"),
+        "{missing_framework}"
+    );
+    assert!(
+        missing_framework.contains("tests plan vitest --direct-test-owner"),
+        "{missing_framework}"
+    );
+    assert!(
+        missing_framework.contains("framework-specific test ownership"),
+        "{missing_framework}"
+    );
 
     let limit = run(&[
         "tests",
@@ -56,7 +66,15 @@ fn tests_plan_direct_test_owner_requires_framework_and_rejects_limits() {
         "1",
     ]);
     assert!(!limit.status.success());
-    assert!(String::from_utf8_lossy(&limit.stderr).contains("cannot be used with"));
+    let stderr = String::from_utf8_lossy(&limit.stderr);
+    assert!(
+        stderr.contains("--direct-test-owner conflicts with --limit-percent, --limit-files, and --global-config-fallback"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("remove those policy overrides because direct ownership bypasses configured plan policy"),
+        "{stderr}"
+    );
 
     let entrypoint = run(&[
         "tests",
