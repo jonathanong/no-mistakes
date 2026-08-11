@@ -4,7 +4,7 @@ use no_mistakes::codebase::rules::{
     SuppressedFinding, SuppressionTarget,
 };
 use no_mistakes::codebase::ts_source::SourceStore;
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
@@ -26,7 +26,7 @@ pub(super) struct Inputs<'a> {
     pub(super) rule_suppression_sources: &'a [Option<String>],
     pub(super) filesystem: &'a mut Vec<RuleFinding>,
     pub(super) integration: &'a mut Vec<IntegrationFinding>,
-    pub(super) codebase: &'a mut Vec<UniqueExportFinding>,
+    pub(super) codebase: &'a mut Vec<PreparedUniqueExportFinding>,
     pub(super) advisories: &'a mut Vec<RuleFinding>,
 }
 
@@ -111,10 +111,10 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         sources,
         |finding| SuppressionTarget {
             domain: "codebase",
-            rule: &finding.rule,
-            file: &finding.file,
-            line: Some(finding.line as usize),
-            reason: &finding.message,
+            rule: &finding.finding.rule,
+            file: &finding.finding.file,
+            line: Some(finding.finding.line as usize),
+            reason: &finding.finding.message,
             identity: None,
         },
         |finding| {

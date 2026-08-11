@@ -1,7 +1,7 @@
 use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::codebase::rules::{self, RuleFinding};
-use no_mistakes::codebase::unique_exports::{self, UniqueExportFinding};
+use no_mistakes::codebase::unique_exports::{self, PreparedUniqueExportFinding};
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
 use no_mistakes::queue::CheckFinding;
@@ -142,7 +142,7 @@ pub(crate) struct CodebaseCheckInputs<'a> {
 
 pub(crate) fn run_codebase_check_with_catalog(
     inputs: CodebaseCheckInputs<'_>,
-) -> Result<CheckTask<Vec<UniqueExportFinding>>> {
+) -> Result<CheckTask<Vec<PreparedUniqueExportFinding>>> {
     let CodebaseCheckInputs {
         session,
         root,

@@ -4,7 +4,7 @@ use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;
 use anyhow::anyhow;
 use no_mistakes::codebase::rules::{RuleFinding, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS};
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
@@ -470,7 +470,7 @@ fn ok_integration() -> anyhow::Result<CheckTask<Vec<IntegrationFinding>>> {
     Ok(empty_task(Vec::new()))
 }
 
-fn ok_codebase() -> anyhow::Result<CheckTask<Vec<UniqueExportFinding>>> {
+fn ok_codebase() -> anyhow::Result<CheckTask<Vec<PreparedUniqueExportFinding>>> {
     Ok(empty_task(Vec::new()))
 }
 

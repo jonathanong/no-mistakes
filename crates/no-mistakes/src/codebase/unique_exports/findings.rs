@@ -1,5 +1,6 @@
 use super::types::{
-    ExportBucket, ExportOccurrence, ExportOrigin, UniqueExportFinding, UniqueExportsOptions,
+    ExportBucket, ExportOccurrence, ExportOrigin, PreparedUniqueExportFinding, UniqueExportFinding,
+    UniqueExportsOptions,
 };
 use super::RULE_ID;
 use anyhow::Result;
@@ -8,7 +9,7 @@ use std::collections::BTreeMap;
 pub(super) fn unique_export_findings(
     occurrences: Vec<ExportOccurrence>,
     options: UniqueExportsOptions,
-) -> Result<Vec<UniqueExportFinding>> {
+) -> Result<Vec<PreparedUniqueExportFinding>> {
     let mut buckets: BTreeMap<(String, ExportBucket), Vec<ExportOccurrence>> = BTreeMap::new();
     for occurrence in occurrences {
         buckets
@@ -88,20 +89,22 @@ fn finding(
     name: &str,
     bucket: ExportBucket,
     suppression_source_location: Option<(String, u32)>,
-) -> UniqueExportFinding {
-    UniqueExportFinding {
-        rule: RULE_ID.to_string(),
-        file: duplicate.file.clone(),
-        line: duplicate.line,
-        export_name: name.to_string(),
-        export_kind: bucket.as_str().to_string(),
-        message: format!(
-            "{} `{}` is already exported from {}:{}; rename or consolidate this exported API",
-            bucket.message_label(),
-            name,
-            first.file,
-            first.line
-        ),
+) -> PreparedUniqueExportFinding {
+    PreparedUniqueExportFinding {
+        finding: UniqueExportFinding {
+            rule: RULE_ID.to_string(),
+            file: duplicate.file.clone(),
+            line: duplicate.line,
+            export_name: name.to_string(),
+            export_kind: bucket.as_str().to_string(),
+            message: format!(
+                "{} `{}` is already exported from {}:{}; rename or consolidate this exported API",
+                bucket.message_label(),
+                name,
+                first.file,
+                first.line
+            ),
+        },
         suppression_source_location,
     }
 }

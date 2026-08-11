@@ -30,6 +30,18 @@ fn finding_names(findings: &[UniqueExportFinding]) -> Vec<(String, String)> {
 }
 
 #[test]
+fn public_finding_keeps_six_field_construction_compatibility() {
+    let _ = UniqueExportFinding {
+        rule: RULE_ID.to_string(),
+        file: "src/example.ts".to_string(),
+        line: 1,
+        export_name: "example".to_string(),
+        export_kind: "value".to_string(),
+        message: "example".to_string(),
+    };
+}
+
+#[test]
 fn standalone_unique_exports_honors_same_line_suppression_in_static_fixture() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-unique-canonical");

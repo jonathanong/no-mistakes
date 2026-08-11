@@ -1,7 +1,7 @@
 use crate::check_tasks::CheckTask;
 use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::codebase::rules::RuleFinding;
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
@@ -12,7 +12,7 @@ pub(crate) type DomainResults = (
     anyhow::Result<CheckTask<Vec<CheckFinding>>>,
     anyhow::Result<CheckTask<Vec<RuleFinding>>>,
     anyhow::Result<CheckTask<Vec<IntegrationFinding>>>,
-    anyhow::Result<CheckTask<Vec<UniqueExportFinding>>>,
+    anyhow::Result<CheckTask<Vec<PreparedUniqueExportFinding>>>,
     anyhow::Result<CheckTask<Vec<RuleFinding>>>,
 );
 

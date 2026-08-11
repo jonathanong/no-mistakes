@@ -2,7 +2,7 @@ use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;
 use anyhow::Result;
 use no_mistakes::codebase::rules::RuleFinding;
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::codebase::unique_exports::{PreparedUniqueExportFinding, UniqueExportFinding};
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
@@ -44,7 +44,7 @@ pub(crate) struct CompletedDomainChecks {
     pub(crate) queues: CheckTask<Vec<CheckFinding>>,
     pub(crate) rules: CheckTask<Vec<RuleFinding>>,
     pub(crate) integration: CheckTask<Vec<IntegrationFinding>>,
-    pub(crate) codebase: CheckTask<Vec<UniqueExportFinding>>,
+    pub(crate) codebase: CheckTask<Vec<PreparedUniqueExportFinding>>,
     pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
 }
 
@@ -136,7 +136,11 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         queues: queues.findings,
         rules: rules.findings,
         integration: integration.findings,
-        codebase: codebase.findings,
+        codebase: codebase
+            .findings
+            .into_iter()
+            .map(|prepared| prepared.finding)
+            .collect(),
         warnings,
         advisories,
         suppressed: if include_suppressed {

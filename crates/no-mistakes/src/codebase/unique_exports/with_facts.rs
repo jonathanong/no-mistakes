@@ -1,6 +1,8 @@
 use super::{analyze_unique_exports, filter_source_files, load_codebase_config_with_path};
 use super::{normalize_path, workspaces};
-use super::{ImportResolver, UniqueExportFinding, UniqueExportsOptions};
+use super::{
+    ImportResolver, PreparedUniqueExportFinding, UniqueExportFinding, UniqueExportsOptions,
+};
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use anyhow::Result;
@@ -49,7 +51,7 @@ struct ProjectRootsAnalysis<'a> {
 
 fn analyze_project_roots_with_facts(
     inputs: ProjectRootsAnalysis<'_>,
-) -> Result<Vec<UniqueExportFinding>> {
+) -> Result<Vec<PreparedUniqueExportFinding>> {
     let ProjectRootsAnalysis {
         session,
         root,

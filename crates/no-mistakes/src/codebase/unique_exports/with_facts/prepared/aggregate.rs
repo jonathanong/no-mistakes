@@ -1,8 +1,8 @@
-use super::{analyze_project_with_optional_prepared_facts, PreparedResolution};
+use super::{analyze_project_with_optional_prepared_facts_prepared, PreparedResolution};
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::config::Config;
-use crate::codebase::unique_exports::UniqueExportFinding;
+use crate::codebase::unique_exports::PreparedUniqueExportFinding;
 use anyhow::Result;
 use std::path::Path;
 
@@ -17,8 +17,8 @@ pub fn analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_
     inferred_roots: &crate::codebase::config::InferredRoots,
     session: &AnalysisSession,
     defer_suppression: bool,
-) -> Result<Vec<UniqueExportFinding>> {
-    analyze_project_with_optional_prepared_facts(
+) -> Result<Vec<PreparedUniqueExportFinding>> {
+    analyze_project_with_optional_prepared_facts_prepared(
         root,
         config,
         PreparedResolution {

@@ -1,7 +1,7 @@
 use super::CheckTask;
 use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactMap;
-use no_mistakes::codebase::unique_exports::{self, UniqueExportFinding};
+use no_mistakes::codebase::unique_exports::{self, PreparedUniqueExportFinding};
 use std::path::PathBuf;
 
 pub(crate) fn run_codebase_check(
@@ -12,7 +12,7 @@ pub(crate) fn run_codebase_check(
     enabled: bool,
     facts: &CheckFactMap,
     inferred_roots: &no_mistakes::codebase::config::InferredRoots,
-) -> Result<CheckTask<Vec<UniqueExportFinding>>> {
+) -> Result<CheckTask<Vec<PreparedUniqueExportFinding>>> {
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.codebase",
         no_mistakes::diagnostics::TimingKind::Parallel,
@@ -26,6 +26,12 @@ pub(crate) fn run_codebase_check(
                     inferred_roots,
                     session,
                 )?
+                .into_iter()
+                .map(|finding| PreparedUniqueExportFinding {
+                    finding,
+                    suppression_source_location: None,
+                })
+                .collect()
             } else {
                 Vec::new()
             })

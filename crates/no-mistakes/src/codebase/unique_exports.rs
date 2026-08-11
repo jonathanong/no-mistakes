@@ -18,7 +18,7 @@ use collector::collect_file_exports;
 use findings::unique_export_findings;
 use scan::{filter_source_files, sorted_paths};
 use types::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile};
-pub use types::{UniqueExportFinding, UniqueExportsOptions};
+pub use types::{PreparedUniqueExportFinding, UniqueExportFinding, UniqueExportsOptions};
 pub use with_facts::{
     analyze_project_with_config_and_facts, analyze_project_with_facts,
     analyze_project_with_prepared_facts, analyze_project_with_prepared_facts_and_inferred,
@@ -67,7 +67,7 @@ fn analyze_unique_exports<R: ImportResolverFacade>(
     options: UniqueExportsOptions,
     resolver: R,
     workspace: crate::codebase::workspaces::WorkspaceMap,
-) -> Result<Vec<UniqueExportFinding>> {
+) -> Result<Vec<PreparedUniqueExportFinding>> {
     let by_path: HashMap<PathBuf, SourceFile> = source_files
         .into_iter()
         .map(|file| (file.path.clone(), file))

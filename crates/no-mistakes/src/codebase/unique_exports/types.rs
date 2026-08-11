@@ -17,9 +17,13 @@ pub struct UniqueExportFinding {
     pub export_name: String,
     pub export_kind: String,
     pub message: String,
-    /// Internal suppression provenance. The public diagnostic location remains
-    /// the re-export target; aggregate checking reads directives from here.
-    #[serde(skip)]
+}
+
+/// Internal aggregate-check sidecar; the public finding remains six fields.
+#[doc(hidden)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct PreparedUniqueExportFinding {
+    pub finding: UniqueExportFinding,
     pub suppression_source_location: Option<(String, u32)>,
 }
 
