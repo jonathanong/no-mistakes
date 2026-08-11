@@ -107,6 +107,7 @@ fn dispatch_prepares_one_index_and_only_reads_preclassified_views() {
     let dispatch = concat!(
         include_str!("../../filesystem_dispatch.rs"),
         include_str!("../execute.rs"),
+        include_str!("../execute/special.rs"),
     );
 
     assert_eq!(dispatch.matches("RuleCandidateIndex::prepare").count(), 1);

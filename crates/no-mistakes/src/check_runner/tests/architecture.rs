@@ -111,6 +111,7 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
     let dispatcher = concat!(
         include_str!("../../codebase/rules/filesystem_dispatch.rs"),
         include_str!("../../codebase/rules/filesystem_dispatch/execute.rs"),
+        include_str!("../../codebase/rules/filesystem_dispatch/execute/special.rs"),
     );
     let catalog = include_str!("../../codebase/rules/vitest_project_catalog.rs");
     let mapping = include_str!("../../codebase/rules/vitest_project_mapping/project_sources.rs");
