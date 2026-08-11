@@ -39,7 +39,9 @@ runner selectors are resolved per generated job before runner platform and
 implicit-shell checks; unresolved selectors do not provide coverage.
 Runner group names establish that a job can be scheduled but not its operating system. A
 group-only job therefore needs an explicit supported shell, and it cannot use
-containers or services for coverage unless `runs-on.labels` proves Linux.
+containers or services for coverage unless `runs-on.labels` contains an exact
+self-hosted operating-system label such as `linux`; a hosted-looking label in
+a runner group can be a custom label and does not establish the operating system.
 Repository-local action steps (`uses: ./path` or `uses: ./` for the repository
 root) count only when the tracked target directory contains parseable
 `action.yml` or `action.yaml` metadata
@@ -126,6 +128,9 @@ explicit supported shell.
 Jobs that declare `container` or `services` count only with a statically Linux
 runner label. GitHub does not support those fields on Windows or macOS runners,
 and an unknown custom runner label cannot prove the required Linux host.
+Known Linux, macOS, and Windows runner labels also provide the corresponding
+`runner.os` value when the rule evaluates step conditions; unknown runner
+selectors leave that value unresolved.
 
 Literal YAML `if: false` and `continue-on-error: true` values, plus exact
 constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
@@ -137,12 +142,14 @@ determines the result. Literal call inputs, declared defaults, omitted values,
 and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
 values through transitive calls. This lets the rule resolve exact string
 equality/inequality and number equality/inequality or relational comparisons,
-as well as input truthiness. Static `contains`, `startsWith`, `endsWith`, and
-`format` calls are also resolved using GitHub's string coercion; missing
-properties coerce to an empty string. Static `format` calls support zero-based
-placeholders and doubled-brace escapes, including when composed inside the
-other supported string functions. Static `case` calls select the first truthy
-branch or their default, while an unknown predicate remains unresolved.
+as well as input truthiness. Static `contains`, `startsWith`, `endsWith`,
+`format`, and `join` calls are also resolved using GitHub's string coercion;
+missing properties coerce to an empty string. Static `format` calls support
+zero-based placeholders and doubled-brace escapes, including when composed
+inside the other supported string functions. Static `join` calls support
+literal arrays, scalar values, and the default comma separator. Static `case`
+calls select the first truthy branch or their default, while an unknown
+predicate remains unresolved.
 Expressions whose result remains dynamic fail open as potentially runnable.
 Condition evaluation is limited to 256 logical operands, bounding the recursive
 static evaluator even when a repository supplies a long flat `&&` or `||`

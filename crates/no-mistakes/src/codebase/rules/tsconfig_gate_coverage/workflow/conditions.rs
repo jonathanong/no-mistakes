@@ -11,6 +11,7 @@ mod inputs;
 mod literals;
 mod logical;
 mod resolution;
+mod static_json;
 mod static_values;
 mod step_evaluation;
 mod step_outcomes;
@@ -27,7 +28,7 @@ pub(super) use evaluation::{
 };
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,
-    inputs_with_needs_results, MatrixState, SecretAvailability, SecretState,
+    inputs_with_needs_results, inputs_with_runner_os, MatrixState, SecretAvailability, SecretState,
 };
 use inputs::{event_action_value, event_base_ref_value, event_name_value, event_ref_name_value};
 use resolution::condition_input_value;
@@ -164,6 +165,8 @@ mod condition_values_tests;
 mod contains_tests;
 #[cfg(test)]
 mod format_tests;
+#[cfg(test)]
+mod join_tests;
 #[cfg(test)]
 mod literal_from_json_tests;
 #[cfg(test)]

@@ -164,6 +164,19 @@ fn literal_from_json_array_conditions_skip_unreachable_typechecks() {
 }
 
 #[test]
+fn literal_join_conditions_skip_unreachable_typechecks() {
+    let documents = vec![workflow(
+        ".github/workflows/conditional.yml",
+        "on: push\njobs:\n  skipped:\n    if: join(fromJSON('[\"release\"]'), ',') == 'candidate'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project skipped/tsconfig.json\n  retained:\n    if: join(fromJSON('[\"push\", \"schedule\"]'), '-') == 'push-schedule'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project retained/tsconfig.json\n",
+    )];
+
+    assert_eq!(
+        scanned(documents, &["skipped", "retained"]),
+        BTreeSet::from(["retained/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn literal_from_json_array_comparisons_preserve_distinct_instance_semantics() {
     let documents = vec![workflow(
         ".github/workflows/conditional.yml",

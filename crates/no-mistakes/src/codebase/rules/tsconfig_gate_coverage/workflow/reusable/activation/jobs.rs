@@ -1,7 +1,8 @@
 use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    callee_inputs, callee_secrets, job_statically_disabled, job_statically_enforcing,
-    job_statically_not_enforcing, EnvironmentState, InputState, StaticBool,
+    callee_inputs, callee_secrets, inputs_with_runner_os, job_statically_disabled,
+    job_statically_enforcing, job_statically_not_enforcing, EnvironmentState, InputState,
+    StaticBool,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
@@ -129,6 +130,8 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         let mut failed = false;
         let mut indeterminate = false;
         for inputs in inputs {
+            let inputs = inputs_with_runner_os(inputs, runner_os(job, inputs));
+            let inputs = &inputs;
             let environment = EnvironmentState::from_workflow(
                 self.workflow_runtime.workflow,
                 &self.state.secrets,

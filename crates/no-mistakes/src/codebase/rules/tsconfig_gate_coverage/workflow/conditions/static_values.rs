@@ -35,6 +35,9 @@ fn static_expression_value(
     if super::resolution::github_ref_name(expression) {
         return super::inputs::event_ref_name_value(inputs);
     }
+    if super::resolution::runner_os(expression) {
+        return super::inputs::runner_os_value(inputs);
+    }
     if super::resolution::github_base_ref(expression) {
         return super::inputs::event_base_ref_value(inputs);
     }
@@ -78,7 +81,7 @@ fn static_from_json(
     let encoded = match value {
         StaticValue::Unknown => return None,
         StaticValue::Sequence(_) | StaticValue::Mapping | StaticValue::NonStringable => {
-            return Some(StaticValue::NonStringable)
+            return Some(StaticValue::NonStringable);
         }
         value => value.function_string()?,
     };

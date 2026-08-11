@@ -8,6 +8,8 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
 
 mod format_value;
 pub(super) use format_value::static_format_value;
+mod join_value;
+pub(super) use join_value::static_join_value;
 
 pub(super) fn static_join_value(
     expression: &str,
@@ -48,6 +50,10 @@ pub(super) fn static_function_bool(
     }
     if call.function == Function::Format {
         return static_format_value(expression, inputs, environment, status)
+            .map(|value| value.truthiness());
+    }
+    if call.function == Function::Join {
+        return static_join_value(expression, inputs, environment, status)
             .map(|value| value.truthiness());
     }
     if call.arguments.len() != 2 {

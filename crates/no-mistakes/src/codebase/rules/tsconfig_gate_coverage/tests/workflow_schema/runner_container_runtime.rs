@@ -82,7 +82,6 @@ fn resolved_runner_strategy_and_container_configuration_control_coverage() {
         BTreeSet::from([
             "available-credential/tsconfig.json".to_string(),
             "matrix-linux/tsconfig.json".to_string(),
-            "runner-group-labels/tsconfig.json".to_string(),
             "runner-group/tsconfig.json".to_string(),
             "runner-labels/tsconfig.json".to_string(),
             "supported-option/tsconfig.json".to_string(),

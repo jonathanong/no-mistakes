@@ -235,4 +235,20 @@ fn runner_selection_resolves_matrix_labels_and_group_mappings() {
         container_runner_support(group_only.as_mapping().unwrap()),
         ContainerRunnerSupport::Unknown
     ));
+
+    let group_hosted_looking: Value =
+        serde_yaml::from_str("runs-on: {group: custom, labels: ubuntu-latest}").unwrap();
+    assert!(runs_on_can_default_to_windows(&group_hosted_looking));
+    assert!(matches!(
+        container_runner_support(group_hosted_looking.as_mapping().unwrap()),
+        ContainerRunnerSupport::Unknown
+    ));
+
+    let group_linux: Value =
+        serde_yaml::from_str("runs-on: {group: custom, labels: linux}").unwrap();
+    assert!(!runs_on_can_default_to_windows(&group_linux));
+    assert!(matches!(
+        container_runner_support(group_linux.as_mapping().unwrap()),
+        ContainerRunnerSupport::Linux
+    ));
 }

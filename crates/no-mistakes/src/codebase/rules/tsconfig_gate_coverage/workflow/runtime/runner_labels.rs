@@ -20,7 +20,7 @@ pub(in super::super) fn runs_on_can_default_to_windows(job: &Value, inputs: &Inp
         return false;
     };
     matches!(
-        runner_platform(&selection.labels),
+        runner_selection_platform(&selection),
         RunnerPlatform::Windows | RunnerPlatform::Unknown
     )
 }
@@ -49,7 +49,7 @@ pub(in super::super) fn container_runner_support(
     let Some(selection) = static_runner_selection(Some(job), inputs) else {
         return ContainerRunnerSupport::Unknown;
     };
-    match runner_platform(&selection.labels) {
+    match runner_selection_platform(&selection) {
         RunnerPlatform::Linux => ContainerRunnerSupport::Linux,
         RunnerPlatform::MacOs | RunnerPlatform::Windows => ContainerRunnerSupport::NonLinux,
         RunnerPlatform::Unknown => ContainerRunnerSupport::Unknown,
@@ -62,6 +62,24 @@ enum RunnerPlatform {
     MacOs,
     Windows,
     Unknown,
+}
+
+pub(in super::super) fn runner_os(job: &Value, inputs: &InputState) -> Option<&'static str> {
+    let selection = static_runner_selection(job.as_mapping(), inputs)?;
+    match runner_selection_platform(&selection) {
+        RunnerPlatform::Linux => Some("Linux"),
+        RunnerPlatform::MacOs => Some("macOS"),
+        RunnerPlatform::Windows => Some("Windows"),
+        RunnerPlatform::Unknown => None,
+    }
+}
+
+fn runner_selection_platform(selection: &selection::StaticRunnerSelection) -> RunnerPlatform {
+    if selection.group.is_some() {
+        self_hosted_labels_platform(&selection.labels)
+    } else {
+        runner_platform(&selection.labels)
+    }
 }
 
 fn runner_platform(labels: &[String]) -> RunnerPlatform {

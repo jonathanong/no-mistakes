@@ -3,10 +3,11 @@ use super::{
     input_value::comparison_literal,
     literals::status_function_bool,
     logical,
-    resolution::{condition_input_value, literal_from_json_static_value},
+    resolution::condition_input_value,
     resolution::{
         github_base_ref, github_event_action, github_event_name, github_ref, github_ref_name,
     },
+    static_json::literal_from_json_static_value,
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 
@@ -41,6 +42,9 @@ pub(super) fn condition_value(
     }
     if github_ref_name(operand) {
         return event_ref_name_value(inputs);
+    }
+    if super::resolution::runner_os(operand) {
+        return super::inputs::runner_os_value(inputs);
     }
     if github_base_ref(operand) {
         return event_base_ref_value(inputs);

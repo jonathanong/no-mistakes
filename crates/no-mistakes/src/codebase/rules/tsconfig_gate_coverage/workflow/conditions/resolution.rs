@@ -1,5 +1,4 @@
 use super::{EnvironmentState, InputState, StaticValue};
-use serde_yaml::Value;
 
 pub(super) fn input_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "inputs")
@@ -11,6 +10,10 @@ pub(super) fn matrix_name(operand: &str) -> Option<&str> {
 
 pub(super) fn env_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "env")
+}
+
+pub(super) fn runner_os(operand: &str) -> bool {
+    context_property_name(operand, "runner").is_some_and(|name| name.eq_ignore_ascii_case("os"))
 }
 
 fn needs_result_name(operand: &str) -> Option<&str> {
@@ -145,32 +148,6 @@ pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticVa
         })
 }
 
-pub(super) fn literal_from_json_static_value(expression: &str) -> Option<StaticValue> {
-    Some(static_yaml_value(
-        crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(expression.trim())?,
-    ))
-}
-
-fn static_yaml_value(value: Value) -> StaticValue {
-    match value {
-        Value::Bool(value) => StaticValue::Bool(value),
-        Value::Number(value) => StaticValue::Number(value.to_string()),
-        Value::String(value) => StaticValue::String(value),
-        Value::Null => StaticValue::Null,
-        Value::Sequence(values) => {
-            StaticValue::Sequence(values.into_iter().map(static_sequence_element).collect())
-        }
-        Value::Mapping(_) | Value::Tagged(_) => StaticValue::Unknown,
-    }
-}
-
-fn static_sequence_element(value: Value) -> StaticValue {
-    match value {
-        Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::NonStringable,
-        value => static_yaml_value(value),
-    }
-}
-
 pub(super) fn condition_input_value(
     operand: &str,
     inputs: &InputState,
@@ -196,6 +173,9 @@ pub(super) fn condition_input_value(
     }
     if let Some(name) = step_outcome_name(operand) {
         return Some(environment.step_outcome(name));
+    }
+    if runner_os(operand) {
+        return super::inputs::runner_os_value(inputs);
     }
     let name = matrix_name(operand)?;
     Some(matrix_property_value(name, inputs))
