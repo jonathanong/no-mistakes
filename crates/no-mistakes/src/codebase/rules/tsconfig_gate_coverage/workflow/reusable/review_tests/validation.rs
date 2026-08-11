@@ -88,3 +88,64 @@ fn local_actions_are_validated_only_when_their_step_executes() {
         ])
     );
 }
+
+#[test]
+fn resolved_job_timeouts_must_be_positive() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  invalid:\n    uses: ./.github/workflows/invalid.yml\n    with: {timeout: 0}\n  valid:\n    uses: ./.github/workflows/valid.yml\n    with: {timeout: 1}\n",
+            ),
+            document(
+                ".github/workflows/invalid.yml",
+                "on:\n  workflow_call:\n    inputs:\n      timeout: {type: number, required: true}\njobs:\n  typecheck:\n    timeout-minutes: '${{ inputs.timeout }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid-timeout/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/valid.yml",
+                "on:\n  workflow_call:\n    inputs:\n      timeout: {type: number, required: true}\njobs:\n  typecheck:\n    timeout-minutes: '${{ inputs.timeout }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p valid-timeout/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/matrix.yml",
+                "on: push\njobs:\n  invalid:\n    strategy:\n      matrix: {timeout: [0]}\n    timeout-minutes: '${{ matrix.timeout }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid-matrix-timeout/tsconfig.json\n  valid:\n    strategy:\n      matrix: {timeout: [361]}\n    timeout-minutes: '${{ matrix.timeout }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p valid-matrix-timeout/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "invalid-timeout/tsconfig.json".to_string(),
+        "invalid-matrix-timeout/tsconfig.json".to_string(),
+        "valid-matrix-timeout/tsconfig.json".to_string(),
+        "valid-timeout/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from([
+            "valid-matrix-timeout/tsconfig.json".to_string(),
+            "valid-timeout/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn skipped_need_results_are_available_to_continuation_conditions() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  setup:\n    if: false\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo skipped\n  skipped-result:\n    needs: setup\n    if: \"${{ always() && needs.setup.result == 'skipped' }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p skipped-result/tsconfig.json\n  bracket-result:\n    needs: setup\n    if: \"${{ always() && needs['setup']['result'] == 'skipped' }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p bracket-result/tsconfig.json\n  success-result:\n    needs: setup\n    if: \"${{ always() && needs.setup.result == 'success' }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p success-result/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "bracket-result/tsconfig.json".to_string(),
+        "skipped-result/tsconfig.json".to_string(),
+        "success-result/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from([
+            "bracket-result/tsconfig.json".to_string(),
+            "skipped-result/tsconfig.json".to_string(),
+        ])
+    );
+}

@@ -3,7 +3,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde_yaml::Value;
 
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    inputs_with_matrix_values, statically_skipped_jobs, InputState, MatrixState,
+    inputs_with_matrix_values, inputs_with_needs_results, statically_skipped_jobs, InputState,
+    MatrixState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
     static_matrix_combinations, zero_instance_matrix, MatrixCombinations,
@@ -46,6 +47,13 @@ impl JobStates {
                 .cloned()
                 .expect("matrix inputs were precomputed for every job")
         });
+        let mut matrix_inputs = matrix_inputs;
+        for (raw_job_id, job) in jobs {
+            let job_id = super::super::super::normalized_job_id(raw_job_id)?;
+            for inputs in matrix_inputs.get_mut(&job_id)? {
+                *inputs = inputs_with_needs_results(inputs, job, &skipped);
+            }
+        }
         Some(Self {
             matrix_inputs,
             skipped,

@@ -1,0 +1,7 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/failing
+      - run: pnpm exec tsc --noEmit --project failing-action/tsconfig.json

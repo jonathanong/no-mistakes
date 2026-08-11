@@ -32,8 +32,25 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_timeout
     value: Option<&Value>,
     inputs: &InputState,
 ) -> bool {
+    timeout_minutes_enforced(value, inputs, Some(360))
+}
+
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_timeout_minutes_enforced(
+    value: Option<&Value>,
+    inputs: &InputState,
+) -> bool {
+    timeout_minutes_enforced(value, inputs, None)
+}
+
+fn timeout_minutes_enforced(
+    value: Option<&Value>,
+    inputs: &InputState,
+    maximum: Option<u64>,
+) -> bool {
     value.is_none_or(|value| match value {
-        Value::Number(value) => value.as_u64().is_some_and(valid_step_timeout_minutes),
+        Value::Number(value) => value
+            .as_u64()
+            .is_some_and(|minutes| valid_timeout_minutes(minutes, maximum)),
         Value::String(expression) => {
             super::super::expressions::complete_literal_expression_value(expression)
                 .or_else(|| {
@@ -45,14 +62,14 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_timeout
                         })
                 })
                 .and_then(|value| value.as_u64())
-                .is_some_and(valid_step_timeout_minutes)
+                .is_some_and(|minutes| valid_timeout_minutes(minutes, maximum))
         }
         _ => false,
     })
 }
 
-fn valid_step_timeout_minutes(minutes: u64) -> bool {
-    (1..=360).contains(&minutes)
+fn valid_timeout_minutes(minutes: u64, maximum: Option<u64>) -> bool {
+    minutes > 0 && maximum.is_none_or(|maximum| minutes <= maximum)
 }
 
 pub(super) fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticBool {

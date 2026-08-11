@@ -16,12 +16,13 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::
 pub(super) use environment::EnvironmentState;
 use evaluation::{continues_after_skipped_need, static_bool};
 pub(super) use evaluation::{
-    expression_bool, expression_bool_with_status_and_environment, statically_not_enforcing,
-    statically_not_enforcing_with_environment, step_timeout_minutes_enforced,
+    expression_bool, expression_bool_with_status_and_environment, job_timeout_minutes_enforced,
+    statically_not_enforcing, statically_not_enforcing_with_environment,
+    step_timeout_minutes_enforced,
 };
 pub(super) use inputs::{
-    callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, MatrixState,
-    SecretAvailability, SecretState,
+    callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,
+    inputs_with_needs_results, MatrixState, SecretAvailability, SecretState,
 };
 use inputs::{event_action_value, event_name_value};
 use resolution::condition_input_value;
@@ -57,7 +58,10 @@ pub(super) fn statically_skipped_jobs(
         let mut changed = false;
         for (raw_job_id, job) in jobs {
             let job_id = super::normalized_job_id(raw_job_id).expect("validated scalar job ID");
-            let inputs = matrix_inputs(raw_job_id, job);
+            let inputs = matrix_inputs(raw_job_id, job)
+                .into_iter()
+                .map(|inputs| inputs_with_needs_results(&inputs, job, &skipped))
+                .collect::<Vec<_>>();
             let directly_disabled = !inputs.is_empty()
                 && inputs
                     .iter()

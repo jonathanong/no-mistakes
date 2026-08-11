@@ -1,7 +1,8 @@
 use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    callee_inputs, callee_secrets, statically_not_enforcing, EnvironmentState, InputState,
+    callee_inputs, callee_secrets, job_timeout_minutes_enforced, statically_not_enforcing,
+    EnvironmentState, InputState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
     ActivationMemo, ActivationState, ScanContext,
@@ -137,6 +138,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             .with_job(job, inputs);
             if step_job_runner_supported(job, inputs)
                 && strategy_configuration_valid_for_inputs(job, inputs)
+                && job_timeout_minutes_enforced(job.get("timeout-minutes"), inputs)
                 && !statically_not_enforcing(job, inputs)
                 && container_configuration_valid_for_inputs(job, inputs, &environment)
             {

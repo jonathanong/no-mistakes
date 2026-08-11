@@ -1,8 +1,10 @@
 use super::{join_relative, normalize_repo_relative, scan_tokens, static_tokens};
 
 mod comments;
+mod failures;
 
 use comments::strip_static_comments;
+pub(crate) use failures::shell_body_has_static_failure;
 
 pub(super) fn scan_shell_body_for_typechecked_projects(
     script: &str,

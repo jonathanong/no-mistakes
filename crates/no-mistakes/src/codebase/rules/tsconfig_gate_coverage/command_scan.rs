@@ -55,6 +55,10 @@ pub(crate) fn scan_workflow_shell_for_typechecked_projects(
     shell::scan_shell_body_for_typechecked_projects(script, initial_cwd, failure_enforced)
 }
 
+pub(crate) fn shell_body_has_static_failure(script: &str) -> bool {
+    shell::shell_body_has_static_failure(script)
+}
+
 /// Scan one configured argv command. A shell script is accepted only for a
 /// static `bash|sh ... -c <literal>` form; all other argv commands are parsed
 /// as direct static command tokens.

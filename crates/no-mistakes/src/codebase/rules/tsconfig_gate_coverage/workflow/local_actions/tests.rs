@@ -81,3 +81,69 @@ fn composite_actions_require_valid_acyclic_nested_local_targets() {
         "name: Nested\ndescription: Nested\nruns: {using: composite, steps: [{uses: ./root}]}";
     assert!(!valid(&[("root", root), ("nested", cycle)], &[], "root"));
 }
+
+#[test]
+fn composite_actions_reject_unconditional_static_failures() {
+    for (condition, run) in [
+        ("", "false"),
+        ("", "exit 1"),
+        ("", "return"),
+        ("if: true\n      ", "false"),
+        ("if: '${{ vars.MAYBE }}'\n      ", "false"),
+    ] {
+        let action = format!(
+            "name: Failing\ndescription: Failing\nruns:\n  using: composite\n  steps:\n    - {condition}shell: bash\n      run: '{run}'\n"
+        );
+        assert!(!valid(&[("action", &action)], &[], "action"), "{run}");
+    }
+    for step in [
+        "{run: echo ok, shell: bash}",
+        "{run: 'exit 0', shell: bash}",
+        "{if: false, run: 'false', shell: bash}",
+    ] {
+        let action = format!(
+            "name: Passing\ndescription: Passing\nruns: {{using: composite, steps: [{step}]}}"
+        );
+        assert!(valid(&[("action", &action)], &[], "action"), "{step}");
+    }
+}
+
+#[test]
+fn composite_action_nesting_is_bounded() {
+    let descriptors = |count: usize| {
+        (0..count)
+            .map(|index| {
+                let runs = if index + 1 == count {
+                    "runs: {using: composite, steps: [{run: echo ok, shell: bash}]}".to_string()
+                } else {
+                    format!(
+                        "runs: {{using: composite, steps: [{{uses: ./action-{}}}]}}",
+                        index + 1
+                    )
+                };
+                (
+                    format!("action-{index}"),
+                    serde_yaml::from_str(&format!(
+                        "name: Action {index}\ndescription: Nested\n{runs}"
+                    ))
+                    .unwrap(),
+                )
+            })
+            .collect::<BTreeMap<_, _>>()
+    };
+
+    assert!(action_directory_valid(
+        "action-0",
+        &descriptors(10),
+        &BTreeSet::new(),
+        &mut BTreeSet::new(),
+        &mut BTreeMap::new(),
+    ));
+    assert!(!action_directory_valid(
+        "action-0",
+        &descriptors(11),
+        &BTreeSet::new(),
+        &mut BTreeSet::new(),
+        &mut BTreeMap::new(),
+    ));
+}

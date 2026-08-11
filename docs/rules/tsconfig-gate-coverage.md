@@ -38,6 +38,9 @@ JavaScript action's `runs.main` must resolve to a tracked file under that action
 directory. Local targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
 missing action prevents later commands in the same executed job from counting.
+Composite-action traversal follows GitHub's ten-action nesting limit, and a
+composite action with a statically failing run step cannot allow a later
+workflow typecheck to count unless that failing step is statically skipped.
 Static local reusable-workflow jobs (`uses: ./.github/workflows/*.yml`) are
 followed transitively and their step-based jobs are evaluated under the direct
 caller's file triggers. Remote, dynamic, missing, non-callable, and cyclic
@@ -144,6 +147,8 @@ statically known; `max-parallel` must similarly be a positive integer.
 Reusable-input `max-parallel` expressions are rechecked with the active input
 values, so a value that resolves to zero or a non-integer cannot provide
 coverage.
+Job-level `timeout-minutes` is also rechecked for each active reusable input or
+matrix combination and must resolve to a positive integer.
 Job and step `timeout-minutes` expressions use their documented context sets,
 must resolve to positive integers, and do not admit status functions. Only
 step-level timeouts admit `hashFiles` and enforce the documented 360-minute
@@ -187,6 +192,9 @@ check such as `always()` or `!cancelled()` can explicitly continue after a
 skipped need when the whole condition is statically true. A dependency with
 `continue-on-error: true` is non-enforcing itself but is not treated as skipped
 for downstream jobs.
+Known skipped dependency results are available to these conditions through
+dot or single-quoted bracket `needs.<job>.result` access; other dependency
+results remain unresolved rather than being guessed.
 
 A project whose effective local `compilerOptions.noCheck` is `true` does not
 count as typechecked, even when both commands are registered. Remove or disable

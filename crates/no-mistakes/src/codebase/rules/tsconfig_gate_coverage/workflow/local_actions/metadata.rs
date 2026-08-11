@@ -2,6 +2,8 @@ use super::*;
 use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
 use serde_yaml::Mapping;
 
+const MAX_COMPOSITE_ACTION_DEPTH: usize = 10;
+
 pub(super) fn action_directory_valid(
     directory: &str,
     descriptors: &BTreeMap<String, Value>,
@@ -9,8 +11,14 @@ pub(super) fn action_directory_valid(
     visiting: &mut BTreeSet<String>,
     cache: &mut BTreeMap<String, bool>,
 ) -> bool {
-    if let Some(valid) = cache.get(directory) {
-        return *valid;
+    let root = visiting.is_empty();
+    if root {
+        if let Some(valid) = cache.get(directory) {
+            return *valid;
+        }
+    }
+    if visiting.len() >= MAX_COMPOSITE_ACTION_DEPTH {
+        return false;
     }
     if !visiting.insert(directory.to_string()) {
         return false;
@@ -19,7 +27,9 @@ pub(super) fn action_directory_valid(
         valid_action_metadata(metadata, directory, descriptors, tracked, visiting, cache)
     });
     visiting.remove(directory);
-    cache.insert(directory.to_string(), valid);
+    if root {
+        cache.insert(directory.to_string(), valid);
+    }
     valid
 }
 
@@ -91,7 +101,12 @@ fn composite_step_valid(
         return false;
     }
     if let Some(run) = step.get("run") {
-        return nonempty_string(Some(run)) && nonempty_string(step.get("shell"));
+        return nonempty_string(Some(run))
+            && nonempty_string(step.get("shell"))
+            && (!composite_step_may_run(step)
+                || !run
+                    .as_str()
+                    .is_some_and(command_scan::shell_body_has_static_failure));
     }
     let target = step
         .get("uses")
@@ -100,6 +115,17 @@ fn composite_step_valid(
     target.strip_prefix("./").is_none_or(|directory| {
         action_directory_valid(directory, descriptors, tracked, visiting, cache)
     })
+}
+
+fn composite_step_may_run(step: &Mapping) -> bool {
+    match step.get("if") {
+        Some(Value::Bool(false)) => false,
+        Some(Value::String(expression)) => {
+            super::super::conditions::expression_bool(expression, &BTreeMap::new())
+                != super::super::conditions::StaticBool::False
+        }
+        None | Some(_) => true,
+    }
 }
 
 fn composite_steps_shape_valid(steps: &[Value]) -> bool {

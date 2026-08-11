@@ -13,6 +13,38 @@ pub(super) fn env_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "env")
 }
 
+fn needs_result_name(operand: &str) -> Option<&str> {
+    let operand = operand.trim();
+    let remainder = operand
+        .get(.."needs".len())
+        .filter(|prefix| prefix.eq_ignore_ascii_case("needs"))
+        .and_then(|_| operand.get("needs".len()..))?;
+    let (name, remainder) = context_property_segment(remainder)?;
+    let remainder = github_property_segment(remainder, "result")?;
+    remainder.trim().is_empty().then_some(name)
+}
+
+fn context_property_segment(remainder: &str) -> Option<(&str, &str)> {
+    let remainder = remainder.trim_start();
+    if let Some(remainder) = remainder.strip_prefix('.') {
+        let remainder = remainder.trim_start();
+        let end = remainder
+            .find(|character: char| {
+                character == '.' || character == '[' || character.is_whitespace()
+            })
+            .unwrap_or(remainder.len());
+        let name = &remainder[..end];
+        return super::contracts::valid_identifier(name).then_some((name, &remainder[end..]));
+    }
+    let quoted = remainder
+        .strip_prefix('[')?
+        .trim_start()
+        .strip_prefix('\'')?;
+    let (name, remainder) = quoted.split_once('\'')?;
+    let remainder = remainder.trim_start().strip_prefix(']')?;
+    super::contracts::valid_identifier(name).then_some((name, remainder))
+}
+
 pub(super) fn secret_name(operand: &str) -> Option<&str> {
     let body = operand
         .trim()
@@ -134,6 +166,9 @@ pub(super) fn condition_input_value(
                 .value(name)
                 .unwrap_or(StaticValue::String(String::new())),
         );
+    }
+    if let Some(name) = needs_result_name(operand) {
+        return Some(super::inputs::needs_result_value(name, inputs));
     }
     let name = matrix_name(operand)?;
     Some(matrix_property_value(name, inputs))

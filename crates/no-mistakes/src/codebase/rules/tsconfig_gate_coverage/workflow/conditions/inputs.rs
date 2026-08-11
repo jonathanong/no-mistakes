@@ -12,9 +12,12 @@ use std::collections::{BTreeMap, BTreeSet};
 mod bindings;
 #[cfg(test)]
 mod default_value_tests;
+mod needs;
 mod secrets;
 mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::inputs_with_needs_results;
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::needs_result_value;
 pub(crate) use secrets::{callee_secrets, SecretAvailability, SecretState};
 use values::{default_value, nonboolean_binding_value};
 
