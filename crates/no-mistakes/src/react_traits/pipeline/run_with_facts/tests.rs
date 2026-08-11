@@ -138,7 +138,8 @@ fn run_analyze_inner_with_facts_covers_fallback_missing_cache_and_errors() {
         frontend_root: Some("app".to_string()),
         assert_no_fetch: None,
     };
-    let shared = facts(Vec::new());
+    let mut shared = facts(Vec::new());
+    shared.files.push(root.join("app/components/Child.tsx"));
 
     let missing_cache = run_analyze_inner_with_facts(
         &root,

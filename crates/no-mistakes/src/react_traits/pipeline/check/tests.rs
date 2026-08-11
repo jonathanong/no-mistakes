@@ -126,6 +126,32 @@ fn run_check_with_facts_reports_violations_when_assert_no_fetch_is_enabled() {
 }
 
 #[test]
+fn prepared_check_and_aggregate_sidecar_cover_enabled_and_disabled_paths() {
+    use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+
+    let root = assert_no_fetch_root();
+    let fetcher = root.join("app/components/Fetcher.tsx");
+    let facts = collect_check_facts(
+        &root,
+        vec![fetcher],
+        CheckFactPlan {
+            react: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let enabled = prepare_check_from_loaded_config(&config, true);
+    let violations = run_check_with_prepared_facts(&root, &[], &facts, &enabled).unwrap();
+    assert!(!violations.is_empty());
+
+    let disabled = prepare_file_config(FileConfig::default(), false);
+    let aggregate =
+        run_check_with_prepared_facts_for_aggregate(&root, &[], &facts, &disabled).unwrap();
+    assert!(aggregate.findings.is_empty());
+    assert!(aggregate.suppression_targets.is_empty());
+}
+
+#[test]
 fn aggregate_check_keeps_public_violations_and_private_suppression_locations_separate() {
     use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
 
