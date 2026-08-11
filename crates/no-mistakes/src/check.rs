@@ -86,39 +86,45 @@ fn record_missing_check_timings(results: &check_runner::CheckResults) {
         .map(|entry| entry.label)
         .collect::<std::collections::HashSet<_>>();
     for (label, duration) in &results.timings {
-        let (label, kind) = match *label {
-            "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
-            "parse_extract" => ("parse", no_mistakes::diagnostics::TimingKind::Serial),
-            "react" => (
-                "analysis.react",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "queues" => (
-                "analysis.queues",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "rules" => (
-                "analysis.rules",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "integration" => (
-                "analysis.integration",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "codebase" => (
-                "analysis.codebase",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "filesystem_rules" => (
-                "analysis.filesystem_rules",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            _ => continue,
+        let Some((label, kind)) = timing_metadata(label) else {
+            continue;
         };
         if !existing.contains(label) {
             observer.record_duration(label, *duration, kind);
         }
     }
+}
+
+fn timing_metadata(label: &str) -> Option<(&'static str, no_mistakes::diagnostics::TimingKind)> {
+    Some(match label {
+        "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
+        "parse_extract" => ("parse", no_mistakes::diagnostics::TimingKind::Serial),
+        "react" => (
+            "analysis.react",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "queues" => (
+            "analysis.queues",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "rules" => (
+            "analysis.rules",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "integration" => (
+            "analysis.integration",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "codebase" => (
+            "analysis.codebase",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "filesystem_rules" => (
+            "analysis.filesystem_rules",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        _ => return None,
+    })
 }
 
 fn has_failures(results: &check_runner::CheckResults) -> bool {
@@ -128,4 +134,21 @@ fn has_failures(results: &check_runner::CheckResults) -> bool {
         || !results.integration.is_empty()
         || !results.codebase.is_empty()
         || !results.warnings.is_empty()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn timing_metadata_omits_unknown_check_runner_labels() {
+        assert_eq!(
+            timing_metadata("queues"),
+            Some((
+                "analysis.queues",
+                no_mistakes::diagnostics::TimingKind::Parallel
+            ))
+        );
+        assert_eq!(timing_metadata("not-a-check-timing"), None);
+    }
 }

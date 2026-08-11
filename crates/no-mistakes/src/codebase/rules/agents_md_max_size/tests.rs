@@ -150,6 +150,25 @@ fn checks_advisories_and_suppressions_share_one_source_read() {
 }
 
 #[test]
+fn prepared_scan_ignores_missing_source_files() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/agents-md-max-size/pass");
+    let missing = root.join("missing/AGENTS.md");
+    let files = vec![missing];
+    let sources = super::super::source_store_for_files(&files);
+    let findings = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config_with_rule("{maxChars: 20}"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn advisories_skip_over_limit_files() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("CLAUDE.md");

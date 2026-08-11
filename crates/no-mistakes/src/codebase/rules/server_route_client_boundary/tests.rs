@@ -216,6 +216,21 @@ fn non_matching_rules_return_no_findings() {
 }
 
 #[test]
+fn reports_invalid_rule_include_globs() {
+    let mut config = config();
+    config.rules[0].include = vec!["[".to_string()];
+
+    let error = check(&fixture("fail"), &config).unwrap_err();
+
+    assert!(
+        error
+            .to_string()
+            .contains("rule `server-route-client-boundary` include contains invalid glob"),
+        "{error:#}"
+    );
+}
+
+#[test]
 fn fact_path_returns_empty_when_route_globs_are_unconfigured() {
     let root = fixture("no-route");
     let files = crate::codebase::ts_source::discover_files(&root, &[]);

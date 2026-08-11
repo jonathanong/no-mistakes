@@ -124,6 +124,28 @@ fn deferred_suppression_sources_read_relative_component_paths() {
     ));
 }
 
+#[test]
+fn missing_project_target_is_ignored() {
+    let root = fixture("comments");
+    let mut config = config("");
+    config.projects.remove("web");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+
+    let findings = super::runner::check_with_resolver(
+        &root,
+        &config,
+        &CheckFactMap::default(),
+        &empty_resolver(&root),
+        None,
+        false,
+        &sources,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty());
+}
+
 fn react_facts(
     components: Vec<ComponentFacts>,
 ) -> std::sync::Arc<crate::react_traits::analyze::file::FileAnalysis> {
