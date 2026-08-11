@@ -1,4 +1,10 @@
-use super::{strategy_shape_valid, string_field_valid, JOB_NAME_CONTEXTS, STEP_STRING_CONTEXTS};
+use super::{
+    strategy_configuration_valid_for_inputs, strategy_shape_valid, string_field_valid,
+    JOB_NAME_CONTEXTS, STEP_STRING_CONTEXTS,
+};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    InputState, StaticValue,
+};
 use serde_yaml::Value;
 
 fn strategy(yaml: &str) -> Value {
@@ -82,4 +88,21 @@ fn strategy_fields_require_documented_contexts_and_scalar_shapes() {
     ] {
         assert!(!strategy_shape_valid(Some(&strategy(yaml))), "{yaml}");
     }
+}
+
+#[test]
+fn max_parallel_rechecks_resolved_input_values() {
+    let job = strategy("strategy:\n  max-parallel: '${{ inputs.parallel }}'");
+    let mut inputs = InputState::new();
+    inputs.insert("parallel".to_string(), StaticValue::Number("0".to_string()));
+    assert!(!strategy_configuration_valid_for_inputs(&job, &inputs));
+
+    inputs.insert("parallel".to_string(), StaticValue::Number("2".to_string()));
+    assert!(strategy_configuration_valid_for_inputs(&job, &inputs));
+
+    let dynamic = strategy("strategy:\n  max-parallel: '${{ github.run_number }}'");
+    assert!(strategy_configuration_valid_for_inputs(
+        &dynamic,
+        &InputState::new()
+    ));
 }

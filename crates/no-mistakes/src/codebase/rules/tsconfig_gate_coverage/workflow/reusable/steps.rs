@@ -29,7 +29,7 @@ pub(super) fn scan_job_steps(
     };
     let job_cwd = effective_working_directory(job, workflow_cwd);
     let job_shell = effective_shell(job, workflow_shell);
-    let implicit_shell_can_be_windows = runs_on_can_default_to_windows(job);
+    let implicit_shell_can_be_windows = runs_on_can_default_to_windows(job, inputs);
     let mut projects = BTreeSet::new();
     for step in steps {
         let environment = environment.with_step(step, inputs);

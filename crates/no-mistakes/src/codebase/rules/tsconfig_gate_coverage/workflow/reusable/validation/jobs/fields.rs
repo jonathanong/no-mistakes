@@ -1,6 +1,10 @@
 use super::values::only_keys;
 use serde_yaml::{Mapping, Value};
 
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    resolve_static_interpolations, EnvironmentState, InputState,
+};
+
 use super::super::super::super::expressions::{
     complete_expression_contexts_available, complete_expression_contexts_with_hash_files_available,
     complete_expression_type, complete_literal_expression_value,
@@ -49,6 +53,30 @@ pub(super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
                 })
         })
     })
+}
+
+pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &InputState) -> bool {
+    let Some(max_parallel) = job
+        .get("strategy")
+        .and_then(Value::as_mapping)
+        .and_then(|strategy| strategy.get("max-parallel"))
+    else {
+        return true;
+    };
+    if max_parallel.as_u64().is_some_and(|value| value > 0) {
+        return true;
+    }
+    let Some(expression) = max_parallel.as_str() else {
+        return false;
+    };
+    resolve_static_interpolations(expression, inputs, &EnvironmentState::default()).is_none_or(
+        |resolved| {
+            serde_yaml::from_str::<Value>(&resolved)
+                .ok()
+                .and_then(|value| value.as_u64())
+                .is_some_and(|value| value > 0)
+        },
+    )
 }
 
 fn strategy_fail_fast_expression_valid(value: &str) -> bool {

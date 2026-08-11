@@ -49,6 +49,10 @@ impl EnvironmentState {
         self.values.get(&name.to_lowercase()).cloned()
     }
 
+    pub(crate) fn secret_availability(&self, name: &str) -> SecretAvailability {
+        self.secrets.availability(name)
+    }
+
     fn with_scope(&self, scope: &Value, inputs: &super::InputState) -> Self {
         let mut environment_values = self.values.clone();
         environment_values.extend(values(scope.get("env"), &self.secrets, inputs, self));

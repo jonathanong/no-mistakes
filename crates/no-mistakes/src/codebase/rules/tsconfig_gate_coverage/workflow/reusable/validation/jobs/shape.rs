@@ -13,6 +13,7 @@ use super::values::{
 };
 use serde_yaml::Value;
 
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputState;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::{
     container_runner_support, ContainerRunnerSupport,
 };
@@ -77,7 +78,8 @@ pub(crate) fn step_job_shape_valid(job: &Value) -> bool {
             && container_shape_valid(job.get("container"))
             && services_shape_valid(job.get("services"))
             && ((job.get("container").is_none() && job.get("services").is_none())
-                || container_runner_support(job) != ContainerRunnerSupport::NonLinux)
+                || container_runner_support(job, &InputState::new())
+                    != ContainerRunnerSupport::NonLinux)
             && strategy_shape_valid(job.get("strategy"))
     })
 }

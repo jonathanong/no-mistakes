@@ -1,4 +1,26 @@
-use super::*;
+use super::{
+    container_runner_support as container_runner_support_for_inputs,
+    has_static_runnable_runs_on as has_static_runnable_runs_on_for_inputs,
+    runs_on_can_default_to_windows as runs_on_can_default_to_windows_for_inputs,
+    ContainerRunnerSupport,
+};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    inputs_with_matrix_values, InputState, MatrixState,
+};
+use serde_yaml::Value;
+use std::collections::BTreeMap;
+
+fn has_static_runnable_runs_on(job: &Value) -> bool {
+    has_static_runnable_runs_on_for_inputs(job, &InputState::new())
+}
+
+fn runs_on_can_default_to_windows(job: &Value) -> bool {
+    runs_on_can_default_to_windows_for_inputs(job, &InputState::new())
+}
+
+fn container_runner_support(job: &serde_yaml::Mapping) -> ContainerRunnerSupport {
+    container_runner_support_for_inputs(job, &InputState::new())
+}
 
 #[test]
 fn missing_runner_cannot_imply_a_windows_default() {
@@ -170,5 +192,30 @@ fn conflicting_and_malformed_runner_labels_remain_indeterminate() {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(!has_static_runnable_runs_on(&job), "{yaml}");
         assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
+    }
+}
+
+#[test]
+fn runner_selection_resolves_matrix_labels_and_group_mappings() {
+    let inputs = inputs_with_matrix_values(
+        &InputState::new(),
+        &BTreeMap::from([("os".to_string(), Value::String("ubuntu-latest".to_string()))]),
+        MatrixState::Static,
+    );
+    let matrix: Value = serde_yaml::from_str("runs-on: '${{ matrix.os }}'").unwrap();
+    assert!(has_static_runnable_runs_on_for_inputs(&matrix, &inputs));
+    assert!(!runs_on_can_default_to_windows_for_inputs(&matrix, &inputs));
+    assert!(matches!(
+        container_runner_support_for_inputs(matrix.as_mapping().unwrap(), &inputs),
+        ContainerRunnerSupport::Linux
+    ));
+
+    for yaml in [
+        "runs-on: {group: ubuntu-runners}",
+        "runs-on: {group: ubuntu-runners, labels: ubuntu-latest}",
+        "runs-on: {labels: [ubuntu-latest]}",
+    ] {
+        let job: Value = serde_yaml::from_str(yaml).unwrap();
+        assert!(has_static_runnable_runs_on(&job), "{yaml}");
     }
 }

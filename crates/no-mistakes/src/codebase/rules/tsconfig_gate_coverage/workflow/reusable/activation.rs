@@ -11,8 +11,10 @@ use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
+mod job_states;
 mod jobs;
-use jobs::{JobScanner, JobStates, WorkflowRuntime};
+use job_states::JobStates;
+use jobs::{JobScanner, WorkflowRuntime};
 
 pub(super) fn scan_activation(
     path: &str,
@@ -85,13 +87,13 @@ fn reusable_call_target(job: &Value) -> Option<Option<&str>> {
     }
 }
 
-fn step_job_runner_supported(job: &Value) -> bool {
-    if !has_static_runnable_runs_on(job) {
+fn step_job_runner_supported(job: &Value, inputs: &super::super::conditions::InputState) -> bool {
+    if !has_static_runnable_runs_on(job, inputs) {
         return false;
     }
     let requires_linux_runner = job.get("container").is_some() || job.get("services").is_some();
     !requires_linux_runner
-        || job
-            .as_mapping()
-            .is_some_and(|job| container_runner_support(job) == ContainerRunnerSupport::Linux)
+        || job.as_mapping().is_some_and(|job| {
+            container_runner_support(job, inputs) == ContainerRunnerSupport::Linux
+        })
 }

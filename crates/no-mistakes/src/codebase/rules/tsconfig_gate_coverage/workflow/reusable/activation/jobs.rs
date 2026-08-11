@@ -1,77 +1,26 @@
 use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    callee_inputs, callee_secrets, inputs_with_matrix_values, statically_not_enforcing,
-    statically_skipped_jobs, EnvironmentState, InputState, MatrixState,
+    callee_inputs, callee_secrets, statically_not_enforcing, EnvironmentState, InputState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
     ActivationMemo, ActivationState, ScanContext,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    container_configuration_valid_for_inputs, scan_job_shape_valid, static_matrix_combinations,
-    validated_reusable_target, zero_instance_matrix, MatrixCombinations,
+    container_configuration_valid_for_inputs, scan_job_shape_valid,
+    strategy_configuration_valid_for_inputs, validated_reusable_target,
 };
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
-pub(super) struct JobStates {
-    matrix_inputs: BTreeMap<String, Vec<InputState>>,
-    skipped: BTreeSet<String>,
-}
+use super::job_states::JobStates;
 
 pub(super) struct WorkflowRuntime<'workflow> {
     pub(super) cwd: Option<String>,
     pub(super) shell: Option<String>,
     pub(super) workflow: &'workflow Value,
-}
-
-impl JobStates {
-    pub(super) fn new(jobs: &serde_yaml::Mapping, inputs: &InputState) -> Option<Self> {
-        let zero_instance_jobs = zero_instance_job_ids(jobs)?;
-        let matrix_inputs = jobs
-            .iter()
-            .map(|(job_id, job)| {
-                let job_id = super::super::super::normalized_job_id(job_id)?;
-                let combinations = static_matrix_combinations(job)?;
-                let inputs = match combinations {
-                    MatrixCombinations::Static(combinations) => combinations
-                        .iter()
-                        .map(|values| {
-                            inputs_with_matrix_values(inputs, values, MatrixState::Static)
-                        })
-                        .collect(),
-                    MatrixCombinations::Dynamic(_) => vec![inputs_with_matrix_values(
-                        inputs,
-                        &BTreeMap::new(),
-                        MatrixState::Dynamic,
-                    )],
-                };
-                Some((job_id, inputs))
-            })
-            .collect::<Option<BTreeMap<_, Vec<_>>>>()?;
-        let skipped = statically_skipped_jobs(jobs, &zero_instance_jobs, |job_id, _| {
-            let job_id =
-                super::super::super::normalized_job_id(job_id).expect("validated scalar job ID");
-            matrix_inputs
-                .get(&job_id)
-                .cloned()
-                .expect("matrix inputs were precomputed for every job")
-        });
-        Some(Self {
-            matrix_inputs,
-            skipped,
-        })
-    }
-
-    fn is_skipped(&self, job_id: &str, job: &Value) -> bool {
-        self.skipped.contains(job_id) || zero_instance_matrix(job)
-    }
-
-    fn inputs_for(&self, job_id: &str) -> Option<&[InputState]> {
-        self.matrix_inputs.get(job_id).map(Vec::as_slice)
-    }
 }
 
 pub(super) struct JobScanner<'a, 'workflow> {
@@ -175,7 +124,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
     }
 
     fn scan_step_job(&self, job: &Value, inputs: &[InputState], skipped: bool) -> BTreeSet<String> {
-        if skipped || !step_job_runner_supported(job) {
+        if skipped {
             return BTreeSet::new();
         }
         let mut projects = BTreeSet::new();
@@ -186,7 +135,9 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 inputs,
             )
             .with_job(job, inputs);
-            if !statically_not_enforcing(job, inputs)
+            if step_job_runner_supported(job, inputs)
+                && strategy_configuration_valid_for_inputs(job, inputs)
+                && !statically_not_enforcing(job, inputs)
                 && container_configuration_valid_for_inputs(job, inputs, &environment)
             {
                 projects.extend(scan_job_steps(
@@ -202,11 +153,4 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         }
         projects
     }
-}
-
-fn zero_instance_job_ids(jobs: &serde_yaml::Mapping) -> Option<BTreeSet<String>> {
-    jobs.iter()
-        .filter(|(_, job)| zero_instance_matrix(job))
-        .map(|(job_id, _)| super::super::super::normalized_job_id(job_id))
-        .collect()
 }

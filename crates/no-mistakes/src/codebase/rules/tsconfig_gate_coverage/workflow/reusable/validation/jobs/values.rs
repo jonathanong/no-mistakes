@@ -45,13 +45,30 @@ pub(super) fn only_keys(mapping: &Mapping, allowed: &[&str]) -> bool {
 pub(super) fn runs_on_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_str().is_some_and(valid_runs_on_label)
-            || value.as_sequence().is_some_and(|labels| {
-                !labels.is_empty()
-                    && labels
-                        .iter()
-                        .all(|label| label.as_str().is_some_and(valid_runs_on_label))
+            || value
+                .as_sequence()
+                .is_some_and(|labels| valid_runs_on_labels(labels))
+            || value.as_mapping().is_some_and(|selection| {
+                !selection.is_empty()
+                    && only_keys(selection, &["group", "labels"])
+                    && selection
+                        .get("group")
+                        .is_none_or(|group| group.as_str().is_some_and(valid_runs_on_label))
+                    && selection.get("labels").is_none_or(|labels| {
+                        labels.as_str().is_some_and(valid_runs_on_label)
+                            || labels
+                                .as_sequence()
+                                .is_some_and(|labels| valid_runs_on_labels(labels))
+                    })
             })
     })
+}
+
+fn valid_runs_on_labels(labels: &[Value]) -> bool {
+    !labels.is_empty()
+        && labels
+            .iter()
+            .all(|label| label.as_str().is_some_and(valid_runs_on_label))
 }
 
 fn valid_runs_on_label(value: &str) -> bool {

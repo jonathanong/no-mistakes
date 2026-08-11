@@ -27,7 +27,10 @@ working directory, sequential `cd` commands, and
 `pnpm --dir <path> exec tsc`. Workflow working directories
 may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`.
-Step-based jobs need a non-empty, static `runs-on` string or label array.
+Step-based jobs need a non-empty, statically resolvable `runs-on` string,
+label array, or `group`/`labels` mapping. Static matrix and reusable-input
+runner selectors are resolved per generated job before runner platform and
+implicit-shell checks; unresolved selectors do not provide coverage.
 Repository-local action steps (`uses: ./path`) count only when the tracked
 target directory contains parseable `action.yml` or `action.yaml` metadata
 with the required name, description, and a supported `runs` contract.
@@ -132,6 +135,9 @@ and URLs, use their own GitHub context/function sets; status functions are not
 accepted in `continue-on-error`. Strategy `fail-fast` expressions use the
 documented strategy contexts and must be boolean when their result type is
 statically known; `max-parallel` must similarly be a positive integer.
+Reusable-input `max-parallel` expressions are rechecked with the active input
+values, so a value that resolves to zero or a non-integer cannot provide
+coverage.
 Job and step `timeout-minutes` expressions use their documented context sets,
 must resolve to positive integers, and do not admit status functions. Only
 step-level timeouts admit `hashFiles` and enforce the documented 360-minute
@@ -148,7 +154,11 @@ container/service images likewise reject contexts and functions unavailable at
 their own fields. A fully static image must be a valid Docker reference; an
 image that remains dynamic, including one that depends on a dynamic matrix,
 does not earn typecheck coverage because its Docker reference cannot be
-validated.
+validated. Resolved registry usernames and passwords must be non-empty;
+available secret values remain opaque, while an omitted reusable secret
+resolves empty and cannot start the container. Container options reject
+GitHub's unsupported `--network` and `--entrypoint` flags, and service options
+reject `--network`; dynamically unresolved options remain conservative.
 
 Reusable-workflow secret validation follows each call edge. A directly
 triggered workflow can inherit its available repository or organization

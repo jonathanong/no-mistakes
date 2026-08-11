@@ -159,6 +159,30 @@ fn runs_on_uses_its_documented_contexts_without_expression_functions() {
 }
 
 #[test]
+fn runner_group_mappings_and_container_options_follow_actions_schema() {
+    for yaml in [
+        "runs-on: {group: ubuntu-runners}\nsteps:\n  - run: echo valid",
+        "runs-on: {group: ubuntu-runners, labels: ubuntu-latest}\nsteps:\n  - run: echo valid",
+        "runs-on: {labels: [self-hosted, linux]}\nsteps:\n  - run: echo valid",
+        "runs-on: ubuntu-latest\ncontainer: {image: node:22, options: '--cpus 1'}\nsteps:\n  - run: echo valid",
+        "runs-on: ubuntu-latest\nservices: {postgres: {image: postgres:16, options: '--entrypoint postgres'}}\nsteps:\n  - run: echo valid",
+    ] {
+        assert!(super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "runs-on: {}\nsteps:\n  - run: echo invalid",
+        "runs-on: {pool: ubuntu-runners}\nsteps:\n  - run: echo invalid",
+        "runs-on: {group: 1}\nsteps:\n  - run: echo invalid",
+        "runs-on: {labels: []}\nsteps:\n  - run: echo invalid",
+        "runs-on: {labels: [ubuntu-latest, 1]}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ncontainer: {image: node:22, options: '--entrypoint=/bin/false'}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nservices: {postgres: {image: postgres:16, options: '--network=host'}}\nsteps:\n  - run: echo invalid",
+    ] {
+        assert!(!super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn continue_on_error_uses_its_field_specific_contexts() {
     assert!(super::step_job_shape_valid(&job(
         "continue-on-error: '${{ matrix.experimental }}'\nruns-on: ubuntu-latest\nsteps:\n  - run: echo valid"

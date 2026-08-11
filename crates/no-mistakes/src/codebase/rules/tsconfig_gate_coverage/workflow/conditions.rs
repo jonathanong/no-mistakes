@@ -89,6 +89,12 @@ pub(crate) fn resolve_static_interpolations(
         condition_input_value(expression, inputs, environment)
             .and_then(|value| value.function_string())
             .or_else(|| {
+                resolution::secret_name(&format!("${{{{ {expression} }}}}")).and_then(|name| {
+                    (environment.secret_availability(name) == SecretAvailability::Absent)
+                        .then(String::new)
+                })
+            })
+            .or_else(|| {
                 super::expressions::complete_literal_expression_value(&format!(
                     "${{{{ {expression} }}}}"
                 ))

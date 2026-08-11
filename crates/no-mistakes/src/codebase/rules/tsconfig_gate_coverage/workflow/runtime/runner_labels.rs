@@ -1,18 +1,21 @@
-use super::super::complete_literal_expression_value;
+use super::super::conditions::InputState;
 use serde_yaml::{Mapping, Value};
+
+mod selection;
+use selection::static_runner_labels;
 
 /// A CI job cannot provide a typecheck gate unless Actions can schedule it on
 /// a statically known runner. Reusable-workflow jobs use `uses:` rather than
 /// `steps:` and are excluded separately by the step requirement.
-pub(in super::super) fn has_static_runnable_runs_on(job: &Value) -> bool {
-    static_runner_labels(job.as_mapping()).is_some()
+pub(in super::super) fn has_static_runnable_runs_on(job: &Value, inputs: &InputState) -> bool {
+    static_runner_labels(job.as_mapping(), inputs).is_some()
 }
 
 /// An unspecified Actions shell is PowerShell on Windows. Only reject this
 /// known incompatible default; an explicit supported `bash`/`sh` override is
 /// still safe to analyze on the same runner.
-pub(in super::super) fn runs_on_can_default_to_windows(job: &Value) -> bool {
-    let Some(labels) = static_runner_labels(job.as_mapping()) else {
+pub(in super::super) fn runs_on_can_default_to_windows(job: &Value, inputs: &InputState) -> bool {
+    let Some(labels) = static_runner_labels(job.as_mapping(), inputs) else {
         return false;
     };
     matches!(
@@ -28,8 +31,11 @@ pub(in super::super) enum ContainerRunnerSupport {
     Unknown,
 }
 
-pub(in super::super) fn container_runner_support(job: &Mapping) -> ContainerRunnerSupport {
-    let Some(labels) = static_runner_labels(Some(job)) else {
+pub(in super::super) fn container_runner_support(
+    job: &Mapping,
+    inputs: &InputState,
+) -> ContainerRunnerSupport {
+    let Some(labels) = static_runner_labels(Some(job), inputs) else {
         return ContainerRunnerSupport::Unknown;
     };
     match runner_platform(&labels) {
@@ -88,33 +94,6 @@ fn labels_platform(labels: &[String], classify: impl Fn(&str) -> RunnerPlatform)
         platform = Some(label_platform);
     }
     platform.unwrap_or(RunnerPlatform::Unknown)
-}
-
-fn static_runner_labels(job: Option<&Mapping>) -> Option<Vec<String>> {
-    match job?.get("runs-on") {
-        Some(Value::String(label)) => Some(vec![resolved_static_runner_label(label)?]),
-        Some(Value::Sequence(labels)) if !labels.is_empty() => labels
-            .iter()
-            .map(|label| label.as_str().and_then(resolved_static_runner_label))
-            .collect(),
-        _ => None,
-    }
-}
-
-/// Resolve a complete, context-free literal expression before interpreting its
-/// runner label. Interpolated or context-dependent labels cannot prove a job
-/// is schedulable on a particular runner.
-fn resolved_static_runner_label(label: &str) -> Option<String> {
-    let label = label.trim();
-    if label.is_empty() {
-        return None;
-    }
-    if !label.contains("${{") {
-        return Some(label.to_string());
-    }
-    complete_literal_expression_value(label)
-        .and_then(|value| value.as_str().map(str::to_string))
-        .filter(|label| !label.trim().is_empty())
 }
 
 /// GitHub documents exact OS labels for self-hosted runners. Prefixes are

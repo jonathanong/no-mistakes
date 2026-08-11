@@ -1,8 +1,6 @@
 use serde_yaml::{Mapping, Value};
 
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    resolve_static_interpolations, valid_identifier, EnvironmentState, InputState,
-};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::valid_identifier;
 
 use super::super::super::super::expressions::interpolation::opaque_interpolated_expression_form;
 use super::super::super::super::expressions::{
@@ -11,7 +9,17 @@ use super::super::super::super::expressions::{
 };
 use super::values::{only_keys, scalar_mapping_valid};
 
+mod configuration;
 mod images;
+mod options;
+
+pub(crate) use configuration::container_configuration_valid_for_inputs;
+
+#[derive(Clone, Copy)]
+enum ContainerKind {
+    Job,
+    Service,
+}
 
 const CONTAINER_CONTEXTS: &[&str] = &["github", "needs", "strategy", "matrix", "vars", "inputs"];
 const CONTAINER_ENV_CONTEXTS: &[&str] = &[
@@ -25,9 +33,9 @@ const DYNAMIC_VOLUME_EXPRESSION: &str = "\u{FDD1}";
 pub(super) fn container_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_str().is_some_and(valid_container_image)
-            || value
-                .as_mapping()
-                .is_some_and(container_mapping_shape_valid)
+            || value.as_mapping().is_some_and(|container| {
+                container_mapping_shape_valid(container, ContainerKind::Job)
+            })
     })
 }
 
@@ -37,69 +45,15 @@ pub(super) fn services_shape_valid(value: Option<&Value>) -> bool {
             !services.is_empty()
                 && services.iter().all(|(name, service)| {
                     name.as_str().is_some_and(valid_identifier)
-                        && service
-                            .as_mapping()
-                            .is_some_and(container_mapping_shape_valid)
+                        && service.as_mapping().is_some_and(|service| {
+                            container_mapping_shape_valid(service, ContainerKind::Service)
+                        })
                 })
         })
     })
 }
 
-pub(crate) fn container_configuration_valid_for_inputs(
-    job: &Value,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> bool {
-    container_value_valid_for_inputs(job.get("container"), inputs, environment)
-        && job
-            .get("services")
-            .and_then(Value::as_mapping)
-            .is_none_or(|services| {
-                services.values().all(|service| {
-                    service.as_mapping().is_some_and(|service| {
-                        container_value_mapping_valid_for_inputs(service, inputs, environment)
-                    })
-                })
-            })
-}
-
-fn container_value_valid_for_inputs(
-    value: Option<&Value>,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> bool {
-    value.is_none_or(|value| match value {
-        Value::String(image) => container_image_valid_for_inputs(image, inputs, environment),
-        Value::Mapping(container) => {
-            container_value_mapping_valid_for_inputs(container, inputs, environment)
-        }
-        _ => false,
-    })
-}
-
-fn container_value_mapping_valid_for_inputs(
-    container: &Mapping,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> bool {
-    container
-        .get("image")
-        .and_then(Value::as_str)
-        .is_some_and(|image| container_image_valid_for_inputs(image, inputs, environment))
-        && super::ports::port_sequence_valid_for_inputs(container.get("ports"), inputs, environment)
-}
-
-fn container_image_valid_for_inputs(
-    image: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> bool {
-    valid_container_image(image)
-        && resolve_static_interpolations(image, inputs, environment)
-            .is_some_and(|image| images::valid_static_reference(&image))
-}
-
-fn container_mapping_shape_valid(container: &Mapping) -> bool {
+fn container_mapping_shape_valid(container: &Mapping, kind: ContainerKind) -> bool {
     only_keys(
         container,
         &["image", "credentials", "env", "ports", "volumes", "options"],
@@ -112,9 +66,11 @@ fn container_mapping_shape_valid(container: &Mapping) -> bool {
         && scalar_sequence_contexts_valid(container.get("ports"), CONTAINER_CONTEXTS)
         && super::ports::port_sequence_valid(container.get("ports"))
         && volume_sequence_valid(container.get("volumes"), CONTAINER_CONTEXTS)
-        && container
-            .get("options")
-            .is_none_or(|value| value.as_str().is_some_and(valid_container_value))
+        && container.get("options").is_none_or(|value| {
+            value
+                .as_str()
+                .is_some_and(|value| options::shape_valid(value, kind))
+        })
 }
 
 fn credentials_shape_valid(value: Option<&Value>) -> bool {
