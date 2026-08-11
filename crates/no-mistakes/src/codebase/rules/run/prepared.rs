@@ -11,6 +11,8 @@ use anyhow::Result;
 use std::path::Path;
 
 mod execution;
+#[cfg(test)]
+mod tests;
 
 /// Preloaded inputs for the aggregate rules check.
 ///
@@ -29,13 +31,7 @@ pub struct PreparedRulesCheck<'a> {
     pub prepared_tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
     pub prepared_tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    /// The request-owned source store. Aggregate callers must pass the same
-    /// store used for discovery and fact collection; standalone callers build
-    /// one store for their own request before entering this prepared path.
-    pub sources: &'a crate::codebase::ts_source::SourceStore,
-    /// Aggregate `check` defers suppression until every domain can share one
-    /// SourceStore-aware adapter and produce optional accounting.
-    pub defer_suppression: bool,
+    pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
 
 /// Shared-config entry point used by the aggregate `check` command.
@@ -79,13 +75,15 @@ pub fn run_check_with_config_facts_playwright_and_graph(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
 ) -> Result<Vec<RuleFinding>> {
-    Ok(execution::run(inputs, dependency_graph)?.findings)
+    Ok(execution::run(inputs, dependency_graph, None, false)?.findings)
 }
 
 #[doc(hidden)]
 pub fn run_check_with_config_facts_playwright_and_graph_with_suppression(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<PreparedRuleFindings> {
-    execution::run(inputs, dependency_graph)
+    execution::run(inputs, dependency_graph, Some(sources), defer_suppression)
 }

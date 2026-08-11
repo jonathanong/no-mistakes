@@ -106,7 +106,6 @@ fn prepared_dispatch_rejects_tsconfig_gate_without_workflow_documents() {
             workflow_documents: None,
             tsconfig_gate_project_inputs: None,
             config_path: Some(&config_path),
-            defer_suppression: false,
         },
     )
     .unwrap_err();
@@ -214,7 +213,6 @@ fn enabling_mermaid_validation_preserves_existing_markdown_findings() {
                 workflow_documents: None,
                 tsconfig_gate_project_inputs: None,
                 config_path: Some(&config_path),
-                defer_suppression: false,
             },
         )
         .unwrap()
@@ -406,7 +404,6 @@ fn aggregate_reads_rust_sources_once_without_global_suppression_rereads() {
             workflow_documents: None,
             tsconfig_gate_project_inputs: None,
             config_path: None,
-            defer_suppression: false,
         },
     )
     .unwrap();
@@ -461,7 +458,6 @@ comparisons:
             workflow_documents: None,
             tsconfig_gate_project_inputs: None,
             config_path: None,
-            defer_suppression: false,
         },
     )
     .unwrap();
@@ -530,7 +526,6 @@ fn aggregate_finding_and_suppression_share_one_physical_read() {
             workflow_documents: None,
             tsconfig_gate_project_inputs: None,
             config_path: None,
-            defer_suppression: false,
         },
     )
     .unwrap();

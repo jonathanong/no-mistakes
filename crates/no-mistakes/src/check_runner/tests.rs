@@ -125,9 +125,9 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
             workflow_documents: None,
             tsconfig_gate_project_inputs: None,
             config_path: None,
-            defer_suppression: false,
         },
         None,
+        false,
     )
     .unwrap();
 

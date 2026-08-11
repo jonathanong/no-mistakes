@@ -76,7 +76,6 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let prepared_tsconfig_catalog = inputs.prepared_tsconfig_catalog;
     let visible_paths = inputs.visible_paths;
     let sources = inputs.sources;
-    let rule_sources = std::sync::Arc::clone(&sources);
     let inferred_roots = inputs.inferred_roots;
     let config = inputs.config;
     let codebase_config = inputs.codebase_config;
@@ -123,10 +122,11 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 prepared_tsconfig,
                                 prepared_tsconfig_catalog,
                                 inferred_roots: Some(inferred_roots),
-                                sources: rule_sources.as_ref(),
-                                defer_suppression,
+                                sources: Some(sources.as_ref()),
                             },
                             dependency_graph.as_deref(),
+                            sources.as_ref(),
+                            defer_suppression,
                         )
                     })
                 },
@@ -174,14 +174,14 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                 discovered_files,
                                                 no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
                                                     snapshot: visible_paths,
-                                                    sources,
+                                                    sources: std::sync::Arc::clone(&sources),
                                                     vitest_catalog: vitest_projects,
                                                     workflow_documents,
                                                     tsconfig_gate_project_inputs,
                                                     config_path: config_path.as_deref(),
-                                                    defer_suppression,
                                                 },
                                                 Some(facts),
+                                                defer_suppression,
                                             )
                                         },
                                     )

@@ -62,6 +62,8 @@ pub(crate) fn run_queue_check(
 pub(crate) fn run_rules_check(
     inputs: rules::PreparedRulesCheck<'_>,
     dependency_graph: Option<&no_mistakes::codebase::dependencies::graph::DepGraph>,
+    sources: &no_mistakes::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let (((findings, suppression_sources), warning), duration) =
         no_mistakes::diagnostics::measure_if_enabled(
@@ -70,6 +72,8 @@ pub(crate) fn run_rules_check(
             || match rules::run_check_with_config_facts_playwright_and_graph_with_suppression(
                 inputs,
                 dependency_graph,
+                sources,
+                defer_suppression,
             ) {
                 Ok(findings) => ((findings.findings, findings.suppression_sources), None),
                 Err(err) => (

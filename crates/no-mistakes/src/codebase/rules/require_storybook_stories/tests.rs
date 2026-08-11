@@ -99,10 +99,8 @@ fn react_component(name: &str, file: &str, children: Vec<ComponentRef>) -> Compo
 }
 
 #[test]
-fn deferred_suppression_sources_read_relative_component_paths() {
+fn deferred_suppression_sources_use_prepared_component_text() {
     let root = fixture("comments");
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    let sources = snapshot.source_store_for(&root);
     let component = types::Component {
         key: "components/DisabledFile.tsx#DisabledFile".to_string(),
         file: PathBuf::from("components/DisabledFile.tsx"),
@@ -112,11 +110,46 @@ fn deferred_suppression_sources_read_relative_component_paths() {
         line: 2,
         explicit: true,
     };
+    let path = normalize_path(&root.join(&component.file));
+    let prepared_without_directive = CheckFactMap {
+        ts: HashMap::from([(
+            path.clone(),
+            std::sync::Arc::new(CheckFileFacts {
+                source: Some("export function DisabledFile() { return <div />; }".into()),
+                ..Default::default()
+            }),
+        )]),
+        ..Default::default()
+    };
 
     let indexed = suppression::component_suppression_sources(
         &root,
         std::slice::from_ref(&component),
-        &sources,
+        &prepared_without_directive,
+    );
+    // The fixture on disk is disabled, but the prepared source is authoritative.
+    assert!(!suppression::component_is_suppressed(
+        &root, &indexed, &component,
+    ));
+
+    let prepared_with_directive = CheckFactMap {
+        ts: HashMap::from([(
+            path,
+            std::sync::Arc::new(CheckFileFacts {
+                source: Some(
+                    "// no-mistakes-disable-file require-storybook-stories: prepared exemption\n\
+                     export function DisabledFile() { return <div />; }"
+                        .into(),
+                ),
+                ..Default::default()
+            }),
+        )]),
+        ..Default::default()
+    };
+    let indexed = suppression::component_suppression_sources(
+        &root,
+        std::slice::from_ref(&component),
+        &prepared_with_directive,
     );
 
     assert!(suppression::component_is_suppressed(

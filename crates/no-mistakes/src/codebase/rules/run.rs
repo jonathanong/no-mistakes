@@ -84,8 +84,7 @@ pub fn run_check_with_facts_and_playwright(
         prepared_tsconfig: &prepared_tsconfig,
         prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
         inferred_roots: None,
-        sources: &sources,
-        defer_suppression: false,
+        sources: Some(&sources),
     })
 }
 

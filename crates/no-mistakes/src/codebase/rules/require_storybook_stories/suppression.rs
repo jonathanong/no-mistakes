@@ -22,23 +22,22 @@ pub(super) fn component_is_suppressed(
         })
 }
 
-/// Index only selected components, so suppression checks reuse one request
-/// SourceStore read per selected path rather than scanning every TS fact.
+/// Index only selected components from the caller's authoritative fact map.
 pub(super) fn component_suppression_sources(
     root: &Path,
     components: &[Component],
-    sources: &crate::codebase::ts_source::SourceStore,
+    shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> HashMap<std::path::PathBuf, Arc<str>> {
     components
         .iter()
         .map(|component| &component.file)
         .filter_map(|path| {
-            let candidate = if path.is_absolute() {
+            let candidate = normalize_path(&if path.is_absolute() {
                 path.clone()
             } else {
                 root.join(path)
-            };
-            let source = sources.read_path(&candidate).ok()?;
+            });
+            let source = shared.ts.get(&candidate)?.source.as_ref().map(Arc::clone)?;
             let normalized = normalize_path(path);
             let rooted = normalize_path(&root.join(path));
             Some((normalized, source, rooted))

@@ -2,13 +2,23 @@ use super::*;
 
 mod graph_rules;
 mod helpers;
+mod source_store;
 use graph_rules::graph_rule_findings;
-use helpers::{storybook_findings, suppress_findings, StorybookFindingsRequest};
+use helpers::{finalize_findings, storybook_findings, suppress_findings, StorybookFindingsRequest};
 
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
+    aggregate_sources: Option<&crate::codebase::ts_source::SourceStore>,
+    defer_suppression: bool,
 ) -> Result<PreparedRuleFindings> {
+    let provided_sources = aggregate_sources.or(inputs.sources);
+    let fallback_sources = provided_sources
+        .is_none()
+        .then(|| source_store::for_request(&inputs));
+    let sources = provided_sources
+        .or(fallback_sources.as_deref())
+        .expect("prepared rules source fallback is initialized");
     let PreparedRulesCheck {
         session,
         root,
@@ -21,8 +31,7 @@ pub(super) fn run(
         prepared_tsconfig,
         prepared_tsconfig_catalog,
         inferred_roots,
-        sources,
-        defer_suppression,
+        sources: _,
     } = inputs;
     if !any_codebase_rule_enabled(config) {
         return Ok(PreparedRuleFindings {
@@ -187,15 +196,5 @@ pub(super) fn run(
     if !defer_suppression {
         suppress_findings(root, &mut findings, sources);
     }
-    let mut paired = findings
-        .into_iter()
-        .zip(suppression_sources)
-        .collect::<Vec<_>>();
-    paired.sort_by(|(a, _), (b, _)| a.cmp(b));
-    paired.dedup_by(|(a, source_a), (b, source_b)| a == b && source_a == source_b);
-    let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
-    Ok(PreparedRuleFindings {
-        findings,
-        suppression_sources,
-    })
+    Ok(finalize_findings(findings, suppression_sources))
 }

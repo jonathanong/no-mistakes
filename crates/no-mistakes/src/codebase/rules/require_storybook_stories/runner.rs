@@ -104,7 +104,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
     .filter(|component| rule_filter.is_match(&component.file))
     .collect::<Vec<_>>();
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
-    let suppression_sources = component_suppression_sources(root, &components, sources);
+    let suppression_sources = component_suppression_sources(root, &components, shared);
     let suppression_filtered_component_keys: HashSet<String> = components
         .iter()
         .filter(|component| !component_is_suppressed(root, &suppression_sources, component))
