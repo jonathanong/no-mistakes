@@ -20,7 +20,7 @@ pub struct UniqueExportFinding {
     /// Internal suppression provenance. The public diagnostic location remains
     /// the re-export target; aggregate checking reads directives from here.
     #[serde(skip)]
-    pub suppression_source_file: Option<String>,
+    pub suppression_source_location: Option<(String, u32)>,
 }
 
 #[derive(Debug, Clone)]

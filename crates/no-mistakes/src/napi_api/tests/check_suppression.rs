@@ -244,6 +244,40 @@ fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports
 }
 
 #[test]
+fn check_json_matches_origin_line_directives_for_reexport_suppression_audits() {
+    let (baseline, audit) = baseline_and_audit("suppression-unique-origin-lines");
+    for report in [&baseline, &audit] {
+        assert!(report["codebase"].as_array().is_some_and(|items| {
+            items.iter().any(|item| {
+                item["rule"] == "unique-exports"
+                    && item["exportName"] == "active"
+                    && item["file"] == "src/active-b.ts"
+                    && item["line"] == 1
+            })
+        }));
+    }
+
+    let suppressed = audit["suppressed"].as_array().unwrap();
+    assert_eq!(suppressed.len(), 2, "{audit}");
+    assert!(suppressed.iter().any(|item| {
+        item["rule"] == "unique-exports"
+            && item["file"] == "src/line-barrel.ts"
+            && item["sourceFile"] == "shared/line-origin.ts"
+            && item["line"] == 1
+            && item["directive"]["kind"] == "line"
+            && item["directive"]["line"] == 3
+    }));
+    assert!(suppressed.iter().any(|item| {
+        item["rule"] == "unique-exports"
+            && item["file"] == "src/next-barrel.ts"
+            && item["sourceFile"] == "shared/next-origin.ts"
+            && item["line"] == 1
+            && item["directive"]["kind"] == "nextLine"
+            && item["directive"]["line"] == 2
+    }));
+}
+
+#[test]
 fn check_json_keeps_named_reexport_duplicates_when_auditing_suppression() {
     let (baseline, audit) = baseline_and_audit("suppression-unique-canonical");
     for report in [&baseline, &audit] {

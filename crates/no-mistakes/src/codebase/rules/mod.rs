@@ -87,8 +87,8 @@ pub(crate) use file_matching::matching_files;
 pub(crate) use source_access::{read_source, source_store_for_files};
 #[doc(hidden)]
 pub use suppression::{
-    suppress_domain_findings_with_source_files, suppress_domain_findings_with_sources,
-    SuppressedFinding, SuppressionTarget,
+    suppress_domain_findings_with_source_files, suppress_domain_findings_with_source_locations,
+    suppress_domain_findings_with_sources, SuppressedFinding, SuppressionTarget,
 };
 pub(crate) use suppression::{
     suppress_rule_findings_with_source, suppress_rule_findings_with_sources,

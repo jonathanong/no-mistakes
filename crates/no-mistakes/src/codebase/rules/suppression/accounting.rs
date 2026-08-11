@@ -71,12 +71,29 @@ pub fn suppress_domain_findings_with_source_files<T>(
     describe: impl Fn(&T) -> SuppressionTarget<'_>,
     source_file: impl Fn(&T) -> Option<&str>,
 ) -> Vec<SuppressedFinding> {
+    suppress_domain_findings_with_source_locations(root, findings, sources, describe, |finding| {
+        source_file(finding).map(|file| (file, None))
+    })
+}
+
+/// Retain findings while reading directives from an internal provenance
+/// location. The public finding location remains the target location, while
+/// line-specific directives are matched against the provenance source line.
+#[doc(hidden)]
+pub fn suppress_domain_findings_with_source_locations<T>(
+    root: &Path,
+    findings: &mut Vec<T>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    describe: impl Fn(&T) -> SuppressionTarget<'_>,
+    source_location: impl Fn(&T) -> Option<(&str, Option<usize>)>,
+) -> Vec<SuppressedFinding> {
     let lexical_root = crate::codebase::ts_source::normalize_discovery_path(root);
     let mut cached_sources = HashMap::new();
     let mut suppressed = Vec::new();
     findings.retain(|finding| {
         let target = describe(finding);
-        let source_file = source_file(finding).unwrap_or(target.file);
+        let (source_file, source_line) =
+            source_location(finding).unwrap_or((target.file, target.line));
         let source = cached_sources
             .entry(source_file.to_string())
             .or_insert_with(|| {
@@ -91,7 +108,7 @@ pub fn suppress_domain_findings_with_source_files<T>(
             });
         let Some(directive) = source
             .as_deref()
-            .and_then(|source| matching_directive(source, target.rule, target.line))
+            .and_then(|source| matching_directive(source, target.rule, source_line))
         else {
             return true;
         };

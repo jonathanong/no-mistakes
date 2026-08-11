@@ -4,8 +4,9 @@ use std::path::{Path, PathBuf};
 
 mod accounting;
 pub use accounting::{
-    suppress_domain_findings_with_source_files, suppress_domain_findings_with_sources,
-    SuppressedFinding, SuppressionDirective, SuppressionDirectiveKind, SuppressionTarget,
+    suppress_domain_findings_with_source_files, suppress_domain_findings_with_source_locations,
+    suppress_domain_findings_with_sources, SuppressedFinding, SuppressionDirective,
+    SuppressionDirectiveKind, SuppressionTarget,
 };
 
 pub(crate) fn suppress_rule_findings_with_sources_except(
