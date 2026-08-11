@@ -11,17 +11,16 @@ fn bare_self_hosted_runner_keeps_the_implicit_shell_indeterminate() {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(runs_on_can_default_to_windows(&job), "{yaml}");
     }
-    for yaml in [
-        "runs-on: ubuntu-latest",
-        "runs-on: [self-hosted, linux]",
-        "runs-on: [self-hosted, macOS-14]",
-    ] {
+    for yaml in ["runs-on: ubuntu-latest", "runs-on: [self-hosted, linux]"] {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
     }
     for yaml in [
         "runs-on: [self-hosted, ubuntu-custom]",
         "runs-on: [self-hosted, linux-custom]",
+        "runs-on: [self-hosted, macOS-14]",
+        "runs-on: [self-hosted, macos-custom]",
+        "runs-on: [self-hosted, windows-custom]",
     ] {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(runs_on_can_default_to_windows(&job), "{yaml}");
@@ -53,6 +52,14 @@ fn container_runner_support_requires_unambiguous_linux_labels() {
         ),
         (
             "runs-on: [self-hosted, linux-custom]",
+            ContainerRunnerSupport::Unknown,
+        ),
+        (
+            "runs-on: [self-hosted, macos-custom]",
+            ContainerRunnerSupport::Unknown,
+        ),
+        (
+            "runs-on: [self-hosted, windows-custom]",
             ContainerRunnerSupport::Unknown,
         ),
         (

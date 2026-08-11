@@ -41,3 +41,39 @@ fn ports_reject_non_port_yaml_values() {
         assert!(!port_entry_valid(&value), "{yaml}");
     }
 }
+
+#[test]
+fn port_sequences_cover_dynamic_parts_and_invalid_mapping_shapes() {
+    assert!(port_sequence_valid(None));
+    assert!(port_sequence_valid(Some(
+        &serde_yaml::from_str("[]").unwrap()
+    )));
+    assert!(!port_sequence_valid(Some(
+        &serde_yaml::from_str("[80, invalid]").unwrap()
+    )));
+
+    for value in [
+        "${{ matrix.port }}",
+        "${{ matrix.host }}:8080:80",
+        "[${{ matrix.address }}]:8080:80/sctp",
+        "8080-${{ matrix.end }}:80-${{ matrix.container_end }}",
+    ] {
+        assert!(port_mapping_valid(value), "{value}");
+    }
+    for value in [
+        "80/tcp/udp",
+        "[::1:8080:80",
+        "[not-an-address]:8080:80",
+        "8080:80:81:82",
+        "8080-8082:80-81",
+        "${{ matrix.port }",
+        "8080:${{ matrix.port }}:80",
+    ] {
+        assert!(!port_mapping_valid(value), "{value}");
+    }
+
+    assert_eq!(
+        opaque_expression_form("${{ matrix.host }}:8080:${{ matrix.container }}"),
+        format!("{DYNAMIC_EXPRESSION}:8080:{DYNAMIC_EXPRESSION}")
+    );
+}

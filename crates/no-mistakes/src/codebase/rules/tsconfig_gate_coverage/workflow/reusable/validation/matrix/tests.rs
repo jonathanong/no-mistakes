@@ -382,3 +382,42 @@ fn traversal_exhaustion_and_nonmatching_includes_are_conservative() {
         Some(false)
     );
 }
+
+#[test]
+fn static_mappings_classify_empty_literal_dynamic_and_invalid_values() {
+    use super::mappings::{static_mappings, StaticMappings};
+
+    let literal = job("include:\n  - target: \"${{ 'linux' }}\"\n    attempts: '${{ 2 }}'");
+    assert!(matches!(
+        static_mappings(literal.get("include")),
+        StaticMappings::Static(values) if values.len() == 1
+    ));
+    for yaml in [
+        "include: []",
+        "include: invalid",
+        "include:\n  - invalid",
+        "include:\n  - target: '${{ broken'",
+        "include: '${{ true }}'",
+    ] {
+        assert!(
+            matches!(
+                static_mappings(job(yaml).get("include")),
+                StaticMappings::Invalid
+            ),
+            "{yaml}"
+        );
+    }
+    for yaml in [
+        "include: '${{ fromJSON(inputs.include) }}'",
+        "include:\n  - target: '${{ inputs.target }}'",
+    ] {
+        assert!(
+            matches!(
+                static_mappings(job(yaml).get("include")),
+                StaticMappings::Dynamic
+            ),
+            "{yaml}"
+        );
+    }
+    assert!(matches!(static_mappings(None), StaticMappings::Static(values) if values.is_empty()));
+}

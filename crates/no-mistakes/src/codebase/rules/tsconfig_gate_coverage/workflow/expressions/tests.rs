@@ -247,3 +247,31 @@ fn rejects_unclosed_accessors_and_function_arguments() {
         assert_eq!(complete_expression_type(expression), None, "{expression}");
     }
 }
+
+#[test]
+fn literal_from_json_helpers_handle_escapes_nested_calls_and_invalid_payloads() {
+    assert_eq!(
+        super::literal_value::literal_from_json_value(r#"fromJSON('"it''''s"')"#),
+        Some(Value::String("it''s".to_string()))
+    );
+    for expression in [
+        "${{ fromJSON('not-json') }}",
+        "${{ contains(fromJSON('not-json'), 'value') }}",
+    ] {
+        assert!(
+            super::literal_value::invalid_literal_from_json(expression),
+            "{expression}"
+        );
+    }
+    for expression in [
+        "fromJSON('not-json')",
+        "${{ fromJSON(inputs.payload) }}",
+        "${{ fromJSON('true', 'false') }}",
+        "${{ 'fromJSON(''not-json'')' }}",
+    ] {
+        assert!(
+            !super::literal_value::invalid_literal_from_json(expression),
+            "{expression}"
+        );
+    }
+}

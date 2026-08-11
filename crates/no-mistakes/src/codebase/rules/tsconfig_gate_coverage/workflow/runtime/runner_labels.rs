@@ -15,20 +15,18 @@ pub(in super::super) fn runs_on_can_default_to_windows(job: &Value) -> bool {
     let Some(labels) = static_runner_labels(job.as_mapping()) else {
         return false;
     };
-    if labels.iter().any(|label| is_windows_runner_label(label)) {
-        return true;
-    }
     let self_hosted = labels
         .iter()
         .any(|label| label.eq_ignore_ascii_case("self-hosted"));
-    let known_posix = labels.iter().any(|label| {
-        if self_hosted {
-            is_macos_runner_label(label) || is_explicit_self_hosted_linux_label(label)
-        } else {
-            is_posix_runner_label(label)
-        }
-    });
-    self_hosted && !known_posix
+    if self_hosted {
+        return !labels
+            .iter()
+            .any(|label| is_explicit_self_hosted_linux_label(label));
+    }
+    if labels.iter().any(|label| is_windows_runner_label(label)) {
+        return true;
+    }
+    false
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -44,11 +42,6 @@ pub(in super::super) fn container_runner_support(job: &Mapping) -> ContainerRunn
     };
     if labels
         .iter()
-        .any(|label| is_windows_runner_label(label) || is_macos_runner_label(label))
-    {
-        ContainerRunnerSupport::NonLinux
-    } else if labels
-        .iter()
         .any(|label| label.eq_ignore_ascii_case("self-hosted"))
     {
         if labels
@@ -59,6 +52,11 @@ pub(in super::super) fn container_runner_support(job: &Mapping) -> ContainerRunn
         } else {
             ContainerRunnerSupport::Unknown
         }
+    } else if labels
+        .iter()
+        .any(|label| is_windows_runner_label(label) || is_macos_runner_label(label))
+    {
+        ContainerRunnerSupport::NonLinux
     } else if labels.iter().any(|label| is_linux_runner_label(label)) {
         ContainerRunnerSupport::Linux
     } else {
@@ -101,12 +99,6 @@ fn is_explicit_self_hosted_linux_label(label: &str) -> bool {
 
 fn is_windows_runner_label(label: &str) -> bool {
     label_prefix_matches(label, "windows")
-}
-
-fn is_posix_runner_label(label: &str) -> bool {
-    ["linux", "ubuntu", "macos"]
-        .iter()
-        .any(|os| label_prefix_matches(label, os))
 }
 
 fn is_linux_runner_label(label: &str) -> bool {

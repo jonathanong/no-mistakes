@@ -125,3 +125,6 @@ fn static_expression_value(text: &str) -> Option<StaticValue> {
         | StaticExpressionType::Number => None,
     }
 }
+
+#[cfg(test)]
+mod tests;

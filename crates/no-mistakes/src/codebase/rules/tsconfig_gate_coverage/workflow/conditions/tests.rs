@@ -141,6 +141,7 @@ fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
     let inputs = InputState::new();
     for (expression, expected) in [
         ("fromJSON('false')", StaticBool::False),
+        ("${{ fromJSON('false') }}", StaticBool::False),
         ("fromJSON('0')", StaticBool::False),
         ("fromJSON('true')", StaticBool::True),
         ("fromJSON('1')", StaticBool::True),
