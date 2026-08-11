@@ -2,6 +2,8 @@ use super::{lexer::Token, StaticExpressionType};
 
 mod result_type;
 
+const MAX_EXPRESSION_NESTING: usize = 256;
+
 pub(super) fn parse(tokens: &[Token]) -> Option<StaticExpressionType> {
     ExpressionSyntax::new(tokens)
         .parse()
@@ -39,11 +41,16 @@ impl Expression {
 struct ExpressionSyntax<'a> {
     tokens: &'a [Token],
     index: usize,
+    nesting: usize,
 }
 
 impl<'a> ExpressionSyntax<'a> {
     fn new(tokens: &'a [Token]) -> Self {
-        Self { tokens, index: 0 }
+        Self {
+            tokens,
+            index: 0,
+            nesting: 0,
+        }
     }
 
     fn parse(mut self) -> Option<Expression> {
@@ -79,12 +86,17 @@ impl<'a> ExpressionSyntax<'a> {
     }
 
     fn parse_unary(&mut self) -> Option<Expression> {
-        if self.take(Token::Bang) {
-            self.parse_unary()?;
-            Some(Expression::scalar(StaticExpressionType::Boolean))
-        } else {
-            self.parse_primary()
+        let mut unary_count = 0;
+        while self.take(Token::Bang) {
+            unary_count += 1;
+            if unary_count > MAX_EXPRESSION_NESTING {
+                return None;
+            }
         }
+        let expression = self.parse_primary()?;
+        (unary_count == 0)
+            .then_some(expression)
+            .or_else(|| Some(Expression::scalar(StaticExpressionType::Boolean)))
     }
 
     fn parse_primary(&mut self) -> Option<Expression> {
@@ -106,7 +118,7 @@ impl<'a> ExpressionSyntax<'a> {
                 })
             }
             Token::LeftParen => {
-                let expression = self.parse_or()?;
+                let expression = self.parse_nested_expression()?;
                 self.take(Token::RightParen).then_some(expression)
             }
             _ => None,
@@ -121,7 +133,7 @@ impl<'a> ExpressionSyntax<'a> {
                 }
                 expression = Expression::dynamic(true);
             } else if self.take(Token::LeftBracket) {
-                self.parse_or()?;
+                self.parse_nested_expression()?;
                 if !self.take(Token::RightBracket) {
                     return None;
                 }
@@ -133,6 +145,13 @@ impl<'a> ExpressionSyntax<'a> {
     }
 
     fn parse_arguments(&mut self) -> Option<Vec<Expression>> {
+        self.enter_nesting()?;
+        let arguments = self.parse_arguments_inner();
+        self.nesting -= 1;
+        arguments
+    }
+
+    fn parse_arguments_inner(&mut self) -> Option<Vec<Expression>> {
         if self.take(Token::RightParen) {
             return Some(Vec::new());
         }
@@ -146,6 +165,19 @@ impl<'a> ExpressionSyntax<'a> {
                 return None;
             }
         }
+    }
+
+    fn parse_nested_expression(&mut self) -> Option<Expression> {
+        self.enter_nesting()?;
+        let expression = self.parse_or();
+        self.nesting -= 1;
+        expression
+    }
+
+    fn enter_nesting(&mut self) -> Option<()> {
+        (self.nesting < MAX_EXPRESSION_NESTING).then_some(())?;
+        self.nesting += 1;
+        Some(())
     }
 
     fn take(&mut self, token: Token) -> bool {

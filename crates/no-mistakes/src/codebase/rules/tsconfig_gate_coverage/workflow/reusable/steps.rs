@@ -7,7 +7,10 @@ use serde_yaml::Value;
 use std::collections::BTreeSet;
 
 use super::super::{
-    conditions::{statically_not_enforcing, InputState},
+    conditions::{
+        statically_not_enforcing_with_environment, step_timeout_minutes_enforced, EnvironmentState,
+        InputState,
+    },
     effective_working_directory,
     runtime::{effective_shell, runs_on_can_default_to_windows, shell_failure_enforced},
 };
@@ -16,6 +19,7 @@ pub(super) fn scan_job_steps(
     job: &Value,
     triggers: &CompiledTriggers,
     inputs: &InputState,
+    environment: &EnvironmentState,
     workflow_cwd: Option<String>,
     workflow_shell: Option<String>,
     context: &ScanContext<'_>,
@@ -28,7 +32,10 @@ pub(super) fn scan_job_steps(
     let implicit_shell_can_be_windows = runs_on_can_default_to_windows(job);
     let mut projects = BTreeSet::new();
     for step in steps {
-        if statically_not_enforcing(step, inputs) {
+        let environment = environment.with_step(step);
+        if statically_not_enforcing_with_environment(step, inputs, &environment)
+            || !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs)
+        {
             continue;
         }
         let step_cwd = match step.get("working-directory").and_then(Value::as_str) {

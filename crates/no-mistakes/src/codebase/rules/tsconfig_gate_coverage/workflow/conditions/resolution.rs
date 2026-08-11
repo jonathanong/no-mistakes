@@ -1,4 +1,4 @@
-use super::{InputState, StaticValue};
+use super::{EnvironmentState, InputState, StaticValue};
 use serde_yaml::Value;
 
 pub(super) fn input_name(operand: &str) -> Option<&str> {
@@ -7,6 +7,19 @@ pub(super) fn input_name(operand: &str) -> Option<&str> {
 
 pub(super) fn matrix_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "matrix")
+}
+
+pub(super) fn env_name(operand: &str) -> Option<&str> {
+    context_property_name(operand, "env")
+}
+
+pub(super) fn secret_name(operand: &str) -> Option<&str> {
+    let body = operand
+        .trim()
+        .strip_prefix("${{")?
+        .strip_suffix("}}")?
+        .trim();
+    context_property_name(body, "secrets")
 }
 
 pub(super) fn github_event_name(operand: &str) -> bool {
@@ -98,13 +111,24 @@ fn static_sequence_element(value: Value) -> StaticValue {
     }
 }
 
-pub(super) fn condition_input_value(operand: &str, inputs: &InputState) -> Option<StaticValue> {
+pub(super) fn condition_input_value(
+    operand: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
     if let Some(name) = input_name(operand) {
         return Some(
             inputs
                 .get(&name.to_lowercase())
                 .cloned()
                 .unwrap_or(StaticValue::Bool(false)),
+        );
+    }
+    if let Some(name) = env_name(operand) {
+        return Some(
+            environment
+                .value(name)
+                .unwrap_or(StaticValue::String(String::new())),
         );
     }
     let name = matrix_name(operand)?;

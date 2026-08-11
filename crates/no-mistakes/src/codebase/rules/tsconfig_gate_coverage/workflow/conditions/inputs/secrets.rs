@@ -18,6 +18,12 @@ pub(crate) struct SecretState {
     all: bool,
 }
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(crate) enum SecretAvailability {
+    Absent,
+    Available,
+}
+
 impl SecretState {
     pub(crate) fn direct() -> Self {
         Self {
@@ -28,6 +34,14 @@ impl SecretState {
 
     fn reusable(names: BTreeSet<String>, all: bool) -> Self {
         Self { names, all }
+    }
+
+    pub(crate) fn availability(&self, name: &str) -> SecretAvailability {
+        if self.all || self.names.contains(&normalized_name(name)) {
+            SecretAvailability::Available
+        } else {
+            SecretAvailability::Absent
+        }
     }
 }
 
@@ -42,7 +56,7 @@ pub(crate) fn callee_secrets(
     let (names, all) = if call_job.get("secrets").and_then(Value::as_str) == Some("inherit") {
         (parent.names.clone(), parent.all)
     } else {
-        (explicit_secret_bindings(contract, call_job)?, false)
+        (explicit_secret_bindings(contract, call_job, parent)?, false)
     };
     contract
         .secrets
@@ -55,6 +69,7 @@ pub(crate) fn callee_secrets(
 fn explicit_secret_bindings(
     contract: &WorkflowCallContract,
     call_job: &Value,
+    parent: &SecretState,
 ) -> Option<BTreeSet<String>> {
     let bindings = match call_job.get("secrets") {
         Some(Value::Mapping(mapping)) => normalized_bindings(mapping)?,
@@ -85,7 +100,20 @@ fn explicit_secret_bindings(
     {
         return None;
     }
-    Some(bindings.into_keys().collect())
+    Some(
+        bindings
+            .into_iter()
+            .filter_map(|(destination, value)| {
+                let source = value
+                    .as_str()
+                    .and_then(super::super::resolution::secret_name);
+                (source.is_none_or(|source| {
+                    parent.availability(source) == SecretAvailability::Available
+                }))
+                .then_some(destination)
+            })
+            .collect(),
+    )
 }
 
 #[cfg(test)]

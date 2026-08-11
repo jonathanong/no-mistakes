@@ -1,5 +1,6 @@
 use super::*;
 use crate::codebase::workflow_topology::model::WorkflowCallSecret;
+use std::collections::BTreeSet;
 
 fn contract(name: &str) -> WorkflowCallContract {
     WorkflowCallContract {
@@ -24,6 +25,14 @@ fn inherited_secrets_preserve_wildcard_or_known_availability() {
     let available = callee_secrets(&contract("token"), &explicit, &SecretState::direct()).unwrap();
     assert!(callee_secrets(&contract("token"), &inherit, &available).is_some());
     assert!(callee_secrets(&contract("other"), &inherit, &available).is_none());
+}
+
+#[test]
+fn bindings_do_not_make_an_absent_parent_secret_available() {
+    let absent = SecretState::reusable(BTreeSet::new(), false);
+    let call: Value = serde_yaml::from_str("secrets: {token: '${{ secrets.token }}'}").unwrap();
+
+    assert!(callee_secrets(&contract("token"), &call, &absent).is_none());
 }
 
 #[test]

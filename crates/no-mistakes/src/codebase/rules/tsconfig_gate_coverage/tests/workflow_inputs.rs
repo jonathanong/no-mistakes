@@ -59,6 +59,68 @@ fn ci_scanner_treats_omitted_or_falsy_nonboolean_inputs_as_false() {
 }
 
 #[test]
+fn ci_scanner_resolves_reusable_defaults_and_absent_secrets_in_step_environment_conditions() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/push.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        default: \"${{ github.event_name == 'schedule' }}\"\n    secrets:\n      token:\n        required: false\njobs:\n  defaulted:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project defaulted/tsconfig.json\n  absent-secret:\n    runs-on: ubuntu-latest\n    env:\n      TOKEN: \"${{ secrets.token }}\"\n    steps:\n      - if: env.TOKEN != ''\n        run: tsc --noEmit --project absent-secret/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "absent-secret/tsconfig.json".to_string(),
+        "defaulted/tsconfig.json".to_string(),
+    ]
+    .into_iter()
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::new()
+    );
+}
+
+#[test]
+fn ci_scanner_merges_workflow_job_and_step_environment_for_step_enforcement() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n",
+            ),
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on:\n  workflow_call:\n    secrets:\n      token:\n        required: false\nenv:\n  TOKEN: \"${{ secrets.token }}\"\njobs:\n  workflow-secret-skipped:\n    runs-on: ubuntu-latest\n    steps:\n      - if: env.TOKEN != ''\n        run: tsc --noEmit --project workflow-secret-skipped/tsconfig.json\n  job-override:\n    runs-on: ubuntu-latest\n    env: {TOKEN: true}\n    steps:\n      - if: env.TOKEN == 'true'\n        run: tsc --noEmit --project job-override/tsconfig.json\n  step-override:\n    runs-on: ubuntu-latest\n    env: {TOKEN: false}\n    steps:\n      - env: {TOKEN: 7}\n        if: env.TOKEN == '7'\n        run: tsc --noEmit --project step-override/tsconfig.json\n      - env: {TOKEN: 7}\n        continue-on-error: \"${{ env.TOKEN == '7' }}\"\n        run: tsc --noEmit --project allowed-failure/tsconfig.json\n  scalar-normalized:\n    runs-on: ubuntu-latest\n    env: {COUNT: 0}\n    steps:\n      - if: env.COUNT == '0'\n        run: tsc --noEmit --project scalar-normalized/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "allowed-failure/tsconfig.json",
+        "job-override/tsconfig.json",
+        "scalar-normalized/tsconfig.json",
+        "step-override/tsconfig.json",
+        "workflow-secret-skipped/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from([
+            "job-override/tsconfig.json".to_string(),
+            "scalar-normalized/tsconfig.json".to_string(),
+            "step-override/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
 fn ci_scanner_validates_contract_identifiers_outputs_and_bracket_input_references() {
     let workflows = ParsedWorkflowSet {
         documents: vec![

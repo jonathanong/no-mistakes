@@ -2,7 +2,7 @@ use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     callee_inputs, callee_secrets, inputs_with_matrix_values, statically_not_enforcing,
-    statically_skipped_jobs, InputState, MatrixState,
+    statically_skipped_jobs, EnvironmentState, InputState, MatrixState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
     ActivationMemo, ActivationState, ScanContext,
@@ -19,6 +19,12 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(super) struct JobStates {
     matrix_inputs: BTreeMap<String, Vec<InputState>>,
     skipped: BTreeSet<String>,
+}
+
+pub(super) struct WorkflowRuntime {
+    pub(super) cwd: Option<String>,
+    pub(super) shell: Option<String>,
+    pub(super) environment: EnvironmentState,
 }
 
 impl JobStates {
@@ -71,8 +77,7 @@ impl JobStates {
 pub(super) struct JobScanner<'a, 'workflow> {
     job_states: &'a JobStates,
     triggers: &'a CompiledTriggers,
-    workflow_cwd: Option<String>,
-    workflow_shell: Option<String>,
+    workflow_runtime: WorkflowRuntime,
     state: &'a ActivationState,
     context: &'a ScanContext<'workflow>,
     memo: &'a mut ActivationMemo,
@@ -82,8 +87,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
     pub(super) fn new(
         job_states: &'a JobStates,
         triggers: &'a CompiledTriggers,
-        workflow_cwd: Option<String>,
-        workflow_shell: Option<String>,
+        workflow_runtime: WorkflowRuntime,
         state: &'a ActivationState,
         context: &'a ScanContext<'workflow>,
         memo: &'a mut ActivationMemo,
@@ -91,8 +95,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         Self {
             job_states,
             triggers,
-            workflow_cwd,
-            workflow_shell,
+            workflow_runtime,
             state,
             context,
             memo,
@@ -182,8 +185,9 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                     job,
                     self.triggers,
                     inputs,
-                    self.workflow_cwd.clone(),
-                    self.workflow_shell.clone(),
+                    &self.workflow_runtime.environment.with_job(job),
+                    self.workflow_runtime.cwd.clone(),
+                    self.workflow_runtime.shell.clone(),
                     self.context,
                 ));
             }

@@ -355,6 +355,26 @@ fn matrix_values_stay_correlated_across_job_and_step_conditions() {
 }
 
 #[test]
+fn static_matrix_timeouts_must_be_valid_before_steps_earn_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  valid:\n    strategy:\n      matrix: {timeout: [1, 360]}\n    runs-on: ubuntu-latest\n    steps:\n      - timeout-minutes: '${{ matrix.timeout }}'\n        run: tsc --noEmit --project valid/tsconfig.json\n  invalid:\n    strategy:\n      matrix: {timeout: [0, 361]}\n    runs-on: ubuntu-latest\n    steps:\n      - timeout-minutes: '${{ matrix.timeout }}'\n        run: tsc --noEmit --project invalid/tsconfig.json\n  dynamic:\n    strategy:\n      matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'\n    runs-on: ubuntu-latest\n    steps:\n      - timeout-minutes: '${{ matrix.timeout }}'\n        run: tsc --noEmit --project dynamic/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "valid/tsconfig.json".to_string(),
+        "invalid/tsconfig.json".to_string(),
+        "dynamic/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["valid/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn bracketed_matrix_conditions_preserve_static_gate_boundaries() {
     let workflows = ParsedWorkflowSet {
         documents: vec![workflow_document(

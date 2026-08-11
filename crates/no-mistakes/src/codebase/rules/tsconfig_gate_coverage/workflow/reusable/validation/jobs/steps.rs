@@ -139,10 +139,10 @@ fn shared_step_fields_valid(step: &Mapping) -> bool {
 }
 
 fn action_target_valid(target: &str) -> bool {
-    if target.contains("${{") || target.chars().any(char::is_whitespace) {
-        return false;
-    }
     if let Some(path) = target.strip_prefix("./") {
+        if target.chars().any(char::is_whitespace) {
+            return false;
+        }
         return !path.is_empty()
             && !path.contains('\\')
             && path
@@ -150,7 +150,10 @@ fn action_target_valid(target: &str) -> bool {
                 .all(|segment| !matches!(segment, "" | "." | ".."));
     }
     if let Some(image) = target.strip_prefix("docker://") {
-        return !image.is_empty();
+        return super::containers::valid_container_image(image);
+    }
+    if target.contains("${{") || target.chars().any(char::is_whitespace) {
+        return false;
     }
     let Some((path, reference)) = target.rsplit_once('@') else {
         return false;

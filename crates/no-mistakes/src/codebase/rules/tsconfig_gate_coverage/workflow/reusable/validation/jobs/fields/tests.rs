@@ -73,6 +73,8 @@ fn strategy_fields_require_documented_contexts_and_scalar_shapes() {
         "max-parallel: '${{ success() }}'",
         "fail-fast: \"${{ format('{0}', github.ref) }}\"",
         "fail-fast: '${{ 1 }}'",
+        "fail-fast: \"${{ fromJSON('\\\"true\\\"') }}\"",
+        "fail-fast: \"${{ fromJSON('5') }}\"",
         "max-parallel: \"${{ contains(github.ref, 'main') }}\"",
         "max-parallel: '${{ true }}'",
         "max-parallel: '${{ -1 }}'",

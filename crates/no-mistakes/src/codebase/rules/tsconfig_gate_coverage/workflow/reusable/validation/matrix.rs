@@ -143,4 +143,6 @@ fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCoun
 }
 
 #[cfg(test)]
+mod root_expression_tests;
+#[cfg(test)]
 mod tests;

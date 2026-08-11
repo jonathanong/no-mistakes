@@ -1,4 +1,7 @@
-use super::{comparison_literal, condition_value, input_name, InputState, StaticBool, StaticValue};
+use super::{
+    comparison_literal, condition_value, input_name, EnvironmentState, InputState, StaticBool,
+    StaticValue,
+};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_function_call, Function,
 };
@@ -6,17 +9,20 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
 pub(super) fn static_function_bool(
     expression: &str,
     inputs: &InputState,
+    environment: &EnvironmentState,
     success: StaticBool,
 ) -> Option<StaticBool> {
     let call = condition_function_call(expression)?;
     if call.function == Function::Case {
-        return static_case_value(expression, inputs, success).map(StaticValue::truthiness);
+        return static_case_value(expression, inputs, environment, success)
+            .map(StaticValue::truthiness);
     }
     if call.arguments.len() != 2 {
         return None;
     }
-    let search = function_argument_value(call.arguments[0], inputs, success)?;
-    let item = function_argument_value(call.arguments[1], inputs, success)?.function_string()?;
+    let search = function_argument_value(call.arguments[0], inputs, environment, success)?;
+    let item = function_argument_value(call.arguments[1], inputs, environment, success)?
+        .function_string()?;
     let matched = match call.function {
         Function::Contains => contains_static_value(&search, &item)?,
         Function::StartsWith => starts_with_ignore_ascii_case(&search.function_string()?, &item)?,
@@ -50,25 +56,34 @@ fn contains_static_value(search: &StaticValue, item: &str) -> Option<bool> {
 pub(super) fn static_case_value(
     expression: &str,
     inputs: &InputState,
+    environment: &EnvironmentState,
     success: StaticBool,
 ) -> Option<StaticValue> {
     let call = condition_function_call(expression)?;
     (call.function == Function::Case).then_some(())?;
     for index in (0..call.arguments.len() - 1).step_by(2) {
-        match function_argument_value(call.arguments[index], inputs, success)?.truthiness() {
+        match function_argument_value(call.arguments[index], inputs, environment, success)?
+            .truthiness()
+        {
             StaticBool::False => continue,
             StaticBool::True | StaticBool::TruthyNonBoolean => {
-                return function_argument_value(call.arguments[index + 1], inputs, success);
+                return function_argument_value(
+                    call.arguments[index + 1],
+                    inputs,
+                    environment,
+                    success,
+                );
             }
             StaticBool::Unknown => return None,
         }
     }
-    function_argument_value(call.arguments.last()?, inputs, success)
+    function_argument_value(call.arguments.last()?, inputs, environment, success)
 }
 
 fn function_argument_value(
     expression: &str,
     inputs: &InputState,
+    environment: &EnvironmentState,
     success: StaticBool,
 ) -> Option<StaticValue> {
     if let Some(name) = input_name(expression) {
@@ -82,7 +97,8 @@ fn function_argument_value(
                 .unwrap_or_else(|| StaticValue::String(String::new())),
         );
     }
-    condition_value(expression, inputs, success).or_else(|| comparison_literal(expression))
+    condition_value(expression, inputs, environment, success)
+        .or_else(|| comparison_literal(expression))
 }
 
 // GitHub's documented functions compare case-insensitively. This analyzer only

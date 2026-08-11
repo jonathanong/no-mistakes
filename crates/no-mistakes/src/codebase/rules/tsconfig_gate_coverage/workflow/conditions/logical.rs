@@ -1,4 +1,6 @@
-use super::{expression_bool_with_status, InputState, StaticBool};
+use super::{
+    expression_bool_with_status_and_environment, EnvironmentState, InputState, StaticBool,
+};
 
 #[derive(Clone, Copy)]
 pub(super) enum Comparison {
@@ -19,22 +21,23 @@ pub(super) enum LogicalOperator {
 pub(super) fn compound_bool(
     expression: &str,
     inputs: &InputState,
+    environment: &EnvironmentState,
     success: StaticBool,
 ) -> Option<StaticBool> {
     if let Some((left, right, LogicalOperator::Or)) = logical_operands(expression) {
         return Some(or(
-            expression_bool_with_status(left, inputs, success),
-            expression_bool_with_status(right, inputs, success),
+            expression_bool_with_status_and_environment(left, inputs, environment, success),
+            expression_bool_with_status_and_environment(right, inputs, environment, success),
         ));
     }
     if let Some((left, right, LogicalOperator::And)) = logical_operands(expression) {
         return Some(and(
-            expression_bool_with_status(left, inputs, success),
-            expression_bool_with_status(right, inputs, success),
+            expression_bool_with_status_and_environment(left, inputs, environment, success),
+            expression_bool_with_status_and_environment(right, inputs, environment, success),
         ));
     }
     outer_parentheses_body(expression)
-        .map(|body| expression_bool_with_status(body, inputs, success))
+        .map(|body| expression_bool_with_status_and_environment(body, inputs, environment, success))
 }
 
 pub(super) fn logical_operands(expression: &str) -> Option<(&str, &str, LogicalOperator)> {

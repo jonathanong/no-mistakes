@@ -13,7 +13,7 @@ mod bindings;
 mod secrets;
 mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
-pub(crate) use secrets::{callee_secrets, SecretState};
+pub(crate) use secrets::{callee_secrets, SecretAvailability, SecretState};
 use values::{default_value, nonboolean_binding_value};
 
 pub(super) const EVENT_NAME_KEY: &str = "\0github.event_name";
@@ -79,7 +79,10 @@ pub(crate) fn direct_inputs(
             let input_type = declaration
                 .input_type
                 .expect("validated workflow_call input type");
-            (normalized_name(name), default_value(None, input_type))
+            (
+                normalized_name(name),
+                default_value(None, input_type, &InputState::new()),
+            )
         })
         .collect();
     Some(event_inputs(event, inputs))
@@ -131,27 +134,7 @@ fn inputs_from_contract(
             return None;
         }
     }
-    let mut inputs: InputState = contract
-        .inputs
-        .iter()
-        .map(|(name, declaration)| {
-            let input_type = declaration
-                .input_type
-                .expect("validated workflow_call input type");
-            let binding = binding_map
-                .as_ref()
-                .and_then(|mapping| mapping.get(&normalized_name(name)));
-            let state = match input_type {
-                WorkflowCallInputType::Boolean => binding
-                    .map(|value| binding_bool(value, parent))
-                    .unwrap_or_else(|| default_value(declaration.default.as_ref(), input_type)),
-                WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
-                    .map(|value| nonboolean_binding_value(value, parent, input_type))
-                    .unwrap_or_else(|| default_value(declaration.default.as_ref(), input_type)),
-            };
-            (normalized_name(name), state)
-        })
-        .collect();
+    let mut inputs = InputState::new();
     inputs.insert(
         EVENT_NAME_KEY.to_string(),
         parent.get(EVENT_NAME_KEY)?.clone(),
@@ -160,6 +143,27 @@ fn inputs_from_contract(
         EVENT_ACTION_KEY.to_string(),
         parent.get(EVENT_ACTION_KEY)?.clone(),
     );
+    for (name, declaration) in &contract.inputs {
+        let input_type = declaration
+            .input_type
+            .expect("validated workflow_call input type");
+        let binding = binding_map
+            .as_ref()
+            .and_then(|mapping| mapping.get(&normalized_name(name)));
+        let state = match input_type {
+            WorkflowCallInputType::Boolean => binding
+                .map(|value| binding_bool(value, parent))
+                .unwrap_or_else(|| {
+                    default_value(declaration.default.as_ref(), input_type, &inputs)
+                }),
+            WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
+                .map(|value| nonboolean_binding_value(value, parent, input_type))
+                .unwrap_or_else(|| {
+                    default_value(declaration.default.as_ref(), input_type, &inputs)
+                }),
+        };
+        inputs.insert(normalized_name(name), state);
+    }
     Some(inputs)
 }
 
@@ -178,6 +182,8 @@ fn event_inputs(event: &GithubEventContext, mut inputs: InputState) -> InputStat
     inputs
 }
 
+#[cfg(test)]
+mod defaults_tests;
 #[cfg(test)]
 mod matrix_tests;
 #[cfg(test)]

@@ -292,6 +292,8 @@ fn action_steps_require_static_canonical_targets() {
         "steps:\n  - uses: owner/action@de0fac2e4500dabe0009e67214ff5f5447ce83dd",
         "steps:\n  - uses: ./.github/actions/check",
         "steps:\n  - uses: docker://alpine:3.8",
+        "steps:\n  - uses: docker://ghcr.io/checker:${{ matrix.tag }}",
+        "steps:\n  - uses: \"docker://${{ 'alpine:3.8' }}\"",
     ] {
         assert!(steps_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -304,6 +306,9 @@ fn action_steps_require_static_canonical_targets() {
         "steps:\n  - uses: actions/checkout@release.lock",
         "steps:\n  - uses: ./../outside",
         "steps:\n  - uses: docker://",
+        "steps:\n  - uses: docker://ghcr.io//checker:22",
+        "steps:\n  - uses: docker://node:${{ '' }}",
+        "steps:\n  - uses: docker://${{ secrets.IMAGE }}",
     ] {
         assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
     }

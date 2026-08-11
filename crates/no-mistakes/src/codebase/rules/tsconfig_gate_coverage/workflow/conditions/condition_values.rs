@@ -1,13 +1,14 @@
 use super::{
-    comparison_literal, condition_input_value, event_action_value, event_name_value,
-    expression_bool_with_status, functions, literal_from_json_static_value, logical,
+    comparison_literal, condition_input_value, event_action_value, event_name_value, functions,
+    literal_from_json_static_value, logical,
     resolution::{github_event_action, github_event_name},
-    status_function_bool, InputState, StaticBool, StaticValue,
+    status_function_bool, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 
 pub(super) fn condition_value(
     operand: &str,
     inputs: &InputState,
+    environment: &EnvironmentState,
     success: StaticBool,
 ) -> Option<StaticValue> {
     let operand = operand.trim();
@@ -25,42 +26,52 @@ pub(super) fn condition_value(
         return event_action_value(inputs);
     }
     literal_from_json_static_value(operand)
-        .or_else(|| condition_input_value(operand, inputs))
+        .or_else(|| condition_input_value(operand, inputs, environment))
         .or_else(|| comparison_literal(operand))
         .or_else(|| {
             logical::outer_parentheses_body(operand)
-                .and_then(|operand| condition_value(operand, inputs, success))
+                .and_then(|operand| condition_value(operand, inputs, environment, success))
         })
-        .or_else(|| logical_value(operand, inputs, success))
-        .or_else(|| comparison_bool(operand, inputs, success).map(static_bool_value))
+        .or_else(|| logical_value(operand, inputs, environment, success))
+        .or_else(|| comparison_bool(operand, inputs, environment, success).map(static_bool_value))
         .or_else(|| {
             operand.strip_prefix('!').map(str::trim).map(|operand| {
-                static_bool_value(expression_bool_with_status(operand, inputs, success).negate())
+                static_bool_value(
+                    super::expression_bool_with_status_and_environment(
+                        operand,
+                        inputs,
+                        environment,
+                        success,
+                    )
+                    .negate(),
+                )
             })
         })
-        .or_else(|| functions::static_case_value(operand, inputs, success))
+        .or_else(|| functions::static_case_value(operand, inputs, environment, success))
         .or_else(|| {
-            functions::static_function_bool(operand, inputs, success).map(static_bool_value)
+            functions::static_function_bool(operand, inputs, environment, success)
+                .map(static_bool_value)
         })
 }
 
 fn logical_value(
     expression: &str,
     inputs: &InputState,
+    environment: &EnvironmentState,
     success: StaticBool,
 ) -> Option<StaticValue> {
     let (left, right, operator) = logical::logical_operands(expression)?;
-    let left = condition_value(left, inputs, success)?;
+    let left = condition_value(left, inputs, environment, success)?;
     match (operator, left.clone().truthiness()) {
         (logical::LogicalOperator::Or, StaticBool::False) => {
-            condition_value(right, inputs, success)
+            condition_value(right, inputs, environment, success)
         }
         (logical::LogicalOperator::Or, StaticBool::True | StaticBool::TruthyNonBoolean) => {
             Some(left)
         }
         (logical::LogicalOperator::And, StaticBool::False) => Some(left),
         (logical::LogicalOperator::And, StaticBool::True | StaticBool::TruthyNonBoolean) => {
-            condition_value(right, inputs, success)
+            condition_value(right, inputs, environment, success)
         }
         (_, StaticBool::Unknown) => None,
     }
@@ -69,11 +80,12 @@ fn logical_value(
 pub(super) fn comparison_bool(
     expression: &str,
     inputs: &InputState,
+    environment: &EnvironmentState,
     success: StaticBool,
 ) -> Option<StaticBool> {
     let (left, right, comparison) = logical::comparison_operands(expression)?;
-    let actual = condition_value(left, inputs, success)?;
-    let expected = condition_value(right, inputs, success)?;
+    let actual = condition_value(left, inputs, environment, success)?;
+    let expected = condition_value(right, inputs, environment, success)?;
     Some(match comparison {
         logical::Comparison::Equal => actual.equals(&expected),
         logical::Comparison::NotEqual => actual.equals(&expected).negate(),

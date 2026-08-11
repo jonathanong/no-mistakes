@@ -8,11 +8,12 @@ use super::validation::{
     workflow_shape_valid,
 };
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::EnvironmentState;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
 mod jobs;
-use jobs::{JobScanner, JobStates};
+use jobs::{JobScanner, JobStates, WorkflowRuntime};
 
 pub(super) fn scan_activation(
     path: &str,
@@ -51,8 +52,6 @@ fn scan_activation_uncached(
     if !workflow_shape_valid(document.value) {
         return None;
     }
-    let workflow_cwd = effective_working_directory(document.value, Some(".".to_string()));
-    let workflow_shell = effective_shell(document.value, None);
     let jobs = document.value.get("jobs").and_then(Value::as_mapping)?;
     if jobs.is_empty() || !valid_job_dependencies(jobs) {
         return None;
@@ -61,8 +60,11 @@ fn scan_activation_uncached(
     JobScanner::new(
         &job_states,
         triggers,
-        workflow_cwd,
-        workflow_shell,
+        WorkflowRuntime {
+            cwd: effective_working_directory(document.value, Some(".".to_string())),
+            shell: effective_shell(document.value, None),
+            environment: EnvironmentState::from_workflow(document.value, &state.secrets),
+        },
         &state,
         context,
         memo,

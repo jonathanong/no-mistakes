@@ -15,6 +15,7 @@ use serde_yaml::Value;
 use std::collections::BTreeMap;
 
 mod fixture_policy;
+mod literal_braces;
 mod no_check;
 mod runner_tests;
 mod workflow;

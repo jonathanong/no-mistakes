@@ -40,6 +40,9 @@ pub(super) fn complete_expression_type(value: &str) -> Option<StaticExpressionTy
 }
 
 pub(super) fn complete_expression_may_produce_mapping(value: &str) -> bool {
+    if let Some(value) = complete_literal_expression_value(value) {
+        return matches!(value, serde_yaml::Value::Mapping(_));
+    }
     let value = value.trim();
     let Some(body) = value
         .strip_prefix("${{")

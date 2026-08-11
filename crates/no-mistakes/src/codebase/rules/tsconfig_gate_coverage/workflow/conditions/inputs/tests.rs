@@ -4,24 +4,26 @@ use crate::codebase::workflow_topology::model::{WorkflowCallInput, WorkflowCallS
 #[test]
 fn nonboolean_defaults_preserve_scalar_values() {
     assert_eq!(
-        default_value(None, WorkflowCallInputType::String),
+        default_value(None, WorkflowCallInputType::String, &InputState::new()),
         StaticValue::String(String::new())
     );
     assert_eq!(
-        default_value(None, WorkflowCallInputType::Number),
+        default_value(None, WorkflowCallInputType::Number, &InputState::new()),
         StaticValue::Number("0".into())
     );
     assert_eq!(
         default_value(
             Some(&JsonScalar::Number(serde_json::Number::from(2))),
-            WorkflowCallInputType::Number
+            WorkflowCallInputType::Number,
+            &InputState::new(),
         ),
         StaticValue::Number("2".into())
     );
     assert_eq!(
         default_value(
             Some(&JsonScalar::Text("release".into())),
-            WorkflowCallInputType::String
+            WorkflowCallInputType::String,
+            &InputState::new(),
         ),
         StaticValue::String("release".into())
     );
@@ -78,7 +80,11 @@ fn nonboolean_defaults_preserve_scalar_values() {
         ),
     ] {
         assert_eq!(
-            default_value(Some(&JsonScalar::Text(value.into())), input_type),
+            default_value(
+                Some(&JsonScalar::Text(value.into())),
+                input_type,
+                &InputState::new(),
+            ),
             expected,
             "{value}"
         );
@@ -478,7 +484,11 @@ fn static_values_cover_event_matrix_and_untyped_scalar_paths() {
         StaticValue::Unknown
     );
     assert_eq!(
-        default_value(Some(&JsonScalar::Bool(true)), WorkflowCallInputType::String,),
+        default_value(
+            Some(&JsonScalar::Bool(true)),
+            WorkflowCallInputType::String,
+            &InputState::new(),
+        ),
         StaticValue::Unknown
     );
 }

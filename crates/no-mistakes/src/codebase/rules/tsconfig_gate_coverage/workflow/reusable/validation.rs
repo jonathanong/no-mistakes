@@ -1,5 +1,5 @@
 use serde_yaml::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use super::model::ReusableTarget;
 use crate::codebase::workflow_topology::model::WorkflowCallEdge;
@@ -148,20 +148,38 @@ pub(super) fn valid_job_dependencies(jobs: &serde_yaml::Mapping) -> bool {
     {
         return false;
     }
-    while !dependencies.is_empty() {
-        let ready = dependencies
-            .iter()
-            .filter(|(_, needs)| needs.iter().all(|need| !dependencies.contains_key(need)))
-            .map(|(job_id, _)| job_id.clone())
-            .collect::<Vec<_>>();
-        if ready.is_empty() {
-            return false;
-        }
-        for job_id in ready {
-            dependencies.remove(&job_id);
+    let mut dependents = dependencies
+        .keys()
+        .map(|job_id| (job_id.clone(), Vec::new()))
+        .collect::<BTreeMap<_, _>>();
+    let mut remaining_needs = BTreeMap::new();
+    for (job_id, needs) in &dependencies {
+        remaining_needs.insert(job_id.clone(), needs.len());
+        for need in needs {
+            dependents
+                .get_mut(need)
+                .expect("dependency existence was validated")
+                .push(job_id.clone());
         }
     }
-    true
+    let mut ready = remaining_needs
+        .iter()
+        .filter_map(|(job_id, count)| (*count == 0).then_some(job_id.clone()))
+        .collect::<VecDeque<_>>();
+    let mut visited = 0;
+    while let Some(job_id) = ready.pop_front() {
+        visited += 1;
+        for dependent in &dependents[&job_id] {
+            let count = remaining_needs
+                .get_mut(dependent)
+                .expect("dependent was collected from the same job graph");
+            *count -= 1;
+            if *count == 0 {
+                ready.push_back(dependent.clone());
+            }
+        }
+    }
+    visited == dependencies.len()
 }
 
 fn valid_job_id(job_id: &str) -> bool {

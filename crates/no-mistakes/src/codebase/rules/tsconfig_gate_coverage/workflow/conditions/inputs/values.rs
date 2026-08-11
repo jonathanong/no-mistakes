@@ -8,16 +8,16 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     InputState, StaticBool, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
-    complete_expression_contexts_available, complete_expression_type,
-    complete_literal_expression_value, StaticExpressionType,
+    complete_expression_type, complete_literal_expression_value, StaticExpressionType,
 };
 
 pub(super) fn default_value(
     default: Option<&JsonScalar>,
     input_type: WorkflowCallInputType,
+    activation_inputs: &InputState,
 ) -> StaticValue {
     if let Some(JsonScalar::Text(value)) = default {
-        if let Some(value) = static_expression_value(value) {
+        if let Some(value) = static_expression_value(value, activation_inputs) {
             return value;
         }
         if value.contains("${{") {
@@ -49,7 +49,10 @@ pub(super) fn nonboolean_binding_value(
     if let Some(value) = forwarded_input_value(value, parent) {
         return value;
     }
-    if let Some(value) = value.as_str().and_then(static_expression_value) {
+    if let Some(value) = value
+        .as_str()
+        .and_then(|value| static_expression_value(value, parent))
+    {
         return value;
     }
     if value.as_str().is_some_and(|value| value.contains("${{")) {
@@ -88,16 +91,19 @@ pub(super) fn matrix_axis_value(value: &Value) -> Option<StaticValue> {
     match value {
         Value::Bool(value) => Some(StaticValue::Bool(*value)),
         Value::Number(value) => Some(StaticValue::Number(value.to_string())),
-        Value::String(value) => {
-            static_expression_value(value).or_else(|| Some(StaticValue::String(value.clone())))
-        }
+        Value::String(value) => static_expression_value(value, &InputState::new())
+            .or_else(|| Some(StaticValue::String(value.clone()))),
         Value::Null => Some(StaticValue::Null),
         Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => None,
     }
 }
 
-fn static_expression_value(text: &str) -> Option<StaticValue> {
+fn static_expression_value(text: &str, activation_inputs: &InputState) -> Option<StaticValue> {
     let body = text.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
+    if let Some(value) = forwarded_input_value(&Value::String(text.to_string()), activation_inputs)
+    {
+        return Some(value);
+    }
     if let Some(value) = comparison_literal(body) {
         return Some(value);
     }
@@ -114,16 +120,11 @@ fn static_expression_value(text: &str) -> Option<StaticValue> {
     match expression_type {
         StaticExpressionType::Dynamic => Some(StaticValue::Unknown),
         StaticExpressionType::Boolean => {
-            if !complete_expression_contexts_available(text, &[]) {
-                return Some(StaticValue::Unknown);
+            match super::super::expression_bool(text, activation_inputs) {
+                StaticBool::False => Some(StaticValue::Bool(false)),
+                StaticBool::True => Some(StaticValue::Bool(true)),
+                StaticBool::TruthyNonBoolean | StaticBool::Unknown => Some(StaticValue::Unknown),
             }
-            Some(
-                match super::super::expression_bool(text, &InputState::new()) {
-                    StaticBool::False => StaticValue::Bool(false),
-                    StaticBool::True => StaticValue::Bool(true),
-                    StaticBool::TruthyNonBoolean | StaticBool::Unknown => StaticValue::Unknown,
-                },
-            )
         }
         StaticExpressionType::Null
         | StaticExpressionType::String

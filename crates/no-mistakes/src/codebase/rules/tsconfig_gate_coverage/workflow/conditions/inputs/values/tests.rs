@@ -12,7 +12,7 @@ fn static_expression_values_distinguish_literals_dynamic_values_and_boolean_resu
         ("${{ }}", None),
     ] {
         assert_eq!(
-            static_expression_value(expression),
+            static_expression_value(expression, &InputState::new()),
             expected,
             "{expression}"
         );

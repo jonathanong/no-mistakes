@@ -79,7 +79,7 @@ pub(super) fn interpolated_expression_valid_for_contexts(
     let mut remaining = value;
     loop {
         let Some(start) = remaining.find("${{") else {
-            return !remaining.contains("}}");
+            return true;
         };
         let body = &remaining[start + "${{".len()..];
         let Some(end) = interpolated_expression_end(body) else {

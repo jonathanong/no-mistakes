@@ -94,6 +94,9 @@ whose result remains dynamic fail open as potentially runnable.
 Reusable input default expressions must match their declared scalar type and
 may use only `github`, `inputs`, and `vars`; malformed defaults or unavailable
 contexts invalidate the workflow before any command can provide coverage.
+Defaults can read caller event state and input values resolved earlier in the
+contract's canonical input order. References whose value is not yet resolved
+remain dynamic rather than being guessed.
 For static matrices, `${{ matrix.name }}` bindings, step conditions, and job or
 step `continue-on-error` expressions are evaluated once per generated
 combination after `exclude` and ordered `include` expansion. Execution and
@@ -110,7 +113,10 @@ reusable-input forwarding.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
-the workflow from providing coverage. Workflow and job `defaults.run` values
+the workflow from providing coverage. Step conditions merge static environment
+values with GitHub's workflow, job, then step precedence and string coercion;
+an omitted reusable secret referenced by an environment value resolves to the
+empty string. Workflow and job `defaults.run` values
 must be static. Workflow concurrency expressions may use `github`, `inputs`,
 and `vars`; job concurrency additionally permits `needs`, `strategy`, and
 `matrix`. Job and step `continue-on-error` expressions, plus environment names

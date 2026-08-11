@@ -53,6 +53,7 @@ pub(super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
 
 fn strategy_fail_fast_expression_valid(value: &str) -> bool {
     complete_expression_contexts_available(value, STRATEGY_CONTEXTS)
+        && complete_literal_expression_value(value).is_none_or(|literal| literal.is_bool())
         && matches!(
             complete_expression_type(value),
             Some(StaticExpressionType::Boolean | StaticExpressionType::Dynamic)

@@ -182,15 +182,11 @@ fn validates_interpolated_expression_strings() {
         "build ${{ github.ref }}",
         "${{ github.repository }} checks ${{ github.ref }}",
         "${{ format('{0}}}', github.ref) }}",
+        "build github.ref }}",
     ] {
         assert!(interpolated_expression_valid(value), "{value}");
     }
-    for value in [
-        "${{ }}",
-        "build ${{ github.ref",
-        "build github.ref }}",
-        "${{ arbitrary() }}",
-    ] {
+    for value in ["${{ }}", "build ${{ github.ref", "${{ arbitrary() }}"] {
         assert!(!interpolated_expression_valid(value), "{value}");
     }
     assert_eq!(
@@ -257,6 +253,26 @@ fn rejects_unclosed_accessors_and_function_arguments() {
         "${{ contains('value' 'needle') }}",
     ] {
         assert_eq!(complete_expression_type(expression), None, "{expression}");
+    }
+}
+
+#[test]
+fn rejects_expressions_beyond_the_parser_nesting_budget_without_stack_overflow() {
+    let deeply_unary = format!("${{{{ {}true }}}}", "!".repeat(10_000));
+    let deeply_grouped = format!("${{{{ {}true{} }}}}", "(".repeat(1_000), ")".repeat(1_000));
+    let deeply_called = format!(
+        "${{{{ {}github.ref, 'x'{} }}}}",
+        "contains(".repeat(1_000),
+        ")".repeat(1_000)
+    );
+    let deeply_accessed = format!(
+        "${{{{ root[{}value{}] }}}}",
+        "root[".repeat(1_000),
+        "]".repeat(1_000)
+    );
+
+    for expression in [deeply_unary, deeply_grouped, deeply_called, deeply_accessed] {
+        assert_eq!(complete_expression_type(&expression), None, "{expression}");
     }
 }
 

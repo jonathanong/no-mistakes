@@ -144,7 +144,7 @@ fn scalar_sequence_contexts_valid(value: Option<&Value>, allowed_contexts: &[&st
     })
 }
 
-fn valid_container_image(value: &str) -> bool {
+pub(super) fn valid_container_image(value: &str) -> bool {
     !value.is_empty()
         && interpolated_expression_contexts_available(value, CONTAINER_CONTEXTS)
         && match reduce_context_free_interpolations(value) {

@@ -31,6 +31,22 @@ fn dependency_validation_rejects_malformed_and_unresolvable_jobs() {
 }
 
 #[test]
+fn dependency_validation_handles_long_linear_graphs() {
+    let mut graph = serde_yaml::Mapping::new();
+    for index in 0..10_000 {
+        let mut job = serde_yaml::Mapping::new();
+        if index > 0 {
+            job.insert(
+                Value::String("needs".into()),
+                Value::String(format!("job{}", index - 1)),
+            );
+        }
+        graph.insert(Value::String(format!("job{index}")), Value::Mapping(job));
+    }
+    assert!(valid_job_dependencies(&graph));
+}
+
+#[test]
 fn step_jobs_reject_unknown_keys() {
     let valid = serde_yaml::from_str::<Value>(
         "runs-on: ubuntu-latest\nsteps:\n  - run: echo valid\ntimeout-minutes: 5",
