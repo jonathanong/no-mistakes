@@ -6,6 +6,8 @@ use super::super::super::super::expressions::interpolated_expression_contexts_av
 use super::super::super::super::expressions::interpolation::opaque_interpolated_expression_form;
 use super::values::{only_keys, scalar_mapping_valid};
 
+mod images;
+
 const CONTAINER_CONTEXTS: &[&str] = &["github", "needs", "strategy", "matrix", "vars", "inputs"];
 const CONTAINER_ENV_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "inputs",
@@ -17,7 +19,7 @@ const DYNAMIC_VOLUME_EXPRESSION: &str = "\u{FDD1}";
 
 pub(super) fn container_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
-        value.as_str().is_some_and(valid_container_value)
+        value.as_str().is_some_and(valid_container_image)
             || value
                 .as_mapping()
                 .is_some_and(container_mapping_shape_valid)
@@ -45,7 +47,7 @@ fn container_mapping_shape_valid(container: &Mapping) -> bool {
     ) && container
         .get("image")
         .and_then(Value::as_str)
-        .is_some_and(valid_container_value)
+        .is_some_and(valid_container_image)
         && credentials_shape_valid(container.get("credentials"))
         && scalar_mapping_valid(container.get("env"), CONTAINER_ENV_CONTEXTS, false)
         && scalar_sequence_contexts_valid(container.get("ports"), CONTAINER_CONTEXTS)
@@ -137,6 +139,10 @@ fn scalar_sequence_contexts_valid(value: Option<&Value>, allowed_contexts: &[&st
 
 fn valid_container_value(value: &str) -> bool {
     valid_contextual_value(value, CONTAINER_CONTEXTS)
+}
+
+fn valid_container_image(value: &str) -> bool {
+    valid_contextual_value(value, CONTAINER_CONTEXTS) && images::valid(value)
 }
 
 fn valid_contextual_value(value: &str, allowed_contexts: &[&str]) -> bool {

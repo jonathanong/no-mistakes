@@ -20,6 +20,7 @@ const ENVIRONMENT_NAME_CONTEXTS: &[&str] =
 const ENVIRONMENT_URL_CONTEXTS: &[&str] = &[
     "github", "inputs", "vars", "needs", "strategy", "matrix", "job", "runner", "env", "steps",
 ];
+const RUNS_ON_CONTEXTS: &[&str] = &["github", "needs", "strategy", "matrix", "vars", "inputs"];
 pub(super) fn scalar_mapping_valid(
     value: Option<&Value>,
     allowed_contexts: &[&str],
@@ -43,18 +44,18 @@ pub(super) fn only_keys(mapping: &Mapping, allowed: &[&str]) -> bool {
 
 pub(super) fn runs_on_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
-        value
-            .as_str()
-            .is_some_and(valid_nonempty_interpolated_string)
+        value.as_str().is_some_and(valid_runs_on_label)
             || value.as_sequence().is_some_and(|labels| {
                 !labels.is_empty()
-                    && labels.iter().all(|label| {
-                        label
-                            .as_str()
-                            .is_some_and(valid_nonempty_interpolated_string)
-                    })
+                    && labels
+                        .iter()
+                        .all(|label| label.as_str().is_some_and(valid_runs_on_label))
             })
     })
+}
+
+fn valid_runs_on_label(value: &str) -> bool {
+    !value.is_empty() && interpolated_expression_contexts_available(value, RUNS_ON_CONTEXTS)
 }
 
 pub(super) fn environment_shape_valid(value: Option<&Value>) -> bool {

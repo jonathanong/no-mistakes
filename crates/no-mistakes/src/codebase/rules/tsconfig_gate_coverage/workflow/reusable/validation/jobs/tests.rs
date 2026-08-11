@@ -245,6 +245,26 @@ fn environments_use_distinct_name_and_url_contexts() {
 }
 
 #[test]
+fn runs_on_uses_only_runner_selection_contexts() {
+    for yaml in [
+        "runs-on: '${{ github.ref_name }}'\nsteps:\n  - run: echo valid",
+        "runs-on: ['self-hosted', '${{ matrix.runner }}']\nstrategy:\n  matrix: {runner: [linux]}\nsteps:\n  - run: echo valid",
+        "runs-on: '${{ needs.prepare.outputs.runner }}'\nsteps:\n  - run: echo valid",
+        "runs-on: '${{ vars.RUNNER }}'\nsteps:\n  - run: echo valid",
+    ] {
+        assert!(super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "runs-on: '${{ secrets.RUNNER }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: '${{ jobs.build.outputs.runner }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ['self-hosted', '${{ runner.os }}']\nsteps:\n  - run: echo invalid",
+        "runs-on: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"\nsteps:\n  - run: echo invalid",
+    ] {
+        assert!(!super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn action_steps_require_static_canonical_targets() {
     for yaml in [
         "steps:\n  - uses: actions/checkout@v4",
