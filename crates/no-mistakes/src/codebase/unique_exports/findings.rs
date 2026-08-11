@@ -42,66 +42,66 @@ pub(super) fn unique_export_findings(
         if unique_occurrences.len() < 2 {
             continue;
         }
-        // Preserve the visible duplicate representative in both ordinary and
-        // audit reports. Suppressed canonical provenance is retained by the
-        // occurrence metadata for accounting, not by changing this selection.
-        let first_active = unique_occurrences
+        let active_occurrences = unique_occurrences
             .iter()
-            .find(|occurrence| !occurrence.suppressed)
-            .unwrap_or(&unique_occurrences[0]);
-        // An origin directive is only discoverable during deferred audit
-        // analysis. Keep its lexically canonical re-export as the active
-        // comparison point so audit mode preserves ordinary output, and add a
-        // sidecar finding solely for directive accounting below.
-        let suppressed_origin_canonical = unique_occurrences.first().filter(|occurrence| {
-            occurrence.suppressed
-                && occurrence
-                    .suppression_location
-                    .as_ref()
-                    .is_some_and(|(file, _)| file != &occurrence.file)
-        });
-        let first = suppressed_origin_canonical.unwrap_or(first_active);
-        if let Some(canonical) = suppressed_origin_canonical {
-            if !std::ptr::eq(canonical, first_active) {
-                findings.push(UniqueExportFinding {
-                    rule: RULE_ID.to_string(),
-                    file: canonical.file.clone(),
-                    line: canonical.line,
-                    export_name: name.clone(),
-                    export_kind: bucket.as_str().to_string(),
-                    message: format!(
-                        "{} `{}` is already exported from {}:{}; rename or consolidate this exported API",
-                        bucket.message_label(),
-                        name,
-                        first_active.file,
-                        first_active.line
-                    ),
-                    suppression_source_location: canonical.suppression_location.clone(),
-                });
+            .filter(|occurrence| !occurrence.suppressed)
+            .collect::<Vec<_>>();
+        // Baseline and audit reports must select their public duplicate from
+        // the same active occurrences. Suppressed occurrences below are only
+        // sidecars for directive accounting.
+        let first_active = active_occurrences.first().copied();
+        if let Some(first_active) = first_active {
+            for duplicate in active_occurrences.into_iter().skip(1) {
+                findings.push(finding(duplicate, first_active, &name, bucket, None));
             }
         }
-        for duplicate in unique_occurrences
-            .iter()
-            .filter(|item| !std::ptr::eq(*item, first))
-        {
-            findings.push(UniqueExportFinding {
-                rule: RULE_ID.to_string(),
-                file: duplicate.file.clone(),
-                line: duplicate.line,
-                export_name: name.clone(),
-                export_kind: bucket.as_str().to_string(),
-                message: format!(
-                    "{} `{}` is already exported from {}:{}; rename or consolidate this exported API",
-                    bucket.message_label(),
-                    name,
-                    first.file,
-                    first.line
-                ),
-                suppression_source_location: duplicate.suppression_location.clone(),
-            });
+
+        // Retain every suppressed duplicate as an accounting sidecar without
+        // permitting it to become the public comparison anchor. When every
+        // occurrence is suppressed, preserve the normal n - 1 cardinality.
+        let sidecar_anchor = first_active.or_else(|| unique_occurrences.first());
+        if let Some(sidecar_anchor) = sidecar_anchor {
+            for suppressed in unique_occurrences
+                .iter()
+                .filter(|occurrence| occurrence.suppressed)
+            {
+                if !std::ptr::eq(suppressed, sidecar_anchor) {
+                    findings.push(finding(
+                        suppressed,
+                        sidecar_anchor,
+                        &name,
+                        bucket,
+                        suppressed.suppression_location.clone(),
+                    ));
+                }
+            }
         }
     }
     findings.sort();
     findings.dedup();
     Ok(findings)
+}
+
+fn finding(
+    duplicate: &ExportOccurrence,
+    first: &ExportOccurrence,
+    name: &str,
+    bucket: ExportBucket,
+    suppression_source_location: Option<(String, u32)>,
+) -> UniqueExportFinding {
+    UniqueExportFinding {
+        rule: RULE_ID.to_string(),
+        file: duplicate.file.clone(),
+        line: duplicate.line,
+        export_name: name.to_string(),
+        export_kind: bucket.as_str().to_string(),
+        message: format!(
+            "{} `{}` is already exported from {}:{}; rename or consolidate this exported API",
+            bucket.message_label(),
+            name,
+            first.file,
+            first.line
+        ),
+        suppression_source_location,
+    }
 }

@@ -210,6 +210,20 @@ fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports
         &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
     )
     .unwrap();
+    // `wildOnly` has one visible export and one wildcard re-export whose
+    // source directive is suppressed. Audit mode may account for that
+    // directive, but must not turn the suppressed wildcard into a public
+    // duplicate anchor.
+    let active_wild_only = |report: &serde_json::Value| {
+        report["codebase"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|item| item["exportName"] == "wildOnly")
+            .cloned()
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(active_wild_only(&audit), active_wild_only(&baseline));
     assert!(audit["suppressed"].as_array().is_some_and(|items| {
         items.iter().any(|item| {
             item["rule"] == "unique-exports"
