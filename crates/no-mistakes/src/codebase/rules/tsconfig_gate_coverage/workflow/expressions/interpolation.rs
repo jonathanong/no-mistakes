@@ -71,3 +71,23 @@ pub(in super::super) fn resolve_interpolations(
     normalized.push_str(remaining);
     Some(normalized)
 }
+
+/// Applies a predicate to every interpolation body in a previously validated
+/// interpolated string.
+pub(in super::super) fn interpolation_expressions_all(
+    value: &str,
+    mut predicate: impl FnMut(&str) -> bool,
+) -> bool {
+    let mut remaining = value;
+    while let Some(start) = remaining.find("${{") {
+        let body = &remaining[start + "${{".len()..];
+        let Some(end) = super::validation::interpolated_expression_end(body) else {
+            return false;
+        };
+        if !predicate(body[..end].trim()) {
+            return false;
+        }
+        remaining = &body[end + "}}".len()..];
+    }
+    true
+}

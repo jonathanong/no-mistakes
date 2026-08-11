@@ -32,6 +32,7 @@ pub(crate) enum GithubEventAction {
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) enum GithubRef {
     Exact(String),
+    UnknownExcluding(BTreeSet<String>),
     PullRequestMerge,
     Unknown,
 }

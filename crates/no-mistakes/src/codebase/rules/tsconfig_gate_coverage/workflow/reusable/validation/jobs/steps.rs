@@ -1,9 +1,13 @@
+use super::super::super::super::expressions;
 use super::fields::{
     bool_or_expression_field_valid, condition_field_valid, string_field_valid,
     timeout_minutes_field_valid, STEP_CONDITION_CONTEXTS, STEP_CONTINUE_ON_ERROR_CONTEXTS,
     STEP_TIMEOUT_CONTEXTS,
 };
 use super::values::{only_keys, scalar_mapping_valid, STEP_ENV_CONTEXTS};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    complete_expression_static_value_with_environment, EnvironmentState, InputState, StaticValue,
+};
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
 
@@ -100,14 +104,50 @@ fn action_step_with_mapping_valid(value: Option<&Value>) -> bool {
             mapping.iter().all(|(name, value)| {
                 name.is_string()
                     && (matches!(value, Value::Bool(_) | Value::Number(_))
-                        || value.as_str().is_some_and(|value| {
-                            super::super::super::super::expressions::interpolated_expression_contexts_and_hash_files_available(
-                                value,
-                                ACTION_STEP_WITH_CONTEXTS,
-                            )
-                        }))
+                        || value.as_str().is_some_and(action_input_expression_valid))
             })
         })
+    })
+}
+
+fn action_input_expression_valid(value: &str) -> bool {
+    expressions::interpolated_expression_contexts_and_hash_files_available(
+        value,
+        ACTION_STEP_WITH_CONTEXTS,
+    ) && action_input_interpolations_stringable(
+        value,
+        &InputState::new(),
+        &EnvironmentState::default(),
+    )
+}
+
+pub(crate) fn action_step_inputs_valid_for_state(
+    step: &Value,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    step.get("with")
+        .and_then(Value::as_mapping)
+        .into_iter()
+        .flatten()
+        .all(|(_, value)| {
+            value.as_str().is_none_or(|value| {
+                action_input_interpolations_stringable(value, inputs, environment)
+            })
+        })
+}
+
+fn action_input_interpolations_stringable(
+    value: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    expressions::interpolation_expressions_all(value, |expression| {
+        let expression = format!("${{{{ {expression} }}}}");
+        complete_expression_static_value_with_environment(&expression, inputs, environment)
+            .is_none_or(|value| {
+                !matches!(value, StaticValue::Sequence(_) | StaticValue::NonStringable)
+            })
     })
 }
 

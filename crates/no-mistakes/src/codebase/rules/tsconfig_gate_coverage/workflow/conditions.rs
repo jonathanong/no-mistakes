@@ -95,10 +95,15 @@ pub(crate) fn complete_expression_static_value(
     value: &str,
     inputs: &InputState,
 ) -> Option<StaticValue> {
-    let expression = value.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
-    super::expressions::complete_literal_expression_value(value)
-        .map(static_yaml_value)
-        .or_else(|| condition_input_value(expression, inputs, &EnvironmentState::default()))
+    complete_expression_static_value_with_environment(value, inputs, &EnvironmentState::default())
+}
+
+pub(crate) fn complete_expression_static_value_with_environment(
+    value: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
+    static_values::complete_expression_static_value_with_environment(value, inputs, environment)
 }
 
 pub(crate) fn resolve_static_interpolations(

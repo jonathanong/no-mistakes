@@ -354,6 +354,9 @@ fn action_step_with_uses_its_field_specific_contexts_and_functions() {
     for yaml in [
         "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: '${{ jobs.typecheck.outputs.ref }}'",
         "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: '${{ success() }}'",
+        "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: \"${{ fromJSON('{}') }}\"",
+        "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: \"${{ fromJSON('[]') }}\"",
+        "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: \"prefix-${{ fromJSON('{}') }}\"",
     ] {
         assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
     }

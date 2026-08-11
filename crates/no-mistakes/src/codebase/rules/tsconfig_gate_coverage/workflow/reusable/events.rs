@@ -73,6 +73,16 @@ fn references_for(
     if includes.is_empty() {
         return if ignores.contains(&"**") {
             Vec::new()
+        } else if !ignores.is_empty() {
+            let excluded = ignores
+                .into_iter()
+                .filter(|pattern| is_exact_pattern(pattern))
+                .map(|pattern| format!("{prefix}{pattern}"))
+                .collect::<BTreeSet<_>>();
+            if excluded.is_empty() {
+                return vec![GithubRef::Unknown];
+            }
+            vec![GithubRef::UnknownExcluding(excluded)]
         } else {
             vec![GithubRef::Unknown]
         };

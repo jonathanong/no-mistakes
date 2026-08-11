@@ -115,6 +115,19 @@ pub(super) fn comparison_bool(
     {
         let other = if github_ref(left) { right } else { left };
         if let Some(StaticValue::String(reference)) = comparison_literal(other) {
+            if inputs
+                .get(super::inputs::REF_EXCLUSIONS_KEY)
+                .is_some_and(|excluded| {
+                    matches!(excluded, StaticValue::Sequence(values) if values.contains(&StaticValue::String(reference.clone())))
+                })
+            {
+                let equal = StaticBool::False;
+                return Some(if matches!(comparison, logical::Comparison::Equal) {
+                    equal
+                } else {
+                    equal.negate()
+                });
+            }
             let is_pull_request_merge = inputs
                 .get(super::inputs::REF_KIND_KEY)
                 .is_some_and(|kind| kind == &StaticValue::String("pull-request-merge".into()));

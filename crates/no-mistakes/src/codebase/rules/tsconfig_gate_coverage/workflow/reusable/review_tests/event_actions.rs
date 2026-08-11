@@ -86,3 +86,22 @@ fn direct_event_action_truthiness_keeps_push_and_pull_request_activations_isolat
         ])
     );
 }
+
+#[test]
+fn mixed_exact_and_glob_branch_exclusions_block_the_exact_ref_condition() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/branches.yml",
+            "on:\n  push:\n    branches-ignore: [main, 'release/**']\njobs:\n  excluded:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p excluded/tsconfig.json\n  dynamic:\n    if: github.ref == 'refs/heads/dev'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p dynamic/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "excluded/tsconfig.json".to_string(),
+        "dynamic/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["dynamic/tsconfig.json".to_string()])
+    );
+}

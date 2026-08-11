@@ -7,7 +7,7 @@ use super::model::{
 };
 use super::validation::{
     call_bindings_shape_valid, reusable_call_job_shape_valid, valid_job_dependencies,
-    workflow_shape_valid,
+    workflow_concurrency_valid_for_inputs, workflow_shape_valid,
 };
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use serde_yaml::Value;
@@ -54,6 +54,9 @@ fn scan_activation_uncached(
     let mut state = state.clone();
     state.active_paths.insert(path.to_string());
     if !workflow_shape_valid(document.value) {
+        return None;
+    }
+    if !workflow_concurrency_valid_for_inputs(document.value.get("concurrency"), &state.inputs) {
         return None;
     }
     let jobs = document.value.get("jobs").and_then(Value::as_mapping)?;

@@ -17,6 +17,7 @@ use super::super::{
         shell_pipefail_enforced,
     },
 };
+use super::validation::action_step_inputs_valid_for_state;
 
 pub(super) struct StepScan {
     pub(super) projects: BTreeSet<String>,
@@ -59,6 +60,12 @@ pub(super) fn scan_job_steps(
             || !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs)
         {
             continue;
+        }
+        if step.get("uses").is_some()
+            && !action_step_inputs_valid_for_state(step, inputs, &environment)
+        {
+            failed |= condition == StaticBool::True;
+            break;
         }
         if let Some(directory) = step
             .get("uses")

@@ -1,8 +1,6 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
 use super::{InputState, StaticValue};
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
-    GithubEventAction, GithubEventContext, GithubRef,
-};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubEventContext;
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
 };
@@ -12,29 +10,20 @@ use std::collections::{BTreeMap, BTreeSet};
 mod bindings;
 #[cfg(test)]
 mod default_value_tests;
+mod event;
 mod needs;
 mod secrets;
 mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
+pub(super) use event::{
+    event_action_value, event_name_value, REF_EXCLUSIONS_KEY, REF_KEY, REF_KIND_KEY,
+};
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::inputs_with_needs_results;
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::{
     needs_result_not_skipped, needs_result_value,
 };
 pub(crate) use secrets::{callee_secrets, SecretAvailability, SecretState};
 use values::{default_value, nonboolean_binding_value};
-
-pub(super) const EVENT_NAME_KEY: &str = "\0github.event_name";
-pub(super) const EVENT_ACTION_KEY: &str = "\0github.event.action";
-pub(super) const REF_KEY: &str = "\0github.ref";
-pub(super) const REF_KIND_KEY: &str = "\0github.ref.kind";
-
-pub(super) fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
-    inputs.get(EVENT_NAME_KEY).cloned()
-}
-
-pub(super) fn event_action_value(inputs: &InputState) -> Option<StaticValue> {
-    inputs.get(EVENT_ACTION_KEY).cloned()
-}
 
 pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
 const DYNAMIC_MATRIX_KEY: &str = "\0matrix.dynamic";
@@ -76,7 +65,7 @@ pub(crate) fn direct_inputs(
     // A workflow invoked directly by a repository event receives the declared
     // false/default values that GitHub assigns when workflow_call is not used.
     let Some(contract) = contract else {
-        return Some(event_inputs(event, InputState::new()));
+        return Some(event::with_event(event, InputState::new()));
     };
     if !workflow_call_contract_valid(contract) {
         return None;
@@ -94,7 +83,7 @@ pub(crate) fn direct_inputs(
             )
         })
         .collect();
-    Some(event_inputs(event, inputs))
+    Some(event::with_event(event, inputs))
 }
 
 pub(crate) fn callee_inputs(
@@ -144,11 +133,7 @@ fn inputs_from_contract(
         }
     }
     let mut inputs = InputState::new();
-    for key in [EVENT_NAME_KEY, EVENT_ACTION_KEY, REF_KEY, REF_KIND_KEY] {
-        if let Some(value) = parent.get(key) {
-            inputs.insert(key.to_string(), value.clone());
-        }
-    }
+    event::copy_event_inputs(parent, &mut inputs);
     for (name, declaration) in &contract.inputs {
         let input_type = declaration
             .input_type
@@ -171,33 +156,6 @@ fn inputs_from_contract(
         inputs.insert(normalized_name(name), state);
     }
     Some(inputs)
-}
-
-fn event_inputs(event: &GithubEventContext, mut inputs: InputState) -> InputState {
-    inputs.insert(
-        EVENT_NAME_KEY.to_string(),
-        StaticValue::String(event.name.clone()),
-    );
-    inputs.insert(
-        EVENT_ACTION_KEY.to_string(),
-        StaticValue::String(match &event.action {
-            GithubEventAction::Missing => String::new(),
-            GithubEventAction::Known(action) => action.clone(),
-        }),
-    );
-    match &event.reference {
-        GithubRef::Exact(reference) => {
-            inputs.insert(REF_KEY.to_string(), StaticValue::String(reference.clone()));
-        }
-        GithubRef::PullRequestMerge => {
-            inputs.insert(
-                REF_KIND_KEY.to_string(),
-                StaticValue::String("pull-request-merge".to_string()),
-            );
-        }
-        GithubRef::Unknown => {}
-    }
-    inputs
 }
 
 #[cfg(test)]

@@ -1,4 +1,8 @@
 use super::*;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    inputs_with_matrix_values, InputState, MatrixState, StaticValue,
+};
+use std::collections::BTreeMap;
 
 fn workflow(yaml: &str) -> Value {
     serde_yaml::from_str(yaml).unwrap()
@@ -166,6 +170,56 @@ fn concurrency_rejects_statically_empty_context_free_groups() {
             "job-level value should preserve dynamic groups: {yaml}"
         );
     }
+}
+
+#[test]
+fn concurrency_groups_recheck_resolved_activation_values() {
+    let input_group = workflow("concurrency: '${{ inputs.group }}'");
+    let embedded_input_group = workflow("concurrency: 'checks-${{ fromJSON(inputs.group) }}'");
+    let matrix_group = workflow("concurrency: '${{ matrix.group }}'");
+    let input_group = input_group.get("concurrency");
+    let embedded_input_group = embedded_input_group.get("concurrency");
+    let matrix_group = matrix_group.get("concurrency");
+    let mut inputs = InputState::new();
+
+    inputs.insert(
+        "group".to_string(),
+        StaticValue::String("checks".to_string()),
+    );
+    assert!(workflow_concurrency_valid_for_inputs(input_group, &inputs));
+    assert!(job_concurrency_valid_for_inputs(input_group, &inputs));
+
+    inputs.insert("group".to_string(), StaticValue::String(String::new()));
+    assert!(!workflow_concurrency_valid_for_inputs(input_group, &inputs));
+    assert!(!job_concurrency_valid_for_inputs(input_group, &inputs));
+
+    inputs.insert("group".to_string(), StaticValue::NonStringable);
+    assert!(!workflow_concurrency_valid_for_inputs(input_group, &inputs));
+    assert!(!job_concurrency_valid_for_inputs(input_group, &inputs));
+
+    inputs.insert("group".to_string(), StaticValue::Unknown);
+    assert!(workflow_concurrency_valid_for_inputs(input_group, &inputs));
+    assert!(job_concurrency_valid_for_inputs(input_group, &inputs));
+
+    inputs.insert("group".to_string(), StaticValue::String("{}".to_string()));
+    assert!(!workflow_concurrency_valid_for_inputs(
+        embedded_input_group,
+        &inputs
+    ));
+    assert!(!job_concurrency_valid_for_inputs(
+        embedded_input_group,
+        &inputs
+    ));
+
+    let matrix_inputs = inputs_with_matrix_values(
+        &InputState::new(),
+        &BTreeMap::from([(String::from("group"), Value::String(String::new()))]),
+        MatrixState::Static,
+    );
+    assert!(!job_concurrency_valid_for_inputs(
+        matrix_group,
+        &matrix_inputs
+    ));
 }
 
 #[test]

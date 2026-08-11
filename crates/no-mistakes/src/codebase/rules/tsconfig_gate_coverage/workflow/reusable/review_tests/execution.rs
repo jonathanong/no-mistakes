@@ -84,6 +84,7 @@ fn static_job_failures_propagate_through_needs() {
     );
 }
 
+mod concurrency;
 mod job_failures;
 mod resolution;
 mod run_scripts;

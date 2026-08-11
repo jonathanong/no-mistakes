@@ -1,16 +1,28 @@
-use super::{InputState, StaticValue};
+use super::{EnvironmentState, InputState, StaticValue};
 
 pub(crate) fn complete_expression_static_string_value(
     value: &str,
     inputs: &InputState,
 ) -> Option<StaticValue> {
+    complete_expression_static_value_with_environment(value, inputs, &EnvironmentState::default())
+}
+
+pub(crate) fn complete_expression_static_value_with_environment(
+    value: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
     let expression = value.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
     super::super::expressions::complete_literal_expression_value(value)
         .map(super::static_yaml_value)
-        .or_else(|| static_expression_value(expression, inputs))
+        .or_else(|| static_expression_value(expression, inputs, environment))
 }
 
-fn static_expression_value(expression: &str, inputs: &InputState) -> Option<StaticValue> {
+fn static_expression_value(
+    expression: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
     if let Some(name) = super::resolution::input_name(expression) {
         return Some(
             inputs
@@ -23,18 +35,18 @@ fn static_expression_value(expression: &str, inputs: &InputState) -> Option<Stat
         if call.function == super::super::expressions::Function::FromJson
             && call.arguments.len() == 1
         {
-            return static_from_json(call.arguments[0], inputs);
+            return static_from_json(call.arguments[0], inputs, environment);
         }
     }
-    super::resolution::condition_input_value(
-        expression,
-        inputs,
-        &super::EnvironmentState::default(),
-    )
+    super::resolution::condition_input_value(expression, inputs, environment)
 }
 
-fn static_from_json(argument: &str, inputs: &InputState) -> Option<StaticValue> {
-    let value = static_expression_value(argument, inputs)?;
+fn static_from_json(
+    argument: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
+    let value = static_expression_value(argument, inputs, environment)?;
     let encoded = match value {
         StaticValue::Unknown => return None,
         StaticValue::Sequence(_) | StaticValue::NonStringable => {

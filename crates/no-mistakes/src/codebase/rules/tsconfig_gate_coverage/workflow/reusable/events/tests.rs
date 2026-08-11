@@ -91,7 +91,9 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
             .into_iter()
             .filter_map(|context| match context.reference {
                 GithubRef::Exact(reference) => Some(reference),
-                GithubRef::PullRequestMerge | GithubRef::Unknown => None,
+                GithubRef::UnknownExcluding(_)
+                | GithubRef::PullRequestMerge
+                | GithubRef::Unknown => None,
             })
             .collect::<Vec<_>>();
         assert_eq!(actual, expected, "{yaml}");
@@ -103,4 +105,15 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
     assert!(source_change_event_contexts(&workflow, "push")
         .iter()
         .all(|context| matches!(context.reference, GithubRef::Unknown)));
+
+    let workflow: Value =
+        serde_yaml::from_str("on:\n  push:\n    branches-ignore: [main, 'release/**']").unwrap();
+    assert!(matches!(
+        source_change_event_contexts(&workflow, "push").as_slice(),
+        [context] if matches!(
+            &context.reference,
+            GithubRef::UnknownExcluding(excluded)
+                if excluded == &std::collections::BTreeSet::from(["refs/heads/main".to_string()])
+        )
+    ));
 }

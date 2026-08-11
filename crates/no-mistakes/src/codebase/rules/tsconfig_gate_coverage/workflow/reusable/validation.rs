@@ -12,12 +12,13 @@ mod workflow;
 pub(super) use contracts::workflow_call_shape_valid;
 pub(crate) use jobs::steps_shape_valid;
 pub(super) use jobs::{
-    call_bindings_shape_valid, container_configuration_valid_for_inputs,
-    environment_configuration_valid_for_inputs, reusable_call_job_shape_valid,
-    strategy_configuration_valid_for_inputs,
+    action_step_inputs_valid_for_state, call_bindings_shape_valid,
+    container_configuration_valid_for_inputs, environment_configuration_valid_for_inputs,
+    reusable_call_job_shape_valid, strategy_configuration_valid_for_inputs,
 };
 pub(super) use matrix::{static_matrix_combinations_for_inputs, MatrixCombinations};
-pub(super) use workflow::workflow_shape_valid;
+pub(super) use workflow::job_concurrency_valid_for_inputs;
+pub(super) use workflow::{workflow_concurrency_valid_for_inputs, workflow_shape_valid};
 
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {
     matrix::matrix_shape_valid(job)

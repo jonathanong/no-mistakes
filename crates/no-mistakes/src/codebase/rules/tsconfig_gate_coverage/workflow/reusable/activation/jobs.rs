@@ -10,7 +10,8 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
     container_configuration_valid_for_inputs, environment_configuration_valid_for_inputs,
-    scan_job_shape_valid, strategy_configuration_valid_for_inputs, validated_reusable_target,
+    job_concurrency_valid_for_inputs, scan_job_shape_valid,
+    strategy_configuration_valid_for_inputs, validated_reusable_target,
 };
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
@@ -112,6 +113,10 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             std::slice::from_ref(&fallback_inputs)
         };
         for inputs in inputs {
+            if has_instances && !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs) {
+                failed |= !skipped && job_statically_enforcing(job, inputs, failed_need);
+                continue;
+            }
             let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
             let callee_state = self.state.callee(callee_inputs, callee_secrets.clone());
             let callee_scan = scan_activation(
@@ -154,6 +159,10 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 inputs,
             )
             .with_job(job, inputs);
+            if !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs) {
+                failed |= job_statically_enforcing(job, inputs, failed_need);
+                continue;
+            }
             if step_job_runner_supported(job, inputs)
                 && strategy_configuration_valid_for_inputs(job, inputs)
                 && job_timeout_minutes_enforced(job.get("timeout-minutes"), inputs)

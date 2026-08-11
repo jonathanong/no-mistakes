@@ -6,7 +6,10 @@ use super::super::super::expressions::{
     interpolated_expression_contexts_available, interpolated_expression_valid,
 };
 
-pub(super) use concurrency::{job_concurrency_shape_valid, workflow_concurrency_shape_valid};
+pub(crate) use concurrency::{
+    job_concurrency_shape_valid, job_concurrency_valid_for_inputs,
+    workflow_concurrency_shape_valid, workflow_concurrency_valid_for_inputs,
+};
 
 pub(crate) fn workflow_shape_valid(workflow: &Value) -> bool {
     let Some(workflow) = workflow.as_mapping() else {

@@ -171,6 +171,12 @@ coverage.
 Environment names are rechecked for every active reusable-input and matrix
 state; a name that resolves to an empty string, array, or object cannot provide
 coverage.
+Workflow- and job-level concurrency groups are likewise rechecked for every
+active input or matrix state; a known empty or non-string result cannot provide
+coverage, while an unresolved dynamic result remains conservative.
+Action `with` values are rechecked for every active input, matrix, and
+environment state; statically known arrays or objects cannot be string action
+inputs and stop later steps from providing coverage.
 Job-level `timeout-minutes` is also rechecked for each active reusable input or
 matrix combination and must resolve to a positive integer.
 Job and step `timeout-minutes` expressions use their documented context sets,

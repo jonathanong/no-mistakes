@@ -84,6 +84,29 @@ fn bracketed_github_event_name_access_matches_dot_access() {
 }
 
 #[test]
+fn exact_ref_comparisons_respect_known_exclusion_only_constraints() {
+    let inputs = InputState::from([(
+        "\0github.ref.exclusions".into(),
+        StaticValue::Sequence(vec![StaticValue::String("refs/heads/main".into())]),
+    )]);
+
+    assert_eq!(
+        static_bool(
+            Some(&Value::String("github.ref == 'refs/heads/main'".into())),
+            &inputs
+        ),
+        StaticBool::False
+    );
+    assert_eq!(
+        static_bool(
+            Some(&Value::String("github.ref == 'refs/heads/dev'".into())),
+            &inputs
+        ),
+        StaticBool::Unknown
+    );
+}
+
+#[test]
 fn direct_event_action_truthiness_uses_the_event_activation_state() {
     let push_inputs = InputState::from([(
         "\0github.event.action".into(),
