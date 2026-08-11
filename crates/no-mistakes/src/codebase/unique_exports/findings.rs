@@ -30,7 +30,7 @@ pub(super) fn unique_export_findings(
         for occurrence in occurrences {
             let origin = occurrence.origin.clone();
             if let Some(index) = origin_indices.get(&origin).copied() {
-                if unique_occurrences[index].suppressed && !occurrence.suppressed {
+                if suppressed(&unique_occurrences[index]) && !suppressed(&occurrence) {
                     unique_occurrences[index] = occurrence;
                 }
             } else {
@@ -44,7 +44,7 @@ pub(super) fn unique_export_findings(
         }
         let active_occurrences = unique_occurrences
             .iter()
-            .filter(|occurrence| !occurrence.suppressed)
+            .filter(|occurrence| !suppressed(occurrence))
             .collect::<Vec<_>>();
         // Baseline and audit reports must select their public duplicate from
         // the same active occurrences. Suppressed occurrences below are only
@@ -63,7 +63,7 @@ pub(super) fn unique_export_findings(
         if let Some(sidecar_anchor) = sidecar_anchor {
             for suppressed in unique_occurrences
                 .iter()
-                .filter(|occurrence| occurrence.suppressed)
+                .filter(|occurrence| suppressed(occurrence))
             {
                 if !std::ptr::eq(suppressed, sidecar_anchor) {
                     findings.push(finding(
@@ -104,4 +104,11 @@ fn finding(
         ),
         suppression_source_location,
     }
+}
+
+fn suppressed(occurrence: &ExportOccurrence) -> bool {
+    // Re-export provenance can be populated independently from the legacy
+    // boolean while deferred aggregate suppression is resolving a source
+    // directive. Either representation means this occurrence is a sidecar.
+    occurrence.suppressed || occurrence.suppression_location.is_some()
 }

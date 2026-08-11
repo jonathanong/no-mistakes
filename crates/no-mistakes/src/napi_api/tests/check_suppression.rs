@@ -260,6 +260,26 @@ fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports
 #[test]
 fn check_json_matches_origin_line_directives_for_reexport_suppression_audits() {
     let (baseline, audit) = baseline_and_audit("suppression-unique-origin-lines");
+    // Both source-origin directive forms are accounting-only sidecars: they
+    // must not make their visible re-export partner an active duplicate.
+    let active_origin_reexports = |report: &serde_json::Value| {
+        report["codebase"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|item| {
+                matches!(
+                    item["exportName"].as_str(),
+                    Some("lineOrigin" | "nextOrigin")
+                )
+            })
+            .cloned()
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        active_origin_reexports(&audit),
+        active_origin_reexports(&baseline),
+    );
     for report in [&baseline, &audit] {
         assert!(report["codebase"].as_array().is_some_and(|items| {
             items.iter().any(|item| {

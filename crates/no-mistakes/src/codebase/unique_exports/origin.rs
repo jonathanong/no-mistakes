@@ -55,7 +55,10 @@ impl<R: ImportResolverFacade> OriginSearch<'_, R> {
             .symbols
             .exports
             .iter()
-            .filter(|export| !super::collector::should_skip_export(file, export))
+            // Origin lookup carries directive provenance to a re-export even
+            // for ordinary checks. The caller suppresses that re-export
+            // consistently with audit mode; only file-disabled sources stay
+            // absent through the early return above.
             .find_map(|export| self.find_export(file, export, imported));
         self.visiting.remove(&target);
         found
