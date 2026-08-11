@@ -32,12 +32,32 @@ fn valid_secret_binding_contexts_supply_the_destination_secret() {
         "${{ secrets['TOKEN'] }}",
         "${{ github.token }}",
         "${{ needs.setup.outputs.token }}",
+        "${{ strategy.job-index }}",
+        "${{ matrix.token }}",
+        "${{ inputs.token }}",
+        "${{ vars.TOKEN }}",
         "${{ secrets.MISSING || github.token }}",
     ] {
         let call_job: Value =
             serde_yaml::from_str(&format!("secrets:\n  token: \"{binding}\"")).unwrap();
         assert!(
             callee_secrets(&contract("token"), &call_job, &SecretState::direct()).is_some(),
+            "{binding}"
+        );
+    }
+}
+
+#[test]
+fn unavailable_secret_binding_contexts_do_not_supply_the_destination_secret() {
+    for binding in [
+        "${{ steps.setup.outputs.token }}",
+        "${{ env.TOKEN }}",
+        "${{ runner.os }}",
+    ] {
+        let call_job: Value =
+            serde_yaml::from_str(&format!("secrets:\n  token: \"{binding}\"")).unwrap();
+        assert!(
+            callee_secrets(&contract("token"), &call_job, &SecretState::direct()).is_none(),
             "{binding}"
         );
     }

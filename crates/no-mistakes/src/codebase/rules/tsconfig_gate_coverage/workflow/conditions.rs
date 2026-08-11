@@ -11,6 +11,7 @@ mod logical;
 mod resolution;
 
 use condition_values::{comparison_bool, condition_value};
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
 use input_value::comparison_literal;
 use inputs::event_name_value;
 pub(super) use inputs::{

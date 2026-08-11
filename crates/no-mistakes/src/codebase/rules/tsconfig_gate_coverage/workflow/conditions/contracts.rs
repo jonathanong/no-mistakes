@@ -38,7 +38,9 @@ fn declaration_names_valid<'a>(names: impl Iterator<Item = &'a String>) -> bool 
     unique_contract_names(names.iter().copied()) && names.iter().all(|name| valid_identifier(name))
 }
 
-pub(super) fn valid_identifier(name: &str) -> bool {
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn valid_identifier(
+    name: &str,
+) -> bool {
     let mut characters = name.bytes();
     matches!(characters.next(), Some(b'A'..=b'Z' | b'a'..=b'z' | b'_'))
         && characters.all(|character| {

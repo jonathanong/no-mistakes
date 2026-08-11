@@ -1,5 +1,10 @@
 use super::lexer;
 
+/// Contexts GitHub makes available when binding a secret to a reusable workflow call.
+pub(crate) const REUSABLE_CALL_SECRET_BINDING_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "secrets", "inputs", "vars",
+];
+
 pub(super) fn root_contexts_available(expression: &str, allowed: &[&str]) -> bool {
     let bytes = expression.as_bytes();
     let mut index = 0;

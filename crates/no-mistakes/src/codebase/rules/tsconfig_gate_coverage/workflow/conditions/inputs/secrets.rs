@@ -1,6 +1,8 @@
 use super::super::contracts::{normalized_name, workflow_call_contract_valid};
 use super::bindings::normalized_bindings;
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::complete_expression_contexts_available;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
+    complete_expression_contexts_available, REUSABLE_CALL_SECRET_BINDING_CONTEXTS,
+};
 use crate::codebase::workflow_topology::model::WorkflowCallContract;
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
@@ -76,7 +78,7 @@ fn explicit_secret_bindings(
                 value.contains("${{")
                     && !complete_expression_contexts_available(
                         value,
-                        &["github", "needs", "secrets"],
+                        REUSABLE_CALL_SECRET_BINDING_CONTEXTS,
                     )
             })
         })

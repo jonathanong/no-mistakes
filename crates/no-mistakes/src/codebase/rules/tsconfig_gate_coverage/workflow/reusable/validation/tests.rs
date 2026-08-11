@@ -104,6 +104,24 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
 }
 
 #[test]
+fn service_names_require_github_identifier_grammar() {
+    for name in ["postgres", "postgres_16", "postgres-service"] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\nservices:\n  '{name}': {{image: postgres:16}}\nsteps:\n  - run: echo ok"
+        ))
+        .unwrap();
+        assert!(scan_job_shape_valid(&job), "{name}");
+    }
+    for name in ["1postgres", "postgres service", "postgres!", "pöstgres"] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\nservices:\n  '{name}': {{image: postgres:16}}\nsteps:\n  - run: echo invalid"
+        ))
+        .unwrap();
+        assert!(!scan_job_shape_valid(&job), "{name}");
+    }
+}
+
+#[test]
 fn scanner_rejects_strategy_fields_with_unavailable_contexts_or_invalid_scalars() {
     for yaml in [
         "runs-on: ubuntu-latest\nstrategy: {fail-fast: '${{ github.ref == ''refs/heads/main'' }}', max-parallel: '${{ needs.setup.outputs.parallel }}'}\nsteps:\n  - run: tsc --noEmit",

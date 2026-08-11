@@ -275,6 +275,8 @@ fn literal_relational_comparisons_resolve_without_context_values() {
         ("0 <= 0", StaticBool::True),
         ("1 > 0", StaticBool::True),
         ("1 >= 1", StaticBool::True),
+        ("'release' < 1", StaticBool::False),
+        ("'release' >= 1", StaticBool::False),
         ("github.run_number > 0", StaticBool::Unknown),
     ] {
         assert_eq!(

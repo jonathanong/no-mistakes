@@ -1,5 +1,7 @@
 use serde_yaml::{Mapping, Value};
 
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::valid_identifier;
+
 use super::super::super::super::expressions::{
     interpolated_expression_contexts_and_hash_files_available,
     interpolated_expression_contexts_available, interpolated_expression_valid,
@@ -104,7 +106,7 @@ pub(super) fn services_shape_valid(value: Option<&Value>) -> bool {
         value.as_mapping().is_some_and(|services| {
             !services.is_empty()
                 && services.iter().all(|(name, service)| {
-                    name.as_str().is_some_and(|name| !name.is_empty())
+                    name.as_str().is_some_and(valid_identifier)
                         && service
                             .as_mapping()
                             .is_some_and(container_mapping_shape_valid)

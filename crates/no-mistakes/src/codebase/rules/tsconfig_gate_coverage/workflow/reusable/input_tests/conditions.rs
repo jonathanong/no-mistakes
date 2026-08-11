@@ -56,12 +56,14 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
     let parsed = ParsedWorkflowSet {
         documents: vec![document(
             ".github/workflows/checks.yml",
-            "on: push\njobs:\n  compound-disabled:\n    if: '${{ (false || false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound-disabled/tsconfig.json\n  truthy-string-disabled:\n    if: \"${{ (false || 'release') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project truthy-string-disabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
+            "on: push\njobs:\n  compound-disabled:\n    if: '${{ (false || false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound-disabled/tsconfig.json\n  truthy-string-disabled:\n    if: \"${{ (false || 'release') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project truthy-string-disabled/tsconfig.json\n  nonnumeric-relational-disabled:\n    if: \"${{ 'release' < 1 }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project nonnumeric-relational-disabled/tsconfig.json\n  numeric-relational-enabled:\n    if: '${{ 1 < 2 }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-relational-enabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
         )],
     };
     let tracked = [
         "compound-disabled/tsconfig.json",
         "truthy-string-disabled/tsconfig.json",
+        "nonnumeric-relational-disabled/tsconfig.json",
+        "numeric-relational-enabled/tsconfig.json",
         "unary-enabled/tsconfig.json",
         "function-enabled/tsconfig.json",
     ]
@@ -77,6 +79,7 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
         collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
         BTreeSet::from([
             "function-enabled/tsconfig.json".to_string(),
+            "numeric-relational-enabled/tsconfig.json".to_string(),
             "unary-enabled/tsconfig.json".to_string(),
         ])
     );

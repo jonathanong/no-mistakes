@@ -1,4 +1,6 @@
-use super::super::super::super::expressions::interpolated_expression_contexts_available;
+use super::super::super::super::expressions::{
+    interpolated_expression_contexts_available, REUSABLE_CALL_SECRET_BINDING_CONTEXTS,
+};
 use super::fields::scalar_value_valid;
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
@@ -48,11 +50,6 @@ fn unique_scalar_bindings(mapping: &Mapping, value_valid: fn(&Value) -> bool) ->
 fn secret_value_valid(value: &Value) -> bool {
     matches!(value, Value::Bool(_) | Value::Number(_))
         || value.as_str().is_some_and(|value| {
-            interpolated_expression_contexts_available(
-                value,
-                &[
-                    "github", "needs", "strategy", "matrix", "secrets", "inputs", "vars",
-                ],
-            )
+            interpolated_expression_contexts_available(value, REUSABLE_CALL_SECRET_BINDING_CONTEXTS)
         })
 }

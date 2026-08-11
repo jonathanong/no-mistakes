@@ -97,6 +97,10 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    services: {postgres: {image: postgres:16, ports: [false]}}\n    steps:\n      - run: tsc --noEmit --project invalid-service-ports/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/invalid-service-name.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    services: {'postgres service': {image: postgres:16}}\n    steps:\n      - run: tsc --noEmit --project invalid-service-name/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/valid-ports.yml",
             "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    container: {image: node:22, ports: [8080, '8081:80']}\n    services: {postgres: {image: postgres:16, ports: ['127.0.0.1:5432:5432/tcp']}}\n    steps:\n      - run: tsc --noEmit --project valid-ports/tsconfig.json\n",
         ),
@@ -216,6 +220,7 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "invalid-action-lock-ref-sibling",
         "invalid-container-ports",
         "invalid-service-ports",
+        "invalid-service-name",
         "valid-ports",
         "missing-steps-sibling",
         "missing-runs-on-sibling",

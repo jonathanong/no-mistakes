@@ -69,7 +69,7 @@ impl StaticValue {
     }
 
     pub(super) fn equals(self, expected: &Self) -> StaticBool {
-        if matches!(self, Self::Unknown) || matches!(expected, Self::Unknown) {
+        if matches!(&self, Self::Unknown) || matches!(expected, Self::Unknown) {
             return StaticBool::Unknown;
         }
         match (&self, expected) {
@@ -99,16 +99,22 @@ impl StaticValue {
     }
 
     pub(super) fn less_than(self, expected: &Self) -> StaticBool {
+        if matches!(&self, Self::Unknown) || matches!(expected, Self::Unknown) {
+            return StaticBool::Unknown;
+        }
         match (self.loose_number(), expected.clone().loose_number()) {
             (Some(actual), Some(expected)) => StaticBool::from(actual < expected),
-            _ => StaticBool::Unknown,
+            _ => StaticBool::False,
         }
     }
 
     pub(super) fn less_than_or_equal(self, expected: &Self) -> StaticBool {
+        if matches!(self, Self::Unknown) || matches!(expected, Self::Unknown) {
+            return StaticBool::Unknown;
+        }
         match (self.loose_number(), expected.clone().loose_number()) {
             (Some(actual), Some(expected)) => StaticBool::from(actual <= expected),
-            _ => StaticBool::Unknown,
+            _ => StaticBool::False,
         }
     }
 

@@ -6,6 +6,7 @@ mod syntax;
 mod typed_scalar;
 
 pub(crate) use calls::condition_function_call;
+pub(crate) use contexts::REUSABLE_CALL_SECRET_BINDING_CONTEXTS;
 pub(crate) use lexer::Function;
 pub(super) use literal_value::{
     complete_literal_expression_value, invalid_literal_from_json, literal_from_json_value,
