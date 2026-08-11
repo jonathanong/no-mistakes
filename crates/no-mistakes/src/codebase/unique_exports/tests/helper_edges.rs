@@ -101,7 +101,7 @@ fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
 }
 
 #[test]
-fn deferred_reexports_preserve_suppression_provenance_and_origin_ordering() {
+fn deferred_reexports_keep_named_reexports_lexically_visible() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/codebase/unique-exports-suppressed-origin"),
@@ -166,12 +166,17 @@ fn deferred_reexports_preserve_suppression_provenance_and_origin_ordering() {
     let explicit = collect("src/barrel.ts");
     assert_eq!(explicit.len(), 1);
     let explicit_origin = &explicit[0].origin;
-    assert!(explicit[0].suppressed, "{explicit:#?}");
-    assert_eq!(
-        explicit[0].suppression_location.as_ref(),
-        Some(&("src/source.ts".to_string(), 2))
-    );
-    assert_eq!(explicit_origin.file, "src/source.ts");
+    // A disabled target has no exported identity for an unsuppressed named
+    // re-export to inherit. The barrel occurrence must therefore remain
+    // visible and use its own lexical origin.
+    assert!(!explicit[0].suppressed, "{explicit:#?}");
+    assert_eq!(explicit[0].suppression_location, None);
+    assert_eq!(explicit_origin.file, "src/barrel.ts");
+    assert_eq!(explicit_origin.line, 2);
+    assert_eq!(explicit_origin.name, "Shared");
+    assert_eq!(explicit_origin.bucket, ExportBucket::Value);
+    assert!(!explicit_origin.suppressed);
+    assert_eq!(explicit_origin.suppression_location, None);
 
     let wildcard = collect("src/wild-barrel.ts");
     assert_eq!(wildcard.len(), 2);
