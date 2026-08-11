@@ -40,6 +40,29 @@ fn aggregate_rule_uses_prepared_config_without_standalone_discovery() {
 }
 
 #[test]
+fn prepared_config_reports_missing_visible_config_source() {
+    let root = fixture();
+    let missing = root.join("missing-visible-vitest.config.ts");
+    assert!(
+        !missing.exists(),
+        "the fixture intentionally has no config file"
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One(
+        "missing-visible-vitest.config.*".to_string(),
+    ));
+
+    // The request inventory is authoritative: a config listed there without a
+    // readable source must report an error instead of falling back to disk.
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&missing));
+    let error = prepare_from_visible(&root, &config, &[missing], &sources)
+        .err()
+        .expect("missing prepared source must be reported");
+
+    assert!(error.to_string().contains("failed to read"));
+}
+
+#[test]
 fn pass4b_prepared_setup_files_drop_ignored_candidate_and_keep_visible_fallback() {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
     crate::test_support::git_init(fixture.path());

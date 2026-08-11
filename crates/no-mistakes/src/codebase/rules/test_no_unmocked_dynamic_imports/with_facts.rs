@@ -196,3 +196,6 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         suppression_sources,
     })
 }
+
+#[cfg(test)]
+mod tests;
