@@ -126,6 +126,37 @@ fn run_check_with_facts_reports_violations_when_assert_no_fetch_is_enabled() {
 }
 
 #[test]
+fn aggregate_check_keeps_public_violations_and_private_suppression_locations_separate() {
+    use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+
+    let root = assert_no_fetch_root();
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let facts = collect_check_facts(
+        &root,
+        files,
+        CheckFactPlan {
+            react: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let prepared = prepare_check_from_loaded_config(
+        &crate::config::v2::load_v2_config(&root, None).unwrap(),
+        false,
+    );
+    let report =
+        run_check_with_prepared_facts_for_aggregate(&root, &[], &facts, &prepared).unwrap();
+    assert_eq!(report.findings.len(), report.suppression_targets.len());
+    assert!(report
+        .findings
+        .iter()
+        .any(|finding| finding.rule == "assert-no-fetch"));
+    assert!(report
+        .suppression_targets
+        .iter()
+        .any(|targets| !targets.is_empty()));
+}
+
+#[test]
 fn prepared_check_uses_frozen_visible_files_after_source_is_removed() {
     use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
 

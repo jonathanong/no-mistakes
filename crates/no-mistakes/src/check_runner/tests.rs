@@ -447,6 +447,7 @@ fn assert_domain_error(results: DomainResults, expected: &str) {
 fn empty_task<T>(findings: T) -> CheckTask<T> {
     CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         warning: None,
         duration: Duration::ZERO,

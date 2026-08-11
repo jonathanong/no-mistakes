@@ -7,7 +7,8 @@ pub use pipeline::check::check_enabled;
 pub use pipeline::check::run_check_with_facts;
 #[doc(hidden)]
 pub use pipeline::check::{
-    prepare_check_from_loaded_config, run_check_with_prepared_facts, PreparedReactCheck,
+    prepare_check_from_loaded_config, run_check_with_prepared_facts,
+    run_check_with_prepared_facts_for_aggregate, PreparedReactCheck, PreparedReactFindings,
 };
 pub use pipeline::run_analyze;
 pub use pipeline::run_check;

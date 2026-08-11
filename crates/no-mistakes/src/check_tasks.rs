@@ -5,51 +5,23 @@ use no_mistakes::codebase::unique_exports::{self, UniqueExportFinding};
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
 use no_mistakes::queue::CheckFinding;
-use no_mistakes::react_traits;
 use std::time::Duration;
 
 mod filesystem;
+mod react;
 #[cfg(test)]
 mod tests;
 
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
+pub(crate) use react::run_react_check;
 
 pub(crate) struct CheckTask<T> {
     pub(crate) findings: T,
+    pub(crate) react_suppression_targets:
+        Vec<Vec<no_mistakes::react_traits::ReactSuppressionTarget>>,
     pub(crate) suppression_sources: Vec<Option<String>>,
     pub(crate) warning: Option<String>,
     pub(crate) duration: Duration,
-}
-
-pub(crate) fn run_react_check(
-    root: &std::path::Path,
-    enabled: bool,
-    facts: &CheckFactMap,
-    prepared: &react_traits::PreparedReactCheck,
-) -> Result<CheckTask<Vec<react_traits::Violation>>> {
-    let ((findings, warning), duration) = no_mistakes::diagnostics::measure_if_enabled(
-        "analysis.react",
-        no_mistakes::diagnostics::TimingKind::Parallel,
-        || {
-            if enabled {
-                match react_traits::run_check_with_prepared_facts(root, &[], facts, prepared) {
-                    Ok(findings) => (findings, None),
-                    Err(err) => (
-                        Vec::new(),
-                        Some(format!("warning: react check skipped: {err:#}")),
-                    ),
-                }
-            } else {
-                (Vec::new(), None)
-            }
-        },
-    );
-    Ok(CheckTask {
-        findings,
-        suppression_sources: Vec::new(),
-        warning,
-        duration,
-    })
 }
 
 pub(crate) fn run_queue_check(
@@ -80,6 +52,7 @@ pub(crate) fn run_queue_check(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         warning: None,
         duration,
@@ -107,6 +80,7 @@ pub(crate) fn run_rules_check(
         );
     Ok(CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
         suppression_sources,
         warning,
         duration,
@@ -143,6 +117,7 @@ pub(crate) fn run_integration_check(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         warning: None,
         duration,
@@ -179,6 +154,7 @@ pub(crate) fn run_codebase_check_with_catalog(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         warning: None,
         duration,

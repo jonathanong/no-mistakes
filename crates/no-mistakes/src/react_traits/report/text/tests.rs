@@ -78,9 +78,6 @@ fn print_violations_outputs_violations() {
         file: "app/components/Fetcher.tsx".to_string(),
         rule: "assert-no-fetch".to_string(),
         detail: Some("GET /api/users".to_string()),
-        line: Some(1),
-        suppression_lines: vec![1],
-        suppression_targets: Vec::new(),
     }];
     print_violations(&violations);
 }
@@ -92,9 +89,26 @@ fn print_violations_no_detail() {
         file: "app/components/Fetcher.tsx".to_string(),
         rule: "assert-no-fetch".to_string(),
         detail: None,
-        line: None,
-        suppression_lines: Vec::new(),
-        suppression_targets: Vec::new(),
     }];
     print_violations(&violations);
+}
+
+#[test]
+fn violation_json_shape_remains_public_four_fields() {
+    let violation = Violation {
+        component: "Fetcher".to_string(),
+        file: "app/components/Fetcher.tsx".to_string(),
+        rule: "assert-no-fetch".to_string(),
+        detail: None,
+    };
+
+    assert_eq!(
+        serde_json::to_value(violation).unwrap(),
+        serde_json::json!({
+            "component": "Fetcher",
+            "file": "app/components/Fetcher.tsx",
+            "rule": "assert-no-fetch",
+            "detail": null,
+        })
+    );
 }

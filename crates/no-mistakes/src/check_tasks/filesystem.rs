@@ -69,6 +69,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         warning: None,
         duration,

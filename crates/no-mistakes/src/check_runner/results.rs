@@ -73,6 +73,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         include_suppressed,
     } = input;
     let mut react = completed.react;
+    let react_suppression_targets = react.react_suppression_targets.as_slice();
     let mut queues = completed.queues;
     let mut rules = completed.rules;
     let rule_suppression_sources = rules.suppression_sources.as_slice();
@@ -105,6 +106,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         root,
         sources,
         react: &mut react.findings,
+        react_suppression_targets,
         queues: &mut queues.findings,
         rules: &mut rules.findings,
         rule_suppression_sources,

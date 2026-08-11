@@ -121,17 +121,6 @@ pub struct Violation {
     pub file: String,
     pub rule: String,
     pub detail: Option<String>,
-    /// Internal location for the aggregate check suppression adapter. Direct
-    /// React check output remains byte-for-byte compatible.
-    #[serde(skip)]
-    pub line: Option<usize>,
-    /// All local fetch locations represented by this component-level
-    /// diagnostic. Aggregate suppression uses these without changing the
-    /// stable direct React report schema.
-    #[serde(skip)]
-    pub suppression_lines: Vec<usize>,
-    #[serde(skip)]
-    pub suppression_targets: Vec<ReactSuppressionTarget>,
 }
 
 #[derive(Debug, Clone)]

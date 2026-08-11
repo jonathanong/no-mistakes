@@ -15,6 +15,7 @@ pub(super) struct Inputs<'a> {
     pub(super) root: &'a std::path::Path,
     pub(super) sources: &'a SourceStore,
     pub(super) react: &'a mut Vec<react_traits::Violation>,
+    pub(super) react_suppression_targets: &'a [Vec<react_traits::ReactSuppressionTarget>],
     pub(super) queues: &'a mut Vec<CheckFinding>,
     pub(super) rules: &'a mut Vec<RuleFinding>,
     pub(super) rule_suppression_sources: &'a [Option<String>],
@@ -29,6 +30,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         root,
         sources,
         react,
+        react_suppression_targets,
         queues,
         rules,
         rule_suppression_sources,
@@ -38,7 +40,13 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         advisories,
     } = input;
     let mut suppressed = Vec::new();
-    suppress_react(root, sources, react, &mut suppressed);
+    suppress_react(
+        root,
+        sources,
+        react,
+        react_suppression_targets,
+        &mut suppressed,
+    );
     suppressed.extend(suppress_domain_findings_with_sources(
         root,
         queues,
@@ -96,6 +104,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
 /// single stable public finding unless all of those fetches are suppressed.
 struct ReactSuppressionFinding {
     finding: react_traits::Violation,
+    line: Option<usize>,
     identity: String,
 }
 
@@ -103,46 +112,29 @@ pub(super) fn suppress_react(
     root: &std::path::Path,
     sources: &SourceStore,
     findings: &mut Vec<react_traits::Violation>,
+    suppression_targets: &[Vec<react_traits::ReactSuppressionTarget>],
     suppressed: &mut Vec<SuppressedFinding>,
 ) {
-    findings.retain(|finding| {
+    let original_findings = findings.drain(..).enumerate().collect::<Vec<_>>();
+    for (index, finding) in original_findings {
         let identity = format!("{}@{}", finding.component, finding.file);
-        let mut locations = if !finding.suppression_targets.is_empty() {
-            finding
-                .suppression_targets
+        let targets = suppression_targets.get(index).cloned().unwrap_or_default();
+        let mut locations = if !targets.is_empty() {
+            targets
                 .iter()
                 .map(|target| ReactSuppressionFinding {
                     finding: react_traits::Violation {
                         file: target.file.clone(),
-                        line: Some(target.line),
-                        suppression_lines: Vec::new(),
-                        suppression_targets: Vec::new(),
                         ..finding.clone()
                     },
-                    identity: identity.clone(),
-                })
-                .collect()
-        } else if !finding.suppression_lines.is_empty() {
-            finding
-                .suppression_lines
-                .iter()
-                .map(|line| ReactSuppressionFinding {
-                    finding: react_traits::Violation {
-                        line: Some(*line),
-                        suppression_lines: Vec::new(),
-                        suppression_targets: Vec::new(),
-                        ..finding.clone()
-                    },
+                    line: Some(target.line),
                     identity: identity.clone(),
                 })
                 .collect()
         } else {
             vec![ReactSuppressionFinding {
-                finding: react_traits::Violation {
-                    suppression_lines: Vec::new(),
-                    suppression_targets: Vec::new(),
-                    ..finding.clone()
-                },
+                finding: finding.clone(),
+                line: None,
                 identity,
             }]
         };
@@ -152,8 +144,10 @@ pub(super) fn suppress_react(
             sources,
             react_target,
         ));
-        !locations.is_empty()
-    });
+        if !locations.is_empty() {
+            findings.push(finding);
+        }
+    }
 }
 
 fn react_target(entry: &ReactSuppressionFinding) -> SuppressionTarget<'_> {
@@ -162,7 +156,7 @@ fn react_target(entry: &ReactSuppressionFinding) -> SuppressionTarget<'_> {
         domain: "react",
         rule: &finding.rule,
         file: &finding.file,
-        line: finding.line,
+        line: entry.line,
         reason: finding
             .detail
             .as_deref()
