@@ -222,8 +222,9 @@ fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports
                     .is_some_and(|reason| reason.contains("chained"))
         }) && items.iter().any(|item| {
             item["rule"] == "unique-exports"
-                && item["file"] == "shared/suppressed-origin.ts"
-                && item["line"] == 5
+                && item["file"] == "src/wild-barrel.ts"
+                && item["sourceFile"] == "shared/suppressed-origin.ts"
+                && item["line"] == 1
                 && item["directive"]["kind"] == "file"
                 && item["directive"]["line"] == 3
                 && item["reason"]

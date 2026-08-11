@@ -1,6 +1,7 @@
 use no_mistakes::codebase::rules::RuleFinding;
 use no_mistakes::codebase::rules::{
-    suppress_domain_findings_with_sources, SuppressedFinding, SuppressionTarget,
+    suppress_domain_findings_with_source_files, suppress_domain_findings_with_sources,
+    SuppressedFinding, SuppressionTarget,
 };
 use no_mistakes::codebase::ts_source::SourceStore;
 use no_mistakes::codebase::unique_exports::UniqueExportFinding;
@@ -104,7 +105,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
             identity: None,
         },
     ));
-    suppressed.extend(suppress_domain_findings_with_sources(
+    suppressed.extend(suppress_domain_findings_with_source_files(
         root,
         codebase,
         sources,
@@ -116,6 +117,7 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
             reason: &finding.message,
             identity: None,
         },
+        |finding| finding.suppression_source_file.as_deref(),
     ));
     suppressed.sort();
     suppressed

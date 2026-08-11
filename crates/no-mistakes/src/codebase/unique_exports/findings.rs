@@ -55,16 +55,8 @@ pub(super) fn unique_export_findings(
         {
             findings.push(UniqueExportFinding {
                 rule: RULE_ID.to_string(),
-                file: duplicate
-                    .suppression_location
-                    .as_ref()
-                    .map(|(file, _)| file.clone())
-                    .unwrap_or_else(|| duplicate.file.clone()),
-                line: duplicate
-                    .suppression_location
-                    .as_ref()
-                    .map(|(_, line)| *line)
-                    .unwrap_or(duplicate.line),
+                file: duplicate.file.clone(),
+                line: duplicate.line,
                 export_name: name.clone(),
                 export_kind: bucket.as_str().to_string(),
                 message: format!(
@@ -74,6 +66,10 @@ pub(super) fn unique_export_findings(
                     first.file,
                     first.line
                 ),
+                suppression_source_file: duplicate
+                    .suppression_location
+                    .as_ref()
+                    .map(|(file, _)| file.clone())
             });
         }
     }
