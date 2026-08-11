@@ -1,7 +1,7 @@
 use serde_yaml::{Mapping, Value};
 
 use super::super::super::super::conditions::{
-    complete_expression_static_string_value, complete_expression_static_value,
+    complete_expression_static_string_value, complete_expression_static_value_with_environment,
     resolve_static_interpolations, EnvironmentState, InputState, StaticValue,
 };
 use super::super::super::super::expressions::{
@@ -96,7 +96,11 @@ pub(super) fn environment_shape_valid(value: Option<&Value>) -> bool {
     })
 }
 
-pub(crate) fn environment_configuration_valid_for_inputs(job: &Value, inputs: &InputState) -> bool {
+pub(crate) fn environment_configuration_valid_for_inputs(
+    job: &Value,
+    inputs: &InputState,
+    state: &EnvironmentState,
+) -> bool {
     let Some(environment) = job.get("environment") else {
         return true;
     };
@@ -116,10 +120,14 @@ pub(crate) fn environment_configuration_valid_for_inputs(job: &Value, inputs: &I
         }
         resolve_static_interpolations(name, inputs, &EnvironmentState::default())
             .is_none_or(|name| !name.trim().is_empty())
-    }) && environment_url_valid_for_inputs(environment, inputs)
+    }) && environment_url_valid_for_inputs(environment, inputs, state)
 }
 
-fn environment_url_valid_for_inputs(environment: &Value, inputs: &InputState) -> bool {
+fn environment_url_valid_for_inputs(
+    environment: &Value,
+    inputs: &InputState,
+    state: &EnvironmentState,
+) -> bool {
     let Some(url) = environment
         .as_mapping()
         .and_then(|environment| environment.get("url"))
@@ -131,9 +139,9 @@ fn environment_url_valid_for_inputs(environment: &Value, inputs: &InputState) ->
     };
     interpolation_expressions_all(url, |expression| {
         let expression = format!("${{{{ {expression} }}}}");
-        complete_expression_static_value(&expression, inputs).is_none_or(|value| {
-            matches!(value, StaticValue::Unknown) || value.function_string().is_some()
-        })
+        complete_expression_static_value_with_environment(&expression, inputs, state).is_none_or(
+            |value| matches!(value, StaticValue::Unknown) || value.function_string().is_some(),
+        )
     })
 }
 

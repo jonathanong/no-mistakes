@@ -16,7 +16,8 @@ fn static_yaml_value(value: Value) -> StaticValue {
         Value::Sequence(values) => {
             StaticValue::Sequence(values.into_iter().map(static_sequence_element).collect())
         }
-        Value::Mapping(_) | Value::Tagged(_) => StaticValue::Unknown,
+        Value::Mapping(_) => StaticValue::Mapping,
+        Value::Tagged(_) => StaticValue::Unknown,
     }
 }
 

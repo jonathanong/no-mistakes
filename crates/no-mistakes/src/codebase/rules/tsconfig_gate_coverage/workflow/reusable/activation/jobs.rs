@@ -136,7 +136,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             )
             .with_job(job, inputs)
             .with_runner_os(runner_os(job, inputs));
-            match job_configuration_validity(job, inputs) {
+            match job_configuration_validity(job, inputs, &environment) {
                 StaticBool::False => {
                     let enforcing = job_statically_enforcing(job, inputs, failed_need);
                     failed |= enforcing;

@@ -3,7 +3,8 @@ use serde_yaml::Value;
 use std::collections::BTreeMap;
 
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    inputs_with_matrix_values, InputState, MatrixState, StaticValue,
+    complete_expression_static_value_with_environment, inputs_with_matrix_values, EnvironmentState,
+    InputState, MatrixState, StaticValue,
 };
 
 fn job(yaml: &str) -> Value {
@@ -311,22 +312,30 @@ fn environment_url_rechecks_resolved_stringable_values_per_active_state() {
         StaticValue::String("https://example.test".to_string()),
     );
     assert!(super::environment_configuration_valid_for_inputs(
-        &input_url, &inputs
+        &input_url,
+        &inputs,
+        &EnvironmentState::default(),
     ));
 
     inputs.insert("url".to_string(), StaticValue::Bool(true));
     assert!(super::environment_configuration_valid_for_inputs(
-        &input_url, &inputs
+        &input_url,
+        &inputs,
+        &EnvironmentState::default(),
     ));
 
     inputs.insert("url".to_string(), StaticValue::Mapping);
     assert!(!super::environment_configuration_valid_for_inputs(
-        &input_url, &inputs
+        &input_url,
+        &inputs,
+        &EnvironmentState::default(),
     ));
 
     inputs.insert("url".to_string(), StaticValue::Unknown);
     assert!(super::environment_configuration_valid_for_inputs(
-        &input_url, &inputs
+        &input_url,
+        &inputs,
+        &EnvironmentState::default(),
     ));
 
     let matrix_inputs = inputs_with_matrix_values(
@@ -339,7 +348,42 @@ fn environment_url_rechecks_resolved_stringable_values_per_active_state() {
     );
     assert!(!super::environment_configuration_valid_for_inputs(
         &matrix_url,
-        &matrix_inputs
+        &matrix_inputs,
+        &EnvironmentState::default(),
+    ));
+
+    let runner_url = job(
+        "runs-on: ubuntu-latest\nenvironment:\n  name: staging\n  url: \"${{ case(runner.os == 'Linux', fromJSON('{}'), 'https://ok') }}\"\nsteps:\n  - run: echo valid",
+    );
+    let runner_environment = EnvironmentState::default().with_runner_os(Some("Linux"));
+    assert_eq!(
+        complete_expression_static_value_with_environment(
+            "${{ runner.os }}",
+            &InputState::new(),
+            &runner_environment,
+        ),
+        Some(StaticValue::String("Linux".to_string())),
+    );
+    assert_eq!(
+        complete_expression_static_value_with_environment(
+            "${{ runner.os == 'Linux' }}",
+            &InputState::new(),
+            &runner_environment,
+        ),
+        Some(StaticValue::Bool(true)),
+    );
+    assert_eq!(
+        complete_expression_static_value_with_environment(
+            "${{ case(runner.os == 'Linux', fromJSON('{}'), 'https://ok') }}",
+            &InputState::new(),
+            &runner_environment,
+        ),
+        Some(StaticValue::Mapping),
+    );
+    assert!(!super::environment_configuration_valid_for_inputs(
+        &runner_url,
+        &InputState::new(),
+        &runner_environment,
     ));
 }
 
