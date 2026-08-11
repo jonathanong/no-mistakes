@@ -174,7 +174,7 @@ fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
         ("fromJSON('false') == false", StaticBool::True),
         ("fromJSON('0') == 0", StaticBool::True),
         ("fromJSON('true') == false", StaticBool::False),
-        ("fromJSON('not-json')", StaticBool::Unknown),
+        ("fromJSON('not-json')", StaticBool::False),
         ("fromJSON('{}')", StaticBool::TruthyNonBoolean),
     ] {
         assert_eq!(

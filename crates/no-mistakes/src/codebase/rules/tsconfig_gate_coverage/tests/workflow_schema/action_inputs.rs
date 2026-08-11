@@ -59,7 +59,7 @@ fn repository_root_local_actions_allow_following_typechecks() {
     let documents = ParsedWorkflowSet {
         documents: vec![workflow(
             ".github/workflows/root-action.yml",
-            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./\n      - run: tsc --noEmit --project root-action/tsconfig.json\n",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ./\n      - run: tsc --noEmit --project root-action/tsconfig.json\n",
         )],
     };
     let tracked = BTreeSet::from(["root-action/tsconfig.json".to_string()]);

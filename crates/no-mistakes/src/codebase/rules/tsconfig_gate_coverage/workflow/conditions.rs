@@ -93,6 +93,9 @@ pub(super) enum StaticValue {
     /// conditions but cannot be coerced to a GitHub string.
     Mapping,
     NonStringable,
+    /// GitHub aborts evaluation rather than treating a known expression error
+    /// as an unknown runtime value.
+    ExpressionError,
     Unknown,
 }
 

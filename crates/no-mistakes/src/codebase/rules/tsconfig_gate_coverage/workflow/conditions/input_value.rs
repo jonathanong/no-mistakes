@@ -60,6 +60,7 @@ impl StaticValue {
             Self::Sequence(_) => None,
             Self::Mapping => None,
             Self::NonStringable => None,
+            Self::ExpressionError => None,
             Self::Unknown => None,
         }
     }
@@ -84,6 +85,7 @@ impl StaticValue {
             Self::Sequence(_) => StaticBool::TruthyNonBoolean,
             Self::Mapping => StaticBool::TruthyNonBoolean,
             Self::NonStringable => StaticBool::Unknown,
+            Self::ExpressionError => StaticBool::False,
             Self::Unknown => StaticBool::Unknown,
         }
     }
@@ -153,6 +155,7 @@ impl StaticValue {
             Self::Sequence(_) => None,
             Self::Mapping => None,
             Self::NonStringable => None,
+            Self::ExpressionError => None,
             Self::Unknown => None,
         }
     }

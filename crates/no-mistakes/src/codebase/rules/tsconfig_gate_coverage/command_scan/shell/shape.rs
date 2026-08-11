@@ -2,8 +2,10 @@ use super::super::{normalize_repo_relative, static_tokens};
 use super::comments::strip_static_comments;
 
 mod effective_command;
+mod first_word;
 pub(super) use effective_command::effective_tokens;
 use effective_command::{effective_first_word, has_leading_redirection};
+use first_word::{has_dangling_escape, has_dynamic_first_word};
 
 pub(crate) fn shell_body_has_safe_static_shape(script: &str) -> bool {
     let script = strip_static_comments(script);
@@ -44,20 +46,6 @@ fn is_unsupported_shape_control(tokens: &[String]) -> bool {
             tokens.first().map(String::as_str),
             Some("false" | "exit" | "return")
         ) && is_unsupported_control_command(tokens))
-}
-
-fn has_dangling_escape(command: &str) -> bool {
-    command
-        .chars()
-        .rev()
-        .take_while(|character| *character == '\\')
-        .count()
-        % 2
-        == 1
-}
-
-fn has_dynamic_first_word(command: &str) -> bool {
-    effective_first_word(command).is_some_and(|word| word.contains(['\'', '"', '$', '`']))
 }
 
 pub(super) fn is_unsupported_control_command(tokens: &[String]) -> bool {

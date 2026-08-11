@@ -330,6 +330,8 @@ fn remote_references_reject_lock_components() {
         "foo.lock",
         "refs/heads/foo.lock",
         "release/foo.lock/candidate",
+        "release/.hidden",
+        ".hidden",
     ] {
         assert!(!valid_remote_reference(reference), "{reference}");
     }

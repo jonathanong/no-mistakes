@@ -180,6 +180,7 @@ fn string_static_value(value: StaticValue) -> StaticValue {
         StaticValue::Sequence(_)
         | StaticValue::Mapping
         | StaticValue::NonStringable
+        | StaticValue::ExpressionError
         | StaticValue::Unknown => StaticValue::Unknown,
     }
 }

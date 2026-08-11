@@ -81,7 +81,8 @@ pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {
             | StaticValue::Null
             | StaticValue::Sequence(_)
             | StaticValue::Mapping
-            | StaticValue::NonStringable => StaticValue::Unknown,
+            | StaticValue::NonStringable
+            | StaticValue::ExpressionError => StaticValue::Unknown,
         }
     } else {
         match expression_bool(value.as_str().unwrap_or_default(), parent) {

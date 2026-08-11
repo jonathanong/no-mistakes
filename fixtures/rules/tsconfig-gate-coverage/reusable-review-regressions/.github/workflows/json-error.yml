@@ -1,0 +1,12 @@
+on:
+  workflow_call:
+    inputs:
+      payload:
+        required: true
+        type: string
+jobs:
+  typecheck:
+    if: fromJSON(inputs.payload)
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project json-error/tsconfig.json

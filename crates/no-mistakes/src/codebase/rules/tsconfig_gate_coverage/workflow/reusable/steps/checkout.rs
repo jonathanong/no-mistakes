@@ -1,0 +1,20 @@
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::StaticBool;
+use serde_yaml::Value;
+
+#[derive(Default)]
+pub(super) struct CheckoutState(bool);
+
+impl CheckoutState {
+    pub(super) fn available(&self) -> bool {
+        self.0
+    }
+
+    pub(super) fn observe(&mut self, step: &Value, condition: StaticBool) {
+        self.0 |= condition == StaticBool::True
+            && step
+                .get("uses")
+                .and_then(Value::as_str)
+                .and_then(|target| target.strip_prefix("actions/checkout@"))
+                .is_some_and(|reference| !reference.is_empty());
+    }
+}

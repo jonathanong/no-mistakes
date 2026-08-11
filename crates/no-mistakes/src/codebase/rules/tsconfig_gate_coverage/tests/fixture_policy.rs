@@ -141,9 +141,13 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             .collect::<BTreeSet<_>>(),
         BTreeSet::from([
             "env/tsconfig.json",
+            "checkout/tsconfig.json",
             "composite/tsconfig.json",
+            "hidden-ref/tsconfig.json",
             "join/tsconfig.json",
+            "json-error/tsconfig.json",
             "matrix/tsconfig.json",
+            "output/tsconfig.json",
             "runner/tsconfig.json",
             "script/tsconfig.json",
         ]),

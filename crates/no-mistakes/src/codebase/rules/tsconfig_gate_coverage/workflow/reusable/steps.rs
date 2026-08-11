@@ -19,10 +19,13 @@ use super::super::{
 };
 use super::validation::action_step_inputs_valid_for_state;
 
+mod checkout;
 mod configuration;
 mod model;
-use configuration::step_configuration_validity;
+mod working_directory;
 pub(super) use model::StepScan;
+use working_directory::step_working_directory;
+use {checkout::CheckoutState, configuration::step_configuration_validity};
 
 pub(super) fn scan_job_steps(
     job: &Value,
@@ -54,6 +57,7 @@ pub(super) fn scan_job_steps(
     let mut failed = false;
     let mut indeterminate = false;
     let mut step_outcomes = StepOutcomes::default();
+    let mut checkout = CheckoutState::default();
     for step in steps {
         let environment = environment
             .with_step_outcomes(&step_outcomes)
@@ -97,18 +101,13 @@ pub(super) fn scan_job_steps(
             .and_then(Value::as_str)
             .and_then(|target| target.strip_prefix("./"))
         {
-            if !context.local_actions.contains(directory) {
+            if !checkout.available() || !context.local_actions.contains(directory) {
                 break;
             }
             continue;
         }
-        let step_cwd = match step.get("working-directory").and_then(Value::as_str) {
-            Some(raw) => {
-                super::super::conditions::resolve_static_interpolations(raw, inputs, &environment)
-                    .and_then(|directory| command_scan::normalize_repo_relative(&directory))
-            }
-            None => job_cwd.clone(),
-        };
+        checkout.observe(step, condition);
+        let step_cwd = step_working_directory(step, inputs, &environment, &job_cwd);
         let Some(cwd) = step_cwd else {
             continue;
         };

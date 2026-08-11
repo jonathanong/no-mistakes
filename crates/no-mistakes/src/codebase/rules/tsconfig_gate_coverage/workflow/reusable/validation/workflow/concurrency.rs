@@ -98,7 +98,8 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
             | StaticValue::Null
             | StaticValue::Sequence(_)
             | StaticValue::Mapping
-            | StaticValue::NonStringable => false,
+            | StaticValue::NonStringable
+            | StaticValue::ExpressionError => false,
         }
     } else {
         resolved_concurrency_group_valid(group, inputs)

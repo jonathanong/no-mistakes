@@ -1,0 +1,8 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      # Reusable-workflow jobs need their own checkout before local actions.
+      - uses: ./.github/actions/valid
+      - run: pnpm exec tsc --noEmit --project checkout/tsconfig.json

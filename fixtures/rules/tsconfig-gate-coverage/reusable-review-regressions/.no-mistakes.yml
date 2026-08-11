@@ -24,6 +24,26 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, composite/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-checkout
+      command: [pnpm, exec, tsc, --noEmit, --project, checkout/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-json-error
+      command: [pnpm, exec, tsc, --noEmit, --project, json-error/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-hidden-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, hidden-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-quoted
+      command: [pnpm, exec, tsc, --noEmit, --project, quoted/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-output
+      command: [pnpm, exec, tsc, --noEmit, --project, output/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

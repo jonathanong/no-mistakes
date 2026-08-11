@@ -10,3 +10,7 @@ jobs:
       prefix: exit 1
   env:
     uses: ./.github/workflows/env.yml
+  json-error:
+    uses: ./.github/workflows/json-error.yml
+    with:
+      payload: not-json
