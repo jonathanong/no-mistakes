@@ -1,0 +1,7 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      unit:
+        integration_suites:
+          unit: [aws]

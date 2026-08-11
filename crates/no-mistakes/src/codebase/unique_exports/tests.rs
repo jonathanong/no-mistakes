@@ -30,6 +30,27 @@ fn finding_names(findings: &[UniqueExportFinding]) -> Vec<(String, String)> {
 }
 
 #[test]
+fn public_finding_keeps_six_field_construction_compatibility() {
+    let _ = UniqueExportFinding {
+        rule: RULE_ID.to_string(),
+        file: "src/example.ts".to_string(),
+        line: 1,
+        export_name: "example".to_string(),
+        export_kind: "value".to_string(),
+        message: "example".to_string(),
+    };
+}
+
+#[test]
+fn standalone_unique_exports_honors_same_line_suppression_in_static_fixture() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-unique-canonical");
+    let findings = analyze_project(&root, None, None).unwrap();
+    assert!(findings.iter().any(|finding| finding.file == "src/c.ts"));
+    assert!(!findings.iter().any(|finding| finding.file == "src/a.ts"));
+}
+
+#[test]
 fn pass4b_unique_origin_skips_ignored_local_and_workspace_candidates() {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
     crate::test_support::git_init(fixture.path());
@@ -306,7 +327,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
     let missing = crate::codebase::check_facts::CheckFactMap::default();
 
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing)
+        scan::collect_source_files_from_facts(&root, &files, &missing, false)
             .unwrap_err()
             .to_string()
             .contains("missing shared facts")
@@ -323,7 +344,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
         .into(),
     );
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &parse_error)
+        scan::collect_source_files_from_facts(&root, &files, &parse_error, false)
             .unwrap_err()
             .to_string()
             .contains("bad syntax")
@@ -332,7 +353,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
     let mut missing_source = crate::codebase::check_facts::CheckFactMap::default();
     missing_source.ts.insert(file.clone(), Default::default());
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_source)
+        scan::collect_source_files_from_facts(&root, &files, &missing_source, false)
             .unwrap_err()
             .to_string()
             .contains("missing source facts")
@@ -348,7 +369,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
         .into(),
     );
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_symbols)
+        scan::collect_source_files_from_facts(&root, &files, &missing_symbols, false)
             .unwrap_err()
             .to_string()
             .contains("missing symbol facts")

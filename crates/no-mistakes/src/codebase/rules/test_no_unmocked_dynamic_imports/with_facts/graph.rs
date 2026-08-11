@@ -1,4 +1,4 @@
-use super::check_with_prepared_facts_graph_and_session;
+use super::{check_with_prepared_facts_graph_and_session, PreparedFactsGraphRequest};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::ts_resolver::{TsConfig, TsConfigCatalog};
@@ -13,6 +13,7 @@ pub(crate) fn check_with_prepared_facts_and_session(
     tsconfig_catalog: &TsConfigCatalog,
     shared: &CheckFactMap,
     session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<super::RuleFinding>> {
     let graph = crate::perf_trace::trace("test_no_unmocked_dynamic_imports.graph_build", || {
         DepGraph::build_with_complete_check_facts_and_session(
@@ -28,13 +29,14 @@ pub(crate) fn check_with_prepared_facts_and_session(
             session.clone(),
         )
     })?;
-    check_with_prepared_facts_graph_and_session(
+    check_with_prepared_facts_graph_and_session(PreparedFactsGraphRequest {
         root,
         config,
-        tsconfig,
         tsconfig_catalog,
         shared,
-        &graph,
+        graph: &graph,
         session,
-    )
+        sources,
+        defer_suppression: false,
+    })
 }

@@ -207,3 +207,8 @@ export interface ProjectOptions {
   /** `reactUsages` `--include` spec: comma-separated `stories,tests,props`. */
   include?: string;
 }
+
+export interface CheckOptions extends ProjectOptions {
+  /** Add deterministic accounting for findings hidden by no-mistakes directives. */
+  includeSuppressed?: boolean;
+}

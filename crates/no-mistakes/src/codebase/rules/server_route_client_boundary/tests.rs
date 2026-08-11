@@ -1,4 +1,13 @@
 use super::*;
+use crate::codebase::check_facts::CheckFactMap;
+
+fn check_with_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    facts: &CheckFactMap,
+) -> anyhow::Result<Vec<RuleFinding>> {
+    check_with_facts_for_aggregate(root, config, facts, None, false)
+}
 use crate::config::v2::schema::{Project, ProjectType, RuleDef, RuleScope};
 
 fn fixture(name: &str) -> PathBuf {
@@ -204,6 +213,21 @@ fn non_matching_rules_return_no_findings() {
     let findings = check(&fixture("fail"), &config).unwrap();
 
     assert!(findings.is_empty());
+}
+
+#[test]
+fn reports_invalid_rule_include_globs() {
+    let mut config = config();
+    config.rules[0].include = vec!["[".to_string()];
+
+    let error = check(&fixture("fail"), &config).unwrap_err();
+
+    assert!(
+        error
+            .to_string()
+            .contains("rule `server-route-client-boundary` include contains invalid glob"),
+        "{error:#}"
+    );
 }
 
 #[test]

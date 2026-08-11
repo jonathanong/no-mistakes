@@ -2,6 +2,10 @@ use crate::react_traits::report::types::{FileConfig, RootConfig, Violation};
 use anyhow::Result;
 use std::path::Path;
 
+mod aggregate;
+pub use aggregate::PreparedReactFindings;
+use aggregate::{assert_no_fetch_violations, assert_no_fetch_violations_with_suppression};
+
 /// Parsed React check settings that can be shared across one request.
 #[doc(hidden)]
 pub struct PreparedReactCheck {
@@ -102,26 +106,26 @@ pub fn run_check_with_prepared_facts(
     Ok(assert_no_fetch_violations(&facts_list))
 }
 
-fn assert_no_fetch_violations(
-    facts_list: &[crate::react_traits::ComponentFacts],
-) -> Vec<Violation> {
-    let mut violations = Vec::new();
-    for facts in facts_list {
-        let has_fetch = !facts.fetches.is_empty()
-            || facts
-                .inherited_from_children
-                .as_ref()
-                .is_some_and(|agg| agg.has_fetch);
-        if has_fetch {
-            violations.push(Violation {
-                component: facts.name.clone(),
-                file: facts.file.clone(),
-                rule: "assert-no-fetch".to_string(),
-                detail: facts.fetches.first().and_then(|f| f.shape.clone()),
-            });
-        }
+#[doc(hidden)]
+pub fn run_check_with_prepared_facts_for_aggregate(
+    root: &Path,
+    targets: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    prepared: &PreparedReactCheck,
+) -> Result<PreparedReactFindings> {
+    if !prepared.enabled() {
+        return Ok(PreparedReactFindings {
+            findings: Vec::new(),
+            suppression_targets: Vec::new(),
+        });
     }
-    violations
+    let facts_list = crate::react_traits::pipeline::run_with_facts::run_analyze_inner_with_facts_and_suppression(
+        root,
+        &prepared.file_config,
+        targets,
+        shared,
+    )?;
+    Ok(assert_no_fetch_violations_with_suppression(&facts_list))
 }
 
 pub fn check_enabled(

@@ -1,5 +1,8 @@
 use super::RuleFinding;
-use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
+use crate::codebase::check_facts::{
+    collect_check_facts_with_graph_files_playwright_sources_and_session, CheckFactMap,
+    CheckFactPlan,
+};
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
 use std::collections::HashSet;
@@ -13,6 +16,7 @@ mod findings;
 mod prepared;
 mod runner;
 mod selection;
+mod suppression;
 mod types;
 
 use colocated_tests::covered_components as colocated_test_covered_components;
@@ -20,9 +24,7 @@ use config::effective_story_patterns;
 use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};
 use findings::{namespace_import_findings, stale_or_blank_allow_findings};
-pub(crate) use prepared::{
-    check_with_prepared_facts_and_inferred_and_session, check_with_prepared_facts_and_session,
-};
+pub(crate) use prepared::{check_with_prepared_facts_for_aggregate, PreparedStorybookCheck};
 use selection::{component_disabled, file_disabled, selected_components};
 use types::{GlobMatcher, Options};
 
@@ -53,21 +55,40 @@ pub fn configured_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<s
     roots
 }
 
+#[doc(hidden)]
+pub fn authorize_configured_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    sources: &crate::codebase::ts_source::SourceStore,
+) {
+    config::authorize_configured_sources(
+        root,
+        config,
+        &configured_project_roots(root, config),
+        sources,
+    );
+}
+
 pub fn check(
     root: &Path,
     config: &NoMistakesConfig,
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let snapshot = session.visible_paths(root);
     let visible_paths = snapshot.paths_for(root);
     let files = crate::codebase::ts_source::discover_files_from_visible(
         root,
         &config.filesystem.skip_directories,
         &visible_paths,
     );
-    let facts = crate::codebase::check_facts::collect_check_facts(
+    let sources = snapshot.source_store_for(root);
+    authorize_configured_sources(root, config, &sources);
+    let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
+        &session,
         root,
-        files,
+        (files, Vec::new()),
         CheckFactPlan {
             react: true,
             symbols: true,
@@ -76,10 +97,11 @@ pub fn check(
             source: true,
             ..Default::default()
         },
+        None,
+        std::sync::Arc::clone(&sources),
     );
-    let sources = snapshot.source_store_for(root);
     let catalog = tsconfig_catalog(root, config, tsconfig_path, &visible_paths, &sources)?;
-    check_with_facts_and_catalog(root, config, &facts, &catalog, None)
+    check_with_facts_and_catalog(root, config, &facts, &catalog, None, &sources, &session)
 }
 
 fn check_with_facts_and_catalog(
@@ -88,9 +110,9 @@ fn check_with_facts_and_catalog(
     shared: &CheckFactMap,
     catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<Vec<RuleFinding>> {
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let visible_files = shared
         .files()
         .iter()
@@ -99,9 +121,17 @@ fn check_with_facts_and_catalog(
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         catalog,
         &visible_files,
-        &session,
+        session,
     );
-    runner::check_with_resolver(root, config, shared, &resolver, inferred_roots)
+    runner::check_with_resolver(
+        root,
+        config,
+        shared,
+        &resolver,
+        inferred_roots,
+        false,
+        sources,
+    )
 }
 
 fn tsconfig_catalog(

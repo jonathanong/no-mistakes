@@ -37,21 +37,14 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     check_files(&root, config, &files)
 }
 
-pub(crate) fn check_with_facts(
+pub(crate) fn check_with_facts_for_aggregate(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, None)
-}
-
-pub(crate) fn check_with_facts_and_inferred(
-    root: &Path,
-    config: &NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    inferred_roots: &crate::codebase::config::InferredRoots,
-) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, Some(inferred_roots))
+    check_with_optional_inferred(root, config, shared, inferred_roots, defer_suppression)
 }
 
 fn check_with_optional_inferred(
@@ -59,6 +52,7 @@ fn check_with_optional_inferred(
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut findings = Vec::new();
@@ -96,7 +90,13 @@ fn check_with_optional_inferred(
                     path.display()
                 );
             };
-            findings.extend(findings_for_file(&root, path, source, cache_facts));
+            findings.extend(findings_for_file(
+                &root,
+                path,
+                source,
+                cache_facts,
+                defer_suppression,
+            ));
         }
     }
     super::sort_findings(&mut findings);
@@ -135,7 +135,7 @@ fn check_files(
                     let Ok(cache_facts) = extract(path, &source) else {
                         return Vec::new();
                     };
-                    findings_for_file(root, path, &source, &cache_facts)
+                    findings_for_file(root, path, &source, &cache_facts, false)
                 })
                 .collect::<Vec<_>>(),
         );
@@ -149,14 +149,17 @@ fn findings_for_file(
     path: &Path,
     source: &str,
     cache_facts: &[NextjsCachingFinding],
+    defer_suppression: bool,
 ) -> Vec<RuleFinding> {
-    if has_disable_file_comment(source, RULE_ID) {
+    if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
         return Vec::new();
     }
     let file = relative_slash_path(root, path);
     cache_facts
         .iter()
-        .filter(|finding| !has_disable_comment(source, finding.line as u32, RULE_ID))
+        .filter(|finding| {
+            defer_suppression || !has_disable_comment(source, finding.line as u32, RULE_ID)
+        })
         .map(|finding| RuleFinding {
             rule: RULE_ID.to_string(),
             file: file.clone(),

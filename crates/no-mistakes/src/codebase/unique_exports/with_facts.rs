@@ -1,6 +1,8 @@
 use super::{analyze_unique_exports, filter_source_files, load_codebase_config_with_path};
 use super::{normalize_path, workspaces};
-use super::{ImportResolver, UniqueExportFinding, UniqueExportsOptions};
+use super::{
+    ImportResolver, PreparedUniqueExportFinding, UniqueExportFinding, UniqueExportsOptions,
+};
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use anyhow::Result;
@@ -9,7 +11,7 @@ use std::path::Path;
 
 mod helpers;
 mod prepared;
-use helpers::{relative, shared_symbol_files};
+use helpers::{relative, shared_symbol_files, ApplicationProjectFilter};
 pub use prepared::{
     analyze_project_with_config_and_facts, analyze_project_with_prepared_facts,
     analyze_project_with_prepared_facts_and_inferred,
@@ -17,6 +19,7 @@ pub use prepared::{
 pub use prepared::{
     analyze_project_with_prepared_facts_and_inferred_and_session,
     analyze_project_with_prepared_facts_catalog_and_inferred_and_session,
+    analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check,
 };
 
 pub fn analyze_project_with_facts(
@@ -42,12 +45,13 @@ struct ProjectRootsAnalysis<'a> {
     shared: &'a CheckFactMap,
     project_roots: Vec<std::path::PathBuf>,
     options: UniqueExportsOptions,
+    defer_suppression: bool,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
 }
 
 fn analyze_project_roots_with_facts(
     inputs: ProjectRootsAnalysis<'_>,
-) -> Result<Vec<UniqueExportFinding>> {
+) -> Result<Vec<PreparedUniqueExportFinding>> {
     let ProjectRootsAnalysis {
         session,
         root,
@@ -56,6 +60,7 @@ fn analyze_project_roots_with_facts(
         shared,
         project_roots,
         options,
+        defer_suppression,
         inferred_roots,
     } = inputs;
     if project_roots.is_empty() {
@@ -94,7 +99,12 @@ fn analyze_project_roots_with_facts(
         .collect::<HashSet<_>>();
     let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
         .unwrap_or_default();
-    let source_files = super::scan::collect_source_files_from_facts(root, &symbol_files, shared)?;
+    let source_files = super::scan::collect_source_files_from_facts(
+        root,
+        &symbol_files,
+        shared,
+        defer_suppression,
+    )?;
     if let Some(catalog) = resolution.catalog {
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
             catalog,
@@ -138,26 +148,32 @@ fn filter_application_files(
     let include = GlobMatcher::new(&application.include, "unique-exports rule include")?;
     let exclude = GlobMatcher::new(&application.exclude, "unique-exports rule exclude")?;
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
-    let projects = application
-        .projects
-        .iter()
-        .filter_map(|project_name| {
-            let project = config.projects.get(project_name)?;
-            let project_root = project
-                .effective_root_with_cache(root, &mut inferred_roots)
-                .unwrap_or_else(|| root.to_path_buf());
-            let project_root = normalize_path(&project_root);
-            let project_include =
-                GlobMatcher::new(&project.include, "unique-exports project include").ok()?;
-            let project_exclude =
-                GlobMatcher::new(&project.exclude, "unique-exports project exclude").ok()?;
-            Some(ApplicationProjectFilter {
-                root: project_root,
-                include: project_include,
-                exclude: project_exclude,
-            })
-        })
-        .collect::<Vec<_>>();
+    let mut projects = Vec::new();
+    for project_name in &application.projects {
+        let Some(project) = config.projects.get(project_name) else {
+            continue;
+        };
+        let project_root = match project.effective_root_with_cache(root, &mut inferred_roots) {
+            Some(project_root) => project_root,
+            None => root.to_path_buf(),
+        };
+        let project_root = normalize_path(&project_root);
+        let Ok(project_include) =
+            GlobMatcher::new(&project.include, "unique-exports project include")
+        else {
+            continue;
+        };
+        let Ok(project_exclude) =
+            GlobMatcher::new(&project.exclude, "unique-exports project exclude")
+        else {
+            continue;
+        };
+        projects.push(ApplicationProjectFilter {
+            root: project_root,
+            include: project_include,
+            exclude: project_exclude,
+        });
+    }
     Ok(files
         .into_iter()
         .filter(|path| {
@@ -185,12 +201,6 @@ fn filter_application_files(
             })
         })
         .collect())
-}
-
-struct ApplicationProjectFilter {
-    root: std::path::PathBuf,
-    include: crate::codebase::rules::path_filter::GlobMatcher,
-    exclude: crate::codebase::rules::path_filter::GlobMatcher,
 }
 
 #[cfg(test)]

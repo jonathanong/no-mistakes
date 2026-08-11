@@ -204,6 +204,17 @@ test("programmatic API proxies object options through async native addon calls",
         },
       },
     );
+    assert.deepEqual(
+      await api.analyzeProject({
+        reports: [{ type: "check", includeSuppressed: true }],
+      }),
+      {
+        command: "analyzeProject",
+        options: {
+          reports: [{ type: "check", includeSuppressed: true }],
+        },
+      },
+    );
     assert.equal(
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
       "both",
@@ -429,6 +440,18 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
+    traversalDeclarations,
+    /export interface CheckOptions extends ProjectOptions \{[\s\S]*?includeSuppressed\?: boolean;/,
+  );
+  assert.doesNotMatch(
+    traversalDeclarations,
+    /export interface ProjectOptions \{[^}]*includeSuppressed/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /check\(options\?: WithInvocationOptions<CheckOptions>\): Promise<CheckReport>;/,
+  );
+  assert.match(
     analyzeProjectDeclarations,
     /type: "symbols"; id\?: string } & \(SymbolsListOptions \| SymbolsSignatureImpactOptions\)/,
   );
@@ -474,9 +497,17 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<ProjectOptions, "root" \| "tsconfig" \| "config">/,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed"[\s\S]*?>/,
+  );
+  assert.doesNotMatch(
+    analyzeProjectDeclarations,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"include" \| "includeSuppressed"/,
   );
   assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
+  assert.match(
+    readFileSync(join(packageRoot, "report-types.d.ts"), "utf8"),
+    /domain:[\s\S]*\| "advisories";/,
+  );
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,

@@ -30,6 +30,22 @@ export interface CheckReport {
   codebase: unknown[];
   warnings: string[];
   advisories: unknown[];
+  /** Present when `includeSuppressed` is requested; empty when no directives matched. */
+  suppressed?: SuppressedFinding[];
+}
+
+export interface SuppressedFinding {
+  domain: "react" | "queues" | "rules" | "filesystem" | "integration" | "codebase" | "advisories";
+  rule: string;
+  file: string;
+  /** File containing the suppression directive. */
+  sourceFile: string;
+  line?: number;
+  reason: string;
+  directive: {
+    kind: "file" | "line" | "nextLine";
+    line: number;
+  };
 }
 
 export interface QueueReport {

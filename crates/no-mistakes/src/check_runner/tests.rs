@@ -4,7 +4,7 @@ use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;
 use anyhow::anyhow;
 use no_mistakes::codebase::rules::{RuleFinding, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS};
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
@@ -20,6 +20,14 @@ mod integration_gitignore;
 mod prepared_parser_cache;
 mod prepared_tsconfig;
 mod tsconfig_catalog;
+
+fn run_all(
+    root: PathBuf,
+    config_path: Option<PathBuf>,
+    tsconfig_path: Option<PathBuf>,
+) -> anyhow::Result<CheckResults> {
+    super::run_all_with_suppressed(root, config_path, tsconfig_path, false)
+}
 
 fn aggregate_html_id_rule_composition(name: &str) -> Vec<RuleFinding> {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -119,6 +127,7 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
             config_path: None,
         },
         None,
+        false,
     )
     .unwrap();
 
@@ -438,6 +447,8 @@ fn assert_domain_error(results: DomainResults, expected: &str) {
 fn empty_task<T>(findings: T) -> CheckTask<T> {
     CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
+        suppression_sources: Vec::new(),
         warning: None,
         duration: Duration::ZERO,
     }
@@ -459,7 +470,7 @@ fn ok_integration() -> anyhow::Result<CheckTask<Vec<IntegrationFinding>>> {
     Ok(empty_task(Vec::new()))
 }
 
-fn ok_codebase() -> anyhow::Result<CheckTask<Vec<UniqueExportFinding>>> {
+fn ok_codebase() -> anyhow::Result<CheckTask<Vec<PreparedUniqueExportFinding>>> {
     Ok(empty_task(Vec::new()))
 }
 

@@ -3,6 +3,14 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
 use std::collections::HashMap;
 
+fn check_with_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    facts: &CheckFactMap,
+) -> anyhow::Result<Vec<RuleFinding>> {
+    check_with_facts_for_aggregate(root, config, facts, None, false)
+}
+
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/no-nextjs-api-routes/fixture")
@@ -87,6 +95,22 @@ fn fact_runner_checks_nextjs_api_routes() {
     .unwrap();
 
     assert_eq!(findings.len(), 4);
+}
+
+#[test]
+fn fact_runner_reports_invalid_rule_include_globs() {
+    let root = fixture();
+    let mut config = config();
+    config.rules[0].include = vec!["[".to_string()];
+
+    let error = check_with_facts(&root, &config, &CheckFactMap::default()).unwrap_err();
+
+    assert!(
+        error
+            .to_string()
+            .contains("rule `nextjs-no-api-routes` include contains invalid glob"),
+        "{error:#}"
+    );
 }
 
 #[test]
@@ -202,7 +226,7 @@ fn route_matching_rejects_paths_outside_target_roots() {
     let target_roots = vec![root.join("web")];
     let outside = root.join("other/app/api/users/route.ts");
 
-    assert!(finding_for_file(&root, &target_roots, &outside, "").is_none());
+    assert!(finding_for_file(&root, &target_roots, &outside, "", false).is_none());
     assert!(!is_nextjs_api_route(&outside, &target_roots));
 }
 
@@ -212,6 +236,6 @@ fn route_matching_rejects_non_route_paths_inside_target_roots() {
     let target_roots = vec![root.join("web")];
     let inside = root.join("web/app/page.tsx");
 
-    assert!(finding_for_file(&root, &target_roots, &inside, "").is_none());
+    assert!(finding_for_file(&root, &target_roots, &inside, "", false).is_none());
     assert!(!is_nextjs_api_route(&inside, &target_roots));
 }

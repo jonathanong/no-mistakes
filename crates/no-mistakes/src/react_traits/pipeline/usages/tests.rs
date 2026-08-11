@@ -149,6 +149,72 @@ fn target_file_not_found_is_an_error() {
 }
 
 #[test]
+fn loaded_usages_rejects_an_absolute_missing_target() {
+    let root = fixture();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let missing = root.join("app/components/missing.tsx");
+    let error = run_usages_with_loaded_config_and_facts(
+        &root,
+        &config,
+        &missing.to_string_lossy(),
+        &[],
+        &UsagesInclude::all(),
+        &crate::codebase::check_facts::CheckFactMap::default(),
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("target file not found"));
+}
+
+#[test]
+fn loaded_usages_skips_files_without_prepared_usage_facts() {
+    let root = fixture();
+    let target = root.join("app/components/button.tsx");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let facts = crate::codebase::check_facts::CheckFactMap {
+        files: vec![target.clone()],
+        ..Default::default()
+    };
+    let report = run_usages_with_loaded_config_and_facts(
+        &root,
+        &config,
+        "app/components/button.tsx#Button",
+        &[],
+        &UsagesInclude::all(),
+        &facts,
+    )
+    .unwrap();
+    assert!(report.callsites.is_empty());
+    assert!(report.stories.unwrap().is_empty());
+    assert!(report.tests.unwrap().is_empty());
+}
+
+#[test]
+fn run_usages_returns_error_for_nonexistent_config_path() {
+    let root = fixture();
+    let error = run_usages(
+        &root,
+        Some(Path::new("missing-no-mistakes.yaml")),
+        "app/components/button.tsx#Button",
+        &[],
+        &UsagesInclude::all(),
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("missing-no-mistakes.yaml"));
+}
+
+#[test]
+fn collect_usage_file_facts_supports_unscoped_import_resolution() {
+    let file = fixture().join("app/pages/home.tsx");
+    let source = std::fs::read_to_string(&file).unwrap();
+    let facts = crate::ast::with_program(&file, &source, |program, _| {
+        collect_usage_file_facts(&file, &source, program, None)
+    })
+    .unwrap();
+    assert!(!facts.imports.is_empty());
+    assert!(!facts.callsites.is_empty());
+}
+
+#[test]
 fn unparseable_target_file_yields_empty_prop_types() {
     let root = fixture();
     // broken.tsx is unparseable: scanning skips it, and its prop types come back empty.

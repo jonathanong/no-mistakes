@@ -47,5 +47,6 @@ pub(super) fn check_files(
         |item| item.path.as_path(),
         |item| &item.facts,
         None,
+        false,
     )
 }

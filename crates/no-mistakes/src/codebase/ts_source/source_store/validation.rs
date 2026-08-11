@@ -13,7 +13,7 @@ pub(super) fn validated_regular_path(
 ) -> Option<PathBuf> {
     if inventory
         .classification_for_path(candidate)
-        .is_some_and(super::super::FileClassification::is_lexical_file)
+        .is_some_and(super::super::FileClassification::target_is_file)
     {
         return Some(candidate.to_path_buf());
     }

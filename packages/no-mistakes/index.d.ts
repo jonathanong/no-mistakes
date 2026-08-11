@@ -4,6 +4,7 @@ import type {
   AnalyzeProjectResult,
   CallSitesOptions,
   CallSitesResult,
+  CheckOptions,
   DeadExportsOptions,
   DeadExportsResult,
   DependencyResult,
@@ -93,7 +94,7 @@ export function resolveCheck(
 ): Promise<ResolveCheckBatchResult>;
 export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<unknown>;
 export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
-export function check(options?: WithInvocationOptions<ProjectOptions>): Promise<CheckReport>;
+export function check(options?: WithInvocationOptions<CheckOptions>): Promise<CheckReport>;
 export function validateMermaidMarkdown(
   options: WithInvocationOptions<MermaidValidationOptions>,
 ): Promise<MermaidValidationResult>;

@@ -18,6 +18,9 @@ fn call_first_string_arguments_allow_line_suppression_at_the_dynamic_call() {
 
 #[test]
 fn suppressed_dynamic_calls_do_not_skip_static_set_comparisons() {
+    // Suppression only removes the extraction diagnostic after comparison;
+    // retaining the suppressed call's static value is what makes both
+    // comparison findings sound.
     let root = call_literal_fixture_root("suppressed-static-mismatch");
     let files = vec![root.join("schedules.mts"), root.join("registry.mts")];
 

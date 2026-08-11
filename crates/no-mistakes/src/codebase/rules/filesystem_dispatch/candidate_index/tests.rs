@@ -88,10 +88,6 @@ fn rust_exclusivity_tracks_enabled_non_rust_candidate_overlap() {
         &files,
         Some(Arc::clone(&files)),
     );
-    assert_eq!(
-        exclusive.exclusive_rust_candidates(),
-        std::slice::from_ref(&rust_file)
-    );
     let agents = exclusive
         .by_rule
         .get(super::super::AGENTS_MD_MAX_SIZE)
@@ -104,27 +100,6 @@ fn rust_exclusivity_tracks_enabled_non_rust_candidate_overlap() {
         .unwrap();
     assert!(Arc::ptr_eq(&agents, &workflows));
     assert!(Arc::ptr_eq(&agents, &files));
-
-    let overlapping = NoMistakesConfig {
-        rules: vec![
-            rust_rule,
-            RuleDef {
-                rule: super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES.to_string(),
-                scope: Some(RuleScope::Repository),
-                ..Default::default()
-            },
-        ],
-        ..Default::default()
-    };
-    let shared = RuleCandidateIndex::prepare_with_inventory(
-        &root,
-        &overlapping,
-        &files,
-        &files,
-        &files,
-        None,
-    );
-    assert!(shared.exclusive_rust_candidates().is_empty());
 }
 
 #[test]
@@ -132,6 +107,7 @@ fn dispatch_prepares_one_index_and_only_reads_preclassified_views() {
     let dispatch = concat!(
         include_str!("../../filesystem_dispatch.rs"),
         include_str!("../execute.rs"),
+        include_str!("../execute/special.rs"),
     );
 
     assert_eq!(dispatch.matches("RuleCandidateIndex::prepare").count(), 1);

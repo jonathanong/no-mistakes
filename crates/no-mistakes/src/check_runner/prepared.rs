@@ -64,6 +64,11 @@ pub(crate) fn prepare_from_shared(
     let codebase_config =
         no_mistakes::codebase::config::config_from_loaded_v2(root, config_path, &config);
     let sources = visible_paths.source_store_for(root);
+    if config.rule_configured(no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES) {
+        no_mistakes::codebase::rules::require_storybook_stories::authorize_configured_sources(
+            root, &config, &sources,
+        );
+    }
     let tsconfig_catalog = Arc::new(if let Some(path) = tsconfig_path {
         let path = if path.is_absolute() {
             path.to_path_buf()

@@ -1,5 +1,9 @@
 use super::*;
 
+fn suppress_rule_findings(root: &std::path::Path, findings: &mut Vec<RuleFinding>) {
+    super::suppression::suppress_rule_findings_inner(root, findings, None, &[]);
+}
+
 #[test]
 fn shared_suppression_only_reads_repo_relative_paths() {
     let temp = tempfile::tempdir().unwrap();

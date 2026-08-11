@@ -29,8 +29,48 @@ fn source_file(root: &Path, rel: &str, source: &str) -> SourceFile {
             .unwrap()
             .into(),
         disabled: false,
+        defer_suppression: false,
         is_nextjs_project: false,
     }
+}
+
+#[test]
+fn current_suppression_location_reports_file_and_line_directives() {
+    let root = fixture("unique-exports-edge-cases");
+    let visible = source_file(&root, "src/visible.ts", "export const Visible = 1;\n");
+    let line_disabled = source_file(
+        &root,
+        "src/line-disabled.ts",
+        "// no-mistakes-disable-next-line unique-exports\nexport const Hidden = 1;\n",
+    );
+    let mut file_disabled = visible.clone();
+    file_disabled.disabled = true;
+
+    assert_eq!(
+        collector::current_suppression_location(&visible, &visible.symbols.exports[0]),
+        None
+    );
+    assert_eq!(
+        collector::current_suppression_location(&line_disabled, &line_disabled.symbols.exports[0]),
+        Some(("src/line-disabled.ts".to_string(), 2))
+    );
+    assert_eq!(
+        collector::current_suppression_location(&file_disabled, &file_disabled.symbols.exports[0]),
+        Some(("src/visible.ts".to_string(), 1))
+    );
+}
+
+fn suppression_origin_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase/unique-exports-suppressed-origin")
+}
+
+fn fixture_source_file(root: &Path, rel: &str, defer_suppression: bool) -> SourceFile {
+    let source = std::fs::read_to_string(root.join(rel)).unwrap();
+    let mut file = source_file(root, rel, &source);
+    file.disabled = crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID);
+    file.defer_suppression = defer_suppression;
+    file
 }
 
 fn find_origin(
@@ -97,4 +137,30 @@ export type { MissingType } from './missing'\n",
 
     let missing_type = find_origin(&reexport_path, "MissingType", &files, &resolver, &workspace);
     assert_eq!(missing_type.bucket, ExportBucket::Type);
+}
+
+#[test]
+fn deferred_suppression_keeps_disabled_reexport_as_fallback_origin() {
+    let root = suppression_origin_fixture();
+    let source = fixture_source_file(&root, "src/source.ts", true);
+    let barrel = fixture_source_file(&root, "src/barrel.ts", true);
+    let barrel_path = barrel.path.clone();
+    let files = HashMap::from([(source.path.clone(), source), (barrel.path.clone(), barrel)]);
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tsconfig);
+
+    let origin = find_origin(
+        &barrel_path,
+        "Shared",
+        &files,
+        &resolver,
+        &WorkspaceMap::default(),
+    );
+
+    assert_eq!(origin.file, "src/barrel.ts");
 }

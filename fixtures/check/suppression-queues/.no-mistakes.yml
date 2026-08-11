@@ -1,0 +1,7 @@
+projects:
+  queues:
+    type: library
+    root: .
+    queues:
+      enqueues: [src/queues.ts]
+      workers: [src/queues.ts]

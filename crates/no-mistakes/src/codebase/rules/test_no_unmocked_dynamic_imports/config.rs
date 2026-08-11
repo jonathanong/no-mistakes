@@ -39,25 +39,40 @@ fn precompute_setup_data_from_config_files(
     root: &Path,
     config_files: &[ConfigFile],
 ) -> Result<Vec<ConfigSetupData>> {
-    precompute_setup_data_from_config_files_inner(root, config_files, None)
+    precompute_setup_data_from_config_files_inner(root, config_files, None, None)
 }
 
 fn precompute_setup_data_from_config_files_from_visible(
     root: &Path,
     config_files: &[ConfigFile],
     visible_files: &std::collections::HashSet<PathBuf>,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<ConfigSetupData>> {
-    precompute_setup_data_from_config_files_inner(root, config_files, Some(visible_files))
+    precompute_setup_data_from_config_files_inner(
+        root,
+        config_files,
+        Some(visible_files),
+        Some(sources),
+    )
 }
 
 fn precompute_setup_data_from_config_files_inner(
     root: &Path,
     config_files: &[ConfigFile],
     visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<ConfigSetupData>> {
     let mut result = Vec::new();
     for config_file in config_files {
-        let source = std::fs::read_to_string(&config_file.path)?;
+        let source = match sources {
+            Some(sources) => crate::codebase::rules::read_source(sources, &config_file.path)
+                .ok_or(anyhow::anyhow!(
+                    "failed to read {}",
+                    config_file.path.display()
+                ))?
+                .to_string(),
+            None => std::fs::read_to_string(&config_file.path)?,
+        };
         let base = config_file.path.parent().unwrap_or(root);
         let includes = normalize_matcher_patterns(root, base, config_file.includes(&source));
         let excludes = normalize_matcher_patterns(
@@ -70,8 +85,12 @@ fn precompute_setup_data_from_config_files_inner(
             include_regex: build_regexes(&extract_test_regexes(&source))?,
             exclude: build_globset(&excludes)?,
         };
-        let setup_files =
-            setup_files_from_configs_inner(root, vec![config_file.path.clone()], visible_files)?;
+        let setup_files = setup_files_from_configs_inner(
+            root,
+            vec![config_file.path.clone()],
+            visible_files,
+            sources,
+        )?;
         result.push(ConfigSetupData {
             filter,
             setup_files,
@@ -119,10 +138,16 @@ fn setup_files_from_configs_inner(
     root: &Path,
     config_files: Vec<PathBuf>,
     visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
     for config_file in config_files {
-        let source = std::fs::read_to_string(&config_file)?;
+        let source = match sources {
+            Some(sources) => crate::codebase::rules::read_source(sources, &config_file)
+                .ok_or(anyhow::anyhow!("failed to read {}", config_file.display()))?
+                .to_string(),
+            None => std::fs::read_to_string(&config_file)?,
+        };
         let base = config_file.parent().unwrap_or(root);
         let mut setups = extract_test_property_strings(&source, "setupFiles");
         setups.extend(extract_property_strings(&source, "setupFiles"));

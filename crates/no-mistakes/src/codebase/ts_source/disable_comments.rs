@@ -135,10 +135,14 @@ pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> 
 /// - `// no-mistakes-disable-file <rule_id>: <reason>`
 /// - `// no-mistakes-disable-file <rule_id> <reason>`
 pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
+    disable_file_directive_line(source, rule_id).is_some()
+}
+
+fn disable_file_directive_line(source: &str, rule_id: &str) -> Option<u32> {
     let mut in_block_comment = false;
     let mut saw_hash_attribute = false;
 
-    for line in source.trim_start_matches('\u{FEFF}').lines() {
+    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
         let mut rest = line.trim();
 
         loop {
@@ -166,24 +170,22 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
 
             let comment_prefix_is_slash = rest.starts_with("//");
             saw_hash_attribute |= hash_attribute_comment_line(rest);
-            let Some(rest) = leading_comment_text(rest) else {
-                return false;
-            };
+            let rest = leading_comment_text(rest)?;
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
                 break;
             };
             if saw_hash_attribute && comment_prefix_is_slash {
-                return false;
+                return None;
             }
             let rule_part = after_directive.trim();
             if rule_part_matches(rule_part, rule_id) {
-                return true;
+                return Some((index + 1) as u32);
             }
             break;
         }
     }
 
-    false
+    None
 }
 
 fn hash_attribute_comment_line(line: &str) -> bool {
@@ -227,3 +229,6 @@ fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
         suffix.is_empty() || suffix.starts_with(':') || suffix.starts_with(char::is_whitespace)
     })
 }
+#[path = "disable_comments/directives.rs"]
+mod directives;
+pub use directives::{matching_disable_directive, DisableDirective};

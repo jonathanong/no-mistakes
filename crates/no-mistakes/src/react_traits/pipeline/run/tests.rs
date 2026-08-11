@@ -1,6 +1,6 @@
 use super::test_support::*;
 use super::*;
-use crate::react_traits::report::types::{ComponentRef, Environment, FetchCall};
+use crate::react_traits::report::types::{AggregatedFacts, ComponentRef, Environment, FetchCall};
 use std::collections::HashMap;
 
 fn fixture(name: &str) -> PathBuf {
@@ -149,9 +149,29 @@ fn aggregate_children_skips_repeated_refs_and_unreadable_children() {
         file: child.file.clone(),
         exported_name: None,
         shape: None,
+        line: 1,
     });
     let mut cache = HashMap::from([(root.join("app/components/Child.tsx"), vec![child])]);
     let agg = aggregate_children(&parent, &mut cache, &root, &mut HashSet::new());
 
     assert!(agg.has_fetch);
+}
+
+#[test]
+fn aggregate_children_skips_children_outside_the_visible_snapshot() {
+    let root = fixture("nested");
+    let mut parent = component("Parent", "app/components/Parent.tsx");
+    parent.children = vec![ComponentRef {
+        file: "app/components/Child.tsx".to_string(),
+        name: "Child".to_string(),
+    }];
+    let child = component("Child", "app/components/Child.tsx");
+    let child_path = root.join("app/components/Child.tsx");
+    let mut cache = HashMap::from([(child_path, vec![child])]);
+    let visible = HashSet::from([root.join("app/components/Parent.tsx")]);
+
+    let agg =
+        aggregate_children_from_visible(&parent, &mut cache, &root, &visible, &mut HashSet::new());
+
+    assert_eq!(agg, AggregatedFacts::default());
 }

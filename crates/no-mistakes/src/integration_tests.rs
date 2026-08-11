@@ -123,7 +123,7 @@ pub fn check_with_prepared_facts_and_session(
         return Ok(Vec::new());
     }
 
-    fail_on_dropped_files(shared)?;
+    fail_on_dropped_files(root, &suites, shared)?;
     let analyses: std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis> = shared
         .ts
         .iter()
@@ -175,7 +175,7 @@ pub fn check_with_prepared_facts_catalog_and_session(
         return Ok(Vec::new());
     }
 
-    fail_on_dropped_files(shared)?;
+    fail_on_dropped_files(root, &suites, shared)?;
     let analyses: std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis> = shared
         .ts
         .iter()

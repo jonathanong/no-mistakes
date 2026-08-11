@@ -28,12 +28,12 @@ pub(super) struct RustWork {
     pub(super) inline_allows: bool,
 }
 
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn check_with_files_sources_and_deferred_suppression(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
-    exclusive_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let mut work = BTreeMap::<PathBuf, RustWork>::new();
     add_max_lines_work(root, config, all_files, &mut work)?;
@@ -43,13 +43,7 @@ pub(crate) fn check_with_files_and_sources(
     let mut findings: Vec<RuleFinding> = work
         .par_iter()
         .flat_map(|(path, work)| {
-            scan::scan_file(
-                root,
-                path,
-                work,
-                exclusive_files.binary_search(path).is_ok(),
-                sources,
-            )
+            scan::scan_file_with_deferred_suppression(root, path, work, sources, defer_suppression)
         })
         .collect();
     super::sort_findings(&mut findings);

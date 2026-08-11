@@ -94,7 +94,17 @@ pub(crate) fn check_source(
     content: &str,
     limit: usize,
 ) -> Option<RuleFinding> {
-    if has_disable_file_comment(content, RULE_ID) {
+    check_source_with_deferred_suppression(path, root, content, limit, false)
+}
+
+pub(crate) fn check_source_with_deferred_suppression(
+    path: &Path,
+    root: &Path,
+    content: &str,
+    limit: usize,
+    defer_suppression: bool,
+) -> Option<RuleFinding> {
+    if !defer_suppression && has_disable_file_comment(content, RULE_ID) {
         return None;
     }
     let code_lines = count_code_lines(content);

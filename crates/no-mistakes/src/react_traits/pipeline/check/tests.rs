@@ -62,6 +62,13 @@ fn run_check_reports_violations_when_assert_no_fetch_is_enabled() {
 }
 
 #[test]
+fn run_check_returns_analysis_error_for_missing_frontend_root() {
+    let root = assert_no_fetch_root().join("missing");
+    let error = run_check(&root, None, &[], true).unwrap_err();
+    assert!(error.to_string().contains("frontend root not found"));
+}
+
+#[test]
 fn check_enabled_returns_true_when_assert_no_fetch_is_enabled() {
     let root = assert_no_fetch_root();
     assert!(check_enabled(&root, None, true).unwrap());
@@ -123,6 +130,108 @@ fn run_check_with_facts_reports_violations_when_assert_no_fetch_is_enabled() {
     let facts = collect_check_facts(&root, vec![fetcher], plan);
     let violations = run_check_with_facts(&root, None, &[], true, &facts).unwrap();
     assert!(!violations.is_empty(), "expected fetch violations");
+}
+
+#[test]
+fn prepared_check_and_aggregate_sidecar_cover_enabled_and_disabled_paths() {
+    use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+
+    let root = assert_no_fetch_root();
+    let fetcher = root.join("app/components/Fetcher.tsx");
+    let facts = collect_check_facts(
+        &root,
+        vec![fetcher],
+        CheckFactPlan {
+            react: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let enabled = prepare_check_from_loaded_config(&config, true);
+    let violations = run_check_with_prepared_facts(&root, &[], &facts, &enabled).unwrap();
+    assert!(!violations.is_empty());
+
+    let disabled = prepare_file_config(FileConfig::default(), false);
+    let aggregate =
+        run_check_with_prepared_facts_for_aggregate(&root, &[], &facts, &disabled).unwrap();
+    assert!(aggregate.findings.is_empty());
+    assert!(aggregate.suppression_targets.is_empty());
+}
+
+#[test]
+fn prepared_check_returns_analysis_error_for_missing_frontend_root() {
+    let root = assert_no_fetch_root().join("missing");
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+    let prepared = prepare_file_config(
+        FileConfig {
+            frontend_root: Some("app".to_string()),
+            assert_no_fetch: Some(true),
+        },
+        false,
+    );
+
+    let error = run_check_with_prepared_facts(&root, &[], &facts, &prepared).unwrap_err();
+    assert!(error.to_string().contains("frontend root not found"));
+}
+
+#[test]
+fn aggregate_check_keeps_public_violations_and_private_suppression_locations_separate() {
+    use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+
+    let root = assert_no_fetch_root();
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let facts = collect_check_facts(
+        &root,
+        files,
+        CheckFactPlan {
+            react: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let prepared = prepare_check_from_loaded_config(
+        &crate::config::v2::load_v2_config(&root, None).unwrap(),
+        false,
+    );
+    let report =
+        run_check_with_prepared_facts_for_aggregate(&root, &[], &facts, &prepared).unwrap();
+    assert_eq!(report.findings.len(), report.suppression_targets.len());
+    assert!(report
+        .findings
+        .iter()
+        .any(|finding| finding.rule == "assert-no-fetch"));
+    assert!(report
+        .suppression_targets
+        .iter()
+        .any(|targets| !targets.is_empty()));
+}
+
+#[test]
+fn public_prepared_check_matches_aggregate_findings_for_fetch_fixture() {
+    use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+
+    let root = assert_no_fetch_root();
+    let facts = collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_visible_paths(&root),
+        CheckFactPlan {
+            react: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let prepared = prepare_check_from_loaded_config(
+        &crate::config::v2::load_v2_config(&root, None).unwrap(),
+        false,
+    );
+
+    let public = run_check_with_prepared_facts(&root, &[], &facts, &prepared).unwrap();
+    let aggregate =
+        run_check_with_prepared_facts_for_aggregate(&root, &[], &facts, &prepared).unwrap();
+
+    assert_eq!(
+        serde_json::to_value(public).unwrap(),
+        serde_json::to_value(aggregate.findings).unwrap(),
+        "the public prepared-facts check must not require suppression sidecars"
+    );
 }
 
 #[test]

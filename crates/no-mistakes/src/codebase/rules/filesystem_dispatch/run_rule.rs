@@ -1,21 +1,37 @@
 use super::*;
 
-pub(super) fn run_rule_with_sources(
-    rule_id: &str,
-    fallback: fn(
-        &Path,
-        &crate::config::v2::NoMistakesConfig,
-        &[PathBuf],
-    ) -> Result<Vec<RuleFinding>>,
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
-) -> Result<Vec<RuleFinding>> {
+pub(super) struct RunRuleRequest<'a> {
+    pub(super) rule_id: &'a str,
+    pub(super) fallback:
+        fn(&Path, &crate::config::v2::NoMistakesConfig, &[PathBuf]) -> Result<Vec<RuleFinding>>,
+    pub(super) root: &'a Path,
+    pub(super) config: &'a crate::config::v2::NoMistakesConfig,
+    pub(super) files: &'a [PathBuf],
+    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(super) facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
+    pub(super) defer_suppression: bool,
+}
+
+pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
+    let RunRuleRequest {
+        rule_id,
+        fallback,
+        root,
+        config,
+        files,
+        sources,
+        facts,
+        defer_suppression,
+    } = request;
     match rule_id {
         AGENTS_MD_MAX_SIZE => {
-            agents_md_max_size::check_with_files_and_sources(root, config, files, sources)
+            agents_md_max_size::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
         }
         FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files_sources_and_facts(
             root,

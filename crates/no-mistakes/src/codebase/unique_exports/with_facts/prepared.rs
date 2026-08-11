@@ -3,9 +3,14 @@ use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::config::Config;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::unique_exports::{UniqueExportFinding, RULE_ID};
+use crate::codebase::unique_exports::{PreparedUniqueExportFinding, UniqueExportFinding, RULE_ID};
 use anyhow::Result;
 use std::path::Path;
+
+mod aggregate;
+mod public;
+pub use aggregate::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check;
+use public::analyze_project_with_optional_prepared_facts;
 
 #[derive(Clone, Copy, Default)]
 pub(super) struct PreparedResolution<'a> {
@@ -32,6 +37,7 @@ pub fn analyze_project_with_config_and_facts(
         shared,
         None,
         &session,
+        false,
     )
 }
 
@@ -53,6 +59,7 @@ pub fn analyze_project_with_prepared_facts(
         shared,
         None,
         &session,
+        false,
     )
 }
 
@@ -94,6 +101,7 @@ pub fn analyze_project_with_prepared_facts_and_inferred_and_session(
         shared,
         Some(inferred_roots),
         session,
+        false,
     )
 }
 
@@ -117,17 +125,19 @@ pub fn analyze_project_with_prepared_facts_catalog_and_inferred_and_session(
         shared,
         Some(inferred_roots),
         session,
+        false,
     )
 }
 
-fn analyze_project_with_optional_prepared_facts(
+pub(super) fn analyze_project_with_optional_prepared_facts_prepared(
     root: &Path,
     config: &Config,
     resolution: PreparedResolution<'_>,
     shared: &CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     session: &AnalysisSession,
-) -> Result<Vec<UniqueExportFinding>> {
+    defer_suppression: bool,
+) -> Result<Vec<PreparedUniqueExportFinding>> {
     let normalized_root = normalize_path(root);
     let root = normalized_root.as_path();
     let applications = config.rule_applications_for(RULE_ID);
@@ -154,6 +164,7 @@ fn analyze_project_with_optional_prepared_facts(
                 shared,
                 project_roots,
                 options,
+                defer_suppression,
                 inferred_roots,
             })?);
         }
@@ -178,6 +189,7 @@ fn analyze_project_with_optional_prepared_facts(
         shared,
         project_roots,
         options: config.rule_options(RULE_ID),
+        defer_suppression,
         inferred_roots,
     })
 }

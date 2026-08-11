@@ -24,6 +24,7 @@ pub(super) fn collect_source_files_from_facts(
     root: &Path,
     files: &[PathBuf],
     shared: &crate::codebase::check_facts::CheckFactMap,
+    defer_suppression: bool,
 ) -> Result<Vec<SourceFile>> {
     let nextjs_projects = NextJsProjectLookup::new(root, files, shared.files());
     let mut source_files = Vec::new();
@@ -35,12 +36,10 @@ pub(super) fn collect_source_files_from_facts(
             anyhow::bail!("missing source facts for {}", path.display());
         };
         let disabled = has_disable_file_comment(&source, RULE_ID);
-        if !disabled {
-            if let Some(error) = &facts.parse_error {
+        let symbols = if let Some(error) = &facts.parse_error {
+            if !disabled {
                 anyhow::bail!("failed to parse {}: {error}", path.display());
             }
-        }
-        let symbols = if disabled {
             Default::default()
         } else {
             let Some(symbols) = facts.symbols.clone() else {
@@ -51,9 +50,10 @@ pub(super) fn collect_source_files_from_facts(
         source_files.push(SourceFile {
             path: normalize_path(path),
             rel: relative_slash_path(root, path),
-            disabled,
-            is_nextjs_project: nextjs_projects.contains_file(path),
             source: source.to_string(),
+            disabled,
+            defer_suppression,
+            is_nextjs_project: nextjs_projects.contains_file(path),
             symbols,
         });
     }

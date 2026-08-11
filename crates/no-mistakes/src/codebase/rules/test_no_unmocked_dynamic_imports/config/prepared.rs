@@ -1,5 +1,4 @@
 use super::discovery::config_files_from_visible;
-use super::filter::test_filter_from_config_files;
 use super::{ConfigSetupData, TestFilter};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -25,6 +24,7 @@ pub(in super::super) fn prepare_from_visible(
     root: &Path,
     config: &NoMistakesConfig,
     visible_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<PreparedConfig> {
     let config_files = config_files_from_visible(root, config, visible_files);
     let visible_files = visible_files
@@ -32,11 +32,17 @@ pub(in super::super) fn prepare_from_visible(
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<HashSet<_>>();
     Ok(PreparedConfig {
-        test_filter: test_filter_from_config_files(root, config, &config_files)?,
+        test_filter: super::filter::test_filter_from_config_files_with_sources(
+            root,
+            config,
+            &config_files,
+            Some(sources),
+        )?,
         setup_data: super::precompute_setup_data_from_config_files_from_visible(
             root,
             &config_files,
             &visible_files,
+            sources,
         )?,
     })
 }

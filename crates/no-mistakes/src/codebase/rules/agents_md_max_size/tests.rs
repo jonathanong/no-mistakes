@@ -1,4 +1,4 @@
-use super::agents_md_max_size_budget::{check_content, count_lines};
+use super::agents_md_max_size_budget::{check_content_with_deferred_suppression, count_lines};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -14,7 +14,7 @@ fn check_file(
     let Ok(content) = std::fs::read_to_string(path) else {
         return Vec::new();
     };
-    check_content(path, root, max_lines, max_chars, &content)
+    check_content_with_deferred_suppression(path, root, max_lines, max_chars, &content, false)
 }
 
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
@@ -147,6 +147,25 @@ fn checks_advisories_and_suppressions_share_one_source_read() {
     assert!(findings.is_empty());
     assert_eq!(advisories.len(), 1);
     assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn prepared_scan_ignores_missing_source_files() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/agents-md-max-size/pass");
+    let missing = root.join("missing/AGENTS.md");
+    let files = vec![missing];
+    let sources = super::super::source_store_for_files(&files);
+    let findings = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config_with_rule("{maxChars: 20}"),
+        &files,
+        &sources,
+        false,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty());
 }
 
 #[test]

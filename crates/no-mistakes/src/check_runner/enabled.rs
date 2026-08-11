@@ -66,7 +66,11 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         storybook: enabled.storybook_stories,
         server_route_client_boundary: enabled.boundary_rules,
         raw_source: enabled.nextjs_api_routes,
-        source: enabled.dynamic_import_rules
+        // Integration parse failures must retain their directive text so the
+        // prepared integration projection can distinguish disabled suite
+        // tests from malformed imported helpers without a second source read.
+        source: enabled.integration
+            || enabled.dynamic_import_rules
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,

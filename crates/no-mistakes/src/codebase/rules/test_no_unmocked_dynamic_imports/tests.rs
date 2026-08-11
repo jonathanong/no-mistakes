@@ -445,9 +445,10 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
 }
 
 #[test]
-fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
-    // reachable.rs:54 — closing `}` of `if let (Some(source), Some(facts))`.
-    // When a dep is in shared.ts but source/dynamic_imports is None, fall through to disk.
+fn reachable_check_does_not_fall_back_to_disk_when_shared_facts_incomplete() {
+    // A prepared entry is authoritative even when its source or extracted
+    // dynamic-import facts are incomplete; only shared=None uses legacy disk
+    // parsing. This protects one-pass request ownership.
     let root = fixture();
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -457,12 +458,14 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
     };
     let resolver = ImportResolver::new(&tsconfig);
     let test_file = root.join("tests").join("good.test.mts");
-    let dep = root.join("src").join("child.mts");
+    let dep = root.join("src").join("unmocked-next-dynamic-component.mts");
     let mut forward = HashMap::new();
     forward.insert(test_file.clone(), vec![dep.clone()]);
     let graph = from_raw_maps(root.clone(), forward, Default::default());
     let mut shared_ts = HashMap::new();
-    // dep is in shared.ts but with source=None (incomplete facts)
+    // dep is in shared.ts but with source=None (incomplete facts). The file
+    // also exists in the fixture and has an unmocked import, so a disk
+    // fallback would produce a finding.
     shared_ts.insert(
         dep.clone(),
         crate::codebase::check_facts::CheckFileFacts {

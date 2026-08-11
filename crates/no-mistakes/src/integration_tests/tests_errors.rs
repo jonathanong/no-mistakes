@@ -84,3 +84,25 @@ fn check_with_facts_reports_dropped_helper_parse_errors() {
 
     assert!(error.to_string().contains("synthetic helper parse error"));
 }
+
+#[test]
+fn file_disabled_parse_errors_do_not_abort_integration_checks() {
+    let root = fixture("basic");
+    let file = root.join("backend/unit.test.mts");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let suites = test_support::configured_suites(&root, &config).unwrap();
+    let mut shared = crate::codebase::check_facts::CheckFactMap::default();
+    shared.ts.insert(
+        file,
+        crate::codebase::check_facts::CheckFileFacts {
+            parse_error: Some("synthetic disabled parse error".to_string()),
+            source: Some(
+                "// no-mistakes-disable-file integration-test-no-mocks: generated file\n<".into(),
+            ),
+            ..Default::default()
+        }
+        .into(),
+    );
+
+    checks::fail_on_dropped_files(&root, &suites, &shared).unwrap();
+}

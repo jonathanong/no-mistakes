@@ -37,6 +37,10 @@ pub struct FetchCall {
     pub file: String,
     pub exported_name: Option<String>,
     pub shape: Option<String>,
+    /// Internal location for aggregate-check suppression. Direct React reports
+    /// intentionally retain their established JSON schema.
+    #[serde(skip)]
+    pub line: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +116,12 @@ pub struct Violation {
     pub file: String,
     pub rule: String,
     pub detail: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ReactSuppressionTarget {
+    pub file: String,
+    pub line: usize,
 }
 
 #[derive(Default, Deserialize)]

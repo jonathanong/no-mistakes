@@ -26,11 +26,11 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     }
 
     for shared_entrypoint in [
-        "run_check_with_prepared_facts",
+        "run_check_with_prepared_facts_for_aggregate",
         "run_check_with_config_facts_playwright_and_graph",
         "queue::analyze_project_with_prepared_facts_and_catalog_and_session",
         "integration_tests::check_with_prepared_facts_catalog_and_session",
-        "unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session",
+        "unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check",
         "run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts",
     ] {
         assert!(
@@ -111,6 +111,7 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
     let dispatcher = concat!(
         include_str!("../../codebase/rules/filesystem_dispatch.rs"),
         include_str!("../../codebase/rules/filesystem_dispatch/execute.rs"),
+        include_str!("../../codebase/rules/filesystem_dispatch/execute/special.rs"),
     );
     let catalog = include_str!("../../codebase/rules/vitest_project_catalog.rs");
     let mapping = include_str!("../../codebase/rules/vitest_project_mapping/project_sources.rs");
@@ -162,6 +163,7 @@ fn check_task_sources() -> String {
     [
         include_str!("../../check_tasks.rs"),
         include_str!("../../check_tasks/filesystem.rs"),
+        include_str!("../../check_tasks/react.rs"),
     ]
     .concat()
 }
@@ -255,9 +257,20 @@ fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     // Keep per-rule variant selection out of the aggregate coordinator so its
     // complexity remains bounded as additional rules are introduced.
     assert!(execution.contains("mod helpers;"));
-    assert!(execution.contains("use helpers::{storybook_findings, suppress_findings};"));
+    // Keep this structural: the helper request type may grow with prepared
+    // inputs without invalidating the coordinator ownership assertion.
+    for symbol in [
+        "storybook_findings",
+        "suppress_findings",
+        "StorybookFindingsRequest",
+    ] {
+        assert!(
+            execution.contains(symbol),
+            "expanded helper import must include {symbol}"
+        );
+    }
     assert!(helpers.contains("pub(super) fn storybook_findings("));
-    assert!(helpers.contains("check_with_prepared_facts_and_inferred_and_session"));
+    assert!(helpers.contains("check_with_prepared_facts_for_aggregate"));
     assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);
     assert!(storybook_block.contains("prepared_tsconfig_catalog"));
     assert!(!storybook_block.contains("prepared_tsconfig,"));

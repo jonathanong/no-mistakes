@@ -1,4 +1,12 @@
 use super::*;
+
+fn check_with_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    facts: &CheckFactMap,
+) -> anyhow::Result<Vec<RuleFinding>> {
+    check_with_facts_for_aggregate(root, config, facts, None, false)
+}
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
 use std::collections::HashMap;
@@ -566,4 +574,5 @@ fn extract_ignores_commonjs_config_object_outside_next_config_files() {
     assert!(findings.is_empty());
 }
 
+mod coverage;
 mod nested;

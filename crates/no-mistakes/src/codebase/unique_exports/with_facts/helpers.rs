@@ -1,5 +1,12 @@
 use super::filter_source_files;
+use crate::codebase::rules::path_filter::GlobMatcher;
 use std::path::{Path, PathBuf};
+
+pub(super) struct ApplicationProjectFilter {
+    pub(super) root: PathBuf,
+    pub(super) include: GlobMatcher,
+    pub(super) exclude: GlobMatcher,
+}
 
 pub(super) fn relative(root: &Path, path: &Path) -> String {
     path.strip_prefix(root)

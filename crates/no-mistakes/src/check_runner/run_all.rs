@@ -8,10 +8,11 @@ use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured};
 use std::path::PathBuf;
 
-pub(crate) fn run_all(
+pub(crate) fn run_all_with_suppressed(
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,
+    include_suppressed: bool,
 ) -> Result<CheckResults> {
     let root = root.canonicalize().unwrap_or(root);
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(
@@ -101,7 +102,9 @@ pub(crate) fn run_all(
         filesystem_rules_enabled,
         no_mistakes::playwright::rules::configured(config),
     ) {
-        return Ok(empty_results([None]));
+        let mut results = empty_results([None]);
+        results.include_suppressed = include_suppressed;
+        return Ok(results);
     }
     let (views, discover_duration) = no_mistakes::diagnostics::measure_if_enabled(
         "discovery",
@@ -165,6 +168,9 @@ pub(crate) fn run_all(
             vitest_projects: prepared.vitest_projects.as_ref(),
             workflow_documents: prepared.workflow_documents.as_deref(),
             tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
+            // Ordinary checks preserve each domain's early suppression path;
+            // only audit requests need cross-domain suppression accounting.
+            defer_suppression: include_suppressed,
         });
     no_mistakes::invocation::check_timeout()?;
     results::finalize_domain_checks(results::FinalizeInput {
@@ -184,5 +190,6 @@ pub(crate) fn run_all(
             codebase,
             filesystem_rules,
         ))?,
+        include_suppressed,
     })
 }

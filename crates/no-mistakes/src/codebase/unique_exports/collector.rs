@@ -3,7 +3,7 @@ use super::origin::{origin_for_export, resolve_export_source};
 use super::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile, RULE_ID};
 use crate::codebase::symbols::export_kind_str;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolverFacade};
-use crate::codebase::ts_source::has_disable_comment;
+use crate::codebase::ts_source::{has_disable_comment, has_disable_line_comment};
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
@@ -31,13 +31,12 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
         memo.insert(path, out.clone());
         return out;
     };
-    if file.disabled {
+    if file.disabled && !file.defer_suppression {
         visiting.remove(&path);
         let out = Vec::new();
         memo.insert(path, out.clone());
         return out;
     }
-
     let mut out = Vec::new();
     for export in &file.symbols.exports {
         if should_skip_export(file, export) {
@@ -63,6 +62,10 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     occurrence.file = file.rel.clone();
                     occurrence.line = export.line;
                     occurrence.kind = export_kind_str(&export.kind).to_string();
+                    if let Some(location) = current_suppression_location(file, export) {
+                        occurrence.suppression_location = Some(location);
+                        occurrence.suppressed = true;
+                    }
                     if !super::nextjs::is_framework_export(
                         &occurrence.file,
                         &occurrence.name,
@@ -90,6 +93,13 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                         .map(|origin| origin.bucket)
                         .unwrap_or_else(|| ExportBucket::from_export(export))
                 };
+                let origin_suppressed = resolved_origin
+                    .as_ref()
+                    .is_some_and(|origin| origin.suppressed);
+                let current_suppression = current_suppression_location(file, export);
+                let current_suppressed = current_suppression.is_some();
+                let suppression_location = current_suppression
+                    .or_else(|| suppressed_origin_location(resolved_origin.as_ref()));
                 let origin = resolved_origin
                     .map(|origin| {
                         if export.is_type_only {
@@ -109,10 +119,13 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     line: export.line,
                     kind: export_kind_str(&export.kind).to_string(),
                     origin,
+                    suppressed: current_suppressed || origin_suppressed,
+                    suppression_location,
                 });
             }
             _ => {
                 let bucket = ExportBucket::from_export(export);
+                let suppression_location = current_suppression_location(file, export);
                 out.push(ExportOccurrence {
                     name: export.name.clone(),
                     bucket,
@@ -120,6 +133,8 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                     line: export.line,
                     kind: export_kind_str(&export.kind).to_string(),
                     origin: origin_for_export(file, export, bucket),
+                    suppressed: suppression_location.is_some(),
+                    suppression_location,
                 });
             }
         }
@@ -132,6 +147,22 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
 
 pub(super) fn should_skip_export(file: &SourceFile, export: &Export) -> bool {
     export.name == "default"
-        || has_disable_comment(&file.source, export.line, RULE_ID)
+        || (!file.defer_suppression && current_suppression_location(file, export).is_some())
         || super::nextjs::is_framework_export(&file.rel, &export.name, file.is_nextjs_project)
+}
+
+pub(super) fn current_suppression_location(
+    file: &SourceFile,
+    export: &Export,
+) -> Option<(String, u32)> {
+    (file.disabled
+        || has_disable_comment(&file.source, export.line, RULE_ID)
+        || has_disable_line_comment(&file.source, export.line, RULE_ID))
+    .then(|| (file.rel.clone(), export.line))
+}
+
+fn suppressed_origin_location(origin: Option<&ExportOrigin>) -> Option<(String, u32)> {
+    origin
+        .filter(|origin| origin.suppressed)
+        .and_then(|origin| origin.suppression_location.clone())
 }

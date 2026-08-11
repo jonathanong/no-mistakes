@@ -1,0 +1,11 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    routes:
+      - api/**
+
+rules:
+  - rule: server-route-client-boundary
+    projects:
+      - backend

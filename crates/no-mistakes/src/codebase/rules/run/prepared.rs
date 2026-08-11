@@ -1,17 +1,18 @@
 use super::{
     any_codebase_rule_enabled, forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching,
     require_storybook_stories, required_entrypoint_reachability, rule_enabled,
-    server_route_client_boundary, sort_findings, suppress_rule_findings,
-    suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports, RuleFinding,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
-    REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
-    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    server_route_client_boundary, suppress_rule_findings_with_sources,
+    test_no_unmocked_dynamic_imports, PreparedRuleFindings, RuleFinding, FORBIDDEN_DEPENDENCIES,
+    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRED_ENTRYPOINT_REACHABILITY,
+    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use anyhow::Result;
 use std::path::Path;
 
 mod execution;
+#[cfg(test)]
+mod tests;
 
 /// Preloaded inputs for the aggregate rules check.
 ///
@@ -74,5 +75,15 @@ pub fn run_check_with_config_facts_playwright_and_graph(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
 ) -> Result<Vec<RuleFinding>> {
-    execution::run(inputs, dependency_graph)
+    Ok(execution::run(inputs, dependency_graph, None, false)?.findings)
+}
+
+#[doc(hidden)]
+pub fn run_check_with_config_facts_playwright_and_graph_with_suppression(
+    inputs: PreparedRulesCheck<'_>,
+    dependency_graph: Option<&DepGraph>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<PreparedRuleFindings> {
+    execution::run(inputs, dependency_graph, Some(sources), defer_suppression)
 }

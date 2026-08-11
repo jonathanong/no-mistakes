@@ -2,9 +2,12 @@ use super::RuleFinding;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-pub(crate) fn suppress_rule_findings(root: &Path, findings: &mut Vec<RuleFinding>) {
-    suppress_rule_findings_inner(root, findings, None, &[]);
-}
+mod accounting;
+pub use accounting::{
+    suppress_domain_findings_with_source_files, suppress_domain_findings_with_source_locations,
+    suppress_domain_findings_with_sources, SuppressedFinding, SuppressionDirective,
+    SuppressionDirectiveKind, SuppressionTarget,
+};
 
 pub(crate) fn suppress_rule_findings_with_sources_except(
     root: &Path,
@@ -27,7 +30,7 @@ pub(crate) fn suppress_rule_findings_with_source(findings: &mut Vec<RuleFinding>
     findings.retain(|finding| !finding_is_suppressed(source, finding));
 }
 
-fn suppress_rule_findings_inner(
+pub(super) fn suppress_rule_findings_inner(
     root: &Path,
     findings: &mut Vec<RuleFinding>,
     request_sources: Option<&crate::codebase::ts_source::SourceStore>,
@@ -109,4 +112,31 @@ fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
             crate::codebase::ts_source::has_disable_comment(source, line, &finding.rule)
                 || crate::codebase::ts_source::has_disable_line_comment(source, line, &finding.rule)
         })
+}
+
+fn matching_directive(
+    source: &str,
+    rule: &str,
+    line: Option<usize>,
+) -> Option<SuppressionDirective> {
+    use crate::codebase::ts_source::DisableDirective;
+
+    match crate::codebase::ts_source::matching_disable_directive(
+        source,
+        line.and_then(|line| u32::try_from(line).ok()),
+        rule,
+    )? {
+        DisableDirective::File { line } => Some(SuppressionDirective {
+            kind: SuppressionDirectiveKind::File,
+            line: line as usize,
+        }),
+        DisableDirective::Line { line } => Some(SuppressionDirective {
+            kind: SuppressionDirectiveKind::Line,
+            line: line as usize,
+        }),
+        DisableDirective::NextLine { line } => Some(SuppressionDirective {
+            kind: SuppressionDirectiveKind::NextLine,
+            line: line as usize,
+        }),
+    }
 }

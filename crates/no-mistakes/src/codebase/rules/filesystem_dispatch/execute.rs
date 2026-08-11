@@ -3,15 +3,18 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
-type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
+mod special;
 
-struct RuleRunInputs<'a> {
+pub(super) type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
+
+pub(super) struct RuleRunInputs<'a> {
     root: &'a Path,
     config: &'a crate::config::v2::NoMistakesConfig,
     snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
+    defer_suppression: bool,
     workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
     tsconfig_gate_project_inputs: Option<&'a tsconfig_gate_coverage::ProjectSourceInputs>,
     config_path: Option<&'a Path>,
@@ -64,6 +67,29 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
+    run_prepared_filesystem_rules(root, config, files, prepared, facts, false)
+}
+
+/// Aggregate check adapter that defers suppression to the shared result pass.
+#[doc(hidden)]
+pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    prepared: PreparedFilesystemRuleInputs<'_>,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    run_prepared_filesystem_rules(root, config, files, prepared, facts, true)
+}
+
+fn run_prepared_filesystem_rules(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    prepared: PreparedFilesystemRuleInputs<'_>,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
     let PreparedFilesystemRuleInputs {
         snapshot,
         vitest_catalog,
@@ -93,6 +119,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
         vitest_catalog,
         sources: &sources,
         facts,
+        defer_suppression,
         workflow_documents,
         tsconfig_gate_project_inputs,
         config_path,
@@ -106,97 +133,23 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     for (_, result) in results {
         findings.extend(result?);
     }
-    suppress_rule_findings_with_sources_except(
-        root,
-        &mut findings,
-        &sources,
-        &[
-            RUST_MAX_LINES_PER_FILE,
-            RUST_NO_INLINE_TESTS,
-            RUST_NO_INLINE_ALLOWS,
-        ],
-    );
+    if !defer_suppression {
+        suppress_rule_findings_with_sources_except(
+            root,
+            &mut findings,
+            &sources,
+            &[
+                RUST_MAX_LINES_PER_FILE,
+                RUST_NO_INLINE_TESTS,
+                RUST_NO_INLINE_ALLOWS,
+            ],
+        );
+    }
     super::super::sort_findings(&mut findings);
     Ok(findings)
 }
 
 fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
-    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = run_rule::run_rule_with_sources($id, $call, inputs.root, inputs.config, inputs.candidates.candidates($id), inputs.sources, inputs.facts); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; spawn_special_rules(scope, inputs); }); }; }
+    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = run_rule::run_rule_with_sources(run_rule::RunRuleRequest { rule_id: $id, fallback: $call, root: inputs.root, config: inputs.config, files: inputs.candidates.candidates($id), sources: inputs.sources, facts: inputs.facts, defer_suppression: inputs.defer_suppression }); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; special::spawn(scope, inputs); }); }; }
     crate::filesystem_rules!(run_rules);
-}
-
-fn spawn_special_rules<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'a>) {
-    let RuleRunInputs {
-        root,
-        config,
-        snapshot,
-        vitest_catalog,
-        sources,
-        facts: _,
-        workflow_documents,
-        tsconfig_gate_project_inputs,
-        config_path,
-        candidates,
-        markdown_facts,
-        acc,
-    } = *inputs;
-    markdown_dispatch::spawn(scope, root, config, candidates, markdown_facts, acc);
-    if registry::rust_rules_enabled(config) {
-        scope.spawn(|_| {
-            let result = rust_rules_combined::check_with_files_and_sources(
-                root,
-                config,
-                candidates.rust_candidates(),
-                candidates.exclusive_rust_candidates(),
-                sources,
-            );
-            acc.lock()
-                .expect("mutex poisoned")
-                .push(("rust-rules-combined", result));
-        });
-    }
-    if rule_enabled(config, VITEST_PROJECT_MAPPING) {
-        scope.spawn(move |_| {
-            let result = vitest_project_mapping::check_with_files_and_catalog(
-                root,
-                config,
-                candidates.candidates(VITEST_PROJECT_MAPPING),
-                vitest_catalog,
-            );
-            acc.lock()
-                .expect("mutex poisoned")
-                .push((VITEST_PROJECT_MAPPING, result));
-        });
-    }
-    if rule_enabled(config, VITEST_CI_PATH_COVERAGE) {
-        scope.spawn(move |_| { let result = vitest_ci_path_coverage::check_with_files_from_snapshot_catalog_sources_and_workflows(root, config, candidates.candidates(VITEST_CI_PATH_COVERAGE), snapshot, vitest_catalog, sources, workflow_documents); acc.lock().expect("mutex poisoned").push((VITEST_CI_PATH_COVERAGE, result)); });
-    }
-    if rule_enabled(config, TSCONFIG_GATE_COVERAGE) {
-        scope.spawn(move |_| {
-            let result = workflow_documents
-                .zip(tsconfig_gate_project_inputs)
-                .map_or_else(
-                || {
-                    Err(anyhow::anyhow!(
-                        "prepared workflow documents and project inputs are required for {TSCONFIG_GATE_COVERAGE}"
-                    ))
-                },
-                |(workflows, project_source_inputs)| {
-                    tsconfig_gate_coverage::check_with_prepared(
-                        root,
-                        config,
-                        tsconfig_gate_coverage::PreparedInputs {
-                            tracked_paths: snapshot.tracked_paths_for(root).as_ref(),
-                            workflows,
-                            project_source_inputs,
-                            sources,
-                            config_path,
-                        },
-                    )
-                });
-            acc.lock()
-                .expect("mutex poisoned")
-                .push((TSCONFIG_GATE_COVERAGE, result));
-        });
-    }
 }

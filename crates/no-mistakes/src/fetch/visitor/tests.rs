@@ -68,6 +68,18 @@ fn anonymous_default_function_declaration_keeps_fetch_visible_inside_body() {
 }
 
 #[test]
+fn fetch_call_uses_its_actual_one_based_source_line() {
+    let source = "export default async function Fetcher() {\n  // directive\n  await fetch('/api/visible');\n}";
+    crate::ast::with_program(Path::new("fixture.ts"), source, |program, source| {
+        let mut visitor = FetchVisitor::new(source, "fixture.ts", false, false);
+        visitor.visit_program(program);
+        assert_eq!(visitor.fetches.len(), 1);
+        assert_eq!(visitor.fetches[0].line, 3);
+    })
+    .unwrap();
+}
+
+#[test]
 fn namespace_import_is_tracked_as_shadowed() {
     let source = "import * as Fetcher from './fetcher';\nFetcher.fetch('/api/hidden');";
     crate::ast::with_program(Path::new("fixture.ts"), source, |program, source| {
