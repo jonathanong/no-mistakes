@@ -8,6 +8,8 @@ pub(crate) fn run_react_check(
     enabled: bool,
     facts: &CheckFactMap,
     prepared: &react_traits::PreparedReactCheck,
+    sources: &no_mistakes::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<CheckTask<Vec<react_traits::Violation>>> {
     let (((findings, react_suppression_targets), warning), duration) =
         no_mistakes::diagnostics::measure_if_enabled(
@@ -21,7 +23,20 @@ pub(crate) fn run_react_check(
                         facts,
                         prepared,
                     ) {
-                        Ok(findings) => ((findings.findings, findings.suppression_targets), None),
+                        Ok(mut findings) => {
+                            if !defer_suppression {
+                                // Ordinary checks suppress each component using
+                                // the full local/inherited target sidecar.
+                                crate::check_runner::results::suppression::suppress_react(
+                                    root,
+                                    sources,
+                                    &mut findings.findings,
+                                    &findings.suppression_targets,
+                                    &mut Vec::new(),
+                                );
+                            }
+                            ((findings.findings, findings.suppression_targets), None)
+                        }
                         Err(err) => (
                             (Vec::new(), Vec::new()),
                             Some(format!("warning: react check skipped: {err:#}")),

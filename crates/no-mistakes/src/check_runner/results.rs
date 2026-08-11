@@ -9,7 +9,7 @@ use no_mistakes::react_traits;
 use std::time::Duration;
 
 mod advisories;
-mod suppression;
+pub(crate) mod suppression;
 #[cfg(test)]
 mod suppression_tests;
 

@@ -11,7 +11,7 @@ use no_mistakes::react_traits;
 mod provenance;
 use provenance::suppress_rules_with_sources;
 mod react;
-pub(super) use react::suppress_react;
+pub(crate) use react::suppress_react;
 
 pub(super) struct Inputs<'a> {
     pub(super) root: &'a std::path::Path,

@@ -42,11 +42,13 @@ pub(super) fn unique_export_findings(
         if unique_occurrences.len() < 2 {
             continue;
         }
-        // Standalone collection removes suppressed occurrences before this
-        // point. Deferred audit keeps their lexical canonical provenance so
-        // accounting can identify the directive source without changing the
-        // ordinary visible report.
-        let first = &unique_occurrences[0];
+        // Preserve the visible duplicate representative in both ordinary and
+        // audit reports. Suppressed canonical provenance is retained by the
+        // occurrence metadata for accounting, not by changing this selection.
+        let first = unique_occurrences
+            .iter()
+            .find(|occurrence| !occurrence.suppressed)
+            .unwrap_or(&unique_occurrences[0]);
         for duplicate in unique_occurrences
             .iter()
             .filter(|item| !std::ptr::eq(*item, first))

@@ -8,7 +8,7 @@ struct ReactSuppressionFinding {
     identity: String,
 }
 
-pub(in super::super) fn suppress_react(
+pub(crate) fn suppress_react(
     root: &std::path::Path,
     sources: &SourceStore,
     findings: &mut Vec<react_traits::Violation>,

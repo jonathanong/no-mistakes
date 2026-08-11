@@ -1,6 +1,6 @@
 use crate::check_tasks::{
     run_codebase_check_with_catalog, run_filesystem_rules_check_with_facts, run_integration_check,
-    run_queue_check, run_react_check, run_rules_check, CheckTask, CodebaseCheckInputs,
+    run_queue_check, run_rules_check, CheckTask, CodebaseCheckInputs,
 };
 use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::codebase::rules::RuleFinding;
@@ -9,6 +9,8 @@ use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 use std::path::{Path, PathBuf};
+
+mod react_dispatch;
 
 pub(crate) type DomainResults = (
     anyhow::Result<CheckTask<Vec<react_traits::Violation>>>,
@@ -88,7 +90,14 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
             rayon::join(
                 || {
                     no_mistakes::diagnostics::with_observer(observer.clone(), || {
-                        run_react_check(root, react_enabled, facts, prepared_react)
+                        react_dispatch::run(react_dispatch::Inputs {
+                            root,
+                            enabled: react_enabled,
+                            facts,
+                            prepared: prepared_react,
+                            sources: sources.as_ref(),
+                            defer_suppression,
+                        })
                     })
                 },
                 || {
