@@ -8,7 +8,7 @@ use super::fields::{
 };
 use super::values::{
     container_shape_valid, environment_shape_valid, only_keys, outputs_shape_valid,
-    runs_on_shape_valid, scalar_mapping_valid, services_shape_valid,
+    runs_on_shape_valid, scalar_mapping_valid, services_shape_valid, JOB_ENV_CONTEXTS,
 };
 use serde_yaml::Value;
 
@@ -58,7 +58,7 @@ pub(crate) fn step_job_shape_valid(job: &Value) -> bool {
             && environment_shape_valid(job.get("environment"))
             && job_concurrency_shape_valid(job.get("concurrency"))
             && outputs_shape_valid(job.get("outputs"))
-            && scalar_mapping_valid(job.get("env"))
+            && scalar_mapping_valid(job.get("env"), JOB_ENV_CONTEXTS, false)
             && job_defaults_shape_valid(job.get("defaults"))
             && super::fields::timeout_minutes_field_valid(
                 job,

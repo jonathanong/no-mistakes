@@ -1,21 +1,39 @@
 use serde_yaml::{Mapping, Value};
 
 use super::super::super::super::expressions::{
+    interpolated_expression_contexts_and_hash_files_available,
     interpolated_expression_contexts_available, interpolated_expression_valid,
 };
 use super::fields::string_field_valid;
 
+pub(super) const JOB_ENV_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "vars", "secrets", "inputs",
+];
+pub(super) const STEP_ENV_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "steps",
+    "inputs",
+];
+const CONTAINER_ENV_CONTEXTS: &[&str] = STEP_ENV_CONTEXTS;
+const JOB_OUTPUT_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "steps",
+    "inputs",
+];
 const ENVIRONMENT_NAME_CONTEXTS: &[&str] =
     &["github", "inputs", "vars", "needs", "strategy", "matrix"];
 const ENVIRONMENT_URL_CONTEXTS: &[&str] = &[
     "github", "inputs", "vars", "needs", "strategy", "matrix", "job", "runner", "env", "steps",
 ];
-pub(super) fn scalar_mapping_valid(value: Option<&Value>) -> bool {
+pub(super) fn scalar_mapping_valid(
+    value: Option<&Value>,
+    allowed_contexts: &[&str],
+    hash_files_available: bool,
+) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|mapping| {
-            mapping
-                .iter()
-                .all(|(name, value)| name.is_string() && super::fields::scalar_value_valid(value))
+            mapping.iter().all(|(name, value)| {
+                name.is_string()
+                    && scalar_value_valid(value, allowed_contexts, hash_files_available)
+            })
         })
     })
 }
@@ -64,9 +82,7 @@ pub(super) fn outputs_shape_valid(value: Option<&Value>) -> bool {
             !outputs.is_empty()
                 && outputs.iter().all(|(name, expression)| {
                     name.as_str().is_some_and(|name| !name.is_empty())
-                        && expression
-                            .as_str()
-                            .is_some_and(valid_nonempty_interpolated_string)
+                        && expression.as_str().is_some_and(valid_job_output_expression)
                 })
         })
     })
@@ -106,7 +122,7 @@ fn container_mapping_shape_valid(container: &Mapping) -> bool {
         .and_then(Value::as_str)
         .is_some_and(valid_nonempty_interpolated_string)
         && credentials_shape_valid(container.get("credentials"))
-        && scalar_mapping_valid(container.get("env"))
+        && scalar_mapping_valid(container.get("env"), CONTAINER_ENV_CONTEXTS, false)
         && super::ports::port_sequence_valid(container.get("ports"))
         && string_sequence_valid(container.get("volumes"))
         && string_field_valid(container, "options")
@@ -141,6 +157,25 @@ fn string_sequence_valid(value: Option<&Value>) -> bool {
 
 fn valid_nonempty_interpolated_string(value: &str) -> bool {
     !value.is_empty() && interpolated_expression_valid(value)
+}
+
+fn scalar_value_valid(
+    value: &Value,
+    allowed_contexts: &[&str],
+    hash_files_available: bool,
+) -> bool {
+    matches!(value, Value::Bool(_) | Value::Number(_))
+        || value.as_str().is_some_and(|value| {
+            if hash_files_available {
+                interpolated_expression_contexts_and_hash_files_available(value, allowed_contexts)
+            } else {
+                interpolated_expression_contexts_available(value, allowed_contexts)
+            }
+        })
+}
+
+fn valid_job_output_expression(value: &str) -> bool {
+    !value.is_empty() && interpolated_expression_contexts_available(value, JOB_OUTPUT_CONTEXTS)
 }
 
 fn valid_environment_name(value: &str) -> bool {

@@ -3,7 +3,7 @@ use super::fields::{
     timeout_minutes_field_valid, STEP_CONDITION_CONTEXTS, STEP_CONTINUE_ON_ERROR_CONTEXTS,
     STEP_TIMEOUT_CONTEXTS,
 };
-use super::values::{only_keys, scalar_mapping_valid};
+use super::values::{only_keys, scalar_mapping_valid, STEP_ENV_CONTEXTS};
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
 
@@ -117,7 +117,7 @@ fn shared_step_fields_valid(step: &Mapping) -> bool {
         && condition_field_valid(step.get("if"), STEP_CONDITION_CONTEXTS, true)
         && string_field_valid(step, "working-directory")
         && string_field_valid(step, "shell")
-        && scalar_mapping_valid(step.get("env"))
+        && scalar_mapping_valid(step.get("env"), STEP_ENV_CONTEXTS, true)
         && bool_or_expression_field_valid(
             step,
             "continue-on-error",

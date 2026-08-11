@@ -68,6 +68,43 @@ fn steps_require_known_keys_and_matching_value_shapes() {
 }
 
 #[test]
+fn job_and_step_environment_expressions_use_distinct_documented_contexts() {
+    let valid = job(
+        "runs-on: ubuntu-latest\nenv:\n  REF: '${{ needs.setup.outputs.ref }}'\n  TOKEN: '${{ secrets.TOKEN }}'\nsteps:\n  - env:\n      JOB: '${{ job.status }}'\n      RUNNER: '${{ runner.os }}'\n      PRIOR: '${{ steps.setup.outputs.value }}'\n      FILES: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"\n    run: echo valid",
+    );
+    assert!(super::step_job_shape_valid(&valid));
+    assert!(super::steps_shape_valid(&valid));
+
+    for yaml in [
+        "runs-on: ubuntu-latest\nenv: {RESULT: '${{ jobs.build.outputs.result }}'}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nenv: {RESULT: '${{ steps.setup.outputs.result }}'}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\nenv: {RESULT: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"}\nsteps:\n  - run: echo invalid",
+    ] {
+        assert!(!super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "runs-on: ubuntu-latest\nsteps:\n  - env: {RESULT: '${{ jobs.build.outputs.result }}'}\n    run: echo invalid",
+        "runs-on: ubuntu-latest\nsteps:\n  - env: {RESULT: '${{ success() }}'}\n    run: echo invalid",
+    ] {
+        assert!(!super::steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
+fn job_outputs_reject_the_reusable_workflow_jobs_context() {
+    for yaml in [
+        "runs-on: ubuntu-latest\noutputs: {result: '${{ steps.collect.outputs.result }}'}\nsteps:\n  - run: echo valid",
+        "runs-on: ubuntu-latest\noutputs: {result: '${{ needs.prepare.outputs.result }}'}\nsteps:\n  - run: echo valid",
+        "runs-on: ubuntu-latest\noutputs: {result: '${{ secrets.TOKEN }}'}\nsteps:\n  - run: echo valid",
+    ] {
+        assert!(super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+    assert!(!super::step_job_shape_valid(&job(
+        "runs-on: ubuntu-latest\noutputs: {result: '${{ jobs.build.outputs.result }}'}\nsteps:\n  - run: echo invalid"
+    )));
+}
+
+#[test]
 fn step_ids_must_be_unique_case_insensitive_identifiers() {
     for yaml in [
         "steps:\n  - id: build\n    run: cargo build\n  - id: test\n    run: cargo test",
