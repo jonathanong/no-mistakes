@@ -1,5 +1,8 @@
 use serde_yaml::{Mapping, Value};
 
+use super::super::super::super::conditions::{
+    resolve_static_interpolations, EnvironmentState, InputState,
+};
 use super::super::super::super::expressions::{
     interpolated_expression_contexts_and_hash_files_available,
     interpolated_expression_contexts_available, interpolated_expression_valid,
@@ -88,6 +91,22 @@ pub(super) fn environment_shape_valid(value: Option<&Value>) -> bool {
                         .get("url")
                         .is_none_or(|url| url.as_str().is_some_and(valid_environment_url))
             })
+    })
+}
+
+pub(crate) fn environment_configuration_valid_for_inputs(job: &Value, inputs: &InputState) -> bool {
+    let Some(environment) = job.get("environment") else {
+        return true;
+    };
+    let name = environment.as_str().or_else(|| {
+        environment
+            .as_mapping()
+            .and_then(|environment| environment.get("name"))
+            .and_then(Value::as_str)
+    });
+    name.is_some_and(|name| {
+        resolve_static_interpolations(name, inputs, &EnvironmentState::default())
+            .is_none_or(|name| !name.trim().is_empty())
     })
 }
 

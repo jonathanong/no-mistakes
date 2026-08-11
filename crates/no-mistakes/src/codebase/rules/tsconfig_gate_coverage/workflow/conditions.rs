@@ -11,14 +11,14 @@ mod inputs;
 mod literals;
 mod logical;
 mod resolution;
+mod step_evaluation;
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
 pub(super) use environment::EnvironmentState;
 use evaluation::{continues_after_skipped_need, static_bool};
 pub(super) use evaluation::{
     expression_bool, expression_bool_with_status_and_environment, job_timeout_minutes_enforced,
-    statically_not_enforcing, statically_not_enforcing_with_environment,
-    step_timeout_minutes_enforced,
+    statically_not_enforcing, step_timeout_minutes_enforced,
 };
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,
@@ -26,6 +26,7 @@ pub(super) use inputs::{
 };
 use inputs::{event_action_value, event_name_value};
 use resolution::condition_input_value;
+pub(super) use step_evaluation::{continue_on_error_enabled, step_condition_with_status};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -33,6 +34,37 @@ pub(super) enum StaticBool {
     True,
     TruthyNonBoolean,
     Unknown,
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct ConditionStatus {
+    success: StaticBool,
+    failure: StaticBool,
+}
+
+impl ConditionStatus {
+    const SUCCESS: Self = Self {
+        success: StaticBool::True,
+        failure: StaticBool::False,
+    };
+
+    const SKIPPED: Self = Self {
+        success: StaticBool::False,
+        failure: StaticBool::False,
+    };
+
+    fn from_success(success: StaticBool) -> Self {
+        Self {
+            success,
+            failure: success.negate(),
+        }
+    }
+}
+
+impl From<StaticBool> for ConditionStatus {
+    fn from(success: StaticBool) -> Self {
+        Self::from_success(success)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

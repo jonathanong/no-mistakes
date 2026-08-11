@@ -26,7 +26,8 @@ default `tsconfig.json` relative to the effective
 working directory, sequential `cd` commands, and
 `pnpm --dir <path> exec tsc`. Workflow working directories
 may come from workflow/job `defaults.run.working-directory` or a step's
-`working-directory`.
+`working-directory`. Context-free static step directory expressions are
+resolved; values that remain dynamic do not count.
 Step-based jobs need a non-empty, statically resolvable `runs-on` string,
 label array, or `group`/`labels` mapping. Static matrix and reusable-input
 runner selectors are resolved per generated job before runner platform and
@@ -115,6 +116,9 @@ calls are also resolved using GitHub's string coercion; missing properties
 coerce to an empty string. Static `case` calls select the first truthy branch
 or their default, while an unknown predicate remains unresolved. Expressions
 whose result remains dynamic fail open as potentially runnable.
+Condition evaluation is limited to 256 logical operands, bounding the recursive
+static evaluator even when a repository supplies a long flat `&&` or `||`
+chain. Conditions over that limit are invalid and do not provide coverage.
 Reusable input default expressions must match their declared scalar type and
 may use only `github`, `inputs`, and `vars`; malformed defaults or unavailable
 contexts invalidate the workflow before any command can provide coverage.
@@ -144,14 +148,16 @@ empty string. Workflow `defaults.run` values must be static; job defaults may
 use their documented `github`, `needs`, `strategy`, `matrix`, `env`, `vars`,
 and `inputs` contexts. Workflow concurrency expressions may use `github`,
 `inputs`, and `vars`; job concurrency additionally permits `needs`, `strategy`,
-and `matrix`. Job and step `continue-on-error` expressions, plus environment names
-and URLs, use their own GitHub context/function sets; status functions are not
+and `matrix`. Job and step `continue-on-error` expressions, plus environment
+names and URLs, use their own GitHub context/function sets; status functions are not
 accepted in `continue-on-error`. Strategy `fail-fast` expressions use the
 documented strategy contexts and must be boolean when their result type is
 statically known; `max-parallel` must similarly be a positive integer.
 Reusable-input `max-parallel` expressions are rechecked with the active input
 values, so a value that resolves to zero or a non-integer cannot provide
 coverage.
+Environment names are rechecked for every active reusable-input and matrix
+state; a name that resolves to an empty string cannot provide coverage.
 Job-level `timeout-minutes` is also rechecked for each active reusable input or
 matrix combination and must resolve to a positive integer.
 Job and step `timeout-minutes` expressions use their documented context sets,
@@ -231,6 +237,10 @@ non-executing mode such as `bash -n`, are rejected rather
 than credited heuristically. A typecheck before another command in an `&&`
 list is rejected when a later top-level command could mask a failed or skipped
 typecheck. A final static `&&` list remains recognized.
+Across workflow steps, an unconditional static failure blocks later steps that
+retain the implicit `success()` condition. Explicit status continuations such
+as `always()` or `failure()` remain runnable, and `continue-on-error: true`
+keeps the following step on the successful path.
 
 Informational, setup, or config-bypassing commands (`--showConfig`,
 `--help`/`-h`, `--version`/`-v`, `--init`, enabled `--noCheck`,

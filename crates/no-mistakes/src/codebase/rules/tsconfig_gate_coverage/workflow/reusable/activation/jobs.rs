@@ -9,8 +9,8 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    container_configuration_valid_for_inputs, scan_job_shape_valid,
-    strategy_configuration_valid_for_inputs, validated_reusable_target,
+    container_configuration_valid_for_inputs, environment_configuration_valid_for_inputs,
+    scan_job_shape_valid, strategy_configuration_valid_for_inputs, validated_reusable_target,
 };
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
@@ -139,6 +139,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             if step_job_runner_supported(job, inputs)
                 && strategy_configuration_valid_for_inputs(job, inputs)
                 && job_timeout_minutes_enforced(job.get("timeout-minutes"), inputs)
+                && environment_configuration_valid_for_inputs(job, inputs)
                 && !statically_not_enforcing(job, inputs)
                 && container_configuration_valid_for_inputs(job, inputs, &environment)
             {

@@ -1,7 +1,8 @@
 use super::interpolation::opaque_interpolated_expression_form;
 use super::{
     complete_expression_contexts_available, complete_expression_may_produce_mapping,
-    complete_expression_type, complete_literal_expression_value, condition_expression_valid,
+    complete_expression_type, complete_literal_expression_value,
+    condition_expression_contexts_available, condition_expression_valid,
     condition_has_status_function, interpolated_expression_contexts_available,
     interpolated_expression_valid, StaticExpressionType,
 };
@@ -234,6 +235,32 @@ fn context_and_status_helpers_reject_malformed_or_unavailable_expressions() {
         "${{ success() }}",
         &["github"]
     ));
+}
+
+#[test]
+fn condition_logical_operator_budget_bounds_flat_evaluation() {
+    let at_limit = std::iter::repeat_n("true", 256)
+        .collect::<Vec<_>>()
+        .join(" && ");
+    let over_limit = std::iter::repeat_n("true", 257)
+        .collect::<Vec<_>>()
+        .join(" || ");
+
+    assert!(condition_expression_valid(&at_limit));
+    assert!(condition_expression_contexts_available(
+        &at_limit,
+        &[],
+        false
+    ));
+    assert!(!condition_expression_valid(&over_limit));
+    assert!(!condition_expression_contexts_available(
+        &over_limit,
+        &[],
+        false
+    ));
+    assert!(!condition_has_status_function(&format!(
+        "always() && {over_limit}"
+    )));
 }
 
 #[test]

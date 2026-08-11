@@ -76,6 +76,12 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         &["action/outside.js"],
         "action"
     ));
+    let local_node_hooks = "name: Node\ndescription: Valid\nruns: {using: node24, pre: missing-pre.js, main: dist/index.js, post: missing-post.js}";
+    assert!(valid(
+        &[("action", local_node_hooks)],
+        &["action/dist/index.js"],
+        "action"
+    ));
     let escaping_dockerfile =
         "name: Docker\ndescription: Invalid\nruns: {using: docker, image: ../Dockerfile}";
     assert!(!valid(

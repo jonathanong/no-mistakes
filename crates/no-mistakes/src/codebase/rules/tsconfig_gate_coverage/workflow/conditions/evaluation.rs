@@ -4,7 +4,7 @@ use super::{
         hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
     },
     resolution::condition_input_value,
-    EnvironmentState, InputState, StaticBool, StaticValue,
+    ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use serde_yaml::Value;
 
@@ -76,17 +76,26 @@ pub(super) fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticB
     static_bool_with_environment(value, inputs, &EnvironmentState::default())
 }
 
-fn static_bool_with_environment(
+pub(super) fn static_bool_with_environment(
     value: Option<&Value>,
     inputs: &InputState,
     environment: &EnvironmentState,
+) -> StaticBool {
+    static_bool_with_status_and_environment(value, inputs, environment, ConditionStatus::SUCCESS)
+}
+
+pub(super) fn static_bool_with_status_and_environment(
+    value: Option<&Value>,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+    status: ConditionStatus,
 ) -> StaticBool {
     match value {
         Some(Value::Bool(value)) => StaticBool::from(*value),
         Some(Value::Number(value)) => number_bool(value.as_f64()),
         Some(Value::Null) => StaticBool::False,
         Some(Value::String(expression)) => {
-            expression_bool_with_environment(expression, inputs, environment)
+            expression_bool_with_status_and_environment(expression, inputs, environment, status)
         }
         _ => StaticBool::Unknown,
     }
@@ -100,45 +109,27 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn expression_b
         expression,
         inputs,
         &EnvironmentState::default(),
-        StaticBool::True,
+        ConditionStatus::SUCCESS,
     )
-}
-
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn expression_bool_with_status(
-    expression: &str,
-    inputs: &InputState,
-    success: StaticBool,
-) -> StaticBool {
-    expression_bool_with_status_and_environment(
-        expression,
-        inputs,
-        &EnvironmentState::default(),
-        success,
-    )
-}
-
-fn expression_bool_with_environment(
-    expression: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> StaticBool {
-    expression_bool_with_status_and_environment(expression, inputs, environment, StaticBool::True)
 }
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn expression_bool_with_status_and_environment(
     expression: &str,
     inputs: &InputState,
     environment: &EnvironmentState,
-    success: StaticBool,
+    status: ConditionStatus,
 ) -> StaticBool {
     let expression = strip_expression(expression.trim());
-    if super::super::expressions::condition_expression_valid(expression) {
-        if let Some(value) = super::logical::compound_bool(expression, inputs, environment, success)
-        {
-            return value;
-        }
+    if expression.is_empty() {
+        return StaticBool::False;
     }
-    if expression.is_empty() || expression.eq_ignore_ascii_case("false") {
+    if !super::super::expressions::condition_expression_valid(expression) {
+        return StaticBool::Unknown;
+    }
+    if let Some(value) = super::logical::compound_bool(expression, inputs, environment, status) {
+        return value;
+    }
+    if expression.eq_ignore_ascii_case("false") {
         return StaticBool::False;
     }
     if expression.eq_ignore_ascii_case("true") {
@@ -147,11 +138,11 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn expression_b
     if expression.eq_ignore_ascii_case("null") {
         return StaticBool::False;
     }
-    if let Some(value) = status_function_bool(expression, success) {
+    if let Some(value) = status_function_bool(expression, status) {
         return value;
     }
     if let Some(value) =
-        super::functions::static_function_bool(expression, inputs, environment, success)
+        super::functions::static_function_bool(expression, inputs, environment, status)
     {
         return value;
     }
@@ -164,23 +155,23 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn expression_b
     if let Ok(value) = expression.parse::<f64>() {
         return number_bool(Some(value));
     }
-    resolve_input_expression(expression, inputs, environment, success)
+    resolve_input_expression(expression, inputs, environment, status)
 }
 
 fn resolve_input_expression(
     expression: &str,
     inputs: &InputState,
     environment: &EnvironmentState,
-    success: StaticBool,
+    status: ConditionStatus,
 ) -> StaticBool {
-    if let Some(value) = comparison_bool(expression, inputs, environment, success) {
+    if let Some(value) = comparison_bool(expression, inputs, environment, status) {
         return value;
     }
-    if let Some(value) = condition_value(expression, inputs, environment, success) {
+    if let Some(value) = condition_value(expression, inputs, environment, status) {
         return value.truthiness();
     }
     if let Some(operand) = expression.strip_prefix('!').map(str::trim) {
-        return expression_bool_with_status_and_environment(operand, inputs, environment, success)
+        return expression_bool_with_status_and_environment(operand, inputs, environment, status)
             .negate();
     }
     StaticBool::Unknown
@@ -191,7 +182,11 @@ pub(super) fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> 
         .and_then(Value::as_str)
         .is_some_and(|expression| {
             super::super::expressions::condition_has_status_function(expression)
-                && expression_bool_with_status(expression, inputs, StaticBool::False)
-                    == StaticBool::True
+                && expression_bool_with_status_and_environment(
+                    expression,
+                    inputs,
+                    &EnvironmentState::default(),
+                    ConditionStatus::SKIPPED,
+                ) == StaticBool::True
         })
 }

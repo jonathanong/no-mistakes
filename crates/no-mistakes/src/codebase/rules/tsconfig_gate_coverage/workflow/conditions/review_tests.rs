@@ -27,6 +27,23 @@ fn case_functions_resolve_the_selected_static_branch() {
 }
 
 #[test]
+fn over_budget_logical_conditions_never_enter_the_recursive_evaluator() {
+    let at_limit = std::iter::repeat_n("true", 256)
+        .collect::<Vec<_>>()
+        .join(" && ");
+    let over_limit = format!("{at_limit} && true");
+
+    assert_eq!(
+        static_bool(Some(&Value::String(at_limit)), &InputState::new()),
+        StaticBool::True
+    );
+    assert_eq!(
+        static_bool(Some(&Value::String(over_limit)), &InputState::new()),
+        StaticBool::Unknown
+    );
+}
+
+#[test]
 fn bracketed_github_event_name_access_matches_dot_access() {
     let inputs = InputState::from([
         (

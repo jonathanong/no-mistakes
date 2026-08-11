@@ -1,5 +1,6 @@
 use super::{
-    expression_bool_with_status_and_environment, EnvironmentState, InputState, StaticBool,
+    expression_bool_with_status_and_environment, ConditionStatus, EnvironmentState, InputState,
+    StaticBool,
 };
 
 #[derive(Clone, Copy)]
@@ -22,22 +23,22 @@ pub(super) fn compound_bool(
     expression: &str,
     inputs: &InputState,
     environment: &EnvironmentState,
-    success: StaticBool,
+    status: ConditionStatus,
 ) -> Option<StaticBool> {
     if let Some((left, right, LogicalOperator::Or)) = logical_operands(expression) {
         return Some(or(
-            expression_bool_with_status_and_environment(left, inputs, environment, success),
-            expression_bool_with_status_and_environment(right, inputs, environment, success),
+            expression_bool_with_status_and_environment(left, inputs, environment, status),
+            expression_bool_with_status_and_environment(right, inputs, environment, status),
         ));
     }
     if let Some((left, right, LogicalOperator::And)) = logical_operands(expression) {
         return Some(and(
-            expression_bool_with_status_and_environment(left, inputs, environment, success),
-            expression_bool_with_status_and_environment(right, inputs, environment, success),
+            expression_bool_with_status_and_environment(left, inputs, environment, status),
+            expression_bool_with_status_and_environment(right, inputs, environment, status),
         ));
     }
     outer_parentheses_body(expression)
-        .map(|body| expression_bool_with_status_and_environment(body, inputs, environment, success))
+        .map(|body| expression_bool_with_status_and_environment(body, inputs, environment, status))
 }
 
 pub(super) fn logical_operands(expression: &str) -> Option<(&str, &str, LogicalOperator)> {

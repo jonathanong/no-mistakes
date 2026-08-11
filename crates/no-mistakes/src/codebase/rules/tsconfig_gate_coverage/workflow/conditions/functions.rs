@@ -1,6 +1,6 @@
 use super::{
     condition_values::condition_value, input_value::comparison_literal, resolution::input_name,
-    EnvironmentState, InputState, StaticBool, StaticValue,
+    ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_function_call, Function,
@@ -10,18 +10,18 @@ pub(super) fn static_function_bool(
     expression: &str,
     inputs: &InputState,
     environment: &EnvironmentState,
-    success: StaticBool,
+    status: ConditionStatus,
 ) -> Option<StaticBool> {
     let call = condition_function_call(expression)?;
     if call.function == Function::Case {
-        return static_case_value(expression, inputs, environment, success)
+        return static_case_value(expression, inputs, environment, status)
             .map(StaticValue::truthiness);
     }
     if call.arguments.len() != 2 {
         return None;
     }
-    let search = function_argument_value(call.arguments[0], inputs, environment, success)?;
-    let item = function_argument_value(call.arguments[1], inputs, environment, success)?
+    let search = function_argument_value(call.arguments[0], inputs, environment, status)?;
+    let item = function_argument_value(call.arguments[1], inputs, environment, status)?
         .function_string()?;
     let matched = match call.function {
         Function::Contains => contains_static_value(&search, &item)?,
@@ -57,12 +57,13 @@ pub(super) fn static_case_value(
     expression: &str,
     inputs: &InputState,
     environment: &EnvironmentState,
-    success: StaticBool,
+    status: impl Into<ConditionStatus>,
 ) -> Option<StaticValue> {
+    let status = status.into();
     let call = condition_function_call(expression)?;
     (call.function == Function::Case).then_some(())?;
     for index in (0..call.arguments.len() - 1).step_by(2) {
-        match function_argument_value(call.arguments[index], inputs, environment, success)?
+        match function_argument_value(call.arguments[index], inputs, environment, status)?
             .truthiness()
         {
             StaticBool::False => continue,
@@ -71,20 +72,20 @@ pub(super) fn static_case_value(
                     call.arguments[index + 1],
                     inputs,
                     environment,
-                    success,
+                    status,
                 );
             }
             StaticBool::Unknown => return None,
         }
     }
-    function_argument_value(call.arguments.last()?, inputs, environment, success)
+    function_argument_value(call.arguments.last()?, inputs, environment, status)
 }
 
 fn function_argument_value(
     expression: &str,
     inputs: &InputState,
     environment: &EnvironmentState,
-    success: StaticBool,
+    status: ConditionStatus,
 ) -> Option<StaticValue> {
     if let Some(name) = input_name(expression) {
         // The boolean/equality condition path intentionally models a missing
@@ -97,7 +98,7 @@ fn function_argument_value(
                 .unwrap_or_else(|| StaticValue::String(String::new())),
         );
     }
-    condition_value(expression, inputs, environment, success)
+    condition_value(expression, inputs, environment, status)
         .or_else(|| comparison_literal(expression))
 }
 

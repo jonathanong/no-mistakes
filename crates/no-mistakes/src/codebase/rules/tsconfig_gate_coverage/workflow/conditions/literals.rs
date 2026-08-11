@@ -55,24 +55,27 @@ pub(super) fn strip_expression(expression: &str) -> &str {
         .unwrap_or(expression)
 }
 
-pub(super) fn status_function_bool(expression: &str, success: StaticBool) -> Option<StaticBool> {
+pub(super) fn status_function_bool(
+    expression: &str,
+    status: super::ConditionStatus,
+) -> Option<StaticBool> {
     let expression = expression.trim();
     if let Some(operand) = expression.strip_prefix('!') {
-        return status_function_bool(operand, success).map(StaticBool::negate);
+        return status_function_bool(operand, status).map(StaticBool::negate);
     }
     if let Some(operand) = expression
         .strip_prefix('(')
         .and_then(|operand| operand.strip_suffix(')'))
     {
-        return status_function_bool(operand, success);
+        return status_function_bool(operand, status);
     }
     if expression.eq_ignore_ascii_case("success()") {
-        Some(success)
+        Some(status.success)
     } else if expression.eq_ignore_ascii_case("always()") {
         Some(StaticBool::True)
-    } else if expression.eq_ignore_ascii_case("failure()")
-        || expression.eq_ignore_ascii_case("cancelled()")
-    {
+    } else if expression.eq_ignore_ascii_case("failure()") {
+        Some(status.failure)
+    } else if expression.eq_ignore_ascii_case("cancelled()") {
         Some(StaticBool::False)
     } else {
         None

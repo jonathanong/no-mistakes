@@ -51,7 +51,8 @@ pub(in super::super) fn condition_expression_contexts_available(
         let Some(tokens) = lexer::tokenize(expression) else {
             return false;
         };
-        syntax::parse(&tokens).is_some()
+        super::condition_tokens_within_budget(&tokens)
+            && syntax::parse(&tokens).is_some()
             && contexts::root_contexts_available(expression, allowed)
             && special_functions_available(&tokens, hash_files_available, true)
     })

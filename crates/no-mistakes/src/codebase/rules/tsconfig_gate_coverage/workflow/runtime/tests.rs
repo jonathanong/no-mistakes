@@ -23,6 +23,16 @@ fn container_runner_support(job: &serde_yaml::Mapping) -> ContainerRunnerSupport
 }
 
 #[test]
+fn pipefail_requires_an_explicit_bash_shell() {
+    assert!(!super::shell_pipefail_enforced(None));
+    assert!(super::shell_pipefail_enforced(Some("bash")));
+    assert!(super::shell_pipefail_enforced(Some(
+        "bash --noprofile --norc -eo pipefail {0}"
+    )));
+    assert!(!super::shell_pipefail_enforced(Some("bash -e {0}")));
+}
+
+#[test]
 fn missing_runner_cannot_imply_a_windows_default() {
     assert!(!runs_on_can_default_to_windows(&Value::Null));
 }

@@ -44,6 +44,21 @@ pub(super) fn shell_failure_enforced(shell: Option<&str>) -> Option<bool> {
         .or_else(|| execution_preserving_shell_template_failure_enforced(command, &args))
 }
 
+pub(super) fn shell_pipefail_enforced(shell: Option<&str>) -> bool {
+    let Some(shell) = shell else {
+        return false;
+    };
+    let mut tokens = shell.split_ascii_whitespace();
+    if tokens.next() != Some("bash") {
+        return false;
+    }
+    let arguments = tokens.collect::<Vec<_>>();
+    arguments.is_empty()
+        || arguments
+            .windows(2)
+            .any(|pair| is_bash_pipefail_option(pair[0]) && pair.get(1) == Some(&"pipefail"))
+}
+
 fn execution_preserving_shell_template_failure_enforced(
     command: &str,
     arguments: &[&str],

@@ -34,6 +34,30 @@ pub(super) enum StaticExpressionType {
     Dynamic,
 }
 
+const MAX_CONDITION_LOGICAL_OPERATORS: usize = 255;
+
+fn condition_tokens_within_budget(tokens: &[lexer::Token]) -> bool {
+    tokens
+        .iter()
+        .filter(|token| matches!(token, lexer::Token::And | lexer::Token::Or))
+        .take(MAX_CONDITION_LOGICAL_OPERATORS + 1)
+        .count()
+        <= MAX_CONDITION_LOGICAL_OPERATORS
+}
+
+fn condition_tokens(value: &str) -> Option<Vec<lexer::Token>> {
+    let value = value.trim();
+    let body = if value.starts_with("${{") || value.ends_with("}}") {
+        value
+            .strip_prefix("${{")
+            .and_then(|body| body.strip_suffix("}}"))
+            .map(str::trim)?
+    } else {
+        value
+    };
+    lexer::tokenize(body).filter(|tokens| condition_tokens_within_budget(tokens))
+}
+
 pub(super) fn complete_expression_type(value: &str) -> Option<StaticExpressionType> {
     let value = value.trim();
     let body = value.strip_prefix("${{")?.strip_suffix("}}")?.trim();
@@ -58,27 +82,11 @@ pub(super) fn complete_expression_may_produce_mapping(value: &str) -> bool {
 }
 
 pub(super) fn condition_expression_valid(value: &str) -> bool {
-    let value = value.trim();
-    if value.starts_with("${{") || value.ends_with("}}") {
-        complete_expression_type(value).is_some()
-    } else {
-        lexer::tokenize(value)
-            .and_then(|tokens| syntax::parse(&tokens))
-            .is_some()
-    }
+    condition_tokens(value).is_some_and(|tokens| syntax::parse(&tokens).is_some())
 }
 
 pub(super) fn condition_has_status_function(value: &str) -> bool {
-    let value = value.trim();
-    let body = if value.starts_with("${{") || value.ends_with("}}") {
-        value
-            .strip_prefix("${{")
-            .and_then(|body| body.strip_suffix("}}"))
-            .map(str::trim)
-    } else {
-        Some(value)
-    };
-    body.and_then(lexer::tokenize).is_some_and(|tokens| {
+    condition_tokens(value).is_some_and(|tokens| {
         syntax::parse(&tokens).is_some()
             && tokens.iter().any(|token| {
                 matches!(

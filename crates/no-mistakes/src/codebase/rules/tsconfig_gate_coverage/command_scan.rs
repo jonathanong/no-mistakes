@@ -59,6 +59,14 @@ pub(crate) fn shell_body_has_static_failure(script: &str) -> bool {
     shell::shell_body_has_static_failure(script)
 }
 
+pub(crate) fn shell_body_has_static_pipeline_failure(script: &str, failure_enforced: bool) -> bool {
+    shell::shell_body_has_static_pipeline_failure(script, failure_enforced)
+}
+
+pub(crate) fn shell_body_has_static_terminal_failure(script: &str) -> bool {
+    shell::shell_body_has_static_terminal_failure(script)
+}
+
 /// Scan one configured argv command. A shell script is accepted only for a
 /// static `bash|sh ... -c <literal>` form; all other argv commands are parsed
 /// as direct static command tokens.
