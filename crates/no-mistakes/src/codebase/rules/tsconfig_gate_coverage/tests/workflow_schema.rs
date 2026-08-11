@@ -348,12 +348,22 @@ fn job_level_expression_schema_errors_do_not_credit_typechecks() {
             "on: push\njobs:\n  typecheck:\n    concurrency: checks-${{ secrets.TOKEN }}\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unavailable-job-concurrency/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/invalid-job-timeout.yml",
+            "on: push\njobs:\n  typecheck:\n    timeout-minutes: '${{ failure() }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-job-timeout/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/invalid-step-timeout.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - timeout-minutes: '${{ failure() }}'\n        run: tsc --noEmit --project invalid-step-timeout/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/valid-job-contexts.yml",
             "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    outputs:\n      key: value\n    steps:\n      - run: echo setup\n  typecheck:\n    needs: setup\n    concurrency:\n      group: checks-${{ needs.setup.outputs.key }}\n      cancel-in-progress: '${{ github.ref_protected }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid-job-contexts/tsconfig.json\n",
         ),
     ];
     let tracked = [
         "dynamic-job-defaults/tsconfig.json",
+        "invalid-job-timeout/tsconfig.json",
+        "invalid-step-timeout/tsconfig.json",
         "unavailable-job-concurrency/tsconfig.json",
         "valid-job-contexts/tsconfig.json",
     ]

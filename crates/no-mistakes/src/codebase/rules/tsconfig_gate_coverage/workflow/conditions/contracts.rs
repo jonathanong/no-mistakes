@@ -1,3 +1,6 @@
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
+    typed_scalar_expression_contexts_available, StaticExpressionType,
+};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
 };
@@ -47,10 +50,18 @@ pub(super) fn valid_identifier(name: &str) -> bool {
 }
 
 fn default_matches_type(value: &JsonScalar, input_type: WorkflowCallInputType) -> bool {
-    matches!(
-        (input_type, value),
+    const INPUT_DEFAULT_CONTEXTS: &[&str] = &["github", "inputs", "vars"];
+    match (input_type, value) {
         (WorkflowCallInputType::Boolean, JsonScalar::Bool(_))
-            | (WorkflowCallInputType::Number, JsonScalar::Number(_))
-            | (WorkflowCallInputType::String, JsonScalar::Text(_))
-    )
+        | (WorkflowCallInputType::Number, JsonScalar::Number(_)) => true,
+        (input_type, JsonScalar::Text(value)) => {
+            let expected = match input_type {
+                WorkflowCallInputType::Boolean => StaticExpressionType::Boolean,
+                WorkflowCallInputType::Number => StaticExpressionType::Number,
+                WorkflowCallInputType::String => StaticExpressionType::String,
+            };
+            typed_scalar_expression_contexts_available(value, INPUT_DEFAULT_CONTEXTS, expected)
+        }
+        _ => false,
+    }
 }

@@ -116,13 +116,26 @@ fn resolves_only_complete_literal_expressions_to_yaml_values() {
         ("${{ (7) }}", Value::Number(7.into())),
         ("${{ 'release' }}", Value::String("release".to_string())),
         ("${{ null }}", Value::Null),
+        ("${{ fromJSON('false') }}", Value::Bool(false)),
+        ("${{ fromJSON('0') }}", Value::Number(0.into())),
+        (
+            "${{ fromJSON('{\"enabled\":true}') }}",
+            serde_yaml::from_str("{enabled: true}").unwrap(),
+        ),
     ] {
         assert_eq!(
             complete_literal_expression_value(expression),
             Some(expected)
         );
     }
-    for expression in ["${{ inputs.target }}", "${{ true || false }}", "${{ }}"] {
+    for expression in [
+        "${{ inputs.target }}",
+        "${{ true || false }}",
+        "${{ fromJSON('not-json') }}",
+        "${{ contains(fromJSON('not-json'), 'x') }}",
+        "${{ (fromJSON('not-json')) }}",
+        "${{ }}",
+    ] {
         assert_eq!(
             complete_literal_expression_value(expression),
             None,

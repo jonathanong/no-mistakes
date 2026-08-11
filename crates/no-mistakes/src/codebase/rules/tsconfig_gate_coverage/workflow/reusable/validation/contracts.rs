@@ -1,6 +1,9 @@
 use serde_yaml::Value;
 
-use super::super::super::expressions::interpolated_expression_contexts_available;
+use super::super::super::expressions::{
+    interpolated_expression_contexts_available, typed_scalar_expression_contexts_available,
+    StaticExpressionType,
+};
 
 mod triggers;
 
@@ -46,14 +49,34 @@ fn declaration_group_valid(
 }
 
 fn input_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
+    let Some(input_type) = declaration.get("type").and_then(Value::as_str) else {
+        return false;
+    };
     only_keys(declaration, &["type", "required", "default", "description"])
-        && declaration
-            .get("type")
-            .and_then(Value::as_str)
-            .is_some_and(|input_type| matches!(input_type, "boolean" | "number" | "string"))
+        && matches!(input_type, "boolean" | "number" | "string")
         && bool_field_valid(declaration, "required")
-        && scalar_field_valid(declaration, "default")
+        && input_default_valid(declaration.get("default"), input_type)
         && string_field_valid(declaration, "description")
+}
+
+fn input_default_valid(value: Option<&Value>, input_type: &str) -> bool {
+    const INPUT_DEFAULT_CONTEXTS: &[&str] = &["github", "inputs", "vars"];
+    let Some(value) = value else {
+        return true;
+    };
+    match (input_type, value) {
+        ("boolean", Value::Bool(_)) | ("number", Value::Number(_)) => true,
+        ("boolean" | "number" | "string", Value::String(value)) => {
+            let expected = match input_type {
+                "boolean" => StaticExpressionType::Boolean,
+                "number" => StaticExpressionType::Number,
+                "string" => StaticExpressionType::String,
+                _ => unreachable!("validated workflow_call input type"),
+            };
+            typed_scalar_expression_contexts_available(value, INPUT_DEFAULT_CONTEXTS, expected)
+        }
+        _ => false,
+    }
 }
 
 fn secret_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
@@ -84,12 +107,6 @@ fn string_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
 
 fn bool_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
     mapping.get(field).is_none_or(Value::is_bool)
-}
-
-fn scalar_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
-    mapping
-        .get(field)
-        .is_none_or(|value| matches!(value, Value::Bool(_) | Value::Number(_) | Value::String(_)))
 }
 
 #[cfg(test)]

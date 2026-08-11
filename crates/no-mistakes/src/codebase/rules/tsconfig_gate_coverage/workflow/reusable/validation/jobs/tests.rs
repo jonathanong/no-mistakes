@@ -124,6 +124,45 @@ fn continue_on_error_uses_its_field_specific_contexts() {
 }
 
 #[test]
+fn timeout_minutes_uses_its_field_specific_contexts_and_functions() {
+    for yaml in [
+        "runs-on: ubuntu-latest\ntimeout-minutes: '${{ matrix.timeout }}'\nstrategy:\n  matrix:\n    timeout: [5]\nsteps:\n  - run: echo valid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: '${{ inputs.timeout }}'\nsteps:\n  - run: echo valid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: 361\nsteps:\n  - run: echo valid",
+    ] {
+        assert!(super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "steps:\n  - timeout-minutes: '${{ steps.setup.outputs.timeout }}'\n    run: echo valid",
+        "steps:\n  - timeout-minutes: '${{ github.run_number }}'\n    run: echo valid",
+        "steps:\n  - timeout-minutes: \"${{ case(contains(hashFiles('**/pnpm-lock.yaml'), 'x'), 5, 10) }}\"\n    run: echo valid",
+    ] {
+        assert!(steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+
+    for yaml in [
+        "runs-on: ubuntu-latest\ntimeout-minutes: '${{ secrets.TIMEOUT }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: '${{ hashFiles(''**/pnpm-lock.yaml'') }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: '${{ failure() }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: '${{ false }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: '${{ 0 }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: \"${{ '5' }}\"\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ntimeout-minutes: \"${{ fromJSON('not-json') }}\"\nsteps:\n  - run: echo invalid",
+    ] {
+        assert!(!super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "steps:\n  - timeout-minutes: '${{ failure() }}'\n    run: echo invalid",
+        "steps:\n  - timeout-minutes: '${{ -1 }}'\n    run: echo invalid",
+        "steps:\n  - timeout-minutes: '${{ 361 }}'\n    run: echo invalid",
+        "steps:\n  - timeout-minutes: \"${{ fromJSON('not-json') }}\"\n    run: echo invalid",
+        "steps:\n  - timeout-minutes: '${{ 361 || 5 }}'\n    run: echo invalid",
+    ] {
+        assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn environments_use_distinct_name_and_url_contexts() {
     assert!(super::step_job_shape_valid(&job(
         "runs-on: ubuntu-latest\nenvironment:\n  name: '${{ matrix.deployment }}'\n  url: '${{ steps.deploy.outputs.url }}'\nsteps:\n  - run: echo valid"

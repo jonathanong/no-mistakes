@@ -88,6 +88,9 @@ as well as input truthiness. Static `contains`, `startsWith`, and `endsWith`
 calls are also resolved using GitHub's string coercion; missing properties
 coerce to an empty string. Expressions whose result remains dynamic fail open
 as potentially runnable.
+Reusable input default expressions must match their declared scalar type and
+may use only `github`, `inputs`, and `vars`; malformed defaults or unavailable
+contexts invalidate the workflow before any command can provide coverage.
 For static matrices, `${{ matrix.name }}` bindings, step conditions, and job or
 step `continue-on-error` expressions are evaluated once per generated
 combination after `exclude` and ordered `include` expansion. Execution and
@@ -112,6 +115,11 @@ and URLs, use their own GitHub context/function sets; status functions are not
 accepted in `continue-on-error`. Strategy `fail-fast` expressions use the
 documented strategy contexts and must be boolean when their result type is
 statically known; `max-parallel` must similarly be a positive integer.
+Job and step `timeout-minutes` expressions use their documented context sets,
+must resolve to positive integers, and do not admit status functions. Only
+step-level timeouts admit `hashFiles` and enforce the documented 360-minute
+maximum; job timeouts may be larger and are ultimately bounded by the selected
+runner.
 Workflow-dispatch choice options/defaults and container/service port
 declarations must also match their field-specific GitHub types and static
 Docker shape. Complete expressions in supported port components remain dynamic

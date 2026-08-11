@@ -1,5 +1,7 @@
 use super::*;
 
+mod defaults;
+
 fn on(yaml: &str) -> Value {
     serde_yaml::from_str(yaml).unwrap()
 }

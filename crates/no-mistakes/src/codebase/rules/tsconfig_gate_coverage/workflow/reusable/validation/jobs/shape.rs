@@ -60,7 +60,13 @@ pub(crate) fn step_job_shape_valid(job: &Value) -> bool {
             && outputs_shape_valid(job.get("outputs"))
             && scalar_mapping_valid(job.get("env"))
             && job_defaults_shape_valid(job.get("defaults"))
-            && super::fields::number_or_expression_field_valid(job, "timeout-minutes")
+            && super::fields::timeout_minutes_field_valid(
+                job,
+                "timeout-minutes",
+                super::fields::JOB_TIMEOUT_CONTEXTS,
+                false,
+                None,
+            )
             && bool_or_expression_field_valid(
                 job,
                 "continue-on-error",

@@ -132,13 +132,7 @@ fn inputs_from_contract(
             let state = match input_type {
                 WorkflowCallInputType::Boolean => binding
                     .map(|value| binding_bool(value, parent))
-                    .unwrap_or_else(|| {
-                        if let Some(JsonScalar::Bool(value)) = declaration.default.as_ref() {
-                            StaticValue::Bool(*value)
-                        } else {
-                            StaticValue::Bool(false)
-                        }
-                    }),
+                    .unwrap_or_else(|| default_value(declaration.default.as_ref(), input_type)),
                 WorkflowCallInputType::Number | WorkflowCallInputType::String => binding
                     .map(|value| nonboolean_binding_value(value, parent, input_type))
                     .unwrap_or_else(|| default_value(declaration.default.as_ref(), input_type)),

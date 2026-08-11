@@ -4,7 +4,8 @@ use serde_yaml::{Mapping, Value};
 use super::super::super::super::expressions::{
     complete_expression_contexts_available, complete_expression_contexts_with_hash_files_available,
     complete_expression_type, complete_literal_expression_value,
-    condition_expression_contexts_available, interpolated_expression_valid, StaticExpressionType,
+    condition_expression_contexts_available, interpolated_expression_valid,
+    invalid_literal_from_json, StaticExpressionType,
 };
 
 pub(super) const JOB_CONDITION_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
@@ -17,6 +18,8 @@ pub(super) const STEP_CONTINUE_ON_ERROR_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "steps",
     "inputs",
 ];
+pub(super) const JOB_TIMEOUT_CONTEXTS: &[&str] = JOB_CONTINUE_ON_ERROR_CONTEXTS;
+pub(super) const STEP_TIMEOUT_CONTEXTS: &[&str] = STEP_CONTINUE_ON_ERROR_CONTEXTS;
 const STRATEGY_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
 
 pub(super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
@@ -50,6 +53,7 @@ fn strategy_fail_fast_expression_valid(value: &str) -> bool {
 
 fn strategy_max_parallel_expression_valid(value: &str) -> bool {
     complete_expression_contexts_available(value, STRATEGY_CONTEXTS)
+        && !invalid_literal_from_json(value)
         && matches!(
             complete_expression_type(value),
             Some(StaticExpressionType::Number | StaticExpressionType::Dynamic)
@@ -99,15 +103,43 @@ pub(super) fn bool_or_expression_field_valid(
     })
 }
 
-pub(super) fn number_or_expression_field_valid(mapping: &Mapping, field: &str) -> bool {
+pub(super) fn timeout_minutes_field_valid(
+    mapping: &Mapping,
+    field: &str,
+    allowed_contexts: &[&str],
+    hash_files_available: bool,
+    maximum: Option<u64>,
+) -> bool {
     mapping.get(field).is_none_or(|value| {
         value
             .as_u64()
-            .is_some_and(|minutes| (1..=360).contains(&minutes))
-            || value
-                .as_str()
-                .is_some_and(super::super::super::super::complete_expression)
+            .is_some_and(|minutes| valid_timeout(minutes, maximum))
+            || value.as_str().is_some_and(|value| {
+                complete_expression_contexts_with_hash_files_available(
+                    value,
+                    allowed_contexts,
+                    hash_files_available,
+                ) && !invalid_literal_from_json(value)
+                    && matches!(
+                        complete_expression_type(value),
+                        Some(StaticExpressionType::Number | StaticExpressionType::Dynamic)
+                    )
+                    && match complete_literal_expression_value(value) {
+                        Some(literal) => literal
+                            .as_u64()
+                            .is_some_and(|minutes| valid_timeout(minutes, maximum)),
+                        None => !complete_expression_contexts_with_hash_files_available(
+                            value,
+                            &[],
+                            false,
+                        ),
+                    }
+            })
     })
+}
+
+fn valid_timeout(minutes: u64, maximum: Option<u64>) -> bool {
+    minutes > 0 && maximum.is_none_or(|maximum| minutes <= maximum)
 }
 
 pub(super) fn scalar_value_valid(value: &Value) -> bool {

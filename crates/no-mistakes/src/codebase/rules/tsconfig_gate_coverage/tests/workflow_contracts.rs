@@ -244,3 +244,61 @@ fn malformed_contract_containers_and_empty_matrices_earn_no_credit() {
         ])
     );
 }
+
+#[test]
+fn workflow_call_input_default_expressions_are_validated_and_preserved() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/caller.yml",
+            "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/defaults.yml\n",
+        ),
+        workflow(
+            ".github/workflows/defaults.yml",
+            "on:\n  workflow_call:\n    inputs:\n      disabled:\n        type: boolean\n        default: '${{ false }}'\n      enabled:\n        type: boolean\n        default: '${{ true }}'\n      compared:\n        type: boolean\n        default: '${{ true == false }}'\n      logical:\n        type: boolean\n        default: '${{ true && false }}'\n      contained:\n        type: boolean\n        default: \"${{ contains('x', 'y') }}\"\n      attempts:\n        type: number\n        default: '${{ 0 }}'\n      label:\n        type: string\n        default: 'release-${{ github.ref_name }}'\njobs:\n  disabled:\n    if: inputs.disabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project disabled-default/tsconfig.json\n  enabled:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project enabled-default/tsconfig.json\n  compared:\n    if: inputs.compared\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compared-default/tsconfig.json\n  logical:\n    if: inputs.logical\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project logical-default/tsconfig.json\n  contained:\n    if: inputs.contained\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project contained-default/tsconfig.json\n  zero:\n    if: inputs.attempts\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project zero-default/tsconfig.json\n  dynamic:\n    if: inputs.label\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-default/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/json-caller.yml",
+            "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/json-defaults.yml\n",
+        ),
+        workflow(
+            ".github/workflows/json-defaults.yml",
+            "on:\n  workflow_call:\n    inputs:\n      disabled:\n        type: boolean\n        default: \"${{ fromJSON('false') }}\"\n      attempts:\n        type: number\n        default: \"${{ fromJSON('0') }}\"\njobs:\n  disabled:\n    if: inputs.disabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project json-disabled-default/tsconfig.json\n  zero:\n    if: inputs.attempts\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project json-zero-default/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/malformed-default.yml",
+            "on:\n  push:\n  workflow_call:\n    inputs:\n      label:\n        type: string\n        default: '${{ }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed-default/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/unavailable-default.yml",
+            "on:\n  push:\n  workflow_call:\n    inputs:\n      enabled:\n        type: boolean\n        default: '${{ secrets.TOKEN }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unavailable-default/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/mismatched-default.yml",
+            "on:\n  push:\n  workflow_call:\n    inputs:\n      label:\n        type: string\n        default: '${{ true }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project mismatched-default/tsconfig.json\n",
+        ),
+    ];
+
+    assert_eq!(
+        scanned(
+            documents,
+            &[
+                "disabled-default",
+                "enabled-default",
+                "compared-default",
+                "logical-default",
+                "contained-default",
+                "json-disabled-default",
+                "json-zero-default",
+                "zero-default",
+                "dynamic-default",
+                "malformed-default",
+                "unavailable-default",
+                "mismatched-default",
+            ],
+        ),
+        BTreeSet::from([
+            "dynamic-default/tsconfig.json".to_string(),
+            "enabled-default/tsconfig.json".to_string(),
+        ])
+    );
+}

@@ -3,10 +3,12 @@ mod contexts;
 mod lexer;
 mod literal_value;
 mod syntax;
+mod typed_scalar;
 
 pub(crate) use calls::condition_function_call;
 pub(crate) use lexer::Function;
-pub(super) use literal_value::complete_literal_expression_value;
+pub(super) use literal_value::{complete_literal_expression_value, invalid_literal_from_json};
+pub(super) use typed_scalar::typed_scalar_expression_contexts_available;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum StaticExpressionType {
