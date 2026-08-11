@@ -31,7 +31,7 @@ Step-based jobs need a non-empty, statically resolvable `runs-on` string,
 label array, or `group`/`labels` mapping. Static matrix and reusable-input
 runner selectors are resolved per generated job before runner platform and
 implicit-shell checks; unresolved selectors do not provide coverage.
-Runner group names establish schedulability but not an operating system. A
+Runner group names establish that a job can be scheduled but not its operating system. A
 group-only job therefore needs an explicit supported shell, and it cannot use
 containers or services for coverage unless `runs-on.labels` proves Linux.
 Repository-local action steps (`uses: ./path`) count only when the tracked
