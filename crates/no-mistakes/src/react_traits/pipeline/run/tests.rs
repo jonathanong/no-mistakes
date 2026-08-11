@@ -173,6 +173,5 @@ fn aggregate_children_skips_children_outside_the_visible_snapshot() {
     let agg =
         aggregate_children_from_visible(&parent, &mut cache, &root, &visible, &mut HashSet::new());
 
-    assert_eq!(agg.facts, AggregatedFacts::default());
-    assert!(agg.fetch_locations.is_empty());
+    assert_eq!(agg, AggregatedFacts::default());
 }

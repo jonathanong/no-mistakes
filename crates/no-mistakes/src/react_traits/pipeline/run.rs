@@ -101,8 +101,8 @@ pub(crate) fn run_analyze_inner_from_visible(
             &visible_files,
             &mut HashSet::new(),
         );
-        if agg.facts != AggregatedFacts::default() {
-            facts.inherited_from_children = Some(agg.facts);
+        if agg != AggregatedFacts::default() {
+            facts.inherited_from_children = Some(agg);
         }
         all_results.push(facts);
     }
@@ -121,7 +121,7 @@ fn aggregate_children_from_visible(
     root: &Path,
     visible_files: &HashSet<PathBuf>,
     visited: &mut HashSet<String>,
-) -> AggregateResult {
+) -> AggregatedFacts {
     aggregate_children_inner(facts, file_cache, root, Some(visible_files), visited)
 }
 
@@ -131,8 +131,8 @@ fn aggregate_children_inner(
     root: &Path,
     visible_files: Option<&HashSet<PathBuf>>,
     visited: &mut HashSet<String>,
-) -> AggregateResult {
-    let mut agg = AggregateResult::default();
+) -> AggregatedFacts {
+    let mut agg = AggregatedFacts::default();
     for child_ref in &facts.children {
         let key = format!("{}#{}", child_ref.file, child_ref.name);
         if visited.contains(&key) {
@@ -163,36 +163,23 @@ fn aggregate_children_inner(
             .and_then(|comps| comps.iter().find(|c| c.name == child_ref.name))
             .cloned();
         if let Some(child_facts) = child_facts_opt {
-            agg.facts.has_state |= child_facts.has_state;
-            agg.facts.has_props |= child_facts.has_props;
-            agg.facts.passes_props |= child_facts.passes_props;
-            agg.facts.uses_memo |= child_facts.uses_memo;
-            agg.facts.uses_context_provider |= child_facts.uses_context_provider;
-            agg.facts.uses_suspense |= child_facts.uses_suspense;
-            agg.facts.has_fetch |= !child_facts.fetches.is_empty();
-            agg.fetch_locations.extend(
-                child_facts
-                    .fetches
-                    .iter()
-                    .map(|fetch| (fetch.file.clone(), fetch.line)),
-            );
+            agg.has_state |= child_facts.has_state;
+            agg.has_props |= child_facts.has_props;
+            agg.passes_props |= child_facts.passes_props;
+            agg.uses_memo |= child_facts.uses_memo;
+            agg.uses_context_provider |= child_facts.uses_context_provider;
+            agg.uses_suspense |= child_facts.uses_suspense;
+            agg.has_fetch |= !child_facts.fetches.is_empty();
             let child_agg =
                 aggregate_children_inner(&child_facts, file_cache, root, visible_files, visited);
-            agg.facts.has_state |= child_agg.facts.has_state;
-            agg.facts.has_fetch |= child_agg.facts.has_fetch;
-            agg.facts.uses_suspense |= child_agg.facts.uses_suspense;
-            agg.facts.uses_context_provider |= child_agg.facts.uses_context_provider;
-            agg.facts.uses_memo |= child_agg.facts.uses_memo;
-            agg.facts.has_props |= child_agg.facts.has_props;
-            agg.facts.passes_props |= child_agg.facts.passes_props;
-            agg.fetch_locations.extend(child_agg.fetch_locations);
+            agg.has_state |= child_agg.has_state;
+            agg.has_fetch |= child_agg.has_fetch;
+            agg.uses_suspense |= child_agg.uses_suspense;
+            agg.uses_context_provider |= child_agg.uses_context_provider;
+            agg.uses_memo |= child_agg.uses_memo;
+            agg.has_props |= child_agg.has_props;
+            agg.passes_props |= child_agg.passes_props;
         }
     }
     agg
-}
-
-#[derive(Default)]
-struct AggregateResult {
-    facts: AggregatedFacts,
-    fetch_locations: Vec<(String, usize)>,
 }

@@ -119,6 +119,25 @@ pub(super) fn suppress_react(
     for (index, finding) in original_findings {
         let identity = format!("{}@{}", finding.component, finding.file);
         let targets = suppression_targets.get(index).cloned().unwrap_or_default();
+        if !targets.is_empty() {
+            // An inherited fetch still belongs to the parent component. Honor a
+            // parent file directive before evaluating each child fetch location.
+            let mut parent_location = vec![ReactSuppressionFinding {
+                finding: finding.clone(),
+                line: None,
+                identity: identity.clone(),
+            }];
+            let parent_suppressed = suppress_domain_findings_with_sources(
+                root,
+                &mut parent_location,
+                sources,
+                react_target,
+            );
+            if parent_location.is_empty() {
+                suppressed.extend(parent_suppressed);
+                continue;
+            }
+        }
         let mut locations = if !targets.is_empty() {
             targets
                 .iter()

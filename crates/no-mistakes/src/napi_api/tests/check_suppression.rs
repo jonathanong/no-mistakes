@@ -312,4 +312,12 @@ fn check_json_keeps_inherited_react_suppressions_distinct_by_parent_component() 
             .as_str()
             .is_some_and(|reason| reason.contains("ParentB"))
     }));
+    assert!(parents.iter().any(|item| {
+        item["reason"]
+            .as_str()
+            .is_some_and(|reason| reason.contains("ParentA"))
+            && item["file"] == "app/ParentA.tsx"
+            && item["line"].is_null()
+            && item["directive"]["kind"] == "file"
+    }));
 }
