@@ -1,4 +1,5 @@
 use super::*;
+use serde_yaml::Value;
 
 fn descriptors(entries: &[(&str, &str)]) -> BTreeMap<String, Value> {
     entries
@@ -30,9 +31,10 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         "name: Container\ndescription: Valid\nruns: {using: docker, image: 'docker://alpine:3.22'}",
         "name: Upper container\ndescription: Valid\nruns: {using: docker, image: 'DOCKER://alpine:3.22'}",
         "name: Base image\ndescription: Valid\nruns: {using: docker, image: 'alpine:3.22'}",
+        "name: Node 20\ndescription: Valid\nruns: {using: node20, main: dist/index.js}",
         "name: Node\ndescription: Valid\nruns: {using: node24, main: dist/index.js}",
     ] {
-        let tracked = if yaml.contains("using: node24") {
+        let tracked = if yaml.contains("using: node") {
             &["action/dist/index.js"][..]
         } else if yaml.contains("image: Dockerfile") {
             &["action/Dockerfile"][..]
@@ -76,9 +78,25 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         &["action/outside.js"],
         "action"
     ));
-    let local_node_hooks = "name: Node\ndescription: Valid\nruns: {using: node24, pre: missing-pre.js, main: dist/index.js, post: missing-post.js}";
-    assert!(valid(
+    for runtime in ["node12", "node16"] {
+        let legacy = format!(
+            "name: Legacy\ndescription: Invalid\nruns: {{using: {runtime}, main: dist/index.js}}"
+        );
+        assert!(!valid(
+            &[("action", &legacy)],
+            &["action/dist/index.js"],
+            "action"
+        ));
+    }
+    let local_node_hooks = "name: Node\ndescription: Invalid\nruns: {using: node24, pre: missing-pre.js, main: dist/index.js, post: cleanup.js}";
+    assert!(!valid(
         &[("action", local_node_hooks)],
+        &["action/dist/index.js"],
+        "action"
+    ));
+    let local_node_post_hook = "name: Node\ndescription: Valid\nruns: {using: node24, main: dist/index.js, post: cleanup.js, post-if: always()}";
+    assert!(valid(
+        &[("action", local_node_post_hook)],
         &["action/dist/index.js"],
         "action"
     ));
@@ -96,6 +114,59 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         &["action/build/Dockerfile.test"],
         "action"
     ));
+}
+
+#[test]
+fn action_metadata_validates_all_supported_fields_before_cataloging() {
+    let complete = "name: Complete\nauthor: Acme\ndescription: Valid\ninputs:\n  project:\n    description: Project name\n    required: true\n    default: app\n    deprecationMessage: Use matrix.project\noutputs:\n  result:\n    description: Result path\n    value: '${{ steps.result.outputs.path }}'\nruns:\n  using: composite\n  steps:\n    - id: result\n      run: echo ok\n      shell: bash\nbranding:\n  icon: check\n  color: green\n";
+    assert!(valid(&[("action", complete)], &[], "action"));
+    for icon in ["archive", "arrow-down-circle", "x", "zap-off", "zoom-out"] {
+        let boundary_icon = format!(
+            "name: Boundary\ndescription: Valid\nbranding: {{icon: {icon}, color: blue}}\nruns: {{using: composite, steps: [{{run: ok, shell: bash}}]}}"
+        );
+        assert!(
+            valid(&[("action", &boundary_icon)], &[], "action"),
+            "{icon}"
+        );
+    }
+    for icon in ["not-a-feather-icon", "coffee"] {
+        let invalid_icon = format!(
+            "name: Invalid\ndescription: Invalid\nbranding: {{icon: {icon}, color: green}}\nruns: {{using: composite, steps: [{{run: ok, shell: bash}}]}}"
+        );
+        assert!(
+            !valid(&[("action", &invalid_icon)], &[], "action"),
+            "{icon}"
+        );
+    }
+    let tolerated = "name: Tolerated\ndescription: Valid\nruns:\n  using: composite\n  steps:\n    - run: 'false'\n      shell: bash\n      continue-on-error: true\n";
+    assert!(valid(&[("action", tolerated)], &[], "action"));
+
+    for yaml in [
+        "name: Unknown top-level\ndescription: Invalid\nunknown: true\nruns: {using: node24, main: index.js}",
+        "name: Bad author\nauthor: [Acme]\ndescription: Invalid\nruns: {using: node24, main: index.js}",
+        "name: Bad inputs\ndescription: Invalid\ninputs: []\nruns: {using: node24, main: index.js}",
+        "name: Missing input description\ndescription: Invalid\ninputs: {project: {required: true}}\nruns: {using: node24, main: index.js}",
+        "name: Bad input required\ndescription: Invalid\ninputs: {project: {description: Project, required: yes}}\nruns: {using: node24, main: index.js}",
+        "name: Bad input default\ndescription: Invalid\ninputs: {project: {description: Project, default: [app]}}\nruns: {using: node24, main: index.js}",
+        "name: Bad deprecation\ndescription: Invalid\ninputs: {project: {description: Project, deprecationMessage: [old]}}\nruns: {using: node24, main: index.js}",
+        "name: Bad outputs\ndescription: Invalid\noutputs: []\nruns: {using: node24, main: index.js}",
+        "name: Missing output description\ndescription: Invalid\noutputs: {result: {value: path}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
+        "name: Missing composite output value\ndescription: Invalid\noutputs: {result: {description: Result}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
+        "name: Bad output field\ndescription: Invalid\noutputs: {result: {description: Result, unknown: true, value: path}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
+        "name: Bad branding\ndescription: Invalid\nbranding: {icon: check, color: pink}\nruns: {using: node24, main: index.js}",
+        "name: Unknown branding icon\ndescription: Invalid\nbranding: {icon: not-a-feather-icon, color: green}\nruns: {using: node24, main: index.js}",
+        "name: Omitted branding icon\ndescription: Invalid\nbranding: {icon: coffee, color: green}\nruns: {using: node24, main: index.js}",
+        "name: Bad branding shape\ndescription: Invalid\nbranding: check\nruns: {using: node24, main: index.js}",
+        "name: Unknown runs field\ndescription: Invalid\nruns: {using: node24, main: index.js, unknown: true}",
+        "name: Unsupported local pre\ndescription: Invalid\nruns: {using: node24, pre: setup.js, main: index.js}",
+        "name: Unsupported local pre condition\ndescription: Invalid\nruns: {using: node24, main: index.js, pre-if: always()}",
+        "name: Bad node hook\ndescription: Invalid\nruns: {using: node24, main: index.js, post: [cleanup]}",
+        "name: Bad docker args\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: [--ok, 1]}",
+        "name: Bad docker env\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: [KEY]}",
+        "name: Bad composite step\ndescription: Invalid\nruns: {using: composite, steps: [true]}",
+    ] {
+        assert!(!valid(&[("action", yaml)], &[], "action"), "{yaml}");
+    }
 }
 
 #[test]

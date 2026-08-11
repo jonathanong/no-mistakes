@@ -83,6 +83,11 @@ pub(super) fn scan_job_steps(
         let Some(run) = step.get("run").and_then(Value::as_str) else {
             continue;
         };
+        let Some(run) =
+            super::super::conditions::resolve_static_interpolations(run, inputs, &environment)
+        else {
+            continue;
+        };
         let shell = effective_shell(step, job_shell.clone());
         if shell.is_none() && implicit_shell_can_be_windows {
             continue;
@@ -103,9 +108,9 @@ pub(super) fn scan_job_steps(
         };
         let pipefail_enforced = shell_pipefail_enforced(shell.as_deref());
         let scanned = if failure_enforced {
-            command_scan::scan_shell_for_typechecked_projects(run, &cwd)
+            command_scan::scan_shell_for_typechecked_projects(&run, &cwd)
         } else {
-            command_scan::scan_workflow_shell_for_typechecked_projects(run, &cwd, false)
+            command_scan::scan_workflow_shell_for_typechecked_projects(&run, &cwd, false)
         };
         for project in scanned {
             let project = resolve_gate_project_against_tracked(&project, context.tracked);
@@ -125,12 +130,12 @@ pub(super) fn scan_job_steps(
             }
         }
         let pipeline_failure = pipefail_enforced
-            && command_scan::shell_body_has_static_pipeline_failure(run, failure_enforced);
+            && command_scan::shell_body_has_static_pipeline_failure(&run, failure_enforced);
         let static_failure = pipeline_failure
             || if failure_enforced {
-                command_scan::shell_body_has_static_failure(run)
+                command_scan::shell_body_has_static_failure(&run)
             } else {
-                command_scan::shell_body_has_static_terminal_failure(run)
+                command_scan::shell_body_has_static_terminal_failure(&run)
             };
         if condition == StaticBool::True && static_failure {
             success = StaticBool::False;

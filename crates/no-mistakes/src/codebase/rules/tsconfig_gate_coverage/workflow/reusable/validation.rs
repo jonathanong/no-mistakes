@@ -16,7 +16,7 @@ pub(super) use jobs::{
     environment_configuration_valid_for_inputs, reusable_call_job_shape_valid,
     strategy_configuration_valid_for_inputs,
 };
-pub(super) use matrix::{static_matrix_combinations, zero_instance_matrix, MatrixCombinations};
+pub(super) use matrix::{static_matrix_combinations_for_inputs, MatrixCombinations};
 pub(super) use workflow::workflow_shape_valid;
 
 pub(super) fn scan_job_shape_valid(job: &Value) -> bool {

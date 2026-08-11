@@ -1,7 +1,8 @@
 use serde_yaml::{Mapping, Value};
 
 use super::super::super::super::conditions::{
-    resolve_static_interpolations, EnvironmentState, InputState,
+    complete_expression_static_string_value, resolve_static_interpolations, EnvironmentState,
+    InputState, StaticValue,
 };
 use super::super::super::super::expressions::{
     interpolated_expression_contexts_and_hash_files_available,
@@ -105,6 +106,13 @@ pub(crate) fn environment_configuration_valid_for_inputs(job: &Value, inputs: &I
             .and_then(Value::as_str)
     });
     name.is_some_and(|name| {
+        if let Some(value) = complete_expression_static_string_value(name, inputs) {
+            if !matches!(value, StaticValue::Unknown) {
+                return value
+                    .function_string()
+                    .is_some_and(|name| !name.trim().is_empty());
+            }
+        }
         resolve_static_interpolations(name, inputs, &EnvironmentState::default())
             .is_none_or(|name| !name.trim().is_empty())
     })

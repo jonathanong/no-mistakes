@@ -1,4 +1,16 @@
 use super::*;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputState;
+
+fn static_matrix_combinations(job: &Value) -> Option<MatrixCombinations> {
+    static_matrix_combinations_for_inputs(job, &InputState::new())
+}
+
+fn zero_instance_matrix(job: &Value) -> bool {
+    matches!(
+        static_matrix_combinations(job),
+        Some(MatrixCombinations::Static(values)) if values.is_empty()
+    )
+}
 
 fn job(yaml: &str) -> Value {
     serde_yaml::from_str(yaml).unwrap()

@@ -11,6 +11,7 @@ mod inputs;
 mod literals;
 mod logical;
 mod resolution;
+mod static_values;
 mod step_evaluation;
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
@@ -27,6 +28,7 @@ pub(super) use inputs::{
 };
 use inputs::{event_action_value, event_name_value};
 use resolution::condition_input_value;
+pub(crate) use static_values::complete_expression_static_string_value;
 pub(super) use step_evaluation::{continue_on_error_enabled, step_condition_with_status};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -86,6 +88,19 @@ pub(super) enum StaticValue {
 
 pub(super) type InputState = BTreeMap<String, StaticValue>;
 
+/// Resolves a complete expression only when its result is already known for
+/// this activation. Callers that require a scalar can distinguish a known
+/// object or array from a genuinely dynamic expression.
+pub(crate) fn complete_expression_static_value(
+    value: &str,
+    inputs: &InputState,
+) -> Option<StaticValue> {
+    let expression = value.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
+    super::expressions::complete_literal_expression_value(value)
+        .map(static_yaml_value)
+        .or_else(|| condition_input_value(expression, inputs, &EnvironmentState::default()))
+}
+
 pub(crate) fn resolve_static_interpolations(
     value: &str,
     inputs: &InputState,
@@ -116,6 +131,16 @@ fn static_value_string(value: Value) -> Option<String> {
         Value::String(value) => Some(value),
         Value::Null => Some(String::new()),
         Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => None,
+    }
+}
+
+fn static_yaml_value(value: Value) -> StaticValue {
+    match value {
+        Value::Bool(value) => StaticValue::Bool(value),
+        Value::Number(value) => StaticValue::Number(value.to_string()),
+        Value::String(value) => StaticValue::String(value),
+        Value::Null => StaticValue::Null,
+        Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::NonStringable,
     }
 }
 

@@ -27,7 +27,10 @@ working directory, sequential `cd` commands, and
 `pnpm --dir <path> exec tsc`. Workflow working directories
 may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`. Context-free static step directory expressions are
-resolved; values that remain dynamic do not count.
+resolved; values that remain dynamic do not count. Static input, matrix, and
+environment expressions in `run:` scripts are resolved before command and
+failure analysis; a script with an unresolved dynamic expression is not
+interpreted heuristically.
 Step-based jobs need a non-empty, statically resolvable `runs-on` string,
 label array, or `group`/`labels` mapping. Static matrix and reusable-input
 runner selectors are resolved per generated job before runner platform and
@@ -37,9 +40,14 @@ group-only job therefore needs an explicit supported shell, and it cannot use
 containers or services for coverage unless `runs-on.labels` proves Linux.
 Repository-local action steps (`uses: ./path`) count only when the tracked
 target directory contains parseable `action.yml` or `action.yaml` metadata
-with the required name, description, and a supported `runs` contract. A
+with only GitHub's supported top-level fields and correctly typed
+`inputs`, `outputs`, `runs`, and `branding` sections, plus the required name
+and description. A
 JavaScript action's `runs.main` must resolve to a tracked file under that action
-directory. A Docker action's Dockerfile-shaped local `runs.image` must likewise
+directory and use GitHub's supported `node20` or `node24` runtime; local
+JavaScript actions must not declare the unsupported `runs.pre`
+or `runs.pre-if` hooks, while supported `runs.post` and `runs.post-if` hooks are
+accepted. A Docker action's Dockerfile-shaped local `runs.image` must likewise
 resolve to a tracked file; external image references remain external. Local
 targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
@@ -136,7 +144,10 @@ whose value remains dynamic stops static enumeration conservatively. A missing
 property in a statically known matrix coerces to an empty string. Dynamic
 matrices and their properties remain unresolved and fail open as potentially
 enforcing, but a root matrix expression whose parser result is guaranteed
-scalar is rejected because Actions requires an object. Dot and single-quoted
+scalar is rejected because Actions requires an object. Reusable root matrix
+expressions first resolve known caller input JSON; known mappings use the same
+256-job limit as literal matrices, a known non-object result is rejected, and
+an unknown result remains dynamic. Dot and single-quoted
 bracket property access share the same normalized parser for conditions and
 reusable-input forwarding.
 Condition expressions must also use contexts available at their location.
@@ -158,7 +169,8 @@ Reusable-input `max-parallel` expressions are rechecked with the active input
 values, so a value that resolves to zero or a non-integer cannot provide
 coverage.
 Environment names are rechecked for every active reusable-input and matrix
-state; a name that resolves to an empty string cannot provide coverage.
+state; a name that resolves to an empty string, array, or object cannot provide
+coverage.
 Job-level `timeout-minutes` is also rechecked for each active reusable input or
 matrix combination and must resolve to a positive integer.
 Job and step `timeout-minutes` expressions use their documented context sets,
@@ -199,7 +211,8 @@ This prevents failure-handler or cancellation-only type checks from satisfying
 the required CI gate.
 
 A job blocked by a statically skipped `needs` dependency, including a
-transitive dependency, does not count. A job condition that contains a status
+zero-instance matrix resolved from reusable caller input and a transitive
+dependency, does not count. A job condition that contains a status
 check such as `always()` or `!cancelled()` can explicitly continue after a
 skipped need when the whole condition is statically true. A dependency with
 `continue-on-error: true` is non-enforcing itself but is not treated as skipped

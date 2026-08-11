@@ -12,7 +12,10 @@ use mappings::{static_mappings, StaticMappings};
 mod traversal;
 use traversal::{count_unexcluded, has_applicable_combination};
 mod combinations;
-pub(in super::super) use combinations::{static_matrix_combinations, MatrixCombinations};
+pub(in super::super) use combinations::{
+    static_matrix_combinations_for_inputs, MatrixCombinations,
+};
+mod root_expression;
 
 const MATRIX_JOB_LIMIT: usize = 256;
 const MATRIX_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
@@ -26,20 +29,6 @@ enum StaticMatrixJobCount {
     Known(usize),
     Dynamic,
     Invalid,
-}
-
-pub(crate) fn zero_instance_matrix(job: &Value) -> bool {
-    let Some(matrix) = job
-        .get("strategy")
-        .and_then(|strategy| strategy.get("matrix"))
-        .and_then(Value::as_mapping)
-    else {
-        return false;
-    };
-    matches!(
-        static_matrix_job_count(matrix),
-        StaticMatrixJobCount::Known(0)
-    )
 }
 
 pub(crate) fn matrix_shape_valid(job: &Value) -> bool {

@@ -46,7 +46,9 @@ pub(super) fn comparison_literal(operand: &str) -> Option<StaticValue> {
 }
 
 impl StaticValue {
-    pub(super) fn function_string(&self) -> Option<String> {
+    pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn function_string(
+        &self,
+    ) -> Option<String> {
         match self {
             Self::Bool(value) => Some(value.to_string()),
             Self::String(value) => Some(value.clone()),

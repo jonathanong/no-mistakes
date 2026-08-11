@@ -1,7 +1,8 @@
 use super::{
-    static_mappings, static_matrix_axes, StaticMappings, StaticMatrixAxes,
-    STATIC_MATRIX_ENUMERATION_LIMIT,
+    static_mappings, static_matrix_axes, static_matrix_job_count, StaticMappings, StaticMatrixAxes,
+    StaticMatrixJobCount, MATRIX_JOB_LIMIT, STATIC_MATRIX_ENUMERATION_LIMIT,
 };
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputState;
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
@@ -11,8 +12,9 @@ pub(in super::super::super) enum MatrixCombinations {
     Dynamic(Vec<BTreeMap<String, Value>>),
 }
 
-pub(in super::super::super) fn static_matrix_combinations(
+pub(in super::super::super) fn static_matrix_combinations_for_inputs(
     job: &Value,
+    inputs: &InputState,
 ) -> Option<MatrixCombinations> {
     let Some(matrix) = job
         .get("strategy")
@@ -20,10 +22,36 @@ pub(in super::super::super) fn static_matrix_combinations(
     else {
         return Some(MatrixCombinations::Static(vec![BTreeMap::new()]));
     };
+    let Some(expression) = matrix.as_str() else {
+        return static_matrix_combinations_for_value(matrix);
+    };
+    match super::root_expression::resolve(expression, inputs) {
+        super::root_expression::ResolvedRootMatrix::Mapping(matrix) => {
+            static_matrix_combinations_for_mapping(&matrix)
+        }
+        super::root_expression::ResolvedRootMatrix::NonMapping => None,
+        super::root_expression::ResolvedRootMatrix::Dynamic => {
+            static_matrix_combinations_for_value(matrix)
+        }
+    }
+}
+
+fn static_matrix_combinations_for_value(matrix: &Value) -> Option<MatrixCombinations> {
     let Some(matrix) = matrix.as_mapping() else {
         return super::matrix_expression_may_be_mapping(matrix.as_str()?)
             .then_some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
     };
+    static_matrix_combinations_for_mapping(matrix)
+}
+
+fn static_matrix_combinations_for_mapping(
+    matrix: &serde_yaml::Mapping,
+) -> Option<MatrixCombinations> {
+    match static_matrix_job_count(matrix) {
+        StaticMatrixJobCount::Known(count) if count <= MATRIX_JOB_LIMIT => {}
+        StaticMatrixJobCount::Dynamic => {}
+        StaticMatrixJobCount::Known(_) | StaticMatrixJobCount::Invalid => return None,
+    }
     let axes = match static_matrix_axes(matrix) {
         axes @ (StaticMatrixAxes::Static(_) | StaticMatrixAxes::Dynamic) => axes,
         StaticMatrixAxes::Invalid => return None,

@@ -85,66 +85,8 @@ fn static_job_failures_propagate_through_needs() {
 }
 
 mod job_failures;
-
-#[test]
-fn static_step_working_directories_and_condition_budgets_bound_coverage() {
-    let over_budget = std::iter::repeat_n("true", 257)
-        .collect::<Vec<_>>()
-        .join(" && ");
-    let directory = document(
-        ".github/workflows/directory.yml",
-        "on: push\njobs:\n  directory:\n    runs-on: ubuntu-latest\n    steps:\n      - working-directory: \"${{ 'package' }}\"\n        run: tsc --noEmit -p tsconfig.json\n",
-    );
-    let over_budget = document(
-        ".github/workflows/over-budget.yml",
-        &format!(
-            "on: push\njobs:\n  over-budget:\n    runs-on: ubuntu-latest\n    steps:\n      - if: ${{{{ {over_budget} }}}}\n        run: tsc --noEmit -p over-budget/tsconfig.json\n"
-        ),
-    );
-
-    assert_eq!(
-        scanned_projects(vec![directory, over_budget], &["package", "over-budget"]),
-        BTreeSet::from(["package/tsconfig.json".to_string()])
-    );
-}
-
-#[test]
-fn resolved_environment_names_must_be_nonempty_per_activation() {
-    let documents = vec![
-        document(
-            ".github/workflows/caller.yml",
-            "on: push\njobs:\n  invalid:\n    uses: ./.github/workflows/invalid.yml\n    with: {environment: ''}\n  valid:\n    uses: ./.github/workflows/valid.yml\n    with: {environment: staging}\n",
-        ),
-        document(
-            ".github/workflows/invalid.yml",
-            "on:\n  workflow_call:\n    inputs:\n      environment: {type: string, required: true}\njobs:\n  typecheck:\n    environment: '${{ inputs.environment }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid-environment/tsconfig.json\n",
-        ),
-        document(
-            ".github/workflows/valid.yml",
-            "on:\n  workflow_call:\n    inputs:\n      environment: {type: string, required: true}\njobs:\n  typecheck:\n    environment: {name: '${{ inputs.environment }}'}\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p valid-environment/tsconfig.json\n",
-        ),
-        document(
-            ".github/workflows/matrix.yml",
-            "on: push\njobs:\n  invalid:\n    strategy:\n      matrix: {environment: ['']}\n    environment: {name: '${{ matrix.environment }}'}\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid-matrix-environment/tsconfig.json\n  valid:\n    strategy:\n      matrix: {environment: [production]}\n    environment: '${{ matrix.environment }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p valid-matrix-environment/tsconfig.json\n",
-        ),
-    ];
-
-    assert_eq!(
-        scanned_projects(
-            documents,
-            &[
-                "invalid-environment",
-                "valid-environment",
-                "invalid-matrix-environment",
-                "valid-matrix-environment",
-            ],
-        ),
-        BTreeSet::from([
-            "valid-environment/tsconfig.json".to_string(),
-            "valid-matrix-environment/tsconfig.json".to_string(),
-        ])
-    );
-}
+mod resolution;
+mod run_scripts;
 
 #[test]
 fn masked_failures_and_skipped_needs_preserve_distinct_statuses() {
@@ -162,19 +104,6 @@ fn masked_failures_and_skipped_needs_preserve_distinct_statuses() {
             "always-after-skip/tsconfig.json".to_string(),
             "masked/tsconfig.json".to_string(),
         ])
-    );
-}
-
-#[test]
-fn job_default_directories_resolve_per_matrix_combination() {
-    let workflow = document(
-        ".github/workflows/job-directory.yml",
-        "on: push\njobs:\n  directory:\n    strategy:\n      matrix: {package: [job-package]}\n    defaults:\n      run:\n        working-directory: '${{ matrix.package }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p tsconfig.json\n",
-    );
-
-    assert_eq!(
-        scanned_projects(vec![workflow], &["job-package"]),
-        BTreeSet::from(["job-package/tsconfig.json".to_string()])
     );
 }
 

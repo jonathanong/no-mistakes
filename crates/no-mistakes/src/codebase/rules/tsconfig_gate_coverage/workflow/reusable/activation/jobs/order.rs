@@ -55,10 +55,11 @@ impl JobScanner<'_, '_> {
                 let directly_enabled = inputs
                     .iter()
                     .any(|inputs| job_statically_enabled(job, inputs));
+                let zero_instances = self.job_states.has_zero_instances(&job_id);
                 let skipped = if unsuccessful_need {
-                    self.job_states.has_zero_instances(job) || !continues
+                    zero_instances || !continues
                 } else {
-                    self.job_states.has_zero_instances(job) || directly_disabled
+                    zero_instances || directly_disabled
                 };
                 let result = self.scan_job(&job_id, job, &inputs, skipped, failed_need)?;
                 projects.extend(result.projects);
