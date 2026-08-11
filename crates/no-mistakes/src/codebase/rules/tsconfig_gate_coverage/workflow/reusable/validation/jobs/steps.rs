@@ -186,11 +186,11 @@ fn action_target_valid(target: &str) -> bool {
         if target.chars().any(char::is_whitespace) {
             return false;
         }
-        return !path.is_empty()
-            && !path.contains('\\')
-            && path
-                .split('/')
-                .all(|segment| !matches!(segment, "" | "." | ".."));
+        return !path.contains('\\')
+            && (path.is_empty()
+                || path
+                    .split('/')
+                    .all(|segment| !matches!(segment, "" | "." | "..")));
     }
     if let Some(image) = target.strip_prefix("docker://") {
         return super::containers::valid_container_image(image);

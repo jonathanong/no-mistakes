@@ -80,6 +80,7 @@ fn local_action_steps_require_existing_valid_action_metadata() {
             "invalid/tsconfig.json",
             "missing-dockerfile/tsconfig.json",
             "missing-entrypoint/tsconfig.json",
+            "missing-working-directory/tsconfig.json",
             "missing/tsconfig.json",
         ]),
         "{report:#?}"

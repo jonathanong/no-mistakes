@@ -3,7 +3,6 @@ use super::{
     literals::{
         hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
     },
-    resolution::condition_input_value,
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use serde_yaml::Value;
@@ -20,20 +19,22 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use jobs::{
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_timeout_minutes_enforced(
     value: Option<&Value>,
     inputs: &InputState,
+    environment: &EnvironmentState,
 ) -> bool {
-    timeout_minutes_enforced(value, inputs, Some(360))
+    timeout_minutes_enforced(value, inputs, environment, Some(360))
 }
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_timeout_minutes_enforced(
     value: Option<&Value>,
     inputs: &InputState,
 ) -> bool {
-    timeout_minutes_enforced(value, inputs, None)
+    timeout_minutes_enforced(value, inputs, &EnvironmentState::default(), None)
 }
 
 fn timeout_minutes_enforced(
     value: Option<&Value>,
     inputs: &InputState,
+    environment: &EnvironmentState,
     maximum: Option<u64>,
 ) -> bool {
     value.is_none_or(|value| match value {
@@ -43,12 +44,15 @@ fn timeout_minutes_enforced(
         Value::String(expression) => {
             super::super::expressions::complete_literal_expression_value(expression)
                 .or_else(|| {
-                    let expression = strip_expression(expression.trim());
-                    condition_input_value(expression, inputs, &EnvironmentState::default())
-                        .and_then(|value| match value {
-                            StaticValue::Number(value) => serde_yaml::from_str(&value).ok(),
-                            _ => None,
-                        })
+                    super::complete_expression_static_value_with_environment(
+                        expression,
+                        inputs,
+                        environment,
+                    )
+                    .and_then(|value| match value {
+                        StaticValue::Number(value) => serde_yaml::from_str(&value).ok(),
+                        _ => None,
+                    })
                 })
                 .and_then(|value| value.as_u64())
                 .is_some_and(|minutes| valid_timeout_minutes(minutes, maximum))

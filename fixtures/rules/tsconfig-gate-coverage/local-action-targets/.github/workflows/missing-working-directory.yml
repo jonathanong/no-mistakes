@@ -1,0 +1,7 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/missing-working-directory
+      - run: pnpm exec tsc --noEmit --project missing-working-directory/tsconfig.json

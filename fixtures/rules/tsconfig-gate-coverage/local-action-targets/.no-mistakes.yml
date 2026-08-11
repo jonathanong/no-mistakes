@@ -24,6 +24,14 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, missing-dockerfile/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-missing-working-directory
+      command: [pnpm, exec, tsc, --noEmit, --project, missing-working-directory/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-root-action
+      command: [pnpm, exec, tsc, --noEmit, --project, root-action/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

@@ -38,8 +38,9 @@ implicit-shell checks; unresolved selectors do not provide coverage.
 Runner group names establish that a job can be scheduled but not its operating system. A
 group-only job therefore needs an explicit supported shell, and it cannot use
 containers or services for coverage unless `runs-on.labels` proves Linux.
-Repository-local action steps (`uses: ./path`) count only when the tracked
-target directory contains parseable `action.yml` or `action.yaml` metadata
+Repository-local action steps (`uses: ./path` or `uses: ./` for the repository
+root) count only when the tracked target directory contains parseable
+`action.yml` or `action.yaml` metadata
 with only GitHub's supported top-level fields and correctly typed
 `inputs`, `outputs`, `runs`, and `branding` sections, plus the required name
 and description. A
@@ -52,9 +53,11 @@ resolve to a tracked file; external image references remain external. Local
 targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
 missing action prevents later commands in the same executed job from counting.
-Composite-action traversal follows GitHub's ten-action nesting limit, and a
-composite action with a statically failing run step cannot allow a later
-workflow typecheck to count unless that failing step is statically skipped.
+Composite-action traversal follows GitHub's ten-action nesting limit. A
+statically resolved composite run-step working directory must exist in the
+tracked checkout, and a composite action with a statically failing run step
+cannot allow a later workflow typecheck to count unless that failing step is
+statically skipped.
 Static local reusable-workflow jobs (`uses: ./.github/workflows/*.yml`) are
 followed transitively and their step-based jobs are evaluated under the direct
 caller's file triggers. Remote, dynamic, missing, non-callable, and cyclic

@@ -1,0 +1,5 @@
+name: Repository root action
+description: Exercises repository-root local action cataloging
+runs:
+  using: node24
+  main: root-action.js

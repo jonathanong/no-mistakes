@@ -315,6 +315,7 @@ fn action_steps_require_static_canonical_targets() {
         "steps:\n  - uses: owner/action/subdirectory@main",
         "steps:\n  - uses: owner/action@release/2026.08",
         "steps:\n  - uses: owner/action@de0fac2e4500dabe0009e67214ff5f5447ce83dd",
+        "steps:\n  - uses: ./",
         "steps:\n  - uses: ./.github/actions/check",
         "steps:\n  - uses: docker://alpine:3.8",
         "steps:\n  - uses: docker://ghcr.io/checker:${{ matrix.tag }}",

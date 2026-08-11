@@ -1,5 +1,8 @@
 use super::shape::{nonempty_string, only_keys};
 use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
+    reduce_context_free_interpolations, ContextFreeInterpolation,
+};
 use serde_yaml::{Mapping, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -37,7 +40,11 @@ fn dockerfile_image(image: &str) -> bool {
 
 pub(super) fn action_file(directory: &str, path: &str) -> Option<String> {
     let path = command_scan::normalize_repo_relative(path)?;
-    command_scan::normalize_repo_relative(&format!("{directory}/{path}"))
+    if directory.is_empty() {
+        Some(path)
+    } else {
+        command_scan::normalize_repo_relative(&format!("{directory}/{path}"))
+    }
 }
 
 pub(super) fn composite_step_valid(
@@ -70,9 +77,10 @@ pub(super) fn composite_step_valid(
             && nonempty_string(step.get("shell"))
             && (composite_step_continues_on_error(step)
                 || !composite_step_may_run(step)
-                || !run
-                    .as_str()
-                    .is_some_and(command_scan::shell_body_has_static_failure));
+                || (composite_step_working_directory_valid(step, tracked)
+                    && !run
+                        .as_str()
+                        .is_some_and(command_scan::shell_body_has_static_failure)));
     }
     let Some(target) = step.get("uses").and_then(Value::as_str) else {
         return false;
@@ -80,6 +88,28 @@ pub(super) fn composite_step_valid(
     target.strip_prefix("./").is_none_or(|directory| {
         super::super::action_directory_valid(directory, descriptors, tracked, visiting, cache)
     })
+}
+
+fn composite_step_working_directory_valid(step: &Mapping, tracked: &BTreeSet<String>) -> bool {
+    let Some(value) = step.get("working-directory") else {
+        return true;
+    };
+    let Some(value) = value.as_str() else {
+        return false;
+    };
+    match reduce_context_free_interpolations(value) {
+        ContextFreeInterpolation::Dynamic => true,
+        ContextFreeInterpolation::Invalid => false,
+        ContextFreeInterpolation::Static(path) => {
+            let Some(path) = command_scan::normalize_repo_relative(&path) else {
+                return false;
+            };
+            path == "."
+                || tracked
+                    .iter()
+                    .any(|tracked| tracked.starts_with(&format!("{path}/")))
+        }
+    }
 }
 
 fn composite_step_continues_on_error(step: &Mapping) -> bool {

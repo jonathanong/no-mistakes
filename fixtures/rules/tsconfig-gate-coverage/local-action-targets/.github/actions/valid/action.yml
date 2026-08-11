@@ -5,3 +5,4 @@ runs:
   steps:
     - shell: bash
       run: echo valid
+      working-directory: valid

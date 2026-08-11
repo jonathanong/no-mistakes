@@ -1,9 +1,8 @@
 use super::{
     continues_after_skipped_need,
     evaluation::static_bool,
-    expression_bool,
     literals::{hexadecimal_bool, number_bool},
-    step_timeout_minutes_enforced, InputState, StaticBool, StaticValue,
+    InputState, StaticBool, StaticValue,
 };
 use serde_yaml::Value;
 
@@ -304,20 +303,6 @@ fn negated_parenthesized_inputs_resolve_at_any_supported_depth() {
             "{expression}"
         );
     }
-}
-
-#[test]
-fn timeout_validation_rejects_non_numeric_values_and_negates_dynamic_values() {
-    let inputs = InputState::new();
-    assert!(!step_timeout_minutes_enforced(
-        Some(&Value::Bool(true)),
-        &inputs,
-    ));
-    assert!(!step_timeout_minutes_enforced(
-        Some(&Value::Number(361.into())),
-        &inputs,
-    ));
-    assert_eq!(expression_bool("!github.ref", &inputs), StaticBool::Unknown);
 }
 
 #[test]

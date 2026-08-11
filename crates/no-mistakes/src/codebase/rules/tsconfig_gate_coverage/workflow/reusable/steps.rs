@@ -57,7 +57,7 @@ pub(super) fn scan_job_steps(
         let continue_on_error = continue_on_error_enabled(step, inputs, &environment);
         if condition == StaticBool::False
             || continue_on_error
-            || !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs)
+            || !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs, &environment)
         {
             continue;
         }

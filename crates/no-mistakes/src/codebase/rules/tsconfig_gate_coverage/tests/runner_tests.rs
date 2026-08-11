@@ -81,6 +81,42 @@ fn ci_scanner_distinguishes_truthy_object_matrix_values_from_missing_properties(
 }
 
 #[test]
+fn ci_scanner_resolves_step_timeout_from_step_environment() {
+    let workflow: Value = serde_yaml::from_str(
+        r#"on: push
+env: {TIMEOUT: 3}
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    env: {TIMEOUT: 4}
+    steps:
+      - env: {TIMEOUT: 5}
+        timeout-minutes: "${{ fromJSON(env.TIMEOUT) }}"
+        run: tsc --noEmit --project step-timeout/tsconfig.json
+      - env: {TIMEOUT: 361}
+        timeout-minutes: "${{ fromJSON(env.TIMEOUT) }}"
+        run: tsc --noEmit --project invalid-step-timeout/tsconfig.json
+"#,
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/step-timeout.yml".into(),
+            value: Ok(workflow),
+        }],
+    };
+    let projects = BTreeSet::from([
+        "invalid-step-timeout/tsconfig.json".to_string(),
+        "step-timeout/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &projects, &project_inputs(&projects)),
+        BTreeSet::from(["step-timeout/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn ci_scanner_resolves_literal_shell_expressions_without_guessing_dynamic_shells() {
     let workflow: Value = serde_yaml::from_str(
         "on: push\njobs:\n  literal-bash:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: \"${{ 'bash' }}\"\n        run: tsc --noEmit --project literal-bash/tsconfig.json\n  literal-errexit:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: \"${{ 'bash -e {0}' }}\"\n        run: tsc --noEmit --project literal-errexit/tsconfig.json; echo later\n  dynamic-shell:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: '${{ vars.SHELL }}'\n        run: tsc --noEmit --project dynamic-shell/tsconfig.json\n",

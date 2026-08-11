@@ -78,6 +78,13 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         &["action/outside.js"],
         "action"
     ));
+
+    let root_node =
+        "name: Root node\ndescription: Valid\nruns: {using: node24, main: dist/index.js}";
+    assert!(valid(&[("", root_node)], &["dist/index.js"], ""));
+    let root_docker =
+        "name: Root Docker\ndescription: Valid\nruns: {using: docker, image: Dockerfile}";
+    assert!(valid(&[("", root_docker)], &["Dockerfile"], ""));
     for runtime in ["node12", "node16"] {
         let legacy = format!(
             "name: Legacy\ndescription: Invalid\nruns: {{using: {runtime}, main: dist/index.js}}"
@@ -245,4 +252,50 @@ fn composite_action_nesting_is_bounded() {
         &mut BTreeSet::new(),
         &mut BTreeMap::new(),
     ));
+}
+
+#[test]
+fn composite_run_working_directories_must_exist_in_the_checkout() {
+    let action = |working_directory: &str, control: &str| {
+        format!(
+            "name: Composite\ndescription: Valid\nruns:\n  using: composite\n  steps:\n    - run: echo ok\n      shell: bash\n      working-directory: {working_directory}\n{control}"
+        )
+    };
+
+    let existing = action("packages/app", "");
+    assert!(valid(
+        &[("action", &existing)],
+        &["packages/app/src/index.ts"],
+        "action"
+    ));
+
+    let literal_expression = action("\"packages/${{ 'app' }}\"", "");
+    assert!(valid(
+        &[("action", &literal_expression)],
+        &["packages/app/src/index.ts"],
+        "action"
+    ));
+
+    for missing in [
+        action("packages/missing", ""),
+        action("packages/app/src/index.ts", ""),
+        action("../outside", ""),
+    ] {
+        assert!(!valid(
+            &[("action", &missing)],
+            &["packages/app/src/index.ts"],
+            "action"
+        ));
+    }
+
+    let checkout_root = action(".", "");
+    assert!(valid(&[("action", &checkout_root)], &[], "action"));
+
+    let dynamic = action("\"${{ inputs.directory }}\"", "");
+    assert!(valid(&[("action", &dynamic)], &[], "action"));
+
+    for control in ["      if: false\n", "      continue-on-error: true\n"] {
+        let ignored_missing = action("packages/missing", control);
+        assert!(valid(&[("action", &ignored_missing)], &[], "action"));
+    }
 }
