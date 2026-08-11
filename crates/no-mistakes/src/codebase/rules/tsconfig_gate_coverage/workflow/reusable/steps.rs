@@ -11,11 +11,7 @@ use super::super::{
         continue_on_error_enabled, step_condition_with_status, EnvironmentState, InputState,
         StaticBool, StaticValue, StepOutcomes,
     },
-    default_working_directory,
-    runtime::{
-        effective_shell, runs_on_can_default_to_windows, shell_failure_enforced,
-        shell_pipefail_enforced,
-    },
+    runtime::{effective_shell, shell_failure_enforced, shell_pipefail_enforced},
 };
 use super::validation::action_step_inputs_valid_for_state;
 
@@ -25,7 +21,10 @@ mod model;
 mod working_directory;
 pub(super) use model::StepScan;
 use working_directory::step_working_directory;
-use {checkout::CheckoutState, configuration::step_configuration_validity};
+use {
+    checkout::CheckoutState,
+    configuration::{job_runtime, job_working_directory, step_configuration_validity},
+};
 
 pub(super) fn scan_job_steps(
     job: &Value,
@@ -43,15 +42,8 @@ pub(super) fn scan_job_steps(
             indeterminate: false,
         };
     };
-    let job_cwd = match default_working_directory(job) {
-        Some(raw) => {
-            super::super::conditions::resolve_static_interpolations(raw, inputs, environment)
-                .and_then(|directory| command_scan::normalize_repo_relative(&directory))
-        }
-        None => workflow_cwd,
-    };
-    let job_shell = effective_shell(job, workflow_shell);
-    let implicit_shell_can_be_windows = runs_on_can_default_to_windows(job, inputs);
+    let job_cwd = job_working_directory(job, inputs, environment, workflow_cwd);
+    let (job_shell, implicit_shell_can_be_windows) = job_runtime(job, inputs, workflow_shell);
     let mut projects = BTreeSet::new();
     let mut success = StaticBool::True;
     let mut failed = false;
@@ -68,6 +60,11 @@ pub(super) fn scan_job_steps(
             step_outcomes.record(step, StaticValue::String("skipped".to_string()));
             continue;
         }
+        if condition == StaticBool::Invalid {
+            step_outcomes.record(step, StaticValue::String("failure".to_string()));
+            failed = true;
+            break;
+        }
         match step_configuration_validity(step, inputs, &environment) {
             StaticBool::False => {
                 if condition == StaticBool::True {
@@ -78,7 +75,7 @@ pub(super) fn scan_job_steps(
                 }
                 break;
             }
-            StaticBool::Unknown | StaticBool::TruthyNonBoolean => {
+            StaticBool::Invalid | StaticBool::Unknown | StaticBool::TruthyNonBoolean => {
                 indeterminate = true;
                 break;
             }

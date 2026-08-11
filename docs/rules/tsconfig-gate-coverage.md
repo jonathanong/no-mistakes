@@ -43,12 +43,14 @@ containers or services for coverage unless `runs-on.labels` contains an exact
 self-hosted operating-system label such as `linux`; a hosted-looking label in
 a runner group can be a custom label and does not establish the operating system.
 Repository-local action steps (`uses: ./path` or `uses: ./` for the repository
-root) count only when the tracked target directory contains parseable
+root) count only after an earlier successful `actions/checkout` step in the
+same job, when the tracked target directory contains parseable
 `action.yml` or `action.yaml` metadata
 with only GitHub's supported top-level fields and correctly typed
 `inputs`, `outputs`, `runs`, and `branding` sections, plus the required name
-and description. A
-JavaScript action's `runs.main` must resolve to a tracked file under that action
+and description. Composite output expressions must be syntactically valid and
+use only the contexts GitHub exposes to action metadata. A JavaScript action's
+`runs.main` must resolve to a tracked file under that action
 directory and use GitHub's supported `node20` or `node24` runtime; local
 JavaScript actions must not declare the unsupported `runs.pre`
 or `runs.pre-if` hooks, while supported `runs.post` and `runs.post-if` hooks are
@@ -151,6 +153,8 @@ literal arrays, scalar values, and the default comma separator. Static `case`
 calls select the first truthy branch or their default, while an unknown
 predicate remains unresolved.
 Expressions whose result remains dynamic fail open as potentially runnable.
+Known malformed `fromJSON` inputs are expression errors and do not provide
+coverage, including through comparisons, logical operators, or string functions.
 Condition evaluation is limited to 256 logical operands, bounding the recursive
 static evaluator even when a repository supplies a long flat `&&` or `||`
 chain. Conditions over that limit are invalid and do not provide coverage.

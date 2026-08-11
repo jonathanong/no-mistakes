@@ -135,6 +135,7 @@ fn static_expression_value(text: &str, activation_inputs: &InputState) -> Option
                 StaticBool::False => Some(StaticValue::Bool(false)),
                 StaticBool::True => Some(StaticValue::Bool(true)),
                 StaticBool::TruthyNonBoolean | StaticBool::Unknown => Some(StaticValue::Unknown),
+                StaticBool::Invalid => Some(StaticValue::Invalid),
             }
         }
         StaticExpressionType::Null

@@ -377,3 +377,19 @@ fn workflow_call_input_default_expressions_are_validated_and_preserved() {
         ])
     );
 }
+
+#[test]
+fn known_from_json_parse_errors_do_not_credit_reusable_conditions() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/caller.yml",
+            "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with: {payload: not-json}\n",
+        ),
+        workflow(
+            ".github/workflows/checks.yml",
+            "on:\n  workflow_call:\n    inputs:\n      payload: {type: string, required: true}\njobs:\n  typecheck:\n    if: fromJSON(inputs.payload) != true\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-json/tsconfig.json\n",
+        ),
+    ];
+
+    assert!(scanned(documents, &["invalid-json"]).is_empty());
+}

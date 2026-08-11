@@ -3,5 +3,6 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/missing-dockerfile
       - run: pnpm exec tsc --noEmit --project missing-dockerfile/tsconfig.json

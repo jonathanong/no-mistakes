@@ -151,7 +151,10 @@ fn action_input_interpolations_stringable(
             .is_none_or(|value| {
                 !matches!(
                     value,
-                    StaticValue::Sequence(_) | StaticValue::Mapping | StaticValue::NonStringable
+                    StaticValue::Sequence(_)
+                        | StaticValue::Mapping
+                        | StaticValue::NonStringable
+                        | StaticValue::Invalid
                 )
             })
     })

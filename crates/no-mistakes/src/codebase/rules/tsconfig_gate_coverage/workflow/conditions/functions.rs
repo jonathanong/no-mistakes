@@ -34,8 +34,14 @@ pub(super) fn static_function_bool(
         return None;
     }
     let search = function_argument_value(call.arguments[0], inputs, environment, status)?;
-    let item = function_argument_value(call.arguments[1], inputs, environment, status)?
-        .function_string()?;
+    if matches!(search, StaticValue::Invalid) {
+        return Some(StaticBool::Invalid);
+    }
+    let item = function_argument_value(call.arguments[1], inputs, environment, status)?;
+    if matches!(item, StaticValue::Invalid) {
+        return Some(StaticBool::Invalid);
+    }
+    let item = item.function_string()?;
     let matched = match call.function {
         Function::Contains => contains_static_value(&search, &item)?,
         Function::StartsWith => starts_with_ignore_ascii_case(&search.function_string()?, &item)?,
@@ -88,6 +94,7 @@ pub(super) fn static_case_value(
                     status,
                 );
             }
+            StaticBool::Invalid => return Some(StaticValue::Invalid),
             StaticBool::Unknown => return None,
         }
     }

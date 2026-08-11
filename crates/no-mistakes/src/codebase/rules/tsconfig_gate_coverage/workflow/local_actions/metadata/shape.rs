@@ -4,6 +4,9 @@ use std::collections::BTreeSet;
 const COMPOSITE_OUTPUT_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runner", "env"];
 
 use super::icons::branding_icon_valid;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::interpolated_expression_contexts_available;
+
+const COMPOSITE_OUTPUT_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runner", "env", "vars"];
 
 pub(super) fn action_inputs_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
@@ -57,7 +60,10 @@ pub(super) fn outputs_valid(value: Option<&Value>, composite: bool) -> bool {
                             .get("value")
                             .and_then(Value::as_str)
                             .is_some_and(|value| {
-                                crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::interpolated_expression_contexts_available(value, COMPOSITE_OUTPUT_CONTEXTS)
+                                interpolated_expression_contexts_available(
+                                    value,
+                                    COMPOSITE_OUTPUT_CONTEXTS,
+                                )
                             })
                     } else {
                         metadata.get("value").is_none()

@@ -143,7 +143,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                     indeterminate |= !enforcing && !job_statically_disabled(job, inputs);
                     continue;
                 }
-                StaticBool::Unknown | StaticBool::TruthyNonBoolean => {
+                StaticBool::Invalid | StaticBool::Unknown | StaticBool::TruthyNonBoolean => {
                     indeterminate |= !job_statically_disabled(job, inputs);
                     continue;
                 }

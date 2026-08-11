@@ -93,13 +93,14 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
         match value {
             StaticValue::String(value) => !value.trim().is_empty(),
             StaticValue::Unknown => resolved_concurrency_group_valid(group, inputs),
+            StaticValue::Invalid => false,
             StaticValue::Bool(_)
             | StaticValue::Number(_)
             | StaticValue::Null
             | StaticValue::Sequence(_)
             | StaticValue::Mapping
             | StaticValue::NonStringable
-            | StaticValue::ExpressionError => false,
+            | StaticValue::Invalid => false,
         }
     } else {
         resolved_concurrency_group_valid(group, inputs)

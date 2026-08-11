@@ -3,5 +3,6 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/malformed
       - run: pnpm exec tsc --noEmit --project malformed-metadata/tsconfig.json

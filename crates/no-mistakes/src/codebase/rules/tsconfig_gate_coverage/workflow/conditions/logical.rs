@@ -68,6 +68,7 @@ pub(super) fn comparison_operands(expression: &str) -> Option<(&str, &str, Compa
 
 fn and(left: StaticBool, right: StaticBool) -> StaticBool {
     match (left.truthiness(), right.truthiness()) {
+        (StaticBool::Invalid, _) | (_, StaticBool::Invalid) => StaticBool::Invalid,
         (StaticBool::False, _) | (_, StaticBool::False) => StaticBool::False,
         (StaticBool::True, StaticBool::True) => StaticBool::True,
         _ => StaticBool::Unknown,
@@ -76,6 +77,7 @@ fn and(left: StaticBool, right: StaticBool) -> StaticBool {
 
 fn or(left: StaticBool, right: StaticBool) -> StaticBool {
     match (left.truthiness(), right.truthiness()) {
+        (StaticBool::Invalid, _) | (_, StaticBool::Invalid) => StaticBool::Invalid,
         (StaticBool::True, _) | (_, StaticBool::True) => StaticBool::True,
         (StaticBool::False, StaticBool::False) => StaticBool::False,
         _ => StaticBool::Unknown,

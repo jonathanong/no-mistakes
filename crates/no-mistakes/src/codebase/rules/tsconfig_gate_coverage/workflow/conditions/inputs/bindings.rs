@@ -75,20 +75,21 @@ pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {
     } else if let Some(value) = forwarded_input_value(value, parent) {
         match value {
             StaticValue::Bool(value) => StaticValue::Bool(value),
+            StaticValue::Invalid => StaticValue::Invalid,
             StaticValue::Unknown => StaticValue::Unknown,
             StaticValue::String(_)
             | StaticValue::Number(_)
             | StaticValue::Null
             | StaticValue::Sequence(_)
             | StaticValue::Mapping
-            | StaticValue::NonStringable
-            | StaticValue::ExpressionError => StaticValue::Unknown,
+            | StaticValue::NonStringable => StaticValue::Unknown,
         }
     } else {
         match expression_bool(value.as_str().unwrap_or_default(), parent) {
             StaticBool::False => StaticValue::Bool(false),
             StaticBool::True => StaticValue::Bool(true),
             StaticBool::TruthyNonBoolean | StaticBool::Unknown => StaticValue::Unknown,
+            StaticBool::Invalid => StaticValue::Invalid,
         }
     }
 }

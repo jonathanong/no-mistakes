@@ -96,10 +96,7 @@ pub(super) fn valid_remote_reference(reference: &str) -> bool {
         && !reference.contains("//")
         && !reference
             .split('/')
-            .any(|component| component.starts_with('.'))
-        && !reference
-            .split('/')
-            .any(|component| component.ends_with(".lock"))
+            .any(|component| component.starts_with('.') || component.ends_with(".lock"))
         && reference.bytes().all(|byte| byte >= 0x20 && byte != 0x7f)
 }
 

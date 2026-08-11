@@ -87,6 +87,6 @@ fn static_from_json(
             .ok()
             .and_then(|value| serde_yaml::to_value(value).ok())
             .map(super::static_yaml_value)
-            .unwrap_or(StaticValue::ExpressionError),
+            .unwrap_or(StaticValue::Invalid),
     )
 }

@@ -7,6 +7,7 @@ impl StaticBool {
     pub(super) fn truthiness(self) -> Self {
         match self {
             Self::TruthyNonBoolean => Self::True,
+            Self::Invalid => Self::Invalid,
             value => value,
         }
     }
@@ -16,6 +17,7 @@ impl StaticBool {
             Self::False => Self::True,
             Self::True => Self::False,
             Self::TruthyNonBoolean => Self::False,
+            Self::Invalid => Self::Invalid,
             Self::Unknown => Self::Unknown,
         }
     }
@@ -60,7 +62,7 @@ impl StaticValue {
             Self::Sequence(_) => None,
             Self::Mapping => None,
             Self::NonStringable => None,
-            Self::ExpressionError => None,
+            Self::Invalid => None,
             Self::Unknown => None,
         }
     }
@@ -85,12 +87,15 @@ impl StaticValue {
             Self::Sequence(_) => StaticBool::TruthyNonBoolean,
             Self::Mapping => StaticBool::TruthyNonBoolean,
             Self::NonStringable => StaticBool::Unknown,
-            Self::ExpressionError => StaticBool::False,
+            Self::Invalid => StaticBool::Invalid,
             Self::Unknown => StaticBool::Unknown,
         }
     }
 
     pub(super) fn equals(self, expected: &Self) -> StaticBool {
+        if matches!(&self, Self::Invalid) || matches!(expected, Self::Invalid) {
+            return StaticBool::Invalid;
+        }
         if matches!(&self, Self::Unknown) || matches!(expected, Self::Unknown) {
             return StaticBool::Unknown;
         }
@@ -126,6 +131,9 @@ impl StaticValue {
     }
 
     pub(super) fn less_than(self, expected: &Self) -> StaticBool {
+        if matches!(&self, Self::Invalid) || matches!(expected, Self::Invalid) {
+            return StaticBool::Invalid;
+        }
         if matches!(&self, Self::Unknown) || matches!(expected, Self::Unknown) {
             return StaticBool::Unknown;
         }
@@ -136,6 +144,9 @@ impl StaticValue {
     }
 
     pub(super) fn less_than_or_equal(self, expected: &Self) -> StaticBool {
+        if matches!(&self, Self::Invalid) || matches!(expected, Self::Invalid) {
+            return StaticBool::Invalid;
+        }
         if matches!(self, Self::Unknown) || matches!(expected, Self::Unknown) {
             return StaticBool::Unknown;
         }
@@ -155,7 +166,7 @@ impl StaticValue {
             Self::Sequence(_) => None,
             Self::Mapping => None,
             Self::NonStringable => None,
-            Self::ExpressionError => None,
+            Self::Invalid => None,
             Self::Unknown => None,
         }
     }

@@ -78,6 +78,10 @@ fn shell_scanner_rejects_reachability_control_commands_without_modeling_them() {
         vec!["tsconfig.json"]
     );
     assert_eq!(
+        scan_shell_for_typechecked_projects("'tsc' --noEmit --project app/tsconfig.json", ".",),
+        vec!["app/tsconfig.json"]
+    );
+    assert_eq!(
         scan_shell_for_typechecked_projects(
             "command command -- tsc --noEmit --project app/tsconfig.json",
             ".",

@@ -15,6 +15,11 @@ impl CheckoutState {
                 .get("uses")
                 .and_then(Value::as_str)
                 .and_then(|target| target.strip_prefix("actions/checkout@"))
-                .is_some_and(|reference| !reference.is_empty());
+                .is_some_and(|reference| !reference.is_empty())
+            && step.get("with").is_none_or(|bindings| {
+                bindings.as_mapping().is_some_and(|bindings| {
+                    !bindings.contains_key("repository") && !bindings.contains_key("path")
+                })
+            });
     }
 }

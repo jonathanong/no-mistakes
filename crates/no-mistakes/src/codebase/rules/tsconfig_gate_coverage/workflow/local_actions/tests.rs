@@ -170,6 +170,7 @@ fn action_metadata_validates_all_supported_fields_before_cataloging() {
         "name: Missing composite output value\ndescription: Invalid\noutputs: {result: {description: Result}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
         "name: Bad output field\ndescription: Invalid\noutputs: {result: {description: Result, unknown: true, value: path}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
         "name: Bad output expression\ndescription: Invalid\noutputs: {result: {description: Result, value: '${{ steps.build.outputs. }}'}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
+        "name: Unavailable output context\ndescription: Invalid\noutputs: {result: {description: Result, value: '${{ needs.build.outputs.result }}'}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
         "name: Bad branding\ndescription: Invalid\nbranding: {icon: check, color: pink}\nruns: {using: node24, main: index.js}",
         "name: Unknown branding icon\ndescription: Invalid\nbranding: {icon: not-a-feather-icon, color: green}\nruns: {using: node24, main: index.js}",
         "name: Omitted branding icon\ndescription: Invalid\nbranding: {icon: coffee, color: green}\nruns: {using: node24, main: index.js}",

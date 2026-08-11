@@ -75,3 +75,66 @@ fn repository_root_local_actions_allow_following_typechecks() {
         tracked
     );
 }
+
+#[test]
+fn local_actions_require_a_prior_checkout_in_each_job() {
+    let documents = ParsedWorkflowSet {
+        documents: vec![
+            workflow(
+                ".github/workflows/direct-missing.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/local\n      - run: tsc --noEmit --project direct-missing/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/direct-checked-out.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ./.github/actions/local\n      - run: tsc --noEmit --project direct-checked-out/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/other-repository.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with: {repository: other/repository}\n      - uses: ./.github/actions/local\n      - run: tsc --noEmit --project other-repository/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/subdirectory.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with: {path: source}\n      - uses: ./.github/actions/local\n      - run: tsc --noEmit --project subdirectory/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/invalid-checkout-input.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with: {fetch-depth: \"${{ fromJSON('not-json') }}\"}\n      - uses: ./.github/actions/local\n      - run: tsc --noEmit --project invalid-checkout-input/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  call:\n    uses: ./.github/workflows/callee.yml\n  call-checked-out:\n    uses: ./.github/workflows/callee-checked-out.yml\n",
+            ),
+            workflow(
+                ".github/workflows/callee.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/local\n      - run: tsc --noEmit --project reusable-missing/tsconfig.json\n",
+            ),
+            workflow(
+                ".github/workflows/callee-checked-out.yml",
+                "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ./.github/actions/local\n      - run: tsc --noEmit --project reusable-checked-out/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "direct-checked-out/tsconfig.json".to_string(),
+        "direct-missing/tsconfig.json".to_string(),
+        "invalid-checkout-input/tsconfig.json".to_string(),
+        "other-repository/tsconfig.json".to_string(),
+        "reusable-checked-out/tsconfig.json".to_string(),
+        "reusable-missing/tsconfig.json".to_string(),
+        "subdirectory/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        super::super::super::workflow::ci_typechecked_projects_with_local_actions_and_stats(
+            &documents,
+            &tracked,
+            &project_inputs(&tracked),
+            &BTreeSet::from([".github/actions/local".to_string()]),
+        )
+        .0,
+        BTreeSet::from([
+            "direct-checked-out/tsconfig.json".to_string(),
+            "reusable-checked-out/tsconfig.json".to_string(),
+        ])
+    );
+}

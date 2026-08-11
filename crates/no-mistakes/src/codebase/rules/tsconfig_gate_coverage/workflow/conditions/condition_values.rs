@@ -23,7 +23,7 @@ pub(super) fn condition_value(
         return match value {
             StaticBool::False => Some(StaticValue::Bool(false)),
             StaticBool::True => Some(StaticValue::Bool(true)),
-            StaticBool::TruthyNonBoolean | StaticBool::Unknown => None,
+            StaticBool::TruthyNonBoolean | StaticBool::Invalid | StaticBool::Unknown => None,
         };
     }
     if github_event_name(operand) {
@@ -97,7 +97,7 @@ fn logical_value(
         (logical::LogicalOperator::And, StaticBool::True | StaticBool::TruthyNonBoolean) => {
             condition_value(right, inputs, environment, status)
         }
-        (_, StaticBool::Unknown) => None,
+        (_, StaticBool::Invalid | StaticBool::Unknown) => None,
     }
 }
 
@@ -181,6 +181,7 @@ fn static_bool_value(value: StaticBool) -> StaticValue {
     match value {
         StaticBool::False => StaticValue::Bool(false),
         StaticBool::True => StaticValue::Bool(true),
+        StaticBool::Invalid => StaticValue::Invalid,
         StaticBool::TruthyNonBoolean | StaticBool::Unknown => StaticValue::Unknown,
     }
 }

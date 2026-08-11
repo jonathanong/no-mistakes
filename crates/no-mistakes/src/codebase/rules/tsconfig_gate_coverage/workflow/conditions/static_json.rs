@@ -2,9 +2,17 @@ use super::StaticValue;
 use serde_yaml::Value;
 
 pub(super) fn literal_from_json_static_value(expression: &str) -> Option<StaticValue> {
-    Some(static_yaml_value(
-        crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(expression.trim())?,
-    ))
+    crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(
+        expression.trim(),
+    )
+    .map(static_yaml_value)
+    .or_else(|| invalid_literal_from_json(expression).then_some(StaticValue::Invalid))
+}
+
+pub(super) fn invalid_literal_from_json(expression: &str) -> bool {
+    crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::invalid_literal_from_json(
+        &format!("${{{{ {expression} }}}}"),
+    )
 }
 
 fn static_yaml_value(value: Value) -> StaticValue {

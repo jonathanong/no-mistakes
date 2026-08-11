@@ -43,6 +43,9 @@ pub(super) enum StaticBool {
     False,
     True,
     TruthyNonBoolean,
+    /// A statically-known expression error. It propagates through a condition
+    /// so a valid sibling (for example `|| true`) cannot earn coverage credit.
+    Invalid,
     Unknown,
 }
 
@@ -93,9 +96,10 @@ pub(super) enum StaticValue {
     /// conditions but cannot be coerced to a GitHub string.
     Mapping,
     NonStringable,
-    /// GitHub aborts evaluation rather than treating a known expression error
-    /// as an unknown runtime value.
-    ExpressionError,
+    /// A context-free `fromJSON` call whose input is known malformed JSON.
+    /// This is distinct from a dynamic value so condition evaluation can fail
+    /// closed rather than allowing a sibling logical operand to earn credit.
+    Invalid,
     Unknown,
 }
 

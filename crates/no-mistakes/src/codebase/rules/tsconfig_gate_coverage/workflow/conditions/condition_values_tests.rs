@@ -157,6 +157,15 @@ fn unary_boolean_values_and_case_predicates_cover_scalar_conversion() {
     );
     assert_eq!(
         condition_value(
+            "fromJSON('not-json')",
+            &inputs,
+            &EnvironmentState::default(),
+            StaticBool::True
+        ),
+        Some(StaticValue::Invalid)
+    );
+    assert_eq!(
+        condition_value(
             "!true",
             &inputs,
             &EnvironmentState::default(),

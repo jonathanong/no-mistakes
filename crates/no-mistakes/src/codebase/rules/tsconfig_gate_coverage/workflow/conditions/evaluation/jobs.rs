@@ -61,7 +61,8 @@ fn job_enforcement(value: &Value, inputs: &InputState, after_failed_need: bool) 
                 )
             });
     (
-        condition == StaticBool::False || continue_on_error == StaticBool::True,
+        matches!(condition, StaticBool::False | StaticBool::Invalid)
+            || matches!(continue_on_error, StaticBool::True | StaticBool::Invalid),
         condition == StaticBool::True && continue_on_error == StaticBool::False,
     )
 }

@@ -12,15 +12,19 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions) fn 
     let status = status.into();
     let call = condition_function_call(expression)?;
     (call.function == Function::Format).then_some(())?;
-    let format = function_argument_value(call.arguments.first()?, inputs, environment, status)?
-        .format_string()?;
-    let replacements = call.arguments[1..]
-        .iter()
-        .map(|argument| {
-            function_argument_value(argument, inputs, environment, status)
-                .and_then(|value| value.format_string())
-        })
-        .collect::<Option<Vec<_>>>()?;
+    let format = function_argument_value(call.arguments.first()?, inputs, environment, status)?;
+    if matches!(format, StaticValue::Invalid) {
+        return Some(StaticValue::Invalid);
+    }
+    let format = format.format_string()?;
+    let mut replacements = Vec::with_capacity(call.arguments.len().saturating_sub(1));
+    for argument in &call.arguments[1..] {
+        let value = function_argument_value(argument, inputs, environment, status)?;
+        if matches!(value, StaticValue::Invalid) {
+            return Some(StaticValue::Invalid);
+        }
+        replacements.push(value.format_string()?);
+    }
     format_github_string(&format, &replacements).map(StaticValue::String)
 }
 

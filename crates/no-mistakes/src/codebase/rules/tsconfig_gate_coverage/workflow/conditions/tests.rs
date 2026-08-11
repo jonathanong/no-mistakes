@@ -174,7 +174,14 @@ fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
         ("fromJSON('false') == false", StaticBool::True),
         ("fromJSON('0') == 0", StaticBool::True),
         ("fromJSON('true') == false", StaticBool::False),
-        ("fromJSON('not-json')", StaticBool::False),
+        ("fromJSON('not-json')", StaticBool::Invalid),
+        ("fromJSON('not-json') != true", StaticBool::Invalid),
+        ("contains(fromJSON('not-json'), 'x')", StaticBool::Invalid),
+        ("format('{0}', fromJSON('not-json'))", StaticBool::Invalid),
+        ("join(fromJSON('not-json'), ',')", StaticBool::Invalid),
+        // A literal parse failure makes GitHub reject the condition; it must
+        // not be short-circuited into coverage credit.
+        ("fromJSON('not-json') || true", StaticBool::Invalid),
         ("fromJSON('{}')", StaticBool::TruthyNonBoolean),
     ] {
         assert_eq!(
@@ -183,6 +190,18 @@ fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
             "{expression}"
         );
     }
+}
+
+#[test]
+fn known_from_json_parse_errors_propagate_through_logical_conditions() {
+    let inputs = InputState::from([("malformed".into(), StaticValue::String("not-json".into()))]);
+    assert_eq!(
+        static_bool(
+            Some(&Value::String("fromJSON(inputs.malformed) || true".into())),
+            &inputs,
+        ),
+        StaticBool::Invalid,
+    );
 }
 
 #[test]
