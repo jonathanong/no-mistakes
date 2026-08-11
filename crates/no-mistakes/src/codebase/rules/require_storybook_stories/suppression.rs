@@ -1,6 +1,6 @@
 use super::types::Component;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::ts_source::matching_disable_directive;
+use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
@@ -17,8 +17,11 @@ pub(super) fn component_is_suppressed(
         .or_else(|| sources.get(&rooted_component_path))
         .map(Arc::as_ref)
         .is_some_and(|source| {
-            matching_disable_directive(source, Some(component.line as u32), super::RULE_ID)
-                .is_some()
+            // Stale allow-components auditing must use exactly the directives
+            // that ordinary component selection honors. In particular,
+            // same-line directives do not remove a component from selection.
+            has_disable_file_comment(source, super::RULE_ID)
+                || has_disable_comment(source, component.line as u32, super::RULE_ID)
         })
 }
 

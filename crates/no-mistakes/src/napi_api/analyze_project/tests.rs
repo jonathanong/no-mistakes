@@ -113,6 +113,22 @@ fn analyze_project_check_applies_shared_suppression_accounting() {
 }
 
 #[test]
+fn analyze_project_react_analysis_reports_a_parse_error_despite_check_only_directive() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/react-analyze-suppressed-parse-error");
+    let error = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [{ "type": "reactAnalyze" }]
+        })
+        .to_string(),
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains("failed to parse"), "{error:#}");
+}
+
+#[test]
 fn analyze_project_empty_check_includes_empty_suppression_array_in_audit_mode() {
     let root = check_runner_fixture("empty");
     let output = analyze_project_json_impl(

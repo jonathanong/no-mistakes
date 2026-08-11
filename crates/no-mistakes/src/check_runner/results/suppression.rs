@@ -31,8 +31,12 @@ pub(super) fn apply_if_requested(
     include_suppressed: bool,
     input: Inputs<'_>,
 ) -> Vec<SuppressedFinding> {
+    // Directive filtering is part of the ordinary check contract. The flag
+    // controls whether we retain the accounting records, not whether a
+    // directive hides its matching finding.
+    let suppressed = apply(input);
     if include_suppressed {
-        apply(input)
+        suppressed
     } else {
         Vec::new()
     }

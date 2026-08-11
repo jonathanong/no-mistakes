@@ -15,3 +15,4 @@ rules:
       includeAllReactNamedExports: true
       allow_components:
         "components/FileSuppressed.tsx#FileSuppressed": "covered by the parent application shell"
+        "components/SameLine.tsx#SameLine": "covered by the parent application shell"

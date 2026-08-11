@@ -236,22 +236,25 @@ fn check_json_accounts_for_react_queue_and_integration_adapters() {
         ),
     ];
     for (fixture, domain, rule, directive_kind) in fixtures {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/check")
-            .join(fixture);
-        let output =
-            check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string())
-                .unwrap();
-        let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+        let (baseline, audit) = baseline_and_audit(fixture);
+        let result_field = if domain == "filesystem" {
+            "rules"
+        } else {
+            domain
+        };
         assert!(
-            value["suppressed"]
+            baseline[result_field].as_array().is_some_and(Vec::is_empty),
+            "default check must filter {domain} directives: {baseline}"
+        );
+        assert!(
+            audit["suppressed"]
                 .as_array()
                 .is_some_and(|findings| findings.iter().any(|finding| {
                     finding["domain"] == domain
                         && finding["rule"] == rule
                         && finding["directive"]["kind"] == directive_kind
                 })),
-            "{fixture}: {value}"
+            "{fixture}: {audit}"
         );
     }
 }

@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn file_disabled_parse_errors_are_skipped_before_react_aggregation() {
+fn file_disabled_parse_errors_are_skipped_only_for_aggregate_react_checks() {
     let root = fixture("nested");
     let file = root.join("app/components/Child.tsx");
     let mut shared = facts(Vec::new());
@@ -16,7 +16,21 @@ fn file_disabled_parse_errors_are_skipped_before_react_aggregation() {
         .into(),
     );
 
-    let findings = run_analyze_inner_with_facts(
+    let analysis_error = run_analyze_inner_with_facts(
+        &root,
+        &FileConfig {
+            frontend_root: Some("app".to_string()),
+            assert_no_fetch: Some(true),
+        },
+        &["app/components/Child.tsx".to_string()],
+        &shared,
+    )
+    .unwrap_err();
+    assert!(analysis_error
+        .to_string()
+        .contains("synthetic disabled parse error"));
+
+    let findings = run_analyze_inner_with_facts_and_suppression(
         &root,
         &FileConfig {
             frontend_root: Some("app".to_string()),
