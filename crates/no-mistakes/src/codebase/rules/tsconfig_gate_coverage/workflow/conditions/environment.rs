@@ -88,3 +88,6 @@ fn string_value(value: Value) -> StaticValue {
         Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::Unknown,
     }
 }
+
+#[cfg(test)]
+mod tests;
