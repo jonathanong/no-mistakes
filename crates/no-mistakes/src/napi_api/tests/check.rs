@@ -354,7 +354,18 @@ fn check_json_records_one_react_suppression_per_component_after_all_fetches_are_
         1,
         "{value}"
     );
-    assert!(react_suppressions.iter().all(|item| item["line"] == 3));
+    assert!(react_suppressions.iter().any(|item| {
+        item["file"] == "app/Child.tsx"
+            && item["sourceFile"] == "app/Child.tsx"
+            && item["line"] == 3
+    }));
+    // Fetcher also inherits Child, but its own suppressed fetch remains the
+    // component diagnostic target instead of inheriting the child's line.
+    assert!(react_suppressions.iter().any(|item| {
+        item["file"] == "app/Fetcher.tsx"
+            && item["sourceFile"] == "app/Fetcher.tsx"
+            && item["line"] == 5
+    }));
 }
 
 #[test]

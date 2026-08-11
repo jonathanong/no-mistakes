@@ -3,16 +3,31 @@ use anyhow::Result;
 use std::path::Path;
 
 pub(super) fn fail_on_dropped_files(
+    root: &Path,
+    suites: &[types::Suite],
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<()> {
+    let suite_globs = suites
+        .iter()
+        .map(|suite| {
+            Ok((
+                project_config::build_globset(&suite.include)?,
+                project_config::build_globset(&suite.exclude)?,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?;
     for (file, facts) in &shared.ts {
         if let Some(error) = &facts.parse_error {
-            if facts.source.as_deref().is_some_and(|source| {
+            let disabled_suite_test = facts.source.as_deref().is_some_and(|source| {
                 crate::codebase::ts_source::has_disable_file_comment(
                     source,
                     "integration-test-no-mocks",
                 )
-            }) {
+            }) && suite_globs.iter().any(|(include, exclude)| {
+                let relative = crate::codebase::ts_source::relative_slash_path(root, file);
+                include.is_match(&relative) && !exclude.is_match(&relative)
+            });
+            if disabled_suite_test {
                 continue;
             }
             anyhow::bail!(

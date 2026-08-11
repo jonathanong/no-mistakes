@@ -5,6 +5,7 @@ use super::*;
 struct ReactSuppressionFinding {
     finding: react_traits::Violation,
     line: Option<usize>,
+    source_location: Option<(String, usize)>,
     identity: String,
 }
 
@@ -25,6 +26,7 @@ pub(crate) fn suppress_react(
             let mut parent_location = vec![ReactSuppressionFinding {
                 finding: finding.clone(),
                 line: None,
+                source_location: None,
                 identity: identity.clone(),
             }];
             let parent_suppressed = suppress_domain_findings_with_sources(
@@ -42,11 +44,13 @@ pub(crate) fn suppress_react(
             targets
                 .iter()
                 .map(|target| ReactSuppressionFinding {
-                    finding: react_traits::Violation {
-                        file: target.file.clone(),
-                        ..finding.clone()
-                    },
-                    line: Some(target.line),
+                    // Same-file fetches are the public diagnostic location.
+                    // For inherited fetches, keep the parent as the target
+                    // and use the child fetch only as directive provenance.
+                    finding: finding.clone(),
+                    line: (target.file == finding.file).then_some(target.line),
+                    source_location: (target.file != finding.file)
+                        .then(|| (target.file.clone(), target.line)),
                     identity: identity.clone(),
                 })
                 .collect()
@@ -54,16 +58,42 @@ pub(crate) fn suppress_react(
             vec![ReactSuppressionFinding {
                 finding: finding.clone(),
                 line: None,
+                source_location: None,
                 identity,
             }]
         };
-        let target_suppressions =
-            suppress_domain_findings_with_sources(root, &mut locations, sources, react_target);
+        let target_suppressions = suppress_domain_findings_with_source_locations(
+            root,
+            &mut locations,
+            sources,
+            react_target,
+            |location| {
+                location
+                    .source_location
+                    .as_ref()
+                    .map(|(file, line)| (file.as_str(), Some(*line)))
+            },
+        );
         if locations.is_empty() {
             // A React violation is one component-level diagnostic even when
             // several fetch locations contribute to it. Keep one deterministic
-            // directive record only after every contributing location is hidden.
-            suppressed.extend(target_suppressions.into_iter().next());
+            // directive record for the first contributing location only after
+            // every location is hidden.
+            let first_target = targets
+                .iter()
+                .find(|target| target.file == finding.file)
+                .or_else(|| targets.first())
+                .expect("non-empty suppression targets have a first target");
+            let first_suppression = target_suppressions.iter().find(|suppression| {
+                suppression.file == finding.file
+                    && suppression.source_file == first_target.file
+                    && if first_target.file == finding.file {
+                        suppression.line == Some(first_target.line)
+                    } else {
+                        suppression.line.is_none()
+                    }
+            });
+            suppressed.extend(first_suppression.or(target_suppressions.first()).cloned());
         } else {
             clear_suppressed_first_fetch_detail(&mut finding, &targets, &locations);
             findings.push(finding);
@@ -80,7 +110,13 @@ fn clear_suppressed_first_fetch_detail(
         return;
     };
     let first_target_retained = locations.iter().any(|location| {
-        location.finding.file == first_target.file && location.line == Some(first_target.line)
+        location.source_location.as_ref().map_or_else(
+            || {
+                location.finding.file == first_target.file
+                    && location.line == Some(first_target.line)
+            },
+            |(file, line)| file == &first_target.file && *line == first_target.line,
+        )
     });
     if !first_target_retained {
         // The public detail belongs to the first local fetch. Once that target

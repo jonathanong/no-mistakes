@@ -392,6 +392,11 @@ fn check_json_keeps_inherited_react_suppressions_distinct_by_parent_component() 
         item["reason"]
             .as_str()
             .is_some_and(|reason| reason.contains("ParentB"))
+            && item["file"] == "app/ParentB.tsx"
+            && item["sourceFile"] == "app/Child.tsx"
+            && item["line"].is_null()
+            && item["directive"]["kind"] == "nextLine"
+            && item["directive"]["line"] == 4
     }));
     assert!(parents.iter().any(|item| {
         item["reason"]
@@ -401,4 +406,19 @@ fn check_json_keeps_inherited_react_suppressions_distinct_by_parent_component() 
             && item["line"].is_null()
             && item["directive"]["kind"] == "file"
     }));
+}
+
+#[test]
+fn check_json_rejects_disabled_malformed_helpers_reached_from_active_integration_tests() {
+    let root = static_check_fixture("suppression-integration-malformed-helper");
+    let error = check_json_impl(json!({ "root": root }).to_string()).unwrap_err();
+    let message = format!("{error:#}");
+    assert!(
+        message.contains("helpers/malformed-helper.mts"),
+        "{message}"
+    );
+    assert!(
+        !message.contains("tests/disabled-malformed.test.mts"),
+        "{message}"
+    );
 }

@@ -88,7 +88,9 @@ fn check_with_facts_reports_dropped_helper_parse_errors() {
 #[test]
 fn file_disabled_parse_errors_do_not_abort_integration_checks() {
     let root = fixture("basic");
-    let file = root.join("helpers/openai.mts");
+    let file = root.join("backend/unit.test.mts");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let suites = test_support::configured_suites(&root, &config).unwrap();
     let mut shared = crate::codebase::check_facts::CheckFactMap::default();
     shared.ts.insert(
         file,
@@ -102,5 +104,5 @@ fn file_disabled_parse_errors_do_not_abort_integration_checks() {
         .into(),
     );
 
-    checks::fail_on_dropped_files(&shared).unwrap();
+    checks::fail_on_dropped_files(&root, &suites, &shared).unwrap();
 }
