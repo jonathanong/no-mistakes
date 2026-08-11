@@ -116,10 +116,11 @@ read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
 the workflow from providing coverage. Step conditions merge static environment
 values with GitHub's workflow, job, then step precedence and string coercion;
 an omitted reusable secret referenced by an environment value resolves to the
-empty string. Workflow and job `defaults.run` values
-must be static. Workflow concurrency expressions may use `github`, `inputs`,
-and `vars`; job concurrency additionally permits `needs`, `strategy`, and
-`matrix`. Job and step `continue-on-error` expressions, plus environment names
+empty string. Workflow `defaults.run` values must be static; job defaults may
+use their documented `github`, `needs`, `strategy`, `matrix`, `env`, `vars`,
+and `inputs` contexts. Workflow concurrency expressions may use `github`,
+`inputs`, and `vars`; job concurrency additionally permits `needs`, `strategy`,
+and `matrix`. Job and step `continue-on-error` expressions, plus environment names
 and URLs, use their own GitHub context/function sets; status functions are not
 accepted in `continue-on-error`. Strategy `fail-fast` expressions use the
 documented strategy contexts and must be boolean when their result type is

@@ -52,6 +52,14 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
                 "on: push\njobs:\n  typecheck:\n    runs-on: \"${{ 'ubuntu-latest' }}\"\n    container: node:22\n    steps:\n      - run: tsc --noEmit -p constant-runner-expression/tsconfig.json\n",
             ),
             document(
+                ".github/workflows/job-default-expression.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    defaults:\n      run:\n        working-directory: '${{ matrix.project }}'\n    strategy:\n      matrix:\n        project: [job-default-expression]\n    steps:\n      - working-directory: job-default-expression\n        run: tsc --noEmit -p tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/invalid-check-suite-activity.yml",
+                "on:\n  push:\n  check_suite:\n    types: [requested]\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid-check-suite-activity/tsconfig.json\n",
+            ),
+            document(
                 ".github/workflows/self-hosted-label.yml",
                 "on: push\njobs:\n  typecheck:\n    runs-on: [self-hosted, ubuntu-custom]\n    container: node:22\n    steps:\n      - run: tsc --noEmit -p self-hosted-label/tsconfig.json\n",
             ),
@@ -80,6 +88,8 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
         "windows-container",
         "custom-container",
         "constant-runner-expression",
+        "job-default-expression",
+        "invalid-check-suite-activity",
         "self-hosted-label",
         "closed",
         "synchronize",
@@ -94,6 +104,7 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
         BTreeSet::from([
             "linux-container/tsconfig.json".to_string(),
             "constant-runner-expression/tsconfig.json".to_string(),
+            "job-default-expression/tsconfig.json".to_string(),
             "push-fallback/tsconfig.json".to_string(),
             "success/tsconfig.json".to_string(),
             "synchronize/tsconfig.json".to_string(),

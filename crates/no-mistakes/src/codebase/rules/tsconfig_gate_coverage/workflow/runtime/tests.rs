@@ -109,9 +109,34 @@ fn container_runner_support_requires_unambiguous_linux_labels() {
 
 #[test]
 fn documented_hosted_runner_labels_have_known_platforms() {
-    for yaml in ["runs-on: ubuntu-26.04-arm", "runs-on: macos-26-intel"] {
+    let ubuntu: Value = serde_yaml::from_str("runs-on: ubuntu-26.04-arm").unwrap();
+    assert!(!runs_on_can_default_to_windows(&ubuntu));
+
+    for yaml in [
+        "runs-on: macos-26-intel",
+        "runs-on: macos-latest-large",
+        "runs-on: macos-14-large",
+        "runs-on: macos-15-large",
+        "runs-on: macos-26-large",
+        "runs-on: macos-latest-xlarge",
+        "runs-on: macos-14-xlarge",
+        "runs-on: macos-15-xlarge",
+        "runs-on: macos-26-xlarge",
+        "runs-on: xcode-27-xlarge",
+    ] {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
+        assert!(
+            matches!(
+                container_runner_support(job.as_mapping().unwrap()),
+                ContainerRunnerSupport::NonLinux
+            ),
+            "{yaml}"
+        );
+    }
+    for yaml in ["runs-on: macos-13-large", "runs-on: macos-13-xlarge"] {
+        let job: Value = serde_yaml::from_str(yaml).unwrap();
+        assert!(runs_on_can_default_to_windows(&job), "{yaml}");
     }
     let job: Value = serde_yaml::from_str("runs-on: windows-2025-vs2026").unwrap();
     assert!(runs_on_can_default_to_windows(&job));

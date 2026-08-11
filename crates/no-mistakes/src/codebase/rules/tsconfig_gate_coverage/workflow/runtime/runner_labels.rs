@@ -151,11 +151,20 @@ fn github_hosted_runner_platform(label: &str) -> RunnerPlatform {
         RunnerPlatform::Linux
     } else if [
         "macos-latest",
+        "macos-latest-large",
         "macos-14",
+        "macos-14-large",
         "macos-15",
         "macos-15-intel",
+        "macos-15-large",
         "macos-26",
         "macos-26-intel",
+        "macos-26-large",
+        "macos-latest-xlarge",
+        "macos-14-xlarge",
+        "macos-15-xlarge",
+        "macos-26-xlarge",
+        "xcode-27-xlarge",
     ]
     .iter()
     .any(|known| label.eq_ignore_ascii_case(known))

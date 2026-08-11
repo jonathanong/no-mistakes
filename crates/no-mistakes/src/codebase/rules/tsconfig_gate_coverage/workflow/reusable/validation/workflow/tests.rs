@@ -102,6 +102,10 @@ fn workflow_defaults_and_concurrency_follow_workflow_context_rules() {
 fn job_defaults_and_concurrency_follow_job_context_rules() {
     for yaml in [
         "defaults:\n  run:\n    shell: bash\n    working-directory: packages/app",
+        "defaults:\n  run:\n    shell: 'bash ${{ github.ref }}'\n    working-directory: 'packages/${{ needs.setup.outputs.package }}'",
+        "defaults:\n  run:\n    shell: 'bash ${{ strategy.job-index }}'\n    working-directory: 'packages/${{ matrix.package }}'",
+        "defaults:\n  run:\n    shell: 'bash ${{ vars.SHELL_FLAGS }}'\n    working-directory: 'packages/${{ inputs.package }}'",
+        "defaults:\n  run:\n    shell: 'bash ${{ env.SHELL }}'",
         "concurrency: checks-${{ github.ref }}",
         "concurrency:\n  group: checks-${{ needs.setup.outputs.key }}\n  cancel-in-progress: '${{ matrix.cancel }}'",
         "concurrency:\n  group: checks-${{ strategy.job-index }}\n  cancel-in-progress: '${{ inputs.cancel }}'",
@@ -117,8 +121,7 @@ fn job_defaults_and_concurrency_follow_job_context_rules() {
     }
 
     for yaml in [
-        "defaults:\n  run:\n    shell: '${{ github.ref }}'",
-        "defaults:\n  run:\n    working-directory: 'packages/${{ matrix.package }}'",
+        "defaults:\n  run:\n    working-directory: 'packages/${{ secrets.PACKAGE }}'",
         "concurrency: checks-${{ env.CI }}",
         "concurrency:\n  group: checks\n  cancel-in-progress: '${{ secrets.CANCEL }}'",
         "concurrency:\n  group: checks\n  cancel-in-progress: \"${{ 'false' }}\"",

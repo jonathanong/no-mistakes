@@ -147,6 +147,7 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "issues:\n  types: [not_an_issue_event]",
         "check_suite:\n  types: [requested]",
         "check_suite:\n  types: [rerequested]",
+        "check_suite:\n  types: [not_a_check_suite_event]",
         "pull_request:\n  types: [not_a_pull_request_event]",
         "merge_group:\n  types: [completed]",
         "workflow_run:\n  workflows: [CI]\n  types: [not_a_workflow_run_event]",

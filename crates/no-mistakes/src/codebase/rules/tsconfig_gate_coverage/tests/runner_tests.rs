@@ -30,7 +30,7 @@ fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
 #[test]
 fn ci_scanner_only_credits_implicit_shells_on_known_posix_runners() {
     let workflow: Value = serde_yaml::from_str(
-        "on: push\njobs:\n  self-hosted-macos:\n    runs-on: [self-hosted, macOS]\n    steps:\n      - run: tsc --noEmit --project self-hosted-macos/tsconfig.json\n  custom-runner:\n    runs-on: custom-runner\n    steps:\n      - run: tsc --noEmit --project custom-runner/tsconfig.json\n  custom-macos-runner:\n    runs-on: macos-custom\n    steps:\n      - run: tsc --noEmit --project custom-macos-runner/tsconfig.json\n",
+        "on: push\njobs:\n  self-hosted-macos:\n    runs-on: [self-hosted, macOS]\n    steps:\n      - run: tsc --noEmit --project self-hosted-macos/tsconfig.json\n  macos-xlarge:\n    runs-on: xcode-27-xlarge\n    steps:\n      - run: tsc --noEmit --project macos-xlarge/tsconfig.json\n  obsolete-macos-xlarge:\n    runs-on: macos-13-xlarge\n    steps:\n      - run: tsc --noEmit --project obsolete-macos-xlarge/tsconfig.json\n  custom-runner:\n    runs-on: custom-runner\n    steps:\n      - run: tsc --noEmit --project custom-runner/tsconfig.json\n  custom-macos-runner:\n    runs-on: macos-custom\n    steps:\n      - run: tsc --noEmit --project custom-macos-runner/tsconfig.json\n",
     )
     .unwrap();
     let workflows = ParsedWorkflowSet {
@@ -39,14 +39,39 @@ fn ci_scanner_only_credits_implicit_shells_on_known_posix_runners() {
             value: Ok(workflow),
         }],
     };
-    let expected = BTreeSet::from(["self-hosted-macos/tsconfig.json".to_string()]);
+    let expected = BTreeSet::from([
+        "macos-xlarge/tsconfig.json".to_string(),
+        "self-hosted-macos/tsconfig.json".to_string(),
+    ]);
     let projects = BTreeSet::from([
         "custom-macos-runner/tsconfig.json".to_string(),
         "custom-runner/tsconfig.json".to_string(),
+        "macos-xlarge/tsconfig.json".to_string(),
+        "obsolete-macos-xlarge/tsconfig.json".to_string(),
         "self-hosted-macos/tsconfig.json".to_string(),
     ]);
     assert_eq!(
         ci_typechecked_projects(&workflows, &projects, &project_inputs(&projects)),
         expected
+    );
+}
+
+#[test]
+fn ci_scanner_does_not_credit_static_object_matrix_values_as_missing_properties() {
+    let workflow: Value = serde_yaml::from_str(
+        "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        cfg: [{package: app}]\n    if: ${{ matrix.cfg == '' }}\n    steps:\n      - run: tsc --noEmit --project object-matrix/tsconfig.json\n",
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/object-matrix.yml".into(),
+            value: Ok(workflow),
+        }],
+    };
+    let projects = BTreeSet::from(["object-matrix/tsconfig.json".to_string()]);
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &projects, &project_inputs(&projects)),
+        BTreeSet::new()
     );
 }

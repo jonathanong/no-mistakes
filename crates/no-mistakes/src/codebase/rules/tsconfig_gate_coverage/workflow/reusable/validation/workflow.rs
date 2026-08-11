@@ -147,6 +147,10 @@ pub(super) fn workflow_defaults_shape_valid(value: Option<&Value>) -> bool {
 }
 
 pub(super) fn job_defaults_shape_valid(value: Option<&Value>) -> bool {
+    const JOB_DEFAULTS_CONTEXTS: &[&str] = &[
+        "github", "needs", "strategy", "matrix", "env", "vars", "inputs",
+    ];
+
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|defaults| {
             defaults.len() == 1
@@ -157,7 +161,15 @@ pub(super) fn job_defaults_shape_valid(value: Option<&Value>) -> bool {
                                 key.as_str()
                                     .is_some_and(|key| matches!(key, "shell" | "working-directory"))
                             })
-                            && run.values().all(valid_nonempty_literal_string)
+                            && run.values().all(|value| {
+                                value.as_str().is_some_and(|value| {
+                                    !value.is_empty()
+                                        && interpolated_expression_contexts_available(
+                                            value,
+                                            JOB_DEFAULTS_CONTEXTS,
+                                        )
+                                })
+                            })
                     })
                 })
         })
