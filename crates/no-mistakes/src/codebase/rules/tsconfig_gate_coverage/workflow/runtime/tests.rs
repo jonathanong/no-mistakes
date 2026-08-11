@@ -155,3 +155,20 @@ fn constant_runner_expressions_are_static_but_dynamic_expressions_are_not() {
     let dynamic: Value = serde_yaml::from_str("runs-on: '${{ matrix.runner }}'").unwrap();
     assert!(!has_static_runnable_runs_on(&dynamic));
 }
+
+#[test]
+fn conflicting_and_malformed_runner_labels_remain_indeterminate() {
+    let conflicting: Value =
+        serde_yaml::from_str("runs-on: [self-hosted, linux, windows]").unwrap();
+    assert!(runs_on_can_default_to_windows(&conflicting));
+    assert!(matches!(
+        container_runner_support(conflicting.as_mapping().unwrap()),
+        ContainerRunnerSupport::Unknown
+    ));
+
+    for yaml in ["runs-on: []", "runs-on: 42", "runs-on: '   '"] {
+        let job: Value = serde_yaml::from_str(yaml).unwrap();
+        assert!(!has_static_runnable_runs_on(&job), "{yaml}");
+        assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
+    }
+}

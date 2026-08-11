@@ -24,6 +24,9 @@ fn static_image_references_follow_docker_name_tag_and_digest_shapes() {
         "ghcr.io//service:latest",
         "ghcr.io/example/service:bad tag",
         "-invalid/name:latest",
+        "[not-an-ipv6/service",
+        "[not-an-ipv6]:5000/service",
+        "[::1]not-a-port/service",
     ] {
         assert!(!valid_static_reference(image), "{image}");
     }

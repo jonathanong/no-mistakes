@@ -6,6 +6,11 @@ fn static_expression_values_distinguish_literals_dynamic_values_and_boolean_resu
         ("${{ true }}", Some(StaticValue::Bool(true))),
         ("${{ null }}", Some(StaticValue::Null)),
         ("${{ fromJSON('[1, 2]') }}", Some(StaticValue::Unknown)),
+        (
+            "${{ fromJSON('\"release\"') }}",
+            Some(StaticValue::String("release".into())),
+        ),
+        ("${{ fromJSON('null') }}", Some(StaticValue::Null)),
         ("${{ true || false }}", Some(StaticValue::Bool(true))),
         ("${{ 'value' }}", Some(StaticValue::String("value".into()))),
         ("${{ github.ref }}", Some(StaticValue::Unknown)),

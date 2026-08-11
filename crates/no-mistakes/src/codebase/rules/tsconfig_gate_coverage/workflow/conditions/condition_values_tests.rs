@@ -7,6 +7,24 @@ use serde_yaml::Value;
 #[test]
 fn truthy_nonboolean_values_preserve_expression_semantics() {
     assert_eq!(StaticBool::TruthyNonBoolean.negate(), StaticBool::False);
+    for (value, truthiness) in [
+        (
+            StaticValue::Sequence(Vec::new()),
+            StaticBool::TruthyNonBoolean,
+        ),
+        (StaticValue::NonStringable, StaticBool::Unknown),
+    ] {
+        assert_eq!(value.function_string(), None);
+        assert_eq!(value.clone().truthiness(), truthiness);
+        assert_eq!(
+            value.less_than_or_equal(&StaticValue::Number("1".into())),
+            StaticBool::False,
+        );
+    }
+    assert_eq!(
+        StaticValue::NonStringable.equals(&StaticValue::NonStringable),
+        StaticBool::Unknown,
+    );
 }
 
 #[test]

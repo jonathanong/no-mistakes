@@ -303,3 +303,19 @@ fn literal_from_json_helpers_handle_escapes_nested_calls_and_invalid_payloads() 
         );
     }
 }
+
+#[test]
+fn literal_from_json_scanner_handles_spacing_nesting_and_unclosed_calls() {
+    let call = super::condition_function_call("fromJSON  ( 'true' )").unwrap();
+    assert_eq!(call.arguments, vec!["'true'"]);
+
+    assert!(super::literal_value::invalid_literal_from_json(
+        "${{ fromJSON   ('not-json') }}"
+    ));
+    assert!(!super::literal_value::invalid_literal_from_json(
+        "${{ fromJSON(('not-json')) }}"
+    ));
+    assert!(!super::literal_value::invalid_literal_from_json(
+        "${{ fromJSON('not-json' }}"
+    ));
+}
