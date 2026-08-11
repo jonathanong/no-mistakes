@@ -34,7 +34,16 @@ fn event_references(workflow: &Value, event: &str) -> Vec<GithubRef> {
         .and_then(Value::as_mapping)
         .and_then(|events| events.get(event));
     match event {
-        "push" => push_references(config),
+        "push" => {
+            let branches_configured =
+                has_key(config, "branches") || has_key(config, "branches-ignore");
+            let tags_configured = has_key(config, "tags") || has_key(config, "tags-ignore");
+            if branches_configured || !tags_configured {
+                branch_references(config)
+            } else {
+                Vec::new()
+            }
+        }
         "pull_request" => branch_references(config)
             .into_iter()
             .map(|_| GithubRef::PullRequestMerge)
@@ -46,28 +55,8 @@ fn event_references(workflow: &Value, event: &str) -> Vec<GithubRef> {
     }
 }
 
-/// GitHub evaluates `branches` and `tags` independently against short ref
-/// names. An exact literal therefore supplies a fully-qualified `github.ref`;
-/// globs, ignores, and expression-shaped values retain an unknown state.
-fn push_references(config: Option<&Value>) -> Vec<GithubRef> {
-    let branches_configured = has_key(config, "branches") || has_key(config, "branches-ignore");
-    let tags_configured = has_key(config, "tags") || has_key(config, "tags-ignore");
-    let mut references = BTreeSet::new();
-    if branches_configured || !tags_configured {
-        references.extend(branch_references(config));
-    }
-    if tags_configured || !branches_configured {
-        references.extend(tag_references(config));
-    }
-    references.into_iter().collect()
-}
-
 fn branch_references(config: Option<&Value>) -> Vec<GithubRef> {
     references_for(config, "branches", "branches-ignore", "refs/heads/")
-}
-
-fn tag_references(config: Option<&Value>) -> Vec<GithubRef> {
-    references_for(config, "tags", "tags-ignore", "refs/tags/")
 }
 
 fn references_for(

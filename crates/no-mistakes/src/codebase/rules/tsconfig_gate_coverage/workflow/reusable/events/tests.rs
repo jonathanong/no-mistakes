@@ -79,7 +79,7 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
             "push",
             vec!["refs/heads/dev", "refs/heads/main"],
         ),
-        ("on:\n  push:\n    tags: [v1]", "push", vec!["refs/tags/v1"]),
+        ("on:\n  push:\n    tags: [v1]", "push", vec![]),
         (
             "on:\n  pull_request_target:\n    types: [synchronize]\n    branches: [main]",
             "pull_request_target",

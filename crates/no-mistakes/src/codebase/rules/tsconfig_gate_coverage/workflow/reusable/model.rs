@@ -92,9 +92,15 @@ pub(super) struct ActivationKey {
     pub(super) state: ActivationState,
 }
 
+#[derive(Clone)]
+pub(super) struct ActivationScan {
+    pub(super) projects: BTreeSet<String>,
+    pub(super) failed: bool,
+}
+
 #[derive(Default)]
 pub(super) struct ActivationMemo {
-    entries: BTreeMap<ActivationKey, Option<BTreeSet<String>>>,
+    entries: BTreeMap<ActivationKey, Option<ActivationScan>>,
     computations: usize,
     exhausted: bool,
     targets: BTreeSet<ReusableTarget>,
@@ -111,7 +117,7 @@ impl ActivationMemo {
         Self::default()
     }
 
-    pub(super) fn get(&self, key: &ActivationKey) -> Option<&Option<BTreeSet<String>>> {
+    pub(super) fn get(&self, key: &ActivationKey) -> Option<&Option<ActivationScan>> {
         self.entries.get(key)
     }
 
@@ -124,7 +130,7 @@ impl ActivationMemo {
         true
     }
 
-    pub(super) fn insert(&mut self, key: ActivationKey, result: Option<BTreeSet<String>>) {
+    pub(super) fn insert(&mut self, key: ActivationKey, result: Option<ActivationScan>) {
         self.entries.insert(key, result);
     }
 

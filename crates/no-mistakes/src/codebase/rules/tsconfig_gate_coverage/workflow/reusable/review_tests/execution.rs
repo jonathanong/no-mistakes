@@ -42,6 +42,113 @@ fn static_step_failures_only_allow_explicit_continuations() {
 }
 
 #[test]
+fn bare_exit_preserves_the_preceding_command_status() {
+    let workflow = document(
+        ".github/workflows/bare-exit.yml",
+        "on: push\njobs:\n  failed:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: 'false; exit'\n      - run: tsc --noEmit -p failed/tsconfig.json\n  succeeded:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: 'true; exit'\n      - run: tsc --noEmit -p succeeded/tsconfig.json\n",
+    );
+
+    assert_eq!(
+        scanned_projects(vec![workflow], &["failed", "succeeded"]),
+        BTreeSet::from(["succeeded/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn static_job_failures_propagate_through_needs() {
+    let workflow = document(
+        ".github/workflows/job-failures.yml",
+        "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - run: exit 1\n  ordinary:\n    needs: setup\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p ordinary/tsconfig.json\n  literal:\n    needs: setup\n    if: true\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p literal/tsconfig.json\n  transitive:\n    needs: ordinary\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p transitive/tsconfig.json\n  always:\n    needs: setup\n    if: always()\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p always/tsconfig.json\n  failure-handler:\n    needs: setup\n    if: failure()\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p failure-handler/tsconfig.json\n      - run: exit 1\n  after-handler:\n    needs: failure-handler\n    if: always() && needs.failure-handler.result == 'failure'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p after-handler/tsconfig.json\n  failure-result:\n    needs: setup\n    if: always() && needs.setup.result == 'failure'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p failure-result/tsconfig.json\n  tolerated:\n    runs-on: ubuntu-latest\n    steps:\n      - continue-on-error: true\n        run: exit 1\n  after-tolerated:\n    needs: tolerated\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p after-tolerated/tsconfig.json\n",
+    );
+
+    assert_eq!(
+        scanned_projects(
+            vec![workflow],
+            &[
+                "ordinary",
+                "literal",
+                "transitive",
+                "always",
+                "failure-handler",
+                "after-handler",
+                "failure-result",
+                "after-tolerated",
+            ],
+        ),
+        BTreeSet::from([
+            "after-tolerated/tsconfig.json".to_string(),
+            "after-handler/tsconfig.json".to_string(),
+            "always/tsconfig.json".to_string(),
+            "failure-result/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn local_reusable_workflow_failures_propagate_to_callers() {
+    let caller = document(
+        ".github/workflows/caller.yml",
+        "on: push\njobs:\n  call:\n    uses: ./.github/workflows/callee.yml\n  dependent:\n    needs: call\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p dependent/tsconfig.json\n  always:\n    needs: call\n    if: always()\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p caller-always/tsconfig.json\n  failure-handler:\n    needs: call\n    if: failure()\n    uses: ./.github/workflows/gate.yml\n  after-handler:\n    needs: failure-handler\n    if: always() && needs.failure-handler.result == 'failure'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p reusable-after-handler/tsconfig.json\n",
+    );
+    let callee = document(
+        ".github/workflows/callee.yml",
+        "on: workflow_call\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - run: exit 1\n",
+    );
+    let gate = document(
+        ".github/workflows/gate.yml",
+        "on: workflow_call\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p failure-handler/tsconfig.json\n      - run: exit 1\n",
+    );
+
+    assert_eq!(
+        scanned_projects(
+            vec![caller, callee, gate],
+            &[
+                "dependent",
+                "caller-always",
+                "failure-handler",
+                "reusable-after-handler",
+            ],
+        ),
+        BTreeSet::from([
+            "caller-always/tsconfig.json".to_string(),
+            "reusable-after-handler/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn successful_failure_handlers_are_known_not_skipped() {
+    let direct = document(
+        ".github/workflows/direct-handler.yml",
+        "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - run: exit 1\n  handler:\n    needs: setup\n    if: failure()\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n  skipped-result:\n    needs: handler\n    if: always() && needs.handler.result == 'skipped'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p skipped-result/tsconfig.json\n  not-skipped-result:\n    needs: handler\n    if: always() && needs.handler.result != 'skipped'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p not-skipped-result/tsconfig.json\n",
+    );
+    let caller = document(
+        ".github/workflows/reusable-handler.yml",
+        "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - run: exit 1\n  handler:\n    needs: setup\n    if: failure()\n    uses: ./.github/workflows/success.yml\n  skipped-result:\n    needs: handler\n    if: always() && needs.handler.result == 'skipped'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p reusable-skipped-result/tsconfig.json\n  not-skipped-result:\n    needs: handler\n    if: always() && needs.handler.result != 'skipped'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p reusable-not-skipped-result/tsconfig.json\n",
+    );
+    let success = document(
+        ".github/workflows/success.yml",
+        "on: workflow_call\njobs:\n  success:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n",
+    );
+
+    assert_eq!(
+        scanned_projects(
+            vec![direct, caller, success],
+            &[
+                "skipped-result",
+                "not-skipped-result",
+                "reusable-skipped-result",
+                "reusable-not-skipped-result",
+            ],
+        ),
+        BTreeSet::from([
+            "not-skipped-result/tsconfig.json".to_string(),
+            "reusable-not-skipped-result/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
 fn static_step_working_directories_and_condition_budgets_bound_coverage() {
     let over_budget = std::iter::repeat_n("true", 257)
         .collect::<Vec<_>>()

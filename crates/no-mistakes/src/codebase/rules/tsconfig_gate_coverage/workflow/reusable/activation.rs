@@ -2,14 +2,15 @@ use super::super::effective_working_directory;
 use super::super::runtime::{
     container_runner_support, effective_shell, has_static_runnable_runs_on, ContainerRunnerSupport,
 };
-use super::model::{ActivationKey, ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
+use super::model::{
+    ActivationKey, ActivationMemo, ActivationScan, ActivationState, ScanContext, WorkflowDocument,
+};
 use super::validation::{
     call_bindings_shape_valid, reusable_call_job_shape_valid, valid_job_dependencies,
     workflow_shape_valid,
 };
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use serde_yaml::Value;
-use std::collections::BTreeSet;
 
 mod job_states;
 mod jobs;
@@ -23,7 +24,7 @@ pub(super) fn scan_activation(
     state: &ActivationState,
     context: &ScanContext<'_>,
     memo: &mut ActivationMemo,
-) -> Option<BTreeSet<String>> {
+) -> Option<ActivationScan> {
     if state.active_paths.contains(path) {
         return None;
     }
@@ -49,7 +50,7 @@ fn scan_activation_uncached(
     state: &ActivationState,
     context: &ScanContext<'_>,
     memo: &mut ActivationMemo,
-) -> Option<BTreeSet<String>> {
+) -> Option<ActivationScan> {
     let mut state = state.clone();
     state.active_paths.insert(path.to_string());
     if !workflow_shape_valid(document.value) {

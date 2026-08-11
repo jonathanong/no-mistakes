@@ -99,6 +99,18 @@ pub(super) fn comparison_bool(
     if matches!(
         comparison,
         logical::Comparison::Equal | logical::Comparison::NotEqual
+    ) && known_not_skipped_comparison(left, right, inputs)
+    {
+        let equal = StaticBool::False;
+        return Some(if matches!(comparison, logical::Comparison::Equal) {
+            equal
+        } else {
+            equal.negate()
+        });
+    }
+    if matches!(
+        comparison,
+        logical::Comparison::Equal | logical::Comparison::NotEqual
     ) && (github_ref(left) || github_ref(right))
     {
         let other = if github_ref(left) { right } else { left };
@@ -126,6 +138,18 @@ pub(super) fn comparison_bool(
         logical::Comparison::GreaterThan => expected.less_than(&actual),
         logical::Comparison::GreaterThanOrEqual => expected.less_than_or_equal(&actual),
     })
+}
+
+fn known_not_skipped_comparison(left: &str, right: &str, inputs: &InputState) -> bool {
+    [(left, right), (right, left)]
+        .into_iter()
+        .any(|(actual, expected)| {
+            super::resolution::needs_result_is_known_not_skipped(actual, inputs)
+                && matches!(
+                    comparison_literal(expected),
+                    Some(StaticValue::String(value)) if value.eq_ignore_ascii_case("skipped")
+                )
+        })
 }
 
 fn static_bool_value(value: StaticBool) -> StaticValue {

@@ -74,7 +74,7 @@ pub(super) fn collect_ci_projects_with_local_actions(
                 let Some(inputs) = direct_inputs(document.call_contract.as_ref(), &event) else {
                     continue;
                 };
-                if let Some(activation_projects) = scan_activation(
+                if let Some(activation) = scan_activation(
                     path,
                     document,
                     &triggers,
@@ -82,7 +82,7 @@ pub(super) fn collect_ci_projects_with_local_actions(
                     &context,
                     &mut memo,
                 ) {
-                    event_projects.extend(activation_projects);
+                    event_projects.extend(activation.projects);
                 }
             }
             if !memo.exhausted() {

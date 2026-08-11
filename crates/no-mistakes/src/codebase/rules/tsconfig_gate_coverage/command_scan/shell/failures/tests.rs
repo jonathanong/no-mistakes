@@ -5,13 +5,23 @@ fn static_shell_failures_distinguish_successful_and_dynamic_forms() {
     for script in [
         "false",
         "echo ok; exit 1",
+        "false; exit",
+        "false;\nexit",
         "return",
         "exit invalid",
         "exit 1 2",
     ] {
         assert!(shell_body_has_static_failure(script), "{script}");
     }
-    for script in ["echo ok", "exit", "exit 0", "exit 256", "false || true"] {
+    for script in [
+        "echo ok",
+        "exit",
+        "true; exit",
+        "true;\nexit",
+        "exit 0",
+        "exit 256",
+        "false || true",
+    ] {
         assert!(!shell_body_has_static_failure(script), "{script}");
     }
     assert!(!shell_body_has_static_failure(
@@ -26,10 +36,11 @@ fn terminal_failures_ignore_masked_non_errexit_commands() {
         "echo ok; exit 2",
         "false",
         "false && echo skipped",
+        "false; exit",
     ] {
         assert!(shell_body_has_static_terminal_failure(script), "{script}");
     }
-    for script in ["false; echo ok", "exit 0", "false || true"] {
+    for script in ["false; echo ok", "true; exit", "exit 0", "false || true"] {
         assert!(!shell_body_has_static_terminal_failure(script), "{script}");
     }
 }

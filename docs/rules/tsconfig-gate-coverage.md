@@ -75,7 +75,8 @@ example, `paths: [app/tsconfig.json]` cannot cover `app/src/index.ts`; add
 `app/**` or an
 unfiltered applicable event. Inclusive `branches`, `tags`, or `paths` filters
 that use `!` exclusions must also contain at least one positive pattern, as
-required by GitHub Actions.
+required by GitHub Actions. Tag refs never contribute source-change coverage,
+including when a `push` trigger declares both branch and tag filters.
 
 Workflow commands run only when their effective shell is GitHub Actions'
 implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
@@ -203,9 +204,16 @@ check such as `always()` or `!cancelled()` can explicitly continue after a
 skipped need when the whole condition is statically true. A dependency with
 `continue-on-error: true` is non-enforcing itself but is not treated as skipped
 for downstream jobs.
-Known skipped dependency results are available to these conditions through
+An unconditional static step failure likewise publishes a `failure` job
+result, skips ordinary and transitive dependents, and propagates through local
+reusable-workflow calls. Failure handlers can affect later job status but do
+not themselves satisfy the successful-path gate. Known skipped and failed
+dependency results are available to these conditions through
 dot or single-quoted bracket `needs.<job>.result` access; other dependency
-results remain unresolved rather than being guessed.
+results remain unresolved rather than being guessed. When a job is statically
+known to execute but its final result is otherwise unresolved, comparisons to
+`skipped` still resolve false without guessing `success`, `failure`, or
+`cancelled`.
 
 A project whose effective local `compilerOptions.noCheck` is `true` does not
 count as typechecked, even when both commands are registered. Remove or disable
@@ -240,7 +248,8 @@ typecheck. A final static `&&` list remains recognized.
 Across workflow steps, an unconditional static failure blocks later steps that
 retain the implicit `success()` condition. Explicit status continuations such
 as `always()` or `failure()` remain runnable, and `continue-on-error: true`
-keeps the following step on the successful path.
+keeps the following step on the successful path. In a custom non-errexit shell,
+a bare `exit` preserves the preceding static command status.
 
 Informational, setup, or config-bypassing commands (`--showConfig`,
 `--help`/`-h`, `--version`/`-v`, `--init`, enabled `--noCheck`,

@@ -3,8 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde_yaml::Value;
 
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    inputs_with_matrix_values, inputs_with_needs_results, statically_skipped_jobs, InputState,
-    MatrixState,
+    inputs_with_matrix_values, inputs_with_needs_results, InputState, MatrixState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
     static_matrix_combinations, zero_instance_matrix, MatrixCombinations,
@@ -12,12 +11,10 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validati
 
 pub(super) struct JobStates {
     matrix_inputs: BTreeMap<String, Vec<InputState>>,
-    skipped: BTreeSet<String>,
 }
 
 impl JobStates {
     pub(super) fn new(jobs: &serde_yaml::Mapping, inputs: &InputState) -> Option<Self> {
-        let zero_instance_jobs = zero_instance_job_ids(jobs)?;
         let matrix_inputs = jobs
             .iter()
             .map(|(job_id, job)| {
@@ -39,39 +36,32 @@ impl JobStates {
                 Some((job_id, inputs))
             })
             .collect::<Option<BTreeMap<_, Vec<_>>>>()?;
-        let skipped = statically_skipped_jobs(jobs, &zero_instance_jobs, |job_id, _| {
-            let job_id =
-                super::super::super::normalized_job_id(job_id).expect("validated scalar job ID");
-            matrix_inputs
-                .get(&job_id)
-                .cloned()
-                .expect("matrix inputs were precomputed for every job")
-        });
-        let mut matrix_inputs = matrix_inputs;
-        for (raw_job_id, job) in jobs {
-            let job_id = super::super::super::normalized_job_id(raw_job_id)?;
-            for inputs in matrix_inputs.get_mut(&job_id)? {
-                *inputs = inputs_with_needs_results(inputs, job, &skipped);
-            }
-        }
-        Some(Self {
-            matrix_inputs,
-            skipped,
-        })
+        Some(Self { matrix_inputs })
     }
 
-    pub(super) fn is_skipped(&self, job_id: &str, job: &Value) -> bool {
-        self.skipped.contains(job_id) || zero_instance_matrix(job)
+    pub(super) fn has_zero_instances(&self, job: &Value) -> bool {
+        zero_instance_matrix(job)
     }
 
     pub(super) fn inputs_for(&self, job_id: &str) -> Option<&[InputState]> {
         self.matrix_inputs.get(job_id).map(Vec::as_slice)
     }
-}
 
-fn zero_instance_job_ids(jobs: &serde_yaml::Mapping) -> Option<BTreeSet<String>> {
-    jobs.iter()
-        .filter(|(_, job)| zero_instance_matrix(job))
-        .map(|(job_id, _)| super::super::super::normalized_job_id(job_id))
-        .collect()
+    pub(super) fn inputs_with_results_for(
+        &self,
+        job_id: &str,
+        job: &Value,
+        runtime_skipped: &BTreeSet<String>,
+        failed: &BTreeSet<String>,
+        executed: &BTreeSet<String>,
+    ) -> Option<Vec<InputState>> {
+        Some(
+            self.inputs_for(job_id)?
+                .iter()
+                .map(|inputs| {
+                    inputs_with_needs_results(inputs, job, runtime_skipped, failed, executed)
+                })
+                .collect(),
+        )
+    }
 }

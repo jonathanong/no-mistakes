@@ -1,5 +1,5 @@
 use serde_yaml::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 mod condition_values;
 mod contracts;
@@ -15,10 +15,13 @@ mod step_evaluation;
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
 pub(super) use environment::EnvironmentState;
-use evaluation::{continues_after_skipped_need, static_bool};
+#[cfg(test)]
+use evaluation::static_bool;
+pub(super) use evaluation::{continues_after_failed_need, continues_after_skipped_need};
 pub(super) use evaluation::{
-    expression_bool, expression_bool_with_status_and_environment, job_timeout_minutes_enforced,
-    statically_not_enforcing, step_timeout_minutes_enforced,
+    expression_bool, expression_bool_with_status_and_environment, job_statically_disabled,
+    job_statically_enabled, job_statically_enforcing, job_statically_not_enforcing,
+    job_timeout_minutes_enforced, step_timeout_minutes_enforced,
 };
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,
@@ -53,6 +56,11 @@ impl ConditionStatus {
         failure: StaticBool::False,
     };
 
+    const FAILURE: Self = Self {
+        success: StaticBool::False,
+        failure: StaticBool::True,
+    };
+
     fn from_success(success: StaticBool) -> Self {
         Self {
             success,
@@ -79,42 +87,6 @@ pub(super) enum StaticValue {
 }
 
 pub(super) type InputState = BTreeMap<String, StaticValue>;
-
-pub(super) fn statically_skipped_jobs(
-    jobs: &serde_yaml::Mapping,
-    initial_skipped: &BTreeSet<String>,
-    matrix_inputs: impl Fn(&Value, &Value) -> Vec<InputState>,
-) -> BTreeSet<String> {
-    let mut skipped = initial_skipped.clone();
-    loop {
-        let mut changed = false;
-        for (raw_job_id, job) in jobs {
-            let job_id = super::normalized_job_id(raw_job_id).expect("validated scalar job ID");
-            let inputs = matrix_inputs(raw_job_id, job)
-                .into_iter()
-                .map(|inputs| inputs_with_needs_results(&inputs, job, &skipped))
-                .collect::<Vec<_>>();
-            let directly_disabled = !inputs.is_empty()
-                && inputs
-                    .iter()
-                    .all(|inputs| static_bool(job.get("if"), inputs) == StaticBool::False);
-            let blocked_by_need = !inputs
-                .iter()
-                .any(|inputs| continues_after_skipped_need(job, inputs))
-                && crate::codebase::workflow_topology::value_primitives::string_list(
-                    job.get("needs"),
-                )
-                .iter()
-                .any(|need| skipped.contains(&need.to_lowercase()));
-            if (directly_disabled || blocked_by_need) && skipped.insert(job_id) {
-                changed = true;
-            }
-        }
-        if !changed {
-            return skipped;
-        }
-    }
-}
 
 pub(crate) fn resolve_static_interpolations(
     value: &str,

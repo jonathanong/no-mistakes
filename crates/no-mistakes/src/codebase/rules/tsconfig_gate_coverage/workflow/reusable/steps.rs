@@ -18,6 +18,11 @@ use super::super::{
     },
 };
 
+pub(super) struct StepScan {
+    pub(super) projects: BTreeSet<String>,
+    pub(super) failed: bool,
+}
+
 pub(super) fn scan_job_steps(
     job: &Value,
     triggers: &CompiledTriggers,
@@ -26,9 +31,12 @@ pub(super) fn scan_job_steps(
     workflow_cwd: Option<String>,
     workflow_shell: Option<String>,
     context: &ScanContext<'_>,
-) -> BTreeSet<String> {
+) -> StepScan {
     let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
-        return BTreeSet::new();
+        return StepScan {
+            projects: BTreeSet::new(),
+            failed: false,
+        };
     };
     let job_cwd = match default_working_directory(job) {
         Some(raw) => {
@@ -41,6 +49,7 @@ pub(super) fn scan_job_steps(
     let implicit_shell_can_be_windows = runs_on_can_default_to_windows(job, inputs);
     let mut projects = BTreeSet::new();
     let mut success = StaticBool::True;
+    let mut failed = false;
     for step in steps {
         let environment = environment.with_step(step, inputs);
         let condition = step_condition_with_status(step, inputs, &environment, success);
@@ -125,7 +134,8 @@ pub(super) fn scan_job_steps(
             };
         if condition == StaticBool::True && static_failure {
             success = StaticBool::False;
+            failed = true;
         }
     }
-    projects
+    StepScan { projects, failed }
 }

@@ -8,21 +8,78 @@ use super::{
 };
 use serde_yaml::Value;
 
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn statically_not_enforcing(
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_statically_not_enforcing(
     value: &Value,
     inputs: &InputState,
 ) -> bool {
-    statically_not_enforcing_with_environment(value, inputs, &EnvironmentState::default())
+    job_enforcement(value, inputs, false).0
 }
 
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn statically_not_enforcing_with_environment(
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_statically_disabled(
     value: &Value,
     inputs: &InputState,
-    environment: &EnvironmentState,
 ) -> bool {
-    static_bool_with_environment(value.get("if"), inputs, environment) == StaticBool::False
-        || static_bool_with_environment(value.get("continue-on-error"), inputs, environment)
-            == StaticBool::True
+    value.get("if").is_some_and(|condition| {
+        static_bool_with_status_and_environment(
+            Some(condition),
+            inputs,
+            &EnvironmentState::default(),
+            ConditionStatus::SUCCESS,
+        ) == StaticBool::False
+    })
+}
+
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_statically_enabled(
+    value: &Value,
+    inputs: &InputState,
+) -> bool {
+    value.get("if").is_none_or(|condition| {
+        static_bool_with_status_and_environment(
+            Some(condition),
+            inputs,
+            &EnvironmentState::default(),
+            ConditionStatus::SUCCESS,
+        ) == StaticBool::True
+    })
+}
+
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_statically_enforcing(
+    value: &Value,
+    inputs: &InputState,
+    after_failed_need: bool,
+) -> bool {
+    job_enforcement(value, inputs, after_failed_need).1
+}
+
+fn job_enforcement(value: &Value, inputs: &InputState, after_failed_need: bool) -> (bool, bool) {
+    let status = if after_failed_need {
+        ConditionStatus::FAILURE
+    } else {
+        ConditionStatus::SUCCESS
+    };
+    let condition = value.get("if").map_or(StaticBool::True, |condition| {
+        static_bool_with_status_and_environment(
+            Some(condition),
+            inputs,
+            &EnvironmentState::default(),
+            status,
+        )
+    });
+    let continue_on_error =
+        value
+            .get("continue-on-error")
+            .map_or(StaticBool::False, |continue_on_error| {
+                static_bool_with_status_and_environment(
+                    Some(continue_on_error),
+                    inputs,
+                    &EnvironmentState::default(),
+                    status,
+                )
+            });
+    (
+        condition == StaticBool::False || continue_on_error == StaticBool::True,
+        condition == StaticBool::True && continue_on_error == StaticBool::False,
+    )
 }
 
 /// Credit a timed step only when its timeout is statically known to be within
@@ -72,6 +129,7 @@ fn valid_timeout_minutes(minutes: u64, maximum: Option<u64>) -> bool {
     minutes > 0 && maximum.is_none_or(|maximum| minutes <= maximum)
 }
 
+#[cfg(test)]
 pub(super) fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticBool {
     static_bool_with_environment(value, inputs, &EnvironmentState::default())
 }
@@ -177,7 +235,25 @@ fn resolve_input_expression(
     StaticBool::Unknown
 }
 
-pub(super) fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn continues_after_skipped_need(
+    job: &Value,
+    inputs: &InputState,
+) -> bool {
+    continues_after_unsuccessful_need(job, inputs, ConditionStatus::SKIPPED)
+}
+
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn continues_after_failed_need(
+    job: &Value,
+    inputs: &InputState,
+) -> bool {
+    continues_after_unsuccessful_need(job, inputs, ConditionStatus::FAILURE)
+}
+
+fn continues_after_unsuccessful_need(
+    job: &Value,
+    inputs: &InputState,
+    status: ConditionStatus,
+) -> bool {
     job.get("if")
         .and_then(Value::as_str)
         .is_some_and(|expression| {
@@ -186,7 +262,7 @@ pub(super) fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> 
                     expression,
                     inputs,
                     &EnvironmentState::default(),
-                    ConditionStatus::SKIPPED,
+                    status,
                 ) == StaticBool::True
         })
 }

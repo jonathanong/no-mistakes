@@ -154,7 +154,11 @@ fn exact_ref_filters_make_impossible_ref_conditions_unreachable() {
         documents: vec![
             document(
                 ".github/workflows/push.yml",
-                "on:\n  push:\n    branches: [main]\njobs:\n  main:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p push-main/tsconfig.json\n  dev:\n    if: github.ref == 'refs/heads/dev'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p push-dev/tsconfig.json\n",
+                "on:\n  push:\n    branches: [main]\n    tags: [v1]\njobs:\n  main:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p push-main/tsconfig.json\n  tag:\n    if: github.ref == 'refs/tags/v1'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p push-tag/tsconfig.json\n  dev:\n    if: github.ref == 'refs/heads/dev'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p push-dev/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/tag-only.yml",
+                "on:\n  push:\n    tags: [v1]\njobs:\n  tag:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p tag-only/tsconfig.json\n",
             ),
             document(
                 ".github/workflows/pull-request.yml",
@@ -176,7 +180,9 @@ fn exact_ref_filters_make_impossible_ref_conditions_unreachable() {
     };
     let tracked = [
         "push-main/tsconfig.json",
+        "push-tag/tsconfig.json",
         "push-dev/tsconfig.json",
+        "tag-only/tsconfig.json",
         "pull-request-base-ref/tsconfig.json",
         "pull-request-target-base-ref/tsconfig.json",
         "forwarded-main/tsconfig.json",

@@ -24,6 +24,11 @@ fn needs_result_name(operand: &str) -> Option<&str> {
     remainder.trim().is_empty().then_some(name)
 }
 
+pub(super) fn needs_result_is_known_not_skipped(operand: &str, inputs: &InputState) -> bool {
+    needs_result_name(operand)
+        .is_some_and(|name| super::inputs::needs_result_not_skipped(name, inputs))
+}
+
 fn context_property_segment(remainder: &str) -> Option<(&str, &str)> {
     let remainder = remainder.trim_start();
     if let Some(remainder) = remainder.strip_prefix('.') {
