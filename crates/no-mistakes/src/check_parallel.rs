@@ -159,6 +159,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                 unique_exports_enabled,
                                                 facts,
                                                 inferred_roots,
+                                                defer_suppression,
                                             )
                                         },
                                     )

@@ -81,12 +81,21 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let mut codebase = completed.codebase;
     let mut filesystem_rules = completed.filesystem_rules;
     let mut advisories = if filesystem_rules_enabled {
-        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_sources_and_deferred_suppression(
-            root,
-            config,
-            filesystem_files,
-            sources,
-        )?
+        if include_suppressed {
+            no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                filesystem_files,
+                sources,
+            )?
+        } else {
+            no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_and_sources(
+                root,
+                config,
+                filesystem_files,
+                sources,
+            )?
+        }
     } else {
         Vec::new()
     };
@@ -102,19 +111,23 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .into_iter()
     .flatten()
     .collect();
-    let suppressed = suppression::apply(suppression::Inputs {
-        root,
-        sources,
-        react: &mut react.findings,
-        react_suppression_targets,
-        queues: &mut queues.findings,
-        rules: &mut rules.findings,
-        rule_suppression_sources,
-        filesystem: &mut filesystem_rules.findings,
-        integration: &mut integration.findings,
-        codebase: &mut codebase.findings,
-        advisories: &mut advisories,
-    });
+    let suppressed = include_suppressed
+        .then(|| {
+            suppression::apply(suppression::Inputs {
+                root,
+                sources,
+                react: &mut react.findings,
+                react_suppression_targets,
+                queues: &mut queues.findings,
+                rules: &mut rules.findings,
+                rule_suppression_sources,
+                filesystem: &mut filesystem_rules.findings,
+                integration: &mut integration.findings,
+                codebase: &mut codebase.findings,
+                advisories: &mut advisories,
+            })
+        })
+        .unwrap_or_default();
     // The public `rules` list has historically contained both codebase and
     // filesystem findings in that domain order. Preserve it while retaining
     // the distinct adapter identity in optional suppression accounting.

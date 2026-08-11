@@ -105,7 +105,9 @@ impl SharedCheckContext {
                     .prepared
                     .tsconfig_gate_project_inputs
                     .as_ref(),
-                defer_suppression: true,
+                // Preserve ordinary check behavior; defer only when this
+                // additive report requests suppression accounting.
+                defer_suppression: include_suppressed,
             });
         let completed = crate::check_runner::complete_domain_checks((
             react,

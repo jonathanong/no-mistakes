@@ -168,7 +168,9 @@ pub(crate) fn run_all_with_suppressed(
             vitest_projects: prepared.vitest_projects.as_ref(),
             workflow_documents: prepared.workflow_documents.as_deref(),
             tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
-            defer_suppression: true,
+            // Ordinary checks preserve each domain's early suppression path;
+            // only audit requests need cross-domain suppression accounting.
+            defer_suppression: include_suppressed,
         });
     no_mistakes::invocation::check_timeout()?;
     results::finalize_domain_checks(results::FinalizeInput {

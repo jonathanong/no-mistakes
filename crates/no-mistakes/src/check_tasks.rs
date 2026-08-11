@@ -136,6 +136,7 @@ pub(crate) fn run_codebase_check_with_catalog(
     enabled: bool,
     facts: &CheckFactMap,
     inferred_roots: &no_mistakes::codebase::config::InferredRoots,
+    defer_suppression: bool,
 ) -> Result<CheckTask<Vec<UniqueExportFinding>>> {
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.codebase",
@@ -149,6 +150,7 @@ pub(crate) fn run_codebase_check_with_catalog(
                     facts,
                     inferred_roots,
                     session,
+                    defer_suppression,
                 )?
             } else {
                 Vec::new()

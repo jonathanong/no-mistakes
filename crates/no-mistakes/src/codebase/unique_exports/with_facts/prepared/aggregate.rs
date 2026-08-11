@@ -16,6 +16,7 @@ pub fn analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_
     shared: &CheckFactMap,
     inferred_roots: &crate::codebase::config::InferredRoots,
     session: &AnalysisSession,
+    defer_suppression: bool,
 ) -> Result<Vec<UniqueExportFinding>> {
     analyze_project_with_optional_prepared_facts(
         root,
@@ -27,6 +28,6 @@ pub fn analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_
         shared,
         Some(inferred_roots),
         session,
-        true,
+        defer_suppression,
     )
 }

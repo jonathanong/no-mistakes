@@ -42,12 +42,11 @@ pub(super) fn unique_export_findings(
         if unique_occurrences.len() < 2 {
             continue;
         }
-        // In aggregate mode preserve standalone semantics: a suppressed
-        // occurrence must not turn an unsuppressed export into a duplicate.
-        let first = unique_occurrences
-            .iter()
-            .find(|occurrence| !occurrence.suppressed)
-            .unwrap_or(&unique_occurrences[0]);
+        // Standalone collection removes suppressed occurrences before this
+        // point. Deferred audit keeps their lexical canonical provenance so
+        // accounting can identify the directive source without changing the
+        // ordinary visible report.
+        let first = &unique_occurrences[0];
         for duplicate in unique_occurrences
             .iter()
             .filter(|item| !std::ptr::eq(*item, first))
