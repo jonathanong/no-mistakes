@@ -94,10 +94,10 @@ pub(super) fn matrix_axis_value(value: &Value) -> Option<StaticValue> {
         Value::String(value) => static_expression_value(value, &InputState::new())
             .or_else(|| Some(StaticValue::String(value.clone()))),
         Value::Null => Some(StaticValue::Null),
-        // Static object-valued matrix entries are known values even though
-        // GitHub expressions cannot stringify them. Keep that distinct from
-        // an omitted matrix property, which coerces to an empty string.
-        Value::Mapping(_) => Some(StaticValue::NonStringable),
+        // Static object-valued matrix entries are known, truthy values even
+        // though GitHub expressions cannot stringify them. Keep that distinct
+        // from an omitted matrix property, which coerces to an empty string.
+        Value::Mapping(_) => Some(StaticValue::Mapping),
         Value::Sequence(_) | Value::Tagged(_) => None,
     }
 }

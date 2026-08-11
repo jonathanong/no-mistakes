@@ -80,6 +80,7 @@ pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {
             | StaticValue::Number(_)
             | StaticValue::Null
             | StaticValue::Sequence(_)
+            | StaticValue::Mapping
             | StaticValue::NonStringable => StaticValue::Unknown,
         }
     } else {

@@ -33,6 +33,7 @@ fn expressions_resolve_current_inputs_and_matrix_values_with_string_coercion() {
             "\0matrix.target".to_string(),
             StaticValue::String("linux".to_string()),
         ),
+        ("\0matrix.cfg".to_string(), StaticValue::Mapping),
         ("\0matrix.dynamic".to_string(), StaticValue::Unknown),
     ]);
 
@@ -42,6 +43,7 @@ fn expressions_resolve_current_inputs_and_matrix_values_with_string_coercion() {
         ("${{ inputs.empty }}", StaticValue::String(String::new())),
         ("${{ inputs.missing }}", StaticValue::String(String::new())),
         ("${{ matrix.target }}", StaticValue::String("linux".into())),
+        ("${{ matrix.cfg }}", StaticValue::Unknown),
         ("${{ matrix.dynamic_target }}", StaticValue::Unknown),
         ("prefix-${{ inputs.enabled }}", StaticValue::Unknown),
     ] {

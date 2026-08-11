@@ -12,6 +12,7 @@ fn truthy_nonboolean_values_preserve_expression_semantics() {
             StaticValue::Sequence(Vec::new()),
             StaticBool::TruthyNonBoolean,
         ),
+        (StaticValue::Mapping, StaticBool::TruthyNonBoolean),
         (StaticValue::NonStringable, StaticBool::Unknown),
     ] {
         assert_eq!(value.function_string(), None);

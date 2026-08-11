@@ -117,3 +117,35 @@ fn max_parallel_rechecks_resolved_input_values() {
         &InputState::new()
     ));
 }
+
+#[test]
+fn fail_fast_rechecks_resolved_input_values() {
+    let job = strategy("strategy:\n  fail-fast: '${{ fromJSON(inputs.fail_fast) }}'");
+    let mut inputs = InputState::new();
+    for invalid in ["{}", "[]", "1", "null", "\"enabled\""] {
+        inputs.insert(
+            "fail_fast".to_string(),
+            StaticValue::String(invalid.to_string()),
+        );
+        assert!(
+            !strategy_configuration_valid_for_inputs(&job, &inputs),
+            "{invalid}"
+        );
+    }
+    for valid in ["true", "false"] {
+        inputs.insert(
+            "fail_fast".to_string(),
+            StaticValue::String(valid.to_string()),
+        );
+        assert!(
+            strategy_configuration_valid_for_inputs(&job, &inputs),
+            "{valid}"
+        );
+    }
+
+    let dynamic = strategy("strategy:\n  fail-fast: '${{ github.ref_protected }}'");
+    assert!(strategy_configuration_valid_for_inputs(
+        &dynamic,
+        &InputState::new()
+    ));
+}

@@ -251,6 +251,13 @@ fn container_and_service_images_require_static_docker_references() {
         assert!(!scan_job_shape_valid(&job), "{image}");
     }
 
+    let short_sha256 = format!("node@sha256:{}", "a".repeat(63));
+    let job = serde_yaml::from_str::<Value>(&format!(
+        "runs-on: ubuntu-latest\ncontainer: {{image: \"{short_sha256}\"}}\nsteps:\n  - run: echo invalid"
+    ))
+    .unwrap();
+    assert!(!scan_job_shape_valid(&job), "{short_sha256}");
+
     for image in [
         "${{ matrix.image }}",
         "ghcr.io/octo-org/checker:${{ matrix.tag }}",

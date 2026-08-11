@@ -1,18 +1,16 @@
-use super::values::only_keys;
 use serde_yaml::{Mapping, Value};
 
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    resolve_static_interpolations, EnvironmentState, InputState,
-};
-
 use super::super::super::super::expressions::{
-    complete_expression_contexts_available, complete_expression_contexts_with_hash_files_available,
-    complete_expression_type, complete_literal_expression_value,
-    condition_expression_contexts_available,
+    complete_expression_contexts_with_hash_files_available, complete_expression_type,
+    complete_literal_expression_value, condition_expression_contexts_available,
     interpolated_expression_contexts_and_hash_files_available,
     interpolated_expression_contexts_available, interpolated_expression_valid,
     invalid_literal_from_json, StaticExpressionType,
 };
+
+mod strategy;
+pub(crate) use strategy::strategy_configuration_valid_for_inputs;
+pub(super) use strategy::strategy_shape_valid;
 
 pub(super) const JOB_CONDITION_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
 pub(super) const STEP_CONDITION_CONTEXTS: &[&str] = &[
@@ -26,79 +24,12 @@ pub(super) const STEP_CONTINUE_ON_ERROR_CONTEXTS: &[&str] = &[
 ];
 pub(super) const JOB_TIMEOUT_CONTEXTS: &[&str] = JOB_CONTINUE_ON_ERROR_CONTEXTS;
 pub(super) const STEP_TIMEOUT_CONTEXTS: &[&str] = STEP_CONTINUE_ON_ERROR_CONTEXTS;
-const STRATEGY_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
 pub(super) const JOB_NAME_CONTEXTS: &[&str] =
     &["github", "needs", "strategy", "matrix", "vars", "inputs"];
 pub(super) const STEP_STRING_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "steps",
     "inputs",
 ];
-
-pub(super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
-    value.is_none_or(|value| {
-        value.as_mapping().is_some_and(|strategy| {
-            !strategy.is_empty()
-                && only_keys(strategy, &["fail-fast", "max-parallel", "matrix"])
-                && strategy.get("fail-fast").is_none_or(|value| {
-                    value.is_bool()
-                        || value
-                            .as_str()
-                            .is_some_and(strategy_fail_fast_expression_valid)
-                })
-                && strategy.get("max-parallel").is_none_or(|value| {
-                    value.as_u64().is_some_and(|value| value > 0)
-                        || value
-                            .as_str()
-                            .is_some_and(strategy_max_parallel_expression_valid)
-                })
-        })
-    })
-}
-
-pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &InputState) -> bool {
-    let Some(max_parallel) = job
-        .get("strategy")
-        .and_then(Value::as_mapping)
-        .and_then(|strategy| strategy.get("max-parallel"))
-    else {
-        return true;
-    };
-    if max_parallel.as_u64().is_some_and(|value| value > 0) {
-        return true;
-    }
-    let Some(expression) = max_parallel.as_str() else {
-        return false;
-    };
-    resolve_static_interpolations(expression, inputs, &EnvironmentState::default()).is_none_or(
-        |resolved| {
-            serde_yaml::from_str::<Value>(&resolved)
-                .ok()
-                .and_then(|value| value.as_u64())
-                .is_some_and(|value| value > 0)
-        },
-    )
-}
-
-fn strategy_fail_fast_expression_valid(value: &str) -> bool {
-    complete_expression_contexts_available(value, STRATEGY_CONTEXTS)
-        && !invalid_literal_from_json(value)
-        && matches!(
-            complete_expression_type(value),
-            Some(StaticExpressionType::Boolean | StaticExpressionType::Dynamic)
-        )
-        && complete_literal_expression_value(value).is_none_or(|literal| literal.is_bool())
-}
-
-fn strategy_max_parallel_expression_valid(value: &str) -> bool {
-    complete_expression_contexts_available(value, STRATEGY_CONTEXTS)
-        && !invalid_literal_from_json(value)
-        && matches!(
-            complete_expression_type(value),
-            Some(StaticExpressionType::Number | StaticExpressionType::Dynamic)
-        )
-        && complete_literal_expression_value(value)
-            .is_none_or(|literal| literal.as_u64().is_some_and(|parallelism| parallelism > 0))
-}
 
 pub(super) fn string_field_valid(
     mapping: &Mapping,

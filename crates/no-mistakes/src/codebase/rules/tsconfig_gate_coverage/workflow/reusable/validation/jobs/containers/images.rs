@@ -20,8 +20,22 @@ fn valid_digest(digest: &str) -> bool {
                 .is_some_and(|byte| byte.is_ascii_alphabetic())
                 && component.bytes().all(|byte| byte.is_ascii_alphanumeric())
         })
-        && encoded.len() >= 32
+        && valid_encoded_digest_length(algorithm, encoded)
         && encoded.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
+fn valid_encoded_digest_length(algorithm: &str, encoded: &str) -> bool {
+    let expected_length = [
+        ("md5", 32),
+        ("sha1", 40),
+        ("sha224", 56),
+        ("sha256", 64),
+        ("sha384", 96),
+        ("sha512", 128),
+    ]
+    .into_iter()
+    .find_map(|(recognized, length)| algorithm.eq_ignore_ascii_case(recognized).then_some(length));
+    expected_length.map_or(encoded.len() >= 32, |length| encoded.len() == length)
 }
 
 fn valid_name(value: &str) -> bool {

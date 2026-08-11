@@ -125,11 +125,14 @@ fn failure_propagating_shell_constructs_block_later_steps() {
 fn pipefail_preserves_final_pipeline_and_and_list_status_without_errexit() {
     let workflow = document(
         ".github/workflows/custom-pipefail.yml",
-        "on: push\njobs:\n  pipeline:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash -o pipefail {0}'\n        run: 'false | true'\n      - run: tsc --noEmit -p pipeline/tsconfig.json\n  and-list:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash\n        run: 'false | true && echo masked'\n      - run: tsc --noEmit -p and-list/tsconfig.json\n  completed:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'false | true && echo masked; echo completed'\n      - run: tsc --noEmit -p completed/tsconfig.json\n",
+        "on: push\njobs:\n  pipeline:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash -o pipefail {0}'\n        run: 'false | true'\n      - run: tsc --noEmit -p pipeline/tsconfig.json\n  inline:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'false | true && tsc --noEmit -p inline/tsconfig.json'\n  and-list:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash\n        run: 'false | true && echo masked'\n      - run: tsc --noEmit -p and-list/tsconfig.json\n  completed:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'false | true && echo masked; echo completed'\n      - run: tsc --noEmit -p completed/tsconfig.json\n",
     );
 
     assert_eq!(
-        scanned_projects(vec![workflow], &["pipeline", "and-list", "completed"]),
+        scanned_projects(
+            vec![workflow],
+            &["pipeline", "inline", "and-list", "completed"],
+        ),
         BTreeSet::from(["completed/tsconfig.json".to_string()])
     );
 }

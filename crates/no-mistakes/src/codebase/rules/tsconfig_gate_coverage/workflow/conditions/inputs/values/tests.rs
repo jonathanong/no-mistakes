@@ -70,14 +70,14 @@ fn forwarded_values_cover_event_matrix_and_unavailable_inputs() {
 }
 
 #[test]
-fn matrix_axis_values_preserve_static_object_values_as_non_stringable() {
+fn matrix_axis_values_preserve_static_object_values_as_mappings() {
     for (yaml, expected) in [
         ("false", Some(StaticValue::Bool(false))),
         ("2", Some(StaticValue::Number("2".to_string()))),
         ("release", Some(StaticValue::String("release".to_string()))),
         ("null", Some(StaticValue::Null)),
         ("[release]", None),
-        ("{target: release}", Some(StaticValue::NonStringable)),
+        ("{target: release}", Some(StaticValue::Mapping)),
     ] {
         let value = serde_yaml::from_str(yaml).expect("valid YAML scalar or structure");
         assert_eq!(matrix_axis_value(&value), expected, "{yaml}");

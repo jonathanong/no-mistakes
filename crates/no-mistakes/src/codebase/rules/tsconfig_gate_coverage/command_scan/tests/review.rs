@@ -57,6 +57,8 @@ fn shell_scanner_rejects_unmodeled_function_and_group_bodies() {
 fn shell_scanner_does_not_credit_masked_and_list_commands() {
     for script in [
         "! true && tsc --noEmit --project app/tsconfig.json; true",
+        "false | true && tsc --noEmit --project app/tsconfig.json",
+        "dynamic-command | true && tsc --noEmit --project app/tsconfig.json",
         "tsc --noEmit --project app/tsconfig.json && echo checked; echo done",
         "cd app && tsc --noEmit; echo done",
     ] {

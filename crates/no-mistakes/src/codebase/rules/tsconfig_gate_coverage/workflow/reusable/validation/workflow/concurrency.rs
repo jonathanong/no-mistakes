@@ -81,7 +81,10 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
     if !interpolation_expressions_all(group, |expression| {
         let expression = format!("${{{{ {expression} }}}}");
         complete_expression_static_value(&expression, inputs).is_none_or(|value| {
-            !matches!(value, StaticValue::Sequence(_) | StaticValue::NonStringable)
+            !matches!(
+                value,
+                StaticValue::Sequence(_) | StaticValue::Mapping | StaticValue::NonStringable
+            )
         })
     }) {
         return false;
@@ -94,6 +97,7 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
             | StaticValue::Number(_)
             | StaticValue::Null
             | StaticValue::Sequence(_)
+            | StaticValue::Mapping
             | StaticValue::NonStringable => false,
         };
     }

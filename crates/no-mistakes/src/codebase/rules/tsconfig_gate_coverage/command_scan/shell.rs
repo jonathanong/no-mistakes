@@ -33,8 +33,12 @@ pub(super) fn scan_shell_body_for_typechecked_projects(
         if segments.len() > 1 && !final_group {
             return Vec::new();
         }
-        for segment in segments {
+        let segment_count = segments.len();
+        for (segment_index, segment) in segments.into_iter().enumerate() {
             let Some(tokens) = static_tokens(segment) else {
+                if segment_index + 1 < segment_count {
+                    break;
+                }
                 continue;
             };
             let first = tokens

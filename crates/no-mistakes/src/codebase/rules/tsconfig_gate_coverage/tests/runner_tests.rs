@@ -57,9 +57,9 @@ fn ci_scanner_only_credits_implicit_shells_on_known_posix_runners() {
 }
 
 #[test]
-fn ci_scanner_does_not_credit_static_object_matrix_values_as_missing_properties() {
+fn ci_scanner_distinguishes_truthy_object_matrix_values_from_missing_properties() {
     let workflow: Value = serde_yaml::from_str(
-        "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        cfg: [{package: app}]\n    if: ${{ matrix.cfg == '' }}\n    steps:\n      - run: tsc --noEmit --project object-matrix/tsconfig.json\n",
+        "on: push\njobs:\n  missing-comparison:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        cfg: [{package: app}]\n    steps:\n      - if: ${{ matrix.cfg == '' }}\n        run: tsc --noEmit --project object-matrix-missing/tsconfig.json\n  truthy-object:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        cfg: [{package: app}]\n    steps:\n      - if: ${{ matrix.cfg }}\n        run: tsc --noEmit --project object-matrix-truthy/tsconfig.json\n  negated-object:\n    runs-on: ubuntu-latest\n    strategy:\n      matrix:\n        cfg: [{package: app}]\n    steps:\n      - if: ${{ !matrix.cfg }}\n        run: tsc --noEmit --project object-matrix-negated/tsconfig.json\n",
     )
     .unwrap();
     let workflows = ParsedWorkflowSet {
@@ -68,11 +68,15 @@ fn ci_scanner_does_not_credit_static_object_matrix_values_as_missing_properties(
             value: Ok(workflow),
         }],
     };
-    let projects = BTreeSet::from(["object-matrix/tsconfig.json".to_string()]);
+    let projects = BTreeSet::from([
+        "object-matrix-missing/tsconfig.json".to_string(),
+        "object-matrix-negated/tsconfig.json".to_string(),
+        "object-matrix-truthy/tsconfig.json".to_string(),
+    ]);
 
     assert_eq!(
         ci_typechecked_projects(&workflows, &projects, &project_inputs(&projects)),
-        BTreeSet::new()
+        BTreeSet::from(["object-matrix-truthy/tsconfig.json".to_string()])
     );
 }
 

@@ -146,7 +146,10 @@ fn action_input_interpolations_stringable(
         let expression = format!("${{{{ {expression} }}}}");
         complete_expression_static_value_with_environment(&expression, inputs, environment)
             .is_none_or(|value| {
-                !matches!(value, StaticValue::Sequence(_) | StaticValue::NonStringable)
+                !matches!(
+                    value,
+                    StaticValue::Sequence(_) | StaticValue::Mapping | StaticValue::NonStringable
+                )
             })
     })
 }

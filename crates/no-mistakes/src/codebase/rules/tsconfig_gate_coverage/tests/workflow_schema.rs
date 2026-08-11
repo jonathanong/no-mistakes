@@ -6,6 +6,7 @@ mod matrix_exclusions;
 mod ports_concurrency;
 mod review_contexts;
 mod runner_container_runtime;
+mod strategy_runtime;
 
 fn workflow(path: &str, yaml: &str) -> ParsedWorkflowDocument {
     ParsedWorkflowDocument {

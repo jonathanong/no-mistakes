@@ -140,9 +140,10 @@ fn string_static_value(value: StaticValue) -> StaticValue {
         StaticValue::Bool(value) => StaticValue::String(value.to_string()),
         StaticValue::Number(value) | StaticValue::String(value) => StaticValue::String(value),
         StaticValue::Null => StaticValue::String(String::new()),
-        StaticValue::Sequence(_) | StaticValue::NonStringable | StaticValue::Unknown => {
-            StaticValue::Unknown
-        }
+        StaticValue::Sequence(_)
+        | StaticValue::Mapping
+        | StaticValue::NonStringable
+        | StaticValue::Unknown => StaticValue::Unknown,
     }
 }
 

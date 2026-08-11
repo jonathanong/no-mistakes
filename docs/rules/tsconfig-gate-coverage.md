@@ -164,7 +164,8 @@ and `matrix`. Job and step `continue-on-error` expressions, plus environment
 names and URLs, use their own GitHub context/function sets; status functions are not
 accepted in `continue-on-error`. Strategy `fail-fast` expressions use the
 documented strategy contexts and must be boolean when their result type is
-statically known; `max-parallel` must similarly be a positive integer.
+statically known, including after reusable-input resolution; `max-parallel`
+must similarly be a positive integer.
 Reusable-input `max-parallel` expressions are rechecked with the active input
 values, so a value that resolves to zero or a non-integer cannot provide
 coverage.
@@ -192,8 +193,10 @@ environment, port, volume, option, and registry-credential expressions each
 accept only the contexts GitHub exposes at that field; a step-only context
 cannot validate an earlier container configuration. Runner labels and
 container/service images likewise reject contexts and functions unavailable at
-their own fields. A fully static image must be a valid Docker reference; an
-image that remains dynamic, including one that depends on a dynamic matrix,
+their own fields. A fully static image must be a valid Docker reference; known
+digest algorithms require their standard encoded hexadecimal length, while
+otherwise-valid extensible algorithms retain the conservative minimum length.
+An image that remains dynamic, including one that depends on a dynamic matrix,
 does not earn typecheck coverage because its Docker reference cannot be
 validated. Resolved registry usernames and passwords must be non-empty;
 available secret values remain opaque, while an omitted reusable secret

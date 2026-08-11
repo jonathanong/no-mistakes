@@ -82,6 +82,9 @@ pub(super) enum StaticValue {
     Number(String),
     Null,
     Sequence(Vec<Self>),
+    /// A known static YAML mapping from a matrix axis. It is truthy in
+    /// conditions but cannot be coerced to a GitHub string.
+    Mapping,
     NonStringable,
     Unknown,
 }

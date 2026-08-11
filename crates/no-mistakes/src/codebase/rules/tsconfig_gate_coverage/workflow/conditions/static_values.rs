@@ -49,7 +49,7 @@ fn static_from_json(
     let value = static_expression_value(argument, inputs, environment)?;
     let encoded = match value {
         StaticValue::Unknown => return None,
-        StaticValue::Sequence(_) | StaticValue::NonStringable => {
+        StaticValue::Sequence(_) | StaticValue::Mapping | StaticValue::NonStringable => {
             return Some(StaticValue::NonStringable)
         }
         value => value.function_string()?,
