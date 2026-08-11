@@ -127,7 +127,7 @@ fn aggregate_children_cached(
             crate::codebase::ts_source::normalize_discovery_path(Path::new(&child_ref.file));
         let child_facts_opt = child_path_index
             .get(&child_ref.file)
-            .or_else(|| child_path_index.get(normalized_child_file.to_string_lossy().as_ref()))
+            .or(child_path_index.get(normalized_child_file.to_string_lossy().as_ref()))
             .and_then(|path| file_cache.get(path))
             .and_then(|comps| comps.iter().find(|c| c.name == child_ref.name));
         if let Some(child_facts) = child_facts_opt {

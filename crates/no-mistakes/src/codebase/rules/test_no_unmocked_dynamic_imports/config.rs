@@ -66,7 +66,10 @@ fn precompute_setup_data_from_config_files_inner(
     for config_file in config_files {
         let source = match sources {
             Some(sources) => crate::codebase::rules::read_source(sources, &config_file.path)
-                .ok_or_else(|| anyhow::anyhow!("failed to read {}", config_file.path.display()))?
+                .ok_or(anyhow::anyhow!(
+                    "failed to read {}",
+                    config_file.path.display()
+                ))?
                 .to_string(),
             None => std::fs::read_to_string(&config_file.path)?,
         };
@@ -141,7 +144,7 @@ fn setup_files_from_configs_inner(
     for config_file in config_files {
         let source = match sources {
             Some(sources) => crate::codebase::rules::read_source(sources, &config_file)
-                .ok_or_else(|| anyhow::anyhow!("failed to read {}", config_file.display()))?
+                .ok_or(anyhow::anyhow!("failed to read {}", config_file.display()))?
                 .to_string(),
             None => std::fs::read_to_string(&config_file)?,
         };

@@ -14,7 +14,7 @@ pub(super) fn component_is_suppressed(
     let rooted_component_path = normalize_path(&root.join(&component.file));
     sources
         .get(&component_path)
-        .or_else(|| sources.get(&rooted_component_path))
+        .or(sources.get(&rooted_component_path))
         .map(Arc::as_ref)
         .is_some_and(|source| {
             // Stale allow-components auditing must use exactly the directives

@@ -144,9 +144,12 @@ pub(crate) fn impacted_checks_json_impl(options_json: String) -> napi::Result<St
     let Some(timings) = timing.into_timings() else {
         return to_pretty_json(&report);
     };
-    let mut value = serde_json::to_value(&report).map_err(|error| to_napi_error(error.into()))?;
-    value["timings"] =
-        serde_json::to_value(timings).map_err(|error| to_napi_error(error.into()))?;
+    let mut value = serde_json::to_value(&report)
+        .map_err(anyhow::Error::from)
+        .map_err(to_napi_error)?;
+    value["timings"] = serde_json::to_value(timings)
+        .map_err(anyhow::Error::from)
+        .map_err(to_napi_error)?;
     to_pretty_json(&value)
 }
 

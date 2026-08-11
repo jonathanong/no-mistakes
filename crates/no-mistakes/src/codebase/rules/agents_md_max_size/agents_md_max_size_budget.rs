@@ -35,7 +35,7 @@ pub(super) fn scan_with_sources(
             )
         })
         .collect();
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    findings.sort();
     Ok(findings)
 }
 
@@ -71,7 +71,7 @@ pub(super) fn scan_advisories_with_sources_deferred(
             )
         })
         .collect();
-    advisories.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    advisories.sort();
     Ok(advisories)
 }
 

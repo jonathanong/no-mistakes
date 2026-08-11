@@ -564,5 +564,6 @@ mod async_task_tests;
 mod check;
 mod ci;
 mod react_usages;
+mod suppression_contract_tests;
 mod tests_entrypoints;
 mod tests_sample_when_limited;
