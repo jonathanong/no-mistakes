@@ -81,11 +81,12 @@ pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &Inpu
 
 fn strategy_fail_fast_expression_valid(value: &str) -> bool {
     complete_expression_contexts_available(value, STRATEGY_CONTEXTS)
-        && complete_literal_expression_value(value).is_none_or(|literal| literal.is_bool())
+        && !invalid_literal_from_json(value)
         && matches!(
             complete_expression_type(value),
             Some(StaticExpressionType::Boolean | StaticExpressionType::Dynamic)
         )
+        && complete_literal_expression_value(value).is_none_or(|literal| literal.is_bool())
 }
 
 fn strategy_max_parallel_expression_valid(value: &str) -> bool {

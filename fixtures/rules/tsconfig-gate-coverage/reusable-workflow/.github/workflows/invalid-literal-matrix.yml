@@ -1,0 +1,9 @@
+name: Invalid literal matrix
+on: push
+jobs:
+  typecheck:
+    strategy:
+      matrix: "${{ fromJSON('[\"ubuntu-latest\"]') }}"
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project invalid-literal-matrix/tsconfig.json

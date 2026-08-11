@@ -1,5 +1,6 @@
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
-    complete_expression_contexts_available, interpolated_expression_contexts_available,
+    complete_expression_contexts_available, complete_literal_expression_value,
+    interpolated_expression_contexts_available,
 };
 use serde_yaml::Value;
 use std::collections::BTreeMap;
@@ -64,7 +65,9 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
 }
 
 fn matrix_expression_may_be_mapping(value: &str) -> bool {
-    matrix_expression_valid(value) && super::super::super::complete_expression_may_be_mapping(value)
+    matrix_expression_valid(value)
+        && complete_literal_expression_value(value).is_none_or(|value| value.as_mapping().is_some())
+        && super::super::super::complete_expression_may_be_mapping(value)
 }
 
 fn matrix_expression_valid(value: &str) -> bool {

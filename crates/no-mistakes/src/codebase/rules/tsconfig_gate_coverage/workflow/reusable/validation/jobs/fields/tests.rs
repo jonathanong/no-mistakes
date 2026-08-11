@@ -63,6 +63,11 @@ fn strategy_fields_require_documented_contexts_and_scalar_shapes() {
     }
 
     for yaml in [
+        "fail-fast: \"${{ fromJSON('null') }}\"",
+        "fail-fast: \"${{ fromJSON('1') }}\"",
+        "fail-fast: \"${{ fromJSON('\\\"enabled\\\"') }}\"",
+        "fail-fast: \"${{ fromJSON('[true]') }}\"",
+        "fail-fast: \"${{ fromJSON('{\\\"enabled\\\":true}') }}\"",
         "fail-fast: 1",
         "fail-fast: 'false'",
         "max-parallel: 0",
@@ -87,6 +92,12 @@ fn strategy_fields_require_documented_contexts_and_scalar_shapes() {
         "max-parallel: '${{ 1.5 }}'",
     ] {
         assert!(!strategy_shape_valid(Some(&strategy(yaml))), "{yaml}");
+    }
+    for yaml in [
+        "fail-fast: \"${{ fromJSON('true') }}\"",
+        "fail-fast: \"${{ fromJSON(needs.setup.outputs.fail_fast) }}\"",
+    ] {
+        assert!(strategy_shape_valid(Some(&strategy(yaml))), "{yaml}");
     }
 }
 

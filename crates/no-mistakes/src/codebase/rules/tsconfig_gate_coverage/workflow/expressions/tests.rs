@@ -180,6 +180,7 @@ fn distinguishes_mapping_candidates_from_guaranteed_scalars() {
 fn validates_interpolated_expression_strings() {
     for value in [
         "literal name",
+        "literal }}",
         "build ${{ github.ref }}",
         "${{ github.repository }} checks ${{ github.ref }}",
         "${{ format('{0}}}', github.ref) }}",
@@ -187,7 +188,12 @@ fn validates_interpolated_expression_strings() {
     ] {
         assert!(interpolated_expression_valid(value), "{value}");
     }
-    for value in ["${{ }}", "build ${{ github.ref", "${{ arbitrary() }}"] {
+    for value in [
+        "${{ }}",
+        "build ${{ github.ref",
+        "build ${{ github.ref }",
+        "${{ arbitrary() }}",
+    ] {
         assert!(!interpolated_expression_valid(value), "{value}");
     }
     assert_eq!(

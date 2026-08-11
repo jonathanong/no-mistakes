@@ -246,6 +246,26 @@ fn root_matrix_expression_requires_a_dynamic_result() {
 }
 
 #[test]
+fn root_matrix_rejects_literal_non_mapping_from_json_values() {
+    for expression in [
+        "fromJSON('null')",
+        "fromJSON('true')",
+        "fromJSON('42')",
+        "fromJSON('\\\"matrix\\\"')",
+        "fromJSON('[\\\"linux\\\"]')",
+    ] {
+        let yaml = format!("strategy:\n  matrix: \"${{{{ {expression} }}}}\"");
+        assert!(!matrix_shape_valid(&job(&yaml)), "{expression}");
+    }
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix: \"${{ fromJSON('{\\\"os\\\":[\\\"ubuntu-latest\\\"]}') }}\""
+    )));
+    assert!(matrix_shape_valid(&job(
+        "strategy:\n  matrix: \"${{ fromJSON(needs.setup.outputs.matrix) }}\""
+    )));
+}
+
+#[test]
 fn static_matrix_shape_enforces_the_github_job_limit() {
     assert!(matrix_shape_valid(&job(
         "strategy:\n  matrix:\n    a: [1, 2]\n    b: [3, 4]"

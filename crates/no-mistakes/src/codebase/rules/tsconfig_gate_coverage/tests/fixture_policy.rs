@@ -27,11 +27,14 @@ fn workflow_paths_must_cover_every_source_selected_by_the_project() {
 fn reusable_workflow_callers_cover_filaments_style_static_typecheck_jobs() {
     let root = fixture_root("reusable-workflow");
     let report = findings(&root, &config(&root));
-    assert_eq!(report.len(), 2, "{report:#?}");
+    assert_eq!(report.len(), 4, "{report:#?}");
     assert!(
-        report
-            .iter()
-            .all(|finding| finding.file == "caller-only/tsconfig.json"),
+        report.iter().all(|finding| matches!(
+            finding.file.as_str(),
+            "caller-only/tsconfig.json"
+                | "invalid-literal-fail-fast/tsconfig.json"
+                | "invalid-literal-matrix/tsconfig.json"
+        )),
         "{report:#?}"
     );
     assert!(
@@ -46,6 +49,20 @@ fn reusable_workflow_callers_cover_filaments_style_static_typecheck_jobs() {
             .any(|finding| finding.message.contains("no local typecheck registration")),
         "{report:#?}"
     );
+    for project in [
+        "invalid-literal-fail-fast/tsconfig.json",
+        "invalid-literal-matrix/tsconfig.json",
+    ] {
+        assert!(report.iter().any(|finding| {
+            finding.file == project && finding.message.contains("no CI typecheck registration")
+        }));
+        assert!(report.iter().all(|finding| {
+            finding.file != project || !finding.message.contains("no local typecheck registration")
+        }));
+    }
+    assert!(report
+        .iter()
+        .all(|finding| finding.file != "literal-closing-braces/tsconfig.json"));
 }
 
 #[test]

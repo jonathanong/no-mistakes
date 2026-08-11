@@ -20,6 +20,18 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, cloudflare-worker/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-invalid-literal-fail-fast
+      command: [pnpm, exec, tsc, --noEmit, --project, invalid-literal-fail-fast/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-invalid-literal-matrix
+      command: [pnpm, exec, tsc, --noEmit, --project, invalid-literal-matrix/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-literal-closing-braces
+      command: [pnpm, exec, tsc, --noEmit, --project, literal-closing-braces/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository
