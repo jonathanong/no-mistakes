@@ -1,8 +1,11 @@
 use super::{
-    comparison_literal, condition_input_value, event_action_value, event_name_value, functions,
-    literal_from_json_static_value, logical,
+    event_action_value, event_name_value, functions,
+    input_value::comparison_literal,
+    literals::status_function_bool,
+    logical,
+    resolution::{condition_input_value, literal_from_json_static_value},
     resolution::{github_event_action, github_event_name},
-    status_function_bool, EnvironmentState, InputState, StaticBool, StaticValue,
+    EnvironmentState, InputState, StaticBool, StaticValue,
 };
 
 pub(super) fn condition_value(

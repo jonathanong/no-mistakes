@@ -1,4 +1,8 @@
-use super::{continues_after_skipped_need, static_bool, InputState, StaticBool, StaticValue};
+use super::{
+    continues_after_skipped_need,
+    literals::{hexadecimal_bool, number_bool},
+    static_bool, InputState, StaticBool, StaticValue,
+};
 use serde_yaml::Value;
 
 #[test]
@@ -467,12 +471,9 @@ fn literal_and_parenthesized_condition_helpers_cover_static_paths() {
     let inputs = InputState::new();
     assert_eq!(StaticBool::TruthyNonBoolean.truthiness(), StaticBool::True);
     assert_eq!(StaticValue::Null.truthiness(), StaticBool::False);
-    assert_eq!(
-        super::hexadecimal_bool("0x1"),
-        Some(StaticBool::TruthyNonBoolean)
-    );
-    assert_eq!(super::number_bool(Some(2.0)), StaticBool::TruthyNonBoolean);
-    assert_eq!(super::number_bool(None), StaticBool::Unknown);
+    assert_eq!(hexadecimal_bool("0x1"), Some(StaticBool::TruthyNonBoolean));
+    assert_eq!(number_bool(Some(2.0)), StaticBool::TruthyNonBoolean);
+    assert_eq!(number_bool(None), StaticBool::Unknown);
     for expression in ["(true)", "((true))", "(true"] {
         assert_eq!(
             static_bool(Some(&Value::String(expression.into())), &inputs),

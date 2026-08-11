@@ -10,6 +10,8 @@ use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod bindings;
+#[cfg(test)]
+mod default_value_tests;
 mod secrets;
 mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};

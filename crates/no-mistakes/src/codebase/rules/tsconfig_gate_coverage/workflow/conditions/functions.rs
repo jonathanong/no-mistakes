@@ -1,6 +1,6 @@
 use super::{
-    comparison_literal, condition_value, input_name, EnvironmentState, InputState, StaticBool,
-    StaticValue,
+    condition_values::condition_value, input_value::comparison_literal, resolution::input_name,
+    EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_function_call, Function,

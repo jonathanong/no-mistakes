@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 mod condition_values;
 mod contracts;
 mod environment;
+mod evaluation;
 mod functions;
 mod input_value;
 mod inputs;
@@ -11,19 +12,18 @@ mod literals;
 mod logical;
 mod resolution;
 
-use condition_values::{comparison_bool, condition_value};
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
 pub(super) use environment::EnvironmentState;
-use input_value::comparison_literal;
+use evaluation::{continues_after_skipped_need, static_bool};
+pub(super) use evaluation::{
+    expression_bool, expression_bool_with_status_and_environment, statically_not_enforcing,
+    statically_not_enforcing_with_environment, step_timeout_minutes_enforced,
+};
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, MatrixState,
     SecretAvailability, SecretState,
 };
 use inputs::{event_action_value, event_name_value};
-use literals::{
-    hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
-};
-use resolution::{condition_input_value, input_name, literal_from_json_static_value};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -77,165 +77,6 @@ pub(super) fn statically_skipped_jobs(
             return skipped;
         }
     }
-}
-
-pub(super) fn statically_not_enforcing(value: &Value, inputs: &InputState) -> bool {
-    statically_not_enforcing_with_environment(value, inputs, &EnvironmentState::default())
-}
-
-pub(super) fn statically_not_enforcing_with_environment(
-    value: &Value,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> bool {
-    static_bool_with_environment(value.get("if"), inputs, environment) == StaticBool::False
-        || static_bool_with_environment(value.get("continue-on-error"), inputs, environment)
-            == StaticBool::True
-}
-
-/// Credit a timed step only when its timeout is statically known to be within
-/// GitHub's 1..=360 minute step limit. Unknown (including dynamic matrices)
-/// remains conservative rather than assuming a valid timeout.
-pub(super) fn step_timeout_minutes_enforced(value: Option<&Value>, inputs: &InputState) -> bool {
-    value.is_none_or(|value| match value {
-        Value::Number(value) => value.as_u64().is_some_and(valid_step_timeout_minutes),
-        Value::String(expression) => {
-            super::expressions::complete_literal_expression_value(expression)
-                .or_else(|| {
-                    let expression = strip_expression(expression.trim());
-                    condition_input_value(expression, inputs, &EnvironmentState::default())
-                        .and_then(|value| match value {
-                            StaticValue::Number(value) => serde_yaml::from_str(&value).ok(),
-                            _ => None,
-                        })
-                })
-                .and_then(|value| value.as_u64())
-                .is_some_and(valid_step_timeout_minutes)
-        }
-        _ => false,
-    })
-}
-
-fn valid_step_timeout_minutes(minutes: u64) -> bool {
-    (1..=360).contains(&minutes)
-}
-
-fn static_bool(value: Option<&Value>, inputs: &InputState) -> StaticBool {
-    static_bool_with_environment(value, inputs, &EnvironmentState::default())
-}
-
-fn static_bool_with_environment(
-    value: Option<&Value>,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> StaticBool {
-    match value {
-        Some(Value::Bool(value)) => StaticBool::from(*value),
-        Some(Value::Number(value)) => number_bool(value.as_f64()),
-        Some(Value::Null) => StaticBool::False,
-        Some(Value::String(expression)) => {
-            expression_bool_with_environment(expression, inputs, environment)
-        }
-        _ => StaticBool::Unknown,
-    }
-}
-
-fn expression_bool(expression: &str, inputs: &InputState) -> StaticBool {
-    expression_bool_with_status_and_environment(
-        expression,
-        inputs,
-        &EnvironmentState::default(),
-        StaticBool::True,
-    )
-}
-
-fn expression_bool_with_status(
-    expression: &str,
-    inputs: &InputState,
-    success: StaticBool,
-) -> StaticBool {
-    expression_bool_with_status_and_environment(
-        expression,
-        inputs,
-        &EnvironmentState::default(),
-        success,
-    )
-}
-
-fn expression_bool_with_environment(
-    expression: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-) -> StaticBool {
-    expression_bool_with_status_and_environment(expression, inputs, environment, StaticBool::True)
-}
-
-fn expression_bool_with_status_and_environment(
-    expression: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-    success: StaticBool,
-) -> StaticBool {
-    let expression = strip_expression(expression.trim());
-    if super::expressions::condition_expression_valid(expression) {
-        if let Some(value) = logical::compound_bool(expression, inputs, environment, success) {
-            return value;
-        }
-    }
-    if expression.is_empty() || expression.eq_ignore_ascii_case("false") {
-        return StaticBool::False;
-    }
-    if expression.eq_ignore_ascii_case("true") {
-        return StaticBool::True;
-    }
-    if expression.eq_ignore_ascii_case("null") {
-        return StaticBool::False;
-    }
-    if let Some(value) = status_function_bool(expression, success) {
-        return value;
-    }
-    if let Some(value) = functions::static_function_bool(expression, inputs, environment, success) {
-        return value;
-    }
-    if let Some(value) = quoted_string_bool(expression) {
-        return value;
-    }
-    if let Some(value) = hexadecimal_bool(expression) {
-        return value;
-    }
-    if let Ok(value) = expression.parse::<f64>() {
-        return number_bool(Some(value));
-    }
-    resolve_input_expression(expression, inputs, environment, success)
-}
-
-fn resolve_input_expression(
-    expression: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-    success: StaticBool,
-) -> StaticBool {
-    if let Some(value) = comparison_bool(expression, inputs, environment, success) {
-        return value;
-    }
-    if let Some(value) = condition_value(expression, inputs, environment, success) {
-        return value.truthiness();
-    }
-    if let Some(operand) = expression.strip_prefix('!').map(str::trim) {
-        return expression_bool_with_status_and_environment(operand, inputs, environment, success)
-            .negate();
-    }
-    StaticBool::Unknown
-}
-
-fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
-    job.get("if")
-        .and_then(Value::as_str)
-        .is_some_and(|expression| {
-            super::expressions::condition_has_status_function(expression)
-                && expression_bool_with_status(expression, inputs, StaticBool::False)
-                    == StaticBool::True
-        })
 }
 
 #[cfg(test)]
