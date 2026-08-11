@@ -4,6 +4,8 @@ use crate::react_traits::analyze::file::FileAnalysis;
 use crate::react_traits::report::types::{ComponentRef, Environment, FetchCall};
 use std::collections::HashMap;
 
+mod suppression;
+
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/react-traits-components")

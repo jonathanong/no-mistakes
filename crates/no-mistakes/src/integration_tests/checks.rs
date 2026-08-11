@@ -7,6 +7,14 @@ pub(super) fn fail_on_dropped_files(
 ) -> Result<()> {
     for (file, facts) in &shared.ts {
         if let Some(error) = &facts.parse_error {
+            if facts.source.as_deref().is_some_and(|source| {
+                crate::codebase::ts_source::has_disable_file_comment(
+                    source,
+                    "integration-test-no-mocks",
+                )
+            }) {
+                continue;
+            }
             anyhow::bail!(
                 "failed to parse integration file {}: {error}",
                 file.display()

@@ -49,7 +49,12 @@ pub(crate) fn run_analyze_inner_with_facts_and_suppression(
             file_cache.insert(path.clone(), analysis.components.clone());
         }
         if let Some(error) = &facts.parse_error {
-            parse_errors.insert(path, error);
+            let file_disabled = facts.source.as_deref().is_some_and(|source| {
+                crate::codebase::ts_source::has_disable_file_comment(source, "assert-no-fetch")
+            });
+            if !file_disabled {
+                parse_errors.insert(path, error);
+            }
         }
     }
     let child_path_index = child_path_index(&root, &file_cache);
