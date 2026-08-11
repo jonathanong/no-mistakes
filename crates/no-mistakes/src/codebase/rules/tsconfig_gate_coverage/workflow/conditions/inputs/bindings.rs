@@ -66,6 +66,9 @@ pub(super) fn binding_matches_type(
     )
 }
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {
     if let Some(value) = value.as_bool() {
         StaticValue::Bool(value)
