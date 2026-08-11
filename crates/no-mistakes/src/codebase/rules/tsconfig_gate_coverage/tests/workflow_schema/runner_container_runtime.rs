@@ -89,3 +89,32 @@ fn resolved_runner_strategy_and_container_configuration_control_coverage() {
         ])
     );
 }
+
+#[test]
+fn resolved_container_and_service_volumes_control_coverage() {
+    let documents = vec![workflow(
+        ".github/workflows/container-volumes.yml",
+        "on: push\njobs:\n  invalid-container:\n    strategy:\n      matrix: {volume: ['./cache']}\n    runs-on: ubuntu-latest\n    container: {image: node:22, volumes: ['${{ matrix.volume }}:/cache']}\n    steps:\n      - run: tsc --noEmit --project invalid-container-volume/tsconfig.json\n  invalid-service:\n    strategy:\n      matrix: {volume: ['./postgres']}\n    runs-on: ubuntu-latest\n    services:\n      postgres: {image: postgres:16, volumes: ['${{ matrix.volume }}:/data']}\n    steps:\n      - run: tsc --noEmit --project invalid-service-volume/tsconfig.json\n  valid-named:\n    strategy:\n      matrix: {volume: [cache]}\n    runs-on: ubuntu-latest\n    container: {image: node:22, volumes: ['${{ matrix.volume }}:/cache']}\n    steps:\n      - run: tsc --noEmit --project valid-named-volume/tsconfig.json\n  valid-absolute:\n    strategy:\n      matrix: {volume: [/host/cache]}\n    runs-on: ubuntu-latest\n    services:\n      postgres: {image: postgres:16, volumes: ['${{ matrix.volume }}:/data']}\n    steps:\n      - run: tsc --noEmit --project valid-absolute-volume/tsconfig.json\n",
+    )];
+    let projects = [
+        "invalid-container-volume/tsconfig.json",
+        "invalid-service-volume/tsconfig.json",
+        "valid-absolute-volume/tsconfig.json",
+        "valid-named-volume/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(
+            &ParsedWorkflowSet { documents },
+            &projects,
+            &project_inputs(&projects),
+        ),
+        BTreeSet::from([
+            "valid-absolute-volume/tsconfig.json".to_string(),
+            "valid-named-volume/tsconfig.json".to_string(),
+        ])
+    );
+}

@@ -58,7 +58,11 @@ fn local_action_steps_require_existing_valid_action_metadata() {
             .iter()
             .map(|finding| finding.file.as_str())
             .collect::<BTreeSet<_>>(),
-        BTreeSet::from(["invalid/tsconfig.json", "missing/tsconfig.json",]),
+        BTreeSet::from([
+            "invalid/tsconfig.json",
+            "missing-entrypoint/tsconfig.json",
+            "missing/tsconfig.json",
+        ]),
         "{report:#?}"
     );
     assert!(report

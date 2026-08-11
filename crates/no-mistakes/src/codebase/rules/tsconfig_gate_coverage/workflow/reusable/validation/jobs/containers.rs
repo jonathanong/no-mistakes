@@ -2,7 +2,6 @@ use serde_yaml::{Mapping, Value};
 
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::valid_identifier;
 
-use super::super::super::super::expressions::interpolation::opaque_interpolated_expression_form;
 use super::super::super::super::expressions::{
     interpolated_expression_contexts_available, reduce_context_free_interpolations,
     ContextFreeInterpolation,
@@ -12,6 +11,7 @@ use super::values::{only_keys, scalar_mapping_valid};
 mod configuration;
 mod images;
 mod options;
+mod volumes;
 
 pub(crate) use configuration::container_configuration_valid_for_inputs;
 
@@ -28,7 +28,6 @@ const CONTAINER_ENV_CONTEXTS: &[&str] = &[
 const CONTAINER_CREDENTIAL_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "env", "vars", "secrets", "inputs",
 ];
-const DYNAMIC_VOLUME_EXPRESSION: &str = "\u{FDD1}";
 
 pub(super) fn container_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
@@ -65,7 +64,7 @@ fn container_mapping_shape_valid(container: &Mapping, kind: ContainerKind) -> bo
         && scalar_mapping_valid(container.get("env"), CONTAINER_ENV_CONTEXTS, false)
         && scalar_sequence_contexts_valid(container.get("ports"), CONTAINER_CONTEXTS)
         && super::ports::port_sequence_valid(container.get("ports"))
-        && volume_sequence_valid(container.get("volumes"), CONTAINER_CONTEXTS)
+        && volumes::shape_valid(container.get("volumes"), CONTAINER_CONTEXTS)
         && container.get("options").is_none_or(|value| {
             value
                 .as_str()
@@ -91,56 +90,6 @@ fn credentials_shape_valid(value: Option<&Value>) -> bool {
 
 fn valid_container_credential(value: &str) -> bool {
     valid_contextual_value(value, CONTAINER_CREDENTIAL_CONTEXTS)
-}
-
-fn volume_sequence_valid(value: Option<&Value>, allowed_contexts: &[&str]) -> bool {
-    value.is_none_or(|value| {
-        value.as_sequence().is_some_and(|items| {
-            items.iter().all(|item| {
-                item.as_str().is_some_and(|value| {
-                    valid_contextual_value(value, allowed_contexts) && valid_volume(value)
-                })
-            })
-        })
-    })
-}
-
-fn valid_volume(value: &str) -> bool {
-    let Some(value) = opaque_interpolated_expression_form(value, DYNAMIC_VOLUME_EXPRESSION) else {
-        return false;
-    };
-    if value == DYNAMIC_VOLUME_EXPRESSION {
-        return true;
-    }
-    if !value.contains(':') {
-        return value.starts_with('/');
-    }
-    let mut parts = value.split(':');
-    let Some(source) = parts.next() else {
-        return false;
-    };
-    let Some(destination) = parts.next() else {
-        return false;
-    };
-    parts.next().is_none() && volume_source_valid(source) && volume_destination_valid(destination)
-}
-
-fn volume_source_valid(value: &str) -> bool {
-    if value.starts_with('/') || value.starts_with(DYNAMIC_VOLUME_EXPRESSION) {
-        return true;
-    }
-    let normalized = value.replace(DYNAMIC_VOLUME_EXPRESSION, "dynamic");
-    normalized
-        .bytes()
-        .next()
-        .is_some_and(|byte| byte.is_ascii_alphanumeric())
-        && normalized
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
-}
-
-fn volume_destination_valid(value: &str) -> bool {
-    value.starts_with('/') || value.starts_with(DYNAMIC_VOLUME_EXPRESSION)
 }
 
 fn scalar_sequence_contexts_valid(value: Option<&Value>, allowed_contexts: &[&str]) -> bool {

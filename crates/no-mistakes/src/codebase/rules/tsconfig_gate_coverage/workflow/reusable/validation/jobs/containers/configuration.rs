@@ -63,6 +63,7 @@ fn container_mapping_valid_for_inputs(
             inputs,
             environment,
         )
+        && super::volumes::valid_for_inputs(container.get("volumes"), inputs, environment)
         && credentials_valid_for_inputs(container.get("credentials"), inputs, environment)
         && options::valid_for_inputs(
             container.get("options").and_then(Value::as_str),

@@ -75,3 +75,30 @@ fn ci_scanner_does_not_credit_static_object_matrix_values_as_missing_properties(
         BTreeSet::new()
     );
 }
+
+#[test]
+fn ci_scanner_resolves_literal_shell_expressions_without_guessing_dynamic_shells() {
+    let workflow: Value = serde_yaml::from_str(
+        "on: push\njobs:\n  literal-bash:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: \"${{ 'bash' }}\"\n        run: tsc --noEmit --project literal-bash/tsconfig.json\n  literal-errexit:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: \"${{ 'bash -e {0}' }}\"\n        run: tsc --noEmit --project literal-errexit/tsconfig.json; echo later\n  dynamic-shell:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: '${{ vars.SHELL }}'\n        run: tsc --noEmit --project dynamic-shell/tsconfig.json\n",
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/shell-expressions.yml".into(),
+            value: Ok(workflow),
+        }],
+    };
+    let projects = BTreeSet::from([
+        "dynamic-shell/tsconfig.json".to_string(),
+        "literal-bash/tsconfig.json".to_string(),
+        "literal-errexit/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &projects, &project_inputs(&projects)),
+        BTreeSet::from([
+            "literal-bash/tsconfig.json".to_string(),
+            "literal-errexit/tsconfig.json".to_string(),
+        ])
+    );
+}

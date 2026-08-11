@@ -33,7 +33,11 @@ runner selectors are resolved per generated job before runner platform and
 implicit-shell checks; unresolved selectors do not provide coverage.
 Repository-local action steps (`uses: ./path`) count only when the tracked
 target directory contains parseable `action.yml` or `action.yaml` metadata
-with the required name, description, and a supported `runs` contract.
+with the required name, description, and a supported `runs` contract. A
+JavaScript action's `runs.main` must resolve to a tracked file under that action
+directory. Local targets are checked in step execution order, so a statically
+skipped job or step does not invalidate an independent typecheck, while a
+missing action prevents later commands in the same executed job from counting.
 Static local reusable-workflow jobs (`uses: ./.github/workflows/*.yml`) are
 followed transitively and their step-based jobs are evaluated under the direct
 caller's file triggers. Remote, dynamic, missing, non-callable, and cyclic
@@ -71,6 +75,8 @@ must invoke `bash` or `sh`, pass the script as `{0}`, and use only
 execution-preserving flags: `-e`, `-u`, `-x`, and Bash's `-o pipefail`,
 `--noprofile`, and `--norc`. This includes GitHub Actions' standard
 `bash --noprofile --norc -eo pipefail {0}` and `sh -e {0}` templates.
+Context-free literal shell expressions are reduced before this classification;
+shell expressions whose value remains dynamic do not count.
 Other shells (such as `python`, PowerShell, or `cmd`) and dynamic/custom shell
 forms do not count; neither do non-executing modes such as `bash -n {0}`.
 Implicit and built-in `bash`/`sh` shells propagate failures. Custom templates
@@ -159,6 +165,9 @@ available secret values remain opaque, while an omitted reusable secret
 resolves empty and cannot start the container. Container options reject
 GitHub's unsupported `--network` and `--entrypoint` flags, and service options
 reject `--network`; dynamically unresolved options remain conservative.
+Container and service volumes are likewise revalidated after static matrix and
+reusable-input substitution, so a resolved bind source must be absolute and a
+resolved named volume must satisfy Docker's volume-name shape.
 
 Reusable-workflow secret validation follows each call edge. A directly
 triggered workflow can inherit its available repository or organization

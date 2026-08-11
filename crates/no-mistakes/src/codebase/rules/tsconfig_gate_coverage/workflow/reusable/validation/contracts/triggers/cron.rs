@@ -77,7 +77,8 @@ fn cron_atom_position(atom: &str, position: usize) -> Option<u8> {
             .iter()
             .position(|name| atom.eq_ignore_ascii_case(name))
         {
-            return u8::try_from(index).ok();
+            let offset = u8::from(position == 3);
+            return u8::try_from(index).ok()?.checked_add(offset);
         }
     }
     let number = atom.parse::<u8>().ok()?;

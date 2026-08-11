@@ -57,3 +57,34 @@ fn invalid_continue_on_error_and_environment_contexts_earn_no_coverage() {
         BTreeSet::from(["valid/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn local_actions_are_validated_only_when_their_step_executes() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p sibling/tsconfig.json\n  skipped-job:\n    if: false\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/missing\n  missing-before:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/missing\n      - run: tsc --noEmit -p before/tsconfig.json\n  missing-after:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p after/tsconfig.json\n      - uses: ./.github/actions/missing\n  skipped-step:\n    runs-on: ubuntu-latest\n    steps:\n      - if: false\n        uses: ./.github/actions/missing\n      - run: tsc --noEmit -p skipped-step/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "after/tsconfig.json".to_string(),
+        "before/tsconfig.json".to_string(),
+        "sibling/tsconfig.json".to_string(),
+        "skipped-step/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_local_actions(
+            &workflows,
+            &tracked,
+            &project_inputs(&tracked),
+            &BTreeSet::new(),
+        )
+        .0,
+        BTreeSet::from([
+            "after/tsconfig.json".to_string(),
+            "sibling/tsconfig.json".to_string(),
+            "skipped-step/tsconfig.json".to_string(),
+        ])
+    );
+}

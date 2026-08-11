@@ -34,9 +34,7 @@ pub(super) fn collect_ci_projects_with_local_actions(
         .iter()
         .filter_map(|document| {
             let value = document.value.as_ref().ok()?;
-            if !workflow_shape_valid(value)
-                || !super::local_actions::workflow_targets_valid(value, local_actions)
-            {
+            if !workflow_shape_valid(value) {
                 return None;
             }
             Some((
@@ -53,6 +51,7 @@ pub(super) fn collect_ci_projects_with_local_actions(
         workflows,
         tracked,
         project_source_inputs,
+        local_actions,
     };
     let mut projects = BTreeSet::new();
     let mut computations = 0;

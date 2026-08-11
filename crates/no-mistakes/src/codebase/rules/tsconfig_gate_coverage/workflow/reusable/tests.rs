@@ -112,11 +112,16 @@ fn invalid_activity_type_and_cron_earn_no_coverage() {
                 ".github/workflows/schedule.yml",
                 "on:\n  schedule:\n    - cron: nope\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-cron/tsconfig.json\n",
             ),
+            workflow_document(
+                ".github/workflows/month-range.yml",
+                "on:\n  schedule:\n    - cron: '0 0 * FEB-1 *'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-month-range/tsconfig.json\n",
+            ),
         ],
     };
     let tracked = BTreeSet::from([
         "invalid-type/tsconfig.json".to_string(),
         "invalid-cron/tsconfig.json".to_string(),
+        "invalid-month-range/tsconfig.json".to_string(),
     ]);
 
     assert!(

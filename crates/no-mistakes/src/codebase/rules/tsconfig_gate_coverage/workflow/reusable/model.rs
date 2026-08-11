@@ -20,6 +20,7 @@ pub(super) struct ScanContext<'a> {
     pub(super) workflows: BTreeMap<String, WorkflowDocument<'a>>,
     pub(super) tracked: &'a BTreeSet<String>,
     pub(super) project_source_inputs: &'a ProjectSourceInputs,
+    pub(super) local_actions: &'a BTreeSet<String>,
 }
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]

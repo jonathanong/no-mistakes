@@ -38,6 +38,16 @@ pub(super) fn scan_job_steps(
         {
             continue;
         }
+        if let Some(directory) = step
+            .get("uses")
+            .and_then(Value::as_str)
+            .and_then(|target| target.strip_prefix("./"))
+        {
+            if !context.local_actions.contains(directory) {
+                break;
+            }
+            continue;
+        }
         let step_cwd = match step.get("working-directory").and_then(Value::as_str) {
             Some(raw) => command_scan::normalize_repo_relative(raw),
             None => job_cwd.clone(),
@@ -52,6 +62,17 @@ pub(super) fn scan_job_steps(
         if shell.is_none() && implicit_shell_can_be_windows {
             continue;
         }
+        let shell = match shell {
+            Some(shell) => match super::super::conditions::resolve_static_interpolations(
+                &shell,
+                inputs,
+                &environment,
+            ) {
+                Some(shell) => Some(shell),
+                None => continue,
+            },
+            None => None,
+        };
         let Some(failure_enforced) = shell_failure_enforced(shell.as_deref()) else {
             continue;
         };

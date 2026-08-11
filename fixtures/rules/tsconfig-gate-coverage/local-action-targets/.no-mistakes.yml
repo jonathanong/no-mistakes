@@ -12,6 +12,10 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, invalid/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-missing-entrypoint
+      command: [pnpm, exec, tsc, --noEmit, --project, missing-entrypoint/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository
