@@ -300,12 +300,40 @@ fn check_json_does_not_hide_later_react_fetch_after_first_is_suppressed() {
         check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(!value["react"].as_array().unwrap().is_empty(), "{value}");
-    assert!(value["suppressed"].as_array().is_some_and(|items| items
-        .iter()
-        .any(|item| { item["domain"] == "react" && item["line"] == 5 })));
+    assert!(value["suppressed"]
+        .as_array()
+        .is_some_and(|items| items.iter().all(|item| item["domain"] != "react")));
     assert!(value["react"]
         .as_array()
         .is_some_and(|items| { items.iter().any(|item| item["file"] == "app/Fetcher.tsx") }));
+}
+
+#[test]
+fn check_json_records_one_react_suppression_per_component_after_all_fetches_are_hidden() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-react-all-multiple");
+    let output =
+        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert!(value["react"].as_array().is_some_and(Vec::is_empty));
+    let react_suppressions = value["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|item| item["domain"] == "react")
+        .collect::<Vec<_>>();
+    assert_eq!(react_suppressions.len(), 2, "{value}");
+    assert_eq!(
+        react_suppressions
+            .iter()
+            .filter(|item| item["reason"]
+                .as_str()
+                .is_some_and(|reason| reason.contains("component default@app/Fetcher.tsx")))
+            .count(),
+        1,
+        "{value}"
+    );
+    assert!(react_suppressions.iter().all(|item| item["line"] == 3));
 }
 
 #[test]

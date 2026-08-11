@@ -157,13 +157,14 @@ pub(super) fn suppress_react(
                 identity,
             }]
         };
-        suppressed.extend(suppress_domain_findings_with_sources(
-            root,
-            &mut locations,
-            sources,
-            react_target,
-        ));
-        if !locations.is_empty() {
+        let target_suppressions =
+            suppress_domain_findings_with_sources(root, &mut locations, sources, react_target);
+        if locations.is_empty() {
+            // A React violation is one component-level diagnostic even when
+            // several fetch locations contribute to it. Keep one deterministic
+            // directive record only after every contributing location is hidden.
+            suppressed.extend(target_suppressions.into_iter().next());
+        } else {
             findings.push(finding);
         }
     }
