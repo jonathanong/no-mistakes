@@ -108,6 +108,26 @@ fn literal_array_contains_and_pull_request_activities_control_reusable_coverage(
 }
 
 #[test]
+fn reusable_activation_state_controls_secret_env_and_event_defaults() {
+    let root = fixture_root("reusable-activation-state");
+    let report = findings(&root, &config(&root));
+
+    assert_eq!(report.len(), 4, "{report:#?}");
+    for project in [
+        "omitted-job/tsconfig.json",
+        "omitted-step/tsconfig.json",
+        "push-default/tsconfig.json",
+        "schedule-default/tsconfig.json",
+    ] {
+        let finding = report
+            .iter()
+            .find(|finding| finding.file == project)
+            .unwrap_or_else(|| panic!("missing {project} finding: {report:#?}"));
+        assert!(finding.message.contains("no CI typecheck registration"));
+    }
+}
+
+#[test]
 fn no_check_tsconfigs_do_not_credit_ci_or_local_gates() {
     let root = fixture_root("no-check");
     let report = findings(&root, &config(&root));

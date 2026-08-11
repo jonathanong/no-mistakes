@@ -1,0 +1,13 @@
+on:
+  push:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  omitted:
+    uses: ./.github/workflows/omitted.yml
+  push-default:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/push-default.yml
+  schedule-default:
+    if: github.event_name == 'schedule'
+    uses: ./.github/workflows/schedule-default.yml
