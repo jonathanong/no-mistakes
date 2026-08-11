@@ -82,6 +82,7 @@ fn local_action_steps_require_existing_valid_action_metadata() {
             "missing-entrypoint/tsconfig.json",
             "missing-working-directory/tsconfig.json",
             "missing/tsconfig.json",
+            "malformed-metadata/tsconfig.json",
         ]),
         "{report:#?}"
     );
@@ -126,6 +127,28 @@ fn reusable_activation_state_controls_secret_env_and_event_defaults() {
             .unwrap_or_else(|| panic!("missing {project} finding: {report:#?}"));
         assert!(finding.message.contains("no CI typecheck registration"));
     }
+}
+
+#[test]
+fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
+    let root = fixture_root("reusable-review-regressions");
+    let report = findings(&root, &config(&root));
+
+    assert_eq!(
+        report
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            "env/tsconfig.json",
+            "matrix/tsconfig.json",
+            "script/tsconfig.json",
+        ]),
+        "{report:#?}"
+    );
+    assert!(report
+        .iter()
+        .all(|finding| finding.message.contains("no CI typecheck registration")));
 }
 
 #[test]

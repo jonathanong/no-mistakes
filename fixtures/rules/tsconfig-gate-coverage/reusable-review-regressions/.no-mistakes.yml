@@ -1,0 +1,17 @@
+checks:
+  commands:
+    - name: typecheck-matrix
+      command: [pnpm, exec, tsc, --noEmit, --project, matrix/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-script
+      command: [pnpm, exec, tsc, --noEmit, --project, script/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-env
+      command: [pnpm, exec, tsc, --noEmit, --project, env/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

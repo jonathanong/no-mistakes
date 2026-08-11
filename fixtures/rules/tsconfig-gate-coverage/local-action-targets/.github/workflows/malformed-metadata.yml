@@ -1,0 +1,7 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/malformed
+      - run: pnpm exec tsc --noEmit --project malformed-metadata/tsconfig.json

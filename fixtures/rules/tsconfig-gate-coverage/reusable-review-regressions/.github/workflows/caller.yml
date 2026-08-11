@@ -1,0 +1,12 @@
+on: push
+jobs:
+  matrix:
+    uses: ./.github/workflows/matrix.yml
+    with:
+      matrix: 'null'
+  script:
+    uses: ./.github/workflows/script.yml
+    with:
+      prefix: exit 1
+  env:
+    uses: ./.github/workflows/env.yml
