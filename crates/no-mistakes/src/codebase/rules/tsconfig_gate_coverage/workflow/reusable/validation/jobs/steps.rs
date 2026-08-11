@@ -30,6 +30,11 @@ const ACTION_STEP_KEYS: &[&str] = &[
     "timeout-minutes",
 ];
 
+const ACTION_STEP_WITH_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "steps",
+    "inputs",
+];
+
 pub(crate) fn steps_shape_valid(job: &Value) -> bool {
     let Some(steps) = job.get("steps") else {
         return job.get("uses").is_some();
@@ -77,10 +82,27 @@ fn step_shape_valid(step: &Mapping) -> bool {
         (None, Some(Value::String(target))) if action_target_valid(target) => {
             only_keys(step, ACTION_STEP_KEYS)
                 && shared_step_fields_valid(step)
-                && scalar_mapping_valid(step.get("with"))
+                && action_step_with_mapping_valid(step.get("with"))
         }
         _ => false,
     }
+}
+
+fn action_step_with_mapping_valid(value: Option<&Value>) -> bool {
+    value.is_none_or(|value| {
+        value.as_mapping().is_some_and(|mapping| {
+            mapping.iter().all(|(name, value)| {
+                name.is_string()
+                    && (matches!(value, Value::Bool(_) | Value::Number(_))
+                        || value.as_str().is_some_and(|value| {
+                            super::super::super::super::expressions::interpolated_expression_contexts_and_hash_files_available(
+                                value,
+                                ACTION_STEP_WITH_CONTEXTS,
+                            )
+                        }))
+            })
+        })
+    })
 }
 
 fn shared_step_fields_valid(step: &Mapping) -> bool {

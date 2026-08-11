@@ -86,6 +86,55 @@ fn nonboolean_defaults_preserve_scalar_values() {
 }
 
 #[test]
+fn direct_event_inputs_use_declared_type_empty_states() {
+    let contract = WorkflowCallContract {
+        inputs: BTreeMap::from([
+            (
+                "enabled".to_string(),
+                WorkflowCallInput {
+                    input_type: Some(WorkflowCallInputType::Boolean),
+                    required: false,
+                    default: None,
+                    description: None,
+                },
+            ),
+            (
+                "attempts".to_string(),
+                WorkflowCallInput {
+                    input_type: Some(WorkflowCallInputType::Number),
+                    required: false,
+                    default: None,
+                    description: None,
+                },
+            ),
+            (
+                "label".to_string(),
+                WorkflowCallInput {
+                    input_type: Some(WorkflowCallInputType::String),
+                    required: false,
+                    default: None,
+                    description: None,
+                },
+            ),
+        ]),
+        ..WorkflowCallContract::default()
+    };
+
+    assert_eq!(
+        direct_inputs(Some(&contract), "push"),
+        Some(InputState::from([
+            ("enabled".to_string(), StaticValue::Bool(false)),
+            ("attempts".to_string(), StaticValue::Number("0".to_string())),
+            ("label".to_string(), StaticValue::String(String::new())),
+            (
+                "\0github.event_name".to_string(),
+                StaticValue::String("push".to_string()),
+            ),
+        ]))
+    );
+}
+
+#[test]
 fn complete_literal_bindings_preserve_nonboolean_values() {
     for (value, input_type, expected) in [
         (

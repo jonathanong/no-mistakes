@@ -90,3 +90,39 @@ fn reusable_conditions_resolve_static_string_functions_across_call_inputs() {
         ])
     );
 }
+
+#[test]
+fn direct_event_conditions_use_typed_input_defaults_and_literal_from_json() {
+    let parsed = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on:\n  push:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean}\n      attempts: {type: number}\n      label: {type: string}\njobs:\n  boolean-disabled:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project boolean-disabled/tsconfig.json\n  number-disabled:\n    if: inputs.attempts\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project number-disabled/tsconfig.json\n  string-must-not-stringify-false:\n    if: contains(inputs.label, 'false')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project string-false/tsconfig.json\n  string-empty-positive-control:\n    if: contains(inputs.label, '')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project string-empty/tsconfig.json\n  from-json-false:\n    if: fromJSON('false')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project from-json-false/tsconfig.json\n  from-json-zero:\n    if: fromJSON('0')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project from-json-zero/tsconfig.json\n  from-json-true:\n    if: fromJSON('true')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project from-json-true/tsconfig.json\n  from-json-string:\n    if: fromJSON('\"release\"')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project from-json-string/tsconfig.json\n",
+        )],
+    };
+    let tracked = [
+        "boolean-disabled/tsconfig.json",
+        "number-disabled/tsconfig.json",
+        "string-false/tsconfig.json",
+        "string-empty/tsconfig.json",
+        "from-json-false/tsconfig.json",
+        "from-json-zero/tsconfig.json",
+        "from-json-true/tsconfig.json",
+        "from-json-string/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect::<BTreeSet<_>>();
+    let project_inputs = tracked
+        .iter()
+        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
+        .collect();
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
+        BTreeSet::from([
+            "from-json-string/tsconfig.json".to_string(),
+            "from-json-true/tsconfig.json".to_string(),
+            "string-empty/tsconfig.json".to_string(),
+        ])
+    );
+}

@@ -49,6 +49,24 @@ fn workflow_shape_requires_known_top_level_keys_and_supported_field_shapes() {
 }
 
 #[test]
+fn workflow_env_uses_workflow_level_contexts_and_functions() {
+    for yaml in [
+        "on: push\nenv:\n  REF: '${{ github.ref }}'\n  TOKEN: '${{ secrets.TOKEN }}'\n  INPUT: '${{ inputs.target }}'\n  VARIABLE: '${{ vars.ENVIRONMENT }}'\njobs: {}",
+        "on: push\nenv:\n  FORMATTED: \"${{ format('{0}', github.ref_name) }}\"\njobs: {}",
+    ] {
+        assert!(workflow_shape_valid(&workflow(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "on: push\nenv:\n  JOB: '${{ jobs.typecheck.outputs.version }}'\njobs: {}",
+        "on: push\nenv:\n  NEED: '${{ needs.setup.outputs.version }}'\njobs: {}",
+        "on: push\nenv:\n  HASH: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"\njobs: {}",
+        "on: push\nenv:\n  STATUS: '${{ success() }}'\njobs: {}",
+    ] {
+        assert!(!workflow_shape_valid(&workflow(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn workflow_defaults_and_concurrency_follow_workflow_context_rules() {
     for yaml in [
         "defaults:\n  run:\n    shell: bash\n    working-directory: packages/app",

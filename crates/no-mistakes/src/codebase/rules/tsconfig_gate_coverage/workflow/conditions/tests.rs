@@ -137,6 +137,29 @@ fn literal_comparisons_resolve_without_context_values() {
 }
 
 #[test]
+fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        ("fromJSON('false')", StaticBool::False),
+        ("fromJSON('0')", StaticBool::False),
+        ("fromJSON('true')", StaticBool::True),
+        ("fromJSON('1')", StaticBool::True),
+        ("fromJSON('\"release\"')", StaticBool::True),
+        ("fromJSON('false') == false", StaticBool::True),
+        ("fromJSON('0') == 0", StaticBool::True),
+        ("fromJSON('true') == false", StaticBool::False),
+        ("fromJSON('not-json')", StaticBool::Unknown),
+        ("fromJSON('{}')", StaticBool::Unknown),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn deterministic_string_functions_resolve_static_arguments() {
     let inputs = InputState::from([("label".into(), StaticValue::String("Release".into()))]);
     for (expression, expected) in [

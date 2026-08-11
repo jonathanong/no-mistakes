@@ -305,8 +305,16 @@ fn scalar_literal_matrix_mapping_expressions_earn_no_coverage() {
 fn workflow_level_expression_schema_errors_do_not_credit_typechecks() {
     let documents = vec![
         workflow(
+            ".github/workflows/unavailable-workflow-env.yml",
+            "on: push\nenv:\n  TYPECHECK_REF: '${{ jobs.typecheck.outputs.ref }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unavailable-workflow-env/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/dynamic-defaults.yml",
             "on: push\ndefaults:\n  run:\n    working-directory: 'packages/${{ inputs.package }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-defaults/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-workflow-env.yml",
+            "on: push\nenv:\n  TYPECHECK_REF: '${{ github.ref }}'\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid-workflow-env/tsconfig.json\n",
         ),
         workflow(
             ".github/workflows/unavailable-concurrency.yml",
@@ -320,7 +328,9 @@ fn workflow_level_expression_schema_errors_do_not_credit_typechecks() {
     let tracked = [
         "dynamic-defaults/tsconfig.json",
         "unavailable-concurrency/tsconfig.json",
+        "unavailable-workflow-env/tsconfig.json",
         "valid/tsconfig.json",
+        "valid-workflow-env/tsconfig.json",
     ]
     .into_iter()
     .map(str::to_string)
@@ -332,13 +342,28 @@ fn workflow_level_expression_schema_errors_do_not_credit_typechecks() {
             &tracked,
             &project_inputs(&tracked),
         ),
-        BTreeSet::from(["valid/tsconfig.json".to_string()])
+        BTreeSet::from([
+            "valid/tsconfig.json".to_string(),
+            "valid-workflow-env/tsconfig.json".to_string(),
+        ])
     );
 }
 
 #[test]
 fn job_level_expression_schema_errors_do_not_credit_typechecks() {
     let documents = vec![
+        workflow(
+            ".github/workflows/invalid-action-input-context.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: '${{ jobs.typecheck.outputs.ref }}'\n      - run: tsc --noEmit --project invalid-action-input-context/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-action-input-function.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"\n      - run: tsc --noEmit --project valid-action-input-function/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-action-input-context.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: \"${{ format('{0}', github.ref) }}\"\n      - run: tsc --noEmit --project valid-action-input-context/tsconfig.json\n",
+        ),
         workflow(
             ".github/workflows/dynamic-job-defaults.yml",
             "on: push\njobs:\n  typecheck:\n    defaults:\n      run:\n        shell: '${{ github.ref }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project dynamic-job-defaults/tsconfig.json\n",
@@ -363,9 +388,12 @@ fn job_level_expression_schema_errors_do_not_credit_typechecks() {
     let tracked = [
         "dynamic-job-defaults/tsconfig.json",
         "invalid-job-timeout/tsconfig.json",
+        "invalid-action-input-context/tsconfig.json",
         "invalid-step-timeout/tsconfig.json",
         "unavailable-job-concurrency/tsconfig.json",
         "valid-job-contexts/tsconfig.json",
+        "valid-action-input-context/tsconfig.json",
+        "valid-action-input-function/tsconfig.json",
     ]
     .into_iter()
     .map(str::to_string)
@@ -377,7 +405,11 @@ fn job_level_expression_schema_errors_do_not_credit_typechecks() {
             &tracked,
             &project_inputs(&tracked),
         ),
-        BTreeSet::from(["valid-job-contexts/tsconfig.json".to_string()])
+        BTreeSet::from([
+            "valid-action-input-context/tsconfig.json".to_string(),
+            "valid-action-input-function/tsconfig.json".to_string(),
+            "valid-job-contexts/tsconfig.json".to_string(),
+        ])
     );
 }
 

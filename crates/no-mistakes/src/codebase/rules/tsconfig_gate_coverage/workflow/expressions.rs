@@ -7,7 +7,9 @@ mod typed_scalar;
 
 pub(crate) use calls::condition_function_call;
 pub(crate) use lexer::Function;
-pub(super) use literal_value::{complete_literal_expression_value, invalid_literal_from_json};
+pub(super) use literal_value::{
+    complete_literal_expression_value, invalid_literal_from_json, literal_from_json_value,
+};
 pub(super) use typed_scalar::typed_scalar_expression_contexts_available;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -131,14 +133,25 @@ pub(super) fn condition_expression_contexts_available(
 }
 
 pub(super) fn interpolated_expression_valid(value: &str) -> bool {
-    interpolated_expression_valid_for_contexts(value, None)
+    interpolated_expression_valid_for_contexts(value, None, false)
 }
 
 pub(super) fn interpolated_expression_contexts_available(value: &str, allowed: &[&str]) -> bool {
-    interpolated_expression_valid_for_contexts(value, Some(allowed))
+    interpolated_expression_valid_for_contexts(value, Some(allowed), false)
 }
 
-fn interpolated_expression_valid_for_contexts(value: &str, allowed: Option<&[&str]>) -> bool {
+pub(super) fn interpolated_expression_contexts_and_hash_files_available(
+    value: &str,
+    allowed: &[&str],
+) -> bool {
+    interpolated_expression_valid_for_contexts(value, Some(allowed), true)
+}
+
+fn interpolated_expression_valid_for_contexts(
+    value: &str,
+    allowed: Option<&[&str]>,
+    hash_files_available: bool,
+) -> bool {
     let mut remaining = value;
     loop {
         let Some(start) = remaining.find("${{") else {
@@ -155,7 +168,8 @@ fn interpolated_expression_valid_for_contexts(value: &str, allowed: Option<&[&st
         if syntax::parse(&tokens).is_none()
             || allowed
                 .is_some_and(|allowed| !contexts::root_contexts_available(expression, allowed))
-            || (allowed.is_some() && !special_functions_available(&tokens, false, false))
+            || (allowed.is_some()
+                && !special_functions_available(&tokens, hash_files_available, false))
         {
             return false;
         }

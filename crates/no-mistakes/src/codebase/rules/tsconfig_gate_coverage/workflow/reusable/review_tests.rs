@@ -48,6 +48,14 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
                 "on: push\njobs:\n  unknown:\n    runs-on: custom-runner\n    container: node:22\n    steps:\n      - run: tsc --noEmit -p custom-container/tsconfig.json\n",
             ),
             document(
+                ".github/workflows/constant-runner-expression.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: \"${{ 'ubuntu-latest' }}\"\n    container: node:22\n    steps:\n      - run: tsc --noEmit -p constant-runner-expression/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/self-hosted-label.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: [self-hosted, ubuntu-custom]\n    container: node:22\n    steps:\n      - run: tsc --noEmit -p self-hosted-label/tsconfig.json\n",
+            ),
+            document(
                 ".github/workflows/closed.yml",
                 "on:\n  pull_request:\n    types: [closed]\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p closed/tsconfig.json\n",
             ),
@@ -71,6 +79,8 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
         "linux-container",
         "windows-container",
         "custom-container",
+        "constant-runner-expression",
+        "self-hosted-label",
         "closed",
         "synchronize",
         "push-fallback",
@@ -83,6 +93,7 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
         collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
         BTreeSet::from([
             "linux-container/tsconfig.json".to_string(),
+            "constant-runner-expression/tsconfig.json".to_string(),
             "push-fallback/tsconfig.json".to_string(),
             "success/tsconfig.json".to_string(),
             "synchronize/tsconfig.json".to_string(),

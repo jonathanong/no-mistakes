@@ -203,6 +203,23 @@ fn action_steps_require_static_canonical_targets() {
 }
 
 #[test]
+fn action_step_with_uses_its_field_specific_contexts_and_functions() {
+    for yaml in [
+        "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: '${{ github.ref }}'\n      token: '${{ secrets.TOKEN }}'",
+        "steps:\n  - id: setup\n    run: echo setup\n  - uses: actions/checkout@v4\n    with:\n      ref: \"${{ format('{0}', steps.setup.outputs.ref) }}\"",
+        "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"",
+    ] {
+        assert!(steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+    for yaml in [
+        "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: '${{ jobs.typecheck.outputs.ref }}'",
+        "steps:\n  - uses: actions/checkout@v4\n    with:\n      ref: '${{ success() }}'",
+    ] {
+        assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn call_bindings_require_unique_scalar_names() {
     for yaml in [
         "uses: owner/repo/.github/workflows/a.yml@main",

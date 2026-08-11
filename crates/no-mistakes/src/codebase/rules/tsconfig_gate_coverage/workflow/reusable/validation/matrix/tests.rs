@@ -75,6 +75,24 @@ fn literal_expression_mapping_values_match_typed_matrix_values() {
 }
 
 #[test]
+fn literal_expression_axis_values_expand_as_their_resolved_yaml_values() {
+    let matrix = job(
+        "strategy:\n  matrix:\n    enabled: ['${{ true }}']\n    attempts: ['${{ 2 }}']\n    target: [\"${{ 'linux' }}\"]\n    optional: ['${{ null }}']",
+    );
+
+    assert!(matrix_shape_valid(&matrix));
+    assert_eq!(
+        static_matrix_combinations(&matrix),
+        Some(MatrixCombinations::Static(vec![BTreeMap::from([
+            ("attempts".to_string(), Value::Number(2.into())),
+            ("enabled".to_string(), Value::Bool(true)),
+            ("optional".to_string(), Value::Null),
+            ("target".to_string(), Value::String("linux".to_string())),
+        ])]))
+    );
+}
+
+#[test]
 fn dynamic_mapping_expressions_do_not_enumerate_static_combinations() {
     let matrix = job(
         "strategy:\n  matrix:\n    target: [linux]\n    exclude:\n      - target: '${{ inputs.target }}'",

@@ -19,6 +19,13 @@ fn bare_self_hosted_runner_keeps_the_implicit_shell_indeterminate() {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
     }
+    for yaml in [
+        "runs-on: [self-hosted, ubuntu-custom]",
+        "runs-on: [self-hosted, linux-custom]",
+    ] {
+        let job: Value = serde_yaml::from_str(yaml).unwrap();
+        assert!(runs_on_can_default_to_windows(&job), "{yaml}");
+    }
 }
 
 #[test]
@@ -40,6 +47,22 @@ fn container_runner_support_requires_unambiguous_linux_labels() {
             "runs-on: '${{ matrix.runner }}'",
             ContainerRunnerSupport::Unknown,
         ),
+        (
+            "runs-on: [self-hosted, ubuntu-custom]",
+            ContainerRunnerSupport::Unknown,
+        ),
+        (
+            "runs-on: [self-hosted, linux-custom]",
+            ContainerRunnerSupport::Unknown,
+        ),
+        (
+            "runs-on: [self-hosted, linux]",
+            ContainerRunnerSupport::Linux,
+        ),
+        (
+            "runs-on: \"${{ 'ubuntu-latest' }}\"",
+            ContainerRunnerSupport::Linux,
+        ),
     ] {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(
@@ -48,4 +71,18 @@ fn container_runner_support_requires_unambiguous_linux_labels() {
             "{yaml}"
         );
     }
+}
+
+#[test]
+fn constant_runner_expressions_are_static_but_dynamic_expressions_are_not() {
+    for yaml in [
+        "runs-on: \"${{ 'ubuntu-latest' }}\"",
+        "runs-on: [self-hosted, \"${{ 'linux' }}\"]",
+    ] {
+        let job: Value = serde_yaml::from_str(yaml).unwrap();
+        assert!(has_static_runnable_runs_on(&job), "{yaml}");
+        assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
+    }
+    let dynamic: Value = serde_yaml::from_str("runs-on: '${{ matrix.runner }}'").unwrap();
+    assert!(!has_static_runnable_runs_on(&dynamic));
 }

@@ -1,7 +1,8 @@
 use super::{JsonScalar, Value, WorkflowCallInputType};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     event_name_value,
-    input_value::{comparison_literal, input_name, matrix_name, matrix_property_value},
+    input_value::comparison_literal,
+    resolution::{input_name, matrix_name, matrix_property_value},
     InputState, StaticBool, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{

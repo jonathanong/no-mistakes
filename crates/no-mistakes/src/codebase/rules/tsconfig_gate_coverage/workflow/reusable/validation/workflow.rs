@@ -15,7 +15,7 @@ pub(crate) fn workflow_shape_valid(workflow: &Value) -> bool {
     only_workflow_keys(workflow)
         && string_field_valid(workflow, "name")
         && run_name_field_valid(workflow)
-        && scalar_mapping_valid(workflow.get("env"))
+        && workflow_env_mapping_valid(workflow.get("env"))
         && permissions_shape_valid(workflow.get("permissions"))
         && workflow_defaults_shape_valid(workflow.get("defaults"))
         && workflow_concurrency_shape_valid(workflow.get("concurrency"))
@@ -52,19 +52,23 @@ fn run_name_field_valid(workflow: &Mapping) -> bool {
     })
 }
 
+const WORKFLOW_ENV_CONTEXTS: &[&str] = &["github", "secrets", "inputs", "vars"];
+
 fn valid_nonempty_literal_string(value: &Value) -> bool {
     value.as_str().is_some_and(|value| {
         !value.is_empty() && !value.contains("${{") && interpolated_expression_valid(value)
     })
 }
 
-pub(super) fn scalar_mapping_valid(value: Option<&Value>) -> bool {
+fn workflow_env_mapping_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|mapping| {
             mapping.iter().all(|(name, value)| {
                 name.is_string()
                     && match value {
-                        Value::String(value) => interpolated_expression_valid(value),
+                        Value::String(value) => {
+                            interpolated_expression_contexts_available(value, WORKFLOW_ENV_CONTEXTS)
+                        }
                         Value::Bool(_) | Value::Number(_) => true,
                         _ => false,
                     }

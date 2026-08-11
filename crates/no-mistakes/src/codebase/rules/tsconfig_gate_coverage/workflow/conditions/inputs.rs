@@ -1,5 +1,5 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
-use super::{InputState, StaticValue, EVENT_NAME_KEY};
+use super::{InputState, StaticValue};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
 };
@@ -12,6 +12,12 @@ mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
 pub(crate) use secrets::{callee_secrets, SecretState};
 use values::{default_value, nonboolean_binding_value};
+
+pub(super) const EVENT_NAME_KEY: &str = "\0github.event_name";
+
+pub(super) fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(EVENT_NAME_KEY).cloned()
+}
 
 pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
 const DYNAMIC_MATRIX_KEY: &str = "\0matrix.dynamic";
@@ -63,8 +69,13 @@ pub(crate) fn direct_inputs(
     }
     let mut inputs: InputState = contract
         .inputs
-        .keys()
-        .map(|name| (normalized_name(name), StaticValue::Bool(false)))
+        .iter()
+        .map(|(name, declaration)| {
+            let input_type = declaration
+                .input_type
+                .expect("validated workflow_call input type");
+            (normalized_name(name), default_value(None, input_type))
+        })
         .collect();
     inputs.insert(
         EVENT_NAME_KEY.to_string(),

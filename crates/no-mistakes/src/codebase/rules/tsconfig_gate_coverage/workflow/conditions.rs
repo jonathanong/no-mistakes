@@ -7,8 +7,10 @@ mod input_value;
 mod inputs;
 mod literals;
 mod logical;
+mod resolution;
 
-use input_value::{comparison_literal, input_name, matrix_name, matrix_property_value};
+use input_value::comparison_literal;
+use inputs::event_name_value;
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, MatrixState,
     SecretState,
@@ -16,6 +18,7 @@ pub(super) use inputs::{
 use literals::{
     hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
 };
+use resolution::{condition_input_value, input_name, literal_from_json_static_value};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -35,11 +38,6 @@ pub(super) enum StaticValue {
 }
 
 pub(super) type InputState = BTreeMap<String, StaticValue>;
-const EVENT_NAME_KEY: &str = "\0github.event_name";
-
-fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
-    inputs.get(EVENT_NAME_KEY).cloned()
-}
 
 pub(super) fn statically_skipped_jobs(
     jobs: &serde_yaml::Mapping,
@@ -156,7 +154,9 @@ fn resolve_input_expression(
             logical::Comparison::GreaterThanOrEqual => expected.less_than_or_equal(&actual),
         };
     }
-    if let Some(value) = condition_input_value(expression, inputs) {
+    if let Some(value) = literal_from_json_static_value(expression)
+        .or_else(|| condition_input_value(expression, inputs))
+    {
         return value.truthiness();
     }
     if let Some(operand) = expression.strip_prefix('!').map(str::trim) {
@@ -180,20 +180,7 @@ pub(super) fn condition_value(
     if operand.trim().eq_ignore_ascii_case("github.event_name") {
         return event_name_value(inputs);
     }
-    condition_input_value(operand, inputs)
-}
-
-fn condition_input_value(operand: &str, inputs: &InputState) -> Option<StaticValue> {
-    if let Some(name) = input_name(operand) {
-        return Some(
-            inputs
-                .get(&name.to_lowercase())
-                .cloned()
-                .unwrap_or(StaticValue::Bool(false)),
-        );
-    }
-    let name = matrix_name(operand)?;
-    Some(matrix_property_value(name, inputs))
+    literal_from_json_static_value(operand).or_else(|| condition_input_value(operand, inputs))
 }
 
 fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {

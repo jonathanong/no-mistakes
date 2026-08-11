@@ -1,114 +1,13 @@
-use serde_yaml::{Mapping, Value};
+use serde_yaml::Value;
+
+mod runner_labels;
+pub(super) use runner_labels::{
+    container_runner_support, has_static_runnable_runs_on, runs_on_can_default_to_windows,
+    ContainerRunnerSupport,
+};
 
 #[cfg(test)]
 mod tests;
-
-/// A CI job cannot provide a typecheck gate unless Actions can schedule it on
-/// a statically known runner. Reusable-workflow jobs use `uses:` rather than
-/// `steps:` and are excluded separately by the step requirement.
-pub(super) fn has_static_runnable_runs_on(job: &Value) -> bool {
-    match job.get("runs-on") {
-        Some(Value::String(label)) => is_static_runner_label(label),
-        Some(Value::Sequence(labels)) => {
-            !labels.is_empty()
-                && labels
-                    .iter()
-                    .all(|label| label.as_str().is_some_and(is_static_runner_label))
-        }
-        _ => false,
-    }
-}
-
-fn is_static_runner_label(label: &str) -> bool {
-    !label.trim().is_empty() && !label.contains("${{")
-}
-
-/// An unspecified Actions shell is PowerShell on Windows. Only reject this
-/// known incompatible default; an explicit supported `bash`/`sh` override is
-/// still safe to analyze on the same runner.
-pub(super) fn runs_on_can_default_to_windows(job: &Value) -> bool {
-    match job.get("runs-on") {
-        Some(Value::String(label)) => labels_can_default_to_windows([label.as_str()]),
-        Some(Value::Sequence(labels)) => {
-            labels_can_default_to_windows(labels.iter().filter_map(Value::as_str))
-        }
-        _ => false,
-    }
-}
-
-fn labels_can_default_to_windows<'a>(labels: impl IntoIterator<Item = &'a str>) -> bool {
-    let mut self_hosted = false;
-    let mut known_posix = false;
-    for label in labels {
-        if is_windows_runner_label(label) {
-            return true;
-        }
-        self_hosted |= label.trim().eq_ignore_ascii_case("self-hosted");
-        known_posix |= is_posix_runner_label(label);
-    }
-    self_hosted && !known_posix
-}
-
-fn is_windows_runner_label(label: &str) -> bool {
-    let label = label.trim();
-    label.eq_ignore_ascii_case("windows")
-        || label
-            .get(.."windows-".len())
-            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("windows-"))
-}
-
-fn is_posix_runner_label(label: &str) -> bool {
-    let label = label.trim();
-    ["linux", "ubuntu", "macos"].iter().any(|os| {
-        label.eq_ignore_ascii_case(os)
-            || label
-                .get(..os.len() + 1)
-                .is_some_and(|prefix| prefix.eq_ignore_ascii_case(&format!("{os}-")))
-    })
-}
-
-#[derive(Clone, Copy, Eq, PartialEq)]
-pub(super) enum ContainerRunnerSupport {
-    Linux,
-    NonLinux,
-    Unknown,
-}
-
-pub(super) fn container_runner_support(job: &Mapping) -> ContainerRunnerSupport {
-    let labels = match job.get("runs-on") {
-        Some(Value::String(label)) => vec![label.as_str()],
-        Some(Value::Sequence(labels)) => labels.iter().filter_map(Value::as_str).collect(),
-        _ => return ContainerRunnerSupport::Unknown,
-    };
-    if labels
-        .iter()
-        .any(|label| is_windows_runner_label(label) || is_macos_runner_label(label))
-    {
-        ContainerRunnerSupport::NonLinux
-    } else if labels.iter().any(|label| is_linux_runner_label(label)) {
-        ContainerRunnerSupport::Linux
-    } else {
-        ContainerRunnerSupport::Unknown
-    }
-}
-
-fn is_linux_runner_label(label: &str) -> bool {
-    let label = label.trim();
-    ["linux", "ubuntu"].iter().any(|os| {
-        label.eq_ignore_ascii_case(os)
-            || label
-                .get(..os.len() + 1)
-                .is_some_and(|prefix| prefix.eq_ignore_ascii_case(&format!("{os}-")))
-    })
-}
-
-fn is_macos_runner_label(label: &str) -> bool {
-    let label = label.trim();
-    label.eq_ignore_ascii_case("macos")
-        || label
-            .get(.."macos-".len())
-            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("macos-"))
-}
 
 fn default_shell(value: &Value) -> Option<&str> {
     value

@@ -309,3 +309,22 @@ fn bracketed_matrix_conditions_preserve_static_gate_boundaries() {
         BTreeSet::from(["enforced/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn literal_expression_matrix_axes_control_step_gate_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  disabled:\n    strategy:\n      matrix:\n        enabled: ['${{ false }}']\n    runs-on: ubuntu-latest\n    steps:\n      - if: matrix.enabled\n        run: tsc --noEmit --project literal-disabled/tsconfig.json\n  enabled:\n    strategy:\n      matrix:\n        enabled: ['${{ true }}']\n    runs-on: ubuntu-latest\n    steps:\n      - if: matrix.enabled\n        run: tsc --noEmit --project literal-enabled/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "literal-disabled/tsconfig.json".to_string(),
+        "literal-enabled/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["literal-enabled/tsconfig.json".to_string()])
+    );
+}

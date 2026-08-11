@@ -22,10 +22,15 @@ pub(in super::super) fn complete_literal_expression_value(value: &str) -> Option
     }) {
         return serde_yaml::from_str(strip_literal_parentheses(body)).ok();
     }
-    let call = condition_function_call(body)?;
-    if call.function != lexer::Function::FromJson || call.arguments.len() != 1 {
-        return None;
-    }
+    literal_from_json_value(body)
+}
+
+/// Returns a parsed JSON value when a complete, context-free `fromJSON` call
+/// has one literal string argument. This accepts an expression body so condition
+/// evaluation can use it after removing `${{ ... }}` delimiters.
+pub(in super::super) fn literal_from_json_value(expression: &str) -> Option<Value> {
+    let call = condition_function_call(expression)?;
+    (call.function == lexer::Function::FromJson && call.arguments.len() == 1).then_some(())?;
     let encoded = github_string_literal(call.arguments[0])?;
     serde_json::from_str::<serde_json::Value>(&encoded)
         .ok()

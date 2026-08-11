@@ -74,31 +74,17 @@ fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
             return StaticMatrixAxes::Invalid;
         };
         match values {
-            Value::Sequence(values)
-                if values.iter().any(|value| {
-                    value.as_str().is_some_and(|value| {
-                        value.trim().starts_with("${{")
-                            && !super::super::super::complete_expression(value)
-                    })
-                }) =>
-            {
-                return StaticMatrixAxes::Invalid;
-            }
-            Value::Sequence(values) if values.is_empty() => return StaticMatrixAxes::Invalid,
-            Value::Sequence(values)
-                if values.iter().all(|value| {
-                    !matches!(value, Value::Sequence(_))
-                        && !value
-                            .as_str()
-                            .is_some_and(|value| value.trim().starts_with("${{"))
-                }) =>
-            {
-                axes.push((name.to_string(), values.clone()));
-            }
+            Value::Sequence(values) => match resolved_static_axis_values(values) {
+                ResolvedStaticAxisValues::Static(values) if values.is_empty() => {
+                    return StaticMatrixAxes::Invalid;
+                }
+                ResolvedStaticAxisValues::Static(values) => axes.push((name.to_string(), values)),
+                ResolvedStaticAxisValues::Dynamic => dynamic = true,
+                ResolvedStaticAxisValues::Invalid => return StaticMatrixAxes::Invalid,
+            },
             Value::String(expression) if super::super::super::complete_expression(expression) => {
                 dynamic = true;
             }
-            Value::Sequence(_) => dynamic = true,
             _ => return StaticMatrixAxes::Invalid,
         }
     }
@@ -107,6 +93,43 @@ fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
     } else {
         StaticMatrixAxes::Static(axes)
     }
+}
+
+/// Matrix axis entries are evaluated individually. Resolve context-free
+/// expressions so the cartesian product and include/exclude matching use the
+/// same typed values GitHub Actions sees at runtime.
+enum ResolvedStaticAxisValues {
+    Static(Vec<Value>),
+    Dynamic,
+    Invalid,
+}
+
+fn resolved_static_axis_values(values: &[Value]) -> ResolvedStaticAxisValues {
+    let mut resolved = Vec::with_capacity(values.len());
+    for value in values {
+        match value {
+            Value::Sequence(_) => return ResolvedStaticAxisValues::Dynamic,
+            Value::String(expression)
+                if expression.trim().starts_with("${{")
+                    && !super::super::super::complete_expression(expression) =>
+            {
+                return ResolvedStaticAxisValues::Invalid;
+            }
+            Value::String(expression) if super::super::super::complete_expression(expression) => {
+                let Some(value) =
+                    super::super::super::complete_literal_expression_value(expression)
+                else {
+                    return ResolvedStaticAxisValues::Dynamic;
+                };
+                if matches!(value, Value::Sequence(_)) {
+                    return ResolvedStaticAxisValues::Dynamic;
+                }
+                resolved.push(value);
+            }
+            value => resolved.push(value.clone()),
+        }
+    }
+    ResolvedStaticAxisValues::Static(resolved)
 }
 
 fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCount {
