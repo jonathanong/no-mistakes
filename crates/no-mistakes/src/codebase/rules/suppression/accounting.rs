@@ -25,6 +25,8 @@ pub struct SuppressedFinding {
     pub domain: String,
     pub rule: String,
     pub file: String,
+    /// File containing the directive when it differs from the diagnostic target.
+    pub source_file: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub line: Option<usize>,
     /// The deterministic diagnostic that would have been emitted.
@@ -97,6 +99,7 @@ pub fn suppress_domain_findings_with_source_files<T>(
             domain: target.domain.to_string(),
             rule: target.rule.to_string(),
             file: target.file.to_string(),
+            source_file: source_file.to_string(),
             line: target.line,
             reason: target.identity.map_or_else(
                 || target.reason.to_string(),
