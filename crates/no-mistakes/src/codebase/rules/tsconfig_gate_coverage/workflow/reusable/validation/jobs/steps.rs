@@ -35,6 +35,11 @@ const ACTION_STEP_WITH_CONTEXTS: &[&str] = &[
     "inputs",
 ];
 
+const STEP_RUN_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "steps",
+    "inputs",
+];
+
 pub(crate) fn steps_shape_valid(job: &Value) -> bool {
     let Some(steps) = job.get("steps") else {
         return job.get("uses").is_some();
@@ -73,8 +78,9 @@ fn step_shape_valid(step: &Mapping) -> bool {
     match (step.get("run"), step.get("uses")) {
         (Some(Value::String(command)), None)
             if !command.is_empty()
-                && super::super::super::super::expressions::interpolated_expression_valid(
+                && super::super::super::super::expressions::interpolated_expression_contexts_and_hash_files_available(
                     command,
+                    STEP_RUN_CONTEXTS,
                 ) =>
         {
             only_keys(step, RUN_STEP_KEYS) && shared_step_fields_valid(step)

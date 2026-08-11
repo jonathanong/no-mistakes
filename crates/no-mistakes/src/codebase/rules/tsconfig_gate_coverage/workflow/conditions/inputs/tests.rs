@@ -435,6 +435,25 @@ fn statically_typed_expression_bindings_must_match_declared_inputs() {
             &InputState::new()
         ));
     }
+    for value in [
+        "${{ fromJSON('[true]') }}",
+        "${{ fromJSON('{\"enabled\":true}') }}",
+    ] {
+        for input_type in [
+            WorkflowCallInputType::Boolean,
+            WorkflowCallInputType::Number,
+            WorkflowCallInputType::String,
+        ] {
+            assert!(
+                !binding_matches_type(
+                    &Value::String(value.to_string()),
+                    input_type,
+                    &InputState::new()
+                ),
+                "{value} must not bind to {input_type:?}"
+            );
+        }
+    }
 }
 
 #[test]

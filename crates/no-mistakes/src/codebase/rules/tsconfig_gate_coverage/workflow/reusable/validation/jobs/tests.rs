@@ -34,6 +34,7 @@ fn steps_require_known_keys_and_matching_value_shapes() {
         "steps:\n  - name: action ${{ github.ref }}\n    uses: actions/checkout@v4\n    with: {ref: 'refs/${{ github.ref_name }}'}\n    env: {NODE_ENV: '${{ github.ref_name }}'}",
         "steps:\n  - if: env.RUN && runner.os && steps.setup.outputs.enabled\n    run: echo valid",
         "steps:\n  - if: hashFiles('**/pnpm-lock.yaml') != ''\n    run: echo valid",
+        "steps:\n  - run: \"echo ${{ github.ref }} ${{ secrets.TOKEN }} ${{ hashFiles('**/pnpm-lock.yaml') }}\"",
     ] {
         assert!(steps_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -48,6 +49,8 @@ fn steps_require_known_keys_and_matching_value_shapes() {
         "steps:\n  - if: '${{ hashFiles() }}'\n    run: echo invalid",
         "steps:\n  - if: secrets.TYPECHECK\n    run: echo invalid",
         "steps:\n  - run: 'echo ${{ }}'",
+        "steps:\n  - run: 'tsc --noEmit ${{ jobs.typecheck.outputs.project }}'",
+        "steps:\n  - run: 'tsc --noEmit ${{ success() }}'",
         "steps:\n  - uses: actions/checkout@v4\n    with: {ref: '${{ }}'}",
         "steps:\n  - run: echo invalid\n    working-directory: true",
         "steps:\n  - run: echo invalid\n    shell: true",
