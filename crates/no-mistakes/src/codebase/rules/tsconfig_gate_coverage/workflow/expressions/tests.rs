@@ -1,3 +1,4 @@
+use super::interpolation::opaque_interpolated_expression_form;
 use super::{
     complete_expression_contexts_available, complete_expression_may_produce_mapping,
     complete_expression_type, complete_literal_expression_value, condition_expression_valid,
@@ -192,6 +193,17 @@ fn validates_interpolated_expression_strings() {
     ] {
         assert!(!interpolated_expression_valid(value), "{value}");
     }
+    assert_eq!(
+        opaque_interpolated_expression_form(
+            "cache-${{ format('{0}}}', github.ref) }}:/data",
+            "<dynamic>",
+        ),
+        Some("cache-<dynamic>:/data".to_string())
+    );
+    assert_eq!(
+        opaque_interpolated_expression_form("literal <dynamic>", "<dynamic>"),
+        None
+    );
 }
 
 #[test]

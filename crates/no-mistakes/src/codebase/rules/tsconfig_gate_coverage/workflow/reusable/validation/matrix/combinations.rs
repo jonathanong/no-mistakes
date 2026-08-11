@@ -25,21 +25,31 @@ pub(in super::super::super) fn static_matrix_combinations(
             .then_some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
     };
     let axes = match static_matrix_axes(matrix) {
-        StaticMatrixAxes::Static(axes) => axes,
-        StaticMatrixAxes::Dynamic => {
-            return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]))
-        }
+        axes @ (StaticMatrixAxes::Static(_) | StaticMatrixAxes::Dynamic) => axes,
         StaticMatrixAxes::Invalid => return None,
     };
     let exclusions = match static_mappings(matrix.get("exclude")) {
-        StaticMappings::Static(exclusions) => exclusions,
-        StaticMappings::Dynamic => return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()])),
+        mappings @ (StaticMappings::Static(_) | StaticMappings::Dynamic) => mappings,
         StaticMappings::Invalid => return None,
     };
     let includes = match static_mappings(matrix.get("include")) {
-        StaticMappings::Static(includes) => includes,
-        StaticMappings::Dynamic => return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()])),
+        mappings @ (StaticMappings::Static(_) | StaticMappings::Dynamic) => mappings,
         StaticMappings::Invalid => return None,
+    };
+    let (axes, exclusions, includes) = match (axes, exclusions, includes) {
+        (
+            StaticMatrixAxes::Static(axes),
+            StaticMappings::Static(exclusions),
+            StaticMappings::Static(includes),
+        ) => (axes, exclusions, includes),
+        (StaticMatrixAxes::Dynamic, _, _)
+        | (_, StaticMappings::Dynamic, _)
+        | (_, _, StaticMappings::Dynamic) => {
+            return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
+        }
+        (StaticMatrixAxes::Invalid, _, _)
+        | (_, StaticMappings::Invalid, _)
+        | (_, _, StaticMappings::Invalid) => return None,
     };
     let mut originals = Vec::new();
     let mut assigned = BTreeMap::new();

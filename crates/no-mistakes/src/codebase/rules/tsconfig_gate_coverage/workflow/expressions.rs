@@ -1,5 +1,6 @@
 mod calls;
 mod contexts;
+pub(super) mod interpolation;
 mod lexer;
 mod literal_value;
 mod syntax;
@@ -7,6 +8,7 @@ mod typed_scalar;
 
 pub(crate) use calls::condition_function_call;
 pub(crate) use contexts::REUSABLE_CALL_SECRET_BINDING_CONTEXTS;
+pub(super) use interpolation::interpolated_expression_valid;
 pub(crate) use lexer::Function;
 pub(super) use literal_value::{
     complete_literal_expression_value, invalid_literal_from_json, literal_from_json_value,
@@ -131,10 +133,6 @@ pub(super) fn condition_expression_contexts_available(
             && contexts::root_contexts_available(expression, allowed)
             && special_functions_available(&tokens, hash_files_available, true)
     })
-}
-
-pub(super) fn interpolated_expression_valid(value: &str) -> bool {
-    interpolated_expression_valid_for_contexts(value, None, false)
 }
 
 pub(super) fn interpolated_expression_contexts_available(value: &str, allowed: &[&str]) -> bool {

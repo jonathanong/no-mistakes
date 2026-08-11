@@ -1,5 +1,7 @@
 use super::*;
 
+mod review_contexts;
+
 fn workflow(path: &str, yaml: &str) -> ParsedWorkflowDocument {
     ParsedWorkflowDocument {
         path: path.to_string(),

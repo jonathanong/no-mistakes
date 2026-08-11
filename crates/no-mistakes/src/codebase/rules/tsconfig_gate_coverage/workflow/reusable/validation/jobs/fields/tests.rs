@@ -1,8 +1,49 @@
-use super::strategy_shape_valid;
+use super::{strategy_shape_valid, string_field_valid, JOB_NAME_CONTEXTS, STEP_STRING_CONTEXTS};
 use serde_yaml::Value;
 
 fn strategy(yaml: &str) -> Value {
     serde_yaml::from_str(yaml).unwrap()
+}
+
+#[test]
+fn string_fields_require_their_documented_expression_contexts() {
+    let job = strategy("name: 'check ${{ matrix.target }}'");
+    assert!(string_field_valid(
+        job.as_mapping().unwrap(),
+        "name",
+        JOB_NAME_CONTEXTS,
+        false
+    ));
+
+    let invalid_job = strategy("name: '${{ jobs.build.result }}'");
+    assert!(!string_field_valid(
+        invalid_job.as_mapping().unwrap(),
+        "name",
+        JOB_NAME_CONTEXTS,
+        false
+    ));
+
+    let step = strategy(
+        "name: \"${{ hashFiles('src/**') }}\"\nworking-directory: \"${{ hashFiles('src/**') }}\"",
+    );
+    assert!(string_field_valid(
+        step.as_mapping().unwrap(),
+        "name",
+        STEP_STRING_CONTEXTS,
+        true
+    ));
+    assert!(string_field_valid(
+        step.as_mapping().unwrap(),
+        "working-directory",
+        STEP_STRING_CONTEXTS,
+        true
+    ));
+    assert!(!string_field_valid(
+        step.as_mapping().unwrap(),
+        "working-directory",
+        STEP_STRING_CONTEXTS,
+        false
+    ));
 }
 
 #[test]

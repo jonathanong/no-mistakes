@@ -174,8 +174,37 @@ fn dynamic_matrix_requires_one_nonempty_expression() {
         "strategy:\n  matrix: '${{ true }}${{ false }}'",
         "strategy:\n  matrix: '${{ true }}}'",
         "strategy:\n  matrix: '${{{ true }}'",
+        "strategy:\n  matrix: '${{ jobs.build.result }}'",
     ] {
         assert!(!matrix_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
+fn matrix_expressions_require_strategy_matrix_contexts() {
+    for yaml in [
+        "strategy:\n  matrix:\n    target: ['${{ jobs.build.result }}']",
+        "strategy:\n  matrix:\n    target: ['linux-${{ jobs.build.result }}-suffix']",
+        "strategy:\n  matrix:\n    target: ['${{ inputs.target }}', '${{ jobs.build.result }}']",
+        "strategy:\n  matrix:\n    target: ['${{ jobs.build.result }}', '${{ inputs.target }}']",
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - target: '${{ steps.setup.outputs.target }}'",
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - target: 'linux-${{ steps.setup.outputs.target }}'",
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - target: '${{ inputs.target }}'\n        label: '${{ jobs.build.result }}'",
+        "strategy:\n  matrix:\n    target: [linux]\n    include:\n      - target: '${{ inputs.target }}'\n      - target: '${{ jobs.build.result }}'",
+        "strategy:\n  matrix:\n    target: '${{ inputs.targets }}'\n    include:\n      - target: '${{ jobs.build.result }}'",
+        "strategy:\n  matrix:\n    target: [linux]\n    exclude: '${{ secrets.EXCLUSIONS }}'",
+    ] {
+        let job = job(yaml);
+        assert!(!matrix_shape_valid(&job), "{yaml}");
+        assert!(static_matrix_combinations(&job).is_none(), "{yaml}");
+    }
+
+    for yaml in [
+        "strategy:\n  matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'",
+        "strategy:\n  matrix:\n    target: ['${{ inputs.target }}']",
+        "strategy:\n  matrix:\n    target: ['linux-${{ inputs.target }}']",
+    ] {
+        assert!(matrix_shape_valid(&job(yaml)), "{yaml}");
     }
 }
 

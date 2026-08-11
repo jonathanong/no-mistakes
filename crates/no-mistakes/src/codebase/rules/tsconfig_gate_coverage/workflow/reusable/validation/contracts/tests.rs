@@ -154,6 +154,7 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "create:\n  types: [created]",
         "workflow_dispatch:\n  unknown: true",
         "workflow_dispatch:\n  inputs:\n    environment: true",
+        "workflow_dispatch:\n  inputs:\n    'bad name':\n      type: string",
         "workflow_dispatch:\n  inputs:\n    environment:\n      type: choice",
         "workflow_dispatch:\n  inputs:\n    environment:\n      type: string\n      options: [staging]",
         "workflow_dispatch:\n  inputs:\n    deploy:\n      type: boolean\n      default: text",

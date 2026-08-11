@@ -48,7 +48,7 @@ fn step_jobs_reject_unknown_keys() {
 #[test]
 fn job_schema_validates_run_and_reusable_call_field_values() {
     let run_job = serde_yaml::from_str::<Value>(
-        "runs-on: [self-hosted, linux]\npermissions:\n  contents: read\nenv: {NODE_ENV: test}\ndefaults:\n  run: {shell: bash}\nconcurrency: {group: checks, cancel-in-progress: false}\noutputs: {result: '${{ steps.run.outputs.result }}'}\nenvironment: {name: staging, url: 'https://example.test'}\ntimeout-minutes: 5\ncontinue-on-error: false\ncontainer:\n  image: node:22\n  credentials: {username: octo, password: '${{ secrets.TOKEN }}'}\n  env: {CI: true}\n  ports: [8080]\n  volumes: ['/data']\n  options: --cpus 1\nservices:\n  postgres:\n    image: postgres:16\n    env: {POSTGRES_PASSWORD: postgres}\nstrategy:\n  fail-fast: false\n  max-parallel: 2\n  matrix: {node: [22]}\nsteps:\n  - id: run\n    run: echo ok",
+        "runs-on: [self-hosted, linux]\npermissions:\n  contents: read\nenv: {NODE_ENV: test}\ndefaults:\n  run: {shell: bash}\nconcurrency: {group: checks, cancel-in-progress: false}\noutputs: {result: '${{ steps.run.outputs.result }}'}\nenvironment: {name: staging, url: 'https://example.test'}\ntimeout-minutes: 5\ncontinue-on-error: false\ncontainer:\n  image: node:22\n  credentials: {username: octo, password: '${{ secrets.TOKEN }}'}\n  env: {CI: true}\n  ports: [8080]\n  volumes: ['cache:/data']\n  options: --cpus 1\nservices:\n  postgres:\n    image: postgres:16\n    env: {POSTGRES_PASSWORD: postgres}\nstrategy:\n  fail-fast: false\n  max-parallel: 2\n  matrix: {node: [22]}\nsteps:\n  - id: run\n    run: echo ok",
     )
     .unwrap();
     assert!(scan_job_shape_valid(&run_job));
@@ -162,6 +162,36 @@ fn container_fields_validate_their_expression_contexts() {
     )
     .unwrap();
     assert!(scan_job_shape_valid(&valid));
+
+    for volume in [
+        "cache:relative",
+        "cache",
+        ":/data",
+        "relative/path:/data",
+        "cache:/data:ro",
+        "cache:${{ vars.VOLUME }}:ro",
+    ] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\ncontainer: {{image: node:22, volumes: ['{volume}']}}\nsteps:\n  - run: echo invalid"
+        ))
+        .unwrap();
+        assert!(!scan_job_shape_valid(&job), "{volume}");
+    }
+    for volume in [
+        "/data",
+        "cache:/data",
+        "/host/data:/data",
+        "${{ vars.VOLUME }}",
+        "${{ vars.SOURCE }}:/data",
+        "cache-${{ vars.SOURCE }}:/data",
+        "cache:${{ vars.DESTINATION }}",
+    ] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\ncontainer: {{image: node:22, volumes: ['{volume}']}}\nsteps:\n  - run: echo valid"
+        ))
+        .unwrap();
+        assert!(scan_job_shape_valid(&job), "{volume}");
+    }
 }
 
 #[test]

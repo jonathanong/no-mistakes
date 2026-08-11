@@ -1,7 +1,8 @@
 use serde_yaml::Value;
 
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
-    complete_expression_contexts_available, interpolated_expression_contexts_available,
+    interpolated_expression_contexts_available, typed_scalar_expression_contexts_available,
+    StaticExpressionType,
 };
 
 pub(crate) fn job_concurrency_shape_valid(value: Option<&Value>) -> bool {
@@ -23,12 +24,9 @@ pub(crate) fn job_concurrency_shape_valid(value: Option<&Value>) -> bool {
                             JOB_CONCURRENCY_CONTEXTS,
                         )
                 })
-            }) && concurrency.get("cancel-in-progress").is_none_or(|value| {
-                value.is_bool()
-                    || value.as_str().is_some_and(|value| {
-                        complete_expression_contexts_available(value, JOB_CONCURRENCY_CONTEXTS)
-                    })
-            })
+            }) && concurrency
+                .get("cancel-in-progress")
+                .is_none_or(|value| cancel_in_progress_valid(value, JOB_CONCURRENCY_CONTEXTS))
         })
     })
 }
@@ -51,12 +49,20 @@ pub(crate) fn workflow_concurrency_shape_valid(value: Option<&Value>) -> bool {
                             WORKFLOW_CONCURRENCY_CONTEXTS,
                         )
                 })
-            }) && concurrency.get("cancel-in-progress").is_none_or(|value| {
-                value.is_bool()
-                    || value.as_str().is_some_and(|value| {
-                        complete_expression_contexts_available(value, WORKFLOW_CONCURRENCY_CONTEXTS)
-                    })
-            })
+            }) && concurrency
+                .get("cancel-in-progress")
+                .is_none_or(|value| cancel_in_progress_valid(value, WORKFLOW_CONCURRENCY_CONTEXTS))
         })
     })
+}
+
+fn cancel_in_progress_valid(value: &Value, allowed_contexts: &[&str]) -> bool {
+    value.is_bool()
+        || value.as_str().is_some_and(|value| {
+            typed_scalar_expression_contexts_available(
+                value,
+                allowed_contexts,
+                StaticExpressionType::Boolean,
+            )
+        })
 }

@@ -1,6 +1,11 @@
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
+    complete_expression_contexts_available, interpolated_expression_contexts_available,
+};
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
+mod axes;
+use axes::{static_matrix_axes, StaticMatrixAxes};
 mod mappings;
 use mappings::{static_mappings, StaticMappings};
 mod traversal;
@@ -9,17 +14,12 @@ mod combinations;
 pub(in super::super) use combinations::{static_matrix_combinations, MatrixCombinations};
 
 const MATRIX_JOB_LIMIT: usize = 256;
+const MATRIX_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
 // Recursive matrix traversal needs a finite axis-depth bound even when every
 // axis has one value and the cartesian product remains one job.
 const STATIC_MATRIX_AXIS_LIMIT: usize = MATRIX_JOB_LIMIT;
 const STATIC_MATRIX_ENUMERATION_LIMIT: usize = (MATRIX_JOB_LIMIT + 1) * 64;
 pub(super) const MAX_STATIC_MATRIX_AXIS_DEPTH: usize = MATRIX_JOB_LIMIT;
-
-enum StaticMatrixAxes {
-    Static(Vec<(String, Vec<Value>)>),
-    Dynamic,
-    Invalid,
-}
 
 enum StaticMatrixJobCount {
     Known(usize),
@@ -64,78 +64,15 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
 }
 
 fn matrix_expression_may_be_mapping(value: &str) -> bool {
-    super::super::super::complete_expression_may_be_mapping(value)
+    matrix_expression_valid(value) && super::super::super::complete_expression_may_be_mapping(value)
 }
 
-fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
-    let mut axes = Vec::new();
-    let mut dynamic = false;
-    for (name, values) in mapping {
-        if matches!(name.as_str(), Some("include" | "exclude")) {
-            continue;
-        }
-        let Some(name) = name.as_str() else {
-            return StaticMatrixAxes::Invalid;
-        };
-        match values {
-            Value::Sequence(values) => match resolved_static_axis_values(values) {
-                ResolvedStaticAxisValues::Static(values) if values.is_empty() => {
-                    return StaticMatrixAxes::Invalid;
-                }
-                ResolvedStaticAxisValues::Static(values) => axes.push((name.to_string(), values)),
-                ResolvedStaticAxisValues::Dynamic => dynamic = true,
-                ResolvedStaticAxisValues::Invalid => return StaticMatrixAxes::Invalid,
-            },
-            Value::String(expression) if super::super::super::complete_expression(expression) => {
-                dynamic = true;
-            }
-            _ => return StaticMatrixAxes::Invalid,
-        }
-    }
-    if dynamic {
-        StaticMatrixAxes::Dynamic
-    } else if axes.len() > STATIC_MATRIX_AXIS_LIMIT {
-        StaticMatrixAxes::Invalid
-    } else {
-        StaticMatrixAxes::Static(axes)
-    }
+fn matrix_expression_valid(value: &str) -> bool {
+    complete_expression_contexts_available(value, MATRIX_CONTEXTS)
 }
 
-/// Matrix axis entries are evaluated individually. Resolve context-free
-/// expressions so the cartesian product and include/exclude matching use the
-/// same typed values GitHub Actions sees at runtime.
-enum ResolvedStaticAxisValues {
-    Static(Vec<Value>),
-    Dynamic,
-    Invalid,
-}
-
-fn resolved_static_axis_values(values: &[Value]) -> ResolvedStaticAxisValues {
-    let mut resolved = Vec::with_capacity(values.len());
-    for value in values {
-        match value {
-            Value::Sequence(_) => return ResolvedStaticAxisValues::Dynamic,
-            Value::String(expression)
-                if expression.trim().starts_with("${{")
-                    && !super::super::super::complete_expression(expression) =>
-            {
-                return ResolvedStaticAxisValues::Invalid;
-            }
-            Value::String(expression) if super::super::super::complete_expression(expression) => {
-                let Some(value) =
-                    super::super::super::complete_literal_expression_value(expression)
-                else {
-                    return ResolvedStaticAxisValues::Dynamic;
-                };
-                if matches!(value, Value::Sequence(_)) {
-                    return ResolvedStaticAxisValues::Dynamic;
-                }
-                resolved.push(value);
-            }
-            value => resolved.push(value.clone()),
-        }
-    }
-    ResolvedStaticAxisValues::Static(resolved)
+fn matrix_interpolated_expression_valid(value: &str) -> bool {
+    interpolated_expression_contexts_available(value, MATRIX_CONTEXTS)
 }
 
 fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCount {

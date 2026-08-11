@@ -16,22 +16,25 @@ pub(super) fn static_mappings(value: Option<&Value>) -> StaticMappings {
     match value {
         Some(Value::Sequence(items)) if !items.is_empty() => {
             let mut mappings = Vec::with_capacity(items.len());
+            let mut dynamic = false;
             for item in items {
                 let Some(mapping) = item.as_mapping() else {
                     return StaticMappings::Invalid;
                 };
                 match resolved_static_mapping(mapping) {
                     ResolvedStaticMapping::Static(mapping) => mappings.push(mapping),
-                    ResolvedStaticMapping::Dynamic => return StaticMappings::Dynamic,
+                    ResolvedStaticMapping::Dynamic => dynamic = true,
                     ResolvedStaticMapping::Invalid => return StaticMappings::Invalid,
                 }
             }
-            StaticMappings::Static(mappings)
+            if dynamic {
+                StaticMappings::Dynamic
+            } else {
+                StaticMappings::Static(mappings)
+            }
         }
         Some(Value::Sequence(_)) => StaticMappings::Invalid,
-        Some(Value::String(expression))
-            if super::super::super::super::complete_expression(expression) =>
-        {
+        Some(Value::String(expression)) if super::matrix_expression_valid(expression) => {
             if super::super::super::super::complete_expression_may_be_mapping(expression) {
                 StaticMappings::Dynamic
             } else {
@@ -48,16 +51,21 @@ pub(super) fn static_mappings(value: Option<&Value>) -> StaticMappings {
 /// stop static enumeration so a partial expansion cannot credit a skipped job.
 fn resolved_static_mapping(mapping: &serde_yaml::Mapping) -> ResolvedStaticMapping {
     let mut resolved = serde_yaml::Mapping::new();
+    let mut dynamic = false;
     for (name, value) in mapping {
         match resolved_static_value(value) {
             ResolvedStaticValue::Static(value) => {
                 resolved.insert(name.clone(), value);
             }
-            ResolvedStaticValue::Dynamic => return ResolvedStaticMapping::Dynamic,
+            ResolvedStaticValue::Dynamic => dynamic = true,
             ResolvedStaticValue::Invalid => return ResolvedStaticMapping::Invalid,
         }
     }
-    ResolvedStaticMapping::Static(resolved)
+    if dynamic {
+        ResolvedStaticMapping::Dynamic
+    } else {
+        ResolvedStaticMapping::Static(resolved)
+    }
 }
 
 enum ResolvedStaticValue {
@@ -71,11 +79,17 @@ fn resolved_static_value(value: &Value) -> ResolvedStaticValue {
         return ResolvedStaticValue::Static(value.clone());
     };
     if !super::super::super::super::complete_expression(expression) {
-        return if expression.trim().starts_with("${{") || expression.trim().ends_with("}}") {
-            ResolvedStaticValue::Invalid
-        } else {
-            ResolvedStaticValue::Static(value.clone())
-        };
+        if expression.contains("${{") || expression.contains("}}") {
+            return if super::matrix_interpolated_expression_valid(expression) {
+                ResolvedStaticValue::Dynamic
+            } else {
+                ResolvedStaticValue::Invalid
+            };
+        }
+        return ResolvedStaticValue::Static(value.clone());
+    }
+    if !super::matrix_expression_valid(expression) {
+        return ResolvedStaticValue::Invalid;
     }
     super::super::super::super::complete_literal_expression_value(expression)
         .map_or(ResolvedStaticValue::Dynamic, ResolvedStaticValue::Static)

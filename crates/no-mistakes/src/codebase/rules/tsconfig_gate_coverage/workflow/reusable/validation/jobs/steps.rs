@@ -112,11 +112,16 @@ fn action_step_with_mapping_valid(value: Option<&Value>) -> bool {
 }
 
 fn shared_step_fields_valid(step: &Mapping) -> bool {
-    string_field_valid(step, "name")
-        && string_field_valid(step, "id")
+    string_field_valid(step, "name", super::fields::STEP_STRING_CONTEXTS, true)
+        && string_field_valid(step, "id", &[], false)
         && condition_field_valid(step.get("if"), STEP_CONDITION_CONTEXTS, true)
-        && string_field_valid(step, "working-directory")
-        && string_field_valid(step, "shell")
+        && string_field_valid(
+            step,
+            "working-directory",
+            super::fields::STEP_STRING_CONTEXTS,
+            true,
+        )
+        && string_field_valid(step, "shell", super::fields::STEP_STRING_CONTEXTS, true)
         && scalar_mapping_valid(step.get("env"), STEP_ENV_CONTEXTS, true)
         && bool_or_expression_field_valid(
             step,

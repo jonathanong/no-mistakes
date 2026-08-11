@@ -4,7 +4,9 @@ use serde_yaml::{Mapping, Value};
 use super::super::super::super::expressions::{
     complete_expression_contexts_available, complete_expression_contexts_with_hash_files_available,
     complete_expression_type, complete_literal_expression_value,
-    condition_expression_contexts_available, interpolated_expression_valid,
+    condition_expression_contexts_available,
+    interpolated_expression_contexts_and_hash_files_available,
+    interpolated_expression_contexts_available, interpolated_expression_valid,
     invalid_literal_from_json, StaticExpressionType,
 };
 
@@ -21,6 +23,12 @@ pub(super) const STEP_CONTINUE_ON_ERROR_CONTEXTS: &[&str] = &[
 pub(super) const JOB_TIMEOUT_CONTEXTS: &[&str] = JOB_CONTINUE_ON_ERROR_CONTEXTS;
 pub(super) const STEP_TIMEOUT_CONTEXTS: &[&str] = STEP_CONTINUE_ON_ERROR_CONTEXTS;
 const STRATEGY_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
+pub(super) const JOB_NAME_CONTEXTS: &[&str] =
+    &["github", "needs", "strategy", "matrix", "vars", "inputs"];
+pub(super) const STEP_STRING_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "secrets", "steps",
+    "inputs",
+];
 
 pub(super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
@@ -62,10 +70,21 @@ fn strategy_max_parallel_expression_valid(value: &str) -> bool {
             .is_none_or(|literal| literal.as_u64().is_some_and(|parallelism| parallelism > 0))
 }
 
-pub(super) fn string_field_valid(mapping: &Mapping, field: &str) -> bool {
-    mapping
-        .get(field)
-        .is_none_or(|value| value.as_str().is_some_and(interpolated_expression_valid))
+pub(super) fn string_field_valid(
+    mapping: &Mapping,
+    field: &str,
+    allowed_contexts: &[&str],
+    hash_files_available: bool,
+) -> bool {
+    mapping.get(field).is_none_or(|value| {
+        value.as_str().is_some_and(|value| {
+            if hash_files_available {
+                interpolated_expression_contexts_and_hash_files_available(value, allowed_contexts)
+            } else {
+                interpolated_expression_contexts_available(value, allowed_contexts)
+            }
+        })
+    })
 }
 
 pub(crate) fn condition_field_valid(

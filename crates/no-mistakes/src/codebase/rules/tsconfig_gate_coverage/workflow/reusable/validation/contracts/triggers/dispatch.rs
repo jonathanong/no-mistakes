@@ -1,3 +1,4 @@
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::valid_identifier;
 use serde_yaml::{Mapping, Value};
 
 const WORKFLOW_DISPATCH_INPUT_LIMIT: usize = 25;
@@ -15,7 +16,7 @@ fn workflow_dispatch_inputs_valid(inputs: &Value) -> bool {
     inputs.as_mapping().is_some_and(|inputs| {
         inputs.len() <= WORKFLOW_DISPATCH_INPUT_LIMIT
             && inputs.iter().all(|(name, declaration)| {
-                name.is_string()
+                name.as_str().is_some_and(valid_identifier)
                     && declaration
                         .as_mapping()
                         .is_some_and(workflow_dispatch_input_valid)
