@@ -9,6 +9,7 @@ import type {
 import type { PlaywrightOptions, PlaywrightRelatedOptions } from "./report-types";
 import type {
   ProjectOptions,
+  CheckOptions,
   SymbolsListOptions,
   SymbolsSignatureImpactOptions,
   TraverseOptions,
@@ -26,7 +27,7 @@ type BatchedReactUsagesOptions = Pick<
 > &
   Required<Pick<ProjectOptions, "target">>;
 type BatchedCheckOptions = Pick<
-  ProjectOptions,
+  CheckOptions,
   "root" | "tsconfig" | "config" | "includeSuppressed"
 >;
 

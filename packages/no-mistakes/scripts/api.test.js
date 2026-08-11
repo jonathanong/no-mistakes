@@ -440,6 +440,18 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
+    traversalDeclarations,
+    /export interface CheckOptions extends ProjectOptions \{[\s\S]*?includeSuppressed\?: boolean;/,
+  );
+  assert.doesNotMatch(
+    traversalDeclarations,
+    /export interface ProjectOptions \{[^}]*includeSuppressed/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /check\(options\?: WithInvocationOptions<CheckOptions>\): Promise<CheckReport>;/,
+  );
+  assert.match(
     analyzeProjectDeclarations,
     /type: "symbols"; id\?: string } & \(SymbolsListOptions \| SymbolsSignatureImpactOptions\)/,
   );
