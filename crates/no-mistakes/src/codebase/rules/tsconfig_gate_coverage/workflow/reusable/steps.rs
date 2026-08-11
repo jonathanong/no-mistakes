@@ -19,6 +19,7 @@ mod checkout;
 mod configuration;
 mod model;
 mod working_directory;
+use model::run_command;
 pub(super) use model::StepScan;
 use working_directory::step_working_directory;
 use {
@@ -81,12 +82,11 @@ pub(super) fn scan_job_steps(
             }
             StaticBool::True => {}
         }
-        if continue_on_error && step.get("uses").is_some() {
+        let uses_action = step.get("uses").is_some();
+        if continue_on_error && uses_action {
             continue;
         }
-        if step.get("uses").is_some()
-            && !action_step_inputs_valid_for_state(step, inputs, &environment)
-        {
+        if uses_action && !action_step_inputs_valid_for_state(step, inputs, &environment) {
             if condition == StaticBool::True {
                 step_outcomes.record(step, StaticValue::String("failure".to_string()));
             }
@@ -98,17 +98,21 @@ pub(super) fn scan_job_steps(
             .and_then(Value::as_str)
             .and_then(|target| target.strip_prefix("./"))
         {
-            if !checkout.available() || !context.local_actions.contains(directory) {
+            if !checkout.local_action_available(context.local_actions, directory) {
+                if condition == StaticBool::True {
+                    step_outcomes.record(step, StaticValue::String("failure".to_string()));
+                    failed = true;
+                } else {
+                    indeterminate = true;
+                }
                 break;
             }
             continue;
         }
         checkout.observe(step, condition);
         let step_cwd = step_working_directory(step, inputs, &environment, &job_cwd);
-        let Some(cwd) = step_cwd else {
-            continue;
-        };
-        let Some(run) = step.get("run").and_then(Value::as_str) else {
+        let Some(cwd) = step_cwd else { continue };
+        let Some(run) = run_command(step) else {
             continue;
         };
         let Some(run) =
@@ -189,9 +193,5 @@ pub(super) fn scan_job_steps(
             step_outcomes.record(step, StaticValue::String("success".to_string()));
         }
     }
-    StepScan {
-        projects,
-        failed,
-        indeterminate,
-    }
+    StepScan::new(projects, failed, indeterminate)
 }

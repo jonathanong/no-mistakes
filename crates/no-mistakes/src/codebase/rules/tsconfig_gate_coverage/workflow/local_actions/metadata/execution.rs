@@ -148,6 +148,9 @@ fn composite_step_may_run(step: &Mapping) -> bool {
     match step.get("if") {
         Some(Value::Bool(false)) => false,
         Some(Value::String(expression)) => {
+            if expression.contains("inputs.") {
+                return true;
+            }
             super::super::super::conditions::expression_bool(expression, &BTreeMap::new())
                 != super::super::super::conditions::StaticBool::False
         }

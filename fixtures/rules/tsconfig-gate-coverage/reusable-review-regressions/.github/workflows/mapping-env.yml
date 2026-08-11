@@ -1,0 +1,9 @@
+on: push
+jobs:
+  check:
+    strategy: {matrix: {cfg: [{key: value}]}}
+    runs-on: ubuntu-latest
+    # A mapping cannot become a scalar environment value; it must block this gate.
+    env: {CFG: '${{ matrix.cfg }}'}
+    steps:
+      - run: pnpm exec tsc --noEmit --project mapping-env/tsconfig.json

@@ -11,7 +11,8 @@ pub(super) fn job_configuration_validity(
     inputs: &InputState,
     environment: &EnvironmentState,
 ) -> StaticBool {
-    if !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs)
+    if environment.has_invalid_value()
+        || !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs)
         || !environment_configuration_valid_for_inputs(job, inputs, environment)
     {
         return StaticBool::False;

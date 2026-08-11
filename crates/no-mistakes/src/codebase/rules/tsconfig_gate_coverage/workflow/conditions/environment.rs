@@ -64,6 +64,12 @@ impl EnvironmentState {
         self.runner_os.clone()
     }
 
+    pub(crate) fn has_invalid_value(&self) -> bool {
+        self.values
+            .values()
+            .any(|value| matches!(value, StaticValue::Invalid))
+    }
+
     pub(crate) fn with_runner_os(&self, runner_os: Option<&str>) -> Self {
         Self {
             values: self.values.clone(),
@@ -168,7 +174,7 @@ fn string_value(value: Value) -> StaticValue {
         Value::Number(value) => StaticValue::String(value.to_string()),
         Value::String(value) => StaticValue::String(value),
         Value::Null => StaticValue::String(String::new()),
-        Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::Unknown,
+        Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::Invalid,
     }
 }
 
@@ -177,10 +183,8 @@ fn string_static_value(value: StaticValue) -> StaticValue {
         StaticValue::Bool(value) => StaticValue::String(value.to_string()),
         StaticValue::Number(value) | StaticValue::String(value) => StaticValue::String(value),
         StaticValue::Null => StaticValue::String(String::new()),
-        StaticValue::Sequence(_)
-        | StaticValue::Mapping
-        | StaticValue::NonStringable
-        | StaticValue::Unknown => StaticValue::Unknown,
+        StaticValue::Sequence(_) | StaticValue::Mapping => StaticValue::Invalid,
+        StaticValue::NonStringable | StaticValue::Unknown => StaticValue::Unknown,
         StaticValue::Invalid => StaticValue::Invalid,
     }
 }

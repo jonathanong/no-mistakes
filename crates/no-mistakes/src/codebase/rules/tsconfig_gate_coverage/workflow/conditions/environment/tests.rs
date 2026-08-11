@@ -13,10 +13,10 @@ fn literal_environment_values_use_github_string_coercion() {
             StaticValue::String("release".into()),
         ),
         (Value::Null, StaticValue::String(String::new())),
-        (Value::Sequence(Vec::new()), StaticValue::Unknown),
+        (Value::Sequence(Vec::new()), StaticValue::Invalid),
         (
             Value::Mapping(serde_yaml::Mapping::new()),
-            StaticValue::Unknown,
+            StaticValue::Invalid,
         ),
     ] {
         assert_eq!(string_value(value), expected);
@@ -43,7 +43,7 @@ fn expressions_resolve_current_inputs_and_matrix_values_with_string_coercion() {
         ("${{ inputs.empty }}", StaticValue::String(String::new())),
         ("${{ inputs.missing }}", StaticValue::String(String::new())),
         ("${{ matrix.target }}", StaticValue::String("linux".into())),
-        ("${{ matrix.cfg }}", StaticValue::Unknown),
+        ("${{ matrix.cfg }}", StaticValue::Invalid),
         ("${{ matrix.dynamic_target }}", StaticValue::Unknown),
         ("prefix-${{ inputs.enabled }}", StaticValue::Unknown),
     ] {

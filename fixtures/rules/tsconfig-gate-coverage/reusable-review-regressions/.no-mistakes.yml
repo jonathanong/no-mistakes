@@ -44,6 +44,22 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, output/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-input-condition
+      command: [pnpm, exec, tsc, --noEmit, --project, input-condition/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-mapping-env
+      command: [pnpm, exec, tsc, --noEmit, --project, mapping-env/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pre-if
+      command: [pnpm, exec, tsc, --noEmit, --project, pre-if/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-needs-action
+      command: [pnpm, exec, tsc, --noEmit, --project, needs-action/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

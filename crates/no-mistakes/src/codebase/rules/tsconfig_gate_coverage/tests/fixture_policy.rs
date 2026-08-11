@@ -150,6 +150,10 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "output/tsconfig.json",
             "runner/tsconfig.json",
             "script/tsconfig.json",
+            "input-condition/tsconfig.json",
+            "mapping-env/tsconfig.json",
+            "pre-if/tsconfig.json",
+            "needs-action/tsconfig.json",
         ]),
         "{report:#?}"
     );

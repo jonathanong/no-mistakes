@@ -123,12 +123,8 @@ pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
         || !runs
             .get("post")
             .is_none_or(|value| nonempty_string(Some(value)))
-        || !runs
-            .get("pre-if")
-            .is_none_or(|value| nonempty_string(Some(value)))
-        || !runs
-            .get("post-if")
-            .is_none_or(|value| nonempty_string(Some(value)))
+        || !runs.get("pre-if").is_none_or(valid_action_condition)
+        || !runs.get("post-if").is_none_or(valid_action_condition)
         || !runs
             .get("pre-entrypoint")
             .is_none_or(|value| nonempty_string(Some(value)))
@@ -158,6 +154,13 @@ pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
         }
     }
     true
+}
+
+fn valid_action_condition(value: &Value) -> bool {
+    value.as_str().is_some_and(|value| {
+        !value.trim().is_empty()
+            && crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::condition_expression_valid(value)
+    })
 }
 
 pub(super) fn only_keys(mapping: &Mapping, keys: &[&str]) -> bool {

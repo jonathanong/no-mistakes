@@ -1,0 +1,8 @@
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bad-pre
+      - run: pnpm exec tsc --noEmit --project pre-if/tsconfig.json

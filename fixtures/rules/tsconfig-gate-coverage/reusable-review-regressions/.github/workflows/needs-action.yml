@@ -1,0 +1,12 @@
+on: push
+jobs:
+  broken:
+    runs-on: ubuntu-latest
+    steps:
+      # A missing local action fails this prerequisite, so the dependent must not count.
+      - uses: ./.github/actions/missing
+  check:
+    needs: broken
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project needs-action/tsconfig.json
