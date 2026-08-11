@@ -162,6 +162,8 @@ fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
 }
 
 #[cfg(test)]
+mod condition_values_tests;
+#[cfg(test)]
 mod matrix_tests;
 #[cfg(test)]
 mod relational_tests;
