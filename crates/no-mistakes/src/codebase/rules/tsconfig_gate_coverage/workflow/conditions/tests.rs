@@ -161,6 +161,26 @@ fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
 }
 
 #[test]
+fn comparisons_resolve_static_subexpressions_without_crediting_dynamic_values() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        ("${{ (false || false) == true }}", StaticBool::False),
+        ("${{ (!false) == true }}", StaticBool::True),
+        (
+            "${{ startsWith('release', 'rel') == true }}",
+            StaticBool::True,
+        ),
+        ("${{ (github.ref || false) == true }}", StaticBool::Unknown),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn deterministic_string_functions_resolve_static_arguments() {
     let inputs = InputState::from([("label".into(), StaticValue::String("Release".into()))]);
     for (expression, expected) in [

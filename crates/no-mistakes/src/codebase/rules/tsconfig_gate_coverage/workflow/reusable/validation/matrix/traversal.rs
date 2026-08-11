@@ -9,6 +9,9 @@ pub(super) fn count_unexcluded(
     limit: usize,
     states_remaining: &mut usize,
 ) -> Option<usize> {
+    if index > super::MAX_STATIC_MATRIX_AXIS_DEPTH {
+        return None;
+    }
     if !consume_state(states_remaining) {
         return None;
     }
@@ -59,6 +62,9 @@ pub(super) fn has_applicable_combination(
     values: &mut BTreeMap<String, Value>,
     states_remaining: &mut usize,
 ) -> Option<bool> {
+    if index > super::MAX_STATIC_MATRIX_AXIS_DEPTH {
+        return None;
+    }
     if !consume_state(states_remaining) {
         return None;
     }

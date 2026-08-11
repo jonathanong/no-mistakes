@@ -180,7 +180,16 @@ pub(super) fn condition_value(
     if operand.trim().eq_ignore_ascii_case("github.event_name") {
         return event_name_value(inputs);
     }
-    literal_from_json_static_value(operand).or_else(|| condition_input_value(operand, inputs))
+    literal_from_json_static_value(operand)
+        .or_else(|| condition_input_value(operand, inputs))
+        .or_else(|| comparison_literal(operand))
+        .or_else(
+            || match expression_bool_with_status(operand, inputs, success) {
+                StaticBool::False => Some(StaticValue::Bool(false)),
+                StaticBool::True => Some(StaticValue::Bool(true)),
+                StaticBool::TruthyNonBoolean | StaticBool::Unknown => None,
+            },
+        )
 }
 
 fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {

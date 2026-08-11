@@ -384,6 +384,43 @@ fn traversal_exhaustion_and_nonmatching_includes_are_conservative() {
 }
 
 #[test]
+fn excessive_axis_depth_stops_before_recursive_traversal() {
+    let axes = (0..=super::MAX_STATIC_MATRIX_AXIS_DEPTH)
+        .map(|index| (format!("axis{index}"), vec![Value::Bool(false)]))
+        .collect::<Vec<_>>();
+    let mut matrix = serde_yaml::Mapping::new();
+    for (name, choices) in &axes {
+        matrix.insert(
+            Value::String(name.clone()),
+            Value::Sequence(choices.clone()),
+        );
+    }
+    let job = Value::Mapping(serde_yaml::Mapping::from_iter([(
+        Value::String("strategy".into()),
+        Value::Mapping(serde_yaml::Mapping::from_iter([(
+            Value::String("matrix".into()),
+            Value::Mapping(matrix),
+        )])),
+    )]));
+    assert!(!matrix_shape_valid(&job));
+    assert!(static_matrix_combinations(&job).is_none());
+
+    let mut values = BTreeMap::new();
+    let mut states_remaining = 1_000_000;
+    assert_eq!(
+        traversal::has_applicable_combination(
+            &axes,
+            &[],
+            &serde_yaml::Mapping::new(),
+            0,
+            &mut values,
+            &mut states_remaining,
+        ),
+        None
+    );
+}
+
+#[test]
 fn static_mappings_classify_empty_literal_dynamic_and_invalid_values() {
     use super::mappings::{static_mappings, StaticMappings};
 

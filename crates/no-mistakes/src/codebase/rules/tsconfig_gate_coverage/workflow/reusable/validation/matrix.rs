@@ -10,6 +10,7 @@ pub(in super::super) use combinations::{static_matrix_combinations, MatrixCombin
 
 const MATRIX_JOB_LIMIT: usize = 256;
 const STATIC_MATRIX_ENUMERATION_LIMIT: usize = (MATRIX_JOB_LIMIT + 1) * 64;
+pub(super) const MAX_STATIC_MATRIX_AXIS_DEPTH: usize = MATRIX_JOB_LIMIT;
 
 enum StaticMatrixAxes {
     Static(Vec<(String, Vec<Value>)>),

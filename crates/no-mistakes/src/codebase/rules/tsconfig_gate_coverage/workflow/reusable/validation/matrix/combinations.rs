@@ -94,6 +94,9 @@ fn collect_combinations(
     combinations: &mut Vec<BTreeMap<String, Value>>,
     states_remaining: &mut usize,
 ) -> bool {
+    if index > super::MAX_STATIC_MATRIX_AXIS_DEPTH {
+        return false;
+    }
     if !super::traversal::consume_state(states_remaining) {
         return false;
     }
