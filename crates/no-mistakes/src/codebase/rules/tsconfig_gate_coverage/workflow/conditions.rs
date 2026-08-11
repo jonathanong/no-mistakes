@@ -24,6 +24,7 @@ pub(super) use inputs::{
     SecretAvailability, SecretState,
 };
 use inputs::{event_action_value, event_name_value};
+use resolution::condition_input_value;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -76,6 +77,33 @@ pub(super) fn statically_skipped_jobs(
         if !changed {
             return skipped;
         }
+    }
+}
+
+pub(crate) fn resolve_static_interpolations(
+    value: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<String> {
+    super::expressions::resolve_interpolations(value, |expression| {
+        condition_input_value(expression, inputs, environment)
+            .and_then(|value| value.function_string())
+            .or_else(|| {
+                super::expressions::complete_literal_expression_value(&format!(
+                    "${{{{ {expression} }}}}"
+                ))
+                .and_then(static_value_string)
+            })
+    })
+}
+
+fn static_value_string(value: Value) -> Option<String> {
+    match value {
+        Value::Bool(value) => Some(value.to_string()),
+        Value::Number(value) => Some(value.to_string()),
+        Value::String(value) => Some(value),
+        Value::Null => Some(String::new()),
+        Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => None,
     }
 }
 

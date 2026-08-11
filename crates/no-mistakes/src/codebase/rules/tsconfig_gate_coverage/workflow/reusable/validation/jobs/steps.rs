@@ -159,10 +159,12 @@ fn action_target_valid(target: &str) -> bool {
         return false;
     };
     let mut segments = path.split('/');
-    segments.next().is_some_and(|owner| !owner.is_empty())
+    segments
+        .next()
+        .is_some_and(super::super::valid_remote_owner)
         && segments
             .next()
-            .is_some_and(|repository| !repository.is_empty())
+            .is_some_and(super::super::valid_remote_repository)
         && segments.all(|segment| !segment.is_empty())
         && super::super::valid_remote_reference(reference)
 }

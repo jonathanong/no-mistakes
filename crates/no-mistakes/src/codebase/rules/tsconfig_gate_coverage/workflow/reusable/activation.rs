@@ -8,7 +8,6 @@ use super::validation::{
     workflow_shape_valid,
 };
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::EnvironmentState;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
@@ -63,7 +62,7 @@ fn scan_activation_uncached(
         WorkflowRuntime {
             cwd: effective_working_directory(document.value, Some(".".to_string())),
             shell: effective_shell(document.value, None),
-            environment: EnvironmentState::from_workflow(document.value, &state.secrets),
+            workflow: document.value,
         },
         &state,
         context,

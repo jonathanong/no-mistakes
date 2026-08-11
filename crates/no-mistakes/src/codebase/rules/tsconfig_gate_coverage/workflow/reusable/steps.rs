@@ -32,7 +32,7 @@ pub(super) fn scan_job_steps(
     let implicit_shell_can_be_windows = runs_on_can_default_to_windows(job);
     let mut projects = BTreeSet::new();
     for step in steps {
-        let environment = environment.with_step(step);
+        let environment = environment.with_step(step, inputs);
         if statically_not_enforcing_with_environment(step, inputs, &environment)
             || !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs)
         {

@@ -9,8 +9,8 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    scan_job_shape_valid, static_matrix_combinations, validated_reusable_target,
-    zero_instance_matrix, MatrixCombinations,
+    container_images_valid_for_inputs, scan_job_shape_valid, static_matrix_combinations,
+    validated_reusable_target, zero_instance_matrix, MatrixCombinations,
 };
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
@@ -21,10 +21,10 @@ pub(super) struct JobStates {
     skipped: BTreeSet<String>,
 }
 
-pub(super) struct WorkflowRuntime {
+pub(super) struct WorkflowRuntime<'workflow> {
     pub(super) cwd: Option<String>,
     pub(super) shell: Option<String>,
-    pub(super) environment: EnvironmentState,
+    pub(super) workflow: &'workflow Value,
 }
 
 impl JobStates {
@@ -77,7 +77,7 @@ impl JobStates {
 pub(super) struct JobScanner<'a, 'workflow> {
     job_states: &'a JobStates,
     triggers: &'a CompiledTriggers,
-    workflow_runtime: WorkflowRuntime,
+    workflow_runtime: WorkflowRuntime<'workflow>,
     state: &'a ActivationState,
     context: &'a ScanContext<'workflow>,
     memo: &'a mut ActivationMemo,
@@ -87,7 +87,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
     pub(super) fn new(
         job_states: &'a JobStates,
         triggers: &'a CompiledTriggers,
-        workflow_runtime: WorkflowRuntime,
+        workflow_runtime: WorkflowRuntime<'workflow>,
         state: &'a ActivationState,
         context: &'a ScanContext<'workflow>,
         memo: &'a mut ActivationMemo,
@@ -180,12 +180,20 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         }
         let mut projects = BTreeSet::new();
         for inputs in inputs {
-            if !statically_not_enforcing(job, inputs) {
+            let environment = EnvironmentState::from_workflow(
+                self.workflow_runtime.workflow,
+                &self.state.secrets,
+                inputs,
+            )
+            .with_job(job, inputs);
+            if !statically_not_enforcing(job, inputs)
+                && container_images_valid_for_inputs(job, inputs, &environment)
+            {
                 projects.extend(scan_job_steps(
                     job,
                     self.triggers,
                     inputs,
-                    &self.workflow_runtime.environment.with_job(job),
+                    &environment,
                     self.workflow_runtime.cwd.clone(),
                     self.workflow_runtime.shell.clone(),
                     self.context,

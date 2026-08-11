@@ -1,6 +1,8 @@
 use serde_yaml::{Mapping, Value};
 
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::valid_identifier;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    resolve_static_interpolations, valid_identifier, EnvironmentState, InputState,
+};
 
 use super::super::super::super::expressions::interpolation::opaque_interpolated_expression_form;
 use super::super::super::super::expressions::{
@@ -41,6 +43,53 @@ pub(super) fn services_shape_valid(value: Option<&Value>) -> bool {
                 })
         })
     })
+}
+
+pub(crate) fn container_images_valid_for_inputs(
+    job: &Value,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    container_image_value(job.get("container"), inputs, environment)
+        && job
+            .get("services")
+            .and_then(Value::as_mapping)
+            .is_none_or(|services| {
+                services.values().all(|service| {
+                    service
+                        .as_mapping()
+                        .and_then(|service| service.get("image"))
+                        .and_then(Value::as_str)
+                        .is_some_and(|image| {
+                            container_image_valid_for_inputs(image, inputs, environment)
+                        })
+                })
+            })
+}
+
+fn container_image_value(
+    value: Option<&Value>,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    value.is_none_or(|value| match value {
+        Value::String(image) => container_image_valid_for_inputs(image, inputs, environment),
+        Value::Mapping(container) => container
+            .get("image")
+            .and_then(Value::as_str)
+            .is_some_and(|image| container_image_valid_for_inputs(image, inputs, environment)),
+        _ => false,
+    })
+}
+
+fn container_image_valid_for_inputs(
+    image: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    valid_container_image(image)
+        && resolve_static_interpolations(image, inputs, environment)
+            .is_some_and(|image| images::valid_static_reference(&image))
 }
 
 fn container_mapping_shape_valid(container: &Mapping) -> bool {

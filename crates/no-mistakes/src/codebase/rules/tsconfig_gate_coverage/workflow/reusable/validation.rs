@@ -11,7 +11,8 @@ mod workflow;
 
 pub(super) use contracts::workflow_call_shape_valid;
 pub(super) use jobs::{
-    call_bindings_shape_valid, reusable_call_job_shape_valid, steps_shape_valid,
+    call_bindings_shape_valid, container_images_valid_for_inputs, reusable_call_job_shape_valid,
+    steps_shape_valid,
 };
 pub(super) use matrix::{static_matrix_combinations, zero_instance_matrix, MatrixCombinations};
 pub(super) use workflow::workflow_shape_valid;
@@ -60,7 +61,7 @@ pub(super) fn canonical_remote_call_target(target: &str) -> bool {
     valid && segments.next().is_none()
 }
 
-fn valid_remote_owner(owner: &str) -> bool {
+pub(super) fn valid_remote_owner(owner: &str) -> bool {
     !owner.is_empty()
         && owner.len() <= 39
         && !owner.starts_with('-')
@@ -71,7 +72,7 @@ fn valid_remote_owner(owner: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
 }
 
-fn valid_remote_repository(repository: &str) -> bool {
+pub(super) fn valid_remote_repository(repository: &str) -> bool {
     !repository.is_empty()
         && repository.len() <= 100
         && !matches!(repository, "." | "..")

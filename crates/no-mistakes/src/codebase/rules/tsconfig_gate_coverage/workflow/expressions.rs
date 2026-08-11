@@ -10,7 +10,8 @@ mod validation;
 pub(crate) use calls::condition_function_call;
 pub(crate) use contexts::REUSABLE_CALL_SECRET_BINDING_CONTEXTS;
 pub(super) use interpolation::{
-    interpolated_expression_valid, reduce_context_free_interpolations, ContextFreeInterpolation,
+    interpolated_expression_valid, reduce_context_free_interpolations, resolve_interpolations,
+    ContextFreeInterpolation,
 };
 pub(crate) use lexer::Function;
 pub(super) use literal_value::{

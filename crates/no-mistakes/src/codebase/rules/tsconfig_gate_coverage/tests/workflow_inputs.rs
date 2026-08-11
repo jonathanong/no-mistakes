@@ -121,6 +121,134 @@ fn ci_scanner_merges_workflow_job_and_step_environment_for_step_enforcement() {
 }
 
 #[test]
+fn ci_scanner_resolves_environment_inputs_and_matrix_per_job_combination() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/false.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with: {enabled: false}\n",
+            ),
+            workflow_document(
+                ".github/workflows/true.yml",
+                "on: push\njobs:\n  checks:\n    uses: ./.github/workflows/checks.yml\n    with: {enabled: true}\n",
+            ),
+            workflow_document(
+                ".github/workflows/checks.yml",
+                r#"on:
+  workflow_call:
+    inputs:
+      enabled: {type: boolean, required: true}
+env:
+  ENABLED: '${{ inputs.enabled }}'
+jobs:
+  input:
+    runs-on: ubuntu-latest
+    steps:
+      - if: env.ENABLED == 'false'
+        run: tsc --noEmit --project input-false/tsconfig.json
+  matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: {enabled: [false, true]}
+    env:
+      ENABLED: '${{ matrix.enabled }}'
+    steps:
+      - if: env.ENABLED == 'false'
+        run: tsc --noEmit --project matrix-false/tsconfig.json
+      - continue-on-error: "${{ env.ENABLED == 'true' }}"
+        run: tsc --noEmit --project matrix-coe/tsconfig.json
+  step-override:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: {enabled: [true]}
+    env:
+      ENABLED: '${{ matrix.enabled }}'
+    steps:
+      - env: {ENABLED: false}
+        if: env.ENABLED == 'false'
+        run: tsc --noEmit --project step-override/tsconfig.json
+"#,
+            ),
+        ],
+    };
+    let tracked = [
+        "input-false/tsconfig.json",
+        "matrix-coe/tsconfig.json",
+        "matrix-false/tsconfig.json",
+        "step-override/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from([
+            "input-false/tsconfig.json".to_string(),
+            "matrix-coe/tsconfig.json".to_string(),
+            "matrix-false/tsconfig.json".to_string(),
+            "step-override/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn ci_scanner_resolves_outer_environment_values_and_missing_inputs() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            r#"on:
+  push:
+  workflow_call:
+    inputs:
+      declared: {type: boolean}
+env:
+  OUTER: true
+  MISSING: '${{ inputs.not_declared }}'
+jobs:
+  scopes:
+    runs-on: ubuntu-latest
+    steps:
+      - if: env.OUTER == 'true'
+        run: tsc --noEmit --project job-control/tsconfig.json
+      - env:
+          FROM_JOB: '${{ env.OUTER }}'
+        if: env.FROM_JOB == 'true'
+        run: tsc --noEmit --project step-control/tsconfig.json
+      # Without the outer environment resolution this is falsely credited.
+      - env:
+          FROM_JOB: '${{ env.OUTER }}'
+        continue-on-error: "${{ env.FROM_JOB == 'true' }}"
+        run: tsc --noEmit --project false-credit/tsconfig.json
+  missing-input:
+    runs-on: ubuntu-latest
+    steps:
+      - if: env.MISSING == ''
+        run: tsc --noEmit --project missing-input/tsconfig.json
+"#,
+        )],
+    };
+    let tracked = [
+        "false-credit/tsconfig.json",
+        "job-control/tsconfig.json",
+        "missing-input/tsconfig.json",
+        "step-control/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)),
+        BTreeSet::from([
+            "job-control/tsconfig.json".to_string(),
+            "missing-input/tsconfig.json".to_string(),
+            "step-control/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
 fn ci_scanner_validates_contract_identifiers_outputs_and_bracket_input_references() {
     let workflows = ParsedWorkflowSet {
         documents: vec![

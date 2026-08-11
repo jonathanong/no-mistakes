@@ -1,4 +1,7 @@
-use super::{resolution::secret_name, SecretAvailability, SecretState, StaticValue};
+use super::{
+    resolution::{condition_input_value, input_name, secret_name},
+    SecretAvailability, SecretState, StaticValue,
+};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::complete_literal_expression_value;
 use serde_yaml::Value;
 use std::collections::BTreeMap;
@@ -18,28 +21,37 @@ impl Default for EnvironmentState {
 }
 
 impl EnvironmentState {
-    pub(crate) fn from_workflow(workflow: &Value, secrets: &SecretState) -> Self {
+    pub(crate) fn from_workflow(
+        workflow: &Value,
+        secrets: &SecretState,
+        inputs: &super::InputState,
+    ) -> Self {
         Self {
-            values: values(workflow.get("env"), secrets),
+            values: values(
+                workflow.get("env"),
+                secrets,
+                inputs,
+                &EnvironmentState::default(),
+            ),
             secrets: secrets.clone(),
         }
     }
 
-    pub(crate) fn with_job(&self, job: &Value) -> Self {
-        self.with_scope(job)
+    pub(crate) fn with_job(&self, job: &Value, inputs: &super::InputState) -> Self {
+        self.with_scope(job, inputs)
     }
 
-    pub(crate) fn with_step(&self, step: &Value) -> Self {
-        self.with_scope(step)
+    pub(crate) fn with_step(&self, step: &Value, inputs: &super::InputState) -> Self {
+        self.with_scope(step, inputs)
     }
 
     pub(crate) fn value(&self, name: &str) -> Option<StaticValue> {
         self.values.get(&name.to_lowercase()).cloned()
     }
 
-    fn with_scope(&self, scope: &Value) -> Self {
+    fn with_scope(&self, scope: &Value, inputs: &super::InputState) -> Self {
         let mut environment_values = self.values.clone();
-        environment_values.extend(values(scope.get("env"), &self.secrets));
+        environment_values.extend(values(scope.get("env"), &self.secrets, inputs, self));
         Self {
             values: environment_values,
             secrets: self.secrets.clone(),
@@ -47,7 +59,12 @@ impl EnvironmentState {
     }
 }
 
-fn values(value: Option<&Value>, secrets: &SecretState) -> BTreeMap<String, StaticValue> {
+fn values(
+    value: Option<&Value>,
+    secrets: &SecretState,
+    inputs: &super::InputState,
+    environment: &EnvironmentState,
+) -> BTreeMap<String, StaticValue> {
     value
         .and_then(Value::as_mapping)
         .into_iter()
@@ -55,13 +72,18 @@ fn values(value: Option<&Value>, secrets: &SecretState) -> BTreeMap<String, Stat
         .filter_map(|(name, raw_value)| {
             Some((
                 name.as_str()?.to_lowercase(),
-                environment_value(raw_value, secrets),
+                environment_value(raw_value, secrets, inputs, environment),
             ))
         })
         .collect()
 }
 
-fn environment_value(value: &Value, secrets: &SecretState) -> StaticValue {
+fn environment_value(
+    value: &Value,
+    secrets: &SecretState,
+    inputs: &super::InputState,
+    environment: &EnvironmentState,
+) -> StaticValue {
     match value {
         Value::Bool(value) => StaticValue::String(value.to_string()),
         Value::Number(value) => StaticValue::String(value.to_string()),
@@ -72,11 +94,31 @@ fn environment_value(value: &Value, secrets: &SecretState) -> StaticValue {
                     .then(|| StaticValue::String(String::new()))
             })
             .or_else(|| complete_literal_expression_value(value).map(string_value))
+            .or_else(|| expression_input_value(value, inputs, environment).map(string_static_value))
             .unwrap_or(StaticValue::Unknown),
         Value::Null | Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => {
             StaticValue::Unknown
         }
     }
+}
+
+fn expression_input_value(
+    value: &str,
+    inputs: &super::InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
+    let expression = value.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
+    if let Some(name) = input_name(expression) {
+        return Some(
+            inputs
+                .get(&name.to_lowercase())
+                .cloned()
+                // GitHub resolves a missing input in an environment value to
+                // the empty string, rather than preserving condition false.
+                .unwrap_or_else(|| StaticValue::String(String::new())),
+        );
+    }
+    condition_input_value(expression, inputs, environment)
 }
 
 fn string_value(value: Value) -> StaticValue {
@@ -86,6 +128,17 @@ fn string_value(value: Value) -> StaticValue {
         Value::String(value) => StaticValue::String(value),
         Value::Null => StaticValue::String(String::new()),
         Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::Unknown,
+    }
+}
+
+fn string_static_value(value: StaticValue) -> StaticValue {
+    match value {
+        StaticValue::Bool(value) => StaticValue::String(value.to_string()),
+        StaticValue::Number(value) | StaticValue::String(value) => StaticValue::String(value),
+        StaticValue::Null => StaticValue::String(String::new()),
+        StaticValue::Sequence(_) | StaticValue::NonStringable | StaticValue::Unknown => {
+            StaticValue::Unknown
+        }
     }
 }
 

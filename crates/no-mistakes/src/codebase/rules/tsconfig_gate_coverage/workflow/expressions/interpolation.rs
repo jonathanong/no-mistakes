@@ -52,3 +52,22 @@ pub(in super::super) fn reduce_context_free_interpolations(
     normalized.push_str(remaining);
     ContextFreeInterpolation::Static(normalized)
 }
+
+/// Resolves every interpolation using the caller's already-prepared static
+/// state. An unavailable expression leaves the whole value unresolved.
+pub(in super::super) fn resolve_interpolations(
+    value: &str,
+    mut resolve: impl FnMut(&str) -> Option<String>,
+) -> Option<String> {
+    let mut normalized = String::with_capacity(value.len());
+    let mut remaining = value;
+    while let Some(start) = remaining.find("${{") {
+        normalized.push_str(&remaining[..start]);
+        let body = &remaining[start + "${{".len()..];
+        let end = super::validation::interpolated_expression_end(body)?;
+        normalized.push_str(&resolve(body[..end].trim())?);
+        remaining = &body[end + "}}".len()..];
+    }
+    normalized.push_str(remaining);
+    Some(normalized)
+}

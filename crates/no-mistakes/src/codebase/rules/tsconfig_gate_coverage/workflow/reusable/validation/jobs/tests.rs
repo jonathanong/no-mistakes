@@ -70,12 +70,13 @@ fn steps_require_known_keys_and_matching_value_shapes() {
 #[test]
 fn job_and_step_environment_expressions_use_distinct_documented_contexts() {
     let valid = job(
-        "runs-on: ubuntu-latest\nenv:\n  REF: '${{ needs.setup.outputs.ref }}'\n  TOKEN: '${{ secrets.TOKEN }}'\nsteps:\n  - env:\n      JOB: '${{ job.status }}'\n      RUNNER: '${{ runner.os }}'\n      PRIOR: '${{ steps.setup.outputs.value }}'\n      FILES: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"\n    run: echo valid",
+        "runs-on: ubuntu-latest\nenv:\n  REF: '${{ needs.setup.outputs.ref }}'\n  TOKEN: '${{ secrets.TOKEN }}'\nsteps:\n  - env:\n      JOB: '${{ job.status }}'\n      RUNNER: '${{ runner.os }}'\n      PRIOR: '${{ steps.setup.outputs.value }}'\n      OUTER: '${{ env.OUTER }}'\n      FILES: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"\n    run: echo valid",
     );
     assert!(super::step_job_shape_valid(&valid));
     assert!(super::steps_shape_valid(&valid));
 
     for yaml in [
+        "runs-on: ubuntu-latest\nenv: {RESULT: '${{ env.OUTER }}'}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nenv: {RESULT: '${{ jobs.build.outputs.result }}'}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nenv: {RESULT: '${{ steps.setup.outputs.result }}'}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nenv: {RESULT: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"}\nsteps:\n  - run: echo invalid",
@@ -304,6 +305,9 @@ fn action_steps_require_static_canonical_targets() {
         "steps:\n  - uses: actions/checkout@main branch",
         "steps:\n  - uses: actions/checkout@refs//heads/main",
         "steps:\n  - uses: actions/checkout@release.lock",
+        "steps:\n  - uses: owner/../action@v1",
+        "steps:\n  - uses: -owner/action@v1",
+        "steps:\n  - uses: owner-/action@v1",
         "steps:\n  - uses: ./../outside",
         "steps:\n  - uses: docker://",
         "steps:\n  - uses: docker://ghcr.io//checker:22",

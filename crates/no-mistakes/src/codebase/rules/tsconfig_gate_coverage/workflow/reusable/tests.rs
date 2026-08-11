@@ -375,6 +375,27 @@ fn static_matrix_timeouts_must_be_valid_before_steps_earn_coverage() {
 }
 
 #[test]
+fn static_matrix_images_must_be_valid_before_steps_earn_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  invalid-container:\n    strategy:\n      matrix: {tag: [':']}\n    runs-on: ubuntu-latest\n    container: 'node:${{ matrix.tag }}'\n    steps:\n      - run: tsc --noEmit --project invalid-container/tsconfig.json\n  valid-container:\n    strategy:\n      matrix: {tag: [22]}\n    runs-on: ubuntu-latest\n    container: 'node:${{ matrix.tag }}'\n    steps:\n      - run: tsc --noEmit --project valid-container/tsconfig.json\n  invalid-service:\n    strategy:\n      matrix: {tag: [':']}\n    runs-on: ubuntu-latest\n    services:\n      postgres: {image: 'postgres:${{ matrix.tag }}'}\n    steps:\n      - run: tsc --noEmit --project invalid-service/tsconfig.json\n  dynamic:\n    strategy:\n      matrix: '${{ fromJSON(needs.setup.outputs.matrix) }}'\n    runs-on: ubuntu-latest\n    container: 'node:${{ matrix.tag }}'\n    steps:\n      - run: tsc --noEmit --project dynamic-image/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "invalid-container/tsconfig.json".to_string(),
+        "valid-container/tsconfig.json".to_string(),
+        "invalid-service/tsconfig.json".to_string(),
+        "dynamic-image/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["valid-container/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn bracketed_matrix_conditions_preserve_static_gate_boundaries() {
     let workflows = ParsedWorkflowSet {
         documents: vec![workflow_document(
