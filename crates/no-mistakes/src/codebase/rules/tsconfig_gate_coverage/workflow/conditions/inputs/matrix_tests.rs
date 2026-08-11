@@ -1,4 +1,4 @@
-use super::super::{resolution::matrix_property_value, static_bool, StaticBool};
+use super::super::{evaluation::static_bool, resolution::matrix_property_value, StaticBool};
 use super::*;
 
 #[test]

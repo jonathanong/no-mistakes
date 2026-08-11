@@ -1,7 +1,9 @@
 use super::{
-    continues_after_skipped_need, expression_bool,
+    continues_after_skipped_need,
+    evaluation::static_bool,
+    expression_bool,
     literals::{hexadecimal_bool, number_bool},
-    static_bool, step_timeout_minutes_enforced, InputState, StaticBool, StaticValue,
+    step_timeout_minutes_enforced, InputState, StaticBool, StaticValue,
 };
 use serde_yaml::Value;
 

@@ -1,4 +1,4 @@
-use super::{static_bool, InputState, StaticBool, StaticValue};
+use super::{evaluation::static_bool, InputState, StaticBool, StaticValue};
 use serde_yaml::Value;
 
 #[test]
