@@ -1,8 +1,8 @@
 use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    callee_inputs, callee_secrets, job_statically_enforcing, job_statically_not_enforcing,
-    job_timeout_minutes_enforced, EnvironmentState, InputState,
+    callee_inputs, callee_secrets, job_statically_disabled, job_statically_enforcing,
+    job_statically_not_enforcing, job_timeout_minutes_enforced, EnvironmentState, InputState,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
     ActivationMemo, ActivationScan, ActivationState, ScanContext,
@@ -169,14 +169,17 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 inputs,
             )
             .with_job(job, inputs);
-            if !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs) {
-                failed |= job_statically_enforcing(job, inputs, failed_need);
+            if !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs)
+                || !environment_configuration_valid_for_inputs(job, inputs)
+            {
+                let enforcing = job_statically_enforcing(job, inputs, failed_need);
+                failed |= enforcing;
+                indeterminate |= !enforcing && !job_statically_disabled(job, inputs);
                 continue;
             }
             if step_job_runner_supported(job, inputs)
                 && strategy_configuration_valid_for_inputs(job, inputs)
                 && job_timeout_minutes_enforced(job.get("timeout-minutes"), inputs)
-                && environment_configuration_valid_for_inputs(job, inputs)
                 && container_configuration_valid_for_inputs(job, inputs, &environment)
             {
                 let scan = scan_job_steps(

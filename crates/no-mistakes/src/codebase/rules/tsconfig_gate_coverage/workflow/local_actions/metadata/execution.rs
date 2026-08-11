@@ -17,25 +17,16 @@ pub(super) fn docker_action_image_valid(
     if image.is_empty() || image.trim() != image || image.eq_ignore_ascii_case("docker://") {
         return false;
     }
-    if !dockerfile_image(image) {
+    if docker_image_reference(image) {
         return true;
     }
-    action_file(directory, image).is_some_and(|dockerfile| tracked.contains(&dockerfile))
+    action_file(directory, image).is_some_and(|target| tracked.contains(&target))
 }
 
-fn dockerfile_image(image: &str) -> bool {
-    if image
+fn docker_image_reference(image: &str) -> bool {
+    image
         .get(.."docker://".len())
         .is_some_and(|prefix| prefix.eq_ignore_ascii_case("docker://"))
-    {
-        return false;
-    }
-    let name = image.rsplit('/').next().unwrap_or(image);
-    name.get(.."Dockerfile.".len())
-        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("Dockerfile."))
-        || name
-            .get(name.len().saturating_sub("Dockerfile".len())..)
-            .is_some_and(|suffix| suffix.eq_ignore_ascii_case("Dockerfile"))
 }
 
 pub(super) fn action_file(directory: &str, path: &str) -> Option<String> {

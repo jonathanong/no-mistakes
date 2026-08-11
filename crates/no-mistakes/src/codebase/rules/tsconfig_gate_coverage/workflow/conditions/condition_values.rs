@@ -1,10 +1,10 @@
 use super::{
-    event_action_value, event_name_value, functions,
+    event_action_value, event_name_value, event_ref_name_value, functions,
     input_value::comparison_literal,
     literals::status_function_bool,
     logical,
     resolution::{condition_input_value, literal_from_json_static_value},
-    resolution::{github_event_action, github_event_name, github_ref},
+    resolution::{github_event_action, github_event_name, github_ref, github_ref_name},
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 
@@ -37,7 +37,11 @@ pub(super) fn condition_value(
                 .unwrap_or(StaticValue::Unknown),
         );
     }
+    if github_ref_name(operand) {
+        return event_ref_name_value(inputs);
+    }
     literal_from_json_static_value(operand)
+        .or_else(|| super::static_values::static_from_json_expression(operand, inputs, environment))
         .or_else(|| condition_input_value(operand, inputs, environment))
         .or_else(|| comparison_literal(operand))
         .or_else(|| {

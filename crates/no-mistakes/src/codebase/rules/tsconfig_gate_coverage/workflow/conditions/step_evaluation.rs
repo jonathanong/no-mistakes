@@ -46,3 +46,27 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn continue_on_
     static_bool_with_environment(value.get("continue-on-error"), inputs, environment)
         == StaticBool::True
 }
+
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_continue_on_error_value_valid(
+    value: &Value,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    let Some(value) = value.get("continue-on-error") else {
+        return true;
+    };
+    match value {
+        Value::Bool(_) => true,
+        Value::String(expression) => {
+            match super::complete_expression_static_value_with_environment(
+                expression,
+                inputs,
+                environment,
+            ) {
+                Some(super::StaticValue::Bool(_)) | None => true,
+                Some(_) => false,
+            }
+        }
+        _ => false,
+    }
+}

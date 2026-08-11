@@ -28,9 +28,9 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
     for yaml in [
         "name: Composite\ndescription: Valid\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
         "name: Docker\ndescription: Valid\nruns: {using: docker, image: Dockerfile}",
+        "name: Local build target\ndescription: Valid\nruns: {using: docker, image: build/container}",
         "name: Container\ndescription: Valid\nruns: {using: docker, image: 'docker://alpine:3.22'}",
         "name: Upper container\ndescription: Valid\nruns: {using: docker, image: 'DOCKER://alpine:3.22'}",
-        "name: Base image\ndescription: Valid\nruns: {using: docker, image: 'alpine:3.22'}",
         "name: Node 20\ndescription: Valid\nruns: {using: node20, main: dist/index.js}",
         "name: Node\ndescription: Valid\nruns: {using: node24, main: dist/index.js}",
     ] {
@@ -38,6 +38,8 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
             &["action/dist/index.js"][..]
         } else if yaml.contains("image: Dockerfile") {
             &["action/Dockerfile"][..]
+        } else if yaml.contains("image: build/container") {
+            &["action/build/container"][..]
         } else {
             &[]
         };
@@ -56,6 +58,7 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         "name: Empty image\ndescription: Invalid\nruns: {using: docker, image: ''}",
         "name: Padded Dockerfile\ndescription: Invalid\nruns: {using: docker, image: ' Dockerfile '}",
         "name: Empty container\ndescription: Invalid\nruns: {using: docker, image: 'docker://'}",
+        "name: Bare container image\ndescription: Invalid\nruns: {using: docker, image: node:20}",
         "name: Missing Dockerfile\ndescription: Invalid\nruns: {using: docker, image: Dockerfile}",
         "name: Empty main\ndescription: Invalid\nruns: {using: node20, main: ''}",
         "name: Future runtime\ndescription: Invalid\nruns: {using: node99, main: index.js}",

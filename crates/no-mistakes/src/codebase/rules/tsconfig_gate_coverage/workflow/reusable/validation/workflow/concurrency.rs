@@ -89,8 +89,8 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
     }) {
         return false;
     }
-    if let Some(value) = complete_expression_static_string_value(group, inputs) {
-        return match value {
+    let group_valid = if let Some(value) = complete_expression_static_string_value(group, inputs) {
+        match value {
             StaticValue::String(value) => !value.trim().is_empty(),
             StaticValue::Unknown => resolved_concurrency_group_valid(group, inputs),
             StaticValue::Bool(_)
@@ -99,9 +99,15 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
             | StaticValue::Sequence(_)
             | StaticValue::Mapping
             | StaticValue::NonStringable => false,
-        };
-    }
-    resolved_concurrency_group_valid(group, inputs)
+        }
+    } else {
+        resolved_concurrency_group_valid(group, inputs)
+    };
+    group_valid
+        && concurrency_cancel_in_progress_valid_for_inputs(
+            value.and_then(concurrency_cancel_in_progress),
+            inputs,
+        )
 }
 
 fn resolved_concurrency_group_valid(group: &str, inputs: &InputState) -> bool {
@@ -115,6 +121,26 @@ fn concurrency_group(value: &Value) -> Option<&str> {
             .as_mapping()
             .and_then(|concurrency| concurrency.get("group"))
             .and_then(Value::as_str)
+    })
+}
+
+fn concurrency_cancel_in_progress(value: &Value) -> Option<&Value> {
+    value
+        .as_mapping()
+        .and_then(|concurrency| concurrency.get("cancel-in-progress"))
+}
+
+fn concurrency_cancel_in_progress_valid_for_inputs(
+    value: Option<&Value>,
+    inputs: &InputState,
+) -> bool {
+    value.is_none_or(|value| {
+        value.is_bool()
+            || value.as_str().is_some_and(|value| {
+                complete_expression_static_value(value, inputs).is_none_or(|value| {
+                    matches!(value, StaticValue::Bool(_) | StaticValue::Unknown)
+                })
+            })
     })
 }
 

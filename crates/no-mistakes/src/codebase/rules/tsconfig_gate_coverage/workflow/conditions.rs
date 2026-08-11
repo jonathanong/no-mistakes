@@ -29,10 +29,12 @@ pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,
     inputs_with_needs_results, MatrixState, SecretAvailability, SecretState,
 };
-use inputs::{event_action_value, event_name_value};
+use inputs::{event_action_value, event_name_value, event_ref_name_value};
 use resolution::condition_input_value;
 pub(crate) use static_values::complete_expression_static_string_value;
-pub(super) use step_evaluation::{continue_on_error_enabled, step_condition_with_status};
+pub(super) use step_evaluation::{
+    continue_on_error_enabled, step_condition_with_status, step_continue_on_error_value_valid,
+};
 pub(super) use step_outcomes::StepOutcomes;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

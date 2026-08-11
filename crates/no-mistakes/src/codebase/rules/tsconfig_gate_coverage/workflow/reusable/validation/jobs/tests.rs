@@ -1,5 +1,10 @@
 use super::*;
 use serde_yaml::Value;
+use std::collections::BTreeMap;
+
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    inputs_with_matrix_values, InputState, MatrixState, StaticValue,
+};
 
 fn job(yaml: &str) -> Value {
     serde_yaml::from_str(yaml).unwrap()
@@ -286,6 +291,53 @@ fn environments_use_distinct_name_and_url_contexts() {
     ] {
         assert!(!super::step_job_shape_valid(&job(yaml)), "{yaml}");
     }
+}
+
+#[test]
+fn environment_url_rechecks_resolved_stringable_values_per_active_state() {
+    let input_url = job(
+        "runs-on: ubuntu-latest\nenvironment:\n  name: staging\n  url: '${{ inputs.url }}'\nsteps:\n  - run: echo valid",
+    );
+    let matrix_url = job(
+        "runs-on: ubuntu-latest\nenvironment:\n  name: staging\n  url: '${{ matrix.url }}'\nsteps:\n  - run: echo valid",
+    );
+    let mut inputs = InputState::new();
+
+    inputs.insert(
+        "url".to_string(),
+        StaticValue::String("https://example.test".to_string()),
+    );
+    assert!(super::environment_configuration_valid_for_inputs(
+        &input_url, &inputs
+    ));
+
+    inputs.insert("url".to_string(), StaticValue::Bool(true));
+    assert!(super::environment_configuration_valid_for_inputs(
+        &input_url, &inputs
+    ));
+
+    inputs.insert("url".to_string(), StaticValue::Mapping);
+    assert!(!super::environment_configuration_valid_for_inputs(
+        &input_url, &inputs
+    ));
+
+    inputs.insert("url".to_string(), StaticValue::Unknown);
+    assert!(super::environment_configuration_valid_for_inputs(
+        &input_url, &inputs
+    ));
+
+    let matrix_inputs = inputs_with_matrix_values(
+        &InputState::new(),
+        &BTreeMap::from([(
+            String::from("url"),
+            Value::Mapping(serde_yaml::Mapping::new()),
+        )]),
+        MatrixState::Static,
+    );
+    assert!(!super::environment_configuration_valid_for_inputs(
+        &matrix_url,
+        &matrix_inputs
+    ));
 }
 
 #[test]

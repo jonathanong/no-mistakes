@@ -59,6 +59,40 @@ fn invalid_continue_on_error_and_environment_contexts_earn_no_coverage() {
 }
 
 #[test]
+fn resolved_step_continue_on_error_must_be_boolean() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  invalid-object:\n    uses: ./.github/workflows/object.yml\n    with: {payload: '{}'}\n  invalid-array:\n    uses: ./.github/workflows/array.yml\n    with: {payload: '[]'}\n  valid:\n    uses: ./.github/workflows/valid.yml\n    with: {payload: 'false'}\n",
+            ),
+            document(
+                ".github/workflows/object.yml",
+                "on:\n  workflow_call:\n    inputs:\n      payload: {type: string, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - continue-on-error: '${{ fromJSON(inputs.payload) }}'\n        run: echo setup\n      - run: tsc --noEmit -p object/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/array.yml",
+                "on:\n  workflow_call:\n    inputs:\n      payload: {type: string, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - continue-on-error: '${{ fromJSON(inputs.payload) }}'\n        run: echo setup\n      - run: tsc --noEmit -p array/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/valid.yml",
+                "on:\n  workflow_call:\n    inputs:\n      payload: {type: string, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - continue-on-error: '${{ fromJSON(inputs.payload) }}'\n        run: tsc --noEmit -p valid/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "array/tsconfig.json".to_string(),
+        "object/tsconfig.json".to_string(),
+        "valid/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["valid/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn local_actions_are_validated_only_when_their_step_executes() {
     let workflows = ParsedWorkflowSet {
         documents: vec![document(

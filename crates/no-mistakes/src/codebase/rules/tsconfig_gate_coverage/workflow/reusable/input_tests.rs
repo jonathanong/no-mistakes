@@ -12,6 +12,7 @@ fn document(path: &str, yaml: &str) -> ParsedWorkflowDocument {
 mod conditions;
 mod event_conditions;
 mod format_conditions;
+mod ref_name;
 
 #[test]
 fn literal_expression_bindings_preserve_truthiness_across_reusable_calls() {

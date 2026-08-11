@@ -23,6 +23,18 @@ fn static_expression_value(
     inputs: &InputState,
     environment: &EnvironmentState,
 ) -> Option<StaticValue> {
+    if super::resolution::github_event_name(expression) {
+        return super::inputs::event_name_value(inputs);
+    }
+    if super::resolution::github_event_action(expression) {
+        return super::inputs::event_action_value(inputs);
+    }
+    if super::resolution::github_ref(expression) {
+        return inputs.get(super::inputs::REF_KEY).cloned();
+    }
+    if super::resolution::github_ref_name(expression) {
+        return super::inputs::event_ref_name_value(inputs);
+    }
     if let Some(name) = super::resolution::input_name(expression) {
         return Some(
             inputs
@@ -31,14 +43,27 @@ fn static_expression_value(
                 .unwrap_or_else(|| StaticValue::String(String::new())),
         );
     }
-    if let Some(call) = super::super::expressions::condition_function_call(expression) {
-        if call.function == super::super::expressions::Function::FromJson
-            && call.arguments.len() == 1
-        {
-            return static_from_json(call.arguments[0], inputs, environment);
-        }
+    if let Some(value) = static_from_json_expression(expression, inputs, environment) {
+        return Some(value);
     }
-    super::resolution::condition_input_value(expression, inputs, environment)
+    super::resolution::condition_input_value(expression, inputs, environment).or_else(|| {
+        super::condition_values::condition_value(
+            expression,
+            inputs,
+            environment,
+            super::ConditionStatus::SUCCESS,
+        )
+    })
+}
+
+pub(super) fn static_from_json_expression(
+    expression: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
+    let call = super::super::expressions::condition_function_call(expression)?;
+    (call.function == super::super::expressions::Function::FromJson && call.arguments.len() == 1)
+        .then(|| static_from_json(call.arguments[0], inputs, environment))?
 }
 
 fn static_from_json(

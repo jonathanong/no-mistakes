@@ -1,9 +1,10 @@
 use super::{JsonScalar, Value, WorkflowCallInputType};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    event_action_value, event_name_value,
+    event_action_value, event_name_value, event_ref_name_value,
     input_value::comparison_literal,
     resolution::{
-        github_event_action, github_event_name, input_name, matrix_name, matrix_property_value,
+        github_event_action, github_event_name, github_ref_name, input_name, matrix_name,
+        matrix_property_value,
     },
     InputState, StaticBool, StaticValue,
 };
@@ -79,6 +80,9 @@ pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Optio
     }
     if github_event_action(body) {
         return event_action_value(parent);
+    }
+    if github_ref_name(body) {
+        return event_ref_name_value(parent);
     }
     if let Some(name) = matrix_name(body) {
         return Some(matrix_property_value(name, parent));

@@ -1,12 +1,13 @@
 use serde_yaml::{Mapping, Value};
 
 use super::super::super::super::conditions::{
-    complete_expression_static_string_value, resolve_static_interpolations, EnvironmentState,
-    InputState, StaticValue,
+    complete_expression_static_string_value, complete_expression_static_value,
+    resolve_static_interpolations, EnvironmentState, InputState, StaticValue,
 };
 use super::super::super::super::expressions::{
     interpolated_expression_contexts_and_hash_files_available,
     interpolated_expression_contexts_available, interpolated_expression_valid,
+    interpolation_expressions_all,
 };
 const RUNS_ON_CONTEXTS: &[&str] = &["github", "inputs", "vars", "needs", "strategy", "matrix"];
 pub(super) const JOB_ENV_CONTEXTS: &[&str] = &[
@@ -115,6 +116,24 @@ pub(crate) fn environment_configuration_valid_for_inputs(job: &Value, inputs: &I
         }
         resolve_static_interpolations(name, inputs, &EnvironmentState::default())
             .is_none_or(|name| !name.trim().is_empty())
+    }) && environment_url_valid_for_inputs(environment, inputs)
+}
+
+fn environment_url_valid_for_inputs(environment: &Value, inputs: &InputState) -> bool {
+    let Some(url) = environment
+        .as_mapping()
+        .and_then(|environment| environment.get("url"))
+    else {
+        return true;
+    };
+    let Some(url) = url.as_str() else {
+        return false;
+    };
+    interpolation_expressions_all(url, |expression| {
+        let expression = format!("${{{{ {expression} }}}}");
+        complete_expression_static_value(&expression, inputs).is_none_or(|value| {
+            matches!(value, StaticValue::Unknown) || value.function_string().is_some()
+        })
     })
 }
 

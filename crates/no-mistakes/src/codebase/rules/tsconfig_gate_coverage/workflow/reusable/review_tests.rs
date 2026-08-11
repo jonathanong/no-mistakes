@@ -150,4 +150,5 @@ fn event_sensitive_inputs_stay_correlated_with_each_events_path_filters() {
 
 mod event_actions;
 mod execution;
+mod resolved_configuration;
 mod validation;

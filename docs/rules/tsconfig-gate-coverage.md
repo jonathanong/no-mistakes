@@ -50,8 +50,9 @@ JavaScript action's `runs.main` must resolve to a tracked file under that action
 directory and use GitHub's supported `node20` or `node24` runtime; local
 JavaScript actions must not declare the unsupported `runs.pre`
 or `runs.pre-if` hooks, while supported `runs.post` and `runs.post-if` hooks are
-accepted. A Docker action's Dockerfile-shaped local `runs.image` must likewise
-resolve to a tracked file; external image references remain external. Local
+accepted. A Docker action's non-`docker://` `runs.image` is a repository-local
+build target and must resolve canonically to a tracked file; only `docker://`
+image references are external. Local
 targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
 missing action prevents later commands in the same executed job from counting.

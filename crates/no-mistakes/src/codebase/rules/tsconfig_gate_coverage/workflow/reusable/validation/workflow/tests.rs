@@ -227,6 +227,52 @@ fn concurrency_groups_recheck_resolved_activation_values() {
 }
 
 #[test]
+fn concurrency_cancel_in_progress_rechecks_resolved_boolean_values() {
+    let input_cancel =
+        workflow("concurrency:\n  group: checks\n  cancel-in-progress: '${{ inputs.cancel }}'");
+    let matrix_cancel =
+        workflow("concurrency:\n  group: checks\n  cancel-in-progress: '${{ matrix.cancel }}'");
+    let input_cancel = input_cancel.get("concurrency");
+    let matrix_cancel = matrix_cancel.get("concurrency");
+    let mut inputs = InputState::new();
+
+    inputs.insert("cancel".to_string(), StaticValue::Bool(true));
+    assert!(job_concurrency_valid_for_inputs(input_cancel, &inputs));
+
+    inputs.insert(
+        "cancel".to_string(),
+        StaticValue::String("true".to_string()),
+    );
+    assert!(!job_concurrency_valid_for_inputs(input_cancel, &inputs));
+
+    inputs.insert("cancel".to_string(), StaticValue::Number("1".to_string()));
+    assert!(!job_concurrency_valid_for_inputs(input_cancel, &inputs));
+
+    inputs.insert("cancel".to_string(), StaticValue::Unknown);
+    assert!(job_concurrency_valid_for_inputs(input_cancel, &inputs));
+
+    let boolean_matrix = inputs_with_matrix_values(
+        &InputState::new(),
+        &BTreeMap::from([(String::from("cancel"), Value::Bool(false))]),
+        MatrixState::Static,
+    );
+    assert!(job_concurrency_valid_for_inputs(
+        matrix_cancel,
+        &boolean_matrix
+    ));
+
+    let string_matrix = inputs_with_matrix_values(
+        &InputState::new(),
+        &BTreeMap::from([(String::from("cancel"), Value::String("false".to_string()))]),
+        MatrixState::Static,
+    );
+    assert!(!job_concurrency_valid_for_inputs(
+        matrix_cancel,
+        &string_matrix
+    ));
+}
+
+#[test]
 fn permissions_follow_the_actions_scope_and_access_schema() {
     assert!(!permission_value_valid(&Value::Number(1.into()), "read"));
     for yaml in [

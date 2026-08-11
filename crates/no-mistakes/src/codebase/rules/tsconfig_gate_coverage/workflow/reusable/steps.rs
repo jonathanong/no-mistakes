@@ -8,8 +8,9 @@ use std::collections::BTreeSet;
 
 use super::super::{
     conditions::{
-        continue_on_error_enabled, step_condition_with_status, step_timeout_minutes_enforced,
-        EnvironmentState, InputState, StaticBool, StaticValue, StepOutcomes,
+        continue_on_error_enabled, step_condition_with_status, step_continue_on_error_value_valid,
+        step_timeout_minutes_enforced, EnvironmentState, InputState, StaticBool, StaticValue,
+        StepOutcomes,
     },
     default_working_directory,
     runtime::{
@@ -64,6 +65,15 @@ pub(super) fn scan_job_steps(
         if condition == StaticBool::False {
             step_outcomes.record(step, StaticValue::String("skipped".to_string()));
             continue;
+        }
+        if !step_continue_on_error_value_valid(step, inputs, &environment) {
+            if condition == StaticBool::True {
+                step_outcomes.record(step, StaticValue::String("failure".to_string()));
+                failed = true;
+            } else {
+                indeterminate = true;
+            }
+            break;
         }
         if !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs, &environment) {
             continue;
