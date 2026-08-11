@@ -28,7 +28,6 @@ use values::{default_value, nonboolean_binding_value};
 
 pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
 const DYNAMIC_MATRIX_KEY: &str = "\0matrix.dynamic";
-pub(super) const RUNNER_OS_KEY: &str = "\0runner.os";
 
 #[derive(Clone, Copy)]
 pub(crate) enum MatrixState {
@@ -54,24 +53,6 @@ pub(crate) fn inputs_with_matrix_values(
         inputs.insert(DYNAMIC_MATRIX_KEY.to_string(), StaticValue::Unknown);
     }
     inputs
-}
-
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn inputs_with_runner_os(
-    parent: &InputState,
-    runner_os: Option<&str>,
-) -> InputState {
-    let mut inputs = parent.clone();
-    if let Some(runner_os) = runner_os {
-        inputs.insert(
-            RUNNER_OS_KEY.to_string(),
-            StaticValue::String(runner_os.to_string()),
-        );
-    }
-    inputs
-}
-
-pub(super) fn runner_os_value(inputs: &InputState) -> Option<StaticValue> {
-    inputs.get(RUNNER_OS_KEY).cloned()
 }
 
 pub(super) fn matrix_property_is_dynamic(inputs: &InputState) -> bool {

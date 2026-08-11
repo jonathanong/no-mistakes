@@ -43,14 +43,8 @@ pub(super) fn condition_value(
     if github_ref_name(operand) {
         return event_ref_name_value(inputs);
     }
-    if super::resolution::runner_os(operand) {
-        return super::inputs::runner_os_value(inputs);
-    }
     if github_base_ref(operand) {
         return event_base_ref_value(inputs);
-    }
-    if operand.eq_ignore_ascii_case("runner.os") {
-        return Some(environment.runner_os());
     }
     literal_from_json_static_value(operand)
         .or_else(|| super::static_values::static_from_json_expression(operand, inputs, environment))

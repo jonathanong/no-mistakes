@@ -11,32 +11,6 @@ pub(super) use format_value::static_format_value;
 mod join_value;
 pub(super) use join_value::static_join_value;
 
-pub(super) fn static_join_value(
-    expression: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-    status: impl Into<ConditionStatus>,
-) -> Option<StaticValue> {
-    let status = status.into();
-    let call = condition_function_call(expression)?;
-    (call.function == Function::Join).then_some(())?;
-    let values = function_argument_value(call.arguments[0], inputs, environment, status)?;
-    let separator = match call.arguments.get(1) {
-        Some(argument) => function_argument_value(argument, inputs, environment, status)?,
-        None => StaticValue::String(",".to_string()),
-    }
-    .function_string()?;
-    let joined = match values {
-        StaticValue::Sequence(values) => values
-            .iter()
-            .map(StaticValue::function_string)
-            .collect::<Option<Vec<_>>>()?
-            .join(&separator),
-        value => value.function_string()?,
-    };
-    Some(StaticValue::String(joined))
-}
-
 pub(super) fn static_function_bool(
     expression: &str,
     inputs: &InputState,

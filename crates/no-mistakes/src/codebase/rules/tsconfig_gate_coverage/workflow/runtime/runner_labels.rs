@@ -25,16 +25,6 @@ pub(in super::super) fn runs_on_can_default_to_windows(job: &Value, inputs: &Inp
     )
 }
 
-pub(in super::super) fn runner_os(job: &Value, inputs: &InputState) -> Option<&'static str> {
-    let selection = static_runner_selection(job.as_mapping(), inputs)?;
-    match runner_platform(&selection.labels) {
-        RunnerPlatform::Linux => Some("Linux"),
-        RunnerPlatform::MacOs => Some("macOS"),
-        RunnerPlatform::Windows => Some("Windows"),
-        RunnerPlatform::Unknown => None,
-    }
-}
-
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(in super::super) enum ContainerRunnerSupport {
     Linux,

@@ -175,7 +175,7 @@ pub(super) fn condition_input_value(
         return Some(environment.step_outcome(name));
     }
     if runner_os(operand) {
-        return super::inputs::runner_os_value(inputs);
+        return Some(environment.runner_os());
     }
     let name = matrix_name(operand)?;
     Some(matrix_property_value(name, inputs))
