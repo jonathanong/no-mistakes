@@ -1,3 +1,4 @@
+use super::test_support::collect_ci_projects_with_stats;
 use super::*;
 use crate::codebase::ci_workflows::ParsedWorkflowDocument;
 
@@ -144,6 +145,54 @@ fn event_sensitive_inputs_stay_correlated_with_each_events_path_filters() {
     assert_eq!(
         collect_ci_projects_with_stats(&workflows, &tracked, &inputs).0,
         BTreeSet::from(["other/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn exact_ref_filters_make_impossible_ref_conditions_unreachable() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/push.yml",
+                "on:\n  push:\n    branches: [main]\njobs:\n  main:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p push-main/tsconfig.json\n  dev:\n    if: github.ref == 'refs/heads/dev'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p push-dev/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/pull-request.yml",
+                "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]\njobs:\n  base-ref:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p pull-request-base-ref/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/pull-request-target.yml",
+                "on:\n  pull_request_target:\n    types: [synchronize]\n    branches: [main]\njobs:\n  base-ref:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p pull-request-target-base-ref/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/ref-caller.yml",
+                "on:\n  push:\n    branches: [main]\njobs:\n  call:\n    uses: ./.github/workflows/ref-callee.yml\n",
+            ),
+            document(
+                ".github/workflows/ref-callee.yml",
+                "on: workflow_call\njobs:\n  main:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p forwarded-main/tsconfig.json\n  dev:\n    if: github.ref == 'refs/heads/dev'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p forwarded-dev/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "push-main/tsconfig.json",
+        "push-dev/tsconfig.json",
+        "pull-request-base-ref/tsconfig.json",
+        "pull-request-target-base-ref/tsconfig.json",
+        "forwarded-main/tsconfig.json",
+        "forwarded-dev/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from([
+            "push-main/tsconfig.json".to_string(),
+            "pull-request-target-base-ref/tsconfig.json".to_string(),
+            "forwarded-main/tsconfig.json".to_string(),
+        ])
     );
 }
 

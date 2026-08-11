@@ -1,0 +1,17 @@
+checks:
+  commands:
+    - name: typecheck-valid
+      command: [pnpm, exec, tsc, --noEmit, --project, valid/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-missing
+      command: [pnpm, exec, tsc, --noEmit, --project, missing/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-invalid
+      command: [pnpm, exec, tsc, --noEmit, --project, invalid/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

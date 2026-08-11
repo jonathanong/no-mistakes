@@ -1,3 +1,4 @@
+use super::test_support::collect_ci_projects_with_stats;
 use super::*;
 use crate::codebase::ci_workflows::ParsedWorkflowDocument;
 

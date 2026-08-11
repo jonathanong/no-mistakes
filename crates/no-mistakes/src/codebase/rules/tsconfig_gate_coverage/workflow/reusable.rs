@@ -21,17 +21,22 @@ use events::source_change_event_contexts;
 use model::{ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
-pub(super) fn collect_ci_projects_with_stats(
+pub(super) use validation::steps_shape_valid;
+
+pub(super) fn collect_ci_projects_with_local_actions(
     parsed: &ParsedWorkflowSet,
     tracked: &BTreeSet<String>,
     project_source_inputs: &ProjectSourceInputs,
+    local_actions: &BTreeSet<String>,
 ) -> (BTreeSet<String>, usize) {
     let workflows = parsed
         .documents
         .iter()
         .filter_map(|document| {
             let value = document.value.as_ref().ok()?;
-            if !workflow_shape_valid(value) {
+            if !workflow_shape_valid(value)
+                || !super::local_actions::workflow_targets_valid(value, local_actions)
+            {
                 return None;
             }
             Some((
@@ -65,6 +70,7 @@ pub(super) fn collect_ci_projects_with_stats(
             let mut memo = ActivationMemo::new();
             let triggers = CompiledTriggers::for_event(&trigger_model, event_name)
                 .expect("event came from the trigger model");
+            let mut event_projects = BTreeSet::new();
             for event in source_change_event_contexts(document.value, event_name) {
                 let Some(inputs) = direct_inputs(document.call_contract.as_ref(), &event) else {
                     continue;
@@ -77,8 +83,11 @@ pub(super) fn collect_ci_projects_with_stats(
                     &context,
                     &mut memo,
                 ) {
-                    projects.extend(activation_projects);
+                    event_projects.extend(activation_projects);
                 }
+            }
+            if !memo.exhausted() {
+                projects.extend(event_projects);
             }
             computations += memo.computations();
         }
@@ -94,5 +103,7 @@ mod input_tests;
 mod review_tests;
 #[cfg(test)]
 mod secret_tests;
+#[cfg(test)]
+mod test_support;
 #[cfg(test)]
 mod tests;

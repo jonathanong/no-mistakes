@@ -151,3 +151,77 @@ fn reusable_workflow_limit_spans_nested_local_and_remote_targets() {
     );
     assert!(scan(vec![root, nested(50)], "unique/tsconfig.json").is_empty());
 }
+
+fn layered_input_workflows(levels: usize, fanout: usize) -> Vec<ParsedWorkflowDocument> {
+    let root_calls = (0..fanout)
+        .map(|branch| {
+            format!(
+                "  call-{branch}:\n    uses: ./.github/workflows/1.yml\n    with:\n      slot-1: branch-{branch}\n"
+            )
+        })
+        .collect::<String>();
+    let mut documents = vec![workflow(
+        ".github/workflows/root.yml",
+        &format!("on: push\njobs:\n{root_calls}"),
+    )];
+
+    for level in 1..=levels {
+        let inputs = (1..=level)
+            .map(|slot| {
+                format!("      slot-{slot}:\n        required: true\n        type: string\n")
+            })
+            .collect::<String>();
+        let jobs = if level == levels {
+            "jobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project app/tsconfig.json\n".to_string()
+        } else {
+            let calls = (0..fanout)
+                .map(|branch| {
+                    let forwarded = (1..=level)
+                        .map(|slot| format!("      slot-{slot}: ${{{{ inputs.slot-{slot} }}}}\n"))
+                        .collect::<String>();
+                    format!(
+                        "  call-{branch}:\n    uses: ./.github/workflows/{}.yml\n    with:\n{forwarded}      slot-{}: branch-{branch}\n",
+                        level + 1,
+                        level + 1,
+                    )
+                })
+                .collect::<String>();
+            format!("jobs:\n{calls}")
+        };
+        documents.push(workflow(
+            &format!(".github/workflows/{level}.yml"),
+            &format!("on:\n  workflow_call:\n    inputs:\n{inputs}{jobs}"),
+        ));
+    }
+    documents
+}
+
+#[test]
+fn reusable_activation_computation_budget_fails_closed_for_layered_input_fanout() {
+    // Four choices at each level preserve all preceding input values. This
+    // produces exponentially many memo keys without exceeding the reusable
+    // workflow's 50-target or 10-level structural limits.
+    let control = scan_with_stats(layered_input_workflows(4, 4), "app/tsconfig.json");
+    assert_eq!(control.0, BTreeSet::from(["app/tsconfig.json".to_string()]));
+    assert_eq!(control.1, 341);
+
+    let exhausted = scan_with_stats(layered_input_workflows(5, 4), "app/tsconfig.json");
+    assert!(exhausted.0.is_empty());
+    assert_eq!(exhausted.1, 1024);
+
+    let mut multiple_refs = layered_input_workflows(4, 4);
+    multiple_refs[0]
+        .value
+        .as_mut()
+        .expect("parsed root workflow")
+        .as_mapping_mut()
+        .expect("root workflow mapping")
+        .insert(
+            Value::String("on".to_string()),
+            serde_yaml::from_str("push:\n  branches: [one, two, three, four]")
+                .expect("valid trigger fixture"),
+        );
+    let exhausted_across_refs = scan_with_stats(multiple_refs, "app/tsconfig.json");
+    assert!(exhausted_across_refs.0.is_empty());
+    assert_eq!(exhausted_across_refs.1, 1024);
+}

@@ -1,7 +1,7 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
 use super::{InputState, StaticValue};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
-    GithubEventAction, GithubEventContext,
+    GithubEventAction, GithubEventContext, GithubRef,
 };
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
@@ -20,6 +20,8 @@ use values::{default_value, nonboolean_binding_value};
 
 pub(super) const EVENT_NAME_KEY: &str = "\0github.event_name";
 pub(super) const EVENT_ACTION_KEY: &str = "\0github.event.action";
+pub(super) const REF_KEY: &str = "\0github.ref";
+pub(super) const REF_KIND_KEY: &str = "\0github.ref.kind";
 
 pub(super) fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(EVENT_NAME_KEY).cloned()
@@ -137,14 +139,11 @@ fn inputs_from_contract(
         }
     }
     let mut inputs = InputState::new();
-    inputs.insert(
-        EVENT_NAME_KEY.to_string(),
-        parent.get(EVENT_NAME_KEY)?.clone(),
-    );
-    inputs.insert(
-        EVENT_ACTION_KEY.to_string(),
-        parent.get(EVENT_ACTION_KEY)?.clone(),
-    );
+    for key in [EVENT_NAME_KEY, EVENT_ACTION_KEY, REF_KEY, REF_KIND_KEY] {
+        if let Some(value) = parent.get(key) {
+            inputs.insert(key.to_string(), value.clone());
+        }
+    }
     for (name, declaration) in &contract.inputs {
         let input_type = declaration
             .input_type
@@ -181,6 +180,18 @@ fn event_inputs(event: &GithubEventContext, mut inputs: InputState) -> InputStat
             GithubEventAction::Known(action) => action.clone(),
         }),
     );
+    match &event.reference {
+        GithubRef::Exact(reference) => {
+            inputs.insert(REF_KEY.to_string(), StaticValue::String(reference.clone()));
+        }
+        GithubRef::PullRequestMerge => {
+            inputs.insert(
+                REF_KIND_KEY.to_string(),
+                StaticValue::String("pull-request-merge".to_string()),
+            );
+        }
+        GithubRef::Unknown => {}
+    }
     inputs
 }
 

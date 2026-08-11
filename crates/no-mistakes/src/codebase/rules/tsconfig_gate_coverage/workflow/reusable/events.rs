@@ -1,26 +1,142 @@
-use super::model::GithubEventContext;
+use super::model::{GithubEventContext, GithubRef};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
 const DEFAULT_PULL_REQUEST_ACTIVITY_TYPES: &[&str] = &["opened", "synchronize", "reopened"];
 
 /// Direct source changes occur only for the `synchronize` pull-request action.
-/// Keep that action paired with its triggering event so `github.event.action`
-/// conditions are evaluated against the same activation that ran the workflow.
+/// Keep an event's action and ref together so conditions and reusable-call
+/// inputs are evaluated for the same activation.
 pub(super) fn source_change_event_contexts(
     workflow: &Value,
     event: &str,
 ) -> Vec<GithubEventContext> {
-    if !source_change_branch_can_match(workflow, event) {
-        return Vec::new();
-    }
+    let references = event_references(workflow, event);
     if !matches!(event, "pull_request" | "pull_request_target") {
-        return vec![GithubEventContext::without_action(event)];
+        return references
+            .into_iter()
+            .map(|reference| GithubEventContext::with_ref(event, reference))
+            .collect();
     }
     pull_request_activity_types(workflow, event)
         .filter(|action| *action == "synchronize")
-        .map(|action| GithubEventContext::with_action(event, action))
+        .flat_map(|action| {
+            references.iter().cloned().map(move |reference| {
+                GithubEventContext::with_action_and_ref(event, action, reference)
+            })
+        })
         .collect()
+}
+
+fn event_references(workflow: &Value, event: &str) -> Vec<GithubRef> {
+    let config = workflow
+        .get("on")
+        .and_then(Value::as_mapping)
+        .and_then(|events| events.get(event));
+    match event {
+        "push" => push_references(config),
+        "pull_request" => branch_references(config)
+            .into_iter()
+            .map(|_| GithubRef::PullRequestMerge)
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect(),
+        "pull_request_target" => branch_references(config),
+        _ => vec![GithubRef::Unknown],
+    }
+}
+
+/// GitHub evaluates `branches` and `tags` independently against short ref
+/// names. An exact literal therefore supplies a fully-qualified `github.ref`;
+/// globs, ignores, and expression-shaped values retain an unknown state.
+fn push_references(config: Option<&Value>) -> Vec<GithubRef> {
+    let branches_configured = has_key(config, "branches") || has_key(config, "branches-ignore");
+    let tags_configured = has_key(config, "tags") || has_key(config, "tags-ignore");
+    let mut references = BTreeSet::new();
+    if branches_configured || !tags_configured {
+        references.extend(branch_references(config));
+    }
+    if tags_configured || !branches_configured {
+        references.extend(tag_references(config));
+    }
+    references.into_iter().collect()
+}
+
+fn branch_references(config: Option<&Value>) -> Vec<GithubRef> {
+    references_for(config, "branches", "branches-ignore", "refs/heads/")
+}
+
+fn tag_references(config: Option<&Value>) -> Vec<GithubRef> {
+    references_for(config, "tags", "tags-ignore", "refs/tags/")
+}
+
+fn references_for(
+    config: Option<&Value>,
+    include_key: &str,
+    ignore_key: &str,
+    prefix: &str,
+) -> Vec<GithubRef> {
+    let Some(config) = config else {
+        return vec![GithubRef::Unknown];
+    };
+    let includes = configured_patterns(config, include_key);
+    let ignores = configured_patterns(config, ignore_key);
+    if includes.is_empty() {
+        return if ignores.contains(&"**") {
+            Vec::new()
+        } else {
+            vec![GithubRef::Unknown]
+        };
+    }
+
+    let last_reset = includes.iter().rposition(|pattern| *pattern == "!**");
+    let patterns = last_reset.map_or(includes.as_slice(), |index| &includes[index + 1..]);
+    if patterns.iter().any(|pattern| !is_exact_pattern(pattern)) {
+        return vec![GithubRef::Unknown];
+    }
+    let candidates = patterns
+        .iter()
+        .filter_map(|pattern| pattern.strip_prefix('!').map_or(Some(*pattern), |_| None))
+        .collect::<BTreeSet<_>>();
+    candidates
+        .into_iter()
+        .filter(|candidate| selected_exact(patterns, candidate))
+        .map(|candidate| GithubRef::Exact(format!("{prefix}{candidate}")))
+        .collect()
+}
+
+fn has_key(config: Option<&Value>, key: &str) -> bool {
+    config
+        .and_then(Value::as_mapping)
+        .is_some_and(|config| config.contains_key(key))
+}
+
+fn configured_patterns<'a>(config: &'a Value, key: &str) -> Vec<&'a str> {
+    match config.get(key) {
+        Some(Value::String(pattern)) => vec![pattern],
+        Some(Value::Sequence(patterns)) => patterns.iter().filter_map(Value::as_str).collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn is_exact_pattern(pattern: &str) -> bool {
+    let pattern = pattern.strip_prefix('!').unwrap_or(pattern);
+    !pattern.is_empty()
+        && !pattern.contains("${{")
+        && !pattern.contains(['*', '?', '+', '[', ']', '{', '}'])
+}
+
+fn selected_exact(patterns: &[&str], candidate: &str) -> bool {
+    let mut selected = false;
+    for pattern in patterns {
+        let (negated, pattern) = pattern
+            .strip_prefix('!')
+            .map_or((false, *pattern), |pattern| (true, pattern));
+        if pattern == candidate {
+            selected = !negated;
+        }
+    }
+    selected
 }
 
 fn pull_request_activity_types<'a>(
@@ -36,54 +152,6 @@ fn pull_request_activity_types<'a>(
     match configured {
         Some(types) => Box::new(types.iter().filter_map(Value::as_str)),
         None => Box::new(DEFAULT_PULL_REQUEST_ACTIVITY_TYPES.iter().copied()),
-    }
-}
-
-/// Return false only for branch filters GitHub guarantees reject every branch.
-///
-/// A `branches-ignore: ["**"]` filter excludes every branch. In an ordered
-/// `branches` filter, `!**` resets every branch to excluded. A later positive
-/// pattern can re-include branches, unless a later identical negative pattern
-/// excludes that exact glob again. Other glob overlaps may leave some branch
-/// eligible, so the coverage scan keeps them.
-fn source_change_branch_can_match(workflow: &Value, event: &str) -> bool {
-    let Some(config) = workflow
-        .get("on")
-        .and_then(Value::as_mapping)
-        .and_then(|events| events.get(event))
-    else {
-        return true;
-    };
-
-    let branches_ignore = configured_patterns(config, "branches-ignore");
-    if branches_ignore.contains(&"**") {
-        return false;
-    }
-
-    let branches = configured_patterns(config, "branches");
-    let Some(last_universal_exclusion) = branches.iter().rposition(|pattern| *pattern == "!**")
-    else {
-        return true;
-    };
-    let mut reintroduced_patterns = BTreeSet::new();
-    for pattern in &branches[last_universal_exclusion + 1..] {
-        match pattern.strip_prefix('!') {
-            Some(excluded) => {
-                reintroduced_patterns.remove(excluded);
-            }
-            None => {
-                reintroduced_patterns.insert(*pattern);
-            }
-        }
-    }
-    !reintroduced_patterns.is_empty()
-}
-
-fn configured_patterns<'a>(config: &'a Value, key: &str) -> Vec<&'a str> {
-    match config.get(key) {
-        Some(Value::String(pattern)) => vec![pattern],
-        Some(Value::Sequence(patterns)) => patterns.iter().filter_map(Value::as_str).collect(),
-        _ => Vec::new(),
     }
 }
 

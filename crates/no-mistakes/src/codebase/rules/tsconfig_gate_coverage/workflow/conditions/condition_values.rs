@@ -4,7 +4,7 @@ use super::{
     literals::status_function_bool,
     logical,
     resolution::{condition_input_value, literal_from_json_static_value},
-    resolution::{github_event_action, github_event_name},
+    resolution::{github_event_action, github_event_name, github_ref},
     EnvironmentState, InputState, StaticBool, StaticValue,
 };
 
@@ -27,6 +27,14 @@ pub(super) fn condition_value(
     }
     if github_event_action(operand) {
         return event_action_value(inputs);
+    }
+    if github_ref(operand) {
+        return Some(
+            inputs
+                .get(super::inputs::REF_KEY)
+                .cloned()
+                .unwrap_or(StaticValue::Unknown),
+        );
     }
     literal_from_json_static_value(operand)
         .or_else(|| condition_input_value(operand, inputs, environment))
@@ -87,6 +95,26 @@ pub(super) fn comparison_bool(
     success: StaticBool,
 ) -> Option<StaticBool> {
     let (left, right, comparison) = logical::comparison_operands(expression)?;
+    if matches!(
+        comparison,
+        logical::Comparison::Equal | logical::Comparison::NotEqual
+    ) && (github_ref(left) || github_ref(right))
+    {
+        let other = if github_ref(left) { right } else { left };
+        if let Some(StaticValue::String(reference)) = comparison_literal(other) {
+            let is_pull_request_merge = inputs
+                .get(super::inputs::REF_KIND_KEY)
+                .is_some_and(|kind| kind == &StaticValue::String("pull-request-merge".into()));
+            if is_pull_request_merge && !reference.starts_with("refs/pull/") {
+                let equal = StaticBool::False;
+                return Some(if matches!(comparison, logical::Comparison::Equal) {
+                    equal
+                } else {
+                    equal.negate()
+                });
+            }
+        }
+    }
     let actual = condition_value(left, inputs, environment, success)?;
     let expected = condition_value(right, inputs, environment, success)?;
     Some(match comparison {

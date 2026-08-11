@@ -32,7 +32,9 @@ pub(super) fn scan_activation(
     if let Some(result) = memo.get(&key) {
         return result.clone();
     }
-    memo.record_computation();
+    if !memo.try_record_computation() {
+        return None;
+    }
     let result = scan_activation_uncached(path, document, triggers, state, context, memo);
     memo.insert(key, result.clone());
     result

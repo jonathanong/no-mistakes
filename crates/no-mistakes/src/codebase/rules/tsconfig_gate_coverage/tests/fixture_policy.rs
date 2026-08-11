@@ -49,6 +49,24 @@ fn reusable_workflow_callers_cover_filaments_style_static_typecheck_jobs() {
 }
 
 #[test]
+fn local_action_steps_require_existing_valid_action_metadata() {
+    let root = fixture_root("local-action-targets");
+    let report = findings(&root, &config(&root));
+
+    assert_eq!(
+        report
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["invalid/tsconfig.json", "missing/tsconfig.json",]),
+        "{report:#?}"
+    );
+    assert!(report
+        .iter()
+        .all(|finding| finding.message.contains("no CI typecheck registration")));
+}
+
+#[test]
 fn literal_array_contains_and_pull_request_activities_control_reusable_coverage() {
     let root = fixture_root("activity-conditions");
     let report = findings(&root, &config(&root));

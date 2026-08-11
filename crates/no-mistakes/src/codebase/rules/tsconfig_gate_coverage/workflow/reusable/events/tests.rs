@@ -70,3 +70,37 @@ fn source_change_event_contexts_select_only_synchronize_activities() {
         assert_eq!(actual, expected, "{yaml}");
     }
 }
+
+#[test]
+fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
+    for (yaml, event, expected) in [
+        (
+            "on:\n  push:\n    branches: [main, dev]",
+            "push",
+            vec!["refs/heads/dev", "refs/heads/main"],
+        ),
+        ("on:\n  push:\n    tags: [v1]", "push", vec!["refs/tags/v1"]),
+        (
+            "on:\n  pull_request_target:\n    types: [synchronize]\n    branches: [main]",
+            "pull_request_target",
+            vec!["refs/heads/main"],
+        ),
+    ] {
+        let workflow: Value = serde_yaml::from_str(yaml).unwrap();
+        let actual = source_change_event_contexts(&workflow, event)
+            .into_iter()
+            .filter_map(|context| match context.reference {
+                GithubRef::Exact(reference) => Some(reference),
+                GithubRef::PullRequestMerge | GithubRef::Unknown => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(actual, expected, "{yaml}");
+    }
+
+    let workflow: Value =
+        serde_yaml::from_str("on:\n  push:\n    branches: ['release/**']\n    tags-ignore: [v0]")
+            .unwrap();
+    assert!(source_change_event_contexts(&workflow, "push")
+        .iter()
+        .all(|context| matches!(context.reference, GithubRef::Unknown)));
+}

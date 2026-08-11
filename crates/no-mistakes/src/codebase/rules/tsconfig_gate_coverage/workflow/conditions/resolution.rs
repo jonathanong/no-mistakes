@@ -30,6 +30,10 @@ pub(super) fn github_event_action(operand: &str) -> bool {
     github_event_property(operand, &["event", "action"])
 }
 
+pub(super) fn github_ref(operand: &str) -> bool {
+    github_event_property(operand, &["ref"])
+}
+
 fn github_event_property(operand: &str, properties: &[&str]) -> bool {
     let operand = operand.trim();
     let Some(remainder) = operand

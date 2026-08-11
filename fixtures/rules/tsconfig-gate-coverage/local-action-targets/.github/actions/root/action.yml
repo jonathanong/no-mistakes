@@ -1,0 +1,6 @@
+name: Root action
+description: Calls another valid local action
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/nested

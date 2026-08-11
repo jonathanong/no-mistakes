@@ -1,0 +1,7 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/invalid
+      - run: pnpm exec tsc --noEmit --project invalid/tsconfig.json

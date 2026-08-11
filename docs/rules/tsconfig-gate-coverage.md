@@ -28,6 +28,9 @@ working directory, sequential `cd` commands, and
 may come from workflow/job `defaults.run.working-directory` or a step's
 `working-directory`.
 Step-based jobs need a non-empty, static `runs-on` string or label array.
+Repository-local action steps (`uses: ./path`) count only when the tracked
+target directory contains parseable `action.yml` or `action.yaml` metadata
+with the required name, description, and a supported `runs` contract.
 Static local reusable-workflow jobs (`uses: ./.github/workflows/*.yml`) are
 followed transitively and their step-based jobs are evaluated under the direct
 caller's file triggers. Remote, dynamic, missing, non-callable, and cyclic
@@ -36,6 +39,10 @@ sufficient; partial coverage from separate caller paths is never combined.
 Every declared reusable call, including a statically skipped call, still
 participates in cycle, nesting-depth, and unique-target validation; skipped
 callees are validated without crediting their commands.
+For each direct workflow and triggering event, reusable activation evaluates at
+most 1,024 distinct path-sensitive input states. A graph that exceeds this
+budget provides no coverage for that root event, rather than allowing layered
+branching to consume unbounded analysis resources.
 The containing workflow must declare at least one file-triggered `push`,
 `pull_request`, or `pull_request_target` event whose path filters allow every
 visible TypeScript/JavaScript source selected by that project's

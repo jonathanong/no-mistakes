@@ -4,6 +4,12 @@ use crate::codebase::workflow_topology::model::WorkflowCallContract;
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+/// A single direct workflow event may evaluate at most this many distinct
+/// path-sensitive reusable-workflow activation states. This bounds layered
+/// call DAGs whose resolved inputs otherwise create exponentially many memo
+/// keys, while leaving ordinary reusable-workflow graphs room to share work.
+pub(crate) const MAX_ACTIVATION_COMPUTATIONS: usize = 1024;
+
 pub(super) struct WorkflowDocument<'a> {
     pub(super) value: &'a Value,
     pub(super) call_contract: Option<WorkflowCallContract>,
@@ -23,23 +29,33 @@ pub(crate) enum GithubEventAction {
 }
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum GithubRef {
+    Exact(String),
+    PullRequestMerge,
+    Unknown,
+}
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) struct GithubEventContext {
     pub(crate) name: String,
     pub(crate) action: GithubEventAction,
+    pub(crate) reference: GithubRef,
 }
 
 impl GithubEventContext {
-    pub(crate) fn without_action(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            action: GithubEventAction::Missing,
-        }
-    }
-
-    pub(crate) fn with_action(name: &str, action: &str) -> Self {
+    pub(crate) fn with_action_and_ref(name: &str, action: &str, reference: GithubRef) -> Self {
         Self {
             name: name.to_string(),
             action: GithubEventAction::Known(action.to_string()),
+            reference,
+        }
+    }
+
+    pub(crate) fn with_ref(name: &str, reference: GithubRef) -> Self {
+        Self {
+            name: name.to_string(),
+            action: GithubEventAction::Missing,
+            reference,
         }
     }
 }
@@ -79,6 +95,7 @@ pub(super) struct ActivationKey {
 pub(super) struct ActivationMemo {
     entries: BTreeMap<ActivationKey, Option<BTreeSet<String>>>,
     computations: usize,
+    exhausted: bool,
     targets: BTreeSet<ReusableTarget>,
 }
 
@@ -97,8 +114,13 @@ impl ActivationMemo {
         self.entries.get(key)
     }
 
-    pub(super) fn record_computation(&mut self) {
+    pub(super) fn try_record_computation(&mut self) -> bool {
+        if self.computations >= MAX_ACTIVATION_COMPUTATIONS {
+            self.exhausted = true;
+            return false;
+        }
         self.computations += 1;
+        true
     }
 
     pub(super) fn insert(&mut self, key: ActivationKey, result: Option<BTreeSet<String>>) {
@@ -107,6 +129,10 @@ impl ActivationMemo {
 
     pub(super) fn computations(&self) -> usize {
         self.computations
+    }
+
+    pub(super) fn exhausted(&self) -> bool {
+        self.exhausted
     }
 
     pub(super) fn register_target(&mut self, target: ReusableTarget) -> bool {

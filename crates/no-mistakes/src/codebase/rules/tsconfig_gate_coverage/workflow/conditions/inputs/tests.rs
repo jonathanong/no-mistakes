@@ -39,7 +39,10 @@ fn direct_event_inputs_use_declared_type_empty_states() {
     assert_eq!(
         direct_inputs(
             Some(&contract),
-            &crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubEventContext::without_action("push"),
+            &crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubEventContext::with_ref(
+                "push",
+                crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubRef::Unknown,
+            ),
         ),
         Some(InputState::from([
             ("enabled".to_string(), StaticValue::Bool(false)),

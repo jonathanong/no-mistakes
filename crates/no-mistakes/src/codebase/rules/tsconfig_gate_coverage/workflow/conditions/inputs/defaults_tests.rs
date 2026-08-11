@@ -30,7 +30,10 @@ fn reusable_defaults_resolve_the_caller_event_and_prior_inputs() {
     };
     let caller = direct_inputs(
         None,
-        &crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubEventContext::without_action("schedule"),
+        &crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubEventContext::with_ref(
+            "schedule",
+            crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubRef::Unknown,
+        ),
     )
     .unwrap();
     let job: Value = serde_yaml::from_str("uses: ./.github/workflows/checks.yml").unwrap();

@@ -1,8 +1,5 @@
 use super::application::resolve_gate_projects_against_tracked;
-use super::workflow::{
-    ci_typechecked_projects, ci_typechecked_projects_with_stats, default_working_directory,
-    effective_working_directory,
-};
+use super::workflow::{default_working_directory, effective_working_directory};
 use super::*;
 use crate::codebase::ci_workflows::{
     ParsedWorkflowDocument, ParsedWorkflowSet, WorkflowDocumentError, WorkflowDocumentErrorKind,
@@ -29,6 +26,27 @@ fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {
         .iter()
         .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
         .collect()
+}
+
+fn ci_typechecked_projects(
+    workflows: &ParsedWorkflowSet,
+    tracked: &BTreeSet<String>,
+    project_source_inputs: &ProjectSourceInputs,
+) -> BTreeSet<String> {
+    ci_typechecked_projects_with_stats(workflows, tracked, project_source_inputs).0
+}
+
+fn ci_typechecked_projects_with_stats(
+    workflows: &ParsedWorkflowSet,
+    tracked: &BTreeSet<String>,
+    project_source_inputs: &ProjectSourceInputs,
+) -> (BTreeSet<String>, usize) {
+    super::workflow::ci_typechecked_projects_with_local_actions_and_stats(
+        workflows,
+        tracked,
+        project_source_inputs,
+        &BTreeSet::new(),
+    )
 }
 
 fn fixture_root(name: &str) -> PathBuf {
