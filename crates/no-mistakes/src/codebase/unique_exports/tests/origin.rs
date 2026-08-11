@@ -34,6 +34,32 @@ fn source_file(root: &Path, rel: &str, source: &str) -> SourceFile {
     }
 }
 
+#[test]
+fn current_suppression_location_reports_file_and_line_directives() {
+    let root = fixture("unique-exports-edge-cases");
+    let visible = source_file(&root, "src/visible.ts", "export const Visible = 1;\n");
+    let line_disabled = source_file(
+        &root,
+        "src/line-disabled.ts",
+        "// no-mistakes-disable-next-line unique-exports\nexport const Hidden = 1;\n",
+    );
+    let mut file_disabled = visible.clone();
+    file_disabled.disabled = true;
+
+    assert_eq!(
+        collector::current_suppression_location(&visible, &visible.symbols.exports[0]),
+        None
+    );
+    assert_eq!(
+        collector::current_suppression_location(&line_disabled, &line_disabled.symbols.exports[0]),
+        Some(("src/line-disabled.ts".to_string(), 2))
+    );
+    assert_eq!(
+        collector::current_suppression_location(&file_disabled, &file_disabled.symbols.exports[0]),
+        Some(("src/visible.ts".to_string(), 1))
+    );
+}
+
 fn suppression_origin_fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase/unique-exports-suppressed-origin")
