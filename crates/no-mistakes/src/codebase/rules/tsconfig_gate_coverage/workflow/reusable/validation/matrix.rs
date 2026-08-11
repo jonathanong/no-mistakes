@@ -9,6 +9,9 @@ mod combinations;
 pub(in super::super) use combinations::{static_matrix_combinations, MatrixCombinations};
 
 const MATRIX_JOB_LIMIT: usize = 256;
+// Recursive matrix traversal needs a finite axis-depth bound even when every
+// axis has one value and the cartesian product remains one job.
+const STATIC_MATRIX_AXIS_LIMIT: usize = MATRIX_JOB_LIMIT;
 const STATIC_MATRIX_ENUMERATION_LIMIT: usize = (MATRIX_JOB_LIMIT + 1) * 64;
 pub(super) const MAX_STATIC_MATRIX_AXIS_DEPTH: usize = MATRIX_JOB_LIMIT;
 
@@ -91,6 +94,8 @@ fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
     }
     if dynamic {
         StaticMatrixAxes::Dynamic
+    } else if axes.len() > STATIC_MATRIX_AXIS_LIMIT {
+        StaticMatrixAxes::Invalid
     } else {
         StaticMatrixAxes::Static(axes)
     }

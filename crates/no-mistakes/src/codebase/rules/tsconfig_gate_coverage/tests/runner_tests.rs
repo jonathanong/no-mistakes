@@ -26,3 +26,27 @@ fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
         expected
     );
 }
+
+#[test]
+fn ci_scanner_only_credits_implicit_shells_on_known_posix_runners() {
+    let workflow: Value = serde_yaml::from_str(
+        "on: push\njobs:\n  self-hosted-macos:\n    runs-on: [self-hosted, macOS]\n    steps:\n      - run: tsc --noEmit --project self-hosted-macos/tsconfig.json\n  custom-runner:\n    runs-on: custom-runner\n    steps:\n      - run: tsc --noEmit --project custom-runner/tsconfig.json\n  custom-macos-runner:\n    runs-on: macos-custom\n    steps:\n      - run: tsc --noEmit --project custom-macos-runner/tsconfig.json\n",
+    )
+    .unwrap();
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/runner-posix.yml".into(),
+            value: Ok(workflow),
+        }],
+    };
+    let expected = BTreeSet::from(["self-hosted-macos/tsconfig.json".to_string()]);
+    let projects = BTreeSet::from([
+        "custom-macos-runner/tsconfig.json".to_string(),
+        "custom-runner/tsconfig.json".to_string(),
+        "self-hosted-macos/tsconfig.json".to_string(),
+    ]);
+    assert_eq!(
+        ci_typechecked_projects(&workflows, &projects, &project_inputs(&projects)),
+        expected
+    );
+}

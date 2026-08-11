@@ -52,6 +52,37 @@ fn reusable_conditions_resolve_literal_comparisons_and_negated_parenthesized_inp
 }
 
 #[test]
+fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
+    let parsed = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  compound-disabled:\n    if: '${{ (false || false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound-disabled/tsconfig.json\n  truthy-string-disabled:\n    if: \"${{ (false || 'release') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project truthy-string-disabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
+        )],
+    };
+    let tracked = [
+        "compound-disabled/tsconfig.json",
+        "truthy-string-disabled/tsconfig.json",
+        "unary-enabled/tsconfig.json",
+        "function-enabled/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect::<BTreeSet<_>>();
+    let project_inputs = tracked
+        .iter()
+        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
+        .collect();
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
+        BTreeSet::from([
+            "function-enabled/tsconfig.json".to_string(),
+            "unary-enabled/tsconfig.json".to_string(),
+        ])
+    );
+}
+
+#[test]
 fn reusable_conditions_resolve_static_string_functions_across_call_inputs() {
     let parsed = ParsedWorkflowSet {
         documents: vec![

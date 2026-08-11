@@ -1,6 +1,6 @@
 use serde_yaml::{Mapping, Value};
 
-const WORKFLOW_DISPATCH_INPUT_LIMIT: usize = 10;
+const WORKFLOW_DISPATCH_INPUT_LIMIT: usize = 25;
 
 pub(super) fn workflow_dispatch_config_valid(config: &Value) -> bool {
     config.as_mapping().is_some_and(|mapping| {

@@ -305,6 +305,26 @@ fn bounded_static_matrix_enumeration_rejects_unresolved_literal_expansions() {
 }
 
 #[test]
+fn static_matrix_axis_depth_is_bounded_before_recursive_traversal() {
+    let matrix_with_axes = |axis_count| {
+        let axes = (0..axis_count)
+            .map(|index| format!("    axis{index}: [only]"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        job(&format!("strategy:\n  matrix:\n{axes}"))
+    };
+
+    let at_limit = matrix_with_axes(MATRIX_JOB_LIMIT);
+    assert!(matrix_shape_valid(&at_limit));
+    assert!(static_matrix_combinations(&at_limit).is_some());
+
+    let matrix = matrix_with_axes(10_000);
+
+    assert!(!matrix_shape_valid(&matrix));
+    assert!(static_matrix_combinations(&matrix).is_none());
+}
+
+#[test]
 fn combinations_distinguish_dynamic_expansion_and_malformed_includes() {
     for yaml in [
         "strategy:\n  matrix:\n    target: '${{ fromJSON(inputs.targets) }}'",

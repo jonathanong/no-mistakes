@@ -1,6 +1,7 @@
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod condition_values;
 mod contracts;
 mod functions;
 mod input_value;
@@ -9,6 +10,7 @@ mod literals;
 mod logical;
 mod resolution;
 
+use condition_values::{comparison_bool, condition_value};
 use input_value::comparison_literal;
 use inputs::event_name_value;
 pub(super) use inputs::{
@@ -134,25 +136,8 @@ fn resolve_input_expression(
     inputs: &InputState,
     success: StaticBool,
 ) -> StaticBool {
-    if let Some((left, right, comparison)) = logical::comparison_operands(expression) {
-        let Some(actual) =
-            condition_value(left, inputs, success).or_else(|| comparison_literal(left))
-        else {
-            return StaticBool::Unknown;
-        };
-        let Some(expected) =
-            condition_value(right, inputs, success).or_else(|| comparison_literal(right))
-        else {
-            return StaticBool::Unknown;
-        };
-        return match comparison {
-            logical::Comparison::Equal => actual.equals(&expected),
-            logical::Comparison::NotEqual => actual.equals(&expected).negate(),
-            logical::Comparison::LessThan => actual.less_than(&expected),
-            logical::Comparison::LessThanOrEqual => actual.less_than_or_equal(&expected),
-            logical::Comparison::GreaterThan => expected.less_than(&actual),
-            logical::Comparison::GreaterThanOrEqual => expected.less_than_or_equal(&actual),
-        };
+    if let Some(value) = comparison_bool(expression, inputs, success) {
+        return value;
     }
     if let Some(value) = literal_from_json_static_value(expression)
         .or_else(|| condition_input_value(expression, inputs))
@@ -163,33 +148,6 @@ fn resolve_input_expression(
         return expression_bool_with_status(operand, inputs, success).negate();
     }
     StaticBool::Unknown
-}
-
-pub(super) fn condition_value(
-    operand: &str,
-    inputs: &InputState,
-    success: StaticBool,
-) -> Option<StaticValue> {
-    if let Some(value) = status_function_bool(operand.trim(), success) {
-        return match value {
-            StaticBool::False => Some(StaticValue::Bool(false)),
-            StaticBool::True => Some(StaticValue::Bool(true)),
-            StaticBool::TruthyNonBoolean | StaticBool::Unknown => None,
-        };
-    }
-    if operand.trim().eq_ignore_ascii_case("github.event_name") {
-        return event_name_value(inputs);
-    }
-    literal_from_json_static_value(operand)
-        .or_else(|| condition_input_value(operand, inputs))
-        .or_else(|| comparison_literal(operand))
-        .or_else(
-            || match expression_bool_with_status(operand, inputs, success) {
-                StaticBool::False => Some(StaticValue::Bool(false)),
-                StaticBool::True => Some(StaticValue::Bool(true)),
-                StaticBool::TruthyNonBoolean | StaticBool::Unknown => None,
-            },
-        )
 }
 
 fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {

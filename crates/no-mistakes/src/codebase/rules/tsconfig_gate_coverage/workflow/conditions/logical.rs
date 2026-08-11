@@ -10,25 +10,47 @@ pub(super) enum Comparison {
     GreaterThanOrEqual,
 }
 
+#[derive(Clone, Copy)]
+pub(super) enum LogicalOperator {
+    And,
+    Or,
+}
+
 pub(super) fn compound_bool(
     expression: &str,
     inputs: &InputState,
     success: StaticBool,
 ) -> Option<StaticBool> {
-    if let Some(index) = top_level_operator(expression, b"||") {
+    if let Some((left, right, LogicalOperator::Or)) = logical_operands(expression) {
         return Some(or(
-            expression_bool_with_status(&expression[..index], inputs, success),
-            expression_bool_with_status(&expression[index + 2..], inputs, success),
+            expression_bool_with_status(left, inputs, success),
+            expression_bool_with_status(right, inputs, success),
         ));
     }
-    if let Some(index) = top_level_operator(expression, b"&&") {
+    if let Some((left, right, LogicalOperator::And)) = logical_operands(expression) {
         return Some(and(
-            expression_bool_with_status(&expression[..index], inputs, success),
-            expression_bool_with_status(&expression[index + 2..], inputs, success),
+            expression_bool_with_status(left, inputs, success),
+            expression_bool_with_status(right, inputs, success),
         ));
     }
     outer_parentheses_body(expression)
         .map(|body| expression_bool_with_status(body, inputs, success))
+}
+
+pub(super) fn logical_operands(expression: &str) -> Option<(&str, &str, LogicalOperator)> {
+    if let Some(index) = top_level_operator(expression, b"||") {
+        return Some((
+            &expression[..index],
+            &expression[index + 2..],
+            LogicalOperator::Or,
+        ));
+    }
+    let index = top_level_operator(expression, b"&&")?;
+    Some((
+        &expression[..index],
+        &expression[index + 2..],
+        LogicalOperator::And,
+    ))
 }
 
 pub(super) fn comparison_operands(expression: &str) -> Option<(&str, &str, Comparison)> {
@@ -141,7 +163,7 @@ fn top_level_comparison(expression: &str) -> Option<(usize, usize, Comparison)> 
     None
 }
 
-fn outer_parentheses_body(expression: &str) -> Option<&str> {
+pub(super) fn outer_parentheses_body(expression: &str) -> Option<&str> {
     let body = expression.strip_prefix('(')?.strip_suffix(')')?;
     top_level_closing_parenthesis(expression)
         .is_some_and(|index| index + 1 == expression.len())

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn ci_scanner_rejects_push_callers_with_invalid_workflow_dispatch_choices() {
-    let dispatch_inputs = (0..11)
+    let dispatch_inputs = (0..26)
         .map(|index| format!("      input-{index}:\n        type: string"))
         .collect::<Vec<_>>()
         .join("\n");

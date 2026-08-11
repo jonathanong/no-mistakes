@@ -11,7 +11,14 @@ fn bare_self_hosted_runner_keeps_the_implicit_shell_indeterminate() {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(runs_on_can_default_to_windows(&job), "{yaml}");
     }
-    for yaml in ["runs-on: ubuntu-latest", "runs-on: [self-hosted, linux]"] {
+    for yaml in [
+        "runs-on: ubuntu-latest",
+        "runs-on: macos-14",
+        "runs-on: [self-hosted, linux]",
+        "runs-on: [self-hosted, linux, x64, gpu]",
+        // GitHub documents these exact self-hosted OS labels.
+        "runs-on: [self-hosted, macOS]",
+    ] {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
     }
@@ -21,6 +28,11 @@ fn bare_self_hosted_runner_keeps_the_implicit_shell_indeterminate() {
         "runs-on: [self-hosted, macOS-14]",
         "runs-on: [self-hosted, macos-custom]",
         "runs-on: [self-hosted, windows-custom]",
+        "runs-on: custom-runner",
+        "runs-on: ubuntu-custom",
+        "runs-on: linux-custom",
+        "runs-on: macos-custom",
+        "runs-on: windows-custom",
     ] {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(runs_on_can_default_to_windows(&job), "{yaml}");
@@ -35,11 +47,15 @@ fn container_runner_support_requires_unambiguous_linux_labels() {
             "runs-on: [self-hosted, linux]",
             ContainerRunnerSupport::Linux,
         ),
+        (
+            "runs-on: [self-hosted, linux, x64, gpu]",
+            ContainerRunnerSupport::Linux,
+        ),
         ("runs-on: windows-latest", ContainerRunnerSupport::NonLinux),
         ("runs-on: macos-14", ContainerRunnerSupport::NonLinux),
         (
             "runs-on: [ubuntu-latest, windows-latest]",
-            ContainerRunnerSupport::NonLinux,
+            ContainerRunnerSupport::Unknown,
         ),
         ("runs-on: custom-runner", ContainerRunnerSupport::Unknown),
         (
@@ -67,6 +83,17 @@ fn container_runner_support_requires_unambiguous_linux_labels() {
             ContainerRunnerSupport::Linux,
         ),
         (
+            "runs-on: [self-hosted, macOS]",
+            ContainerRunnerSupport::NonLinux,
+        ),
+        (
+            "runs-on: [self-hosted, windows]",
+            ContainerRunnerSupport::NonLinux,
+        ),
+        ("runs-on: ubuntu-custom", ContainerRunnerSupport::Unknown),
+        ("runs-on: macos-custom", ContainerRunnerSupport::Unknown),
+        ("runs-on: windows-custom", ContainerRunnerSupport::Unknown),
+        (
             "runs-on: \"${{ 'ubuntu-latest' }}\"",
             ContainerRunnerSupport::Linux,
         ),
@@ -78,6 +105,16 @@ fn container_runner_support_requires_unambiguous_linux_labels() {
             "{yaml}"
         );
     }
+}
+
+#[test]
+fn documented_hosted_runner_labels_have_known_platforms() {
+    for yaml in ["runs-on: ubuntu-26.04-arm", "runs-on: macos-26-intel"] {
+        let job: Value = serde_yaml::from_str(yaml).unwrap();
+        assert!(!runs_on_can_default_to_windows(&job), "{yaml}");
+    }
+    let job: Value = serde_yaml::from_str("runs-on: windows-2025-vs2026").unwrap();
+    assert!(runs_on_can_default_to_windows(&job));
 }
 
 #[test]

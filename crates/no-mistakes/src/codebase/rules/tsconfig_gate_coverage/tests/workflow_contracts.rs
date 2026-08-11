@@ -128,6 +128,29 @@ fn unavailable_contexts_in_reusable_call_inputs_earn_no_credit() {
 }
 
 #[test]
+fn literal_from_json_collections_cannot_activate_scalar_reusable_workflows() {
+    let documents = vec![
+        workflow(
+            ".github/workflows/caller.yml",
+            "on: push\njobs:\n  call:\n    uses: ./.github/workflows/callee.yml\n    with:\n      enabled: '${{ fromJSON(''[]'') }}'\n",
+        ),
+        workflow(
+            ".github/workflows/callee.yml",
+            "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project collection-binding/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/direct.yml",
+            "on: push\njobs:\n  direct:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct/tsconfig.json\n",
+        ),
+    ];
+
+    assert_eq!(
+        scanned(documents, &["collection-binding", "direct"]),
+        BTreeSet::from(["direct/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn undeclared_inputs_are_false_while_declared_nonbooleans_are_unknown() {
     let documents = vec![
         workflow(

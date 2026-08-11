@@ -164,15 +164,15 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
     ] {
         assert!(!workflow_call_shape_valid(Some(&on(malformed))), "{malformed}");
     }
-    let ten_inputs = (0..10)
+    let twenty_five_inputs = (0..25)
         .map(|index| format!("    input-{index}:\n      type: string"))
         .collect::<Vec<_>>()
         .join("\n");
     assert!(workflow_call_shape_valid(Some(&on(&format!(
-        "workflow_dispatch:\n  inputs:\n{ten_inputs}"
+        "workflow_dispatch:\n  inputs:\n{twenty_five_inputs}"
     )))));
-    let eleven_inputs = format!("{ten_inputs}\n    input-10:\n      type: string");
+    let twenty_six_inputs = format!("{twenty_five_inputs}\n    input-25:\n      type: string");
     assert!(!workflow_call_shape_valid(Some(&on(&format!(
-        "workflow_dispatch:\n  inputs:\n{eleven_inputs}"
+        "workflow_dispatch:\n  inputs:\n{twenty_six_inputs}"
     )))));
 }

@@ -15,18 +15,10 @@ pub(in super::super) fn runs_on_can_default_to_windows(job: &Value) -> bool {
     let Some(labels) = static_runner_labels(job.as_mapping()) else {
         return false;
     };
-    let self_hosted = labels
-        .iter()
-        .any(|label| label.eq_ignore_ascii_case("self-hosted"));
-    if self_hosted {
-        return !labels
-            .iter()
-            .any(|label| is_explicit_self_hosted_linux_label(label));
-    }
-    if labels.iter().any(|label| is_windows_runner_label(label)) {
-        return true;
-    }
-    false
+    matches!(
+        runner_platform(&labels),
+        RunnerPlatform::Windows | RunnerPlatform::Unknown
+    )
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -40,28 +32,62 @@ pub(in super::super) fn container_runner_support(job: &Mapping) -> ContainerRunn
     let Some(labels) = static_runner_labels(Some(job)) else {
         return ContainerRunnerSupport::Unknown;
     };
+    match runner_platform(&labels) {
+        RunnerPlatform::Linux => ContainerRunnerSupport::Linux,
+        RunnerPlatform::MacOs | RunnerPlatform::Windows => ContainerRunnerSupport::NonLinux,
+        RunnerPlatform::Unknown => ContainerRunnerSupport::Unknown,
+    }
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum RunnerPlatform {
+    Linux,
+    MacOs,
+    Windows,
+    Unknown,
+}
+
+fn runner_platform(labels: &[String]) -> RunnerPlatform {
     if labels
         .iter()
         .any(|label| label.eq_ignore_ascii_case("self-hosted"))
     {
-        if labels
-            .iter()
-            .any(|label| is_explicit_self_hosted_linux_label(label))
-        {
-            ContainerRunnerSupport::Linux
-        } else {
-            ContainerRunnerSupport::Unknown
-        }
-    } else if labels
-        .iter()
-        .any(|label| is_windows_runner_label(label) || is_macos_runner_label(label))
-    {
-        ContainerRunnerSupport::NonLinux
-    } else if labels.iter().any(|label| is_linux_runner_label(label)) {
-        ContainerRunnerSupport::Linux
+        self_hosted_labels_platform(labels)
     } else {
-        ContainerRunnerSupport::Unknown
+        labels_platform(labels, github_hosted_runner_platform)
     }
+}
+
+fn self_hosted_labels_platform(labels: &[String]) -> RunnerPlatform {
+    let mut platform = None;
+    for label in labels {
+        let label_platform = self_hosted_runner_platform(label);
+        if label_platform == RunnerPlatform::Unknown {
+            continue;
+        }
+        if platform.is_some_and(|known| known != label_platform) {
+            return RunnerPlatform::Unknown;
+        }
+        platform = Some(label_platform);
+    }
+    platform.unwrap_or(RunnerPlatform::Unknown)
+}
+
+fn labels_platform(labels: &[String], classify: impl Fn(&str) -> RunnerPlatform) -> RunnerPlatform {
+    let mut platform = None;
+    for label in labels {
+        if label.eq_ignore_ascii_case("self-hosted") {
+            continue;
+        }
+        let label_platform = classify(label);
+        if label_platform == RunnerPlatform::Unknown
+            || platform.is_some_and(|known| known != label_platform)
+        {
+            return RunnerPlatform::Unknown;
+        }
+        platform = Some(label_platform);
+    }
+    platform.unwrap_or(RunnerPlatform::Unknown)
 }
 
 fn static_runner_labels(job: Option<&Mapping>) -> Option<Vec<String>> {
@@ -91,30 +117,63 @@ fn resolved_static_runner_label(label: &str) -> Option<String> {
         .filter(|label| !label.trim().is_empty())
 }
 
-/// `ubuntu-*` and `linux-*` are useful GitHub-hosted labels, but arbitrary
-/// self-hosted labels only state an OS when the exact `linux` label is present.
-fn is_explicit_self_hosted_linux_label(label: &str) -> bool {
-    label.trim().eq_ignore_ascii_case("linux")
+/// GitHub documents exact OS labels for self-hosted runners. Prefixes are
+/// custom labels and cannot establish a platform.
+fn self_hosted_runner_platform(label: &str) -> RunnerPlatform {
+    if label.trim().eq_ignore_ascii_case("linux") {
+        RunnerPlatform::Linux
+    } else if label.trim().eq_ignore_ascii_case("macos") {
+        RunnerPlatform::MacOs
+    } else if label.trim().eq_ignore_ascii_case("windows") {
+        RunnerPlatform::Windows
+    } else {
+        RunnerPlatform::Unknown
+    }
 }
 
-fn is_windows_runner_label(label: &str) -> bool {
-    label_prefix_matches(label, "windows")
-}
-
-fn is_linux_runner_label(label: &str) -> bool {
-    ["linux", "ubuntu"]
-        .iter()
-        .any(|os| label_prefix_matches(label, os))
-}
-
-fn is_macos_runner_label(label: &str) -> bool {
-    label_prefix_matches(label, "macos")
-}
-
-fn label_prefix_matches(label: &str, os: &str) -> bool {
+/// The GitHub-hosted labels recognized here are a finite, documented set. A
+/// custom label can omit `self-hosted`, so an OS-looking prefix is not proof.
+fn github_hosted_runner_platform(label: &str) -> RunnerPlatform {
     let label = label.trim();
-    label.eq_ignore_ascii_case(os)
-        || label
-            .get(..os.len() + 1)
-            .is_some_and(|prefix| prefix.eq_ignore_ascii_case(&format!("{os}-")))
+    if [
+        "ubuntu-slim",
+        "ubuntu-latest",
+        "ubuntu-22.04",
+        "ubuntu-22.04-arm",
+        "ubuntu-24.04",
+        "ubuntu-24.04-arm",
+        "ubuntu-26.04",
+        "ubuntu-26.04-arm",
+    ]
+    .iter()
+    .any(|known| label.eq_ignore_ascii_case(known))
+    {
+        RunnerPlatform::Linux
+    } else if [
+        "macos-latest",
+        "macos-14",
+        "macos-15",
+        "macos-15-intel",
+        "macos-26",
+        "macos-26-intel",
+    ]
+    .iter()
+    .any(|known| label.eq_ignore_ascii_case(known))
+    {
+        RunnerPlatform::MacOs
+    } else if [
+        "windows-latest",
+        "windows-2022",
+        "windows-2025",
+        "windows-2025-vs2026",
+        "windows-11-arm",
+        "windows-11-vs2026-arm",
+    ]
+    .iter()
+    .any(|known| label.eq_ignore_ascii_case(known))
+    {
+        RunnerPlatform::Windows
+    } else {
+        RunnerPlatform::Unknown
+    }
 }

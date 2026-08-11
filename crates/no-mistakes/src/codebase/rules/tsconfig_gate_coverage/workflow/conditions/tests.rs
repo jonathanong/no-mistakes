@@ -137,6 +137,25 @@ fn literal_comparisons_resolve_without_context_values() {
 }
 
 #[test]
+fn comparisons_resolve_known_compound_unary_and_function_operands() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        ("(false || false) == true", StaticBool::False),
+        ("!(false) == true", StaticBool::True),
+        ("contains('release', 'LEASE') == true", StaticBool::True),
+        ("(false || false) != false", StaticBool::False),
+        ("(false || 'release') == true", StaticBool::False),
+        ("(true && 'release') == true", StaticBool::False),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
     let inputs = InputState::new();
     for (expression, expected) in [
