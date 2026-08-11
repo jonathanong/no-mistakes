@@ -98,6 +98,9 @@ pub(super) fn bool_or_expression_field_valid(
                     value,
                     allowed_contexts,
                     hash_files_available,
+                ) && matches!(
+                    complete_expression_type(value),
+                    Some(StaticExpressionType::Boolean | StaticExpressionType::Dynamic)
                 )
             })
     })

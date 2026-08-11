@@ -145,6 +145,14 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         let contract = callee.call_contract.as_ref()?;
         let callee_secrets = callee_secrets(contract, job, &self.state.secrets)?;
         let mut projects = BTreeSet::new();
+        let has_instances = !inputs.is_empty();
+        let fallback_inputs;
+        let inputs = if has_instances {
+            inputs
+        } else {
+            fallback_inputs = self.state.inputs.clone();
+            std::slice::from_ref(&fallback_inputs)
+        };
         for inputs in inputs {
             let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
             let callee_state = self.state.callee(callee_inputs, callee_secrets.clone());
@@ -156,7 +164,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 self.context,
                 self.memo,
             )?;
-            if !skipped && !statically_not_enforcing(job, inputs) {
+            if has_instances && !skipped && !statically_not_enforcing(job, inputs) {
                 projects.extend(callee_projects);
             }
         }

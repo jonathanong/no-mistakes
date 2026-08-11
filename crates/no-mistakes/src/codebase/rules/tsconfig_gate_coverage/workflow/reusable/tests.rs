@@ -243,6 +243,56 @@ fn skipped_acyclic_reusable_calls_validate_without_crediting_callee_projects() {
 }
 
 #[test]
+fn zero_instance_reusable_calls_validate_once_without_crediting_callee_projects() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on: push\njobs:\n  skipped-call:\n    strategy:\n      matrix:\n        target: [linux]\n        exclude:\n          - target: linux\n    uses: ./.github/workflows/callee.yml\n    with:\n      enabled: true\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project sibling/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project callee/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "callee/tsconfig.json".to_string(),
+        "sibling/tsconfig.json".to_string(),
+    ]);
+
+    let (projects, computations) =
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked));
+    assert_eq!(
+        projects,
+        BTreeSet::from(["sibling/tsconfig.json".to_string()])
+    );
+    assert_eq!(computations, 2);
+}
+
+#[test]
+fn zero_instance_reusable_calls_reject_invalid_callee_boundary() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on: push\njobs:\n  skipped-call:\n    strategy:\n      matrix:\n        target: [linux]\n        exclude:\n          - target: linux\n    uses: ./.github/workflows/callee.yml\n  sibling:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project sibling/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project callee/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["sibling/tsconfig.json".to_string()]);
+
+    let (projects, computations) =
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked));
+    assert!(projects.is_empty());
+    assert_eq!(computations, 1);
+}
+
+#[test]
 fn uniform_matrix_values_control_steps_within_the_same_job() {
     let workflows = ParsedWorkflowSet {
         documents: vec![workflow_document(
