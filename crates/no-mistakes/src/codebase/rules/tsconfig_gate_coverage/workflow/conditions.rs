@@ -15,8 +15,6 @@ mod step_evaluation;
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
 pub(super) use environment::EnvironmentState;
-#[cfg(test)]
-use evaluation::static_bool;
 pub(super) use evaluation::{continues_after_failed_need, continues_after_skipped_need};
 pub(super) use evaluation::{
     expression_bool, expression_bool_with_status_and_environment, job_statically_disabled,
