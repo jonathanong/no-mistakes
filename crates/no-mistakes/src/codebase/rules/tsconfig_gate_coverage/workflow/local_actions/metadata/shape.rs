@@ -1,8 +1,6 @@
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
 
-const COMPOSITE_OUTPUT_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runner", "env"];
-
 use super::icons::branding_icon_valid;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::interpolated_expression_contexts_available;
 

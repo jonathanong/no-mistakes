@@ -49,7 +49,6 @@ pub(super) fn resolve(expression: &str, inputs: &InputState) -> ResolvedRootMatr
 fn static_value(value: StaticValue) -> ResolvedRootMatrix {
     match value {
         StaticValue::Unknown => ResolvedRootMatrix::Dynamic,
-        StaticValue::Invalid => ResolvedRootMatrix::NonMapping,
         StaticValue::Bool(_)
         | StaticValue::String(_)
         | StaticValue::Number(_)

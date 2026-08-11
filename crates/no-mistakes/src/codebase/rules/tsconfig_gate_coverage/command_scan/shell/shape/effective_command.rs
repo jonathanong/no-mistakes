@@ -48,21 +48,6 @@ pub(super) fn effective_first_word(command: &str) -> Option<&str> {
     }
 }
 
-pub(super) fn has_dynamic_first_word(command: &str) -> bool {
-    effective_first_word(command).is_some_and(|word| {
-        word.contains(['$', '`'])
-            || word.contains(['\'', '"']) && !entirely_literal_quoted_word(word)
-    })
-}
-
-fn entirely_literal_quoted_word(word: &str) -> bool {
-    ['\'', '"'].into_iter().any(|quote| {
-        word.strip_prefix(quote)
-            .and_then(|word| word.strip_suffix(quote))
-            .is_some_and(|word| !word.is_empty() && !word.contains(quote))
-    })
-}
-
 pub(super) fn has_leading_redirection(tokens: &[String]) -> bool {
     effective_tokens(tokens)
         .and_then(|tokens| tokens.first())
