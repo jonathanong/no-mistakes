@@ -8,8 +8,8 @@ import type {
 } from "./named-query-types";
 import type { PlaywrightOptions, PlaywrightRelatedOptions } from "./report-types";
 import type {
-  ProjectOptions,
   CheckOptions,
+  ProjectOptions,
   SymbolsListOptions,
   SymbolsSignatureImpactOptions,
   TraverseOptions,
@@ -26,10 +26,7 @@ type BatchedReactUsagesOptions = Pick<
   "root" | "tsconfig" | "config" | "targets" | "include"
 > &
   Required<Pick<ProjectOptions, "target">>;
-type BatchedCheckOptions = Pick<
-  CheckOptions,
-  "root" | "tsconfig" | "config" | "includeSuppressed"
->;
+type BatchedCheckOptions = Pick<CheckOptions, "root" | "tsconfig" | "config" | "includeSuppressed">;
 
 export type AnalyzeProjectReportRequest =
   | ({ type: "dependencies" | "dependents" | "related"; id?: string } & BatchedTraverseOptions)
