@@ -86,6 +86,10 @@ pub(super) fn github_ref_name(operand: &str) -> bool {
     github_event_property(operand, &["ref_name"])
 }
 
+pub(super) fn github_base_ref(operand: &str) -> bool {
+    github_event_property(operand, &["base_ref"])
+}
+
 fn github_event_property(operand: &str, properties: &[&str]) -> bool {
     let operand = operand.trim();
     let Some(remainder) = operand

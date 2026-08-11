@@ -49,3 +49,82 @@ fn invalid_resolved_environment_urls_fail_dependent_jobs() {
         BTreeSet::from(["valid/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn invalid_resolved_step_timeouts_stop_later_steps() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  invalid:\n    uses: ./.github/workflows/invalid.yml\n    with: {timeout: 0}\n  valid:\n    uses: ./.github/workflows/valid.yml\n    with: {timeout: 5}\n",
+            ),
+            document(
+                ".github/workflows/invalid.yml",
+                "on:\n  workflow_call:\n    inputs:\n      timeout: {type: number, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - timeout-minutes: '${{ inputs.timeout }}'\n        run: echo setup\n      - run: tsc --noEmit -p invalid-timeout/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/valid.yml",
+                "on:\n  workflow_call:\n    inputs:\n      timeout: {type: number, required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - timeout-minutes: '${{ inputs.timeout }}'\n        run: echo setup\n      - run: tsc --noEmit -p valid-timeout/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "invalid-timeout/tsconfig.json".to_string(),
+        "valid-timeout/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["valid-timeout/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn unresolved_step_timeouts_propagate_indeterminate_outcomes() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - timeout-minutes: '${{ steps.prepare.outputs.timeout }}'\n        run: echo setup\n      - run: tsc --noEmit -p later/tsconfig.json\n  failure-handler:\n    needs: setup\n    if: failure()\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p failure/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "failure/tsconfig.json".to_string(),
+        "later/tsconfig.json".to_string(),
+    ]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
+fn job_timeout_validity_propagates_to_dependent_jobs() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  invalid:\n    uses: ./.github/workflows/callee.yml\n    with: {timeout: 0}\n",
+            ),
+            document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      timeout: {type: number, required: true}\njobs:\n  setup:\n    timeout-minutes: '${{ inputs.timeout }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo setup\n  dependent:\n    needs: setup\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/unknown.yml",
+                "on: push\njobs:\n  setup:\n    timeout-minutes: '${{ github.run_number }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo setup\n  failure-handler:\n    needs: setup\n    if: failure()\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p failure/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "failure/tsconfig.json".to_string(),
+        "invalid/tsconfig.json".to_string(),
+    ]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}

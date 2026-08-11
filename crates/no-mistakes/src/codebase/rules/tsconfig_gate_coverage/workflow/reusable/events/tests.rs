@@ -117,3 +117,21 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
         )
     ));
 }
+
+#[test]
+fn pull_request_merge_ref_retains_the_exact_base_ref() {
+    let workflow: Value = serde_yaml::from_str(
+        "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]",
+    )
+    .unwrap();
+
+    assert!(matches!(
+        source_change_event_contexts(&workflow, "pull_request").as_slice(),
+        [context]
+            if matches!(context.reference, GithubRef::PullRequestMerge)
+                && matches!(
+                    &context.base_reference,
+                    GithubRef::Exact(reference) if reference == "refs/heads/main"
+                )
+    ));
+}

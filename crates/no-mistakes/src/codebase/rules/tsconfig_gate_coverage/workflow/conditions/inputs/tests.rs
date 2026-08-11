@@ -56,6 +56,10 @@ fn direct_event_inputs_use_declared_type_empty_states() {
                 "\0github.event.action".to_string(),
                 StaticValue::String(String::new()),
             ),
+            (
+                "\0github.base_ref".to_string(),
+                StaticValue::String(String::new()),
+            ),
         ]))
     );
 }

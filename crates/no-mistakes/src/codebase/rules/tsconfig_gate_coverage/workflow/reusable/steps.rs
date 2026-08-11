@@ -8,9 +8,8 @@ use std::collections::BTreeSet;
 
 use super::super::{
     conditions::{
-        continue_on_error_enabled, step_condition_with_status, step_continue_on_error_value_valid,
-        step_timeout_minutes_enforced, EnvironmentState, InputState, StaticBool, StaticValue,
-        StepOutcomes,
+        continue_on_error_enabled, step_condition_with_status, EnvironmentState, InputState,
+        StaticBool, StaticValue, StepOutcomes,
     },
     default_working_directory,
     runtime::{
@@ -20,11 +19,10 @@ use super::super::{
 };
 use super::validation::action_step_inputs_valid_for_state;
 
-pub(super) struct StepScan {
-    pub(super) projects: BTreeSet<String>,
-    pub(super) failed: bool,
-    pub(super) indeterminate: bool,
-}
+mod configuration;
+mod model;
+use configuration::step_configuration_validity;
+pub(super) use model::StepScan;
 
 pub(super) fn scan_job_steps(
     job: &Value,
@@ -66,17 +64,21 @@ pub(super) fn scan_job_steps(
             step_outcomes.record(step, StaticValue::String("skipped".to_string()));
             continue;
         }
-        if !step_continue_on_error_value_valid(step, inputs, &environment) {
-            if condition == StaticBool::True {
-                step_outcomes.record(step, StaticValue::String("failure".to_string()));
-                failed = true;
-            } else {
-                indeterminate = true;
+        match step_configuration_validity(step, inputs, &environment) {
+            StaticBool::False => {
+                if condition == StaticBool::True {
+                    step_outcomes.record(step, StaticValue::String("failure".to_string()));
+                    failed = true;
+                } else {
+                    indeterminate = true;
+                }
+                break;
             }
-            break;
-        }
-        if !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs, &environment) {
-            continue;
+            StaticBool::Unknown | StaticBool::TruthyNonBoolean => {
+                indeterminate = true;
+                break;
+            }
+            StaticBool::True => {}
         }
         if continue_on_error && step.get("uses").is_some() {
             continue;

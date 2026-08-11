@@ -1,5 +1,6 @@
 use super::{
-    step_timeout_minutes_enforced, EnvironmentState, InputState, SecretState, StaticValue,
+    step_timeout_minutes_validity, EnvironmentState, InputState, SecretState, StaticBool,
+    StaticValue,
 };
 use serde_yaml::Value;
 
@@ -13,11 +14,14 @@ fn step_timeouts_resolve_from_the_computed_step_environment() {
         .with_job(&job, &inputs)
         .with_step(&step, &inputs);
 
-    assert!(step_timeout_minutes_enforced(
-        Some(&Value::String("${{ fromJSON(env.TIMEOUT) }}".into())),
-        &inputs,
-        &environment,
-    ));
+    assert_eq!(
+        step_timeout_minutes_validity(
+            Some(&Value::String("${{ fromJSON(env.TIMEOUT) }}".into())),
+            &inputs,
+            &environment,
+        ),
+        StaticBool::True
+    );
     assert_eq!(
         environment.value("TIMEOUT"),
         Some(StaticValue::String("7".into()))

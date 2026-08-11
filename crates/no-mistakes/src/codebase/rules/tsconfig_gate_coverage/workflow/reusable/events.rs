@@ -22,7 +22,18 @@ pub(super) fn source_change_event_contexts(
         .filter(|action| *action == "synchronize")
         .flat_map(|action| {
             references.iter().cloned().map(move |reference| {
-                GithubEventContext::with_action_and_ref(event, action, reference)
+                let base_reference = reference.clone();
+                let workflow_reference = if event == "pull_request" {
+                    GithubRef::PullRequestMerge
+                } else {
+                    reference
+                };
+                GithubEventContext::with_action_and_refs(
+                    event,
+                    action,
+                    workflow_reference,
+                    base_reference,
+                )
             })
         })
         .collect()
@@ -44,12 +55,7 @@ fn event_references(workflow: &Value, event: &str) -> Vec<GithubRef> {
                 Vec::new()
             }
         }
-        "pull_request" => branch_references(config)
-            .into_iter()
-            .map(|_| GithubRef::PullRequestMerge)
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .collect(),
+        "pull_request" => branch_references(config),
         "pull_request_target" => branch_references(config),
         _ => vec![GithubRef::Unknown],
     }

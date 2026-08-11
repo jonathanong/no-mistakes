@@ -1,60 +1,25 @@
 use super::{reusable_call_target, scan_activation, step_job_runner_supported};
-use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     callee_inputs, callee_secrets, job_statically_disabled, job_statically_enforcing,
-    job_statically_not_enforcing, job_timeout_minutes_enforced, EnvironmentState, InputState,
+    job_statically_not_enforcing, EnvironmentState, InputState, StaticBool,
 };
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
-    ActivationMemo, ActivationScan, ActivationState, ScanContext,
-};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    container_configuration_valid_for_inputs, environment_configuration_valid_for_inputs,
-    job_concurrency_valid_for_inputs, scan_job_shape_valid,
-    strategy_configuration_valid_for_inputs, validated_reusable_target,
+    container_configuration_valid_for_inputs, job_concurrency_valid_for_inputs,
+    scan_job_shape_valid, strategy_configuration_valid_for_inputs, validated_reusable_target,
 };
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
-use super::job_states::JobStates;
-
+mod configuration;
 mod order;
-
-pub(super) struct WorkflowRuntime<'workflow> {
-    pub(super) cwd: Option<String>,
-    pub(super) shell: Option<String>,
-    pub(super) workflow: &'workflow Value,
-}
-
-pub(super) struct JobScanner<'a, 'workflow> {
-    job_states: &'a JobStates,
-    triggers: &'a CompiledTriggers,
-    workflow_runtime: WorkflowRuntime<'workflow>,
-    state: &'a ActivationState,
-    context: &'a ScanContext<'workflow>,
-    memo: &'a mut ActivationMemo,
-}
+mod scanner;
+use configuration::job_configuration_validity;
+pub(super) use scanner::{JobScanner, WorkflowRuntime};
 
 impl<'a, 'workflow> JobScanner<'a, 'workflow> {
-    pub(super) fn new(
-        job_states: &'a JobStates,
-        triggers: &'a CompiledTriggers,
-        workflow_runtime: WorkflowRuntime<'workflow>,
-        state: &'a ActivationState,
-        context: &'a ScanContext<'workflow>,
-        memo: &'a mut ActivationMemo,
-    ) -> Self {
-        Self {
-            job_states,
-            triggers,
-            workflow_runtime,
-            state,
-            context,
-            memo,
-        }
-    }
-
     fn scan_job(
         &mut self,
         job_id: &str,
@@ -169,17 +134,21 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 inputs,
             )
             .with_job(job, inputs);
-            if !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs)
-                || !environment_configuration_valid_for_inputs(job, inputs)
-            {
-                let enforcing = job_statically_enforcing(job, inputs, failed_need);
-                failed |= enforcing;
-                indeterminate |= !enforcing && !job_statically_disabled(job, inputs);
-                continue;
+            match job_configuration_validity(job, inputs) {
+                StaticBool::False => {
+                    let enforcing = job_statically_enforcing(job, inputs, failed_need);
+                    failed |= enforcing;
+                    indeterminate |= !enforcing && !job_statically_disabled(job, inputs);
+                    continue;
+                }
+                StaticBool::Unknown | StaticBool::TruthyNonBoolean => {
+                    indeterminate |= !job_statically_disabled(job, inputs);
+                    continue;
+                }
+                StaticBool::True => {}
             }
             if step_job_runner_supported(job, inputs)
                 && strategy_configuration_valid_for_inputs(job, inputs)
-                && job_timeout_minutes_enforced(job.get("timeout-minutes"), inputs)
                 && container_configuration_valid_for_inputs(job, inputs, &environment)
             {
                 let scan = scan_job_steps(

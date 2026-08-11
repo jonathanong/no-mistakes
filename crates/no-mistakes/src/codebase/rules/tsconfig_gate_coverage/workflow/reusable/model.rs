@@ -42,14 +42,21 @@ pub(crate) struct GithubEventContext {
     pub(crate) name: String,
     pub(crate) action: GithubEventAction,
     pub(crate) reference: GithubRef,
+    pub(crate) base_reference: GithubRef,
 }
 
 impl GithubEventContext {
-    pub(crate) fn with_action_and_ref(name: &str, action: &str, reference: GithubRef) -> Self {
+    pub(crate) fn with_action_and_refs(
+        name: &str,
+        action: &str,
+        reference: GithubRef,
+        base_reference: GithubRef,
+    ) -> Self {
         Self {
             name: name.to_string(),
             action: GithubEventAction::Known(action.to_string()),
             reference,
+            base_reference,
         }
     }
 
@@ -58,6 +65,7 @@ impl GithubEventContext {
             name: name.to_string(),
             action: GithubEventAction::Missing,
             reference,
+            base_reference: GithubRef::Unknown,
         }
     }
 }

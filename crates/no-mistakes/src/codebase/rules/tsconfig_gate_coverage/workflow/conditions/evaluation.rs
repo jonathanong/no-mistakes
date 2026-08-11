@@ -20,49 +20,66 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::{
 /// Credit a timed step only when its timeout is statically known to be within
 /// GitHub's 1..=360 minute step limit. Unknown (including dynamic matrices)
 /// remains conservative rather than assuming a valid timeout.
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_timeout_minutes_enforced(
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_timeout_minutes_validity(
     value: Option<&Value>,
     inputs: &InputState,
     environment: &EnvironmentState,
-) -> bool {
-    timeout_minutes_enforced(value, inputs, environment, Some(360))
+) -> StaticBool {
+    timeout_minutes_validity(value, inputs, environment, Some(360))
 }
 
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_timeout_minutes_enforced(
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_timeout_minutes_validity(
     value: Option<&Value>,
     inputs: &InputState,
-) -> bool {
-    timeout_minutes_enforced(value, inputs, &EnvironmentState::default(), None)
+) -> StaticBool {
+    timeout_minutes_validity(value, inputs, &EnvironmentState::default(), None)
 }
 
-fn timeout_minutes_enforced(
+fn timeout_minutes_validity(
     value: Option<&Value>,
     inputs: &InputState,
     environment: &EnvironmentState,
     maximum: Option<u64>,
-) -> bool {
-    value.is_none_or(|value| match value {
-        Value::Number(value) => value
+) -> StaticBool {
+    let Some(value) = value else {
+        return StaticBool::True;
+    };
+    match value {
+        Value::Number(value) => StaticBool::from(
+            value
+                .as_u64()
+                .is_some_and(|minutes| valid_timeout_minutes(minutes, maximum)),
+        ),
+        Value::String(expression) => {
+            if let Some(value) =
+                super::super::expressions::complete_literal_expression_value(expression)
+            {
+                return yaml_timeout_validity(&value, maximum);
+            }
+            match super::complete_expression_static_value_with_environment(
+                expression,
+                inputs,
+                environment,
+            ) {
+                Some(StaticValue::Number(value)) => serde_yaml::from_str(&value)
+                    .ok()
+                    .map_or(StaticBool::False, |value| {
+                        yaml_timeout_validity(&value, maximum)
+                    }),
+                Some(StaticValue::Unknown) | None => StaticBool::Unknown,
+                Some(_) => StaticBool::False,
+            }
+        }
+        _ => StaticBool::False,
+    }
+}
+
+fn yaml_timeout_validity(value: &Value, maximum: Option<u64>) -> StaticBool {
+    StaticBool::from(
+        value
             .as_u64()
             .is_some_and(|minutes| valid_timeout_minutes(minutes, maximum)),
-        Value::String(expression) => {
-            super::super::expressions::complete_literal_expression_value(expression)
-                .or_else(|| {
-                    super::complete_expression_static_value_with_environment(
-                        expression,
-                        inputs,
-                        environment,
-                    )
-                    .and_then(|value| match value {
-                        StaticValue::Number(value) => serde_yaml::from_str(&value).ok(),
-                        _ => None,
-                    })
-                })
-                .and_then(|value| value.as_u64())
-                .is_some_and(|minutes| valid_timeout_minutes(minutes, maximum))
-        }
-        _ => false,
-    })
+    )
 }
 
 fn valid_timeout_minutes(minutes: u64, maximum: Option<u64>) -> bool {

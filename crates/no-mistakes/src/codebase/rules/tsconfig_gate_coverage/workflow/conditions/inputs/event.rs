@@ -7,6 +7,7 @@ pub(in super::super) const EVENT_NAME_KEY: &str = "\0github.event_name";
 pub(in super::super) const EVENT_ACTION_KEY: &str = "\0github.event.action";
 pub(in super::super) const REF_KEY: &str = "\0github.ref";
 pub(in super::super) const REF_NAME_KEY: &str = "\0github.ref_name";
+pub(in super::super) const BASE_REF_KEY: &str = "\0github.base_ref";
 pub(in super::super) const REF_KIND_KEY: &str = "\0github.ref.kind";
 pub(in super::super) const REF_EXCLUSIONS_KEY: &str = "\0github.ref.exclusions";
 
@@ -19,6 +20,9 @@ pub(in super::super) fn event_action_value(inputs: &InputState) -> Option<Static
 pub(in super::super) fn event_ref_name_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(REF_NAME_KEY).cloned()
 }
+pub(in super::super) fn event_base_ref_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(BASE_REF_KEY).cloned()
+}
 
 pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
     for key in [
@@ -26,6 +30,7 @@ pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
         EVENT_ACTION_KEY,
         REF_KEY,
         REF_NAME_KEY,
+        BASE_REF_KEY,
         REF_KIND_KEY,
         REF_EXCLUSIONS_KEY,
     ] {
@@ -76,6 +81,22 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
             );
         }
         GithubRef::Unknown => {}
+    }
+    match &event.base_reference {
+        GithubRef::Exact(reference) => {
+            if let Some(name) = exact_ref_name(reference) {
+                inputs.insert(
+                    BASE_REF_KEY.to_string(),
+                    StaticValue::String(name.to_string()),
+                );
+            }
+        }
+        GithubRef::Unknown
+            if !matches!(event.name.as_str(), "pull_request" | "pull_request_target") =>
+        {
+            inputs.insert(BASE_REF_KEY.to_string(), StaticValue::String(String::new()));
+        }
+        GithubRef::Unknown | GithubRef::UnknownExcluding(_) | GithubRef::PullRequestMerge => {}
     }
     inputs
 }
