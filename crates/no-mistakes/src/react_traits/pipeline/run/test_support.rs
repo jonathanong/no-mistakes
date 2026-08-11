@@ -27,5 +27,5 @@ pub(super) fn aggregate_children(
             components,
         )
     }));
-    aggregate_children_inner(facts, file_cache, &root, None, visited)
+    aggregate_children_inner(facts, file_cache, &root, None, visited).facts
 }

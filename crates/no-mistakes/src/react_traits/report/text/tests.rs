@@ -112,3 +112,16 @@ fn violation_json_shape_remains_public_four_fields() {
         })
     );
 }
+
+#[test]
+fn aggregated_facts_keeps_the_public_seven_field_literal_shape() {
+    let _facts = AggregatedFacts {
+        has_state: false,
+        has_props: false,
+        passes_props: false,
+        uses_memo: false,
+        uses_context_provider: false,
+        uses_suspense: false,
+        has_fetch: false,
+    };
+}

@@ -29,11 +29,6 @@ pub struct AggregatedFacts {
     pub uses_context_provider: bool,
     pub uses_suspense: bool,
     pub has_fetch: bool,
-    /// Internal fetch locations inherited through rendered child components.
-    #[serde(skip)]
-    pub fetch_lines: Vec<usize>,
-    #[serde(skip)]
-    pub fetch_locations: Vec<(String, usize)>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

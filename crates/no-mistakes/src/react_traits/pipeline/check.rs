@@ -1,20 +1,16 @@
-use crate::react_traits::report::types::{
-    FileConfig, ReactSuppressionTarget, RootConfig, Violation,
-};
+use crate::react_traits::report::types::{FileConfig, RootConfig, Violation};
 use anyhow::Result;
 use std::path::Path;
+
+mod aggregate;
+pub use aggregate::PreparedReactFindings;
+use aggregate::{assert_no_fetch_violations, assert_no_fetch_violations_with_suppression};
 
 /// Parsed React check settings that can be shared across one request.
 #[doc(hidden)]
 pub struct PreparedReactCheck {
     file_config: FileConfig,
     effective_no_fetch: bool,
-}
-
-#[doc(hidden)]
-pub struct PreparedReactFindings {
-    pub findings: Vec<Violation>,
-    pub suppression_targets: Vec<Vec<ReactSuppressionTarget>>,
 }
 
 impl PreparedReactCheck {
@@ -123,64 +119,13 @@ pub fn run_check_with_prepared_facts_for_aggregate(
             suppression_targets: Vec::new(),
         });
     }
-    let facts_list = crate::react_traits::pipeline::run_with_facts::run_analyze_inner_with_facts(
+    let facts_list = crate::react_traits::pipeline::run_with_facts::run_analyze_inner_with_facts_and_suppression(
         root,
         &prepared.file_config,
         targets,
         shared,
     )?;
     Ok(assert_no_fetch_violations_with_suppression(&facts_list))
-}
-
-fn assert_no_fetch_violations(
-    facts_list: &[crate::react_traits::ComponentFacts],
-) -> Vec<Violation> {
-    assert_no_fetch_violations_with_suppression(facts_list).findings
-}
-
-fn assert_no_fetch_violations_with_suppression(
-    facts_list: &[crate::react_traits::ComponentFacts],
-) -> PreparedReactFindings {
-    let mut violations = Vec::new();
-    let mut suppression_targets = Vec::new();
-    for facts in facts_list {
-        let has_fetch = !facts.fetches.is_empty()
-            || facts
-                .inherited_from_children
-                .as_ref()
-                .is_some_and(|agg| agg.has_fetch);
-        if has_fetch {
-            let inherited_locations = facts
-                .inherited_from_children
-                .as_ref()
-                .map(|agg| agg.fetch_locations.clone())
-                .unwrap_or_default();
-            let mut finding_targets = facts
-                .fetches
-                .iter()
-                .map(|fetch| ReactSuppressionTarget {
-                    file: fetch.file.clone(),
-                    line: fetch.line,
-                })
-                .collect::<Vec<_>>();
-            finding_targets.extend(
-                inherited_locations
-                    .into_iter()
-                    .map(|(file, line)| ReactSuppressionTarget { file, line }),
-            );
-            violations.push(Violation {
-                component: facts.name.clone(),
-                file: facts.file.clone(),
-                rule: "assert-no-fetch".to_string(),
-                detail: facts.fetches.first().and_then(|f| f.shape.clone()),
-            });
-            suppression_targets.push(finding_targets);
-        }
-    }
-    PreparedReactFindings {
-        findings: violations,
-        suppression_targets,
-    }
 }
 
 pub fn check_enabled(

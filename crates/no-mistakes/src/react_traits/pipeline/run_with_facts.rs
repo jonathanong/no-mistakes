@@ -20,6 +20,25 @@ pub(crate) fn run_analyze_inner_with_facts(
     targets: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<ComponentFacts>> {
+    Ok(
+        run_analyze_inner_with_facts_and_suppression(root, file_config, targets, shared)?
+            .into_iter()
+            .map(|entry| entry.facts)
+            .collect(),
+    )
+}
+
+pub(crate) struct PreparedComponentFacts {
+    pub(crate) facts: ComponentFacts,
+    pub(crate) inherited_fetch_locations: Vec<(String, usize)>,
+}
+
+pub(crate) fn run_analyze_inner_with_facts_and_suppression(
+    root: &Path,
+    file_config: &FileConfig,
+    targets: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<PreparedComponentFacts>> {
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let files = target_files(&root, file_config, targets, shared.files())?;
     let mut file_cache = HashMap::new();
@@ -49,10 +68,13 @@ pub(crate) fn run_analyze_inner_with_facts(
                 &child_path_index,
                 &mut HashSet::new(),
             );
-            if agg != AggregatedFacts::default() {
-                facts.inherited_from_children = Some(agg);
+            if agg.facts != AggregatedFacts::default() {
+                facts.inherited_from_children = Some(agg.facts);
             }
-            all_results.push(facts);
+            all_results.push(PreparedComponentFacts {
+                facts,
+                inherited_fetch_locations: agg.fetch_locations,
+            });
         }
     }
     Ok(all_results)
@@ -92,8 +114,8 @@ fn aggregate_children_cached(
     file_cache: &HashMap<PathBuf, std::sync::Arc<Vec<ComponentFacts>>>,
     child_path_index: &HashMap<String, PathBuf>,
     visited: &mut HashSet<String>,
-) -> AggregatedFacts {
-    let mut agg = AggregatedFacts::default();
+) -> AggregateResult {
+    let mut agg = AggregateResult::default();
     for child_ref in &facts.children {
         let key = format!("{}#{}", child_ref.file, child_ref.name);
         if !visited.insert(key) {
@@ -116,6 +138,12 @@ fn aggregate_children_cached(
     agg
 }
 
+#[derive(Default)]
+struct AggregateResult {
+    facts: AggregatedFacts,
+    fetch_locations: Vec<(String, usize)>,
+}
+
 fn child_path_index(
     root: &Path,
     file_cache: &HashMap<PathBuf, std::sync::Arc<Vec<ComponentFacts>>>,
@@ -131,16 +159,14 @@ fn child_path_index(
     index
 }
 
-fn merge_component(agg: &mut AggregatedFacts, facts: &ComponentFacts) {
-    agg.has_state |= facts.has_state;
-    agg.has_props |= facts.has_props;
-    agg.passes_props |= facts.passes_props;
-    agg.uses_memo |= facts.uses_memo;
-    agg.uses_context_provider |= facts.uses_context_provider;
-    agg.uses_suspense |= facts.uses_suspense;
-    agg.has_fetch |= !facts.fetches.is_empty();
-    agg.fetch_lines
-        .extend(facts.fetches.iter().map(|fetch| fetch.line));
+fn merge_component(agg: &mut AggregateResult, facts: &ComponentFacts) {
+    agg.facts.has_state |= facts.has_state;
+    agg.facts.has_props |= facts.has_props;
+    agg.facts.passes_props |= facts.passes_props;
+    agg.facts.uses_memo |= facts.uses_memo;
+    agg.facts.uses_context_provider |= facts.uses_context_provider;
+    agg.facts.uses_suspense |= facts.uses_suspense;
+    agg.facts.has_fetch |= !facts.fetches.is_empty();
     agg.fetch_locations.extend(
         facts
             .fetches
@@ -149,15 +175,14 @@ fn merge_component(agg: &mut AggregatedFacts, facts: &ComponentFacts) {
     );
 }
 
-fn merge_aggregate(agg: &mut AggregatedFacts, child: &AggregatedFacts) {
-    agg.has_state |= child.has_state;
-    agg.has_fetch |= child.has_fetch;
-    agg.uses_suspense |= child.uses_suspense;
-    agg.uses_context_provider |= child.uses_context_provider;
-    agg.uses_memo |= child.uses_memo;
-    agg.has_props |= child.has_props;
-    agg.passes_props |= child.passes_props;
-    agg.fetch_lines.extend(child.fetch_lines.iter().copied());
+fn merge_aggregate(agg: &mut AggregateResult, child: &AggregateResult) {
+    agg.facts.has_state |= child.facts.has_state;
+    agg.facts.has_fetch |= child.facts.has_fetch;
+    agg.facts.uses_suspense |= child.facts.uses_suspense;
+    agg.facts.uses_context_provider |= child.facts.uses_context_provider;
+    agg.facts.uses_memo |= child.facts.uses_memo;
+    agg.facts.has_props |= child.facts.has_props;
+    agg.facts.passes_props |= child.facts.passes_props;
     agg.fetch_locations
         .extend(child.fetch_locations.iter().cloned());
 }
