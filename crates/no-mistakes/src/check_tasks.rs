@@ -128,16 +128,31 @@ pub(crate) fn run_integration_check(
     })
 }
 
+pub(crate) struct CodebaseCheckInputs<'a> {
+    pub(crate) session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
+    pub(crate) root: &'a std::path::Path,
+    pub(crate) config: &'a no_mistakes::codebase::config::Config,
+    pub(crate) prepared_tsconfig_catalog:
+        &'a std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
+    pub(crate) enabled: bool,
+    pub(crate) facts: &'a CheckFactMap,
+    pub(crate) inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
+    pub(crate) defer_suppression: bool,
+}
+
 pub(crate) fn run_codebase_check_with_catalog(
-    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
-    root: &std::path::Path,
-    config: &no_mistakes::codebase::config::Config,
-    prepared_tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
-    enabled: bool,
-    facts: &CheckFactMap,
-    inferred_roots: &no_mistakes::codebase::config::InferredRoots,
-    defer_suppression: bool,
+    inputs: CodebaseCheckInputs<'_>,
 ) -> Result<CheckTask<Vec<UniqueExportFinding>>> {
+    let CodebaseCheckInputs {
+        session,
+        root,
+        config,
+        prepared_tsconfig_catalog,
+        enabled,
+        facts,
+        inferred_roots,
+        defer_suppression,
+    } = inputs;
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.codebase",
         no_mistakes::diagnostics::TimingKind::Parallel,

@@ -27,6 +27,17 @@ pub(super) struct Inputs<'a> {
     pub(super) advisories: &'a mut Vec<RuleFinding>,
 }
 
+pub(super) fn apply_if_requested(
+    include_suppressed: bool,
+    input: Inputs<'_>,
+) -> Vec<SuppressedFinding> {
+    if include_suppressed {
+        apply(input)
+    } else {
+        Vec::new()
+    }
+}
+
 pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
     let Inputs {
         root,

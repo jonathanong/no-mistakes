@@ -1,6 +1,6 @@
 use crate::check_tasks::{
     run_codebase_check_with_catalog, run_filesystem_rules_check_with_facts, run_integration_check,
-    run_queue_check, run_react_check, run_rules_check, CheckTask,
+    run_queue_check, run_react_check, run_rules_check, CheckTask, CodebaseCheckInputs,
 };
 use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::codebase::rules::RuleFinding;
@@ -78,8 +78,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let sources = inputs.sources;
     let inferred_roots = inputs.inferred_roots;
     let config = inputs.config;
-    let codebase_config = inputs.codebase_config;
-    let vitest_projects = inputs.vitest_projects;
+    let (codebase_config, vitest_projects) = (inputs.codebase_config, inputs.vitest_projects);
     let workflow_documents = inputs.workflow_documents;
     let tsconfig_gate_project_inputs = inputs.tsconfig_gate_project_inputs;
     let defer_suppression = inputs.defer_suppression;
@@ -151,16 +150,16 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                     no_mistakes::diagnostics::with_observer(
                                         observer.clone(),
                                         || {
-                                            run_codebase_check_with_catalog(
-                                                &session,
+                                            run_codebase_check_with_catalog(CodebaseCheckInputs {
+                                                session: &session,
                                                 root,
-                                                codebase_config,
+                                                config: codebase_config,
                                                 prepared_tsconfig_catalog,
-                                                unique_exports_enabled,
+                                                enabled: unique_exports_enabled,
                                                 facts,
                                                 inferred_roots,
                                                 defer_suppression,
-                                            )
+                                            })
                                         },
                                     )
                                 },
