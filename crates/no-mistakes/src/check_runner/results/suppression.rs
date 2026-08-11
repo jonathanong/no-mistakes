@@ -17,7 +17,9 @@ pub(super) struct Inputs<'a> {
     pub(super) root: &'a std::path::Path,
     pub(super) sources: &'a SourceStore,
     pub(super) react: &'a mut Vec<react_traits::Violation>,
-    pub(super) react_suppression_targets: &'a [Vec<react_traits::ReactSuppressionTarget>],
+    /// React suppression is already applied by ordinary checks. Audit runs
+    /// defer it so they can retain the corresponding accounting records.
+    pub(super) react_suppression_targets: Option<&'a [Vec<react_traits::ReactSuppressionTarget>]>,
     pub(super) queues: &'a mut Vec<CheckFinding>,
     pub(super) rules: &'a mut Vec<RuleFinding>,
     pub(super) rule_suppression_sources: &'a [Option<String>],
@@ -57,13 +59,15 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         advisories,
     } = input;
     let mut suppressed = Vec::new();
-    suppress_react(
-        root,
-        sources,
-        react,
-        react_suppression_targets,
-        &mut suppressed,
-    );
+    if let Some(react_suppression_targets) = react_suppression_targets {
+        suppress_react(
+            root,
+            sources,
+            react,
+            react_suppression_targets,
+            &mut suppressed,
+        );
+    }
     suppressed.extend(suppress_domain_findings_with_sources(
         root,
         queues,

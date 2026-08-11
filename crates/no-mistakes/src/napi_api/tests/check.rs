@@ -312,6 +312,24 @@ fn check_json_does_not_hide_later_react_fetch_after_first_is_suppressed() {
 }
 
 #[test]
+fn ordinary_check_keeps_later_react_component_after_earlier_component_is_suppressed() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-react-component-order");
+    let output = check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value.get("suppressed").is_none());
+    assert!(
+        value["react"].as_array().is_some_and(|findings| {
+            findings.iter().any(|finding| {
+                finding["file"] == "app/Later.tsx" && finding["rule"] == "assert-no-fetch"
+            })
+        }),
+        "{value}"
+    );
+}
+
+#[test]
 fn check_json_records_one_react_suppression_per_component_after_all_fetches_are_hidden() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-react-all-multiple");
