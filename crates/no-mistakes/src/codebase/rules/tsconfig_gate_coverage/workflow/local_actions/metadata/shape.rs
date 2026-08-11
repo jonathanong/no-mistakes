@@ -95,7 +95,7 @@ pub(super) fn branding_valid(value: Option<&Value>) -> bool {
 pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
     let keys = match using {
         "composite" => &["using", "steps"][..],
-        "node" => &["using", "main", "post", "post-if"][..],
+        "node" => &["using", "pre", "pre-if", "main", "post", "post-if"][..],
         "docker" => &[
             "using",
             "image",

@@ -47,7 +47,7 @@ const ACTIVITY_TYPES: &[(&str, &[&str])] = &[
         "check_run",
         &["created", "rerequested", "completed", "requested_action"],
     ),
-    ("check_suite", &["completed"]),
+    ("check_suite", &["completed", "requested", "rerequested"]),
     (
         "discussion",
         &[

@@ -140,11 +140,10 @@ fn environment_url_valid_for_inputs(environment: &Value, inputs: &InputState) ->
 pub(super) fn outputs_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|outputs| {
-            !outputs.is_empty()
-                && outputs.iter().all(|(name, expression)| {
-                    name.as_str().is_some_and(|name| !name.is_empty())
-                        && expression.as_str().is_some_and(valid_job_output_expression)
-                })
+            outputs.iter().all(|(name, expression)| {
+                name.as_str().is_some_and(|name| !name.is_empty())
+                    && expression.as_str().is_some_and(valid_job_output_expression)
+            })
         })
     })
 }

@@ -97,7 +97,6 @@ fn job_schema_validates_run_and_reusable_call_field_values() {
         "runs-on: ubuntu-latest\ndefaults: {run: {shell: []}}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nconcurrency: {group: []}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\noutputs: {result: true}\nsteps:\n  - run: echo invalid",
-        "runs-on: ubuntu-latest\noutputs: {}\nsteps:\n  - run: tsc --noEmit",
         "runs-on: ubuntu-latest\nenvironment: {url: 'https://example.test'}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\ncontainer: {image: node:22, ports: [null]}\nsteps:\n  - run: echo invalid",
         "runs-on: ubuntu-latest\nservices: {postgres: {image: postgres:16, volumes: [false]}}\nsteps:\n  - run: echo invalid",

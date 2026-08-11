@@ -20,6 +20,10 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, runner/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-composite
+      command: [pnpm, exec, tsc, --noEmit, --project, composite/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

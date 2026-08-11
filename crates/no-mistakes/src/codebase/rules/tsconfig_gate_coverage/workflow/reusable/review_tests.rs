@@ -106,6 +106,7 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
             "linux-container/tsconfig.json".to_string(),
             "constant-runner-expression/tsconfig.json".to_string(),
             "job-default-expression/tsconfig.json".to_string(),
+            "invalid-check-suite-activity/tsconfig.json".to_string(),
             "push-fallback/tsconfig.json".to_string(),
             "success/tsconfig.json".to_string(),
             "synchronize/tsconfig.json".to_string(),

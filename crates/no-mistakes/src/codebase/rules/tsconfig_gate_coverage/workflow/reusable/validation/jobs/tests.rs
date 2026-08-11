@@ -98,6 +98,9 @@ fn job_and_step_environment_expressions_use_distinct_documented_contexts() {
 
 #[test]
 fn job_outputs_reject_the_reusable_workflow_jobs_context() {
+    assert!(super::step_job_shape_valid(&job(
+        "runs-on: ubuntu-latest\noutputs: {}\nsteps:\n  - run: echo valid"
+    )));
     for yaml in [
         "runs-on: ubuntu-latest\noutputs: {result: '${{ steps.collect.outputs.result }}'}\nsteps:\n  - run: echo valid",
         "runs-on: ubuntu-latest\noutputs: {result: '${{ needs.prepare.outputs.result }}'}\nsteps:\n  - run: echo valid",

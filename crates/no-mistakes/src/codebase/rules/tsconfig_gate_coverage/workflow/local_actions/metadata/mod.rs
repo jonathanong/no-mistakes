@@ -100,6 +100,11 @@ fn valid_action_metadata(
         Some("node20" | "node24") => {
             runs_shape_valid(runs, "node")
                 && outputs_valid(metadata.get("outputs"), false)
+                && runs.get("pre").is_none_or(|pre| {
+                    pre.as_str()
+                        .and_then(|pre| execution::action_file(directory, pre))
+                        .is_some_and(|pre| tracked.contains(&pre))
+                })
                 && runs
                     .get("main")
                     .and_then(Value::as_str)

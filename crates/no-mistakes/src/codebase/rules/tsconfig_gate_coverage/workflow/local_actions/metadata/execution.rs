@@ -69,6 +69,12 @@ pub(super) fn composite_step_valid(
     if let Some(run) = step.get("run") {
         return nonempty_string(Some(run))
             && nonempty_string(step.get("shell"))
+            // Action-input values are supplied by each caller. The catalog has
+            // no invocation state, so it must not treat a dynamic composite
+            // command as runnable and let a later workflow step earn credit.
+            && !run
+                .as_str()
+                .is_some_and(|run| run.contains("${{ inputs."))
             && (composite_step_continues_on_error(step)
                 || !composite_step_may_run(step)
                 || (composite_step_working_directory_valid(step, tracked)
