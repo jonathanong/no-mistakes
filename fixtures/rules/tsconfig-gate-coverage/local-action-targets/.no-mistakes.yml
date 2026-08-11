@@ -20,6 +20,10 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, failing-action/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-missing-dockerfile
+      command: [pnpm, exec, tsc, --noEmit, --project, missing-dockerfile/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

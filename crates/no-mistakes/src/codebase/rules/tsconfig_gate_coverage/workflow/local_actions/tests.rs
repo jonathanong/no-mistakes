@@ -27,10 +27,15 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
     for yaml in [
         "name: Composite\ndescription: Valid\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
         "name: Docker\ndescription: Valid\nruns: {using: docker, image: Dockerfile}",
+        "name: Container\ndescription: Valid\nruns: {using: docker, image: 'docker://alpine:3.22'}",
+        "name: Upper container\ndescription: Valid\nruns: {using: docker, image: 'DOCKER://alpine:3.22'}",
+        "name: Base image\ndescription: Valid\nruns: {using: docker, image: 'alpine:3.22'}",
         "name: Node\ndescription: Valid\nruns: {using: node24, main: dist/index.js}",
     ] {
         let tracked = if yaml.contains("using: node24") {
             &["action/dist/index.js"][..]
+        } else if yaml.contains("image: Dockerfile") {
+            &["action/Dockerfile"][..]
         } else {
             &[]
         };
@@ -47,6 +52,9 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         "name: Missing shell\ndescription: Invalid\nruns: {using: composite, steps: [{run: ok}]}",
         "name: Unsupported step field\ndescription: Invalid\nruns: {using: composite, steps: [{run: ok, shell: bash, timeout-minutes: 1}]}",
         "name: Empty image\ndescription: Invalid\nruns: {using: docker, image: ''}",
+        "name: Padded Dockerfile\ndescription: Invalid\nruns: {using: docker, image: ' Dockerfile '}",
+        "name: Empty container\ndescription: Invalid\nruns: {using: docker, image: 'docker://'}",
+        "name: Missing Dockerfile\ndescription: Invalid\nruns: {using: docker, image: Dockerfile}",
         "name: Empty main\ndescription: Invalid\nruns: {using: node20, main: ''}",
         "name: Future runtime\ndescription: Invalid\nruns: {using: node99, main: index.js}",
     ] {
@@ -66,6 +74,20 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
     assert!(!valid(
         &[("action", absolute)],
         &["action/outside.js"],
+        "action"
+    ));
+    let escaping_dockerfile =
+        "name: Docker\ndescription: Invalid\nruns: {using: docker, image: ../Dockerfile}";
+    assert!(!valid(
+        &[("action", escaping_dockerfile)],
+        &["Dockerfile"],
+        "action"
+    ));
+    let suffixed_dockerfile =
+        "name: Docker\ndescription: Valid\nruns: {using: docker, image: build/Dockerfile.test}";
+    assert!(valid(
+        &[("action", suffixed_dockerfile)],
+        &["action/build/Dockerfile.test"],
         "action"
     ));
 }

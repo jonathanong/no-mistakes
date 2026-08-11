@@ -31,11 +31,16 @@ Step-based jobs need a non-empty, statically resolvable `runs-on` string,
 label array, or `group`/`labels` mapping. Static matrix and reusable-input
 runner selectors are resolved per generated job before runner platform and
 implicit-shell checks; unresolved selectors do not provide coverage.
+Runner group names establish schedulability but not an operating system. A
+group-only job therefore needs an explicit supported shell, and it cannot use
+containers or services for coverage unless `runs-on.labels` proves Linux.
 Repository-local action steps (`uses: ./path`) count only when the tracked
 target directory contains parseable `action.yml` or `action.yaml` metadata
 with the required name, description, and a supported `runs` contract. A
 JavaScript action's `runs.main` must resolve to a tracked file under that action
-directory. Local targets are checked in step execution order, so a statically
+directory. A Docker action's Dockerfile-shaped local `runs.image` must likewise
+resolve to a tracked file; external image references remain external. Local
+targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
 missing action prevents later commands in the same executed job from counting.
 Composite-action traversal follows GitHub's ten-action nesting limit, and a

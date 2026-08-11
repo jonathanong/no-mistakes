@@ -4,12 +4,21 @@ use super::super::super::conditions::{
     resolve_static_interpolations, EnvironmentState, InputState,
 };
 
-pub(super) fn static_runner_labels(
+#[derive(Debug, Eq, PartialEq)]
+pub(super) struct StaticRunnerSelection {
+    pub(super) group: Option<String>,
+    pub(super) labels: Vec<String>,
+}
+
+pub(super) fn static_runner_selection(
     job: Option<&Mapping>,
     inputs: &InputState,
-) -> Option<Vec<String>> {
+) -> Option<StaticRunnerSelection> {
     match job?.get("runs-on") {
-        Some(Value::String(label)) => Some(vec![resolved_static_runner_label(label, inputs)?]),
+        Some(Value::String(label)) => Some(StaticRunnerSelection {
+            group: None,
+            labels: vec![resolved_static_runner_label(label, inputs)?],
+        }),
         Some(Value::Sequence(labels)) if !labels.is_empty() => labels
             .iter()
             .map(|label| {
@@ -17,19 +26,23 @@ pub(super) fn static_runner_labels(
                     .as_str()
                     .and_then(|label| resolved_static_runner_label(label, inputs))
             })
-            .collect(),
-        Some(Value::Mapping(selection)) => runner_selection_labels(selection, inputs),
+            .collect::<Option<Vec<_>>>()
+            .map(|labels| StaticRunnerSelection {
+                group: None,
+                labels,
+            }),
+        Some(Value::Mapping(selection)) => runner_selection(selection, inputs),
         _ => None,
     }
 }
 
-fn runner_selection_labels(selection: &Mapping, inputs: &InputState) -> Option<Vec<String>> {
+fn runner_selection(selection: &Mapping, inputs: &InputState) -> Option<StaticRunnerSelection> {
     let group = match selection.get("group").and_then(Value::as_str) {
         Some(group) => Some(resolved_static_runner_label(group, inputs)?),
         None => None,
     };
-    match selection.get("labels") {
-        Some(Value::String(label)) => Some(vec![resolved_static_runner_label(label, inputs)?]),
+    let labels = match selection.get("labels") {
+        Some(Value::String(label)) => vec![resolved_static_runner_label(label, inputs)?],
         Some(Value::Sequence(labels)) if !labels.is_empty() => labels
             .iter()
             .map(|label| {
@@ -37,10 +50,11 @@ fn runner_selection_labels(selection: &Mapping, inputs: &InputState) -> Option<V
                     .as_str()
                     .and_then(|label| resolved_static_runner_label(label, inputs))
             })
-            .collect(),
-        None => group.map(|group| vec![group]),
-        _ => None,
-    }
+            .collect::<Option<Vec<_>>>()?,
+        None if group.is_some() => Vec::new(),
+        None | Some(_) => return None,
+    };
+    Some(StaticRunnerSelection { group, labels })
 }
 
 /// Resolve a complete, context-free literal expression before interpreting its

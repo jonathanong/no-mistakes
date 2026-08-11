@@ -1,19 +1,32 @@
 use super::*;
 
-fn labels(yaml: &str) -> Option<Vec<String>> {
+fn selection(yaml: &str) -> Option<StaticRunnerSelection> {
     let job: Value = serde_yaml::from_str(yaml).unwrap();
-    static_runner_labels(job.as_mapping(), &InputState::new())
+    static_runner_selection(job.as_mapping(), &InputState::new())
 }
 
 #[test]
 fn runner_selection_rejects_unresolved_or_malformed_runtime_labels() {
     assert_eq!(
-        labels("runs-on: [self-hosted, linux]"),
-        Some(vec!["self-hosted".to_string(), "linux".to_string()])
+        selection("runs-on: [self-hosted, linux]"),
+        Some(StaticRunnerSelection {
+            group: None,
+            labels: vec!["self-hosted".to_string(), "linux".to_string()],
+        })
     );
     assert_eq!(
-        labels("runs-on: {group: ubuntu-runners, labels: [ubuntu-latest]}"),
-        Some(vec!["ubuntu-latest".to_string()])
+        selection("runs-on: {group: ubuntu-runners, labels: [ubuntu-latest]}"),
+        Some(StaticRunnerSelection {
+            group: Some("ubuntu-runners".to_string()),
+            labels: vec!["ubuntu-latest".to_string()],
+        })
+    );
+    assert_eq!(
+        selection("runs-on: {group: ubuntu-latest}"),
+        Some(StaticRunnerSelection {
+            group: Some("ubuntu-latest".to_string()),
+            labels: Vec::new(),
+        })
     );
     for yaml in [
         "name: missing",
@@ -25,6 +38,6 @@ fn runner_selection_rejects_unresolved_or_malformed_runtime_labels() {
         "runs-on: {labels: []}",
         "runs-on: '${{ }}'",
     ] {
-        assert!(labels(yaml).is_none(), "{yaml}");
+        assert!(selection(yaml).is_none(), "{yaml}");
     }
 }

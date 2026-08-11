@@ -2,24 +2,25 @@ use super::super::conditions::InputState;
 use serde_yaml::{Mapping, Value};
 
 mod selection;
-use selection::static_runner_labels;
+use selection::static_runner_selection;
 
 /// A CI job cannot provide a typecheck gate unless Actions can schedule it on
 /// a statically known runner. Reusable-workflow jobs use `uses:` rather than
 /// `steps:` and are excluded separately by the step requirement.
 pub(in super::super) fn has_static_runnable_runs_on(job: &Value, inputs: &InputState) -> bool {
-    static_runner_labels(job.as_mapping(), inputs).is_some()
+    static_runner_selection(job.as_mapping(), inputs)
+        .is_some_and(|selection| selection.group.is_some() || !selection.labels.is_empty())
 }
 
 /// An unspecified Actions shell is PowerShell on Windows. Only reject this
 /// known incompatible default; an explicit supported `bash`/`sh` override is
 /// still safe to analyze on the same runner.
 pub(in super::super) fn runs_on_can_default_to_windows(job: &Value, inputs: &InputState) -> bool {
-    let Some(labels) = static_runner_labels(job.as_mapping(), inputs) else {
+    let Some(selection) = static_runner_selection(job.as_mapping(), inputs) else {
         return false;
     };
     matches!(
-        runner_platform(&labels),
+        runner_platform(&selection.labels),
         RunnerPlatform::Windows | RunnerPlatform::Unknown
     )
 }
@@ -35,10 +36,10 @@ pub(in super::super) fn container_runner_support(
     job: &Mapping,
     inputs: &InputState,
 ) -> ContainerRunnerSupport {
-    let Some(labels) = static_runner_labels(Some(job), inputs) else {
+    let Some(selection) = static_runner_selection(Some(job), inputs) else {
         return ContainerRunnerSupport::Unknown;
     };
-    match runner_platform(&labels) {
+    match runner_platform(&selection.labels) {
         RunnerPlatform::Linux => ContainerRunnerSupport::Linux,
         RunnerPlatform::MacOs | RunnerPlatform::Windows => ContainerRunnerSupport::NonLinux,
         RunnerPlatform::Unknown => ContainerRunnerSupport::Unknown,

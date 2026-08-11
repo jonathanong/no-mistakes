@@ -49,7 +49,7 @@ fn resolved_runner_strategy_and_container_configuration_control_coverage() {
         ),
         workflow(
             ".github/workflows/runner-groups.yml",
-            "on: push\njobs:\n  group-only:\n    runs-on: {group: ubuntu-runners}\n    defaults: {run: {shell: bash}}\n    steps:\n      - run: tsc --noEmit --project runner-group/tsconfig.json\n  group-labels:\n    runs-on: {group: ubuntu-runners, labels: ubuntu-latest}\n    steps:\n      - run: tsc --noEmit --project runner-group-labels/tsconfig.json\n  labels-only:\n    runs-on: {labels: [ubuntu-latest]}\n    steps:\n      - run: tsc --noEmit --project runner-labels/tsconfig.json\n",
+            "on: push\njobs:\n  group-only:\n    runs-on: {group: ubuntu-runners}\n    defaults: {run: {shell: bash}}\n    steps:\n      - run: tsc --noEmit --project runner-group/tsconfig.json\n  group-implicit-shell:\n    runs-on: {group: ubuntu-latest}\n    steps:\n      - run: tsc --noEmit --project runner-group-implicit/tsconfig.json\n  group-labels:\n    runs-on: {group: ubuntu-runners, labels: ubuntu-latest}\n    steps:\n      - run: tsc --noEmit --project runner-group-labels/tsconfig.json\n  labels-only:\n    runs-on: {labels: [ubuntu-latest]}\n    steps:\n      - run: tsc --noEmit --project runner-labels/tsconfig.json\n",
         ),
     ];
     let tracked = [
@@ -61,6 +61,7 @@ fn resolved_runner_strategy_and_container_configuration_control_coverage() {
         "missing-credential/tsconfig.json",
         "missing-service-credential/tsconfig.json",
         "runner-group-labels/tsconfig.json",
+        "runner-group-implicit/tsconfig.json",
         "runner-group/tsconfig.json",
         "runner-labels/tsconfig.json",
         "supported-option/tsconfig.json",

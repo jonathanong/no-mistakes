@@ -61,7 +61,7 @@ fn valid_action_metadata(
                         composite_step_valid(step, descriptors, tracked, visiting, cache)
                     })
             }),
-        Some("docker") => nonempty_string(runs.get("image")),
+        Some("docker") => docker_action_image_valid(runs, directory, tracked),
         Some("node12" | "node16" | "node20" | "node24") => runs
             .get("main")
             .and_then(Value::as_str)
@@ -69,6 +69,34 @@ fn valid_action_metadata(
             .is_some_and(|main| tracked.contains(&main)),
         _ => false,
     }
+}
+
+fn docker_action_image_valid(runs: &Mapping, directory: &str, tracked: &BTreeSet<String>) -> bool {
+    let Some(image) = runs.get("image").and_then(Value::as_str) else {
+        return false;
+    };
+    if image.is_empty() || image.trim() != image || image.eq_ignore_ascii_case("docker://") {
+        return false;
+    }
+    if !dockerfile_image(image) {
+        return true;
+    }
+    action_file(directory, image).is_some_and(|dockerfile| tracked.contains(&dockerfile))
+}
+
+fn dockerfile_image(image: &str) -> bool {
+    if image
+        .get(.."docker://".len())
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("docker://"))
+    {
+        return false;
+    }
+    let name = image.rsplit('/').next().unwrap_or(image);
+    name.get(.."Dockerfile.".len())
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("Dockerfile."))
+        || name
+            .get(name.len().saturating_sub("Dockerfile".len())..)
+            .is_some_and(|suffix| suffix.eq_ignore_ascii_case("Dockerfile"))
 }
 
 fn action_file(directory: &str, path: &str) -> Option<String> {

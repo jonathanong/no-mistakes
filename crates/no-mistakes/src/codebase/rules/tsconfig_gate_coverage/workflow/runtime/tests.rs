@@ -218,4 +218,11 @@ fn runner_selection_resolves_matrix_labels_and_group_mappings() {
         let job: Value = serde_yaml::from_str(yaml).unwrap();
         assert!(has_static_runnable_runs_on(&job), "{yaml}");
     }
+
+    let group_only: Value = serde_yaml::from_str("runs-on: {group: ubuntu-latest}").unwrap();
+    assert!(runs_on_can_default_to_windows(&group_only));
+    assert!(matches!(
+        container_runner_support(group_only.as_mapping().unwrap()),
+        ContainerRunnerSupport::Unknown
+    ));
 }
