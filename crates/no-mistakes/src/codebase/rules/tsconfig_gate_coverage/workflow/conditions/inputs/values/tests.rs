@@ -27,6 +27,10 @@ fn forwarded_values_cover_event_matrix_and_unavailable_inputs() {
             StaticValue::String("pull_request".to_string()),
         ),
         (
+            "\0github.event.action".to_string(),
+            StaticValue::String("opened".to_string()),
+        ),
+        (
             "\0matrix.target".to_string(),
             StaticValue::String("linux".to_string()),
         ),
@@ -37,6 +41,10 @@ fn forwarded_values_cover_event_matrix_and_unavailable_inputs() {
         (
             "${{ github.event_name }}",
             Some(StaticValue::String("pull_request".to_string())),
+        ),
+        (
+            "${{ github.event.action }}",
+            Some(StaticValue::String("opened".to_string())),
         ),
         (
             "${{ matrix.target }}",

@@ -17,7 +17,7 @@ mod steps;
 mod validation;
 
 use activation::scan_activation;
-use events::source_change_event_eligible;
+use events::{direct_event_actions, source_change_event_eligible};
 use model::{ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
@@ -70,18 +70,24 @@ pub(super) fn collect_ci_projects_with_stats(
             let mut memo = ActivationMemo::new();
             let triggers = CompiledTriggers::for_event(&trigger_model, event_name)
                 .expect("event came from the trigger model");
-            let Some(inputs) = direct_inputs(document.call_contract.as_ref(), event_name) else {
-                continue;
-            };
-            if let Some(activation_projects) = scan_activation(
-                path,
-                document,
-                &triggers,
-                &ActivationState::direct(inputs),
-                &context,
-                &mut memo,
-            ) {
-                projects.extend(activation_projects);
+            for event_action in direct_event_actions(document.value, event_name) {
+                let Some(inputs) = direct_inputs(
+                    document.call_contract.as_ref(),
+                    event_name,
+                    event_action.as_deref(),
+                ) else {
+                    continue;
+                };
+                if let Some(activation_projects) = scan_activation(
+                    path,
+                    document,
+                    &triggers,
+                    &ActivationState::direct(inputs),
+                    &context,
+                    &mut memo,
+                ) {
+                    projects.extend(activation_projects);
+                }
             }
             computations += memo.computations();
         }
@@ -89,6 +95,8 @@ pub(super) fn collect_ci_projects_with_stats(
     (projects, computations)
 }
 
+#[cfg(test)]
+mod activity_tests;
 #[cfg(test)]
 mod input_tests;
 #[cfg(test)]

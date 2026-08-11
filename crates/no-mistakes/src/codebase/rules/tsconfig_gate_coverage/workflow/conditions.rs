@@ -13,15 +13,17 @@ mod resolution;
 use condition_values::{comparison_bool, condition_value};
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
 use input_value::comparison_literal;
-use inputs::event_name_value;
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values, MatrixState,
     SecretState,
 };
+use inputs::{event_action_value, event_name_value};
 use literals::{
     hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
 };
-use resolution::{condition_input_value, input_name, literal_from_json_static_value};
+use resolution::{
+    condition_input_value, input_name, literal_from_json_sequence, literal_from_json_static_value,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -37,6 +39,10 @@ pub(super) enum StaticValue {
     String(String),
     Number(String),
     Null,
+    /// Structured values are retained only so `contains()` can evaluate a
+    /// literal `fromJSON()` array. They deliberately remain unusable by the
+    /// scalar condition paths below.
+    Sequence(Vec<StaticValue>),
     Unknown,
 }
 
@@ -163,6 +169,8 @@ fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
 
 #[cfg(test)]
 mod condition_values_tests;
+#[cfg(test)]
+mod contains_tests;
 #[cfg(test)]
 mod matrix_tests;
 #[cfg(test)]

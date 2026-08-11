@@ -49,3 +49,27 @@ fn bracketed_github_event_name_access_matches_dot_access() {
         );
     }
 }
+
+#[test]
+fn bracketed_github_event_action_access_matches_dot_access() {
+    let inputs = InputState::from([(
+        "\0github.event.action".into(),
+        StaticValue::String("opened".into()),
+    )]);
+    for (expression, expected) in [
+        ("github.event.action == 'opened'", StaticBool::True),
+        ("github.event['action'] == 'CLOSED'", StaticBool::False),
+        ("GITHUB.EVENT [ 'ACTION' ] != 'closed'", StaticBool::True),
+        ("github.event[\"action\"] == 'opened'", StaticBool::Unknown),
+        (
+            "github.event['action'].nested == 'opened'",
+            StaticBool::Unknown,
+        ),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}

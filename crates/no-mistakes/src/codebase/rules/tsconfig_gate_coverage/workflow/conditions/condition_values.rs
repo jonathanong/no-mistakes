@@ -1,6 +1,7 @@
 use super::{
     comparison_literal, condition_input_value, event_name_value, expression_bool_with_status,
-    functions, literal_from_json_static_value, logical, resolution::github_event_name,
+    functions, literal_from_json_static_value, logical,
+    resolution::{github_event_action, github_event_name},
     status_function_bool, InputState, StaticBool, StaticValue,
 };
 
@@ -19,6 +20,9 @@ pub(super) fn condition_value(
     }
     if github_event_name(operand) {
         return event_name_value(inputs);
+    }
+    if github_event_action(operand) {
+        return super::event_action_value(inputs);
     }
     literal_from_json_static_value(operand)
         .or_else(|| condition_input_value(operand, inputs))

@@ -10,8 +10,12 @@ pub(super) fn matrix_name(operand: &str) -> Option<&str> {
 }
 
 pub(super) fn github_event_name(operand: &str) -> bool {
-    context_property_name(operand, "github")
-        .is_some_and(|property| property.eq_ignore_ascii_case("event_name"))
+    github_event_property(operand, "event_name")
+}
+
+pub(super) fn github_event_action(operand: &str) -> bool {
+    context_property_name(operand, "github.event")
+        .is_some_and(|property| property.eq_ignore_ascii_case("action"))
 }
 
 pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticValue {
@@ -33,11 +37,26 @@ pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticVa
 }
 
 pub(super) fn literal_from_json_static_value(expression: &str) -> Option<StaticValue> {
-    match crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(expression.trim())? {
+    static_scalar_from_json(
+        crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(expression.trim())?,
+    )
+}
+
+pub(super) fn literal_from_json_sequence(expression: &str) -> Option<Vec<StaticValue>> {
+    let Value::Sequence(values) = crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(expression.trim())? else {
+        return None;
+    };
+    values.into_iter().map(static_scalar_from_json).collect()
+}
+
+fn static_scalar_from_json(value: Value) -> Option<StaticValue> {
+    match value {
         Value::Bool(value) => Some(StaticValue::Bool(value)),
         Value::Number(value) => Some(StaticValue::Number(value.to_string())),
         Value::String(value) => Some(StaticValue::String(value)),
         Value::Null => Some(StaticValue::Null),
+        // Nested structured values would need their own coercion semantics.
+        // Keep the analyzer conservative even inside literal membership.
         Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => None,
     }
 }
@@ -73,4 +92,9 @@ fn context_property_name<'a>(operand: &'a str, context: &str) -> Option<&'a str>
     let name = bracketed.strip_prefix(quote)?;
     let (name, suffix) = name.split_once(quote)?;
     (suffix.trim() == "]" && super::contracts::valid_identifier(name)).then_some(name)
+}
+
+fn github_event_property(operand: &str, property: &str) -> bool {
+    context_property_name(operand, "github")
+        .is_some_and(|candidate| candidate.eq_ignore_ascii_case(property))
 }

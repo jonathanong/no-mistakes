@@ -76,9 +76,10 @@ pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {
         match value {
             StaticValue::Bool(value) => StaticValue::Bool(value),
             StaticValue::Unknown => StaticValue::Unknown,
-            StaticValue::String(_) | StaticValue::Number(_) | StaticValue::Null => {
-                StaticValue::Unknown
-            }
+            StaticValue::String(_)
+            | StaticValue::Number(_)
+            | StaticValue::Null
+            | StaticValue::Sequence(_) => StaticValue::Unknown,
         }
     } else {
         match expression_bool(value.as_str().unwrap_or_default(), parent) {

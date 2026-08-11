@@ -1,4 +1,7 @@
-use super::{comparison_literal, condition_value, input_name, InputState, StaticBool, StaticValue};
+use super::{
+    comparison_literal, condition_value, input_name, literal_from_json_sequence, InputState,
+    StaticBool, StaticValue,
+};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_function_call, Function,
 };
@@ -15,15 +18,44 @@ pub(super) fn static_function_bool(
     if call.arguments.len() != 2 {
         return None;
     }
-    let search = function_argument_value(call.arguments[0], inputs, success)?.function_string()?;
-    let item = function_argument_value(call.arguments[1], inputs, success)?.function_string()?;
+    let search = if call.function == Function::Contains {
+        literal_from_json_sequence(call.arguments[0])
+            .map(StaticValue::Sequence)
+            .or_else(|| function_argument_value(call.arguments[0], inputs, success))?
+    } else {
+        function_argument_value(call.arguments[0], inputs, success)?
+    };
+    let item = function_argument_value(call.arguments[1], inputs, success)?;
     let matched = match call.function {
-        Function::Contains => contains_ignore_ascii_case(&search, &item)?,
-        Function::StartsWith => starts_with_ignore_ascii_case(&search, &item)?,
-        Function::EndsWith => ends_with_ignore_ascii_case(&search, &item)?,
+        Function::Contains => contains_value(&search, &item)?,
+        Function::StartsWith => {
+            starts_with_ignore_ascii_case(&search.function_string()?, &item.function_string()?)?
+        }
+        Function::EndsWith => {
+            ends_with_ignore_ascii_case(&search.function_string()?, &item.function_string()?)?
+        }
         _ => return None,
     };
     Some(StaticBool::from(matched))
+}
+
+fn contains_value(search: &StaticValue, item: &StaticValue) -> Option<bool> {
+    if let StaticValue::Sequence(values) = search {
+        let item = item.function_string()?;
+        let mut unknown = false;
+        for value in values {
+            match value
+                .function_string()
+                .and_then(|value| string_equals_ignore_ascii_case(&value, &item))
+            {
+                Some(true) => return Some(true),
+                Some(false) => {}
+                None => unknown = true,
+            }
+        }
+        return (!unknown).then_some(false);
+    }
+    contains_ignore_ascii_case(&search.function_string()?, &item.function_string()?)
 }
 
 pub(super) fn static_case_value(
@@ -79,6 +111,12 @@ fn contains_ignore_ascii_case(search: &str, item: &str) -> Option<bool> {
             .windows(item.len())
             .any(|candidate| candidate.eq_ignore_ascii_case(item.as_bytes())),
     )
+}
+
+fn string_equals_ignore_ascii_case(left: &str, right: &str) -> Option<bool> {
+    left.is_ascii().then_some(())?;
+    right.is_ascii().then_some(())?;
+    Some(left.eq_ignore_ascii_case(right))
 }
 
 fn starts_with_ignore_ascii_case(search: &str, item: &str) -> Option<bool> {

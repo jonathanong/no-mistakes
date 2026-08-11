@@ -121,7 +121,7 @@ fn direct_event_inputs_use_declared_type_empty_states() {
     };
 
     assert_eq!(
-        direct_inputs(Some(&contract), "push"),
+        direct_inputs(Some(&contract), "push", None),
         Some(InputState::from([
             ("enabled".to_string(), StaticValue::Bool(false)),
             ("attempts".to_string(), StaticValue::Number("0".to_string())),

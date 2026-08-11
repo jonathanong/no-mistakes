@@ -49,6 +49,16 @@ fn reusable_workflow_callers_cover_filaments_style_static_typecheck_jobs() {
 }
 
 #[test]
+fn literal_array_contains_and_pull_request_activities_control_reusable_coverage() {
+    let root = fixture_root("activity-conditions");
+    let report = findings(&root, &config(&root));
+
+    assert_eq!(report.len(), 1, "{report:#?}");
+    assert_eq!(report[0].file, "unreachable/tsconfig.json");
+    assert!(report[0].message.contains("no CI typecheck registration"));
+}
+
+#[test]
 fn no_check_tsconfigs_do_not_credit_ci_or_local_gates() {
     let root = fixture_root("no-check");
     let report = findings(&root, &config(&root));

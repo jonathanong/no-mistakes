@@ -14,9 +14,14 @@ pub(crate) use secrets::{callee_secrets, SecretState};
 use values::{default_value, nonboolean_binding_value};
 
 pub(super) const EVENT_NAME_KEY: &str = "\0github.event_name";
+pub(super) const EVENT_ACTION_KEY: &str = "\0github.event.action";
 
 pub(super) fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(EVENT_NAME_KEY).cloned()
+}
+
+pub(super) fn event_action_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(EVENT_ACTION_KEY).cloned()
 }
 
 pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
@@ -55,19 +60,21 @@ pub(super) fn matrix_property_is_dynamic(inputs: &InputState) -> bool {
 pub(crate) fn direct_inputs(
     contract: Option<&WorkflowCallContract>,
     event_name: &str,
+    event_action: Option<&str>,
 ) -> Option<InputState> {
     // A workflow invoked directly by a repository event receives the declared
     // false/default values that GitHub assigns when workflow_call is not used.
     let Some(contract) = contract else {
-        return Some(InputState::from([(
-            EVENT_NAME_KEY.to_string(),
-            StaticValue::String(event_name.to_string()),
-        )]));
+        return Some(direct_event_inputs(
+            InputState::new(),
+            event_name,
+            event_action,
+        ));
     };
     if !workflow_call_contract_valid(contract) {
         return None;
     }
-    let mut inputs: InputState = contract
+    let inputs: InputState = contract
         .inputs
         .iter()
         .map(|(name, declaration)| {
@@ -77,11 +84,7 @@ pub(crate) fn direct_inputs(
             (normalized_name(name), default_value(None, input_type))
         })
         .collect();
-    inputs.insert(
-        EVENT_NAME_KEY.to_string(),
-        StaticValue::String(event_name.to_string()),
-    );
-    Some(inputs)
+    Some(direct_event_inputs(inputs, event_name, event_action))
 }
 
 pub(crate) fn callee_inputs(
@@ -155,7 +158,28 @@ fn inputs_from_contract(
         EVENT_NAME_KEY.to_string(),
         parent.get(EVENT_NAME_KEY)?.clone(),
     );
+    if let Some(action) = parent.get(EVENT_ACTION_KEY) {
+        inputs.insert(EVENT_ACTION_KEY.to_string(), action.clone());
+    }
     Some(inputs)
+}
+
+fn direct_event_inputs(
+    mut inputs: InputState,
+    event_name: &str,
+    event_action: Option<&str>,
+) -> InputState {
+    inputs.insert(
+        EVENT_NAME_KEY.to_string(),
+        StaticValue::String(event_name.to_string()),
+    );
+    if let Some(action) = event_action {
+        inputs.insert(
+            EVENT_ACTION_KEY.to_string(),
+            StaticValue::String(action.to_string()),
+        );
+    }
+    inputs
 }
 
 #[cfg(test)]
