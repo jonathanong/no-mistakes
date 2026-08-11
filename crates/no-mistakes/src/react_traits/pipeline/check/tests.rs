@@ -62,6 +62,13 @@ fn run_check_reports_violations_when_assert_no_fetch_is_enabled() {
 }
 
 #[test]
+fn run_check_returns_analysis_error_for_missing_frontend_root() {
+    let root = assert_no_fetch_root().join("missing");
+    let error = run_check(&root, None, &[], true).unwrap_err();
+    assert!(error.to_string().contains("frontend root not found"));
+}
+
+#[test]
 fn check_enabled_returns_true_when_assert_no_fetch_is_enabled() {
     let root = assert_no_fetch_root();
     assert!(check_enabled(&root, None, true).unwrap());
@@ -149,6 +156,22 @@ fn prepared_check_and_aggregate_sidecar_cover_enabled_and_disabled_paths() {
         run_check_with_prepared_facts_for_aggregate(&root, &[], &facts, &disabled).unwrap();
     assert!(aggregate.findings.is_empty());
     assert!(aggregate.suppression_targets.is_empty());
+}
+
+#[test]
+fn prepared_check_returns_analysis_error_for_missing_frontend_root() {
+    let root = assert_no_fetch_root().join("missing");
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+    let prepared = prepare_file_config(
+        FileConfig {
+            frontend_root: Some("app".to_string()),
+            assert_no_fetch: Some(true),
+        },
+        false,
+    );
+
+    let error = run_check_with_prepared_facts(&root, &[], &facts, &prepared).unwrap_err();
+    assert!(error.to_string().contains("frontend root not found"));
 }
 
 #[test]
