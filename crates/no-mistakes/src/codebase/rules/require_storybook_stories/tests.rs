@@ -113,7 +113,11 @@ fn deferred_suppression_sources_read_relative_component_paths() {
         explicit: true,
     };
 
-    let indexed = suppression::component_suppression_sources(&root, &[component.clone()], &sources);
+    let indexed = suppression::component_suppression_sources(
+        &root,
+        std::slice::from_ref(&component),
+        &sources,
+    );
 
     assert!(suppression::component_is_suppressed(
         &root, &indexed, &component,
