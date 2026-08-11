@@ -206,6 +206,35 @@ fn aggregate_check_keeps_public_violations_and_private_suppression_locations_sep
 }
 
 #[test]
+fn public_prepared_check_matches_aggregate_findings_for_fetch_fixture() {
+    use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+
+    let root = assert_no_fetch_root();
+    let facts = collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_visible_paths(&root),
+        CheckFactPlan {
+            react: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let prepared = prepare_check_from_loaded_config(
+        &crate::config::v2::load_v2_config(&root, None).unwrap(),
+        false,
+    );
+
+    let public = run_check_with_prepared_facts(&root, &[], &facts, &prepared).unwrap();
+    let aggregate =
+        run_check_with_prepared_facts_for_aggregate(&root, &[], &facts, &prepared).unwrap();
+
+    assert_eq!(
+        serde_json::to_value(public).unwrap(),
+        serde_json::to_value(aggregate.findings).unwrap(),
+        "the public prepared-facts check must not require suppression sidecars"
+    );
+}
+
+#[test]
 fn prepared_check_uses_frozen_visible_files_after_source_is_removed() {
     use crate::codebase::check_facts::{collect_check_facts, CheckFactPlan};
 
