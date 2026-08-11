@@ -98,6 +98,28 @@ fn react_component(name: &str, file: &str, children: Vec<ComponentRef>) -> Compo
     }
 }
 
+#[test]
+fn deferred_suppression_sources_read_relative_component_paths() {
+    let root = fixture("comments");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let component = types::Component {
+        key: "components/DisabledFile.tsx#DisabledFile".to_string(),
+        file: PathBuf::from("components/DisabledFile.tsx"),
+        repo_file: "components/DisabledFile.tsx".to_string(),
+        project_file: "components/DisabledFile.tsx".to_string(),
+        export_name: "DisabledFile".to_string(),
+        line: 2,
+        explicit: true,
+    };
+
+    let indexed = suppression::component_suppression_sources(&root, &[component.clone()], &sources);
+
+    assert!(suppression::component_is_suppressed(
+        &root, &indexed, &component,
+    ));
+}
+
 fn react_facts(
     components: Vec<ComponentFacts>,
 ) -> std::sync::Arc<crate::react_traits::analyze::file::FileAnalysis> {

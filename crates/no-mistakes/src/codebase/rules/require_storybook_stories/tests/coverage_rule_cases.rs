@@ -97,6 +97,47 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn standalone_check_accepts_explicit_relative_and_absolute_tsconfig_paths() {
+    let root = fixture("covered");
+    let config = config(
+        r#"
+include_all_react_named_exports: true
+"#,
+    );
+    let relative_findings =
+        check(&root, &config, Some(std::path::Path::new("tsconfig.json"))).unwrap();
+    assert!(relative_findings.is_empty(), "{relative_findings:#?}");
+
+    // Keep both forms covered: integrations commonly resolve --tsconfig before
+    // passing it to this standalone API, while the CLI passes relative paths.
+    let absolute_tsconfig = root.join("tsconfig.json");
+    let absolute_findings = check(&root, &config, Some(&absolute_tsconfig)).unwrap();
+    assert!(absolute_findings.is_empty(), "{absolute_findings:#?}");
+}
+
+#[test]
+fn standalone_check_reports_an_explicit_missing_tsconfig() {
+    let root = fixture("covered");
+    let config = config(
+        r#"
+include_all_react_named_exports: true
+"#,
+    );
+
+    let error = check(
+        &root,
+        &config,
+        Some(std::path::Path::new("missing-tsconfig.json")),
+    )
+    .unwrap_err();
+
+    assert!(
+        error.to_string().contains("missing-tsconfig.json"),
+        "{error:#}"
+    );
+}
+
+#[test]
 fn standalone_check_uses_package_local_aliases_for_stories_and_reexports() {
     let fixture = crate::test_support::materialize_gitignore_fixture("storybook-workspace-alias");
     crate::test_support::git_init(fixture.path());
