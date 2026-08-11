@@ -24,6 +24,10 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, missing-dockerfile/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-malformed-metadata
+      command: [pnpm, exec, tsc, --noEmit, --project, malformed-metadata/tsconfig.json]
+      fileArgs: none
+      always: true
     - name: typecheck-missing-working-directory
       command: [pnpm, exec, tsc, --noEmit, --project, missing-working-directory/tsconfig.json]
       fileArgs: none
