@@ -43,7 +43,10 @@ impl<R: ImportResolverFacade> OriginSearch<'_, R> {
             self.visiting.remove(&target);
             return None;
         };
-        if file.disabled && !file.defer_suppression {
+        // A disabled re-export target is absent from ordinary analysis. Keep
+        // that fallback identity when accounting is requested as well, so the
+        // additive audit flag cannot change active duplicate findings.
+        if file.disabled {
             self.visiting.remove(&target);
             return None;
         }

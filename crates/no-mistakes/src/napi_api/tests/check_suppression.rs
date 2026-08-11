@@ -202,12 +202,9 @@ fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports
         serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
             .unwrap();
     assert!(baseline["codebase"].as_array().is_some_and(|items| {
-        !items.iter().any(|item| {
-            matches!(
-                item["exportName"].as_str(),
-                Some("chained" | "wildOnly" | "TypeThing")
-            )
-        })
+        !items
+            .iter()
+            .any(|item| matches!(item["exportName"].as_str(), Some("wildOnly" | "TypeThing")))
     }));
     let audit: serde_json::Value = serde_json::from_str(
         &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
@@ -243,6 +240,21 @@ fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports
                     .is_some_and(|reason| reason.contains("TypeThing"))
         })
     }));
+}
+
+#[test]
+fn check_json_keeps_named_reexport_duplicates_when_auditing_suppression() {
+    let (baseline, audit) = baseline_and_audit("suppression-unique-canonical");
+    for report in [&baseline, &audit] {
+        assert!(
+            report["codebase"].as_array().is_some_and(|items| {
+                items.iter().any(|item| {
+                    item["exportName"] == "chained" && item["file"] == "src/chained-visible.ts"
+                })
+            }),
+            "{report}"
+        );
+    }
 }
 
 #[test]

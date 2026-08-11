@@ -114,7 +114,7 @@ export type { MissingType } from './missing'\n",
 }
 
 #[test]
-fn deferred_suppression_preserves_reexport_origin_identity() {
+fn deferred_suppression_keeps_disabled_reexport_as_fallback_origin() {
     let root = suppression_origin_fixture();
     let source = fixture_source_file(&root, "src/source.ts", true);
     let barrel = fixture_source_file(&root, "src/barrel.ts", true);
@@ -136,5 +136,5 @@ fn deferred_suppression_preserves_reexport_origin_identity() {
         &WorkspaceMap::default(),
     );
 
-    assert_eq!(origin.file, "src/source.ts");
+    assert_eq!(origin.file, "src/barrel.ts");
 }
