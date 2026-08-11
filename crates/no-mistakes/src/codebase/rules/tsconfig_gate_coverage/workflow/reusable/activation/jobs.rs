@@ -9,6 +9,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validati
     container_configuration_valid_for_inputs, job_concurrency_valid_for_inputs,
     scan_job_shape_valid, strategy_configuration_valid_for_inputs, validated_reusable_target,
 };
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::runner_os;
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
@@ -133,7 +134,8 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 &self.state.secrets,
                 inputs,
             )
-            .with_job(job, inputs);
+            .with_job(job, inputs)
+            .with_runner_os(runner_os(job, inputs));
             match job_configuration_validity(job, inputs) {
                 StaticBool::False => {
                     let enforcing = job_statically_enforcing(job, inputs, failed_need);

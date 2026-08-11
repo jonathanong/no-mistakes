@@ -45,6 +45,9 @@ pub(super) fn condition_value(
     if github_base_ref(operand) {
         return event_base_ref_value(inputs);
     }
+    if operand.eq_ignore_ascii_case("runner.os") {
+        return Some(environment.runner_os());
+    }
     literal_from_json_static_value(operand)
         .or_else(|| super::static_values::static_from_json_expression(operand, inputs, environment))
         .or_else(|| condition_input_value(operand, inputs, environment))
@@ -70,6 +73,7 @@ pub(super) fn condition_value(
         })
         .or_else(|| functions::static_case_value(operand, inputs, environment, status))
         .or_else(|| functions::static_format_value(operand, inputs, environment, status))
+        .or_else(|| functions::static_join_value(operand, inputs, environment, status))
         .or_else(|| {
             functions::static_function_bool(operand, inputs, environment, status)
                 .map(static_bool_value)

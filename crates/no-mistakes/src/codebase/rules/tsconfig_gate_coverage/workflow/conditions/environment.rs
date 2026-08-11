@@ -11,6 +11,7 @@ pub(crate) struct EnvironmentState {
     values: BTreeMap<String, StaticValue>,
     secrets: SecretState,
     step_outcomes: StepOutcomes,
+    runner_os: StaticValue,
 }
 
 impl Default for EnvironmentState {
@@ -19,6 +20,7 @@ impl Default for EnvironmentState {
             values: BTreeMap::new(),
             secrets: SecretState::direct(),
             step_outcomes: StepOutcomes::default(),
+            runner_os: StaticValue::Unknown,
         }
     }
 }
@@ -38,6 +40,7 @@ impl EnvironmentState {
             ),
             secrets: secrets.clone(),
             step_outcomes: StepOutcomes::default(),
+            runner_os: StaticValue::Unknown,
         }
     }
 
@@ -57,11 +60,27 @@ impl EnvironmentState {
         self.step_outcomes.value(id)
     }
 
+    pub(crate) fn runner_os(&self) -> StaticValue {
+        self.runner_os.clone()
+    }
+
+    pub(crate) fn with_runner_os(&self, runner_os: Option<&str>) -> Self {
+        Self {
+            values: self.values.clone(),
+            secrets: self.secrets.clone(),
+            step_outcomes: self.step_outcomes.clone(),
+            runner_os: runner_os
+                .map(|runner_os| StaticValue::String(runner_os.to_string()))
+                .unwrap_or(StaticValue::Unknown),
+        }
+    }
+
     pub(crate) fn with_step_outcomes(&self, step_outcomes: &StepOutcomes) -> Self {
         Self {
             values: self.values.clone(),
             secrets: self.secrets.clone(),
             step_outcomes: step_outcomes.clone(),
+            runner_os: self.runner_os.clone(),
         }
     }
 
@@ -76,6 +95,7 @@ impl EnvironmentState {
             values: environment_values,
             secrets: self.secrets.clone(),
             step_outcomes: self.step_outcomes.clone(),
+            runner_os: self.runner_os.clone(),
         }
     }
 }

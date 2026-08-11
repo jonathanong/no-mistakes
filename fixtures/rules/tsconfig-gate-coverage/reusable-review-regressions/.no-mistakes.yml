@@ -12,6 +12,14 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, env/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-join
+      command: [pnpm, exec, tsc, --noEmit, --project, join/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-runner
+      command: [pnpm, exec, tsc, --noEmit, --project, runner/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

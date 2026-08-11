@@ -27,6 +27,28 @@ fn case_functions_resolve_the_selected_static_branch() {
 }
 
 #[test]
+fn join_functions_resolve_static_collections_before_comparisons() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        ("join(fromJSON('[\"a\"]'), ',') == 'b'", StaticBool::False),
+        (
+            "join(fromJSON('[\"a\", \"b\"]'), '-') == 'a-b'",
+            StaticBool::True,
+        ),
+        (
+            "join(fromJSON('[\"a\", {}]'), ',') == 'a,'",
+            StaticBool::Unknown,
+        ),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn over_budget_logical_conditions_never_enter_the_recursive_evaluator() {
     let at_limit = std::iter::repeat_n("true", 256)
         .collect::<Vec<_>>()
