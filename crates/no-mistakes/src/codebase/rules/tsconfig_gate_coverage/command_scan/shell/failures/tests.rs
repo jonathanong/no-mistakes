@@ -38,10 +38,16 @@ fn terminal_failures_ignore_masked_non_errexit_commands() {
         "false && echo skipped",
         "false; exit",
     ] {
-        assert!(shell_body_has_static_terminal_failure(script), "{script}");
+        assert!(
+            shell_body_has_static_failure_with_initial(script, false),
+            "{script}"
+        );
     }
     for script in ["false; echo ok", "true; exit", "exit 0", "false || true"] {
-        assert!(!shell_body_has_static_terminal_failure(script), "{script}");
+        assert!(
+            !shell_body_has_static_failure_with_initial(script, false),
+            "{script}"
+        );
     }
 }
 
@@ -71,5 +77,69 @@ fn pipefail_detects_static_pipeline_failures_without_and_or_masking() {
             !shell_body_has_static_pipeline_failure(script, true),
             "{script}"
         );
+    }
+    assert!(shell_body_has_static_pipeline_failure(
+        "tsc --noEmit --project app/tsconfig.json && false | true",
+        true
+    ));
+    assert!(shell_body_has_static_pipeline_failure(
+        "false | cat; tsc --noEmit --project app/tsconfig.json",
+        true
+    ));
+    assert!(!shell_body_has_static_pipeline_failure(
+        "set -e -o pipefail; false && false | true; echo after",
+        true
+    ));
+}
+
+#[test]
+fn pipefail_failure_prefix_keeps_only_reachable_commands() {
+    assert_eq!(
+        shell_body_before_static_pipeline_failure(
+            "tsc --noEmit --project before/tsconfig.json; false | true; tsc --noEmit --project after/tsconfig.json",
+            true,
+        ),
+        "tsc --noEmit --project before/tsconfig.json"
+    );
+    assert_eq!(
+        shell_body_before_static_pipeline_failure(
+            "true && false | true; tsc --noEmit --project after/tsconfig.json",
+            true,
+        ),
+        "true"
+    );
+    assert_eq!(
+        shell_body_before_static_pipeline_failure("tsc --noEmit --project app/tsconfig.json", true),
+        "tsc --noEmit --project app/tsconfig.json"
+    );
+}
+
+#[test]
+fn static_shell_success_requires_a_proven_successful_body() {
+    for script in [
+        "true",
+        "true; exit",
+        "true; exit 0",
+        "true && true",
+        "false && true; true",
+    ] {
+        assert!(shell_body_is_statically_successful(script), "{script}");
+    }
+    for script in ["", "tsc --noEmit", "false", "true | true"] {
+        assert!(!shell_body_is_statically_successful(script), "{script}");
+    }
+}
+
+#[test]
+fn static_or_lists_remain_outside_the_supported_shell_subset() {
+    for script in [
+        "false || false",
+        "false || true",
+        "unknown || true",
+        "true || false",
+        "false | true || false",
+    ] {
+        assert!(!shell_body_has_static_failure(script), "{script}");
+        assert!(!shell_body_is_statically_successful(script), "{script}");
     }
 }

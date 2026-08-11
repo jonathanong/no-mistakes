@@ -1,5 +1,6 @@
 use super::*;
 
+mod dispatchers;
 mod review;
 
 #[test]
@@ -44,34 +45,18 @@ fn dynamic_and_indirect_commands_do_not_count() {
 }
 
 #[test]
-fn shell_scanner_rejects_reachability_control_commands_without_modeling_them() {
-    for script in [
-        "exit 0; tsc --noEmit --project app/tsconfig.json",
-        "false && tsc --noEmit --project app/tsconfig.json",
-        "return; tsc --noEmit --project app/tsconfig.json",
-        "tsc --noEmit --project app/tsconfig.json && exit 0",
-    ] {
-        assert!(
-            scan_shell_for_typechecked_projects(script, ".").is_empty(),
-            "{script}"
-        );
-    }
-
-    assert_eq!(
-        scan_shell_for_typechecked_projects(
-            "cd app; tsc --noEmit; cd tools; tsc --noEmit --project tsconfig.tools.json",
-            ".",
-        ),
-        vec!["app/tools/tsconfig.tools.json", "app/tsconfig.json"]
-    );
-}
-
-#[test]
 fn shell_scanner_rejects_failure_enforcement_mutations() {
     for script in [
         "set +e; tsc --noEmit --project app/tsconfig.json",
         "set +eu; tsc --noEmit --project app/tsconfig.json",
         "set +o errexit; tsc --noEmit --project app/tsconfig.json",
+        "set -e -o pipefail; tsc --noEmit --project app/tsconfig.json",
+        "set -o pipefail -e; tsc --noEmit --project app/tsconfig.json",
+        "set -eo pipefail; tsc --noEmit --project app/tsconfig.json",
+        "set -euo pipefail; tsc --noEmit --project app/tsconfig.json",
+        "set -e; tsc --noEmit --project app/tsconfig.json",
+        "set -o errexit; tsc --noEmit --project app/tsconfig.json",
+        "set -u; tsc --noEmit --project app/tsconfig.json",
         "tsc --noEmit --project app/tsconfig.json; set +e",
     ] {
         assert!(
@@ -79,18 +64,6 @@ fn shell_scanner_rejects_failure_enforcement_mutations() {
             "{script}"
         );
     }
-    assert_eq!(
-        scan_shell_for_typechecked_projects("set -e; tsc --noEmit", "."),
-        vec!["tsconfig.json"]
-    );
-    assert_eq!(
-        scan_shell_for_typechecked_projects("set -o errexit; tsc --noEmit", "."),
-        vec!["tsconfig.json"]
-    );
-    assert_eq!(
-        scan_shell_for_typechecked_projects("set -u; tsc --noEmit", "."),
-        vec!["tsconfig.json"]
-    );
 }
 
 #[test]
@@ -106,6 +79,11 @@ fn shell_scanner_rejects_unsupported_working_directory_commands() {
             "{script}"
         );
     }
+    assert!(scan_shell_for_typechecked_projects(
+        r#"true \" > /definitely-missing/file \"; tsc --noEmit"#,
+        ".",
+    )
+    .is_empty());
 }
 
 #[test]
@@ -144,11 +122,6 @@ fn local_shell_gates_require_failure_propagation_or_a_final_typecheck() {
             "errexit".into(),
             "-c".into(),
             "cd app; tsc --noEmit; echo reached only after a passing typecheck".into(),
-        ],
-        vec![
-            "sh".into(),
-            "-c".into(),
-            "set -e; cd app; tsc --noEmit; echo reached only after a passing typecheck".into(),
         ],
     ] {
         assert_eq!(

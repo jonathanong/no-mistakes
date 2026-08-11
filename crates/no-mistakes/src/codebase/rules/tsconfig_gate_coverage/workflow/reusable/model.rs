@@ -97,6 +97,7 @@ pub(super) struct ActivationKey {
 pub(super) struct ActivationScan {
     pub(super) projects: BTreeSet<String>,
     pub(super) failed: bool,
+    pub(super) indeterminate: bool,
 }
 
 #[derive(Default)]

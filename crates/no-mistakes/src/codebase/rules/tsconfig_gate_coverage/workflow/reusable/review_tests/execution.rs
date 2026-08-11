@@ -85,6 +85,7 @@ fn static_job_failures_propagate_through_needs() {
 }
 
 mod concurrency;
+mod dispatchers;
 mod job_failures;
 mod resolution;
 mod run_scripts;
@@ -115,10 +116,7 @@ fn failure_propagating_shell_constructs_block_later_steps() {
         "on: push\njobs:\n  errexit:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'set -e; false; echo unreachable'\n      - run: tsc --noEmit -p errexit/tsconfig.json\n  pipefail:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash\n        run: 'false | true; echo unreachable'\n      - run: tsc --noEmit -p pipefail/tsconfig.json\n  recovered:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'false | true || echo recovered'\n      - run: tsc --noEmit -p recovered/tsconfig.json\n",
     );
 
-    assert_eq!(
-        scanned_projects(vec![workflow], &["errexit", "pipefail", "recovered"]),
-        BTreeSet::from(["recovered/tsconfig.json".to_string()])
-    );
+    assert!(scanned_projects(vec![workflow], &["errexit", "pipefail", "recovered"]).is_empty());
 }
 
 #[test]
@@ -145,4 +143,48 @@ fn pipefail_tracks_reachable_pipelines_later_in_and_lists() {
     );
 
     assert!(scanned_projects(vec![workflow], &["final-pipeline"]).is_empty());
+}
+
+#[test]
+fn unsafe_runtime_pipefail_and_unreachable_suffixes_earn_no_coverage() {
+    let workflow = document(
+        ".github/workflows/runtime-pipefail.yml",
+        "on: push\njobs:\n  command-mutation:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash -e {0}\n        run: |\n          command -p eval 'set -o pipefail'\n          false | true\n          tsc --noEmit -p command-mutation/tsconfig.json\n  builtin-mutation:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash -e {0}\n        run: |\n          builtin -- eval 'set -o pipefail'\n          false | true\n          tsc --noEmit -p builtin-mutation/tsconfig.json\n  suffix:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash -eo pipefail {0}\n        run: |\n          tsc --noEmit -p suffix/tsconfig.json\n          false | true\n          set +e\n",
+    );
+
+    assert!(scanned_projects(
+        vec![workflow],
+        &["command-mutation", "builtin-mutation", "suffix"],
+    )
+    .is_empty());
+}
+
+#[test]
+fn known_success_outcomes_skip_failure_conditioned_steps() {
+    let workflow = document(
+        ".github/workflows/masked-success.yml",
+        "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - id: setup\n        run: 'false && true; true'\n      - if: \"${{ steps.setup.outcome == 'failure' }}\"\n        run: tsc --noEmit -p app/tsconfig.json\n",
+    );
+
+    assert!(scanned_projects(vec![workflow], &["app"]).is_empty());
+}
+
+#[test]
+fn unknown_nonfinal_and_predecessors_do_not_truncate_pipefail_prefixes() {
+    let workflow = document(
+        ".github/workflows/unknown-prefix.yml",
+        "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash -eo pipefail {0}\n        run: 'tsc --noEmit -p before/tsconfig.json && unknown && false | true; tsc --noEmit -p after/tsconfig.json'\n",
+    );
+
+    assert!(scanned_projects(vec![workflow], &["before", "after"]).is_empty());
+}
+
+#[test]
+fn shell_replacements_and_escaped_shell_mutations_earn_no_coverage() {
+    let workflow = document(
+        ".github/workflows/shell-replacements.yml",
+        "on: push\njobs:\n  direct:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'X=1 s\"et\" -o pipefail; false | true; tsc --noEmit -p direct/tsconfig.json'\n  dispatcher:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'CMD=eval; X=1 \"$CMD\" true'\n      - run: tsc --noEmit -p dispatcher/tsconfig.json\n  escaped:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'X=1 >/dev/null false'\n      - run: tsc --noEmit -p escaped/tsconfig.json\n",
+    );
+
+    assert!(scanned_projects(vec![workflow], &["direct", "dispatcher", "escaped"]).is_empty());
 }

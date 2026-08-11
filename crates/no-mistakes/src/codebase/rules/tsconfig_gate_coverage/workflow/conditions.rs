@@ -13,10 +13,13 @@ mod logical;
 mod resolution;
 mod static_values;
 mod step_evaluation;
+mod step_outcomes;
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use contracts::valid_identifier;
 pub(super) use environment::EnvironmentState;
-pub(super) use evaluation::{continues_after_failed_need, continues_after_skipped_need};
+pub(super) use evaluation::{
+    continues_after_failed_need, continues_after_indeterminate_need, continues_after_skipped_need,
+};
 pub(super) use evaluation::{
     expression_bool, expression_bool_with_status_and_environment, job_statically_disabled,
     job_statically_enabled, job_statically_enforcing, job_statically_not_enforcing,
@@ -30,6 +33,7 @@ use inputs::{event_action_value, event_name_value};
 use resolution::condition_input_value;
 pub(crate) use static_values::complete_expression_static_string_value;
 pub(super) use step_evaluation::{continue_on_error_enabled, step_condition_with_status};
+pub(super) use step_outcomes::StepOutcomes;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -156,6 +160,8 @@ fn static_yaml_value(value: Value) -> StaticValue {
 mod condition_values_tests;
 #[cfg(test)]
 mod contains_tests;
+#[cfg(test)]
+mod format_tests;
 #[cfg(test)]
 mod literal_from_json_tests;
 #[cfg(test)]

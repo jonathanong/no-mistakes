@@ -11,6 +11,9 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
 
+mod action_target;
+use action_target::action_target_valid;
+
 const RUN_STEP_KEYS: &[&str] = &[
     "name",
     "id",
@@ -179,35 +182,4 @@ fn shared_step_fields_valid(step: &Mapping) -> bool {
             true,
             Some(360),
         )
-}
-
-fn action_target_valid(target: &str) -> bool {
-    if let Some(path) = target.strip_prefix("./") {
-        if target.chars().any(char::is_whitespace) {
-            return false;
-        }
-        return !path.contains('\\')
-            && (path.is_empty()
-                || path
-                    .split('/')
-                    .all(|segment| !matches!(segment, "" | "." | "..")));
-    }
-    if let Some(image) = target.strip_prefix("docker://") {
-        return super::containers::valid_container_image(image);
-    }
-    if target.contains("${{") || target.chars().any(char::is_whitespace) {
-        return false;
-    }
-    let Some((path, reference)) = target.rsplit_once('@') else {
-        return false;
-    };
-    let mut segments = path.split('/');
-    segments
-        .next()
-        .is_some_and(super::super::valid_remote_owner)
-        && segments
-            .next()
-            .is_some_and(super::super::valid_remote_repository)
-        && segments.all(|segment| !segment.is_empty())
-        && super::super::valid_remote_reference(reference)
 }

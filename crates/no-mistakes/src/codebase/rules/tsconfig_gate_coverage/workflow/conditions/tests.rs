@@ -233,7 +233,6 @@ fn deterministic_string_functions_fail_open_for_dynamic_or_unmodeled_arguments()
     let inputs = InputState::new();
     for expression in [
         "contains(github.ref, 'main')",
-        "contains(format('a,{0}', 'b'), 'a,b')",
         "startsWith('M\u{00f6}na', 'm')",
         "endsWith('release', github.ref)",
     ] {

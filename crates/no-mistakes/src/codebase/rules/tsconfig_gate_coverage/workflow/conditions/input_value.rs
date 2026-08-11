@@ -1,5 +1,8 @@
 use super::{StaticBool, StaticValue};
 
+mod format;
+use format::github_format_number;
+
 impl StaticBool {
     pub(super) fn truthiness(self) -> Self {
         match self {
@@ -58,6 +61,15 @@ impl StaticValue {
             Self::Mapping => None,
             Self::NonStringable => None,
             Self::Unknown => None,
+        }
+    }
+
+    pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn format_string(
+        &self,
+    ) -> Option<String> {
+        match self {
+            Self::Number(value) => expression_number(value).and_then(github_format_number),
+            value => value.function_string(),
         }
     }
 

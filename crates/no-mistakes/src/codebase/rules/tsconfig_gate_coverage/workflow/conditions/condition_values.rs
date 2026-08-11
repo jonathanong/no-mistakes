@@ -60,6 +60,7 @@ pub(super) fn condition_value(
             })
         })
         .or_else(|| functions::static_case_value(operand, inputs, environment, status))
+        .or_else(|| functions::static_format_value(operand, inputs, environment, status))
         .or_else(|| {
             functions::static_function_bool(operand, inputs, environment, status)
                 .map(static_bool_value)

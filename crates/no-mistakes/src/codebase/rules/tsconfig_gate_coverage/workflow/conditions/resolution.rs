@@ -24,6 +24,17 @@ fn needs_result_name(operand: &str) -> Option<&str> {
     remainder.trim().is_empty().then_some(name)
 }
 
+fn step_outcome_name(operand: &str) -> Option<&str> {
+    let operand = operand.trim();
+    let remainder = operand
+        .get(.."steps".len())
+        .filter(|prefix| prefix.eq_ignore_ascii_case("steps"))
+        .and_then(|_| operand.get("steps".len()..))?;
+    let (name, remainder) = context_property_segment(remainder)?;
+    let remainder = github_property_segment(remainder, "outcome")?;
+    remainder.trim().is_empty().then_some(name)
+}
+
 pub(super) fn needs_result_is_known_not_skipped(operand: &str, inputs: &InputState) -> bool {
     needs_result_name(operand)
         .is_some_and(|name| super::inputs::needs_result_not_skipped(name, inputs))
@@ -174,6 +185,9 @@ pub(super) fn condition_input_value(
     }
     if let Some(name) = needs_result_name(operand) {
         return Some(super::inputs::needs_result_value(name, inputs));
+    }
+    if let Some(name) = step_outcome_name(operand) {
+        return Some(environment.step_outcome(name));
     }
     let name = matrix_name(operand)?;
     Some(matrix_property_value(name, inputs))

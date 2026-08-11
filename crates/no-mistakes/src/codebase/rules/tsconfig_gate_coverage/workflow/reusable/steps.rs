@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 use super::super::{
     conditions::{
         continue_on_error_enabled, step_condition_with_status, step_timeout_minutes_enforced,
-        EnvironmentState, InputState, StaticBool,
+        EnvironmentState, InputState, StaticBool, StaticValue, StepOutcomes,
     },
     default_working_directory,
     runtime::{
@@ -22,6 +22,7 @@ use super::validation::action_step_inputs_valid_for_state;
 pub(super) struct StepScan {
     pub(super) projects: BTreeSet<String>,
     pub(super) failed: bool,
+    pub(super) indeterminate: bool,
 }
 
 pub(super) fn scan_job_steps(
@@ -37,6 +38,7 @@ pub(super) fn scan_job_steps(
         return StepScan {
             projects: BTreeSet::new(),
             failed: false,
+            indeterminate: false,
         };
     };
     let job_cwd = match default_working_directory(job) {
@@ -51,19 +53,30 @@ pub(super) fn scan_job_steps(
     let mut projects = BTreeSet::new();
     let mut success = StaticBool::True;
     let mut failed = false;
+    let mut indeterminate = false;
+    let mut step_outcomes = StepOutcomes::default();
     for step in steps {
-        let environment = environment.with_step(step, inputs);
+        let environment = environment
+            .with_step_outcomes(&step_outcomes)
+            .with_step(step, inputs);
         let condition = step_condition_with_status(step, inputs, &environment, success);
         let continue_on_error = continue_on_error_enabled(step, inputs, &environment);
-        if condition == StaticBool::False
-            || continue_on_error
-            || !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs, &environment)
-        {
+        if condition == StaticBool::False {
+            step_outcomes.record(step, StaticValue::String("skipped".to_string()));
+            continue;
+        }
+        if !step_timeout_minutes_enforced(step.get("timeout-minutes"), inputs, &environment) {
+            continue;
+        }
+        if continue_on_error && step.get("uses").is_some() {
             continue;
         }
         if step.get("uses").is_some()
             && !action_step_inputs_valid_for_state(step, inputs, &environment)
         {
+            if condition == StaticBool::True {
+                step_outcomes.record(step, StaticValue::String("failure".to_string()));
+            }
             failed |= condition == StaticBool::True;
             break;
         }
@@ -113,41 +126,64 @@ pub(super) fn scan_job_steps(
         let Some(failure_enforced) = shell_failure_enforced(shell.as_deref()) else {
             continue;
         };
+        let safe_static_shape = command_scan::shell_body_has_safe_static_shape(&run);
+        if !safe_static_shape {
+            if !continue_on_error {
+                indeterminate |= condition != StaticBool::False;
+                break;
+            }
+            continue;
+        }
         let pipefail_enforced = shell_pipefail_enforced(shell.as_deref());
+        let reachable_run = command_scan::shell_body_before_static_failure(
+            &run,
+            failure_enforced,
+            pipefail_enforced,
+        );
+        let run_to_scan = reachable_run.as_str();
         let scanned = if failure_enforced {
-            command_scan::scan_shell_for_typechecked_projects(&run, &cwd)
+            command_scan::scan_shell_for_typechecked_projects(run_to_scan, &cwd)
         } else {
-            command_scan::scan_workflow_shell_for_typechecked_projects(&run, &cwd, false)
+            command_scan::scan_workflow_shell_for_typechecked_projects(run_to_scan, &cwd, false)
         };
-        for project in scanned {
-            let project = resolve_gate_project_against_tracked(&project, context.tracked);
-            if context
-                .project_source_inputs
-                .get(&project)
-                .is_some_and(|source_inputs| {
-                    source_inputs.iter().all(|input| {
-                        matches!(
-                            triggers.evaluate(input).0,
-                            TriggerMatch::Matched | TriggerMatch::Always
-                        )
+        if !continue_on_error {
+            for project in scanned {
+                let project = resolve_gate_project_against_tracked(&project, context.tracked);
+                if context
+                    .project_source_inputs
+                    .get(&project)
+                    .is_some_and(|source_inputs| {
+                        source_inputs.iter().all(|input| {
+                            matches!(
+                                triggers.evaluate(input).0,
+                                TriggerMatch::Matched | TriggerMatch::Always
+                            )
+                        })
                     })
-                })
-            {
-                projects.insert(project);
+                {
+                    projects.insert(project);
+                }
             }
         }
         let pipeline_failure = pipefail_enforced
             && command_scan::shell_body_has_static_pipeline_failure(&run, failure_enforced);
         let static_failure = pipeline_failure
-            || if failure_enforced {
-                command_scan::shell_body_has_static_failure(&run)
-            } else {
-                command_scan::shell_body_has_static_terminal_failure(&run)
-            };
+            || command_scan::shell_body_has_static_failure_with_initial(&run, failure_enforced);
         if condition == StaticBool::True && static_failure {
-            success = StaticBool::False;
-            failed = true;
+            step_outcomes.record(step, StaticValue::String("failure".to_string()));
+            if !continue_on_error {
+                success = StaticBool::False;
+                failed = true;
+            }
+        } else if condition == StaticBool::True
+            && command_scan::shell_body_is_statically_successful(&run)
+        {
+            step_outcomes.record(step, StaticValue::String("success".to_string()));
         }
     }
-    StepScan { projects, failed }
+    StepScan {
+        projects,
+        failed,
+        indeterminate,
+    }
 }

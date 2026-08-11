@@ -1,7 +1,7 @@
 use super::JobScanner;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    continues_after_failed_need, continues_after_skipped_need, job_statically_disabled,
-    job_statically_enabled,
+    continues_after_failed_need, continues_after_indeterminate_need, continues_after_skipped_need,
+    job_statically_disabled, job_statically_enabled,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use std::collections::BTreeSet;
@@ -11,6 +11,7 @@ impl JobScanner<'_, '_> {
         let mut projects = BTreeSet::new();
         let mut completed = BTreeSet::new();
         let mut failed = BTreeSet::new();
+        let mut indeterminate = BTreeSet::new();
         let mut runtime_skipped = BTreeSet::new();
         let mut known_executed = BTreeSet::new();
         while completed.len() < jobs.len() {
@@ -38,16 +39,21 @@ impl JobScanner<'_, '_> {
                 )?;
                 let failed_need = needs.iter().any(|need| failed.contains(need));
                 let skipped_need = needs.iter().any(|need| runtime_skipped.contains(need));
+                let indeterminate_need = needs.iter().any(|need| indeterminate.contains(need));
                 let continues = inputs.iter().any(|inputs| {
                     if failed_need {
                         continues_after_failed_need(job, inputs)
                     } else if skipped_need {
                         continues_after_skipped_need(job, inputs)
+                    } else if indeterminate_need {
+                        continues_after_indeterminate_need(job, inputs)
                     } else {
                         false
                     }
                 });
-                let unsuccessful_need = failed_need || skipped_need;
+                let unsuccessful_need = failed_need || skipped_need || indeterminate_need;
+                let blocked_by_indeterminate_need =
+                    indeterminate_need && !failed_need && !skipped_need && !continues;
                 let directly_disabled = !inputs.is_empty()
                     && inputs
                         .iter()
@@ -66,8 +72,13 @@ impl JobScanner<'_, '_> {
                 if result.failed {
                     failed.insert(job_id.clone());
                 }
+                if result.indeterminate || blocked_by_indeterminate_need {
+                    indeterminate.insert(job_id.clone());
+                }
                 if skipped {
-                    runtime_skipped.insert(job_id.clone());
+                    if !blocked_by_indeterminate_need {
+                        runtime_skipped.insert(job_id.clone());
+                    }
                 } else if (unsuccessful_need && continues)
                     || (!unsuccessful_need && directly_enabled)
                 {
@@ -83,6 +94,7 @@ impl JobScanner<'_, '_> {
         Some(ActivationScan {
             projects,
             failed: !failed.is_empty(),
+            indeterminate: !indeterminate.is_empty(),
         })
     }
 }

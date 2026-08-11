@@ -93,6 +93,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             return Some(ActivationScan {
                 projects: BTreeSet::new(),
                 failed: false,
+                indeterminate: false,
             });
         }
         let callee_path = edge.to.as_deref().unwrap_or_default();
@@ -104,6 +105,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         let callee_secrets = callee_secrets(contract, job, &self.state.secrets)?;
         let mut projects = BTreeSet::new();
         let mut failed = false;
+        let mut indeterminate = false;
         let has_instances = !inputs.is_empty();
         let fallback_inputs;
         let inputs = if has_instances {
@@ -132,9 +134,15 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                     projects.extend(callee_scan.projects);
                 }
                 failed |= callee_scan.failed && job_statically_enforcing(job, inputs, failed_need);
+                indeterminate |=
+                    callee_scan.indeterminate && job_statically_enforcing(job, inputs, failed_need);
             }
         }
-        Some(ActivationScan { projects, failed })
+        Some(ActivationScan {
+            projects,
+            failed,
+            indeterminate,
+        })
     }
 
     fn scan_step_job(
@@ -148,10 +156,12 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             return ActivationScan {
                 projects: BTreeSet::new(),
                 failed: false,
+                indeterminate: false,
             };
         }
         let mut projects = BTreeSet::new();
         let mut failed = false;
+        let mut indeterminate = false;
         for inputs in inputs {
             let environment = EnvironmentState::from_workflow(
                 self.workflow_runtime.workflow,
@@ -182,8 +192,14 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                     projects.extend(scan.projects);
                 }
                 failed |= scan.failed && job_statically_enforcing(job, inputs, failed_need);
+                indeterminate |=
+                    scan.indeterminate && job_statically_enforcing(job, inputs, failed_need);
             }
         }
-        ActivationScan { projects, failed }
+        ActivationScan {
+            projects,
+            failed,
+            indeterminate,
+        }
     }
 }

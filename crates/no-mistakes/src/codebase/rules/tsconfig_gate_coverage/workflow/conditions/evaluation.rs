@@ -8,9 +8,13 @@ use super::{
 use serde_yaml::Value;
 
 mod jobs;
+mod needs;
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use jobs::{
     job_statically_disabled, job_statically_enabled, job_statically_enforcing,
     job_statically_not_enforcing,
+};
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::{
+    continues_after_failed_need, continues_after_indeterminate_need, continues_after_skipped_need,
 };
 
 /// Credit a timed step only when its timeout is statically known to be within
@@ -171,36 +175,4 @@ fn resolve_input_expression(
             .negate();
     }
     StaticBool::Unknown
-}
-
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn continues_after_skipped_need(
-    job: &Value,
-    inputs: &InputState,
-) -> bool {
-    continues_after_unsuccessful_need(job, inputs, ConditionStatus::SKIPPED)
-}
-
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn continues_after_failed_need(
-    job: &Value,
-    inputs: &InputState,
-) -> bool {
-    continues_after_unsuccessful_need(job, inputs, ConditionStatus::FAILURE)
-}
-
-fn continues_after_unsuccessful_need(
-    job: &Value,
-    inputs: &InputState,
-    status: ConditionStatus,
-) -> bool {
-    job.get("if")
-        .and_then(Value::as_str)
-        .is_some_and(|expression| {
-            super::super::expressions::condition_has_status_function(expression)
-                && expression_bool_with_status_and_environment(
-                    expression,
-                    inputs,
-                    &EnvironmentState::default(),
-                    status,
-                ) == StaticBool::True
-        })
 }

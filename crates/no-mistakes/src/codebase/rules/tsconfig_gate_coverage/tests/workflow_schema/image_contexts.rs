@@ -32,8 +32,8 @@ fn invalid_runner_and_container_image_fields_do_not_credit_typechecks() {
             "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: docker://ghcr.io//checker:22\n      - run: tsc --noEmit --project invalid-docker-action/tsconfig.json\n",
         ),
         workflow(
-            ".github/workflows/valid-dynamic-docker-action.yml",
-            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: 'docker://ghcr.io/checker:${{ matrix.tag }}'\n      - run: tsc --noEmit --project valid-dynamic-docker-action/tsconfig.json\n",
+            ".github/workflows/invalid-dynamic-docker-action.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: 'docker://ghcr.io/checker:${{ matrix.tag }}'\n      - run: tsc --noEmit --project invalid-dynamic-docker-action/tsconfig.json\n",
         ),
         workflow(
             ".github/workflows/valid-uppercase-registry.yml",
@@ -48,7 +48,7 @@ fn invalid_runner_and_container_image_fields_do_not_credit_typechecks() {
         "invalid-reduced-container-image/tsconfig.json",
         "invalid-digest-algorithm/tsconfig.json",
         "invalid-docker-action/tsconfig.json",
-        "valid-dynamic-docker-action/tsconfig.json",
+        "invalid-dynamic-docker-action/tsconfig.json",
         "valid-uppercase-registry/tsconfig.json",
     ]
     .into_iter()
@@ -61,9 +61,6 @@ fn invalid_runner_and_container_image_fields_do_not_credit_typechecks() {
             &tracked,
             &project_inputs(&tracked),
         ),
-        BTreeSet::from([
-            "valid-dynamic-docker-action/tsconfig.json".to_string(),
-            "valid-uppercase-registry/tsconfig.json".to_string(),
-        ]),
+        BTreeSet::from(["valid-uppercase-registry/tsconfig.json".to_string(),]),
     );
 }

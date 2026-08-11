@@ -6,6 +6,9 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_function_call, Function,
 };
 
+mod format_value;
+pub(super) use format_value::static_format_value;
+
 pub(super) fn static_function_bool(
     expression: &str,
     inputs: &InputState,
@@ -16,6 +19,10 @@ pub(super) fn static_function_bool(
     if call.function == Function::Case {
         return static_case_value(expression, inputs, environment, status)
             .map(StaticValue::truthiness);
+    }
+    if call.function == Function::Format {
+        return static_format_value(expression, inputs, environment, status)
+            .map(|value| value.truthiness());
     }
     if call.arguments.len() != 2 {
         return None;

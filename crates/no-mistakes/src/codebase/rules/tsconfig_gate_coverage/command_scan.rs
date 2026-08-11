@@ -1,9 +1,11 @@
 //! Static command recognition shared by workflow and configured local gates.
 
 mod shell;
+mod tokens;
 mod tsc_arguments;
 
 use shell::local_shell_command;
+pub(super) use tokens::static_tokens;
 use tsc_arguments::project_argument;
 
 /// Normalize one static repository-relative path into slash form.
@@ -59,12 +61,31 @@ pub(crate) fn shell_body_has_static_failure(script: &str) -> bool {
     shell::shell_body_has_static_failure(script)
 }
 
+pub(crate) fn shell_body_has_static_failure_with_initial(
+    script: &str,
+    failure_enforced: bool,
+) -> bool {
+    shell::shell_body_has_static_failure_with_initial(script, failure_enforced)
+}
+
 pub(crate) fn shell_body_has_static_pipeline_failure(script: &str, failure_enforced: bool) -> bool {
     shell::shell_body_has_static_pipeline_failure(script, failure_enforced)
 }
 
-pub(crate) fn shell_body_has_static_terminal_failure(script: &str) -> bool {
-    shell::shell_body_has_static_terminal_failure(script)
+pub(crate) fn shell_body_before_static_failure(
+    script: &str,
+    failure_enforced: bool,
+    pipefail_enforced: bool,
+) -> String {
+    shell::shell_body_before_static_failure(script, failure_enforced, pipefail_enforced)
+}
+
+pub(crate) fn shell_body_is_statically_successful(script: &str) -> bool {
+    shell::shell_body_is_statically_successful(script)
+}
+
+pub(crate) fn shell_body_has_safe_static_shape(script: &str) -> bool {
+    shell::shell_body_has_safe_static_shape(script)
 }
 
 /// Scan one configured argv command. A shell script is accepted only for a
@@ -135,51 +156,6 @@ fn join_relative(base: &str, raw: &str) -> Option<String> {
         format!("{base}/{raw}")
     };
     normalize_repo_relative(&joined)
-}
-
-fn static_tokens(segment: &str) -> Option<Vec<String>> {
-    if segment.is_empty()
-        || segment.contains("||")
-        || segment.contains('|')
-        || segment.contains(['$', '`', '\\'])
-    {
-        return None;
-    }
-    let mut tokens = Vec::new();
-    let mut chars = segment.chars().peekable();
-    while chars.peek().is_some() {
-        while chars.peek().is_some_and(|c| c.is_whitespace()) {
-            chars.next();
-        }
-        let Some(first) = chars.next() else {
-            break;
-        };
-        let mut token = String::new();
-        if matches!(first, '\'' | '"') {
-            let quote = first;
-            let mut closed = false;
-            for ch in chars.by_ref() {
-                if ch == quote {
-                    closed = true;
-                    break;
-                }
-                token.push(ch);
-            }
-            if !closed || chars.peek().is_some_and(|ch| !ch.is_whitespace()) {
-                return None;
-            }
-        } else {
-            token.push(first);
-            while chars.peek().is_some_and(|ch| !ch.is_whitespace()) {
-                token.push(chars.next().expect("peeked character exists"));
-            }
-        }
-        if token.is_empty() {
-            return None;
-        }
-        tokens.push(token);
-    }
-    Some(tokens)
 }
 
 #[cfg(test)]

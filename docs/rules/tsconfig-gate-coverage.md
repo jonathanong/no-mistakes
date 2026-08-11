@@ -30,7 +30,9 @@ may come from workflow/job `defaults.run.working-directory` or a step's
 resolved; values that remain dynamic do not count. Static input, matrix, and
 environment expressions in `run:` scripts are resolved before command and
 failure analysis; a script with an unresolved dynamic expression is not
-interpreted heuristically.
+interpreted heuristically. Every action-step `uses:` target, including
+`docker://` images, must be a literal static value; expressions and
+interpolations do not provide coverage.
 Step-based jobs need a non-empty, statically resolvable `runs-on` string,
 label array, or `group`/`labels` mapping. Static matrix and reusable-input
 runner selectors are resolved per generated job before runner platform and
@@ -103,6 +105,17 @@ forms do not count; neither do non-executing modes such as `bash -n {0}`.
 Implicit and built-in `bash`/`sh` shells propagate failures. Custom templates
 must include `-e` or `-o errexit` to credit a typecheck before a later command;
 without it, only a final `tsc` command counts.
+Shell command dispatch is credited only when `command` directly selects a
+static executable (optionally after `--`); `builtin`, query modes, `command -p`,
+unknown dispatcher options, and assignment targets do not prove that the
+project compiler ran. Dynamic shell-state or working-directory mutations also
+stop later commands from earning coverage. OR lists remain outside the static
+shell subset; statically failing `&&` and pipefail lists retain only commands
+that are provably reachable before the failure.
+Runtime shell-state changes such as `set`, `trap`, `export`, `hash`, and
+variable-mutating builtins are outside the supported subset; declare failure
+semantics in the static `shell:` template instead. Unquoted shell redirections
+are also unsupported because their setup can fail before the command runs.
 An implicit shell does not count for statically Windows-labeled runners
 (`windows-*` or a self-hosted `windows` label), because GitHub Actions defaults
 those runners to PowerShell; specify a supported `bash` or `sh` shell instead.
@@ -123,11 +136,13 @@ determines the result. Literal call inputs, declared defaults, omitted values,
 and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
 values through transitive calls. This lets the rule resolve exact string
 equality/inequality and number equality/inequality or relational comparisons,
-as well as input truthiness. Static `contains`, `startsWith`, and `endsWith`
-calls are also resolved using GitHub's string coercion; missing properties
-coerce to an empty string. Static `case` calls select the first truthy branch
-or their default, while an unknown predicate remains unresolved. Expressions
-whose result remains dynamic fail open as potentially runnable.
+as well as input truthiness. Static `contains`, `startsWith`, `endsWith`, and
+`format` calls are also resolved using GitHub's string coercion; missing
+properties coerce to an empty string. Static `format` calls support zero-based
+placeholders and doubled-brace escapes, including when composed inside the
+other supported string functions. Static `case` calls select the first truthy
+branch or their default, while an unknown predicate remains unresolved.
+Expressions whose result remains dynamic fail open as potentially runnable.
 Condition evaluation is limited to 256 logical operands, bounding the recursive
 static evaluator even when a repository supplies a long flat `&&` or `||`
 chain. Conditions over that limit are invalid and do not provide coverage.
@@ -239,6 +254,10 @@ results remain unresolved rather than being guessed. When a job is statically
 known to execute but its final result is otherwise unresolved, comparisons to
 `skipped` still resolve false without guessing `success`, `failure`, or
 `cancelled`.
+An unmodeled executed command similarly leaves the job result indeterminate:
+it neither manufactures a `failure` result nor permits ordinary downstream
+jobs to count. Only a status-conditioned continuation that is statically true
+for both success and failure, such as `always()`, can provide coverage.
 
 A project whose effective local `compilerOptions.noCheck` is `true` does not
 count as typechecked, even when both commands are registered. Remove or disable
@@ -261,20 +280,22 @@ Dynamic shell expansion, command substitution, arbitrary wrapper scripts,
 paths outside the repository, and other unresolved command forms do not count
 as registrations. Express such a command statically if it is intended to
 provide this gate.
-Shell bodies containing `exit`, `return`, `false`, or a failure-mode mutation
-such as `set +e` are also rejected as a whole because the rule does not model
-shell reachability or option state. Negated pipelines and bodies with unquoted shell comments,
-quoted command separators, or shell function/group braces, and local shell
-invocations that enable a
-non-executing mode such as `bash -n`, are rejected rather
-than credited heuristically. A typecheck before another command in an `&&`
-list is rejected when a later top-level command could mask a failed or skipped
-typecheck. A final static `&&` list remains recognized.
+Simple `exit`, `return`, `true`, and `false` outcomes are modeled so only a
+provably reachable prefix can count. Runtime failure-mode mutations such as
+`set +e` remain unsupported; declare the mode in `shell:` instead. Negated
+pipelines and bodies with unquoted shell comments, quoted command separators,
+shell function/group syntax, or non-executing shells such as `bash -n` are
+rejected rather than credited heuristically. A typecheck before another
+command in an `&&` list is rejected when a later top-level command could mask a
+failed or skipped typecheck. A final static `&&` list remains recognized.
 Across workflow steps, an unconditional static failure blocks later steps that
 retain the implicit `success()` condition. Explicit status continuations such
 as `always()` or `failure()` remain runnable, and `continue-on-error: true`
 keeps the following step on the successful path. In a custom non-errexit shell,
-a bare `exit` preserves the preceding static command status.
+a bare `exit` preserves the preceding static command status. A statically
+failing `pipefail` pipeline credits only reachable checks before that pipeline;
+later step `if` and `continue-on-error` expressions can resolve statically known
+`steps.<id>.outcome` values.
 
 Informational, setup, or config-bypassing commands (`--showConfig`,
 `--help`/`-h`, `--version`/`-v`, `--init`, enabled `--noCheck`,

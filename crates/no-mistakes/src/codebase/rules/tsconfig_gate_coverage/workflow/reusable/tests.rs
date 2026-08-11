@@ -438,3 +438,63 @@ fn literal_expression_matrix_axes_control_step_gate_coverage() {
         BTreeSet::from(["literal-enabled/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn static_step_failures_bound_pipeline_credits_and_later_step_outcome_conditions() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      # A pipefail failure terminates this step, but the preceding check did run.\n      - shell: bash -eo pipefail {0}\n        run: |\n          tsc --noEmit --project before-pipeline/tsconfig.json\n          false | true\n          tsc --noEmit --project after-pipeline/tsconfig.json\n  outcomes:\n    runs-on: ubuntu-latest\n    steps:\n      - id: tolerated\n        continue-on-error: true\n        run: 'false'\n      - if: \"${{ steps.tolerated.outcome == 'success' }}\"\n        run: tsc --noEmit --project failed-outcome/tsconfig.json\n      - if: \"${{ steps.tolerated.outcome == 'failure' }}\"\n        continue-on-error: \"${{ steps.tolerated.outcome == 'failure' }}\"\n        run: tsc --noEmit --project outcome-tolerated/tsconfig.json\n  known-success:\n    runs-on: ubuntu-latest\n    steps:\n      - id: setup\n        run: 'true'\n      - if: \"${{ steps.setup.outcome == 'failure' }}\"\n        run: tsc --noEmit --project success-outcome/tsconfig.json\n  skipped:\n    runs-on: ubuntu-latest\n    steps:\n      - id: disabled\n        if: false\n        run: tsc --noEmit --project disabled/tsconfig.json\n      - if: \"${{ steps.disabled.outcome != 'skipped' }}\"\n        run: tsc --noEmit --project skipped-outcome/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "before-pipeline/tsconfig.json".to_string(),
+        "after-pipeline/tsconfig.json".to_string(),
+        "failed-outcome/tsconfig.json".to_string(),
+        "outcome-tolerated/tsconfig.json".to_string(),
+        "success-outcome/tsconfig.json".to_string(),
+        "disabled/tsconfig.json".to_string(),
+        "skipped-outcome/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["before-pipeline/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn prior_step_outcomes_resolve_when_later_step_environment_is_built() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - id: setup\n        run: 'true; exit'\n      - env:\n          SETUP_OUTCOME: '${{ steps.setup.outcome }}'\n        if: \"${{ env.SETUP_OUTCOME == 'failure' }}\"\n        run: tsc --noEmit --project should-not-run/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from(["should-not-run/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
+fn pipefail_after_an_unknown_command_stops_later_steps_but_keeps_the_prior_check() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash -eo pipefail {0}\n        run: tsc --noEmit --project before/tsconfig.json && false | true\n      - run: tsc --noEmit --project after/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "before/tsconfig.json".to_string(),
+        "after/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["before/tsconfig.json".to_string()])
+    );
+}

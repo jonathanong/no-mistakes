@@ -1,14 +1,16 @@
 use super::{
     resolution::{condition_input_value, input_name, secret_name},
-    SecretAvailability, SecretState, StaticValue,
+    SecretAvailability, SecretState, StaticValue, StepOutcomes,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::complete_literal_expression_value;
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
+#[derive(Clone)]
 pub(crate) struct EnvironmentState {
     values: BTreeMap<String, StaticValue>,
     secrets: SecretState,
+    step_outcomes: StepOutcomes,
 }
 
 impl Default for EnvironmentState {
@@ -16,6 +18,7 @@ impl Default for EnvironmentState {
         Self {
             values: BTreeMap::new(),
             secrets: SecretState::direct(),
+            step_outcomes: StepOutcomes::default(),
         }
     }
 }
@@ -34,6 +37,7 @@ impl EnvironmentState {
                 &EnvironmentState::default(),
             ),
             secrets: secrets.clone(),
+            step_outcomes: StepOutcomes::default(),
         }
     }
 
@@ -49,6 +53,18 @@ impl EnvironmentState {
         self.values.get(&name.to_lowercase()).cloned()
     }
 
+    pub(crate) fn step_outcome(&self, id: &str) -> StaticValue {
+        self.step_outcomes.value(id)
+    }
+
+    pub(crate) fn with_step_outcomes(&self, step_outcomes: &StepOutcomes) -> Self {
+        Self {
+            values: self.values.clone(),
+            secrets: self.secrets.clone(),
+            step_outcomes: step_outcomes.clone(),
+        }
+    }
+
     pub(crate) fn secret_availability(&self, name: &str) -> SecretAvailability {
         self.secrets.availability(name)
     }
@@ -59,6 +75,7 @@ impl EnvironmentState {
         Self {
             values: environment_values,
             secrets: self.secrets.clone(),
+            step_outcomes: self.step_outcomes.clone(),
         }
     }
 }

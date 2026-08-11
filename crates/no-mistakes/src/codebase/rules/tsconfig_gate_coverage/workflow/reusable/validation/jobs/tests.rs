@@ -318,8 +318,6 @@ fn action_steps_require_static_canonical_targets() {
         "steps:\n  - uses: ./",
         "steps:\n  - uses: ./.github/actions/check",
         "steps:\n  - uses: docker://alpine:3.8",
-        "steps:\n  - uses: docker://ghcr.io/checker:${{ matrix.tag }}",
-        "steps:\n  - uses: \"docker://${{ 'alpine:3.8' }}\"",
     ] {
         assert!(steps_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -334,9 +332,12 @@ fn action_steps_require_static_canonical_targets() {
         "steps:\n  - uses: -owner/action@v1",
         "steps:\n  - uses: owner-/action@v1",
         "steps:\n  - uses: ./../outside",
+        "steps:\n  - uses: ./.github/actions/${{ matrix.action }}",
         "steps:\n  - uses: docker://",
         "steps:\n  - uses: docker://ghcr.io//checker:22",
+        "steps:\n  - uses: docker://ghcr.io/checker:${{ matrix.tag }}",
         "steps:\n  - uses: docker://node:${{ '' }}",
+        "steps:\n  - uses: \"docker://${{ 'alpine:3.8' }}\"",
         "steps:\n  - uses: docker://${{ secrets.IMAGE }}",
     ] {
         assert!(!steps_shape_valid(&job(yaml)), "{yaml}");
