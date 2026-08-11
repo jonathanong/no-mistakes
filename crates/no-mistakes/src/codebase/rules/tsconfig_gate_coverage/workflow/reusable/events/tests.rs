@@ -22,6 +22,40 @@ fn source_change_event_contexts_select_only_synchronize_activities() {
             "pull_request",
             vec![],
         ),
+        (
+            "on:\n  pull_request:\n    types: [synchronize]\n    branches-ignore: ['**']",
+            "pull_request",
+            vec![],
+        ),
+        (
+            "on:\n  push:\n    branches-ignore: ['**']",
+            "push",
+            vec![],
+        ),
+        (
+            "on:\n  pull_request:\n    types: [synchronize]\n    branches: [release/**, '!**']",
+            "pull_request",
+            vec![],
+        ),
+        // `release/**` does not exclude every branch, so source changes can
+        // still activate this workflow on another branch.
+        (
+            "on:\n  pull_request:\n    types: [synchronize]\n    branches-ignore: [release/**]",
+            "pull_request",
+            vec![("pull_request".to_string(), Some("synchronize".to_string()))],
+        ),
+        // A positive pattern after `!**` re-includes matching branches.
+        (
+            "on:\n  pull_request:\n    types: [synchronize]\n    branches: [release/**, '!**', main]",
+            "pull_request",
+            vec![("pull_request".to_string(), Some("synchronize".to_string()))],
+        ),
+        // The later exact negative pattern excludes the branch re-included by `main`.
+        (
+            "on:\n  pull_request:\n    types: [synchronize]\n    branches: ['!**', main, '!main']",
+            "pull_request",
+            vec![],
+        ),
     ] {
         let workflow: Value = serde_yaml::from_str(yaml).unwrap();
         let actual = source_change_event_contexts(&workflow, event)

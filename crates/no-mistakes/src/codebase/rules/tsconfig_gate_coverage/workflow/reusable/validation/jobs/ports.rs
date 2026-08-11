@@ -1,6 +1,10 @@
 use serde_yaml::Value;
 use std::net::IpAddr;
 
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    resolve_static_interpolations, EnvironmentState, InputState,
+};
+
 use super::super::super::super::expressions::interpolated_expression_valid;
 
 const MIN_PORT: u64 = 1;
@@ -12,6 +16,28 @@ pub(super) fn port_sequence_valid(value: Option<&Value>) -> bool {
         value
             .as_sequence()
             .is_some_and(|ports| ports.iter().all(port_entry_valid))
+    })
+}
+
+pub(super) fn port_sequence_valid_for_inputs(
+    value: Option<&Value>,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    value.is_none_or(|value| {
+        value.as_sequence().is_some_and(|ports| {
+            ports.iter().all(|port| {
+                port.as_str().map_or_else(
+                    || port_entry_valid(port),
+                    |port| {
+                        resolve_static_interpolations(port, inputs, environment).map_or_else(
+                            || port_mapping_valid(port),
+                            |port| port_mapping_valid(&port),
+                        )
+                    },
+                )
+            })
+        })
     })
 }
 

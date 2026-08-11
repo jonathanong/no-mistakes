@@ -1,5 +1,6 @@
 use super::*;
 
+mod branch_filters;
 mod dispatch;
 
 fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {

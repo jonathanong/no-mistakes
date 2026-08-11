@@ -137,6 +137,38 @@ fn job_defaults_and_concurrency_follow_job_context_rules() {
 }
 
 #[test]
+fn concurrency_rejects_statically_empty_context_free_groups() {
+    for yaml in [
+        "concurrency: '${{ '' }}'",
+        "concurrency:\n  group: '${{ '' }}'",
+        "concurrency: '${{ true }}'",
+        "concurrency:\n  group: '${{ true }}'",
+    ] {
+        let value = workflow(yaml);
+        assert!(
+            !workflow_concurrency_shape_valid(value.get("concurrency")),
+            "workflow-level value should reject an empty group: {yaml}"
+        );
+        assert!(
+            !job_concurrency_shape_valid(value.get("concurrency")),
+            "job-level value should reject an empty group: {yaml}"
+        );
+    }
+
+    for yaml in [
+        "concurrency: \"${{ 'checks' }}\"",
+        "concurrency: checks-${{ github.ref }}",
+        "concurrency:\n  group: checks-${{ matrix.package }}",
+    ] {
+        let value = workflow(yaml);
+        assert!(
+            job_concurrency_shape_valid(value.get("concurrency")),
+            "job-level value should preserve dynamic groups: {yaml}"
+        );
+    }
+}
+
+#[test]
 fn permissions_follow_the_actions_scope_and_access_schema() {
     assert!(!permission_value_valid(&Value::Number(1.into()), "read"));
     for yaml in [

@@ -77,3 +77,28 @@ fn port_sequences_cover_dynamic_parts_and_invalid_mapping_shapes() {
         format!("{DYNAMIC_EXPRESSION}:8080:{DYNAMIC_EXPRESSION}")
     );
 }
+
+#[test]
+fn resolved_port_sequences_validate_static_inputs_and_preserve_dynamic_inputs() {
+    use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+        EnvironmentState, InputState, StaticValue,
+    };
+
+    let invalid_static_port = serde_yaml::from_str("['${{ matrix.port }}:6379']").unwrap();
+    let static_inputs = InputState::from([(
+        "\0matrix.port".to_string(),
+        StaticValue::Number("70000".to_string()),
+    )]);
+    assert!(!port_sequence_valid_for_inputs(
+        Some(&invalid_static_port),
+        &static_inputs,
+        &EnvironmentState::default(),
+    ));
+
+    let dynamic_inputs = InputState::from([("\0matrix.dynamic".to_string(), StaticValue::Unknown)]);
+    assert!(port_sequence_valid_for_inputs(
+        Some(&invalid_static_port),
+        &dynamic_inputs,
+        &EnvironmentState::default(),
+    ));
+}

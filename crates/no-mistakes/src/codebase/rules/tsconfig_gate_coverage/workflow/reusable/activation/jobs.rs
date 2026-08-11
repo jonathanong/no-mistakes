@@ -9,7 +9,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    container_images_valid_for_inputs, scan_job_shape_valid, static_matrix_combinations,
+    container_configuration_valid_for_inputs, scan_job_shape_valid, static_matrix_combinations,
     validated_reusable_target, zero_instance_matrix, MatrixCombinations,
 };
 use crate::codebase::workflow_topology::workflow_values;
@@ -187,7 +187,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             )
             .with_job(job, inputs);
             if !statically_not_enforcing(job, inputs)
-                && container_images_valid_for_inputs(job, inputs, &environment)
+                && container_configuration_valid_for_inputs(job, inputs, &environment)
             {
                 projects.extend(scan_job_steps(
                     job,

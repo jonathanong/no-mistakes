@@ -45,41 +45,48 @@ pub(super) fn services_shape_valid(value: Option<&Value>) -> bool {
     })
 }
 
-pub(crate) fn container_images_valid_for_inputs(
+pub(crate) fn container_configuration_valid_for_inputs(
     job: &Value,
     inputs: &InputState,
     environment: &EnvironmentState,
 ) -> bool {
-    container_image_value(job.get("container"), inputs, environment)
+    container_value_valid_for_inputs(job.get("container"), inputs, environment)
         && job
             .get("services")
             .and_then(Value::as_mapping)
             .is_none_or(|services| {
                 services.values().all(|service| {
-                    service
-                        .as_mapping()
-                        .and_then(|service| service.get("image"))
-                        .and_then(Value::as_str)
-                        .is_some_and(|image| {
-                            container_image_valid_for_inputs(image, inputs, environment)
-                        })
+                    service.as_mapping().is_some_and(|service| {
+                        container_value_mapping_valid_for_inputs(service, inputs, environment)
+                    })
                 })
             })
 }
 
-fn container_image_value(
+fn container_value_valid_for_inputs(
     value: Option<&Value>,
     inputs: &InputState,
     environment: &EnvironmentState,
 ) -> bool {
     value.is_none_or(|value| match value {
         Value::String(image) => container_image_valid_for_inputs(image, inputs, environment),
-        Value::Mapping(container) => container
-            .get("image")
-            .and_then(Value::as_str)
-            .is_some_and(|image| container_image_valid_for_inputs(image, inputs, environment)),
+        Value::Mapping(container) => {
+            container_value_mapping_valid_for_inputs(container, inputs, environment)
+        }
         _ => false,
     })
+}
+
+fn container_value_mapping_valid_for_inputs(
+    container: &Mapping,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    container
+        .get("image")
+        .and_then(Value::as_str)
+        .is_some_and(|image| container_image_valid_for_inputs(image, inputs, environment))
+        && super::ports::port_sequence_valid_for_inputs(container.get("ports"), inputs, environment)
 }
 
 fn container_image_valid_for_inputs(

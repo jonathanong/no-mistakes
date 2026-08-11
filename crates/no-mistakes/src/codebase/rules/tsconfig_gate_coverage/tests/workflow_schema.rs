@@ -1,6 +1,8 @@
 use super::*;
 
 mod image_contexts;
+mod matrix_exclusions;
+mod ports_concurrency;
 mod review_contexts;
 
 fn workflow(path: &str, yaml: &str) -> ParsedWorkflowDocument {
@@ -278,18 +280,6 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "valid-ports/tsconfig.json".to_string(),
         ])
     );
-}
-
-#[test]
-fn literal_expression_exclusions_create_a_zero_instance_workflow_boundary() {
-    let tracked = BTreeSet::from(["excluded-expression/tsconfig.json".to_string()]);
-    let workflows = ParsedWorkflowSet {
-        documents: vec![workflow(
-            ".github/workflows/excluded-expression.yml",
-            "on: push\njobs:\n  typecheck:\n    strategy:\n      matrix:\n        enabled: [true]\n        exclude:\n          - enabled: '${{ true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project excluded-expression/tsconfig.json\n",
-        )],
-    };
-    assert!(ci_typechecked_projects(&workflows, &tracked, &project_inputs(&tracked)).is_empty());
 }
 
 #[test]
