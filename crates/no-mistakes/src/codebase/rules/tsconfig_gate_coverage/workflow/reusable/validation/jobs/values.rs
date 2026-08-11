@@ -4,6 +4,7 @@ use super::super::super::super::expressions::{
     interpolated_expression_contexts_and_hash_files_available,
     interpolated_expression_contexts_available, interpolated_expression_valid,
 };
+const RUNS_ON_CONTEXTS: &[&str] = &["github", "inputs", "vars", "needs", "strategy", "matrix"];
 pub(super) const JOB_ENV_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "vars", "secrets", "inputs",
 ];
@@ -20,7 +21,6 @@ const ENVIRONMENT_NAME_CONTEXTS: &[&str] =
 const ENVIRONMENT_URL_CONTEXTS: &[&str] = &[
     "github", "inputs", "vars", "needs", "strategy", "matrix", "job", "runner", "env", "steps",
 ];
-const RUNS_ON_CONTEXTS: &[&str] = &["github", "needs", "strategy", "matrix", "vars", "inputs"];
 pub(super) fn scalar_mapping_valid(
     value: Option<&Value>,
     allowed_contexts: &[&str],

@@ -28,10 +28,16 @@ fn case_functions_resolve_the_selected_static_branch() {
 
 #[test]
 fn bracketed_github_event_name_access_matches_dot_access() {
-    let inputs = InputState::from([(
-        "\0github.event_name".into(),
-        StaticValue::String("push".into()),
-    )]);
+    let inputs = InputState::from([
+        (
+            "\0github.event_name".into(),
+            StaticValue::String("push".into()),
+        ),
+        (
+            "\0github.event.action".into(),
+            StaticValue::String("synchronize".into()),
+        ),
+    ]);
     for (expression, expected) in [
         ("github.event_name == 'push'", StaticBool::True),
         ("github['event_name'] == 'push'", StaticBool::True),
@@ -41,6 +47,16 @@ fn bracketed_github_event_name_access_matches_dot_access() {
         ),
         ("github[\"event_name\"] == 'push'", StaticBool::Unknown),
         ("github['event_name'].nested == 'push'", StaticBool::Unknown),
+        ("github.event.action == 'synchronize'", StaticBool::True),
+        ("github.event['action'] == 'synchronize'", StaticBool::True),
+        (
+            "GITHUB [ 'EVENT' ] [ 'ACTION' ] == 'closed'",
+            StaticBool::False,
+        ),
+        (
+            "github['event']['action'].nested == 'synchronize'",
+            StaticBool::Unknown,
+        ),
     ] {
         assert_eq!(
             static_bool(Some(&Value::String(expression.into())), &inputs),
@@ -51,25 +67,52 @@ fn bracketed_github_event_name_access_matches_dot_access() {
 }
 
 #[test]
-fn bracketed_github_event_action_access_matches_dot_access() {
-    let inputs = InputState::from([(
+fn direct_event_action_truthiness_uses_the_event_activation_state() {
+    let push_inputs = InputState::from([(
         "\0github.event.action".into(),
-        StaticValue::String("opened".into()),
+        StaticValue::String(String::new()),
     )]);
-    for (expression, expected) in [
-        ("github.event.action == 'opened'", StaticBool::True),
-        ("github.event['action'] == 'CLOSED'", StaticBool::False),
-        ("GITHUB.EVENT [ 'ACTION' ] != 'closed'", StaticBool::True),
-        ("github.event[\"action\"] == 'opened'", StaticBool::Unknown),
+    let pull_request_inputs = InputState::from([(
+        "\0github.event.action".into(),
+        StaticValue::String("synchronize".into()),
+    )]);
+
+    for (expression, expected_on_push, expected_on_pull_request) in [
+        ("github.event.action", StaticBool::False, StaticBool::True),
         (
-            "github.event['action'].nested == 'opened'",
-            StaticBool::Unknown,
+            "github.event['action']",
+            StaticBool::False,
+            StaticBool::True,
+        ),
+        (
+            "github['event']['action']",
+            StaticBool::False,
+            StaticBool::True,
+        ),
+        ("!github.event.action", StaticBool::True, StaticBool::False),
+        (
+            "!github.event['action']",
+            StaticBool::True,
+            StaticBool::False,
+        ),
+        (
+            "!github['event']['action']",
+            StaticBool::True,
+            StaticBool::False,
         ),
     ] {
         assert_eq!(
-            static_bool(Some(&Value::String(expression.into())), &inputs),
-            expected,
-            "{expression}"
+            static_bool(Some(&Value::String(expression.into())), &push_inputs),
+            expected_on_push,
+            "push: {expression}"
+        );
+        assert_eq!(
+            static_bool(
+                Some(&Value::String(expression.into())),
+                &pull_request_inputs
+            ),
+            expected_on_pull_request,
+            "pull_request synchronize: {expression}"
         );
     }
 }

@@ -53,6 +53,7 @@ impl StaticValue {
             Self::Number(value) => expression_number(value).map(|value| value.to_string()),
             Self::Null => Some(String::new()),
             Self::Sequence(_) => None,
+            Self::NonStringable => None,
             Self::Unknown => None,
         }
     }
@@ -65,7 +66,8 @@ impl StaticValue {
                 .map(|value| StaticBool::from(value != 0.0))
                 .unwrap_or(StaticBool::Unknown),
             Self::Null => StaticBool::False,
-            Self::Sequence(_) => StaticBool::Unknown,
+            Self::Sequence(_) => StaticBool::TruthyNonBoolean,
+            Self::NonStringable => StaticBool::Unknown,
             Self::Unknown => StaticBool::Unknown,
         }
     }
@@ -96,6 +98,9 @@ impl StaticValue {
                 }
             }
             (Self::Null, Self::Null) => StaticBool::True,
+            // GitHub only considers arrays equal when they are the same
+            // instance. Each literal `fromJSON` call constructs a new array.
+            (Self::Sequence(_), Self::Sequence(_)) => StaticBool::False,
             _ => StaticBool::Unknown,
         }
     }
@@ -128,6 +133,7 @@ impl StaticValue {
             Self::String(value) => json_number(&value),
             Self::Null => Some(0.0),
             Self::Sequence(_) => None,
+            Self::NonStringable => None,
             Self::Unknown => None,
         }
     }

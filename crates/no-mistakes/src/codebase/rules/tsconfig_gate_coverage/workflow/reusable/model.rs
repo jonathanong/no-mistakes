@@ -17,6 +17,34 @@ pub(super) struct ScanContext<'a> {
 }
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) enum GithubEventAction {
+    Missing,
+    Known(String),
+}
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub(crate) struct GithubEventContext {
+    pub(crate) name: String,
+    pub(crate) action: GithubEventAction,
+}
+
+impl GithubEventContext {
+    pub(crate) fn without_action(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            action: GithubEventAction::Missing,
+        }
+    }
+
+    pub(crate) fn with_action(name: &str, action: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            action: GithubEventAction::Known(action.to_string()),
+        }
+    }
+}
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub(super) struct ActivationState {
     pub(super) inputs: InputState,
     pub(super) secrets: SecretState,

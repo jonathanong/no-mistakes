@@ -129,7 +129,11 @@ Docker shape. Complete expressions in supported port components remain dynamic
 rather than being rejected as malformed mappings. Container and service image,
 environment, port, volume, option, and registry-credential expressions each
 accept only the contexts GitHub exposes at that field; a step-only context
-cannot validate an earlier container configuration.
+cannot validate an earlier container configuration. Runner labels and
+container/service images likewise reject contexts and functions unavailable at
+their own fields. A fully static image must be a valid Docker reference;
+otherwise-dynamic image expressions remain conservatively accepted after their
+available contexts are validated.
 
 Reusable-workflow secret validation follows each call edge. A directly
 triggered workflow can inherit its available repository or organization

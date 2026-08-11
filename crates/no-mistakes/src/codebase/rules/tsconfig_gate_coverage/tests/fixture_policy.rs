@@ -53,9 +53,17 @@ fn literal_array_contains_and_pull_request_activities_control_reusable_coverage(
     let root = fixture_root("activity-conditions");
     let report = findings(&root, &config(&root));
 
-    assert_eq!(report.len(), 1, "{report:#?}");
-    assert_eq!(report[0].file, "unreachable/tsconfig.json");
-    assert!(report[0].message.contains("no CI typecheck registration"));
+    assert_eq!(report.len(), 2, "{report:#?}");
+    assert_eq!(
+        report
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from(["opened/tsconfig.json", "unreachable/tsconfig.json"])
+    );
+    assert!(report
+        .iter()
+        .all(|finding| finding.message.contains("no CI typecheck registration")));
 }
 
 #[test]

@@ -1,50 +1,38 @@
 use super::*;
 
 #[test]
-fn pull_request_events_must_include_synchronize_when_types_are_explicit() {
+fn source_change_event_contexts_select_only_synchronize_activities() {
     for (yaml, event, expected) in [
-        ("on: push", "push", true),
-        ("on: pull_request", "pull_request", true),
-        ("on:\n  pull_request:\n", "pull_request", true),
+        ("on: push", "push", vec![("push".to_string(), None)]),
         (
-            "on:\n  pull_request:\n    types: [synchronize]",
+            "on: pull_request",
             "pull_request",
-            true,
+            vec![("pull_request".to_string(), Some("synchronize".to_string()))],
         ),
         (
             "on:\n  pull_request_target:\n    types: [opened, synchronize]",
             "pull_request_target",
-            true,
+            vec![(
+                "pull_request_target".to_string(),
+                Some("synchronize".to_string()),
+            )],
         ),
         (
             "on:\n  pull_request:\n    types: [opened, closed]",
             "pull_request",
-            false,
+            vec![],
         ),
     ] {
         let workflow: Value = serde_yaml::from_str(yaml).unwrap();
-        assert_eq!(
-            source_change_event_eligible(&workflow, event),
-            expected,
-            "{yaml}"
-        );
+        let actual = source_change_event_contexts(&workflow, event)
+            .into_iter()
+            .map(|context| match context.action {
+                super::super::model::GithubEventAction::Missing => (context.name, None),
+                super::super::model::GithubEventAction::Known(action) => {
+                    (context.name, Some(action))
+                }
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(actual, expected, "{yaml}");
     }
-}
-
-#[test]
-fn direct_pull_request_actions_are_sorted_and_event_specific() {
-    let workflow: Value = serde_yaml::from_str(
-        "on:\n  pull_request:\n    types: [synchronize, opened, synchronize]\n  pull_request_target:\n    types: [closed]",
-    )
-    .unwrap();
-
-    assert_eq!(
-        direct_event_actions(&workflow, "pull_request"),
-        vec![Some("opened".to_string()), Some("synchronize".to_string())]
-    );
-    assert_eq!(
-        direct_event_actions(&workflow, "pull_request_target"),
-        vec![None]
-    );
-    assert_eq!(direct_event_actions(&workflow, "push"), vec![None]);
 }

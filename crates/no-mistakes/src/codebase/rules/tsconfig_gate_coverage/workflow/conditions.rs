@@ -21,9 +21,7 @@ use inputs::{event_action_value, event_name_value};
 use literals::{
     hexadecimal_bool, number_bool, quoted_string_bool, status_function_bool, strip_expression,
 };
-use resolution::{
-    condition_input_value, input_name, literal_from_json_sequence, literal_from_json_static_value,
-};
+use resolution::{condition_input_value, input_name, literal_from_json_static_value};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum StaticBool {
@@ -39,10 +37,8 @@ pub(super) enum StaticValue {
     String(String),
     Number(String),
     Null,
-    /// Structured values are retained only so `contains()` can evaluate a
-    /// literal `fromJSON()` array. They deliberately remain unusable by the
-    /// scalar condition paths below.
-    Sequence(Vec<StaticValue>),
+    Sequence(Vec<Self>),
+    NonStringable,
     Unknown,
 }
 
@@ -146,9 +142,7 @@ fn resolve_input_expression(
     if let Some(value) = comparison_bool(expression, inputs, success) {
         return value;
     }
-    if let Some(value) = literal_from_json_static_value(expression)
-        .or_else(|| condition_input_value(expression, inputs))
-    {
+    if let Some(value) = condition_value(expression, inputs, success) {
         return value.truthiness();
     }
     if let Some(operand) = expression.strip_prefix('!').map(str::trim) {
@@ -171,6 +165,8 @@ fn continues_after_skipped_need(job: &Value, inputs: &InputState) -> bool {
 mod condition_values_tests;
 #[cfg(test)]
 mod contains_tests;
+#[cfg(test)]
+mod literal_from_json_tests;
 #[cfg(test)]
 mod matrix_tests;
 #[cfg(test)]

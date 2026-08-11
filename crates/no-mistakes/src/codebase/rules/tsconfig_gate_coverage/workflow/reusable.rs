@@ -12,12 +12,12 @@ mod events;
 mod matrix_property_tests;
 #[cfg(test)]
 mod memo_tests;
-mod model;
+pub(crate) mod model;
 mod steps;
 mod validation;
 
 use activation::scan_activation;
-use events::{direct_event_actions, source_change_event_eligible};
+use events::source_change_event_contexts;
 use model::{ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
@@ -59,23 +59,14 @@ pub(super) fn collect_ci_projects_with_stats(
         if trigger_model.triggers.events.is_empty() {
             continue;
         }
-        for event_name in trigger_model
-            .triggers
-            .events
-            .keys()
-            .filter(|event| source_change_event_eligible(document.value, event))
-        {
+        for event_name in trigger_model.triggers.events.keys() {
             // A direct workflow's call graph may be the same for multiple events,
             // but its path-filtered coverage is event-specific.
             let mut memo = ActivationMemo::new();
             let triggers = CompiledTriggers::for_event(&trigger_model, event_name)
                 .expect("event came from the trigger model");
-            for event_action in direct_event_actions(document.value, event_name) {
-                let Some(inputs) = direct_inputs(
-                    document.call_contract.as_ref(),
-                    event_name,
-                    event_action.as_deref(),
-                ) else {
+            for event in source_change_event_contexts(document.value, event_name) {
+                let Some(inputs) = direct_inputs(document.call_contract.as_ref(), &event) else {
                     continue;
                 };
                 if let Some(activation_projects) = scan_activation(

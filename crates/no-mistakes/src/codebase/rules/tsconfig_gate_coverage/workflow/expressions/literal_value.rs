@@ -22,7 +22,7 @@ pub(in super::super) fn complete_literal_expression_value(value: &str) -> Option
     }) {
         return serde_yaml::from_str(strip_literal_parentheses(body)).ok();
     }
-    literal_from_json_value(body)
+    literal_from_json_value(strip_literal_parentheses(body))
 }
 
 /// Returns a parsed JSON value when a complete, context-free `fromJSON` call

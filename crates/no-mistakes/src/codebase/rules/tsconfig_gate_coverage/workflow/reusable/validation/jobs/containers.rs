@@ -2,8 +2,11 @@ use serde_yaml::{Mapping, Value};
 
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::valid_identifier;
 
-use super::super::super::super::expressions::interpolated_expression_contexts_available;
 use super::super::super::super::expressions::interpolation::opaque_interpolated_expression_form;
+use super::super::super::super::expressions::{
+    interpolated_expression_contexts_available, reduce_context_free_interpolations,
+    ContextFreeInterpolation,
+};
 use super::values::{only_keys, scalar_mapping_valid};
 
 mod images;
@@ -111,13 +114,17 @@ fn valid_volume(value: &str) -> bool {
 }
 
 fn volume_source_valid(value: &str) -> bool {
-    value.starts_with('/')
-        || value.starts_with(DYNAMIC_VOLUME_EXPRESSION)
-        || (!value.is_empty()
-            && value
-                .replace(DYNAMIC_VOLUME_EXPRESSION, "dynamic")
-                .bytes()
-                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-')))
+    if value.starts_with('/') || value.starts_with(DYNAMIC_VOLUME_EXPRESSION) {
+        return true;
+    }
+    let normalized = value.replace(DYNAMIC_VOLUME_EXPRESSION, "dynamic");
+    normalized
+        .bytes()
+        .next()
+        .is_some_and(|byte| byte.is_ascii_alphanumeric())
+        && normalized
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
 }
 
 fn volume_destination_valid(value: &str) -> bool {
@@ -137,12 +144,18 @@ fn scalar_sequence_contexts_valid(value: Option<&Value>, allowed_contexts: &[&st
     })
 }
 
-fn valid_container_value(value: &str) -> bool {
-    valid_contextual_value(value, CONTAINER_CONTEXTS)
+fn valid_container_image(value: &str) -> bool {
+    !value.is_empty()
+        && interpolated_expression_contexts_available(value, CONTAINER_CONTEXTS)
+        && match reduce_context_free_interpolations(value) {
+            ContextFreeInterpolation::Static(value) => images::valid_static_reference(&value),
+            ContextFreeInterpolation::Dynamic => true,
+            ContextFreeInterpolation::Invalid => false,
+        }
 }
 
-fn valid_container_image(value: &str) -> bool {
-    valid_contextual_value(value, CONTAINER_CONTEXTS) && images::valid(value)
+fn valid_container_value(value: &str) -> bool {
+    valid_contextual_value(value, CONTAINER_CONTEXTS)
 }
 
 fn valid_contextual_value(value: &str, allowed_contexts: &[&str]) -> bool {

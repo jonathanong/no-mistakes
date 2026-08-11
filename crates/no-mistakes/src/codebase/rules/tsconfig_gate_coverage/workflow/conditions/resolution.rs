@@ -10,12 +10,48 @@ pub(super) fn matrix_name(operand: &str) -> Option<&str> {
 }
 
 pub(super) fn github_event_name(operand: &str) -> bool {
-    github_event_property(operand, "event_name")
+    github_event_property(operand, &["event_name"])
 }
 
 pub(super) fn github_event_action(operand: &str) -> bool {
-    context_property_name(operand, "github.event")
-        .is_some_and(|property| property.eq_ignore_ascii_case("action"))
+    github_event_property(operand, &["event", "action"])
+}
+
+fn github_event_property(operand: &str, properties: &[&str]) -> bool {
+    let operand = operand.trim();
+    let Some(remainder) = operand
+        .get(.."github".len())
+        .filter(|prefix| prefix.eq_ignore_ascii_case("github"))
+        .and_then(|_| operand.get("github".len()..))
+    else {
+        return false;
+    };
+    let Some(remainder) = properties
+        .iter()
+        .try_fold(remainder, |remainder, property| {
+            github_property_segment(remainder, property)
+        })
+    else {
+        return false;
+    };
+    remainder.trim().is_empty()
+}
+
+fn github_property_segment<'a>(remainder: &'a str, expected: &str) -> Option<&'a str> {
+    let remainder = remainder.trim_start();
+    if let Some(remainder) = remainder.strip_prefix('.') {
+        let remainder = remainder.trim_start();
+        let property = remainder.get(..expected.len())?;
+        return property
+            .eq_ignore_ascii_case(expected)
+            .then_some(&remainder[expected.len()..]);
+    }
+    let remainder = remainder.strip_prefix('[')?.trim_start();
+    let quoted = remainder.strip_prefix('\'')?;
+    let (property, remainder) = quoted.split_once('\'')?;
+    property
+        .eq_ignore_ascii_case(expected)
+        .then_some(remainder.trim_start().strip_prefix(']')?)
 }
 
 pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticValue {
@@ -37,27 +73,28 @@ pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticVa
 }
 
 pub(super) fn literal_from_json_static_value(expression: &str) -> Option<StaticValue> {
-    static_scalar_from_json(
+    Some(static_yaml_value(
         crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(expression.trim())?,
-    )
+    ))
 }
 
-pub(super) fn literal_from_json_sequence(expression: &str) -> Option<Vec<StaticValue>> {
-    let Value::Sequence(values) = crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(expression.trim())? else {
-        return None;
-    };
-    values.into_iter().map(static_scalar_from_json).collect()
-}
-
-fn static_scalar_from_json(value: Value) -> Option<StaticValue> {
+fn static_yaml_value(value: Value) -> StaticValue {
     match value {
-        Value::Bool(value) => Some(StaticValue::Bool(value)),
-        Value::Number(value) => Some(StaticValue::Number(value.to_string())),
-        Value::String(value) => Some(StaticValue::String(value)),
-        Value::Null => Some(StaticValue::Null),
-        // Nested structured values would need their own coercion semantics.
-        // Keep the analyzer conservative even inside literal membership.
-        Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => None,
+        Value::Bool(value) => StaticValue::Bool(value),
+        Value::Number(value) => StaticValue::Number(value.to_string()),
+        Value::String(value) => StaticValue::String(value),
+        Value::Null => StaticValue::Null,
+        Value::Sequence(values) => {
+            StaticValue::Sequence(values.into_iter().map(static_sequence_element).collect())
+        }
+        Value::Mapping(_) | Value::Tagged(_) => StaticValue::Unknown,
+    }
+}
+
+fn static_sequence_element(value: Value) -> StaticValue {
+    match value {
+        Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::NonStringable,
+        value => static_yaml_value(value),
     }
 }
 
@@ -92,9 +129,4 @@ fn context_property_name<'a>(operand: &'a str, context: &str) -> Option<&'a str>
     let name = bracketed.strip_prefix(quote)?;
     let (name, suffix) = name.split_once(quote)?;
     (suffix.trim() == "]" && super::contracts::valid_identifier(name)).then_some(name)
-}
-
-fn github_event_property(operand: &str, property: &str) -> bool {
-    context_property_name(operand, "github")
-        .is_some_and(|candidate| candidate.eq_ignore_ascii_case(property))
 }

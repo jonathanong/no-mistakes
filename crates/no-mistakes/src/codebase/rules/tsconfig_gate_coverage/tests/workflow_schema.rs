@@ -1,5 +1,6 @@
 use super::*;
 
+mod image_contexts;
 mod review_contexts;
 
 fn workflow(path: &str, yaml: &str) -> ParsedWorkflowDocument {

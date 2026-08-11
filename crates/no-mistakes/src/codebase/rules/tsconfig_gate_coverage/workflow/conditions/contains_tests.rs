@@ -27,14 +27,14 @@ fn literal_from_json_arrays_only_resolve_contains_membership() {
             StaticBool::True,
         ),
         ("contains(fromJSON('[1]'), '1')", StaticBool::True),
-        ("fromJSON('[\"schedule\"]')", StaticBool::Unknown),
+        ("fromJSON('[\"schedule\"]')", StaticBool::TruthyNonBoolean),
         (
             "fromJSON('[\"schedule\"]') == fromJSON('[\"schedule\"]')",
-            StaticBool::Unknown,
+            StaticBool::False,
         ),
         (
             "contains(fromJSON('[[\"schedule\"]]'), github.event_name)",
-            StaticBool::Unknown,
+            StaticBool::False,
         ),
     ] {
         assert_eq!(

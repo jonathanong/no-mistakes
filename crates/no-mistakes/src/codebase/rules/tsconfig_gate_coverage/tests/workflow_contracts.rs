@@ -151,6 +151,45 @@ fn literal_from_json_collections_cannot_activate_scalar_reusable_workflows() {
 }
 
 #[test]
+fn literal_from_json_array_conditions_skip_unreachable_typechecks() {
+    let documents = vec![workflow(
+        ".github/workflows/conditional.yml",
+        "on: push\njobs:\n  skipped:\n    if: contains(fromJSON('[\"schedule\"]'), github.event_name)\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project skipped/tsconfig.json\n  retained:\n    if: contains(fromJSON('[\"push\", \"schedule\"]'), github.event_name)\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project retained/tsconfig.json\n",
+    )];
+
+    assert_eq!(
+        scanned(documents, &["skipped", "retained"]),
+        BTreeSet::from(["retained/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn literal_from_json_array_comparisons_preserve_distinct_instance_semantics() {
+    let documents = vec![workflow(
+        ".github/workflows/conditional.yml",
+        "on: push\njobs:\n  equal:\n    if: fromJSON('[]') == fromJSON('[]')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project equal/tsconfig.json\n  unequal:\n    if: fromJSON('[]') != fromJSON('[]')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unequal/tsconfig.json\n",
+    )];
+
+    assert_eq!(
+        scanned(documents, &["equal", "unequal"]),
+        BTreeSet::from(["unequal/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn literal_from_json_objects_in_arrays_do_not_credit_typechecks() {
+    let documents = vec![workflow(
+        ".github/workflows/conditional.yml",
+        "on: push\njobs:\n  skipped:\n    if: contains(fromJSON('[{}]'), 'x')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project skipped/tsconfig.json\n  retained:\n    if: contains(fromJSON('[{}, \"push\"]'), github.event_name)\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project retained/tsconfig.json\n",
+    )];
+
+    assert_eq!(
+        scanned(documents, &["skipped", "retained"]),
+        BTreeSet::from(["retained/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn undeclared_inputs_are_false_while_declared_nonbooleans_are_unknown() {
     let documents = vec![
         workflow(

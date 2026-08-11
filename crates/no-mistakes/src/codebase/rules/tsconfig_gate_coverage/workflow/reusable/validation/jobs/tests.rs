@@ -139,6 +139,25 @@ fn hash_files_is_available_only_in_step_conditions() {
 }
 
 #[test]
+fn runs_on_uses_its_documented_contexts_without_expression_functions() {
+    for yaml in [
+        "runs-on: '${{ matrix.runner }}'\nsteps:\n  - run: echo valid",
+        "runs-on: ['self-hosted', '${{ vars.RUNNER_LABEL }}']\nsteps:\n  - run: echo valid",
+        "runs-on: \"${{ format('{0}', matrix.runner) }}\"\nsteps:\n  - run: echo valid",
+    ] {
+        assert!(super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+
+    for yaml in [
+        "runs-on: '${{ secrets.RUNNER }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"\nsteps:\n  - run: echo invalid",
+        "runs-on: '${{ success() }}'\nsteps:\n  - run: echo invalid",
+    ] {
+        assert!(!super::step_job_shape_valid(&job(yaml)), "{yaml}");
+    }
+}
+
+#[test]
 fn continue_on_error_uses_its_field_specific_contexts() {
     assert!(super::step_job_shape_valid(&job(
         "continue-on-error: '${{ matrix.experimental }}'\nruns-on: ubuntu-latest\nsteps:\n  - run: echo valid"

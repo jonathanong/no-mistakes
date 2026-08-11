@@ -164,6 +164,9 @@ fn container_fields_validate_their_expression_contexts() {
     assert!(scan_job_shape_valid(&valid));
 
     for volume in [
+        ".cache:/data",
+        "_cache:/data",
+        "-cache:/data",
         "cache:relative",
         "cache",
         ":/data",
@@ -192,6 +195,71 @@ fn container_fields_validate_their_expression_contexts() {
         .unwrap();
         assert!(scan_job_shape_valid(&job), "{volume}");
     }
+}
+
+#[test]
+fn container_and_service_images_require_static_docker_references() {
+    for image in [
+        "node:22",
+        "ghcr.io/octo-org/checker:2026.08",
+        "GHCR.IO/team/checker:22",
+        "node__js:22",
+        "localhost:5000/team/checker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "node@sha256+foo:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "${{ 'node:22' }}",
+    ] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\ncontainer: {{image: \"{image}\"}}\nservices: {{database: {{image: \"{image}\"}}}}\nsteps:\n  - run: echo valid"
+        ))
+        .unwrap();
+        assert!(scan_job_shape_valid(&job), "{image}");
+    }
+
+    for image in [
+        "node:",
+        "Node:22",
+        "ghcr.io//checker",
+        "node@sha256:short",
+        "node___js:22",
+        "node@sha256:zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+        "node@sha256+1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "${{ 'node:' }}",
+        "node:${{ '' }}",
+        "${{ secrets.IMAGE }}",
+        "node:${{ hashFiles('**/pnpm-lock.yaml') }}",
+    ] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\ncontainer: {{image: \"{image}\"}}\nsteps:\n  - run: echo invalid"
+        ))
+        .unwrap();
+        assert!(!scan_job_shape_valid(&job), "{image}");
+    }
+
+    for image in [
+        "${{ matrix.image }}",
+        "ghcr.io/octo-org/checker:${{ matrix.tag }}",
+        "node:${{ fromJSON(matrix.tag) }}",
+    ] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\nservices: {{database: {{image: '{image}'}}}}\nsteps:\n  - run: echo valid"
+        ))
+        .unwrap();
+        assert!(scan_job_shape_valid(&job), "{image}");
+    }
+}
+
+#[test]
+fn container_images_reduce_context_free_interpolations_before_validation() {
+    let job = serde_yaml::from_str::<Value>(
+        r#"runs-on: ubuntu-latest
+container:
+  image: "${{ (fromJSON('\"node:\"')) }}"
+steps:
+  - run: echo invalid
+"#,
+    )
+    .unwrap();
+    assert!(!scan_job_shape_valid(&job));
 }
 
 #[test]

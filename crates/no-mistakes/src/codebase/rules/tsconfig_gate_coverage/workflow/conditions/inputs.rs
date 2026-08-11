@@ -1,5 +1,8 @@
 use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
 use super::{InputState, StaticValue};
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
+    GithubEventAction, GithubEventContext,
+};
 use crate::codebase::workflow_topology::model::{
     JsonScalar, WorkflowCallContract, WorkflowCallInputType,
 };
@@ -59,17 +62,12 @@ pub(super) fn matrix_property_is_dynamic(inputs: &InputState) -> bool {
 
 pub(crate) fn direct_inputs(
     contract: Option<&WorkflowCallContract>,
-    event_name: &str,
-    event_action: Option<&str>,
+    event: &GithubEventContext,
 ) -> Option<InputState> {
     // A workflow invoked directly by a repository event receives the declared
     // false/default values that GitHub assigns when workflow_call is not used.
     let Some(contract) = contract else {
-        return Some(direct_event_inputs(
-            InputState::new(),
-            event_name,
-            event_action,
-        ));
+        return Some(event_inputs(event, InputState::new()));
     };
     if !workflow_call_contract_valid(contract) {
         return None;
@@ -84,7 +82,7 @@ pub(crate) fn direct_inputs(
             (normalized_name(name), default_value(None, input_type))
         })
         .collect();
-    Some(direct_event_inputs(inputs, event_name, event_action))
+    Some(event_inputs(event, inputs))
 }
 
 pub(crate) fn callee_inputs(
@@ -158,27 +156,25 @@ fn inputs_from_contract(
         EVENT_NAME_KEY.to_string(),
         parent.get(EVENT_NAME_KEY)?.clone(),
     );
-    if let Some(action) = parent.get(EVENT_ACTION_KEY) {
-        inputs.insert(EVENT_ACTION_KEY.to_string(), action.clone());
-    }
+    inputs.insert(
+        EVENT_ACTION_KEY.to_string(),
+        parent.get(EVENT_ACTION_KEY)?.clone(),
+    );
     Some(inputs)
 }
 
-fn direct_event_inputs(
-    mut inputs: InputState,
-    event_name: &str,
-    event_action: Option<&str>,
-) -> InputState {
+fn event_inputs(event: &GithubEventContext, mut inputs: InputState) -> InputState {
     inputs.insert(
         EVENT_NAME_KEY.to_string(),
-        StaticValue::String(event_name.to_string()),
+        StaticValue::String(event.name.clone()),
     );
-    if let Some(action) = event_action {
-        inputs.insert(
-            EVENT_ACTION_KEY.to_string(),
-            StaticValue::String(action.to_string()),
-        );
-    }
+    inputs.insert(
+        EVENT_ACTION_KEY.to_string(),
+        StaticValue::String(match &event.action {
+            GithubEventAction::Missing => String::new(),
+            GithubEventAction::Known(action) => action.clone(),
+        }),
+    );
     inputs
 }
 

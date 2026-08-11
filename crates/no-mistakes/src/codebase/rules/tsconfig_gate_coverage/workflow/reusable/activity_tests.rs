@@ -37,9 +37,6 @@ fn reusable_calls_keep_pull_request_actions_correlated_with_declared_types() {
 
     assert_eq!(
         collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
-        BTreeSet::from([
-            "opened/tsconfig.json".to_string(),
-            "synchronized/tsconfig.json".to_string(),
-        ])
+        BTreeSet::from(["synchronized/tsconfig.json".to_string()])
     );
 }
