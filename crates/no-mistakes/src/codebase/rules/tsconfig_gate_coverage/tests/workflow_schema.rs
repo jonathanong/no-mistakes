@@ -93,6 +93,14 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    container: {image: node:22, ports: [true]}\n    steps:\n      - run: tsc --noEmit --project invalid-container-ports/tsconfig.json\n",
         ),
         workflow(
+            ".github/workflows/invalid-container-credential-context.yml",
+            "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    container:\n      image: node:22\n      credentials:\n        username: '${{ runner.os }}'\n        password: token\n    steps:\n      - run: tsc --noEmit --project invalid-container-credential-context/tsconfig.json\n",
+        ),
+        workflow(
+            ".github/workflows/valid-container-credential-context.yml",
+            "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    container:\n      image: node:22\n      credentials:\n        username: '${{ github.actor }}'\n        password: '${{ secrets.REGISTRY_TOKEN }}'\n    steps:\n      - run: tsc --noEmit --project valid-container-credential-context/tsconfig.json\n",
+        ),
+        workflow(
             ".github/workflows/invalid-service-ports.yml",
             "on: push\njobs:\n  malformed:\n    runs-on: ubuntu-latest\n    services: {postgres: {image: postgres:16, ports: [false]}}\n    steps:\n      - run: tsc --noEmit --project invalid-service-ports/tsconfig.json\n",
         ),
@@ -219,6 +227,8 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         "invalid-action-lock-ref",
         "invalid-action-lock-ref-sibling",
         "invalid-container-ports",
+        "invalid-container-credential-context",
+        "valid-container-credential-context",
         "invalid-service-ports",
         "invalid-service-name",
         "valid-ports",
@@ -255,6 +265,7 @@ fn invalid_contract_jobs_dependencies_and_empty_matrices_earn_no_credit() {
         ),
         BTreeSet::from([
             "partial/tsconfig.json".to_string(),
+            "valid-container-credential-context/tsconfig.json".to_string(),
             "valid-ports/tsconfig.json".to_string(),
         ])
     );

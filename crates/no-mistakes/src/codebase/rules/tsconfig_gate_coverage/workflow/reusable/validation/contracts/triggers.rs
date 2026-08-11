@@ -75,6 +75,7 @@ fn ref_filter_config_valid(config: &Value, allow_tags: bool) -> bool {
     config.as_mapping().is_some_and(|mapping| {
         only_keys(mapping, allowed)
             && mapping.values().all(non_empty_literal_string_sequence)
+            && negated_patterns_have_positive(mapping)
             && mutually_exclusive(mapping, "branches", "branches-ignore")
             && mutually_exclusive(mapping, "paths", "paths-ignore")
             && (!allow_tags || mutually_exclusive(mapping, "tags", "tags-ignore"))
@@ -100,7 +101,8 @@ fn pull_request_config_valid(config: &Value) -> bool {
                 )
         }) && mapping.iter().all(|(key, value)| {
             key.as_str() == Some("types") || non_empty_literal_string_sequence(value)
-        }) && mutually_exclusive(mapping, "branches", "branches-ignore")
+        }) && negated_patterns_have_positive(mapping)
+            && mutually_exclusive(mapping, "branches", "branches-ignore")
             && mutually_exclusive(mapping, "paths", "paths-ignore")
     })
 }
@@ -115,6 +117,7 @@ fn merge_group_config_valid(config: &Value) -> bool {
             && mapping.iter().all(|(key, value)| {
                 key.as_str() == Some("types") || non_empty_literal_string_sequence(value)
             })
+            && negated_patterns_have_positive(mapping)
             && mutually_exclusive(mapping, "branches", "branches-ignore")
     })
 }
@@ -132,7 +135,8 @@ fn workflow_run_config_valid(config: &Value) -> bool {
                 )
         }) && mapping.iter().all(|(key, value)| {
             key.as_str() == Some("types") || non_empty_literal_string_sequence(value)
-        }) && mutually_exclusive(mapping, "branches", "branches-ignore")
+        }) && negated_patterns_have_positive(mapping)
+            && mutually_exclusive(mapping, "branches", "branches-ignore")
             && mapping
                 .get("workflows")
                 .is_some_and(non_empty_literal_string_sequence)
@@ -152,6 +156,23 @@ pub(super) fn non_empty_literal_string_sequence(value: &Value) -> bool {
 
 fn mutually_exclusive(mapping: &Mapping, first: &str, second: &str) -> bool {
     !(mapping.contains_key(first) && mapping.contains_key(second))
+}
+
+fn negated_patterns_have_positive(mapping: &Mapping) -> bool {
+    ["branches", "tags", "paths"].iter().all(|key| {
+        mapping.get(*key).is_none_or(|value| {
+            let patterns = value.as_sequence().expect("filter shape was validated");
+            !patterns.iter().any(|pattern| {
+                pattern
+                    .as_str()
+                    .is_some_and(|pattern| pattern.starts_with('!'))
+            }) || patterns.iter().any(|pattern| {
+                pattern
+                    .as_str()
+                    .is_some_and(|pattern| !pattern.starts_with('!'))
+            })
+        })
+    })
 }
 
 fn only_keys(mapping: &Mapping, allowed: &[&str]) -> bool {

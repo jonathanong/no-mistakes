@@ -98,6 +98,7 @@ fn contract_shape_validates_every_declaration_kind() {
 fn trigger_configs_reject_values_actions_cannot_schedule() {
     for valid in [
         "push:\n  branches: [main]\n  paths: ['src/**']",
+        "push:\n  branches: [main, '!release/**']\n  tags: ['v*', '!v0.*']\n  paths: ['src/**', '!src/generated/**']",
         "pull_request:\n  types: [opened]\n  branches-ignore: [release/**]",
         "merge_group:\n  types: [checks_requested]",
         "workflow_run:\n  workflows: [CI]\n  types: [completed]",
@@ -128,6 +129,13 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "push:\n  paths: ['src/${{ matrix.target }}/**']",
         "push:\n  branches: [main]\n  branches-ignore: [release/**]",
         "push:\n  paths: ['src/**']\n  paths-ignore: ['src/generated/**']",
+        "push:\n  branches: ['!release/**']",
+        "push:\n  tags: ['!v0.*']",
+        "push:\n  paths: ['!src/generated/**']",
+        "pull_request:\n  branches: ['!release/**']",
+        "pull_request:\n  paths: ['!src/generated/**']",
+        "workflow_run:\n  workflows: [CI]\n  branches: ['!release/**']",
+        "merge_group:\n  branches: ['!release/**']",
         "push:\n  unknown: true",
         "pull_request:\n  tags: [v*]",
         "workflow_run:\n  types: [completed]",

@@ -50,7 +50,9 @@ typecheck gate on their own. A `workflow_call` workflow can provide one when
 reached from an applicable caller. For
 example, `paths: [app/tsconfig.json]` cannot cover `app/src/index.ts`; add
 `app/**` or an
-unfiltered applicable event.
+unfiltered applicable event. Inclusive `branches`, `tags`, or `paths` filters
+that use `!` exclusions must also contain at least one positive pattern, as
+required by GitHub Actions.
 
 Workflow commands run only when their effective shell is GitHub Actions'
 implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
@@ -86,8 +88,9 @@ values through transitive calls. This lets the rule resolve exact string
 equality/inequality and number equality/inequality or relational comparisons,
 as well as input truthiness. Static `contains`, `startsWith`, and `endsWith`
 calls are also resolved using GitHub's string coercion; missing properties
-coerce to an empty string. Expressions whose result remains dynamic fail open
-as potentially runnable.
+coerce to an empty string. Static `case` calls select the first truthy branch
+or their default, while an unknown predicate remains unresolved. Expressions
+whose result remains dynamic fail open as potentially runnable.
 Reusable input default expressions must match their declared scalar type and
 may use only `github`, `inputs`, and `vars`; malformed defaults or unavailable
 contexts invalidate the workflow before any command can provide coverage.
@@ -123,7 +126,10 @@ runner.
 Workflow-dispatch choice options/defaults and container/service port
 declarations must also match their field-specific GitHub types and static
 Docker shape. Complete expressions in supported port components remain dynamic
-rather than being rejected as malformed mappings.
+rather than being rejected as malformed mappings. Container and service image,
+environment, port, volume, option, and registry-credential expressions each
+accept only the contexts GitHub exposes at that field; a step-only context
+cannot validate an earlier container configuration.
 
 Reusable-workflow secret validation follows each call edge. A directly
 triggered workflow can inherit its available repository or organization

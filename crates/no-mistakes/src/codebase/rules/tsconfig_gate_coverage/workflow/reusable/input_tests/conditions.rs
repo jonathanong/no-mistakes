@@ -56,7 +56,7 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
     let parsed = ParsedWorkflowSet {
         documents: vec![document(
             ".github/workflows/checks.yml",
-            "on: push\njobs:\n  compound-disabled:\n    if: '${{ (false || false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound-disabled/tsconfig.json\n  truthy-string-disabled:\n    if: \"${{ (false || 'release') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project truthy-string-disabled/tsconfig.json\n  nonnumeric-relational-disabled:\n    if: \"${{ 'release' < 1 }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project nonnumeric-relational-disabled/tsconfig.json\n  numeric-relational-enabled:\n    if: '${{ 1 < 2 }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-relational-enabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
+            "on: push\njobs:\n  compound-disabled:\n    if: '${{ (false || false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound-disabled/tsconfig.json\n  truthy-string-disabled:\n    if: \"${{ (false || 'release') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project truthy-string-disabled/tsconfig.json\n  nonnumeric-relational-disabled:\n    if: \"${{ 'release' < 1 }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project nonnumeric-relational-disabled/tsconfig.json\n  numeric-relational-enabled:\n    if: '${{ 1 < 2 }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-relational-enabled/tsconfig.json\n  case-disabled:\n    if: \"${{ case(false, 'release', 'nightly') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project case-disabled/tsconfig.json\n  case-enabled:\n    if: \"${{ case(false, 'nightly', true, 'release', 'other') == 'release' }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project case-enabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
         )],
     };
     let tracked = [
@@ -64,6 +64,8 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
         "truthy-string-disabled/tsconfig.json",
         "nonnumeric-relational-disabled/tsconfig.json",
         "numeric-relational-enabled/tsconfig.json",
+        "case-disabled/tsconfig.json",
+        "case-enabled/tsconfig.json",
         "unary-enabled/tsconfig.json",
         "function-enabled/tsconfig.json",
     ]
@@ -79,6 +81,7 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
         collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
         BTreeSet::from([
             "function-enabled/tsconfig.json".to_string(),
+            "case-enabled/tsconfig.json".to_string(),
             "numeric-relational-enabled/tsconfig.json".to_string(),
             "unary-enabled/tsconfig.json".to_string(),
         ])
@@ -158,5 +161,42 @@ fn direct_event_conditions_use_typed_input_defaults_and_literal_from_json() {
             "from-json-true/tsconfig.json".to_string(),
             "string-empty/tsconfig.json".to_string(),
         ])
+    );
+}
+
+#[test]
+fn reusable_scanner_resolves_bracketed_event_name_bindings_for_push_and_schedule() {
+    let parsed = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on:\n  push:\n  schedule:\n    - cron: '0 0 * * *'\njobs:\n  valid:\n    uses: ./.github/workflows/callee.yml\n    with:\n      enabled: \"${{ GiThUb [ 'EVENT_NAME' ] == 'push' }}\"\n",
+            ),
+            document(
+                ".github/workflows/malformed-caller.yml",
+                "on: push\njobs:\n  malformed:\n    uses: ./.github/workflows/malformed.yml\n    with:\n      enabled: \"${{ github['event_name' == 'push' }}\"\n",
+            ),
+            document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project push/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/malformed.yml",
+                "on:\n  workflow_call:\n    inputs:\n      enabled: {type: boolean, required: true}\njobs:\n  typecheck:\n    if: inputs.enabled\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project malformed/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "malformed/tsconfig.json".to_string(),
+        "push/tsconfig.json".to_string(),
+    ]);
+    let project_inputs = tracked
+        .iter()
+        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
+        .collect();
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
+        BTreeSet::from(["push/tsconfig.json".to_string()])
     );
 }

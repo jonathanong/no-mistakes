@@ -72,17 +72,30 @@ fn malformed_workflow_level_fields_earn_no_coverage() {
 #[test]
 fn invalid_non_reusable_trigger_configuration_earns_no_coverage() {
     let workflows = ParsedWorkflowSet {
-        documents: vec![workflow_document(
-            ".github/workflows/checks.yml",
-            "on:\n  push:\n    paths: ['src/**']\n    paths-ignore: ['src/generated/**']\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-trigger/tsconfig.json\n",
-        )],
+        documents: vec![
+            workflow_document(
+                ".github/workflows/checks.yml",
+                "on:\n  push:\n    paths: ['src/**']\n    paths-ignore: ['src/generated/**']\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid-trigger/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/negative-only.yml",
+                "on:\n  push:\n    paths: ['!src/generated/**']\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project negative-only/tsconfig.json\n",
+            ),
+            workflow_document(
+                ".github/workflows/valid-trigger.yml",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project valid-trigger/tsconfig.json\n",
+            ),
+        ],
     };
-    let tracked = BTreeSet::from(["invalid-trigger/tsconfig.json".to_string()]);
+    let tracked = BTreeSet::from([
+        "invalid-trigger/tsconfig.json".to_string(),
+        "negative-only/tsconfig.json".to_string(),
+        "valid-trigger/tsconfig.json".to_string(),
+    ]);
 
-    assert!(
-        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
-            .0
-            .is_empty()
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from(["valid-trigger/tsconfig.json".to_string()])
     );
 }
 

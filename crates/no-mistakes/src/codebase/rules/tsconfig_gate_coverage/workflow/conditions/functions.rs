@@ -9,6 +9,9 @@ pub(super) fn static_function_bool(
     success: StaticBool,
 ) -> Option<StaticBool> {
     let call = condition_function_call(expression)?;
+    if call.function == Function::Case {
+        return static_case_value(expression, inputs, success).map(StaticValue::truthiness);
+    }
     if call.arguments.len() != 2 {
         return None;
     }
@@ -21,6 +24,25 @@ pub(super) fn static_function_bool(
         _ => return None,
     };
     Some(StaticBool::from(matched))
+}
+
+pub(super) fn static_case_value(
+    expression: &str,
+    inputs: &InputState,
+    success: StaticBool,
+) -> Option<StaticValue> {
+    let call = condition_function_call(expression)?;
+    (call.function == Function::Case).then_some(())?;
+    for index in (0..call.arguments.len() - 1).step_by(2) {
+        match function_argument_value(call.arguments[index], inputs, success)?.truthiness() {
+            StaticBool::False => continue,
+            StaticBool::True | StaticBool::TruthyNonBoolean => {
+                return function_argument_value(call.arguments[index + 1], inputs, success);
+            }
+            StaticBool::Unknown => return None,
+        }
+    }
+    function_argument_value(call.arguments.last()?, inputs, success)
 }
 
 fn function_argument_value(

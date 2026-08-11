@@ -122,6 +122,49 @@ fn service_names_require_github_identifier_grammar() {
 }
 
 #[test]
+fn container_credentials_validate_expression_contexts() {
+    let valid = serde_yaml::from_str::<Value>(
+        "runs-on: ubuntu-latest\ncontainer:\n  image: node:22\n  credentials:\n    username: '${{ github.actor }}'\n    password: '${{ secrets.REGISTRY_TOKEN }}'\nsteps:\n  - run: echo ok",
+    )
+    .unwrap();
+    assert!(scan_job_shape_valid(&valid));
+
+    for credentials in [
+        "username: '${{ jobs.build.outputs.username }}'\n    password: token",
+        "username: '${{ job.status }}'\n    password: token",
+        "username: '${{ runner.os }}'\n    password: token",
+        "username: '${{ steps.login.outputs.username }}'\n    password: token",
+        "username: octo\n    password: \"${{ hashFiles('**/pnpm-lock.yaml') }}\"",
+    ] {
+        let job = serde_yaml::from_str::<Value>(&format!(
+            "runs-on: ubuntu-latest\ncontainer:\n  image: node:22\n  credentials:\n    {credentials}\nsteps:\n  - run: echo invalid"
+        ))
+        .unwrap();
+        assert!(!scan_job_shape_valid(&job), "{credentials}");
+    }
+}
+
+#[test]
+fn container_fields_validate_their_expression_contexts() {
+    for yaml in [
+        "runs-on: ubuntu-latest\ncontainer: 'node:${{ steps.setup.outputs.tag }}'\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ncontainer: {image: node:22, env: {TAG: '${{ steps.setup.outputs.tag }}'}}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ncontainer: {image: node:22, ports: ['${{ steps.setup.outputs.port }}']}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ncontainer: {image: node:22, volumes: ['${{ steps.setup.outputs.volume }}']}\nsteps:\n  - run: echo invalid",
+        "runs-on: ubuntu-latest\ncontainer: {image: node:22, options: '${{ steps.setup.outputs.options }}'}\nsteps:\n  - run: echo invalid",
+    ] {
+        let job = serde_yaml::from_str::<Value>(yaml).unwrap();
+        assert!(!scan_job_shape_valid(&job), "{yaml}");
+    }
+
+    let valid = serde_yaml::from_str::<Value>(
+        "runs-on: ubuntu-latest\ncontainer:\n  image: 'node:${{ matrix.node }}'\n  env: {STATUS: '${{ job.status }}'}\n  ports: ['${{ matrix.port }}']\n  volumes: ['${{ vars.VOLUME }}']\n  options: '${{ inputs.options }}'\nsteps:\n  - run: echo ok",
+    )
+    .unwrap();
+    assert!(scan_job_shape_valid(&valid));
+}
+
+#[test]
 fn scanner_rejects_strategy_fields_with_unavailable_contexts_or_invalid_scalars() {
     for yaml in [
         "runs-on: ubuntu-latest\nstrategy: {fail-fast: '${{ github.ref == ''refs/heads/main'' }}', max-parallel: '${{ needs.setup.outputs.parallel }}'}\nsteps:\n  - run: tsc --noEmit",

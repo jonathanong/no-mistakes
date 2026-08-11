@@ -423,6 +423,23 @@ fn static_values_cover_event_matrix_and_untyped_scalar_paths() {
         ),
         Some(StaticValue::String("push".into()))
     );
+    for expression in [
+        "${{ github['event_name'] }}",
+        "${{ GiThUb [ 'EVENT_NAME' ] }}",
+    ] {
+        assert_eq!(
+            super::values::forwarded_input_value(&Value::String(expression.into()), &parent),
+            Some(StaticValue::String("push".into())),
+            "{expression}"
+        );
+    }
+    assert_eq!(
+        super::values::forwarded_input_value(
+            &Value::String("${{ github['event_name' }}".into()),
+            &parent,
+        ),
+        None
+    );
     assert_eq!(
         super::values::forwarded_input_value(
             &Value::String("${{ matrix.enabled }}".into()),

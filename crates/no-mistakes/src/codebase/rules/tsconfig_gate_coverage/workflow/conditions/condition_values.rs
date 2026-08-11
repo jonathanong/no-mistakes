@@ -1,7 +1,7 @@
 use super::{
     comparison_literal, condition_input_value, event_name_value, expression_bool_with_status,
-    functions, literal_from_json_static_value, logical, status_function_bool, InputState,
-    StaticBool, StaticValue,
+    functions, literal_from_json_static_value, logical, resolution::github_event_name,
+    status_function_bool, InputState, StaticBool, StaticValue,
 };
 
 pub(super) fn condition_value(
@@ -17,7 +17,7 @@ pub(super) fn condition_value(
             StaticBool::TruthyNonBoolean | StaticBool::Unknown => None,
         };
     }
-    if operand.eq_ignore_ascii_case("github.event_name") {
+    if github_event_name(operand) {
         return event_name_value(inputs);
     }
     literal_from_json_static_value(operand)
@@ -34,6 +34,7 @@ pub(super) fn condition_value(
                 static_bool_value(expression_bool_with_status(operand, inputs, success).negate())
             })
         })
+        .or_else(|| functions::static_case_value(operand, inputs, success))
         .or_else(|| {
             functions::static_function_bool(operand, inputs, success).map(static_bool_value)
         })

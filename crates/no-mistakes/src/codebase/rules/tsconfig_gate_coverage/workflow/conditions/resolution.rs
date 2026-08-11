@@ -9,6 +9,11 @@ pub(super) fn matrix_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "matrix")
 }
 
+pub(super) fn github_event_name(operand: &str) -> bool {
+    context_property_name(operand, "github")
+        .is_some_and(|property| property.eq_ignore_ascii_case("event_name"))
+}
+
 pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticValue {
     inputs
         .get(&format!(

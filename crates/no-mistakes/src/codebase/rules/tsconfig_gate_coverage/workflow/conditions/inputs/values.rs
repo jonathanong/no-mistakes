@@ -2,7 +2,7 @@ use super::{JsonScalar, Value, WorkflowCallInputType};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     event_name_value,
     input_value::comparison_literal,
-    resolution::{input_name, matrix_name, matrix_property_value},
+    resolution::{github_event_name, input_name, matrix_name, matrix_property_value},
     InputState, StaticBool, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
@@ -69,7 +69,7 @@ pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Optio
         .strip_prefix("${{")?
         .strip_suffix("}}")?
         .trim();
-    if body.eq_ignore_ascii_case("github.event_name") {
+    if github_event_name(body) {
         return event_name_value(parent);
     }
     if let Some(name) = matrix_name(body) {

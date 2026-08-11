@@ -2,13 +2,14 @@ use super::super::workflow::{
     job_concurrency_shape_valid, job_defaults_shape_valid, permissions_shape_valid,
 };
 use super::bindings::call_bindings_mapping_shape_valid;
+use super::containers::{container_shape_valid, services_shape_valid};
 use super::fields::{
     bool_or_expression_field_valid, condition_field_valid, strategy_shape_valid,
     string_field_valid, JOB_CONDITION_CONTEXTS, JOB_CONTINUE_ON_ERROR_CONTEXTS,
 };
 use super::values::{
-    container_shape_valid, environment_shape_valid, only_keys, outputs_shape_valid,
-    runs_on_shape_valid, scalar_mapping_valid, services_shape_valid, JOB_ENV_CONTEXTS,
+    environment_shape_valid, only_keys, outputs_shape_valid, runs_on_shape_valid,
+    scalar_mapping_valid, JOB_ENV_CONTEXTS,
 };
 use serde_yaml::Value;
 
