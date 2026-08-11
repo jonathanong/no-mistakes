@@ -197,6 +197,14 @@ fn composite_actions_reject_unconditional_static_failures() {
         ("", "false"),
         ("", "exit 1"),
         ("", "return"),
+        ("", "false | true"),
+        ("", "command false | true"),
+        ("", "builtin false | true"),
+        ("", "command builtin false | true"),
+        ("", "builtin command false | true"),
+        ("", "command -p -- false | true"),
+        ("", "command -p -p false | true"),
+        ("", "command -pp false | true"),
         ("if: true\n      ", "false"),
         ("if: '${{ vars.MAYBE }}'\n      ", "false"),
     ] {
@@ -215,6 +223,14 @@ fn composite_actions_reject_unconditional_static_failures() {
         );
         assert!(valid(&[("action", &action)], &[], "action"), "{step}");
     }
+    let static_shell_expression = "name: Failing\ndescription: Failing\nruns:\n  using: composite\n  steps:\n    - shell: \"${{ 'bash' }}\"\n      run: 'false | true'\n";
+    assert!(!valid(
+        &[("action", static_shell_expression)],
+        &[],
+        "action"
+    ));
+    let dynamic_shell = "name: Failing\ndescription: Failing\ninputs:\n  shell: {description: Shell, default: bash}\nruns:\n  using: composite\n  steps:\n    - shell: '${{ inputs.shell }}'\n      run: 'false | true'\n";
+    assert!(!valid(&[("action", dynamic_shell)], &[], "action"));
 }
 
 #[test]

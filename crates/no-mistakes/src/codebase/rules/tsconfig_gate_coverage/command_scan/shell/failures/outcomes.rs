@@ -27,6 +27,9 @@ pub(super) fn static_group_outcome(group: &str, mut previous_failed: Option<bool
         let Some(tokens) = static_tokens(command) else {
             return GroupOutcome::Unknown;
         };
+        let Some(tokens) = outcome_tokens(&tokens) else {
+            return GroupOutcome::Unknown;
+        };
         match tokens.first().map(String::as_str) {
             Some("true") => previous_failed = Some(false),
             Some("false") => {
@@ -36,13 +39,48 @@ pub(super) fn static_group_outcome(group: &str, mut previous_failed: Option<bool
             }
             Some("return") => return GroupOutcome::Exit(true),
             Some("exit") => {
-                return exit_status_fails(&tokens, previous_failed)
+                return exit_status_fails(tokens, previous_failed)
                     .map_or(GroupOutcome::Unknown, GroupOutcome::Exit)
             }
             _ => return GroupOutcome::Unknown,
         }
     }
     GroupOutcome::Success
+}
+
+fn outcome_tokens(mut tokens: &[String]) -> Option<&[String]> {
+    loop {
+        match tokens.first()?.as_str() {
+            "builtin" => {
+                tokens = match tokens.get(1)?.as_str() {
+                    "--" => tokens.get(2..).filter(|tokens| !tokens.is_empty())?,
+                    argument if argument.starts_with('-') => return None,
+                    _ => tokens.get(1..)?,
+                };
+            }
+            "command" => {
+                let mut index = 1;
+                while tokens.get(index).is_some_and(|argument| {
+                    argument.strip_prefix('-').is_some_and(|flags| {
+                        !flags.is_empty() && flags.chars().all(|flag| flag == 'p')
+                    })
+                }) {
+                    index += 1;
+                }
+                if tokens.get(index).map(String::as_str) == Some("--") {
+                    index += 1;
+                }
+                if tokens
+                    .get(index)
+                    .is_some_and(|argument| argument.starts_with('-'))
+                {
+                    return None;
+                }
+                tokens = tokens.get(index..).filter(|tokens| !tokens.is_empty())?;
+            }
+            _ => return Some(tokens),
+        }
+    }
 }
 
 fn exit_status_fails(tokens: &[String], previous_failed: Option<bool>) -> Option<bool> {

@@ -3,6 +3,9 @@ use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     reduce_context_free_interpolations, ContextFreeInterpolation,
 };
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::{
+    shell_failure_enforced, shell_pipefail_enforced,
+};
 use serde_yaml::{Mapping, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -69,9 +72,12 @@ pub(super) fn composite_step_valid(
             && (composite_step_continues_on_error(step)
                 || !composite_step_may_run(step)
                 || (composite_step_working_directory_valid(step, tracked)
-                    && !run
-                        .as_str()
-                        .is_some_and(command_scan::shell_body_has_static_failure)));
+                    && !run.as_str().is_some_and(|run| {
+                        composite_run_has_static_failure(
+                            run,
+                            step.get("shell").and_then(Value::as_str),
+                        )
+                    })));
     }
     let Some(target) = step.get("uses").and_then(Value::as_str) else {
         return false;
@@ -79,6 +85,24 @@ pub(super) fn composite_step_valid(
     target.strip_prefix("./").is_none_or(|directory| {
         super::super::action_directory_valid(directory, descriptors, tracked, visiting, cache)
     })
+}
+
+fn composite_run_has_static_failure(run: &str, shell: Option<&str>) -> bool {
+    let shell = match shell.map(reduce_context_free_interpolations) {
+        Some(ContextFreeInterpolation::Invalid) => return true,
+        Some(ContextFreeInterpolation::Static(shell)) => Some(shell),
+        Some(ContextFreeInterpolation::Dynamic) => {
+            return command_scan::shell_body_has_static_failure(run)
+                || command_scan::shell_body_has_static_pipeline_failure(run, true);
+        }
+        None => return true,
+    };
+    command_scan::shell_body_has_static_failure(run)
+        || (shell_pipefail_enforced(shell.as_deref())
+            && command_scan::shell_body_has_static_pipeline_failure(
+                run,
+                shell_failure_enforced(shell.as_deref()).unwrap_or(false),
+            ))
 }
 
 fn composite_step_working_directory_valid(step: &Mapping, tracked: &BTreeSet<String>) -> bool {
