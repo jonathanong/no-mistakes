@@ -1,12 +1,26 @@
 use super::{
-    condition_values::condition_value, functions::static_case_value, static_bool, EnvironmentState,
-    InputState, StaticBool, StaticValue,
+    condition_values::condition_value, functions::static_case_value, static_bool,
+    static_value_string, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use serde_yaml::Value;
 
 #[test]
 fn truthy_nonboolean_values_preserve_expression_semantics() {
     assert_eq!(StaticBool::TruthyNonBoolean.negate(), StaticBool::False);
+}
+
+#[test]
+fn static_interpolation_values_follow_github_string_coercion() {
+    for (value, expected) in [
+        (Value::Bool(true), Some("true".to_string())),
+        (Value::Number(42.into()), Some("42".to_string())),
+        (Value::String("release".into()), Some("release".into())),
+        (Value::Null, Some(String::new())),
+        (Value::Sequence(Vec::new()), None),
+        (Value::Mapping(Default::default()), None),
+    ] {
+        assert_eq!(static_value_string(value), expected);
+    }
 }
 
 #[test]
