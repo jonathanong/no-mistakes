@@ -72,6 +72,19 @@ fn ref_prefix_functions_use_every_known_reference_shape() {
 }
 
 #[test]
+fn non_condition_functions_remain_unknown_in_condition_evaluation() {
+    assert_eq!(
+        static_bool(
+            Some(&Value::String(
+                "hashFiles('Cargo.lock', 'package-lock.json')".into()
+            )),
+            &InputState::new(),
+        ),
+        StaticBool::Unknown,
+    );
+}
+
+#[test]
 fn complete_expression_values_resolve_event_properties_and_conservative_json_inputs() {
     let inputs = InputState::from([
         (
