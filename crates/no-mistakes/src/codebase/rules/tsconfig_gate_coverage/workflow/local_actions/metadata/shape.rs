@@ -4,6 +4,9 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
 };
 use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
+
+#[cfg(test)]
+mod tests;
 const COMPOSITE_OUTPUT_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runner", "env", "vars"];
 const ACTION_PRE_IF_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "inputs",
