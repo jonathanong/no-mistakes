@@ -32,6 +32,29 @@ pub(super) struct RunStepState<'a> {
     pub(super) indeterminate: &'a mut bool,
 }
 
+enum ShellResolution {
+    Resolved(Option<String>),
+    Unresolved,
+    UnsupportedImplicit,
+}
+
+fn resolved_shell(step: &Value, configuration: &RunStepConfiguration<'_, '_>) -> ShellResolution {
+    let shell = effective_shell(step, configuration.job_shell.clone());
+    if shell.is_none() && configuration.implicit_shell_can_be_windows {
+        return ShellResolution::UnsupportedImplicit;
+    }
+    match shell {
+        Some(shell) => super::super::super::conditions::resolve_static_interpolations(
+            &shell,
+            configuration.inputs,
+            configuration.environment,
+        )
+        .map(|shell| ShellResolution::Resolved(Some(shell)))
+        .unwrap_or(ShellResolution::Unresolved),
+        None => ShellResolution::Resolved(None),
+    }
+}
+
 pub(super) fn run_step_stops_job(
     step: &Value,
     configuration: &RunStepConfiguration<'_, '_>,
@@ -85,26 +108,16 @@ pub(super) fn run_step_stops_job(
         }
         return false;
     };
-    let shell = effective_shell(step, configuration.job_shell.clone());
-    if shell.is_none() && configuration.implicit_shell_can_be_windows {
-        return false;
-    }
-    let shell = match shell {
-        Some(shell) => match super::super::super::conditions::resolve_static_interpolations(
-            &shell,
-            configuration.inputs,
-            configuration.environment,
-        ) {
-            Some(shell) => Some(shell),
-            None => {
-                if !configuration.continue_on_error {
-                    *state.indeterminate |= configuration.condition != StaticBool::False;
-                    return true;
-                }
-                return false;
+    let shell = match resolved_shell(step, configuration) {
+        ShellResolution::Resolved(shell) => shell,
+        ShellResolution::UnsupportedImplicit => return false,
+        ShellResolution::Unresolved => {
+            if !configuration.continue_on_error {
+                *state.indeterminate |= configuration.condition != StaticBool::False;
+                return true;
             }
-        },
-        None => None,
+            return false;
+        }
     };
     let Some(failure_enforced) = shell_failure_enforced(shell.as_deref()) else {
         if !configuration.continue_on_error && configuration.condition != StaticBool::False {

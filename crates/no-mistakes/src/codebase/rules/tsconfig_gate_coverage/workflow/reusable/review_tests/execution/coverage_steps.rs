@@ -35,6 +35,10 @@ fn malformed_and_unresolved_steps_stop_coverage_at_the_runtime_boundary() {
             "unresolved-shell",
             "      - shell: \"${{ github.event.unknown }}\"\n        run: echo unresolved\n      - run: tsc --noEmit -p unresolved-shell/tsconfig.json\n",
         ),
+        (
+            "tolerated-unresolved-shell",
+            "      - continue-on-error: true\n        shell: \"${{ github.event.unknown }}\"\n        run: echo unresolved\n      - run: tsc --noEmit -p tolerated-shell/tsconfig.json\n",
+        ),
     ];
     let workflows = cases
         .into_iter()
@@ -60,12 +64,14 @@ fn malformed_and_unresolved_steps_stop_coverage_at_the_runtime_boundary() {
                 "unresolved-run",
                 "tolerated-run",
                 "unresolved-shell",
+                "tolerated-shell",
             ],
         ),
         BTreeSet::from([
             "invalid-condition/tsconfig.json".to_string(),
             "tolerated/tsconfig.json".to_string(),
             "tolerated-run/tsconfig.json".to_string(),
+            "tolerated-shell/tsconfig.json".to_string(),
         ])
     );
 }
