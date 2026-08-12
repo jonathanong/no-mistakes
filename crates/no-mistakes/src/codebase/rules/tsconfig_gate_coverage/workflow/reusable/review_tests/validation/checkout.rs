@@ -22,12 +22,18 @@ fn tolerated_checkout_only_makes_local_actions_available_after_valid_action_inpu
         "app/tsconfig.json".to_string(),
         "invalid/tsconfig.json".to_string(),
     ]);
+    let tracked_paths = tracked
+        .iter()
+        .map(std::path::PathBuf::from)
+        .collect::<Vec<_>>();
     let local_actions = BTreeSet::from([".github/actions/setup".to_string()]);
 
     assert_eq!(
         collect_ci_projects_with_local_actions(
+            std::path::Path::new("."),
             &workflows,
             &tracked,
+            &tracked_paths,
             &project_inputs(&tracked),
             &local_actions,
         )

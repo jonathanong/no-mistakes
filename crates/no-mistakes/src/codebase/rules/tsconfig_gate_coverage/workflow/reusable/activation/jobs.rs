@@ -1,7 +1,7 @@
 use super::{reusable_call_target, scan_activation, step_job_runner_supported};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     callee_inputs, callee_secrets, job_statically_disabled, job_statically_enforcing,
-    job_statically_not_enforcing, EnvironmentState, InputState, StaticBool,
+    job_statically_not_enforcing, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
@@ -76,12 +76,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         let contract = callee.call_contract.as_ref()?;
         let callee_secrets = callee_secrets(contract, job, &self.state.secrets)?;
         let mut projects = BTreeSet::new();
-        let mut outputs: Option<
-            BTreeMap<
-                String,
-                crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::StaticValue,
-            >,
-        > = None;
+        let mut outputs: Option<BTreeMap<String, StaticValue>> = None;
         let mut failed = false;
         let mut indeterminate = false;
         let has_instances = !inputs.is_empty();
