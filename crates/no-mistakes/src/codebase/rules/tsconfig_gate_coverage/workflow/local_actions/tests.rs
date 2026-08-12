@@ -224,6 +224,8 @@ fn action_metadata_validates_all_supported_fields_before_cataloging() {
         "name: Bad node hook\ndescription: Invalid\nruns: {using: node24, main: index.js, post: [cleanup]}",
         "name: Bad docker args\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: [--ok, 1]}",
         "name: Docker args not sequence\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: --ok}",
+        "name: Malformed Docker arg expression\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: ['${{ inputs. }}']}",
+        "name: Unavailable Docker arg context\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: ['${{ steps.build.outcome }}']}",
         "name: Bad docker env\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: [KEY]}",
         "name: Docker env non-string value\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {KEY: true}}",
         "name: Docker env non-string key\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {1: value}}",

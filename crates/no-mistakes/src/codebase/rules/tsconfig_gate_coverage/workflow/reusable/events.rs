@@ -113,15 +113,20 @@ fn references_for(
         .iter()
         .any(|pattern| !pattern.starts_with('!') && !is_exact_pattern(pattern))
     {
-        references.push(if candidates.is_empty() {
+        let excluded = candidates
+            .into_iter()
+            .chain(
+                patterns
+                    .iter()
+                    .filter_map(|pattern| pattern.strip_prefix('!'))
+                    .filter(|pattern| is_exact_pattern(pattern)),
+            )
+            .map(|candidate| format!("{prefix}{candidate}"))
+            .collect::<BTreeSet<_>>();
+        references.push(if excluded.is_empty() {
             GithubRef::UnknownBranch
         } else {
-            GithubRef::UnknownExcluding(
-                candidates
-                    .into_iter()
-                    .map(|candidate| format!("{prefix}{candidate}"))
-                    .collect(),
-            )
+            GithubRef::UnknownExcluding(excluded)
         });
     }
     references

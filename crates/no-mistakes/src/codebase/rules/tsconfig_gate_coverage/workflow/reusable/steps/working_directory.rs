@@ -23,10 +23,8 @@ pub(super) fn step_working_directory(
 pub(super) fn working_directory_exists(directory: &str, visible_paths: &BTreeSet<String>) -> bool {
     directory == "."
         || visible_paths.iter().any(|path| {
-            path == directory
-                || path
-                    .strip_prefix(directory)
-                    .is_some_and(|suffix| suffix.starts_with('/'))
+            path.strip_prefix(directory)
+                .is_some_and(|suffix| suffix.starts_with('/'))
         })
 }
 

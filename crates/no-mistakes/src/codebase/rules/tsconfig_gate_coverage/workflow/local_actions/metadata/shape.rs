@@ -10,6 +10,7 @@ const COMPOSITE_OUTPUT_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runne
 const ACTION_PRE_IF_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "inputs",
 ];
+const DOCKER_ARGUMENT_CONTEXTS: &[&str] = &["github", "inputs"];
 
 pub(super) fn action_inputs_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
@@ -150,10 +151,13 @@ pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
         return false;
     }
     if let Some(args) = runs.get("args") {
-        if !args
-            .as_sequence()
-            .is_some_and(|args| args.iter().all(|value| matches!(value, Value::String(_))))
-        {
+        if !args.as_sequence().is_some_and(|args| {
+            args.iter().all(|value| {
+                value.as_str().is_some_and(|value| {
+                    interpolated_expression_contexts_available(value, DOCKER_ARGUMENT_CONTEXTS)
+                })
+            })
+        }) {
             return false;
         }
     }

@@ -154,6 +154,20 @@ fn wildcard_negations_remove_exact_branch_candidates_in_order() {
 }
 
 #[test]
+fn wildcard_branch_activations_retain_exact_negative_exclusions() {
+    let workflow: Value =
+        serde_yaml::from_str("on:\n  push:\n    branches: ['release/**', '!release/bad']").unwrap();
+    assert!(matches!(
+        source_change_event_contexts(&workflow, "push").as_slice(),
+        [context] if matches!(
+            &context.reference,
+            GithubRef::UnknownExcluding(excluded)
+                if excluded == &BTreeSet::from(["refs/heads/release/bad".to_string()])
+        )
+    ));
+}
+
+#[test]
 fn pull_request_merge_ref_retains_the_exact_base_ref() {
     let workflow: Value = serde_yaml::from_str(
         "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]",

@@ -87,6 +87,10 @@ fn complete_expression_values_resolve_event_properties_and_conservative_json_inp
             Some(StaticValue::String("main".into())),
         ),
         (
+            "${{ github.event.pull_request.base.ref }}",
+            Some(StaticValue::String("main".into())),
+        ),
+        (
             "${{ toJSON(github.event_name) }}",
             Some(StaticValue::String("\"push\"".into())),
         ),

@@ -1,5 +1,6 @@
-use super::{step_working_directory, EnvironmentState, InputState};
+use super::{step_working_directory, working_directory_exists, EnvironmentState, InputState};
 use serde_yaml::Value;
+use std::collections::BTreeSet;
 
 #[test]
 fn dynamic_step_directory_cannot_fall_through_to_a_later_run_step() {
@@ -13,4 +14,15 @@ fn dynamic_step_directory_cannot_fall_through_to_a_later_run_step() {
         ),
         None
     );
+}
+
+#[test]
+fn working_directories_require_a_tracked_descendant_not_a_file_at_the_same_path() {
+    let paths = BTreeSet::from([
+        "README.md".to_string(),
+        "packages/app/tsconfig.json".to_string(),
+    ]);
+    assert!(!working_directory_exists("README.md", &paths));
+    assert!(working_directory_exists("packages/app", &paths));
+    assert!(working_directory_exists(".", &paths));
 }

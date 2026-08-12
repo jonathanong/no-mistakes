@@ -4,6 +4,7 @@ use super::*;
 fn static_shell_failures_distinguish_successful_and_dynamic_forms() {
     for script in [
         "false",
+        "true | false",
         "echo ok; exit 1",
         "false; exit",
         "false;\nexit",
@@ -16,6 +17,7 @@ fn static_shell_failures_distinguish_successful_and_dynamic_forms() {
     }
     for script in [
         "echo ok",
+        "false | true",
         "exit",
         "true; exit",
         "true;\nexit",
@@ -128,11 +130,12 @@ fn static_shell_success_requires_a_proven_successful_body() {
         "true; exit",
         "true; exit 0",
         "true && true",
+        "true | true",
         "false && true; true",
     ] {
         assert!(shell_body_is_statically_successful(script), "{script}");
     }
-    for script in ["", "tsc --noEmit", "false", "true | true"] {
+    for script in ["", "tsc --noEmit", "false"] {
         assert!(!shell_body_is_statically_successful(script), "{script}");
     }
 }

@@ -25,6 +25,7 @@ pub(super) fn static_group_outcome(group: &str, mut previous_failed: Option<bool
         if command.contains("||") {
             return GroupOutcome::Unknown;
         }
+        let command = command.rsplit('|').next().unwrap_or(command);
         let Some(tokens) = static_tokens(command) else {
             return GroupOutcome::Unknown;
         };
