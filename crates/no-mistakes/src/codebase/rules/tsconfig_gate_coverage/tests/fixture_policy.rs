@@ -153,6 +153,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "docker-args-invalid/tsconfig.json",
             "docker-invalid/tsconfig.json",
             "dynamic-dependent/tsconfig.json",
+            "dynamic-shell/tsconfig.json",
             "file-working-directory/tsconfig.json",
             "fail-fast-default/tsconfig.json",
             "fail-fast-true/tsconfig.json",
@@ -189,6 +190,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "workflow-job-output/tsconfig.json",
             "dynamic-working-directory/tsconfig.json",
             "pull-request-event-base-ref/tsconfig.json",
+            "pull-request-merged/tsconfig.json",
             "push-head-ref/tsconfig.json",
             "incompatible-hosted-runner/tsconfig.json",
             "duplicate-service-port/tsconfig.json",
@@ -290,6 +292,10 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     assert!(uncovered.contains("file-working-directory/tsconfig.json"));
     // Invalid Docker arg interpolation stops subsequent typechecks.
     assert!(uncovered.contains("docker-args-invalid/tsconfig.json"));
+    // An unresolved shell can fail before the later typecheck starts.
+    assert!(uncovered.contains("dynamic-shell/tsconfig.json"));
+    // Source-change pull-request payloads are synchronize events, not merges.
+    assert!(uncovered.contains("pull-request-merged/tsconfig.json"));
 }
 
 #[test]

@@ -63,6 +63,7 @@ fn malformed_and_unresolved_steps_stop_coverage_at_the_runtime_boundary() {
                 "tolerated",
                 "unresolved-run",
                 "tolerated-run",
+                // An unresolved shell can still enforce an earlier failure.
                 "unresolved-shell",
                 "tolerated-shell",
             ],

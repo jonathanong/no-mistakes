@@ -113,6 +113,12 @@ fn direct_step_scanning_covers_nonterminating_runtime_boundaries() {
     );
     assert!(!tolerated_unknown_shell.failed && !tolerated_unknown_shell.indeterminate);
 
+    let unresolved_shell = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - shell: '${{ vars.SHELL }}'\n    run: exit 1",
+        BTreeSet::new(),
+    );
+    assert!(unresolved_shell.indeterminate);
+
     let tolerated_unsafe_body = scan(
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: eval true",
         BTreeSet::new(),

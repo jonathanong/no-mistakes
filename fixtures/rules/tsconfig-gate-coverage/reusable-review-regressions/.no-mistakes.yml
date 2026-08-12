@@ -240,6 +240,14 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, wildcard-exclusion/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-dynamic-shell
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-shell/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pull-request-merged
+      command: [pnpm, exec, tsc, --noEmit, --project, pull-request-merged/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository
