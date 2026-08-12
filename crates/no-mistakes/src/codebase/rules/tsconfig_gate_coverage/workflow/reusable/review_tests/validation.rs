@@ -26,6 +26,23 @@ fn unavailable_reusable_secret_expressions_earn_no_coverage() {
 }
 
 #[test]
+fn unknown_trigger_names_invalidate_an_otherwise_reachable_workflow() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/typo.yml",
+            "on: {push: null, pussh: {}}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      # GitHub rejects the typo instead of scheduling the push job.\n      - run: tsc --noEmit -p typo/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from(["typo/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
 fn invalid_continue_on_error_and_environment_contexts_earn_no_coverage() {
     let workflows = ParsedWorkflowSet {
         documents: vec![

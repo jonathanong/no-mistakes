@@ -34,3 +34,16 @@ fn unfiltered_and_wildcard_push_refs_are_known_branches_through_reusable_calls()
         ])
     );
 }
+
+#[test]
+fn mixed_exact_and_wildcard_branches_keep_the_nonexact_activation() {
+    let workflow = document(
+        ".github/workflows/branches.yml",
+        "on:\n  push:\n    branches: [main, 'release/**']\njobs:\n  main-only:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p main-only/tsconfig.json\n  every-branch:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p every-branch/tsconfig.json\n",
+    );
+
+    assert_eq!(
+        scanned_projects(vec![workflow], &["main-only", "every-branch"]),
+        BTreeSet::from(["every-branch/tsconfig.json".to_string()])
+    );
+}

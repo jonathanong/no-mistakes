@@ -28,8 +28,9 @@ impl StepOutcomes {
         let Some(id) = step.get("id").and_then(Value::as_str) else {
             return;
         };
-        self.outcomes.insert(id.to_lowercase(), outcome);
-        self.conclusions.insert(id.to_lowercase(), conclusion);
+        let id = id.to_lowercase();
+        self.outcomes.insert(id.clone(), outcome);
+        self.conclusions.insert(id, conclusion);
     }
 
     pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn value(

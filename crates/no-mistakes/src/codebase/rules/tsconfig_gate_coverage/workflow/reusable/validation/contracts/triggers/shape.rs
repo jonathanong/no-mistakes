@@ -13,18 +13,19 @@ pub(crate) fn has_workflow_call_trigger(on: &Value) -> bool {
 
 pub(crate) fn workflow_call_trigger_keys_valid(on: &Value) -> bool {
     match on {
-        Value::String(trigger) => KNOWN_WORKFLOW_TRIGGERS.contains(&trigger.as_str()),
-        Value::Sequence(triggers) => triggers.iter().all(|trigger| {
-            trigger
-                .as_str()
-                .is_some_and(|trigger| KNOWN_WORKFLOW_TRIGGERS.contains(&trigger))
-        }),
-        Value::Mapping(triggers) => triggers.keys().all(|key| {
-            key.as_str()
-                .is_some_and(|trigger| KNOWN_WORKFLOW_TRIGGERS.contains(&trigger))
-        }),
+        Value::String(trigger) => supported_workflow_trigger(trigger),
+        Value::Sequence(triggers) => triggers
+            .iter()
+            .all(|trigger| trigger.as_str().is_some_and(supported_workflow_trigger)),
+        Value::Mapping(triggers) => triggers
+            .keys()
+            .all(|key| key.as_str().is_some_and(supported_workflow_trigger)),
         _ => false,
     }
+}
+
+pub(super) fn supported_workflow_trigger(trigger: &str) -> bool {
+    KNOWN_WORKFLOW_TRIGGERS.contains(&trigger)
 }
 
 const KNOWN_WORKFLOW_TRIGGERS: &[&str] = &[

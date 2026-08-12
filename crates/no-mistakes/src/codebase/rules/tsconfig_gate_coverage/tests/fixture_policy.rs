@@ -141,12 +141,18 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     assert_eq!(
         uncovered,
         BTreeSet::from([
+            "branch-main-only/tsconfig.json",
             "env/tsconfig.json",
             "checkout/tsconfig.json",
             "composite/tsconfig.json",
+            "composite-secret/tsconfig.json",
+            "conclusion-blocked/tsconfig.json",
             "container-dependent/tsconfig.json",
+            "docker-invalid/tsconfig.json",
+            "dynamic-dependent/tsconfig.json",
             "fail-fast-default/tsconfig.json",
             "fail-fast-true/tsconfig.json",
+            "fork-secret/tsconfig.json",
             "hidden-ref/tsconfig.json",
             "join/tsconfig.json",
             "json-error/tsconfig.json",
@@ -163,6 +169,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "step-env/tsconfig.json",
             "strategy-dependent/tsconfig.json",
             "tag-ref/tsconfig.json",
+            "trigger-typo/tsconfig.json",
         ]),
         "{report:#?}"
     );
@@ -191,6 +198,20 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     assert!(uncovered.contains("fail-fast-default/tsconfig.json"));
     assert!(uncovered.contains("fail-fast-true/tsconfig.json"));
     assert!(!uncovered.contains("fail-fast-false/tsconfig.json"));
+    // Runtime conditions can skip prerequisites, so ordinary needs cannot be trusted.
+    assert!(uncovered.contains("dynamic-dependent/tsconfig.json"));
+    // Exact branches and wildcard alternatives are separate source-change activations.
+    assert!(uncovered.contains("branch-main-only/tsconfig.json"));
+    // Scalar action defaults are valid, but composite secret contexts and bad Docker refs are not.
+    assert!(!uncovered.contains("scalar-action/tsconfig.json"));
+    assert!(uncovered.contains("composite-secret/tsconfig.json"));
+    assert!(uncovered.contains("docker-invalid/tsconfig.json"));
+    // Tolerated failures retain their outcome but publish a successful conclusion.
+    assert!(!uncovered.contains("conclusion-outcome/tsconfig.json"));
+    assert!(uncovered.contains("conclusion-blocked/tsconfig.json"));
+    // A trigger typo and a potentially forked PR secret both prevent scheduling.
+    assert!(uncovered.contains("trigger-typo/tsconfig.json"));
+    assert!(uncovered.contains("fork-secret/tsconfig.json"));
 }
 
 #[test]

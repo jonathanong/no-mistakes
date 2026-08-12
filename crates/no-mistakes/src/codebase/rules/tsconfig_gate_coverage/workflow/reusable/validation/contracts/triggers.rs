@@ -8,6 +8,7 @@ mod shape;
 use activity::activity_type_config_valid;
 use cron::schedule_config_valid;
 use dispatch::workflow_dispatch_config_valid;
+use shape::supported_workflow_trigger;
 pub(super) use shape::{has_workflow_call_trigger, workflow_call_trigger_keys_valid};
 
 pub(super) fn workflow_trigger_configs_valid(on: &Value) -> bool {
@@ -26,7 +27,11 @@ pub(super) fn workflow_trigger_configs_valid(on: &Value) -> bool {
 }
 
 fn trigger_config_not_required(trigger: &str) -> bool {
-    !matches!(trigger, "schedule" | "workflow_run")
+    supported_trigger(trigger) && !matches!(trigger, "schedule" | "workflow_run")
+}
+
+fn supported_trigger(trigger: &str) -> bool {
+    supported_workflow_trigger(trigger)
 }
 
 /// Only credit workflow files whose trigger configuration can be represented
@@ -49,7 +54,9 @@ fn trigger_config_valid(trigger: &str, config: &Value) -> bool {
         trigger if activity::ACTIVITY_TYPE_TRIGGERS.contains(&trigger) => {
             activity_type_config_valid(trigger, config)
         }
-        _ => config.as_mapping().is_some_and(Mapping::is_empty),
+        // GitHub permits an empty mapping for supported no-option events.
+        trigger if supported_trigger(trigger) => config.as_mapping().is_some_and(Mapping::is_empty),
+        _ => false,
     }
 }
 

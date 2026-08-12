@@ -62,6 +62,7 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         "name: Empty container\ndescription: Invalid\nruns: {using: docker, image: 'docker://'}",
         "name: Malformed container\ndescription: Invalid\nruns: {using: docker, image: 'docker://ghcr.io//checker:22'}",
         "name: Incomplete container tag\ndescription: Invalid\nruns: {using: docker, image: 'docker://node:'}",
+        "name: Invalid container\ndescription: Invalid\nruns: {using: docker, image: 'docker://bad image'}",
         "name: Bare container image\ndescription: Invalid\nruns: {using: docker, image: node:20}",
         "name: Missing Dockerfile\ndescription: Invalid\nruns: {using: docker, image: Dockerfile}",
         "name: Empty main\ndescription: Invalid\nruns: {using: node20, main: ''}",
@@ -134,6 +135,26 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         &["action/build/Dockerfile.test"],
         "action"
     ));
+}
+
+#[test]
+fn action_metadata_coerces_scalar_defaults_and_rejects_unavailable_composite_contexts() {
+    let defaults = "name: Defaults\ndescription: Valid\ninputs:\n  enabled: {description: Enabled, default: true}\n  retries: {description: Retries, default: 3}\nruns: {using: node24, main: dist/index.js}";
+    assert!(valid(
+        &[("action", defaults)],
+        &["action/dist/index.js"],
+        "action"
+    ));
+
+    for step in [
+        "{env: {TOKEN: '${{ secrets.TOKEN }}'}, run: echo ok, shell: bash}",
+        "{run: 'echo ${{ secrets.TOKEN }}', shell: bash}",
+    ] {
+        let action = format!(
+            "name: Invalid\ndescription: Invalid\nruns: {{using: composite, steps: [{step}]}}"
+        );
+        assert!(!valid(&[("action", &action)], &[], "action"), "{step}");
+    }
 }
 
 #[test]

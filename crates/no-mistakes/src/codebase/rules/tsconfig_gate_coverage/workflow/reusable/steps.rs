@@ -87,7 +87,6 @@ pub(super) fn scan_job_steps(
             failed |= condition == StaticBool::True;
             break;
         }
-        // Tolerating an action's failure does not prevent a successful checkout.
         checkout.observe(step, condition);
         if uses_action && condition == StaticBool::True {
             step_outcomes.record(step, StaticValue::String("success".to_string()));

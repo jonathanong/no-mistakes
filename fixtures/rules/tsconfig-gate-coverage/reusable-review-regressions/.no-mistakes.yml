@@ -104,6 +104,42 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, fail-fast-false/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-dynamic-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-branch-main-only
+      command: [pnpm, exec, tsc, --noEmit, --project, branch-main-only/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-scalar-action
+      command: [pnpm, exec, tsc, --noEmit, --project, scalar-action/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-composite-secret
+      command: [pnpm, exec, tsc, --noEmit, --project, composite-secret/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-docker-invalid
+      command: [pnpm, exec, tsc, --noEmit, --project, docker-invalid/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-conclusion-outcome
+      command: [pnpm, exec, tsc, --noEmit, --project, conclusion-outcome/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-conclusion-blocked
+      command: [pnpm, exec, tsc, --noEmit, --project, conclusion-blocked/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-trigger-typo
+      command: [pnpm, exec, tsc, --noEmit, --project, trigger-typo/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fork-secret
+      command: [pnpm, exec, tsc, --noEmit, --project, fork-secret/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository
