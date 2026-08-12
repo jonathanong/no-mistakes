@@ -81,6 +81,20 @@ fn direct_step_scanning_fail_closes_invalid_and_unresolved_runtime_states() {
 
 #[test]
 fn direct_step_scanning_covers_nonterminating_runtime_boundaries() {
+    let unresolved_directory = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: '${{ matrix.directory }}'\n    run: echo unresolved",
+        BTreeSet::new(),
+    );
+    assert!(unresolved_directory.indeterminate);
+
+    let tolerated_unresolved_directory = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    working-directory: '${{ matrix.directory }}'\n    run: echo unresolved",
+        BTreeSet::new(),
+    );
+    assert!(
+        !tolerated_unresolved_directory.failed && !tolerated_unresolved_directory.indeterminate
+    );
+
     let tolerated_directory = scan(
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    working-directory: missing\n    run: echo absent",
         BTreeSet::new(),
@@ -92,4 +106,16 @@ fn direct_step_scanning_covers_nonterminating_runtime_boundaries() {
         BTreeSet::new(),
     );
     assert!(uncertain_directory.indeterminate);
+
+    let tolerated_unknown_shell = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    shell: fish\n    run: echo unknown",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_unknown_shell.failed && !tolerated_unknown_shell.indeterminate);
+
+    let tolerated_unsafe_body = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: eval true",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_unsafe_body.failed && !tolerated_unsafe_body.indeterminate);
 }
