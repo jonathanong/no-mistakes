@@ -43,7 +43,12 @@ fn checkout_root_is_available(
         return false;
     };
     !bindings.contains_key("repository")
-        && !bindings.contains_key("sparse-checkout")
+        && bindings.get("sparse-checkout").is_none_or(|value| {
+            value
+                .as_str()
+                .and_then(|value| resolve_static_interpolations(value, inputs, environment))
+                .is_some_and(|value| value.is_empty())
+        })
         && bindings.get("path").is_none_or(|path| {
             path.as_str()
                 .and_then(|path| resolve_static_interpolations(path, inputs, environment))

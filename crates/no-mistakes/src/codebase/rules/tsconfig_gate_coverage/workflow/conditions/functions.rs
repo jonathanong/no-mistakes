@@ -61,10 +61,10 @@ fn known_ref_prefix_starts_with(inputs: &InputState, item: &str) -> Option<bool>
         StaticValue::String(shape) if shape == "pull-request-merge" => "refs/pull/",
         _ => return None,
     };
-    if prefix.starts_with(item) {
+    if starts_with_ignore_ascii_case(prefix, item) == Some(true) {
         return Some(true);
     }
-    (!item.starts_with(prefix)).then_some(false)
+    (starts_with_ignore_ascii_case(item, prefix) == Some(false)).then_some(false)
 }
 
 fn contains_static_value(search: &StaticValue, item: &str) -> Option<bool> {

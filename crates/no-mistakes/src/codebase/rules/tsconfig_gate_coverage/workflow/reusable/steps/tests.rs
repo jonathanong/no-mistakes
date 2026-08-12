@@ -123,6 +123,13 @@ fn direct_step_scanning_covers_nonterminating_runtime_boundaries() {
     );
     assert!(unresolved_shell.indeterminate);
 
+    let unsupported_implicit_shell = scan(
+        "runs-on: windows-latest\nsteps:\n  - run: exit 1\n  - shell: bash\n    run: tsc --noEmit -p app/tsconfig.json",
+        BTreeSet::new(),
+    );
+    assert!(unsupported_implicit_shell.indeterminate);
+    assert!(unsupported_implicit_shell.projects.is_empty());
+
     let tolerated_unsafe_body = scan(
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: eval true",
         BTreeSet::new(),
@@ -149,4 +156,10 @@ fn tolerated_action_outcomes_and_local_docker_runners_remain_sound() {
         super::super::super::local_actions::LocalActionCatalog::docker(docker_actions),
     );
     assert!(!linux.failed && !linux.indeterminate);
+
+    let sparse_checkout = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - uses: actions/checkout@v4\n    with: {sparse-checkout: ''}\n  - uses: ./local-action",
+        BTreeSet::from(["local-action".to_string()]),
+    );
+    assert!(!sparse_checkout.failed && !sparse_checkout.indeterminate);
 }

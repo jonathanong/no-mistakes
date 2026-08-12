@@ -158,6 +158,10 @@ fn environment_value(
             })
             .or_else(|| complete_literal_expression_value(value).map(string_value))
             .or_else(|| expression_input_value(value, inputs, environment).map(string_static_value))
+            .or_else(|| {
+                super::resolve_static_interpolations(value, inputs, environment)
+                    .map(StaticValue::String)
+            })
             .unwrap_or(StaticValue::Unknown),
         Value::Null | Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => {
             StaticValue::Unknown

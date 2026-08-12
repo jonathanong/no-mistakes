@@ -110,7 +110,13 @@ pub(super) fn run_step_stops_job(
     };
     let shell = match resolved_shell(step, configuration) {
         ShellResolution::Resolved(shell) => shell,
-        ShellResolution::UnsupportedImplicit => return false,
+        ShellResolution::UnsupportedImplicit => {
+            if !configuration.continue_on_error {
+                *state.indeterminate |= configuration.condition != StaticBool::False;
+                return true;
+            }
+            return false;
+        }
         ShellResolution::Unresolved => {
             if !configuration.continue_on_error {
                 *state.indeterminate |= configuration.condition != StaticBool::False;

@@ -246,6 +246,8 @@ fn action_metadata_validates_all_supported_fields_before_cataloging() {
         "name: Docker args not sequence\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: --ok}",
         "name: Malformed Docker arg expression\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: ['${{ inputs. }}']}",
         "name: Unavailable Docker arg context\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: ['${{ steps.build.outcome }}']}",
+        "name: Malformed Docker env expression\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {KEY: '${{ inputs. }}'}}",
+        "name: Unavailable Docker env context\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {KEY: '${{ steps.build.outcome }}'}}",
         "name: Bad docker env\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: [KEY]}",
         "name: Docker env non-string value\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {KEY: true}}",
         "name: Docker env non-string key\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {1: value}}",

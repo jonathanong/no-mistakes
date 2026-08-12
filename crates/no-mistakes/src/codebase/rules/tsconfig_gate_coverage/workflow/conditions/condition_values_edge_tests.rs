@@ -49,6 +49,7 @@ fn ref_prefix_functions_use_every_known_reference_shape() {
         ("branch", "refs/heads/", StaticBool::True),
         ("tag", "refs/tags/", StaticBool::True),
         ("pull-request-merge", "refs/pull/", StaticBool::True),
+        ("branch", "REFS/HEADS/", StaticBool::True),
         ("unsupported", "refs/heads/", StaticBool::Unknown),
     ] {
         let inputs = InputState::from([(

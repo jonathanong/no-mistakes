@@ -45,7 +45,10 @@ fn expressions_resolve_current_inputs_and_matrix_values_with_string_coercion() {
         ("${{ matrix.target }}", StaticValue::String("linux".into())),
         ("${{ matrix.cfg }}", StaticValue::Mapping),
         ("${{ matrix.dynamic_target }}", StaticValue::Unknown),
-        ("prefix-${{ inputs.enabled }}", StaticValue::Unknown),
+        (
+            "prefix-${{ inputs.enabled }}",
+            StaticValue::String("prefix-true".into()),
+        ),
     ] {
         assert_eq!(
             environment_value(

@@ -160,8 +160,12 @@ pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
     }
     if let Some(env) = runs.get("env") {
         if !env.as_mapping().is_some_and(|env| {
-            env.iter()
-                .all(|(name, value)| name.as_str().is_some() && matches!(value, Value::String(_)))
+            env.iter().all(|(name, value)| {
+                name.as_str().is_some()
+                    && value.as_str().is_some_and(|value| {
+                        interpolated_expression_contexts_available(value, DOCKER_ARGUMENT_CONTEXTS)
+                    })
+            })
         }) {
             return false;
         }
