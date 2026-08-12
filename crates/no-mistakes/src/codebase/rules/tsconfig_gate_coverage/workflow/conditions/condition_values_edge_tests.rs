@@ -58,6 +58,16 @@ fn ref_prefix_functions_use_every_known_reference_shape() {
         let expression = Value::String(format!("startsWith(github.ref, '{prefix}')"));
         assert_eq!(static_bool(Some(&expression), &inputs), expected, "{shape}");
     }
+
+    assert_eq!(
+        static_bool(
+            Some(&Value::String(
+                "startsWith(github.ref, fromJSON('not-json'))".into(),
+            )),
+            &InputState::new(),
+        ),
+        StaticBool::Invalid,
+    );
 }
 
 #[test]
