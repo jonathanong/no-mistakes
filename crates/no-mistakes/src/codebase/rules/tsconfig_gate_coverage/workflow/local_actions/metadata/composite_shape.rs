@@ -1,4 +1,4 @@
-use super::shape::only_keys;
+use super::shape::{action_identifier, only_keys};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     complete_expression_contexts_available, complete_expression_type,
     condition_expression_contexts_available, interpolated_expression_contexts_available,
@@ -22,10 +22,22 @@ const COMPOSITE_STEP_KEYS: &[&str] = &[
 ];
 
 pub(super) fn steps_valid(steps: &[Value]) -> bool {
-    !steps.is_empty()
-        && steps
+    if steps.is_empty()
+        || !steps
             .iter()
             .all(|step| step.as_mapping().is_some_and(step_valid))
+    {
+        return false;
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    steps.iter().all(|step| {
+        step.as_mapping()
+            .and_then(|step| step.get("id"))
+            .is_none_or(|id| {
+                id.as_str()
+                    .is_some_and(|id| action_identifier(id) && ids.insert(id.to_ascii_lowercase()))
+            })
+    })
 }
 
 pub(super) fn step_valid(step: &Mapping) -> bool {
@@ -46,7 +58,7 @@ pub(super) fn step_valid(step: &Mapping) -> bool {
 }
 
 fn shared_fields_valid(step: &Mapping) -> bool {
-    ["name", "id", "shell", "working-directory"]
+    ["name", "shell", "working-directory"]
         .into_iter()
         .all(|field| interpolated_field_valid(step.get(field)))
         && step.get("if").is_none_or(|value| {

@@ -15,6 +15,7 @@ pub(super) const ACTIVITY_TYPE_TRIGGERS: &[&str] = &[
     "pull_request_review_comment",
     "registry_package",
     "release",
+    "watch",
 ];
 
 pub(super) const PULL_REQUEST_ACTIVITY_TYPES: &[&str] = &[
@@ -116,6 +117,7 @@ const ACTIVITY_TYPES: &[(&str, &[&str])] = &[
             "released",
         ],
     ),
+    ("watch", &["started"]),
 ];
 
 pub(super) fn activity_type_config_valid(trigger: &str, config: &Value) -> bool {

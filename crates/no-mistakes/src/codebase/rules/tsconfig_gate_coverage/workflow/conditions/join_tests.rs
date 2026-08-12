@@ -35,13 +35,15 @@ fn static_join_value_resolves_known_scalars_and_sequences() {
             "join(fromJSON('[\"a\", \"b\"]'), 1.2345678901234567)",
             Some(StaticValue::String("a1.23456789012346b".into())),
         ),
+        ("join(fromJSON('[\"release\"]'), inputs.dynamic)", None),
+        ("join(fromJSON('[]'), inputs.dynamic)", None),
         (
-            "join(fromJSON('[\"release\"]'), inputs.dynamic)",
-            Some(StaticValue::String("release".into())),
+            "join(fromJSON('[]'), fromJSON('not-json'))",
+            Some(StaticValue::Invalid),
         ),
         (
-            "join(fromJSON('[]'), inputs.dynamic)",
-            Some(StaticValue::String(String::new())),
+            "join(fromJSON('[\"release\"]'), fromJSON('not-json'))",
+            Some(StaticValue::Invalid),
         ),
     ] {
         assert_eq!(

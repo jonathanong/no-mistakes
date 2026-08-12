@@ -16,18 +16,18 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions) fn 
     if matches!(value, StaticValue::Invalid) {
         return Some(StaticValue::Invalid);
     }
+    let separator = match call.arguments.get(1) {
+        Some(argument) => {
+            let separator = function_argument_value(argument, inputs, environment, status)?;
+            if matches!(separator, StaticValue::Invalid) {
+                return Some(StaticValue::Invalid);
+            }
+            separator.format_string()?
+        }
+        None => ",".to_string(),
+    };
     match value {
         StaticValue::Sequence(values) if values.len() > 1 => {
-            let separator = match call.arguments.get(1) {
-                Some(argument) => {
-                    let separator = function_argument_value(argument, inputs, environment, status)?;
-                    if matches!(separator, StaticValue::Invalid) {
-                        return Some(StaticValue::Invalid);
-                    }
-                    separator.format_string()?
-                }
-                None => ",".to_string(),
-            };
             if values
                 .iter()
                 .any(|value| matches!(value, StaticValue::Invalid))

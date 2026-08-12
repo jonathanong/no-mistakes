@@ -136,9 +136,7 @@ pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
             .get("post")
             .is_none_or(|value| nonempty_string(Some(value)))
         || !runs.get("pre-if").is_none_or(pre_if_valid)
-        || !runs
-            .get("post-if")
-            .is_none_or(|value| nonempty_string(Some(value)))
+        || !runs.get("post-if").is_none_or(pre_if_valid)
         || !runs
             .get("pre-entrypoint")
             .is_none_or(|value| nonempty_string(Some(value)))
@@ -188,7 +186,7 @@ pub(super) fn nonempty_string(value: Option<&Value>) -> bool {
         .is_some_and(|value| !value.trim().is_empty())
 }
 
-fn action_identifier(value: &str) -> bool {
+pub(super) fn action_identifier(value: &str) -> bool {
     let mut characters = value.chars();
     characters
         .next()

@@ -167,11 +167,11 @@ fn literal_from_json_array_conditions_skip_unreachable_typechecks() {
 fn literal_join_conditions_skip_unreachable_typechecks() {
     let documents = vec![workflow(
         ".github/workflows/conditional.yml",
-        "on: push\njobs:\n  skipped:\n    if: join(fromJSON('[\"release\"]'), ',') == 'candidate'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project skipped/tsconfig.json\n  retained:\n    if: join(fromJSON('[\"push\", \"schedule\"]'), '-') == 'push-schedule'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project retained/tsconfig.json\n",
+        "on: push\njobs:\n  skipped:\n    if: join(fromJSON('[\"release\"]'), ',') == 'candidate'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project skipped/tsconfig.json\n  invalid:\n    if: join(fromJSON('[]'), fromJSON('not-json')) == ''\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project invalid/tsconfig.json\n  retained:\n    if: join(fromJSON('[\"push\", \"schedule\"]'), '-') == 'push-schedule'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project retained/tsconfig.json\n",
     )];
 
     assert_eq!(
-        scanned(documents, &["skipped", "retained"]),
+        scanned(documents, &["skipped", "invalid", "retained"]),
         BTreeSet::from(["retained/tsconfig.json".to_string()])
     );
 }

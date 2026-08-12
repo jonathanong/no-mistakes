@@ -110,7 +110,10 @@ fn composite_step_working_directory_valid(step: &Mapping, tracked: &BTreeSet<Str
         return false;
     };
     match reduce_context_free_interpolations(value) {
-        ContextFreeInterpolation::Dynamic => true,
+        // The catalog has no caller input state, so it cannot prove where a
+        // dynamic composite step will execute. Treat it as unavailable rather
+        // than letting a later workflow step inherit false success.
+        ContextFreeInterpolation::Dynamic => false,
         ContextFreeInterpolation::Invalid => false,
         ContextFreeInterpolation::Static(path) => {
             let Some(path) = command_scan::normalize_repo_relative(&path) else {

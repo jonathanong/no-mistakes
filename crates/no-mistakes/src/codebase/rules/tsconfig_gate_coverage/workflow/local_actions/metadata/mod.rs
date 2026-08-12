@@ -106,6 +106,11 @@ fn valid_action_metadata(
                         .and_then(|pre| execution::action_file(directory, pre))
                         .is_some_and(|pre| tracked.contains(&pre))
                 })
+                && runs.get("post").is_none_or(|post| {
+                    post.as_str()
+                        .and_then(|post| execution::action_file(directory, post))
+                        .is_some_and(|post| tracked.contains(&post))
+                })
                 && runs
                     .get("main")
                     .and_then(Value::as_str)

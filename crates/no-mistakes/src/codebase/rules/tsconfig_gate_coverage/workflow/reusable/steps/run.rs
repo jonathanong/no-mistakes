@@ -97,6 +97,10 @@ pub(super) fn run_step_stops_job(
         None => None,
     };
     let Some(failure_enforced) = shell_failure_enforced(shell.as_deref()) else {
+        if !configuration.continue_on_error && configuration.condition != StaticBool::False {
+            *state.indeterminate = true;
+            return true;
+        }
         return false;
     };
     if !command_scan::shell_body_has_safe_static_shape(&run) {

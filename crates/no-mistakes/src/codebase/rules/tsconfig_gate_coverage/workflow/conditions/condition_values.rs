@@ -150,7 +150,7 @@ pub(super) fn comparison_bool(
             }
             let reference_kind =
                 inputs
-                    .get(super::inputs::REF_KIND_KEY)
+                    .get(super::inputs::REF_SHAPE_KEY)
                     .and_then(|kind| match kind {
                         StaticValue::String(kind) => Some(kind.as_str()),
                         _ => None,

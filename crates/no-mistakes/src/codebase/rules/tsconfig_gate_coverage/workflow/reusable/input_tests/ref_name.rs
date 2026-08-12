@@ -69,6 +69,29 @@ fn exact_pull_request_base_ref_reaches_direct_and_reusable_conditions() {
 }
 
 #[test]
+fn pull_request_merge_refs_report_branch_type_to_conditions() {
+    let parsed = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/pull-request.yml",
+            "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]\njobs:\n  branch:\n    if: github.ref_type == 'branch'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project branch/tsconfig.json\n  nonbranch:\n    if: github.ref_type != 'branch'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project nonbranch/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "branch/tsconfig.json".to_string(),
+        "nonbranch/tsconfig.json".to_string(),
+    ]);
+    let project_inputs = tracked
+        .iter()
+        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
+        .collect();
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
+        BTreeSet::from(["branch/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn non_pull_request_base_ref_is_the_empty_string() {
     let parsed = ParsedWorkflowSet {
         documents: vec![

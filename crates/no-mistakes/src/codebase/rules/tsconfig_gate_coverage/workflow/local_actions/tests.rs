@@ -110,9 +110,14 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         "action"
     ));
     let local_node_post_hook = "name: Node\ndescription: Valid\nruns: {using: node24, main: dist/index.js, post: cleanup.js, post-if: always()}";
-    assert!(valid(
+    assert!(!valid(
         &[("action", local_node_post_hook)],
         &["action/dist/index.js"],
+        "action"
+    ));
+    assert!(valid(
+        &[("action", local_node_post_hook)],
+        &["action/dist/index.js", "action/cleanup.js"],
         "action"
     ));
     let local_node_pre_hook = "name: Node\ndescription: Invalid\nruns: {using: node24, pre: setup.js, pre-if: always(), main: dist/index.js}";
@@ -236,7 +241,7 @@ fn composite_step_contexts_exclude_workflow_only_secrets() {
         assert!(!valid(&[("action", &action)], &[], "action"), "{field}");
     }
 
-    let action = "name: Valid context\ndescription: Valid\nruns:\n  using: composite\n  steps:\n    - if: '${{ inputs.enabled }}'\n      run: 'echo ${{ github.ref }}'\n      shell: bash\n      env: {LABEL: '${{ vars.LABEL }}'}\n      working-directory: '${{ inputs.directory }}'\n      continue-on-error: '${{ inputs.tolerate }}'\n    - uses: actions/cache@v4\n      with: {key: '${{ steps.setup.outputs.key }}'}\n";
+    let action = "name: Valid context\ndescription: Valid\nruns:\n  using: composite\n  steps:\n    - if: '${{ inputs.enabled }}'\n      run: 'echo ${{ github.ref }}'\n      shell: bash\n      env: {LABEL: '${{ vars.LABEL }}'}\n      continue-on-error: '${{ inputs.tolerate }}'\n    - uses: actions/cache@v4\n      with: {key: '${{ steps.setup.outputs.key }}'}\n";
     assert!(valid(&[("action", action)], &[], "action"));
 }
 
@@ -364,6 +369,40 @@ fn action_pre_if_conditions_require_valid_documented_contexts() {
         );
         assert!(!valid(&[("action", &docker)], &[], "action"), "{pre_if}");
     }
+
+    for post_if in [
+        "runner.os ==",
+        "steps.setup.outputs.ready",
+        "hashFiles('**') != ''",
+    ] {
+        let node = format!(
+            "name: Node\ndescription: Invalid\nruns: {{using: node24, main: dist/index.js, post: cleanup.js, post-if: \"{post_if}\"}}"
+        );
+        assert!(
+            !valid(
+                &[("action", &node)],
+                &["action/dist/index.js", "action/cleanup.js"],
+                "action"
+            ),
+            "{post_if}"
+        );
+    }
+}
+
+#[test]
+fn composite_step_ids_are_static_unique_identifiers() {
+    for steps in [
+        "[{id: setup, run: echo ok, shell: bash}, {id: SETUP, run: echo ok, shell: bash}]",
+        "[{id: 'setup step', run: echo ok, shell: bash}]",
+        "[{id: '${{ inputs.step }}', run: echo ok, shell: bash}]",
+    ] {
+        let action = format!(
+            "name: Invalid\ndescription: Invalid\nruns: {{using: composite, steps: {steps}}}"
+        );
+        assert!(!valid(&[("action", &action)], &[], "action"), "{steps}");
+    }
+    let valid_ids = "name: Valid\ndescription: Valid\nruns: {using: composite, steps: [{id: setup, run: echo ok, shell: bash}, {id: verify_2, run: echo ok, shell: bash}]}";
+    assert!(valid(&[("action", valid_ids)], &[], "action"));
 }
 
 #[test]
@@ -444,7 +483,7 @@ fn composite_run_working_directories_must_exist_in_the_checkout() {
     assert!(valid(&[("action", &checkout_root)], &[], "action"));
 
     let dynamic = action("\"${{ inputs.directory }}\"", "");
-    assert!(valid(&[("action", &dynamic)], &[], "action"));
+    assert!(!valid(&[("action", &dynamic)], &[], "action"));
 
     for control in ["      if: false\n", "      continue-on-error: true\n"] {
         let ignored_missing = action("packages/missing", control);

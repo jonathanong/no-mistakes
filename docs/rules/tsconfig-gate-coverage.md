@@ -58,15 +58,16 @@ the narrower metadata context set rather than workflow-only contexts such as
 `runs.main` must resolve to a tracked file under that action
 directory and use GitHub's supported `node20` or `node24` runtime; local
 JavaScript actions must not declare the unsupported `runs.pre`
-or `runs.pre-if` hooks, while supported `runs.post` and `runs.post-if` hooks are
-accepted. A Docker action's non-`docker://` `runs.image` is a repository-local
+or `runs.pre-if` hooks; supported `runs.post` must resolve to a tracked file,
+and `runs.post-if` must be a valid action-context condition. Composite step IDs
+must be unique static identifiers. A Docker action's non-`docker://` `runs.image` is a repository-local
 build target and must resolve canonically to a tracked file; external
 `docker://` references must contain a valid static OCI image reference. Local
 targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
 missing action prevents later commands in the same executed job from counting.
 Composite-action traversal follows GitHub's ten-action nesting limit. A
-statically resolved composite run-step working directory must exist in the
+composite run-step working directory must resolve statically and exist in the
 tracked checkout, and a composite action with a statically failing run step
 cannot allow a later workflow typecheck to count unless that failing step is
 statically skipped.
@@ -120,7 +121,9 @@ execution-preserving flags: `-e`, `-u`, `-x`, and Bash's `-o pipefail`,
 Context-free literal shell expressions are reduced before this classification;
 shell expressions whose value remains dynamic do not count.
 Other shells (such as `python`, PowerShell, or `cmd`) and dynamic/custom shell
-forms do not count; neither do non-executing modes such as `bash -n {0}`.
+forms do not count; an enabled non-tolerated step using one also leaves the job
+indeterminate, so later ordinary steps and dependents do not count. Neither do
+non-executing modes such as `bash -n {0}`.
 Implicit and built-in `bash`/`sh` shells propagate failures. Custom templates
 must include `-e` or `-o errexit` to credit a typecheck before a later command;
 without it, only a final `tsc` command counts.

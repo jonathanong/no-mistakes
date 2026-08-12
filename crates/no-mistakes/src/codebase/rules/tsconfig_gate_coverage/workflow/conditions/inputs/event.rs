@@ -9,6 +9,7 @@ pub(in super::super) const REF_KEY: &str = "\0github.ref";
 pub(in super::super) const REF_NAME_KEY: &str = "\0github.ref_name";
 pub(in super::super) const BASE_REF_KEY: &str = "\0github.base_ref";
 pub(in super::super) const REF_KIND_KEY: &str = "\0github.ref.kind";
+pub(in super::super) const REF_SHAPE_KEY: &str = "\0github.ref.shape";
 pub(in super::super) const REF_EXCLUSIONS_KEY: &str = "\0github.ref.exclusions";
 
 pub(in super::super) fn event_name_value(inputs: &InputState) -> Option<StaticValue> {
@@ -35,6 +36,7 @@ pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
         REF_NAME_KEY,
         BASE_REF_KEY,
         REF_KIND_KEY,
+        REF_SHAPE_KEY,
         REF_EXCLUSIONS_KEY,
     ] {
         if let Some(value) = parent.get(key) {
@@ -63,6 +65,10 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
                     REF_KIND_KEY.to_string(),
                     StaticValue::String(kind.to_string()),
                 );
+                inputs.insert(
+                    REF_SHAPE_KEY.to_string(),
+                    StaticValue::String(kind.to_string()),
+                );
             }
             if let Some(name) = exact_ref_name(reference) {
                 inputs.insert(
@@ -74,6 +80,10 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
         GithubRef::UnknownExcluding(references) => {
             inputs.insert(
                 REF_KIND_KEY.to_string(),
+                StaticValue::String("branch".to_string()),
+            );
+            inputs.insert(
+                REF_SHAPE_KEY.to_string(),
                 StaticValue::String("branch".to_string()),
             );
             inputs.insert(
@@ -92,10 +102,18 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
                 REF_KIND_KEY.to_string(),
                 StaticValue::String("branch".to_string()),
             );
+            inputs.insert(
+                REF_SHAPE_KEY.to_string(),
+                StaticValue::String("branch".to_string()),
+            );
         }
         GithubRef::PullRequestMerge => {
             inputs.insert(
                 REF_KIND_KEY.to_string(),
+                StaticValue::String("branch".to_string()),
+            );
+            inputs.insert(
+                REF_SHAPE_KEY.to_string(),
                 StaticValue::String("pull-request-merge".to_string()),
             );
         }

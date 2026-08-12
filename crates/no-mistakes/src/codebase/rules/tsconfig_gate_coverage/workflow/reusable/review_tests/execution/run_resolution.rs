@@ -22,3 +22,13 @@ fn unresolved_enforcing_run_interpolations_block_later_and_dependent_typechecks(
 
     assert!(scanned_projects(vec![workflow], &["later", "dependent"]).is_empty());
 }
+
+#[test]
+fn unanalyzable_custom_shells_block_later_and_dependent_typechecks() {
+    let workflow = document(
+        ".github/workflows/custom-shell.yml",
+        "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: python {0}\n        run: raise SystemExit(1)\n      - run: tsc --noEmit -p later/tsconfig.json\n  dependent:\n    needs: setup\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p dependent/tsconfig.json\n",
+    );
+
+    assert!(scanned_projects(vec![workflow], &["later", "dependent"]).is_empty());
+}
