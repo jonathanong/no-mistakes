@@ -1,5 +1,4 @@
-use super::super::step_job_runner_supported;
-use super::{job_configuration_validity, JobScanner};
+use super::JobScanner;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     job_statically_disabled, job_statically_enforcing, job_statically_not_enforcing,
     EnvironmentState, InputState, StaticBool,
@@ -7,18 +6,14 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    container_configuration_valid_for_inputs, fail_fast_enabled_for_inputs,
-    strategy_configuration_valid_for_inputs,
+    container_configuration_valid_for_inputs, strategy_configuration_valid_for_inputs,
+    strategy_fail_fast_enabled_for_inputs,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::runner_os;
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::outputs::{
-    merge_fail_fast_failure_projects, merge_step_job_outputs, retain_fail_fast_projects,
-    static_step_job_outputs,
-};
-
+use super::outputs::{merge_step_job_outputs, static_step_job_outputs};
 impl JobScanner<'_, '_> {
     pub(super) fn scan_step_job(
         &self,
@@ -39,8 +34,11 @@ impl JobScanner<'_, '_> {
         let mut failed = false;
         let mut indeterminate = false;
         let mut outputs = None;
-        let mut fail_fast_failure_projects = None;
+        let mut cancel_remaining_instances = false;
         for inputs in inputs {
+            if cancel_remaining_instances {
+                break;
+            }
             let environment = EnvironmentState::from_workflow(
                 self.workflow_runtime.workflow,
                 &self.state.secrets,
@@ -48,11 +46,13 @@ impl JobScanner<'_, '_> {
             )
             .with_job(job, inputs)
             .with_runner_os(runner_os(job, inputs));
-            match job_configuration_validity(job, inputs, &environment) {
+            match super::configuration::job_configuration_validity(job, inputs, &environment) {
                 StaticBool::False => {
                     let enforcing = job_statically_enforcing(job, inputs, failed_need);
                     failed |= enforcing;
                     indeterminate |= !enforcing && !job_statically_disabled(job, inputs);
+                    cancel_remaining_instances =
+                        enforcing && strategy_fail_fast_enabled_for_inputs(job, inputs);
                     continue;
                 }
                 StaticBool::Invalid | StaticBool::Unknown | StaticBool::TruthyNonBoolean => {
@@ -67,9 +67,11 @@ impl JobScanner<'_, '_> {
                 let enforcing = job_statically_enforcing(job, inputs, failed_need);
                 failed |= enforcing;
                 indeterminate |= !enforcing && !job_statically_disabled(job, inputs);
+                cancel_remaining_instances =
+                    enforcing && strategy_fail_fast_enabled_for_inputs(job, inputs);
                 continue;
             }
-            if step_job_runner_supported(job, inputs) {
+            if super::super::step_job_runner_supported(job, inputs) {
                 let scan = scan_job_steps(
                     job,
                     self.triggers,
@@ -83,23 +85,25 @@ impl JobScanner<'_, '_> {
                     projects.extend(scan.projects.iter().cloned());
                 }
                 let enforcing = job_statically_enforcing(job, inputs, failed_need);
-                failed |= scan.failed && enforcing;
                 if !scan.failed && !scan.indeterminate {
                     merge_step_job_outputs(
                         &mut outputs,
                         static_step_job_outputs(job, inputs, &environment),
                     );
                 }
-                if scan.failed && enforcing && fail_fast_enabled_for_inputs(job, inputs) {
-                    merge_fail_fast_failure_projects(
-                        &mut fail_fast_failure_projects,
-                        scan.projects,
-                    );
-                }
+                let instance_failed = scan.failed && enforcing;
+                failed |= instance_failed;
                 indeterminate |= scan.indeterminate && enforcing;
+                cancel_remaining_instances =
+                    instance_failed && strategy_fail_fast_enabled_for_inputs(job, inputs);
+            } else {
+                // A statically unrunnable enabled job prevents downstream needs.
+                let instance_failed = job_statically_enforcing(job, inputs, failed_need);
+                failed |= instance_failed;
+                cancel_remaining_instances =
+                    instance_failed && strategy_fail_fast_enabled_for_inputs(job, inputs);
             }
         }
-        retain_fail_fast_projects(&mut projects, fail_fast_failure_projects, inputs.len());
         ActivationScan {
             projects,
             outputs: outputs.unwrap_or_default(),

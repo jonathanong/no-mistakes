@@ -134,32 +134,63 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     let root = fixture_root("reusable-review-regressions");
     let report = findings(&root, &config(&root));
 
+    let uncovered = report
+        .iter()
+        .map(|finding| finding.file.as_str())
+        .collect::<BTreeSet<_>>();
     assert_eq!(
-        report
-            .iter()
-            .map(|finding| finding.file.as_str())
-            .collect::<BTreeSet<_>>(),
+        uncovered,
         BTreeSet::from([
             "env/tsconfig.json",
             "checkout/tsconfig.json",
             "composite/tsconfig.json",
+            "container-dependent/tsconfig.json",
+            "fail-fast-default/tsconfig.json",
+            "fail-fast-true/tsconfig.json",
             "hidden-ref/tsconfig.json",
             "join/tsconfig.json",
             "json-error/tsconfig.json",
+            "logical-and/tsconfig.json",
             "matrix/tsconfig.json",
             "output/tsconfig.json",
             "runner/tsconfig.json",
+            "runner-dependent/tsconfig.json",
             "script/tsconfig.json",
             "input-condition/tsconfig.json",
             "mapping-env/tsconfig.json",
             "pre-if/tsconfig.json",
             "needs-action/tsconfig.json",
+            "step-env/tsconfig.json",
+            "strategy-dependent/tsconfig.json",
+            "tag-ref/tsconfig.json",
         ]),
         "{report:#?}"
     );
     assert!(report
         .iter()
         .all(|finding| finding.message.contains("no CI typecheck registration")));
+
+    // true || skips an invalid right operand; false && skips it and the job.
+    assert!(!uncovered.contains("logical-or/tsconfig.json"));
+    assert!(uncovered.contains("logical-and/tsconfig.json"));
+    // A tolerated checkout still makes a following local action available.
+    assert!(!uncovered.contains("checkout-tolerated/tsconfig.json"));
+    // Invalid values in a step-merged environment block that step.
+    assert!(uncovered.contains("step-env/tsconfig.json"));
+    // Invalid runner, strategy, and container prerequisites fail their needs.
+    for project in [
+        "runner-dependent/tsconfig.json",
+        "strategy-dependent/tsconfig.json",
+        "container-dependent/tsconfig.json",
+    ] {
+        assert!(uncovered.contains(project));
+    }
+    // A tag-only push has no source-change coverage and cannot become a branch ref.
+    assert!(uncovered.contains("tag-ref/tsconfig.json"));
+    // Default/true fail-fast cancel later siblings; false leaves them runnable.
+    assert!(uncovered.contains("fail-fast-default/tsconfig.json"));
+    assert!(uncovered.contains("fail-fast-true/tsconfig.json"));
+    assert!(!uncovered.contains("fail-fast-false/tsconfig.json"));
 }
 
 #[test]

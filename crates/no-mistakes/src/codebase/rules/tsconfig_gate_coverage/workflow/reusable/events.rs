@@ -49,11 +49,16 @@ fn event_references(workflow: &Value, event: &str) -> Vec<GithubRef> {
             let branches_configured =
                 has_key(config, "branches") || has_key(config, "branches-ignore");
             let tags_configured = has_key(config, "tags") || has_key(config, "tags-ignore");
-            if branches_configured || !tags_configured {
+            let mut references = if branches_configured || !tags_configured {
                 branch_references(config)
             } else {
                 Vec::new()
+            };
+            if tags_configured {
+                // Tags are refs too; do not model them as unknown branches.
+                references.extend(references_for(config, "tags", "tags-ignore", "refs/tags/"));
             }
+            references
         }
         "pull_request" => branch_references(config),
         "pull_request_target" => branch_references(config),

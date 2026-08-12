@@ -10,7 +10,9 @@ use super::super::super::super::expressions::{
 
 mod strategy;
 pub(super) use strategy::strategy_shape_valid;
-pub(crate) use strategy::{fail_fast_enabled_for_inputs, strategy_configuration_valid_for_inputs};
+pub(crate) use strategy::{
+    strategy_configuration_valid_for_inputs, strategy_fail_fast_enabled_for_inputs,
+};
 
 pub(super) const JOB_CONDITION_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
 pub(super) const STEP_CONDITION_CONTEXTS: &[&str] = &[

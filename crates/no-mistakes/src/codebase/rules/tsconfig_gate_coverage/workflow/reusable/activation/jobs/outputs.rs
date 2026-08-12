@@ -71,30 +71,6 @@ pub(super) fn merge_step_job_outputs(
     }
 }
 
-pub(super) fn merge_fail_fast_failure_projects(
-    aggregate: &mut Option<BTreeSet<String>>,
-    projects: BTreeSet<String>,
-) {
-    match aggregate {
-        Some(failed_projects) => {
-            failed_projects.retain(|project| projects.contains(project));
-        }
-        None => *aggregate = Some(projects),
-    }
-}
-
-pub(super) fn retain_fail_fast_projects(
-    projects: &mut BTreeSet<String>,
-    failed_projects: Option<BTreeSet<String>>,
-    instance_count: usize,
-) {
-    if instance_count > 1 {
-        if let Some(failed_projects) = failed_projects {
-            *projects = failed_projects;
-        }
-    }
-}
-
 #[cfg(test)]
 #[path = "outputs_tests.rs"]
 mod tests;

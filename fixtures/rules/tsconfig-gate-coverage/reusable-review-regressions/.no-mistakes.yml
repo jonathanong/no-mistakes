@@ -60,6 +60,50 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, needs-action/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-logical-or
+      command: [pnpm, exec, tsc, --noEmit, --project, logical-or/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-logical-and
+      command: [pnpm, exec, tsc, --noEmit, --project, logical-and/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-checkout-tolerated
+      command: [pnpm, exec, tsc, --noEmit, --project, checkout-tolerated/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-step-env
+      command: [pnpm, exec, tsc, --noEmit, --project, step-env/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-runner-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, runner-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-container-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, container-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-strategy-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, strategy-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-tag-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, tag-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fail-fast-default
+      command: [pnpm, exec, tsc, --noEmit, --project, fail-fast-default/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fail-fast-true
+      command: [pnpm, exec, tsc, --noEmit, --project, fail-fast-true/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fail-fast-false
+      command: [pnpm, exec, tsc, --noEmit, --project, fail-fast-false/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

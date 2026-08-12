@@ -14,3 +14,7 @@ jobs:
     uses: ./.github/workflows/json-error.yml
     with:
       payload: not-json
+  strategy:
+    uses: ./.github/workflows/strategy.yml
+    with:
+      parallel: 0

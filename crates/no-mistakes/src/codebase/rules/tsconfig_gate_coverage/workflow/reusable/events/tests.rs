@@ -75,7 +75,8 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
             "push",
             vec!["refs/heads/dev", "refs/heads/main"],
         ),
-        ("on:\n  push:\n    tags: [v1]", "push", vec![]),
+        // Tags use their own fully qualified ref namespace, not refs/heads.
+        ("on:\n  push:\n    tags: [v1]", "push", vec!["refs/tags/v1"]),
         (
             "on:\n  pull_request_target:\n    types: [synchronize]\n    branches: [main]",
             "pull_request_target",
@@ -101,7 +102,11 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
             .unwrap();
     assert!(source_change_event_contexts(&workflow, "push")
         .iter()
-        .all(|context| matches!(context.reference, GithubRef::UnknownBranch)));
+        .any(|context| matches!(
+            &context.reference,
+            GithubRef::UnknownExcluding(excluded)
+                if excluded == &std::collections::BTreeSet::from(["refs/tags/v0".to_string()])
+        )));
 
     let workflow: Value =
         serde_yaml::from_str("on:\n  push:\n    branches-ignore: [main, 'release/**']").unwrap();

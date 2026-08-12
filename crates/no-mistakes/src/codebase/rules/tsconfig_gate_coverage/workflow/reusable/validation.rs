@@ -14,8 +14,8 @@ pub(crate) use jobs::steps_shape_valid;
 pub(super) use jobs::{
     action_step_inputs_valid_for_state, call_bindings_shape_valid,
     container_configuration_valid_for_inputs, environment_configuration_valid_for_inputs,
-    fail_fast_enabled_for_inputs, reusable_call_job_shape_valid,
-    strategy_configuration_valid_for_inputs,
+    reusable_call_job_shape_valid, strategy_configuration_valid_for_inputs,
+    strategy_fail_fast_enabled_for_inputs,
 };
 pub(super) use matrix::{static_matrix_combinations_for_inputs, MatrixCombinations};
 pub(super) use workflow::job_concurrency_valid_for_inputs;

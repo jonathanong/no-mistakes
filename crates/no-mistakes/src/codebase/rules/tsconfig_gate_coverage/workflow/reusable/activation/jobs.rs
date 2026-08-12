@@ -5,7 +5,8 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    job_concurrency_valid_for_inputs, scan_job_shape_valid, validated_reusable_target,
+    job_concurrency_valid_for_inputs, scan_job_shape_valid, strategy_fail_fast_enabled_for_inputs,
+    validated_reusable_target,
 };
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
@@ -16,7 +17,6 @@ mod order;
 mod outputs;
 mod scanner;
 mod step;
-use configuration::job_configuration_validity;
 use outputs::merge_reusable_outputs;
 pub(super) use scanner::{JobScanner, WorkflowRuntime};
 
@@ -82,9 +82,17 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             fallback_inputs = self.state.inputs.clone();
             std::slice::from_ref(&fallback_inputs)
         };
+        let mut cancel_remaining_instances = false;
         for inputs in inputs {
+            if cancel_remaining_instances {
+                break;
+            }
             if has_instances && !job_concurrency_valid_for_inputs(job.get("concurrency"), inputs) {
-                failed |= !skipped && job_statically_enforcing(job, inputs, failed_need);
+                let instance_failed =
+                    !skipped && job_statically_enforcing(job, inputs, failed_need);
+                failed |= instance_failed;
+                cancel_remaining_instances =
+                    instance_failed && strategy_fail_fast_enabled_for_inputs(job, inputs);
                 continue;
             }
             let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
@@ -102,9 +110,12 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 if !job_statically_not_enforcing(job, inputs) {
                     projects.extend(callee_scan.projects);
                 }
-                failed |= callee_scan.failed && job_statically_enforcing(job, inputs, failed_need);
-                indeterminate |=
-                    callee_scan.indeterminate && job_statically_enforcing(job, inputs, failed_need);
+                let enforcing = job_statically_enforcing(job, inputs, failed_need);
+                let instance_failed = callee_scan.failed && enforcing;
+                failed |= instance_failed;
+                indeterminate |= callee_scan.indeterminate && enforcing;
+                cancel_remaining_instances =
+                    instance_failed && strategy_fail_fast_enabled_for_inputs(job, inputs);
             }
         }
         Some(ActivationScan {

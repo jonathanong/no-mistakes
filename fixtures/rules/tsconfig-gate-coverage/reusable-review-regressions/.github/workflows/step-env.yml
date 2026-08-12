@@ -1,0 +1,8 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      # A merged step environment cannot stringify this static mapping.
+      - env: {BROKEN: '${{ fromJSON(''{}'') }}'}
+        run: pnpm exec tsc --noEmit --project step-env/tsconfig.json

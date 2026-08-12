@@ -44,22 +44,25 @@ pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &Inpu
             .is_none_or(|value| max_parallel_valid_for_inputs(value, inputs))
 }
 
-pub(crate) fn fail_fast_enabled_for_inputs(job: &Value, inputs: &InputState) -> bool {
-    job.get("strategy")
+/// GitHub Actions enables matrix fail-fast unless a statically resolved value
+/// explicitly disables it. Dynamic values cannot prove that queued siblings
+/// were cancelled, so callers must continue scanning them.
+pub(crate) fn strategy_fail_fast_enabled_for_inputs(job: &Value, inputs: &InputState) -> bool {
+    let Some(value) = job
+        .get("strategy")
         .and_then(Value::as_mapping)
         .and_then(|strategy| strategy.get("fail-fast"))
-        .is_none_or(|value| {
-            value.as_bool().unwrap_or_else(|| {
-                !matches!(
-                    value
-                        .as_str()
-                        .and_then(|expression| complete_expression_static_value(
-                            expression, inputs
-                        )),
-                    Some(StaticValue::Bool(false))
-                )
-            })
-        })
+    else {
+        return true;
+    };
+    match value {
+        Value::Bool(enabled) => *enabled,
+        Value::String(expression) => matches!(
+            complete_expression_static_value(expression, inputs),
+            Some(StaticValue::Bool(true))
+        ),
+        _ => false,
+    }
 }
 
 fn fail_fast_valid_for_inputs(value: &Value, inputs: &InputState) -> bool {
