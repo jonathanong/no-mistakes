@@ -62,6 +62,10 @@ fn complete_expression_values_resolve_event_properties_and_conservative_json_inp
             "\0github.base_ref".into(),
             StaticValue::String("main".into()),
         ),
+        (
+            "\0github.head_ref".into(),
+            StaticValue::String("feature".into()),
+        ),
         ("dynamic".into(), StaticValue::Unknown),
         (
             "array".into(),
@@ -89,6 +93,10 @@ fn complete_expression_values_resolve_event_properties_and_conservative_json_inp
         (
             "${{ github.event.pull_request.base.ref }}",
             Some(StaticValue::String("main".into())),
+        ),
+        (
+            "${{ github.head_ref }}",
+            Some(StaticValue::String("feature".into())),
         ),
         (
             "${{ toJSON(github.event_name) }}",
