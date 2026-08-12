@@ -130,6 +130,12 @@ fn direct_step_scanning_covers_nonterminating_runtime_boundaries() {
     assert!(unsupported_implicit_shell.indeterminate);
     assert!(unsupported_implicit_shell.projects.is_empty());
 
+    let tolerated_implicit_shell = scan(
+        "runs-on: windows-latest\nsteps:\n  - continue-on-error: true\n    run: exit 1",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_implicit_shell.failed && !tolerated_implicit_shell.indeterminate);
+
     let tolerated_unsafe_body = scan(
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: eval true",
         BTreeSet::new(),

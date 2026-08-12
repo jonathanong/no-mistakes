@@ -91,6 +91,25 @@ fn known_non_stringable_input_values_remain_invalid_environment_values() {
 }
 
 #[test]
+fn structured_yaml_environment_values_remain_unknown() {
+    for value in [
+        Value::Null,
+        Value::Sequence(Vec::new()),
+        Value::Mapping(Default::default()),
+    ] {
+        assert_eq!(
+            environment_value(
+                &value,
+                &SecretState::direct(),
+                &BTreeMap::new(),
+                &EnvironmentState::default(),
+            ),
+            StaticValue::Unknown,
+        );
+    }
+}
+
+#[test]
 fn inner_environment_scopes_resolve_outer_values_without_self_references() {
     let inputs = BTreeMap::new();
     let workflow: Value = serde_yaml::from_str("env: {OUTER: true}").unwrap();
