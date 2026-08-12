@@ -44,6 +44,23 @@ fn ref_comparisons_apply_known_exclusions_and_reference_kinds() {
 }
 
 #[test]
+fn ref_prefix_functions_use_every_known_reference_shape() {
+    for (shape, prefix, expected) in [
+        ("branch", "refs/heads/", StaticBool::True),
+        ("tag", "refs/tags/", StaticBool::True),
+        ("pull-request-merge", "refs/pull/", StaticBool::True),
+        ("unsupported", "refs/heads/", StaticBool::Unknown),
+    ] {
+        let inputs = InputState::from([(
+            super::inputs::REF_SHAPE_KEY.to_string(),
+            StaticValue::String(shape.into()),
+        )]);
+        let expression = Value::String(format!("startsWith(github.ref, '{prefix}')"));
+        assert_eq!(static_bool(Some(&expression), &inputs), expected, "{shape}");
+    }
+}
+
+#[test]
 fn complete_expression_values_resolve_event_properties_and_conservative_json_inputs() {
     let inputs = InputState::from([
         (
