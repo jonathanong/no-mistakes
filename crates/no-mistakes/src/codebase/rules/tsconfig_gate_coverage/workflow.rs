@@ -8,6 +8,7 @@ use super::{application::project_finding, command_scan, RuleFinding};
 use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
+use std::path::PathBuf;
 
 fn normalized_job_id(value: &Value) -> Option<String> {
     crate::codebase::workflow_topology::value_primitives::string_value(Some(value))
@@ -27,14 +28,18 @@ fn complete_expression_may_be_mapping(value: &str) -> bool {
 }
 
 pub(super) fn ci_typechecked_projects_with_local_actions(
+    root: &std::path::Path,
     workflows: &ParsedWorkflowSet,
     tracked: &BTreeSet<String>,
+    tracked_paths: &[PathBuf],
     project_source_inputs: &super::ProjectSourceInputs,
     local_actions: &BTreeSet<String>,
 ) -> BTreeSet<String> {
     ci_typechecked_projects_with_local_actions_and_stats(
+        root,
         workflows,
         tracked,
+        tracked_paths,
         project_source_inputs,
         local_actions,
     )
@@ -42,14 +47,18 @@ pub(super) fn ci_typechecked_projects_with_local_actions(
 }
 
 pub(super) fn ci_typechecked_projects_with_local_actions_and_stats(
+    root: &std::path::Path,
     workflows: &ParsedWorkflowSet,
     tracked: &BTreeSet<String>,
+    tracked_paths: &[PathBuf],
     project_source_inputs: &super::ProjectSourceInputs,
     local_actions: &BTreeSet<String>,
 ) -> (BTreeSet<String>, usize) {
     reusable::collect_ci_projects_with_local_actions(
+        root,
         workflows,
         tracked,
+        tracked_paths,
         project_source_inputs,
         local_actions,
     )

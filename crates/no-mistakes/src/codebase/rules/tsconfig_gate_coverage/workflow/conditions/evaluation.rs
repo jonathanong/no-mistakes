@@ -11,7 +11,7 @@ mod jobs;
 mod needs;
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use jobs::{
     job_statically_disabled, job_statically_enabled, job_statically_enforcing,
-    job_statically_not_enforcing,
+    job_statically_not_enforcing, job_tolerates_failure,
 };
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::{
     continues_after_failed_need, continues_after_indeterminate_need, continues_after_skipped_need,

@@ -33,10 +33,10 @@ fn needs_output_name(operand: &str) -> Option<(&str, &str)> {
         .get(.."needs".len())
         .filter(|prefix| prefix.eq_ignore_ascii_case("needs"))
         .and_then(|_| operand.get("needs".len()..))?;
-    let (need, remainder) = context_property_segment(remainder)?;
+    let (job, remainder) = context_property_segment(remainder)?;
     let remainder = github_property_segment(remainder, "outputs")?;
     let (output, remainder) = context_property_segment(remainder)?;
-    remainder.trim().is_empty().then_some((need, output))
+    remainder.trim().is_empty().then_some((job, output))
 }
 
 fn step_outcome_name(operand: &str) -> Option<&str> {
@@ -183,8 +183,8 @@ pub(super) fn condition_input_value(
     if let Some(name) = needs_result_name(operand) {
         return Some(super::inputs::needs_result_value(name, inputs));
     }
-    if let Some((need, output)) = needs_output_name(operand) {
-        return Some(super::inputs::needs_output_value(need, output, inputs));
+    if let Some((job, output)) = needs_output_name(operand) {
+        return Some(super::inputs::needs_output_value(job, output, inputs));
     }
     if let Some(name) = step_outcome_name(operand) {
         return Some(environment.step_outcome(name));

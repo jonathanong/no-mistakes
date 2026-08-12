@@ -35,6 +35,25 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_statical
     job_enforcement(value, inputs, after_failed_need).1
 }
 
+/// A failed job with this static setting reports success to downstream needs.
+/// Keep this separate from a false `if:` condition: a failure handler is still
+/// enforcing even though `failure()` is false on an ordinary success path.
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn job_tolerates_failure(
+    value: &Value,
+    inputs: &InputState,
+) -> bool {
+    value
+        .get("continue-on-error")
+        .is_some_and(|continue_on_error| {
+            static_bool_with_status_and_environment(
+                Some(continue_on_error),
+                inputs,
+                &EnvironmentState::default(),
+                ConditionStatus::SUCCESS,
+            ) == StaticBool::True
+        })
+}
+
 fn job_enforcement(value: &Value, inputs: &InputState, after_failed_need: bool) -> (bool, bool) {
     let status = if after_failed_need {
         ConditionStatus::FAILURE

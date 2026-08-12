@@ -11,7 +11,7 @@ use super::validation::{
 };
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    resolve_static_interpolations, EnvironmentState, StaticValue,
+    complete_expression_static_value, StaticValue,
 };
 use serde_yaml::Value;
 use std::collections::BTreeMap;
@@ -68,7 +68,7 @@ fn scan_activation_uncached(
         return None;
     }
     let job_states = JobStates::new(jobs, &state.inputs)?;
-    JobScanner::new(
+    let mut scan = JobScanner::new(
         &job_states,
         triggers,
         WorkflowRuntime {
@@ -80,14 +80,12 @@ fn scan_activation_uncached(
         context,
         memo,
     )
-    .scan(jobs)
-    .map(|mut scan| {
-        scan.outputs = workflow_output_values(document, &state.inputs);
-        scan
-    })
+    .scan(jobs)?;
+    scan.outputs = static_workflow_outputs(document, &state.inputs);
+    Some(scan)
 }
 
-fn workflow_output_values(
+fn static_workflow_outputs(
     document: &WorkflowDocument<'_>,
     inputs: &super::super::conditions::InputState,
 ) -> BTreeMap<String, StaticValue> {
@@ -95,17 +93,14 @@ fn workflow_output_values(
         .call_contract
         .as_ref()
         .into_iter()
-        .flat_map(|contract| &contract.outputs)
-        .map(|(name, output)| {
-            let value = output
-                .value
-                .as_deref()
-                .and_then(|value| {
-                    resolve_static_interpolations(value, inputs, &EnvironmentState::default())
-                })
-                .map(StaticValue::String)
-                .unwrap_or(StaticValue::Unknown);
-            (name.to_lowercase(), value)
+        .flat_map(|contract| contract.outputs.iter())
+        .filter_map(|(name, output)| {
+            let value = complete_expression_static_value(output.value.as_deref()?, inputs)?;
+            value.function_string().map(|value| {
+                // Workflow outputs cross the reusable boundary as strings;
+                // preserve only projections every caller can compare exactly.
+                (name.to_lowercase(), StaticValue::String(value))
+            })
         })
         .collect()
 }

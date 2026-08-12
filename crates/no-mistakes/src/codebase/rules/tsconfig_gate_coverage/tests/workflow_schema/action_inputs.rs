@@ -63,11 +63,14 @@ fn repository_root_local_actions_allow_following_typechecks() {
         )],
     };
     let tracked = BTreeSet::from(["root-action/tsconfig.json".to_string()]);
+    let tracked_paths = tracked.iter().map(PathBuf::from).collect::<Vec<_>>();
 
     assert_eq!(
         super::super::super::workflow::ci_typechecked_projects_with_local_actions_and_stats(
+            Path::new("."),
             &documents,
             &tracked,
+            &tracked_paths,
             &project_inputs(&tracked),
             &BTreeSet::from([String::new()]),
         )
@@ -123,11 +126,14 @@ fn local_actions_require_a_prior_checkout_in_each_job() {
         "reusable-missing/tsconfig.json".to_string(),
         "subdirectory/tsconfig.json".to_string(),
     ]);
+    let tracked_paths = tracked.iter().map(PathBuf::from).collect::<Vec<_>>();
 
     assert_eq!(
         super::super::super::workflow::ci_typechecked_projects_with_local_actions_and_stats(
+            Path::new("."),
             &documents,
             &tracked,
+            &tracked_paths,
             &project_inputs(&tracked),
             &BTreeSet::from([".github/actions/local".to_string()]),
         )

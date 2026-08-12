@@ -20,10 +20,12 @@ pub(super) fn step_working_directory(
         .unwrap_or_else(|| job_cwd.clone())
 }
 
-pub(super) fn working_directory_exists(directory: &str, tracked: &BTreeSet<String>) -> bool {
+pub(super) fn working_directory_exists(directory: &str, visible_paths: &BTreeSet<String>) -> bool {
     directory == "."
-        || tracked.iter().any(|path| {
-            path.strip_prefix(directory)
-                .is_some_and(|suffix| suffix.starts_with('/'))
+        || visible_paths.iter().any(|path| {
+            path == directory
+                || path
+                    .strip_prefix(directory)
+                    .is_some_and(|suffix| suffix.starts_with('/'))
         })
 }

@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde_yaml::Value;
 
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    inputs_with_matrix_values, inputs_with_needs_results, InputState, MatrixState,
+    inputs_with_matrix_values, inputs_with_needs_results, InputState, MatrixState, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
     static_matrix_combinations_for_inputs, MatrixCombinations,
@@ -58,13 +58,7 @@ impl JobStates {
         runtime_skipped: &BTreeSet<String>,
         failed: &BTreeSet<String>,
         executed: &BTreeSet<String>,
-        outputs: &BTreeMap<
-            String,
-            BTreeMap<
-                String,
-                crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::StaticValue,
-            >,
-        >,
+        outputs: &BTreeMap<String, BTreeMap<String, StaticValue>>,
     ) -> Option<Vec<InputState>> {
         Some(
             self.inputs_for(job_id)?

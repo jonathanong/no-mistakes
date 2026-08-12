@@ -1,7 +1,7 @@
 use super::JobScanner;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     continues_after_failed_need, continues_after_indeterminate_need, continues_after_skipped_need,
-    job_statically_disabled, job_statically_enabled,
+    job_statically_disabled, job_statically_enabled, job_tolerates_failure,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use std::collections::{BTreeMap, BTreeSet};
@@ -71,7 +71,11 @@ impl JobScanner<'_, '_> {
                 };
                 let result = self.scan_job(&job_id, job, &inputs, skipped, failed_need)?;
                 projects.extend(result.projects);
-                if result.failed {
+                if result.failed
+                    && inputs
+                        .iter()
+                        .any(|inputs| !job_tolerates_failure(job, inputs))
+                {
                     failed.insert(job_id.clone());
                 }
                 if result.indeterminate || blocked_by_indeterminate_need {

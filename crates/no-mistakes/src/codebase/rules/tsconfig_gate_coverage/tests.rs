@@ -41,9 +41,12 @@ fn ci_typechecked_projects_with_stats(
     tracked: &BTreeSet<String>,
     project_source_inputs: &ProjectSourceInputs,
 ) -> (BTreeSet<String>, usize) {
+    let tracked_paths = tracked.iter().map(PathBuf::from).collect::<Vec<_>>();
     super::workflow::ci_typechecked_projects_with_local_actions_and_stats(
+        Path::new("."),
         workflows,
         tracked,
+        &tracked_paths,
         project_source_inputs,
         &BTreeSet::new(),
     )

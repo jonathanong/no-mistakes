@@ -58,8 +58,10 @@ pub(crate) fn check_with_prepared(
     let local_actions =
         workflow::local_actions::catalog(root, prepared.tracked_paths, prepared.sources);
     let ci_projects = ci_typechecked_projects_with_local_actions(
+        root,
         prepared.workflows,
         &tracked,
+        prepared.tracked_paths,
         prepared.project_source_inputs,
         &local_actions,
     );

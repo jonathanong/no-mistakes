@@ -163,6 +163,47 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
 }
 
 #[test]
+fn exact_branch_activations_must_all_cover_a_project() {
+    let root = fixture_root("reusable-branch-intersection");
+    let report = findings(&root, &config(&root));
+    assert_eq!(report.len(), 1, "{report:#?}");
+    assert_eq!(report[0].file, "app/tsconfig.json");
+    assert!(report[0].message.contains("no CI typecheck registration"));
+}
+
+#[test]
+fn nonexistent_static_working_directories_stop_later_typechecks() {
+    let root = fixture_root("nonexistent-working-directory");
+    let report = findings(&root, &config(&root));
+    assert_eq!(report.len(), 1, "{report:#?}");
+    assert_eq!(report[0].file, "app/tsconfig.json");
+    assert!(report[0].message.contains("no CI typecheck registration"));
+}
+
+#[test]
+fn reusable_static_outputs_activate_downstream_needs_conditions() {
+    let root = fixture_root("reusable-static-outputs");
+    let report = findings(&root, &config(&root));
+    assert!(report.is_empty(), "unexpected findings: {report:#?}");
+}
+
+#[test]
+fn tolerated_failures_are_effective_needs_successes() {
+    let root = fixture_root("tolerated-failure-needs");
+    let report = findings(&root, &config(&root));
+    assert!(report.is_empty(), "unexpected findings: {report:#?}");
+}
+
+#[test]
+fn unsupported_case_functions_do_not_credit_typechecks() {
+    let root = fixture_root("unsupported-case-expression");
+    let report = findings(&root, &config(&root));
+    assert_eq!(report.len(), 1, "{report:#?}");
+    assert_eq!(report[0].file, "app/tsconfig.json");
+    assert!(report[0].message.contains("no CI typecheck registration"));
+}
+
+#[test]
 fn no_check_tsconfigs_do_not_credit_ci_or_local_gates() {
     let root = fixture_root("no-check");
     let report = findings(&root, &config(&root));

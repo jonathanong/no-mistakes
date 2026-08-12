@@ -133,6 +133,35 @@ fn comparisons_resolve_known_compound_unary_and_function_operands() {
 }
 
 #[test]
+fn unsupported_case_functions_remain_unknown() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        (
+            "case(true, 'release', 'nightly') == 'release'",
+            StaticBool::Unknown,
+        ),
+        (
+            "case(false, 'nightly', true, 'release', 'other') == 'release'",
+            StaticBool::Unknown,
+        ),
+        (
+            "case(false, 'nightly', 'release') == true",
+            StaticBool::Unknown,
+        ),
+        (
+            "case(github.ref == 'refs/heads/main', true, false) == true",
+            StaticBool::Unknown,
+        ),
+    ] {
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
     let inputs = InputState::new();
     for (expression, expected) in [

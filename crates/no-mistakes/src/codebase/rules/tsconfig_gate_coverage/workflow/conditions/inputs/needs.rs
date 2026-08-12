@@ -1,9 +1,10 @@
 use super::{InputState, StaticValue};
 use serde_yaml::Value;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 const NEEDS_RESULT_PREFIX: &str = "\0needs.";
 const NEEDS_NOT_SKIPPED_SUFFIX: &str = ".not-skipped";
+const NEEDS_OUTPUTS_SUFFIX: &str = ".outputs.";
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn inputs_with_needs_results(
     parent: &InputState,
@@ -11,7 +12,7 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn inputs_with_
     skipped: &BTreeSet<String>,
     failed: &BTreeSet<String>,
     executed: &BTreeSet<String>,
-    outputs: &BTreeMap<String, BTreeMap<String, StaticValue>>,
+    outputs: &std::collections::BTreeMap<String, std::collections::BTreeMap<String, StaticValue>>,
 ) -> InputState {
     let mut inputs = parent.clone();
     for need in crate::codebase::workflow_topology::value_primitives::string_list(job.get("needs"))
@@ -33,13 +34,10 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn inputs_with_
                 StaticValue::Bool(true),
             );
         }
-        if let Some(outputs) = outputs.get(&need) {
-            for (name, value) in outputs {
+        if executed.contains(&need) {
+            for (name, value) in outputs.get(&need).into_iter().flatten() {
                 inputs.insert(
-                    format!(
-                        "{NEEDS_RESULT_PREFIX}{need}.outputs.{}",
-                        name.to_lowercase()
-                    ),
+                    format!("{NEEDS_RESULT_PREFIX}{need}{NEEDS_OUTPUTS_SUFFIX}{name}"),
                     value.clone(),
                 );
             }
@@ -49,14 +47,14 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn inputs_with_
 }
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn needs_output_value(
-    need: &str,
+    job: &str,
     output: &str,
     inputs: &InputState,
 ) -> StaticValue {
     inputs
         .get(&format!(
-            "{NEEDS_RESULT_PREFIX}{}.outputs.{}",
-            need.to_lowercase(),
+            "{NEEDS_RESULT_PREFIX}{}{NEEDS_OUTPUTS_SUFFIX}{}",
+            job.to_lowercase(),
             output.to_lowercase()
         ))
         .cloned()
@@ -85,7 +83,3 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn needs_result
         .cloned()
         .unwrap_or(StaticValue::Unknown)
 }
-
-#[cfg(test)]
-#[path = "needs_tests.rs"]
-mod tests;

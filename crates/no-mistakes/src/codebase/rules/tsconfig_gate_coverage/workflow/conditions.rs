@@ -24,7 +24,7 @@ pub(super) use evaluation::{
 pub(super) use evaluation::{
     expression_bool, expression_bool_with_status_and_environment, job_statically_disabled,
     job_statically_enabled, job_statically_enforcing, job_statically_not_enforcing,
-    job_timeout_minutes_validity, step_timeout_minutes_validity,
+    job_timeout_minutes_validity, job_tolerates_failure, step_timeout_minutes_validity,
 };
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,

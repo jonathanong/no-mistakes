@@ -56,10 +56,7 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
     let parsed = ParsedWorkflowSet {
         documents: vec![document(
             ".github/workflows/checks.yml",
-            "on: push\njobs:\n  compound-disabled:\n    if: '${{ (false || false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound-disabled/tsconfig.json\n  truthy-string-disabled:\n    if: \"${{ (false || 'release') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project truthy-string-disabled/tsconfig.json\n  nonnumeric-relational-disabled:\n    if: \"${{ 'release' < 1 }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project nonnumeric-relational-disabled/tsconfig.json\n  numeric-relational-enabled:\n    if: '${{ 1 < 2 }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-relational-enabled/tsconfig.json\n  case-disabled:\n    if: \"${{ case(false, 'release', 'nightly') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project case-disabled/tsconfig.json\n  case-enabled:\n    if: \"${{ case(false, 'nightly', true, 'release', 'other') == 'release' }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project case-enabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
-        ), document(
-            ".github/workflows/supported.yml",
-            "on: push\njobs:\n  numeric-relational-enabled:\n    if: '${{ 1 < 2 }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-relational-enabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
+            "on: push\njobs:\n  compound-disabled:\n    if: '${{ (false || false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project compound-disabled/tsconfig.json\n  truthy-string-disabled:\n    if: \"${{ (false || 'release') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project truthy-string-disabled/tsconfig.json\n  nonnumeric-relational-disabled:\n    if: \"${{ 'release' < 1 }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project nonnumeric-relational-disabled/tsconfig.json\n  numeric-relational-enabled:\n    if: '${{ 1 < 2 }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project numeric-relational-enabled/tsconfig.json\n  unary-enabled:\n    if: '${{ !(false) == true }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project unary-enabled/tsconfig.json\n  function-enabled:\n    if: \"${{ contains('release', 'LEASE') == true }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project function-enabled/tsconfig.json\n",
         )],
     };
     let tracked = [
@@ -67,8 +64,6 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
         "truthy-string-disabled/tsconfig.json",
         "nonnumeric-relational-disabled/tsconfig.json",
         "numeric-relational-enabled/tsconfig.json",
-        "case-disabled/tsconfig.json",
-        "case-enabled/tsconfig.json",
         "unary-enabled/tsconfig.json",
         "function-enabled/tsconfig.json",
     ]

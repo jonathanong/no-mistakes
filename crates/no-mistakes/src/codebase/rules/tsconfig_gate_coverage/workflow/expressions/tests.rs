@@ -83,7 +83,7 @@ fn rejects_documented_functions_with_invalid_arities() {
         "${{ toJSON() }}",
         "${{ fromJSON() }}",
         "${{ hashFiles() }}",
-        "${{ case(true, 'matched', 'fallback') }}",
+        "${{ case(true, 'matched', 'other') }}",
         "${{ success(1) }}",
         "${{ failure(1) }}",
         "${{ always(1) }}",

@@ -16,10 +16,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod configuration;
 mod order;
-mod outputs;
 mod scanner;
 use configuration::job_configuration_validity;
-use outputs::merge_reusable_outputs;
 pub(super) use scanner::{JobScanner, WorkflowRuntime};
 
 impl<'a, 'workflow> JobScanner<'a, 'workflow> {
@@ -73,7 +71,12 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         let contract = callee.call_contract.as_ref()?;
         let callee_secrets = callee_secrets(contract, job, &self.state.secrets)?;
         let mut projects = BTreeSet::new();
-        let mut outputs = None;
+        let mut outputs: Option<
+            BTreeMap<
+                String,
+                crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::StaticValue,
+            >,
+        > = None;
         let mut failed = false;
         let mut indeterminate = false;
         let has_instances = !inputs.is_empty();
@@ -100,13 +103,22 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 self.memo,
             )?;
             if has_instances && !skipped {
-                merge_reusable_outputs(&mut outputs, &callee_scan);
                 if !job_statically_not_enforcing(job, inputs) {
                     projects.extend(callee_scan.projects);
                 }
                 failed |= callee_scan.failed && job_statically_enforcing(job, inputs, failed_need);
                 indeterminate |=
                     callee_scan.indeterminate && job_statically_enforcing(job, inputs, failed_need);
+                if !callee_scan.failed && !callee_scan.indeterminate {
+                    outputs = Some(match outputs {
+                        Some(mut shared) => {
+                            shared
+                                .retain(|name, value| callee_scan.outputs.get(name) == Some(value));
+                            shared
+                        }
+                        None => callee_scan.outputs,
+                    });
+                }
             }
         }
         Some(ActivationScan {

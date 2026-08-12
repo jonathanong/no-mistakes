@@ -5,5 +5,16 @@ pub(super) fn collect_ci_projects_with_stats(
     tracked: &BTreeSet<String>,
     project_source_inputs: &ProjectSourceInputs,
 ) -> (BTreeSet<String>, usize) {
-    collect_ci_projects_with_local_actions(parsed, tracked, project_source_inputs, &BTreeSet::new())
+    let tracked_paths = tracked
+        .iter()
+        .map(std::path::PathBuf::from)
+        .collect::<Vec<_>>();
+    collect_ci_projects_with_local_actions(
+        std::path::Path::new("."),
+        parsed,
+        tracked,
+        &tracked_paths,
+        project_source_inputs,
+        &BTreeSet::new(),
+    )
 }

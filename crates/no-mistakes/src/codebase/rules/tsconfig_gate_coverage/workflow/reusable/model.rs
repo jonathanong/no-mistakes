@@ -1,4 +1,4 @@
-use super::super::conditions::{InputState, SecretState, StaticValue};
+use super::super::conditions::{InputState, SecretState};
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 use crate::codebase::workflow_topology::model::WorkflowCallContract;
 use serde_yaml::Value;
@@ -19,6 +19,9 @@ pub(super) struct WorkflowDocument<'a> {
 pub(super) struct ScanContext<'a> {
     pub(super) workflows: BTreeMap<String, WorkflowDocument<'a>>,
     pub(super) tracked: &'a BTreeSet<String>,
+    /// This request-owned inventory proves which static working directories
+    /// exist without creating another discovery pass for reusable workflows.
+    pub(super) visible_paths: BTreeSet<String>,
     pub(super) project_source_inputs: &'a ProjectSourceInputs,
     pub(super) local_actions: &'a BTreeSet<String>,
 }
@@ -104,7 +107,8 @@ pub(super) struct ActivationKey {
 #[derive(Clone)]
 pub(super) struct ActivationScan {
     pub(super) projects: BTreeSet<String>,
-    pub(super) outputs: BTreeMap<String, StaticValue>,
+    /// Static reusable-workflow outputs shared by every viable activation.
+    pub(super) outputs: BTreeMap<String, super::super::conditions::StaticValue>,
     pub(super) failed: bool,
     pub(super) indeterminate: bool,
 }

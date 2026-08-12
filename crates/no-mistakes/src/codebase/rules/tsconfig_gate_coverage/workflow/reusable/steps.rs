@@ -1,6 +1,8 @@
 use super::ScanContext;
-use crate::codebase::ci_graph::triggers::CompiledTriggers;
-use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
+use crate::codebase::ci_graph::triggers::{CompiledTriggers, TriggerMatch};
+use crate::codebase::rules::tsconfig_gate_coverage::{
+    application::resolve_gate_project_against_tracked, command_scan,
+};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
@@ -15,12 +17,9 @@ use super::validation::action_step_inputs_valid_for_state;
 
 mod checkout;
 mod configuration;
-mod failure;
 mod local_action;
 mod model;
-mod projects;
 mod working_directory;
-use model::run_command;
 pub(super) use model::StepScan;
 use working_directory::{step_working_directory, working_directory_exists};
 use {
@@ -83,11 +82,12 @@ pub(super) fn scan_job_steps(
             }
             StaticBool::True => {}
         }
-        let uses_action = step.get("uses").is_some();
-        if continue_on_error && uses_action {
+        if continue_on_error && step.get("uses").is_some() {
             continue;
         }
-        if uses_action && !action_step_inputs_valid_for_state(step, inputs, &environment) {
+        if step.get("uses").is_some()
+            && !action_step_inputs_valid_for_state(step, inputs, &environment)
+        {
             if condition == StaticBool::True {
                 step_outcomes.record(step, StaticValue::String("failure".to_string()));
             }
@@ -96,33 +96,26 @@ pub(super) fn scan_job_steps(
         }
         if let Some(available) = local_action::available(step, &checkout, context.local_actions) {
             if !available {
-                failure::record_unavailable(
-                    step,
-                    condition,
-                    &mut step_outcomes,
-                    &mut failed,
-                    &mut indeterminate,
-                );
+                if condition == StaticBool::True {
+                    step_outcomes.record(step, StaticValue::String("failure".to_string()));
+                    failed = true;
+                } else {
+                    indeterminate = true;
+                }
                 break;
             }
             continue;
         }
         checkout.observe(step, condition);
-        let step_cwd = step_working_directory(step, inputs, &environment, &job_cwd);
-        let Some(cwd) = step_cwd else {
+        let Some(cwd) = step_working_directory(step, inputs, &environment, &job_cwd) else {
             continue;
         };
-        if !working_directory_exists(&cwd, context.tracked) {
-            failure::record_unavailable(
-                step,
-                condition,
-                &mut step_outcomes,
-                &mut failed,
-                &mut indeterminate,
-            );
+        if !working_directory_exists(&cwd, &context.visible_paths) {
+            failed |= condition == StaticBool::True;
+            indeterminate |= condition != StaticBool::True;
             break;
         }
-        let Some(run) = run_command(step) else {
+        let Some(run) = model::run_command(step) else {
             continue;
         };
         let Some(run) =
@@ -163,14 +156,29 @@ pub(super) fn scan_job_steps(
             pipefail_enforced,
         );
         let run_to_scan = reachable_run.as_str();
+        let scanned = if failure_enforced {
+            command_scan::scan_shell_for_typechecked_projects(run_to_scan, &cwd)
+        } else {
+            command_scan::scan_workflow_shell_for_typechecked_projects(run_to_scan, &cwd, false)
+        };
         if !continue_on_error {
-            projects.extend(projects::scan(
-                run_to_scan,
-                &cwd,
-                failure_enforced,
-                triggers,
-                context,
-            ));
+            for project in scanned {
+                let project = resolve_gate_project_against_tracked(&project, context.tracked);
+                if context
+                    .project_source_inputs
+                    .get(&project)
+                    .is_some_and(|source_inputs| {
+                        source_inputs.iter().all(|input| {
+                            matches!(
+                                triggers.evaluate(input).0,
+                                TriggerMatch::Matched | TriggerMatch::Always
+                            )
+                        })
+                    })
+                {
+                    projects.insert(project);
+                }
+            }
         }
         let pipeline_failure = pipefail_enforced
             && command_scan::shell_body_has_static_pipeline_failure(&run, failure_enforced);
