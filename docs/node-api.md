@@ -246,6 +246,19 @@ edges.
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 
+The Node declarations model the stable report DTOs for `fetches()`, `queues()`,
+`reactAnalyze()`, and `check()`. Fetch reports use `FetchOccurrence`,
+`DuplicateApiCall`, and `UnsupportedApiCall`; queue reports use typed producer,
+worker, job, edge, diagnostic, and check-finding records; React component facts
+use typed fetch calls, child references, and inherited aggregate facts. Rust
+fields with `skip_serializing_if` are optional in TypeScript and omitted from
+JSON when absent; other nullable Rust fields are represented as `string | null`.
+Check reports optionally include `suppressed` when `includeSuppressed: true` is
+passed. Each `SuppressedFinding` records its domain, rule, source file, reason,
+and the matching `file`, `line`, or `nextLine` directive. The report DTOs live in
+focused `*-report-types.d.ts` modules and are exported from `no-mistakes` through
+the `report-types.d.ts` barrel.
+
 `validateMermaidMarkdown({ content, file? })` validates Mermaid fences in an
 in-memory Markdown or MDX document without reading the filesystem. It resolves
 asynchronously with `{ valid, diagramCount, diagnostics }`; each diagnostic

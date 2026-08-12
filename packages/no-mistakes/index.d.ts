@@ -10,6 +10,7 @@ import type {
   DependencyResult,
   ExportsOfOptions,
   ExportsOfResult,
+  FetchReport,
   FetchesOptions,
   FlowOptions,
   FlowReport,
@@ -27,6 +28,8 @@ import type {
   PlaywrightOptions,
   PlaywrightRelatedOptions,
   ProjectOptions,
+  QueueCheckFinding,
+  QueueEdge,
   QueueReport,
   ReactComponentFacts,
   ReactUsagesReport,
@@ -92,7 +95,7 @@ export function resolveCheck(
 export function resolveCheck(
   options: WithInvocationOptions<ResolveCheckFilesOptions>,
 ): Promise<ResolveCheckBatchResult>;
-export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<unknown>;
+export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<FetchReport>;
 export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
 export function check(options?: WithInvocationOptions<CheckOptions>): Promise<CheckReport>;
 export function validateMermaidMarkdown(
@@ -128,9 +131,11 @@ export function playwrightTests(
   options?: WithInvocationOptions<PlaywrightOptions>,
 ): Promise<unknown>;
 export function queues(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueReport>;
-export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<GraphEdge[]>;
-export function queueRelated(options: WithInvocationOptions<ProjectOptions>): Promise<GraphEdge[]>;
-export function queueCheck(options?: WithInvocationOptions<ProjectOptions>): Promise<unknown[]>;
+export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
+export function queueRelated(options: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
+export function queueCheck(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<QueueCheckFinding[]>;
 export function serverRoutes(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<ServerRoutesReport>;
