@@ -39,3 +39,17 @@ fn reusable_workflow_outputs_flow_to_callers_needs_context() {
         ])
     );
 }
+
+#[test]
+fn reusable_workflow_outputs_resolve_completed_job_outputs() {
+    let caller = document(
+        ".github/workflows/caller-job-output.yml",
+        "on: push\njobs:\n  call:\n    uses: ./.github/workflows/job-output.yml\n  blocked:\n    needs: call\n    if: needs.call.outputs.enabled == 'true'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p blocked/tsconfig.json\n",
+    );
+    let callee = document(
+        ".github/workflows/job-output.yml",
+        "on:\n  workflow_call:\n    outputs:\n      enabled: {value: '${{ jobs.complete.outputs.enabled }}'}\njobs:\n  complete:\n    runs-on: ubuntu-latest\n    outputs: {enabled: '${{ false }}'}\n    steps:\n      - run: echo complete\n",
+    );
+
+    assert!(scanned_projects(vec![caller, callee], &["blocked"]).is_empty());
+}

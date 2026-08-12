@@ -1,6 +1,7 @@
 use super::{EnvironmentState, InputState, StaticValue};
 
 mod properties;
+pub(crate) use properties::context_output_name;
 use properties::{context_property_name, context_property_segment, github_property_segment};
 pub(super) use properties::{
     github_base_ref, github_event_action, github_event_name, github_ref, github_ref_name,
@@ -13,6 +14,21 @@ pub(super) fn input_name(operand: &str) -> Option<&str> {
 
 pub(super) fn matrix_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "matrix")
+}
+
+fn matrix_property_path(operand: &str) -> Option<Vec<&str>> {
+    let operand = operand.trim();
+    let mut remainder = operand
+        .get(.."matrix".len())
+        .filter(|prefix| prefix.eq_ignore_ascii_case("matrix"))
+        .and_then(|_| operand.get("matrix".len()..))?;
+    let mut path = Vec::new();
+    while !remainder.trim().is_empty() {
+        let (name, next) = context_property_segment(remainder)?;
+        path.push(name);
+        remainder = next;
+    }
+    (!path.is_empty()).then_some(path)
 }
 
 fn strategy_name(operand: &str) -> Option<&str> {
@@ -40,18 +56,6 @@ fn needs_result_name(operand: &str) -> Option<&str> {
     let (name, remainder) = context_property_segment(remainder)?;
     let remainder = github_property_segment(remainder, "result")?;
     remainder.trim().is_empty().then_some(name)
-}
-
-fn needs_output_name(operand: &str) -> Option<(&str, &str)> {
-    let operand = operand.trim();
-    let remainder = operand
-        .get(.."needs".len())
-        .filter(|prefix| prefix.eq_ignore_ascii_case("needs"))
-        .and_then(|_| operand.get("needs".len()..))?;
-    let (job, remainder) = context_property_segment(remainder)?;
-    let remainder = github_property_segment(remainder, "outputs")?;
-    let (output, remainder) = context_property_segment(remainder)?;
-    remainder.trim().is_empty().then_some((job, output))
 }
 
 fn step_result_name(operand: &str) -> Option<(&str, StepResult)> {
@@ -109,6 +113,30 @@ pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticVa
         })
 }
 
+fn matrix_property_path_value(path: &[&str], inputs: &InputState) -> StaticValue {
+    let mut key = format!(
+        "{}{}",
+        super::inputs::MATRIX_VALUE_PREFIX,
+        path[0].to_lowercase()
+    );
+    let Some(mut value) = inputs.get(&key).cloned() else {
+        return matrix_property_value(path[0], inputs);
+    };
+    for name in &path[1..] {
+        if !matches!(value, StaticValue::MatrixMapping(_)) {
+            return StaticValue::Unknown;
+        }
+        key.push('.');
+        key.push_str(&name.to_lowercase());
+        value = inputs
+            .get(&key)
+            .cloned()
+            // A missing property of a known object coerces to an empty string.
+            .unwrap_or_else(|| StaticValue::String(String::new()));
+    }
+    value
+}
+
 fn strategy_property_value(name: &str, inputs: &InputState) -> StaticValue {
     inputs
         .get(&format!(
@@ -143,7 +171,7 @@ pub(super) fn condition_input_value(
     if let Some(name) = needs_result_name(operand) {
         return Some(super::inputs::needs_result_value(name, inputs));
     }
-    if let Some((job, output)) = needs_output_name(operand) {
+    if let Some((job, output)) = context_output_name(operand, "needs") {
         return Some(super::inputs::needs_output_value(job, output, inputs));
     }
     if let Some((name, result)) = step_result_name(operand) {
@@ -158,6 +186,6 @@ pub(super) fn condition_input_value(
     if let Some(name) = strategy_name(operand) {
         return Some(strategy_property_value(name, inputs));
     }
-    let name = matrix_name(operand)?;
-    Some(matrix_property_value(name, inputs))
+    let path = matrix_property_path(operand)?;
+    Some(matrix_property_path_value(&path, inputs))
 }

@@ -107,6 +107,7 @@ impl JobScanner<'_, '_> {
         Some(ActivationScan {
             projects,
             outputs: BTreeMap::new(),
+            job_outputs: outputs,
             failed: !failed.is_empty(),
             indeterminate: !indeterminate.is_empty(),
         })

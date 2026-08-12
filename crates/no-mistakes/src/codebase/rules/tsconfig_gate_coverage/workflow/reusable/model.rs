@@ -110,6 +110,9 @@ pub(super) struct ActivationScan {
     pub(super) projects: BTreeSet<String>,
     /// Static reusable-workflow outputs shared by every viable activation.
     pub(super) outputs: BTreeMap<String, super::super::conditions::StaticValue>,
+    /// Completed jobs' outputs, retained until workflow_call outputs are projected.
+    pub(super) job_outputs:
+        BTreeMap<String, BTreeMap<String, super::super::conditions::StaticValue>>,
     pub(super) failed: bool,
     pub(super) indeterminate: bool,
 }

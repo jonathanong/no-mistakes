@@ -159,7 +159,14 @@ fn selected_exact(patterns: &[&str], candidate: &str) -> bool {
         let (negated, pattern) = pattern
             .strip_prefix('!')
             .map_or((false, *pattern), |pattern| (true, pattern));
-        if pattern == candidate {
+        let matches = pattern == candidate
+            || (!is_exact_pattern(pattern)
+                && globset::GlobBuilder::new(pattern)
+                    .literal_separator(true)
+                    .build()
+                    .ok()
+                    .is_some_and(|glob| glob.compile_matcher().is_match(candidate)));
+        if matches {
             selected = !negated;
         }
     }

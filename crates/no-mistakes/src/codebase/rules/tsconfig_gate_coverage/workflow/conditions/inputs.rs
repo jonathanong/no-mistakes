@@ -1,4 +1,6 @@
-use super::contracts::{input_contract_valid, normalized_name, workflow_call_contract_valid};
+use super::contracts::{
+    input_contract_valid, normalized_name, valid_identifier, workflow_call_contract_valid,
+};
 use super::{InputState, StaticValue};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::GithubEventContext;
 use crate::codebase::workflow_topology::model::{
@@ -45,18 +47,28 @@ pub(crate) fn inputs_with_matrix_values(
     let mut inputs = parent.clone();
     for (name, value) in matrix_values {
         let key = format!("{MATRIX_VALUE_PREFIX}{}", name.to_lowercase());
-        let value = match value {
-            Value::Mapping(_) => Some(StaticValue::MatrixMapping(key.clone())),
-            value => values::matrix_axis_value(value),
-        };
-        if let Some(value) = value {
-            inputs.insert(key, value);
-        }
+        insert_matrix_value(&mut inputs, key, value);
     }
     if matches!(matrix_state, MatrixState::Dynamic) {
         inputs.insert(DYNAMIC_MATRIX_KEY.to_string(), StaticValue::Unknown);
     }
     inputs
+}
+
+fn insert_matrix_value(inputs: &mut InputState, key: String, value: &Value) {
+    let value = match value {
+        Value::Mapping(mapping) => {
+            for (name, value) in mapping {
+                let Some(name) = name.as_str().filter(|name| valid_identifier(name)) else {
+                    continue;
+                };
+                insert_matrix_value(inputs, format!("{key}.{}", name.to_lowercase()), value);
+            }
+            StaticValue::MatrixMapping(key.clone())
+        }
+        value => values::matrix_axis_value(value).unwrap_or(StaticValue::NonStringable),
+    };
+    inputs.insert(key, value);
 }
 
 pub(crate) use strategy::{

@@ -52,6 +52,9 @@ fn static_expression_value(
     if let Some(value) = static_from_json_expression(expression, inputs, environment) {
         return Some(value);
     }
+    if let Some(value) = static_to_json_expression(expression, inputs, environment) {
+        return Some(value);
+    }
     super::resolution::condition_input_value(expression, inputs, environment).or_else(|| {
         super::condition_values::condition_value(
             expression,
@@ -60,6 +63,24 @@ fn static_expression_value(
             super::ConditionStatus::SUCCESS,
         )
     })
+}
+
+pub(super) fn static_to_json_expression(
+    expression: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> Option<StaticValue> {
+    let call = super::super::expressions::condition_function_call(expression)?;
+    (call.function == super::super::expressions::Function::ToJson && call.arguments.len() == 1)
+        .then(|| {
+            super::condition_values::condition_value(
+                call.arguments[0],
+                inputs,
+                environment,
+                super::ConditionStatus::SUCCESS,
+            )
+            .and_then(super::static_json::to_json_static_value)
+        })?
 }
 
 pub(super) fn static_from_json_expression(

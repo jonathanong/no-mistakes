@@ -41,6 +41,21 @@ pub(super) fn context_property_segment(remainder: &str) -> Option<(&str, &str)> 
     valid_identifier(name).then_some((name, remainder))
 }
 
+pub(crate) fn context_output_name<'a>(
+    operand: &'a str,
+    context: &str,
+) -> Option<(&'a str, &'a str)> {
+    let operand = operand.trim();
+    let remainder = operand
+        .get(..context.len())
+        .filter(|prefix| prefix.eq_ignore_ascii_case(context))
+        .and_then(|_| operand.get(context.len()..))?;
+    let (job, remainder) = context_property_segment(remainder)?;
+    let remainder = github_property_segment(remainder, "outputs")?;
+    let (output, remainder) = context_property_segment(remainder)?;
+    remainder.trim().is_empty().then_some((job, output))
+}
+
 pub(in super::super) fn github_event_name(operand: &str) -> bool {
     github_event_property(operand, &["event_name"])
 }

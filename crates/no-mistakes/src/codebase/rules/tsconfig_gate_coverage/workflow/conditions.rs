@@ -36,6 +36,7 @@ use inputs::{
     event_ref_type_value,
 };
 use resolution::condition_input_value;
+pub(crate) use resolution::context_output_name;
 pub(crate) use static_values::complete_expression_static_string_value;
 pub(super) use step_evaluation::{
     continue_on_error_enabled, step_condition_with_status, step_continue_on_error_value_valid,
@@ -193,3 +194,5 @@ mod review_tests;
 mod tests;
 #[cfg(test)]
 mod timeout_tests;
+#[cfg(test)]
+mod to_json_tests;

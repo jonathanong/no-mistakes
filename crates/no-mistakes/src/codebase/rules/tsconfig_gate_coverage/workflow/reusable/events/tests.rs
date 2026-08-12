@@ -140,6 +140,14 @@ fn mixed_exact_and_wildcard_branch_filters_preserve_every_activation_alternative
 }
 
 #[test]
+fn wildcard_negations_remove_exact_branch_candidates_in_order() {
+    let workflow: Value =
+        serde_yaml::from_str("on:\n  push:\n    branches: [main, '!m*']").unwrap();
+
+    assert!(source_change_event_contexts(&workflow, "push").is_empty());
+}
+
+#[test]
 fn pull_request_merge_ref_retains_the_exact_base_ref() {
     let workflow: Value = serde_yaml::from_str(
         "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]",

@@ -164,6 +164,9 @@ missing properties coerce to an empty string. Static `format` calls support
 zero-based placeholders and doubled-brace escapes, including when composed
 inside the other supported string functions. Static `join` calls support
 literal arrays, scalar values, and the default comma separator.
+Static `toJSON` calls serialize known scalar values and arrays with GitHub's
+pretty-printed JSON representation; values whose object structure is not
+retained by the static model remain dynamic rather than gaining coverage.
 Expressions whose result remains dynamic fail open as potentially runnable.
 Known malformed `fromJSON` inputs are expression errors and do not provide
 coverage, including through comparisons, logical operators, or string functions.

@@ -66,3 +66,27 @@ fn static_object_matrix_values_remain_known_truthy_nonstringable_properties() {
         StaticBool::False
     );
 }
+
+#[test]
+fn static_matrix_object_properties_preserve_scalar_values_by_path() {
+    let matrix_values = BTreeMap::from([(
+        "cfg".to_string(),
+        serde_yaml::from_str("{enabled: false, nested: {enabled: true}}").unwrap(),
+    )]);
+    let inputs = inputs_with_matrix_values(&InputState::new(), &matrix_values, MatrixState::Static);
+
+    assert_eq!(
+        static_bool(
+            Some(&Value::String("${{ matrix.cfg.enabled == false }}".into())),
+            &inputs
+        ),
+        StaticBool::True
+    );
+    assert_eq!(
+        static_bool(
+            Some(&Value::String("${{ matrix.cfg.nested.enabled }}".into())),
+            &inputs
+        ),
+        StaticBool::True
+    );
+}

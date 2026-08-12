@@ -56,6 +56,7 @@ pub(super) fn condition_value(
     }
     literal_from_json_static_value(operand)
         .or_else(|| super::static_values::static_from_json_expression(operand, inputs, environment))
+        .or_else(|| super::static_values::static_to_json_expression(operand, inputs, environment))
         .or_else(|| condition_input_value(operand, inputs, environment))
         .or_else(|| comparison_literal(operand))
         .or_else(|| {

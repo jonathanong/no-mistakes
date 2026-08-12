@@ -26,6 +26,7 @@ impl JobScanner<'_, '_> {
             return ActivationScan {
                 projects: BTreeSet::new(),
                 outputs: BTreeMap::new(),
+                job_outputs: BTreeMap::new(),
                 failed: false,
                 indeterminate: false,
             };
@@ -107,6 +108,7 @@ impl JobScanner<'_, '_> {
         ActivationScan {
             projects,
             outputs: outputs.unwrap_or_default(),
+            job_outputs: BTreeMap::new(),
             failed,
             indeterminate,
         }

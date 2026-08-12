@@ -81,13 +81,14 @@ fn scan_activation_uncached(
         memo,
     )
     .scan(jobs)?;
-    scan.outputs = static_workflow_outputs(document, &state.inputs);
+    scan.outputs = static_workflow_outputs(document, &state.inputs, &scan.job_outputs);
     Some(scan)
 }
 
 fn static_workflow_outputs(
     document: &WorkflowDocument<'_>,
     inputs: &super::super::conditions::InputState,
+    job_outputs: &BTreeMap<String, BTreeMap<String, StaticValue>>,
 ) -> BTreeMap<String, StaticValue> {
     document
         .call_contract
@@ -95,7 +96,9 @@ fn static_workflow_outputs(
         .into_iter()
         .flat_map(|contract| contract.outputs.iter())
         .filter_map(|(name, output)| {
-            let value = complete_expression_static_value(output.value.as_deref()?, inputs)?;
+            let expression = output.value.as_deref()?;
+            let value = static_job_output_value(expression, job_outputs)
+                .or_else(|| complete_expression_static_value(expression, inputs))?;
             value.function_string().map(|value| {
                 // Workflow outputs cross the reusable boundary as strings;
                 // preserve only projections every caller can compare exactly.
@@ -103,6 +106,18 @@ fn static_workflow_outputs(
             })
         })
         .collect()
+}
+
+fn static_job_output_value(
+    value: &str,
+    job_outputs: &BTreeMap<String, BTreeMap<String, StaticValue>>,
+) -> Option<StaticValue> {
+    let expression = value.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
+    let (job, output) = super::super::conditions::context_output_name(expression, "jobs")?;
+    job_outputs
+        .get(&job.to_lowercase())?
+        .get(&output.to_lowercase())
+        .cloned()
 }
 
 fn reusable_call_target(job: &Value) -> Option<Option<&str>> {

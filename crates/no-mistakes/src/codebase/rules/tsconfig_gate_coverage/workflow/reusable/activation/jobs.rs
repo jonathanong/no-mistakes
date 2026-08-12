@@ -59,6 +59,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             return Some(ActivationScan {
                 projects: BTreeSet::new(),
                 outputs: BTreeMap::new(),
+                job_outputs: BTreeMap::new(),
                 failed: false,
                 indeterminate: false,
             });
@@ -121,6 +122,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         Some(ActivationScan {
             projects,
             outputs: outputs.unwrap_or_default(),
+            job_outputs: BTreeMap::new(),
             failed,
             indeterminate,
         })
