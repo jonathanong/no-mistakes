@@ -4,7 +4,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     input_value::comparison_literal,
     resolution::{
         github_base_ref, github_event_action, github_event_name, github_ref_name, input_name,
-        matrix_name, matrix_property_value,
+        matrix_property_path, matrix_property_path_value,
     },
     InputState, StaticBool, StaticValue,
 };
@@ -87,8 +87,8 @@ pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Optio
     if github_base_ref(body) {
         return event_base_ref_value(parent);
     }
-    if let Some(name) = matrix_name(body) {
-        return Some(matrix_property_value(name, parent));
+    if let Some(path) = matrix_property_path(body) {
+        return Some(matrix_property_path_value(&path, parent));
     }
     let name = input_name(body)?;
     parent.get(&name.to_lowercase()).cloned()

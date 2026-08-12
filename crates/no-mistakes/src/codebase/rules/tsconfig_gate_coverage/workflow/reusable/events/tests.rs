@@ -49,6 +49,12 @@ fn source_change_event_contexts_select_only_synchronize_activities() {
             "pull_request",
             vec![],
         ),
+        // A wildcard negation also removes an earlier exact inclusion.
+        (
+            "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main, '!m*']",
+            "pull_request",
+            vec![],
+        ),
     ] {
         let workflow: Value = serde_yaml::from_str(yaml).unwrap();
         let actual = source_change_event_contexts(&workflow, event)

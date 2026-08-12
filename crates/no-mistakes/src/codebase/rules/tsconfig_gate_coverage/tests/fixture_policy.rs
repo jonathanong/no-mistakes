@@ -178,6 +178,10 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "tags-only/tsconfig.json",
             "trigger-typo/tsconfig.json",
             "sparse-checkout/tsconfig.json",
+            "wildcard-negation/tsconfig.json",
+            "matrix-object/tsconfig.json",
+            "to-json/tsconfig.json",
+            "workflow-job-output/tsconfig.json",
         ]),
         "{report:#?}"
     );
@@ -242,6 +246,16 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     }
     // pnpm permits an optional command separator before a static typecheck.
     assert!(!uncovered.contains("pnpm-separator/tsconfig.json"));
+    // Ordered wildcard negations, nested matrices, static JSON, and callee
+    // job outputs each make these otherwise plausible typechecks unreachable.
+    for project in [
+        "wildcard-negation/tsconfig.json",
+        "matrix-object/tsconfig.json",
+        "to-json/tsconfig.json",
+        "workflow-job-output/tsconfig.json",
+    ] {
+        assert!(uncovered.contains(project));
+    }
 }
 
 #[test]

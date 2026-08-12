@@ -180,6 +180,22 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, tags-only/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-wildcard-negation
+      command: [pnpm, exec, tsc, --noEmit, --project, wildcard-negation/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-matrix-object
+      command: [pnpm, exec, tsc, --noEmit, --project, matrix-object/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-to-json
+      command: [pnpm, exec, tsc, --noEmit, --project, to-json/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-workflow-job-output
+      command: [pnpm, exec, tsc, --noEmit, --project, workflow-job-output/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

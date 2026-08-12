@@ -1,0 +1,11 @@
+on: push
+jobs:
+  call:
+    uses: ./.github/workflows/job-output-callee.yml
+  blocked:
+    needs: call
+    if: needs.call.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      # The completed callee job exposes a false reusable-workflow output.
+      - run: pnpm exec tsc --noEmit --project workflow-job-output/tsconfig.json

@@ -71,7 +71,7 @@ fn static_object_matrix_values_remain_known_truthy_nonstringable_properties() {
 fn static_matrix_object_properties_preserve_scalar_values_by_path() {
     let matrix_values = BTreeMap::from([(
         "cfg".to_string(),
-        serde_yaml::from_str("{enabled: false, nested: {enabled: true}}").unwrap(),
+        serde_yaml::from_str("{enabled: false, nested: {enabled: true, package: app}}").unwrap(),
     )]);
     let inputs = inputs_with_matrix_values(&InputState::new(), &matrix_values, MatrixState::Static);
 
@@ -82,9 +82,12 @@ fn static_matrix_object_properties_preserve_scalar_values_by_path() {
         ),
         StaticBool::True
     );
+    // Bracket and dot paths must resolve the same nested static mapping value.
     assert_eq!(
         static_bool(
-            Some(&Value::String("${{ matrix.cfg.nested.enabled }}".into())),
+            Some(&Value::String(
+                "${{ matrix['cfg'].nested.package == 'app' }}".into()
+            )),
             &inputs
         ),
         StaticBool::True

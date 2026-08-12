@@ -12,11 +12,7 @@ pub(super) fn input_name(operand: &str) -> Option<&str> {
     context_property_name(operand, "inputs")
 }
 
-pub(super) fn matrix_name(operand: &str) -> Option<&str> {
-    context_property_name(operand, "matrix")
-}
-
-fn matrix_property_path(operand: &str) -> Option<Vec<&str>> {
+pub(super) fn matrix_property_path(operand: &str) -> Option<Vec<&str>> {
     let operand = operand.trim();
     let mut remainder = operand
         .get(.."matrix".len())
@@ -113,7 +109,7 @@ pub(super) fn matrix_property_value(name: &str, inputs: &InputState) -> StaticVa
         })
 }
 
-fn matrix_property_path_value(path: &[&str], inputs: &InputState) -> StaticValue {
+pub(super) fn matrix_property_path_value(path: &[&str], inputs: &InputState) -> StaticValue {
     let mut key = format!(
         "{}{}",
         super::inputs::MATRIX_VALUE_PREFIX,

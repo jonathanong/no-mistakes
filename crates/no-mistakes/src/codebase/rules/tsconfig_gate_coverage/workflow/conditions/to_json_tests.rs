@@ -3,7 +3,7 @@ use super::{
 };
 
 #[test]
-fn to_json_serializes_known_scalars_and_arrays_but_preserves_conservative_states() {
+fn to_json_serializes_known_scalars_arrays_and_literal_mappings() {
     let inputs = InputState::from([("dynamic".into(), StaticValue::Unknown)]);
     for (expression, expected) in [
         (
@@ -19,7 +19,10 @@ fn to_json_serializes_known_scalars_and_arrays_but_preserves_conservative_states
         ),
         ("toJSON(inputs.dynamic)", None),
         ("toJSON(fromJSON('not-json'))", Some(StaticValue::Invalid)),
-        ("toJSON(fromJSON('{\"name\":\"release\"}'))", None),
+        (
+            "toJSON(fromJSON('{\"name\":\"release\"}'))",
+            Some(StaticValue::String("{\n  \"name\": \"release\"\n}".into())),
+        ),
     ] {
         assert_eq!(
             condition_value(

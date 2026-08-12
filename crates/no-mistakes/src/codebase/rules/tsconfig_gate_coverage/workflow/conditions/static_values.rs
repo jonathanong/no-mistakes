@@ -73,13 +73,19 @@ pub(super) fn static_to_json_expression(
     let call = super::super::expressions::condition_function_call(expression)?;
     (call.function == super::super::expressions::Function::ToJson && call.arguments.len() == 1)
         .then(|| {
-            super::condition_values::condition_value(
-                call.arguments[0],
-                inputs,
-                environment,
-                super::ConditionStatus::SUCCESS,
-            )
-            .and_then(super::static_json::to_json_static_value)
+            let literal = format!("${{{{ {} }}}}", call.arguments[0]);
+            super::super::expressions::complete_literal_expression_value(&literal)
+                .and_then(|value| serde_json::to_string_pretty(&value).ok())
+                .map(StaticValue::String)
+                .or_else(|| {
+                    super::condition_values::condition_value(
+                        call.arguments[0],
+                        inputs,
+                        environment,
+                        super::ConditionStatus::SUCCESS,
+                    )
+                    .and_then(super::static_json::to_json_static_value)
+                })
         })?
 }
 

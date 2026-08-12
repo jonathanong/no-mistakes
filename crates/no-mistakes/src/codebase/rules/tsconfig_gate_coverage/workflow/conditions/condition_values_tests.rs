@@ -98,6 +98,22 @@ fn condition_values_preserve_known_status_and_short_circuit_operands() {
 }
 
 #[test]
+fn static_to_json_values_preserve_scalar_encodings() {
+    let inputs = InputState::new();
+    for (expression, expected) in [
+        ("toJSON(false) == 'true'", StaticBool::False),
+        ("toJSON(false) == 'false'", StaticBool::True),
+    ] {
+        // Static JSON serialization makes these condition outcomes exact.
+        assert_eq!(
+            static_bool(Some(&Value::String(expression.into())), &inputs),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn condition_values_remain_unknown_for_unknown_status_and_operands() {
     let inputs = InputState::from([("dynamic".into(), StaticValue::Unknown)]);
     assert_eq!(StaticValue::Unknown.function_string(), None);

@@ -13,6 +13,9 @@ use super::{
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 
+mod static_bool;
+use static_bool::static_bool_value;
+
 pub(super) fn condition_value(
     operand: &str,
     inputs: &InputState,
@@ -193,13 +196,4 @@ fn known_not_skipped_comparison(left: &str, right: &str, inputs: &InputState) ->
                     Some(StaticValue::String(value)) if value.eq_ignore_ascii_case("skipped")
                 )
         })
-}
-
-fn static_bool_value(value: StaticBool) -> StaticValue {
-    match value {
-        StaticBool::False => StaticValue::Bool(false),
-        StaticBool::True => StaticValue::Bool(true),
-        StaticBool::Invalid => StaticValue::Invalid,
-        StaticBool::TruthyNonBoolean | StaticBool::Unknown => StaticValue::Unknown,
-    }
 }
