@@ -1,9 +1,7 @@
 use super::model::{GithubEventContext, GithubRef};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
-
 const DEFAULT_PULL_REQUEST_ACTIVITY_TYPES: &[&str] = &["opened", "synchronize", "reopened"];
-
 /// Direct source changes occur only for the `synchronize` pull-request action.
 /// Keep an event's action and ref together so conditions and reusable-call
 /// inputs are evaluated for the same activation.
@@ -38,7 +36,6 @@ pub(super) fn source_change_event_contexts(
         })
         .collect()
 }
-
 fn event_references(workflow: &Value, event: &str) -> Vec<GithubRef> {
     let config = workflow
         .get("on")
@@ -63,7 +60,6 @@ fn event_references(workflow: &Value, event: &str) -> Vec<GithubRef> {
         _ => vec![GithubRef::Unknown],
     }
 }
-
 fn branch_references(config: Option<&Value>) -> Vec<GithubRef> {
     references_for(config, "branches", "branches-ignore", "refs/heads/")
 }
@@ -113,25 +109,27 @@ fn references_for(
         .iter()
         .any(|pattern| !pattern.starts_with('!') && !is_exact_pattern(pattern))
     {
-        let excluded = candidates
-            .into_iter()
-            .chain(
-                patterns
-                    .iter()
-                    .filter_map(|pattern| pattern.strip_prefix('!'))
-                    .filter(|pattern| is_exact_pattern(pattern)),
-            )
-            .map(|candidate| format!("{prefix}{candidate}"))
-            .collect::<BTreeSet<_>>();
+        let mut excluded = candidates;
+        excluded.extend(
+            patterns
+                .iter()
+                .filter_map(|pattern| pattern.strip_prefix('!'))
+                .filter(|pattern| is_exact_pattern(pattern))
+                .filter(|candidate| !selected_exact(patterns, candidate)),
+        );
         references.push(if excluded.is_empty() {
             GithubRef::UnknownBranch
         } else {
-            GithubRef::UnknownExcluding(excluded)
+            GithubRef::UnknownExcluding(
+                excluded
+                    .into_iter()
+                    .map(|candidate| format!("{prefix}{candidate}"))
+                    .collect(),
+            )
         });
     }
     references
 }
-
 fn has_key(config: Option<&Value>, key: &str) -> bool {
     config
         .and_then(Value::as_mapping)

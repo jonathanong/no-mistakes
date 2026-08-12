@@ -220,6 +220,26 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, dynamic-continue-on-error/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-docker-args-invalid
+      command: [pnpm, exec, tsc, --noEmit, --project, docker-args-invalid/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-file-working-directory
+      command: [pnpm, exec, tsc, --noEmit, --project, file-working-directory/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-non-pipefail-pipeline
+      command: [pnpm, exec, tsc, --noEmit, --project, non-pipefail-pipeline/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pull-request-event-base-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, pull-request-event-base-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-wildcard-exclusion
+      command: [pnpm, exec, tsc, --noEmit, --project, wildcard-exclusion/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

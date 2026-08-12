@@ -124,6 +124,18 @@ fn pipefail_failure_prefix_keeps_only_reachable_commands() {
 }
 
 #[test]
+fn non_pipefail_pipeline_uses_its_final_command_status() {
+    assert_eq!(
+        shell_body_before_static_failure(
+            "true | false; tsc --noEmit --project after/tsconfig.json",
+            true,
+            false,
+        ),
+        ""
+    );
+}
+
+#[test]
 fn static_shell_success_requires_a_proven_successful_body() {
     for script in [
         "true",

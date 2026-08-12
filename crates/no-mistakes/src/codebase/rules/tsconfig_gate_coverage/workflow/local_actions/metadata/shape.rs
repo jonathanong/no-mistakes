@@ -1,17 +1,14 @@
-use serde_yaml::{Mapping, Value};
-use std::collections::BTreeSet;
-
 use super::icons::branding_icon_valid;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_expression_contexts_available, interpolated_expression_contexts_available,
 };
-
+use serde_yaml::{Mapping, Value};
+use std::collections::BTreeSet;
 const COMPOSITE_OUTPUT_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runner", "env", "vars"];
 const ACTION_PRE_IF_CONTEXTS: &[&str] = &[
     "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "inputs",
 ];
 const DOCKER_ARGUMENT_CONTEXTS: &[&str] = &["github", "inputs"];
-
 pub(super) fn action_inputs_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|mapping| {

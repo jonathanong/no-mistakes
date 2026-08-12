@@ -1,0 +1,10 @@
+on:
+  push:
+    branches: ['release/**', '!release/bad']
+jobs:
+  wildcard-exclusion:
+    runs-on: ubuntu-latest
+    steps:
+      # The excluded branch can never satisfy this source-change gate.
+      - if: github.ref == 'refs/heads/release/bad'
+        run: pnpm exec tsc --noEmit --project wildcard-exclusion/tsconfig.json

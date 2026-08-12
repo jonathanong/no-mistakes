@@ -35,12 +35,12 @@ fn exact_ref_name_is_forwarded_to_reusable_workflow_conditions() {
 }
 
 #[test]
-fn exact_pull_request_base_ref_reaches_direct_and_reusable_conditions() {
+fn exact_pull_request_event_base_ref_reaches_direct_and_reusable_conditions() {
     let parsed = ParsedWorkflowSet {
         documents: vec![
             document(
                 ".github/workflows/caller.yml",
-                "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]\njobs:\n  direct-matching:\n    if: github.base_ref == 'main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct-matching/tsconfig.json\n  direct-mismatching:\n    if: github.base_ref != 'main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct-mismatching/tsconfig.json\n  checks:\n    uses: ./.github/workflows/callee.yml\n    with:\n      branch: '${{ github.base_ref }}'\n",
+                "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]\njobs:\n  direct-matching:\n    if: github.event.pull_request.base.ref == 'main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct-matching/tsconfig.json\n  direct-mismatching:\n    if: github.event.pull_request.base.ref != 'main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project direct-mismatching/tsconfig.json\n  checks:\n    uses: ./.github/workflows/callee.yml\n    with:\n      branch: '${{ github.event.pull_request.base.ref }}'\n",
             ),
             document(
                 ".github/workflows/callee.yml",

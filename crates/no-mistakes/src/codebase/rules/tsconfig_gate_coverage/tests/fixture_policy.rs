@@ -150,8 +150,10 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "composite-secret/tsconfig.json",
             "conclusion-blocked/tsconfig.json",
             "container-dependent/tsconfig.json",
+            "docker-args-invalid/tsconfig.json",
             "docker-invalid/tsconfig.json",
             "dynamic-dependent/tsconfig.json",
+            "file-working-directory/tsconfig.json",
             "fail-fast-default/tsconfig.json",
             "fail-fast-true/tsconfig.json",
             "fork-secret/tsconfig.json",
@@ -161,6 +163,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "job-status/tsconfig.json",
             "logical-and/tsconfig.json",
             "matrix/tsconfig.json",
+            "non-pipefail-pipeline/tsconfig.json",
             "output/tsconfig.json",
             "runner/tsconfig.json",
             "runner-dependent/tsconfig.json",
@@ -178,12 +181,14 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "tags-only/tsconfig.json",
             "trigger-typo/tsconfig.json",
             "sparse-checkout/tsconfig.json",
+            "wildcard-exclusion/tsconfig.json",
             "wildcard-negation/tsconfig.json",
             "matrix-object/tsconfig.json",
             "to-json/tsconfig.json",
             "to-json-structured/tsconfig.json",
             "workflow-job-output/tsconfig.json",
             "dynamic-working-directory/tsconfig.json",
+            "pull-request-event-base-ref/tsconfig.json",
             "push-head-ref/tsconfig.json",
             "incompatible-hosted-runner/tsconfig.json",
             "duplicate-service-port/tsconfig.json",
@@ -255,6 +260,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     // Ordered wildcard negations, nested matrices, static JSON, and callee
     // job outputs each make these otherwise plausible typechecks unreachable.
     for project in [
+        "wildcard-exclusion/tsconfig.json",
         "wildcard-negation/tsconfig.json",
         "matrix-object/tsconfig.json",
         "to-json/tsconfig.json",
@@ -274,6 +280,16 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     ] {
         assert!(uncovered.contains(project));
     }
+    // The final failed non-pipefail pipeline command blocks later steps.
+    assert!(uncovered.contains("non-pipefail-pipeline/tsconfig.json"));
+    // An exact negative must remain excluded from a wildcard trigger.
+    assert!(uncovered.contains("wildcard-exclusion/tsconfig.json"));
+    // Pull-request event payload base refs are available to conditions.
+    assert!(uncovered.contains("pull-request-event-base-ref/tsconfig.json"));
+    // A tracked regular file cannot serve as a working directory.
+    assert!(uncovered.contains("file-working-directory/tsconfig.json"));
+    // Invalid Docker arg interpolation stops subsequent typechecks.
+    assert!(uncovered.contains("docker-args-invalid/tsconfig.json"));
 }
 
 #[test]
