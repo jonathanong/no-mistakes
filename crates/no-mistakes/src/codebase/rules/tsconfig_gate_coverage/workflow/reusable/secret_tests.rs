@@ -74,6 +74,29 @@ fn reusable_secret_availability_survives_only_explicit_or_known_inheritance() {
 }
 
 #[test]
+fn pull_request_calls_do_not_forward_repository_secrets() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: pull_request\njobs:\n  call:\n    uses: ./.github/workflows/pull-request-callee.yml\n    secrets: inherit\n",
+            ),
+            document(
+                ".github/workflows/pull-request-callee.yml",
+                "on:\n  workflow_call:\n    secrets:\n      token: {required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p app/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
 fn reusable_scanner_accepts_job_shape_secret_contexts_and_rejects_unavailable_ones() {
     let workflows = ParsedWorkflowSet {
         documents: vec![

@@ -149,6 +149,7 @@ fn exact_ref_filters_make_impossible_ref_conditions_unreachable() {
         BTreeSet::from([
             "pull-request-target-base-ref/tsconfig.json".to_string(),
             "forwarded-main/tsconfig.json".to_string(),
+            "push-main/tsconfig.json".to_string(),
         ])
     );
 }

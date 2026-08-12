@@ -48,21 +48,53 @@ pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &Inpu
 /// explicitly disables it. Dynamic values cannot prove that queued siblings
 /// were cancelled, so callers must continue scanning them.
 pub(crate) fn strategy_fail_fast_enabled_for_inputs(job: &Value, inputs: &InputState) -> bool {
-    let Some(value) = job
-        .get("strategy")
-        .and_then(Value::as_mapping)
+    matches!(
+        strategy_context_values_for_inputs(job, inputs, None).0,
+        StaticValue::Bool(true)
+    )
+}
+
+pub(crate) fn strategy_context_values_for_inputs(
+    job: &Value,
+    inputs: &InputState,
+    job_total: Option<usize>,
+) -> (StaticValue, StaticValue) {
+    let strategy = job.get("strategy").and_then(Value::as_mapping);
+    let fail_fast = strategy
         .and_then(|strategy| strategy.get("fail-fast"))
-    else {
-        return true;
-    };
-    match value {
-        Value::Bool(enabled) => *enabled,
-        Value::String(expression) => matches!(
-            complete_expression_static_value(expression, inputs),
-            Some(StaticValue::Bool(true))
-        ),
-        _ => false,
+        .map_or(StaticValue::Bool(true), |value| match value {
+            Value::Bool(enabled) => StaticValue::Bool(*enabled),
+            Value::String(expression) => complete_expression_static_value(expression, inputs)
+                .filter(|value| matches!(value, StaticValue::Bool(_) | StaticValue::Unknown))
+                .unwrap_or(StaticValue::Unknown),
+            _ => StaticValue::Unknown,
+        });
+    let max_parallel = strategy
+        .and_then(|strategy| strategy.get("max-parallel"))
+        .map_or_else(
+            || {
+                job_total.map_or(StaticValue::Unknown, |job_total| {
+                    StaticValue::Number(job_total.to_string())
+                })
+            },
+            |value| max_parallel_static_value(value, inputs),
+        );
+    (fail_fast, max_parallel)
+}
+
+fn max_parallel_static_value(value: &Value, inputs: &InputState) -> StaticValue {
+    if let Some(value) = value.as_u64().filter(|value| *value > 0) {
+        return StaticValue::Number(value.to_string());
     }
+    let Some(expression) = value.as_str() else {
+        return StaticValue::Unknown;
+    };
+    resolve_static_interpolations(expression, inputs, &EnvironmentState::default())
+        .and_then(|resolved| serde_yaml::from_str::<Value>(&resolved).ok())
+        .and_then(|value| value.as_u64())
+        .filter(|value| *value > 0)
+        .map(|value| StaticValue::Number(value.to_string()))
+        .unwrap_or(StaticValue::Unknown)
 }
 
 fn fail_fast_valid_for_inputs(value: &Value, inputs: &InputState) -> bool {

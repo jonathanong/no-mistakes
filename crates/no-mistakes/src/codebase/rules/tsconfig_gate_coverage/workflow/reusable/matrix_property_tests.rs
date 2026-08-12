@@ -43,3 +43,51 @@ fn missing_matrix_properties_forward_to_reusable_string_inputs_as_empty() {
         tracked
     );
 }
+
+#[test]
+fn static_matrix_instances_materialize_strategy_context_values() {
+    let parsed = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/typecheck.yml",
+            "on: push\njobs:\n  configured:\n    strategy:\n      fail-fast: false\n      max-parallel: 1\n      matrix: {target: [one, two]}\n    runs-on: ubuntu-latest\n    steps:\n      - if: strategy.job-index == 0 && strategy.job-total == 2 && !strategy.fail-fast && strategy.max-parallel == 1\n        run: tsc --noEmit --project configured/tsconfig.json\n  defaults:\n    strategy:\n      matrix: {target: [one, two]}\n    runs-on: ubuntu-latest\n    steps:\n      - if: strategy.fail-fast\n        run: tsc --noEmit --project defaults/tsconfig.json\n  dynamic-configuration:\n    strategy:\n      fail-fast: false\n      max-parallel: 1\n      matrix: '${{ fromJSON(github.event.matrix) }}'\n    runs-on: ubuntu-latest\n    steps:\n      - if: '!strategy.fail-fast && strategy.max-parallel == 1'\n        run: tsc --noEmit --project dynamic-configuration/tsconfig.json\n      - if: 'strategy.fail-fast || strategy.max-parallel != 1'\n        run: tsc --noEmit --project dynamic-impossible/tsconfig.json\n  impossible-instance:\n    strategy:\n      matrix: {target: [one, two]}\n    runs-on: ubuntu-latest\n    steps:\n      - if: strategy.job-index == 2\n        run: tsc --noEmit --project impossible/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "configured/tsconfig.json".to_string(),
+        "defaults/tsconfig.json".to_string(),
+        "dynamic-configuration/tsconfig.json".to_string(),
+        "dynamic-impossible/tsconfig.json".to_string(),
+        "impossible/tsconfig.json".to_string(),
+    ]);
+    let inputs = ProjectSourceInputs::from([
+        (
+            "configured/tsconfig.json".to_string(),
+            BTreeSet::from(["configured/src/index.ts".to_string()]),
+        ),
+        (
+            "defaults/tsconfig.json".to_string(),
+            BTreeSet::from(["defaults/src/index.ts".to_string()]),
+        ),
+        (
+            "dynamic-configuration/tsconfig.json".to_string(),
+            BTreeSet::from(["dynamic-configuration/src/index.ts".to_string()]),
+        ),
+        (
+            "dynamic-impossible/tsconfig.json".to_string(),
+            BTreeSet::from(["dynamic-impossible/src/index.ts".to_string()]),
+        ),
+        (
+            "impossible/tsconfig.json".to_string(),
+            BTreeSet::from(["impossible/src/index.ts".to_string()]),
+        ),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&parsed, &tracked, &inputs).0,
+        BTreeSet::from([
+            "configured/tsconfig.json".to_string(),
+            "defaults/tsconfig.json".to_string(),
+            "dynamic-configuration/tsconfig.json".to_string(),
+        ])
+    );
+}

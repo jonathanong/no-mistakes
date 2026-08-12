@@ -13,6 +13,7 @@ mod default_value_tests;
 mod event;
 mod needs;
 mod secrets;
+mod strategy;
 mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
 pub(super) use event::{
@@ -27,6 +28,7 @@ pub(crate) use secrets::{callee_secrets, SecretAvailability, SecretState};
 use values::{default_value, nonboolean_binding_value};
 
 pub(super) const MATRIX_VALUE_PREFIX: &str = "\0matrix.";
+pub(super) const STRATEGY_VALUE_PREFIX: &str = "\0strategy.";
 const DYNAMIC_MATRIX_KEY: &str = "\0matrix.dynamic";
 
 #[derive(Clone, Copy)]
@@ -56,6 +58,11 @@ pub(crate) fn inputs_with_matrix_values(
     }
     inputs
 }
+
+pub(crate) use strategy::{
+    with_configuration_values as inputs_with_strategy_configuration_values,
+    with_static_position_values as inputs_with_static_strategy_position_values,
+};
 
 pub(super) fn matrix_property_is_dynamic(inputs: &InputState) -> bool {
     inputs.contains_key(DYNAMIC_MATRIX_KEY)

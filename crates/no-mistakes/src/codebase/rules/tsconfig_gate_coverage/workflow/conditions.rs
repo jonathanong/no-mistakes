@@ -28,7 +28,8 @@ pub(super) use evaluation::{
 };
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,
-    inputs_with_needs_results, MatrixState, SecretAvailability, SecretState,
+    inputs_with_needs_results, inputs_with_static_strategy_position_values,
+    inputs_with_strategy_configuration_values, MatrixState, SecretAvailability, SecretState,
 };
 use inputs::{event_action_value, event_base_ref_value, event_name_value, event_ref_name_value};
 use resolution::condition_input_value;

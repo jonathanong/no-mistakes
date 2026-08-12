@@ -129,10 +129,14 @@ fn command_and_cwd<'a>(tokens: &'a [String], cwd: &str) -> Option<(&'a str, Stri
                 command_cwd = join_relative(cwd, tokens.get(index + 1)?)?;
                 index += 2;
             }
-            (tokens.get(index)? == "exec").then_some((
-                tokens.get(index + 1)?.as_str(),
+            if tokens.get(index)? != "exec" {
+                return None;
+            }
+            let command_index = index + 1 + usize::from(tokens.get(index + 1)? == "--");
+            Some((
+                tokens.get(command_index)?.as_str(),
                 command_cwd,
-                index + 2,
+                command_index + 1,
             ))
         }
         command => Some((command, cwd.to_string(), 1)),

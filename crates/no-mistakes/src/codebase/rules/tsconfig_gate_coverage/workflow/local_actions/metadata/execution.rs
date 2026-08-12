@@ -4,6 +4,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_expression_contexts_available, reduce_context_free_interpolations,
     ContextFreeInterpolation,
 };
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::valid_static_container_image_reference;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::{
     shell_failure_enforced, shell_pipefail_enforced,
 };
@@ -21,16 +22,17 @@ pub(super) fn docker_action_image_valid(
     if image.is_empty() || image.trim() != image || image.eq_ignore_ascii_case("docker://") {
         return false;
     }
-    if docker_image_reference(image) {
-        return true;
+    if let Some(reference) = docker_image_reference(image) {
+        return valid_static_container_image_reference(reference);
     }
     action_file(directory, image).is_some_and(|target| tracked.contains(&target))
 }
 
-fn docker_image_reference(image: &str) -> bool {
+fn docker_image_reference(image: &str) -> Option<&str> {
     image
         .get(.."docker://".len())
         .is_some_and(|prefix| prefix.eq_ignore_ascii_case("docker://"))
+        .then(|| &image["docker://".len()..])
 }
 
 pub(super) fn action_file(directory: &str, path: &str) -> Option<String> {

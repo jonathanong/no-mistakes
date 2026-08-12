@@ -226,21 +226,27 @@ fn continue_on_error_rejects_static_nonboolean_expressions() {
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ 1 }}'\n    run: echo invalid",
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ null }}'\n    run: echo invalid",
     ] {
-        assert!(!if yaml.starts_with("runs-on:") {
-            steps_shape_valid(&job(yaml))
-        } else {
-            super::step_job_shape_valid(&job(yaml))
-        }, "{yaml}");
+        assert!(
+            !if yaml.starts_with("runs-on:") {
+                steps_shape_valid(&job(yaml))
+            } else {
+                super::step_job_shape_valid(&job(yaml))
+            },
+            "{yaml}"
+        );
     }
     for yaml in [
         "continue-on-error: '${{ inputs.allowed }}'\nruns-on: ubuntu-latest\nsteps:\n  - run: echo valid",
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ steps.setup.outputs.allowed }}'\n    run: echo valid",
     ] {
-        assert!(if yaml.starts_with("runs-on:") {
-            steps_shape_valid(&job(yaml))
-        } else {
-            super::step_job_shape_valid(&job(yaml))
-        }, "{yaml}");
+        assert!(
+            if yaml.starts_with("runs-on:") {
+                steps_shape_valid(&job(yaml))
+            } else {
+                super::step_job_shape_valid(&job(yaml))
+            },
+            "{yaml}"
+        );
     }
 }
 

@@ -32,6 +32,13 @@ impl SecretState {
         }
     }
 
+    pub(crate) fn direct_pull_request() -> Self {
+        Self {
+            names: BTreeSet::new(),
+            all: false,
+        }
+    }
+
     fn reusable(names: BTreeSet<String>, all: bool) -> Self {
         Self { names, all }
     }

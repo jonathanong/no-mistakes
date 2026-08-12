@@ -115,6 +115,12 @@ pub(super) fn valid_container_image(value: &str) -> bool {
         }
 }
 
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn valid_static_container_image_reference(
+    value: &str,
+) -> bool {
+    images::valid_static_reference(value)
+}
+
 fn valid_container_value(value: &str) -> bool {
     valid_contextual_value(value, CONTAINER_CONTEXTS)
 }

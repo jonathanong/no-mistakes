@@ -60,6 +60,8 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         "name: Empty image\ndescription: Invalid\nruns: {using: docker, image: ''}",
         "name: Padded Dockerfile\ndescription: Invalid\nruns: {using: docker, image: ' Dockerfile '}",
         "name: Empty container\ndescription: Invalid\nruns: {using: docker, image: 'docker://'}",
+        "name: Malformed container\ndescription: Invalid\nruns: {using: docker, image: 'docker://ghcr.io//checker:22'}",
+        "name: Incomplete container tag\ndescription: Invalid\nruns: {using: docker, image: 'docker://node:'}",
         "name: Bare container image\ndescription: Invalid\nruns: {using: docker, image: node:20}",
         "name: Missing Dockerfile\ndescription: Invalid\nruns: {using: docker, image: Dockerfile}",
         "name: Empty main\ndescription: Invalid\nruns: {using: node20, main: ''}",

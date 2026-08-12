@@ -82,10 +82,14 @@ pub(super) struct ActivationState {
 }
 
 impl ActivationState {
-    pub(super) fn direct(inputs: InputState) -> Self {
+    pub(super) fn direct(inputs: InputState, event: &GithubEventContext) -> Self {
         Self {
             inputs,
-            secrets: SecretState::direct(),
+            secrets: if event.name == "pull_request" {
+                SecretState::direct_pull_request()
+            } else {
+                SecretState::direct()
+            },
             active_paths: BTreeSet::new(),
         }
     }

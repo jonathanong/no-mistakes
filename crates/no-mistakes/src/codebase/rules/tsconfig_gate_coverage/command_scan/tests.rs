@@ -12,6 +12,13 @@ fn shell_scanner_tracks_cd_and_pnpm_dir() {
         ),
         vec!["app/tools/tsconfig.tools.json", "app/tsconfig.json"]
     );
+    assert_eq!(
+        scan_shell_for_typechecked_projects(
+            "pnpm exec -- tsc --noEmit --project app/tsconfig.json",
+            ".",
+        ),
+        vec!["app/tsconfig.json"]
+    );
 }
 
 #[test]

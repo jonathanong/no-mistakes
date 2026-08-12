@@ -6,7 +6,7 @@ fn tolerated_checkout_only_makes_local_actions_available_after_valid_action_inpu
         documents: vec![
             document(
                 ".github/workflows/checks.yml",
-                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        continue-on-error: true\n      - uses: ./.github/actions/setup\n      - run: tsc --noEmit -p app/tsconfig.json\n",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        continue-on-error: true\n        with: {path: .}\n      - uses: ./.github/actions/setup\n      - run: tsc --noEmit -p app/tsconfig.json\n",
             ),
             document(
                 ".github/workflows/caller.yml",

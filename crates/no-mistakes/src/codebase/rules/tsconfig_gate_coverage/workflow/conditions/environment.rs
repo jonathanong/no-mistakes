@@ -60,6 +60,10 @@ impl EnvironmentState {
         self.step_outcomes.value(id)
     }
 
+    pub(crate) fn step_conclusion(&self, id: &str) -> StaticValue {
+        self.step_outcomes.conclusion(id)
+    }
+
     pub(crate) fn runner_os(&self) -> StaticValue {
         self.runner_os.clone()
     }

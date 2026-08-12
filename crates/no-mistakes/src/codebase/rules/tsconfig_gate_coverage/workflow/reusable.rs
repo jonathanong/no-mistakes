@@ -20,6 +20,7 @@ mod validation;
 use activation::scan_activation;
 use events::source_change_event_contexts;
 use model::{ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use validation::valid_static_container_image_reference;
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
 pub(super) fn collect_ci_projects_with_local_actions(
@@ -82,7 +83,7 @@ pub(super) fn collect_ci_projects_with_local_actions(
                             path,
                             document,
                             &triggers,
-                            &ActivationState::direct(inputs),
+                            &ActivationState::direct(inputs, &event),
                             &context,
                             &mut memo,
                         )

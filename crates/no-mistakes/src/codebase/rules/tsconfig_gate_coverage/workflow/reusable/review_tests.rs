@@ -115,6 +115,23 @@ fn only_success_path_valid_context_linux_and_source_change_gates_count() {
 }
 
 #[test]
+fn unknown_trigger_names_cannot_earn_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/unknown.yml",
+            "on: unsupported_event\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p unknown/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from(["unknown/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
 fn event_sensitive_inputs_stay_correlated_with_each_events_path_filters() {
     let workflows = ParsedWorkflowSet {
         documents: vec![

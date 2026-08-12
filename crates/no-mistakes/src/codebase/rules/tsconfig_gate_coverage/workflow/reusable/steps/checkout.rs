@@ -18,7 +18,10 @@ impl CheckoutState {
                 .is_some_and(|reference| !reference.is_empty())
             && step.get("with").is_none_or(|bindings| {
                 bindings.as_mapping().is_some_and(|bindings| {
-                    !bindings.contains_key("repository") && !bindings.contains_key("path")
+                    !bindings.contains_key("repository")
+                        && bindings
+                            .get("path")
+                            .is_none_or(|path| path.as_str() == Some("."))
                 })
             });
     }

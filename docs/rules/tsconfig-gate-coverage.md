@@ -46,7 +46,8 @@ self-hosted operating-system label such as `linux`; a hosted-looking label in
 a runner group can be a custom label and does not establish the operating system.
 Repository-local action steps (`uses: ./path` or `uses: ./` for the repository
 root) count only after an earlier successful `actions/checkout` step in the
-same job, when the tracked target directory contains parseable
+same job. Checkout at its default location or with `with.path: .` makes the
+repository root available, when the tracked target directory contains parseable
 `action.yml` or `action.yaml` metadata
 with only GitHub's supported top-level fields and correctly typed
 `inputs`, `outputs`, `runs`, and `branding` sections, plus the required name
@@ -59,8 +60,8 @@ directory and use GitHub's supported `node20` or `node24` runtime; local
 JavaScript actions must not declare the unsupported `runs.pre`
 or `runs.pre-if` hooks, while supported `runs.post` and `runs.post-if` hooks are
 accepted. A Docker action's non-`docker://` `runs.image` is a repository-local
-build target and must resolve canonically to a tracked file; only `docker://`
-image references are external. Local
+build target and must resolve canonically to a tracked file; external
+`docker://` references must contain a valid static OCI image reference. Local
 targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
 missing action prevents later commands in the same executed job from counting.
@@ -182,6 +183,10 @@ failure tolerance therefore stay correlated: a typecheck that runs only in an
 allowed-to-fail combination does not count. When fail-fast is enabled and a
 matrix instance is statically known to fail, only checks that ran in every
 such failing instance are retained; sibling-only checks may be cancelled.
+Each static combination also receives GitHub's zero-based `strategy.job-index`,
+`strategy.job-total`, `strategy.fail-fast`, and `strategy.max-parallel` values;
+`fail-fast` defaults to `true`, while an omitted `max-parallel` remains unknown
+because GitHub maximizes concurrency subject to runner availability.
 Literal complete expressions in static `include` and `exclude` entries retain
 their YAML scalar types; an entry
 whose value remains dynamic stops static enumeration conservatively. A missing
@@ -256,10 +261,12 @@ resolved named volume must satisfy Docker's volume-name shape.
 
 Reusable-workflow secret validation follows each call edge. A directly
 triggered workflow can inherit its available repository or organization
-secrets; `secrets: inherit` preserves that availability through nested calls,
-while an explicit secret mapping narrows it to the destination names supplied
-by that mapping. Required secrets must therefore be available at the immediate
-caller boundary rather than being inferred from an earlier ancestor.
+secrets, except a `pull_request` activation, which may originate from a fork
+and therefore begins without repository secrets. `secrets: inherit` preserves
+that availability through nested calls, while an explicit secret mapping
+narrows it to the destination names supplied by that mapping. Required secrets
+must therefore be available at the immediate caller boundary rather than being
+inferred from an earlier ancestor.
 
 The rule evaluates the successful gate path: `success()`, `always()`, and
 `!cancelled()` are runnable there, while `failure()` and `cancelled()` are not.
@@ -326,7 +333,9 @@ keeps the following step on the successful path. In a custom non-errexit shell,
 a bare `exit` preserves the preceding static command status. A statically
 failing `pipefail` pipeline credits only reachable checks before that pipeline;
 later step `if` and `continue-on-error` expressions can resolve statically known
-`steps.<id>.outcome` values.
+`steps.<id>.outcome` and `steps.<id>.conclusion` values. A tolerated static
+failure keeps `outcome: failure` while exposing `conclusion: success`; successful
+action steps with an `id` expose success for both properties.
 
 Informational, setup, or config-bypassing commands (`--showConfig`,
 `--help`/`-h`, `--version`/`-v`, `--init`, enabled `--noCheck`,

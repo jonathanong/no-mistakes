@@ -412,6 +412,25 @@ fn static_step_failures_bound_pipeline_credits_and_later_step_outcome_conditions
 }
 
 #[test]
+fn step_conclusions_distinguish_tolerated_failures_and_successful_actions() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![workflow_document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  tolerated:\n    runs-on: ubuntu-latest\n    steps:\n      - id: test\n        continue-on-error: true\n        run: 'false'\n      - if: \"${{ steps.test.outcome == 'failure' && steps.test.conclusion == 'success' }}\"\n        run: tsc --noEmit --project tolerated/tsconfig.json\n  action:\n    runs-on: ubuntu-latest\n    steps:\n      - id: checkout\n        uses: actions/checkout@v4\n      - if: \"${{ steps.checkout.outcome == 'success' && steps.checkout.conclusion == 'success' }}\"\n        run: tsc --noEmit --project action/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "tolerated/tsconfig.json".to_string(),
+        "action/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        tracked
+    );
+}
+
+#[test]
 fn prior_step_outcomes_resolve_when_later_step_environment_is_built() {
     let workflows = ParsedWorkflowSet {
         documents: vec![workflow_document(

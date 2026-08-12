@@ -68,6 +68,13 @@ fn source_change_event_contexts_select_only_synchronize_activities() {
 }
 
 #[test]
+fn tag_only_pushes_do_not_model_source_change_activations() {
+    let workflow: Value = serde_yaml::from_str("on:\n  push:\n    tags: [v1]").unwrap();
+
+    assert!(source_change_event_contexts(&workflow, "push").is_empty());
+}
+
+#[test]
 fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
     for (yaml, event, expected) in [
         (
@@ -75,8 +82,8 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
             "push",
             vec!["refs/heads/dev", "refs/heads/main"],
         ),
-        // Tags use their own fully qualified ref namespace, not refs/heads.
-        ("on:\n  push:\n    tags: [v1]", "push", vec!["refs/tags/v1"]),
+        // Tag-only pushes do not carry source-path changes.
+        ("on:\n  push:\n    tags: [v1]", "push", vec![]),
         (
             "on:\n  pull_request_target:\n    types: [synchronize]\n    branches: [main]",
             "pull_request_target",
@@ -100,13 +107,10 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
     let workflow: Value =
         serde_yaml::from_str("on:\n  push:\n    branches: ['release/**']\n    tags-ignore: [v0]")
             .unwrap();
-    assert!(source_change_event_contexts(&workflow, "push")
-        .iter()
-        .any(|context| matches!(
-            &context.reference,
-            GithubRef::UnknownExcluding(excluded)
-                if excluded == &std::collections::BTreeSet::from(["refs/tags/v0".to_string()])
-        )));
+    assert!(matches!(
+        source_change_event_contexts(&workflow, "push").as_slice(),
+        [context] if matches!(context.reference, GithubRef::UnknownBranch)
+    ));
 
     let workflow: Value =
         serde_yaml::from_str("on:\n  push:\n    branches-ignore: [main, 'release/**']").unwrap();
