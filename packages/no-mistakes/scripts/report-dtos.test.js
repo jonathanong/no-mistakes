@@ -22,7 +22,10 @@ function loadApiWithFixtureNative() {
     assert.equal(filename, addonPath);
     module.exports = {
       fetchesJson: async () => JSON.stringify(fixture.fetches),
-      checkJson: async () => JSON.stringify(fixture.check),
+      checkJson: async (json) =>
+        JSON.stringify(
+          JSON.parse(json).includeSuppressed ? fixture.checkWithSuppressed : fixture.check,
+        ),
       queuesJson: async () => JSON.stringify(fixture.queues),
       reactAnalyzeJson: async () => JSON.stringify(fixture.reactAnalyze),
     };
@@ -45,7 +48,18 @@ test("Node report DTO fixture preserves fetch, queue, React, and check shapes", 
     assert.deepEqual(await loaded.api.fetches({ root: "/fixture" }), fixture.fetches);
     assert.deepEqual(await loaded.api.queues({ root: "/fixture" }), fixture.queues);
     assert.deepEqual(await loaded.api.reactAnalyze({ root: "/fixture" }), fixture.reactAnalyze);
-    assert.deepEqual(await loaded.api.check({ root: "/fixture" }), fixture.check);
+    const baselineCheck = await loaded.api.check({ root: "/fixture" });
+    const checkWithSuppressed = await loaded.api.check({
+      root: "/fixture",
+      includeSuppressed: true,
+    });
+    assert.deepEqual(baselineCheck, fixture.check);
+    assert.equal(Object.hasOwn(baselineCheck, "suppressed"), false);
+    assert.deepEqual(checkWithSuppressed, fixture.checkWithSuppressed);
+    assert.deepEqual(checkWithSuppressed.suppressed, fixture.checkWithSuppressed.suppressed);
+    const { suppressed, ...optedInBaseline } = checkWithSuppressed;
+    assert.deepEqual(optedInBaseline, baselineCheck);
+    assert.ok(suppressed.length > 0);
   } finally {
     loaded.restore();
   }

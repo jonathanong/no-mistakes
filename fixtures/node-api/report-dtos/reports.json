@@ -147,6 +147,40 @@
       "message": "duplicate export"
     }],
     "warnings": [],
+    "advisories": []
+  },
+  "checkWithSuppressed": {
+    "react": [{
+      "component": "UsersPage",
+      "file": "app/users/page.tsx",
+      "rule": "no-fetch",
+      "detail": null
+    }],
+    "queues": [],
+    "rules": [{
+      "rule": "example-rule",
+      "file": "src/example.ts",
+      "line": 3,
+      "message": "example",
+      "target": "src/other.ts"
+    }],
+    "integration": [{
+      "framework": "vitest",
+      "suite": "unit",
+      "file": "src/example.test.ts",
+      "line": 5,
+      "describePath": ["example"],
+      "message": "example"
+    }],
+    "codebase": [{
+      "rule": "unique-exports",
+      "file": "src/example.ts",
+      "line": 1,
+      "exportName": "Example",
+      "exportKind": "value",
+      "message": "duplicate export"
+    }],
+    "warnings": [],
     "advisories": [],
     "suppressed": [
       {
