@@ -4,8 +4,8 @@ mod properties;
 pub(crate) use properties::context_output_name;
 use properties::{context_property_name, context_property_segment, github_property_segment};
 pub(super) use properties::{
-    github_base_ref, github_event_action, github_event_name, github_head_ref, github_ref,
-    github_ref_name, github_ref_type,
+    github_base_ref, github_event_action, github_event_name, github_head_ref,
+    github_pull_request_merged, github_ref, github_ref_name, github_ref_type,
 };
 
 pub(super) fn input_name(operand: &str) -> Option<&str> {

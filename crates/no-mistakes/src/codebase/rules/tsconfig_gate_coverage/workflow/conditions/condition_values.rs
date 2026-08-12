@@ -3,11 +3,11 @@ use super::{
     event_ref_name_value, event_ref_type_value, functions,
     input_value::comparison_literal,
     literals::{job_status_value, status_function_bool},
-    logical,
+    logical, pull_request_merged_value,
     resolution::condition_input_value,
     resolution::{
-        github_base_ref, github_event_action, github_event_name, github_head_ref, github_ref,
-        github_ref_name, github_ref_type, job_status,
+        github_base_ref, github_event_action, github_event_name, github_head_ref,
+        github_pull_request_merged, github_ref, github_ref_name, github_ref_type, job_status,
     },
     static_json::literal_from_json_static_value,
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
@@ -35,6 +35,9 @@ pub(super) fn condition_value(
     }
     if github_event_action(operand) {
         return event_action_value(inputs);
+    }
+    if github_pull_request_merged(operand) {
+        return pull_request_merged_value(inputs);
     }
     if github_ref(operand) {
         return Some(

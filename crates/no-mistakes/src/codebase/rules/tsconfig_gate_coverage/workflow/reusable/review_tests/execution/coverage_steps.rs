@@ -66,7 +66,6 @@ fn malformed_and_unresolved_steps_stop_coverage_at_the_runtime_boundary() {
             "invalid-condition/tsconfig.json".to_string(),
             "tolerated/tsconfig.json".to_string(),
             "tolerated-run/tsconfig.json".to_string(),
-            "unresolved-shell/tsconfig.json".to_string(),
         ])
     );
 }

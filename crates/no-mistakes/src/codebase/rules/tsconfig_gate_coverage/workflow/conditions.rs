@@ -35,7 +35,7 @@ pub(super) use inputs::{
 };
 use inputs::{
     event_action_value, event_base_ref_value, event_head_ref_value, event_name_value,
-    event_ref_name_value, event_ref_type_value,
+    event_ref_name_value, event_ref_type_value, pull_request_merged_value,
 };
 use resolution::condition_input_value;
 pub(crate) use resolution::context_output_name;

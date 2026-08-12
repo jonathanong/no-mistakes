@@ -5,6 +5,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
 
 pub(in super::super) const EVENT_NAME_KEY: &str = "\0github.event_name";
 pub(in super::super) const EVENT_ACTION_KEY: &str = "\0github.event.action";
+pub(in super::super) const PULL_REQUEST_MERGED_KEY: &str = "\0github.event.pull_request.merged";
 pub(in super::super) const REF_KEY: &str = "\0github.ref";
 pub(in super::super) const REF_NAME_KEY: &str = "\0github.ref_name";
 pub(in super::super) const BASE_REF_KEY: &str = "\0github.base_ref";
@@ -18,6 +19,9 @@ pub(in super::super) fn event_name_value(inputs: &InputState) -> Option<StaticVa
 }
 pub(in super::super) fn event_action_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(EVENT_ACTION_KEY).cloned()
+}
+pub(in super::super) fn pull_request_merged_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(PULL_REQUEST_MERGED_KEY).cloned()
 }
 pub(in super::super) fn event_ref_name_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(REF_NAME_KEY).cloned()
@@ -36,6 +40,7 @@ pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
     for key in [
         EVENT_NAME_KEY,
         EVENT_ACTION_KEY,
+        PULL_REQUEST_MERGED_KEY,
         REF_KEY,
         REF_NAME_KEY,
         BASE_REF_KEY,
@@ -62,6 +67,14 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
             GithubEventAction::Known(action) => action.clone(),
         }),
     );
+    if event.name == "pull_request"
+        && matches!(&event.action, GithubEventAction::Known(action) if action == "synchronize")
+    {
+        inputs.insert(
+            PULL_REQUEST_MERGED_KEY.to_string(),
+            StaticValue::Bool(false),
+        );
+    }
     match &event.reference {
         GithubRef::Exact(reference) => {
             inputs.insert(REF_KEY.to_string(), StaticValue::String(reference.clone()));

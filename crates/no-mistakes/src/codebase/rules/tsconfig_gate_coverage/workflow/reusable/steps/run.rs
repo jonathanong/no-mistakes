@@ -96,7 +96,13 @@ pub(super) fn run_step_stops_job(
             configuration.environment,
         ) {
             Some(shell) => Some(shell),
-            None => return false,
+            None => {
+                if !configuration.continue_on_error {
+                    *state.indeterminate |= configuration.condition != StaticBool::False;
+                    return true;
+                }
+                return false;
+            }
         },
         None => None,
     };

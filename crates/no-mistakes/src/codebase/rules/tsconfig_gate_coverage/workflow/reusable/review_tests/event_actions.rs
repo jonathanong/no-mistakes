@@ -157,3 +157,33 @@ fn mixed_exact_and_glob_branch_exclusions_block_the_exact_ref_condition() {
         BTreeSet::from(["dynamic/tsconfig.json".to_string()])
     );
 }
+
+#[test]
+fn synchronized_pull_requests_are_known_not_merged() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/pull-request-merged.yml",
+                "on:\n  pull_request:\n    types: [synchronize]\njobs:\n  merged:\n    if: github.event.pull_request.merged == true\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p merged/tsconfig.json\n  unmerged:\n    if: github['event']['pull_request']['merged'] == false\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p unmerged/tsconfig.json\n  reusable:\n    uses: ./.github/workflows/merged-callee.yml\n",
+            ),
+            document(
+                ".github/workflows/merged-callee.yml",
+                "on: workflow_call\njobs:\n  merged:\n    if: github.event.pull_request.merged == true\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p callee-merged/tsconfig.json\n  unmerged:\n    if: github.event.pull_request.merged == false\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p callee-unmerged/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from([
+        "merged/tsconfig.json".to_string(),
+        "unmerged/tsconfig.json".to_string(),
+        "callee-merged/tsconfig.json".to_string(),
+        "callee-unmerged/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::from([
+            "unmerged/tsconfig.json".to_string(),
+            "callee-unmerged/tsconfig.json".to_string(),
+        ])
+    );
+}
