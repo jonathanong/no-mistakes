@@ -11,6 +11,10 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::{
 use serde_yaml::{Mapping, Value};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[cfg(test)]
+#[path = "execution_tests.rs"]
+mod tests;
+
 pub(super) fn docker_action_image_valid(
     runs: &Mapping,
     directory: &str,

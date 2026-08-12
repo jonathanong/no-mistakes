@@ -26,17 +26,12 @@ pub(super) fn source_change_event_contexts(
     pull_request_activity_types(workflow, event)
         .filter(|action| *action == "synchronize")
         .flat_map(|action| {
-            references.iter().cloned().map(move |reference| {
+            references.iter().map(move |reference| {
                 let base_reference = reference.clone();
-                let workflow_reference = if event == "pull_request" {
-                    GithubRef::PullRequestMerge
-                } else {
-                    reference
-                };
                 GithubEventContext::with_action_and_refs(
                     event,
                     action,
-                    workflow_reference,
+                    GithubRef::PullRequestMerge,
                     base_reference,
                 )
             })

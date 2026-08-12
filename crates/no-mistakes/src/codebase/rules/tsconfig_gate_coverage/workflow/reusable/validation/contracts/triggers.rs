@@ -4,6 +4,9 @@ mod activity;
 mod cron;
 mod dispatch;
 mod shape;
+#[cfg(test)]
+#[path = "triggers/tests.rs"]
+mod tests;
 
 use activity::activity_type_config_valid;
 use cron::schedule_config_valid;

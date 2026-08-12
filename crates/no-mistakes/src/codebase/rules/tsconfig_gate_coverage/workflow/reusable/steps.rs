@@ -14,6 +14,8 @@ mod configuration;
 mod local_action;
 mod model;
 mod run;
+#[cfg(test)]
+mod tests;
 mod working_directory;
 pub(super) use model::StepScan;
 use {

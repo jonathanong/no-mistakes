@@ -58,6 +58,7 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         "name: Missing shell\ndescription: Invalid\nruns: {using: composite, steps: [{run: ok}]}",
         "name: Unsupported step field\ndescription: Invalid\nruns: {using: composite, steps: [{run: ok, shell: bash, timeout-minutes: 1}]}",
         "name: Empty image\ndescription: Invalid\nruns: {using: docker, image: ''}",
+        "name: Non-string image\ndescription: Invalid\nruns: {using: docker, image: [Dockerfile]}",
         "name: Padded Dockerfile\ndescription: Invalid\nruns: {using: docker, image: ' Dockerfile '}",
         "name: Empty container\ndescription: Invalid\nruns: {using: docker, image: 'docker://'}",
         "name: Malformed container\ndescription: Invalid\nruns: {using: docker, image: 'docker://ghcr.io//checker:22'}",
@@ -198,11 +199,16 @@ fn action_metadata_validates_all_supported_fields_before_cataloging() {
         "name: Unknown top-level\ndescription: Invalid\nunknown: true\nruns: {using: node24, main: index.js}",
         "name: Bad author\nauthor: [Acme]\ndescription: Invalid\nruns: {using: node24, main: index.js}",
         "name: Bad inputs\ndescription: Invalid\ninputs: []\nruns: {using: node24, main: index.js}",
+        "name: Non-string input name\ndescription: Invalid\ninputs: {1: {description: Project}}\nruns: {using: node24, main: index.js}",
+        "name: Non-mapping input metadata\ndescription: Invalid\ninputs: {project: Project}\nruns: {using: node24, main: index.js}",
         "name: Missing input description\ndescription: Invalid\ninputs: {project: {required: true}}\nruns: {using: node24, main: index.js}",
         "name: Bad input required\ndescription: Invalid\ninputs: {project: {description: Project, required: yes}}\nruns: {using: node24, main: index.js}",
         "name: Bad input default\ndescription: Invalid\ninputs: {project: {description: Project, default: [app]}}\nruns: {using: node24, main: index.js}",
         "name: Bad deprecation\ndescription: Invalid\ninputs: {project: {description: Project, deprecationMessage: [old]}}\nruns: {using: node24, main: index.js}",
         "name: Bad outputs\ndescription: Invalid\noutputs: []\nruns: {using: node24, main: index.js}",
+        "name: Non-string output name\ndescription: Invalid\noutputs: {1: {description: Result}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
+        "name: Non-mapping output metadata\ndescription: Invalid\noutputs: {result: Result}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
+        "name: JavaScript output value\ndescription: Invalid\noutputs: {result: {description: Result, value: value}}\nruns: {using: node24, main: index.js}",
         "name: Missing output description\ndescription: Invalid\noutputs: {result: {value: path}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
         "name: Missing composite output value\ndescription: Invalid\noutputs: {result: {description: Result}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
         "name: Bad output field\ndescription: Invalid\noutputs: {result: {description: Result, unknown: true, value: path}}\nruns: {using: composite, steps: [{run: ok, shell: bash}]}",
@@ -217,7 +223,10 @@ fn action_metadata_validates_all_supported_fields_before_cataloging() {
         "name: Unsupported local pre condition\ndescription: Invalid\nruns: {using: node24, main: index.js, pre-if: always()}",
         "name: Bad node hook\ndescription: Invalid\nruns: {using: node24, main: index.js, post: [cleanup]}",
         "name: Bad docker args\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: [--ok, 1]}",
+        "name: Docker args not sequence\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, args: --ok}",
         "name: Bad docker env\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: [KEY]}",
+        "name: Docker env non-string value\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {KEY: true}}",
+        "name: Docker env non-string key\ndescription: Invalid\nruns: {using: docker, image: alpine:3.22, env: {1: value}}",
         "name: Bad composite step\ndescription: Invalid\nruns: {using: composite, steps: [true]}",
     ] {
         assert!(!valid(&[("action", yaml)], &[], "action"), "{yaml}");
@@ -484,6 +493,9 @@ fn composite_run_working_directories_must_exist_in_the_checkout() {
 
     let dynamic = action("\"${{ inputs.directory }}\"", "");
     assert!(!valid(&[("action", &dynamic)], &[], "action"));
+
+    let malformed = action("\"${{ github.ref == }}\"", "");
+    assert!(!valid(&[("action", &malformed)], &[], "action"));
 
     for control in ["      if: false\n", "      continue-on-error: true\n"] {
         let ignored_missing = action("packages/missing", control);

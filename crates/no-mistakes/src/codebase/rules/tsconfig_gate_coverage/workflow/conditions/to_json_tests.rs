@@ -40,6 +40,18 @@ fn to_json_serializes_known_scalars_arrays_and_literal_mappings() {
 
 #[test]
 fn to_json_propagates_invalid_and_unresolved_nested_values() {
+    assert_eq!(
+        to_json_static_value(StaticValue::Sequence(vec![
+            StaticValue::Bool(true),
+            StaticValue::String("release".into()),
+            StaticValue::Number("2".into()),
+            StaticValue::Null,
+        ])),
+        Some(StaticValue::String(
+            "[\n  true,\n  \"release\",\n  2,\n  null\n]".into()
+        ))
+    );
+
     for value in [
         StaticValue::Mapping,
         StaticValue::MatrixMapping("matrix.axis".into()),

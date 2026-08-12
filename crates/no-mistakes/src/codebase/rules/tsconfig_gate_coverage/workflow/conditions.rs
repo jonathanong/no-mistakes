@@ -177,9 +177,13 @@ fn static_yaml_value(value: Value) -> StaticValue {
 }
 
 #[cfg(test)]
+mod condition_values_edge_tests;
+#[cfg(test)]
 mod condition_values_tests;
 #[cfg(test)]
 mod contains_tests;
+#[cfg(test)]
+mod enforcement_tests;
 #[cfg(test)]
 mod format_tests;
 #[cfg(test)]

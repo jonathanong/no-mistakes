@@ -54,3 +54,29 @@ fn relational_comparisons_coerce_known_values_and_keep_dynamic_unknown() {
         StaticBool::False
     );
 }
+
+#[test]
+fn structured_invalid_and_unknown_values_keep_comparison_states_distinct() {
+    assert_eq!(
+        StaticValue::Mapping.equals(&StaticValue::Mapping),
+        StaticBool::False
+    );
+    assert_eq!(
+        StaticValue::MatrixMapping("first".into())
+            .equals(&StaticValue::MatrixMapping("second".into())),
+        StaticBool::False
+    );
+    for value in [StaticValue::Invalid, StaticValue::Unknown] {
+        let expected = value.clone().truthiness();
+        assert_eq!(
+            value.clone().less_than(&StaticValue::Number("1".into())),
+            expected
+        );
+        assert_eq!(
+            value
+                .clone()
+                .less_than_or_equal(&StaticValue::Number("1".into())),
+            expected
+        );
+    }
+}

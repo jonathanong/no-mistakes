@@ -170,3 +170,19 @@ fn pull_request_merge_ref_retains_the_exact_base_ref() {
                 )
     ));
 }
+
+#[test]
+fn reference_classification_handles_scalar_and_non_source_events() {
+    let pull_request_target: Value =
+        serde_yaml::from_str("on:\n  pull_request_target:\n    branches: main").unwrap();
+    assert!(matches!(
+        event_references(&pull_request_target, "pull_request_target").as_slice(),
+        [GithubRef::Exact(reference)] if reference == "refs/heads/main"
+    ));
+
+    let workflow: Value = serde_yaml::from_str("on: workflow_dispatch").unwrap();
+    assert!(matches!(
+        event_references(&workflow, "workflow_dispatch").as_slice(),
+        [GithubRef::Unknown]
+    ));
+}

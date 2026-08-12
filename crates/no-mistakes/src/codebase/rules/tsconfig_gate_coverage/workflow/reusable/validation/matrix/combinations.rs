@@ -6,6 +6,10 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputS
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
+#[cfg(test)]
+#[path = "combinations/internal_tests.rs"]
+mod internal_tests;
+
 #[derive(Debug, PartialEq)]
 pub(in super::super::super) enum MatrixCombinations {
     Static(Vec<BTreeMap<String, Value>>),

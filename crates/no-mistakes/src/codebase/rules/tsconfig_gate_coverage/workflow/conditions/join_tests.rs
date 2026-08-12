@@ -9,6 +9,17 @@ fn static_join_value_resolves_known_scalars_and_sequences() {
     let inputs = InputState::from([
         ("label".into(), StaticValue::String("release".into())),
         ("dynamic".into(), StaticValue::Unknown),
+        (
+            "invalids".into(),
+            StaticValue::Sequence(vec![
+                StaticValue::String("release".into()),
+                StaticValue::Invalid,
+            ]),
+        ),
+        (
+            "invalid-singleton".into(),
+            StaticValue::Sequence(vec![StaticValue::Invalid]),
+        ),
     ]);
     for (expression, expected) in [
         (
@@ -45,6 +56,8 @@ fn static_join_value_resolves_known_scalars_and_sequences() {
             "join(fromJSON('[\"release\"]'), fromJSON('not-json'))",
             Some(StaticValue::Invalid),
         ),
+        ("join(inputs.invalids)", Some(StaticValue::Invalid)),
+        ("join(inputs.invalid-singleton)", Some(StaticValue::Invalid)),
     ] {
         assert_eq!(
             static_join_value(

@@ -330,6 +330,24 @@ fn empty_resolved_service_images_disable_only_that_service() {
 }
 
 #[test]
+fn malformed_resolved_container_and_service_values_fail_closed() {
+    let inputs = InputState::new();
+    let environment = EnvironmentState::default();
+    for yaml in [
+        "services: {database: {ports: [5432]}}",
+        "services: {database: {image: ' invalid '}}",
+        "services: {database: {image: \"${{ fromJSON('not-json') }}\"}}",
+        "container: true",
+    ] {
+        assert!(!container_configuration_valid_for_inputs(
+            &job(yaml),
+            &inputs,
+            &environment
+        ));
+    }
+}
+
+#[test]
 fn environment_url_rechecks_resolved_stringable_values_per_active_state() {
     let input_url = job(
         "runs-on: ubuntu-latest\nenvironment:\n  name: staging\n  url: '${{ inputs.url }}'\nsteps:\n  - run: echo valid",

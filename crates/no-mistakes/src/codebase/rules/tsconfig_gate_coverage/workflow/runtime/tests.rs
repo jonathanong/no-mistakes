@@ -23,6 +23,20 @@ fn known_non_stringable_runs_on_expressions_are_statically_invalid() {
     assert!(runs_on_has_statically_invalid_value_for_inputs(
         &job, &inputs
     ));
+    for yaml in [
+        "runs-on: '   '",
+        "runs-on: [ubuntu-latest, '   ']",
+        "runs-on: {group: ' ', labels: [ubuntu-latest]}",
+    ] {
+        assert!(runs_on_has_statically_invalid_value_for_inputs(
+            &serde_yaml::from_str(yaml).unwrap(),
+            &InputState::new()
+        ));
+    }
+    assert!(!runs_on_has_statically_invalid_value_for_inputs(
+        &serde_yaml::from_str("runs-on: true").unwrap(),
+        &InputState::new()
+    ));
 }
 
 fn runs_on_can_default_to_windows(job: &Value) -> bool {
