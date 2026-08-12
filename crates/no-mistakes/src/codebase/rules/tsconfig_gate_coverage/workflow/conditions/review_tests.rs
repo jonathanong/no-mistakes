@@ -2,31 +2,6 @@ use super::{evaluation::static_bool, InputState, StaticBool, StaticValue};
 use serde_yaml::Value;
 
 #[test]
-fn case_functions_resolve_the_selected_static_branch() {
-    let inputs = InputState::new();
-    for (expression, expected) in [
-        ("case(true, false, true)", StaticBool::False),
-        ("case(false, true, true, false, true)", StaticBool::False),
-        (
-            "case(false, true, true, 'release', false)",
-            StaticBool::True,
-        ),
-        ("case(true, false, github.ref)", StaticBool::False),
-        (
-            "case(false, 'ignored', 'release') == 'release'",
-            StaticBool::True,
-        ),
-        ("case(github.ref, false, true)", StaticBool::Unknown),
-    ] {
-        assert_eq!(
-            static_bool(Some(&Value::String(expression.into())), &inputs),
-            expected,
-            "{expression}"
-        );
-    }
-}
-
-#[test]
 fn join_functions_resolve_static_collections_before_comparisons() {
     let inputs = InputState::new();
     for (expression, expected) in [

@@ -232,6 +232,7 @@ fn root_matrix_expression_requires_a_dynamic_result() {
         "success()",
         "toJSON(github)",
         "true || false",
+        "case(inputs.enabled, fromJSON(inputs.matrix), needs.setup.outputs.matrix)",
     ] {
         let yaml = format!("strategy:\n  matrix: \"${{{{ {expression} }}}}\"");
         let job = job(&yaml);
@@ -242,7 +243,6 @@ fn root_matrix_expression_requires_a_dynamic_result() {
     for expression in [
         "fromJSON(needs.setup.outputs.matrix)",
         "needs.setup.outputs.matrix",
-        "case(inputs.enabled, fromJSON(inputs.matrix), needs.setup.outputs.matrix)",
     ] {
         let yaml = format!("strategy:\n  matrix: \"${{{{ {expression} }}}}\"");
         let dynamic = job(&yaml);

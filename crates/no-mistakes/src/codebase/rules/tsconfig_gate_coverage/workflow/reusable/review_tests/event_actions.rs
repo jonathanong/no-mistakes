@@ -88,6 +88,41 @@ fn direct_event_action_truthiness_keeps_push_and_pull_request_activations_isolat
 }
 
 #[test]
+fn exact_branch_activations_intersect_direct_and_reusable_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/direct.yml",
+                "on:\n  push:\n    branches: [main, release]\njobs:\n  main:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p direct-main/tsconfig.json\n  release:\n    if: github.ref == 'refs/heads/release'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p direct-release/tsconfig.json\n",
+            ),
+            document(
+                ".github/workflows/caller.yml",
+                "on:\n  push:\n    branches: [main, release]\njobs:\n  checks:\n    uses: ./.github/workflows/callee.yml\n",
+            ),
+            document(
+                ".github/workflows/callee.yml",
+                "on: workflow_call\njobs:\n  main:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p reusable-main/tsconfig.json\n  release:\n    if: github.ref == 'refs/heads/release'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p reusable-release/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = [
+        "direct-main/tsconfig.json",
+        "direct-release/tsconfig.json",
+        "reusable-main/tsconfig.json",
+        "reusable-release/tsconfig.json",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect();
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
 fn mixed_exact_and_glob_branch_exclusions_block_the_exact_ref_condition() {
     let workflows = ParsedWorkflowSet {
         documents: vec![document(

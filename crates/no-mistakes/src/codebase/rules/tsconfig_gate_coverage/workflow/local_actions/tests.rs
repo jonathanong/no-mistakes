@@ -110,8 +110,8 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
         &["action/dist/index.js"],
         "action"
     ));
-    let local_node_pre_hook = "name: Node\ndescription: Valid\nruns: {using: node24, pre: setup.js, pre-if: always(), main: dist/index.js}";
-    assert!(valid(
+    let local_node_pre_hook = "name: Node\ndescription: Invalid\nruns: {using: node24, pre: setup.js, pre-if: always(), main: dist/index.js}";
+    assert!(!valid(
         &[("action", local_node_pre_hook)],
         &["action/setup.js", "action/dist/index.js"],
         "action"
@@ -239,6 +239,37 @@ fn composite_actions_reject_unconditional_static_failures() {
     ));
     let dynamic_shell = "name: Failing\ndescription: Failing\ninputs:\n  shell: {description: Shell, default: bash}\nruns:\n  using: composite\n  steps:\n    - shell: '${{ inputs.shell }}'\n      run: 'false | true'\n";
     assert!(!valid(&[("action", dynamic_shell)], &[], "action"));
+}
+
+#[test]
+fn input_dependent_composite_conditions_cannot_hide_static_failures() {
+    let action = "name: Conditional failure\ndescription: Conditional failure\ninputs:\n  enabled: {description: Enable failure}\nruns:\n  using: composite\n  steps:\n    - if: '${{ inputs.enabled }}'\n      run: 'false'\n      shell: bash\n";
+
+    assert!(!valid(&[("action", action)], &[], "action"));
+}
+
+#[test]
+fn action_pre_if_conditions_require_valid_documented_contexts() {
+    let node = "name: Node\ndescription: Invalid\nruns: {using: node24, pre: setup.js, pre-if: \"runner.os == 'Linux' && always()\", main: dist/index.js}";
+    assert!(!valid(
+        &[("action", node)],
+        &["action/setup.js", "action/dist/index.js"],
+        "action"
+    ));
+
+    let docker = "name: Docker\ndescription: Valid\nruns: {using: docker, image: 'docker://alpine:3.22', pre-entrypoint: setup.sh, pre-if: \"github.ref != ''\"}";
+    assert!(valid(&[("action", docker)], &[], "action"));
+
+    for pre_if in [
+        "runner.os ==",
+        "steps.setup.outputs.ready",
+        "hashFiles('**') != ''",
+    ] {
+        let docker = format!(
+            "name: Docker\ndescription: Invalid\nruns: {{using: docker, image: 'docker://alpine:3.22', pre-entrypoint: setup.sh, pre-if: \"{pre_if}\"}}"
+        );
+        assert!(!valid(&[("action", &docker)], &[], "action"), "{pre_if}");
+    }
 }
 
 #[test]

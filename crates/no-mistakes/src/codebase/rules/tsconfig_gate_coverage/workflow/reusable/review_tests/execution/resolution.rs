@@ -23,6 +23,16 @@ fn static_step_working_directories_and_condition_budgets_bound_coverage() {
 }
 
 #[test]
+fn missing_static_working_directories_fail_jobs_before_later_or_dependent_typechecks() {
+    let workflow = document(
+        ".github/workflows/missing-directory.yml",
+        "on: push\njobs:\n  setup:\n    runs-on: ubuntu-latest\n    steps:\n      - working-directory: missing\n        run: tsc --noEmit -p ../setup/tsconfig.json\n      - run: tsc --noEmit -p later/tsconfig.json\n  dependent:\n    needs: setup\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p dependent/tsconfig.json\n",
+    );
+
+    assert!(scanned_projects(vec![workflow], &["setup", "later", "dependent"]).is_empty());
+}
+
+#[test]
 fn resolved_environment_names_must_be_nonempty_per_activation() {
     let documents = vec![
         document(

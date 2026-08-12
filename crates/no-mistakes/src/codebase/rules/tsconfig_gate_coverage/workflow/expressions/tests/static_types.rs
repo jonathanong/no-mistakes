@@ -27,7 +27,6 @@ fn classifies_guaranteed_function_case_and_logical_result_types() {
         "${{ hashFiles('**/package-lock.json') }}",
         "${{ hashFiles('**/package-lock.json') }}",
         "${{ 'first' || 'second' }}",
-        "${{ case(true, 'first', 'second') }}",
     ] {
         assert_eq!(
             complete_expression_type(expression),
@@ -41,7 +40,6 @@ fn classifies_guaranteed_function_case_and_logical_result_types() {
         "${{ github.ref }}",
         "${{ toJSON(github).value }}",
         "${{ true || 'second' }}",
-        "${{ case(true, 'first', false) }}",
     ] {
         assert_eq!(
             complete_expression_type(expression),

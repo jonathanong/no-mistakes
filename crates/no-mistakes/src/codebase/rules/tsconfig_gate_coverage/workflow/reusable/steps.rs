@@ -1,8 +1,6 @@
 use super::ScanContext;
-use crate::codebase::ci_graph::triggers::{CompiledTriggers, TriggerMatch};
-use crate::codebase::rules::tsconfig_gate_coverage::{
-    application::resolve_gate_project_against_tracked, command_scan,
-};
+use crate::codebase::ci_graph::triggers::CompiledTriggers;
+use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 
@@ -17,11 +15,14 @@ use super::validation::action_step_inputs_valid_for_state;
 
 mod checkout;
 mod configuration;
+mod failure;
+mod local_action;
 mod model;
+mod projects;
 mod working_directory;
 use model::run_command;
 pub(super) use model::StepScan;
-use working_directory::step_working_directory;
+use working_directory::{step_working_directory, working_directory_exists};
 use {
     checkout::CheckoutState,
     configuration::{job_runtime, job_working_directory, step_configuration_validity},
@@ -93,25 +94,34 @@ pub(super) fn scan_job_steps(
             failed |= condition == StaticBool::True;
             break;
         }
-        if let Some(directory) = step
-            .get("uses")
-            .and_then(Value::as_str)
-            .and_then(|target| target.strip_prefix("./"))
-        {
-            if !checkout.local_action_available(context.local_actions, directory) {
-                if condition == StaticBool::True {
-                    step_outcomes.record(step, StaticValue::String("failure".to_string()));
-                    failed = true;
-                } else {
-                    indeterminate = true;
-                }
+        if let Some(available) = local_action::available(step, &checkout, context.local_actions) {
+            if !available {
+                failure::record_unavailable(
+                    step,
+                    condition,
+                    &mut step_outcomes,
+                    &mut failed,
+                    &mut indeterminate,
+                );
                 break;
             }
             continue;
         }
         checkout.observe(step, condition);
         let step_cwd = step_working_directory(step, inputs, &environment, &job_cwd);
-        let Some(cwd) = step_cwd else { continue };
+        let Some(cwd) = step_cwd else {
+            continue;
+        };
+        if !working_directory_exists(&cwd, context.tracked) {
+            failure::record_unavailable(
+                step,
+                condition,
+                &mut step_outcomes,
+                &mut failed,
+                &mut indeterminate,
+            );
+            break;
+        }
         let Some(run) = run_command(step) else {
             continue;
         };
@@ -153,29 +163,14 @@ pub(super) fn scan_job_steps(
             pipefail_enforced,
         );
         let run_to_scan = reachable_run.as_str();
-        let scanned = if failure_enforced {
-            command_scan::scan_shell_for_typechecked_projects(run_to_scan, &cwd)
-        } else {
-            command_scan::scan_workflow_shell_for_typechecked_projects(run_to_scan, &cwd, false)
-        };
         if !continue_on_error {
-            for project in scanned {
-                let project = resolve_gate_project_against_tracked(&project, context.tracked);
-                if context
-                    .project_source_inputs
-                    .get(&project)
-                    .is_some_and(|source_inputs| {
-                        source_inputs.iter().all(|input| {
-                            matches!(
-                                triggers.evaluate(input).0,
-                                TriggerMatch::Matched | TriggerMatch::Always
-                            )
-                        })
-                    })
-                {
-                    projects.insert(project);
-                }
-            }
+            projects.extend(projects::scan(
+                run_to_scan,
+                &cwd,
+                failure_enforced,
+                triggers,
+                context,
+            ));
         }
         let pipeline_failure = pipefail_enforced
             && command_scan::shell_body_has_static_pipeline_failure(&run, failure_enforced);

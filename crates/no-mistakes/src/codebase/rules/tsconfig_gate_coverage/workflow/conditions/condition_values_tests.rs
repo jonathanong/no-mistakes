@@ -1,6 +1,6 @@
 use super::{
-    condition_values::condition_value, evaluation::static_bool, functions::static_case_value,
-    static_value_string, EnvironmentState, InputState, StaticBool, StaticValue,
+    condition_values::condition_value, evaluation::static_bool, static_value_string,
+    EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use serde_yaml::Value;
 
@@ -172,14 +172,5 @@ fn unary_boolean_values_and_case_predicates_cover_scalar_conversion() {
             StaticBool::True
         ),
         Some(StaticValue::Bool(false))
-    );
-    assert_eq!(
-        static_case_value(
-            "case(inputs.dynamic, 'selected', 'default')",
-            &inputs,
-            &EnvironmentState::default(),
-            StaticBool::True
-        ),
-        None
     );
 }

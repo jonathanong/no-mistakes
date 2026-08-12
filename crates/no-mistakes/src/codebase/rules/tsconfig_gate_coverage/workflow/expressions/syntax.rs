@@ -198,15 +198,12 @@ impl<'a> ExpressionSyntax<'a> {
 
 fn function_may_produce_mapping(
     function: super::lexer::Function,
-    arguments: &[Expression],
+    _arguments: &[Expression],
 ) -> bool {
     use super::lexer::Function;
 
     match function {
         Function::FromJson => true,
-        Function::Case => arguments.iter().enumerate().any(|(index, argument)| {
-            (index % 2 == 1 || index + 1 == arguments.len()) && argument.may_produce_mapping
-        }),
         Function::Contains
         | Function::StartsWith
         | Function::EndsWith

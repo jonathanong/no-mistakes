@@ -6,6 +6,9 @@ fn exact_ref_names_are_type_checked_in_resolved_job_fields() {
         documents: vec![document(
             ".github/workflows/checks.yml",
             "on:\n  push:\n    branches: [main]\njobs:\n  invalid-concurrency:\n    concurrency:\n      group: checks\n      cancel-in-progress: '${{ github.ref_name || false }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p concurrency/tsconfig.json\n  invalid-url:\n    environment:\n      name: production\n      url: '${{ case(true, fromJSON(github.ref_name), ''ok'') }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p environment/tsconfig.json\n  unknown-config:\n    if: vars.ENABLED\n    concurrency:\n      group: checks\n      cancel-in-progress: '${{ github.ref_name }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo setup\n  dependent:\n    needs: unknown-config\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p dependent/tsconfig.json\n",
+        ), document(
+            ".github/workflows/supported-checks.yml",
+            "on:\n  push:\n    branches: [main]\njobs:\n  invalid-concurrency:\n    concurrency:\n      group: checks\n      cancel-in-progress: '${{ github.ref_name || false }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p concurrency/tsconfig.json\n  invalid-url:\n    environment:\n      name: production\n      url: '${{ fromJSON(github.ref_name) }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p environment/tsconfig.json\n  unknown-config:\n    if: vars.ENABLED\n    concurrency:\n      group: checks\n      cancel-in-progress: '${{ github.ref_name }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo setup\n  dependent:\n    needs: unknown-config\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p dependent/tsconfig.json\n",
         )],
     };
     let tracked = BTreeSet::from([
@@ -14,10 +17,9 @@ fn exact_ref_names_are_type_checked_in_resolved_job_fields() {
         "environment/tsconfig.json".to_string(),
     ]);
 
-    assert!(
-        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
-            .0
-            .is_empty()
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::new(),
     );
 }
 
@@ -47,6 +49,29 @@ fn invalid_resolved_environment_urls_fail_dependent_jobs() {
     assert_eq!(
         collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
         BTreeSet::from(["valid/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
+fn non_stringable_environment_values_from_known_inputs_earn_no_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  call:\n    uses: ./.github/workflows/callee.yml\n    with: {value: '{}'}\n",
+            ),
+            document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    inputs:\n      value: {type: string, required: true}\nenv:\n  DEPLOY_ENV: '${{ fromJSON(inputs.value) }}'\njobs:\n  typecheck:\n    environment: '${{ env.DEPLOY_ENV }}'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p invalid-environment/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["invalid-environment/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
     );
 }
 

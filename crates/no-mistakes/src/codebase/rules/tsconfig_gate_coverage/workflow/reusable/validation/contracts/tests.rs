@@ -172,7 +172,10 @@ fn trigger_configs_reject_values_actions_cannot_schedule() {
         "schedule:\n  - cron: '0 0 * 0 *'",
         "schedule:\n  - cron: '0 0 * * */0'",
     ] {
-        assert!(!workflow_call_shape_valid(Some(&on(malformed))), "{malformed}");
+        assert!(
+            !workflow_call_shape_valid(Some(&on(malformed))),
+            "{malformed}"
+        );
     }
     let twenty_five_inputs = (0..25)
         .map(|index| format!("    input-{index}:\n      type: string"))

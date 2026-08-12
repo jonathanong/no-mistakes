@@ -58,7 +58,6 @@ fn accepts_only_documented_github_expression_functions_case_insensitively() {
         "${{ toJSON(github) }}",
         "${{ fromJSON(inputs.payload) }}",
         "${{ hashFiles('**/package-lock.json') }}",
-        "${{ case(github.ref == 'refs/heads/main', 'production', 'development') }}",
         "${{ success() }}",
         "${{ failure() }}",
         "${{ always() }}",
@@ -84,8 +83,7 @@ fn rejects_documented_functions_with_invalid_arities() {
         "${{ toJSON() }}",
         "${{ fromJSON() }}",
         "${{ hashFiles() }}",
-        "${{ case(true, 'matched') }}",
-        "${{ case(true, 'matched', false, 'other') }}",
+        "${{ case(true, 'matched', 'fallback') }}",
         "${{ success(1) }}",
         "${{ failure(1) }}",
         "${{ always(1) }}",
@@ -167,7 +165,6 @@ fn distinguishes_mapping_candidates_from_guaranteed_scalars() {
     for expression in [
         "${{ fromJSON(needs.setup.outputs.matrix) }}",
         "${{ needs.setup.outputs.matrix }}",
-        "${{ case(inputs.enabled, fromJSON(inputs.matrix), needs.setup.outputs.matrix) }}",
     ] {
         assert!(
             complete_expression_may_produce_mapping(expression),

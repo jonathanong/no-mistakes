@@ -18,10 +18,6 @@ pub(super) fn static_function_bool(
     status: ConditionStatus,
 ) -> Option<StaticBool> {
     let call = condition_function_call(expression)?;
-    if call.function == Function::Case {
-        return static_case_value(expression, inputs, environment, status)
-            .map(StaticValue::truthiness);
-    }
     if call.function == Function::Format {
         return static_format_value(expression, inputs, environment, status)
             .map(|value| value.truthiness());
@@ -70,35 +66,6 @@ fn contains_static_value(search: &StaticValue, item: &str) -> Option<bool> {
         }
     }
     (!unknown).then_some(false)
-}
-
-pub(super) fn static_case_value(
-    expression: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-    status: impl Into<ConditionStatus>,
-) -> Option<StaticValue> {
-    let status = status.into();
-    let call = condition_function_call(expression)?;
-    (call.function == Function::Case).then_some(())?;
-    for index in (0..call.arguments.len() - 1).step_by(2) {
-        match function_argument_value(call.arguments[index], inputs, environment, status)?
-            .truthiness()
-        {
-            StaticBool::False => continue,
-            StaticBool::True | StaticBool::TruthyNonBoolean => {
-                return function_argument_value(
-                    call.arguments[index + 1],
-                    inputs,
-                    environment,
-                    status,
-                );
-            }
-            StaticBool::Invalid => return Some(StaticValue::Invalid),
-            StaticBool::Unknown => return None,
-        }
-    }
-    function_argument_value(call.arguments.last()?, inputs, environment, status)
 }
 
 fn function_argument_value(

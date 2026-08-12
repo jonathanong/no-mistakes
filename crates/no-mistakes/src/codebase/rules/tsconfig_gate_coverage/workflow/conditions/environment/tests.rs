@@ -43,7 +43,7 @@ fn expressions_resolve_current_inputs_and_matrix_values_with_string_coercion() {
         ("${{ inputs.empty }}", StaticValue::String(String::new())),
         ("${{ inputs.missing }}", StaticValue::String(String::new())),
         ("${{ matrix.target }}", StaticValue::String("linux".into())),
-        ("${{ matrix.cfg }}", StaticValue::Invalid),
+        ("${{ matrix.cfg }}", StaticValue::Mapping),
         ("${{ matrix.dynamic_target }}", StaticValue::Unknown),
         ("prefix-${{ inputs.enabled }}", StaticValue::Unknown),
     ] {
@@ -55,6 +55,34 @@ fn expressions_resolve_current_inputs_and_matrix_values_with_string_coercion() {
                 &EnvironmentState::default(),
             ),
             expected
+        );
+    }
+}
+
+#[test]
+fn known_non_stringable_input_values_remain_invalid_environment_values() {
+    let inputs = BTreeMap::from([
+        ("sequence".to_string(), StaticValue::Sequence(Vec::new())),
+        ("mapping".to_string(), StaticValue::Mapping),
+        ("non-stringable".to_string(), StaticValue::NonStringable),
+        ("invalid".to_string(), StaticValue::Invalid),
+    ]);
+
+    for (name, expected) in [
+        ("sequence", StaticValue::Sequence(Vec::new())),
+        ("mapping", StaticValue::Mapping),
+        ("non-stringable", StaticValue::NonStringable),
+        ("invalid", StaticValue::Invalid),
+    ] {
+        assert_eq!(
+            environment_value(
+                &Value::String(format!("${{{{ inputs.{name} }}}}")),
+                &SecretState::direct(),
+                &inputs,
+                &EnvironmentState::default(),
+            ),
+            expected,
+            "{name}",
         );
     }
 }

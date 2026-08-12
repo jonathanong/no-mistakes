@@ -12,12 +12,14 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validati
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::runner_os;
 use crate::codebase::workflow_topology::workflow_values;
 use serde_yaml::Value;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 mod configuration;
 mod order;
+mod outputs;
 mod scanner;
 use configuration::job_configuration_validity;
+use outputs::merge_reusable_outputs;
 pub(super) use scanner::{JobScanner, WorkflowRuntime};
 
 impl<'a, 'workflow> JobScanner<'a, 'workflow> {
@@ -58,6 +60,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         if !edge.local {
             return Some(ActivationScan {
                 projects: BTreeSet::new(),
+                outputs: BTreeMap::new(),
                 failed: false,
                 indeterminate: false,
             });
@@ -70,6 +73,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         let contract = callee.call_contract.as_ref()?;
         let callee_secrets = callee_secrets(contract, job, &self.state.secrets)?;
         let mut projects = BTreeSet::new();
+        let mut outputs = None;
         let mut failed = false;
         let mut indeterminate = false;
         let has_instances = !inputs.is_empty();
@@ -96,6 +100,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 self.memo,
             )?;
             if has_instances && !skipped {
+                merge_reusable_outputs(&mut outputs, &callee_scan);
                 if !job_statically_not_enforcing(job, inputs) {
                     projects.extend(callee_scan.projects);
                 }
@@ -106,6 +111,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         }
         Some(ActivationScan {
             projects,
+            outputs: outputs.unwrap_or_default(),
             failed,
             indeterminate,
         })
@@ -121,6 +127,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         if skipped {
             return ActivationScan {
                 projects: BTreeSet::new(),
+                outputs: BTreeMap::new(),
                 failed: false,
                 indeterminate: false,
             };
@@ -172,6 +179,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         }
         ActivationScan {
             projects,
+            outputs: BTreeMap::new(),
             failed,
             indeterminate,
         }

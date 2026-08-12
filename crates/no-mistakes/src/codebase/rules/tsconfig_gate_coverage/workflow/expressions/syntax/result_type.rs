@@ -13,7 +13,7 @@ pub(super) fn logical_result(left: Expression, right: Expression) -> Expression 
 
 pub(super) fn function_static_type(
     function: Function,
-    arguments: &[Expression],
+    _arguments: &[Expression],
 ) -> StaticExpressionType {
     match function {
         Function::Contains
@@ -27,23 +27,5 @@ pub(super) fn function_static_type(
             StaticExpressionType::String
         }
         Function::FromJson => StaticExpressionType::Dynamic,
-        Function::Case => case_static_type(arguments),
-    }
-}
-
-fn case_static_type(arguments: &[Expression]) -> StaticExpressionType {
-    let mut branches = arguments
-        .iter()
-        .enumerate()
-        .filter_map(|(index, argument)| {
-            (index % 2 == 1 || index + 1 == arguments.len()).then_some(argument.static_type)
-        });
-    let Some(static_type) = branches.next() else {
-        return StaticExpressionType::Dynamic;
-    };
-    if branches.all(|branch| branch == static_type && branch != StaticExpressionType::Dynamic) {
-        static_type
-    } else {
-        StaticExpressionType::Dynamic
     }
 }

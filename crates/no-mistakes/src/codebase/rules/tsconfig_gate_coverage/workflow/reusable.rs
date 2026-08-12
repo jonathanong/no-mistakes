@@ -18,7 +18,7 @@ mod validation;
 
 use activation::scan_activation;
 use events::source_change_event_contexts;
-use model::{ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
+use model::{ActivationMemo, ActivationState, GithubRef, ScanContext, WorkflowDocument};
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
 pub(super) use validation::steps_shape_valid;
@@ -69,9 +69,18 @@ pub(super) fn collect_ci_projects_with_local_actions(
             let mut memo = ActivationMemo::new();
             let triggers = CompiledTriggers::for_event(&trigger_model, event_name)
                 .expect("event came from the trigger model");
+            let events = source_change_event_contexts(document.value, event_name);
+            let exact_branch_activations = events.len() > 1
+                && events
+                    .iter()
+                    .all(|event| matches!(event.reference, GithubRef::Exact(_)));
             let mut event_projects = BTreeSet::new();
-            for event in source_change_event_contexts(document.value, event_name) {
+            let mut exact_projects = None;
+            for event in events {
                 let Some(inputs) = direct_inputs(document.call_contract.as_ref(), &event) else {
+                    if exact_branch_activations {
+                        exact_projects = Some(BTreeSet::new());
+                    }
                     continue;
                 };
                 if let Some(activation) = scan_activation(
@@ -82,8 +91,22 @@ pub(super) fn collect_ci_projects_with_local_actions(
                     &context,
                     &mut memo,
                 ) {
-                    event_projects.extend(activation.projects);
+                    if exact_branch_activations {
+                        match &mut exact_projects {
+                            Some(projects) => {
+                                projects.retain(|project| activation.projects.contains(project))
+                            }
+                            None => exact_projects = Some(activation.projects),
+                        }
+                    } else {
+                        event_projects.extend(activation.projects);
+                    }
+                } else if exact_branch_activations {
+                    exact_projects = Some(BTreeSet::new());
                 }
+            }
+            if exact_branch_activations {
+                event_projects = exact_projects.unwrap_or_default();
             }
             if !memo.exhausted() {
                 projects.extend(event_projects);

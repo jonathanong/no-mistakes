@@ -1,4 +1,4 @@
-use super::super::conditions::{InputState, SecretState};
+use super::super::conditions::{InputState, SecretState, StaticValue};
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 use crate::codebase::workflow_topology::model::WorkflowCallContract;
 use serde_yaml::Value;
@@ -104,6 +104,7 @@ pub(super) struct ActivationKey {
 #[derive(Clone)]
 pub(super) struct ActivationScan {
     pub(super) projects: BTreeSet<String>,
+    pub(super) outputs: BTreeMap<String, StaticValue>,
     pub(super) failed: bool,
     pub(super) indeterminate: bool,
 }

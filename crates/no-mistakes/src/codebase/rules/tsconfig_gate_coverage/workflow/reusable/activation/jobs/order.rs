@@ -4,7 +4,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
     job_statically_disabled, job_statically_enabled,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 impl JobScanner<'_, '_> {
     pub(in super::super) fn scan(&mut self, jobs: &serde_yaml::Mapping) -> Option<ActivationScan> {
@@ -14,6 +14,7 @@ impl JobScanner<'_, '_> {
         let mut indeterminate = BTreeSet::new();
         let mut runtime_skipped = BTreeSet::new();
         let mut known_executed = BTreeSet::new();
+        let mut outputs = BTreeMap::new();
         while completed.len() < jobs.len() {
             let mut progressed = false;
             for (raw_job_id, job) in jobs {
@@ -36,6 +37,7 @@ impl JobScanner<'_, '_> {
                     &runtime_skipped,
                     &failed,
                     &known_executed,
+                    &outputs,
                 )?;
                 let failed_need = needs.iter().any(|need| failed.contains(need));
                 let skipped_need = needs.iter().any(|need| runtime_skipped.contains(need));
@@ -83,6 +85,7 @@ impl JobScanner<'_, '_> {
                     || (!unsuccessful_need && directly_enabled)
                 {
                     known_executed.insert(job_id.clone());
+                    outputs.insert(job_id.clone(), result.outputs);
                 }
                 completed.insert(job_id);
                 progressed = true;
@@ -93,6 +96,7 @@ impl JobScanner<'_, '_> {
         }
         Some(ActivationScan {
             projects,
+            outputs: BTreeMap::new(),
             failed: !failed.is_empty(),
             indeterminate: !indeterminate.is_empty(),
         })

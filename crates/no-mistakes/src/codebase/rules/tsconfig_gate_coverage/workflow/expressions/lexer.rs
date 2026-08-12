@@ -29,7 +29,6 @@ pub(crate) enum Function {
     ToJson,
     FromJson,
     HashFiles,
-    Case,
     Success,
     Failure,
     Always,
@@ -46,8 +45,6 @@ impl Function {
             Self::ToJson | Self::FromJson => count == 1,
             // `hashFiles` accepts one or more comma-separated patterns.
             Self::HashFiles => count >= 1,
-            // `case` takes predicate/value pairs and a final default value.
-            Self::Case => count >= 3 && count % 2 == 1,
             Self::Success | Self::Failure | Self::Always | Self::Cancelled => count == 0,
         }
     }
@@ -160,7 +157,6 @@ fn function(identifier: &str) -> Option<Function> {
         "tojson" => Function::ToJson,
         "fromjson" => Function::FromJson,
         "hashfiles" => Function::HashFiles,
-        "case" => Function::Case,
         "success" => Function::Success,
         "failure" => Function::Failure,
         "always" => Function::Always,

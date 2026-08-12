@@ -65,9 +65,15 @@ impl EnvironmentState {
     }
 
     pub(crate) fn has_invalid_value(&self) -> bool {
-        self.values
-            .values()
-            .any(|value| matches!(value, StaticValue::Invalid))
+        self.values.values().any(|value| {
+            matches!(
+                value,
+                StaticValue::Sequence(_)
+                    | StaticValue::Mapping
+                    | StaticValue::NonStringable
+                    | StaticValue::Invalid
+            )
+        })
     }
 
     pub(crate) fn with_runner_os(&self, runner_os: Option<&str>) -> Self {
@@ -183,9 +189,11 @@ fn string_static_value(value: StaticValue) -> StaticValue {
         StaticValue::Bool(value) => StaticValue::String(value.to_string()),
         StaticValue::Number(value) | StaticValue::String(value) => StaticValue::String(value),
         StaticValue::Null => StaticValue::String(String::new()),
-        StaticValue::Sequence(_) | StaticValue::Mapping => StaticValue::Invalid,
-        StaticValue::NonStringable | StaticValue::Unknown => StaticValue::Unknown,
-        StaticValue::Invalid => StaticValue::Invalid,
+        StaticValue::Sequence(_)
+        | StaticValue::Mapping
+        | StaticValue::NonStringable
+        | StaticValue::Invalid => value,
+        StaticValue::Unknown => StaticValue::Unknown,
     }
 }
 

@@ -73,6 +73,9 @@ sufficient; partial coverage from separate caller paths is never combined.
 Every declared reusable call, including a statically skipped call, still
 participates in cycle, nesting-depth, and unique-target validation; skipped
 callees are validated without crediting their commands.
+Statically known reusable-workflow outputs propagate through the caller's
+`needs.<job>.outputs` context; divergent or dynamic output values remain
+unresolved rather than being guessed.
 For each direct workflow and triggering event, reusable activation evaluates at
 most 1,024 distinct path-sensitive input states. A graph that exceeds this
 budget provides no coverage for that root event, rather than allowing layered
@@ -83,7 +86,9 @@ visible TypeScript/JavaScript source selected by that project's
 `files`/`include`/`exclude` settings. Projects with no known source files fall
 back to the tracked tsconfig path. Input values and path coverage are evaluated
 for each direct caller event independently, so coverage from different events
-is never combined. An explicitly activity-filtered `pull_request` or
+is never combined. Exact branch activations for the same event are also kept
+correlated, so projects reachable on separate branches are never combined into
+one enforcing gate. An explicitly activity-filtered `pull_request` or
 `pull_request_target` event must include `synchronize`, the event that runs when
 source commits are added to an open pull request. Manual, scheduled, reusable,
 empty, tag-only, and path-filtered-out workflows cannot provide a repository
@@ -149,9 +154,7 @@ as well as input truthiness. Static `contains`, `startsWith`, `endsWith`,
 missing properties coerce to an empty string. Static `format` calls support
 zero-based placeholders and doubled-brace escapes, including when composed
 inside the other supported string functions. Static `join` calls support
-literal arrays, scalar values, and the default comma separator. Static `case`
-calls select the first truthy branch or their default, while an unknown
-predicate remains unresolved.
+literal arrays, scalar values, and the default comma separator.
 Expressions whose result remains dynamic fail open as potentially runnable.
 Known malformed `fromJSON` inputs are expression errors and do not provide
 coverage, including through comparisons, logical operators, or string functions.

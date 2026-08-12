@@ -2,9 +2,14 @@ use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
 
 use super::icons::branding_icon_valid;
-use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::interpolated_expression_contexts_available;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
+    condition_expression_contexts_available, interpolated_expression_contexts_available,
+};
 
 const COMPOSITE_OUTPUT_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runner", "env", "vars"];
+const ACTION_PRE_IF_CONTEXTS: &[&str] = &[
+    "github", "needs", "strategy", "matrix", "job", "runner", "env", "vars", "inputs",
+];
 
 pub(super) fn action_inputs_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
@@ -104,7 +109,7 @@ pub(super) fn branding_valid(value: Option<&Value>) -> bool {
 pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
     let keys = match using {
         "composite" => &["using", "steps"][..],
-        "node" => &["using", "pre", "pre-if", "main", "post", "post-if"][..],
+        "node" => &["using", "main", "post", "post-if"][..],
         "docker" => &[
             "using",
             "image",
@@ -123,8 +128,10 @@ pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
         || !runs
             .get("post")
             .is_none_or(|value| nonempty_string(Some(value)))
-        || !runs.get("pre-if").is_none_or(valid_action_condition)
-        || !runs.get("post-if").is_none_or(valid_action_condition)
+        || !runs.get("pre-if").is_none_or(pre_if_valid)
+        || !runs
+            .get("post-if")
+            .is_none_or(|value| nonempty_string(Some(value)))
         || !runs
             .get("pre-entrypoint")
             .is_none_or(|value| nonempty_string(Some(value)))
@@ -156,10 +163,9 @@ pub(super) fn runs_shape_valid(runs: &Mapping, using: &str) -> bool {
     true
 }
 
-fn valid_action_condition(value: &Value) -> bool {
+fn pre_if_valid(value: &Value) -> bool {
     value.as_str().is_some_and(|value| {
-        !value.trim().is_empty()
-            && crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::condition_expression_valid(value)
+        condition_expression_contexts_available(value, ACTION_PRE_IF_CONTEXTS, false)
     })
 }
 

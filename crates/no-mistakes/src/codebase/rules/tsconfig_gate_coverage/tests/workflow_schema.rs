@@ -460,10 +460,6 @@ fn scalar_root_matrix_expressions_do_not_credit_typechecks() {
     for (name, expression) in [
         ("dynamic-from-json", "fromJSON(needs.setup.outputs.matrix)"),
         ("dynamic-property", "needs.setup.outputs.matrix"),
-        (
-            "dynamic-case",
-            "case(inputs.enabled, fromJSON(inputs.matrix), needs.setup.outputs.matrix)",
-        ),
     ] {
         documents.push(workflow(
             &format!(".github/workflows/{name}.yml"),
@@ -477,7 +473,7 @@ fn scalar_root_matrix_expressions_do_not_credit_typechecks() {
         .enumerate()
         .map(|(index, _)| format!("scalar-matrix-{index}/tsconfig.json"))
         .chain(
-            ["dynamic-from-json", "dynamic-property", "dynamic-case"]
+            ["dynamic-from-json", "dynamic-property"]
                 .into_iter()
                 .map(|name| format!("{name}/tsconfig.json")),
         )
@@ -490,7 +486,6 @@ fn scalar_root_matrix_expressions_do_not_credit_typechecks() {
             &project_inputs(&tracked),
         ),
         BTreeSet::from([
-            "dynamic-case/tsconfig.json".to_string(),
             "dynamic-from-json/tsconfig.json".to_string(),
             "dynamic-property/tsconfig.json".to_string(),
         ])

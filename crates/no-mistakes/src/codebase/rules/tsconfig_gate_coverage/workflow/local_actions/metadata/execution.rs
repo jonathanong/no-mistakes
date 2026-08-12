@@ -1,7 +1,8 @@
 use super::shape::{nonempty_string, only_keys};
 use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
-    reduce_context_free_interpolations, ContextFreeInterpolation,
+    condition_expression_contexts_available, reduce_context_free_interpolations,
+    ContextFreeInterpolation,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::{
     shell_failure_enforced, shell_pipefail_enforced,
@@ -147,15 +148,20 @@ fn composite_step_continues_on_error(step: &Mapping) -> bool {
 fn composite_step_may_run(step: &Mapping) -> bool {
     match step.get("if") {
         Some(Value::Bool(false)) => false,
-        Some(Value::String(expression)) => {
-            if expression.contains("inputs.") {
-                return true;
-            }
+        Some(Value::String(expression)) if !action_input_condition(expression) => {
             super::super::super::conditions::expression_bool(expression, &BTreeMap::new())
                 != super::super::super::conditions::StaticBool::False
         }
         None | Some(_) => true,
     }
+}
+
+fn action_input_condition(expression: &str) -> bool {
+    !condition_expression_contexts_available(
+        expression,
+        &["github", "steps", "runner", "env", "vars"],
+        true,
+    )
 }
 
 pub(super) fn composite_steps_shape_valid(steps: &[Value]) -> bool {

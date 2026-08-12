@@ -69,7 +69,6 @@ pub(super) fn condition_value(
                 )
             })
         })
-        .or_else(|| functions::static_case_value(operand, inputs, environment, status))
         .or_else(|| functions::static_format_value(operand, inputs, environment, status))
         .or_else(|| functions::static_join_value(operand, inputs, environment, status))
         .or_else(|| {

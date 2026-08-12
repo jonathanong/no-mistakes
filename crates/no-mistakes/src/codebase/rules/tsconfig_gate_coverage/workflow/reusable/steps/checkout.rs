@@ -1,6 +1,5 @@
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::StaticBool;
 use serde_yaml::Value;
-use std::collections::BTreeSet;
 
 #[derive(Default)]
 pub(super) struct CheckoutState(bool);
@@ -8,14 +7,6 @@ pub(super) struct CheckoutState(bool);
 impl CheckoutState {
     pub(super) fn available(&self) -> bool {
         self.0
-    }
-
-    pub(super) fn local_action_available(
-        &self,
-        local_actions: &BTreeSet<String>,
-        directory: &str,
-    ) -> bool {
-        self.available() && local_actions.contains(directory)
     }
 
     pub(super) fn observe(&mut self, step: &Value, condition: StaticBool) {

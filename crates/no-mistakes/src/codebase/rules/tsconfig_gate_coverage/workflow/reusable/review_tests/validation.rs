@@ -124,6 +124,31 @@ fn local_actions_are_validated_only_when_their_step_executes() {
 }
 
 #[test]
+fn failing_local_actions_block_needs_dependents_from_credit() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  invalid-action:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ./.github/actions/missing\n  blocked:\n    needs: invalid-action\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p blocked/tsconfig.json\n  independent:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p independent/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "blocked/tsconfig.json".to_string(),
+        "independent/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_local_actions(
+            &workflows,
+            &tracked,
+            &project_inputs(&tracked),
+            &BTreeSet::new(),
+        )
+        .0,
+        BTreeSet::from(["independent/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn resolved_job_timeouts_must_be_positive() {
     let workflows = ParsedWorkflowSet {
         documents: vec![

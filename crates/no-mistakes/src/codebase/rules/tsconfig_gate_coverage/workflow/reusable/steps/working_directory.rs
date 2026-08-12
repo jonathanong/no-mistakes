@@ -3,6 +3,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
 };
 use crate::codebase::rules::tsconfig_gate_coverage::{command_scan, workflow::conditions};
 use serde_yaml::Value;
+use std::collections::BTreeSet;
 
 pub(super) fn step_working_directory(
     step: &Value,
@@ -17,4 +18,12 @@ pub(super) fn step_working_directory(
                 .and_then(|directory| command_scan::normalize_repo_relative(&directory))
         })
         .unwrap_or_else(|| job_cwd.clone())
+}
+
+pub(super) fn working_directory_exists(directory: &str, tracked: &BTreeSet<String>) -> bool {
+    directory == "."
+        || tracked.iter().any(|path| {
+            path.strip_prefix(directory)
+                .is_some_and(|suffix| suffix.starts_with('/'))
+        })
 }

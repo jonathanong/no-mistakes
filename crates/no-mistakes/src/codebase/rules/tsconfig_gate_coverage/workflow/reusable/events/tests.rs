@@ -27,11 +27,7 @@ fn source_change_event_contexts_select_only_synchronize_activities() {
             "pull_request",
             vec![],
         ),
-        (
-            "on:\n  push:\n    branches-ignore: ['**']",
-            "push",
-            vec![],
-        ),
+        ("on:\n  push:\n    branches-ignore: ['**']", "push", vec![]),
         (
             "on:\n  pull_request:\n    types: [synchronize]\n    branches: [release/**, '!**']",
             "pull_request",

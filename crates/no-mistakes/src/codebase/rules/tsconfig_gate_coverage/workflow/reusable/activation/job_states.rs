@@ -58,12 +58,26 @@ impl JobStates {
         runtime_skipped: &BTreeSet<String>,
         failed: &BTreeSet<String>,
         executed: &BTreeSet<String>,
+        outputs: &BTreeMap<
+            String,
+            BTreeMap<
+                String,
+                crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::StaticValue,
+            >,
+        >,
     ) -> Option<Vec<InputState>> {
         Some(
             self.inputs_for(job_id)?
                 .iter()
                 .map(|inputs| {
-                    inputs_with_needs_results(inputs, job, runtime_skipped, failed, executed)
+                    inputs_with_needs_results(
+                        inputs,
+                        job,
+                        runtime_skipped,
+                        failed,
+                        executed,
+                        outputs,
+                    )
                 })
                 .collect(),
         )

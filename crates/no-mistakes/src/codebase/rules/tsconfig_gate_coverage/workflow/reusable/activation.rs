@@ -10,7 +10,11 @@ use super::validation::{
     workflow_concurrency_valid_for_inputs, workflow_shape_valid,
 };
 use crate::codebase::ci_graph::triggers::CompiledTriggers;
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
+    resolve_static_interpolations, EnvironmentState, StaticValue,
+};
 use serde_yaml::Value;
+use std::collections::BTreeMap;
 
 mod job_states;
 mod jobs;
@@ -77,6 +81,33 @@ fn scan_activation_uncached(
         memo,
     )
     .scan(jobs)
+    .map(|mut scan| {
+        scan.outputs = workflow_output_values(document, &state.inputs);
+        scan
+    })
+}
+
+fn workflow_output_values(
+    document: &WorkflowDocument<'_>,
+    inputs: &super::super::conditions::InputState,
+) -> BTreeMap<String, StaticValue> {
+    document
+        .call_contract
+        .as_ref()
+        .into_iter()
+        .flat_map(|contract| &contract.outputs)
+        .map(|(name, output)| {
+            let value = output
+                .value
+                .as_deref()
+                .and_then(|value| {
+                    resolve_static_interpolations(value, inputs, &EnvironmentState::default())
+                })
+                .map(StaticValue::String)
+                .unwrap_or(StaticValue::Unknown);
+            (name.to_lowercase(), value)
+        })
+        .collect()
 }
 
 fn reusable_call_target(job: &Value) -> Option<Option<&str>> {

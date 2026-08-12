@@ -34,6 +34,9 @@ fn known_runner_os_controls_resolved_environment_urls() {
         documents: vec![document(
             ".github/workflows/checks.yml",
             "on: push\njobs:\n  invalid-linux:\n    runs-on: ubuntu-latest\n    environment:\n      name: production\n      url: \"${{ case(runner.os == 'Linux', fromJSON('{}'), 'https://ok') }}\"\n    steps:\n      - run: tsc --noEmit -p invalid/tsconfig.json\n  valid-windows:\n    runs-on: windows-latest\n    environment:\n      name: production\n      url: \"${{ case(runner.os == 'Linux', fromJSON('{}'), 'https://ok') }}\"\n    steps:\n      - shell: bash\n        run: tsc --noEmit -p valid/tsconfig.json\n",
+        ), document(
+            ".github/workflows/supported-environment.yml",
+            "on: push\njobs:\n  invalid-linux:\n    runs-on: ubuntu-latest\n    environment:\n      name: production\n      url: \"${{ runner.os == 'Linux' && fromJSON('{}') || 'https://ok' }}\"\n    steps:\n      - run: tsc --noEmit -p invalid/tsconfig.json\n  valid-windows:\n    runs-on: windows-latest\n    environment:\n      name: production\n      url: \"${{ runner.os == 'Linux' && fromJSON('{}') || 'https://ok' }}\"\n    steps:\n      - shell: bash\n        run: tsc --noEmit -p valid/tsconfig.json\n",
         )],
     };
     let tracked = BTreeSet::from([

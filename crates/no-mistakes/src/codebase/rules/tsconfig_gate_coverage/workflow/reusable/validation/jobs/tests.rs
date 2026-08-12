@@ -226,21 +226,27 @@ fn continue_on_error_rejects_static_nonboolean_expressions() {
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ 1 }}'\n    run: echo invalid",
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ null }}'\n    run: echo invalid",
     ] {
-        assert!(!if yaml.starts_with("runs-on:") {
-            steps_shape_valid(&job(yaml))
-        } else {
-            super::step_job_shape_valid(&job(yaml))
-        }, "{yaml}");
+        assert!(
+            !if yaml.starts_with("runs-on:") {
+                steps_shape_valid(&job(yaml))
+            } else {
+                super::step_job_shape_valid(&job(yaml))
+            },
+            "{yaml}"
+        );
     }
     for yaml in [
         "continue-on-error: '${{ inputs.allowed }}'\nruns-on: ubuntu-latest\nsteps:\n  - run: echo valid",
         "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ steps.setup.outputs.allowed }}'\n    run: echo valid",
     ] {
-        assert!(if yaml.starts_with("runs-on:") {
-            steps_shape_valid(&job(yaml))
-        } else {
-            super::step_job_shape_valid(&job(yaml))
-        }, "{yaml}");
+        assert!(
+            if yaml.starts_with("runs-on:") {
+                steps_shape_valid(&job(yaml))
+            } else {
+                super::step_job_shape_valid(&job(yaml))
+            },
+            "{yaml}"
+        );
     }
 }
 
@@ -256,7 +262,7 @@ fn timeout_minutes_uses_its_field_specific_contexts_and_functions() {
     for yaml in [
         "steps:\n  - timeout-minutes: '${{ steps.setup.outputs.timeout }}'\n    run: echo valid",
         "steps:\n  - timeout-minutes: '${{ github.run_number }}'\n    run: echo valid",
-        "steps:\n  - timeout-minutes: \"${{ case(contains(hashFiles('**/pnpm-lock.yaml'), 'x'), 5, 10) }}\"\n    run: echo valid",
+        "steps:\n  - timeout-minutes: \"${{ contains(hashFiles('**/pnpm-lock.yaml'), 'x') && 5 || 10 }}\"\n    run: echo valid",
     ] {
         assert!(steps_shape_valid(&job(yaml)), "{yaml}");
     }
@@ -353,7 +359,7 @@ fn environment_url_rechecks_resolved_stringable_values_per_active_state() {
     ));
 
     let runner_url = job(
-        "runs-on: ubuntu-latest\nenvironment:\n  name: staging\n  url: \"${{ case(runner.os == 'Linux', fromJSON('{}'), 'https://ok') }}\"\nsteps:\n  - run: echo valid",
+        "runs-on: ubuntu-latest\nenvironment:\n  name: staging\n  url: \"${{ runner.os == 'Linux' && fromJSON('{}') || 'https://ok' }}\"\nsteps:\n  - run: echo valid",
     );
     let runner_environment = EnvironmentState::default().with_runner_os(Some("Linux"));
     assert_eq!(
@@ -374,7 +380,7 @@ fn environment_url_rechecks_resolved_stringable_values_per_active_state() {
     );
     assert_eq!(
         complete_expression_static_value_with_environment(
-            "${{ case(runner.os == 'Linux', fromJSON('{}'), 'https://ok') }}",
+            "${{ runner.os == 'Linux' && fromJSON('{}') || 'https://ok' }}",
             &InputState::new(),
             &runner_environment,
         ),
