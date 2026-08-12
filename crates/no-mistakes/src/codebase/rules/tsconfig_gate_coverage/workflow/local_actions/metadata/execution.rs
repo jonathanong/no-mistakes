@@ -1,4 +1,4 @@
-use super::shape::{nonempty_string, only_keys};
+use super::{composite_shape, shape::nonempty_string};
 use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_expression_contexts_available, reduce_context_free_interpolations,
@@ -49,22 +49,10 @@ pub(super) fn composite_step_valid(
     visiting: &mut BTreeSet<String>,
     cache: &mut BTreeMap<String, bool>,
 ) -> bool {
-    const KEYS: &[&str] = &[
-        "continue-on-error",
-        "env",
-        "id",
-        "if",
-        "name",
-        "run",
-        "shell",
-        "uses",
-        "with",
-        "working-directory",
-    ];
     let Some(step) = step.as_mapping() else {
         return false;
     };
-    if !only_keys(step, KEYS) {
+    if !composite_shape::step_valid(step) {
         return false;
     }
     if let Some(run) = step.get("run") {
@@ -165,10 +153,5 @@ fn action_input_condition(expression: &str) -> bool {
 }
 
 pub(super) fn composite_steps_shape_valid(steps: &[Value]) -> bool {
-    let mut job = Mapping::new();
-    job.insert(
-        Value::String("steps".to_string()),
-        Value::Sequence(steps.to_vec()),
-    );
-    super::super::super::reusable::steps_shape_valid(&Value::Mapping(job))
+    composite_shape::steps_valid(steps)
 }

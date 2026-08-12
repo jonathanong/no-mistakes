@@ -1,6 +1,7 @@
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
+mod composite_shape;
 mod execution;
 mod icons;
 mod shape;

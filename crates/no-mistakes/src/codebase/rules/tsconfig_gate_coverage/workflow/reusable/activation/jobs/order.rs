@@ -63,6 +63,11 @@ impl JobScanner<'_, '_> {
                 let directly_enabled = inputs
                     .iter()
                     .any(|inputs| job_statically_enabled(job, inputs));
+                let condition_indeterminate = !directly_disabled
+                    && !inputs.is_empty()
+                    && !inputs
+                        .iter()
+                        .all(|inputs| job_statically_enabled(job, inputs));
                 let zero_instances = self.job_states.has_zero_instances(&job_id);
                 let skipped = if unsuccessful_need {
                     zero_instances || !continues
@@ -78,7 +83,8 @@ impl JobScanner<'_, '_> {
                 {
                     failed.insert(job_id.clone());
                 }
-                if result.indeterminate || blocked_by_indeterminate_need {
+                if result.indeterminate || blocked_by_indeterminate_need || condition_indeterminate
+                {
                     indeterminate.insert(job_id.clone());
                 }
                 if skipped {
@@ -86,7 +92,7 @@ impl JobScanner<'_, '_> {
                         runtime_skipped.insert(job_id.clone());
                     }
                 } else if (unsuccessful_need && continues)
-                    || (!unsuccessful_need && directly_enabled)
+                    || (!unsuccessful_need && directly_enabled && !condition_indeterminate)
                 {
                     known_executed.insert(job_id.clone());
                     outputs.insert(job_id.clone(), result.outputs);

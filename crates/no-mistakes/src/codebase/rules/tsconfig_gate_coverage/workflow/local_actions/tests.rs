@@ -1,4 +1,6 @@
 use super::*;
+use crate::codebase::ci_workflows::{ParsedWorkflowDocument, ParsedWorkflowSet};
+use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 use serde_yaml::Value;
 
 fn descriptors(entries: &[(&str, &str)]) -> BTreeMap<String, Value> {
@@ -157,6 +159,13 @@ fn action_metadata_validates_all_supported_fields_before_cataloging() {
     let tolerated = "name: Tolerated\ndescription: Valid\nruns:\n  using: composite\n  steps:\n    - run: 'false'\n      shell: bash\n      continue-on-error: true\n";
     assert!(valid(&[("action", tolerated)], &[], "action"));
 
+    for default in ["app", "true", "42", "null"] {
+        let action = format!(
+            "name: Scalar default\ndescription: Valid\ninputs: {{project: {{description: Project, default: {default}}}}}\nruns: {{using: composite, steps: [{{run: echo ok, shell: bash}}]}}"
+        );
+        assert!(valid(&[("action", &action)], &[], "action"), "{default}");
+    }
+
     for yaml in [
         "name: Unknown top-level\ndescription: Invalid\nunknown: true\nruns: {using: node24, main: index.js}",
         "name: Bad author\nauthor: [Acme]\ndescription: Invalid\nruns: {using: node24, main: index.js}",
@@ -185,6 +194,68 @@ fn action_metadata_validates_all_supported_fields_before_cataloging() {
     ] {
         assert!(!valid(&[("action", yaml)], &[], "action"), "{yaml}");
     }
+}
+
+#[test]
+fn composite_step_contexts_exclude_workflow_only_secrets() {
+    for field in [
+        "if: '${{ secrets.TOKEN != '' }}'\n      run: echo ok\n      shell: bash",
+        "run: 'echo ${{ secrets.TOKEN }}'\n      shell: bash",
+        "run: echo ok\n      shell: '${{ secrets.SHELL }}'",
+        "run: echo ok\n      shell: bash\n      working-directory: '${{ secrets.DIRECTORY }}'",
+        "run: echo ok\n      shell: bash\n      env: {TOKEN: '${{ secrets.TOKEN }}'}",
+        "run: echo ok\n      shell: bash\n      continue-on-error: '${{ secrets.TOLERATE }}'",
+        "uses: actions/cache@v4\n      with: {key: '${{ secrets.KEY }}'}",
+    ] {
+        let action = format!(
+            "name: Invalid context\ndescription: Invalid\nruns:\n  using: composite\n  steps:\n    - {field}\n"
+        );
+        assert!(!valid(&[("action", &action)], &[], "action"), "{field}");
+    }
+
+    let action = "name: Valid context\ndescription: Valid\nruns:\n  using: composite\n  steps:\n    - if: '${{ inputs.enabled }}'\n      run: 'echo ${{ github.ref }}'\n      shell: bash\n      env: {LABEL: '${{ vars.LABEL }}'}\n      working-directory: '${{ inputs.directory }}'\n      continue-on-error: '${{ inputs.tolerate }}'\n    - uses: actions/cache@v4\n      with: {key: '${{ steps.setup.outputs.key }}'}\n";
+    assert!(valid(&[("action", action)], &[], "action"));
+}
+
+#[test]
+fn scalar_defaults_and_action_contexts_catalog_local_actions_for_the_step_scanner() {
+    let action = "name: Cataloged\ndescription: Valid\ninputs:\n  retries: {description: Retries, default: 2}\nruns:\n  using: composite\n  steps:\n    - if: '${{ inputs.enabled }}'\n      run: 'echo ${{ vars.LABEL }}'\n      shell: bash\n";
+    assert!(valid(
+        &[(".github/actions/cataloged", action)],
+        &[],
+        ".github/actions/cataloged"
+    ));
+
+    let workflows = ParsedWorkflowSet {
+        documents: vec![ParsedWorkflowDocument {
+            path: ".github/workflows/typecheck.yml".to_string(),
+            value: Ok(serde_yaml::from_str(
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ./.github/actions/cataloged\n      - run: tsc --noEmit -p app/tsconfig.json\n",
+            )
+            .unwrap()),
+        }],
+    };
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+    let tracked_paths = tracked
+        .iter()
+        .map(std::path::PathBuf::from)
+        .collect::<Vec<_>>();
+    let project_source_inputs = ProjectSourceInputs::from([(
+        "app/tsconfig.json".to_string(),
+        BTreeSet::from(["app/tsconfig.json".to_string()]),
+    )]);
+
+    assert_eq!(
+        super::super::ci_typechecked_projects_with_local_actions(
+            std::path::Path::new("."),
+            &workflows,
+            &tracked,
+            &tracked_paths,
+            &project_source_inputs,
+            &BTreeSet::from([".github/actions/cataloged".to_string()]),
+        ),
+        BTreeSet::from(["app/tsconfig.json".to_string()])
+    );
 }
 
 #[test]

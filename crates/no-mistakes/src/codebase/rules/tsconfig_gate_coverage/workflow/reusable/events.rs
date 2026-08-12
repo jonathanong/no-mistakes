@@ -96,18 +96,32 @@ fn references_for(
 
     let last_reset = includes.iter().rposition(|pattern| *pattern == "!**");
     let patterns = last_reset.map_or(includes.as_slice(), |index| &includes[index + 1..]);
-    if patterns.iter().any(|pattern| !is_exact_pattern(pattern)) {
-        return vec![GithubRef::UnknownBranch];
-    }
     let candidates = patterns
         .iter()
         .filter_map(|pattern| pattern.strip_prefix('!').map_or(Some(*pattern), |_| None))
+        .filter(|pattern| is_exact_pattern(pattern))
         .collect::<BTreeSet<_>>();
-    candidates
-        .into_iter()
+    let mut references = candidates
+        .iter()
         .filter(|candidate| selected_exact(patterns, candidate))
         .map(|candidate| GithubRef::Exact(format!("{prefix}{candidate}")))
-        .collect()
+        .collect::<Vec<_>>();
+    if patterns
+        .iter()
+        .any(|pattern| !pattern.starts_with('!') && !is_exact_pattern(pattern))
+    {
+        references.push(if candidates.is_empty() {
+            GithubRef::UnknownBranch
+        } else {
+            GithubRef::UnknownExcluding(
+                candidates
+                    .into_iter()
+                    .map(|candidate| format!("{prefix}{candidate}"))
+                    .collect(),
+            )
+        });
+    }
+    references
 }
 
 fn has_key(config: Option<&Value>, key: &str) -> bool {

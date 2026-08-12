@@ -116,6 +116,23 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
 }
 
 #[test]
+fn mixed_exact_and_wildcard_branch_filters_preserve_every_activation_alternative() {
+    let workflow: Value =
+        serde_yaml::from_str("on:\n  push:\n    branches: [main, 'release/**']").unwrap();
+    let references = source_change_event_contexts(&workflow, "push")
+        .into_iter()
+        .map(|context| context.reference)
+        .collect::<Vec<_>>();
+
+    assert!(matches!(
+        references.as_slice(),
+        [GithubRef::Exact(reference), GithubRef::UnknownExcluding(excluded)]
+            if reference == "refs/heads/main"
+                && excluded == &BTreeSet::from(["refs/heads/main".to_string()])
+    ));
+}
+
+#[test]
 fn pull_request_merge_ref_retains_the_exact_base_ref() {
     let workflow: Value = serde_yaml::from_str(
         "on:\n  pull_request:\n    types: [synchronize]\n    branches: [main]",

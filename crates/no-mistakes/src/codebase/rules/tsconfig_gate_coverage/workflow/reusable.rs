@@ -22,8 +22,6 @@ use events::source_change_event_contexts;
 use model::{ActivationMemo, ActivationState, ScanContext, WorkflowDocument};
 use validation::{workflow_call_shape_valid, workflow_shape_valid};
 
-pub(super) use validation::steps_shape_valid;
-
 pub(super) fn collect_ci_projects_with_local_actions(
     root: &std::path::Path,
     parsed: &ParsedWorkflowSet,

@@ -51,7 +51,9 @@ same job, when the tracked target directory contains parseable
 with only GitHub's supported top-level fields and correctly typed
 `inputs`, `outputs`, `runs`, and `branding` sections, plus the required name
 and description. Composite output expressions must be syntactically valid and
-use only the contexts GitHub exposes to action metadata. A JavaScript action's
+use only the contexts GitHub exposes to action metadata; composite steps use
+the narrower metadata context set rather than workflow-only contexts such as
+`secrets`. Input defaults accept GitHub's scalar string coercions. A JavaScript action's
 `runs.main` must resolve to a tracked file under that action
 directory and use GitHub's supported `node20` or `node24` runtime; local
 JavaScript actions must not declare the unsupported `runs.pre`
@@ -75,9 +77,9 @@ sufficient; partial coverage from separate caller paths is never combined.
 Every declared reusable call, including a statically skipped call, still
 participates in cycle, nesting-depth, and unique-target validation; skipped
 callees are validated without crediting their commands.
-Statically known reusable-workflow outputs propagate through the caller's
-`needs.<job>.outputs` context; divergent or dynamic output values remain
-unresolved rather than being guessed.
+Statically known ordinary-job and reusable-workflow outputs propagate through
+the caller's `needs.<job>.outputs` context; divergent or dynamic output values
+remain unresolved rather than being guessed.
 For each direct workflow and triggering event, reusable activation evaluates at
 most 1,024 distinct path-sensitive input states. A graph that exceeds this
 budget provides no coverage for that root event, rather than allowing layered
@@ -103,7 +105,9 @@ that use `!` exclusions must also contain at least one positive pattern, as
 required by GitHub Actions. Tag refs never contribute source-change coverage,
 including when a `push` trigger declares both branch and tag filters.
 Unfiltered and wildcard-filtered push activations retain their known branch
-kind, so a condition that requires a tag ref cannot provide coverage.
+kind, so a condition that requires a tag ref cannot provide coverage. Mixed
+exact and wildcard branch filters retain both activation alternatives; an
+exact-ref condition must therefore also run for the wildcard-selected branches.
 
 Workflow commands run only when their effective shell is GitHub Actions'
 implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
@@ -264,7 +268,9 @@ the required CI gate.
 
 A job blocked by a statically skipped `needs` dependency, including a
 zero-instance matrix resolved from reusable caller input and a transitive
-dependency, does not count. A job condition that contains a status
+dependency, does not count. A prerequisite with a dynamic job condition makes
+an ordinary dependent indeterminate because the prerequisite may be skipped at
+runtime. A job condition that contains a status
 check such as `always()` or `!cancelled()` can explicitly continue after a
 skipped need when the whole condition is statically true. A dependency with
 `continue-on-error: true` is non-enforcing itself but is not treated as skipped

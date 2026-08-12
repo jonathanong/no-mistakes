@@ -123,6 +123,23 @@ fn exact_branch_activations_intersect_direct_and_reusable_coverage() {
 }
 
 #[test]
+fn exact_ref_gates_do_not_cover_wildcard_branch_alternatives() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on:\n  push:\n    branches: [main, 'release/**']\njobs:\n  main-only:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p main-only/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from(["main-only/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
 fn mixed_exact_and_glob_branch_exclusions_block_the_exact_ref_condition() {
     let workflows = ParsedWorkflowSet {
         documents: vec![document(

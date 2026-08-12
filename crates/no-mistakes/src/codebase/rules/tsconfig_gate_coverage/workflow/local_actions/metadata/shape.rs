@@ -34,13 +34,20 @@ pub(super) fn action_inputs_valid(value: Option<&Value>) -> bool {
                         .is_none_or(|value| matches!(value, Value::Bool(_)))
                     && metadata
                         .get("default")
-                        .is_none_or(|value| matches!(value, Value::String(_)))
+                        .is_none_or(action_input_default_valid)
                     && metadata
                         .get("deprecationMessage")
                         .is_none_or(|value| matches!(value, Value::String(_)))
             })
         })
     })
+}
+
+fn action_input_default_valid(value: &Value) -> bool {
+    matches!(
+        value,
+        Value::Bool(_) | Value::Number(_) | Value::String(_) | Value::Null
+    )
 }
 
 pub(super) fn outputs_valid(value: Option<&Value>, composite: bool) -> bool {
