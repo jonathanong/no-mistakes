@@ -1,5 +1,6 @@
 use super::{
-    condition_values::condition_value, EnvironmentState, InputState, StaticBool, StaticValue,
+    condition_values::condition_value, static_json::to_json_static_value, EnvironmentState,
+    InputState, StaticBool, StaticValue,
 };
 
 #[test]
@@ -34,5 +35,26 @@ fn to_json_serializes_known_scalars_arrays_and_literal_mappings() {
             expected,
             "{expression}"
         );
+    }
+}
+
+#[test]
+fn to_json_propagates_invalid_and_unresolved_nested_values() {
+    for value in [
+        StaticValue::Mapping,
+        StaticValue::MatrixMapping("matrix.axis".into()),
+        StaticValue::NonStringable,
+        StaticValue::Unknown,
+        StaticValue::Sequence(vec![StaticValue::Unknown]),
+    ] {
+        assert_eq!(to_json_static_value(value), None);
+    }
+
+    for value in [
+        StaticValue::Invalid,
+        StaticValue::Number("not-a-number".into()),
+        StaticValue::Sequence(vec![StaticValue::Invalid]),
+    ] {
+        assert_eq!(to_json_static_value(value), Some(StaticValue::Invalid));
     }
 }

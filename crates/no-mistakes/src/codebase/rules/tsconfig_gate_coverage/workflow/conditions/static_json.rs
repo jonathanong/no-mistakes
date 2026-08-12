@@ -30,29 +30,36 @@ pub(super) fn to_json_static_value(value: StaticValue) -> Option<StaticValue> {
 
 fn static_json_value(value: &StaticValue) -> Result<Option<serde_json::Value>, ()> {
     match value {
-        StaticValue::Bool(value) => Ok(Some(serde_json::Value::Bool(*value))),
-        StaticValue::String(value) => Ok(Some(serde_json::Value::String(value.clone()))),
-        StaticValue::Number(_) => value
-            .format_string()
-            .and_then(|value| serde_json::from_str(&value).ok())
-            .map(Some)
-            .ok_or(()),
-        StaticValue::Null => Ok(Some(serde_json::Value::Null)),
-        StaticValue::Sequence(values) => {
-            let mut serialized = Vec::with_capacity(values.len());
-            for value in values {
-                match static_json_value(value)? {
-                    Some(value) => serialized.push(value),
-                    None => return Ok(None),
-                }
-            }
-            Ok(Some(serde_json::Value::Array(serialized)))
-        }
+        StaticValue::Sequence(values) => static_json_sequence(values),
         StaticValue::Invalid => Err(()),
         StaticValue::Mapping
         | StaticValue::MatrixMapping(_)
         | StaticValue::NonStringable
         | StaticValue::Unknown => Ok(None),
+        value => static_json_scalar(value).map(Some).ok_or(()),
+    }
+}
+
+fn static_json_sequence(values: &[StaticValue]) -> Result<Option<serde_json::Value>, ()> {
+    let mut serialized = Vec::with_capacity(values.len());
+    for value in values {
+        match static_json_value(value)? {
+            Some(value) => serialized.push(value),
+            None => return Ok(None),
+        }
+    }
+    Ok(Some(serde_json::Value::Array(serialized)))
+}
+
+fn static_json_scalar(value: &StaticValue) -> Option<serde_json::Value> {
+    match value {
+        StaticValue::Bool(value) => Some(serde_json::Value::Bool(*value)),
+        StaticValue::String(value) => Some(serde_json::Value::String(value.clone())),
+        StaticValue::Number(_) => value
+            .format_string()
+            .and_then(|value| serde_json::from_str(&value).ok()),
+        StaticValue::Null => Some(serde_json::Value::Null),
+        _ => None,
     }
 }
 
