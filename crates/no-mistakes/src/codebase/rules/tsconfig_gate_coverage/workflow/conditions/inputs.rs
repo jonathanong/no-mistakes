@@ -18,7 +18,7 @@ mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
 pub(super) use event::{
     event_action_value, event_base_ref_value, event_name_value, event_ref_name_value,
-    REF_EXCLUSIONS_KEY, REF_KEY, REF_KIND_KEY,
+    event_ref_type_value, REF_EXCLUSIONS_KEY, REF_KEY, REF_KIND_KEY,
 };
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::inputs_with_needs_results;
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::{

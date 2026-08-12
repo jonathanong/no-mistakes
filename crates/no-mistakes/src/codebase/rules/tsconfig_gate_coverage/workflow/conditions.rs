@@ -31,7 +31,10 @@ pub(super) use inputs::{
     inputs_with_needs_results, inputs_with_static_strategy_position_values,
     inputs_with_strategy_configuration_values, MatrixState, SecretAvailability, SecretState,
 };
-use inputs::{event_action_value, event_base_ref_value, event_name_value, event_ref_name_value};
+use inputs::{
+    event_action_value, event_base_ref_value, event_name_value, event_ref_name_value,
+    event_ref_type_value,
+};
 use resolution::condition_input_value;
 pub(crate) use static_values::complete_expression_static_string_value;
 pub(super) use step_evaluation::{

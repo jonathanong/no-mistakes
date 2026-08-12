@@ -147,7 +147,6 @@ fn exact_ref_filters_make_impossible_ref_conditions_unreachable() {
     assert_eq!(
         collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
         BTreeSet::from([
-            "pull-request-target-base-ref/tsconfig.json".to_string(),
             "forwarded-main/tsconfig.json".to_string(),
             "push-main/tsconfig.json".to_string(),
         ])

@@ -1,4 +1,5 @@
 use super::StaticBool;
+use super::StaticValue;
 
 pub(super) fn hexadecimal_bool(expression: &str) -> Option<StaticBool> {
     let expression = expression.strip_prefix('-').unwrap_or(expression);
@@ -79,5 +80,15 @@ pub(super) fn status_function_bool(
         Some(StaticBool::False)
     } else {
         None
+    }
+}
+
+pub(super) fn job_status_value(status: super::ConditionStatus) -> StaticValue {
+    match status.success {
+        StaticBool::True => StaticValue::String("success".to_string()),
+        StaticBool::False => StaticValue::String("failure".to_string()),
+        StaticBool::TruthyNonBoolean | StaticBool::Invalid | StaticBool::Unknown => {
+            StaticValue::Unknown
+        }
     }
 }

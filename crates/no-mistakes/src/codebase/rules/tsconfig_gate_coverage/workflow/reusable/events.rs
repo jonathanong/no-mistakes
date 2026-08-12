@@ -11,8 +11,13 @@ pub(super) fn source_change_event_contexts(
     workflow: &Value,
     event: &str,
 ) -> Vec<GithubEventContext> {
+    // The default pull_request_target checkout is the trusted base, not the
+    // changed PR head. Do not credit it without an explicit head-ref model.
+    if event == "pull_request_target" {
+        return Vec::new();
+    }
     let references = event_references(workflow, event);
-    if !matches!(event, "pull_request" | "pull_request_target") {
+    if event != "pull_request" {
         return references
             .into_iter()
             .map(|reference| GithubEventContext::with_ref(event, reference))

@@ -15,7 +15,9 @@ pub(crate) use fields::{
 };
 pub(crate) use shape::reusable_call_job_shape_valid;
 pub(super) use shape::step_job_shape_valid;
-pub(crate) use steps::{action_step_inputs_valid_for_state, steps_shape_valid};
+pub(crate) use steps::{
+    action_step_inputs_valid_for_state, action_target_valid, steps_shape_valid,
+};
 pub(crate) use values::environment_configuration_valid_for_inputs;
 
 #[cfg(test)]

@@ -4,6 +4,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     condition_expression_contexts_available, interpolated_expression_contexts_available,
     StaticExpressionType,
 };
+use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::action_target_valid;
 use serde_yaml::{Mapping, Value};
 
 const COMPOSITE_STEP_CONTEXTS: &[&str] = &["github", "inputs", "steps", "runner", "env", "vars"];
@@ -36,7 +37,9 @@ pub(super) fn step_valid(step: &Mapping) -> bool {
                     && interpolated_expression_contexts_available(run, COMPOSITE_STEP_CONTEXTS)
             }
             (None, Some(Value::String(uses))) => {
-                !uses.is_empty() && action_inputs_valid(step.get("with"))
+                !uses.is_empty()
+                    && action_target_valid(uses)
+                    && action_inputs_valid(step.get("with"))
             }
             _ => false,
         }

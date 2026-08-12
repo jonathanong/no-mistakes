@@ -12,7 +12,7 @@ use serde_yaml::{Mapping, Value};
 use std::collections::BTreeSet;
 
 mod action_target;
-use action_target::action_target_valid;
+pub(crate) use action_target::action_target_valid;
 
 const RUN_STEP_KEYS: &[&str] = &[
     "name",

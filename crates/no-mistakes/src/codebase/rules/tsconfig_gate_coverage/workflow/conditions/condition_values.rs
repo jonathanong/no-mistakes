@@ -1,11 +1,13 @@
 use super::{
-    event_action_value, event_base_ref_value, event_name_value, event_ref_name_value, functions,
+    event_action_value, event_base_ref_value, event_name_value, event_ref_name_value,
+    event_ref_type_value, functions,
     input_value::comparison_literal,
-    literals::status_function_bool,
+    literals::{job_status_value, status_function_bool},
     logical,
     resolution::condition_input_value,
     resolution::{
         github_base_ref, github_event_action, github_event_name, github_ref, github_ref_name,
+        github_ref_type, job_status,
     },
     static_json::literal_from_json_static_value,
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
@@ -42,6 +44,12 @@ pub(super) fn condition_value(
     }
     if github_ref_name(operand) {
         return event_ref_name_value(inputs);
+    }
+    if github_ref_type(operand) {
+        return event_ref_type_value(inputs);
+    }
+    if job_status(operand) {
+        return Some(job_status_value(status));
     }
     if github_base_ref(operand) {
         return event_base_ref_value(inputs);

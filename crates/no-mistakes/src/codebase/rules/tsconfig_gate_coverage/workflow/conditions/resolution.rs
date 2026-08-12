@@ -4,6 +4,7 @@ mod properties;
 use properties::{context_property_name, context_property_segment, github_property_segment};
 pub(super) use properties::{
     github_base_ref, github_event_action, github_event_name, github_ref, github_ref_name,
+    github_ref_type,
 };
 
 pub(super) fn input_name(operand: &str) -> Option<&str> {
@@ -24,6 +25,10 @@ pub(super) fn env_name(operand: &str) -> Option<&str> {
 
 pub(super) fn runner_os(operand: &str) -> bool {
     context_property_name(operand, "runner").is_some_and(|name| name.eq_ignore_ascii_case("os"))
+}
+
+pub(super) fn job_status(operand: &str) -> bool {
+    context_property_name(operand, "job").is_some_and(|name| name.eq_ignore_ascii_case("status"))
 }
 
 fn needs_result_name(operand: &str) -> Option<&str> {

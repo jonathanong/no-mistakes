@@ -35,6 +35,9 @@ fn static_expression_value(
     if super::resolution::github_ref_name(expression) {
         return super::inputs::event_ref_name_value(inputs);
     }
+    if super::resolution::github_ref_type(expression) {
+        return super::inputs::event_ref_type_value(inputs);
+    }
     if super::resolution::github_base_ref(expression) {
         return super::inputs::event_base_ref_value(inputs);
     }

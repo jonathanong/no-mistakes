@@ -10,7 +10,6 @@ mod matrix;
 mod workflow;
 
 pub(super) use contracts::workflow_call_shape_valid;
-pub(crate) use jobs::steps_shape_valid;
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use jobs::valid_static_container_image_reference;
 pub(super) use jobs::{
     action_step_inputs_valid_for_state, call_bindings_shape_valid,
@@ -18,6 +17,7 @@ pub(super) use jobs::{
     reusable_call_job_shape_valid, strategy_configuration_valid_for_inputs,
     strategy_context_values_for_inputs, strategy_fail_fast_enabled_for_inputs,
 };
+pub(crate) use jobs::{action_target_valid, steps_shape_valid};
 pub(super) use matrix::{static_matrix_combinations_for_inputs, MatrixCombinations};
 pub(super) use workflow::job_concurrency_valid_for_inputs;
 pub(super) use workflow::{workflow_concurrency_valid_for_inputs, workflow_shape_valid};

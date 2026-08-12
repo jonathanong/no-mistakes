@@ -141,10 +141,12 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     assert_eq!(
         uncovered,
         BTreeSet::from([
+            "action-outcome/tsconfig.json",
             "branch-main-only/tsconfig.json",
             "env/tsconfig.json",
             "checkout/tsconfig.json",
             "composite/tsconfig.json",
+            "composite-remote/tsconfig.json",
             "composite-secret/tsconfig.json",
             "conclusion-blocked/tsconfig.json",
             "container-dependent/tsconfig.json",
@@ -156,6 +158,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "hidden-ref/tsconfig.json",
             "join/tsconfig.json",
             "json-error/tsconfig.json",
+            "job-status/tsconfig.json",
             "logical-and/tsconfig.json",
             "matrix/tsconfig.json",
             "output/tsconfig.json",
@@ -165,11 +168,16 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "input-condition/tsconfig.json",
             "mapping-env/tsconfig.json",
             "pre-if/tsconfig.json",
+            "pr-target/tsconfig.json",
+            "ref-type/tsconfig.json",
             "needs-action/tsconfig.json",
             "step-env/tsconfig.json",
             "strategy-dependent/tsconfig.json",
+            "strategy-index/tsconfig.json",
             "tag-ref/tsconfig.json",
+            "tags-only/tsconfig.json",
             "trigger-typo/tsconfig.json",
+            "sparse-checkout/tsconfig.json",
         ]),
         "{report:#?}"
     );
@@ -212,6 +220,28 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
     // A trigger typo and a potentially forked PR secret both prevent scheduling.
     assert!(uncovered.contains("trigger-typo/tsconfig.json"));
     assert!(uncovered.contains("fork-secret/tsconfig.json"));
+    // Only a root checkout exposes repository-local actions.
+    assert!(!uncovered.contains("checkout-root/tsconfig.json"));
+    assert!(uncovered.contains("sparse-checkout/tsconfig.json"));
+    // Known action, strategy, ref, and job contexts make these gates unreachable.
+    for project in [
+        "action-outcome/tsconfig.json",
+        "strategy-index/tsconfig.json",
+        "ref-type/tsconfig.json",
+        "job-status/tsconfig.json",
+    ] {
+        assert!(uncovered.contains(project));
+    }
+    // Invalid composite targets, tag-only pushes, and base-only PR targets cannot cover changes.
+    for project in [
+        "composite-remote/tsconfig.json",
+        "tags-only/tsconfig.json",
+        "pr-target/tsconfig.json",
+    ] {
+        assert!(uncovered.contains(project));
+    }
+    // pnpm permits an optional command separator before a static typecheck.
+    assert!(!uncovered.contains("pnpm-separator/tsconfig.json"));
 }
 
 #[test]

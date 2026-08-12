@@ -20,6 +20,9 @@ pub(in super::super) fn event_action_value(inputs: &InputState) -> Option<Static
 pub(in super::super) fn event_ref_name_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(REF_NAME_KEY).cloned()
 }
+pub(in super::super) fn event_ref_type_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(REF_KIND_KEY).cloned()
+}
 pub(in super::super) fn event_base_ref_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(BASE_REF_KEY).cloned()
 }
@@ -55,6 +58,12 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
     match &event.reference {
         GithubRef::Exact(reference) => {
             inputs.insert(REF_KEY.to_string(), StaticValue::String(reference.clone()));
+            if let Some(kind) = exact_ref_kind(reference) {
+                inputs.insert(
+                    REF_KIND_KEY.to_string(),
+                    StaticValue::String(kind.to_string()),
+                );
+            }
             if let Some(name) = exact_ref_name(reference) {
                 inputs.insert(
                     REF_NAME_KEY.to_string(),
@@ -118,4 +127,11 @@ fn exact_ref_name(reference: &str) -> Option<&str> {
     reference
         .strip_prefix("refs/heads/")
         .or_else(|| reference.strip_prefix("refs/tags/"))
+}
+
+fn exact_ref_kind(reference: &str) -> Option<&'static str> {
+    reference
+        .strip_prefix("refs/heads/")
+        .map(|_| "branch")
+        .or_else(|| reference.strip_prefix("refs/tags/").map(|_| "tag"))
 }

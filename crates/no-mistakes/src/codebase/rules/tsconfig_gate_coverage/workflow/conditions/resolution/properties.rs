@@ -57,6 +57,10 @@ pub(in super::super) fn github_ref_name(operand: &str) -> bool {
     github_event_property(operand, &["ref_name"])
 }
 
+pub(in super::super) fn github_ref_type(operand: &str) -> bool {
+    github_event_property(operand, &["ref_type"])
+}
+
 pub(in super::super) fn github_base_ref(operand: &str) -> bool {
     github_event_property(operand, &["base_ref"])
 }

@@ -12,10 +12,7 @@ fn source_change_event_contexts_select_only_synchronize_activities() {
         (
             "on:\n  pull_request_target:\n    types: [opened, synchronize]",
             "pull_request_target",
-            vec![(
-                "pull_request_target".to_string(),
-                Some("synchronize".to_string()),
-            )],
+            vec![],
         ),
         (
             "on:\n  pull_request:\n    types: [opened, closed]",
@@ -107,6 +104,7 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
     let workflow: Value =
         serde_yaml::from_str("on:\n  push:\n    branches: ['release/**']\n    tags-ignore: [v0]")
             .unwrap();
+    // Tag filters do not restrict branch source-change activations.
     assert!(matches!(
         source_change_event_contexts(&workflow, "push").as_slice(),
         [context] if matches!(context.reference, GithubRef::UnknownBranch)

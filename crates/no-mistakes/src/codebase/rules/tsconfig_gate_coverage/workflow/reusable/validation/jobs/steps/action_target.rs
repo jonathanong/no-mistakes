@@ -1,4 +1,4 @@
-pub(super) fn action_target_valid(target: &str) -> bool {
+pub(crate) fn action_target_valid(target: &str) -> bool {
     if target.contains("${{") {
         return false;
     }

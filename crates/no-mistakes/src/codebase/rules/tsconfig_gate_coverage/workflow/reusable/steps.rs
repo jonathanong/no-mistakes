@@ -87,7 +87,7 @@ pub(super) fn scan_job_steps(
             failed |= condition == StaticBool::True;
             break;
         }
-        checkout.observe(step, condition);
+        checkout.observe(step, condition, inputs, &environment);
         if uses_action && condition == StaticBool::True {
             step_outcomes.record(step, StaticValue::String("success".to_string()));
         }
@@ -104,6 +104,9 @@ pub(super) fn scan_job_steps(
                 }
                 break;
             }
+            continue;
+        }
+        if uses_action {
             continue;
         }
         if run::run_step_stops_job(
