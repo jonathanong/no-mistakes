@@ -86,6 +86,30 @@ fn reusable_conditions_compare_resolved_compound_unary_and_function_values() {
 }
 
 #[test]
+fn short_circuited_invalid_from_json_conditions_remain_runnable() {
+    let parsed = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on: push\njobs:\n  short-circuited-or:\n    if: \"${{ true || fromJSON('not-json') }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project short-circuited-or/tsconfig.json\n  short-circuited-and:\n    if: \"${{ false && fromJSON('not-json') }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project short-circuited-and/tsconfig.json\n  reached-invalid:\n    if: \"${{ false || fromJSON('not-json') }}\"\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project reached-invalid/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "short-circuited-or/tsconfig.json".to_string(),
+        "short-circuited-and/tsconfig.json".to_string(),
+        "reached-invalid/tsconfig.json".to_string(),
+    ]);
+    let project_inputs = tracked
+        .iter()
+        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
+        .collect();
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
+        BTreeSet::from(["short-circuited-or/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn reusable_conditions_resolve_static_string_functions_across_call_inputs() {
     let parsed = ParsedWorkflowSet {
         documents: vec![

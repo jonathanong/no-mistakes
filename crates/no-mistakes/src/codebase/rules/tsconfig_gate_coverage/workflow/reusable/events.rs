@@ -72,7 +72,7 @@ fn references_for(
     prefix: &str,
 ) -> Vec<GithubRef> {
     let Some(config) = config else {
-        return vec![GithubRef::Unknown];
+        return vec![GithubRef::UnknownBranch];
     };
     let includes = configured_patterns(config, include_key);
     let ignores = configured_patterns(config, ignore_key);
@@ -86,18 +86,18 @@ fn references_for(
                 .map(|pattern| format!("{prefix}{pattern}"))
                 .collect::<BTreeSet<_>>();
             if excluded.is_empty() {
-                return vec![GithubRef::Unknown];
+                return vec![GithubRef::UnknownBranch];
             }
             vec![GithubRef::UnknownExcluding(excluded)]
         } else {
-            vec![GithubRef::Unknown]
+            vec![GithubRef::UnknownBranch]
         };
     }
 
     let last_reset = includes.iter().rposition(|pattern| *pattern == "!**");
     let patterns = last_reset.map_or(includes.as_slice(), |index| &includes[index + 1..]);
     if patterns.iter().any(|pattern| !is_exact_pattern(pattern)) {
-        return vec![GithubRef::Unknown];
+        return vec![GithubRef::UnknownBranch];
     }
     let candidates = patterns
         .iter()

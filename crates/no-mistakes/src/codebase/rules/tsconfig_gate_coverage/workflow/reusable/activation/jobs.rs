@@ -6,8 +6,9 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::ActivationScan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::steps::scan_job_steps;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::validation::{
-    container_configuration_valid_for_inputs, job_concurrency_valid_for_inputs,
-    scan_job_shape_valid, strategy_configuration_valid_for_inputs, validated_reusable_target,
+    container_configuration_valid_for_inputs, fail_fast_enabled_for_inputs,
+    job_concurrency_valid_for_inputs, scan_job_shape_valid,
+    strategy_configuration_valid_for_inputs, validated_reusable_target,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::runner_os;
 use crate::codebase::workflow_topology::workflow_values;
@@ -16,8 +17,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod configuration;
 mod order;
+mod outputs;
 mod scanner;
 use configuration::job_configuration_validity;
+use outputs::{
+    merge_fail_fast_failure_projects, merge_reusable_outputs, retain_fail_fast_projects,
+};
 pub(super) use scanner::{JobScanner, WorkflowRuntime};
 
 impl<'a, 'workflow> JobScanner<'a, 'workflow> {
@@ -103,22 +108,13 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 self.memo,
             )?;
             if has_instances && !skipped {
+                merge_reusable_outputs(&mut outputs, &callee_scan);
                 if !job_statically_not_enforcing(job, inputs) {
                     projects.extend(callee_scan.projects);
                 }
                 failed |= callee_scan.failed && job_statically_enforcing(job, inputs, failed_need);
                 indeterminate |=
                     callee_scan.indeterminate && job_statically_enforcing(job, inputs, failed_need);
-                if !callee_scan.failed && !callee_scan.indeterminate {
-                    outputs = Some(match outputs {
-                        Some(mut shared) => {
-                            shared
-                                .retain(|name, value| callee_scan.outputs.get(name) == Some(value));
-                            shared
-                        }
-                        None => callee_scan.outputs,
-                    });
-                }
             }
         }
         Some(ActivationScan {
@@ -147,6 +143,7 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
         let mut projects = BTreeSet::new();
         let mut failed = false;
         let mut indeterminate = false;
+        let mut fail_fast_failure_projects: Option<BTreeSet<String>> = None;
         for inputs in inputs {
             let environment = EnvironmentState::from_workflow(
                 self.workflow_runtime.workflow,
@@ -168,10 +165,15 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 }
                 StaticBool::True => {}
             }
-            if step_job_runner_supported(job, inputs)
-                && strategy_configuration_valid_for_inputs(job, inputs)
-                && container_configuration_valid_for_inputs(job, inputs, &environment)
+            if !strategy_configuration_valid_for_inputs(job, inputs)
+                || !container_configuration_valid_for_inputs(job, inputs, &environment)
             {
+                let enforcing = job_statically_enforcing(job, inputs, failed_need);
+                failed |= enforcing;
+                indeterminate |= !enforcing && !job_statically_disabled(job, inputs);
+                continue;
+            }
+            if step_job_runner_supported(job, inputs) {
                 let scan = scan_job_steps(
                     job,
                     self.triggers,
@@ -182,13 +184,20 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                     self.context,
                 );
                 if !job_statically_not_enforcing(job, inputs) {
-                    projects.extend(scan.projects);
+                    projects.extend(scan.projects.iter().cloned());
                 }
-                failed |= scan.failed && job_statically_enforcing(job, inputs, failed_need);
-                indeterminate |=
-                    scan.indeterminate && job_statically_enforcing(job, inputs, failed_need);
+                let enforcing = job_statically_enforcing(job, inputs, failed_need);
+                failed |= scan.failed && enforcing;
+                if scan.failed && enforcing && fail_fast_enabled_for_inputs(job, inputs) {
+                    merge_fail_fast_failure_projects(
+                        &mut fail_fast_failure_projects,
+                        scan.projects,
+                    );
+                }
+                indeterminate |= scan.indeterminate && enforcing;
             }
         }
+        retain_fail_fast_projects(&mut projects, fail_fast_failure_projects, inputs.len());
         ActivationScan {
             projects,
             outputs: BTreeMap::new(),

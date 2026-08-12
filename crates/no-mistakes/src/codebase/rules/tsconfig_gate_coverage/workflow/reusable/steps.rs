@@ -82,17 +82,20 @@ pub(super) fn scan_job_steps(
             }
             StaticBool::True => {}
         }
-        if continue_on_error && step.get("uses").is_some() {
-            continue;
-        }
-        if step.get("uses").is_some()
-            && !action_step_inputs_valid_for_state(step, inputs, &environment)
-        {
+        let uses_action = step.get("uses").is_some();
+        if uses_action && !action_step_inputs_valid_for_state(step, inputs, &environment) {
+            if continue_on_error {
+                continue;
+            }
             if condition == StaticBool::True {
                 step_outcomes.record(step, StaticValue::String("failure".to_string()));
             }
             failed |= condition == StaticBool::True;
             break;
+        }
+        checkout.observe(step, condition);
+        if continue_on_error && uses_action {
+            continue;
         }
         if let Some(available) = local_action::available(step, &checkout, context.local_actions) {
             if !available {
@@ -106,7 +109,6 @@ pub(super) fn scan_job_steps(
             }
             continue;
         }
-        checkout.observe(step, condition);
         let Some(cwd) = step_working_directory(step, inputs, &environment, &job_cwd) else {
             continue;
         };

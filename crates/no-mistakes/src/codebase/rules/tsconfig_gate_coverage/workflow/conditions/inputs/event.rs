@@ -64,6 +64,10 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
         }
         GithubRef::UnknownExcluding(references) => {
             inputs.insert(
+                REF_KIND_KEY.to_string(),
+                StaticValue::String("branch".to_string()),
+            );
+            inputs.insert(
                 REF_EXCLUSIONS_KEY.to_string(),
                 StaticValue::Sequence(
                     references
@@ -72,6 +76,12 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
                         .map(StaticValue::String)
                         .collect(),
                 ),
+            );
+        }
+        GithubRef::UnknownBranch => {
+            inputs.insert(
+                REF_KIND_KEY.to_string(),
+                StaticValue::String("branch".to_string()),
             );
         }
         GithubRef::PullRequestMerge => {
@@ -96,7 +106,10 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
         {
             inputs.insert(BASE_REF_KEY.to_string(), StaticValue::String(String::new()));
         }
-        GithubRef::Unknown | GithubRef::UnknownExcluding(_) | GithubRef::PullRequestMerge => {}
+        GithubRef::Unknown
+        | GithubRef::UnknownBranch
+        | GithubRef::UnknownExcluding(_)
+        | GithubRef::PullRequestMerge => {}
     }
     inputs
 }

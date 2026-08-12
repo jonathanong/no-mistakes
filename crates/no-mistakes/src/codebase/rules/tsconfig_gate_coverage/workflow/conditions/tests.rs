@@ -179,6 +179,10 @@ fn literal_from_json_conditions_preserve_scalar_truthiness_and_comparisons() {
         ("contains(fromJSON('not-json'), 'x')", StaticBool::Invalid),
         ("format('{0}', fromJSON('not-json'))", StaticBool::Invalid),
         ("join(fromJSON('not-json'), ',')", StaticBool::Invalid),
+        ("true || fromJSON('not-json')", StaticBool::True),
+        ("false && fromJSON('not-json')", StaticBool::False),
+        ("false || fromJSON('not-json')", StaticBool::Invalid),
+        ("true && fromJSON('not-json')", StaticBool::Invalid),
         // A literal parse failure makes GitHub reject the condition; it must
         // not be short-circuited into coverage credit.
         ("fromJSON('not-json') || true", StaticBool::Invalid),

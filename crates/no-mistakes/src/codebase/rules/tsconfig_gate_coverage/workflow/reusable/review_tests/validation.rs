@@ -1,5 +1,7 @@
 use super::*;
 
+mod checkout;
+
 #[test]
 fn unavailable_reusable_secret_expressions_earn_no_coverage() {
     let workflows = ParsedWorkflowSet {

@@ -139,10 +139,20 @@ pub(super) fn comparison_bool(
                     equal.negate()
                 });
             }
-            let is_pull_request_merge = inputs
-                .get(super::inputs::REF_KIND_KEY)
-                .is_some_and(|kind| kind == &StaticValue::String("pull-request-merge".into()));
-            if is_pull_request_merge && !reference.starts_with("refs/pull/") {
+            let reference_kind =
+                inputs
+                    .get(super::inputs::REF_KIND_KEY)
+                    .and_then(|kind| match kind {
+                        StaticValue::String(kind) => Some(kind.as_str()),
+                        _ => None,
+                    });
+            let incompatible_reference_kind = match reference_kind {
+                Some("branch") => !reference.starts_with("refs/heads/"),
+                Some("tag") => !reference.starts_with("refs/tags/"),
+                Some("pull-request-merge") => !reference.starts_with("refs/pull/"),
+                _ => false,
+            };
+            if incompatible_reference_kind {
                 let equal = StaticBool::False;
                 return Some(if matches!(comparison, logical::Comparison::Equal) {
                     equal

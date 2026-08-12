@@ -25,17 +25,19 @@ pub(super) fn compound_bool(
     environment: &EnvironmentState,
     status: ConditionStatus,
 ) -> Option<StaticBool> {
-    if let Some((left, right, LogicalOperator::Or)) = logical_operands(expression) {
-        return Some(or(
-            expression_bool_with_status_and_environment(left, inputs, environment, status),
-            expression_bool_with_status_and_environment(right, inputs, environment, status),
-        ));
-    }
-    if let Some((left, right, LogicalOperator::And)) = logical_operands(expression) {
-        return Some(and(
-            expression_bool_with_status_and_environment(left, inputs, environment, status),
-            expression_bool_with_status_and_environment(right, inputs, environment, status),
-        ));
+    if let Some((left, right, operator)) = logical_operands(expression) {
+        let left = expression_bool_with_status_and_environment(left, inputs, environment, status);
+        match (operator, left.truthiness()) {
+            (LogicalOperator::Or, StaticBool::True) => return Some(StaticBool::True),
+            (LogicalOperator::And, StaticBool::False) => return Some(StaticBool::False),
+            (_, StaticBool::Invalid) => return Some(StaticBool::Invalid),
+            _ => {}
+        }
+        let right = expression_bool_with_status_and_environment(right, inputs, environment, status);
+        return Some(match operator {
+            LogicalOperator::Or => or(left, right),
+            LogicalOperator::And => and(left, right),
+        });
     }
     outer_parentheses_body(expression)
         .map(|body| expression_bool_with_status_and_environment(body, inputs, environment, status))

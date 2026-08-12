@@ -44,6 +44,24 @@ pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &Inpu
             .is_none_or(|value| max_parallel_valid_for_inputs(value, inputs))
 }
 
+pub(crate) fn fail_fast_enabled_for_inputs(job: &Value, inputs: &InputState) -> bool {
+    job.get("strategy")
+        .and_then(Value::as_mapping)
+        .and_then(|strategy| strategy.get("fail-fast"))
+        .is_none_or(|value| {
+            value.as_bool().unwrap_or_else(|| {
+                !matches!(
+                    value
+                        .as_str()
+                        .and_then(|expression| complete_expression_static_value(
+                            expression, inputs
+                        )),
+                    Some(StaticValue::Bool(false))
+                )
+            })
+        })
+}
+
 fn fail_fast_valid_for_inputs(value: &Value, inputs: &InputState) -> bool {
     if value.is_bool() {
         return true;

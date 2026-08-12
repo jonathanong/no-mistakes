@@ -100,6 +100,8 @@ unfiltered applicable event. Inclusive `branches`, `tags`, or `paths` filters
 that use `!` exclusions must also contain at least one positive pattern, as
 required by GitHub Actions. Tag refs never contribute source-change coverage,
 including when a `push` trigger declares both branch and tag filters.
+Unfiltered and wildcard-filtered push activations retain their known branch
+kind, so a condition that requires a tag ref cannot provide coverage.
 
 Workflow commands run only when their effective shell is GitHub Actions'
 implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
@@ -171,8 +173,11 @@ For static matrices, `${{ matrix.name }}` bindings, step conditions, and job or
 step `continue-on-error` expressions are evaluated once per generated
 combination after `exclude` and ordered `include` expansion. Execution and
 failure tolerance therefore stay correlated: a typecheck that runs only in an
-allowed-to-fail combination does not count. Literal complete expressions in
-static `include` and `exclude` entries retain their YAML scalar types; an entry
+allowed-to-fail combination does not count. When fail-fast is enabled and a
+matrix instance is statically known to fail, only checks that ran in every
+such failing instance are retained; sibling-only checks may be cancelled.
+Literal complete expressions in static `include` and `exclude` entries retain
+their YAML scalar types; an entry
 whose value remains dynamic stops static enumeration conservatively. A missing
 property in a statically known matrix coerces to an empty string. Dynamic
 matrices and their properties remain unresolved and fail open as potentially

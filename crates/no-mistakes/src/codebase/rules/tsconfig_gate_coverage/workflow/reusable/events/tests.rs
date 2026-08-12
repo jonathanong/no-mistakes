@@ -88,6 +88,7 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
             .filter_map(|context| match context.reference {
                 GithubRef::Exact(reference) => Some(reference),
                 GithubRef::UnknownExcluding(_)
+                | GithubRef::UnknownBranch
                 | GithubRef::PullRequestMerge
                 | GithubRef::Unknown => None,
             })
@@ -100,7 +101,7 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
             .unwrap();
     assert!(source_change_event_contexts(&workflow, "push")
         .iter()
-        .all(|context| matches!(context.reference, GithubRef::Unknown)));
+        .all(|context| matches!(context.reference, GithubRef::UnknownBranch)));
 
     let workflow: Value =
         serde_yaml::from_str("on:\n  push:\n    branches-ignore: [main, 'release/**']").unwrap();
