@@ -153,6 +153,7 @@ fn action_input_interpolations_stringable(
                     value,
                     StaticValue::Sequence(_)
                         | StaticValue::Mapping
+                        | StaticValue::MatrixMapping(_)
                         | StaticValue::NonStringable
                         | StaticValue::Invalid
                 )

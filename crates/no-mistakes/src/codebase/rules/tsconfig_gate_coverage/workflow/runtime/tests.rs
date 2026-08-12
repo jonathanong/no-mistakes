@@ -2,16 +2,27 @@ use super::{
     container_runner_support as container_runner_support_for_inputs,
     has_static_runnable_runs_on as has_static_runnable_runs_on_for_inputs,
     runs_on_can_default_to_windows as runs_on_can_default_to_windows_for_inputs,
+    runs_on_has_statically_invalid_value as runs_on_has_statically_invalid_value_for_inputs,
     ContainerRunnerSupport,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
-    inputs_with_matrix_values, InputState, MatrixState,
+    inputs_with_matrix_values, InputState, MatrixState, StaticValue,
 };
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
 fn has_static_runnable_runs_on(job: &Value) -> bool {
     has_static_runnable_runs_on_for_inputs(job, &InputState::new())
+}
+
+#[test]
+fn known_non_stringable_runs_on_expressions_are_statically_invalid() {
+    let inputs = InputState::from([("runner".to_string(), StaticValue::Sequence(Vec::new()))]);
+    let job: Value = serde_yaml::from_str("runs-on: '${{ inputs.runner }}'").unwrap();
+
+    assert!(runs_on_has_statically_invalid_value_for_inputs(
+        &job, &inputs
+    ));
 }
 
 fn runs_on_can_default_to_windows(job: &Value) -> bool {

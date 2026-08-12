@@ -83,7 +83,10 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
         complete_expression_static_value(&expression, inputs).is_none_or(|value| {
             !matches!(
                 value,
-                StaticValue::Sequence(_) | StaticValue::Mapping | StaticValue::NonStringable
+                StaticValue::Sequence(_)
+                    | StaticValue::Mapping
+                    | StaticValue::MatrixMapping(_)
+                    | StaticValue::NonStringable
             )
         })
     }) {
@@ -98,6 +101,7 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
             | StaticValue::Null
             | StaticValue::Sequence(_)
             | StaticValue::Mapping
+            | StaticValue::MatrixMapping(_)
             | StaticValue::NonStringable
             | StaticValue::Invalid => false,
         }

@@ -68,10 +68,28 @@ fn invalid_resolved_strategy_and_container_configurations_fail_dependents() {
         "after-strategy/tsconfig.json".to_string(),
     ]);
 
-    assert!(
-        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
-            .0
-            .is_empty()
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::new()
+    );
+}
+
+#[test]
+fn invalid_step_environment_and_runs_on_values_block_coverage() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![document(
+            ".github/workflows/checks.yml",
+            "on:\n  push:\n  workflow_call:\n    inputs:\n      payload: {type: string, default: '[]'}\n      runner: {type: string, default: '[]'}\njobs:\n  invalid-step-env:\n    runs-on: ubuntu-latest\n    steps:\n      - env: {VALUE: '${{ fromJSON(inputs.payload) }}'}\n        run: tsc --noEmit -p step-env/tsconfig.json\n  invalid-runner:\n    runs-on: '${{ fromJSON(inputs.runner) }}'\n    steps:\n      - run: echo setup\n  after-runner:\n    needs: invalid-runner\n    if: always() && needs.invalid-runner.result == 'success'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p after-runner/tsconfig.json\n",
+        )],
+    };
+    let tracked = BTreeSet::from([
+        "after-runner/tsconfig.json".to_string(),
+        "step-env/tsconfig.json".to_string(),
+    ]);
+
+    assert_eq!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked)).0,
+        BTreeSet::new()
     );
 }
 

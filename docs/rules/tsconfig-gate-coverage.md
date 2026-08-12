@@ -36,7 +36,9 @@ interpolations do not provide coverage.
 Step-based jobs need a non-empty, statically resolvable `runs-on` string,
 label array, or `group`/`labels` mapping. Static matrix and reusable-input
 runner selectors are resolved per generated job before runner platform and
-implicit-shell checks; unresolved selectors do not provide coverage.
+implicit-shell checks. A selector that resolves to an empty value, array, or
+object fails the job and its successful dependents cannot provide coverage;
+an unresolved selector does not provide coverage.
 Runner group names establish that a job can be scheduled but not its operating system. A
 group-only job therefore needs an explicit supported shell, and it cannot use
 containers or services for coverage unless `runs-on.labels` contains an exact
@@ -187,13 +189,16 @@ expressions first resolve known caller input JSON; known mappings use the same
 256-job limit as literal matrices, a known non-object result is rejected, and
 an unknown result remains dynamic. Dot and single-quoted
 bracket property access share the same normalized parser for conditions and
-reusable-input forwarding.
+reusable-input forwarding. Repeated access to the same static matrix object
+retains its identity for equality, while distinct object-valued axes remain
+unequal.
 Condition expressions must also use contexts available at their location.
 For example, job conditions cannot read `secrets`, while step conditions can
 read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
-the workflow from providing coverage. Step conditions merge static environment
-values with GitHub's workflow, job, then step precedence and string coercion;
-an omitted reusable secret referenced by an environment value resolves to the
+the workflow from providing coverage. Step conditions merge static environment values with GitHub's workflow, job,
+then step precedence and string coercion; a step environment value that resolves
+to an array, object, or invalid expression fails before its command is scanned.
+An omitted reusable secret referenced by an environment value resolves to the
 empty string. Workflow `defaults.run` values must be static; job defaults may
 use their documented `github`, `needs`, `strategy`, `matrix`, `env`, `vars`,
 and `inputs` contexts. Workflow concurrency expressions may use `github`,

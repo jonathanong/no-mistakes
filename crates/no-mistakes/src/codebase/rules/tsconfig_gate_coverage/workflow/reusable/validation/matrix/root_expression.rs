@@ -55,6 +55,7 @@ fn static_value(value: StaticValue) -> ResolvedRootMatrix {
         | StaticValue::Null
         | StaticValue::Sequence(_)
         | StaticValue::Mapping
+        | StaticValue::MatrixMapping(_)
         | StaticValue::NonStringable
         | StaticValue::Invalid => ResolvedRootMatrix::NonMapping,
     }

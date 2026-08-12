@@ -3,7 +3,7 @@ use serde_yaml::Value;
 mod runner_labels;
 pub(super) use runner_labels::{
     container_runner_support, has_static_runnable_runs_on, runner_os,
-    runs_on_can_default_to_windows, ContainerRunnerSupport,
+    runs_on_can_default_to_windows, runs_on_has_statically_invalid_value, ContainerRunnerSupport,
 };
 
 #[cfg(test)]

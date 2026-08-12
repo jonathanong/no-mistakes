@@ -97,25 +97,7 @@ pub(super) fn permissions_shape_valid(value: Option<&Value>) -> bool {
 }
 
 fn permission_scope_valid(scope: &str) -> bool {
-    matches!(
-        scope,
-        "actions"
-            | "artifact-metadata"
-            | "attestations"
-            | "checks"
-            | "contents"
-            | "deployments"
-            | "discussions"
-            | "id-token"
-            | "issues"
-            | "models"
-            | "packages"
-            | "pages"
-            | "pull-requests"
-            | "repository-projects"
-            | "security-events"
-            | "statuses"
-    )
+    crate::codebase::ci_graph::model::PERMISSION_SCOPES.contains(&scope)
 }
 
 fn permission_value_valid(scope: &Value, value: &str) -> bool {
@@ -124,7 +106,7 @@ fn permission_value_valid(scope: &Value, value: &str) -> bool {
     };
     match scope {
         "id-token" => matches!(value, "write" | "none"),
-        "models" => matches!(value, "read" | "none"),
+        "models" | "vulnerability-alerts" => matches!(value, "read" | "none"),
         _ => matches!(value, "read" | "write" | "none"),
     }
 }

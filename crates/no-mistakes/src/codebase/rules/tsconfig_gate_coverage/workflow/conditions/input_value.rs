@@ -61,6 +61,7 @@ impl StaticValue {
             Self::Null => Some(String::new()),
             Self::Sequence(_) => None,
             Self::Mapping => None,
+            Self::MatrixMapping(_) => None,
             Self::NonStringable => None,
             Self::Invalid => None,
             Self::Unknown => None,
@@ -86,6 +87,7 @@ impl StaticValue {
             Self::Null => StaticBool::False,
             Self::Sequence(_) => StaticBool::TruthyNonBoolean,
             Self::Mapping => StaticBool::TruthyNonBoolean,
+            Self::MatrixMapping(_) => StaticBool::TruthyNonBoolean,
             Self::NonStringable => StaticBool::Unknown,
             Self::Invalid => StaticBool::Invalid,
             Self::Unknown => StaticBool::Unknown,
@@ -126,6 +128,9 @@ impl StaticValue {
             (Self::Sequence(_), Self::Sequence(_)) => StaticBool::False,
             // Objects are likewise only equal when they are the same instance.
             (Self::Mapping, Self::Mapping) => StaticBool::False,
+            (Self::MatrixMapping(actual), Self::MatrixMapping(expected)) => {
+                StaticBool::from(actual == *expected)
+            }
             _ => StaticBool::Unknown,
         }
     }
@@ -165,6 +170,7 @@ impl StaticValue {
             Self::Null => Some(0.0),
             Self::Sequence(_) => None,
             Self::Mapping => None,
+            Self::MatrixMapping(_) => None,
             Self::NonStringable => None,
             Self::Invalid => None,
             Self::Unknown => None,

@@ -40,7 +40,9 @@ pub(super) fn step_configuration_validity(
     inputs: &InputState,
     environment: &EnvironmentState,
 ) -> StaticBool {
-    if !step_continue_on_error_value_valid(step, inputs, environment) {
+    if environment.has_invalid_value()
+        || !step_continue_on_error_value_valid(step, inputs, environment)
+    {
         return StaticBool::False;
     }
     step_timeout_minutes_validity(step.get("timeout-minutes"), inputs, environment)

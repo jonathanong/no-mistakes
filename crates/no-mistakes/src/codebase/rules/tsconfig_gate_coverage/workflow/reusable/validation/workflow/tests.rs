@@ -279,7 +279,7 @@ fn permissions_follow_the_actions_scope_and_access_schema() {
         "on: push\npermissions: read-all\njobs: {}",
         "on: push\npermissions: write-all\njobs: {}",
         "on: push\npermissions: {}\njobs: {}",
-        "on: push\npermissions:\n  contents: read\n  id-token: write\n  models: read\n  repository-projects: write\njobs: {}",
+        "on: push\npermissions:\n  contents: read\n  id-token: write\n  models: read\n  code-quality: write\n  vulnerability-alerts: read\njobs: {}",
     ] {
         assert!(workflow_shape_valid(&workflow(yaml)), "{yaml}");
     }
@@ -292,8 +292,8 @@ fn permissions_follow_the_actions_scope_and_access_schema() {
         "on: push\npermissions:\n  contents: invalid\njobs: {}",
         "on: push\npermissions:\n  id-token: read\njobs: {}",
         "on: push\npermissions:\n  models: write\njobs: {}",
-        "on: push\npermissions:\n  code-quality: write\njobs: {}",
-        "on: push\npermissions:\n  vulnerability-alerts: read\njobs: {}",
+        "on: push\npermissions:\n  code-quality: invalid\njobs: {}",
+        "on: push\npermissions:\n  vulnerability-alerts: write\njobs: {}",
     ] {
         assert!(!workflow_shape_valid(&workflow(yaml)), "{yaml}");
     }

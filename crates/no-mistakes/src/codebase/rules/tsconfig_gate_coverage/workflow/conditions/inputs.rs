@@ -42,11 +42,13 @@ pub(crate) fn inputs_with_matrix_values(
 ) -> InputState {
     let mut inputs = parent.clone();
     for (name, value) in matrix_values {
-        if let Some(value) = values::matrix_axis_value(value) {
-            inputs.insert(
-                format!("{MATRIX_VALUE_PREFIX}{}", name.to_lowercase()),
-                value,
-            );
+        let key = format!("{MATRIX_VALUE_PREFIX}{}", name.to_lowercase());
+        let value = match value {
+            Value::Mapping(_) => Some(StaticValue::MatrixMapping(key.clone())),
+            value => values::matrix_axis_value(value),
+        };
+        if let Some(value) = value {
+            inputs.insert(key, value);
         }
     }
     if matches!(matrix_state, MatrixState::Dynamic) {

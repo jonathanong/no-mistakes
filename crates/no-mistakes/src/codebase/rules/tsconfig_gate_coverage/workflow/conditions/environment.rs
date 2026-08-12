@@ -70,6 +70,7 @@ impl EnvironmentState {
                 value,
                 StaticValue::Sequence(_)
                     | StaticValue::Mapping
+                    | StaticValue::MatrixMapping(_)
                     | StaticValue::NonStringable
                     | StaticValue::Invalid
             )
@@ -171,7 +172,12 @@ fn expression_input_value(
                 .unwrap_or_else(|| StaticValue::String(String::new())),
         );
     }
-    condition_input_value(expression, inputs, environment)
+    super::static_values::complete_expression_static_value_with_environment(
+        value,
+        inputs,
+        environment,
+    )
+    .or_else(|| condition_input_value(expression, inputs, environment))
 }
 
 fn string_value(value: Value) -> StaticValue {
@@ -191,6 +197,7 @@ fn string_static_value(value: StaticValue) -> StaticValue {
         StaticValue::Null => StaticValue::String(String::new()),
         StaticValue::Sequence(_)
         | StaticValue::Mapping
+        | StaticValue::MatrixMapping(_)
         | StaticValue::NonStringable
         | StaticValue::Invalid => value,
         StaticValue::Unknown => StaticValue::Unknown,

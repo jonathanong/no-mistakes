@@ -53,7 +53,10 @@ fn contains_static_value(search: &StaticValue, item: &str) -> Option<bool> {
     };
     let mut unknown = false;
     for value in values {
-        if matches!(value, StaticValue::Mapping | StaticValue::NonStringable) {
+        if matches!(
+            value,
+            StaticValue::Mapping | StaticValue::MatrixMapping(_) | StaticValue::NonStringable
+        ) {
             continue;
         }
         match value

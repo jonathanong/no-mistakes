@@ -116,6 +116,7 @@ mod dispatchers;
 mod job_failures;
 mod job_results;
 mod matrix_fail_fast;
+mod matrix_identity;
 mod ref_kind;
 mod resolution;
 mod run_scripts;

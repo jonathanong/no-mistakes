@@ -95,6 +95,9 @@ pub(super) enum StaticValue {
     /// A known static YAML mapping from a matrix axis. It is truthy in
     /// conditions but cannot be coerced to a GitHub string.
     Mapping,
+    /// A mapping materialized from one matrix property. Its identity is stable
+    /// within the activation, so repeated reads of that property compare equal.
+    MatrixMapping(String),
     NonStringable,
     /// A context-free `fromJSON` call whose input is known malformed JSON.
     /// This is distinct from a dynamic value so condition evaluation can fail

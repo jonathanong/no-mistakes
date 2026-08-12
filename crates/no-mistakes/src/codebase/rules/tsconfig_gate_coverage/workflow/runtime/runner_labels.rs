@@ -1,7 +1,9 @@
 use super::super::conditions::InputState;
 use serde_yaml::{Mapping, Value};
 
+mod invalid_selection;
 mod selection;
+pub(in super::super) use invalid_selection::runs_on_has_statically_invalid_value;
 use selection::static_runner_selection;
 
 /// A CI job cannot provide a typecheck gate unless Actions can schedule it on
