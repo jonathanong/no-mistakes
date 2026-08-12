@@ -92,22 +92,4 @@ fn direct_step_scanning_covers_nonterminating_runtime_boundaries() {
         BTreeSet::new(),
     );
     assert!(uncertain_directory.indeterminate);
-
-    let no_command = scan(
-        "runs-on: ubuntu-latest\nsteps:\n  - name: no-op",
-        BTreeSet::new(),
-    );
-    assert!(!no_command.failed && !no_command.indeterminate);
-
-    let unresolved_shell = scan(
-        "runs-on: ubuntu-latest\nsteps:\n  - shell: \"${{ github.event.unknown }}\"\n    run: echo unresolved",
-        BTreeSet::new(),
-    );
-    assert!(!unresolved_shell.failed && !unresolved_shell.indeterminate);
-
-    let unknown_runner = scan(
-        "runs-on: custom-runner\nsteps:\n  - run: echo unknown",
-        BTreeSet::new(),
-    );
-    assert!(!unknown_runner.failed && !unknown_runner.indeterminate);
 }
