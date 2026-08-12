@@ -46,6 +46,23 @@ pub(super) fn run_step_stops_job(
         return false;
     };
     if !working_directory::working_directory_exists(&cwd, &configuration.context.visible_paths) {
+        if configuration.condition == StaticBool::True {
+            state.step_outcomes.record_with_conclusion(
+                step,
+                StaticValue::String("failure".to_string()),
+                StaticValue::String(
+                    if configuration.continue_on_error {
+                        "success"
+                    } else {
+                        "failure"
+                    }
+                    .to_string(),
+                ),
+            );
+        }
+        if configuration.continue_on_error {
+            return false;
+        }
         *state.failed |= configuration.condition == StaticBool::True;
         *state.indeterminate |= configuration.condition != StaticBool::True;
         return true;
@@ -58,6 +75,10 @@ pub(super) fn run_step_stops_job(
         configuration.inputs,
         configuration.environment,
     ) else {
+        if !configuration.continue_on_error {
+            *state.indeterminate |= configuration.condition != StaticBool::False;
+            return true;
+        }
         return false;
     };
     let shell = effective_shell(step, configuration.job_shell.clone());

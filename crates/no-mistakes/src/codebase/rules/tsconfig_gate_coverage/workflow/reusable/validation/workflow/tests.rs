@@ -189,6 +189,12 @@ fn concurrency_groups_recheck_resolved_activation_values() {
     assert!(workflow_concurrency_valid_for_inputs(input_group, &inputs));
     assert!(job_concurrency_valid_for_inputs(input_group, &inputs));
 
+    for value in [StaticValue::Bool(false), StaticValue::Number("42".into())] {
+        inputs.insert("group".to_string(), value);
+        assert!(workflow_concurrency_valid_for_inputs(input_group, &inputs));
+        assert!(job_concurrency_valid_for_inputs(input_group, &inputs));
+    }
+
     inputs.insert("group".to_string(), StaticValue::String(String::new()));
     assert!(!workflow_concurrency_valid_for_inputs(input_group, &inputs));
     assert!(!job_concurrency_valid_for_inputs(input_group, &inputs));

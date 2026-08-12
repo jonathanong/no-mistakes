@@ -303,6 +303,33 @@ fn environments_use_distinct_name_and_url_contexts() {
 }
 
 #[test]
+fn empty_resolved_service_images_disable_only_that_service() {
+    let inputs = inputs_with_matrix_values(
+        &InputState::new(),
+        &BTreeMap::from([("image".to_string(), Value::String(String::new()))]),
+        MatrixState::Static,
+    );
+    let environment = EnvironmentState::default();
+    let service = job(
+        "runs-on: ubuntu-latest\nservices: {database: {image: '${{ matrix.image }}'}}\nsteps:\n  - run: echo valid",
+    );
+    assert!(container_configuration_valid_for_inputs(
+        &service,
+        &inputs,
+        &environment
+    ));
+
+    let container = job(
+        "runs-on: ubuntu-latest\ncontainer: '${{ matrix.image }}'\nsteps:\n  - run: echo invalid",
+    );
+    assert!(!container_configuration_valid_for_inputs(
+        &container,
+        &inputs,
+        &environment
+    ));
+}
+
+#[test]
 fn environment_url_rechecks_resolved_stringable_values_per_active_state() {
     let input_url = job(
         "runs-on: ubuntu-latest\nenvironment:\n  name: staging\n  url: '${{ inputs.url }}'\nsteps:\n  - run: echo valid",

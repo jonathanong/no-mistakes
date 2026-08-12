@@ -8,6 +8,7 @@ fn static_shell_failures_distinguish_successful_and_dynamic_forms() {
         "false; exit",
         "false;\nexit",
         "return",
+        "return; echo unreachable",
         "exit invalid",
         "exit 1 2",
     ] {
@@ -43,7 +44,13 @@ fn terminal_failures_ignore_masked_non_errexit_commands() {
             "{script}"
         );
     }
-    for script in ["false; echo ok", "true; exit", "exit 0", "false || true"] {
+    for script in [
+        "false; echo ok",
+        "return; echo ok",
+        "true; exit",
+        "exit 0",
+        "false || true",
+    ] {
         assert!(
             !shell_body_has_static_failure_with_initial(script, false),
             "{script}"

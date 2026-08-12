@@ -19,9 +19,14 @@ pub(crate) fn shell_body_has_static_failure_with_initial(
         previous_failed = outcome.failed();
         match outcome {
             GroupOutcome::Exit(failed) => return failed,
+            GroupOutcome::Return if failure_enforced => return true,
+            GroupOutcome::Return if index + 1 == groups.len() => return true,
             GroupOutcome::Failure { errexit: true } if failure_enforced => return true,
             GroupOutcome::Failure { .. } if index + 1 == groups.len() => return true,
-            GroupOutcome::Success | GroupOutcome::Failure { .. } | GroupOutcome::Unknown => {}
+            GroupOutcome::Success
+            | GroupOutcome::Return
+            | GroupOutcome::Failure { .. }
+            | GroupOutcome::Unknown => {}
         }
     }
     false
@@ -45,7 +50,9 @@ pub(crate) fn shell_body_is_statically_successful(script: &str) -> bool {
             // let that later command establish the final body status.
             GroupOutcome::Failure { .. } if index + 1 < groups.len() => {}
             GroupOutcome::Failure { .. } => return false,
-            GroupOutcome::Exit(true) | GroupOutcome::Unknown => return false,
+            GroupOutcome::Return | GroupOutcome::Exit(true) | GroupOutcome::Unknown => {
+                return false
+            }
         }
     }
     true
@@ -106,6 +113,7 @@ pub(crate) fn shell_body_before_static_failure(
         let outcome = static_group_outcome(group, previous_failed);
         previous_failed = outcome.failed();
         if matches!(outcome, GroupOutcome::Exit(_))
+            || failure_enforced && matches!(outcome, GroupOutcome::Return)
             || failure_enforced && matches!(outcome, GroupOutcome::Failure { errexit: true })
         {
             return groups[..index].join("\n");
@@ -147,7 +155,10 @@ fn terminating_pipeline_segment(
             // continue after a failed AND-list predecessor, so require a
             // proven path to the pipeline before truncating there.
             GroupOutcome::Unknown if final_group => {}
-            GroupOutcome::Failure { .. } | GroupOutcome::Exit(_) | GroupOutcome::Unknown => {
+            GroupOutcome::Failure { .. }
+            | GroupOutcome::Return
+            | GroupOutcome::Exit(_)
+            | GroupOutcome::Unknown => {
                 return None;
             }
         }
@@ -161,7 +172,9 @@ fn static_pipeline_failure(segment: &str) -> Option<bool> {
     for command in segment.split('|') {
         match static_group_outcome(command, None) {
             GroupOutcome::Success | GroupOutcome::Exit(false) => {}
-            GroupOutcome::Failure { .. } | GroupOutcome::Exit(true) => failed = true,
+            GroupOutcome::Failure { .. } | GroupOutcome::Return | GroupOutcome::Exit(true) => {
+                failed = true
+            }
             GroupOutcome::Unknown => unknown = true,
         }
     }

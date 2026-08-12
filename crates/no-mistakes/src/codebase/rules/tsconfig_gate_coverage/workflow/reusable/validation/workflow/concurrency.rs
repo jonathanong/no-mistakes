@@ -95,10 +95,11 @@ fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> b
     let group_valid = if let Some(value) = complete_expression_static_string_value(group, inputs) {
         match value {
             StaticValue::String(value) => !value.trim().is_empty(),
+            StaticValue::Bool(_) | StaticValue::Number(_) => value
+                .function_string()
+                .is_some_and(|value| !value.trim().is_empty()),
             StaticValue::Unknown => resolved_concurrency_group_valid(group, inputs),
-            StaticValue::Bool(_)
-            | StaticValue::Number(_)
-            | StaticValue::Null
+            StaticValue::Null
             | StaticValue::Sequence(_)
             | StaticValue::Mapping
             | StaticValue::MatrixMapping(_)

@@ -24,14 +24,11 @@ fn run_scripts_resolve_static_inputs_matrix_and_environment_values() {
 }
 
 #[test]
-fn resolved_run_failures_block_later_steps_but_dynamic_runs_fail_open() {
+fn resolved_and_dynamic_run_failures_block_later_steps() {
     let workflow = document(
         ".github/workflows/run-resolution.yml",
         "on: push\njobs:\n  resolved:\n    env: {COMMAND: false}\n    runs-on: ubuntu-latest\n    steps:\n      - run: '${{ env.COMMAND }}'\n      - run: tsc --noEmit -p resolved/tsconfig.json\n  dynamic:\n    runs-on: ubuntu-latest\n    steps:\n      - run: '${{ github.event.head_commit.message }}'\n      - run: tsc --noEmit -p dynamic/tsconfig.json\n",
     );
 
-    assert_eq!(
-        scanned_projects(vec![workflow], &["resolved", "dynamic"]),
-        BTreeSet::from(["dynamic/tsconfig.json".to_string()])
-    );
+    assert!(scanned_projects(vec![workflow], &["resolved", "dynamic"]).is_empty());
 }

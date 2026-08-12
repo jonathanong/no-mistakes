@@ -4,6 +4,7 @@ use super::static_tokens;
 pub(super) enum GroupOutcome {
     Success,
     Failure { errexit: bool },
+    Return,
     Exit(bool),
     Unknown,
 }
@@ -12,7 +13,7 @@ impl GroupOutcome {
     pub(super) fn failed(self) -> Option<bool> {
         match self {
             Self::Success | Self::Exit(false) => Some(false),
-            Self::Failure { .. } | Self::Exit(true) => Some(true),
+            Self::Failure { .. } | Self::Return | Self::Exit(true) => Some(true),
             Self::Unknown => None,
         }
     }
@@ -37,7 +38,7 @@ pub(super) fn static_group_outcome(group: &str, mut previous_failed: Option<bool
                     errexit: index + 1 == commands.len(),
                 };
             }
-            Some("return") => return GroupOutcome::Exit(true),
+            Some("return") => return GroupOutcome::Return,
             Some("exit") => {
                 return exit_status_fails(tokens, previous_failed)
                     .map_or(GroupOutcome::Unknown, GroupOutcome::Exit)

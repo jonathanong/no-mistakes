@@ -22,15 +22,33 @@ pub(crate) fn container_configuration_valid_for_inputs(
         .is_none_or(|services| {
             services.values().all(|service| {
                 service.as_mapping().is_some_and(|service| {
-                    container_mapping_valid_for_inputs(
-                        service,
-                        ContainerKind::Service,
-                        inputs,
-                        environment,
-                    )
+                    service_mapping_valid_for_inputs(service, inputs, environment)
                 })
             })
         })
+}
+
+fn service_mapping_valid_for_inputs(
+    service: &Mapping,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+) -> bool {
+    let Some(image) = service.get("image").and_then(Value::as_str) else {
+        return false;
+    };
+    if !super::valid_container_image(image) {
+        return false;
+    }
+    let Some(image) = resolve_static_interpolations(image, inputs, environment) else {
+        return false;
+    };
+    // GitHub omits a service whose image resolves to the empty string. Its
+    // remaining configuration therefore cannot make the job unrunnable.
+    if image.is_empty() {
+        return true;
+    }
+    images::valid_static_reference(&image)
+        && container_mapping_valid_for_inputs(service, ContainerKind::Service, inputs, environment)
 }
 
 fn container_value_valid_for_inputs(

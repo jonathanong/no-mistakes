@@ -94,6 +94,7 @@ mod needs;
 mod outputs;
 mod ref_kind;
 mod resolution;
+mod run_resolution;
 mod run_scripts;
 
 #[test]
