@@ -8,6 +8,7 @@ pub(in super::super) const EVENT_ACTION_KEY: &str = "\0github.event.action";
 pub(in super::super) const REF_KEY: &str = "\0github.ref";
 pub(in super::super) const REF_NAME_KEY: &str = "\0github.ref_name";
 pub(in super::super) const BASE_REF_KEY: &str = "\0github.base_ref";
+pub(in super::super) const HEAD_REF_KEY: &str = "\0github.head_ref";
 pub(in super::super) const REF_KIND_KEY: &str = "\0github.ref.kind";
 pub(in super::super) const REF_SHAPE_KEY: &str = "\0github.ref.shape";
 pub(in super::super) const REF_EXCLUSIONS_KEY: &str = "\0github.ref.exclusions";
@@ -27,6 +28,9 @@ pub(in super::super) fn event_ref_type_value(inputs: &InputState) -> Option<Stat
 pub(in super::super) fn event_base_ref_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(BASE_REF_KEY).cloned()
 }
+pub(in super::super) fn event_head_ref_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(HEAD_REF_KEY).cloned()
+}
 
 pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
     for key in [
@@ -35,6 +39,7 @@ pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
         REF_KEY,
         REF_NAME_KEY,
         BASE_REF_KEY,
+        HEAD_REF_KEY,
         REF_KIND_KEY,
         REF_SHAPE_KEY,
         REF_EXCLUSIONS_KEY,
@@ -137,6 +142,9 @@ pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> 
         | GithubRef::UnknownBranch
         | GithubRef::UnknownExcluding(_)
         | GithubRef::PullRequestMerge => {}
+    }
+    if !matches!(event.name.as_str(), "pull_request" | "pull_request_target") {
+        inputs.insert(HEAD_REF_KEY.to_string(), StaticValue::String(String::new()));
     }
     inputs
 }

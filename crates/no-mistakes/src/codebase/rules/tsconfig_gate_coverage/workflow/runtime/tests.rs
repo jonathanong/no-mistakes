@@ -217,6 +217,12 @@ fn conflicting_and_malformed_runner_labels_remain_indeterminate() {
 }
 
 #[test]
+fn incompatible_hosted_runner_labels_are_not_runnable() {
+    let job: Value = serde_yaml::from_str("runs-on: [ubuntu-latest, windows-latest]").unwrap();
+    assert!(!has_static_runnable_runs_on(&job));
+}
+
+#[test]
 fn runner_selection_resolves_matrix_labels_and_group_mappings() {
     let inputs = inputs_with_matrix_values(
         &InputState::new(),

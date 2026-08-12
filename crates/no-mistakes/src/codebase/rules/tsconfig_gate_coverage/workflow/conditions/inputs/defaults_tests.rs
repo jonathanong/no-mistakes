@@ -55,6 +55,10 @@ fn reusable_defaults_resolve_the_caller_event_and_prior_inputs() {
                 "\0github.base_ref".to_string(),
                 StaticValue::String(String::new()),
             ),
+            (
+                "\0github.head_ref".to_string(),
+                StaticValue::String(String::new()),
+            ),
         ]))
     );
 }

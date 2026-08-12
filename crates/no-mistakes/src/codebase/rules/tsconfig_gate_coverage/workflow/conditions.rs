@@ -34,14 +34,14 @@ pub(super) use inputs::{
     inputs_with_strategy_configuration_values, MatrixState, SecretAvailability, SecretState,
 };
 use inputs::{
-    event_action_value, event_base_ref_value, event_name_value, event_ref_name_value,
-    event_ref_type_value,
+    event_action_value, event_base_ref_value, event_head_ref_value, event_name_value,
+    event_ref_name_value, event_ref_type_value,
 };
 use resolution::condition_input_value;
 pub(crate) use resolution::context_output_name;
 pub(crate) use static_values::complete_expression_static_string_value;
 pub(super) use step_evaluation::{
-    continue_on_error_enabled, step_condition_with_status, step_continue_on_error_value_valid,
+    continue_on_error_value, step_condition_with_status, step_continue_on_error_value_valid,
 };
 pub(super) use step_outcomes::StepOutcomes;
 

@@ -4,8 +4,8 @@ use serde_yaml::Value;
 use std::collections::BTreeSet;
 
 use super::super::conditions::{
-    continue_on_error_enabled, step_condition_with_status, EnvironmentState, InputState,
-    StaticBool, StaticValue, StepOutcomes,
+    continue_on_error_value, step_condition_with_status, EnvironmentState, InputState, StaticBool,
+    StaticValue, StepOutcomes,
 };
 use super::validation::action_step_inputs_valid_for_state;
 
@@ -50,7 +50,7 @@ pub(super) fn scan_job_steps(
             .with_step_outcomes(&step_outcomes)
             .with_step(step, inputs);
         let condition = step_condition_with_status(step, inputs, &environment, success);
-        let continue_on_error = continue_on_error_enabled(step, inputs, &environment);
+        let continue_on_error = continue_on_error_value(step, inputs, &environment);
         if condition == StaticBool::False {
             step_outcomes.record(step, StaticValue::String("skipped".to_string()));
             continue;
@@ -76,6 +76,15 @@ pub(super) fn scan_job_steps(
             }
             StaticBool::True => {}
         }
+        let continue_on_error = match continue_on_error {
+            StaticBool::True => true,
+            StaticBool::False => false,
+            // A dynamic tolerance can either hide a failure or stop later gates.
+            _ => {
+                indeterminate = true;
+                break;
+            }
+        };
         let uses_action = step.get("uses").is_some();
         if uses_action && !action_step_inputs_valid_for_state(step, inputs, &environment) {
             if continue_on_error {

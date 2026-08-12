@@ -29,3 +29,6 @@ pub(super) fn working_directory_exists(directory: &str, visible_paths: &BTreeSet
                     .is_some_and(|suffix| suffix.starts_with('/'))
         })
 }
+
+#[cfg(test)]
+mod tests;

@@ -183,6 +183,11 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "to-json/tsconfig.json",
             "to-json-structured/tsconfig.json",
             "workflow-job-output/tsconfig.json",
+            "dynamic-working-directory/tsconfig.json",
+            "push-head-ref/tsconfig.json",
+            "incompatible-hosted-runner/tsconfig.json",
+            "duplicate-service-port/tsconfig.json",
+            "dynamic-continue-on-error/tsconfig.json",
         ]),
         "{report:#?}"
     );
@@ -255,6 +260,17 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
         "to-json/tsconfig.json",
         "to-json-structured/tsconfig.json",
         "workflow-job-output/tsconfig.json",
+    ] {
+        assert!(uncovered.contains(project));
+    }
+    // Dynamic directories, runtime tolerance, conflicting runners, service ports,
+    // and the empty push head ref each make these typechecks unreachable.
+    for project in [
+        "dynamic-working-directory/tsconfig.json",
+        "dynamic-continue-on-error/tsconfig.json",
+        "incompatible-hosted-runner/tsconfig.json",
+        "duplicate-service-port/tsconfig.json",
+        "push-head-ref/tsconfig.json",
     ] {
         assert!(uncovered.contains(project));
     }

@@ -1,13 +1,13 @@
 use super::{
-    event_action_value, event_base_ref_value, event_name_value, event_ref_name_value,
-    event_ref_type_value, functions,
+    event_action_value, event_base_ref_value, event_head_ref_value, event_name_value,
+    event_ref_name_value, event_ref_type_value, functions,
     input_value::comparison_literal,
     literals::{job_status_value, status_function_bool},
     logical,
     resolution::condition_input_value,
     resolution::{
-        github_base_ref, github_event_action, github_event_name, github_ref, github_ref_name,
-        github_ref_type, job_status,
+        github_base_ref, github_event_action, github_event_name, github_head_ref, github_ref,
+        github_ref_name, github_ref_type, job_status,
     },
     static_json::literal_from_json_static_value,
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
@@ -15,7 +15,6 @@ use super::{
 
 mod static_bool;
 use static_bool::static_bool_value;
-
 pub(super) fn condition_value(
     operand: &str,
     inputs: &InputState,
@@ -57,6 +56,9 @@ pub(super) fn condition_value(
     if github_base_ref(operand) {
         return event_base_ref_value(inputs);
     }
+    if github_head_ref(operand) {
+        return event_head_ref_value(inputs);
+    }
     literal_from_json_static_value(operand)
         .or_else(|| super::static_values::static_from_json_expression(operand, inputs, environment))
         .or_else(|| super::static_values::static_to_json_expression(operand, inputs, environment))
@@ -88,7 +90,6 @@ pub(super) fn condition_value(
                 .map(static_bool_value)
         })
 }
-
 fn logical_value(
     expression: &str,
     inputs: &InputState,

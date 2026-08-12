@@ -43,6 +43,10 @@ pub(super) fn run_step_stops_job(
         configuration.environment,
         configuration.job_cwd,
     ) else {
+        if !configuration.continue_on_error {
+            *state.indeterminate |= configuration.condition != StaticBool::False;
+            return true;
+        }
         return false;
     };
     if !working_directory::working_directory_exists(&cwd, &configuration.context.visible_paths) {

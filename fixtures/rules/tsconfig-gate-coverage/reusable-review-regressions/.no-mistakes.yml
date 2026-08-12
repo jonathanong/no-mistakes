@@ -200,6 +200,26 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, workflow-job-output/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-dynamic-working-directory
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-working-directory/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-push-head-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, push-head-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-incompatible-hosted-runner
+      command: [pnpm, exec, tsc, --noEmit, --project, incompatible-hosted-runner/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-duplicate-service-port
+      command: [pnpm, exec, tsc, --noEmit, --project, duplicate-service-port/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-continue-on-error
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-continue-on-error/tsconfig.json]
+      fileArgs: none
+      always: true
 rules:
   - rule: tsconfig-gate-coverage
     scope: repository

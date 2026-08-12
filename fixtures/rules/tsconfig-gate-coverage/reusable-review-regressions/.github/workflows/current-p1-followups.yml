@@ -1,0 +1,35 @@
+on: push
+jobs:
+  dynamic-working-directory:
+    runs-on: ubuntu-latest
+    steps:
+      # A dynamic directory can hide a prior guaranteed failure from later steps.
+      - working-directory: '${{ vars.DIR }}'
+        run: false
+      - run: pnpm exec tsc --noEmit --project dynamic-working-directory/tsconfig.json
+  push-head-ref:
+    runs-on: ubuntu-latest
+    steps:
+      # github.head_ref is empty outside pull-request activations.
+      - if: github.head_ref != ''
+        run: pnpm exec tsc --noEmit --project push-head-ref/tsconfig.json
+  incompatible-hosted-runner:
+    runs-on: [ubuntu-latest, windows-latest]
+    steps:
+      # Incompatible hosted labels cannot select one runner.
+      - shell: bash
+        run: pnpm exec tsc --noEmit --project incompatible-hosted-runner/tsconfig.json
+  duplicate-service-port:
+    runs-on: ubuntu-latest
+    services:
+      postgres: {image: postgres:16, ports: ['5432:5432']}
+      redis: {image: redis:7, ports: ['5432:6379']}
+    steps:
+      # Docker cannot bind the same static service host port twice.
+      - run: pnpm exec tsc --noEmit --project duplicate-service-port/tsconfig.json
+  dynamic-continue-on-error:
+    runs-on: ubuntu-latest
+    steps:
+      # A variable may tolerate the typecheck failure at runtime.
+      - continue-on-error: '${{ vars.ALLOW_FAILURE }}'
+        run: pnpm exec tsc --noEmit --project dynamic-continue-on-error/tsconfig.json

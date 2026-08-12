@@ -38,13 +38,15 @@ fn implicit_success_condition(success: StaticBool, condition: StaticBool) -> Sta
     }
 }
 
-pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn continue_on_error_enabled(
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn continue_on_error_value(
     value: &Value,
     inputs: &InputState,
     environment: &EnvironmentState,
-) -> bool {
-    static_bool_with_environment(value.get("continue-on-error"), inputs, environment)
-        == StaticBool::True
+) -> StaticBool {
+    value
+        .get("continue-on-error")
+        .map(|value| static_bool_with_environment(Some(value), inputs, environment))
+        .unwrap_or(StaticBool::False)
 }
 
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_continue_on_error_value_valid(
@@ -70,3 +72,6 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn step_continu
         _ => false,
     }
 }
+
+#[cfg(test)]
+mod tests;

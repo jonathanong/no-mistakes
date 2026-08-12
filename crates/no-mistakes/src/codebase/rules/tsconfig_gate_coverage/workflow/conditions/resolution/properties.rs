@@ -80,6 +80,10 @@ pub(in super::super) fn github_base_ref(operand: &str) -> bool {
     github_event_property(operand, &["base_ref"])
 }
 
+pub(in super::super) fn github_head_ref(operand: &str) -> bool {
+    github_event_property(operand, &["head_ref"])
+}
+
 fn github_event_property(operand: &str, properties: &[&str]) -> bool {
     let operand = operand.trim();
     let Some(remainder) = operand

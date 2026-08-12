@@ -10,10 +10,11 @@ use selection::static_runner_selection;
 /// a statically known runner. Reusable-workflow jobs use `uses:` rather than
 /// `steps:` and are excluded separately by the step requirement.
 pub(in super::super) fn has_static_runnable_runs_on(job: &Value, inputs: &InputState) -> bool {
-    static_runner_selection(job.as_mapping(), inputs)
-        .is_some_and(|selection| selection.group.is_some() || !selection.labels.is_empty())
+    static_runner_selection(job.as_mapping(), inputs).is_some_and(|selection| {
+        (selection.group.is_some() || !selection.labels.is_empty())
+            && !has_incompatible_hosted_labels(&selection.labels)
+    })
 }
-
 /// An unspecified Actions shell is PowerShell on Windows. Only reject this
 /// known incompatible default; an explicit supported `bash`/`sh` override is
 /// still safe to analyze on the same runner.
@@ -26,14 +27,12 @@ pub(in super::super) fn runs_on_can_default_to_windows(job: &Value, inputs: &Inp
         RunnerPlatform::Windows | RunnerPlatform::Unknown
     )
 }
-
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(in super::super) enum ContainerRunnerSupport {
     Linux,
     NonLinux,
     Unknown,
 }
-
 pub(in super::super) fn container_runner_support(
     job: &Mapping,
     inputs: &InputState,
@@ -47,7 +46,6 @@ pub(in super::super) fn container_runner_support(
         RunnerPlatform::Unknown => ContainerRunnerSupport::Unknown,
     }
 }
-
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum RunnerPlatform {
     Linux,
@@ -83,6 +81,20 @@ fn runner_platform(labels: &[String]) -> RunnerPlatform {
     } else {
         labels_platform(labels, github_hosted_runner_platform)
     }
+}
+
+fn has_incompatible_hosted_labels(labels: &[String]) -> bool {
+    let mut platform = None;
+    for label in labels {
+        let label_platform = github_hosted_runner_platform(label);
+        if label_platform != RunnerPlatform::Unknown {
+            if platform.is_some_and(|known| known != label_platform) {
+                return true;
+            }
+            platform = Some(label_platform);
+        }
+    }
+    false
 }
 
 fn self_hosted_labels_platform(labels: &[String]) -> RunnerPlatform {
