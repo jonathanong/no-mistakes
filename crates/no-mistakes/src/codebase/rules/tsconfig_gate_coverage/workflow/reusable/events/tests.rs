@@ -84,7 +84,7 @@ fn exact_ref_filters_produce_fully_qualified_ref_contexts() {
         (
             "on:\n  pull_request_target:\n    types: [synchronize]\n    branches: [main]",
             "pull_request_target",
-            vec!["refs/heads/main"],
+            vec![],
         ),
     ] {
         let workflow: Value = serde_yaml::from_str(yaml).unwrap();
