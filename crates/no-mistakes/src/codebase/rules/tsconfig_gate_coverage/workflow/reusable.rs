@@ -5,6 +5,7 @@ use crate::codebase::workflow_topology::workflow_values;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+use super::local_actions::LocalActionCatalog;
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 
 mod activation;
@@ -29,7 +30,7 @@ pub(super) fn collect_ci_projects_with_local_actions(
     tracked: &BTreeSet<String>,
     tracked_paths: &[PathBuf],
     project_source_inputs: &ProjectSourceInputs,
-    local_actions: &BTreeSet<String>,
+    local_actions: &LocalActionCatalog,
 ) -> (BTreeSet<String>, usize) {
     let workflows = parsed
         .documents

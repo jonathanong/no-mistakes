@@ -72,7 +72,9 @@ fn repository_root_local_actions_allow_following_typechecks() {
             &tracked,
             &tracked_paths,
             &project_inputs(&tracked),
-            &BTreeSet::from([String::new()]),
+            &super::super::super::workflow::local_actions::LocalActionCatalog::non_docker(
+                BTreeSet::from([String::new()]),
+            ),
         )
         .0,
         tracked
@@ -135,7 +137,9 @@ fn local_actions_require_a_prior_checkout_in_each_job() {
             &tracked,
             &tracked_paths,
             &project_inputs(&tracked),
-            &BTreeSet::from([".github/actions/local".to_string()]),
+            &super::super::super::workflow::local_actions::LocalActionCatalog::non_docker(
+                BTreeSet::from([".github/actions/local".to_string()]),
+            ),
         )
         .0,
         BTreeSet::from([

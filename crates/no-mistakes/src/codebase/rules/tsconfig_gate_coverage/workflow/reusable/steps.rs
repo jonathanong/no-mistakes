@@ -99,13 +99,29 @@ pub(super) fn scan_job_steps(
             break;
         }
         checkout.observe(step, condition, inputs, &environment);
+        if continue_on_error && uses_action {
+            if condition == StaticBool::True {
+                step_outcomes.record_with_conclusion(
+                    step,
+                    StaticValue::Unknown,
+                    StaticValue::String("success".to_string()),
+                );
+                if step.get("id").is_some() {
+                    indeterminate = true;
+                    break;
+                }
+            }
+            continue;
+        }
         if uses_action && condition == StaticBool::True {
             step_outcomes.record(step, StaticValue::String("success".to_string()));
         }
-        if continue_on_error && uses_action {
-            continue;
-        }
-        if let Some(available) = local_action::available(step, &checkout, context.local_actions) {
+        if let Some(available) = local_action::available(
+            step,
+            &checkout,
+            context.local_actions,
+            environment.runner_os().function_string().as_deref(),
+        ) {
             if !available {
                 if condition == StaticBool::True {
                     step_outcomes.record(step, StaticValue::String("failure".to_string()));

@@ -143,8 +143,13 @@ pub(crate) fn resolve_static_interpolations(
             .and_then(|value| value.function_string())
             .or_else(|| {
                 resolution::secret_name(&format!("${{{{ {expression} }}}}")).and_then(|name| {
-                    (environment.secret_availability(name) == SecretAvailability::Absent)
-                        .then(String::new)
+                    environment
+                        .secret_value(name)
+                        .and_then(|value| value.function_string())
+                        .or_else(|| {
+                            (environment.secret_availability(name) == SecretAvailability::Absent)
+                                .then(String::new)
+                        })
                 })
             })
             .or_else(|| {

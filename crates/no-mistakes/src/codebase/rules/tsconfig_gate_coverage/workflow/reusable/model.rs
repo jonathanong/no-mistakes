@@ -23,7 +23,7 @@ pub(super) struct ScanContext<'a> {
     /// exist without creating another discovery pass for reusable workflows.
     pub(super) visible_paths: BTreeSet<String>,
     pub(super) project_source_inputs: &'a ProjectSourceInputs,
-    pub(super) local_actions: &'a BTreeSet<String>,
+    pub(super) local_actions: &'a super::super::local_actions::LocalActionCatalog,
 }
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]

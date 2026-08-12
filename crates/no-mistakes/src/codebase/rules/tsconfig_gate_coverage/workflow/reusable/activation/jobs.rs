@@ -70,7 +70,6 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
             return None;
         }
         let contract = callee.call_contract.as_ref()?;
-        let callee_secrets = callee_secrets(contract, job, &self.state.secrets)?;
         let mut projects = BTreeSet::new();
         let mut outputs: Option<BTreeMap<String, StaticValue>> = None;
         let mut failed = false;
@@ -96,8 +95,9 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                     instance_failed && strategy_fail_fast_enabled_for_inputs(job, inputs);
                 continue;
             }
+            let callee_secrets = callee_secrets(contract, job, &self.state.secrets, inputs)?;
             let callee_inputs = callee_inputs(Some(contract), job, inputs)?;
-            let callee_state = self.state.callee(callee_inputs, callee_secrets.clone());
+            let callee_state = self.state.callee(callee_inputs, callee_secrets);
             let callee_scan = scan_activation(
                 callee_path,
                 callee,

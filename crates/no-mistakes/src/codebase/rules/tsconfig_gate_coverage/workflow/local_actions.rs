@@ -1,15 +1,51 @@
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 mod metadata;
 use metadata::action_directory_valid;
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(super) enum LocalActionKind {
+    Docker,
+    Other,
+}
+
+#[derive(Default)]
+pub(crate) struct LocalActionCatalog(BTreeMap<String, LocalActionKind>);
+
+impl LocalActionCatalog {
+    #[cfg(test)]
+    pub(crate) fn non_docker(actions: BTreeSet<String>) -> Self {
+        Self(
+            actions
+                .into_iter()
+                .map(|action| (action, LocalActionKind::Other))
+                .collect(),
+        )
+    }
+
+    #[cfg(test)]
+    pub(crate) fn docker(actions: BTreeSet<String>) -> Self {
+        Self(
+            actions
+                .into_iter()
+                .map(|action| (action, LocalActionKind::Docker))
+                .collect(),
+        )
+    }
+
+    pub(super) fn kind(&self, directory: &str) -> Option<LocalActionKind> {
+        self.0.get(directory).copied()
+    }
+}
+
 pub(crate) fn catalog(
     root: &Path,
     tracked_paths: &[PathBuf],
     sources: &SourceStore,
-) -> BTreeSet<String> {
+) -> LocalActionCatalog {
     let tracked = tracked_paths
         .iter()
         .map(|path| relative_slash_path(root, path))
@@ -48,19 +84,33 @@ pub(crate) fn catalog(
         })
         .collect::<BTreeMap<_, _>>();
     let mut cache = BTreeMap::new();
-    descriptors
-        .keys()
-        .filter(|directory| {
-            action_directory_valid(
-                directory,
-                &descriptors,
-                &tracked,
-                &mut BTreeSet::new(),
-                &mut cache,
-            )
-        })
-        .cloned()
-        .collect()
+    LocalActionCatalog(
+        descriptors
+            .iter()
+            .filter(|(directory, _)| {
+                action_directory_valid(
+                    directory,
+                    &descriptors,
+                    &tracked,
+                    &mut BTreeSet::new(),
+                    &mut cache,
+                )
+            })
+            .map(|(directory, metadata)| {
+                let kind = if metadata
+                    .get("runs")
+                    .and_then(|runs| runs.get("using"))
+                    .and_then(Value::as_str)
+                    == Some("docker")
+                {
+                    LocalActionKind::Docker
+                } else {
+                    LocalActionKind::Other
+                };
+                (directory.clone(), kind)
+            })
+            .collect(),
+    )
 }
 
 #[cfg(test)]

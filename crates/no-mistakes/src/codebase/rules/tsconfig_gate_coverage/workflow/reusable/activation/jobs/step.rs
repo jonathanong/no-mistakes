@@ -86,7 +86,7 @@ impl JobScanner<'_, '_> {
                     projects.extend(scan.projects.iter().cloned());
                 }
                 let enforcing = job_statically_enforcing(job, inputs, failed_need);
-                if !scan.failed && !scan.indeterminate {
+                if !scan.indeterminate {
                     merge_step_job_outputs(
                         &mut outputs,
                         static_step_job_outputs(job, inputs, &environment),

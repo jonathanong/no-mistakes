@@ -97,6 +97,29 @@ fn pull_request_calls_do_not_forward_repository_secrets() {
 }
 
 #[test]
+fn statically_empty_secret_bindings_remain_empty_in_callees() {
+    let workflows = ParsedWorkflowSet {
+        documents: vec![
+            document(
+                ".github/workflows/caller.yml",
+                "on: push\njobs:\n  call:\n    uses: ./.github/workflows/callee.yml\n    secrets:\n      token: '${{ github.event.action }}'\n",
+            ),
+            document(
+                ".github/workflows/callee.yml",
+                "on:\n  workflow_call:\n    secrets:\n      token: {required: true}\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    env: {TOKEN: '${{ secrets.token }}'}\n    steps:\n      - if: env.TOKEN != ''\n        run: tsc --noEmit -p app/tsconfig.json\n",
+            ),
+        ],
+    };
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+
+    assert!(
+        collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))
+            .0
+            .is_empty()
+    );
+}
+
+#[test]
 fn reusable_scanner_accepts_job_shape_secret_contexts_and_rejects_unavailable_ones() {
     let workflows = ParsedWorkflowSet {
         documents: vec![

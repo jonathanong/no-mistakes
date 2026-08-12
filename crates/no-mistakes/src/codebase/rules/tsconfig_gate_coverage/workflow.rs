@@ -33,7 +33,7 @@ pub(super) fn ci_typechecked_projects_with_local_actions(
     tracked: &BTreeSet<String>,
     tracked_paths: &[PathBuf],
     project_source_inputs: &super::ProjectSourceInputs,
-    local_actions: &BTreeSet<String>,
+    local_actions: &local_actions::LocalActionCatalog,
 ) -> BTreeSet<String> {
     ci_typechecked_projects_with_local_actions_and_stats(
         root,
@@ -52,7 +52,7 @@ pub(super) fn ci_typechecked_projects_with_local_actions_and_stats(
     tracked: &BTreeSet<String>,
     tracked_paths: &[PathBuf],
     project_source_inputs: &super::ProjectSourceInputs,
-    local_actions: &BTreeSet<String>,
+    local_actions: &local_actions::LocalActionCatalog,
 ) -> (BTreeSet<String>, usize) {
     reusable::collect_ci_projects_with_local_actions(
         root,

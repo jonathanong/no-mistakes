@@ -291,7 +291,9 @@ fn scalar_defaults_and_action_contexts_catalog_local_actions_for_the_step_scanne
             &tracked,
             &tracked_paths,
             &project_source_inputs,
-            &BTreeSet::from([".github/actions/cataloged".to_string()]),
+            &LocalActionCatalog::non_docker(BTreeSet::from([
+                ".github/actions/cataloged".to_string(),
+            ])),
         ),
         BTreeSet::from(["app/tsconfig.json".to_string()])
     );

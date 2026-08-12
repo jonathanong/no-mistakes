@@ -8,6 +8,16 @@ use crate::codebase::{
 };
 
 fn scan(job: &str, local_actions: BTreeSet<String>) -> StepScan {
+    scan_with_catalog(
+        job,
+        super::super::super::local_actions::LocalActionCatalog::non_docker(local_actions),
+    )
+}
+
+fn scan_with_catalog(
+    job: &str,
+    local_actions: super::super::super::local_actions::LocalActionCatalog,
+) -> StepScan {
     let job = serde_yaml::from_str(job).unwrap();
     let workflow: Value = serde_yaml::from_str("'on': push").unwrap();
     let model = parse_workflow_value(&workflow, ".github/workflows/test.yml");
@@ -28,15 +38,9 @@ fn scan(job: &str, local_actions: BTreeSet<String>) -> StepScan {
     )
     .unwrap();
     let inputs = inputs_with_matrix_values(&inputs, &Default::default(), MatrixState::Dynamic);
-    scan_job_steps(
-        &job,
-        &triggers,
-        &inputs,
-        &EnvironmentState::default(),
-        None,
-        None,
-        &context,
-    )
+    let environment = EnvironmentState::default()
+        .with_runner_os(super::super::super::runtime::runner_os(&job, &inputs));
+    scan_job_steps(&job, &triggers, &inputs, &environment, None, None, &context)
 }
 
 #[test]
@@ -124,4 +128,25 @@ fn direct_step_scanning_covers_nonterminating_runtime_boundaries() {
         BTreeSet::new(),
     );
     assert!(!tolerated_unsafe_body.failed && !tolerated_unsafe_body.indeterminate);
+}
+
+#[test]
+fn tolerated_action_outcomes_and_local_docker_runners_remain_sound() {
+    let tolerated = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - id: setup\n    continue-on-error: true\n    uses: actions/cache@v4\n  - if: steps.setup.outcome == 'success'\n    run: tsc --noEmit -p app/tsconfig.json",
+        BTreeSet::new(),
+    );
+    assert!(tolerated.indeterminate && tolerated.projects.is_empty());
+
+    let docker_actions = BTreeSet::from(["local-action".to_string()]);
+    let windows = scan_with_catalog(
+        "runs-on: windows-latest\nsteps:\n  - uses: actions/checkout@v4\n  - uses: ./local-action",
+        super::super::super::local_actions::LocalActionCatalog::docker(docker_actions.clone()),
+    );
+    assert!(windows.failed);
+    let linux = scan_with_catalog(
+        "runs-on: ubuntu-latest\nsteps:\n  - uses: actions/checkout@v4\n  - uses: ./local-action",
+        super::super::super::local_actions::LocalActionCatalog::docker(docker_actions),
+    );
+    assert!(!linux.failed && !linux.indeterminate);
 }

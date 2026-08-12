@@ -14,6 +14,16 @@ fn static_ordinary_job_outputs_flow_to_needs() {
 }
 
 #[test]
+fn completed_failed_jobs_preserve_static_outputs_for_always_dependents() {
+    let workflow = document(
+        ".github/workflows/failed-output.yml",
+        "on: push\njobs:\n  setup:\n    outputs: {enabled: '${{ false }}'}\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'false'\n  dependent:\n    needs: setup\n    if: always()\n    runs-on: ubuntu-latest\n    steps:\n      - if: needs.setup.outputs.enabled == 'true'\n        run: tsc --noEmit -p blocked/tsconfig.json\n",
+    );
+
+    assert!(scanned_projects(vec![workflow], &["blocked"]).is_empty());
+}
+
+#[test]
 fn reusable_workflow_outputs_flow_to_callers_needs_context() {
     let caller = document(
         ".github/workflows/caller.yml",

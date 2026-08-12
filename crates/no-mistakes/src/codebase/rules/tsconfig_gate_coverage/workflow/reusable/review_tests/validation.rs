@@ -137,7 +137,7 @@ fn local_actions_are_validated_only_when_their_step_executes() {
             &tracked,
             &tracked_paths,
             &project_inputs(&tracked),
-            &BTreeSet::new(),
+            &super::super::super::local_actions::LocalActionCatalog::default(),
         )
         .0,
         BTreeSet::from([

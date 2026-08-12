@@ -24,7 +24,7 @@ fn failing_local_actions_block_needs_dependents_from_credit() {
             &tracked,
             &tracked_paths,
             &project_inputs(&tracked),
-            &BTreeSet::new(),
+            &super::super::super::super::local_actions::LocalActionCatalog::default(),
         )
         .0,
         BTreeSet::from(["independent/tsconfig.json".to_string()])

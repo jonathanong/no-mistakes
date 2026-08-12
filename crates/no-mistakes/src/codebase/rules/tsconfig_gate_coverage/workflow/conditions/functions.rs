@@ -1,5 +1,7 @@
 use super::{
-    condition_values::condition_value, input_value::comparison_literal, resolution::input_name,
+    condition_values::condition_value,
+    input_value::comparison_literal,
+    resolution::{github_ref, input_name},
     ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
@@ -38,6 +40,11 @@ pub(super) fn static_function_bool(
         return Some(StaticBool::Invalid);
     }
     let item = item.function_string()?;
+    if call.function == Function::StartsWith && github_ref(call.arguments[0]) {
+        if let Some(matched) = known_ref_prefix_starts_with(inputs, &item) {
+            return Some(StaticBool::from(matched));
+        }
+    }
     let matched = match call.function {
         Function::Contains => contains_static_value(&search, &item)?,
         Function::StartsWith => starts_with_ignore_ascii_case(&search.function_string()?, &item)?,
@@ -45,6 +52,19 @@ pub(super) fn static_function_bool(
         _ => return None,
     };
     Some(StaticBool::from(matched))
+}
+
+fn known_ref_prefix_starts_with(inputs: &InputState, item: &str) -> Option<bool> {
+    let prefix = match inputs.get(super::inputs::REF_SHAPE_KEY)? {
+        StaticValue::String(shape) if shape == "branch" => "refs/heads/",
+        StaticValue::String(shape) if shape == "tag" => "refs/tags/",
+        StaticValue::String(shape) if shape == "pull-request-merge" => "refs/pull/",
+        _ => return None,
+    };
+    if prefix.starts_with(item) {
+        return Some(true);
+    }
+    (!item.starts_with(prefix)).then_some(false)
 }
 
 fn contains_static_value(search: &StaticValue, item: &str) -> Option<bool> {

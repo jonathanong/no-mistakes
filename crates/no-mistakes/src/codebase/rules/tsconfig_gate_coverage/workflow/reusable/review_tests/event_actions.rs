@@ -127,10 +127,13 @@ fn exact_ref_gates_do_not_cover_wildcard_branch_alternatives() {
     let workflows = ParsedWorkflowSet {
         documents: vec![document(
             ".github/workflows/checks.yml",
-            "on:\n  push:\n    branches: [main, 'release/**']\njobs:\n  main-only:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p main-only/tsconfig.json\n",
+            "on:\n  push:\n    branches: [main, 'release/**']\njobs:\n  main-only:\n    if: github.ref == 'refs/heads/main'\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p main-only/tsconfig.json\n  tag-prefix:\n    if: startsWith(github.ref, 'refs/tags/')\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p tag-prefix/tsconfig.json\n",
         )],
     };
-    let tracked = BTreeSet::from(["main-only/tsconfig.json".to_string()]);
+    let tracked = BTreeSet::from([
+        "main-only/tsconfig.json".to_string(),
+        "tag-prefix/tsconfig.json".to_string(),
+    ]);
 
     assert!(
         collect_ci_projects_with_stats(&workflows, &tracked, &project_inputs(&tracked))

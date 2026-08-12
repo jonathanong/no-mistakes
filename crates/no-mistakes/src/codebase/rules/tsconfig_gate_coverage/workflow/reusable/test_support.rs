@@ -15,6 +15,6 @@ pub(super) fn collect_ci_projects_with_stats(
         tracked,
         &tracked_paths,
         project_source_inputs,
-        &BTreeSet::new(),
+        &super::super::local_actions::LocalActionCatalog::default(),
     )
 }

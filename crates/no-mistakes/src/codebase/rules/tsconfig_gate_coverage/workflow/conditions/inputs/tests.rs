@@ -230,7 +230,13 @@ fn malformed_secret_bindings_are_rejected() {
     ] {
         let call_job: Value = serde_yaml::from_str(source).expect("valid test YAML");
         assert!(
-            callee_secrets(&contract, &call_job, &SecretState::direct()).is_none(),
+            callee_secrets(
+                &contract,
+                &call_job,
+                &SecretState::direct(),
+                &InputState::new(),
+            )
+            .is_none(),
             "{source}"
         );
     }

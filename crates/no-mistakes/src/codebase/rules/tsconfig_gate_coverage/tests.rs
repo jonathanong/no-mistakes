@@ -48,7 +48,7 @@ fn ci_typechecked_projects_with_stats(
         tracked,
         &tracked_paths,
         project_source_inputs,
-        &BTreeSet::new(),
+        &super::workflow::local_actions::LocalActionCatalog::default(),
     )
 }
 

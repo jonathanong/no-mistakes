@@ -105,6 +105,10 @@ impl EnvironmentState {
         self.secrets.availability(name)
     }
 
+    pub(crate) fn secret_value(&self, name: &str) -> Option<StaticValue> {
+        self.secrets.value(name)
+    }
+
     fn with_scope(&self, scope: &Value, inputs: &super::InputState) -> Self {
         let mut environment_values = self.values.clone();
         environment_values.extend(values(scope.get("env"), &self.secrets, inputs, self));
@@ -147,9 +151,10 @@ fn environment_value(
         Value::Number(value) => StaticValue::String(value.to_string()),
         Value::String(value) if !value.contains("${{") => StaticValue::String(value.clone()),
         Value::String(value) => secret_name(value)
-            .and_then(|name| {
-                (secrets.availability(name) == SecretAvailability::Absent)
-                    .then(|| StaticValue::String(String::new()))
+            .map(|name| {
+                secrets
+                    .value(name)
+                    .unwrap_or_else(|| StaticValue::String(String::new()))
             })
             .or_else(|| complete_literal_expression_value(value).map(string_value))
             .or_else(|| expression_input_value(value, inputs, environment).map(string_static_value))
