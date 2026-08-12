@@ -59,6 +59,6 @@ test("every root/tsconfig/config option field carries its canonical JSDoc", () =
 });
 
 test("suppression accounting declares the directive source file", () => {
-  const declarations = readFileSync(join(packageRoot, "report-types.d.ts"), "utf8");
+  const declarations = readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8");
   assert.match(declarations, /interface SuppressedFinding[\s\S]*sourceFile: string;/);
 });

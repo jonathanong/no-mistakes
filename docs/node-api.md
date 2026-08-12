@@ -255,8 +255,9 @@ fields with `skip_serializing_if` are optional in TypeScript and omitted from
 JSON when absent; other nullable Rust fields are represented as `string | null`.
 Check reports optionally include `suppressed` when `includeSuppressed: true` is
 passed. Each `SuppressedFinding` records its domain, rule, source file, reason,
-and the matching `file`, `line`, or `nextLine` directive. The report DTOs are
-exported from `no-mistakes` through `report-types.d.ts`.
+and the matching `file`, `line`, or `nextLine` directive. The report DTOs live in
+focused `*-report-types.d.ts` modules and are exported from `no-mistakes` through
+the `report-types.d.ts` barrel.
 
 `validateMermaidMarkdown({ content, file? })` validates Mermaid fences in an
 in-memory Markdown or MDX document without reading the filesystem. It resolves

@@ -9,10 +9,7 @@ const addonPath = join(packageRoot, "bin", "no-mistakes.node");
 const indexPath = join(packageRoot, "index.js");
 const planningPath = join(packageRoot, "planning.js");
 const fixture = JSON.parse(
-  readFileSync(
-    join(repositoryRoot, "fixtures", "node-api", "report-dtos", "reports.json"),
-    "utf8",
-  ),
+  readFileSync(join(repositoryRoot, "fixtures", "node-api", "report-dtos", "reports.json"), "utf8"),
 );
 
 function loadApiWithFixtureNative() {
@@ -55,7 +52,14 @@ test("Node report DTO fixture preserves fetch, queue, React, and check shapes", 
 });
 
 test("Node report declarations name every fixture collection precisely", () => {
-  const declarations = readFileSync(join(packageRoot, "report-types.d.ts"), "utf8");
+  const declarations = [
+    "check-report-types.d.ts",
+    "fetch-report-types.d.ts",
+    "queue-report-types.d.ts",
+    "react-report-types.d.ts",
+  ]
+    .map((file) => readFileSync(join(packageRoot, file), "utf8"))
+    .join("\n");
   assert.match(declarations, /queues: QueueCheckFinding\[\];/);
   assert.match(declarations, /rules: RuleFinding\[\];/);
   assert.match(declarations, /duplicates: DuplicateApiCall\[\];/);
@@ -69,6 +73,7 @@ test("Node report declarations name every fixture collection precisely", () => {
     declarations,
     /domain: "react" \| "queues" \| "rules" \| "filesystem" \| "integration" \| "codebase" \| "advisories";/,
   );
+  assert.match(declarations, /sourceFile: string;/);
   assert.match(declarations, /kind: "file" \| "line" \| "nextLine";/);
   assert.match(declarations, /rawJob: string \| null;/);
   assert.match(declarations, /exportedName: string \| null;/);

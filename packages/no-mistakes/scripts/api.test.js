@@ -508,7 +508,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
   assert.match(
-    readFileSync(join(packageRoot, "report-types.d.ts"), "utf8"),
+    readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
     /domain:[\s\S]*\| "advisories";/,
   );
   assert.match(

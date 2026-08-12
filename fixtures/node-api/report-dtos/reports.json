@@ -153,6 +153,7 @@
         "domain": "advisories",
         "rule": "agents-md-max-size",
         "file": "GUIDANCE.md",
+        "sourceFile": "GUIDANCE.md",
         "line": 1,
         "reason": "intentional fixture exception",
         "directive": {

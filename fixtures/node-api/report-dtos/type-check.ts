@@ -37,28 +37,33 @@ const queueReport: QueueReport = {
 };
 const componentFacts: ReactComponentFacts[] = [];
 const checkReport: CheckReport = {
-  react: [{
-    component: "Example",
-    file: "src/example.ts",
-    rule: "example-rule",
-    detail: null,
-  }],
+  react: [
+    {
+      component: "Example",
+      file: "src/example.ts",
+      rule: "example-rule",
+      detail: null,
+    },
+  ],
   queues: [],
   rules: [],
   integration: [],
   codebase: [],
   warnings: [],
   advisories: [],
-  suppressed: [{
-    domain: "advisories",
-    rule: "agents-md-max-size",
-    file: "GUIDANCE.md",
-    reason: "intentional fixture exception",
-    directive: {
-      kind: "nextLine",
-      line: 1,
+  suppressed: [
+    {
+      domain: "advisories",
+      rule: "agents-md-max-size",
+      file: "GUIDANCE.md",
+      sourceFile: "GUIDANCE.md",
+      reason: "intentional fixture exception",
+      directive: {
+        kind: "nextLine",
+        line: 1,
+      },
     },
-  }],
+  ],
 };
 
 void fetchReport;
