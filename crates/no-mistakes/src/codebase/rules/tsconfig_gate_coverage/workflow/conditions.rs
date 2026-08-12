@@ -28,6 +28,7 @@ pub(super) use evaluation::{
     job_statically_enabled, job_statically_enforcing, job_statically_not_enforcing,
     job_timeout_minutes_validity, job_tolerates_failure, step_timeout_minutes_validity,
 };
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use inputs::with_workflow_name;
 pub(super) use inputs::{
     callee_inputs, callee_secrets, direct_inputs, inputs_with_matrix_values,
     inputs_with_needs_results, inputs_with_static_strategy_position_values,
@@ -35,7 +36,7 @@ pub(super) use inputs::{
 };
 use inputs::{
     event_action_value, event_base_ref_value, event_head_ref_value, event_name_value,
-    event_ref_name_value, event_ref_type_value, pull_request_merged_value,
+    event_ref_name_value, event_ref_type_value, pull_request_merged_value, workflow_value,
 };
 use resolution::condition_input_value;
 pub(crate) use resolution::context_output_name;

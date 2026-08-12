@@ -17,7 +17,11 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions) fn 
         return Some(StaticValue::Invalid);
     }
     let format = format.format_string()?;
-    let mut replacements = Vec::with_capacity(call.arguments.len().saturating_sub(1));
+    let replacement_count = call.arguments.len().saturating_sub(1);
+    if format_github_string(&format, &vec![String::new(); replacement_count]).is_none() {
+        return Some(StaticValue::Invalid);
+    }
+    let mut replacements = Vec::with_capacity(replacement_count);
     for argument in &call.arguments[1..] {
         let value = function_argument_value(argument, inputs, environment, status)?;
         if matches!(value, StaticValue::Invalid) {
@@ -25,12 +29,16 @@ pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions) fn 
         }
         replacements.push(value.format_string()?);
     }
-    format_github_string(&format, &replacements).map(StaticValue::String)
+    Some(
+        format_github_string(&format, &replacements)
+            .map(StaticValue::String)
+            .unwrap_or(StaticValue::Invalid),
+    )
 }
 
 /// GitHub Actions `format` uses zero-based `{N}` placeholders. Literal braces
-/// are escaped by doubling them, so malformed braces and missing replacements
-/// stay unknown instead of producing coverage credit.
+/// are escaped by doubling them. A known malformed format string is an
+/// expression error rather than an unknown value.
 fn format_github_string(format: &str, replacements: &[String]) -> Option<String> {
     let mut rendered = String::with_capacity(format.len());
     let mut characters = format.chars().peekable();

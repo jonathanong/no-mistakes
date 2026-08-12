@@ -29,8 +29,17 @@ fn literal_format_conditions_resolve_replacements_and_preserve_unknown_boundarie
             StaticBool::True,
         ),
         ("format('literal', 'unused') == 'literal'", StaticBool::True),
-        ("format('{1}', 'release') == 'release'", StaticBool::Unknown),
-        ("format('{0', 'release') == 'release'", StaticBool::Unknown),
+        ("format('{1}', 'release') == 'release'", StaticBool::Invalid),
+        (
+            "format('{1}', github.ref) == 'release'",
+            StaticBool::Invalid,
+        ),
+        ("format('{0', 'release') == 'release'", StaticBool::Invalid),
+        (
+            "format('{word}', 'release') == 'release'",
+            StaticBool::Invalid,
+        ),
+        ("format('}', 'release') == 'release'", StaticBool::Invalid),
         ("format('{0}', 1e9999) == 'Infinity'", StaticBool::Unknown),
         (
             "format('{0}', github.ref) == 'refs/heads/main'",

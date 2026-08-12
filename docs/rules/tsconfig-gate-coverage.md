@@ -46,8 +46,9 @@ self-hosted operating-system label such as `linux`; a hosted-looking label in
 a runner group can be a custom label and does not establish the operating system.
 Repository-local action steps (`uses: ./path` or `uses: ./` for the repository
 root) count only after an earlier successful `actions/checkout` step in the
-same job. Checkout at its default location or with `with.path: .` makes the
-repository root available, when the tracked target directory contains parseable
+same job. Checkout at its default location, with a statically empty
+`with.repository`, or with `with.path: .` makes the repository root available,
+when the tracked target directory contains parseable
 `action.yml` or `action.yaml` metadata
 with only GitHub's supported top-level fields and correctly typed
 `inputs`, `outputs`, `runs`, and `branding` sections, plus the required name
@@ -61,7 +62,8 @@ JavaScript actions must not declare the unsupported `runs.pre`
 or `runs.pre-if` hooks; supported `runs.post` must resolve to a tracked file,
 and `runs.post-if` must be a valid action-context condition. Composite step IDs
 must be unique static identifiers. A Docker action's non-`docker://` `runs.image` is a repository-local
-build target and must resolve canonically to a tracked file; external
+build target and must resolve canonically to a tracked file; its optional
+`pre-entrypoint` must likewise resolve to a tracked action-directory file. External
 `docker://` references must contain a valid static OCI image reference. Local
 targets are checked in step execution order, so a statically
 skipped job or step does not invalidate an independent typecheck, while a
@@ -165,7 +167,10 @@ as well as input truthiness. Static `contains`, `startsWith`, `endsWith`,
 `format`, and `join` calls are also resolved using GitHub's string coercion;
 missing properties coerce to an empty string. Static `format` calls support
 zero-based placeholders and doubled-brace escapes, including when composed
-inside the other supported string functions. Static `join` calls support
+inside the other supported string functions; malformed braces and missing
+replacement indexes are expression errors and do not provide coverage. The
+direct workflow's static `github.workflow` name (or workflow path when unnamed)
+is preserved through local reusable calls. Static `join` calls support
 literal arrays, scalar values, and the default comma separator.
 Static `toJSON` calls serialize known scalar values and arrays with GitHub's
 pretty-printed JSON representation; values whose object structure is not

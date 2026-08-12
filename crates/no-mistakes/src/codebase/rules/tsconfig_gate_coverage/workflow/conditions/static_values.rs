@@ -29,6 +29,9 @@ fn static_expression_value(
     if super::resolution::github_event_action(expression) {
         return super::inputs::event_action_value(inputs);
     }
+    if super::resolution::github_workflow(expression) {
+        return super::inputs::workflow_value(inputs);
+    }
     if super::resolution::github_pull_request_merged(expression) {
         return super::inputs::pull_request_merged_value(inputs);
     }

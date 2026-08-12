@@ -1,8 +1,8 @@
 use super::{composite_shape, shape::nonempty_string};
 use crate::codebase::rules::tsconfig_gate_coverage::command_scan;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
-    condition_expression_contexts_available, reduce_context_free_interpolations,
-    ContextFreeInterpolation,
+    condition_expression_contexts_available, interpolation_expressions_all,
+    reduce_context_free_interpolations, ContextFreeInterpolation,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::valid_static_container_image_reference;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::runtime::{
@@ -67,9 +67,7 @@ pub(super) fn composite_step_valid(
             // Action-input values are supplied by each caller. The catalog has
             // no invocation state, so it must not treat a dynamic composite
             // command as runnable and let a later workflow step earn credit.
-            && !run
-                .as_str()
-                .is_some_and(|run| run.contains("${{ inputs."))
+            && !run.as_str().is_some_and(action_input_interpolation)
             && (composite_step_continues_on_error(step)
                 || !composite_step_may_run(step)
                 || (composite_step_working_directory_valid(step, tracked)
@@ -159,6 +157,16 @@ fn action_input_condition(expression: &str) -> bool {
         &["github", "steps", "runner", "env", "vars"],
         true,
     )
+}
+
+fn action_input_interpolation(value: &str) -> bool {
+    !interpolation_expressions_all(value, |expression| {
+        condition_expression_contexts_available(
+            expression,
+            &["github", "steps", "runner", "env", "vars"],
+            true,
+        )
+    })
 }
 
 pub(super) fn composite_steps_shape_valid(steps: &[Value]) -> bool {

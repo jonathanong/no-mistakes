@@ -2,9 +2,11 @@ use super::{InputState, StaticValue};
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::reusable::model::{
     GithubEventAction, GithubEventContext, GithubRef,
 };
+use serde_yaml::Value;
 
 pub(in super::super) const EVENT_NAME_KEY: &str = "\0github.event_name";
 pub(in super::super) const EVENT_ACTION_KEY: &str = "\0github.event.action";
+pub(in super::super) const WORKFLOW_KEY: &str = "\0github.workflow";
 pub(in super::super) const PULL_REQUEST_MERGED_KEY: &str = "\0github.event.pull_request.merged";
 pub(in super::super) const REF_KEY: &str = "\0github.ref";
 pub(in super::super) const REF_NAME_KEY: &str = "\0github.ref_name";
@@ -19,6 +21,9 @@ pub(in super::super) fn event_name_value(inputs: &InputState) -> Option<StaticVa
 }
 pub(in super::super) fn event_action_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(EVENT_ACTION_KEY).cloned()
+}
+pub(in super::super) fn workflow_value(inputs: &InputState) -> Option<StaticValue> {
+    inputs.get(WORKFLOW_KEY).cloned()
 }
 pub(in super::super) fn pull_request_merged_value(inputs: &InputState) -> Option<StaticValue> {
     inputs.get(PULL_REQUEST_MERGED_KEY).cloned()
@@ -40,6 +45,7 @@ pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
     for key in [
         EVENT_NAME_KEY,
         EVENT_ACTION_KEY,
+        WORKFLOW_KEY,
         PULL_REQUEST_MERGED_KEY,
         REF_KEY,
         REF_NAME_KEY,
@@ -53,6 +59,23 @@ pub(super) fn copy_event_inputs(parent: &InputState, inputs: &mut InputState) {
             inputs.insert(key.to_string(), value.clone());
         }
     }
+}
+
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) fn with_workflow_name(
+    mut inputs: InputState,
+    workflow: &Value,
+    path: &str,
+) -> InputState {
+    let name = workflow
+        .get("name")
+        .and_then(Value::as_str)
+        .filter(|name| !name.is_empty())
+        .unwrap_or(path);
+    inputs.insert(
+        WORKFLOW_KEY.to_string(),
+        StaticValue::String(name.to_string()),
+    );
+    inputs
 }
 
 pub(super) fn with_event(event: &GithubEventContext, mut inputs: InputState) -> InputState {

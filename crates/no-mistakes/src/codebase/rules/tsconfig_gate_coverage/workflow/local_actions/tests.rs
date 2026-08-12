@@ -3,6 +3,8 @@ use crate::codebase::ci_workflows::{ParsedWorkflowDocument, ParsedWorkflowSet};
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 use serde_yaml::Value;
 
+mod metadata_contexts;
+
 impl LocalActionCatalog {
     pub(crate) fn non_docker(actions: BTreeSet<String>) -> Self {
         Self(
@@ -159,6 +161,17 @@ fn action_metadata_requires_a_supported_complete_execution_contract() {
     assert!(valid(
         &[("action", suffixed_dockerfile)],
         &["action/build/Dockerfile.test"],
+        "action"
+    ));
+    let docker_pre_entrypoint = "name: Docker\ndescription: Valid\nruns: {using: docker, image: Dockerfile, pre-entrypoint: setup.sh}";
+    assert!(!valid(
+        &[("action", docker_pre_entrypoint)],
+        &["action/Dockerfile"],
+        "action"
+    ));
+    assert!(valid(
+        &[("action", docker_pre_entrypoint)],
+        &["action/Dockerfile", "action/setup.sh"],
         "action"
     ));
 }
@@ -373,71 +386,6 @@ fn composite_actions_reject_unconditional_static_failures() {
     ));
     let dynamic_shell = "name: Failing\ndescription: Failing\ninputs:\n  shell: {description: Shell, default: bash}\nruns:\n  using: composite\n  steps:\n    - shell: '${{ inputs.shell }}'\n      run: 'false | true'\n";
     assert!(!valid(&[("action", dynamic_shell)], &[], "action"));
-}
-
-#[test]
-fn input_dependent_composite_conditions_cannot_hide_static_failures() {
-    let action = "name: Conditional failure\ndescription: Conditional failure\ninputs:\n  enabled: {description: Enable failure}\nruns:\n  using: composite\n  steps:\n    - if: '${{ inputs.enabled }}'\n      run: 'false'\n      shell: bash\n";
-
-    assert!(!valid(&[("action", action)], &[], "action"));
-}
-
-#[test]
-fn action_pre_if_conditions_require_valid_documented_contexts() {
-    let node = "name: Node\ndescription: Invalid\nruns: {using: node24, pre: setup.js, pre-if: \"runner.os == 'Linux' && always()\", main: dist/index.js}";
-    assert!(!valid(
-        &[("action", node)],
-        &["action/setup.js", "action/dist/index.js"],
-        "action"
-    ));
-
-    let docker = "name: Docker\ndescription: Valid\nruns: {using: docker, image: 'docker://alpine:3.22', pre-entrypoint: setup.sh, pre-if: \"github.ref != ''\"}";
-    assert!(valid(&[("action", docker)], &[], "action"));
-
-    for pre_if in [
-        "runner.os ==",
-        "steps.setup.outputs.ready",
-        "hashFiles('**') != ''",
-    ] {
-        let docker = format!(
-            "name: Docker\ndescription: Invalid\nruns: {{using: docker, image: 'docker://alpine:3.22', pre-entrypoint: setup.sh, pre-if: \"{pre_if}\"}}"
-        );
-        assert!(!valid(&[("action", &docker)], &[], "action"), "{pre_if}");
-    }
-
-    for post_if in [
-        "runner.os ==",
-        "steps.setup.outputs.ready",
-        "hashFiles('**') != ''",
-    ] {
-        let node = format!(
-            "name: Node\ndescription: Invalid\nruns: {{using: node24, main: dist/index.js, post: cleanup.js, post-if: \"{post_if}\"}}"
-        );
-        assert!(
-            !valid(
-                &[("action", &node)],
-                &["action/dist/index.js", "action/cleanup.js"],
-                "action"
-            ),
-            "{post_if}"
-        );
-    }
-}
-
-#[test]
-fn composite_step_ids_are_static_unique_identifiers() {
-    for steps in [
-        "[{id: setup, run: echo ok, shell: bash}, {id: SETUP, run: echo ok, shell: bash}]",
-        "[{id: 'setup step', run: echo ok, shell: bash}]",
-        "[{id: '${{ inputs.step }}', run: echo ok, shell: bash}]",
-    ] {
-        let action = format!(
-            "name: Invalid\ndescription: Invalid\nruns: {{using: composite, steps: {steps}}}"
-        );
-        assert!(!valid(&[("action", &action)], &[], "action"), "{steps}");
-    }
-    let valid_ids = "name: Valid\ndescription: Valid\nruns: {using: composite, steps: [{id: setup, run: echo ok, shell: bash}, {id: verify_2, run: echo ok, shell: bash}]}";
-    assert!(valid(&[("action", valid_ids)], &[], "action"));
 }
 
 #[test]

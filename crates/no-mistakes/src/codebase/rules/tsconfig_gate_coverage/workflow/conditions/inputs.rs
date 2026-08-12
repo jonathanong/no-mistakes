@@ -20,10 +20,11 @@ mod secrets;
 mod strategy;
 mod values;
 use bindings::{binding_bool, binding_matches_type, normalized_bindings};
+pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use event::with_workflow_name;
 pub(super) use event::{
     event_action_value, event_base_ref_value, event_head_ref_value, event_name_value,
-    event_ref_name_value, event_ref_type_value, pull_request_merged_value, REF_EXCLUSIONS_KEY,
-    REF_KEY, REF_SHAPE_KEY,
+    event_ref_name_value, event_ref_type_value, pull_request_merged_value, workflow_value,
+    REF_EXCLUSIONS_KEY, REF_KEY, REF_SHAPE_KEY,
 };
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::inputs_with_needs_results;
 pub(in crate::codebase::rules::tsconfig_gate_coverage::workflow) use needs::{

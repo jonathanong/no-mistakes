@@ -1,4 +1,4 @@
-use super::conditions::{direct_inputs, SecretState};
+use super::conditions::{direct_inputs, with_workflow_name, SecretState};
 use super::ParsedWorkflowSet;
 use crate::codebase::ci_graph::{parse::parse_workflow_value, triggers::CompiledTriggers};
 use crate::codebase::workflow_topology::workflow_values;
@@ -79,6 +79,7 @@ pub(super) fn collect_ci_projects_with_local_actions(
             let mut event_projects: Option<BTreeSet<String>> = None;
             for event in source_change_event_contexts(document.value, event_name) {
                 let projects = direct_inputs(document.call_contract.as_ref(), &event)
+                    .map(|inputs| with_workflow_name(inputs, document.value, path))
                     .and_then(|inputs| {
                         // A direct pull request can originate from a fork.
                         // Without origin facts, never credit a secret-dependent path.

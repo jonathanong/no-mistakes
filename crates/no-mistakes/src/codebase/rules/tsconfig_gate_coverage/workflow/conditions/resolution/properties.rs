@@ -64,6 +64,10 @@ pub(in super::super) fn github_event_action(operand: &str) -> bool {
     github_event_property(operand, &["event", "action"])
 }
 
+pub(in super::super) fn github_workflow(operand: &str) -> bool {
+    github_event_property(operand, &["workflow"])
+}
+
 pub(in super::super) fn github_pull_request_merged(operand: &str) -> bool {
     github_event_property(operand, &["event", "pull_request", "merged"])
 }

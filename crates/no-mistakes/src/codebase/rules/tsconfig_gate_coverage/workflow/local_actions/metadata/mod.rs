@@ -97,6 +97,12 @@ fn valid_action_metadata(
             runs_shape_valid(runs, "docker")
                 && outputs_valid(metadata.get("outputs"), false)
                 && docker_action_image_valid(runs, directory, tracked)
+                && runs.get("pre-entrypoint").is_none_or(|entrypoint| {
+                    entrypoint
+                        .as_str()
+                        .and_then(|entrypoint| execution::action_file(directory, entrypoint))
+                        .is_some_and(|entrypoint| tracked.contains(&entrypoint))
+                })
         }
         Some("node20" | "node24") => {
             runs_shape_valid(runs, "node")

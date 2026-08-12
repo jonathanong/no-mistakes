@@ -6,7 +6,7 @@ fn tolerated_checkout_only_makes_local_actions_available_after_valid_action_inpu
         documents: vec![
             document(
                 ".github/workflows/checks.yml",
-                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        continue-on-error: true\n        with: {path: .}\n      - uses: ./.github/actions/setup\n      - run: tsc --noEmit -p app/tsconfig.json\n",
+                "on: push\njobs:\n  typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        continue-on-error: true\n        with: {path: .}\n      - uses: ./.github/actions/setup\n      - run: tsc --noEmit -p app/tsconfig.json\n  empty-repository:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n        with: {repository: ''}\n      - uses: ./.github/actions/setup\n      - run: tsc --noEmit -p empty-repository/tsconfig.json\n",
             ),
             document(
                 ".github/workflows/caller.yml",
@@ -20,6 +20,7 @@ fn tolerated_checkout_only_makes_local_actions_available_after_valid_action_inpu
     };
     let tracked = BTreeSet::from([
         "app/tsconfig.json".to_string(),
+        "empty-repository/tsconfig.json".to_string(),
         "invalid/tsconfig.json".to_string(),
     ]);
     let tracked_paths = tracked
@@ -40,7 +41,10 @@ fn tolerated_checkout_only_makes_local_actions_available_after_valid_action_inpu
             &local_actions,
         )
         .0,
-        BTreeSet::from(["app/tsconfig.json".to_string()])
+        BTreeSet::from([
+            "app/tsconfig.json".to_string(),
+            "empty-repository/tsconfig.json".to_string(),
+        ])
     );
 }
 

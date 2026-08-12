@@ -7,13 +7,16 @@ use super::{
     resolution::condition_input_value,
     resolution::{
         github_base_ref, github_event_action, github_event_name, github_head_ref,
-        github_pull_request_merged, github_ref, github_ref_name, github_ref_type, job_status,
+        github_pull_request_merged, github_ref, github_ref_name, github_ref_type, github_workflow,
+        job_status,
     },
     static_json::literal_from_json_static_value,
-    ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
+    workflow_value, ConditionStatus, EnvironmentState, InputState, StaticBool, StaticValue,
 };
 
+mod comparison;
 mod static_bool;
+pub(super) use comparison::comparison_bool;
 use static_bool::static_bool_value;
 pub(super) fn condition_value(
     operand: &str,
@@ -35,6 +38,9 @@ pub(super) fn condition_value(
     }
     if github_event_action(operand) {
         return event_action_value(inputs);
+    }
+    if github_workflow(operand) {
+        return workflow_value(inputs);
     }
     if github_pull_request_merged(operand) {
         return pull_request_merged_value(inputs);
@@ -114,90 +120,4 @@ fn logical_value(
         }
         (_, StaticBool::Invalid | StaticBool::Unknown) => None,
     }
-}
-
-pub(super) fn comparison_bool(
-    expression: &str,
-    inputs: &InputState,
-    environment: &EnvironmentState,
-    status: ConditionStatus,
-) -> Option<StaticBool> {
-    let (left, right, comparison) = logical::comparison_operands(expression)?;
-    if matches!(
-        comparison,
-        logical::Comparison::Equal | logical::Comparison::NotEqual
-    ) && known_not_skipped_comparison(left, right, inputs)
-    {
-        let equal = StaticBool::False;
-        return Some(if matches!(comparison, logical::Comparison::Equal) {
-            equal
-        } else {
-            equal.negate()
-        });
-    }
-    if matches!(
-        comparison,
-        logical::Comparison::Equal | logical::Comparison::NotEqual
-    ) && (github_ref(left) || github_ref(right))
-    {
-        let other = if github_ref(left) { right } else { left };
-        if let Some(StaticValue::String(reference)) = comparison_literal(other) {
-            if inputs
-                .get(super::inputs::REF_EXCLUSIONS_KEY)
-                .is_some_and(|excluded| {
-                    matches!(excluded, StaticValue::Sequence(values) if values.contains(&StaticValue::String(reference.clone())))
-                })
-            {
-                let equal = StaticBool::False;
-                return Some(if matches!(comparison, logical::Comparison::Equal) {
-                    equal
-                } else {
-                    equal.negate()
-                });
-            }
-            let reference_kind =
-                inputs
-                    .get(super::inputs::REF_SHAPE_KEY)
-                    .and_then(|kind| match kind {
-                        StaticValue::String(kind) => Some(kind.as_str()),
-                        _ => None,
-                    });
-            let incompatible_reference_kind = match reference_kind {
-                Some("branch") => !reference.starts_with("refs/heads/"),
-                Some("tag") => !reference.starts_with("refs/tags/"),
-                Some("pull-request-merge") => !reference.starts_with("refs/pull/"),
-                _ => false,
-            };
-            if incompatible_reference_kind {
-                let equal = StaticBool::False;
-                return Some(if matches!(comparison, logical::Comparison::Equal) {
-                    equal
-                } else {
-                    equal.negate()
-                });
-            }
-        }
-    }
-    let actual = condition_value(left, inputs, environment, status)?;
-    let expected = condition_value(right, inputs, environment, status)?;
-    Some(match comparison {
-        logical::Comparison::Equal => actual.equals(&expected),
-        logical::Comparison::NotEqual => actual.equals(&expected).negate(),
-        logical::Comparison::LessThan => actual.less_than(&expected),
-        logical::Comparison::LessThanOrEqual => actual.less_than_or_equal(&expected),
-        logical::Comparison::GreaterThan => expected.less_than(&actual),
-        logical::Comparison::GreaterThanOrEqual => expected.less_than_or_equal(&actual),
-    })
-}
-
-fn known_not_skipped_comparison(left: &str, right: &str, inputs: &InputState) -> bool {
-    [(left, right), (right, left)]
-        .into_iter()
-        .any(|(actual, expected)| {
-            super::resolution::needs_result_is_known_not_skipped(actual, inputs)
-                && matches!(
-                    comparison_literal(expected),
-                    Some(StaticValue::String(value)) if value.eq_ignore_ascii_case("skipped")
-                )
-        })
 }

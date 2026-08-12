@@ -1,5 +1,7 @@
 use super::*;
 
+mod workflow_context;
+
 #[test]
 fn reusable_conditions_resolve_literal_comparisons_and_negated_parenthesized_inputs() {
     let parsed = ParsedWorkflowSet {
@@ -146,29 +148,6 @@ fn reusable_conditions_resolve_static_string_functions_across_call_inputs() {
             "ends-true/tsconfig.json".to_string(),
             "starts-true/tsconfig.json".to_string(),
         ])
-    );
-}
-
-#[test]
-fn reusable_conditions_evaluate_to_json_of_known_arrays() {
-    let parsed = ParsedWorkflowSet {
-        documents: vec![document(
-            ".github/workflows/checks.yml",
-            "on: push\njobs:\n  enabled:\n    if: contains(toJSON(fromJSON('[\"push\", \"schedule\"]')), github.event_name)\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project enabled/tsconfig.json\n  disabled:\n    if: contains(toJSON(fromJSON('[\"schedule\"]')), github.event_name)\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project disabled/tsconfig.json\n",
-        )],
-    };
-    let tracked = BTreeSet::from([
-        "enabled/tsconfig.json".to_string(),
-        "disabled/tsconfig.json".to_string(),
-    ]);
-    let project_inputs = tracked
-        .iter()
-        .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
-        .collect();
-
-    assert_eq!(
-        collect_ci_projects_with_stats(&parsed, &tracked, &project_inputs).0,
-        BTreeSet::from(["enabled/tsconfig.json".to_string()])
     );
 }
 

@@ -45,19 +45,22 @@ fn checkout_root_is_available(
     let Some(bindings) = bindings.as_mapping() else {
         return false;
     };
-    !bindings.contains_key("repository")
-        && bindings.get("sparse-checkout").is_none_or(|value| {
-            value
-                .as_str()
-                .and_then(|value| resolve_static_interpolations(value, inputs, environment))
-                .is_some_and(|value| value.is_empty())
-        })
-        && bindings.get("path").is_none_or(|path| {
-            path.as_str()
-                .and_then(|path| resolve_static_interpolations(path, inputs, environment))
-                .is_some_and(|path| {
-                    path.is_empty()
-                        || command_scan::normalize_repo_relative(&path).as_deref() == Some(".")
-                })
-        })
+    bindings.get("repository").is_none_or(|repository| {
+        repository
+            .as_str()
+            .and_then(|repository| resolve_static_interpolations(repository, inputs, environment))
+            .is_some_and(|repository| repository.is_empty())
+    }) && bindings.get("sparse-checkout").is_none_or(|value| {
+        value
+            .as_str()
+            .and_then(|value| resolve_static_interpolations(value, inputs, environment))
+            .is_some_and(|value| value.is_empty())
+    }) && bindings.get("path").is_none_or(|path| {
+        path.as_str()
+            .and_then(|path| resolve_static_interpolations(path, inputs, environment))
+            .is_some_and(|path| {
+                path.is_empty()
+                    || command_scan::normalize_repo_relative(&path).as_deref() == Some(".")
+            })
+    })
 }
