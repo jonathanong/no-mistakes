@@ -181,6 +181,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
             "wildcard-negation/tsconfig.json",
             "matrix-object/tsconfig.json",
             "to-json/tsconfig.json",
+            "to-json-structured/tsconfig.json",
             "workflow-job-output/tsconfig.json",
         ]),
         "{report:#?}"
@@ -252,6 +253,7 @@ fn reusable_workflow_review_regressions_do_not_credit_unrunnable_typechecks() {
         "wildcard-negation/tsconfig.json",
         "matrix-object/tsconfig.json",
         "to-json/tsconfig.json",
+        "to-json-structured/tsconfig.json",
         "workflow-job-output/tsconfig.json",
     ] {
         assert!(uncovered.contains(project));

@@ -12,6 +12,8 @@ mod literals;
 mod logical;
 mod resolution;
 mod static_json;
+#[cfg(test)]
+mod static_json_tests;
 mod static_values;
 mod step_evaluation;
 mod step_outcomes;

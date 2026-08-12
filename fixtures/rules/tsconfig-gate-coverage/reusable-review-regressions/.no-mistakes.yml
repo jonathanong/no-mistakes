@@ -192,6 +192,10 @@ checks:
       command: [pnpm, exec, tsc, --noEmit, --project, to-json/tsconfig.json]
       fileArgs: none
       always: true
+    - name: typecheck-to-json-structured
+      command: [pnpm, exec, tsc, --noEmit, --project, to-json-structured/tsconfig.json]
+      fileArgs: none
+      always: true
     - name: typecheck-workflow-job-output
       command: [pnpm, exec, tsc, --noEmit, --project, workflow-job-output/tsconfig.json]
       fileArgs: none

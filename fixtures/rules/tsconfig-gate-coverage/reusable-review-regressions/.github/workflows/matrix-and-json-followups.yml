@@ -14,3 +14,9 @@ jobs:
       # toJSON(false) is the string "false", never the string "true".
       - if: toJSON(false) == 'true'
         run: pnpm exec tsc --noEmit --project to-json/tsconfig.json
+  to-json-structured:
+    runs-on: ubuntu-latest
+    steps:
+      # Pretty JSON cannot contain the opposite static property value.
+      - if: 'contains(toJSON(fromJSON(''{"enabled":false}'')), ''"enabled": true'')'
+        run: pnpm exec tsc --noEmit --project to-json-structured/tsconfig.json

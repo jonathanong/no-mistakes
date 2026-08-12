@@ -28,7 +28,7 @@ pub(super) fn to_json_static_value(value: StaticValue) -> Option<StaticValue> {
     }
 }
 
-fn static_json_value(value: &StaticValue) -> Result<Option<serde_json::Value>, ()> {
+pub(super) fn static_json_value(value: &StaticValue) -> Result<Option<serde_json::Value>, ()> {
     match value {
         StaticValue::Sequence(values) => static_json_sequence(values),
         StaticValue::Invalid => Err(()),

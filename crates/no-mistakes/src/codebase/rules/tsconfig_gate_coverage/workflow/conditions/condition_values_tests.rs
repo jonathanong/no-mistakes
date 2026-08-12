@@ -103,6 +103,10 @@ fn static_to_json_values_preserve_scalar_encodings() {
     for (expression, expected) in [
         ("toJSON(false) == 'true'", StaticBool::False),
         ("toJSON(false) == 'false'", StaticBool::True),
+        (
+            "contains(toJSON(fromJSON('{\"enabled\":false}')), '\"enabled\": true')",
+            StaticBool::False,
+        ),
     ] {
         // Static JSON serialization makes these condition outcomes exact.
         assert_eq!(
