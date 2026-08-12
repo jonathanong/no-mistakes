@@ -6,6 +6,9 @@ use crate::codebase::rules::tsconfig_gate_coverage::{
 };
 use serde_yaml::Value;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Default)]
 pub(super) struct CheckoutState(bool);
 
