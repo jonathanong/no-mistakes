@@ -16,26 +16,6 @@ pub(super) enum LocalActionKind {
 pub(crate) struct LocalActionCatalog(BTreeMap<String, LocalActionKind>);
 
 impl LocalActionCatalog {
-    #[cfg(test)]
-    pub(crate) fn non_docker(actions: BTreeSet<String>) -> Self {
-        Self(
-            actions
-                .into_iter()
-                .map(|action| (action, LocalActionKind::Other))
-                .collect(),
-        )
-    }
-
-    #[cfg(test)]
-    pub(crate) fn docker(actions: BTreeSet<String>) -> Self {
-        Self(
-            actions
-                .into_iter()
-                .map(|action| (action, LocalActionKind::Docker))
-                .collect(),
-        )
-    }
-
     pub(super) fn kind(&self, directory: &str) -> Option<LocalActionKind> {
         self.0.get(directory).copied()
     }

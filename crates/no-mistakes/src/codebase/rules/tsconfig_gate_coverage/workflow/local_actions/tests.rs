@@ -3,6 +3,26 @@ use crate::codebase::ci_workflows::{ParsedWorkflowDocument, ParsedWorkflowSet};
 use crate::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs;
 use serde_yaml::Value;
 
+impl LocalActionCatalog {
+    pub(crate) fn non_docker(actions: BTreeSet<String>) -> Self {
+        Self(
+            actions
+                .into_iter()
+                .map(|action| (action, LocalActionKind::Other))
+                .collect(),
+        )
+    }
+
+    pub(crate) fn docker(actions: BTreeSet<String>) -> Self {
+        Self(
+            actions
+                .into_iter()
+                .map(|action| (action, LocalActionKind::Docker))
+                .collect(),
+        )
+    }
+}
+
 fn descriptors(entries: &[(&str, &str)]) -> BTreeMap<String, Value> {
     entries
         .iter()
