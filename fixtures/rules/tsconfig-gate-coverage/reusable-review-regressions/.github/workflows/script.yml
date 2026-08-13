@@ -1,0 +1,13 @@
+on:
+  workflow_call:
+    inputs:
+      prefix:
+        required: true
+        type: string
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          ${{ inputs.prefix }}
+          pnpm exec tsc --noEmit --project script/tsconfig.json

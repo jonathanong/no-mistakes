@@ -1,153 +1,67 @@
+mod conditions;
+mod expressions;
+pub(super) mod local_actions;
+mod reusable;
 mod runtime;
 
-use super::{
-    application::{project_finding, resolve_gate_project_against_tracked},
-    command_scan, RuleFinding,
-};
-use crate::codebase::ci_graph::{
-    parse::parse_workflow_value,
-    triggers::{CompiledTriggers, TriggerMatch},
-};
+use super::{application::project_finding, command_scan, RuleFinding};
 use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
-use runtime::{
-    effective_shell, has_static_runnable_runs_on, runs_on_can_default_to_windows,
-    shell_failure_enforced,
-};
 use serde_yaml::Value;
 use std::collections::BTreeSet;
+use std::path::PathBuf;
 
-pub(super) fn ci_typechecked_projects(
+fn normalized_job_id(value: &Value) -> Option<String> {
+    crate::codebase::workflow_topology::value_primitives::string_value(Some(value))
+        .map(|job_id| job_id.to_lowercase())
+}
+
+fn complete_expression(value: &str) -> bool {
+    expressions::complete_expression_type(value).is_some()
+}
+
+fn complete_literal_expression_value(value: &str) -> Option<Value> {
+    expressions::complete_literal_expression_value(value)
+}
+
+fn complete_expression_may_be_mapping(value: &str) -> bool {
+    expressions::complete_expression_may_produce_mapping(value)
+}
+
+pub(super) fn ci_typechecked_projects_with_local_actions(
+    root: &std::path::Path,
     workflows: &ParsedWorkflowSet,
     tracked: &BTreeSet<String>,
+    tracked_paths: &[PathBuf],
     project_source_inputs: &super::ProjectSourceInputs,
+    local_actions: &local_actions::LocalActionCatalog,
 ) -> BTreeSet<String> {
-    let mut projects = BTreeSet::new();
-    for document in &workflows.documents {
-        let Ok(workflow) = document.value.as_ref() else {
-            continue;
-        };
-        let trigger_model = parse_workflow_value(workflow, &document.path);
-        let triggers = CompiledTriggers::new(&trigger_model);
-        let workflow_cwd = effective_working_directory(workflow, Some(".".to_string()));
-        let workflow_shell = effective_shell(workflow, None);
-        let Some(jobs) = workflow.get("jobs").and_then(Value::as_mapping) else {
-            continue;
-        };
-        let skipped_jobs = statically_skipped_jobs(jobs);
-        for (job_id, job) in jobs {
-            if job_id
-                .as_str()
-                .is_some_and(|job_id| skipped_jobs.contains(job_id))
-            {
-                continue;
-            }
-            if statically_not_enforcing(job) || !has_static_runnable_runs_on(job) {
-                continue;
-            }
-            let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
-                continue;
-            };
-            let job_cwd = effective_working_directory(job, workflow_cwd.clone());
-            let job_shell = effective_shell(job, workflow_shell.clone());
-            for step in steps {
-                if statically_not_enforcing(step) {
-                    continue;
-                }
-                let step_cwd = match step.get("working-directory").and_then(Value::as_str) {
-                    Some(raw) => command_scan::normalize_repo_relative(raw),
-                    None => job_cwd.clone(),
-                };
-                let Some(cwd) = step_cwd else {
-                    continue;
-                };
-                let Some(run) = step.get("run").and_then(Value::as_str) else {
-                    continue;
-                };
-                let shell = effective_shell(step, job_shell.clone());
-                if shell.is_none() && runs_on_can_default_to_windows(job) {
-                    continue;
-                }
-                let Some(failure_enforced) = shell_failure_enforced(shell.as_deref()) else {
-                    continue;
-                };
-                let scanned_projects = if failure_enforced {
-                    command_scan::scan_shell_for_typechecked_projects(run, &cwd)
-                } else {
-                    command_scan::scan_workflow_shell_for_typechecked_projects(run, &cwd, false)
-                };
-                for project in scanned_projects {
-                    let project = resolve_gate_project_against_tracked(&project, tracked);
-                    if project_source_inputs.get(&project).is_some_and(|inputs| {
-                        inputs.iter().all(|input| {
-                            matches!(
-                                triggers.evaluate(input).0,
-                                TriggerMatch::Matched | TriggerMatch::Always
-                            )
-                        })
-                    }) {
-                        projects.insert(project);
-                    }
-                }
-            }
-        }
-    }
-    projects
+    ci_typechecked_projects_with_local_actions_and_stats(
+        root,
+        workflows,
+        tracked,
+        tracked_paths,
+        project_source_inputs,
+        local_actions,
+    )
+    .0
 }
 
-fn statically_skipped_jobs(jobs: &serde_yaml::Mapping) -> BTreeSet<String> {
-    let mut skipped = BTreeSet::new();
-    loop {
-        let mut changed = false;
-        for (job_id, job) in jobs {
-            let Some(job_id) = job_id.as_str() else {
-                continue;
-            };
-            let directly_disabled = static_bool(job.get("if")) == Some(false);
-            let blocked_by_need = !continues_after_skipped_need(job)
-                && crate::codebase::workflow_topology::value_primitives::string_list(
-                    job.get("needs"),
-                )
-                .iter()
-                .any(|need| skipped.contains(need));
-            if (directly_disabled || blocked_by_need) && skipped.insert(job_id.to_string()) {
-                changed = true;
-            }
-        }
-        if !changed {
-            return skipped;
-        }
-    }
-}
-
-fn continues_after_skipped_need(job: &Value) -> bool {
-    job.get("if")
-        .and_then(Value::as_str)
-        .is_some_and(|expression| {
-            matches!(
-                expression.trim(),
-                "always()" | "${{ always() }}" | "!cancelled()" | "${{ !cancelled() }}"
-            )
-        })
-}
-
-/// A static disabled or non-blocking YAML node cannot enforce a typecheck.
-/// Only exact boolean expressions are resolved; all other expressions remain
-/// unresolved so the rule stays deterministic.
-fn statically_not_enforcing(value: &Value) -> bool {
-    static_bool(value.get("if")) == Some(false)
-        || static_bool(value.get("continue-on-error")) == Some(true)
-}
-
-fn static_bool(value: Option<&Value>) -> Option<bool> {
-    match value {
-        Some(Value::Bool(value)) => Some(*value),
-        Some(Value::String(expression)) => match expression.trim() {
-            "${{ false }}" => Some(false),
-            "${{ true }}" => Some(true),
-            _ => None,
-        },
-        _ => None,
-    }
+pub(super) fn ci_typechecked_projects_with_local_actions_and_stats(
+    root: &std::path::Path,
+    workflows: &ParsedWorkflowSet,
+    tracked: &BTreeSet<String>,
+    tracked_paths: &[PathBuf],
+    project_source_inputs: &super::ProjectSourceInputs,
+    local_actions: &local_actions::LocalActionCatalog,
+) -> (BTreeSet<String>, usize) {
+    reusable::collect_ci_projects_with_local_actions(
+        root,
+        workflows,
+        tracked,
+        tracked_paths,
+        project_source_inputs,
+        local_actions,
+    )
 }
 
 pub(super) fn default_working_directory(value: &Value) -> Option<&str> {

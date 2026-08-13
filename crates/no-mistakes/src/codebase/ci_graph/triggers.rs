@@ -66,6 +66,15 @@ impl CompiledTriggers {
         CompiledTriggers { events }
     }
 
+    /// Compile one path-filterable event so callers can preserve event-local
+    /// condition semantics while evaluating shared workflow jobs.
+    pub fn for_event(workflow: &Workflow, event: &str) -> Option<Self> {
+        let filter = workflow.triggers.events.get(event)?;
+        Some(Self {
+            events: vec![(event.to_string(), CompiledFilter::new(filter))],
+        })
+    }
+
     /// Evaluate the compiled triggers against one changed file.
     pub fn evaluate(&self, changed_rel: &str) -> (TriggerMatch, Vec<MatchedFilter>) {
         if self.events.is_empty() {

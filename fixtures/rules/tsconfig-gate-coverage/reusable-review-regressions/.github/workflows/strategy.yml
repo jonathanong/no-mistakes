@@ -1,0 +1,18 @@
+on:
+  workflow_call:
+    inputs:
+      parallel:
+        required: true
+        type: number
+jobs:
+  invalid-strategy:
+    # Zero resolved max-parallel makes this prerequisite invalid.
+    strategy: {max-parallel: '${{ inputs.parallel }}'}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo setup
+  strategy-dependent:
+    needs: invalid-strategy
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project strategy-dependent/tsconfig.json

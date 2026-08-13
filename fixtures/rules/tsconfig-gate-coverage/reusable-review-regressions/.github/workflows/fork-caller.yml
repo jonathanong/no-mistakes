@@ -1,0 +1,6 @@
+on: pull_request
+jobs:
+  checks:
+    # Direct PR activations may be forks, where repository secrets are absent.
+    uses: ./.github/workflows/fork-callee.yml
+    secrets: inherit

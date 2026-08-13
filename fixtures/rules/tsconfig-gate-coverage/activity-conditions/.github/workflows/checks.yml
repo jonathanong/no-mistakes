@@ -1,0 +1,19 @@
+name: Static checks
+on: workflow_call
+jobs:
+  opened:
+    if: contains(fromJSON('["opened"]'), github.event.action)
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project opened/tsconfig.json
+  synchronized:
+    if: github.event.action == 'synchronize'
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project synchronized/tsconfig.json
+  unreachable:
+    # `schedule` is never this workflow's event, so this gate earns no CI credit.
+    if: contains(fromJSON('["schedule"]'), github.event_name)
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project unreachable/tsconfig.json

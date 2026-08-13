@@ -1,0 +1,5 @@
+name: Preferred descriptor
+description: action.yml takes precedence over action.yaml
+runs:
+  using: node24
+  main: index.js

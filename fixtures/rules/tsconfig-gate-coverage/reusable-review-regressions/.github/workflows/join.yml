@@ -1,0 +1,7 @@
+on: push
+jobs:
+  typecheck:
+    if: join(fromJSON('["a"]'), ',') == 'b'
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project join/tsconfig.json

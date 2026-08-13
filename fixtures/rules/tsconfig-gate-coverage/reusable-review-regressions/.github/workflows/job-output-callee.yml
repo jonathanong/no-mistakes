@@ -1,0 +1,12 @@
+on:
+  workflow_call:
+    outputs:
+      enabled:
+        value: ${{ jobs.setup.outputs.enabled }}
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ false }}
+    steps:
+      - run: echo setup

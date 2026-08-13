@@ -1,0 +1,113 @@
+use serde_yaml::Value;
+
+use super::super::super::expressions::{
+    interpolated_expression_contexts_available, typed_scalar_expression_contexts_available,
+    StaticExpressionType,
+};
+
+mod triggers;
+
+use triggers::{
+    has_workflow_call_trigger, workflow_call_trigger_keys_valid, workflow_trigger_configs_valid,
+};
+
+pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
+    let Some(on) = on else {
+        return true;
+    };
+    if !workflow_call_trigger_keys_valid(on) || !workflow_trigger_configs_valid(on) {
+        return false;
+    }
+    if !has_workflow_call_trigger(on) {
+        return true;
+    }
+    let Some(contract) = on.get("workflow_call") else {
+        return true;
+    };
+    let Value::Mapping(contract) = contract else {
+        return matches!(contract, Value::Null);
+    };
+    contract
+        .keys()
+        .all(|key| matches!(key.as_str(), Some("inputs" | "secrets" | "outputs")))
+        && declaration_group_valid(contract.get("inputs"), input_declaration_valid)
+        && declaration_group_valid(contract.get("secrets"), secret_declaration_valid)
+        && declaration_group_valid(contract.get("outputs"), output_declaration_valid)
+}
+
+fn declaration_group_valid(
+    declarations: Option<&Value>,
+    declaration_valid: fn(&serde_yaml::Mapping) -> bool,
+) -> bool {
+    declarations.is_none_or(|declarations| {
+        declarations.as_mapping().is_some_and(|mapping| {
+            mapping.iter().all(|(name, declaration)| {
+                name.is_string() && declaration.as_mapping().is_some_and(declaration_valid)
+            })
+        })
+    })
+}
+
+fn input_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
+    let Some(input_type) = declaration.get("type").and_then(Value::as_str) else {
+        return false;
+    };
+    only_keys(declaration, &["type", "required", "default", "description"])
+        && matches!(input_type, "boolean" | "number" | "string")
+        && bool_field_valid(declaration, "required")
+        && input_default_valid(declaration.get("default"), input_type)
+        && string_field_valid(declaration, "description")
+}
+
+fn input_default_valid(value: Option<&Value>, input_type: &str) -> bool {
+    const INPUT_DEFAULT_CONTEXTS: &[&str] = &["github", "inputs", "vars"];
+    let Some(value) = value else {
+        return true;
+    };
+    match (input_type, value) {
+        ("boolean", Value::Bool(_)) | ("number", Value::Number(_)) => true,
+        ("boolean" | "number" | "string", Value::String(value)) => {
+            let expected = match input_type {
+                "boolean" => StaticExpressionType::Boolean,
+                "number" => StaticExpressionType::Number,
+                "string" => StaticExpressionType::String,
+                _ => unreachable!("validated workflow_call input type"),
+            };
+            typed_scalar_expression_contexts_available(value, INPUT_DEFAULT_CONTEXTS, expected)
+        }
+        _ => false,
+    }
+}
+
+fn secret_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
+    only_keys(declaration, &["required", "description"])
+        && bool_field_valid(declaration, "required")
+        && string_field_valid(declaration, "description")
+}
+
+fn output_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
+    const OUTPUT_CONTEXTS: &[&str] = &["github", "jobs", "vars", "inputs"];
+    only_keys(declaration, &["value", "description"])
+        && declaration
+            .get("value")
+            .and_then(Value::as_str)
+            .is_some_and(|value| interpolated_expression_contexts_available(value, OUTPUT_CONTEXTS))
+        && string_field_valid(declaration, "description")
+}
+
+fn only_keys(mapping: &serde_yaml::Mapping, allowed: &[&str]) -> bool {
+    mapping
+        .keys()
+        .all(|key| key.as_str().is_some_and(|key| allowed.contains(&key)))
+}
+
+fn string_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
+    mapping.get(field).is_none_or(Value::is_string)
+}
+
+fn bool_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
+    mapping.get(field).is_none_or(Value::is_bool)
+}
+
+#[cfg(test)]
+mod tests;

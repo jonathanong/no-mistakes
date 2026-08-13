@@ -1,0 +1,6 @@
+name: Invalid remote composite target
+description: A malformed remote action target prevents this composite from running.
+runs:
+  using: composite
+  steps:
+    - uses: not-an-action

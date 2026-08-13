@@ -1,7 +1,5 @@
 use super::application::resolve_gate_projects_against_tracked;
-use super::workflow::{
-    ci_typechecked_projects, default_working_directory, effective_working_directory,
-};
+use super::workflow::{default_working_directory, effective_working_directory};
 use super::*;
 use crate::codebase::ci_workflows::{
     ParsedWorkflowDocument, ParsedWorkflowSet, WorkflowDocumentError, WorkflowDocumentErrorKind,
@@ -14,14 +12,44 @@ use serde_yaml::Value;
 use std::collections::BTreeMap;
 
 mod fixture_policy;
+mod literal_braces;
 mod no_check;
+mod runner_tests;
 mod workflow;
+mod workflow_contracts;
+mod workflow_inputs;
+mod workflow_scaling;
+mod workflow_schema;
 
 fn project_inputs(tracked: &BTreeSet<String>) -> ProjectSourceInputs {
     tracked
         .iter()
         .map(|project| (project.clone(), BTreeSet::from([project.clone()])))
         .collect()
+}
+
+fn ci_typechecked_projects(
+    workflows: &ParsedWorkflowSet,
+    tracked: &BTreeSet<String>,
+    project_source_inputs: &ProjectSourceInputs,
+) -> BTreeSet<String> {
+    ci_typechecked_projects_with_stats(workflows, tracked, project_source_inputs).0
+}
+
+fn ci_typechecked_projects_with_stats(
+    workflows: &ParsedWorkflowSet,
+    tracked: &BTreeSet<String>,
+    project_source_inputs: &ProjectSourceInputs,
+) -> (BTreeSet<String>, usize) {
+    let tracked_paths = tracked.iter().map(PathBuf::from).collect::<Vec<_>>();
+    super::workflow::ci_typechecked_projects_with_local_actions_and_stats(
+        Path::new("."),
+        workflows,
+        tracked,
+        &tracked_paths,
+        project_source_inputs,
+        &super::workflow::local_actions::LocalActionCatalog::default(),
+    )
 }
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -438,34 +466,6 @@ fn ci_scanner_accepts_only_execution_preserving_shell_template_flags() {
         "bare-bash/tsconfig.json".to_string(),
         "bash-flags/tsconfig.json".to_string(),
         "sh-flags/tsconfig.json".to_string(),
-    ]);
-    assert_eq!(
-        ci_typechecked_projects(&workflows, &expected, &project_inputs(&expected)),
-        expected
-    );
-}
-
-#[test]
-fn ci_scanner_requires_static_runners_and_shell_failure_propagation() {
-    let workflow: Value = serde_yaml::from_str(
-        "on: push\njobs:\n  implicit-shell:\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit --project implicit-shell/tsconfig.json; echo later\n  builtin-bash:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project builtin-bash/tsconfig.json; echo later\n  custom-final-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: echo first; tsc --noEmit --project custom-final-typecheck/tsconfig.json\n  custom-masked-typecheck:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash {0}'\n        run: tsc --noEmit --project custom-masked-typecheck/tsconfig.json; echo later\n  custom-errexit:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'bash -e {0}'\n        run: tsc --noEmit --project custom-errexit/tsconfig.json; echo later\n  custom-errexit-option:\n    runs-on: ubuntu-latest\n    steps:\n      - shell: 'sh -o errexit {0}'\n        run: tsc --noEmit --project custom-errexit-option/tsconfig.json; echo later\n  missing-runner:\n    steps:\n      - run: tsc --noEmit --project missing-runner/tsconfig.json\n  dynamic-runner:\n    runs-on: ${{ matrix.os }}\n    steps:\n      - run: tsc --noEmit --project dynamic-runner/tsconfig.json\n  bare-self-hosted:\n    runs-on: self-hosted\n    steps:\n      - run: tsc --noEmit --project bare-self-hosted/tsconfig.json\n  label-array-runner:\n    runs-on: [self-hosted, linux]\n    steps:\n      - run: tsc --noEmit --project label-array-runner/tsconfig.json\n  dynamic-label-array-runner:\n    runs-on: [self-hosted, '${{ matrix.os }}']\n    steps:\n      - run: tsc --noEmit --project dynamic-label-array-runner/tsconfig.json\n  implicit-windows:\n    runs-on: Windows-2025\n    steps:\n      - run: tsc --noEmit --project implicit-windows/tsconfig.json\n  implicit-self-hosted-windows:\n    runs-on: [self-hosted, windows]\n    steps:\n      - run: tsc --noEmit --project implicit-self-hosted-windows/tsconfig.json\n  explicit-bash-windows:\n    runs-on: windows-latest\n    steps:\n      - shell: bash\n        run: tsc --noEmit --project explicit-bash-windows/tsconfig.json\n",
-    )
-    .unwrap();
-    let workflows = ParsedWorkflowSet {
-        documents: vec![ParsedWorkflowDocument {
-            path: ".github/workflows/runners-and-shells.yml".into(),
-            value: Ok(workflow),
-        }],
-    };
-
-    let expected = BTreeSet::from([
-        "builtin-bash/tsconfig.json".to_string(),
-        "custom-errexit-option/tsconfig.json".to_string(),
-        "custom-errexit/tsconfig.json".to_string(),
-        "custom-final-typecheck/tsconfig.json".to_string(),
-        "explicit-bash-windows/tsconfig.json".to_string(),
-        "implicit-shell/tsconfig.json".to_string(),
-        "label-array-runner/tsconfig.json".to_string(),
     ]);
     assert_eq!(
         ci_typechecked_projects(&workflows, &expected, &project_inputs(&expected)),

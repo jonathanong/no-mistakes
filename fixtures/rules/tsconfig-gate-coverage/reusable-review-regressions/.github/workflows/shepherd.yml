@@ -1,0 +1,50 @@
+on:
+  push:
+    branches: [main, 'release/**']
+jobs:
+  conditional:
+    # A runtime-disabled prerequisite skips ordinary needs dependents.
+    if: vars.RUN_SETUP
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo setup
+  dynamic-dependent:
+    needs: conditional
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project dynamic-dependent/tsconfig.json
+  main-only:
+    # The release wildcard is a distinct activation from this exact branch.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project branch-main-only/tsconfig.json
+  scalar-action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/scalar
+      - run: pnpm exec tsc --noEmit --project scalar-action/tsconfig.json
+  invalid-composite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/composite-secret
+      - run: pnpm exec tsc --noEmit --project composite-secret/tsconfig.json
+  invalid-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docker-invalid
+      - run: pnpm exec tsc --noEmit --project docker-invalid/tsconfig.json
+  conclusions:
+    runs-on: ubuntu-latest
+    steps:
+      - id: setup
+        continue-on-error: true
+        run: exit 1
+      - if: steps.setup.outcome == 'failure'
+        run: pnpm exec tsc --noEmit --project conclusion-outcome/tsconfig.json
+      # A tolerated failure has a successful conclusion.
+      - if: steps.setup.conclusion == 'failure'
+        run: pnpm exec tsc --noEmit --project conclusion-blocked/tsconfig.json

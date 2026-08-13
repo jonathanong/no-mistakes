@@ -1,0 +1,17 @@
+name: Main
+on:
+  push:
+    paths:
+      - backend/**
+      - email-templates/**
+      - web/**
+      - lambdas/**
+      - cloudflare-worker/**
+jobs:
+  checks:
+    uses: ./.github/workflows/checks-static.yml
+    with:
+      backend: true
+      web: true
+      lambdas: true
+      cloudflare: true

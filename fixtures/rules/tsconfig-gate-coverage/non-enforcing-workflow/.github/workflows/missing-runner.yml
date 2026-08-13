@@ -1,0 +1,6 @@
+name: Invalid missing runner
+on: push
+jobs:
+  missing-runner:
+    steps:
+      - run: tsc --noEmit --project missing-runner/tsconfig.json

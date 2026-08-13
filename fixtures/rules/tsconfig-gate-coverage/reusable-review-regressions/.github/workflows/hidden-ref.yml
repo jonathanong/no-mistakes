@@ -1,0 +1,9 @@
+on: push
+jobs:
+  unavailable:
+    uses: owner/repo/.github/workflows/checks.yml@release/.hidden
+  typecheck:
+    needs: unavailable
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project hidden-ref/tsconfig.json

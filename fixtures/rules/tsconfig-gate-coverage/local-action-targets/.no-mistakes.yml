@@ -1,0 +1,41 @@
+checks:
+  commands:
+    - name: typecheck-valid
+      command: [pnpm, exec, tsc, --noEmit, --project, valid/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-missing
+      command: [pnpm, exec, tsc, --noEmit, --project, missing/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-invalid
+      command: [pnpm, exec, tsc, --noEmit, --project, invalid/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-missing-entrypoint
+      command: [pnpm, exec, tsc, --noEmit, --project, missing-entrypoint/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-failing-action
+      command: [pnpm, exec, tsc, --noEmit, --project, failing-action/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-missing-dockerfile
+      command: [pnpm, exec, tsc, --noEmit, --project, missing-dockerfile/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-malformed-metadata
+      command: [pnpm, exec, tsc, --noEmit, --project, malformed-metadata/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-missing-working-directory
+      command: [pnpm, exec, tsc, --noEmit, --project, missing-working-directory/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-root-action
+      command: [pnpm, exec, tsc, --noEmit, --project, root-action/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

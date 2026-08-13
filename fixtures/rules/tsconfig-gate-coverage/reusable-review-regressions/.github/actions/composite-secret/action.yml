@@ -1,0 +1,8 @@
+name: Invalid composite context
+description: Composite steps cannot access workflow secrets.
+runs:
+  using: composite
+  steps:
+    - env: {TOKEN: '${{ secrets.TOKEN }}'}
+      run: echo setup
+      shell: bash

@@ -1,0 +1,21 @@
+checks:
+  commands:
+    - name: typecheck-omitted-job
+      command: [pnpm, exec, tsc, --noEmit, --project, omitted-job/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-omitted-step
+      command: [pnpm, exec, tsc, --noEmit, --project, omitted-step/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-push-default
+      command: [pnpm, exec, tsc, --noEmit, --project, push-default/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-schedule-default
+      command: [pnpm, exec, tsc, --noEmit, --project, schedule-default/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

@@ -1,0 +1,11 @@
+on: push
+jobs:
+  call:
+    uses: ./.github/workflows/callee.yml
+    with: {enabled: true}
+  downstream:
+    needs: call
+    if: needs.call.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project downstream/tsconfig.json

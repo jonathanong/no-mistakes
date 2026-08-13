@@ -1,0 +1,11 @@
+name: Bad output
+description: A malformed output expression prevents this action from loading
+outputs:
+  result:
+    description: Result
+    value: '${{ steps.build.outputs. }}'
+runs:
+  using: composite
+  steps:
+    - run: echo ready
+      shell: bash

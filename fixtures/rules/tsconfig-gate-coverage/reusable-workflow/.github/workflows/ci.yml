@@ -1,0 +1,18 @@
+name: Pull request
+on: pull_request
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+    steps:
+      - id: changes
+        run: echo backend=true >> "$GITHUB_OUTPUT"
+  checks:
+    needs: detect
+    uses: ./.github/workflows/checks-static.yml
+    with:
+      backend: ${{ needs.detect.outputs.backend }}
+      web: false
+      lambdas: false
+      cloudflare: false

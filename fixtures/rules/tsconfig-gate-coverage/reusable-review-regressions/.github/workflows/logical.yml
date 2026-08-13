@@ -1,0 +1,14 @@
+on: push
+jobs:
+  short-circuit-or:
+    # A true left side must not evaluate the invalid right expression.
+    if: true || fromJSON('not-json')
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project logical-or/tsconfig.json
+  short-circuit-and:
+    # A false left side must not evaluate the invalid right expression.
+    if: false && fromJSON('not-json')
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project logical-and/tsconfig.json

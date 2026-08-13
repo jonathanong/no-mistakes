@@ -1,0 +1,7 @@
+name: Valid
+description: A valid local action
+runs:
+  using: composite
+  steps:
+    - run: echo ready
+      shell: bash

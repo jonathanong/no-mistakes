@@ -1,0 +1,9 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/composite
+        with:
+          prefix: exit 1
+      - run: pnpm exec tsc --noEmit --project composite/tsconfig.json

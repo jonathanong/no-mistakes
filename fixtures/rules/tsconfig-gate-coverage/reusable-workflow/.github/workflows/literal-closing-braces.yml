@@ -1,0 +1,8 @@
+# Raw }} is ordinary workflow text, not an unmatched expression delimiter.
+name: Literal closing braces }}
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project literal-closing-braces/tsconfig.json

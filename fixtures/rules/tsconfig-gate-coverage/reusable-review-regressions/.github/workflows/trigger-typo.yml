@@ -1,0 +1,7 @@
+on: {push: null, pussh: {}}
+jobs:
+  typecheck:
+    # GitHub rejects the unknown trigger before this job can run.
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project trigger-typo/tsconfig.json

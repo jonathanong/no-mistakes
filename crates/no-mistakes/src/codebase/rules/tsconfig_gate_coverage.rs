@@ -20,7 +20,7 @@ use no_check::non_enforcing_tsconfigs;
 use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use workflow::{ci_typechecked_projects, workflow_load_findings};
+use workflow::{ci_typechecked_projects_with_local_actions, workflow_load_findings};
 
 pub const RULE_ID: &str = "tsconfig-gate-coverage";
 #[doc(hidden)]
@@ -55,8 +55,16 @@ pub(crate) fn check_with_prepared(
 ) -> Result<Vec<RuleFinding>> {
     let tracked = tracked_tsconfigs(root, prepared.tracked_paths);
     let non_enforcing = non_enforcing_tsconfigs(root, &tracked, prepared.sources);
-    let ci_projects =
-        ci_typechecked_projects(prepared.workflows, &tracked, prepared.project_source_inputs);
+    let local_actions =
+        workflow::local_actions::catalog(root, prepared.tracked_paths, prepared.sources);
+    let ci_projects = ci_typechecked_projects_with_local_actions(
+        root,
+        prepared.workflows,
+        &tracked,
+        prepared.tracked_paths,
+        prepared.project_source_inputs,
+        &local_actions,
+    );
     let local_projects = local_typechecked_projects(config);
     let config_file = config_file(root, prepared.config_path);
     let workflow_errors = workflow_load_findings(prepared.workflows);

@@ -1,0 +1,6 @@
+name: Malformed
+description: Invalid optional action metadata prevents the later typecheck.
+inputs: []
+runs:
+  using: node20
+  main: index.js

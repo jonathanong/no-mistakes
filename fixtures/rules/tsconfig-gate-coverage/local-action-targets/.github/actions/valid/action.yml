@@ -1,0 +1,8 @@
+name: Valid local action
+description: A valid composite action fixture
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo valid
+      working-directory: valid

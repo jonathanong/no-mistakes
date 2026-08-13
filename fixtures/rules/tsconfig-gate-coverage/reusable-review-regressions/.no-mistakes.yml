@@ -1,0 +1,253 @@
+checks:
+  commands:
+    - name: typecheck-matrix
+      command: [pnpm, exec, tsc, --noEmit, --project, matrix/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-script
+      command: [pnpm, exec, tsc, --noEmit, --project, script/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-env
+      command: [pnpm, exec, tsc, --noEmit, --project, env/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-join
+      command: [pnpm, exec, tsc, --noEmit, --project, join/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-runner
+      command: [pnpm, exec, tsc, --noEmit, --project, runner/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-composite
+      command: [pnpm, exec, tsc, --noEmit, --project, composite/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-checkout
+      command: [pnpm, exec, tsc, --noEmit, --project, checkout/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-json-error
+      command: [pnpm, exec, tsc, --noEmit, --project, json-error/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-hidden-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, hidden-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-quoted
+      command: [pnpm, exec, tsc, --noEmit, --project, quoted/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-output
+      command: [pnpm, exec, tsc, --noEmit, --project, output/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-input-condition
+      command: [pnpm, exec, tsc, --noEmit, --project, input-condition/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-mapping-env
+      command: [pnpm, exec, tsc, --noEmit, --project, mapping-env/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pre-if
+      command: [pnpm, exec, tsc, --noEmit, --project, pre-if/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-needs-action
+      command: [pnpm, exec, tsc, --noEmit, --project, needs-action/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-logical-or
+      command: [pnpm, exec, tsc, --noEmit, --project, logical-or/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-logical-and
+      command: [pnpm, exec, tsc, --noEmit, --project, logical-and/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-checkout-tolerated
+      command: [pnpm, exec, tsc, --noEmit, --project, checkout-tolerated/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-step-env
+      command: [pnpm, exec, tsc, --noEmit, --project, step-env/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-runner-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, runner-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-container-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, container-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-strategy-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, strategy-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-tag-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, tag-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fail-fast-default
+      command: [pnpm, exec, tsc, --noEmit, --project, fail-fast-default/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fail-fast-true
+      command: [pnpm, exec, tsc, --noEmit, --project, fail-fast-true/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fail-fast-false
+      command: [pnpm, exec, tsc, --noEmit, --project, fail-fast-false/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-dependent
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-dependent/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-branch-main-only
+      command: [pnpm, exec, tsc, --noEmit, --project, branch-main-only/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-scalar-action
+      command: [pnpm, exec, tsc, --noEmit, --project, scalar-action/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-composite-secret
+      command: [pnpm, exec, tsc, --noEmit, --project, composite-secret/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-docker-invalid
+      command: [pnpm, exec, tsc, --noEmit, --project, docker-invalid/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-conclusion-outcome
+      command: [pnpm, exec, tsc, --noEmit, --project, conclusion-outcome/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-conclusion-blocked
+      command: [pnpm, exec, tsc, --noEmit, --project, conclusion-blocked/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-trigger-typo
+      command: [pnpm, exec, tsc, --noEmit, --project, trigger-typo/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-fork-secret
+      command: [pnpm, exec, tsc, --noEmit, --project, fork-secret/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-action-outcome
+      command: [pnpm, exec, tsc, --noEmit, --project, action-outcome/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-checkout-root
+      command: [pnpm, exec, tsc, --noEmit, --project, checkout-root/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-composite-remote
+      command: [pnpm, exec, tsc, --noEmit, --project, composite-remote/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-job-status
+      command: [pnpm, exec, tsc, --noEmit, --project, job-status/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pnpm-separator
+      command: [pnpm, exec, tsc, --noEmit, --project, pnpm-separator/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pr-target
+      command: [pnpm, exec, tsc, --noEmit, --project, pr-target/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-ref-type
+      command: [pnpm, exec, tsc, --noEmit, --project, ref-type/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-sparse-checkout
+      command: [pnpm, exec, tsc, --noEmit, --project, sparse-checkout/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-strategy-index
+      command: [pnpm, exec, tsc, --noEmit, --project, strategy-index/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-tags-only
+      command: [pnpm, exec, tsc, --noEmit, --project, tags-only/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-wildcard-negation
+      command: [pnpm, exec, tsc, --noEmit, --project, wildcard-negation/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-matrix-object
+      command: [pnpm, exec, tsc, --noEmit, --project, matrix-object/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-to-json
+      command: [pnpm, exec, tsc, --noEmit, --project, to-json/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-to-json-structured
+      command: [pnpm, exec, tsc, --noEmit, --project, to-json-structured/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-workflow-job-output
+      command: [pnpm, exec, tsc, --noEmit, --project, workflow-job-output/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-working-directory
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-working-directory/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-push-head-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, push-head-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-incompatible-hosted-runner
+      command: [pnpm, exec, tsc, --noEmit, --project, incompatible-hosted-runner/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-duplicate-service-port
+      command: [pnpm, exec, tsc, --noEmit, --project, duplicate-service-port/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-continue-on-error
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-continue-on-error/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-docker-args-invalid
+      command: [pnpm, exec, tsc, --noEmit, --project, docker-args-invalid/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-file-working-directory
+      command: [pnpm, exec, tsc, --noEmit, --project, file-working-directory/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-non-pipefail-pipeline
+      command: [pnpm, exec, tsc, --noEmit, --project, non-pipefail-pipeline/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pull-request-event-base-ref
+      command: [pnpm, exec, tsc, --noEmit, --project, pull-request-event-base-ref/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-wildcard-exclusion
+      command: [pnpm, exec, tsc, --noEmit, --project, wildcard-exclusion/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-dynamic-shell
+      command: [pnpm, exec, tsc, --noEmit, --project, dynamic-shell/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-pull-request-merged
+      command: [pnpm, exec, tsc, --noEmit, --project, pull-request-merged/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

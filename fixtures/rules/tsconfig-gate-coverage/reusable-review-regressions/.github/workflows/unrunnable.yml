@@ -1,0 +1,25 @@
+on: push
+jobs:
+  invalid-runner:
+    # An empty matrix runner label makes this prerequisite unrunnable.
+    strategy: {matrix: {runner: ['']}}
+    runs-on: '${{ matrix.runner }}'
+    steps:
+      - run: echo setup
+  runner-dependent:
+    needs: invalid-runner
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project runner-dependent/tsconfig.json
+  invalid-container:
+    # An empty resolved image makes this prerequisite unrunnable.
+    strategy: {matrix: {image: ['']}}
+    runs-on: ubuntu-latest
+    container: '${{ matrix.image }}'
+    steps:
+      - run: echo setup
+  container-dependent:
+    needs: invalid-container
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project container-dependent/tsconfig.json

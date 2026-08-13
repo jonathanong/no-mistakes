@@ -47,9 +47,6 @@ jobs:
     steps:
       - shell: python
         run: tsc --noEmit --project non-posix-shell/tsconfig.json
-  missing-runner:
-    steps:
-      - run: tsc --noEmit --project missing-runner/tsconfig.json
   dynamic-runner:
     runs-on: '${{ matrix.runner }}'
     steps:

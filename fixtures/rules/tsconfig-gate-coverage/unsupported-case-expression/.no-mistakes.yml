@@ -1,0 +1,9 @@
+checks:
+  commands:
+    - name: local
+      command: [tsc, --noEmit, --project, app/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

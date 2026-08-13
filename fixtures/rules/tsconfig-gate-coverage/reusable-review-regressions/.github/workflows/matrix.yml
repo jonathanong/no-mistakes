@@ -1,0 +1,13 @@
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+jobs:
+  typecheck:
+    strategy:
+      matrix: '${{ fromJSON(inputs.matrix) }}'
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project matrix/tsconfig.json

@@ -1,16 +1,26 @@
 use super::{join_relative, normalize_repo_relative, scan_tokens, static_tokens};
 
 mod comments;
+mod failures;
+mod shape;
 
 use comments::strip_static_comments;
+pub(crate) use failures::{
+    shell_body_before_static_failure, shell_body_has_static_failure,
+    shell_body_has_static_failure_with_initial, shell_body_has_static_pipeline_failure,
+    shell_body_is_statically_successful,
+};
+use shape::{effective_tokens, is_unsupported_control_command};
+
+pub(crate) use shape::shell_body_has_safe_static_shape;
 
 pub(super) fn scan_shell_body_for_typechecked_projects(
     script: &str,
     initial_cwd: &str,
-    mut failure_enforced: bool,
+    failure_enforced: bool,
 ) -> Vec<String> {
     let script = strip_static_comments(script);
-    if contains_unsupported_multiline_shell_construct(&script) {
+    if !shape::shell_body_has_safe_static_shape(&script) {
         return Vec::new();
     }
     let mut cwd = normalize_repo_relative(initial_cwd);
@@ -28,21 +38,23 @@ pub(super) fn scan_shell_body_for_typechecked_projects(
         if segments.len() > 1 && !final_group {
             return Vec::new();
         }
-        for segment in segments {
+        let segment_count = segments.len();
+        for (segment_index, segment) in segments.into_iter().enumerate() {
             let Some(tokens) = static_tokens(segment) else {
+                if segment_index + 1 < segment_count {
+                    break;
+                }
                 continue;
+            };
+            let Some(tokens) = effective_tokens(&tokens) else {
+                return Vec::new();
             };
             let first = tokens
                 .first()
                 .expect("a nonblank static shell segment has at least one token");
-            if is_unsupported_control_command(first)
-                || disables_failure_enforcement(&tokens)
-                || enables_non_executing_mode(&tokens)
-                || is_unsupported_working_directory_command(&tokens)
-            {
+            if is_unsupported_control_command(tokens) {
                 return Vec::new();
             }
-            failure_enforced |= enables_failure_enforcement(&tokens);
             if first == "cd" {
                 cwd = (tokens.len() == 2)
                     .then(|| {
@@ -57,82 +69,13 @@ pub(super) fn scan_shell_body_for_typechecked_projects(
                 continue;
             };
             if failure_enforced || final_group {
-                projects.extend(scan_tokens(&tokens, base));
+                projects.extend(scan_tokens(tokens, base));
             }
         }
     }
     projects.sort();
     projects.dedup();
     projects
-}
-
-/// The scanner tracks only `cd <static-relative-path>`. Directory-stack
-/// commands and malformed `cd` forms make a later command's cwd ambiguous, so
-/// reject the whole body instead of crediting it against the wrong tsconfig.
-fn is_unsupported_working_directory_command(tokens: &[String]) -> bool {
-    match tokens.first().map(String::as_str) {
-        Some("pushd" | "popd" | "dirs") => true,
-        Some("cd") => {
-            tokens.len() != 2
-                || normalize_repo_relative(tokens.get(1).expect("cd has an argument")).is_none()
-        }
-        _ => false,
-    }
-}
-
-fn contains_unsupported_multiline_shell_construct(script: &str) -> bool {
-    if script.contains("<<") {
-        return true;
-    }
-    let mut quote = None;
-    for character in script.chars() {
-        match quote {
-            Some(active) if character == active => quote = None,
-            Some(_) if matches!(character, '\n' | ';' | '&') => return true,
-            Some(_) => {}
-            None if matches!(character, '\'' | '"') => quote = Some(character),
-            None if matches!(character, '{' | '}') => return true,
-            None => {}
-        }
-    }
-    false
-}
-
-fn is_unsupported_control_command(command: &str) -> bool {
-    matches!(command, "!" | "exit" | "return" | "false")
-}
-
-fn disables_failure_enforcement(tokens: &[String]) -> bool {
-    if tokens.first().is_none_or(|command| command != "set") {
-        return false;
-    }
-    match tokens.get(1).map(String::as_str) {
-        Some(option) if option.starts_with('+') && option.contains('e') => true,
-        Some("+o") => tokens.get(2).is_some_and(|option| option == "errexit"),
-        _ => false,
-    }
-}
-
-fn enables_failure_enforcement(tokens: &[String]) -> bool {
-    if tokens.first().is_none_or(|command| command != "set") {
-        return false;
-    }
-    match tokens.get(1).map(String::as_str) {
-        Some(option) if option.starts_with('-') && option.contains('e') => true,
-        Some("-o") => tokens.get(2).is_some_and(|option| option == "errexit"),
-        _ => false,
-    }
-}
-
-fn enables_non_executing_mode(tokens: &[String]) -> bool {
-    if tokens.first().is_none_or(|command| command != "set") {
-        return false;
-    }
-    match tokens.get(1).map(String::as_str) {
-        Some(option) if option.starts_with('-') && option.contains('n') => true,
-        Some("-o") => tokens.get(2).is_some_and(|option| option == "noexec"),
-        _ => false,
-    }
 }
 
 /// Parse the explicit local `bash|sh ... -c <literal>` shape. Unlike Actions,

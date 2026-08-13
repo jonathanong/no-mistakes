@@ -1,0 +1,10 @@
+name: Dynamic composite
+description: Its input can make the action fail before a later typecheck.
+inputs:
+  prefix:
+    description: Command prefix
+runs:
+  using: composite
+  steps:
+    - run: "${{ inputs.prefix }}\necho ready"
+      shell: bash

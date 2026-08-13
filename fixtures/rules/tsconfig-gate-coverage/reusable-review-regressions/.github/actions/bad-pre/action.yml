@@ -1,0 +1,6 @@
+name: Bad pre
+description: Invalid hook condition
+runs:
+  using: node24
+  main: index.js
+  pre-if: '${{ runner.os == }}'

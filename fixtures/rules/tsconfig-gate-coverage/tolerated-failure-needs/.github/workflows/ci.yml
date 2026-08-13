@@ -1,0 +1,12 @@
+on: push
+jobs:
+  tolerated:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'false'
+  downstream:
+    needs: tolerated
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project downstream/tsconfig.json

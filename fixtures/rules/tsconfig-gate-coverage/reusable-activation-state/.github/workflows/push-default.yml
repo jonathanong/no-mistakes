@@ -1,0 +1,12 @@
+on:
+  workflow_call:
+    inputs:
+      enabled:
+        type: boolean
+        default: "${{ github.event_name == 'schedule' }}"
+jobs:
+  typecheck:
+    if: inputs.enabled
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project push-default/tsconfig.json

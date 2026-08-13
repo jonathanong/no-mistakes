@@ -1,0 +1,29 @@
+on: push
+jobs:
+  default:
+    # The default true setting cancels the later static matrix sibling.
+    strategy: {matrix: {target: [first, later]}}
+    runs-on: ubuntu-latest
+    steps:
+      - if: matrix.target == 'first'
+        run: exit 1
+      - if: matrix.target == 'later'
+        run: pnpm exec tsc --noEmit --project fail-fast-default/tsconfig.json
+  enabled:
+    # Explicit true cancels the later static matrix sibling too.
+    strategy: {fail-fast: true, matrix: {target: [first, later]}}
+    runs-on: ubuntu-latest
+    steps:
+      - if: matrix.target == 'first'
+        run: exit 1
+      - if: matrix.target == 'later'
+        run: pnpm exec tsc --noEmit --project fail-fast-true/tsconfig.json
+  disabled:
+    # Explicit false leaves the later static matrix sibling runnable.
+    strategy: {fail-fast: false, matrix: {target: [first, later]}}
+    runs-on: ubuntu-latest
+    steps:
+      - if: matrix.target == 'first'
+        run: exit 1
+      - if: matrix.target == 'later'
+        run: pnpm exec tsc --noEmit --project fail-fast-false/tsconfig.json

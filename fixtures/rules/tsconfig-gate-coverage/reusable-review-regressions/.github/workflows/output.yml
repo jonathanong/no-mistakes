@@ -1,0 +1,8 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/bad-output
+      - run: pnpm exec tsc --noEmit --project output/tsconfig.json

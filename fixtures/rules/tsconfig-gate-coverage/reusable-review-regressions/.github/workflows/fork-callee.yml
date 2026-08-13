@@ -1,0 +1,9 @@
+on:
+  workflow_call:
+    secrets:
+      token: {required: true}
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project fork-secret/tsconfig.json

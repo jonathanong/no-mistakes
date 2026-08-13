@@ -1,0 +1,12 @@
+on:
+  workflow_call:
+    inputs:
+      enabled: {type: boolean, required: true}
+    outputs:
+      enabled:
+        value: '${{ inputs.enabled }}'
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo setup
