@@ -1,33 +1,21 @@
+use ignore::WalkBuilder;
 use std::collections::{BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use syn::{GenericArgument, Item, Meta, PathArguments, Type};
 
 pub(super) fn rust_sources(dir: &Path) -> Vec<PathBuf> {
-    let repo = git_repo_root(dir);
-    let output = Command::new("git")
-        .args([
-            "-C",
-            repo.to_str().expect("repository root must be UTF-8"),
-            "ls-files",
-            "--cached",
-            "--others",
-            "--exclude-standard",
-            "--",
-            "crates/no-mistakes/src",
-        ])
-        .output()
-        .expect("git ls-files must be available for docs coverage");
-    assert!(
-        output.status.success(),
-        "git ls-files failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let mut paths = String::from_utf8(output.stdout)
-        .expect("git ls-files output must be UTF-8")
-        .lines()
-        .filter_map(|relative| {
-            let path = repo.join(relative);
+    let mut paths = WalkBuilder::new(dir)
+        .hidden(false)
+        .parents(false)
+        .git_global(false)
+        .git_exclude(false)
+        .require_git(false)
+        .build()
+        .map(|entry| {
+            entry.unwrap_or_else(|error| panic!("failed to inventory Rust sources: {error}"))
+        })
+        .filter_map(|entry| {
+            let path = entry.into_path();
             (path.extension().and_then(|ext| ext.to_str()) == Some("rs")
                 && std::fs::symlink_metadata(&path)
                     .map(|metadata| metadata.file_type().is_file())
@@ -37,28 +25,6 @@ pub(super) fn rust_sources(dir: &Path) -> Vec<PathBuf> {
         .collect::<Vec<_>>();
     paths.sort();
     paths
-}
-
-fn git_repo_root(dir: &Path) -> PathBuf {
-    let output = Command::new("git")
-        .args([
-            "-C",
-            dir.to_str().expect("source directory must be UTF-8"),
-            "rev-parse",
-            "--show-toplevel",
-        ])
-        .output()
-        .expect("git rev-parse must be available for docs coverage");
-    assert!(
-        output.status.success(),
-        "git rev-parse failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    PathBuf::from(
-        String::from_utf8(output.stdout)
-            .expect("git repository root must be UTF-8")
-            .trim(),
-    )
 }
 
 pub(super) fn subcommand_enums(source: &str) -> Vec<(String, String)> {
@@ -261,5 +227,39 @@ fn parses_inline_optional_subcommand_fixture() {
     assert_eq!(
         subcommand_enums(&source),
         vec![("OptionalArgs".to_string(), "OptionalCommand".to_string())]
+    );
+}
+
+#[test]
+fn inventories_the_requested_source_tree_without_git_commands() {
+    let source =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/docs-coverage/source-tree");
+    let fixture = tempfile::tempdir().expect("create source inventory fixture");
+    for entry in WalkBuilder::new(&source)
+        .hidden(false)
+        .ignore(false)
+        .git_ignore(false)
+        .git_global(false)
+        .git_exclude(false)
+        .require_git(false)
+        .build()
+        .map(Result::unwrap)
+        .filter(|entry| entry.path() != source)
+    {
+        let relative = entry.path().strip_prefix(&source).unwrap();
+        let target = fixture.path().join(relative);
+        if entry
+            .file_type()
+            .is_some_and(|file_type| file_type.is_dir())
+        {
+            std::fs::create_dir_all(&target).unwrap();
+        } else {
+            std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+            std::fs::copy(entry.path(), &target).unwrap();
+        }
+    }
+    assert_eq!(
+        rust_sources(fixture.path()),
+        vec![fixture.path().join("nested/command.rs")]
     );
 }
