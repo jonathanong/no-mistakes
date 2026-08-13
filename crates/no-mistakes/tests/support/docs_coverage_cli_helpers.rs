@@ -6,6 +6,9 @@ use syn::{GenericArgument, Item, Meta, PathArguments, Type};
 pub(super) fn rust_sources(dir: &Path) -> Vec<PathBuf> {
     let mut paths = WalkBuilder::new(dir)
         .hidden(false)
+        .parents(false)
+        .git_global(false)
+        .git_exclude(false)
         .require_git(false)
         .build()
         .map(|entry| {
@@ -229,10 +232,34 @@ fn parses_inline_optional_subcommand_fixture() {
 
 #[test]
 fn inventories_the_requested_source_tree_without_git_commands() {
-    let fixture =
+    let source =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/docs-coverage/source-tree");
+    let fixture = tempfile::tempdir().expect("create source inventory fixture");
+    for entry in WalkBuilder::new(&source)
+        .hidden(false)
+        .ignore(false)
+        .git_ignore(false)
+        .git_global(false)
+        .git_exclude(false)
+        .require_git(false)
+        .build()
+        .map(Result::unwrap)
+        .filter(|entry| entry.path() != source)
+    {
+        let relative = entry.path().strip_prefix(&source).unwrap();
+        let target = fixture.path().join(relative);
+        if entry
+            .file_type()
+            .is_some_and(|file_type| file_type.is_dir())
+        {
+            std::fs::create_dir_all(&target).unwrap();
+        } else {
+            std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+            std::fs::copy(entry.path(), &target).unwrap();
+        }
+    }
     assert_eq!(
-        rust_sources(&fixture),
-        vec![fixture.join("nested/command.rs")]
+        rust_sources(fixture.path()),
+        vec![fixture.path().join("nested/command.rs")]
     );
 }
