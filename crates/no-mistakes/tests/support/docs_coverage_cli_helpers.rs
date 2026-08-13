@@ -6,6 +6,7 @@ use syn::{GenericArgument, Item, Meta, PathArguments, Type};
 pub(super) fn rust_sources(dir: &Path) -> Vec<PathBuf> {
     let mut paths = WalkBuilder::new(dir)
         .hidden(false)
+        .require_git(false)
         .build()
         .map(|entry| {
             entry.unwrap_or_else(|error| panic!("failed to inventory Rust sources: {error}"))
