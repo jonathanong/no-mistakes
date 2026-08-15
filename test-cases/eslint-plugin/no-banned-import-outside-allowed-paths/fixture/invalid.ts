@@ -29,6 +29,20 @@ const req = createRequire(import.meta.url);
 const tsReq = req("typescript");
 tsReq.createProgram();
 
+// createRequire is just as reachable through require()'s destructured or
+// member-accessed result as through the static `import { createRequire }`
+// form above; both forms resolve to the same require-fn-shaped capability.
+function createRequireViaCommonJs() {
+  const { createRequire: cr1 } = require("node:module");
+  const req1 = cr1(import.meta.url);
+  req1("typescript").createProgram();
+
+  const nodeModule = require("module");
+  const createRequireFn = nodeModule.createRequire;
+  const req2 = createRequireFn(import.meta.url);
+  req2("typescript").createProgram();
+}
+
 async function loadTs() {
   const { createProgram: dynCp } = await import("typescript");
   dynCp();
@@ -94,3 +108,83 @@ cp3();
   const tsIife = require("typescript");
   tsIife.createProgram();
 })();
+
+// Discard-on-exit alias scoping must extend past `if` to every
+// conditionally or repeatedly executed construct (loop bodies, switch
+// cases, try/catch, and conditional/logical branches), or an overwrite on a
+// path that isn't guaranteed to run can incorrectly suppress a real report.
+declare const maybeFlag: boolean;
+declare const safeValue: () => void;
+
+function loopScopeLeak() {
+  let fn = createProgram;
+  while (maybeFlag) {
+    fn = safeValue;
+  }
+  return fn();
+}
+
+function switchScopeLeak() {
+  let fn = createProgram;
+  switch (maybeFlag) {
+    case true:
+      fn = safeValue;
+      break;
+    default:
+      break;
+  }
+  return fn();
+}
+
+function tryScopeLeak() {
+  let fn = createProgram;
+  try {
+    fn = safeValue;
+  } catch {
+    // ignore
+  }
+  return fn();
+}
+
+function conditionalScopeLeak() {
+  let fn = createProgram;
+  maybeFlag ? (fn = safeValue) : null;
+  return fn();
+}
+
+function logicalScopeLeak() {
+  let fn = createProgram;
+  maybeFlag && (fn = safeValue);
+  return fn();
+}
+
+// A switch case without a terminating break/return/throw falls through into
+// the next case at runtime, so a banned reassignment made in the
+// fallen-through case must still apply to a call site in the next case in
+// the same run, not be reset as if that next case started fresh from the
+// switch's pre-state.
+function switchFallthroughLeak() {
+  let fn = safeValue;
+  switch (maybeFlag) {
+    case true:
+      fn = createProgram;
+    // falls through intentionally: no break here
+    case false:
+      fn();
+      break;
+  }
+}
+
+// Member access chained directly off an inline require() call must be
+// tracked without first assigning the module object to a variable.
+require("typescript").createProgram();
+
+// An inline export declaration (`export const x = ...`) exposes a tagged
+// value directly; there is no `specifiers` list to inspect for this form.
+import * as tsForInlineExport from "typescript";
+export const inlineExportedCompile = tsForInlineExport.createProgram;
+
+// A banned capability is just as reachable through `new` as through a plain
+// call; NewExpression resolves its callee the same way CallExpression does.
+import limiterForNew from "@acme/rate-limit";
+new limiterForNew();

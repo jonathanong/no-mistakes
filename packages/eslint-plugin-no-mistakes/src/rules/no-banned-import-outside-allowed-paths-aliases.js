@@ -1,7 +1,11 @@
 "use strict";
 
 const { propertyName } = require("./module-mock-helpers");
-const { bindingIdentifier, resolveVariable } = require("./no-global-fetch-outside-helper-bindings");
+const {
+  bindingIdentifier,
+  bindingIdentifiers,
+  resolveVariable,
+} = require("./no-global-fetch-outside-helper-bindings");
 const {
   collectAssignmentExpressions,
   collectVariableDeclarators,
@@ -9,7 +13,10 @@ const {
   isOptionalChainArgument,
 } = require("./no-global-fetch-outside-helper-traversal");
 const { hasBannedName } = require("./no-banned-import-outside-allowed-paths-config");
-const { tagForExpression } = require("./no-banned-import-outside-allowed-paths-tags");
+const {
+  resolveNodeModuleCreateRequireTag,
+  tagForExpression,
+} = require("./no-banned-import-outside-allowed-paths-tags");
 
 function setOrClearTag(identifier, tag, context, aliasMap, clearedAliases) {
   const variable = resolveVariable(identifier, context);
@@ -26,6 +33,8 @@ function setOrClearTag(identifier, tag, context, aliasMap, clearedAliases) {
 function resolvePropertyTag(initTag, key, config) {
   if (initTag?.kind !== "object" || !key) return null;
   for (const module of initTag.modules) {
+    const createRequireTag = resolveNodeModuleCreateRequireTag(module, key);
+    if (createRequireTag) return createRequireTag;
     if (hasBannedName(config, module, key)) return { kind: "direct", module, name: key };
   }
   return null;
@@ -44,7 +53,15 @@ function applyObjectPatternTag(pattern, initTag, context, aliasMap, clearedAlias
     }
     if (property.type !== "Property") continue;
     const identifier = bindingIdentifier(property.value);
-    if (!identifier) continue;
+    if (!identifier) {
+      // The target is itself a nested pattern (unsupported for tagging), but
+      // any identifier it rebinds must still lose a stale tag from an
+      // earlier assignment, or a later use would be a false positive.
+      for (const nested of bindingIdentifiers(property.value)) {
+        setOrClearTag(nested, null, context, aliasMap, clearedAliases);
+      }
+      continue;
+    }
     const tag = resolvePropertyTag(initTag, propertyName(property.key), config);
     setOrClearTag(identifier, tag, context, aliasMap, clearedAliases);
   }
@@ -94,6 +111,15 @@ function recordAssignmentTag(
   if (node.left?.type === "ObjectPattern") {
     const initTag = tagForExpression(node.right, context, readAliasMap, config);
     applyObjectPatternTag(node.left, initTag, context, aliasMap, clearedAliases, config);
+    return;
+  }
+  if (node.left?.type === "ArrayPattern") {
+    // Array destructuring never resolves to a tracked module tag (arrays
+    // aren't "the module object" in this model), but every identifier it
+    // rebinds must still lose a stale tag from an earlier assignment.
+    for (const identifier of bindingIdentifiers(node.left)) {
+      setOrClearTag(identifier, null, context, aliasMap, clearedAliases);
+    }
   }
 }
 

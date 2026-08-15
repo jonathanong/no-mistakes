@@ -2,7 +2,10 @@
 
 const { literalString, memberPropertyName } = require("./module-mock-helpers");
 const { hasLocalBinding, resolveVariable } = require("./no-global-fetch-outside-helper-bindings");
-const { hasBannedName } = require("./no-banned-import-outside-allowed-paths-config");
+const {
+  CREATE_REQUIRE_MODULES,
+  hasBannedName,
+} = require("./no-banned-import-outside-allowed-paths-config");
 
 // Tag shapes tracked per resolved variable:
 //   { kind: "direct", module, name }   - this binding IS a specific banned export's value
@@ -41,22 +44,45 @@ function tagForIdentifier(node, context, aliasMap) {
   return (variable && aliasMap.get(variable)) ?? null;
 }
 
+// `createRequire` is Node's real createRequire() whenever it's reached off
+// one of CREATE_REQUIRE_MODULES, regardless of the binding form (a static
+// `import { createRequire }` specifier, a require()'d object's destructured
+// property, or a require()'d object's member access) — it's a capability in
+// its own right, not a name a config bans per module.
+function resolveNodeModuleCreateRequireTag(module, name) {
+  if (CREATE_REQUIRE_MODULES.has(module) && name === "createRequire") {
+    return { kind: "create-require" };
+  }
+  return null;
+}
+
 function tagForCallExpression(node, context, aliasMap, config) {
   const calleeTag = tagForIdentifier(node.callee, context, aliasMap);
   if (calleeTag?.kind === "create-require") return { kind: "require-fn" };
   const isRequireFn = calleeTag?.kind === "require-fn";
   if (!isRequireFn && !isUnshadowedRequire(node.callee, context)) return null;
   const specifier = literalString(node.arguments[0]);
-  if (!specifier || !config.has(specifier)) return null;
+  if (!specifier) return null;
+  // A require()'d CREATE_REQUIRE_MODULES object is tracked whether or not
+  // the config separately bans anything from it, so its createRequire
+  // property still resolves below even when nothing else about the module
+  // is configured as banned.
+  if (!CREATE_REQUIRE_MODULES.has(specifier) && !config.has(specifier)) return null;
   return { kind: "object", modules: new Set([specifier]) };
 }
 
 function tagForMemberExpression(node, context, aliasMap, config) {
-  const objectTag = tagForIdentifier(node.object, context, aliasMap);
+  // Resolve the object through the full expression tagger, not just
+  // identifiers, so member access chained directly off an inline
+  // require()/import() call (e.g. `require("typescript").createProgram()`)
+  // is tracked without first assigning the module object to a variable.
+  const objectTag = tagForExpression(node.object, context, aliasMap, config);
   if (objectTag?.kind !== "object") return null;
   const name = memberPropertyName(node);
   if (!name) return null;
   for (const module of objectTag.modules) {
+    const createRequireTag = resolveNodeModuleCreateRequireTag(module, name);
+    if (createRequireTag) return createRequireTag;
     if (hasBannedName(config, module, name)) return { kind: "direct", module, name };
   }
   return null;
@@ -96,6 +122,7 @@ function tagForExpression(node, context, aliasMap, config) {
 
 module.exports = {
   isUnshadowedRequire,
+  resolveNodeModuleCreateRequireTag,
   tagForExpression,
   tagForIdentifier,
   unwrapExpression,

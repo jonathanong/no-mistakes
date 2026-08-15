@@ -1700,6 +1700,8 @@ describe("no-banned-import-outside-allowed-paths", () => {
         "bannedImport",
         "bannedImport",
         "bannedImport",
+        "bannedImport",
+        "bannedImport",
         "bannedReExport",
         "bannedReExport",
         "bannedReExport",
@@ -1709,6 +1711,15 @@ describe("no-banned-import-outside-allowed-paths", () => {
         "bannedImport",
         "bannedImport",
         "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedReExport",
         "bannedImport",
       ],
     );
@@ -1764,6 +1775,37 @@ describe("no-banned-import-outside-allowed-paths", () => {
         "src/app/other.ts",
       ),
       ["bannedImport"],
+    );
+  });
+
+  it("does not report an unaliased export-star from a module banned only on default", () => {
+    const defaultOnlyOption = {
+      ...option,
+      bannedImports: [{ module: "@acme/rate-limit", names: ["default"] }],
+    };
+    assert.deepEqual(
+      messages(
+        'export * from "@acme/rate-limit";',
+        "no-banned-import-outside-allowed-paths",
+        defaultOnlyOption,
+        "src/app/build.ts",
+      ),
+      [],
+    );
+  });
+
+  it("reports a non-identifier default export resolved through the expression tagger", () => {
+    assert.deepEqual(
+      messages(
+        `
+          import * as ts from "typescript";
+          export default ts.createProgram;
+        `,
+        "no-banned-import-outside-allowed-paths",
+        option,
+        "src/app/build.ts",
+      ),
+      ["bannedReExport"],
     );
   });
 });

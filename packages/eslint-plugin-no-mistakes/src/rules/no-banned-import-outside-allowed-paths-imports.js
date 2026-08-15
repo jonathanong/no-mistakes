@@ -4,10 +4,13 @@ const { importSpecifierName } = require("./module-mock-helpers");
 const { resolveVariable } = require("./no-global-fetch-outside-helper-bindings");
 const {
   hasAnyBannedName,
+  hasAnyNonDefaultBannedName,
   hasBannedName,
 } = require("./no-banned-import-outside-allowed-paths-config");
-
-const CREATE_REQUIRE_MODULES = new Set(["node:module", "module"]);
+const {
+  resolveNodeModuleCreateRequireTag,
+  tagForExpression,
+} = require("./no-banned-import-outside-allowed-paths-tags");
 
 function isTypeOnlyImport(node, specifier) {
   return node.importKind === "type" || specifier.importKind === "type";
@@ -23,8 +26,9 @@ function seedImportSpecifier(specifier, node, moduleSpecifier, context, config, 
   if (!variable) return;
   if (specifier.type === "ImportSpecifier") {
     const name = importSpecifierName(specifier);
-    if (CREATE_REQUIRE_MODULES.has(moduleSpecifier) && name === "createRequire") {
-      aliasMap.set(variable, { kind: "create-require" });
+    const createRequireTag = resolveNodeModuleCreateRequireTag(moduleSpecifier, name);
+    if (createRequireTag) {
+      aliasMap.set(variable, createRequireTag);
       return;
     }
     if (name && hasBannedName(config, moduleSpecifier, name)) {
@@ -82,16 +86,57 @@ function reportTagLeak(reportNode, tag, config, context) {
   return false;
 }
 
-function reportLocalReExport(specifier, context, config, aliasMap, forwardAliasMap) {
+// Resolves the tag reachable through `variable` for an export check: prefer
+// a live real-time tag, but never fall back to the fixed-point forward tag
+// once the variable has been explicitly cleared (real-time overwritten to
+// something untracked) — otherwise a since-overwritten alias would "revive"
+// its stale, no-longer-true forward tag and produce a false positive. A
+// forward tag is only consulted for a variable never yet touched in real
+// time, i.e. a genuine forward reference.
+function resolveExportedTag(variable, aliasMap, clearedAliases, forwardAliasMap) {
+  if (!variable) return null;
+  if (aliasMap.has(variable)) return aliasMap.get(variable);
+  if (clearedAliases.has(variable)) return null;
+  return forwardAliasMap.get(variable) ?? null;
+}
+
+function reportLocalReExport(
+  specifier,
+  context,
+  config,
+  aliasMap,
+  clearedAliases,
+  forwardAliasMap,
+) {
   const variable = resolveVariable(specifier.local, context);
-  const tag = variable && (aliasMap.get(variable) ?? forwardAliasMap.get(variable));
+  const tag = resolveExportedTag(variable, aliasMap, clearedAliases, forwardAliasMap);
   reportTagLeak(specifier, tag, config, context);
 }
 
-function checkExportLeaks(node, context, config, aliasMap, forwardAliasMap) {
+function checkExportedDeclaration(
+  declaration,
+  context,
+  config,
+  aliasMap,
+  clearedAliases,
+  forwardAliasMap,
+) {
+  if (declaration?.type !== "VariableDeclaration") return;
+  for (const declarator of declaration.declarations) {
+    if (declarator.id.type !== "Identifier") continue;
+    const variable = resolveVariable(declarator.id, context);
+    const tag = resolveExportedTag(variable, aliasMap, clearedAliases, forwardAliasMap);
+    reportTagLeak(declarator, tag, config, context);
+  }
+}
+
+function checkExportLeaks(node, context, config, aliasMap, clearedAliases, forwardAliasMap) {
   if (node.type === "ExportAllDeclaration") {
     const moduleSpecifier = node.source?.value;
-    if (hasAnyBannedName(config, moduleSpecifier)) {
+    // An unaliased `export * from "mod"` never re-exports the module's
+    // default export (ES module semantics), so a module banned only on
+    // "default" exposes nothing reachable through this form.
+    if (hasAnyNonDefaultBannedName(config, moduleSpecifier)) {
       context.report({
         node,
         messageId: "bannedReExport",
@@ -100,6 +145,16 @@ function checkExportLeaks(node, context, config, aliasMap, forwardAliasMap) {
     }
     return;
   }
+  // An inline export declaration (`export const compile = ts.createProgram;`)
+  // exposes a tagged value directly, with no `specifiers` entry to inspect.
+  checkExportedDeclaration(
+    node.declaration,
+    context,
+    config,
+    aliasMap,
+    clearedAliases,
+    forwardAliasMap,
+  );
   for (const specifier of node.specifiers ?? []) {
     if (specifier.type !== "ExportSpecifier" || isTypeOnlyExport(node, specifier)) continue;
     if (node.source) {
@@ -113,14 +168,23 @@ function checkExportLeaks(node, context, config, aliasMap, forwardAliasMap) {
       }
       continue;
     }
-    reportLocalReExport(specifier, context, config, aliasMap, forwardAliasMap);
+    reportLocalReExport(specifier, context, config, aliasMap, clearedAliases, forwardAliasMap);
   }
 }
 
-function checkDefaultExportLeak(node, context, config, aliasMap, forwardAliasMap) {
-  if (node.declaration.type !== "Identifier") return;
-  const variable = resolveVariable(node.declaration, context);
-  const tag = variable && (aliasMap.get(variable) ?? forwardAliasMap.get(variable));
+function checkDefaultExportLeak(node, context, config, aliasMap, clearedAliases, forwardAliasMap) {
+  const { declaration } = node;
+  if (declaration.type === "Identifier") {
+    const variable = resolveVariable(declaration, context);
+    const tag = resolveExportedTag(variable, aliasMap, clearedAliases, forwardAliasMap);
+    reportTagLeak(node, tag, config, context);
+    return;
+  }
+  // A non-identifier declaration (`export default ts.createProgram;` or
+  // `export default require("typescript").createProgram;`) is resolved with
+  // the same expression tagger used for calls and aliases, matching
+  // real-time (depth-0, no forward merge) semantics.
+  const tag = tagForExpression(declaration, context, aliasMap, config);
   reportTagLeak(node, tag, config, context);
 }
 

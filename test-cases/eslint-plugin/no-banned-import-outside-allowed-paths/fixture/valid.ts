@@ -98,3 +98,68 @@ unrelatedNs.whatever();
 // named exports here, not "default".
 import * as ts5 from "typescript";
 ts5();
+
+// An alias unconditionally overwritten to something untracked before being
+// re-exported must not "revive" its earlier tag from the forward
+// fixed-point pass; only a genuine forward reference (never touched in
+// real time) may fall back to a forward tag.
+import * as ts6 from "typescript";
+let reassignedBeforeExport = ts6.createProgram;
+reassignedBeforeExport = ts6.transpileModule;
+export { reassignedBeforeExport };
+
+// The same stale-forward-tag fallback must not apply to default exports
+// either.
+import * as ts7 from "typescript";
+let reassignedBeforeDefaultExport = ts7.createProgram;
+reassignedBeforeDefaultExport = ts7.transpileModule;
+export default reassignedBeforeDefaultExport;
+
+// An existing tagged alias overwritten through a nested object-destructure
+// or an array-destructure must lose its stale tag, even though neither
+// destructure shape resolves to a new tag itself.
+import * as ts8 from "typescript";
+declare const safeNested: { value: { createProgram: () => void } };
+declare const safeArray: [() => void];
+let nestedOverwrite = ts8.createProgram;
+({
+  value: { createProgram: nestedOverwrite },
+} = safeNested);
+nestedOverwrite();
+let arrayOverwrite = ts8.createProgram;
+[arrayOverwrite] = safeArray;
+arrayOverwrite();
+
+// An unaliased export-star from a module with no banned names configured at
+// all carries no tag, the same as one banned only on "default".
+export * from "unrelated-namespace-module";
+
+// An empty switch (no cases at all) still pushes and pops scope-tracking
+// state around it; nothing inside ever assigns a banned alias, so nothing is
+// reported.
+declare const emptySwitchFlag: boolean;
+switch (emptySwitchFlag) {
+}
+
+// A locally re-exported name with no resolvable binding does not crash the
+// export-tag resolver; it is silently ignored, matching the alias tracker's
+// handling of undeclared globals elsewhere in this file.
+export { undeclaredExportedGlobal };
+
+// Only the specific `createRequire` property off a require()'d
+// "node:module"/"module" binding is treated as Node's createRequire; any
+// other property reached the same way is not, since it isn't itself a
+// configured banned name.
+const nodeModuleBuiltins = require("node:module");
+nodeModuleBuiltins.builtinModules;
+
+// A destructured inline export declaration is unsupported for tagging (only
+// a plain identifier declarator is), matching the destructuring precision
+// boundary elsewhere in this file.
+import * as ts9 from "typescript";
+export const { createProgram: destructuredInlineExport } = ts9;
+
+// A directly re-exported name from a `from` source that isn't itself banned
+// carries no report, matching the un-sourced local re-export precision
+// boundary above.
+export { transpileModule as reExportedTranspileFromSource } from "typescript";
