@@ -1,0 +1,6 @@
+# ignoreChecks entries must be the RAW name -- either a Checks API check_run
+# `name` or a Statuses API commit status `context`, not the composite display
+# name shown in the PR UI. pr-shepherd matches against the raw name; composite
+# entries silently never match.
+ignoreChecks:
+  - 'CodeRabbit'
