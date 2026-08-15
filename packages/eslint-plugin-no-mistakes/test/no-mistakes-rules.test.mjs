@@ -1633,3 +1633,137 @@ describe("no-global-fetch-outside-helper", () => {
     assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), true);
   });
 });
+
+describe("no-banned-import-outside-allowed-paths", () => {
+  const option = {
+    checkedPathPatterns: ["src/**"],
+    allowedPathPatterns: ["src/internal/**"],
+    bannedImports: [
+      { module: "typescript", names: ["createProgram", "createWatchProgram"] },
+      { module: "@acme/rate-limit", names: ["default", "invalidateAll"] },
+    ],
+  };
+
+  it("is opt-in without checked paths", () => {
+    assert.deepEqual(
+      messages(
+        'import { createProgram } from "typescript"; createProgram();',
+        "no-banned-import-outside-allowed-paths",
+        { bannedImports: option.bannedImports },
+        "src/app/build.ts",
+      ),
+      [],
+    );
+  });
+
+  it("is a no-op with no options at all", () => {
+    assert.deepEqual(
+      messages(
+        'import { createProgram } from "typescript"; createProgram();',
+        "no-banned-import-outside-allowed-paths",
+        undefined,
+        "src/app/build.ts",
+      ),
+      [],
+    );
+  });
+
+  it("is a no-op without bannedImports", () => {
+    assert.deepEqual(
+      messages(
+        'import { createProgram } from "typescript"; createProgram();',
+        "no-banned-import-outside-allowed-paths",
+        { checkedPathPatterns: ["src/**"] },
+        "src/app/build.ts",
+      ),
+      [],
+    );
+  });
+
+  it("reports banned imports across every tracked binding path in checked files", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("no-banned-import-outside-allowed-paths", "invalid.ts"),
+        "no-banned-import-outside-allowed-paths",
+        option,
+        "src/app/build.ts",
+      ),
+      [
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedReExport",
+        "bannedReExport",
+        "bannedReExport",
+        "bannedReExport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+        "bannedImport",
+      ],
+    );
+  });
+
+  it("allows the configured allowed path and unchecked paths", () => {
+    const code = ruleFixture("no-banned-import-outside-allowed-paths", "invalid.ts");
+    assert.deepEqual(
+      messages(code, "no-banned-import-outside-allowed-paths", option, "src/internal/build.ts"),
+      [],
+    );
+    assert.deepEqual(
+      messages(code, "no-banned-import-outside-allowed-paths", option, "backend/jobs/build.ts"),
+      [],
+    );
+  });
+
+  it("ignores unrelated modules, names, and unsupported binding paths", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("no-banned-import-outside-allowed-paths", "valid.ts"),
+        "no-banned-import-outside-allowed-paths",
+        option,
+        "src/app/build.ts",
+      ),
+      [],
+    );
+  });
+
+  it("supports multiple allowed-path exceptions", () => {
+    const twoExceptionsOption = {
+      ...option,
+      allowedPathPatterns: ["src/internal/**", "src/legacy/rate-limit-shim.ts"],
+    };
+    const code = `
+      import limiter from "@acme/rate-limit";
+      limiter.invalidateAll();
+    `;
+    assert.deepEqual(
+      messages(
+        code,
+        "no-banned-import-outside-allowed-paths",
+        twoExceptionsOption,
+        "src/legacy/rate-limit-shim.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        code,
+        "no-banned-import-outside-allowed-paths",
+        twoExceptionsOption,
+        "src/app/other.ts",
+      ),
+      ["bannedImport"],
+    );
+  });
+});
