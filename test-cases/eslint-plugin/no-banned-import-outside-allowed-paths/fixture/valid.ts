@@ -25,8 +25,9 @@ declare const key: string;
 const dynamic = ts2[key];
 dynamic();
 
-// These destructures are intentionally unsupported as banned-import aliases,
-// matching the reference rule's precision boundary for nested/rest patterns.
+// A nested destructure target is intentionally unsupported as a banned-import
+// alias, matching the reference rule's precision boundary. The rest binding
+// below does carry the module tag, but it is never used, so nothing is reported.
 import * as ts3 from "typescript";
 const {
   createProgram: {},
