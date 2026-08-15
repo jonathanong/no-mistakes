@@ -65,15 +65,26 @@ function createAliasScopeTracker() {
     clearedForwardAliases = new Set(state.baseCleared);
   }
 
+  // A terminator nested inside a bare `{ }` block still runs unconditionally
+  // (the block's statements execute in sequence, same as direct case-body
+  // children), so it's scanned too. A terminator nested inside an `if` or
+  // other conditional/repeated construct is deliberately NOT scanned: it
+  // isn't a guaranteed terminator for the whole case, and treating it as one
+  // would wrongly discard a real fallthrough — the same class of unsoundness
+  // this scope tracker exists to prevent.
+  function terminatesCase(node) {
+    if (
+      node.type === "BreakStatement" ||
+      node.type === "ReturnStatement" ||
+      node.type === "ThrowStatement"
+    ) {
+      return true;
+    }
+    return node.type === "BlockStatement" && node.body.some(terminatesCase);
+  }
+
   function exitsSwitchCase(node) {
-    return (
-      node.consequent?.some(
-        (child) =>
-          child.type === "BreakStatement" ||
-          child.type === "ReturnStatement" ||
-          child.type === "ThrowStatement",
-      ) ?? false
-    );
+    return node.consequent?.some(terminatesCase) ?? false;
   }
 
   function exitSwitchCase(node) {

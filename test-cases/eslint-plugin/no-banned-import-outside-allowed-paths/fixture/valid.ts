@@ -141,6 +141,25 @@ declare const emptySwitchFlag: boolean;
 switch (emptySwitchFlag) {
 }
 
+// A `break` nested directly inside a bare block at the end of a case body is
+// still a guaranteed terminator for that case (the block's statements run
+// unconditionally, same as a direct case-body child), so it must not be
+// treated as falling through into the next case.
+declare const switchBlockFlag: boolean;
+declare const safeFn: () => void;
+function switchBlockTerminatorNoLeak() {
+  let fn = safeFn;
+  switch (switchBlockFlag) {
+    case true: {
+      fn = createProgram;
+      break;
+    }
+    case false:
+      fn();
+      break;
+  }
+}
+
 // A locally re-exported name with no resolvable binding does not crash the
 // export-tag resolver; it is silently ignored, matching the alias tracker's
 // handling of undeclared globals elsewhere in this file.
