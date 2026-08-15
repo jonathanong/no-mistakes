@@ -3,6 +3,7 @@
 const { importSpecifierName } = require("./module-mock-helpers");
 const { resolveVariable } = require("./no-global-fetch-outside-helper-bindings");
 const {
+  CREATE_REQUIRE_MODULES,
   hasAnyBannedName,
   hasAnyNonDefaultBannedName,
   hasBannedName,
@@ -40,7 +41,12 @@ function seedImportSpecifier(specifier, node, moduleSpecifier, context, config, 
     specifier.type === "ImportDefaultSpecifier" ||
     specifier.type === "ImportNamespaceSpecifier"
   ) {
-    if (hasAnyBannedName(config, moduleSpecifier)) {
+    // A CREATE_REQUIRE_MODULES namespace/default binding is tracked as an
+    // object whether or not the config separately bans anything from it, so
+    // a member access like `mod.createRequire` still resolves below (see
+    // resolveNodeModuleCreateRequireTag) even when nothing else about the
+    // module is configured as banned.
+    if (hasAnyBannedName(config, moduleSpecifier) || CREATE_REQUIRE_MODULES.has(moduleSpecifier)) {
       aliasMap.set(variable, { kind: "object", modules: new Set([moduleSpecifier]) });
     }
   }

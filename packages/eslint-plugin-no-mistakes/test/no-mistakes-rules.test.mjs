@@ -1702,6 +1702,7 @@ describe("no-banned-import-outside-allowed-paths", () => {
         "bannedImport",
         "bannedImport",
         "bannedImport",
+        "bannedImport",
         "bannedReExport",
         "bannedReExport",
         "bannedReExport",

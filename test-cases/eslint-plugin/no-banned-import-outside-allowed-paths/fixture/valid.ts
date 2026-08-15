@@ -153,6 +153,12 @@ export { undeclaredExportedGlobal };
 const nodeModuleBuiltins = require("node:module");
 nodeModuleBuiltins.builtinModules;
 
+// The same precision boundary applies to a static namespace import of
+// "node:module"/"module": only its `createRequire` property is treated as
+// Node's createRequire, not any other property reached the same way.
+import * as nodeModuleNsBuiltins from "node:module";
+nodeModuleNsBuiltins.builtinModules;
+
 // A destructured inline export declaration is unsupported for tagging (only
 // a plain identifier declarator is), matching the destructuring precision
 // boundary elsewhere in this file.

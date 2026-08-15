@@ -57,7 +57,11 @@ function resolveNodeModuleCreateRequireTag(module, name) {
 }
 
 function tagForCallExpression(node, context, aliasMap, config) {
-  const calleeTag = tagForIdentifier(node.callee, context, aliasMap);
+  // Resolve the callee through the full expression tagger, not just
+  // identifiers, so a `createRequire` reached directly off a member
+  // expression (e.g. `nodeModuleNs.createRequire(url)`, with no
+  // intermediate variable) is recognized the same way as an aliased one.
+  const calleeTag = tagForExpression(node.callee, context, aliasMap, config);
   if (calleeTag?.kind === "create-require") return { kind: "require-fn" };
   const isRequireFn = calleeTag?.kind === "require-fn";
   if (!isRequireFn && !isUnshadowedRequire(node.callee, context)) return null;

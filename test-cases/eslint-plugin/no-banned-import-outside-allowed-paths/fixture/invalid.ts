@@ -43,6 +43,14 @@ function createRequireViaCommonJs() {
   req2("typescript").createProgram();
 }
 
+// A static namespace import member-accessed for `createRequire` must resolve
+// the same way as the destructured/member-accessed require() forms above;
+// the namespace binding is tracked as CREATE_REQUIRE_MODULES's module object
+// even when nothing else about the module is configured as banned.
+import * as nodeModuleNs from "node:module";
+const req3 = nodeModuleNs.createRequire(import.meta.url);
+req3("typescript").createProgram();
+
 async function loadTs() {
   const { createProgram: dynCp } = await import("typescript");
   dynCp();
