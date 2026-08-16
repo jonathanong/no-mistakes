@@ -1,3 +1,4 @@
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::playwright::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::playwright::config;
 use crate::playwright::fsutil::VisiblePathSnapshot;
@@ -35,7 +36,7 @@ pub(crate) fn analyze_selectors_with_policy_from_snapshot(
         super::pipeline_selectors_core::SelectorAnalysisOptions {
             facts: Some(&facts),
             route_import_candidate: None,
-            graph_file_universe: None,
+            graph_file_universe: facts.graph_files(),
             skip_test_file_errors: false,
             snapshot,
         },
@@ -85,7 +86,7 @@ pub(crate) fn analyze_selectors_with_policy_and_facts_from_snapshot(
         super::pipeline_selectors_core::SelectorAnalysisOptions {
             facts: Some(facts),
             route_import_candidate: None,
-            graph_file_universe: None,
+            graph_file_universe: facts.graph_files(),
             skip_test_file_errors: false,
             snapshot,
         },
