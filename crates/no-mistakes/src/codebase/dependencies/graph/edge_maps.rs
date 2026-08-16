@@ -40,6 +40,16 @@ fn merge_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
     }
 }
 
+/// Seed isolated endpoints in the forward map, then merge. Language collectors
+/// historically keep unused targets as graph members even without outgoing edges.
+fn merge_seeded_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
+    for (from, to, _) in &edges {
+        forward.entry(from.clone()).or_default();
+        forward.entry(to.clone()).or_default();
+    }
+    merge_edges(forward, reverse, edges);
+}
+
 pub(crate) fn edge_index_from_maps(
     mut forward: EdgeMap,
     mut reverse: EdgeMap,
