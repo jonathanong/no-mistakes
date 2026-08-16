@@ -26,7 +26,7 @@ fn package_prefix(package: &str) -> Option<Option<&str>> {
     Some(Some(trimmed))
 }
 
-fn prefix_package(package: Option<&str>, module: String) -> String {
+pub(super) fn prefix_package(package: Option<&str>, module: String) -> String {
     match package.and_then(|name| package_prefix(name).flatten()) {
         Some(package) => format!("{package}.{module}"),
         None => module,
@@ -127,37 +127,4 @@ fn python_from_re() -> &'static Regex {
         Regex::new(r"(?m)^\s*from\s+(\.+(?:[A-Za-z_][\w.]*)?|[A-Za-z_][\w.]*)\s+import\s+([^\n]+)")
             .expect("from")
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::path::Path;
-
-    #[test]
-    fn extract_python_imports_covers_unprefixed_and_star_forms() {
-        let path = Path::new("/repo/app/users/views.py");
-        let imports = extract_python_imports(
-            "import app.tasks, app.models\nfrom . import *\nfrom ...outside import nope\nfrom app.mod import helper",
-            path,
-            None,
-            None,
-        );
-        assert!(imports.iter().any(|import| import == "app.tasks"));
-        assert!(imports.iter().any(|import| import == "app.mod.helper"));
-        assert_eq!(python_module(None, None, path), None);
-        assert_eq!(
-            prefix_package(None, "users.models".to_string()),
-            "users.models"
-        );
-        let pkg = Path::new("/repo");
-        assert_eq!(
-            python_module(Some("."), Some(pkg), &pkg.join("app/users.py")).as_deref(),
-            Some("app.users")
-        );
-        assert_eq!(
-            prefix_package(Some("."), "app.users".to_string()),
-            "app.users"
-        );
-    }
 }

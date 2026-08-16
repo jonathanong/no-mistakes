@@ -48,10 +48,7 @@ fn python_masks_docstring_symbols_and_keeps_include_routes() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "api/" && handler == "app.api.urls"));
-    assert_eq!(
-        mask_strings(r#"x = "class Hidden:" """class Doc:""" 'ok'"#).contains("Hidden"),
-        false
-    );
+    assert!(!mask_strings(r#"x = "class Hidden:" """class Doc:""" 'ok'"#).contains("Hidden"));
 }
 
 #[test]

@@ -3,6 +3,10 @@ use super::strip::strip_comments_keep_strings;
 #[path = "python_imports.rs"]
 mod imports;
 use imports::{extract_python_imports, python_module};
+
+#[cfg(test)]
+#[path = "python_imports_tests.rs"]
+mod tests;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
