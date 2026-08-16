@@ -75,6 +75,7 @@ fn workflow_defaults_and_concurrency_follow_workflow_context_rules() {
     for yaml in [
         "defaults:\n  run:\n    shell: bash\n    working-directory: packages/app",
         "concurrency: checks-${{ github.ref }}",
+        "concurrency:\n  group: checks\n  queue: max",
         "concurrency:\n  group: checks-${{ vars.ENVIRONMENT }}\n  cancel-in-progress: '${{ inputs.cancel }}'",
         "concurrency:\n  group: checks\n  cancel-in-progress: \"${{ fromJSON('false') }}\"",
     ] {
@@ -93,6 +94,9 @@ fn workflow_defaults_and_concurrency_follow_workflow_context_rules() {
         "concurrency:\n  group: checks\n  cancel-in-progress: '${{ secrets.CANCEL }}'",
         "concurrency:\n  group: checks\n  cancel-in-progress: \"${{ 'false' }}\"",
         "concurrency:\n  group: checks\n  cancel-in-progress: \"${{ fromJSON('\\\"false\\\"') }}\"",
+        "concurrency:\n  group: checks\n  queue: min",
+        "concurrency:\n  group: checks\n  queue: '${{ inputs.queue }}'",
+        "concurrency:\n  group: checks\n  queue: 100",
     ] {
         let value = workflow(yaml);
         assert!(
@@ -111,6 +115,7 @@ fn job_defaults_and_concurrency_follow_job_context_rules() {
         "defaults:\n  run:\n    shell: 'bash ${{ vars.SHELL_FLAGS }}'\n    working-directory: 'packages/${{ inputs.package }}'",
         "defaults:\n  run:\n    shell: 'bash ${{ env.SHELL }}'",
         "concurrency: checks-${{ github.ref }}",
+        "concurrency:\n  group: checks\n  queue: max",
         "concurrency:\n  group: checks-${{ needs.setup.outputs.key }}\n  cancel-in-progress: '${{ matrix.cancel }}'",
         "concurrency:\n  group: checks-${{ strategy.job-index }}\n  cancel-in-progress: '${{ inputs.cancel }}'",
         "concurrency: checks-${{ vars.ENVIRONMENT }}",
@@ -130,6 +135,9 @@ fn job_defaults_and_concurrency_follow_job_context_rules() {
         "concurrency:\n  group: checks\n  cancel-in-progress: '${{ secrets.CANCEL }}'",
         "concurrency:\n  group: checks\n  cancel-in-progress: \"${{ 'false' }}\"",
         "concurrency:\n  group: checks\n  cancel-in-progress: \"${{ fromJSON('\\\"false\\\"') }}\"",
+        "concurrency:\n  group: checks\n  queue: min",
+        "concurrency:\n  group: checks\n  queue: '${{ matrix.queue }}'",
+        "concurrency:\n  group: checks\n  queue: true",
     ] {
         let value = workflow(yaml);
         assert!(
