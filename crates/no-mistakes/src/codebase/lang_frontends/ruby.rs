@@ -100,7 +100,9 @@ fn ruby_decl_re() -> &'static Regex {
 
 fn ruby_const_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\b([A-Z][A-Za-z0-9_]*)\b").expect("const"))
+    RE.get_or_init(|| {
+        Regex::new(r"\b([A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*)\b").expect("const")
+    })
 }
 
 fn rails_route_re() -> &'static Regex {

@@ -151,5 +151,44 @@ fn language_frontend_config_keeps_already_prefixed_queue_globs() {
     assert!(options
         .queue_enqueues
         .iter()
-        .any(|glob| glob == "backend/app/**/*.py" || glob.starts_with("backend/")));
+        .any(|glob| glob == "app/application/**/*.py"));
+    assert_eq!(
+        options.queue_glob_clusters.get("backend/app/**/*.py"),
+        Some(&Some("api".into()))
+    );
+    assert_eq!(
+        options.queue_glob_clusters.get("app/application/**/*.py"),
+        Some(&Some("other".into()))
+    );
+}
+
+#[test]
+fn language_frontend_edges_scope_routes_and_go_packages() {
+    let python = lang_fixture("python-celery-django");
+    let python_edges =
+        collect_language_frontend_edges(&python, &lang_files(&python), Some(&lang_options()));
+    assert!(python_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from.as_file().is_some_and(|path| path.ends_with("urls.py"))
+            && to.as_file().is_some_and(|path| path.ends_with("api/urls.py"))
+    }));
+    assert!(python_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from.as_file().is_some_and(|path| path.ends_with("urls.py"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("billing/views.py"))
+    }));
+
+    let go = lang_fixture("go-asynq");
+    let go_edges = collect_language_frontend_edges(&go, &lang_files(&go), Some(&lang_options()));
+    assert!(go_edges.iter().all(|(from, to, kind)| {
+        *kind != EdgeKind::GoReference
+            || !from
+                .as_file()
+                .is_some_and(|path| path.ends_with("pkg/ping.go"))
+            || !to
+                .as_file()
+                .is_some_and(|path| path.ends_with("mail/user.go"))
+    }));
 }

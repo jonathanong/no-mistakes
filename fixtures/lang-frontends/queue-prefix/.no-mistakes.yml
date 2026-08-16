@@ -3,8 +3,18 @@ projects:
     type: server
     root: backend
     queues:
+      cluster: api
       enqueues:
         - backend/app/**/*.py
         - app/**/*.py
       workers:
         - app/**/*.py
+  other:
+    type: server
+    root: app
+    queues:
+      cluster: other
+      enqueues:
+        - application/**/*.py
+      workers:
+        - application/**/*.py

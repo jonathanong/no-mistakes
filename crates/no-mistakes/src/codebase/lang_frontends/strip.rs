@@ -71,3 +71,65 @@ fn copy_quoted(
         }
     }
 }
+
+/// Replace string contents with spaces so docstring examples are not symbols.
+pub(crate) fn mask_strings(source: &str) -> String {
+    let chars: Vec<char> = source.chars().collect();
+    let mut out = String::with_capacity(source.len());
+    let mut i = 0;
+    while i < chars.len() {
+        let ch = chars[i];
+        if ch == '"' || ch == '\'' {
+            i = mask_quoted(&chars, &mut out, i, ch);
+            continue;
+        }
+        out.push(ch);
+        i += 1;
+    }
+    out
+}
+
+fn mask_quoted(chars: &[char], out: &mut String, start: usize, quote: char) -> usize {
+    let triple = chars.get(start + 1) == Some(&quote) && chars.get(start + 2) == Some(&quote);
+    let width = if triple { 3 } else { 1 };
+    for _ in 0..width {
+        out.push(quote);
+    }
+    let mut i = start + width;
+    let mut escaped = false;
+    while i < chars.len() {
+        if !triple && escaped {
+            push_masked(out, chars[i]);
+            escaped = false;
+            i += 1;
+            continue;
+        }
+        if !triple && chars[i] == '\\' {
+            out.push(' ');
+            escaped = true;
+            i += 1;
+            continue;
+        }
+        if triple && chars.get(i..i + 3) == Some(&[quote, quote, quote]) {
+            out.push(quote);
+            out.push(quote);
+            out.push(quote);
+            return i + 3;
+        }
+        if !triple && chars[i] == quote {
+            out.push(quote);
+            return i + 1;
+        }
+        push_masked(out, chars[i]);
+        i += 1;
+    }
+    i
+}
+
+fn push_masked(out: &mut String, ch: char) {
+    if ch == '\n' {
+        out.push('\n');
+    } else {
+        out.push(' ');
+    }
+}

@@ -1,8 +1,12 @@
 # `no-mistakes queues`
 
-Analyze queue producer/worker relationships for BullMQ and glide-mq, and for
-configured Celery, Asynq, Kafka, Active Job, and Laravel enqueue/worker
-sites that emit canonical `queue-enqueue` / `queue-worker` graph edges.
+Analyze queue producer/worker relationships for BullMQ and glide-mq.
+
+Configured Celery, Asynq, Kafka, Active Job, and Laravel sites emit the same
+canonical `queue-enqueue` / `queue-worker` graph edges. Query those through
+`dependents --relationship queue` (or the language filter). The dedicated
+`queues` command still reports the TypeScript queue pipeline; wiring those
+language edges into `queues edges|related|check` is later work.
 
 | Leaf command | Purpose |
 | --- | --- |

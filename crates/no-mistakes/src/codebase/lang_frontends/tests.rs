@@ -44,7 +44,7 @@ fn python_collects_relative_import_celery_and_django_routes() {
     let urls = facts
         .files
         .values()
-        .find(|file| file.path.ends_with("urls.py"))
+        .find(|file| file.path.ends_with("app/urls.py") && !file.path.ends_with("api/urls.py"))
         .expect("urls");
     assert!(urls
         .imports

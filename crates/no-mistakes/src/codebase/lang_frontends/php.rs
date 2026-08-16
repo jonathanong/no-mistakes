@@ -39,7 +39,7 @@ fn parse_php_file(
         declarations: classes,
         references: extract_named(&text, php_use_re()),
         route_handlers: if laravel {
-            extract_pairs(&text, laravel_route_re())
+            extract_laravel_routes(&text)
         } else {
             Vec::new()
         },
@@ -86,12 +86,16 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
-fn extract_pairs(source: &str, re: &Regex) -> Vec<(String, String)> {
-    re.captures_iter(source)
+fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
+    laravel_route_re()
+        .captures_iter(source)
         .filter_map(|cap| {
             Some((
                 cap.get(1)?.as_str().to_string(),
-                cap.get(2)?.as_str().replace('\\', "."),
+                cap.get(2)
+                    .or_else(|| cap.get(3))?
+                    .as_str()
+                    .replace('\\', "."),
             ))
         })
         .collect()
@@ -152,7 +156,7 @@ fn laravel_route_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*\[([^\]]+)\]"#,
+            r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|([A-Za-z_\\][A-Za-z0-9_\\]*)::class)"#,
         )
         .expect("route")
     })
@@ -165,5 +169,7 @@ fn laravel_dispatch_re() -> &'static Regex {
 
 fn php_should_queue_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\bimplements\s+ShouldQueue\b").expect("shouldqueue"))
+    RE.get_or_init(|| {
+        Regex::new(r"\bimplements\s+\\?(?:[A-Za-z_\\]+\\)*ShouldQueue\b").expect("shouldqueue")
+    })
 }

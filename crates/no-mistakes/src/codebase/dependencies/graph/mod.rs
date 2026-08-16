@@ -40,6 +40,7 @@ include!("builder_remaining_edges_fact_domain.rs");
 include!("builder_helpers.rs");
 include!("edge_lang_frontends.rs");
 include!("edge_lang_domains.rs");
+include!("edge_lang_queues.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy_vitest_setup.rs");
 include!("methods_lazy.rs");

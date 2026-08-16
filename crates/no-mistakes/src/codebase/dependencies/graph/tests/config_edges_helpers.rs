@@ -82,6 +82,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         queue_enqueues: vec![],
         queue_workers: vec![],
         queue_cluster: None,
+        queue_glob_clusters: HashMap::new(),
         terraform: Default::default(),
         ci: crate::config::v2::schema::CiConfig::default(),
     };
@@ -110,6 +111,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         queue_enqueues: vec![],
         queue_workers: vec![],
         queue_cluster: None,
+        queue_glob_clusters: HashMap::new(),
         terraform: Default::default(),
         ci: crate::config::v2::schema::CiConfig::default(),
     };
@@ -160,6 +162,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         queue_enqueues: vec![],
         queue_workers: vec![],
         queue_cluster: None,
+        queue_glob_clusters: HashMap::new(),
         terraform: Default::default(),
         ci: crate::config::v2::schema::CiConfig::default(),
     };

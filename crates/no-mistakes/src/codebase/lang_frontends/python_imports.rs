@@ -8,15 +8,26 @@ pub(super) fn python_module(
     package_root: Option<&Path>,
     path: &Path,
 ) -> Option<String> {
-    let package = package?;
+    let package = package_prefix(package?)?;
     match package_root.and_then(|root| module_from_path(root, path)) {
-        Some(rel) => Some(format!("{package}.{rel}")),
-        None => Some(package.to_string()),
+        Some(rel) => Some(match package {
+            Some(package) => format!("{package}.{rel}"),
+            None => rel,
+        }),
+        None => package.map(str::to_string),
     }
 }
 
+fn package_prefix(package: &str) -> Option<Option<&str>> {
+    let trimmed = package.trim();
+    if trimmed.is_empty() || trimmed == "." {
+        return Some(None);
+    }
+    Some(Some(trimmed))
+}
+
 fn prefix_package(package: Option<&str>, module: String) -> String {
-    match package {
+    match package.and_then(|name| package_prefix(name).flatten()) {
         Some(package) => format!("{package}.{module}"),
         None => module,
     }
@@ -138,6 +149,15 @@ mod tests {
         assert_eq!(
             prefix_package(None, "users.models".to_string()),
             "users.models"
+        );
+        let pkg = Path::new("/repo");
+        assert_eq!(
+            python_module(Some("."), Some(pkg), &pkg.join("app/users.py")).as_deref(),
+            Some("app.users")
+        );
+        assert_eq!(
+            prefix_package(Some("."), "app.users".to_string()),
+            "app.users"
         );
     }
 }

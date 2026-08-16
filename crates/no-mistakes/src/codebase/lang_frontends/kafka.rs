@@ -5,7 +5,7 @@ use std::sync::OnceLock;
 pub(crate) fn extract_kafka_topics(source: &str) -> (Vec<String>, Vec<String>) {
     let source = super::strip::strip_comments_keep_strings(source);
     let produces = extract_named(&source, kafka_produce_re());
-    let consumes = extract_named(&source, kafka_consume_re());
+    let consumes = extract_kafka_consumes(&source);
     (produces, consumes)
 }
 
@@ -38,6 +38,19 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
+fn extract_kafka_consumes(source: &str) -> Vec<String> {
+    let mut values = extract_named(source, kafka_consume_re());
+    for cap in kafka_consume_array_re().captures_iter(source) {
+        values.extend(extract_named(
+            cap.get(1).map(|m| m.as_str()).unwrap_or(""),
+            kafka_quoted_re(),
+        ));
+    }
+    values.sort();
+    values.dedup();
+    values
+}
+
 fn kafka_produce_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -49,7 +62,16 @@ fn kafka_produce_re() -> &'static Regex {
 fn kafka_consume_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"subscribe\(\s*(?:\{\s*topic\s*:\s*["']([^"']+)["']|\[\s*["']([^"']+)["'])"#)
-            .expect("consume")
+        Regex::new(r#"subscribe\(\s*\{\s*topic\s*:\s*["']([^"']+)["']"#).expect("consume")
     })
+}
+
+fn kafka_consume_array_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"subscribe\(\s*\[([^\]]*)\]"#).expect("consume array"))
+}
+
+fn kafka_quoted_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"["']([^"']+)["']"#).expect("quoted topic"))
 }

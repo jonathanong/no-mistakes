@@ -1,5 +1,6 @@
 use crate::codebase::lang_frontends::{
-    collect_all_lang_facts, scan_kafka_file, topic_identity, LangFactMap, LangFrontendConfig,
+    collect_all_lang_facts, scan_kafka_file, topic_identity, LangFactMap, LangFileFacts,
+    LangFrontendConfig,
 };
 
 fn collect_language_frontend_edges(
@@ -27,18 +28,13 @@ fn collect_language_frontend_edges(
     emit_lang_edges(&facts.ruby, EdgeKind::RubyRequire, EdgeKind::RubyReference, &mut edges);
     emit_lang_edges(&facts.php, EdgeKind::PhpUse, EdgeKind::PhpUse, &mut edges);
     emit_package_edges(&facts.php, EdgeKind::PhpPackage, &mut edges);
-    emit_queue_edges(
-        root,
-        &facts.python,
-        options,
-        &mut edges,
-    );
+    emit_queue_edges(root, &facts.python, options, &mut edges);
     emit_queue_edges(root, &facts.go, options, &mut edges);
     emit_queue_edges(root, &facts.ruby, options, &mut edges);
     emit_queue_edges(root, &facts.php, options, &mut edges);
-    emit_route_edges(&facts.python, &mut edges);
-    emit_route_edges(&facts.ruby, &mut edges);
-    emit_route_edges(&facts.php, &mut edges);
+    emit_route_edges(root, &facts.python, options, &mut edges);
+    emit_route_edges(root, &facts.ruby, options, &mut edges);
+    emit_route_edges(root, &facts.php, options, &mut edges);
     emit_kafka_edges(root, all_files, options, &mut edges);
     edges
 }
@@ -79,9 +75,10 @@ fn emit_lang_edges(
                 let scoped: std::collections::BTreeSet<_> = targets
                     .iter()
                     .filter(|target| {
-                        file.package.is_none()
-                            || facts.files.get(*target).and_then(|other| other.package.as_ref())
-                                == file.package.as_ref()
+                        facts
+                            .files
+                            .get(*target)
+                            .is_some_and(|other| reference_target_allowed(file, other, reference))
                     })
                     .cloned()
                     .collect();
@@ -130,59 +127,6 @@ fn package_root_file(files: &std::collections::BTreeSet<PathBuf>) -> Option<&Pat
         .or_else(|| named("mod.rs"))
         .or_else(|| files.iter().next())
         .map(PathBuf::as_path)
-}
-
-fn emit_queue_edges(
-    root: &Path,
-    facts: &LangFactMap,
-    options: &GraphConfigOptions,
-    edges: &mut Vec<Edge>,
-) {
-    let cluster = options.queue_cluster.as_deref();
-    let mut workers: std::collections::HashMap<String, std::collections::BTreeSet<PathBuf>> =
-        std::collections::HashMap::new();
-    for file in facts.files.values() {
-        if !file_matches_globs(root, &file.path, &options.queue_workers) {
-            continue;
-        }
-        for job in &file.queue_workers {
-            workers
-                .entry(topic_identity(cluster, job))
-                .or_default()
-                .insert(file.path.clone());
-        }
-    }
-    for file in facts.files.values() {
-        if !file_matches_globs(root, &file.path, &options.queue_enqueues) {
-            continue;
-        }
-        for job in &file.queue_enqueues {
-            let identity = topic_identity(cluster, job);
-            let node = NodeId::queue_job(&file.path, identity.clone());
-            edges.push((
-                NodeId::file(&file.path),
-                node.clone(),
-                EdgeKind::QueueEnqueue,
-            ));
-            if let Some(targets) = workers.get(&identity) {
-                for worker in targets {
-                    edges.push((
-                        node.clone(),
-                        NodeId::file(worker),
-                        EdgeKind::QueueWorker,
-                    ));
-                }
-            }
-        }
-    }
-}
-
-fn file_matches_globs(root: &Path, path: &Path, globs: &[String]) -> bool {
-    if globs.is_empty() {
-        return false;
-    }
-    let rel = path.strip_prefix(root).unwrap_or(path);
-    matches_any(&rel.to_string_lossy(), globs)
 }
 
 fn push_file_edges(

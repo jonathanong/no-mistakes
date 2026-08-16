@@ -1,17 +1,26 @@
-fn emit_route_edges(facts: &LangFactMap, edges: &mut Vec<Edge>) {
+fn emit_route_edges(
+    root: &Path,
+    facts: &LangFactMap,
+    options: &GraphConfigOptions,
+    edges: &mut Vec<Edge>,
+) {
     for file in facts.files.values() {
+        if !route_file_allowed(root, &file.path, options) {
+            continue;
+        }
         for (_, handler) in &file.route_handlers {
+            if let Some(targets) = facts.files_by_module.get(handler) {
+                push_file_edges(edges, &file.path, targets, EdgeKind::RouteRef);
+            }
             for name in route_handler_names(handler) {
                 if let Some(targets) = facts.declarations.get(&name) {
                     let scoped: std::collections::BTreeSet<_> = targets
                         .iter()
                         .filter(|target| {
-                            file.package.is_none()
-                                || facts
-                                    .files
-                                    .get(*target)
-                                    .and_then(|other| other.package.as_ref())
-                                    == file.package.as_ref()
+                            facts.files.get(*target).is_some_and(|other| {
+                                same_lang_package(file, other)
+                                    && handler_module_matches(handler, other)
+                            })
                         })
                         .cloned()
                         .collect();
@@ -22,6 +31,70 @@ fn emit_route_edges(facts: &LangFactMap, edges: &mut Vec<Edge>) {
     }
 }
 
+fn route_file_allowed(root: &Path, path: &Path, options: &GraphConfigOptions) -> bool {
+    let Some(globset) = options.project_route_globset.as_ref() else {
+        return true;
+    };
+    let rel = path.strip_prefix(root).unwrap_or(path);
+    globset.is_match(rel.to_string_lossy().as_ref())
+}
+
+fn same_lang_package(file: &LangFileFacts, other: &LangFileFacts) -> bool {
+    file.package.is_none() || file.package == other.package
+}
+
+fn handler_module_matches(handler: &str, file: &LangFileFacts) -> bool {
+    let view = normalize_route_handler(handler);
+    if !view.contains('.') || view.contains("::") || view.contains('#') || view.contains('/') {
+        return true;
+    }
+    let Some(module) = file.module.as_deref() else {
+        return true;
+    };
+    if module == view || view.starts_with(&format!("{module}.")) {
+        return true;
+    }
+    view.rsplit_once('.')
+        .is_some_and(|(parent, _)| module == parent || module.ends_with(&format!(".{parent}")))
+}
+
+fn normalize_route_handler(handler: &str) -> String {
+    let trimmed = handler.replace(['\'', '"', ' '], "");
+    trimmed
+        .strip_suffix("()")
+        .unwrap_or(trimmed.as_str())
+        .strip_suffix(".as_view")
+        .unwrap_or(trimmed.as_str())
+        .to_string()
+}
+
+fn reference_target_allowed(file: &LangFileFacts, target: &LangFileFacts, reference: &str) -> bool {
+    if file.module.is_some() && file.module == target.module {
+        return true;
+    }
+    if target.module.as_deref().is_some_and(|module| {
+        file.imports
+            .iter()
+            .any(|import| import_reaches_module(import, module, reference))
+    }) {
+        return true;
+    }
+    if file.module.is_some() {
+        return false;
+    }
+    same_lang_package(file, target)
+}
+
+fn import_reaches_module(import: &str, module: &str, reference: &str) -> bool {
+    import == module
+        || import == reference
+        || import == format!("{module}.{reference}")
+        || import == format!("{module}/{reference}")
+        || import.starts_with(&format!("{module}."))
+        || Path::new(import).file_stem().and_then(|name| name.to_str())
+            == Path::new(module).file_stem().and_then(|name| name.to_str())
+}
+
 fn route_handler_names(handler: &str) -> Vec<String> {
     let trimmed = handler.replace(['\'', '"', ' '], "");
     if let Some((controller, _)) = trimmed.split_once('#') {
@@ -30,12 +103,12 @@ fn route_handler_names(handler: &str) -> Vec<String> {
     if let Some((class, _)) = trimmed.split_once("::") {
         return vec![class.rsplit('\\').next().unwrap_or(class).to_string()];
     }
-    let view = trimmed
-        .strip_suffix("()")
-        .unwrap_or(trimmed.as_str())
-        .strip_suffix(".as_view")
-        .unwrap_or(trimmed.as_str());
-    vec![view.rsplit('.').next().unwrap_or(view).to_string()]
+    let view = normalize_route_handler(&trimmed);
+    let mut names = vec![view.clone()];
+    if let Some((_, last)) = view.rsplit_once('.') {
+        names.push(last.to_string());
+    }
+    names
 }
 
 fn rails_controller_names(controller: &str) -> Vec<String> {
@@ -68,65 +141,4 @@ fn snake_to_pascal(name: &str) -> String {
         .collect()
 }
 
-fn emit_kafka_edges(
-    root: &Path,
-    all_files: &[PathBuf],
-    options: &GraphConfigOptions,
-    edges: &mut Vec<Edge>,
-) {
-    let cluster = options.queue_cluster.as_deref();
-    let mut produces = Vec::new();
-    let mut consumes = Vec::new();
-    for path in all_files {
-        let rel = path.strip_prefix(root).unwrap_or(path);
-        let rel_s = rel.to_string_lossy();
-        let enqueue = matches_any(&rel_s, &options.queue_enqueues);
-        let worker = matches_any(&rel_s, &options.queue_workers);
-        if !enqueue && !worker {
-            continue;
-        }
-        let Some((prod, cons)) = scan_kafka_file(path) else {
-            continue;
-        };
-        if enqueue {
-            produces.push((path.clone(), prod));
-        }
-        if worker {
-            consumes.push((path.clone(), cons));
-        }
-    }
-    let mut workers: std::collections::HashMap<String, std::collections::BTreeSet<PathBuf>> =
-        std::collections::HashMap::new();
-    for (path, topics) in &consumes {
-        for topic in topics {
-            workers
-                .entry(topic_identity(cluster, topic))
-                .or_default()
-                .insert(path.clone());
-        }
-    }
-    for (path, topics) in produces {
-        for topic in topics {
-            let identity = topic_identity(cluster, &topic);
-            let node = NodeId::queue_job(&path, identity.clone());
-            edges.push((
-                NodeId::file(&path),
-                node.clone(),
-                EdgeKind::QueueEnqueue,
-            ));
-            if let Some(targets) = workers.get(&identity) {
-                for worker in targets {
-                    edges.push((node.clone(), NodeId::file(worker), EdgeKind::QueueWorker));
-                }
-            }
-        }
-    }
-}
 
-fn matches_any(rel: &str, globs: &[String]) -> bool {
-    globs.iter().any(|glob| {
-        globset::Glob::new(glob)
-            .ok()
-            .is_some_and(|g| g.compile_matcher().is_match(rel))
-    })
-}

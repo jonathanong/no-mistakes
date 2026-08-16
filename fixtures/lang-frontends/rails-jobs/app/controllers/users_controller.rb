@@ -5,5 +5,6 @@ require_relative "/missing/outside"
 class UsersController
   def index
     WelcomeJob.perform_later
+    Admin::User
   end
 end

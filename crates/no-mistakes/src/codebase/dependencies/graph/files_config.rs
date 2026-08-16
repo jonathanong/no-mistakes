@@ -47,6 +47,7 @@ struct GraphConfigOptions {
     queue_enqueues: Vec<String>,
     queue_workers: Vec<String>,
     queue_cluster: Option<String>,
+    queue_glob_clusters: HashMap<String, Option<String>>,
     terraform: crate::config::v2::schema::TerraformConfig,
     ci: crate::config::v2::schema::CiConfig,
 }
@@ -123,20 +124,13 @@ fn graph_config_options_from_loaded_with_test_filter(
         rails_apps: v2_config.tests.rails.apps.clone(),
         php_apps: v2_config.tests.php.apps.clone(),
         php_framework: v2_config.tests.php.framework.clone(),
-        queue_enqueues: v2_config
-            .projects
-            .values()
-            .flat_map(prefixed_queue_globs_enqueues)
-            .collect(),
-        queue_workers: v2_config
-            .projects
-            .values()
-            .flat_map(prefixed_queue_globs_workers)
-            .collect(),
+        queue_enqueues: flatten_queue_globs(v2_config, prefixed_queue_globs_enqueues),
+        queue_workers: flatten_queue_globs(v2_config, prefixed_queue_globs_workers),
         queue_cluster: v2_config
             .projects
             .values()
             .find_map(|project| project.queues.cluster.clone()),
+        queue_glob_clusters: flatten_queue_glob_clusters(v2_config),
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
     }
@@ -150,6 +144,29 @@ fn prefixed_queue_globs_workers(project: &crate::config::v2::schema::Project) ->
     prefix_project_globs(project.root.as_deref(), &project.queues.workers)
 }
 
+fn flatten_queue_globs(
+    v2_config: &crate::config::v2::NoMistakesConfig,
+    select: fn(&crate::config::v2::schema::Project) -> Vec<String>,
+) -> Vec<String> {
+    v2_config.projects.values().flat_map(select).collect()
+}
+
+fn flatten_queue_glob_clusters(
+    v2_config: &crate::config::v2::NoMistakesConfig,
+) -> HashMap<String, Option<String>> {
+    let mut clusters = HashMap::new();
+    for project in v2_config.projects.values() {
+        let cluster = project.queues.cluster.clone();
+        for glob in prefixed_queue_globs_enqueues(project)
+            .into_iter()
+            .chain(prefixed_queue_globs_workers(project))
+        {
+            clusters.entry(glob).or_insert_with(|| cluster.clone());
+        }
+    }
+    clusters
+}
+
 fn prefix_project_globs(root: Option<&str>, globs: &[String]) -> Vec<String> {
     let prefix = root
         .map(str::trim)
@@ -157,10 +174,16 @@ fn prefix_project_globs(root: Option<&str>, globs: &[String]) -> Vec<String> {
     globs
         .iter()
         .map(|glob| match prefix {
-            Some(root) if !glob.starts_with(root) => format!("{}/{glob}", root.trim_end_matches('/')),
-            _ => glob.clone(),
+            Some(root) if glob_has_root_prefix(glob, root) => glob.clone(),
+            Some(root) => format!("{}/{glob}", root.trim_end_matches('/')),
+            None => glob.clone(),
         })
         .collect()
+}
+
+fn glob_has_root_prefix(glob: &str, root: &str) -> bool {
+    let root = root.trim_end_matches('/');
+    glob == root || glob.starts_with(&format!("{root}/"))
 }
 
 fn dedup_rewrites(

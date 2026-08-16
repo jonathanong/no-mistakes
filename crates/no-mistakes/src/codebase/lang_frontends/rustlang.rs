@@ -3,6 +3,8 @@ use super::facts::{
     LangFileFacts,
 };
 use super::strip::strip_comments_keep_strings;
+#[path = "rust_use.rs"]
+mod rust_use;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -56,7 +58,13 @@ fn parse_rust_file(
 }
 
 fn rust_imports(source: &str) -> Vec<String> {
-    let mut imports = extract_named(source, rust_use_re());
+    let mut imports = Vec::new();
+    for cap in rust_use_re().captures_iter(source) {
+        let tree = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        for item in rust_use::expand_rust_use(tree) {
+            imports.push(item.replace("::", "."));
+        }
+    }
     let prefixes: Vec<String> = imports
         .iter()
         .filter_map(|import| import.split('.').next().map(str::to_string))
@@ -87,7 +95,7 @@ fn rust_mod_re() -> &'static Regex {
 fn rust_use_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?use\s+(?:crate|super|self)::([\w:]+)")
+        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?use\s+(?:crate|super|self)::(.+?)\s*;")
             .expect("use")
     })
 }

@@ -11,10 +11,12 @@ mod strip;
 mod tests;
 #[cfg(test)]
 mod tests_extra;
+#[cfg(test)]
+mod tests_more;
 
 use std::path::{Path, PathBuf};
 
-pub(crate) use facts::LangFactMap;
+pub(crate) use facts::{LangFactMap, LangFileFacts};
 pub(crate) use go::collect_go_facts;
 pub(crate) use kafka::{scan_file as scan_kafka_file, topic_identity};
 pub(crate) use php::collect_php_facts;

@@ -1,6 +1,7 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
 use regex::Regex;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -11,14 +12,29 @@ pub(crate) fn collect_go_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, modules);
     let files = files_under(all_files, &roots, "go");
-    super::facts::collect_files_parallel(files, |path| parse_go_file(path, &roots, modules))
+    let manifests: HashMap<PathBuf, Option<String>> = roots
+        .iter()
+        .map(|module_root| (module_root.clone(), read_go_module(module_root)))
+        .collect();
+    super::facts::collect_files_parallel(files, |path| {
+        parse_go_file(path, &roots, modules, &manifests)
+    })
 }
 
-fn parse_go_file(path: &Path, roots: &[PathBuf], modules: &[String]) -> Option<LangFileFacts> {
+fn parse_go_file(
+    path: &Path,
+    roots: &[PathBuf],
+    modules: &[String],
+    manifests: &HashMap<PathBuf, Option<String>>,
+) -> Option<LangFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let package = owning_package(path, roots, modules);
-    let module = go_import_path(path, roots);
+    let module = if is_go_test_file(path) {
+        None
+    } else {
+        go_import_path(path, roots, manifests)
+    };
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package,
@@ -33,19 +49,33 @@ fn parse_go_file(path: &Path, roots: &[PathBuf], modules: &[String]) -> Option<L
     })
 }
 
-fn go_import_path(path: &Path, roots: &[PathBuf]) -> Option<String> {
-    let root = roots
-        .iter()
-        .filter(|candidate| path.starts_with(candidate))
-        .max_by_key(|candidate| candidate.components().count())?;
-    let module = std::fs::read_to_string(root.join("go.mod"))
+fn is_go_test_file(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.ends_with("_test.go"))
+}
+
+fn read_go_module(root: &Path) -> Option<String> {
+    std::fs::read_to_string(root.join("go.mod"))
         .ok()
         .and_then(|source| {
             source.lines().find_map(|line| {
                 line.strip_prefix("module ")
                     .map(|value| value.trim().to_string())
             })
-        });
+        })
+}
+
+fn go_import_path(
+    path: &Path,
+    roots: &[PathBuf],
+    manifests: &HashMap<PathBuf, Option<String>>,
+) -> Option<String> {
+    let root = roots
+        .iter()
+        .filter(|candidate| path.starts_with(candidate))
+        .max_by_key(|candidate| candidate.components().count())?;
+    let module = manifests.get(root).cloned().flatten();
     let rel = path.parent()?.strip_prefix(root).ok()?;
     let suffix = rel.to_string_lossy().replace('\\', "/");
     match (module, suffix.as_str()) {
