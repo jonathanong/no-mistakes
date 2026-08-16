@@ -48,7 +48,10 @@ impl PreparedScope {
     }
 
     fn server_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
-        let prepared = self.server.as_ref().context("server analysis was not prepared")?;
+        let prepared = self
+            .server
+            .as_ref()
+            .context("server analysis was not prepared")?;
         let filters = server_filters(report_type, options);
         let key = canonical_filter_key(&filters)?;
         let traversal = matches!(report_type, "serverRouteEdges" | "serverRouteRelated")
@@ -59,9 +62,7 @@ impl PreparedScope {
             &key,
             traversal,
             || crate::server_routes::analyze_project_with_prepared(prepared, &filters),
-            || {
-                crate::server_routes::analyze_project_with_prepared_indexed(prepared, &filters)
-            },
+            || crate::server_routes::analyze_project_with_prepared_indexed(prepared, &filters),
         )?;
         match report {
             CachedAnalysis::Plain(report) => {
@@ -81,7 +82,6 @@ impl PreparedScope {
             }
         }
     }
-
 
     fn react_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
         if report_type == "reactUsages" {
@@ -145,9 +145,11 @@ fn cached_once<T: Clone>(
             .or_insert_with(|| std::sync::Arc::new(std::sync::OnceLock::new()))
             .clone()
     };
-    cell.get_or_init(|| compute().map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}"))))
-        .clone()
-        .map_err(|message| anyhow::anyhow!("{message}"))
+    cell.get_or_init(|| {
+        compute().map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}")))
+    })
+    .clone()
+    .map_err(|message| anyhow::anyhow!("{message}"))
 }
 
 fn cached_analysis<Plain, Indexed>(
@@ -164,22 +166,6 @@ where
 {
     if traversal {
         return cached_once(indexed, key, analyze_indexed).map(CachedAnalysis::Indexed);
-    }
-    let indexed_cell = indexed
-        .lock()
-        .expect("report cache is poisoned")
-        .get(key)
-        .cloned();
-    if let Some(cell) = indexed_cell {
-        let value = loop {
-            if let Some(value) = cell.get() {
-                break value.clone();
-            }
-            std::hint::spin_loop();
-        };
-        return Ok(CachedAnalysis::Indexed(
-            value.map_err(|message| anyhow::anyhow!("{message}"))?,
-        ));
     }
     cached_once(plain, key, analyze_plain).map(CachedAnalysis::Plain)
 }
