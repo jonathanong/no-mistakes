@@ -3,7 +3,19 @@ fn emit_route_edges(facts: &LangFactMap, edges: &mut Vec<Edge>) {
         for (_, handler) in &file.route_handlers {
             for name in route_handler_names(handler) {
                 if let Some(targets) = facts.declarations.get(&name) {
-                    push_file_edges(edges, &file.path, targets, EdgeKind::RouteRef);
+                    let scoped: std::collections::BTreeSet<_> = targets
+                        .iter()
+                        .filter(|target| {
+                            file.package.is_none()
+                                || facts
+                                    .files
+                                    .get(*target)
+                                    .and_then(|other| other.package.as_ref())
+                                    == file.package.as_ref()
+                        })
+                        .cloned()
+                        .collect();
+                    push_file_edges(edges, &file.path, &scoped, EdgeKind::RouteRef);
                 }
             }
         }

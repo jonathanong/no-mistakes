@@ -41,7 +41,20 @@ fn python_collects_relative_import_celery_and_django_routes() {
     assert!(facts.files[&views]
         .imports
         .iter()
-        .any(|import| import.ends_with(".models") || import.contains("models")));
+        .any(|import| import == "app.users.models" || import.ends_with(".models")));
+    let urls = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("urls.py"))
+        .expect("urls");
+    assert!(urls
+        .imports
+        .iter()
+        .any(|import| import == "app.users.views"));
+    assert_eq!(
+        facts.files[&views].module.as_deref(),
+        Some("app.users.views")
+    );
     let tasks = facts
         .files
         .values()
@@ -60,11 +73,6 @@ fn python_collects_relative_import_celery_and_django_routes() {
         .queue_enqueues
         .iter()
         .any(|job| job == "send_welcome"));
-    let urls = facts
-        .files
-        .values()
-        .find(|file| file.path.ends_with("urls.py"))
-        .expect("urls");
     assert!(urls
         .route_handlers
         .iter()
@@ -92,6 +100,10 @@ fn go_collects_asynq_task_and_handler() {
         .find(|file| file.path.ends_with("tasks.go"))
         .expect("tasks");
     assert_eq!(tasks.queue_workers, vec!["mail:welcome".to_string()]);
+    assert!(tasks
+        .declarations
+        .iter()
+        .any(|name| name == "WelcomePayload" || name == "HandleWelcome"));
 }
 
 #[test]
@@ -186,4 +198,12 @@ fn empty_config_collects_nothing() {
     assert!(collect_rust_facts(&root, &files, &[]).files.is_empty());
     assert!(collect_ruby_facts(&root, &files, &[]).files.is_empty());
     assert!(collect_php_facts(&root, &files, &[], None).files.is_empty());
+}
+
+#[test]
+fn php_without_framework_skips_laravel_extractors() {
+    let root = fixture("php-laravel");
+    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], None);
+    let routes = facts.files.values().find(|f| f.path.ends_with("web.php"));
+    assert!(routes.is_some_and(|file| file.route_handlers.is_empty()));
 }

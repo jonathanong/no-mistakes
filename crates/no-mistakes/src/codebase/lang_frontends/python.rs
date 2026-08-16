@@ -30,14 +30,13 @@ fn parse_python_file(
     let package_root = package
         .as_ref()
         .map(|name| crate::codebase::ts_resolver::normalize_path(&root.join(name)));
-    let module = package_root
-        .as_ref()
-        .and_then(|pkg| module_from_path(pkg, path));
+    let module = python_module(package.as_deref(), package_root.as_deref(), path);
+    let imports = extract_python_imports(&text, path, package.as_deref(), package_root.as_deref());
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package,
         module,
-        imports: extract_python_imports(&text, path, package_root.as_deref()),
+        imports,
         declarations: extract_named(&text, python_decl_re()),
         references: extract_named(&text, python_ref_re()),
         route_handlers: extract_pairs(&text, django_route_re()),
@@ -46,7 +45,31 @@ fn parse_python_file(
     })
 }
 
-fn extract_python_imports(source: &str, path: &Path, package_root: Option<&Path>) -> Vec<String> {
+fn python_module(
+    package: Option<&str>,
+    package_root: Option<&Path>,
+    path: &Path,
+) -> Option<String> {
+    let package = package?;
+    match package_root.and_then(|root| module_from_path(root, path)) {
+        Some(rel) => Some(format!("{package}.{rel}")),
+        None => Some(package.to_string()),
+    }
+}
+
+fn prefix_package(package: Option<&str>, module: String) -> String {
+    match package {
+        Some(package) => format!("{package}.{module}"),
+        None => module,
+    }
+}
+
+fn extract_python_imports(
+    source: &str,
+    path: &Path,
+    package: Option<&str>,
+    package_root: Option<&Path>,
+) -> Vec<String> {
     let mut imports = extract_named(source, python_import_re());
     for cap in python_from_re().captures_iter(source) {
         let Some(module) = cap.get(1).map(|m| m.as_str()) else {
@@ -54,6 +77,7 @@ fn extract_python_imports(source: &str, path: &Path, package_root: Option<&Path>
         };
         let names = cap.get(2).map(|m| m.as_str()).unwrap_or("");
         if let Some(resolved) = resolve_relative(module, path, package_root) {
+            let resolved = prefix_package(package, resolved);
             if module.chars().all(|ch| ch == '.') {
                 for name in imported_names(names) {
                     imports.push(format!("{resolved}.{name}"));
@@ -63,6 +87,9 @@ fn extract_python_imports(source: &str, path: &Path, package_root: Option<&Path>
             }
         } else if !module.starts_with('.') {
             imports.push(module.to_string());
+            for name in imported_names(names) {
+                imports.push(format!("{module}.{name}"));
+            }
         }
     }
     imports.sort();

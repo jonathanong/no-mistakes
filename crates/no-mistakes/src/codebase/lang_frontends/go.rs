@@ -95,7 +95,10 @@ fn go_quoted_re() -> &'static Regex {
 fn go_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*func\s+(?:\([^)]+\)\s+)?([A-Z][A-Za-z0-9_]*)").expect("func")
+        Regex::new(
+            r"(?m)^\s*(?:func\s+(?:\([^)]+\)\s+)?|type\s+|var\s+|const\s+)([A-Z][A-Za-z0-9_]*)",
+        )
+        .expect("func")
     })
 }
 

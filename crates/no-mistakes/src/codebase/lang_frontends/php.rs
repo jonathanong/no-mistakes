@@ -12,7 +12,7 @@ pub(crate) fn collect_php_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, apps);
     let files = files_under(all_files, &roots, "php");
-    let laravel = framework.is_none_or(|name| name.eq_ignore_ascii_case("laravel"));
+    let laravel = framework.is_some_and(|name| name.eq_ignore_ascii_case("laravel"));
     super::facts::collect_files_parallel(files, |path| parse_php_file(path, &roots, apps, laravel))
 }
 
