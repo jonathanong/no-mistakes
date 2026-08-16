@@ -5,12 +5,12 @@ use no_mistakes::codebase::ts_source::facts::TsFactMap;
 use std::path::{Path, PathBuf};
 
 pub(super) const EXPECTED_SOURCE_FILES: usize = 75;
-pub(super) const EXPECTED_IMPORTS: usize = 159;
-pub(super) const EXPECTED_SYMBOL_IMPORTS: usize = 125;
-pub(super) const EXPECTED_SYMBOL_EXPORTS: usize = 138;
-pub(super) const EXPECTED_SYMBOL_REFS: usize = 222;
-pub(super) const EXPECTED_GRAPH_NODES: usize = 199;
-pub(super) const EXPECTED_SYMBOL_NODES: usize = 111;
+pub(super) const EXPECTED_IMPORTS: usize = 160;
+pub(super) const EXPECTED_SYMBOL_IMPORTS: usize = 126;
+pub(super) const EXPECTED_SYMBOL_EXPORTS: usize = 139;
+pub(super) const EXPECTED_SYMBOL_REFS: usize = 229;
+pub(super) const EXPECTED_GRAPH_NODES: usize = 200;
+pub(super) const EXPECTED_SYMBOL_NODES: usize = 112;
 pub(super) const EXPECTED_FORWARD_DEPS: usize = 123;
 pub(super) const EXPECTED_REVERSE_DEPENDENTS: usize = 35;
 pub(super) const FORWARD_ROOTS: &[&str] = &[
@@ -140,7 +140,7 @@ pub(super) fn expect_count(label: &str, actual: usize, expected: usize) {
 /// starts emitting them is not frozen at zero.
 pub(super) const EXPECTED_KIND_COUNTS: &[(EdgeKind, usize)] = &[
     (EdgeKind::Import, 427),
-    (EdgeKind::TypeImport, 55),
+    (EdgeKind::TypeImport, 58),
     (EdgeKind::DynamicImport, 2),
     (EdgeKind::Require, 1),
     (EdgeKind::TestOf, 3),
@@ -150,6 +150,7 @@ pub(super) const EXPECTED_KIND_COUNTS: &[(EdgeKind, usize)] = &[
     (EdgeKind::RouteTest, 3),
     (EdgeKind::MarkdownLink, 4),
     (EdgeKind::WorkspaceImport, 10),
+    (EdgeKind::WorkspaceTypeImport, 1),
     (EdgeKind::PackageDependency, 7),
     (EdgeKind::CiInvocation, 1),
     (EdgeKind::HttpCall, 18),
