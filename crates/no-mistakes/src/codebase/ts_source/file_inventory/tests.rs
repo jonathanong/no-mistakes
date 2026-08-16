@@ -81,9 +81,8 @@ fn logical_symlink_and_target_paths_remain_distinct() {
 
 #[test]
 fn classified_discovery_does_not_restat_inventory_paths() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/scan-config/symlinked-default-playwright/fixture",
-    );
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/scan-config/symlinked-default-playwright/fixture");
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let sources = snapshot.source_store_for(&root);
     let classified = sources.inventory();
