@@ -50,7 +50,7 @@ pub(crate) fn prepare_test_files(
     let prepared: Vec<_> = test_files
         .into_par_iter()
         .map(|test_file| {
-            crate::ast::with_owned_request_parse_cache(|| {
+            crate::ast::with_request_parse_cache(|| {
                 let occurrences =
                     match facts.and_then(|facts| facts.get_playwright_facts(&test_file.path)) {
                         Some(playwright) => match selection {

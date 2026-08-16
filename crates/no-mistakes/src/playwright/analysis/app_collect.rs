@@ -33,7 +33,7 @@ pub(crate) fn collect_app_selector_occurrences_from_visible(
     let app_selectors = source_files
         .par_iter()
         .try_fold(Vec::new, |mut app_selectors, path| -> Result<_> {
-            crate::ast::with_owned_request_parse_cache(|| {
+            crate::ast::with_request_parse_cache(|| {
                 let source = std::fs::read_to_string(path)
                     .context(format!("reading selector source {}", path.display()))?;
                 app_selectors.extend(selectors::extract_app_selectors_with_regexes_from_visible(

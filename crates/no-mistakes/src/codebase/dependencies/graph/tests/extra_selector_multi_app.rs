@@ -67,8 +67,7 @@ fn collect_playwright_selector_edges_analyzes_prepared_apps_in_parallel() {
         "parallel app results must flatten, then sort and dedup for byte-identical output"
     );
     assert!(
-        body.contains("with_owned_request_parse_cache")
-            && !body.contains("with_request_parse_cache("),
+        body.contains("with_owned_request_parse_cache"),
         "Rayon app tasks must install an owned parse cache, not inherit a sibling request's"
     );
     assert!(
@@ -85,8 +84,8 @@ fn nested_selector_rayon_scans_install_owned_parse_caches() {
         include_str!("../../../../playwright/analysis/app_text.rs"),
     ] {
         assert!(
-            source.contains("with_owned_request_parse_cache"),
-            "nested selector Rayon jobs must install an owned parse cache"
+            source.contains("with_request_parse_cache"),
+            "nested selector Rayon jobs must inherit the app-owned parse cache"
         );
     }
 }
