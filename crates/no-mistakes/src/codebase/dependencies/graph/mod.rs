@@ -35,6 +35,8 @@ include!("builder_core_resolution.rs");
 include!("builder_core.rs");
 include!("builder_edges.rs");
 include!("builder_remaining_edges.rs");
+include!("builder_remaining_edges_independent.rs");
+include!("builder_remaining_edges_fact_domain.rs");
 include!("builder_helpers.rs");
 include!("edge_lang_frontends.rs");
 include!("edge_lang_domains.rs");
