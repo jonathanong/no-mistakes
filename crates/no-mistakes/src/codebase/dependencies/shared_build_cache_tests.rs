@@ -1,20 +1,35 @@
 use super::*;
 
 #[test]
-fn normalizes_file_universe_order_and_duplicates() {
+fn graph_universe_key_uses_frozen_identity_not_path_clones() {
     let a = PathBuf::from("/repo/a.ts");
     let b = PathBuf::from("/repo/b.ts");
-    let first = graph::GraphFiles::from_files(vec![b.clone(), a.clone(), a.clone()]);
-    let second = graph::GraphFiles::from_files(vec![a, b]);
+    let files = graph::GraphFiles::from_files(vec![b, a]);
 
-    assert_eq!(
-        GraphFileUniverseKey::new(&first, 0),
-        GraphFileUniverseKey::new(&second, 0)
-    );
+    let first = GraphFileUniverseKey::new(&files, 0);
+    let second = GraphFileUniverseKey::new(&files, 0);
+    assert_eq!(first, second);
+    assert_ne!(GraphFileUniverseKey::new(&files, 0), GraphFileUniverseKey::new(&files, 1));
+
+    let rebuilt = graph::GraphFiles::from_files(files.all().to_vec());
     assert_ne!(
-        GraphFileUniverseKey::new(&first, 0),
-        GraphFileUniverseKey::new(&first, 1)
+        GraphFileUniverseKey::new(&files, 0),
+        GraphFileUniverseKey::new(&rebuilt, 0),
+        "independently constructed universes must not share a cache key"
     );
+}
+
+#[test]
+fn graph_universe_key_constructor_does_not_clone_path_lists() {
+    let source = include_str!("shared_graph_cache.rs");
+    let constructor = source
+        .split("impl GraphFileUniverseKey")
+        .nth(1)
+        .and_then(|body| body.split("impl EffectiveGraphPlanKey").next())
+        .expect("GraphFileUniverseKey impl");
+    assert!(!constructor.contains("to_vec()"));
+    assert!(!constructor.contains(".sort("));
+    assert!(constructor.contains("universe_identity"));
 }
 
 #[test]
