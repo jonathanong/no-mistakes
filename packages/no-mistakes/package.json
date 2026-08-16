@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes",
-  "version": "0.43.2",
+  "version": "0.43.3",
   "description": "Static codebase analysis tools for TS/JS dependencies, dependents, and symbols",
   "license": "MIT",
   "repository": {
