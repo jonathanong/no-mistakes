@@ -1,6 +1,6 @@
 use super::{
     cached_analysis, canonical_filter_key, framework_preparation_plan, graph_build_plan,
-    same_config_path, CachedAnalysis,
+    same_config_path, CachedAnalysis, ReportCache,
 };
 use std::cell::Cell;
 use std::collections::HashMap;
@@ -96,13 +96,13 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
     for domain in ["queue", "server"] {
         let plain_calls = Cell::new(0);
         let indexed_calls = Cell::new(0);
-        let mut plain = HashMap::new();
-        let mut indexed = HashMap::new();
+        let plain = ReportCache::new(HashMap::new());
+        let indexed = ReportCache::new(HashMap::new());
 
         for traversal in [false, false, true, true] {
             let report = cached_analysis(
-                &mut plain,
-                &mut indexed,
+                &plain,
+                &indexed,
                 if traversal { &equivalent_key } else { &key },
                 traversal,
                 || {
@@ -117,10 +117,10 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
             .unwrap();
             match (traversal, report) {
                 (false, CachedAnalysis::Plain(report)) => {
-                    assert_eq!(report, &format!("{domain}-plain"));
+                    assert_eq!(report, format!("{domain}-plain"));
                 }
                 (true, CachedAnalysis::Indexed(report)) => {
-                    assert_eq!(report, &format!("{domain}-indexed"));
+                    assert_eq!(report, format!("{domain}-indexed"));
                 }
                 _ => panic!("{domain} selected the wrong analyzer"),
             }
