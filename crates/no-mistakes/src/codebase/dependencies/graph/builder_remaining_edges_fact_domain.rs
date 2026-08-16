@@ -132,10 +132,12 @@ fn collect_react_edges_for_plan(
     collect_react_render_edges(edge_inputs.root, facts, edge_inputs.graph_files.indexable())
 }
 
+type ResourceEdgeBatch = (Vec<Edge>, ResourceEdgeDetails, Vec<ResourceGraphDiagnostic>);
+
 fn collect_resource_edges_for_plan(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
-) -> Result<Option<(Vec<Edge>, ResourceEdgeDetails, Vec<ResourceGraphDiagnostic>)>> {
+) -> Result<Option<ResourceEdgeBatch>> {
     if !edge_inputs.plan.resources {
         return Ok(None);
     }

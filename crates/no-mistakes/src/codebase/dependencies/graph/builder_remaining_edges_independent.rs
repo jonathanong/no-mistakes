@@ -15,13 +15,11 @@ fn collect_independent_remaining_edges(
     let (markdown, (terraform, (dotnet, swift))) = rayon::join(
         || {
             crate::perf_trace::trace("graph.markdown", || {
-                edge_inputs
-                    .plan
-                    .markdown
-                    .then(|| {
-                        collect_md_edges(&edge_inputs.graph_files.all, edge_inputs.graph_files)
-                    })
-                    .unwrap_or_default()
+                if edge_inputs.plan.markdown {
+                    collect_md_edges(&edge_inputs.graph_files.all, edge_inputs.graph_files)
+                } else {
+                    Vec::new()
+                }
             })
         },
         || {
