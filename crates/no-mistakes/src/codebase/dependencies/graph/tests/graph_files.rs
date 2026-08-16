@@ -226,6 +226,9 @@ fn graph_files_visible_path_recovers_from_poisoned_canonical_cache() {
     );
     let page = root.join("web/app/page.tsx");
     let files = GraphFiles::from_files(vec![page.clone()]);
-    files.poison_canonical_cache_for_tests();
+    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _guard = files.canonical_visible.cache.lock().unwrap();
+        panic!("poison canonical visible cache");
+    }));
     assert_eq!(files.visible_path(&page), Some(page.as_path()));
 }
