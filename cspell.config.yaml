@@ -64,6 +64,7 @@ words:
   - sgconfig
   - shellcheck
   - shasum
+  - Sidekiq
   - Symfony
   - subdirs
   - subpaths

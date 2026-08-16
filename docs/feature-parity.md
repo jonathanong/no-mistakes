@@ -21,7 +21,7 @@ edges and planners ship.
 | Domain | Module graph | Test plan | HTTP routes | Queues | Status |
 | --- | --- | --- | --- | --- | --- |
 | TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Next.js | BullMQ, glide-mq | shipped |
-| Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | Swift `Endpoint` literals via `http` | no | shipped, narrower |
+| Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
 | Rust | no | `--test cargo` globs only | no | no | partial: project type, check rules, CI Cargo edges |
 | Python, Django, Celery | no | no | no | no | not started |
@@ -47,11 +47,13 @@ and no Rust CLI.
 These are the features a new language must cover, or explicitly decline with a
 documented limit. The TS/JS command is the reference behavior.
 
-**Module graph.** `dependencies`, `dependents`, `related`, and `importers`
-over typed edges in the canonical `DepGraph`. TS/JS uses `import`,
-`type-import`, `dynamic-import`, `require`, `workspace`, and `package`. Swift
-and .NET already show the non-TS pattern: language-specific edge kinds behind
-`--relationship swift` or `--relationship dotnet`.
+**Module graph.** `dependencies`, `dependents`, and `related` over typed
+edges in the canonical `DepGraph`. TS/JS uses `import`, `type-import`,
+`dynamic-import`, `require`, `workspace`, and `package`. Swift and .NET
+already show the non-TS pattern: language-specific edge kinds behind
+`--relationship swift` or `--relationship dotnet`. `importers` stays the
+fast TS/JS-only reverse static-import scan; it does not walk language
+graphs. Use `dependents --relationship <lang>` for those.
 
 **Symbols.** Named declarations and who references them. TS/JS has `symbols`,
 `exports-of`, `dead-exports`, and `call-sites`. Swift and .NET collect
@@ -74,8 +76,9 @@ files, the same way TS `fetch` and Swift `Endpoint` literals do.
 
 **Lockfiles.** `lockfile diff` today parses npm-family lockfiles. Language
 support adds the ecosystem lockfile when agents need package-change impact:
-`poetry.lock` / `uv.lock`, `go.sum`, `Cargo.lock`, `Gemfile.lock`,
-`composer.lock`.
+`poetry.lock` / `uv.lock` / `Pipfile.lock`, `go.mod`, `Cargo.lock`,
+`Gemfile.lock`, `composer.lock`. Go package-change impact reads the selected
+module graph from `go.mod`, not authentication hashes in `go.sum`.
 
 **Checks, CLI, and N-API.** Every stable CLI capability needs an async N-API
 equivalent, fixture-backed tests, and docs. Language-specific check rules
@@ -95,10 +98,12 @@ Follow the Swift and .NET adapter shape, not a second analysis session.
    language collector borrows those inputs.
 3. A fact pass extracts imports, declarations, references, and domain
    occurrences (routes, enqueue sites, workers) from each matching file.
-   Heuristic extractors that strip comments/strings first, matching
+   Heuristic extractors that strip comments first, matching
    `codebase/swift` and `codebase/dotnet`, are the expected first
-   implementation. A full grammar is allowed later only if it stays in-process,
-   deterministic, and one-pass.
+   implementation. String literals stay in the source used for route, queue,
+   and topic facts; stripping strings would erase those identities. A full
+   grammar is allowed later only if it stays in-process, deterministic, and
+   one-pass.
 4. Relationship analyzers emit typed edges into `DepGraph`. Commands and
    reports project those edges; they do not rebuild a private index.
 5. Test discovery reads the language's explicit package/project config and
@@ -171,7 +176,7 @@ Go support is the language frontend. Asynq is the queue extractor.
 | Tests | `tests plan vitest` | `tests plan go` → `go test` in owning packages |
 | HTTP routes | `server routes` | configured `net/http`, Chi, Gin, Echo, or Fiber registrations |
 | Queues | BullMQ job name | Asynq `NewTask("mail:welcome", …)` / `HandleFunc("mail:welcome", …)` |
-| Lockfile | npm-family | `go.sum` |
+| Lockfile | npm-family | `go.mod` (selected module graph, not `go.sum`) |
 
 Asynq task type strings are the virtual job identity, same as a BullMQ job
 name. A producer file gets `queue-enqueue`; the handler file gets
@@ -190,8 +195,10 @@ string literal produce no edge. `go/ast` in-process is acceptable; invoking the
 
 Kafka is a queue backend, not a language. Producers and consumers in any
 supported language emit the existing `queue-enqueue` and `queue-worker` edges.
-The virtual node identity is the static topic (and optional static group id),
-not a language-specific edge kind.
+The virtual node identity is the static topic string, not a language-specific
+edge kind. A consumer group id is edge metadata (or a downstream node), never
+part of the shared topic identity, so producer enqueue and consumer worker
+edges meet on the same node.
 
 ```ts
 producer.send({ topic: "mail.welcome", messages });
@@ -217,7 +224,7 @@ routes and queues from the shared domains.
 | Module graph | `import` | `mod`, `use crate::…`, `use super::…`, path attrs |
 | Package identity | workspace packages | configured `Cargo.toml` packages and path deps |
 | Symbols | named exports | `pub fn` / `pub struct` / `pub enum` and `use` paths |
-| Tests | `tests plan vitest` | `tests plan cargo` → `cargo test -p <pkg> --test <name>` |
+| Tests | `tests plan vitest` | `tests plan cargo` → `cargo test -p <pkg>` for sibling `tests.rs`; `cargo test -p <pkg> --test <name>` only for `tests/` integration targets |
 | HTTP routes | `server routes` | configured Axum, Actix, or Rocket registrations |
 | Queues | BullMQ | configured enqueue/worker globs; Kafka when present |
 | Lockfile | npm-family | `Cargo.lock` |
@@ -241,7 +248,7 @@ extractors.
 | Package identity | workspace packages | configured engine/app roots and `Gemfile` path gems |
 | Tests | `tests plan vitest` | `tests plan rails` over Minitest / RSpec files |
 | HTTP routes | `server routes` | configured `config/routes.rb` (and engine routes) → controller#action |
-| Queues | BullMQ | Active Job `SomeJob.perform_later` / `perform_async` → job class |
+| Queues | BullMQ | Active Job `SomeJob.perform_later` → job class. Sidekiq `perform_async` is a later extractor, not v1. |
 | Lockfile | npm-family | `Gemfile.lock` |
 
 Zeitwerk inference is heuristic and must stay inside configured roots. Do not
@@ -256,8 +263,9 @@ WelcomeJob.perform_later(user)
 
 ## PHP
 
-PHP support is Composer/PSR-4 facts plus configured framework extractors
-(Laravel or Symfony, not both inferred).
+PHP support is Composer/PSR-4 facts plus one configured framework extractor.
+Set `tests.php.framework` to `laravel` or `symfony`. Do not infer the
+framework from files, and do not enable both extractors from a missing value.
 
 | Feature | TS/JS reference | PHP equivalent |
 | --- | --- | --- |
@@ -323,6 +331,7 @@ tests:
     apps:
       - apps/web
   php:
+    framework: laravel
     apps:
       - services/api
 ```

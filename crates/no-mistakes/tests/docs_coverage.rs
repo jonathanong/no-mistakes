@@ -444,4 +444,10 @@ fn review_found_doc_regressions_stay_fixed() {
         docs_index.contains("(feature-parity.md)"),
         "docs/README.md must link feature-parity.md"
     );
+
+    let root_readme = read_root("README.md");
+    assert!(
+        root_readme.contains("(docs/feature-parity.md)"),
+        "README.md must link docs/feature-parity.md"
+    );
 }
