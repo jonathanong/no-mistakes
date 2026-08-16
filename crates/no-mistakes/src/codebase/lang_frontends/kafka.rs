@@ -40,7 +40,7 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 fn kafka_produce_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?:topic\s*[:=]\s*["']([^"']+)["']|\.send\(\s*["']([^"']+)["'])"#)
+        Regex::new(r#"\.send\(\s*(?:\{[^}]*topic\s*:\s*["']([^"']+)["']|["']([^"']+)["'])"#)
             .expect("produce")
     })
 }

@@ -23,7 +23,6 @@ edges and planners ship.
 | TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Next.js | BullMQ, glide-mq | shipped |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
-| Rust | no | `--test cargo` globs only | no | no | partial: project type, check rules, CI Cargo edges |
 | Python, Django, Celery | `python-import`, `python-ref` | `--test python` globs | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors) |
 | Go, Asynq | `go-import`, `go-ref` | `--test go` globs | no | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
@@ -34,14 +33,11 @@ edges and planners ship.
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
 
-Rust today is not a language frontend. `projects.*.type: rust` exists,
-[`rust-max-lines-per-file`](rules/rust-max-lines-per-file.md),
-[`rust-no-inline-allows`](rules/rust-no-inline-allows.md), and
-[`rust-no-inline-tests`](rules/rust-no-inline-tests.md) run as filesystem
-checks, `--test cargo` filters `**/tests/**/*.rs` and `src/**/*_test.rs`, and
-`ci` edges connect GitHub Actions workflows to Rust binaries invoked by
-supported Cargo commands. There is no `use`/`mod` graph, no `tests plan cargo`,
-and no Rust CLI.
+Rust v1 is a language frontend for configured `tests.rust.packages`: `use
+crate/super/self` and `pub` declarations emit `rust-use` / `rust-mod` edges.
+The existing `rust-*` filesystem rules, `--test cargo` globs, and `ci` Cargo
+binary edges remain. There is still no `tests plan cargo` and no `no-mistakes
+rust` CLI.
 
 ## Canonical Feature Set
 
