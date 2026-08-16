@@ -5,7 +5,7 @@
 #[path = "graph_gates_support.rs"]
 mod support;
 
-use criterion::{black_box, Criterion, Throughput};
+use criterion::{black_box, BenchmarkId, Criterion, Throughput};
 use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::dependencies::NodeId;
 use no_mistakes::codebase::ts_resolver::load_tsconfig;
@@ -78,19 +78,27 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
 
     let mut build_group = c.benchmark_group("graph_gates_build");
     build_group.throughput(Throughput::Elements(EXPECTED_GRAPH_NODES as u64));
-    build_group.bench_function("all_domains_with_symbols", |b| {
-        b.iter(|| {
-            black_box(
-                DepGraph::build_with_plan_and_config(
-                    black_box(&root),
-                    black_box(&config),
-                    black_box(gate_plan()),
-                    Some(black_box(&config_path)),
-                )
-                .expect("graph-gates build should succeed"),
-            )
+    for threads in [1usize, 4] {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .expect("graph-gates rayon pool");
+        build_group.bench_with_input(BenchmarkId::from_parameter(threads), &threads, |b, _| {
+            b.iter(|| {
+                pool.install(|| {
+                    black_box(
+                        DepGraph::build_with_plan_and_config(
+                            black_box(&root),
+                            black_box(&config),
+                            black_box(gate_plan()),
+                            Some(black_box(&config_path)),
+                        )
+                        .expect("graph-gates build should succeed"),
+                    )
+                })
+            });
         });
-    });
+    }
     build_group.finish();
 
     let mut query_group = c.benchmark_group("graph_gates_query");

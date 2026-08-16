@@ -154,6 +154,7 @@ pub(super) const EXPECTED_KIND_COUNTS: &[(EdgeKind, usize)] = &[
     (EdgeKind::CiInvocation, 1),
     (EdgeKind::HttpCall, 18),
     (EdgeKind::ProcessSpawn, 4),
+    (EdgeKind::ReactRender, 6),
     (EdgeKind::Selector, 1),
     (EdgeKind::WorkflowJob, 1),
     (EdgeKind::WorkflowStep, 2),

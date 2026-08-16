@@ -8,12 +8,17 @@ import { coreFn0 } from '@fixture/core';
 import { dataRecord0 } from '@fixture/data';
 import { clientCall0 } from '@fixture/http';
 export async function GraphGatesEntry() {
-  await Feature0();
-  await Feature1();
-  await Feature2();
-  await Feature3();
-  await Feature4();
-  await Feature5();
   await clientCall0();
-  return <main>{coreFn0()}{dataRecord0.id}</main>;
+  return (
+    <main>
+      {coreFn0()}
+      {dataRecord0.id}
+      <Feature0 />
+      <Feature1 />
+      <Feature2 />
+      <Feature3 />
+      <Feature4 />
+      <Feature5 />
+    </main>
+  );
 }
