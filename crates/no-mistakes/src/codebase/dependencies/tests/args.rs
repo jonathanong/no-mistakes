@@ -232,6 +232,23 @@ fn python_relationship_enables_language_frontend_plan() {
     let plan = crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
     assert!(plan.language_frontends);
     assert!(!plan.imports);
+    for relationship in [
+        crate::codebase::dependencies::RelationshipArg::Go,
+        crate::codebase::dependencies::RelationshipArg::Rust,
+        crate::codebase::dependencies::RelationshipArg::Ruby,
+        crate::codebase::dependencies::RelationshipArg::Php,
+    ] {
+        let allowed = crate::codebase::dependencies::relationship_filter(&[relationship])
+            .expect("language relationship");
+        let plan =
+            crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
+        assert!(plan.language_frontends, "{relationship:?}");
+        assert_eq!(relationship.as_str(), format!("{relationship:?}").to_ascii_lowercase());
+    }
+    assert_eq!(
+        crate::codebase::dependencies::RelationshipArg::Python.as_str(),
+        "python"
+    );
 }
 
 #[test]
