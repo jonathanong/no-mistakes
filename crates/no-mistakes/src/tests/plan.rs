@@ -186,7 +186,7 @@ fn generate_plan_with_prepared_inner(
 
             for (test_node, edge_path) in reachable_tests {
                 let test_path = match &test_node {
-                    NodeId::File(p) => p.clone(),
+                    NodeId::File(p) => p.to_path_buf(),
                     _ => continue,
                 };
                 let rel_test = relative_path(root, &test_path);
@@ -312,7 +312,7 @@ fn generate_plan_with_prepared_inner(
             if graph.has_reverse_node(&module_node) {
                 module_node
             } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {
-                NodeId::File(entry.clone())
+                NodeId::file(entry.clone())
             } else {
                 if !untraceable_lockfile_files.contains(lockfile_rel) {
                     untraceable_lockfile_files.push(lockfile_rel.clone());
@@ -335,7 +335,7 @@ fn generate_plan_with_prepared_inner(
 
         for (test_node, edge_path) in reachable_tests {
             let test_path = match &test_node {
-                NodeId::File(p) => p.clone(),
+                NodeId::File(p) => p.to_path_buf(),
                 _ => continue,
             };
             let rel_test = relative_path(root, &test_path);

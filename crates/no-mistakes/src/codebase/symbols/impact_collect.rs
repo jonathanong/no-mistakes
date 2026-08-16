@@ -32,10 +32,7 @@ fn build_report_from_prepared(
         graph_files.visible().iter().cloned(),
     );
     let visible_files = graph_files.visible().clone();
-    let target = NodeId::Symbol {
-        file: target_file.to_path_buf(),
-        symbol: symbol.to_string(),
-    };
+    let target = NodeId::symbol(target_file, symbol.to_string());
     let definition = if let Some(location) =
         export_location(facts, target_file, root, symbol, false)?
     {
@@ -74,9 +71,9 @@ fn build_report_from_prepared(
     let mut file_roots: Vec<_> = export_nodes
         .iter()
         .filter_map(NodeId::as_file)
-        .map(|path| NodeId::File(path.to_path_buf()))
+        .map(NodeId::file)
         .collect();
-    file_roots.push(NodeId::File(target_file.to_path_buf()));
+    file_roots.push(NodeId::file(target_file));
     file_roots.sort();
     file_roots.dedup();
     let mut file_entry_target_symbols: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();

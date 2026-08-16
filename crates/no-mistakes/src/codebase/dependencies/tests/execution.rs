@@ -5,7 +5,7 @@ fn get_entries_supports_import_only_dependencies() {
     let entrypoints = resolve_entrypoints(&raw_entrypoints, &root, &root);
     let roots = entrypoints
         .iter()
-        .map(|ep| NodeId::File(ep.file.clone()))
+        .map(|ep| NodeId::file(ep.file.clone()))
         .collect::<Vec<_>>();
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
@@ -34,18 +34,18 @@ fn get_entries_supports_symbol_dependents() {
     let entrypoints = vec![
         Entrypoint {
             file: root.join("source.mts"),
-            node: NodeId::File(root.join("source.mts")),
+            node: NodeId::file(root.join("source.mts")),
             symbol: Some("alpha".into()),
         },
         Entrypoint {
             file: root.join("source.mts"),
-            node: NodeId::File(root.join("source.mts")),
+            node: NodeId::file(root.join("source.mts")),
             symbol: None,
         },
     ];
     let roots = entrypoints
         .iter()
-        .map(|ep| NodeId::File(ep.file.clone()))
+        .map(|ep| NodeId::file(ep.file.clone()))
         .collect::<Vec<_>>();
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
@@ -90,7 +90,7 @@ fn export_from_fixture_preserves_import_and_reexport_graph_edges() {
     };
     let graph = build_graph(&root, &tsconfig);
 
-    let dependencies = graph.deps_of(&[NodeId::File(root.join("consumer.mts"))], None, None);
+    let dependencies = graph.deps_of(&[NodeId::file(root.join("consumer.mts"))], None, None);
     let dependency_names = dependencies
         .iter()
         .filter_map(|entry| entry.node.as_file())
@@ -100,7 +100,7 @@ fn export_from_fixture_preserves_import_and_reexport_graph_edges() {
     assert!(dependency_names.contains(&"barrel.mts"));
     assert!(dependency_names.contains(&"source.mts"));
 
-    let dependents = graph.dependents_of(&[NodeId::File(root.join("source.mts"))], None, None);
+    let dependents = graph.dependents_of(&[NodeId::file(root.join("source.mts"))], None, None);
     let dependent_names = dependents
         .iter()
         .filter_map(|entry| entry.node.as_file())
@@ -117,7 +117,7 @@ fn get_entries_supports_plain_dependents_without_symbol_facts() {
     let entrypoints = resolve_entrypoints(&[PathBuf::from("b.mts")], &root, &root);
     let roots = entrypoints
         .iter()
-        .map(|entrypoint| NodeId::File(entrypoint.file.clone()))
+        .map(|entrypoint| NodeId::file(entrypoint.file.clone()))
         .collect::<Vec<_>>();
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
@@ -166,7 +166,7 @@ fn deps_fixture_simple_json_output() {
     };
     let g = build_graph(&root, &tsconfig);
     let a = root.join("a.mts");
-    let entries = g.deps_of(&[NodeId::File(a)], None, None);
+    let entries = g.deps_of(&[NodeId::file(a)], None, None);
     assert!(!entries.is_empty(), "a.mts should have deps");
 
     let mut buf = Vec::new();
@@ -195,7 +195,7 @@ fn deps_fixture_format_output() {
     };
     let g = build_graph(&root, &tsconfig);
     let a = root.join("a.mts");
-    let entries = g.deps_of(&[NodeId::File(a)], None, None);
+    let entries = g.deps_of(&[NodeId::file(a)], None, None);
 
     // Verify md output contains backtick-quoted paths.
     let mut buf = Vec::new();
@@ -226,7 +226,7 @@ fn deps_test_framework_vitest_filter() {
     };
     let g = build_graph(&root, &tsconfig);
     let idx = root.join("src").join("index.mts");
-    let entries = g.dependents_of(&[NodeId::File(idx)], None, None);
+    let entries = g.dependents_of(&[NodeId::file(idx)], None, None);
 
     let mut filters = test_globs("vitest");
     filters.extend(test_globs("playwright"));
@@ -261,7 +261,7 @@ fn filter_fixture_excludes_test_files() {
     };
     let g = build_graph(&root, &tsconfig);
     let main = root.join("src").join("main.mts");
-    let entries = g.deps_of(&[NodeId::File(main)], None, None);
+    let entries = g.deps_of(&[NodeId::file(main)], None, None);
     assert!(!entries.is_empty(), "main.mts should have deps");
 
     let filter_spec = graph::build_filter(&["**/*.test.mts".to_string()])
@@ -304,7 +304,7 @@ fn symbol_export_fixture_alpha_dependents() {
     };
     let g = build_graph(&root, &tsconfig);
     let source = root.join("source.mts");
-    let entries = g.dependents_of(&[NodeId::File(source)], None, None);
+    let entries = g.dependents_of(&[NodeId::file(source)], None, None);
     assert!(!entries.is_empty(), "source.mts should have dependents");
 
     let paths: Vec<_> = entries
@@ -341,7 +341,7 @@ fn folder_suffix_fixture() {
     };
     let g = build_graph(&root, &tsconfig);
     let main = root.join("main.mts");
-    let entries = g.deps_of(&[NodeId::File(main)], None, None);
+    let entries = g.deps_of(&[NodeId::file(main)], None, None);
 
     let spec = graph::build_filter(&["backend/systems/*/".to_string()])
         .unwrap()

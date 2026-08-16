@@ -79,15 +79,12 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
     assert_eq!(edges[1].2, EdgeKind::WorkspaceTypeImport);
     assert_eq!(
         edges[0].1,
-        NodeId::File(target.clone()),
+        NodeId::file(target.clone()),
         "star re-exports target the workspace file"
     );
     assert_eq!(
         edges[1].1,
-        NodeId::Symbol {
-            file: target.clone(),
-            symbol: "Shape".to_string(),
-        },
+        NodeId::symbol(target.clone(), "Shape".to_string()),
         "named re-exports target the workspace symbol"
     );
 
@@ -114,7 +111,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
             &visible,
             &graph_files,
         ),
-        Some((NodeId::File(asset), EdgeKind::RequireResolve))
+        Some((NodeId::file(asset), EdgeKind::RequireResolve))
     );
     for (kind, expected) in [
         (ImportKind::Type, EdgeKind::WorkspaceTypeImport),
@@ -130,7 +127,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
                 &visible,
                 &graph_files,
             ),
-            Some((NodeId::File(target.clone()), expected))
+            Some((NodeId::file(target.clone()), expected))
         );
     }
 
@@ -160,8 +157,8 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
     assert_eq!(
         lazy_neighbors,
         vec![
-            (NodeId::File(target.clone()), EdgeKind::RequireResolve),
-            (NodeId::File(target), EdgeKind::WorkspaceTypeImport),
+            (NodeId::file(target.clone()), EdgeKind::RequireResolve),
+            (NodeId::file(target), EdgeKind::WorkspaceTypeImport),
         ]
     );
 }

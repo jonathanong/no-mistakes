@@ -119,7 +119,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
 impl SwiftReport {
     /// Swift files that import or reference the given file (direct + transitive).
     pub fn importers(&self, file: &str) -> Vec<ImporterRow> {
-        let node = NodeId::File(normalize_path(&self.root.join(file)));
+        let node = NodeId::file(normalize_path(&self.root.join(file)));
         let allowed: HashSet<EdgeKind> = [EdgeKind::SwiftImport, EdgeKind::SwiftReference].into();
         let mut rows: Vec<ImporterRow> = self
             .graph
@@ -150,7 +150,7 @@ impl SwiftReport {
         // The queried file's own test target covers it, but `dependents_of` does
         // not return the root node, so seed it explicitly.
         self.record_test_target(&path, &mut seen);
-        let node = NodeId::File(path);
+        let node = NodeId::file(path);
         let entries = self.graph.dependents_of(&[node], None, Some(&allowed));
         for path in entries.iter().filter_map(|entry| entry.node.as_file()) {
             self.record_test_target(path, &mut seen);

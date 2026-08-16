@@ -14,7 +14,7 @@ fn codebase_intel_graph_emits_queue_http_route_test_and_process_edges() {
     let spawn_target = root.join("packages/api/src/spawn-target.mts");
 
     let enqueue = graph.deps_of(
-        &[NodeId::File(send_email)],
+        &[NodeId::file(send_email)],
         None,
         Some(&[EdgeKind::QueueEnqueue].into()),
     );
@@ -22,41 +22,38 @@ fn codebase_intel_graph_emits_queue_http_route_test_and_process_edges() {
         matches!(
             &entry.node,
             NodeId::QueueJob { queue_file, job }
-                if queue_file == &emails && job == "sendWelcomeEmail"
+                if queue_file.as_ref() == emails.as_path() && job == "sendWelcomeEmail"
         )
     }));
 
-    let queue_job = NodeId::QueueJob {
-        queue_file: emails,
-        job: "sendWelcomeEmail".to_string(),
-    };
+    let queue_job = NodeId::queue_job(emails, "sendWelcomeEmail".to_string());
     let workers = graph.deps_of(&[queue_job], None, Some(&[EdgeKind::QueueWorker].into()));
     assert!(has_file(&workers, &processors));
     assert!(has_file(&workers, &worker));
 
     let http = graph.deps_of(
-        &[NodeId::File(api_client.clone())],
+        &[NodeId::file(api_client.clone())],
         None,
         Some(&[EdgeKind::HttpCall].into()),
     );
     assert!(has_file(&http, &api_index));
 
     let route_refs = graph.deps_of(
-        &[NodeId::File(api_client)],
+        &[NodeId::file(api_client)],
         None,
         Some(&[EdgeKind::RouteRef].into()),
     );
     assert!(has_file(&route_refs, &api_index));
 
     let route_tests = graph.deps_of(
-        &[NodeId::File(spec)],
+        &[NodeId::file(spec)],
         None,
         Some(&[EdgeKind::RouteTest].into()),
     );
     assert!(has_file(&route_tests, &page));
 
     let process = graph.deps_of(
-        &[NodeId::File(spawner)],
+        &[NodeId::file(spawner)],
         None,
         Some(&[EdgeKind::ProcessSpawn].into()),
     );

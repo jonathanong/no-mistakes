@@ -7,31 +7,19 @@ fn p(path: &str) -> PathBuf {
 }
 
 fn n(path: &str) -> NodeId {
-    NodeId::File(p(path))
+    NodeId::file(p(path))
 }
 
 #[test]
 fn normalized_adjacency_flatten_matches_global_sort_oracle() {
     // These nodes share the same display sort keys. Keep this shuffled so the
     // oracle protects typed tie-breakers, duplicate removal, and ordinals.
-    let source_file = NodeId::File(p("/repo/source#job"));
-    let source_symbol = NodeId::Symbol {
-        file: p("/repo/source"),
-        symbol: "job".to_string(),
-    };
-    let source_queue = NodeId::QueueJob {
-        queue_file: p("/repo/source"),
-        job: "job".to_string(),
-    };
-    let target_file = NodeId::File(p("/repo/target#job"));
-    let target_symbol = NodeId::Symbol {
-        file: p("/repo/target"),
-        symbol: "job".to_string(),
-    };
-    let target_queue = NodeId::QueueJob {
-        queue_file: p("/repo/target"),
-        job: "job".to_string(),
-    };
+    let source_file = NodeId::file(p("/repo/source#job"));
+    let source_symbol = NodeId::symbol(p("/repo/source"), "job".to_string());
+    let source_queue = NodeId::queue_job(p("/repo/source"), "job".to_string());
+    let target_file = NodeId::file(p("/repo/target#job"));
+    let target_symbol = NodeId::symbol(p("/repo/target"), "job".to_string());
+    let target_queue = NodeId::queue_job(p("/repo/target"), "job".to_string());
     let empty = n("/repo/empty.ts");
     let edges = vec![
         (

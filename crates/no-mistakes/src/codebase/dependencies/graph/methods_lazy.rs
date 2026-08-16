@@ -45,9 +45,7 @@ impl DepGraph {
     }
 
     pub(crate) fn contains_file(&self, path: &Path) -> bool {
-        self.traversal_edges().forward().contains_key(&NodeId::File(
-            crate::codebase::ts_resolver::normalize_path(path),
-        ))
+        self.traversal_edges().forward().contains_key(&NodeId::file(crate::codebase::ts_resolver::normalize_path(path),))
     }
     /// Get the direct dependents (reverse edges) of a single node.
     pub fn dependents_of_node(&self, node: &NodeId) -> Option<&Vec<(NodeId, EdgeKind)>> {
@@ -134,7 +132,7 @@ impl DepGraph {
         while let Some((src_file, sym)) = queue.pop_front() {
             if let Some(importers) = symbol_index.importers_of(&src_file, &sym) {
                 for (importer, local_name, is_reexport) in importers {
-                    direct_importers.insert(NodeId::File(importer.clone()));
+                    direct_importers.insert(NodeId::file(importer.clone()));
                     if *is_reexport {
                         let pair = (importer.clone(), local_name.clone());
                         push_unvisited_symbol_pair(&mut visited_pairs, &mut queue, pair);
@@ -144,10 +142,7 @@ impl DepGraph {
         }
 
         // Also check if (file, symbol) corresponds to a QueueJob node.
-        let queue_job = NodeId::QueueJob {
-            queue_file: file.to_path_buf(),
-            job: symbol.to_string(),
-        };
+        let queue_job = NodeId::queue_job(file, symbol.to_string());
         if self.traversal_edges().reverse().contains_key(&queue_job) {
             direct_importers.insert(queue_job);
         }

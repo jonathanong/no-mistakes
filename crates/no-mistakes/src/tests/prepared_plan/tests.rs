@@ -80,9 +80,9 @@ fn complete_prepared_graph_keeps_standard_skipped_playwright_sources_outside_its
     crate::ast::begin_parse_count(&root);
     let graph = prepared.graph().unwrap();
     let counts = crate::ast::finish_parse_count(&root);
-    assert!(graph.dependencies_of_node(&NodeId::File(changed)).is_some());
+    assert!(graph.dependencies_of_node(&NodeId::file(changed)).is_some());
     assert!(graph
-        .dependencies_of_node(&NodeId::File(root.join("web/fixtures/included.ts")))
+        .dependencies_of_node(&NodeId::file(root.join("web/fixtures/included.ts")))
         .is_none());
     assert!(!counts.contains_key(&root.join("web/fixtures/included.ts")));
 }

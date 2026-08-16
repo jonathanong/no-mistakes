@@ -29,7 +29,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
             &workspace,
             &visible,
         ),
-        Some((NodeId::File(target.clone()), EdgeKind::WorkspaceImport)),
+        Some((NodeId::file(target.clone()), EdgeKind::WorkspaceImport)),
     );
 
     let scoped = scoped_import_map(
@@ -50,7 +50,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
 
     assert_eq!(
         scoped.get("run"),
-        Some(&vec![(NodeId::File(target), EdgeKind::WorkspaceImport)]),
+        Some(&vec![(NodeId::file(target), EdgeKind::WorkspaceImport)]),
     );
 }
 

@@ -106,12 +106,9 @@ fn signature_target_symbols_keeps_file_entries_and_ignores_non_file_nodes() {
     let barrel = PathBuf::from("/repo/src/barrel.mts");
     let queue = PathBuf::from("/repo/src/queue.mts");
     let export_nodes = BTreeSet::from([
-        NodeId::File(barrel.clone()),
+        NodeId::file(barrel.clone()),
         NodeId::Module("external".to_string()),
-        NodeId::QueueJob {
-            queue_file: queue,
-            job: "send".to_string(),
-        },
+        NodeId::queue_job(queue, "send".to_string()),
     ]);
 
     let target_symbols = signature_target_symbols(

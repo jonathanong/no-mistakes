@@ -265,18 +265,11 @@ fn workflow_virtual_entrypoint_suffixes_round_trip() {
     let file = Path::new("/repo/.github/workflows/main.yml");
     assert_eq!(
         workflow_node_from_suffix(file, "job:build"),
-        Some(NodeId::WorkflowJob {
-            workflow_file: file.to_path_buf(),
-            job: "build".to_string(),
-        })
+        Some(NodeId::workflow_job(file, "build".to_string()))
     );
     assert_eq!(
         workflow_node_from_suffix(file, "job:build/step:3"),
-        Some(NodeId::WorkflowStep {
-            workflow_file: file.to_path_buf(),
-            job: "build".to_string(),
-            step: 3,
-        })
+        Some(NodeId::workflow_step(file, "build".to_string(), 3))
     );
     assert!(workflow_node_from_suffix(file, "job:/step:3").is_none());
     assert!(workflow_node_from_suffix(file, "job:build/step:nope").is_none());
@@ -298,11 +291,7 @@ fn resolve_entrypoints_promotes_workflow_suffixes_to_virtual_nodes() {
     assert_eq!(entrypoints[0].symbol, None);
     assert_eq!(
         entrypoints[0].node,
-        NodeId::WorkflowStep {
-            workflow_file: root.join(".github/workflows/main.yml"),
-            job: "build".to_string(),
-            step: 0,
-        }
+        NodeId::workflow_step(root.join(".github/workflows/main.yml"), "build".to_string(), 0)
     );
 }
 
@@ -348,7 +337,7 @@ fn resolve_entrypoints_prefers_root_before_cwd_fallback() {
     assert_eq!(entrypoints[1].file, cwd.join("does-not-exist.mts"));
     assert_eq!(
         entrypoints[1].node,
-        graph::NodeId::File(cwd.join("does-not-exist.mts"))
+        graph::NodeId::file(cwd.join("does-not-exist.mts"))
     );
     assert_eq!(entrypoints[1].symbol, None);
     assert_eq!(
@@ -366,7 +355,7 @@ fn resolve_entrypoints_infers_workspace_package_directory_entry() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+        graph::NodeId::file(root.join("packages/local/src/index.mts"))
     );
     assert_eq!(
         entrypoints[0].file,
@@ -382,7 +371,7 @@ fn resolve_entrypoints_infers_plain_directory_index_entry() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("src/index.ts"))
+        graph::NodeId::file(root.join("src/index.ts"))
     );
     assert_eq!(entrypoints[0].file, root.join("src/index.ts"));
 }
@@ -395,7 +384,7 @@ fn resolve_entrypoints_infers_plain_directory_cjs_index_entry() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("index.cjs"))
+        graph::NodeId::file(root.join("index.cjs"))
     );
     assert_eq!(entrypoints[0].file, root.join("index.cjs"));
 }
@@ -406,7 +395,7 @@ fn resolve_entrypoints_keeps_directory_without_entry_as_file_node() {
     let args = parse(&["deps", "empty"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
-    assert_eq!(entrypoints[0].node, graph::NodeId::File(root.join("empty")));
+    assert_eq!(entrypoints[0].node, graph::NodeId::file(root.join("empty")));
     assert_eq!(entrypoints[0].file, root.join("empty"));
 }
 
@@ -418,7 +407,7 @@ fn resolve_entrypoints_accepts_workspace_package_specifier() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+        graph::NodeId::file(root.join("packages/local/src/index.mts"))
     );
     assert_eq!(
         entrypoints[0].file,
@@ -463,7 +452,7 @@ fn resolve_entrypoints_treats_missing_source_path_with_existing_parent_as_file_n
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("src/new-file.ts"))
+        graph::NodeId::file(root.join("src/new-file.ts"))
     );
 }
 
@@ -483,7 +472,7 @@ fn explicit_directory_does_not_infer_a_gitignored_index_file() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(fixture.path().join("explicit-dir"))
+        graph::NodeId::file(fixture.path().join("explicit-dir"))
     );
     assert_ne!(entrypoints[0].file, ignored_index);
 }

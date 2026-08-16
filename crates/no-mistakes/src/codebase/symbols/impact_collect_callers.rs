@@ -102,7 +102,7 @@ fn caller_entries(
             continue;
         }
         if let NodeId::File(file) = &entry.node {
-            if export_files.contains(file.as_path()) && !has_file_level_import_edge(&entry.via) {
+            if export_files.contains(file.as_ref()) && !has_file_level_import_edge(&entry.via) {
                 continue;
             }
         }

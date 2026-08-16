@@ -111,7 +111,7 @@ fn tests_plan_binary_lockfile_fallback_requires_explicit_opt_in() {
 }
 
 // Covers workspace package tracing: when a lockfile bumps a workspace package
-// version, plan.rs falls back to NodeId::File(workspace_entry) when
+// version, plan.rs falls back to NodeId::file(workspace_entry) when
 // NodeId::Module(pkg_name) has no reverse edges, and BFS from the entry file
 // reaches consumers of that workspace package.
 #[test]

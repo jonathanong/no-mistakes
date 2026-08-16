@@ -38,15 +38,15 @@ fn collect_import_edges(
                         let target = graph_files.visible_path(target)?;
                         return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(|| {
                             (
-                                NodeId::File((*path).clone()),
-                                NodeId::File(target.to_path_buf()),
+                                NodeId::file((*path).clone()),
+                                NodeId::file(target),
                                 kind,
                             )
                         });
                     }
                     if classification.is_unresolved_external() {
                         return bare_module_node(&imp.specifier)
-                            .map(|module| (NodeId::File((*path).clone()), module, kind));
+                            .map(|module| (NodeId::file((*path).clone()), module, kind));
                     }
                     None
                 })
@@ -76,8 +76,8 @@ fn collect_asset_edges(
                             return None;
                         }
                         Some((
-                            NodeId::File((*path).clone()),
-                            NodeId::File(target.to_path_buf()),
+                            NodeId::file((*path).clone()),
+                            NodeId::file(target),
                             EdgeKind::AssetImport,
                         ))
                     })
@@ -120,8 +120,8 @@ fn collect_workspace_edges(
                                 _ => EdgeKind::WorkspaceImport,
                             };
                             (
-                                NodeId::File((*path).clone()),
-                                NodeId::File(entry.to_path_buf()),
+                                NodeId::file((*path).clone()),
+                                NodeId::file(entry),
                                 kind,
                             )
                         })

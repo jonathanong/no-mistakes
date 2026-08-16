@@ -395,7 +395,7 @@ fn shared_lazy_import_facts_are_reused_by_later_symbol_queries() {
 fn traversal_queue_root_helpers_cover_missing_deps_and_module_entrypoints() {
     let file = PathBuf::from("/repo/src/queue.ts");
     let roots = vec![
-        NodeId::File(file.clone()),
+        NodeId::file(file.clone()),
         NodeId::Module("queue-package".to_string()),
     ];
     let expanded = roots_with_exported_symbol_roots_by(&roots, |_| None);

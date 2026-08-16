@@ -54,7 +54,7 @@ pub(crate) fn generate_direct_test_owner_plan_with_prepared(
             );
         }
 
-        let changed_node = NodeId::File(changed.clone());
+        let changed_node = NodeId::file(changed.clone());
         for (dependent, edge) in graph
             .dependents_of_node(&changed_node)
             .into_iter()
@@ -63,13 +63,13 @@ pub(crate) fn generate_direct_test_owner_plan_with_prepared(
             let NodeId::File(test_path) = dependent else {
                 continue;
             };
-            if !discovered_set.contains(test_path) {
+            if !discovered_set.contains(test_path.as_ref()) {
                 continue;
             }
             let test_rel = relative_path(root, test_path);
             insert_selection(
                 &mut selected,
-                test_path.clone(),
+                test_path.to_path_buf(),
                 SelectedTest {
                     test_file: test_rel.clone(),
                     confidence: crate::tests::plan::path_confidence(&[*edge]),

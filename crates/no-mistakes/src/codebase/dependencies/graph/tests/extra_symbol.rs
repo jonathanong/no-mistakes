@@ -35,10 +35,7 @@ fn graph_private_helpers_cover_noop_branches() {
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
     let file = p("/src/worker.mts");
-    let queue_job = NodeId::QueueJob {
-        queue_file: p("/src/queue.mts"),
-        job: "send".to_string(),
-    };
+    let queue_job = NodeId::queue_job(p("/src/queue.mts"), "send".to_string());
     test_support::add_distinct_worker_file_edges(
         &mut forward,
         &mut reverse,
@@ -53,10 +50,7 @@ fn graph_private_helpers_cover_noop_branches() {
 #[test]
 fn symbol_node_file_helpers_render_paths() {
     let root = p("/repo");
-    let symbol = NodeId::Symbol {
-        file: p("/repo/src/current.mts"),
-        symbol: "alpha".to_string(),
-    };
+    let symbol = NodeId::symbol(p("/repo/src/current.mts"), "alpha".to_string());
 
     assert_eq!(symbol.as_file(), Some(p("/repo/src/current.mts").as_path()));
     assert_eq!(symbol.display_name(&root), "src/current.mts#alpha");
@@ -197,33 +191,18 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
     );
 
     assert!(edges.contains(&(
-        NodeId::File(current.clone()),
-        NodeId::Symbol {
-            file: current.clone(),
-            symbol: "Alias".to_string(),
-        },
+        NodeId::file(current.clone()),
+        NodeId::symbol(current.clone(), "Alias".to_string()),
         EdgeKind::TypeImport
     )));
     assert!(edges.contains(&(
-        NodeId::Symbol {
-            file: current.clone(),
-            symbol: "Alias".to_string(),
-        },
-        NodeId::Symbol {
-            file: target.clone(),
-            symbol: "SourceType".to_string(),
-        },
+        NodeId::symbol(current.clone(), "Alias".to_string()),
+        NodeId::symbol(target.clone(), "SourceType".to_string()),
         EdgeKind::TypeImport
     )));
     assert!(edges.contains(&(
-        NodeId::Symbol {
-            file: current,
-            symbol: "run".to_string(),
-        },
-        NodeId::Symbol {
-            file: target,
-            symbol: "used".to_string(),
-        },
+        NodeId::symbol(current, "run".to_string()),
+        NodeId::symbol(target, "used".to_string()),
         EdgeKind::Import
     )));
 }
@@ -257,7 +236,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             &workspace,
             &visible,
         ),
-        Some((NodeId::File(source.clone()), EdgeKind::Import))
+        Some((NodeId::file(source.clone()), EdgeKind::Import))
     );
     assert_eq!(
         import_target(
@@ -268,7 +247,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             &workspace,
             &visible,
         ),
-        Some((NodeId::File(source.clone()), EdgeKind::TypeImport))
+        Some((NodeId::file(source.clone()), EdgeKind::TypeImport))
     );
     assert_eq!(
         import_target(
@@ -279,7 +258,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             &workspace,
             &visible,
         ),
-        Some((NodeId::File(source), EdgeKind::Require))
+        Some((NodeId::file(source), EdgeKind::Require))
     );
     assert_eq!(
         import_target(
@@ -290,7 +269,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             &workspace,
             &visible,
         ),
-        Some((NodeId::File(asset), EdgeKind::AssetImport))
+        Some((NodeId::file(asset), EdgeKind::AssetImport))
     );
     assert_eq!(
         import_target(
@@ -354,7 +333,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
     assert_eq!(
         scoped.get("run"),
         Some(&vec![(
-            NodeId::File(p("/repo/src/source.mts")),
+            NodeId::file(p("/repo/src/source.mts")),
             EdgeKind::Import
         )])
     );
@@ -364,16 +343,13 @@ fn symbol_import_target_helpers_cover_node_kinds() {
 fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     let owner = p("/repo/src/owner.mts");
     let dep = p("/repo/src/dep.mts");
-    let symbol = NodeId::Symbol {
-        file: owner.clone(),
-        symbol: "alpha".to_string(),
-    };
+    let symbol = NodeId::symbol(owner.clone(), "alpha".to_string());
     let mut edges = EdgeMap::new();
     edges.insert(
         symbol.clone(),
         vec![
-            (NodeId::File(owner.clone()), EdgeKind::Import),
-            (NodeId::File(dep.clone()), EdgeKind::Require),
+            (NodeId::file(owner.clone()), EdgeKind::Import),
+            (NodeId::file(dep.clone()), EdgeKind::Require),
         ],
     );
 
@@ -389,13 +365,13 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     let unfiltered =
         bfs_skipping_symbol_owner_files(std::slice::from_ref(&symbol), &edges, None, None);
     assert_eq!(unfiltered.len(), 1);
-    assert_eq!(unfiltered[0].node, NodeId::File(dep));
+    assert_eq!(unfiltered[0].node, NodeId::file(dep));
 
     let limited =
         bfs_skipping_symbol_owner_files(std::slice::from_ref(&symbol), &edges, Some(0), None);
     assert!(limited.is_empty());
 
-    let file_start = NodeId::File(owner);
+    let file_start = NodeId::file(owner);
     let empty = bfs_skipping_symbol_owner_files(&[file_start], &edges, Some(0), None);
     assert!(empty.is_empty());
 }
@@ -404,31 +380,25 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
 fn symbol_bfs_skips_only_the_current_symbol_owner_file() {
     let owner_a = p("/repo/src/a.mts");
     let owner_b = p("/repo/src/b.mts");
-    let symbol_a = NodeId::Symbol {
-        file: owner_a.clone(),
-        symbol: "alpha".to_string(),
-    };
-    let symbol_b = NodeId::Symbol {
-        file: owner_b.clone(),
-        symbol: "beta".to_string(),
-    };
+    let symbol_a = NodeId::symbol(owner_a.clone(), "alpha".to_string());
+    let symbol_b = NodeId::symbol(owner_b.clone(), "beta".to_string());
     let mut edges = EdgeMap::new();
     edges.insert(
         symbol_a.clone(),
         vec![
-            (NodeId::File(owner_a.clone()), EdgeKind::Import),
-            (NodeId::File(owner_b.clone()), EdgeKind::Import),
+            (NodeId::file(owner_a.clone()), EdgeKind::Import),
+            (NodeId::file(owner_b.clone()), EdgeKind::Import),
         ],
     );
     edges.insert(
         symbol_b.clone(),
-        vec![(NodeId::File(owner_b.clone()), EdgeKind::Import)],
+        vec![(NodeId::file(owner_b.clone()), EdgeKind::Import)],
     );
 
     let result = bfs_skipping_symbol_owner_files(&[symbol_a, symbol_b], &edges, None, None);
     let nodes: Vec<_> = result.into_iter().map(|entry| entry.node).collect();
-    assert!(!nodes.contains(&NodeId::File(owner_a)));
-    assert!(nodes.contains(&NodeId::File(owner_b)));
+    assert!(!nodes.contains(&NodeId::file(owner_a)));
+    assert!(nodes.contains(&NodeId::file(owner_b)));
 }
 
 #[test]
@@ -436,14 +406,8 @@ fn symbol_bfs_widens_reached_symbols_to_owner_files() {
     let source = p("/repo/src/source.mts");
     let owner = p("/repo/src/owner.mts");
     let unrelated_consumer = p("/repo/src/unrelated-consumer.mts");
-    let source_symbol = NodeId::Symbol {
-        file: source,
-        symbol: "alpha".to_string(),
-    };
-    let owner_symbol = NodeId::Symbol {
-        file: owner.clone(),
-        symbol: "usesAlpha".to_string(),
-    };
+    let source_symbol = NodeId::symbol(source, "alpha".to_string());
+    let owner_symbol = NodeId::symbol(owner.clone(), "usesAlpha".to_string());
     let mut edges = EdgeMap::new();
     edges.insert(
         source_symbol.clone(),
@@ -451,19 +415,19 @@ fn symbol_bfs_widens_reached_symbols_to_owner_files() {
     );
     edges.insert(
         owner_symbol.clone(),
-        vec![(NodeId::File(owner.clone()), EdgeKind::Import)],
+        vec![(NodeId::file(owner.clone()), EdgeKind::Import)],
     );
     edges.insert(
-        NodeId::File(owner.clone()),
-        vec![(NodeId::File(unrelated_consumer.clone()), EdgeKind::Import)],
+        NodeId::file(owner.clone()),
+        vec![(NodeId::file(unrelated_consumer.clone()), EdgeKind::Import)],
     );
 
     let result = bfs_skipping_symbol_owner_files(&[source_symbol], &edges, None, None);
     let nodes: Vec<_> = result.into_iter().map(|entry| entry.node).collect();
 
     assert!(nodes.contains(&owner_symbol));
-    assert!(nodes.contains(&NodeId::File(owner)));
-    assert!(nodes.contains(&NodeId::File(unrelated_consumer)));
+    assert!(nodes.contains(&NodeId::file(owner)));
+    assert!(nodes.contains(&NodeId::file(unrelated_consumer)));
 }
 
 include!("extra_symbol_graph_edges.rs");

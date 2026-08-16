@@ -77,10 +77,7 @@ fn collect_top_level_imported_edges(
         let (target, kind) = target_node(imported);
         for export in &exports {
             edges.push((
-                NodeId::Symbol {
-                    file: path.to_path_buf(),
-                    symbol: export.clone(),
-                },
+                NodeId::symbol(path, export.clone()),
                 target.clone(),
                 kind,
             ));
@@ -101,10 +98,7 @@ fn collect_file_scope_import_edges(
         }
         for (target, kind) in imports {
             edges.push((
-                NodeId::Symbol {
-                    file: path.to_path_buf(),
-                    symbol: export_symbol.clone(),
-                },
+                NodeId::symbol(path, export_symbol.clone()),
                 target.clone(),
                 *kind,
             ));

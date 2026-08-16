@@ -98,16 +98,13 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     assert_eq!(
         target_node(imported.get("workspaceValue").unwrap()),
         (
-            NodeId::Symbol {
-                file: workspace_target.clone(),
-                symbol: "workspaceValue".to_string()
-            },
+            NodeId::symbol(workspace_target.clone(), "workspaceValue".to_string()),
             EdgeKind::WorkspaceImport
         )
     );
     assert_eq!(
         target_node(imported.get("payload").unwrap()),
-        (NodeId::File(asset), EdgeKind::AssetImport)
+        (NodeId::file(asset), EdgeKind::AssetImport)
     );
     assert_eq!(
         target_node(imported.get("useMemo").unwrap()),
@@ -126,10 +123,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     assert_eq!(
         namespace_target_node(namespaces.get("core").unwrap(), "parse"),
         (
-            NodeId::Symbol {
-                file: workspace_target.clone(),
-                symbol: "parse".to_string()
-            },
+            NodeId::symbol(workspace_target.clone(), "parse".to_string()),
             EdgeKind::WorkspaceTypeImport
         )
     );
@@ -188,10 +182,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
             &visible,
         ),
         Some((
-            NodeId::Symbol {
-                file: workspace_target,
-                symbol: "member".to_string()
-            },
+            NodeId::symbol(workspace_target, "member".to_string()),
             EdgeKind::WorkspaceTypeImport
         ))
     );
@@ -328,22 +319,13 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
     );
 
     assert!(edges.contains(&(
-        NodeId::Symbol {
-            file: current.clone(),
-            symbol: "keep".to_string(),
-        },
-        NodeId::Symbol {
-            file: target,
-            symbol: "keep".to_string(),
-        },
+        NodeId::symbol(current.clone(), "keep".to_string()),
+        NodeId::symbol(target, "keep".to_string()),
         EdgeKind::Import
     )));
     assert!(!edges.iter().any(|(from, _, _)| {
         *from
-            == NodeId::Symbol {
-                file: current.clone(),
-                symbol: "default".to_string(),
-            }
+            == NodeId::symbol(current.clone(), "default".to_string())
     }));
 }
 
@@ -437,18 +419,9 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
 
 #[test]
 fn symbol_bfs_records_alternate_via_kinds_for_existing_nodes() {
-    let root = NodeId::Symbol {
-        file: p("/repo/src/root.mts"),
-        symbol: "root".to_string(),
-    };
-    let left = NodeId::Symbol {
-        file: p("/repo/src/left.mts"),
-        symbol: "left".to_string(),
-    };
-    let right = NodeId::Symbol {
-        file: p("/repo/src/right.mts"),
-        symbol: "right".to_string(),
-    };
+    let root = NodeId::symbol(p("/repo/src/root.mts"), "root".to_string());
+    let left = NodeId::symbol(p("/repo/src/left.mts"), "left".to_string());
+    let right = NodeId::symbol(p("/repo/src/right.mts"), "right".to_string());
     let target = NodeId::Module("react".to_string());
     let mut edges = EdgeMap::new();
     edges.insert(

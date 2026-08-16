@@ -230,7 +230,7 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     let counts = crate::ast::finish_parse_count(&root);
 
     assert!(graph
-        .dependencies_of_node(&NodeId::File(swift_file))
+        .dependencies_of_node(&NodeId::file(swift_file))
         .is_some_and(|edges| edges.iter().any(|(to, kind)| {
             *kind == EdgeKind::HttpCall && to.as_file() == Some(admin_route.as_path())
         })));

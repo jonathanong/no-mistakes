@@ -64,7 +64,7 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
         Some(root.join("packages/unit/setup/list.ts"))
     );
     let graph = shared.canonical_graph().unwrap();
-    let owner = crate::codebase::dependencies::graph::NodeId::File(
+    let owner = crate::codebase::dependencies::graph::NodeId::file(
         root.join("packages/unit/tests/owner.test.ts"),
     );
     let setup = crate::codebase::dependencies::graph::EdgeKind::VitestSetup(
@@ -74,19 +74,19 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
         graph.dependencies_of_node(&owner),
         Some(&vec![
             (
-                crate::codebase::dependencies::graph::NodeId::File(
+                crate::codebase::dependencies::graph::NodeId::file(
                     root.join("packages/unit/setup/aliased-default.ts"),
                 ),
                 setup,
             ),
             (
-                crate::codebase::dependencies::graph::NodeId::File(
+                crate::codebase::dependencies::graph::NodeId::file(
                     root.join("packages/unit/setup/aliased-namespace.ts"),
                 ),
                 setup,
             ),
             (
-                crate::codebase::dependencies::graph::NodeId::File(
+                crate::codebase::dependencies::graph::NodeId::file(
                     root.join("packages/unit/setup/aliased.ts"),
                 ),
                 crate::codebase::dependencies::graph::EdgeKind::VitestSetup(
