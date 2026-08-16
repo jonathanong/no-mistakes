@@ -136,8 +136,10 @@ fn php_use_re() -> &'static Regex {
 fn php_class_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*(?:final\s+|abstract\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*)")
-            .expect("class")
+        Regex::new(
+            r"(?m)^\s*(?:final\s+|abstract\s+)?(?:class|interface|trait|enum)\s+([A-Za-z_][A-Za-z0-9_]*)",
+        )
+        .expect("class")
     })
 }
 

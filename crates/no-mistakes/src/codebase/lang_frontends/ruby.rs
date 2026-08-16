@@ -20,10 +20,11 @@ fn parse_ruby_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<La
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
-        module: path
-            .file_stem()
-            .map(|name| name.to_string_lossy().into_owned()),
-        imports: extract_requires(&text, path),
+        module: ruby_module_key(path, roots).or_else(|| {
+            path.file_stem()
+                .map(|name| name.to_string_lossy().into_owned())
+        }),
+        imports: extract_requires(&text, path, roots),
         declarations: extract_named(&text, ruby_decl_re()),
         references: extract_named(&text, ruby_const_re()),
         route_handlers: extract_pairs(&text, rails_route_re()),
@@ -33,11 +34,24 @@ fn parse_ruby_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<La
     })
 }
 
-fn extract_requires(source: &str, path: &Path) -> Vec<String> {
+fn ruby_module_key(path: &Path, roots: &[PathBuf]) -> Option<String> {
+    let root = roots
+        .iter()
+        .filter(|candidate| path.starts_with(candidate))
+        .max_by_key(|candidate| candidate.components().count())?;
+    let rel = path.strip_prefix(root).ok()?;
+    let key = rel.to_string_lossy().replace('\\', "/");
+    Some(key.trim_end_matches(".rb").to_string())
+}
+
+fn extract_requires(source: &str, path: &Path, roots: &[PathBuf]) -> Vec<String> {
     let mut imports = extract_named(source, ruby_require_re());
     for rel in extract_named(source, ruby_require_relative_re()) {
         if let Some(parent) = path.parent() {
-            let resolved = parent.join(rel);
+            let resolved = parent.join(rel).with_extension("rb");
+            if let Some(key) = ruby_module_key(&resolved, roots) {
+                imports.push(key);
+            }
             if let Some(stem) = resolved.file_stem() {
                 imports.push(stem.to_string_lossy().into_owned());
             }

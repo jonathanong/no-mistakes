@@ -1,5 +1,6 @@
 <?php
 
+use App\Contracts\Mailer;
 use App\Http\Controllers\{UserController};
 use App\Http\Controllers\UserController;
 

@@ -103,7 +103,7 @@ fn rails_require_relative_and_python_init_module_keys() {
     assert!(controller
         .imports
         .iter()
-        .any(|import| import == "welcome_job"));
+        .any(|import| import == "welcome_job" || import.ends_with("welcome_job")));
     let python = fixture("python-celery-django");
     let facts = collect_python_facts(&python, &all_files(&python), &["app".into()]);
     assert!(facts

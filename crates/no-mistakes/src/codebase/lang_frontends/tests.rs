@@ -183,4 +183,8 @@ fn php_collects_laravel_route_and_dispatch() {
         .declarations
         .iter()
         .any(|name| name == "App.Jobs.SomeJob" || name == "SomeJob"));
+    assert!(facts
+        .declarations
+        .keys()
+        .any(|name| name.contains("Mailer")));
 }

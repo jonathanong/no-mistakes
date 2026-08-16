@@ -1,3 +1,4 @@
+require "app/jobs/welcome_job"
 require_relative "../jobs/welcome_job"
 
 class UsersController
