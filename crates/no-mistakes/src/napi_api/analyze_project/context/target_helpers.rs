@@ -35,7 +35,11 @@ fn legacy_symbol_target_files(
         if args.mode == crate::codebase::symbols::SymbolsMode::SignatureImpact {
             continue;
         }
-        files.extend(args.files.into_iter().map(|file| authoritative_path(root, file)));
+        files.extend(
+            args.files
+                .into_iter()
+                .map(|file| authoritative_path(root, file)),
+        );
     }
     Ok(files)
 }
@@ -110,11 +114,23 @@ fn authoritative_report_files(
     Ok(files)
 }
 
-fn authoritative_path(root: &Path, path: PathBuf) -> PathBuf {
+pub(crate) fn authoritative_path(root: &Path, path: PathBuf) -> PathBuf {
     let path = if path.is_absolute() {
         path
     } else {
-        root.join(path)
+        let from_root = root.join(&path);
+        if from_root.exists() {
+            from_root
+        } else if let Ok(cwd) = std::env::current_dir() {
+            let from_cwd = cwd.join(&path);
+            if from_cwd.exists() {
+                from_cwd
+            } else {
+                from_root
+            }
+        } else {
+            from_root
+        }
     };
     crate::codebase::ts_resolver::normalize_path(&path)
 }

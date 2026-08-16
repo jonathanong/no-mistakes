@@ -4,7 +4,7 @@ use super::{
 };
 use std::cell::Cell;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 impl super::AnalyzeProjectContext {
     pub(in crate::napi_api::analyze_project) fn root_source_read_count(&self) -> usize {
@@ -93,6 +93,31 @@ fn authoritative_report_files_strip_legacy_symbol_suffixes() {
     assert!(
         body.contains("parse_entrypoint"),
         "legacy files#symbol targets must strip the suffix before is_file"
+    );
+}
+
+#[test]
+fn authoritative_path_falls_back_to_cwd_when_missing_under_root() {
+    let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let cargo = PathBuf::from("Cargo.toml");
+    let under_root = super::authoritative_path(&workspace, cargo.clone());
+    assert!(under_root.ends_with("Cargo.toml"));
+    assert!(under_root.is_file());
+
+    let missing_root = Path::new("/no-mistakes-missing-graph-root");
+    let from_cwd = super::authoritative_path(missing_root, cargo);
+    assert!(from_cwd.is_file());
+    assert_eq!(
+        from_cwd,
+        crate::codebase::ts_resolver::normalize_path(
+            &std::env::current_dir().unwrap().join("Cargo.toml")
+        )
+    );
+
+    let missing = super::authoritative_path(missing_root, PathBuf::from("no-such-entry.ts"));
+    assert_eq!(
+        missing,
+        crate::codebase::ts_resolver::normalize_path(&missing_root.join("no-such-entry.ts"))
     );
 }
 
