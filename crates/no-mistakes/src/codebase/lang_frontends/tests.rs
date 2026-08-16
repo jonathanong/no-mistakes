@@ -152,10 +152,15 @@ fn rails_collects_route_and_active_job() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "/api/users" && handler == "users#index"));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/admin/users" && handler == "admin/users#index"));
+    assert!(facts.declarations.contains_key("Admin::UsersController"));
     let controller = facts
         .files
         .values()
-        .find(|file| file.path.ends_with("users_controller.rb"))
+        .find(|file| file.path.ends_with("controllers/users_controller.rb"))
         .expect("controller");
     assert_eq!(controller.queue_enqueues, vec!["WelcomeJob".to_string()]);
 }
@@ -187,4 +192,9 @@ fn php_collects_laravel_route_and_dispatch() {
         .declarations
         .keys()
         .any(|name| name.contains("Mailer")));
+    assert!(routes
+        .imports
+        .iter()
+        .any(|import| import == "App.Jobs.SomeJob"));
+    assert!(routes.imports.iter().all(|import| !import.contains(" as ")));
 }

@@ -104,3 +104,52 @@ fn language_frontend_edges_skip_empty_config() {
     assert!(collect_language_frontend_edges(&root, &files, Some(&GraphConfigOptions::default()))
         .is_empty());
 }
+
+#[test]
+fn language_frontend_edges_cover_kafka_misses_and_empty_queue_globs() {
+    let kafka = lang_fixture("kafka-topics");
+    let mut files = lang_files(&kafka);
+    files.push(kafka.join("missing-producer.ts"));
+    let mut options = lang_options();
+    options.queue_enqueues = vec!["[".into(), "producer.ts".into()];
+    options.queue_workers = vec!["consumer.ts".into()];
+    let edges = collect_language_frontend_edges(&kafka, &files, Some(&options));
+    assert!(edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::QueueEnqueue));
+
+    let python = lang_fixture("python-celery-django");
+    let no_queues = GraphConfigOptions {
+        python_packages: vec!["app".into()],
+        ..GraphConfigOptions::default()
+    };
+    let python_edges =
+        collect_language_frontend_edges(&python, &lang_files(&python), Some(&no_queues));
+    assert!(python_edges
+        .iter()
+        .all(|(_, _, kind)| *kind != EdgeKind::QueueEnqueue));
+
+    let rails = lang_fixture("rails-jobs");
+    let rails_edges = collect_language_frontend_edges(&rails, &lang_files(&rails), Some(&lang_options()));
+    assert!(rails_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from.as_file().is_some_and(|path| path.ends_with("routes.rb"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("admin/users_controller.rb"))
+    }));
+}
+
+#[test]
+fn language_frontend_config_keeps_already_prefixed_queue_globs() {
+    let root = lang_fixture("queue-prefix");
+    let options = graph_config_options(&root).expect("queue-prefix config");
+    assert!(options
+        .queue_enqueues
+        .iter()
+        .any(|glob| glob == "backend/app/**/*.py"));
+    assert!(options
+        .queue_enqueues
+        .iter()
+        .any(|glob| glob == "backend/app/**/*.py" || glob.starts_with("backend/")));
+}

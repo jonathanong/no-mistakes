@@ -25,11 +25,7 @@ fn emit_route_edges(facts: &LangFactMap, edges: &mut Vec<Edge>) {
 fn route_handler_names(handler: &str) -> Vec<String> {
     let trimmed = handler.replace(['\'', '"', ' '], "");
     if let Some((controller, _)) = trimmed.split_once('#') {
-        let mut name = controller.replace('/', "_");
-        if !name.ends_with("Controller") {
-            name.push_str("Controller");
-        }
-        return vec![snake_to_pascal(&name), name];
+        return rails_controller_names(controller);
     }
     if let Some((class, _)) = trimmed.split_once("::") {
         return vec![class.rsplit('\\').next().unwrap_or(class).to_string()];
@@ -42,15 +38,32 @@ fn route_handler_names(handler: &str) -> Vec<String> {
     vec![view.rsplit('.').next().unwrap_or(view).to_string()]
 }
 
+fn rails_controller_names(controller: &str) -> Vec<String> {
+    let parts: Vec<&str> = controller.split('/').filter(|part| !part.is_empty()).collect();
+    let last = parts.last().copied().unwrap_or(controller);
+    let mut class = last.to_string();
+    if !class.ends_with("Controller") {
+        class.push_str("Controller");
+    }
+    let class = snake_to_pascal(&class);
+    if parts.len() <= 1 {
+        return vec![class];
+    }
+    let namespace = parts[..parts.len() - 1]
+        .iter()
+        .map(|part| snake_to_pascal(part))
+        .collect::<Vec<_>>()
+        .join("::");
+    vec![format!("{namespace}::{class}"), class]
+}
+
 fn snake_to_pascal(name: &str) -> String {
     name.split('_')
         .filter(|part| !part.is_empty())
         .map(|part| {
             let mut chars = part.chars();
-            match chars.next() {
-                Some(first) => first.to_ascii_uppercase().to_string() + chars.as_str(),
-                None => String::new(),
-            }
+            let first = chars.next().expect("non-empty");
+            first.to_ascii_uppercase().to_string() + chars.as_str()
         })
         .collect()
 }

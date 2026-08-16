@@ -83,6 +83,10 @@ fn go_and_rust_collectors_cover_missing_manifest_roots() {
     let go = fixture("go-asynq");
     let go_facts = collect_go_facts(&go, &all_files(&go), &["worker".into()]);
     assert!(!go_facts.files.is_empty());
+    assert!(go_facts
+        .files
+        .values()
+        .any(|file| file.path.ends_with("pkg/ping.go") && file.module.as_deref() == Some("pkg")));
     let rust = fixture("rust-mods");
     let rust_facts = collect_rust_facts(&rust, &all_files(&rust), &["src".into()]);
     assert!(rust_facts
@@ -98,7 +102,7 @@ fn rails_require_relative_and_python_init_module_keys() {
     let controller = facts
         .files
         .values()
-        .find(|file| file.path.ends_with("users_controller.rb"))
+        .find(|file| file.path.ends_with("controllers/users_controller.rb"))
         .expect("controller");
     assert!(controller
         .imports
@@ -110,4 +114,9 @@ fn rails_require_relative_and_python_init_module_keys() {
         .files
         .values()
         .any(|file| file.module.as_deref() == Some("app")));
+    let pkg = std::path::Path::new("/pkg");
+    assert_eq!(
+        super::facts::module_from_path(pkg, &pkg.join("foo")).as_deref(),
+        Some("foo")
+    );
 }

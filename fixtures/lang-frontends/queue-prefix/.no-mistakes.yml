@@ -1,0 +1,10 @@
+projects:
+  api:
+    type: server
+    root: backend
+    queues:
+      enqueues:
+        - backend/app/**/*.py
+        - app/**/*.py
+      workers:
+        - app/**/*.py

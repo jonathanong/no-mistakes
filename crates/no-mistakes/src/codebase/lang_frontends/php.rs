@@ -110,9 +110,14 @@ fn extract_php_uses(source: &str) -> Vec<String> {
             .map(|m| m.as_str().replace('\\', "."))
             .unwrap_or_default();
         for member in cap.get(2).map(|m| m.as_str()).unwrap_or("").split(',') {
-            let member = member.trim();
-            if !member.is_empty() {
-                imports.push(format!("{prefix}.{member}"));
+            let ident = member
+                .split_whitespace()
+                .take_while(|token| !token.eq_ignore_ascii_case("as"))
+                .next()
+                .unwrap_or("")
+                .trim();
+            if !ident.is_empty() {
+                imports.push(format!("{prefix}.{ident}"));
             }
         }
     }
