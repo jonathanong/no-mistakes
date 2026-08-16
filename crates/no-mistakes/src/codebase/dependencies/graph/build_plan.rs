@@ -25,6 +25,7 @@ pub struct GraphBuildPlan {
     pub dotnet: bool,
     pub swift: bool,
     pub terraform: bool,
+    pub language_frontends: bool,
 }
 
 impl GraphBuildPlan {
@@ -54,6 +55,7 @@ impl GraphBuildPlan {
             dotnet: true,
             swift: true,
             terraform: true,
+            language_frontends: true,
         }
     }
 
@@ -125,6 +127,17 @@ impl GraphBuildPlan {
             terraform: allowed.contains(&EdgeKind::TerraformReference)
                 || allowed.contains(&EdgeKind::TerraformModuleRef)
                 || allowed.contains(&EdgeKind::TerraformOutputRef),
+            language_frontends: allowed.contains(&EdgeKind::PythonImport)
+                || allowed.contains(&EdgeKind::PythonReference)
+                || allowed.contains(&EdgeKind::GoImport)
+                || allowed.contains(&EdgeKind::GoReference)
+                || allowed.contains(&EdgeKind::RustUse)
+                || allowed.contains(&EdgeKind::RustMod)
+                || allowed.contains(&EdgeKind::RustPackage)
+                || allowed.contains(&EdgeKind::RubyRequire)
+                || allowed.contains(&EdgeKind::RubyReference)
+                || allowed.contains(&EdgeKind::PhpUse)
+                || allowed.contains(&EdgeKind::PhpPackage),
         }
     }
 
@@ -150,6 +163,7 @@ impl GraphBuildPlan {
         self.dotnet |= other.dotnet;
         self.swift |= other.swift;
         self.terraform |= other.terraform;
+        self.language_frontends |= other.language_frontends;
     }
 
     pub fn with_symbols(mut self, symbols: bool) -> Self {
@@ -186,6 +200,7 @@ fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
         || plan.dotnet
         || plan.swift
         || plan.terraform
+        || plan.language_frontends
 }
 
 fn effective_ts_fact_plan(

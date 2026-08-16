@@ -23,13 +23,14 @@ pub(crate) fn collect_php_facts(
 fn parse_php_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<LangFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
     let text = strip_comments_keep_strings(&source);
+    let classes = php_classes(&text);
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
-        module: extract_named(&text, php_class_re()).into_iter().next(),
+        module: classes.first().cloned(),
         imports: extract_named(&text, php_use_re()),
-        declarations: extract_named(&text, php_class_re()),
-        references: extract_named(&text, php_class_re()),
+        declarations: classes,
+        references: extract_named(&text, php_use_re()),
         route_handlers: extract_pairs(&text, laravel_route_re()),
         queue_enqueues: extract_named(&text, laravel_dispatch_re()),
         queue_workers: if php_should_queue_re().is_match(&text) {
@@ -38,6 +39,25 @@ fn parse_php_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<Lan
             Vec::new()
         },
     })
+}
+
+fn php_classes(source: &str) -> Vec<String> {
+    let namespace = php_namespace_re()
+        .captures(source)
+        .and_then(|cap| cap.get(1))
+        .map(|m| m.as_str().replace('\\', "."));
+    let mut names = extract_named(source, php_class_re());
+    if let Some(namespace) = namespace {
+        names.extend(
+            names
+                .clone()
+                .into_iter()
+                .map(|name| format!("{namespace}.{name}")),
+        );
+    }
+    names.sort();
+    names.dedup();
+    names
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
@@ -59,6 +79,11 @@ fn extract_pairs(source: &str, re: &Regex) -> Vec<(String, String)> {
             ))
         })
         .collect()
+}
+
+fn php_namespace_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?m)^\s*namespace\s+([A-Za-z_\\][A-Za-z0-9_\\]*)").expect("ns"))
 }
 
 fn php_use_re() -> &'static Regex {

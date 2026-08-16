@@ -42,7 +42,10 @@ fn extract_requires(source: &str, path: &Path) -> Vec<String> {
     let mut imports = extract_named(source, ruby_require_re());
     for rel in extract_named(source, ruby_require_relative_re()) {
         if let Some(parent) = path.parent() {
-            imports.push(parent.join(rel).to_string_lossy().into_owned());
+            let resolved = parent.join(rel);
+            if let Some(stem) = resolved.file_stem() {
+                imports.push(stem.to_string_lossy().into_owned());
+            }
         }
     }
     imports.sort();

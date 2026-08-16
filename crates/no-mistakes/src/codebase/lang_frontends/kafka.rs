@@ -17,7 +17,8 @@ pub(crate) fn topic_identity(cluster: Option<&str>, topic: &str) -> String {
 
 pub(crate) fn scan_file(path: &Path) -> Option<(Vec<String>, Vec<String>)> {
     let source = std::fs::read_to_string(path).ok()?;
-    Some(extract_kafka_topics(&source))
+    let text = super::strip::strip_comments_keep_strings(&source);
+    Some(extract_kafka_topics(&text))
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {

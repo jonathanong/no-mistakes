@@ -3,30 +3,29 @@ use crate::codebase::lang_frontends::kafka::extract_kafka_topics;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/lang-frontends")
-        .join(name)
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/lang-frontends")
+            .join(name),
+    )
 }
 
 fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    walk(root, &mut files);
-    files.sort();
-    files
-}
-
-fn walk(dir: &std::path::Path, files: &mut Vec<PathBuf>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            walk(&path, files);
-        } else {
-            files.push(crate::codebase::ts_resolver::normalize_path(&path));
-        }
-    }
+    let repo = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
+    );
+    crate::codebase::ts_source::discover_visible_paths(&repo)
+        .into_iter()
+        .map(|path| {
+            let absolute = if path.is_absolute() {
+                path
+            } else {
+                repo.join(path)
+            };
+            crate::codebase::ts_resolver::normalize_path(&absolute)
+        })
+        .filter(|path| path.starts_with(root))
+        .collect()
 }
 
 #[test]
@@ -99,7 +98,11 @@ fn rust_collects_use_and_declaration() {
         .values()
         .find(|file| file.path.ends_with("lib.rs"))
         .expect("lib");
-    assert!(lib.imports.iter().any(|import| import.contains("mail")));
+    assert!(lib.imports.iter().any(|import| import == "mail"));
+    assert!(facts
+        .files
+        .values()
+        .any(|file| file.module.as_deref() == Some("mail")));
     assert!(facts.declarations.contains_key("Welcome"));
 }
 
@@ -143,6 +146,10 @@ fn php_collects_laravel_route_and_dispatch() {
         .find(|file| file.path.ends_with("SomeJob.php"))
         .expect("job");
     assert!(!job.queue_workers.is_empty());
+    assert!(job
+        .declarations
+        .iter()
+        .any(|name| name == "App.Jobs.SomeJob" || name == "SomeJob"));
 }
 
 #[test]

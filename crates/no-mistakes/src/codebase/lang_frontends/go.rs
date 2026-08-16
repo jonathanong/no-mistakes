@@ -24,10 +24,7 @@ fn parse_go_file(path: &Path, roots: &[PathBuf], modules: &[String]) -> Option<L
     let source = std::fs::read_to_string(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let package = owning_package(path, roots, modules);
-    let module = path
-        .parent()
-        .and_then(|dir| dir.file_name())
-        .map(|name| name.to_string_lossy().into_owned());
+    let module = go_import_path(path, roots);
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package,
@@ -39,6 +36,28 @@ fn parse_go_file(path: &Path, roots: &[PathBuf], modules: &[String]) -> Option<L
         queue_enqueues: extract_named(&text, asynq_task_re()),
         queue_workers: extract_named(&text, asynq_handle_re()),
     })
+}
+
+fn go_import_path(path: &Path, roots: &[PathBuf]) -> Option<String> {
+    let root = roots.iter().find(|candidate| path.starts_with(candidate))?;
+    let module = std::fs::read_to_string(root.join("go.mod"))
+        .ok()
+        .and_then(|source| {
+            source.lines().find_map(|line| {
+                line.strip_prefix("module ")
+                    .map(|value| value.trim().to_string())
+            })
+        });
+    let rel = path.parent()?.strip_prefix(root).ok()?;
+    let suffix = rel.to_string_lossy().replace('\\', "/");
+    match (module, suffix.as_str()) {
+        (Some(module), "") => Some(module),
+        (Some(module), suffix) => Some(format!("{module}/{suffix}")),
+        (None, "") => root
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned()),
+        (None, suffix) => Some(suffix.to_string()),
+    }
 }
 
 fn extract_go_imports(source: &str) -> Vec<String> {

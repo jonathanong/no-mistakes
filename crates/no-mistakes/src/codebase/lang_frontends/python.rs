@@ -123,7 +123,10 @@ fn python_import_re() -> &'static Regex {
 
 fn python_from_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"(?m)^\s*from\s+(\.*[A-Za-z_][\w.]*)\s+import").expect("from"))
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*from\s+(\.+(?:[A-Za-z_][\w.]*)?|[A-Za-z_][\w.]*)\s+import")
+            .expect("from")
+    })
 }
 
 fn python_decl_re() -> &'static Regex {

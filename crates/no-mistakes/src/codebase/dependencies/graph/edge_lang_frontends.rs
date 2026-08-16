@@ -67,17 +67,30 @@ fn emit_lang_edges(
         }
         for reference in &file.references {
             if let Some(targets) = facts.declarations.get(reference) {
-                push_file_edges(edges, &file.path, targets, ref_kind);
+                let scoped: std::collections::BTreeSet<_> = targets
+                    .iter()
+                    .filter(|target| {
+                        file.package.is_none()
+                            || facts.files.get(*target).and_then(|other| other.package.as_ref())
+                                == file.package.as_ref()
+                    })
+                    .cloned()
+                    .collect();
+                push_file_edges(edges, &file.path, &scoped, ref_kind);
             }
         }
     }
 }
 
 fn emit_queue_edges(facts: &LangFactMap, cluster: Option<&str>, edges: &mut Vec<Edge>) {
-    let mut workers: std::collections::HashMap<String, PathBuf> = std::collections::HashMap::new();
+    let mut workers: std::collections::HashMap<String, std::collections::BTreeSet<PathBuf>> =
+        std::collections::HashMap::new();
     for file in facts.files.values() {
         for job in &file.queue_workers {
-            workers.insert(topic_identity(cluster, job), file.path.clone());
+            workers
+                .entry(topic_identity(cluster, job))
+                .or_default()
+                .insert(file.path.clone());
         }
     }
     for file in facts.files.values() {
@@ -87,9 +100,19 @@ fn emit_queue_edges(facts: &LangFactMap, cluster: Option<&str>, edges: &mut Vec<
                 queue_file: file.path.clone(),
                 job: identity.clone(),
             };
-            edges.push((NodeId::File(file.path.clone()), node.clone(), EdgeKind::QueueEnqueue));
-            if let Some(worker) = workers.get(&identity) {
-                edges.push((node, NodeId::File(worker.clone()), EdgeKind::QueueWorker));
+            edges.push((
+                NodeId::File(file.path.clone()),
+                node.clone(),
+                EdgeKind::QueueEnqueue,
+            ));
+            if let Some(targets) = workers.get(&identity) {
+                for worker in targets {
+                    edges.push((
+                        node.clone(),
+                        NodeId::File(worker.clone()),
+                        EdgeKind::QueueWorker,
+                    ));
+                }
             }
         }
     }
@@ -98,12 +121,41 @@ fn emit_queue_edges(facts: &LangFactMap, cluster: Option<&str>, edges: &mut Vec<
 fn emit_route_edges(facts: &LangFactMap, edges: &mut Vec<Edge>) {
     for file in facts.files.values() {
         for (_, handler) in &file.route_handlers {
-            let name = handler.rsplit('.').next().unwrap_or(handler);
-            if let Some(targets) = facts.declarations.get(name) {
-                push_file_edges(edges, &file.path, targets, EdgeKind::RouteRef);
+            for name in route_handler_names(handler) {
+                if let Some(targets) = facts.declarations.get(&name) {
+                    push_file_edges(edges, &file.path, targets, EdgeKind::RouteRef);
+                }
             }
         }
     }
+}
+
+fn route_handler_names(handler: &str) -> Vec<String> {
+    let trimmed = handler.replace(['\'', '"', ' '], "");
+    if let Some((controller, _)) = trimmed.split_once('#') {
+        let mut name = controller.replace('/', "_");
+        if !name.ends_with("Controller") {
+            name.push_str("Controller");
+        }
+        return vec![snake_to_pascal(&name), name];
+    }
+    if let Some((class, _)) = trimmed.split_once("::") {
+        return vec![class.rsplit('\\').next().unwrap_or(class).to_string()];
+    }
+    vec![trimmed.rsplit('.').next().unwrap_or(&trimmed).to_string()]
+}
+
+fn snake_to_pascal(name: &str) -> String {
+    name.split('_')
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                Some(first) => first.to_ascii_uppercase().to_string() + chars.as_str(),
+                None => String::new(),
+            }
+        })
+        .collect()
 }
 
 fn emit_kafka_edges(

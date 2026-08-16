@@ -224,6 +224,17 @@ fn cargo_globs_include_tests_dir() {
 }
 
 #[test]
+fn python_relationship_enables_language_frontend_plan() {
+    let allowed = crate::codebase::dependencies::relationship_filter(&[
+        crate::codebase::dependencies::RelationshipArg::Python,
+    ])
+    .expect("python relationship");
+    let plan = crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
+    assert!(plan.language_frontends);
+    assert!(!plan.imports);
+}
+
+#[test]
 fn language_frontend_globs_are_explicit() {
     assert!(test_globs("python").iter().any(|glob| glob.contains("test_*.py")));
     assert!(test_globs("go").iter().any(|glob| glob.contains("*_test.go")));

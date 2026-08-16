@@ -34,19 +34,39 @@ fn parse_rust_file(
     let package_root = package
         .as_ref()
         .map(|name| crate::codebase::ts_resolver::normalize_path(&root.join(name)));
+    let src_root = package_root.as_ref().map(|pkg| {
+        let src = pkg.join("src");
+        if src.is_dir() {
+            src
+        } else {
+            pkg.clone()
+        }
+    });
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package,
-        module: package_root
+        module: src_root
             .as_ref()
             .and_then(|pkg| module_from_path(pkg, path)),
-        imports: extract_named(&text, rust_use_re()),
+        imports: rust_imports(&text),
         declarations: extract_named(&text, rust_decl_re()),
         references: extract_named(&text, rust_ref_re()),
         route_handlers: Vec::new(),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
     })
+}
+
+fn rust_imports(source: &str) -> Vec<String> {
+    let mut imports = extract_named(source, rust_use_re());
+    let prefixes: Vec<String> = imports
+        .iter()
+        .filter_map(|import| import.split('.').next().map(str::to_string))
+        .collect();
+    imports.extend(prefixes);
+    imports.sort();
+    imports.dedup();
+    imports
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {

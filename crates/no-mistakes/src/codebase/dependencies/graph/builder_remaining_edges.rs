@@ -166,7 +166,12 @@ fn collect_remaining_edges(
         merge_terraform_edges(edge_inputs, forward, reverse);
     });
     crate::perf_trace::trace("graph.language_frontends", || {
-        merge_language_frontend_edges(edge_inputs, forward, reverse);
+        if edge_inputs.plan.language_frontends
+            || edge_inputs.plan.queues
+            || edge_inputs.plan.routes
+        {
+            merge_language_frontend_edges(edge_inputs, forward, reverse);
+        }
     });
     crate::invocation::check_timeout()?;
     Ok(())
