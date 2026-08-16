@@ -45,7 +45,15 @@ fn playwright_fact_analysis_forwards_prepared_graph_files() {
     for (source, signature) in [
         (
             include_str!("../../../../playwright/analysis/pipeline_entrypoints.rs"),
+            "pub(crate) fn analyze_with_policy_from_snapshot(",
+        ),
+        (
+            include_str!("../../../../playwright/analysis/pipeline_entrypoints.rs"),
             "pub(crate) fn analyze_with_policy_and_facts_from_snapshot(",
+        ),
+        (
+            include_str!("../../../../playwright/analysis/pipeline_selectors.rs"),
+            "pub(crate) fn analyze_selectors_with_policy_from_snapshot(",
         ),
         (
             include_str!("../../../../playwright/analysis/pipeline_selectors.rs"),
@@ -88,6 +96,24 @@ fn graph_files_visible_path_remaps_canonical_symlink_target() {
     let files = GraphFiles::from_files(vec![via_link.clone()]);
     assert_eq!(files.visible_path(&via_link), Some(via_link.as_path()));
     assert_eq!(files.visible_path(&via_real), Some(via_link.as_path()));
+}
+
+#[cfg(unix)]
+#[test]
+fn graph_files_visible_path_prefers_first_sorted_alias_on_canonical_collision() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/graph-files-dual-alias/fixture"),
+    );
+    let alias_a = root.join("a.ts");
+    let alias_b = root.join("b.ts");
+    let target = root.join("target.ts");
+    let files = GraphFiles::from_files(vec![alias_b.clone(), alias_a.clone()]);
+    assert_eq!(files.visible_path(&alias_a), Some(alias_a.as_path()));
+    assert_eq!(files.visible_path(&alias_b), Some(alias_b.as_path()));
+    // Target is not in the visible set; the reverse map must pick the first
+    // sorted alias rather than HashSet visit order.
+    assert_eq!(files.visible_path(&target), Some(alias_a.as_path()));
 }
 
 #[cfg(unix)]

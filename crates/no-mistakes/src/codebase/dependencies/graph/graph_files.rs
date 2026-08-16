@@ -27,27 +27,33 @@ impl CanonicalVisible {
         }
     }
 
-    fn get(&self, visible: &HashSet<PathBuf>, canonical: &Path) -> Option<PathBuf> {
+    fn get(
+        &self,
+        all: &[PathBuf],
+        visible: &HashSet<PathBuf>,
+        canonical: &Path,
+    ) -> Option<PathBuf> {
         let mut guard = self.lock();
         if guard.is_none() {
-            *guard = Some(build_canonical_visible(visible));
+            *guard = Some(build_canonical_visible(all, visible));
         }
         guard.as_ref()?.get(canonical).cloned()
     }
 }
 
-fn build_canonical_visible(visible: &HashSet<PathBuf>) -> HashMap<PathBuf, PathBuf> {
-    visible
-        .iter()
-        .filter_map(|path| {
-            path.canonicalize().ok().map(|canonical| {
-                (
-                    crate::codebase::ts_resolver::normalize_path(&canonical),
-                    path.clone(),
-                )
-            })
-        })
-        .collect()
+fn build_canonical_visible(
+    all: &[PathBuf],
+    visible: &HashSet<PathBuf>,
+) -> HashMap<PathBuf, PathBuf> {
+    // `all` is sorted; first discovery spelling wins on a canonical collision.
+    let mut map = HashMap::new();
+    for path in all.iter().filter(|path| visible.contains(*path)) {
+        if let Ok(canonical) = path.canonicalize() {
+            map.entry(crate::codebase::ts_resolver::normalize_path(&canonical))
+                .or_insert_with(|| path.clone());
+        }
+    }
+    map
 }
 
 pub(crate) struct GraphFiles {
@@ -173,7 +179,9 @@ impl GraphFiles {
         if let Some(path) = self.visible.get(&canonical) {
             return Some(path);
         }
-        let original = self.canonical_visible.get(&self.visible, &canonical)?;
+        let original = self
+            .canonical_visible
+            .get(&self.all, &self.visible, &canonical)?;
         self.visible.get(&original).map(PathBuf::as_path)
     }
 
