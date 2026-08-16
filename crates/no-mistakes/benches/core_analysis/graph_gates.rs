@@ -38,7 +38,7 @@ fn source_files(root: &Path) -> Vec<PathBuf> {
 
 fn file_nodes(root: &Path, rels: &[&str]) -> Vec<NodeId> {
     rels.iter()
-        .map(|rel| NodeId::File(root.join(rel)))
+        .map(|rel| NodeId::file(root.join(rel)))
         .collect()
 }
 
