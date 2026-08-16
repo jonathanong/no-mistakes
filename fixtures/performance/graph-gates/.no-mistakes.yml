@@ -1,0 +1,81 @@
+version: 2
+queues:
+  factories:
+    - createQueue
+projects:
+  web:
+    type: nextjs
+    root: apps/web
+    include:
+      - apps/web/**
+  api:
+    type: server
+    root: apps/api
+    include:
+      - apps/api/**
+    routes:
+      - apps/api/src/routes/**
+    queues:
+      enqueues:
+        - apps/api/src/producers/**
+        - apps/api/src/queues/**
+      workers:
+        - apps/api/src/workers/**
+  worker:
+    type: library
+    root: apps/worker
+    include:
+      - apps/worker/**
+    queues:
+      workers:
+        - apps/api/src/workers/**
+tests:
+  vitest:
+    configs: vitest.config.ts
+    projects:
+      unit:
+        integration_suites:
+          unit: [openai]
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      htmlIds: false
+      testIds:
+        - data-testid
+        - data-pw
+    selectorRoots:
+      - apps/web
+      - packages/ui
+rules:
+  - rule: unique-exports
+    scope: repository
+  - rule: queue-dashboard-reachability
+    scope: repository
+    options:
+      entrypoint: apps/api/src/entry.ts
+      queuePattern: apps/api/src/queues/*.ts
+      factorySpecifier: "@fixture/queue-factory"
+      factoryFunction: createQueue
+      tsconfig: tsconfig.json
+  - rule: route-consistency
+    scope: repository
+    options:
+      backendPattern: apps/api/src/routes/**
+      backendRegisterObject: app
+      backendPrefixes:
+        - "/api/v1/"
+      frontendRoot: apps/web/app
+      scanPatterns:
+        - apps/web/src/**/*.tsx
+        - apps/web/app/**/*.tsx
+        - apps/api/src/**/*.ts
+  - rule: http-route-static-paths
+    scope: repository
+    options:
+      backendPrefixes:
+        - "/api/v1/"
+  - rule: http-call-static-paths
+    scope: repository
+    options:
+      backendPrefixes:
+        - "/api/v1/"

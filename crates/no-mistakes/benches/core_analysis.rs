@@ -4,6 +4,8 @@ mod aggregate;
 mod fixtures;
 #[path = "core_analysis/graph.rs"]
 mod graph;
+#[path = "core_analysis/graph_gates.rs"]
+mod graph_gates;
 #[path = "core_analysis/observer.rs"]
 mod observer;
 #[path = "core_analysis/query_indexes.rs"]
@@ -16,6 +18,7 @@ mod reports;
 use aggregate::{bench_aggregate_and_multi_report, bench_impacted_checks};
 use criterion::{criterion_group, criterion_main};
 use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
+use graph_gates::bench_graph_gates;
 use observer::bench_observer_overhead;
 use query_indexes::{bench_scoped_resolver_selection, bench_symbol_index_build_and_lookup};
 use relationships::bench_relationship_projection;
@@ -25,6 +28,7 @@ criterion_group!(
     benches,
     bench_lazy_traversal,
     bench_facts_graph_and_query,
+    bench_graph_gates,
     bench_high_fanout_finalization,
     bench_symbol_index_build_and_lookup,
     bench_scoped_resolver_selection,
