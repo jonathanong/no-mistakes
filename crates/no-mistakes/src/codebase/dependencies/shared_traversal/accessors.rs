@@ -53,11 +53,6 @@ impl SharedTraversalContext {
         self.build_plan
     }
 
-    #[cfg(test)]
-    pub(crate) fn canonical_graph(&mut self) -> Result<std::sync::Arc<graph::DepGraph>> {
-        self.request_graph(self.build_plan)
-    }
-
     pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
         &self.prepared_graph
     }

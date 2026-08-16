@@ -48,6 +48,7 @@ struct CachedTraversal {
     // request-local snapshot alongside its traversal so a cache hit can render
     // the same report without leaking diagnostics into other traversals.
     runtime_diagnostics: Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>,
+    tsconfig_provenance: Vec<crate::codebase::ts_resolver::TsConfigProvenance>,
 }
 
 impl SharedTraversalContext {

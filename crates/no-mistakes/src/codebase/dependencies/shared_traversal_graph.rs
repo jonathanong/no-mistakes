@@ -1,10 +1,4 @@
 impl SharedTraversalContext {
-    #[cfg(test)]
-    pub(crate) fn facts(&mut self) -> &crate::codebase::ts_source::facts::TsFactMap {
-        self.ensure_facts();
-        self.facts.as_ref().expect("TS facts are initialized")
-    }
-
     pub(crate) fn ensure_facts(&mut self) {
         let remaining = self
             .graph_files
@@ -43,27 +37,6 @@ impl SharedTraversalContext {
                 )
             })
             .extend(collected);
-    }
-
-    #[cfg(test)]
-    pub(crate) fn graph(&mut self) -> Result<&graph::DepGraph> {
-        if self.graph.is_none() {
-            self.graph = Some(self.request_graph(self.build_plan)?);
-        }
-        self.graph
-            .as_deref()
-            .context("dependency graph was not initialized")
-    }
-
-    #[cfg(test)]
-    pub(crate) fn request_graph(
-        &mut self,
-        plan: graph::GraphBuildPlan,
-    ) -> Result<std::sync::Arc<graph::DepGraph>> {
-        self.ensure_facts();
-        let graph = self.request_graph_shared(plan)?;
-        self.graph_builds = self.graph_cache.build_count();
-        Ok(graph)
     }
 
     pub(crate) fn prepare_canonical_graph_with_check_facts(

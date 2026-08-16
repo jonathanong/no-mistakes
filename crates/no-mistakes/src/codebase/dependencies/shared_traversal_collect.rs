@@ -76,44 +76,47 @@ pub(crate) fn collect_and_filter_entries_prepared(
         include_symbols: args.include_symbols,
         import_only,
     };
-    let (entries, runtime_diagnostics) = cached_traversal_entries(shared, traversal_key, || {
-        let symbol_index = if matches!(direction, Direction::Dependents)
-            && any_symbol
-            && !args.include_symbols
-        {
-            Some(shared.symbol_index_shared()?)
-        } else {
-            None
-        };
-        collect_uncached_entries(
-            UncachedTraversalRequest {
-                args,
-                direction,
-                entrypoints: &entrypoints,
-                roots: &roots,
-                allowed: allowed.as_ref(),
-                import_only,
-                any_symbol,
-                symbol_index: symbol_index.as_deref(),
-            },
-            shared,
-        )
-    })?;
+    let (entries, runtime_diagnostics, tsconfig_provenance) =
+        cached_traversal_entries(shared, traversal_key, || {
+            let symbol_index = if matches!(direction, Direction::Dependents)
+                && any_symbol
+                && !args.include_symbols
+            {
+                Some(shared.symbol_index_shared()?)
+            } else {
+                None
+            };
+            let entries = collect_uncached_entries(
+                UncachedTraversalRequest {
+                    args,
+                    direction,
+                    entrypoints: &entrypoints,
+                    roots: &roots,
+                    allowed: allowed.as_ref(),
+                    import_only,
+                    any_symbol,
+                    symbol_index: symbol_index.as_deref(),
+                },
+                shared,
+            )?;
+            let tsconfig_provenance = entrypoints
+                .iter()
+                .filter_map(|entrypoint| entrypoint.node.as_file())
+                .map(|file| shared.tsconfig_catalog.provenance_for(file))
+                .map(|mut provenance| {
+                    provenance.importer = provenance
+                        .importer
+                        .strip_prefix(&shared.root)
+                        .unwrap_or(&provenance.importer)
+                        .to_path_buf();
+                    provenance.config =
+                        provenance.config.map(|config| visible_provenance_path(shared, config));
+                    provenance
+                })
+                .collect();
+            Ok((entries, tsconfig_provenance))
+        })?;
     crate::invocation::check_timeout()?;
-    let tsconfig_provenance = entrypoints
-        .iter()
-        .filter_map(|entrypoint| entrypoint.node.as_file())
-        .map(|file| shared.tsconfig_catalog.provenance_for(file))
-        .map(|mut provenance| {
-            provenance.importer = provenance
-                .importer
-                .strip_prefix(&shared.root)
-                .unwrap_or(&provenance.importer)
-                .to_path_buf();
-            provenance.config = provenance.config.map(|config| visible_provenance_path(shared, config));
-            provenance
-        })
-        .collect();
     let entries = apply_filters(
         entries,
         args,

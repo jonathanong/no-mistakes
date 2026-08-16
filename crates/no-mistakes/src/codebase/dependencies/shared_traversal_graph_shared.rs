@@ -3,11 +3,6 @@ impl SharedTraversalContext {
         self.facts.as_ref().expect("TS facts are initialized")
     }
 
-    #[cfg(test)]
-    pub(crate) fn graph_build_count(&self) -> usize {
-        self.graph_cache.build_count()
-    }
-
     pub(crate) fn graph_shared(&self) -> Result<std::sync::Arc<graph::DepGraph>> {
         if let Some(graph) = &self.graph {
             return Ok(std::sync::Arc::clone(graph));
