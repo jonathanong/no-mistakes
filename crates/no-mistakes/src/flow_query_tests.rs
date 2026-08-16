@@ -67,22 +67,19 @@ fn flow_query_deps_edges_and_resolvers_cover_path_branches() {
     }));
     assert_eq!(
         resolve_target(&root, root.join("other.mts").to_str().unwrap()),
-        NodeId::File(root.join("other.mts"))
+        NodeId::file(root.join("other.mts"))
     );
     assert_eq!(
         resolve_target(&root, ".github/workflows/main.yml#job:build"),
-        NodeId::WorkflowJob {
-            workflow_file: root.join(".github/workflows/main.yml"),
-            job: "build".to_string(),
-        }
+        NodeId::workflow_job(root.join(".github/workflows/main.yml"), "build".to_string())
     );
     assert_eq!(
         resolve_target(&root, ".github/workflows/main.yml#job:build/step:2"),
-        NodeId::WorkflowStep {
-            workflow_file: root.join(".github/workflows/main.yml"),
-            job: "build".to_string(),
-            step: 2,
-        }
+        NodeId::workflow_step(
+            root.join(".github/workflows/main.yml"),
+            "build".to_string(),
+            2
+        )
     );
     let aliased_root = fixture_root("aliased");
     assert!(resolve_tsconfig(&aliased_root, Some(Path::new("tsconfig.json"))).is_ok());
@@ -108,10 +105,7 @@ fn flow_query_helper_nodes_cover_module_and_queue_variants() {
     assert_eq!(module.module.as_deref(), Some("lodash"));
 
     let queue = flow_node(
-        &NodeId::QueueJob {
-            queue_file: root.join("jobs.mts"),
-            job: "send".to_string(),
-        },
+        &NodeId::queue_job(root.join("jobs.mts"), "send".to_string()),
         &root,
         3,
     );
@@ -120,10 +114,7 @@ fn flow_query_helper_nodes_cover_module_and_queue_variants() {
     assert_eq!(queue.job.as_deref(), Some("send"));
 
     let workflow_job = flow_node(
-        &NodeId::WorkflowJob {
-            workflow_file: root.join(".github/workflows/main.yml"),
-            job: "build".to_string(),
-        },
+        &NodeId::workflow_job(root.join(".github/workflows/main.yml"), "build".to_string()),
         &root,
         4,
     );
@@ -135,11 +126,11 @@ fn flow_query_helper_nodes_cover_module_and_queue_variants() {
     assert_eq!(workflow_job.job.as_deref(), Some("build"));
 
     let workflow_step = flow_node(
-        &NodeId::WorkflowStep {
-            workflow_file: root.join(".github/workflows/main.yml"),
-            job: "build".to_string(),
-            step: 2,
-        },
+        &NodeId::workflow_step(
+            root.join(".github/workflows/main.yml"),
+            "build".to_string(),
+            2,
+        ),
         &root,
         5,
     );

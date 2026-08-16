@@ -350,3 +350,54 @@ export const queue = createQueue(QUEUE_NAME);
         None
     );
 }
+
+#[test]
+fn fused_factory_walk_keeps_first_line_and_first_name() {
+    let source = r#"
+import { createQueue } from "@factory/pkg";
+wrap(createQueue("nested"));
+export const first = createQueue("first");
+export const second = createQueue("second");
+"#;
+    assert_eq!(
+        find_queue_factory_facts(source, "@factory/pkg", "createQueue"),
+        (Some(3), Some("first".to_string()))
+    );
+    assert_eq!(
+        find_create_queue_line(source, "@factory/pkg", "createQueue"),
+        Some(3)
+    );
+    assert_eq!(
+        find_queue_name(source, "@factory/pkg", "createQueue"),
+        Some("first".to_string())
+    );
+}
+
+#[test]
+fn fused_factory_walk_merges_line_and_name_across_var_decls() {
+    let source = r#"
+import { createQueue } from "@factory/pkg";
+export const wrapped = wrap(createQueue("nested")), queue = createQueue("real");
+"#;
+    assert_eq!(
+        find_queue_factory_facts(source, "@factory/pkg", "createQueue"),
+        (Some(3), Some("real".to_string()))
+    );
+}
+
+#[test]
+fn domain_queue_factory_facts_walks_once() {
+    let domain = include_str!("../../ts_source/facts/domain.rs");
+    assert!(
+        domain.contains("find_queue_factory_facts_from_program"),
+        "domain.rs should call the fused factory walker"
+    );
+    assert!(
+        !domain.contains("find_create_queue_line_from_program"),
+        "domain.rs should not walk create-queue lines separately"
+    );
+    assert!(
+        !domain.contains("find_queue_name_from_program"),
+        "domain.rs should not walk queue names separately"
+    );
+}

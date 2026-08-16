@@ -130,14 +130,11 @@ pub(crate) fn workflow_node_from_suffix(file: &Path, suffix: &str) -> Option<Nod
         if job.is_empty() {
             return None;
         }
-        return Some(NodeId::WorkflowStep {
-            workflow_file: file.to_path_buf(),
-            job: job.to_string(),
-            step: step.parse().ok()?,
-        });
+        return Some(NodeId::workflow_step(
+            file,
+            job.to_string(),
+            step.parse().ok()?,
+        ));
     }
-    (!suffix.is_empty()).then(|| NodeId::WorkflowJob {
-        workflow_file: file.to_path_buf(),
-        job: suffix.to_string(),
-    })
+    (!suffix.is_empty()).then(|| NodeId::workflow_job(file, suffix.to_string()))
 }

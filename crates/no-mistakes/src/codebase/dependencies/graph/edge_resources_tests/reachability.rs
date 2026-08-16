@@ -27,14 +27,14 @@ fn eager_aggregate_initializers_create_edges_while_callable_members_stay_pruned(
     assert!(diagnostics.is_empty());
     for eager in [eager_object, eager_static] {
         assert!(edges.contains(&(
-            NodeId::File(consumer.clone()),
-            NodeId::File(eager),
+            NodeId::file(consumer.clone()),
+            NodeId::file(eager),
             EdgeKind::Resource,
         )));
     }
     assert!(!edges.contains(&(
-        NodeId::File(consumer),
-        NodeId::File(deferred),
+        NodeId::file(consumer),
+        NodeId::file(deferred),
         EdgeKind::Resource,
     )));
 }
@@ -122,13 +122,13 @@ fn symbol_mode_does_not_widen_exported_aggregate_resource_reachability() {
     );
     assert!(diagnostics.is_empty());
     assert!(edges.contains(&(
-        NodeId::File(consumer.clone()),
-        NodeId::File(nested_target),
+        NodeId::file(consumer.clone()),
+        NodeId::file(nested_target),
         EdgeKind::Resource,
     )));
-    assert!(!edges
-        .iter()
-        .any(|edge| matches!(&edge.1, NodeId::File(path) if path == &unused_target)));
+    assert!(!edges.iter().any(
+        |edge| matches!(&edge.1, NodeId::File(path) if path.as_ref() == unused_target.as_path())
+    ));
 }
 
 #[test]

@@ -62,7 +62,7 @@ fn resolve_format_prefers_flags_then_tty_default() {
 
 #[test]
 fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
-    let node = NodeId::File(PathBuf::from("shared.ts"));
+    let node = NodeId::file(PathBuf::from("shared.ts"));
     let mut merged = HashMap::new();
     merge_node_entries(
         &mut merged,
@@ -89,14 +89,8 @@ fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
 #[test]
 fn symbol_roots_keep_matching_queue_job_roots() {
     let queue_file = PathBuf::from("/repo/src/queues.ts");
-    let symbol_root = NodeId::Symbol {
-        file: queue_file.clone(),
-        symbol: "sendWelcome".to_string(),
-    };
-    let queue_job = NodeId::QueueJob {
-        queue_file: queue_file.clone(),
-        job: "sendWelcome".to_string(),
-    };
+    let symbol_root = NodeId::symbol(queue_file.clone(), "sendWelcome".to_string());
+    let queue_job = NodeId::queue_job(queue_file.clone(), "sendWelcome".to_string());
     let entrypoints = vec![Entrypoint {
         file: queue_file,
         node: symbol_root.clone(),
@@ -123,7 +117,7 @@ fn target_module_filter_keeps_only_matching_module_nodes() {
             via: vec![EdgeKind::Import],
         },
         graph::NodeEntry {
-            node: NodeId::File(PathBuf::from("src/local.mts")),
+            node: NodeId::file(PathBuf::from("src/local.mts")),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
@@ -158,7 +152,7 @@ fn file_filters_exclude_module_nodes_without_target_module_filter() {
     assert_eq!(filtered.len(), 2);
     assert!(filtered
         .iter()
-        .any(|entry| entry.node == NodeId::File(PathBuf::from("/repo/src/local.mts"))));
+        .any(|entry| entry.node == NodeId::file(PathBuf::from("/repo/src/local.mts"))));
     assert!(filtered
         .iter()
         .any(|entry| matches!(entry.node, NodeId::QueueJob { .. })));
@@ -178,12 +172,9 @@ fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
     let node = if let Some(module) = node.get("module").and_then(|value| value.as_str()) {
         NodeId::Module(module.to_string())
     } else if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
-        NodeId::File(PathBuf::from(file))
+        NodeId::file(PathBuf::from(file))
     } else {
-        NodeId::QueueJob {
-            queue_file: PathBuf::from(node["queue_file"].as_str().unwrap()),
-            job: node["job"].as_str().unwrap().to_string(),
-        }
+        NodeId::queue_job(PathBuf::from(node["queue_file"].as_str().unwrap()), node["job"].as_str().unwrap().to_string())
     };
     let via = value["via"]
         .as_array()

@@ -497,9 +497,9 @@ mod tests {
         assert_eq!(
             impact
                 .graph
-                .dependents_of_node(&NodeId::File(root.join("packages/unit/setup/aliased.ts"),)),
+                .dependents_of_node(&NodeId::file(root.join("packages/unit/setup/aliased.ts"),)),
             Some(&vec![(
-                NodeId::File(root.join("packages/unit/tests/owner.test.ts")),
+                NodeId::file(root.join("packages/unit/tests/owner.test.ts")),
                 EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
             )])
         );

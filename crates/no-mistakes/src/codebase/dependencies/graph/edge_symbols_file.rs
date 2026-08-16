@@ -45,14 +45,14 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
         &imported_symbols,
     ) {
         let (node, kind) = target_node(imported);
-        edges.push((NodeId::File(path.to_path_buf()), node, kind));
+        edges.push((NodeId::file(path), node, kind));
     }
     for (node, kind) in fallback_namespace_symbols(
         &file_facts.function_calls,
         &file_facts.symbol_references,
         &namespace_imports,
     ) {
-        edges.push((NodeId::File(path.to_path_buf()), node, kind));
+        edges.push((NodeId::file(path), node, kind));
     }
     collect_export_reference_edges(
         ExportEdgeInputs {
@@ -138,10 +138,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
                 for (target, kind) in imports {
                     for caller_export in &caller_exports {
                         edges.push((
-                            NodeId::Symbol {
-                                file: path.to_path_buf(),
-                                symbol: caller_export.clone(),
-                            },
+                            NodeId::symbol(path, caller_export.clone()),
                             target.clone(),
                             *kind,
                         ));
@@ -172,10 +169,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
                 ) {
                     for caller_export in &caller_exports {
                         edges.push((
-                            NodeId::Symbol {
-                                file: path.to_path_buf(),
-                                symbol: caller_export.clone(),
-                            },
+                            NodeId::symbol(path, caller_export.clone()),
                             target.clone(),
                             kind,
                         ));

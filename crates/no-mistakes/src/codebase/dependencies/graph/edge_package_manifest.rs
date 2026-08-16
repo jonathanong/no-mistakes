@@ -26,10 +26,10 @@ fn collect_workspace_manifest_edges(
             for name in dependency_names {
                 let target = workspace_entries
                     .get(name.as_str())
-                    .map(|entry| NodeId::File(entry.clone()))
+                    .map(|entry| NodeId::file(entry.clone()))
                     .unwrap_or_else(|| NodeId::Module(name.clone()));
                 edges.push((
-                    NodeId::File(path.clone()),
+                    NodeId::file(path.clone()),
                     target,
                     EdgeKind::PackageDependency,
                 ));

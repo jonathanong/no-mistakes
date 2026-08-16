@@ -17,7 +17,7 @@ impl DepGraph {
             .forward()
             .keys()
             .filter_map(|node| match node {
-                NodeId::File(path) => Some(path.clone()),
+                NodeId::File(path) => Some(path.to_path_buf()),
                 _ => None,
             })
             .collect::<std::collections::BTreeSet<_>>();
@@ -40,8 +40,8 @@ impl DepGraph {
             {
                 edges.extend(project.setups.iter().map(|(setup, field)| {
                     CanonicalEdge::new(
-                        NodeId::File(test.clone()),
-                        NodeId::File(setup.clone()),
+                        NodeId::file(test.clone()),
+                        NodeId::file(setup.clone()),
                         EdgeKind::VitestSetup(*field),
                     )
                 }));

@@ -88,8 +88,8 @@ fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edg
         _ => return None,
     };
     Some((
-        NodeId::File(root.join(test_file_rel)),
-        NodeId::File(root.join(app_file_rel)),
+        NodeId::file(root.join(test_file_rel)),
+        NodeId::file(root.join(app_file_rel)),
         EdgeKind::Selector,
     ))
 }

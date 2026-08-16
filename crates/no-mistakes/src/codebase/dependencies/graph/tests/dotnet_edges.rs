@@ -78,8 +78,8 @@ fn dotnet_project_edges_skip_missing_sources_and_references() {
     assert_eq!(
         edges,
         vec![(
-            NodeId::File(test_file),
-            NodeId::File(app_file),
+            NodeId::file(test_file),
+            NodeId::file(app_file),
             EdgeKind::DotnetProjectDependency
         )]
     );

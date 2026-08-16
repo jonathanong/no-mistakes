@@ -31,17 +31,16 @@ fn parsed_imports_for_plan<'a>(
     Ok(collect_parsed_imports_from_facts(files, facts))
 }
 
-fn merge_http_process_edges(
+fn collect_http_process_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+) -> Vec<Edge> {
     // HTTP and process collectors consume shared TS facts in this path.
     // Keep the file-content fallback empty so graph builds do not add a
     // second source read pass.
+    let mut edges = Vec::new();
     if inputs.plan.http {
-        let http_call_edges = collect_http_call_edges(
+        edges.extend(collect_http_call_edges(
             inputs.root,
             inputs.tsconfig,
             facts,
@@ -49,34 +48,29 @@ fn merge_http_process_edges(
             inputs.graph_files.indexable(),
             &inputs.graph_files.all,
             inputs.config_options,
-        );
-        merge_edges(forward, reverse, http_call_edges);
+        ));
     }
-
     if inputs.plan.process {
-        let spawn_edges = collect_process_spawn_edges(
+        edges.extend(collect_process_spawn_edges(
             inputs.root,
             facts,
             &[],
             inputs.graph_files.indexable(),
             inputs.graph_files.visible(),
-        );
-        merge_edges(forward, reverse, spawn_edges);
+        ));
     }
+    edges
 }
 
-fn merge_swift_edges(
+fn collect_swift_edges_for_plan(
     inputs: &GraphEdgeBuildInputs<'_>,
     ts_facts: Option<&dyn TsFactLookup>,
     session: &crate::codebase::analysis_session::AnalysisSession,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+) -> Vec<Edge> {
     if !inputs.plan.swift {
-        return;
+        return Vec::new();
     }
-
-    let swift_edges = collect_swift_edges_with_facts(SwiftEdgeInputs {
+    collect_swift_edges_with_facts(SwiftEdgeInputs {
         root: inputs.root,
         tsconfig: inputs.tsconfig,
         tsconfig_catalog: inputs.tsconfig_catalog,
@@ -85,52 +79,26 @@ fn merge_swift_edges(
         ts_facts,
         prepared_facts: inputs.swift_facts,
         session,
-    });
-    for (from, to, _) in &swift_edges {
-        forward.entry(from.clone()).or_default();
-        forward.entry(to.clone()).or_default();
-    }
-    merge_edges(forward, reverse, swift_edges);
+    })
 }
 
-fn merge_dotnet_edges(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge> {
     if !inputs.plan.dotnet {
-        return;
+        return Vec::new();
     }
-
-    let dotnet_edges = collect_dotnet_edges(
+    collect_dotnet_edges(
         inputs.root,
         &inputs.graph_files.all,
         inputs.config_options,
         inputs.dotnet_facts,
-    );
-    for (from, to, _) in &dotnet_edges {
-        forward.entry(from.clone()).or_default();
-        forward.entry(to.clone()).or_default();
-    }
-    merge_edges(forward, reverse, dotnet_edges);
+    )
 }
 
-fn merge_terraform_edges(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+fn collect_terraform_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge> {
     if !inputs.plan.terraform {
-        return;
+        return Vec::new();
     }
-
-    let terraform_edges =
-        collect_terraform_edges(inputs.root, &inputs.graph_files.all, inputs.config_options);
-    for (from, to, _) in &terraform_edges {
-        forward.entry(from.clone()).or_default();
-        forward.entry(to.clone()).or_default();
-    }
-    merge_edges(forward, reverse, terraform_edges);
+    collect_terraform_edges(inputs.root, &inputs.graph_files.all, inputs.config_options)
 }
 
 fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
@@ -154,8 +122,8 @@ fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
 
 fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {
     edges.push((
-        NodeId::File(source.to_path_buf()),
-        NodeId::File(target.to_path_buf()),
+        NodeId::file(source),
+        NodeId::file(target),
         EdgeKind::RouteRef,
     ));
 }

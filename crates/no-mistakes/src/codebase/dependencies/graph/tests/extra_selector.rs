@@ -35,8 +35,8 @@ fn selector_dep_edge_maps_selector_edge_to_dep_graph_edge() {
 
     let result = selector_dep_edge(&root, &edge).unwrap();
     // test_file → app_file (mirrors TestOf direction so dependents_of(app_file) returns tests)
-    assert_eq!(result.0, NodeId::File(p("/root/tests/e2e/nav.spec.ts")));
-    assert_eq!(result.1, NodeId::File(p("/root/web/components/nav.tsx")));
+    assert_eq!(result.0, NodeId::file(p("/root/tests/e2e/nav.spec.ts")));
+    assert_eq!(result.1, NodeId::file(p("/root/web/components/nav.tsx")));
     assert_eq!(result.2, EdgeKind::Selector);
 }
 
@@ -68,8 +68,8 @@ fn selector_dep_edge_maps_locator_text_edge_to_dep_graph_edge() {
 
     let result = selector_dep_edge(&root, &edge).unwrap();
     // test_file → app_file (mirrors TestOf direction so dependents_of(app_file) returns tests)
-    assert_eq!(result.0, NodeId::File(p("/root/tests/e2e/button.spec.ts")));
-    assert_eq!(result.1, NodeId::File(p("/root/web/components/button.tsx")));
+    assert_eq!(result.0, NodeId::file(p("/root/tests/e2e/button.spec.ts")));
+    assert_eq!(result.1, NodeId::file(p("/root/web/components/button.tsx")));
     assert_eq!(result.2, EdgeKind::Selector);
 }
 
@@ -119,8 +119,8 @@ fn collect_playwright_selector_edges_returns_edges_for_route_group_fixture() {
     let search_bar = root.join("web/components/search-bar.tsx");
     let search_spec = root.join("tests/e2e/search-bar.spec.ts");
     let has_edge = edges.iter().any(|(from, to, kind)| {
-        from == &NodeId::File(search_spec.clone())
-            && to == &NodeId::File(search_bar.clone())
+        from == &NodeId::file(search_spec.clone())
+            && to == &NodeId::file(search_bar.clone())
             && *kind == EdgeKind::Selector
     });
     assert!(
@@ -156,8 +156,8 @@ fn configured_selector_wrappers_create_only_the_declared_selector_edges() {
     );
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
     let edges = collect_playwright_selector_edges(&root, None, &all_files, None);
-    let app_file = NodeId::File(root.join("web/page.tsx"));
-    let test_file = NodeId::File(root.join("tests/page.spec.ts"));
+    let app_file = NodeId::file(root.join("web/page.tsx"));
+    let test_file = NodeId::file(root.join("tests/page.spec.ts"));
 
     let selector_edges = edges
         .iter()

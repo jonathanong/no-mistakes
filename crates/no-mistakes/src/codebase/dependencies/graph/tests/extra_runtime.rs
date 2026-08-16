@@ -38,10 +38,7 @@ fn queue_edges_use_precomputed_shared_facts() {
         Some(&facts),
         config_options.as_ref(),
     );
-    let queue_job = NodeId::QueueJob {
-        queue_file: emails.clone(),
-        job: "sendWelcomeEmail".to_string(),
-    };
+    let queue_job = NodeId::queue_job(emails.clone(), "sendWelcomeEmail".to_string());
 
     // Two identical worker registrations intentionally produce two raw copies
     // of every relationship; the canonical graph index performs deduplication.
@@ -49,7 +46,7 @@ fn queue_edges_use_precomputed_shared_facts() {
         relationships
             .iter()
             .filter(|edge| {
-                edge.from == NodeId::File(send_email.clone())
+                edge.from == NodeId::file(send_email.clone())
                     && edge.to == queue_job
                     && edge.kind == EdgeKind::QueueEnqueue
             })
@@ -62,7 +59,7 @@ fn queue_edges_use_precomputed_shared_facts() {
                 .iter()
                 .filter(|edge| {
                     edge.from == queue_job
-                        && edge.to == NodeId::File(target.clone())
+                        && edge.to == NodeId::file(target.clone())
                         && edge.kind == EdgeKind::QueueWorker
                 })
                 .count(),
@@ -81,7 +78,7 @@ fn queue_edges_use_precomputed_shared_facts() {
     );
 
     assert!(forward
-        .get(&NodeId::File(send_email))
+        .get(&NodeId::file(send_email))
         .map(|edges| {
             edges.iter().any(|(node, kind)| {
                 matches!(
@@ -89,15 +86,12 @@ fn queue_edges_use_precomputed_shared_facts() {
                     (
                         NodeId::QueueJob { queue_file, job },
                         EdgeKind::QueueEnqueue
-                    ) if queue_file == &emails && job == "sendWelcomeEmail"
+                    ) if queue_file.as_ref() == emails.as_path() && job == "sendWelcomeEmail"
                 )
             })
         })
         .unwrap_or(false));
-    let queue_job = NodeId::QueueJob {
-        queue_file: emails,
-        job: "sendWelcomeEmail".to_string(),
-    };
+    let queue_job = NodeId::queue_job(emails, "sendWelcomeEmail".to_string());
     assert!(forward
         .get(&queue_job)
         .map(|edges| {
@@ -229,18 +223,15 @@ fn scoped_queue_edges_keep_symlink_root_targets_in_visible_namespace() {
         Some(&facts),
         Some(&options),
     );
-    let queue_job = NodeId::QueueJob {
-        queue_file: root.join("src/queues.ts"),
-        job: "sendEmail".to_string(),
-    };
+    let queue_job = NodeId::queue_job(root.join("src/queues.ts"), "sendEmail".to_string());
     assert!(relationships.iter().any(|edge| {
-        edge.from == NodeId::File(root.join("src/producer.ts"))
+        edge.from == NodeId::file(root.join("src/producer.ts"))
             && edge.to == queue_job
             && edge.kind == EdgeKind::QueueEnqueue
     }));
     assert!(relationships.iter().any(|edge| {
         edge.from == queue_job
-            && edge.to == NodeId::File(root.join("src/processors.ts"))
+            && edge.to == NodeId::file(root.join("src/processors.ts"))
             && edge.kind == EdgeKind::QueueWorker
     }));
 }

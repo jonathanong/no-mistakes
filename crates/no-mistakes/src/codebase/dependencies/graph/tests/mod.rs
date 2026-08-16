@@ -87,6 +87,7 @@ include!("vitest_setup.rs");
 
 mod edge_kind_semantics;
 mod finalization;
+mod remaining_edges;
 mod selector_fact_plan;
 mod selector_optimization;
 mod workflow_topology_edges;

@@ -37,8 +37,18 @@ fn symbol_owner_bridge_allowed(
 
 fn is_symbol_owner_bridge(from: &NodeId, to: &NodeId) -> bool {
     match (from, to) {
-        (NodeId::File(file), NodeId::Symbol { file: symbol_file, .. })
-        | (NodeId::Symbol { file: symbol_file, .. }, NodeId::File(file)) => file == symbol_file,
+        (
+            NodeId::File(file),
+            NodeId::Symbol {
+                file: symbol_file, ..
+            },
+        )
+        | (
+            NodeId::Symbol {
+                file: symbol_file, ..
+            },
+            NodeId::File(file),
+        ) => file == symbol_file,
         _ => false,
     }
 }

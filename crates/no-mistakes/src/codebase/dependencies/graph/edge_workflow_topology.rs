@@ -60,28 +60,21 @@ fn collect_workflow_topology_edges(
         if !universe.contains(&workflow_file) {
             continue;
         }
-        let job_node = NodeId::WorkflowJob {
-            workflow_file: workflow_file.clone(),
-            job: job.key.clone(),
-        };
+        let job_node = NodeId::workflow_job(workflow_file.clone(), job.key.clone());
         jobs.insert(job.id.clone(), job_node.clone());
         edges.push((
-            NodeId::File(workflow_file.clone()),
+            NodeId::file(workflow_file.clone()),
             job_node.clone(),
             EdgeKind::WorkflowJob,
         ));
         for step in &job.steps {
-            let step_node = NodeId::WorkflowStep {
-                workflow_file: workflow_file.clone(),
-                job: job.key.clone(),
-                step: step.index as usize,
-            };
+            let step_node = NodeId::workflow_step(workflow_file.clone(), job.key.clone(), step.index as usize);
             steps.insert((job.id.clone(), step.index as usize), step_node.clone());
             edges.push((job_node.clone(), step_node.clone(), EdgeKind::WorkflowStep));
             if let Some(target) = step.uses.as_deref().and_then(|target| {
                 resolve_local_action_descriptor(&root, target, &universe, &action_dirs)
             }) {
-                edges.push((step_node, NodeId::File(target), EdgeKind::WorkflowUses));
+                edges.push((step_node, NodeId::file(target), EdgeKind::WorkflowUses));
             }
         }
     }
@@ -103,7 +96,7 @@ fn collect_workflow_topology_edges(
                     .get(&edge.from)
                     .filter(|_| workflow_files.contains(&target))
                 {
-                    edges.push((from.clone(), NodeId::File(target), EdgeKind::WorkflowUses));
+                    edges.push((from.clone(), NodeId::file(target), EdgeKind::WorkflowUses));
                 }
             }
             WorkflowTopologyEdge::Artifact(edge) => {
@@ -171,7 +164,7 @@ fn add_workflow_run_edges(
                 for target in resolver.resolve(run, &working_directory) {
                     edges.push((
                         step_node.clone(),
-                        NodeId::File(target),
+                        NodeId::file(target),
                         EdgeKind::WorkflowRun,
                     ));
                 }
