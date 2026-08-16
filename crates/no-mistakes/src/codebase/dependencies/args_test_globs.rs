@@ -49,6 +49,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "python" => globs_to_strings(&[
             "**/test_*.py",
             "**/*_test.py",
+            "**/tests.py",
             "**/tests/**/*.py",
         ]),
         "go" => globs_to_strings(&["**/*_test.go"]),

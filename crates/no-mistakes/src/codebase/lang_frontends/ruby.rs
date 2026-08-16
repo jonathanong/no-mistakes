@@ -29,6 +29,7 @@ fn parse_ruby_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<La
         route_handlers: extract_pairs(&text, rails_route_re()),
         queue_enqueues: extract_named(&text, active_job_re()),
         queue_workers: extract_named(&text, ruby_job_class_re()),
+        mods: Vec::new(),
     })
 }
 

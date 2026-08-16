@@ -21,7 +21,8 @@ fn collect_language_frontend_edges(
     let mut edges = Vec::new();
     emit_lang_edges(&facts.python, EdgeKind::PythonImport, EdgeKind::PythonReference, &mut edges);
     emit_lang_edges(&facts.go, EdgeKind::GoImport, EdgeKind::GoReference, &mut edges);
-    emit_lang_edges(&facts.rust, EdgeKind::RustUse, EdgeKind::RustMod, &mut edges);
+    emit_lang_edges(&facts.rust, EdgeKind::RustUse, EdgeKind::RustUse, &mut edges);
+    emit_mod_edges(&facts.rust, EdgeKind::RustMod, &mut edges);
     emit_package_edges(&facts.rust, EdgeKind::RustPackage, &mut edges);
     emit_lang_edges(&facts.ruby, EdgeKind::RubyRequire, EdgeKind::RubyReference, &mut edges);
     emit_lang_edges(&facts.php, EdgeKind::PhpUse, EdgeKind::PhpUse, &mut edges);
@@ -90,12 +91,36 @@ fn emit_lang_edges(
     }
 }
 
-fn emit_package_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>) {
-    for files in facts.files_by_package.values() {
-        for source in files {
-            push_file_edges(edges, source, files, kind);
+fn emit_mod_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>) {
+    for file in facts.files.values() {
+        for name in &file.mods {
+            if let Some(targets) = facts.files_by_module.get(name) {
+                push_file_edges(edges, &file.path, targets, kind);
+            }
         }
     }
+}
+
+fn emit_package_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>) {
+    for files in facts.files_by_package.values() {
+        let Some(root) = package_root_file(files) else {
+            continue;
+        };
+        push_file_edges(edges, root, files, kind);
+    }
+}
+
+fn package_root_file(files: &std::collections::BTreeSet<PathBuf>) -> Option<&Path> {
+    files
+        .iter()
+        .find(|path| {
+            matches!(
+                path.file_name().and_then(|name| name.to_str()),
+                Some("lib.rs" | "main.rs" | "mod.rs" | "composer.json")
+            )
+        })
+        .or_else(|| files.iter().next())
+        .map(PathBuf::as_path)
 }
 
 fn emit_queue_edges(

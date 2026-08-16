@@ -60,15 +60,20 @@ fn emit_kafka_edges(
     let mut produces = Vec::new();
     let mut consumes = Vec::new();
     for path in all_files {
+        let rel = path.strip_prefix(root).unwrap_or(path);
+        let rel_s = rel.to_string_lossy();
+        let enqueue = matches_any(&rel_s, &options.queue_enqueues);
+        let worker = matches_any(&rel_s, &options.queue_workers);
+        if !enqueue && !worker {
+            continue;
+        }
         let Some((prod, cons)) = scan_kafka_file(path) else {
             continue;
         };
-        let rel = path.strip_prefix(root).unwrap_or(path);
-        let rel_s = rel.to_string_lossy();
-        if matches_any(&rel_s, &options.queue_enqueues) {
+        if enqueue {
             produces.push((path.clone(), prod));
         }
-        if matches_any(&rel_s, &options.queue_workers) {
+        if worker {
             consumes.push((path.clone(), cons));
         }
     }

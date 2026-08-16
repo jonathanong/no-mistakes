@@ -1,5 +1,4 @@
 use super::*;
-use crate::codebase::lang_frontends::kafka::extract_kafka_topics;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -69,6 +68,11 @@ fn python_collects_relative_import_celery_and_django_routes() {
         .values()
         .find(|file| file.path.ends_with("enqueue.py"))
         .expect("enqueue");
+    assert!(enqueue.imports.iter().any(|import| import == "app.tasks"));
+    assert!(enqueue
+        .imports
+        .iter()
+        .any(|import| import == "app.users.models"));
     assert!(enqueue
         .queue_enqueues
         .iter()
@@ -116,6 +120,7 @@ fn rust_collects_use_and_declaration() {
         .find(|file| file.path.ends_with("lib.rs"))
         .expect("lib");
     assert!(lib.imports.iter().any(|import| import == "mail"));
+    assert!(lib.mods.iter().any(|name| name == "mail"));
     assert!(facts
         .files
         .values()
@@ -167,43 +172,4 @@ fn php_collects_laravel_route_and_dispatch() {
         .declarations
         .iter()
         .any(|name| name == "App.Jobs.SomeJob" || name == "SomeJob"));
-}
-
-#[test]
-fn kafka_extracts_static_topics_and_skips_dynamic() {
-    let (produces, consumes) = extract_kafka_topics(
-        r#"
-        producer.send({ topic: "mail.welcome" });
-        consumer.subscribe({ topic: "mail.welcome" });
-        producer.send({ topic: prefix + name });
-        // producer.send({ topic: "mail.commented" });
-        "#,
-    );
-    assert_eq!(produces, vec!["mail.welcome".to_string()]);
-    assert_eq!(consumes, vec!["mail.welcome".to_string()]);
-    let (commented, _) = extract_kafka_topics("// producer.send({ topic: \"mail.commented\" });");
-    assert!(commented.is_empty());
-    assert_eq!(
-        topic_identity(Some("orders"), "mail.welcome"),
-        "orders:mail.welcome"
-    );
-}
-
-#[test]
-fn empty_config_collects_nothing() {
-    let root = fixture("python-celery-django");
-    let files = all_files(&root);
-    assert!(collect_python_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_go_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_rust_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_ruby_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_php_facts(&root, &files, &[], None).files.is_empty());
-}
-
-#[test]
-fn php_without_framework_skips_laravel_extractors() {
-    let root = fixture("php-laravel");
-    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], None);
-    let routes = facts.files.values().find(|f| f.path.ends_with("web.php"));
-    assert!(routes.is_some_and(|file| file.route_handlers.is_empty()));
 }

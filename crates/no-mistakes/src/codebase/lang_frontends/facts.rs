@@ -12,6 +12,7 @@ pub(crate) struct LangFileFacts {
     pub route_handlers: Vec<(String, String)>,
     pub queue_enqueues: Vec<String>,
     pub queue_workers: Vec<String>,
+    pub mods: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -90,6 +91,14 @@ pub(crate) fn files_under(
 }
 
 pub(crate) fn module_from_path(package_root: &Path, path: &Path) -> Option<String> {
+    module_from_path_inner(package_root, path, false)
+}
+
+pub(crate) fn rust_module_from_path(package_root: &Path, path: &Path) -> Option<String> {
+    module_from_path_inner(package_root, path, true)
+}
+
+fn module_from_path_inner(package_root: &Path, path: &Path, rust: bool) -> Option<String> {
     let rel = path.strip_prefix(package_root).ok()?;
     let mut parts: Vec<String> = rel
         .iter()
@@ -100,10 +109,10 @@ pub(crate) fn module_from_path(package_root: &Path, path: &Path) -> Option<Strin
             *last = stem.to_string();
         }
     }
-    if parts
-        .last()
-        .is_some_and(|part| part == "__init__" || part == "mod")
-    {
+    if parts.last().is_some_and(|part| part == "__init__") {
+        parts.pop();
+    }
+    if rust && parts.last().is_some_and(|part| part == "mod") {
         parts.pop();
     }
     if parts.is_empty() {

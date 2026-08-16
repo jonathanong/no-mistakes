@@ -1,6 +1,6 @@
 package worker
 
-import "fmt"
+import fmtlib "fmt"
 
 import (
 	"github.com/hibiken/asynq"
@@ -9,7 +9,7 @@ import (
 func EnqueueWelcome(client *asynq.Client) error {
 	_, err := client.Enqueue(asynq.NewTask("mail:welcome", nil))
 	if err != nil {
-		return fmt.Errorf("enqueue: %w", err)
+		return fmtlib.Errorf("enqueue: %w", err)
 	}
 	return nil
 }

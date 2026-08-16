@@ -29,6 +29,7 @@ fn parse_go_file(path: &Path, roots: &[PathBuf], modules: &[String]) -> Option<L
         route_handlers: Vec::new(),
         queue_enqueues: extract_named(&text, asynq_task_re()),
         queue_workers: extract_named(&text, asynq_handle_re()),
+        mods: Vec::new(),
     })
 }
 
@@ -79,7 +80,9 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 
 fn go_single_import_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"(?m)^\s*import\s+"([^"]+)""#).expect("import"))
+    RE.get_or_init(|| {
+        Regex::new(r#"(?m)^\s*import\s+(?:(?:[_A-Za-z][\w.]*)\s+)?"([^"]+)""#).expect("import")
+    })
 }
 
 fn go_import_block_re() -> &'static Regex {

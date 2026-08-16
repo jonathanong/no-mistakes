@@ -47,6 +47,7 @@ fn parse_php_file(
         } else {
             Vec::new()
         },
+        mods: Vec::new(),
     })
 }
 

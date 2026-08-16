@@ -1,5 +1,6 @@
 use super::facts::{
-    configured_roots, files_under, module_from_path, owning_package, LangFactMap, LangFileFacts,
+    configured_roots, files_under, owning_package, rust_module_from_path, LangFactMap,
+    LangFileFacts,
 };
 use super::strip::strip_comments_keep_strings;
 use regex::Regex;
@@ -43,13 +44,14 @@ fn parse_rust_file(
         package,
         module: src_root
             .as_ref()
-            .and_then(|pkg| module_from_path(pkg, path)),
+            .and_then(|pkg| rust_module_from_path(pkg, path)),
         imports: rust_imports(&text),
         declarations: extract_named(&text, rust_decl_re()),
         references: extract_named(&text, rust_ref_re()),
         route_handlers: Vec::new(),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
+        mods: extract_named(&text, rust_mod_re()),
     })
 }
 
@@ -73,6 +75,13 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values.sort();
     values.dedup();
     values
+}
+
+fn rust_mod_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?mod\s+([A-Za-z_]\w*)").expect("mod")
+    })
 }
 
 fn rust_use_re() -> &'static Regex {
