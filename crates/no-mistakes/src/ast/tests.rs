@@ -3,7 +3,7 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, TemplateLiteral};
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn parser_reports_invalid_sources_and_extensions() {
@@ -124,6 +124,30 @@ fn parsed_program_cache_reuses_parse_and_source_type_errors() {
         .unwrap_err();
     assert_eq!(cached, first);
     assert!(first.contains("unsupported JavaScript/TypeScript file"));
+}
+
+#[test]
+fn owned_request_parse_cache_does_not_inherit_active_cache() {
+    with_request_parse_cache(|| {
+        with_program(
+            Path::new("owned-cache.ts"),
+            "export const a = 1;",
+            |_, _| (),
+        )
+        .unwrap();
+        assert_eq!(request_parse_cache_len(), 1);
+        with_owned_request_parse_cache(|| {
+            assert_eq!(request_parse_cache_len(), 0);
+            with_program(
+                Path::new("owned-cache.ts"),
+                "export const a = 2;",
+                |_, _| (),
+            )
+            .unwrap();
+            assert_eq!(request_parse_cache_len(), 1);
+        });
+        assert_eq!(request_parse_cache_len(), 1);
+    });
 }
 
 #[test]

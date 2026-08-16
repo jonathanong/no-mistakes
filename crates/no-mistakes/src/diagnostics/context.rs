@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 thread_local! {
-    static ACTIVE: RefCell<Vec<Arc<InvocationObserver>>> = const { RefCell::new(Vec::new()) };
+    static ACTIVE: RefCell<Vec<Option<Arc<InvocationObserver>>>> = const { RefCell::new(Vec::new()) };
     static TIMING_CONTEXT: RefCell<Vec<TimingKind>> = const { RefCell::new(Vec::new()) };
 }
 
@@ -12,14 +12,14 @@ thread_local! {
 /// propagate the invocation observer explicitly with [`with_observer`]; an
 /// unrelated concurrent request can never observe another thread's state.
 pub fn current() -> Option<Arc<InvocationObserver>> {
-    ACTIVE.with(|active| active.borrow().last().cloned())
+    ACTIVE.with(|active| active.borrow().last().cloned().flatten())
 }
 
 pub struct InvocationGuard;
 
 impl InvocationGuard {
     pub fn install(observer: Arc<InvocationObserver>) -> Self {
-        ACTIVE.with(|active| active.borrow_mut().push(observer));
+        ACTIVE.with(|active| active.borrow_mut().push(Some(observer)));
         Self
     }
 }
@@ -37,15 +37,37 @@ impl Drop for InvocationGuard {
 
 /// Run work with an invocation observer scoped to the current thread. This is
 /// the boundary helper for Rayon tasks and other explicitly spawned work.
+///
+/// `None` pushes a disabled scope so an uninstrumented task cannot record
+/// into another request. A later `Some(observer)` on the same stack overrides
+/// that disabled scope. The timing context is reset to `Serial` so a stolen
+/// task does not inherit an unrelated `Parallel` marker.
 pub fn with_observer<T>(
     observer: Option<Arc<InvocationObserver>>,
     operation: impl FnOnce() -> T,
 ) -> T {
-    let Some(observer) = observer else {
-        return operation();
-    };
-    let _guard = InvocationGuard::install(observer);
-    operation()
+    match observer {
+        Some(observer) => {
+            let _guard = InvocationGuard::install(observer);
+            with_timing_kind(TimingKind::Serial, operation)
+        }
+        None => {
+            ACTIVE.with(|active| active.borrow_mut().push(None));
+            struct DisabledGuard;
+            impl Drop for DisabledGuard {
+                fn drop(&mut self) {
+                    ACTIVE.with(|active| {
+                        active
+                            .borrow_mut()
+                            .pop()
+                            .expect("diagnostics observer scope must be active");
+                    });
+                }
+            }
+            let _disabled = DisabledGuard;
+            with_timing_kind(TimingKind::Serial, operation)
+        }
+    }
 }
 
 pub fn current_timing_kind() -> TimingKind {
@@ -58,7 +80,7 @@ pub fn current_timing_kind() -> TimingKind {
     })
 }
 
-pub(super) fn with_timing_kind<T>(kind: TimingKind, operation: impl FnOnce() -> T) -> T {
+pub fn with_timing_kind<T>(kind: TimingKind, operation: impl FnOnce() -> T) -> T {
     TIMING_CONTEXT.with(|context| context.borrow_mut().push(kind));
     struct TimingGuard;
     impl Drop for TimingGuard {

@@ -88,7 +88,7 @@ pub fn apply_filter(
                     let idx = result.len();
                     folder_seen.insert(folder.clone(), idx);
                     result.push(NodeEntry {
-                        node: NodeId::File(root.join(&folder)),
+                        node: NodeId::file(root.join(&folder)),
                         depth: entry.depth,
                         via: entry.via.clone(),
                     });

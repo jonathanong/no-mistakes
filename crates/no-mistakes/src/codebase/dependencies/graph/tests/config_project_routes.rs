@@ -118,7 +118,7 @@ fn configured_project_routes_reuse_prepared_server_facts() {
     let counts = crate::ast::finish_parse_count(&root);
 
     assert!(graph
-        .dependencies_of_node(&NodeId::File(root.join("src/client.ts")))
+        .dependencies_of_node(&NodeId::file(root.join("src/client.ts")))
         .is_some_and(|edges| edges.iter().any(|(to, kind)| {
             *kind == EdgeKind::RouteRef
                 && to.as_file() == Some(root.join("backend/api/users.ts").as_path())
@@ -224,12 +224,12 @@ fn workspace_project_routes_resolve_mount_aliases_with_the_owning_tsconfig() {
 
     let graph = shared.canonical_graph().unwrap();
     assert!(graph
-        .dependencies_of_node(&NodeId::File(client))
+        .dependencies_of_node(&NodeId::file(client))
         .is_some_and(|edges| edges.iter().any(|(to, kind)| {
             *kind == EdgeKind::RouteRef && to.as_file() == Some(admin_router.as_path())
         })));
     assert!(graph
-        .dependencies_of_node(&NodeId::File(swift_client))
+        .dependencies_of_node(&NodeId::file(swift_client))
         .is_some_and(|edges| edges.iter().any(|(to, kind)| {
             *kind == EdgeKind::HttpCall && to.as_file() == Some(admin_router.as_path())
         })));

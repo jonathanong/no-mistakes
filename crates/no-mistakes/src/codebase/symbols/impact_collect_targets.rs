@@ -52,7 +52,7 @@ fn signature_target_symbols(
                         });
                     if let Some(symbol_name) = symbol_name {
                         if target_symbols
-                            .entry(file.clone())
+                            .entry(file.to_path_buf())
                             .or_default()
                             .insert(symbol_name)
                         {
@@ -61,7 +61,7 @@ fn signature_target_symbols(
                     }
                 }
                 NodeId::File(file) => {
-                    target_symbols.entry(file.clone()).or_default();
+                    target_symbols.entry(file.to_path_buf()).or_default();
                 }
                 NodeId::Module(_)
                 | NodeId::QueueJob { .. }
@@ -112,7 +112,7 @@ fn suggested_test_entries(
         production_files.insert(root.join(&caller.file));
     }
     for file in production_files {
-        let node = NodeId::File(file);
+        let node = NodeId::file(file);
         suggested_entries.extend(graph.dependents_of(&[node], None, Some(&test_edges)));
     }
     suggested_entries

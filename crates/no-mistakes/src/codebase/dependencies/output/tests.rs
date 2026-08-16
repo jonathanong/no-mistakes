@@ -14,7 +14,7 @@ fn p(s: &str) -> PathBuf {
 
 fn entry(path: &str, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::File(p(path)),
+        node: NodeId::file(p(path)),
         depth,
         via: vec![],
     }
@@ -22,7 +22,7 @@ fn entry(path: &str, depth: usize) -> NodeEntry {
 
 fn entry_with_via(path: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
     NodeEntry {
-        node: NodeId::File(p(path)),
+        node: NodeId::file(p(path)),
         depth,
         via,
     }
@@ -30,10 +30,7 @@ fn entry_with_via(path: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
 
 fn queue_job_entry(queue_file: &str, job: &str, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::QueueJob {
-            queue_file: p(queue_file),
-            job: job.to_string(),
-        },
+        node: NodeId::queue_job(p(queue_file), job.to_string()),
         depth,
         via: vec![],
     }
@@ -41,10 +38,7 @@ fn queue_job_entry(queue_file: &str, job: &str, depth: usize) -> NodeEntry {
 
 fn workflow_job_entry(workflow_file: &str, job: &str, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::WorkflowJob {
-            workflow_file: p(workflow_file),
-            job: job.to_string(),
-        },
+        node: NodeId::workflow_job(p(workflow_file), job.to_string()),
         depth,
         via: vec![],
     }
@@ -52,11 +46,7 @@ fn workflow_job_entry(workflow_file: &str, job: &str, depth: usize) -> NodeEntry
 
 fn workflow_step_entry(workflow_file: &str, job: &str, step: usize, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::WorkflowStep {
-            workflow_file: p(workflow_file),
-            job: job.to_string(),
-            step,
-        },
+        node: NodeId::workflow_step(p(workflow_file), job.to_string(), step),
         depth,
         via: vec![EdgeKind::WorkflowStep],
     }
@@ -72,10 +62,7 @@ fn module_entry(specifier: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry 
 
 fn symbol_entry(file: &str, symbol: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
     NodeEntry {
-        node: NodeId::Symbol {
-            file: p(file),
-            symbol: symbol.to_string(),
-        },
+        node: NodeId::symbol(p(file), symbol.to_string()),
         depth,
         via,
     }

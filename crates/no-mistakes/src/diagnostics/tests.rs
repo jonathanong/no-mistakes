@@ -157,6 +157,41 @@ fn concurrent_observers_are_thread_isolated() {
 }
 
 #[test]
+fn with_observer_none_masks_an_inherited_observer() {
+    let observer = InvocationObserver::new(true);
+    with_observer(Some(Arc::clone(&observer)), || {
+        assert!(current().is_some());
+        with_observer(None, || {
+            assert!(current().is_none());
+            measure_if_enabled("masked", TimingKind::Serial, || ());
+            let inner = InvocationObserver::new(true);
+            with_observer(Some(Arc::clone(&inner)), || {
+                assert!(current().is_some());
+                measure_if_enabled("inner", TimingKind::Serial, || ());
+            });
+            assert!(current().is_none());
+            assert_eq!(inner.snapshot().timings[0].label, "inner");
+        });
+        assert!(current().is_some());
+    });
+    assert!(observer.snapshot().timings.is_empty());
+}
+
+#[test]
+fn with_observer_resets_inherited_parallel_timing() {
+    with_timing_kind(TimingKind::Parallel, || {
+        assert_eq!(current_timing_kind(), TimingKind::Parallel);
+        with_observer(None, || {
+            assert_eq!(current_timing_kind(), TimingKind::Serial);
+        });
+        with_observer(Some(InvocationObserver::new(false)), || {
+            assert_eq!(current_timing_kind(), TimingKind::Serial);
+        });
+        assert_eq!(current_timing_kind(), TimingKind::Parallel);
+    });
+}
+
+#[test]
 fn nested_timings_inherit_parallel_context() {
     let observer = InvocationObserver::new(true);
     with_observer(Some(Arc::clone(&observer)), || {

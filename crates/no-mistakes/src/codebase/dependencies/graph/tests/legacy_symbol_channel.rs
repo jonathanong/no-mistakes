@@ -67,12 +67,9 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
         None,
     );
 
-    let standard_node = NodeId::Symbol {
-        file: file.clone(),
-        symbol: "javascriptValue".to_string(),
-    };
+    let standard_node = NodeId::symbol(file.clone(), "javascriptValue".to_string());
     assert!(edges.contains(&(
-        NodeId::File(file.clone()),
+        NodeId::file(file.clone()),
         standard_node,
         EdgeKind::Import,
     )));

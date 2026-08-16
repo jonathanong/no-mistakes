@@ -29,8 +29,8 @@ fn collect_test_edges(
                     let src_path = dir.join(format!("{src_stem}.{ext}"));
                     if file_set.contains(&src_path) {
                         edges.push((
-                            NodeId::File(path.clone()),
-                            NodeId::File(src_path),
+                            NodeId::file(path.clone()),
+                            NodeId::file(src_path),
                             EdgeKind::TestOf,
                         ));
                     }
@@ -78,8 +78,8 @@ fn collect_md_edges(all_files: &[PathBuf], graph_files: &GraphFiles) -> Vec<Edge
                     let target = crate::codebase::ts_resolver::normalize_path(&target);
                     if graph_files.is_visible(&target) {
                         Some((
-                            NodeId::File(path.clone()),
-                            NodeId::File(target),
+                            NodeId::file(path.clone()),
+                            NodeId::file(target),
                             EdgeKind::MarkdownLink,
                         ))
                     } else {

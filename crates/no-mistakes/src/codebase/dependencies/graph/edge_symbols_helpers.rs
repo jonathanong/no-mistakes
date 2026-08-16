@@ -60,7 +60,7 @@ fn imported_symbol_map(
                 }
             } else {
                 ImportedSymbolTarget::Node {
-                    node: NodeId::File(target.to_path_buf()),
+                    node: NodeId::file(target),
                     kind: EdgeKind::AssetImport,
                 }
             }
@@ -115,7 +115,7 @@ fn namespace_import_map(
                 }
             } else {
                 ImportedSymbolTarget::Node {
-                    node: NodeId::File(file.to_path_buf()),
+                    node: NodeId::file(file),
                     kind: EdgeKind::AssetImport,
                 }
             }

@@ -14,7 +14,7 @@ pub(crate) fn runtime_deps(
         EdgeKind::WorkspaceImport,
     ]
     .into();
-    let roots = [NodeId::File(target)];
+    let roots = [NodeId::file(target)];
     let entries = match file_universe {
         Some(universe) => graph.deps_of_in_file_universe(&roots, None, Some(&allowed), universe),
         None => graph.deps_of(&roots, None, Some(&allowed)),

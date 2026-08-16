@@ -27,20 +27,17 @@ impl SharedTraversalContext {
                 .filter_map(|path| {
                     let source = sources.read_path(path).ok()?;
                     session
-                        .with_recovered_program(path, &source, |program, source, error| {
+                        .with_recovered_program(path, &source, |program, parsed, error| {
                             error.is_none().then(|| {
-                                let mut facts = crate::codebase::ts_source::facts::collect_file_facts_from_program(
+                                crate::codebase::ts_source::facts::collect_file_facts_from_program(
                                     path,
                                     self.fact_plan,
                                     &context,
-                                    source,
+                                    parsed,
                                     program,
                                     None,
-                                );
-                                if self.fact_plan.source {
-                                    facts.source = Some(std::sync::Arc::<str>::from(source));
-                                }
-                                facts
+                                    self.fact_plan.source.then(|| std::sync::Arc::clone(&source)),
+                                )
                             })
                         })
                         .ok()

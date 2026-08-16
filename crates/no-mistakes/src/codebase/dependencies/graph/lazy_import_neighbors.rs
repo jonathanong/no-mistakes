@@ -45,14 +45,18 @@ fn import_neighbors(
                 );
             }
         };
-        match session.with_program(path, &source, |program, source| {
+        match session.with_program(path, &source, |program, parsed| {
             crate::codebase::ts_source::facts::collect_file_facts_from_program(
                 path,
                 fact_source.collect_plan,
                 fact_source.context,
-                source,
+                parsed,
                 program,
                 None,
+                fact_source
+                    .collect_plan
+                    .source
+                    .then(|| std::sync::Arc::clone(&source)),
             )
         }) {
             Ok(facts) => facts,
@@ -103,12 +107,12 @@ fn import_neighbors_from_facts(
                     _ => EdgeKind::WorkspaceImport,
                 };
                 return (is_indexable(target) || kind == EdgeKind::RequireResolve)
-                    .then(|| (NodeId::File(target.to_path_buf()), kind));
+                    .then(|| (NodeId::file(target), kind));
             }
             if let Some(target) = classification.preferred_path() {
                 let target = graph_files.visible_path(target)?;
                 return (is_indexable(target) || kind == EdgeKind::RequireResolve)
-                    .then(|| (NodeId::File(target.to_path_buf()), kind));
+                    .then(|| (NodeId::file(target), kind));
             }
             if classification.is_unresolved_external() {
                 return bare_module_node(&imp.specifier).map(|module| (module, kind));

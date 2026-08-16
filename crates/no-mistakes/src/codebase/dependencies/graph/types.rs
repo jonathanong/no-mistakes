@@ -1,25 +1,40 @@
 pub use crate::codebase::ts_source::SKIP_DIRS;
 
 /// A node in the dependency graph: a source file, external module, or virtual node.
+///
+/// File paths are interned as `Arc<Path>` so cloning a `NodeId` does not copy
+/// path bytes. Construct with `NodeId::file` / `symbol` / …; keep matching
+/// `NodeId::File(path)` and `NodeId::Symbol { file, .. }`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum NodeId {
-    File(PathBuf),
-    Symbol { file: PathBuf, symbol: String },
+    File(Arc<Path>),
+    Symbol {
+        file: Arc<Path>,
+        symbol: String,
+    },
     Module(String),
-    QueueJob { queue_file: PathBuf, job: String },
-    WorkflowJob { workflow_file: PathBuf, job: String },
+    QueueJob {
+        queue_file: Arc<Path>,
+        job: String,
+    },
+    WorkflowJob {
+        workflow_file: Arc<Path>,
+        job: String,
+    },
     WorkflowStep {
-        workflow_file: PathBuf,
+        workflow_file: Arc<Path>,
         job: String,
         step: usize,
     },
 }
 
+include!("types_node_id.rs");
+
 impl NodeId {
     pub fn as_file(&self) -> Option<&Path> {
         match self {
-            NodeId::File(p) => Some(p.as_path()),
-            NodeId::Symbol { file, .. } => Some(file.as_path()),
+            NodeId::File(p) => Some(p.as_ref()),
+            NodeId::Symbol { file, .. } => Some(file.as_ref()),
             NodeId::Module(_) | NodeId::QueueJob { .. } => None,
             NodeId::WorkflowJob { .. } | NodeId::WorkflowStep { .. } => None,
         }
@@ -27,11 +42,11 @@ impl NodeId {
 
     fn is_in_file_universe(&self, universe: &HashSet<PathBuf>) -> bool {
         match self {
-            Self::File(path) | Self::Symbol { file: path, .. } => universe.contains(path),
+            Self::File(path) | Self::Symbol { file: path, .. } => universe.contains(path.as_ref()),
             Self::Module(_) => true,
-            Self::QueueJob { queue_file, .. } => universe.contains(queue_file),
+            Self::QueueJob { queue_file, .. } => universe.contains(queue_file.as_ref()),
             Self::WorkflowJob { workflow_file, .. } | Self::WorkflowStep { workflow_file, .. } => {
-                universe.contains(workflow_file)
+                universe.contains(workflow_file.as_ref())
             }
         }
     }
@@ -48,15 +63,13 @@ impl NodeId {
             }
             NodeId::Module(specifier) => specifier.clone(),
             NodeId::QueueJob { queue_file, job } => {
-                let rel = queue_file
-                    .strip_prefix(root)
-                    .unwrap_or(queue_file.as_path());
+                let rel = queue_file.strip_prefix(root).unwrap_or(queue_file.as_ref());
                 format!("{}#{job}", rel.display())
             }
             NodeId::WorkflowJob { workflow_file, job } => {
                 let rel = workflow_file
                     .strip_prefix(root)
-                    .unwrap_or(workflow_file.as_path());
+                    .unwrap_or(workflow_file.as_ref());
                 format!("{}#job:{job}", rel.display())
             }
             NodeId::WorkflowStep {
@@ -66,7 +79,7 @@ impl NodeId {
             } => {
                 let rel = workflow_file
                     .strip_prefix(root)
-                    .unwrap_or(workflow_file.as_path());
+                    .unwrap_or(workflow_file.as_ref());
                 format!("{}#job:{job}/step:{step}", rel.display())
             }
         }

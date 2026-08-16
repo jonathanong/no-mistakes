@@ -3,9 +3,7 @@ use crate::codebase::ts_http_calls::{extract_http_calls_from_program, HttpCall};
 use crate::codebase::ts_process_spawn::{
     extract_spawn_edges_from_program, extract_spawn_edges_from_program_from_visible, SpawnEdge,
 };
-use crate::codebase::ts_queues::factory::{
-    find_create_queue_line_from_program, find_queue_name_from_program,
-};
+use crate::codebase::ts_queues::factory::find_queue_factory_facts_from_program;
 use crate::codebase::ts_queues::usage::{extract_queue_usage_from_program, QueueUsage};
 use crate::codebase::ts_routes::defs_backend::extract_backend_routes_from_program;
 use crate::codebase::ts_routes::refs::{
@@ -158,14 +156,11 @@ fn queue_factory_facts<'a>(
         context.queue_factory_specifier.as_deref(),
         context.queue_factory_function.as_deref(),
     ) {
-        (Some(factory_specifier), Some(factory_function)) => (
-            find_create_queue_line_from_program(
-                program,
-                source,
-                factory_specifier,
-                factory_function,
-            ),
-            find_queue_name_from_program(program, factory_specifier, factory_function),
+        (Some(factory_specifier), Some(factory_function)) => find_queue_factory_facts_from_program(
+            program,
+            source,
+            factory_specifier,
+            factory_function,
         ),
         _ => (None, None),
     }

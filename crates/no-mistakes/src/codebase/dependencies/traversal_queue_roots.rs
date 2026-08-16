@@ -59,10 +59,7 @@ where
         if matches!(entrypoint.node, NodeId::Module(_)) {
             continue;
         }
-        let queue_job = NodeId::QueueJob {
-            queue_file: entrypoint.file.clone(),
-            job: symbol.clone(),
-        };
+        let queue_job = NodeId::queue_job(entrypoint.file.clone(), symbol.clone());
         if has_reverse_node(&queue_job) {
             roots.push(queue_job);
         }

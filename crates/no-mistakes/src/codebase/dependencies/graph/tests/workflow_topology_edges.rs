@@ -8,18 +8,15 @@ fn workflow_topology_fixture() -> PathBuf {
 }
 
 fn workflow_node(root: &Path, job: &str) -> NodeId {
-    NodeId::WorkflowJob {
-        workflow_file: root.join(".github/workflows/main.yml"),
-        job: job.to_string(),
-    }
+    NodeId::workflow_job(root.join(".github/workflows/main.yml"), job.to_string())
 }
 
 fn workflow_step(root: &Path, job: &str, step: usize) -> NodeId {
-    NodeId::WorkflowStep {
-        workflow_file: root.join(".github/workflows/main.yml"),
-        job: job.to_string(),
+    NodeId::workflow_step(
+        root.join(".github/workflows/main.yml"),
+        job.to_string(),
         step,
-    }
+    )
 }
 
 fn graph_has_edge(graph: &DepGraph, from: NodeId, to: NodeId, kind: EdgeKind) -> bool {
@@ -37,15 +34,8 @@ fn workflow_virtual_nodes_normalize_display_and_track_their_file_universe() {
     let normalized_file =
         crate::codebase::ts_resolver::normalize_path(&root.join(".github/workflows/main.yml"));
     let nodes = normalize_nodes(&[
-        NodeId::WorkflowJob {
-            workflow_file: workflow_file.clone(),
-            job: "build".to_string(),
-        },
-        NodeId::WorkflowStep {
-            workflow_file,
-            job: "build".to_string(),
-            step: 2,
-        },
+        NodeId::workflow_job(workflow_file.clone(), "build".to_string()),
+        NodeId::workflow_step(workflow_file, "build".to_string(), 2),
     ]);
 
     assert_eq!(
@@ -73,7 +63,7 @@ fn workflow_topology_builds_job_step_uses_and_run_edges() {
     );
     let graph = DepGraph::build_with_plan(&root, &TsConfig::default(), GraphBuildPlan::all())
         .expect("workflow fixture graph");
-    let workflow = NodeId::File(root.join(".github/workflows/main.yml"));
+    let workflow = NodeId::file(root.join(".github/workflows/main.yml"));
     let build = workflow_node(&root, "build");
     let consume = workflow_node(&root, "consume");
 
@@ -92,7 +82,7 @@ fn workflow_topology_builds_job_step_uses_and_run_edges() {
     assert!(graph_has_edge(
         &graph,
         workflow_node(&root, "call"),
-        NodeId::File(root.join(".github/workflows/reusable.yml")),
+        NodeId::file(root.join(".github/workflows/reusable.yml")),
         EdgeKind::WorkflowUses
     ));
     assert!(graph_has_edge(
@@ -104,31 +94,31 @@ fn workflow_topology_builds_job_step_uses_and_run_edges() {
     assert!(graph_has_edge(
         &graph,
         workflow_step(&root, "build", 0),
-        NodeId::File(root.join("scripts/direct.mjs")),
+        NodeId::file(root.join("scripts/direct.mjs")),
         EdgeKind::WorkflowRun
     ));
     assert!(graph_has_edge(
         &graph,
         workflow_step(&root, "build", 1),
-        NodeId::File(root.join("package.json")),
+        NodeId::file(root.join("package.json")),
         EdgeKind::WorkflowRun
     ));
     assert!(graph_has_edge(
         &graph,
         workflow_step(&root, "build", 1),
-        NodeId::File(root.join("scripts/build.mjs")),
+        NodeId::file(root.join("scripts/build.mjs")),
         EdgeKind::WorkflowRun
     ));
     assert!(graph_has_edge(
         &graph,
         workflow_step(&root, "build", 2),
-        NodeId::File(root.join("packages/tool/check.mjs")),
+        NodeId::file(root.join("packages/tool/check.mjs")),
         EdgeKind::WorkflowRun
     ));
     assert!(graph_has_edge(
         &graph,
         workflow_step(&root, "build", 3),
-        NodeId::File(root.join(".github/actions/local/action.yml")),
+        NodeId::file(root.join(".github/actions/local/action.yml")),
         EdgeKind::WorkflowUses
     ));
 }
@@ -191,7 +181,7 @@ fn prepared_check_fact_graph_reuses_preparsed_workflows() {
     assert!(graph_has_edge(
         &graph,
         workflow_step(&root, "build", 0),
-        NodeId::File(root.join("scripts/direct.mjs")),
+        NodeId::file(root.join("scripts/direct.mjs")),
         EdgeKind::WorkflowRun,
     ));
 }
@@ -219,11 +209,8 @@ fn workflow_graph_uses_configured_workflow_directories() {
 
     assert!(graph_has_edge(
         &graph,
-        NodeId::File(workflow.clone()),
-        NodeId::WorkflowJob {
-            workflow_file: workflow,
-            job: "configured".to_string(),
-        },
+        NodeId::file(workflow.clone()),
+        NodeId::workflow_job(workflow, "configured".to_string()),
         EdgeKind::WorkflowJob
     ));
 }
@@ -310,13 +297,13 @@ fn workflow_edges_support_relative_graph_roots() {
     assert!(graph_has_edge(
         &graph,
         workflow_step(&expected_root, "build", 0),
-        NodeId::File(expected_root.join("scripts/direct.mjs")),
+        NodeId::file(expected_root.join("scripts/direct.mjs")),
         EdgeKind::WorkflowRun
     ));
     assert!(graph_has_edge(
         &graph,
         workflow_step(&expected_root, "build", 3),
-        NodeId::File(expected_root.join(".github/actions/local/action.yml")),
+        NodeId::file(expected_root.join(".github/actions/local/action.yml")),
         EdgeKind::WorkflowUses
     ));
 }
