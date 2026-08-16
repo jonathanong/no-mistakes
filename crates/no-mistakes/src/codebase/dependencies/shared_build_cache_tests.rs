@@ -45,6 +45,13 @@ fn memoizes_successful_and_failed_builds() {
     assert_eq!(first.to_string(), "first failure");
     assert_eq!(second.to_string(), "first failure");
     assert_eq!(cache.build_count(), 2);
+
+    let (first, built) = cache.get_or_build_status(3, || Ok(1)).unwrap();
+    assert_eq!(*first, 1);
+    assert!(built);
+    let (second, built) = cache.get_or_build_status(3, || Ok(2)).unwrap();
+    assert_eq!(*second, 1);
+    assert!(!built);
 }
 
 #[test]

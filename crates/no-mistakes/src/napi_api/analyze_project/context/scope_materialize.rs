@@ -57,14 +57,14 @@ impl PreparedScopePlan {
             check: self.check,
             check_uses_traversal_graph: check_shares_traversal_graph_universe,
             playwright: self.playwright,
-            queue_reports: HashMap::new(),
-            queue_indexed_reports: HashMap::new(),
+            queue_reports: std::sync::Mutex::new(HashMap::new()),
+            queue_indexed_reports: std::sync::Mutex::new(HashMap::new()),
             queue_traversal_keys: self.queue_traversal_keys,
-            server_indexed_reports: HashMap::new(),
+            server_indexed_reports: std::sync::Mutex::new(HashMap::new()),
             server_traversal_keys: self.server_traversal_keys,
-            server_reports: HashMap::new(),
-            playwright_analyses: HashMap::new(),
-            react_analyses: HashMap::new(),
+            server_reports: std::sync::Mutex::new(HashMap::new()),
+            playwright_analyses: std::sync::Mutex::new(HashMap::new()),
+            react_analyses: std::sync::Mutex::new(HashMap::new()),
         })
     }
 }

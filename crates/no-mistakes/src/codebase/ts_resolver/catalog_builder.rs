@@ -126,6 +126,7 @@ impl<'a> CatalogBuilder<'a> {
             forced: false,
             build_diagnostics: self.diagnostics,
             diagnostics: Mutex::new(BTreeSet::new()),
+            runtime_diagnostics_gate: Mutex::new(()),
         }
     }
 

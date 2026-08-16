@@ -30,7 +30,10 @@ include!("shared_traversal_reports.rs");
 include!("output_results.rs");
 include!("shared_graph_cache.rs");
 include!("shared_traversal_graph.rs");
+include!("shared_traversal_graph_shared.rs");
 include!("shared_traversal_collect.rs");
+include!("shared_traversal_collect_cache.rs");
+include!("shared_traversal_collect_roots.rs");
 include!("shared_traversal_provenance.rs");
 include!("shared_traversal_uncached.rs");
 include!("output_args.rs");
@@ -38,6 +41,8 @@ include!("run.rs");
 
 #[cfg(test)]
 mod shared_traversal_facts_tests;
+#[cfg(test)]
+mod shared_traversal_test_api;
 #[cfg(test)]
 mod traversal;
 

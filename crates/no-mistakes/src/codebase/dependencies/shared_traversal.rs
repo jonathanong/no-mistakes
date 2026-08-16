@@ -19,13 +19,18 @@ pub(crate) struct SharedTraversalContext {
     graph_cache: SharedBuildCache<EffectiveGraphPlanKey, graph::DepGraph>,
     symbol_index_cache: SharedBuildCache<GraphFileUniverseKey, graph::SymbolIndex>,
     import_resolution_cache: crate::codebase::ts_resolver::ImportResolutionCache,
-    traversal_results: Vec<(TraversalCacheKey, CachedTraversal)>,
+    traversal_results: TraversalResultCache,
+    pending_lazy_facts: std::sync::Mutex<Option<crate::codebase::ts_source::facts::TsFactMap>>,
     analysis_generation: u64,
     pub(crate) graph_builds: usize,
     pub(crate) symbol_index_builds: usize,
 }
 
-#[derive(PartialEq, Eq)]
+type TraversalResultSlot =
+    std::sync::Arc<std::sync::OnceLock<Result<CachedTraversal, std::sync::Arc<str>>>>;
+type TraversalResultCache = std::sync::Mutex<HashMap<TraversalCacheKey, TraversalResultSlot>>;
+
+#[derive(PartialEq, Eq, Hash)]
 struct TraversalCacheKey {
     generation: u64,
     dependents: bool,
@@ -43,6 +48,7 @@ struct CachedTraversal {
     // request-local snapshot alongside its traversal so a cache hit can render
     // the same report without leaking diagnostics into other traversals.
     runtime_diagnostics: Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>,
+    tsconfig_provenance: Vec<crate::codebase::ts_resolver::TsConfigProvenance>,
 }
 
 impl SharedTraversalContext {

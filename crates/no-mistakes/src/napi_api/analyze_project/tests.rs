@@ -176,9 +176,9 @@ fn analyze_project_check_and_graph_report_share_one_canonical_graph() {
         .to_string(),
     )
     .unwrap();
-    let mut context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    let context = context::AnalyzeProjectContext::prepare(&options).unwrap();
     for request in &options.reports {
-        run_report(request, &options, &mut context).unwrap();
+        run_report(request, &options, &context).unwrap();
     }
     assert_eq!(context.graph_build_count(), 1);
 }
@@ -202,11 +202,11 @@ fn mixed_check_keeps_non_import_edges_from_the_union_graph() {
         .to_string(),
     )
     .unwrap();
-    let mut context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    let context = context::AnalyzeProjectContext::prepare(&options).unwrap();
     let results = options
         .reports
         .iter()
-        .map(|request| run_report(request, &options, &mut context).unwrap())
+        .map(|request| run_report(request, &options, &context).unwrap())
         .collect::<Vec<_>>();
 
     assert!(
@@ -243,11 +243,11 @@ fn mixed_check_collects_ignored_explicit_graph_root_facts() {
         .to_string(),
     )
     .unwrap();
-    let mut context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    let context = context::AnalyzeProjectContext::prepare(&options).unwrap();
     let results = options
         .reports
         .iter()
-        .map(|request| run_report(request, &options, &mut context).unwrap())
+        .map(|request| run_report(request, &options, &context).unwrap())
         .collect::<Vec<_>>();
 
     assert!(

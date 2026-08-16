@@ -1,4 +1,5 @@
 use anyhow::{bail, Result as AnyhowResult};
+use rayon::prelude::*;
 use serde_json::Value;
 
 use super::codebase::build_traverse_args;
@@ -65,17 +66,22 @@ fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<
 }
 
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {
-    let mut context = context::AnalyzeProjectContext::prepare(&options)?;
-    let mut reports = Vec::with_capacity(options.reports.len());
-
-    for request in &options.reports {
-        let result = run_report(request, &options, &mut context)?;
-        reports.push(AnalyzeReportResult {
-            id: request.id.clone(),
-            report_type: request.report_type.clone(),
-            result,
-        });
-    }
+    let context = context::AnalyzeProjectContext::prepare(&options)?;
+    let observer = crate::diagnostics::current();
+    let reports = options
+        .reports
+        .par_iter()
+        .map(|request| {
+            crate::diagnostics::with_observer(observer.clone(), || {
+                run_report(request, &options, &context).map(|result| AnalyzeReportResult {
+                    id: request.id.clone(),
+                    report_type: request.report_type.clone(),
+                    result,
+                })
+            })
+        })
+        .collect::<Vec<_>>();
+    let reports = reports.into_iter().collect::<AnyhowResult<Vec<_>>>()?;
 
     Ok(AnalyzeProjectResult { reports })
 }
@@ -83,7 +89,7 @@ fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjec
 fn run_report(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
-    context: &mut context::AnalyzeProjectContext,
+    context: &context::AnalyzeProjectContext,
 ) -> AnyhowResult<Value> {
     if let Some(direction) = graph_direction(&request.report_type) {
         return context.graph_report(request, options, direction);

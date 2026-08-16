@@ -83,6 +83,7 @@ pub fn run(options: &FlowOptions) -> Result<FlowReport> {
             plan,
             framework_plan,
         )?;
+    traversal.ensure_facts();
     traversal.flow_report(options)
 }
 

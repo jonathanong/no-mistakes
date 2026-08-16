@@ -1,24 +1,24 @@
 impl PreparedScope {
     pub(super) fn graph_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
         direction: Direction,
     ) -> Result<Value> {
         let args = super::traverse_args(request, options)?;
         let cwd = std::env::current_dir().context("reading current directory")?;
-        let result = crate::codebase::dependencies::collect_and_filter_entries_shared(
+        let result = crate::codebase::dependencies::collect_and_filter_entries_prepared(
             &args,
             direction,
             &cwd,
-            &mut self.traversal,
+            &self.traversal,
         )?;
         let json = crate::codebase::dependencies::result_json(&args, &result)?;
         Ok(serde_json::from_str(&json)?)
     }
 
     pub(super) fn import_usages_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -31,13 +31,13 @@ impl PreparedScope {
         let report = crate::codebase::import_usages::collect_with_facts(
             &root,
             prepared,
-            self.traversal.facts(),
+            self.traversal.prepared_facts(),
         )?;
         Ok(serde_json::to_value(report)?)
     }
 
     pub(super) fn symbols_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -64,7 +64,7 @@ impl PreparedScope {
     }
 
     pub(super) fn flow_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -75,7 +75,7 @@ impl PreparedScope {
     }
 
     pub(super) fn effects_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -101,7 +101,7 @@ impl PreparedScope {
     }
 
     pub(super) fn rsc_callers_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {

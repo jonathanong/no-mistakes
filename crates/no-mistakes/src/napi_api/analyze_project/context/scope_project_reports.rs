@@ -1,6 +1,6 @@
 impl PreparedScope {
     pub(super) fn project_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -22,7 +22,7 @@ impl PreparedScope {
                 let dependency_graph = if check.graph_plan().is_some()
                     && self.check_uses_traversal_graph
                 {
-                    Some(self.traversal.canonical_graph()?)
+                    Some(self.traversal.graph_shared()?)
                 } else {
                     None
                 };
@@ -38,7 +38,7 @@ impl PreparedScope {
     }
 
     pub(super) fn playwright_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -50,8 +50,8 @@ impl PreparedScope {
                 "distinct Playwright settings require a separate prepared analyzeProject context"
             );
         };
-        if !self.playwright_analyses.contains_key(&key) {
-            let analysis =
+        let analysis = cached_once(&self.playwright_analyses, &key, || {
+            Ok(std::sync::Arc::new(
                 crate::playwright::analysis::pipeline::analyze_with_policy_and_facts_from_snapshot(
                     self.traversal.root(),
                     &prepared.settings,
@@ -62,18 +62,14 @@ impl PreparedScope {
                     playwright_unique_policy(&parsed),
                     &self.facts,
                     self.traversal.visible_paths(),
-                )?;
-            self.playwright_analyses.insert(key.clone(), analysis);
-        }
-        let analysis = self
-            .playwright_analyses
-            .get(&key)
-            .expect("Playwright analysis is cached");
+                )?,
+            ))
+        })?;
         render_playwright_report(
             &request.report_type,
             &parsed,
             self.traversal.root(),
-            analysis,
+            analysis.as_ref(),
         )
     }
 }

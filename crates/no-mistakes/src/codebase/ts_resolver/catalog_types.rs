@@ -48,6 +48,7 @@ pub struct TsConfigCatalog {
     forced: bool,
     build_diagnostics: BTreeSet<TsConfigDiagnostic>,
     diagnostics: Mutex<BTreeSet<TsConfigDiagnostic>>,
+    runtime_diagnostics_gate: Mutex<()>,
 }
 
 struct CatalogConfig {
