@@ -1,19 +1,30 @@
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 struct GraphFileUniverseKey {
     generation: u64,
-    paths: std::sync::Arc<[PathBuf]>,
-    resource_candidates: std::sync::Arc<[PathBuf]>,
+    universe: std::sync::Arc<()>,
+}
+
+impl PartialEq for GraphFileUniverseKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.generation == other.generation
+            && std::sync::Arc::ptr_eq(&self.universe, &other.universe)
+    }
+}
+
+impl Eq for GraphFileUniverseKey {}
+
+impl std::hash::Hash for GraphFileUniverseKey {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.generation.hash(state);
+        std::sync::Arc::as_ptr(&self.universe).hash(state);
+    }
 }
 
 impl GraphFileUniverseKey {
     fn new(files: &graph::GraphFiles, generation: u64) -> Self {
-        let mut paths = files.all().to_vec();
-        paths.sort();
-        paths.dedup();
         Self {
             generation,
-            paths: paths.into(),
-            resource_candidates: files.resource_candidates().to_vec().into(),
+            universe: std::sync::Arc::clone(files.universe_identity()),
         }
     }
 }
