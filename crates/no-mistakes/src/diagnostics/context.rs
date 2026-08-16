@@ -4,26 +4,22 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 thread_local! {
-    static ACTIVE: RefCell<Vec<Arc<InvocationObserver>>> = const { RefCell::new(Vec::new()) };
+    static ACTIVE: RefCell<Vec<Option<Arc<InvocationObserver>>>> = const { RefCell::new(Vec::new()) };
     static TIMING_CONTEXT: RefCell<Vec<TimingKind>> = const { RefCell::new(Vec::new()) };
-    static OBSERVER_MASK: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 /// Return the observer scoped to this execution thread. Rayon entrypoints must
 /// propagate the invocation observer explicitly with [`with_observer`]; an
 /// unrelated concurrent request can never observe another thread's state.
 pub fn current() -> Option<Arc<InvocationObserver>> {
-    if OBSERVER_MASK.with(std::cell::Cell::get) > 0 {
-        return None;
-    }
-    ACTIVE.with(|active| active.borrow().last().cloned())
+    ACTIVE.with(|active| active.borrow().last().cloned().flatten())
 }
 
 pub struct InvocationGuard;
 
 impl InvocationGuard {
     pub fn install(observer: Arc<InvocationObserver>) -> Self {
-        ACTIVE.with(|active| active.borrow_mut().push(observer));
+        ACTIVE.with(|active| active.borrow_mut().push(Some(observer)));
         Self
     }
 }
@@ -41,25 +37,37 @@ impl Drop for InvocationGuard {
 
 /// Run work with an invocation observer scoped to the current thread. This is
 /// the boundary helper for Rayon tasks and other explicitly spawned work.
+///
+/// `None` pushes a disabled scope so an uninstrumented task cannot record
+/// into another request. A later `Some(observer)` on the same stack overrides
+/// that disabled scope. The timing context is reset to `Serial` so a stolen
+/// task does not inherit an unrelated `Parallel` marker.
 pub fn with_observer<T>(
     observer: Option<Arc<InvocationObserver>>,
     operation: impl FnOnce() -> T,
 ) -> T {
-    let Some(observer) = observer else {
-        // Mask an inherited observer so an uninstrumented Rayon task cannot
-        // record into another request that still owns this worker.
-        OBSERVER_MASK.with(|mask| mask.set(mask.get() + 1));
-        struct MaskGuard;
-        impl Drop for MaskGuard {
-            fn drop(&mut self) {
-                OBSERVER_MASK.with(|mask| mask.set(mask.get() - 1));
-            }
+    match observer {
+        Some(observer) => {
+            let _guard = InvocationGuard::install(observer);
+            with_timing_kind(TimingKind::Serial, operation)
         }
-        let _mask = MaskGuard;
-        return operation();
-    };
-    let _guard = InvocationGuard::install(observer);
-    operation()
+        None => {
+            ACTIVE.with(|active| active.borrow_mut().push(None));
+            struct DisabledGuard;
+            impl Drop for DisabledGuard {
+                fn drop(&mut self) {
+                    ACTIVE.with(|active| {
+                        active
+                            .borrow_mut()
+                            .pop()
+                            .expect("diagnostics observer scope must be active");
+                    });
+                }
+            }
+            let _disabled = DisabledGuard;
+            with_timing_kind(TimingKind::Serial, operation)
+        }
+    }
 }
 
 pub fn current_timing_kind() -> TimingKind {
