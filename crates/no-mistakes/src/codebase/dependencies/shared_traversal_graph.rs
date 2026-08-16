@@ -1,4 +1,5 @@
 impl SharedTraversalContext {
+    #[cfg(any(test, feature = "test-instrumentation"))]
     pub(crate) fn facts(&mut self) -> &crate::codebase::ts_source::facts::TsFactMap {
         self.ensure_facts();
         self.facts.as_ref().expect("TS facts are initialized")
@@ -44,7 +45,8 @@ impl SharedTraversalContext {
             .extend(collected);
     }
 
-    fn graph(&mut self) -> Result<&graph::DepGraph> {
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    pub(crate) fn graph(&mut self) -> Result<&graph::DepGraph> {
         if self.graph.is_none() {
             self.graph = Some(self.request_graph(self.build_plan)?);
         }
@@ -53,7 +55,8 @@ impl SharedTraversalContext {
             .context("dependency graph was not initialized")
     }
 
-    fn request_graph(
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    pub(crate) fn request_graph(
         &mut self,
         plan: graph::GraphBuildPlan,
     ) -> Result<std::sync::Arc<graph::DepGraph>> {

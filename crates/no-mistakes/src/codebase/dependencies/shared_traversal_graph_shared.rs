@@ -3,6 +3,7 @@ impl SharedTraversalContext {
         self.facts.as_ref().expect("TS facts are initialized")
     }
 
+    #[cfg(any(test, feature = "test-instrumentation"))]
     pub(crate) fn graph_build_count(&self) -> usize {
         self.graph_cache.build_count()
     }
