@@ -11,7 +11,13 @@ pub(crate) fn collect_php_facts(
     framework: Option<&str>,
 ) -> LangFactMap {
     let roots = configured_roots(root, apps);
-    let files = files_under(all_files, &roots, "php");
+    let mut files = files_under(all_files, &roots, "php");
+    for root in &roots {
+        let composer = root.join("composer.json");
+        if all_files.iter().any(|path| path == &composer) {
+            files.push(composer);
+        }
+    }
     let laravel = framework.is_some_and(|name| name.eq_ignore_ascii_case("laravel"));
     super::facts::collect_files_parallel(files, |path| parse_php_file(path, &roots, apps, laravel))
 }

@@ -86,7 +86,10 @@ fn rust_mod_re() -> &'static Regex {
 
 fn rust_use_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"(?m)^\s*use\s+(?:crate|super|self)::([\w:]+)").expect("use"))
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?use\s+(?:crate|super|self)::([\w:]+)")
+            .expect("use")
+    })
 }
 
 fn rust_decl_re() -> &'static Regex {
