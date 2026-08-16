@@ -13,6 +13,17 @@ fn public_sort_key_delegates_all_groups_and_non_vitest_detail_is_none() {
         EdgeKind::VitestSetup(VitestSetupField::GlobalSetup).sort_key(),
         (36, 1)
     );
+    assert_eq!(EdgeKind::PythonImport.sort_key(), (39, 0));
+    assert_eq!(EdgeKind::PythonReference.sort_key(), (40, 0));
+    assert_eq!(EdgeKind::GoImport.sort_key(), (41, 0));
+    assert_eq!(EdgeKind::GoReference.sort_key(), (42, 0));
+    assert_eq!(EdgeKind::RustUse.sort_key(), (43, 0));
+    assert_eq!(EdgeKind::RustMod.sort_key(), (44, 0));
+    assert_eq!(EdgeKind::RustPackage.sort_key(), (45, 0));
+    assert_eq!(EdgeKind::RubyRequire.sort_key(), (46, 0));
+    assert_eq!(EdgeKind::RubyReference.sort_key(), (47, 0));
+    assert_eq!(EdgeKind::PhpUse.sort_key(), (48, 0));
+    assert_eq!(EdgeKind::PhpPackage.sort_key(), (49, 0));
 }
 
 #[test]

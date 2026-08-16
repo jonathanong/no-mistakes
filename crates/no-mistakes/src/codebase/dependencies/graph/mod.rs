@@ -17,6 +17,7 @@ use crate::edge_index::{CanonicalEdge, EdgeIndex};
 
 include!("types.rs");
 include!("build_plan.rs");
+include!("build_plan_facts.rs");
 include!("canonical.rs");
 include!("graph_files.rs");
 include!("files_config.rs");
@@ -37,6 +38,9 @@ include!("builder_remaining_edges.rs");
 include!("builder_remaining_edges_independent.rs");
 include!("builder_remaining_edges_fact_domain.rs");
 include!("builder_helpers.rs");
+include!("edge_lang_frontends.rs");
+include!("edge_lang_domains.rs");
+include!("edge_lang_queues.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy_vitest_setup.rs");
 include!("methods_lazy.rs");

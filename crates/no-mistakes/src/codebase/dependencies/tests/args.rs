@@ -224,6 +224,43 @@ fn cargo_globs_include_tests_dir() {
 }
 
 #[test]
+fn python_relationship_enables_language_frontend_plan() {
+    let allowed = crate::codebase::dependencies::relationship_filter(&[
+        crate::codebase::dependencies::RelationshipArg::Python,
+    ])
+    .expect("python relationship");
+    let plan = crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
+    assert!(plan.language_frontends);
+    assert!(!plan.imports);
+    for relationship in [
+        crate::codebase::dependencies::RelationshipArg::Go,
+        crate::codebase::dependencies::RelationshipArg::Rust,
+        crate::codebase::dependencies::RelationshipArg::Ruby,
+        crate::codebase::dependencies::RelationshipArg::Php,
+    ] {
+        let allowed = crate::codebase::dependencies::relationship_filter(&[relationship])
+            .expect("language relationship");
+        let plan =
+            crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
+        assert!(plan.language_frontends, "{relationship:?}");
+        assert_eq!(relationship.as_str(), format!("{relationship:?}").to_ascii_lowercase());
+    }
+    assert_eq!(
+        crate::codebase::dependencies::RelationshipArg::Python.as_str(),
+        "python"
+    );
+}
+
+#[test]
+fn language_frontend_globs_are_explicit() {
+    assert!(test_globs("python").iter().any(|glob| glob.contains("test_*.py")));
+    assert!(test_globs("python").iter().any(|glob| glob.ends_with("tests.py")));
+    assert!(test_globs("go").iter().any(|glob| glob.contains("*_test.go")));
+    assert!(test_globs("rails").iter().any(|glob| glob.contains("_spec.rb")));
+    assert!(test_globs("php").iter().any(|glob| glob.contains("Test.php")));
+}
+
+#[test]
 fn unknown_framework_returns_empty() {
     let globs = test_globs("unknown");
     assert!(globs.is_empty());

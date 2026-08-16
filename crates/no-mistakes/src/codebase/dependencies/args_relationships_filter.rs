@@ -77,6 +77,11 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
                 EdgeKind::TerraformModuleRef,
                 EdgeKind::TerraformOutputRef,
             ],
+        RelationshipArg::Python => &[EdgeKind::PythonImport, EdgeKind::PythonReference],
+        RelationshipArg::Go => &[EdgeKind::GoImport, EdgeKind::GoReference],
+        RelationshipArg::Rust => &[EdgeKind::RustUse, EdgeKind::RustMod, EdgeKind::RustPackage],
+        RelationshipArg::Ruby => &[EdgeKind::RubyRequire, EdgeKind::RubyReference],
+        RelationshipArg::Php => &[EdgeKind::PhpUse, EdgeKind::PhpPackage],
         RelationshipArg::Resource => &[EdgeKind::Resource],
         RelationshipArg::Workflow
         | RelationshipArg::WorkflowJob
@@ -136,6 +141,17 @@ fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
         EdgeKind::TerraformReference,
         EdgeKind::TerraformModuleRef,
         EdgeKind::TerraformOutputRef,
+        EdgeKind::PythonImport,
+        EdgeKind::PythonReference,
+        EdgeKind::GoImport,
+        EdgeKind::GoReference,
+        EdgeKind::RustUse,
+        EdgeKind::RustMod,
+        EdgeKind::RustPackage,
+        EdgeKind::RubyRequire,
+        EdgeKind::RubyReference,
+        EdgeKind::PhpUse,
+        EdgeKind::PhpPackage,
         EdgeKind::Resource,
     ]
     .into_iter()

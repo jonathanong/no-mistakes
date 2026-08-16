@@ -46,6 +46,15 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "cargo" => globs_to_strings(CARGO),
         "dotnet" => globs_to_strings(DOTNET),
         "swift" => globs_to_strings(SWIFT),
+        "python" => globs_to_strings(&[
+            "**/test_*.py",
+            "**/*_test.py",
+            "**/tests.py",
+            "**/tests/**/*.py",
+        ]),
+        "go" => globs_to_strings(&["**/*_test.go"]),
+        "rails" => globs_to_strings(&["**/spec/**/*_spec.rb", "**/test/**/*_test.rb"]),
+        "php" => globs_to_strings(&["**/*Test.php", "**/tests/**/*.php"]),
         _ => vec![],
     }
 }

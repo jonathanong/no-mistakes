@@ -58,6 +58,21 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `terraform-ref` | `TerraformReference` | `terraform` | Terraform file referencing `<type>.<name>` -> file declaring that resource/data source | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 | `terraform-module` | `TerraformModuleRef` | `terraform` | Terraform file with a `module` block -> files in the module's local source directory | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 | `terraform-output` | `TerraformOutputRef` | `terraform` | Terraform file referencing `module.<name>.<output>` -> file declaring that output | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
+| `python-import` | `PythonImport` | `python` | Python file -> module file of a static import | [`python-celery-django`](../fixtures/lang-frontends/python-celery-django) |
+| `python-ref` | `PythonReference` | `python` | Python file -> file declaring a referenced name | [`python-celery-django`](../fixtures/lang-frontends/python-celery-django) |
+| `go-import` | `GoImport` | `go` | Go file -> local files in an imported configured package | [`go-asynq`](../fixtures/lang-frontends/go-asynq) |
+| `go-ref` | `GoReference` | `go` | Go file -> file declaring an exported name | [`go-asynq`](../fixtures/lang-frontends/go-asynq) |
+| `rust-use` | `RustUse` | `rust` | Rust file -> file reached through `use crate/super/self` | [`rust-mods`](../fixtures/lang-frontends/rust-mods) |
+| `rust-mod` | `RustMod` | `rust` | Rust file -> sibling `mod` file | [`rust-mods`](../fixtures/lang-frontends/rust-mods) |
+| `rust-package` | `RustPackage` | `rust` | Rust crate -> files in a configured package | [`rust-mods`](../fixtures/lang-frontends/rust-mods) |
+| `ruby-require` | `RubyRequire` | `ruby` | Ruby file -> required local file | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
+| `ruby-ref` | `RubyReference` | `ruby` | Ruby file -> file declaring a referenced constant | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
+| `php-use` | `PhpUse` | `php` | PHP file -> file declaring a used class | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
+| `php-package` | `PhpPackage` | `php` | PHP file -> files in a configured Composer app | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
+
+Python, Go, Rust, Ruby, and PHP edges require matching `tests.<lang>` package,
+module, or app lists. Empty lists disable that frontend. See
+[Tests and selectors](configuration/tests.md).
 
 For `server edges` and `server related`, filters limit client-call source files;
 they do not narrow the prepared resolver/fact universe used to follow a static
@@ -98,6 +113,11 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | `dotnet` | `dotnet-using`, `dotnet-ref`, `dotnet-project` |
 | `swift` | `swift-import`, `swift-ref`, `swift-package` |
 | `terraform` | `terraform-ref`, `terraform-module`, `terraform-output` |
+| `python` | `python-import`, `python-ref` |
+| `go` | `go-import`, `go-ref` |
+| `rust` | `rust-use`, `rust-mod`, `rust-package` |
+| `ruby` | `ruby-require`, `ruby-ref` |
+| `php` | `php-use`, `php-package` |
 | `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` alternate view |
 
 Workflow virtual-node IDs are stable and project-relative:

@@ -81,6 +81,17 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::TerraformReference,
         EdgeKind::TerraformModuleRef,
         EdgeKind::TerraformOutputRef,
+        EdgeKind::PythonImport,
+        EdgeKind::PythonReference,
+        EdgeKind::GoImport,
+        EdgeKind::GoReference,
+        EdgeKind::RustUse,
+        EdgeKind::RustMod,
+        EdgeKind::RustPackage,
+        EdgeKind::RubyRequire,
+        EdgeKind::RubyReference,
+        EdgeKind::PhpUse,
+        EdgeKind::PhpPackage,
         EdgeKind::WorkflowJob,
         EdgeKind::WorkflowStep,
         EdgeKind::WorkflowNeeds,
@@ -122,6 +133,17 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::TerraformReference => {}
             EdgeKind::TerraformModuleRef => {}
             EdgeKind::TerraformOutputRef => {}
+            EdgeKind::PythonImport => {}
+            EdgeKind::PythonReference => {}
+            EdgeKind::GoImport => {}
+            EdgeKind::GoReference => {}
+            EdgeKind::RustUse => {}
+            EdgeKind::RustMod => {}
+            EdgeKind::RustPackage => {}
+            EdgeKind::RubyRequire => {}
+            EdgeKind::RubyReference => {}
+            EdgeKind::PhpUse => {}
+            EdgeKind::PhpPackage => {}
             EdgeKind::WorkflowJob => {}
             EdgeKind::WorkflowStep => {}
             EdgeKind::WorkflowNeeds => {}

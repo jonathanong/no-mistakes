@@ -36,6 +36,11 @@ pub enum RelationshipArg {
     Dotnet,
     Swift,
     Terraform,
+    Python,
+    Go,
+    Rust,
+    Ruby,
+    Php,
     Resource,
     All,
 }
@@ -81,6 +86,11 @@ impl RelationshipArg {
             Self::Dotnet => "dotnet",
             Self::Swift => "swift",
             Self::Terraform => "terraform",
+            Self::Python => "python",
+            Self::Go => "go",
+            Self::Rust => "rust",
+            Self::Ruby => "ruby",
+            Self::Php => "php",
             Self::Resource => "resource",
             Self::All => "all",
             Self::Workflow

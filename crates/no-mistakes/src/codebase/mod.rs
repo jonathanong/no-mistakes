@@ -9,6 +9,7 @@ pub mod dependencies;
 pub mod dotnet;
 pub(crate) mod glob_normalize;
 pub mod import_usages;
+pub(crate) mod lang_frontends;
 pub mod lockfile;
 pub mod markdown_sections;
 pub mod md_links;

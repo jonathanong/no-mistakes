@@ -94,6 +94,23 @@ fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge>
     )
 }
 
+fn merge_language_frontend_edges(
+    inputs: &GraphEdgeBuildInputs<'_>,
+    forward: &mut EdgeMap,
+    reverse: &mut EdgeMap,
+) {
+    let edges = collect_language_frontend_edges(
+        inputs.root,
+        &inputs.graph_files.all,
+        inputs.config_options,
+    );
+    for (from, to, _) in &edges {
+        forward.entry(from.clone()).or_default();
+        forward.entry(to.clone()).or_default();
+    }
+    merge_edges(forward, reverse, edges);
+}
+
 fn collect_terraform_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge> {
     if !inputs.plan.terraform {
         return Vec::new();

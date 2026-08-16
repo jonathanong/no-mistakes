@@ -10,6 +10,11 @@ pub struct Tests {
     pub vitest: VitestConfig,
     pub dotnet: DotnetConfig,
     pub swift: SwiftConfig,
+    pub python: PythonConfig,
+    pub go: GoConfig,
+    pub rust: RustLangConfig,
+    pub rails: RailsConfig,
+    pub php: PhpConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
     pub impact: ImpactConfig,
@@ -110,6 +115,37 @@ pub struct VitestConfig {
 pub struct SwiftConfig {
     pub packages: Vec<String>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct PythonConfig {
+    pub packages: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct GoConfig {
+    pub modules: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RustLangConfig {
+    pub packages: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct RailsConfig {
+    pub apps: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct PhpConfig {
+    pub framework: Option<String>,
+    pub apps: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

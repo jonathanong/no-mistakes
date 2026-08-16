@@ -26,7 +26,7 @@ pub fn ts_fact_plan_and_context_for_plan_with_config(
     )
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct GraphConfigOptions {
     route: crate::codebase::config::RouteOptions,
     queue: crate::codebase::config::QueueOptions,
@@ -38,6 +38,16 @@ struct GraphConfigOptions {
     queue_project_factory_names: Vec<String>,
     dotnet_projects: Vec<crate::codebase::dotnet::DotnetConfigProject>,
     swift_packages: Vec<String>,
+    python_packages: Vec<String>,
+    go_modules: Vec<String>,
+    rust_packages: Vec<String>,
+    rails_apps: Vec<String>,
+    php_apps: Vec<String>,
+    php_framework: Option<String>,
+    queue_enqueues: Vec<String>,
+    queue_workers: Vec<String>,
+    queue_cluster: Option<String>,
+    queue_glob_clusters: HashMap<String, Option<String>>,
     terraform: crate::config::v2::schema::TerraformConfig,
     ci: crate::config::v2::schema::CiConfig,
 }
@@ -108,9 +118,72 @@ fn graph_config_options_from_loaded_with_test_filter(
         queue_project_factory_names: v2_config.queues.factories.clone(),
         dotnet_projects: crate::codebase::dotnet::configured_projects(root, &v2_config.tests.dotnet),
         swift_packages: v2_config.tests.swift.packages.clone(),
+        python_packages: v2_config.tests.python.packages.clone(),
+        go_modules: v2_config.tests.go.modules.clone(),
+        rust_packages: v2_config.tests.rust.packages.clone(),
+        rails_apps: v2_config.tests.rails.apps.clone(),
+        php_apps: v2_config.tests.php.apps.clone(),
+        php_framework: v2_config.tests.php.framework.clone(),
+        queue_enqueues: flatten_queue_globs(v2_config, prefixed_queue_globs_enqueues),
+        queue_workers: flatten_queue_globs(v2_config, prefixed_queue_globs_workers),
+        queue_cluster: v2_config
+            .projects
+            .values()
+            .find_map(|project| project.queues.cluster.clone()),
+        queue_glob_clusters: flatten_queue_glob_clusters(v2_config),
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
     }
+}
+
+fn prefixed_queue_globs_enqueues(project: &crate::config::v2::schema::Project) -> Vec<String> {
+    prefix_project_globs(project.root.as_deref(), &project.queues.enqueues)
+}
+
+fn prefixed_queue_globs_workers(project: &crate::config::v2::schema::Project) -> Vec<String> {
+    prefix_project_globs(project.root.as_deref(), &project.queues.workers)
+}
+
+fn flatten_queue_globs(
+    v2_config: &crate::config::v2::NoMistakesConfig,
+    select: fn(&crate::config::v2::schema::Project) -> Vec<String>,
+) -> Vec<String> {
+    v2_config.projects.values().flat_map(select).collect()
+}
+
+fn flatten_queue_glob_clusters(
+    v2_config: &crate::config::v2::NoMistakesConfig,
+) -> HashMap<String, Option<String>> {
+    let mut clusters = HashMap::new();
+    for project in v2_config.projects.values() {
+        let cluster = project.queues.cluster.clone();
+        for glob in prefixed_queue_globs_enqueues(project)
+            .into_iter()
+            .chain(prefixed_queue_globs_workers(project))
+        {
+            clusters.entry(glob).or_insert_with(|| cluster.clone());
+        }
+    }
+    clusters
+}
+
+fn prefix_project_globs(root: Option<&str>, globs: &[String]) -> Vec<String> {
+    let prefix = root
+        .map(str::trim)
+        .filter(|root| !root.is_empty() && *root != ".");
+    globs
+        .iter()
+        .map(|glob| match prefix {
+            Some(root) if glob_has_root_prefix(glob, root) => glob.clone(),
+            Some(root) => format!("{}/{glob}", root.trim_end_matches('/')),
+            None => glob.clone(),
+        })
+        .collect()
+}
+
+fn glob_has_root_prefix(glob: &str, root: &str) -> bool {
+    let root = root.trim_end_matches('/');
+    glob == root || glob.starts_with(&format!("{root}/"))
 }
 
 fn dedup_rewrites(

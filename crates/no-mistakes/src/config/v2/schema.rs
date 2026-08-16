@@ -16,9 +16,10 @@ mod tests_config;
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
-    DotnetConfig, DotnetProjectConfig, ImpactConfig, JestConfig, PlaywrightAppBinding,
-    PlaywrightSelectorWrapper, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig,
-    SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
+    DotnetConfig, DotnetProjectConfig, GoConfig, ImpactConfig, JestConfig, PhpConfig,
+    PlaywrightAppBinding, PlaywrightSelectorWrapper, PlaywrightSelectors, PlaywrightTestConfig,
+    PythonConfig, RailsConfig, RustLangConfig, StorybookConfig, SwiftConfig, TestProjectPolicy,
+    Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
@@ -118,6 +119,7 @@ pub enum ProjectType {
 pub struct QueueConfig {
     pub enqueues: Vec<String>,
     pub workers: Vec<String>,
+    pub cluster: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

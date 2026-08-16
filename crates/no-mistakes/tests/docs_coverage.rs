@@ -310,6 +310,11 @@ fn graph_edge_kinds_are_documented() {
         "dotnet-using",
         "dotnet-ref",
         "dotnet-project",
+        "python-import",
+        "go-import",
+        "rust-use",
+        "ruby-require",
+        "php-use",
     ];
     for edge_kind in edge_kinds {
         assert!(

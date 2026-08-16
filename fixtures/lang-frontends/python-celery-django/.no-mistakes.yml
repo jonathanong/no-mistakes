@@ -1,0 +1,12 @@
+projects:
+  api:
+    type: server
+    root: .
+    queues:
+      cluster: orders
+      enqueues: ["app/**/*.py"]
+      workers: ["app/**/*.py"]
+tests:
+  python:
+    packages:
+      - app

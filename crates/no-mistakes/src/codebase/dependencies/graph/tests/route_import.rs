@@ -96,6 +96,26 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
 
     let workspace_type_only: HashSet<_> = [EdgeKind::WorkspaceTypeImport].into();
     assert!(GraphBuildPlan::from_allowed(Some(&workspace_type_only)).workspace);
+
+    for kind in [
+        EdgeKind::PythonImport,
+        EdgeKind::PythonReference,
+        EdgeKind::GoImport,
+        EdgeKind::GoReference,
+        EdgeKind::RustUse,
+        EdgeKind::RustMod,
+        EdgeKind::RustPackage,
+        EdgeKind::RubyRequire,
+        EdgeKind::RubyReference,
+        EdgeKind::PhpUse,
+        EdgeKind::PhpPackage,
+    ] {
+        let allowed: HashSet<_> = [kind].into();
+        assert!(
+            GraphBuildPlan::from_allowed(Some(&allowed)).language_frontends,
+            "{kind:?}"
+        );
+    }
 }
 
 #[test]

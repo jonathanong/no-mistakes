@@ -13,8 +13,8 @@ v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. Playwright, React,
 Next.js fetches, call-sites, dead-exports, ecosystem lockfile diffs, and
 dedicated `no-mistakes python|go|rust|rails|php` CLIs are later work. Agents
-use `dependents --relationship <lang>` and `tests plan <lang>` once those
-edges and planners ship.
+use `dependents --relationship <lang>` now; `tests plan python|go|cargo|rails|php`,
+ecosystem lockfiles, and dedicated language CLIs are not started.
 
 ## Current Status
 
@@ -23,24 +23,21 @@ edges and planners ship.
 | TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Next.js | BullMQ, glide-mq | shipped |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
-| Rust | no | `--test cargo` globs only | no | no | partial: project type, check rules, CI Cargo edges |
-| Python, Django, Celery | no | no | no | no | not started |
-| Go, Asynq | no | no | no | no | not started |
-| Kafka | n/a | n/a | n/a | no | not started |
-| Ruby on Rails | no | no | no | no | not started |
-| PHP | no | no | no | no | not started |
+| Python, Django, Celery | `python-import`, `python-ref` | `--test python` globs | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors) |
+| Go, Asynq | `go-import`, `go-ref` | `--test go` globs | no | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors) |
+| Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
+| Rust | `rust-use`, `rust-mod` | `--test cargo` globs | no | no | shipped (v1 extractors) |
+| Ruby on Rails | `ruby-require`, `ruby-ref` | `--test rails` globs | `routes.rb` `to:` | Active Job `perform_later` | shipped (v1 extractors) |
+| PHP | `php-use`, `php-package` | `--test php` globs | Laravel `Route::` | `::dispatch` / `ShouldQueue` | shipped (v1 extractors) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
 
-Rust today is not a language frontend. `projects.*.type: rust` exists,
-[`rust-max-lines-per-file`](rules/rust-max-lines-per-file.md),
-[`rust-no-inline-allows`](rules/rust-no-inline-allows.md), and
-[`rust-no-inline-tests`](rules/rust-no-inline-tests.md) run as filesystem
-checks, `--test cargo` filters `**/tests/**/*.rs` and `src/**/*_test.rs`, and
-`ci` edges connect GitHub Actions workflows to Rust binaries invoked by
-supported Cargo commands. There is no `use`/`mod` graph, no `tests plan cargo`,
-and no Rust CLI.
+Rust v1 is a language frontend for configured `tests.rust.packages`: `use
+crate/super/self` and `pub` declarations emit `rust-use` / `rust-mod` edges.
+The existing `rust-*` filesystem rules, `--test cargo` globs, and `ci` Cargo
+binary edges remain. There is still no `tests plan cargo` and no `no-mistakes
+rust` CLI.
 
 ## Canonical Feature Set
 
@@ -64,12 +61,18 @@ declarations and references into facts and project them as `*-ref` edges.
 graph exists. Full-suite fallback remains explicit opt-in.
 
 **HTTP routes.** `server routes`, `server edges`, `server related`, and
-`server contracts` list configured route definitions and static client calls.
-Do not invent a second route graph.
+`server contracts` list configured TS/JS route definitions and static client
+calls. Language v1 extractors emit `route` edges into `DepGraph` for Django,
+Rails, and Laravel; query those with `dependents --relationship route`.
+`server routes` does not consume language `RouteRef` facts yet. Do not invent
+a second route graph.
 
 **Queues.** `queues edges`, `queues related`, and `queues check` connect
-producers to virtual job nodes to workers. Celery, Asynq, and Kafka extend this
-domain. They do not get private graph shapes.
+TS/JS producers to virtual job nodes to workers. Celery, Asynq, Kafka, Active
+Job, and Laravel emit the same `queue-enqueue` / `queue-worker` edges into
+`DepGraph`; query those with `dependents --relationship queue`. The dedicated
+`queues` commands still report the TypeScript pipeline. They do not get
+private graph shapes.
 
 **HTTP clients.** Static client calls produce `http` edges to matching route
 files, the same way TS `fetch` and Swift `Endpoint` literals do.
@@ -345,9 +348,8 @@ opt-in.
 ## Agent Fallback
 
 Until a row in the status table is `shipped`, agents should keep using `rg`
-for that language. The shipped `no-mistakes` skill already says Go and Rust
-sources have no import-graph domain. That remains correct until the graph
-edges and test planner land.
+for that language. v1 extractors cover the module graph plus named routes or
+queues; `tests plan <lang>`, lockfiles, and dedicated CLIs remain not started.
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and
