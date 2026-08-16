@@ -49,10 +49,12 @@ pub(crate) fn collect_app_text_targets_from_visible(
     let mut targets = source_files
         .par_iter()
         .try_fold(Vec::new, |mut targets, path| -> Result<_> {
-            let source = std::fs::read_to_string(path)
-                .context(format!("reading selector source {}", path.display()))?;
-            targets.extend(extract_app_text_targets(root, path, &source, settings)?);
-            Ok(targets)
+            crate::ast::with_owned_request_parse_cache(|| {
+                let source = std::fs::read_to_string(path)
+                    .context(format!("reading selector source {}", path.display()))?;
+                targets.extend(extract_app_text_targets(root, path, &source, settings)?);
+                Ok(targets)
+            })
         })
         .try_reduce(Vec::new, |mut left, mut right| -> Result<_> {
             left.append(&mut right);

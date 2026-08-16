@@ -76,3 +76,17 @@ fn collect_playwright_selector_edges_analyzes_prepared_apps_in_parallel() {
         "overlapping per-app selector timings must be marked non-additive"
     );
 }
+
+#[test]
+fn nested_selector_rayon_scans_install_owned_parse_caches() {
+    for source in [
+        include_str!("../../../../playwright/analysis/pipeline_occurrences.rs"),
+        include_str!("../../../../playwright/analysis/app_collect.rs"),
+        include_str!("../../../../playwright/analysis/app_text.rs"),
+    ] {
+        assert!(
+            source.contains("with_owned_request_parse_cache"),
+            "nested selector Rayon jobs must install an owned parse cache"
+        );
+    }
+}
