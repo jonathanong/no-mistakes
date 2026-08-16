@@ -21,8 +21,7 @@ impl SharedTraversalContext {
     ) -> Result<std::sync::Arc<graph::DepGraph>> {
         let vitest_setup_projects = self.prepared_vitest_setup_projects();
         let key = EffectiveGraphPlanKey::new(plan, &self.graph_files, self.analysis_generation);
-        let builds_before = self.graph_cache.build_count();
-        let graph = self.graph_cache.get_or_build(key, || {
+        let (graph, built) = self.graph_cache.get_or_build_status(key, || {
             build_canonical_graph(CanonicalGraphBuild {
                 root: &self.root,
                 tsconfig: &self.tsconfig,
@@ -46,7 +45,7 @@ impl SharedTraversalContext {
                 session: self.session.clone(),
             })
         })?;
-        if self.graph_cache.build_count() == builds_before {
+        if !built {
             self.session.record_work("graph.reuses", 1);
         }
         Ok(graph)
@@ -62,8 +61,7 @@ impl SharedTraversalContext {
     fn symbol_index_shared(&self) -> Result<std::sync::Arc<graph::SymbolIndex>> {
         let key = GraphFileUniverseKey::new(&self.graph_files, self.analysis_generation);
         let workspace = self.dataset.workspace();
-        let builds_before = self.symbol_index_cache.build_count();
-        let index = self.symbol_index_cache.get_or_build(key, || {
+        let (index, built) = self.symbol_index_cache.get_or_build_status(key, || {
             Ok(
                 graph::SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
                     &self.tsconfig,
@@ -76,7 +74,7 @@ impl SharedTraversalContext {
                 ),
             )
         })?;
-        if self.symbol_index_cache.build_count() == builds_before {
+        if !built {
             self.session.record_work("symbol_index.reuses", 1);
         }
         Ok(index)

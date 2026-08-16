@@ -83,6 +83,20 @@ fn filter_cache_keys_ignore_order_and_duplicates() {
 }
 
 #[test]
+fn authoritative_report_files_strip_legacy_symbol_suffixes() {
+    let source = include_str!("target_helpers.rs");
+    let body = source
+        .split("fn authoritative_report_files(")
+        .nth(1)
+        .and_then(|source| source.split("fn authoritative_path(").next())
+        .expect("authoritative_report_files is defined");
+    assert!(
+        body.contains("parse_entrypoint"),
+        "legacy files#symbol targets must strip the suffix before is_file"
+    );
+}
+
+#[test]
 fn report_caches_call_each_analyzer_once_per_canonical_key() {
     let key = canonical_filter_key(&[
         "src/**".to_string(),

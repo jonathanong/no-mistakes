@@ -32,9 +32,6 @@ fn cached_traversal_entries(
         .map_err(|message| anyhow::anyhow!("{message}"))?;
     if !computed {
         shared.session.record_work("traversal.reuses", 1);
-        shared
-            .tsconfig_catalog
-            .replay_runtime_diagnostics(&cached.runtime_diagnostics);
     }
     Ok((cached.entries, cached.runtime_diagnostics))
 }

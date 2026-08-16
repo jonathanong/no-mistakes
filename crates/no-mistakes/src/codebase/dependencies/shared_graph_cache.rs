@@ -63,6 +63,14 @@ impl<K, V> Default for SharedBuildCache<K, V> {
 
 impl<K: Eq + std::hash::Hash, V> SharedBuildCache<K, V> {
     fn get_or_build(&self, key: K, build: impl FnOnce() -> Result<V>) -> Result<std::sync::Arc<V>> {
+        Ok(self.get_or_build_status(key, build)?.0)
+    }
+
+    fn get_or_build_status(
+        &self,
+        key: K,
+        build: impl FnOnce() -> Result<V>,
+    ) -> Result<(std::sync::Arc<V>, bool)> {
         let cell = {
             let mut entries = self.entries.lock().expect("shared build cache is poisoned");
             entries
@@ -70,14 +78,19 @@ impl<K: Eq + std::hash::Hash, V> SharedBuildCache<K, V> {
                 .or_insert_with(|| std::sync::Arc::new(std::sync::OnceLock::new()))
                 .clone()
         };
+        let mut initialized = false;
         let result = cell.get_or_init(|| {
+            initialized = true;
             self.builds
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             build()
                 .map(std::sync::Arc::new)
                 .map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}")))
         });
-        result.clone().map_err(|message| anyhow::anyhow!(message))
+        Ok((
+            result.clone().map_err(|message| anyhow::anyhow!(message))?,
+            initialized,
+        ))
     }
 
     fn clear(&self) {

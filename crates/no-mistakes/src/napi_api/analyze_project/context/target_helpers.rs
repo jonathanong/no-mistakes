@@ -78,12 +78,20 @@ fn authoritative_report_files(
     let mut files = symbol_target_files(options, root)?;
     for request in &options.reports {
         if super::graph_direction(&request.report_type).is_some() {
-            files.extend(
-                super::traverse_args(request, options)?
-                    .files
-                    .into_iter()
-                    .map(|path| authoritative_path(root, path)),
-            );
+            let args = super::traverse_args(request, options)?;
+            files.extend(args.files.into_iter().enumerate().map(|(index, path)| {
+                let structured = args
+                    .file_entrypoints_are_structured
+                    .get(index)
+                    .copied()
+                    .unwrap_or(false);
+                let raw = if structured {
+                    path
+                } else {
+                    crate::codebase::dependencies::parse_entrypoint(&path.to_string_lossy()).0
+                };
+                authoritative_path(root, raw)
+            }));
         } else if request.report_type == "effects" {
             if let Some(entry) = super::options::effects_options(request, options)?.entry {
                 files.push(authoritative_path(root, PathBuf::from(entry)));

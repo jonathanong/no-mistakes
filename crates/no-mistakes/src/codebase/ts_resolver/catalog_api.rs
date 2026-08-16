@@ -157,13 +157,6 @@ impl TsConfigCatalog {
             .clear();
     }
 
-    pub(crate) fn replay_runtime_diagnostics(&self, diagnostics: &[TsConfigDiagnostic]) {
-        self.diagnostics
-            .lock()
-            .expect("tsconfig catalog diagnostics mutex poisoned")
-            .extend(diagnostics.iter().cloned());
-    }
-
     /// Run `compute` with a private runtime-diagnostic set so concurrent
     /// reports cannot clear or snapshot each other's resolver diagnostics.
     pub(crate) fn isolate_runtime_diagnostics<T>(
