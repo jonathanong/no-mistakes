@@ -248,5 +248,8 @@ testPlan:
 Group types: `direct`, `dependencies`, `sample` — for `vitest`;
 `direct`, `dependencies`, `coverage`, `sample` — for `playwright`.
 (`coverage` is a Playwright-only group type; vitest does not support it.)
+`direct` is changed tests plus tests one reverse import/`TestOf` hop from a
+changed file; it runs before `dependencies` so a tight limit cannot drop a
+direct importer in favor of a longer markdown or resource path.
 Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/test-plan.md
 for the full schema.

@@ -183,6 +183,13 @@ changed-file inventory prepared by that same call, relative to the request root.
 The field is present even when no tests are selected and retains deleted paths
 plus both sides of detected renames and copies.
 
+Ordinary `testsPlan()` configured `direct` groups select changed tests and
+tests one reverse import-family or same-directory `TestOf` edge away from a
+changed file. That 1-hop set is selected before `dependencies` and therefore
+survives the environment file/percent limit. Markdown, resource, route, and
+multi-hop import paths stay in `dependencies`. This is distinct from
+`directTestOwner`.
+
 Set `directTestOwner: true` with an explicit `framework` to select only changed
 framework-owned tests and framework-owned tests one reverse canonical graph edge
 away. This bypasses test-plan environment policy (including groups, limits,

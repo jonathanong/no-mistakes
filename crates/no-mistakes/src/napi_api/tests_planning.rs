@@ -3,6 +3,7 @@
 include!("tests_planning/vitest_config_extends.rs");
 include!("tests_planning/changed_files.rs");
 include!("tests_planning/direct_test_owner.rs");
+include!("tests_planning/direct_import_limit.rs");
 
 #[test]
 fn tests_plan_json_union_applies_vitest_setup_fallback() {

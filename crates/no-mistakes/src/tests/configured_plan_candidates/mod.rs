@@ -14,6 +14,9 @@ use hint_emit::{
     append_queue_hint_candidates, append_removed_id_candidates, append_route_hint_candidates,
 };
 
+#[cfg(test)]
+mod tests;
+
 /// `(binding, kind, name)` triple shared with the hint pipeline. Re-exported
 /// here so the public field types stay readable instead of expanding to the
 /// full 3-tuple.
@@ -80,7 +83,15 @@ pub(super) fn group_candidates(
     warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
     match group {
-        TestPlanGroupType::Direct => direct_candidates(root, changed_files, all_test_set, used),
+        TestPlanGroupType::Direct => direct_candidates(
+            root,
+            changed_files,
+            graph,
+            all_test_set,
+            used,
+            warnings,
+            warnings_seen,
+        ),
         TestPlanGroupType::Coverage | TestPlanGroupType::Dependencies => graph_candidates(
             group,
             root,
@@ -100,27 +111,104 @@ pub(super) fn group_candidates(
 fn direct_candidates(
     root: &Path,
     changed_files: &[PathBuf],
+    graph: &DepGraph,
     all_test_set: &HashSet<PathBuf>,
     used: &HashSet<String>,
+    warnings: &mut Vec<Warning>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
-    changed_files
-        .iter()
-        .filter(|changed| all_test_set.contains(*changed))
-        .filter_map(|changed| {
+    let mut self_selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
+    let mut hop_selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
+    for changed in changed_files {
+        if all_test_set.contains(changed) {
             let rel = relative_path(root, changed);
-            (!used.contains(&rel)).then(|| SelectedTest {
-                test_file: rel.clone(),
-                confidence: Confidence::High,
+            if !used.contains(&rel) {
+                self_selected
+                    .entry(rel.clone())
+                    .or_insert_with(|| SelectedTest {
+                        test_file: rel.clone(),
+                        confidence: Confidence::High,
+                        targets: Vec::new(),
+                        reasons: vec![ImpactReason {
+                            changed_file: rel.clone(),
+                            path: vec![rel.clone()],
+                            via: vec!["self".to_string()],
+                            via_details: Vec::new(),
+                        }],
+                    });
+                if let Some(hop) = hop_selected.remove(&rel) {
+                    merge_selected(self_selected.get_mut(&rel).expect("just inserted"), &hop);
+                }
+            }
+        }
+
+        let start = NodeId::file(changed);
+        let Some(dependents) = graph.dependents_of_node(&start) else {
+            continue;
+        };
+        let rel_changed = relative_path(root, changed);
+        for (dependent, kind) in dependents {
+            if !is_direct_owner_edge(*kind) {
+                continue;
+            }
+            let NodeId::File(test_path) = dependent else {
+                continue;
+            };
+            if !all_test_set.contains(test_path.as_ref()) {
+                continue;
+            }
+            let rel_test = relative_path(root, test_path);
+            if used.contains(&rel_test) {
+                continue;
+            }
+            push_resource_diagnostics(graph, root, test_path.as_ref(), warnings, warnings_seen);
+            push_edge_warning(root, dependent, &start, *kind, warnings, warnings_seen);
+            let next = SelectedTest {
+                test_file: rel_test.clone(),
+                confidence: path_confidence(&[*kind]),
                 targets: Vec::new(),
                 reasons: vec![ImpactReason {
-                    changed_file: rel.clone(),
-                    path: vec![rel],
-                    via: vec!["self".to_string()],
-                    via_details: Vec::new(),
+                    changed_file: rel_changed.clone(),
+                    path: vec![rel_changed.clone(), rel_test.clone()],
+                    via: vec![impact_reason_label(*kind).to_string()],
+                    via_details: vec![crate::tests::plan::resource_edge_detail(
+                        graph, dependent, &start, *kind, root,
+                    )],
                 }],
-            })
-        })
-        .collect()
+            };
+            if let Some(existing) = self_selected.get_mut(&rel_test) {
+                merge_selected(existing, &next);
+                continue;
+            }
+            hop_selected
+                .entry(rel_test)
+                .and_modify(|existing| merge_selected(existing, &next))
+                .or_insert(next);
+        }
+    }
+    // Self-selected changed tests keep the first-take budget ahead of
+    // alphabetically earlier 1-hop importers.
+    let mut selected: Vec<SelectedTest> = self_selected.into_values().collect();
+    selected.extend(hop_selected.into_values());
+    selected
+}
+
+/// One reverse hop that should win over multi-hop `dependencies` under a limit.
+/// Import-family and same-directory `TestOf` edges are the direct owners;
+/// markdown/resource/route hops and native module/namespace fan-out stay in
+/// `dependencies`.
+fn is_direct_owner_edge(kind: EdgeKind) -> bool {
+    matches!(
+        kind,
+        EdgeKind::Import
+            | EdgeKind::TypeImport
+            | EdgeKind::DynamicImport
+            | EdgeKind::Require
+            | EdgeKind::RequireResolve
+            | EdgeKind::WorkspaceImport
+            | EdgeKind::WorkspaceTypeImport
+            | EdgeKind::TestOf
+    )
 }
 
 #[allow(clippy::too_many_arguments)]

@@ -460,7 +460,8 @@ fn test_plan_vitest_limit_overrides_configured_limit() {
     assert!(output.status.success());
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
-    assert_eq!(plan["groups"][1]["selected"][0], "source.test.mts");
+    assert_eq!(plan["groups"][0]["selected"][0], "source.test.mts");
+    assert_eq!(plan["groups"][1]["selected"].as_array().unwrap().len(), 0);
     assert_eq!(plan["groups"][2]["limit"], 0);
     assert_eq!(plan["groups"][2]["remaining"], 1);
 }
