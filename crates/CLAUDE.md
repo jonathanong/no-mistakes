@@ -122,10 +122,11 @@ Option<&dyn TsFactLookup>` while siblings have it may duplicate a rule's
 `TsFactLookup`-routed scan, or hand-roll a sequential loop where a shared
 parallel helper exists — keep per-file error tolerance when wiring facts in
 regardless, since an edge producer failing aborts the shared graph, unlike a
-rule failing only its own findings. `git_visible_files`/`git ls-files` is
-equally undeduped (a process spawn per call) — thread one fetch through a
-path that discovers files more than once per invocation, e.g. the additive
-`_from_git_files` variants of `discover_files`/`discover_files_preserving_roots`.
+rule failing only its own findings. `git_visible_files` is one
+`git ls-files -z -t --cached --others --exclude-standard` child process.
+Thread that single snapshot through any path that would otherwise discover
+files again, e.g. the additive `_from_git_files` variants of
+`discover_files`/`discover_files_preserving_roots`.
 
 ### Shared state in parallel loops
 
