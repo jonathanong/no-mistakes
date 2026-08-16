@@ -13,9 +13,10 @@ fn collect_independent_remaining_edges(
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> IndependentRemainingEdges {
     let observer = session.observer().cloned();
+    let timing_kind = crate::diagnostics::current_timing_kind();
     let (markdown, (terraform, (dotnet, swift))) = rayon::join(
         || {
-            crate::diagnostics::with_observer(observer.clone(), || {
+            with_observer_and_timing(observer.clone(), timing_kind, || {
                 collect_unless_timed_out(|| {
                     crate::perf_trace::trace("graph.markdown", || {
                         if edge_inputs.plan.markdown {
@@ -31,7 +32,7 @@ fn collect_independent_remaining_edges(
             crate::diagnostics::with_observer(observer.clone(), || {
                 rayon::join(
                     || {
-                        crate::diagnostics::with_observer(observer.clone(), || {
+                        with_observer_and_timing(observer.clone(), timing_kind, || {
                             collect_unless_timed_out(|| {
                                 crate::perf_trace::trace("graph.terraform", || {
                                     collect_terraform_edges_for_plan(edge_inputs)
@@ -43,7 +44,7 @@ fn collect_independent_remaining_edges(
                         crate::diagnostics::with_observer(observer.clone(), || {
                             rayon::join(
                                 || {
-                                    crate::diagnostics::with_observer(observer.clone(), || {
+                                    with_observer_and_timing(observer.clone(), timing_kind, || {
                                         collect_unless_timed_out(|| {
                                             crate::perf_trace::trace("graph.dotnet", || {
                                                 collect_dotnet_edges_for_plan(edge_inputs)
@@ -52,7 +53,7 @@ fn collect_independent_remaining_edges(
                                     })
                                 },
                                 || {
-                                    crate::diagnostics::with_observer(observer.clone(), || {
+                                    with_observer_and_timing(observer.clone(), timing_kind, || {
                                         collect_unless_timed_out(|| {
                                             crate::perf_trace::trace("graph.swift", || {
                                                 collect_swift_edges_for_plan(

@@ -25,6 +25,25 @@ fn collect_remaining_edges_parallelizes_independent_kinds() {
             && !independent.contains("let _ = crate::invocation::check_timeout()"),
         "independent join leaves must return an empty batch when the deadline has elapsed"
     );
+    assert!(
+        independent.contains("with_observer_and_timing"),
+        "independent join leaves must inherit the caller's timing kind"
+    );
+}
+
+#[test]
+fn with_observer_and_timing_installs_kind_on_this_thread() {
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    super::super::with_observer_and_timing(
+        Some(observer),
+        crate::diagnostics::TimingKind::Parallel,
+        || {
+            assert_eq!(
+                crate::diagnostics::current_timing_kind(),
+                crate::diagnostics::TimingKind::Parallel
+            );
+        },
+    );
 }
 
 #[test]

@@ -58,7 +58,7 @@ pub fn current_timing_kind() -> TimingKind {
     })
 }
 
-pub(super) fn with_timing_kind<T>(kind: TimingKind, operation: impl FnOnce() -> T) -> T {
+pub fn with_timing_kind<T>(kind: TimingKind, operation: impl FnOnce() -> T) -> T {
     TIMING_CONTEXT.with(|context| context.borrow_mut().push(kind));
     struct TimingGuard;
     impl Drop for TimingGuard {

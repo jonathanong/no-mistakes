@@ -1,3 +1,13 @@
+fn with_observer_and_timing<T>(
+    observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
+    kind: crate::diagnostics::TimingKind,
+    operation: impl FnOnce() -> T,
+) -> T {
+    crate::diagnostics::with_observer(observer, || {
+        crate::diagnostics::with_timing_kind(kind, operation)
+    })
+}
+
 fn collect_unless_timed_out<T: Default>(collect: impl FnOnce() -> T) -> T {
     collect_unless_timed_out_or(T::default(), collect)
 }

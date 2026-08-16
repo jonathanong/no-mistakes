@@ -15,12 +15,13 @@ fn collect_fact_domain_remaining_edges(
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<FactDomainRemainingEdges> {
     let observer = session.observer().cloned();
+    let timing_kind = crate::diagnostics::current_timing_kind();
     let ((routes, queues), (http_process, (react, resources))) = rayon::join(
         || {
             crate::diagnostics::with_observer(observer.clone(), || {
                 rayon::join(
                     || {
-                        crate::diagnostics::with_observer(observer.clone(), || {
+                        with_observer_and_timing(observer.clone(), timing_kind, || {
                             collect_unless_timed_out(|| {
                                 crate::perf_trace::trace("graph.routes", || {
                                     collect_route_edges_for_plan(
@@ -31,7 +32,7 @@ fn collect_fact_domain_remaining_edges(
                         })
                     },
                     || {
-                        crate::diagnostics::with_observer(observer.clone(), || {
+                        with_observer_and_timing(observer.clone(), timing_kind, || {
                             collect_unless_timed_out(|| {
                                 crate::perf_trace::trace("graph.queues", || {
                                     collect_queue_edges_for_plan(edge_inputs, facts, resolver)
@@ -46,7 +47,7 @@ fn collect_fact_domain_remaining_edges(
             crate::diagnostics::with_observer(observer.clone(), || {
                 rayon::join(
                     || {
-                        crate::diagnostics::with_observer(observer.clone(), || {
+                        with_observer_and_timing(observer.clone(), timing_kind, || {
                             collect_unless_timed_out(|| {
                                 crate::perf_trace::trace("graph.http_process", || {
                                     collect_http_process_edges(edge_inputs, facts)
@@ -58,7 +59,7 @@ fn collect_fact_domain_remaining_edges(
                         crate::diagnostics::with_observer(observer.clone(), || {
                             rayon::join(
                                 || {
-                                    crate::diagnostics::with_observer(observer.clone(), || {
+                                    with_observer_and_timing(observer.clone(), timing_kind, || {
                                         collect_unless_timed_out(|| {
                                             crate::perf_trace::trace("graph.react", || {
                                                 collect_react_edges_for_plan(edge_inputs, facts)
@@ -67,7 +68,7 @@ fn collect_fact_domain_remaining_edges(
                                     })
                                 },
                                 || {
-                                    crate::diagnostics::with_observer(observer.clone(), || {
+                                    with_observer_and_timing(observer.clone(), timing_kind, || {
                                         collect_unless_timed_out_or(Ok(None), || {
                                             crate::perf_trace::trace("graph.resources", || {
                                                 collect_resource_edges_for_plan(edge_inputs, facts)
