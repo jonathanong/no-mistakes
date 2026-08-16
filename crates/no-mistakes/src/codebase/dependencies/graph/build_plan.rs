@@ -127,17 +127,7 @@ impl GraphBuildPlan {
             terraform: allowed.contains(&EdgeKind::TerraformReference)
                 || allowed.contains(&EdgeKind::TerraformModuleRef)
                 || allowed.contains(&EdgeKind::TerraformOutputRef),
-            language_frontends: allowed.contains(&EdgeKind::PythonImport)
-                || allowed.contains(&EdgeKind::PythonReference)
-                || allowed.contains(&EdgeKind::GoImport)
-                || allowed.contains(&EdgeKind::GoReference)
-                || allowed.contains(&EdgeKind::RustUse)
-                || allowed.contains(&EdgeKind::RustMod)
-                || allowed.contains(&EdgeKind::RustPackage)
-                || allowed.contains(&EdgeKind::RubyRequire)
-                || allowed.contains(&EdgeKind::RubyReference)
-                || allowed.contains(&EdgeKind::PhpUse)
-                || allowed.contains(&EdgeKind::PhpPackage),
+            language_frontends: allowed_requests_language_frontends(allowed),
         }
     }
 

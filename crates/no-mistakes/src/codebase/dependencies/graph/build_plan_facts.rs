@@ -1,3 +1,21 @@
+fn allowed_requests_language_frontends(allowed: &HashSet<EdgeKind>) -> bool {
+    [
+        EdgeKind::PythonImport,
+        EdgeKind::PythonReference,
+        EdgeKind::GoImport,
+        EdgeKind::GoReference,
+        EdgeKind::RustUse,
+        EdgeKind::RustMod,
+        EdgeKind::RustPackage,
+        EdgeKind::RubyRequire,
+        EdgeKind::RubyReference,
+        EdgeKind::PhpUse,
+        EdgeKind::PhpPackage,
+    ]
+    .into_iter()
+    .any(|kind| allowed.contains(&kind))
+}
+
 fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
     plan.ci
         || plan.workflow_topology
