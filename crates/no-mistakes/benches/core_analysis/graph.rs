@@ -62,7 +62,7 @@ pub(super) fn bench_facts_graph_and_query(c: &mut Criterion) {
         Some(&root.join(".no-mistakes.yml")),
     )
     .expect("graph preflight should succeed");
-    let root_node = no_mistakes::codebase::dependencies::NodeId::File(root.join("src/app.tsx"));
+    let root_node = no_mistakes::codebase::dependencies::NodeId::file(root.join("src/app.tsx"));
     assert!(!preflight
         .deps_of(std::slice::from_ref(&root_node), None, None)
         .is_empty());

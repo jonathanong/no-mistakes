@@ -142,7 +142,7 @@ fn graph_candidates(
             continue;
         }
         let rel_changed = relative_path(root, changed);
-        let start_node = NodeId::File(changed.clone());
+        let start_node = NodeId::file(changed.clone());
         let (reachable_tests, path_parents) = bfs_path_find_set(graph, &start_node, all_test_set);
         for (test_node, edge_path) in reachable_tests {
             let NodeId::File(test_path) = &test_node else {
@@ -445,7 +445,7 @@ pub(super) fn bfs_path_find_set(
 
     while let Some(current) = queue.pop_front() {
         if let NodeId::File(path) = &current {
-            if current != *start && test_files.contains(path) {
+            if current != *start && test_files.contains(path.as_ref()) {
                 let mut edge_path = Vec::new();
                 let mut curr_node = current.clone();
                 while let Some((parent, kind)) = parents.get(&curr_node) {

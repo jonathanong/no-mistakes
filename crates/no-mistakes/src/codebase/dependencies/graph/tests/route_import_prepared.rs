@@ -236,7 +236,7 @@ fn route_import_edges_resolve_from_direct_symlink_target() {
     .expect("symlink route-import graph builds");
     let allowed = HashSet::from([EdgeKind::RouteImport]);
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("playwright.config.ts"))],
+        &[NodeId::file(root.join("playwright.config.ts"))],
         None,
         Some(&allowed),
     );

@@ -125,7 +125,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                     NodeId::QueueJob { queue_file, job } => {
                         let rel = queue_file
                             .strip_prefix(root_dir)
-                            .unwrap_or(queue_file.as_path());
+                            .unwrap_or(queue_file.as_ref());
                         OutputNode::QueueJob(OutputQueueJob {
                             queue_file: rel.to_string_lossy().into_owned(),
                             job: job.clone(),
@@ -136,7 +136,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                     NodeId::WorkflowJob { workflow_file, job } => {
                         let rel = workflow_file
                             .strip_prefix(root_dir)
-                            .unwrap_or(workflow_file.as_path());
+                            .unwrap_or(workflow_file.as_ref());
                         OutputNode::WorkflowJob(OutputWorkflowJob {
                             workflow_file: rel.to_string_lossy().into_owned(),
                             job: job.clone(),
@@ -151,7 +151,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                     } => {
                         let rel = workflow_file
                             .strip_prefix(root_dir)
-                            .unwrap_or(workflow_file.as_path());
+                            .unwrap_or(workflow_file.as_ref());
                         OutputNode::WorkflowStep(OutputWorkflowStep {
                             workflow_file: rel.to_string_lossy().into_owned(),
                             job: job.clone(),

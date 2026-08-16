@@ -56,7 +56,7 @@ fn resolve_entrypoints_with_files_and_workspace(
                 graph_files.visible(),
             );
             let file = match &node {
-                NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.clone(),
+                NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.to_path_buf(),
                 _ => normalized,
             };
             if let Some(workflow_node) = symbol
@@ -67,10 +67,7 @@ fn resolve_entrypoints_with_files_and_workspace(
                 symbol = None;
             } else if include_symbols {
                 if let (NodeId::File(file), Some(symbol)) = (&node, &symbol) {
-                    node = NodeId::Symbol {
-                        file: file.clone(),
-                        symbol: symbol.clone(),
-                    };
+                    node = NodeId::symbol(file.clone(), symbol.clone());
                 }
             }
             Entrypoint { file, node, symbol }
@@ -87,7 +84,7 @@ fn resolve_entrypoint_node(
 ) -> NodeId {
     if path.is_dir() {
         if let Some(entry) = package_dir_entry(path, workspace, visible_files) {
-            return NodeId::File(entry);
+            return NodeId::file(entry);
         }
     }
     if workspace
@@ -98,13 +95,13 @@ fn resolve_entrypoint_node(
         return NodeId::Module(raw.to_string());
     }
     if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
-        return NodeId::File(path.to_path_buf());
+        return NodeId::file(path);
     }
     if let Some(entry) = workspace.resolve_specifier_from_visible(raw, visible_files) {
-        return NodeId::File(entry);
+        return NodeId::file(entry);
     }
     if raw_looks_like_source_file(raw, path, root_dependencies) {
-        return NodeId::File(path.to_path_buf());
+        return NodeId::file(path);
     }
     NodeId::Module(raw.to_string())
 }

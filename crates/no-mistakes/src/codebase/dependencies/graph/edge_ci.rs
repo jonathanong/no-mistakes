@@ -38,8 +38,8 @@ fn add_ci_edges(
                     .filter_map(|binary_name| bins.by_name.get(binary_name));
                 for source_file in cargo_target_files.chain(direct_binary_files) {
                     edges.push((
-                        NodeId::File(path.clone()),
-                        NodeId::File(source_file.clone()),
+                        NodeId::file(path.clone()),
+                        NodeId::file(source_file.clone()),
                         EdgeKind::CiInvocation,
                     ));
                 }

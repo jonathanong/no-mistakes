@@ -30,7 +30,7 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
         &mut forward,
         &mut reverse,
     );
-    let workflow = NodeId::File(root.join(".github/workflows/ci.yml"));
+    let workflow = NodeId::file(root.join(".github/workflows/ci.yml"));
     let targets = forward.get(&workflow).cloned().unwrap_or_default();
     assert!(targets.iter().any(|(target, kind)| {
         *kind == EdgeKind::CiInvocation
@@ -65,7 +65,7 @@ fn process_spawn_edges_exclude_ignored_targets_from_file_and_symbol_graphs() {
 
     assert!(graph.all_files().all(|node| node.as_file() != Some(&ignored)));
     assert!(graph
-        .dependencies_of_node(&NodeId::File(root.join("spawn.ts")))
+        .dependencies_of_node(&NodeId::file(root.join("spawn.ts")))
         .into_iter()
         .flatten()
         .all(|(target, _)| target.as_file() != Some(&ignored)));
@@ -84,7 +84,7 @@ fn public_lazy_import_traversal_honors_only_the_explicit_ignored_root() {
         base_url: None,
     };
     let entries = lazy_import_deps_of(
-        &[NodeId::File(root.join("ignored-explicit/effect-entry.ts"))],
+        &[NodeId::file(root.join("ignored-explicit/effect-entry.ts"))],
         &root,
         &tsconfig,
         None,

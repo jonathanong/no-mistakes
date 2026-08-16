@@ -10,7 +10,7 @@ fn export_paths(
     let mut export_nodes = BTreeSet::from([target.clone()]);
     let mut frontier = vec![(target.clone(), target_symbol.to_string())];
     let mut seen = BTreeSet::from([target.clone()]);
-    frontier.push((NodeId::File(root.join(&definition.file)), target_symbol.to_string()));
+    frontier.push((NodeId::file(root.join(&definition.file)), target_symbol.to_string()));
     while let Some((node, current_symbol)) = frontier.pop() {
         if let Some(neighbors) = graph.dependents_of_node(&node) {
             for (neighbor, _) in neighbors {
@@ -23,7 +23,7 @@ fn export_paths(
                             local_import_export(facts, file, symbol, &current_symbol);
                         if location.kind == "re-export" || local_import_export {
                             frontier.push((neighbor.clone(), symbol.clone()));
-                            frontier.push((NodeId::File(file.clone()), symbol.clone()));
+                            frontier.push((NodeId::file(file.clone()), symbol.clone()));
                             exports.insert(location);
                             export_nodes.insert(neighbor.clone());
                         }

@@ -65,7 +65,7 @@ fn test_only_graph_build_applies_project_test_filters() {
     let ignored_test = root.join("web/storybook/skip/ignored.test.tsx");
 
     let dependents =
-        graph.dependents_of(&[NodeId::File(ignored_source)], None, Some(&testof_filter));
+        graph.dependents_of(&[NodeId::file(ignored_source)], None, Some(&testof_filter));
 
     assert!(
         !dependents
@@ -102,9 +102,9 @@ fn graph_build_with_explicit_config_overrides_discovered_test_filters() {
     .unwrap();
 
     let default_dependents =
-        default_graph.dependents_of(&[NodeId::File(source.clone())], None, Some(&testof_filter));
+        default_graph.dependents_of(&[NodeId::file(source.clone())], None, Some(&testof_filter));
     let explicit_dependents =
-        explicit_graph.dependents_of(&[NodeId::File(source)], None, Some(&testof_filter));
+        explicit_graph.dependents_of(&[NodeId::file(source)], None, Some(&testof_filter));
 
     assert!(default_dependents
         .iter()

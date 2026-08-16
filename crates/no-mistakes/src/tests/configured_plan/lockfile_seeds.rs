@@ -46,7 +46,7 @@ pub(super) fn lockfile_seed_candidates(
             if graph.has_reverse_node(&module_node) {
                 module_node
             } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {
-                NodeId::File(entry.clone())
+                NodeId::file(entry.clone())
             } else {
                 // Package referenced in lockfile but absent from graph and workspace map.
                 // Could be a transitive dep or a tooling dep with no import-graph path.

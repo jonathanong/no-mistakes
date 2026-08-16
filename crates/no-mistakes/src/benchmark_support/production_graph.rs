@@ -101,14 +101,8 @@ fn production_node(index: u32) -> NodeId {
         index % 8
     )));
     match index % 3 {
-        0 => NodeId::File(path),
-        1 => NodeId::Symbol {
-            file: path,
-            symbol: "value".to_string(),
-        },
-        _ => NodeId::QueueJob {
-            queue_file: path,
-            job: "run".to_string(),
-        },
+        0 => NodeId::file(path),
+        1 => NodeId::symbol(path, "value".to_string()),
+        _ => NodeId::queue_job(path, "run".to_string()),
     }
 }

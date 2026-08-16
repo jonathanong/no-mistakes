@@ -48,7 +48,7 @@ pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) ->
             NodeId::QueueJob { queue_file, job } => {
                 let rel = queue_file
                     .strip_prefix(root_dir)
-                    .unwrap_or(queue_file.as_path());
+                    .unwrap_or(queue_file.as_ref());
                 writeln!(w, "{}#{}", rel.display(), job)?;
             }
             NodeId::WorkflowJob { .. } | NodeId::WorkflowStep { .. } => {

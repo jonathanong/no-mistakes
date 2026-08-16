@@ -24,7 +24,7 @@ fn bfs_skipping_symbol_owner_files(
         .iter()
         .filter_map(|node| {
             if let NodeId::Symbol { file, symbol } = node {
-                Some((file.clone(), symbol.clone()))
+                Some((file.to_path_buf(), symbol.clone()))
             } else {
                 None
             }
@@ -59,15 +59,15 @@ fn bfs_skipping_symbol_owner_files(
                 ) = (&node, neighbor)
                 {
                     if neighbor_file == owner
-                        && root_symbols.contains(&(owner.clone(), symbol.clone()))
+                        && root_symbols.contains(&(owner.to_path_buf(), symbol.clone()))
                     {
                         continue;
                     }
                 }
                 if let (Some(owner), NodeId::File(importer)) = (&owner_context, neighbor) {
                     if symbol_importer_files_by_owner
-                        .get(owner)
-                        .is_some_and(|files| files.contains(importer))
+                        .get(owner.as_path())
+                        .is_some_and(|files| files.contains(importer.as_ref()))
                     {
                         continue;
                     }
@@ -81,7 +81,7 @@ fn bfs_skipping_symbol_owner_files(
                     (NodeId::Symbol { file: owner, .. }, NodeId::File(neighbor_file))
                         if neighbor_file == owner =>
                     {
-                        Some(owner.clone())
+                        Some(owner.to_path_buf())
                     }
                     _ => None,
                 };
@@ -114,11 +114,11 @@ fn symbol_importer_files_by_owner(edges: &EdgeMap) -> HashMap<PathBuf, HashSet<P
         let NodeId::Symbol { file: owner, .. } = target else {
             continue;
         };
-        let files = map.entry(owner.clone()).or_default();
+        let files = map.entry(owner.to_path_buf()).or_default();
         for (importer, _) in importers {
             match importer {
                 NodeId::File(file) | NodeId::Symbol { file, .. } => {
-                    files.insert(file.clone());
+                    files.insert(file.to_path_buf());
                 }
                 _ => {}
             }

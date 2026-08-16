@@ -182,8 +182,8 @@ fn resolve_target(root: &Path, raw: &str) -> NodeId {
     let path = normalize_path(&path);
     match symbol {
         Some(symbol) => workflow_node_from_suffix(&path, &symbol)
-            .unwrap_or(NodeId::Symbol { file: path, symbol }),
-        None => NodeId::File(path),
+            .unwrap_or(NodeId::symbol(path, symbol)),
+        None => NodeId::file(path),
     }
 }
 

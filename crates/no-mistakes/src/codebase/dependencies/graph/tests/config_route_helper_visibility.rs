@@ -37,7 +37,7 @@ fn injected_facts_cannot_resolve_route_helpers_outside_visible_files() {
         Some(&facts),
     )
     .unwrap();
-    let client = NodeId::File(client);
+    let client = NodeId::file(client);
     assert!(graph
         .dependencies_of_node(&client)
         .into_iter()

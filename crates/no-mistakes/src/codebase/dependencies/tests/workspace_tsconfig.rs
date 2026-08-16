@@ -91,10 +91,10 @@ fn shared_traversal_prepares_workspace_config_ownership() {
         Some(root.join("apps/web/src/runtime/value.ts"))
     );
     let graph = shared.request_graph(plan).unwrap();
-    let entry = crate::codebase::dependencies::NodeId::File(root.join("apps/web/src/entry.ts"));
+    let entry = crate::codebase::dependencies::NodeId::file(root.join("apps/web/src/entry.ts"));
     let dependencies = graph.dependencies_of_node(&entry).unwrap();
     assert!(dependencies.iter().any(|(node, _)| {
-        node == &crate::codebase::dependencies::NodeId::File(
+        node == &crate::codebase::dependencies::NodeId::file(
             root.join("apps/web/src/runtime/value.ts"),
         )
     }));

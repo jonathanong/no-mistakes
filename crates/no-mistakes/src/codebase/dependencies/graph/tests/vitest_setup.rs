@@ -33,19 +33,19 @@ fn vitest_setup_edges_are_lazy_and_connect_setup_dependencies_to_tests() {
 
     assert!(!graph.vitest_setup_edges_materialized());
     assert_eq!(
-        graph.dependents_of_node(&NodeId::File(setup.clone())),
+        graph.dependents_of_node(&NodeId::file(setup.clone())),
         Some(&vec![(
-            NodeId::File(test.clone()),
+            NodeId::file(test.clone()),
             EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
         )]),
     );
     assert!(graph.vitest_setup_edges_materialized());
 
-    let impacted = graph.dependents_of(&[NodeId::File(helper)], None, None);
+    let impacted = graph.dependents_of(&[NodeId::file(helper)], None, None);
     assert!(
         impacted
             .iter()
-            .any(|entry| entry.node == NodeId::File(test.clone()))
+            .any(|entry| entry.node == NodeId::file(test.clone()))
     );
 }
 
@@ -59,9 +59,9 @@ fn vitest_setup_edges_keep_explicit_non_indexable_project_matches() {
         .with_vitest_setup_projects(vec![project]);
 
     assert_eq!(
-        graph.dependents_of_node(&NodeId::File(setup)),
+        graph.dependents_of_node(&NodeId::file(setup)),
         Some(&vec![(
-            NodeId::File(test),
+            NodeId::file(test),
             EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
         )]),
     );
@@ -136,7 +136,7 @@ fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
     let graph = from_typed_maps(
         p("/repo"),
         HashMap::from([
-            (NodeId::File(test.clone()), Vec::new()),
+            (NodeId::file(test.clone()), Vec::new()),
             (NodeId::Module("vitest".to_string()), Vec::new()),
         ]),
         EdgeMap::new(),
@@ -158,14 +158,14 @@ fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
     ]);
 
     assert_eq!(
-        graph.dependencies_of_node(&NodeId::File(test)),
+        graph.dependencies_of_node(&NodeId::file(test)),
         Some(&vec![
             (
-                NodeId::File(nested_setup),
+                NodeId::file(nested_setup),
                 EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
             ),
             (
-                NodeId::File(unscoped_setup),
+                NodeId::file(unscoped_setup),
                 EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
             ),
         ]),
@@ -180,7 +180,7 @@ fn vitest_setup_root_scope_is_an_ancestor_of_nested_projects() {
     let graph = from_typed_maps(
         p("/repo"),
         HashMap::from([
-            (NodeId::File(test.clone()), Vec::new()),
+            (NodeId::file(test.clone()), Vec::new()),
             (NodeId::Module("vitest".to_string()), Vec::new()),
         ]),
         EdgeMap::new(),
@@ -191,9 +191,9 @@ fn vitest_setup_root_scope_is_an_ancestor_of_nested_projects() {
     ]);
 
     assert_eq!(
-        graph.dependencies_of_node(&NodeId::File(test)),
+        graph.dependencies_of_node(&NodeId::file(test)),
         Some(&vec![(
-            NodeId::File(nested_setup),
+            NodeId::file(nested_setup),
             EdgeKind::VitestSetup(VitestSetupField::SetupFiles),
         )]),
     );

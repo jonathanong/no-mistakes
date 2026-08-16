@@ -88,7 +88,7 @@ fn reachable_files(
     let roots = entry_files
         .iter()
         .cloned()
-        .map(NodeId::File)
+        .map(NodeId::file)
         .collect::<Vec<_>>();
     let allowed: HashSet<_> = [EdgeKind::RouteImport].into();
     let dependencies = graph.deps_of(&roots, None, Some(&allowed));

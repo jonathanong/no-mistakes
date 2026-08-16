@@ -77,13 +77,13 @@ fn resource_edges_resolve_exact_directory_and_glob_with_sorted_provenance() {
         edges,
         vec![
             (
-                NodeId::File(consumer.clone()),
-                NodeId::File(button.clone()),
+                NodeId::file(consumer.clone()),
+                NodeId::file(button.clone()),
                 EdgeKind::Resource,
             ),
             (
-                NodeId::File(consumer.clone()),
-                NodeId::File(page.clone()),
+                NodeId::file(consumer.clone()),
+                NodeId::file(page.clone()),
                 EdgeKind::Resource,
             ),
         ]
@@ -171,8 +171,8 @@ fn resource_edges_resolve_absolute_glob_patterns_inside_the_root() {
     assert_eq!(
         edges,
         vec![(
-            NodeId::File(consumer.clone()),
-            NodeId::File(page.clone()),
+            NodeId::file(consumer.clone()),
+            NodeId::file(page.clone()),
             EdgeKind::Resource,
         )]
     );

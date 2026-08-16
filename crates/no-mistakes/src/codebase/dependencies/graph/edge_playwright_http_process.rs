@@ -124,8 +124,8 @@ fn http_edges_for_calls(
         for (def_file, def_pattern) in route_defs {
             if def_file != caller && matcher::matches(&call.path, def_pattern) {
                 edges.push((
-                    NodeId::File(caller.to_path_buf()),
-                    NodeId::File(def_file.clone()),
+                    NodeId::file(caller),
+                    NodeId::file(def_file.clone()),
                     EdgeKind::HttpCall,
                 ));
             }
@@ -161,8 +161,8 @@ fn collect_process_spawn_edges(
                     .filter(|edge| visible_files.contains(&edge.entry))
                     .map(|e| {
                     (
-                        NodeId::File(e.spawner.clone()),
-                        NodeId::File(e.entry.clone()),
+                        NodeId::file(e.spawner.clone()),
+                        NodeId::file(e.entry.clone()),
                         EdgeKind::ProcessSpawn,
                     )
                     })
@@ -178,8 +178,8 @@ fn collect_process_spawn_edges(
                 .filter(|edge| visible_files.contains(&edge.entry))
                 .map(|e| {
                     (
-                        NodeId::File(e.spawner),
-                        NodeId::File(e.entry),
+                        NodeId::file(e.spawner),
+                        NodeId::file(e.entry),
                         EdgeKind::ProcessSpawn,
                     )
                 })

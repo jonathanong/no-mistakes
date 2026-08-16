@@ -122,7 +122,7 @@ pub(crate) fn run_with_prepared(
     if !component_abs.is_file() {
         anyhow::bail!("component file not found: {}", component_abs.display());
     }
-    let component_node = NodeId::File(normalize_path(&component_abs));
+    let component_node = NodeId::file(normalize_path(&component_abs));
 
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut callers: Vec<RscCaller> = Vec::new();

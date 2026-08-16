@@ -428,14 +428,14 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
 
     let test_edges = [crate::codebase::dependencies::graph::EdgeKind::TestOf].into();
     let included = graph.deps_of(
-        &[crate::codebase::dependencies::graph::NodeId::File(
+        &[crate::codebase::dependencies::graph::NodeId::file(
             root.join("src/unit.test.ts"),
         )],
         Some(1),
         Some(&test_edges),
     );
     let excluded = graph.deps_of(
-        &[crate::codebase::dependencies::graph::NodeId::File(
+        &[crate::codebase::dependencies::graph::NodeId::file(
             root.join("src/excluded.test.ts"),
         )],
         Some(1),

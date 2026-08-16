@@ -129,8 +129,8 @@ fn module_relative_resource_paths_resolve_against_the_consumer_directory() {
     assert_eq!(
         edges,
         vec![(
-            NodeId::File(consumer.clone()),
-            NodeId::File(page.clone()),
+            NodeId::file(consumer.clone()),
+            NodeId::file(page.clone()),
             EdgeKind::Resource,
         )]
     );

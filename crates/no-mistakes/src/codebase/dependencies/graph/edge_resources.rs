@@ -119,8 +119,8 @@ fn collect_resource_edges(
             .expect("every collected resource key has a cached expansion");
         for target in targets {
             edges.push((
-                NodeId::File(call.consumer.clone()),
-                NodeId::File(target.clone()),
+                NodeId::file(call.consumer.clone()),
+                NodeId::file(target.clone()),
                 EdgeKind::Resource,
             ));
             details

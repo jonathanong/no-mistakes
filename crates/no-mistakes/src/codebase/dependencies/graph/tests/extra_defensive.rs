@@ -14,7 +14,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     let fact_context = TsFactContext::default();
 
     assert!(lazy_import_deps_of_with_files(
-        &[NodeId::File(root.join("packages/api/src/index.mts"))],
+        &[NodeId::file(root.join("packages/api/src/index.mts"))],
         &root,
         &tsconfig,
         None,

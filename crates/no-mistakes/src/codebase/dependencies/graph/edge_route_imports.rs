@@ -87,8 +87,8 @@ fn collect_route_import_edges(
                 .filter(|target| is_indexable(target))
                 .map(|target| {
                     (
-                        NodeId::File((*path).clone()),
-                        NodeId::File(target),
+                        NodeId::file((*path).clone()),
+                        NodeId::file(target),
                         EdgeKind::RouteImport,
                     )
                 })

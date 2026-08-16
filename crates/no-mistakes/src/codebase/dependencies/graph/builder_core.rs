@@ -106,7 +106,7 @@ impl DepGraph {
         let files = &graph_files.indexable;
 
         for file in files {
-            forward.entry(NodeId::File(file.clone())).or_default();
+            forward.entry(NodeId::file(file.clone())).or_default();
         }
 
         let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
