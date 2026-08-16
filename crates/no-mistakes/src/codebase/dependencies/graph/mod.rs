@@ -52,6 +52,7 @@ include!("edge_imports.rs");
 include!("edge_route_imports.rs");
 include!("edge_symbols_types.rs");
 include!("edge_symbols.rs");
+include!("edge_symbols_file.rs");
 include!("edge_symbols_call_graph.rs");
 include!("edge_symbols_http.rs");
 include!("edge_symbols_runtime.rs");
