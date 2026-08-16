@@ -118,6 +118,40 @@ fn graph_files_visible_path_prefers_first_sorted_alias_on_canonical_collision() 
 
 #[cfg(unix)]
 #[test]
+fn graph_files_explicit_root_keeps_first_sorted_canonical_alias() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/graph-files-dual-alias/fixture"),
+    );
+    let alias_a = root.join("a.ts");
+    let alias_b = root.join("b.ts");
+    let target = root.join("target.ts");
+
+    let mut later_then_earlier = GraphFiles::from_files(vec![alias_b.clone()]);
+    assert_eq!(
+        later_then_earlier.visible_path(&target),
+        Some(alias_b.as_path())
+    );
+    assert!(later_then_earlier.add_explicit_root(&alias_a));
+    assert_eq!(
+        later_then_earlier.visible_path(&target),
+        Some(alias_a.as_path())
+    );
+
+    let mut earlier_then_later = GraphFiles::from_files(vec![alias_a.clone()]);
+    assert_eq!(
+        earlier_then_later.visible_path(&target),
+        Some(alias_a.as_path())
+    );
+    assert!(earlier_then_later.add_explicit_root(&alias_b));
+    assert_eq!(
+        earlier_then_later.visible_path(&target),
+        Some(alias_a.as_path())
+    );
+}
+
+#[cfg(unix)]
+#[test]
 fn graph_files_keeps_uncanonicalizable_paths_under_discovery_spelling() {
     // Tracked broken symlink: canonicalize fails, discovery spelling stays visible.
     let broken = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

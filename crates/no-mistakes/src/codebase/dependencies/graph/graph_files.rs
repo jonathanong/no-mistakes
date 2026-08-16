@@ -23,7 +23,17 @@ impl CanonicalVisible {
 
     fn insert_if_built(&self, canonical: PathBuf, original: PathBuf) {
         if let Some(map) = self.lock().as_mut() {
-            map.insert(canonical, original);
+            match map.entry(canonical) {
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(original);
+                }
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    // Same first-sorted-alias rule as `build_canonical_visible`.
+                    if original < *entry.get() {
+                        entry.insert(original);
+                    }
+                }
+            }
         }
     }
 
