@@ -63,16 +63,19 @@ pub(crate) struct ClassifiedPath {
 pub struct FileInventory {
     paths: Arc<Vec<PathBuf>>,
     classifications: Arc<Vec<FileClassification>>,
+    metadata_stats: usize,
 }
 
 impl FileInventory {
     #[doc(hidden)]
     pub fn from_paths(paths: &[PathBuf]) -> Self {
+        let mut metadata_stats = 0;
         let paths = paths
             .iter()
             .take_while(|_| crate::invocation::check_timeout().is_ok())
             .map(|path| {
                 let path = super::normalize_discovery_path(path);
+                metadata_stats += 1;
                 let classification = std::fs::symlink_metadata(&path)
                     .ok()
                     .map_or_else(FileClassification::default, |metadata| {
@@ -84,10 +87,17 @@ impl FileInventory {
                 }
             })
             .collect::<Vec<_>>();
-        Self::from_classified_paths(paths)
+        Self::from_classified_paths_counted(paths, metadata_stats)
     }
 
-    pub(crate) fn from_classified_paths(mut entries: Vec<ClassifiedPath>) -> Self {
+    pub(crate) fn from_classified_paths(entries: Vec<ClassifiedPath>) -> Self {
+        Self::from_classified_paths_counted(entries, 0)
+    }
+
+    fn from_classified_paths_counted(
+        mut entries: Vec<ClassifiedPath>,
+        metadata_stats: usize,
+    ) -> Self {
         entries.sort_by(|left, right| left.path.cmp(&right.path));
         entries.dedup_by(|left, right| left.path == right.path);
 
@@ -103,6 +113,7 @@ impl FileInventory {
                     .map(|entry| entry.classification)
                     .collect(),
             ),
+            metadata_stats,
         }
     }
 
@@ -165,6 +176,13 @@ impl FileInventory {
     pub fn classification_for_path(&self, path: &Path) -> Option<FileClassification> {
         self.id_for_path(path)
             .and_then(|id| self.classification(id))
+    }
+
+    /// `symlink_metadata` calls performed while building this inventory.
+    /// Classified discovery reuse reports zero.
+    #[doc(hidden)]
+    pub fn metadata_stat_count(&self) -> usize {
+        self.metadata_stats
     }
 }
 

@@ -80,6 +80,32 @@ fn logical_symlink_and_target_paths_remain_distinct() {
 }
 
 #[test]
+fn classified_discovery_does_not_restat_inventory_paths() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/scan-config/symlinked-default-playwright/fixture",
+    );
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let classified = sources.inventory();
+    assert!(
+        classified.len() >= 2,
+        "symlink fixture must contribute visible paths"
+    );
+    assert_eq!(
+        classified.metadata_stat_count(),
+        0,
+        "snapshot inventory must reuse discovery classifications"
+    );
+
+    let restated = FileInventory::from_paths(classified.paths().as_slice());
+    assert_eq!(restated.paths(), classified.paths());
+    assert!(
+        restated.metadata_stat_count() >= classified.len(),
+        "from_paths must stat each candidate; classified reuse must not"
+    );
+}
+
+#[test]
 fn non_file_entries_have_no_file_classification() {
     let directory = fixture("alpha.ts").parent().unwrap().to_path_buf();
     let inventory = FileInventory::from_paths(std::slice::from_ref(&directory));
