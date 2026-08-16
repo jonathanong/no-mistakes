@@ -195,10 +195,11 @@ string literal produce no edge. `go/ast` in-process is acceptable; invoking the
 
 Kafka is a queue backend, not a language. Producers and consumers in any
 supported language emit the existing `queue-enqueue` and `queue-worker` edges.
-The virtual node identity is the static topic string, not a language-specific
-edge kind. A consumer group id is edge metadata (or a downstream node), never
-part of the shared topic identity, so producer enqueue and consumer worker
-edges meet on the same node.
+The virtual node identity is `<cluster>:<topic>`: an explicit configured
+logical cluster or broker namespace plus the static topic string. Topic names
+are cluster-scoped, so two clients that reuse `mail.welcome` on different
+clusters stay distinct. A consumer group id is edge metadata (or a downstream
+node), never part of that identity.
 
 ```ts
 producer.send({ topic: "mail.welcome", messages });
@@ -315,6 +316,7 @@ projects:
     root: backend
     routes: ["config/urls.py", "routes/**/*.py"]
     queues:
+      cluster: orders
       enqueues: ["app/**/tasks.py"]
       workers: ["app/**/tasks.py", "workers/**/*.py"]
 tests:
