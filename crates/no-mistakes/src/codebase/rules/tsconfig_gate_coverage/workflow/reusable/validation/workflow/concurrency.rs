@@ -20,14 +20,15 @@ pub(crate) fn job_concurrency_shape_valid(value: Option<&Value>) -> bool {
             || value.as_mapping().is_some_and(|concurrency| {
                 concurrency.keys().all(|key| {
                     key.as_str()
-                        .is_some_and(|key| matches!(key, "group" | "cancel-in-progress"))
+                        .is_some_and(|key| matches!(key, "group" | "queue" | "cancel-in-progress"))
                 }) && concurrency.get("group").is_some_and(|value| {
                     value.as_str().is_some_and(|value| {
                         valid_concurrency_group(value, JOB_CONCURRENCY_CONTEXTS)
                     })
-                }) && concurrency
-                    .get("cancel-in-progress")
-                    .is_none_or(|value| cancel_in_progress_valid(value, JOB_CONCURRENCY_CONTEXTS))
+                }) && concurrency.get("queue").is_none_or(queue_valid)
+                    && concurrency.get("cancel-in-progress").is_none_or(|value| {
+                        cancel_in_progress_valid(value, JOB_CONCURRENCY_CONTEXTS)
+                    })
             })
     })
 }
@@ -41,14 +42,15 @@ pub(crate) fn workflow_concurrency_shape_valid(value: Option<&Value>) -> bool {
             || value.as_mapping().is_some_and(|concurrency| {
                 concurrency.keys().all(|key| {
                     key.as_str()
-                        .is_some_and(|key| matches!(key, "group" | "cancel-in-progress"))
+                        .is_some_and(|key| matches!(key, "group" | "queue" | "cancel-in-progress"))
                 }) && concurrency.get("group").is_some_and(|value| {
                     value.as_str().is_some_and(|value| {
                         valid_concurrency_group(value, WORKFLOW_CONCURRENCY_CONTEXTS)
                     })
-                }) && concurrency.get("cancel-in-progress").is_none_or(|value| {
-                    cancel_in_progress_valid(value, WORKFLOW_CONCURRENCY_CONTEXTS)
-                })
+                }) && concurrency.get("queue").is_none_or(queue_valid)
+                    && concurrency.get("cancel-in-progress").is_none_or(|value| {
+                        cancel_in_progress_valid(value, WORKFLOW_CONCURRENCY_CONTEXTS)
+                    })
             })
     })
 }
@@ -72,6 +74,10 @@ fn valid_concurrency_group(value: &str, allowed_contexts: &[&str]) -> bool {
             ContextFreeInterpolation::Dynamic => true,
             ContextFreeInterpolation::Invalid => false,
         }
+}
+
+fn queue_valid(value: &Value) -> bool {
+    value.as_str() == Some("max")
 }
 
 fn concurrency_valid_for_inputs(value: Option<&Value>, inputs: &InputState) -> bool {

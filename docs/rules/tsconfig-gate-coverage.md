@@ -238,6 +238,8 @@ coverage.
 Workflow- and job-level concurrency groups are likewise rechecked for every
 active input or matrix state; a known empty or non-string result cannot provide
 coverage, while an unresolved dynamic result remains conservative.
+Both concurrency scopes also accept GitHub's static `queue: max` FIFO policy;
+other queue values and expressions invalidate the workflow schema.
 Action `with` values are rechecked for every active input, matrix, and
 environment state; statically known arrays or objects cannot be string action
 inputs and stop later steps from providing coverage.

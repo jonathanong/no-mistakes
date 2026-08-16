@@ -1,6 +1,25 @@
 use super::*;
 
 #[test]
+fn max_queued_concurrency_preserves_reusable_workflow_coverage() {
+    let documents = vec![
+        document(
+            ".github/workflows/caller.yml",
+            "on: push\njobs:\n  typecheck:\n    uses: ./.github/workflows/callee.yml\n",
+        ),
+        document(
+            ".github/workflows/callee.yml",
+            "on: workflow_call\nconcurrency:\n  group: workflow-checks\n  queue: max\njobs:\n  typecheck:\n    concurrency:\n      group: job-checks\n      queue: max\n    runs-on: ubuntu-latest\n    steps:\n      - run: tsc --noEmit -p queued-concurrency/tsconfig.json\n",
+        ),
+    ];
+
+    assert_eq!(
+        scanned_projects(documents, &["queued-concurrency"]),
+        BTreeSet::from(["queued-concurrency/tsconfig.json".to_string()])
+    );
+}
+
+#[test]
 fn resolved_workflow_concurrency_groups_gate_reusable_activations() {
     let documents = vec![
         document(
