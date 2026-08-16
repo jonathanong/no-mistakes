@@ -419,4 +419,35 @@ fn review_found_doc_regressions_stay_fixed() {
     assert!(limits.contains("spawn(scriptName, [])"));
     assert!(limits.contains(r#"page.locator('[data-testid="submit"]').click()"#));
     assert!(limits.contains(r#"page.locator(`[data-testid="${id}"]`).click()"#));
+
+    let feature_parity = read_root("docs/feature-parity.md");
+    for needle in [
+        "Python",
+        "Django",
+        "Celery",
+        "Go",
+        "Asynq",
+        "Kafka",
+        "Rust",
+        "Ruby on Rails",
+        "PHP",
+        "Counterexample:",
+        "not started",
+    ] {
+        assert!(
+            feature_parity.contains(needle),
+            "docs/feature-parity.md must document `{needle}`"
+        );
+    }
+    let docs_index = read_root("docs/README.md");
+    assert!(
+        docs_index.contains("(feature-parity.md)"),
+        "docs/README.md must link feature-parity.md"
+    );
+
+    let root_readme = read_root("README.md");
+    assert!(
+        root_readme.contains("(docs/feature-parity.md)"),
+        "README.md must link docs/feature-parity.md"
+    );
 }

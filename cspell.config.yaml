@@ -12,11 +12,14 @@ ignorePaths:
   - "test-cases/**"
   - "crates/**/target/**"
 words:
+  - Actix
   - arm64
+  - asynq
   - Basenames
   - callees
   - callsite
   - callsites
+  - constantize
   - cooldown
   - dedup
   - dtolnay
@@ -26,6 +29,8 @@ words:
   - eprintln
   - errexit
   - extglob
+  - frontends
+  - funcs
   - gitignore
   - glibc
   - globset
@@ -33,6 +38,7 @@ words:
   - guardrailsrc
   - invalidators
   - jsonc
+  - Laravel
   - linecount
   - libuv
   - lockfiles
@@ -44,8 +50,12 @@ words:
   - Ong
   - oxlint
   - PCRE
+  - phpunit
   - pipefail
+  - Pipfile
   - pnpm
+  - pytest
+  - pyproject
   - refspec
   - refspecs
   - redirections
@@ -54,13 +64,17 @@ words:
   - sgconfig
   - shellcheck
   - shasum
+  - Sidekiq
+  - Symfony
   - subdirs
   - subpaths
   - tokei
   - tsconfig
   - ungated
+  - urlpatterns
   - unmodeled
   - valkey
   - vitest
   - walkdir
   - worktree
+  - zeitwerk
