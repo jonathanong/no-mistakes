@@ -42,6 +42,53 @@ fn file_nodes(root: &Path, rels: &[&str]) -> Vec<NodeId> {
         .collect()
 }
 
+fn build_graph(
+    root: &Path,
+    config: &no_mistakes::codebase::ts_resolver::TsConfig,
+    config_path: &Path,
+    threads: usize,
+) -> DepGraph {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(threads)
+        .build()
+        .expect("graph-gates rayon pool")
+        .install(|| {
+            DepGraph::build_with_plan_and_config(
+                root,
+                config,
+                GraphBuildPlan::all(),
+                Some(config_path),
+            )
+            .expect("graph-gates build should succeed")
+        })
+}
+
+fn canonical_graph_snapshot(graph: &DepGraph) -> Vec<String> {
+    let mut nodes = graph.all_files().cloned().collect::<Vec<_>>();
+    nodes.sort();
+    let mut rows = nodes
+        .iter()
+        .map(|node| format!("{node:?}"))
+        .collect::<Vec<_>>();
+    for node in &nodes {
+        let mut deps = graph
+            .deps_of(std::slice::from_ref(node), None, None)
+            .into_iter()
+            .map(|entry| format!("{entry:?}"))
+            .collect::<Vec<_>>();
+        deps.sort();
+        let mut dependents = graph
+            .dependents_of(std::slice::from_ref(node), None, None)
+            .into_iter()
+            .map(|entry| format!("{entry:?}"))
+            .collect::<Vec<_>>();
+        dependents.sort();
+        rows.push(format!("fwd {node:?} {deps:?}"));
+        rows.push(format!("rev {node:?} {dependents:?}"));
+    }
+    rows
+}
+
 pub(super) fn bench_graph_gates(c: &mut Criterion) {
     let root = fixture_root();
     let files = source_files(&root);
@@ -55,13 +102,14 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         .values()
         .all(|facts| facts.operational_error.is_none() && facts.parse_error.is_none()));
 
-    let preflight = DepGraph::build_with_plan_and_config(
-        &root,
-        &config,
-        GraphBuildPlan::all(),
-        Some(&config_path),
-    )
-    .expect("graph-gates preflight should succeed");
+    let serial = build_graph(&root, &config, &config_path, 1);
+    let parallel = build_graph(&root, &config, &config_path, 4);
+    assert_eq!(
+        canonical_graph_snapshot(&serial),
+        canonical_graph_snapshot(&parallel),
+        "serial and 4-thread graph builds must be byte-identical"
+    );
+    let preflight = parallel;
     let forward_roots = file_nodes(
         &root,
         &[
