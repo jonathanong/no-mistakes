@@ -116,6 +116,68 @@ fn limited_plan_prefers_self_selected_changed_test_over_earlier_importer() {
 }
 
 #[test]
+fn unlimited_plan_does_not_duplicate_changed_test_that_also_imports_source() {
+    let root = fixture("test-plan-direct-import-limit");
+    let output = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "src/dev-server.mts",
+        "--changed-file",
+        "src/dev-server.test.mts",
+        "--environment",
+        "full",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let direct = group_selected(&plan, "direct");
+    assert_eq!(
+        direct
+            .iter()
+            .filter(|path| **path == "src/dev-server.test.mts")
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn sampled_direct_limit_samples_over_budget_changed_tests() {
+    let root = fixture("test-plan-direct-import-limit");
+    let output = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "yyy.test.mts",
+        "--changed-file",
+        "zzz.test.mts",
+        "--environment",
+        "sampledDirect",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    // first_take would keep yyy.test.mts; stable_take keeps zzz.test.mts.
+    assert_eq!(selected_files(&plan), ["zzz.test.mts"]);
+}
+
+#[test]
 fn sampled_direct_limit_still_keeps_self_selected_changed_test() {
     let root = fixture("test-plan-direct-import-limit");
     let output = run(&[

@@ -74,7 +74,7 @@ pub(super) fn select_limited_direct_candidates(
     let (selves, hops): (Vec<SelectedTest>, Vec<SelectedTest>) = candidates
         .into_iter()
         .partition(|test| test.reasons.iter().any(|reason| reason.via == ["self"]));
-    let mut picked = first_take(selves, limit);
+    let mut picked = select_limited_group_candidates(selves, limit, sample_when_limited);
     let remaining = limit.saturating_sub(picked.len());
     if remaining > 0 {
         picked.extend(select_limited_group_candidates(

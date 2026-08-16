@@ -123,20 +123,22 @@ fn direct_candidates(
         if all_test_set.contains(changed) {
             let rel = relative_path(root, changed);
             if !used.contains(&rel) {
-                self_selected.insert(
-                    rel.clone(),
-                    SelectedTest {
+                self_selected
+                    .entry(rel.clone())
+                    .or_insert_with(|| SelectedTest {
                         test_file: rel.clone(),
                         confidence: Confidence::High,
                         targets: Vec::new(),
                         reasons: vec![ImpactReason {
                             changed_file: rel.clone(),
-                            path: vec![rel],
+                            path: vec![rel.clone()],
                             via: vec!["self".to_string()],
                             via_details: Vec::new(),
                         }],
-                    },
-                );
+                    });
+                if let Some(hop) = hop_selected.remove(&rel) {
+                    merge_selected(self_selected.get_mut(&rel).expect("just inserted"), &hop);
+                }
             }
         }
 
