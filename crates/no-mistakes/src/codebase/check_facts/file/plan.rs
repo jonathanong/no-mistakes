@@ -1,13 +1,16 @@
 use super::{CheckFactPlan, PlaywrightFactPlan, TsFileFacts};
 use std::path::Path;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn should_store_source(plan: &CheckFactPlan) -> bool {
     plan.source || plan.raw_source
 }
 
 pub(super) fn ts_source(source: Option<std::sync::Arc<str>>) -> TsFileFacts {
     TsFileFacts {
-        source: source.as_deref().map(std::sync::Arc::<str>::from),
+        source,
         route_helpers: Vec::new(),
         route_helper_imports: Vec::new(),
         route_helper_refs: Vec::new(),

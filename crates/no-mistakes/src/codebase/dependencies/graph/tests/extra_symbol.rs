@@ -1,3 +1,10 @@
+#[test]
+fn symbol_edge_collection_fans_out_per_file() {
+    let source = include_str!("../edge_symbols.rs");
+    assert!(source.contains(".par_iter()"));
+    assert!(source.contains("collect_symbol_edges_for_file"));
+}
+
 // ── SymbolIndex ──────────────────────────────────────────────────────────
 
 #[test]

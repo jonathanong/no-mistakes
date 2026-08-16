@@ -4,6 +4,7 @@ use crate::codebase::dependencies::extract::{
 };
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
+use std::sync::Arc;
 
 pub(super) fn facts_from_collection_result(result: anyhow::Result<TsFileFacts>) -> TsFileFacts {
     match result {
@@ -52,22 +53,31 @@ pub(super) fn collect_file_facts_with_sources_and_session(
         session.with_recovered_program_status(
             path,
             &source,
-            |program, source, parse_error, panicked| {
+            |program, parsed, parse_error, panicked| {
                 let mut facts = collect_file_facts_from_program(
                     path,
                     plan,
                     context,
-                    source,
+                    parsed,
                     program,
                     parse_error,
+                    plan.source.then(|| Arc::clone(&source)),
                 );
                 facts.fatal_parse_error = panicked;
                 facts
             },
         )
     } else {
-        session.with_recovered_typescript_program(path, &source, |program, source, parse_error| {
-            collect_file_facts_from_program(path, plan, context, source, program, parse_error)
+        session.with_recovered_typescript_program(path, &source, |program, parsed, parse_error| {
+            collect_file_facts_from_program(
+                path,
+                plan,
+                context,
+                parsed,
+                program,
+                parse_error,
+                plan.source.then(|| Arc::clone(&source)),
+            )
         })
     };
     Some(facts_from_collection_result(result))
@@ -80,6 +90,7 @@ pub(crate) fn collect_file_facts_from_program(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     parse_error: Option<String>,
+    stored_source: Option<Arc<str>>,
 ) -> TsFileFacts {
     let import_facts = if plan.imports || plan.function_calls {
         extract_import_facts_from_program_with_source_and_resource_roots(
@@ -132,7 +143,7 @@ pub(crate) fn collect_file_facts_from_program(
         operational_error: None,
         parse_error,
         fatal_parse_error: false,
-        source: plan.source.then(|| std::sync::Arc::<str>::from(source)),
+        source: stored_source.or_else(|| plan.source.then(|| Arc::<str>::from(source))),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         call_sites,
@@ -157,7 +168,7 @@ pub(crate) fn collect_file_facts_from_program(
         http_calls: domain.http_calls,
         process_spawns: domain.process_spawns,
         server_routes: domain.server_routes,
-        react_components: react_components.as_ref().clone(),
+        react_components: Arc::unwrap_or_clone(react_components),
         effect_calls: domain.effect_calls,
         rsc_environment: domain.rsc_environment,
     }

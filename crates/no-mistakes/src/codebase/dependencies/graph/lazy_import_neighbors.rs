@@ -45,14 +45,18 @@ fn import_neighbors(
                 );
             }
         };
-        match session.with_program(path, &source, |program, source| {
+        match session.with_program(path, &source, |program, parsed| {
             crate::codebase::ts_source::facts::collect_file_facts_from_program(
                 path,
                 fact_source.collect_plan,
                 fact_source.context,
-                source,
+                parsed,
                 program,
                 None,
+                fact_source
+                    .collect_plan
+                    .source
+                    .then(|| std::sync::Arc::clone(&source)),
             )
         }) {
             Ok(facts) => facts,

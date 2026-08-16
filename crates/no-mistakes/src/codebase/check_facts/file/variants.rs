@@ -102,11 +102,8 @@ fn collect_variant(
         variant.playwright,
         parsed_source,
         program,
+        should_store_source(variant.plan).then(|| Arc::clone(source)),
     );
-    if should_store_source(variant.plan) {
-        Arc::make_mut(&mut facts.ts).source = Some(Arc::clone(source));
-        facts.source = Some(Arc::clone(source));
-    }
     if recover_symbols {
         facts.legacy_symbols = facts.symbols.clone();
     }
