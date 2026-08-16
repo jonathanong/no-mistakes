@@ -1,0 +1,51 @@
+version: 2
+queues:
+  factories:
+    - createQueue
+projects:
+  web:
+    type: nextjs
+    root: apps/web
+    include:
+      - apps/web/**
+  api:
+    type: server
+    root: apps/api
+    include:
+      - apps/api/**
+    routes:
+      - apps/api/src/routes/**
+    queues:
+      enqueues:
+        - apps/api/src/producers/**
+        - apps/api/src/queues/**
+      workers:
+        - apps/api/src/workers/**
+  worker:
+    type: library
+    root: apps/worker
+    include:
+      - apps/worker/**
+    queues:
+      workers:
+        - apps/api/src/workers/**
+tests:
+  vitest:
+    configs: vitest.config.ts
+    projects:
+      unit:
+        integration_suites:
+          unit: [openai]
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      htmlIds: false
+      testIds:
+        - data-testid
+        - data-pw
+    selectorRoots:
+      - apps/web
+      - packages/ui
+rules:
+  - rule: unique-exports
+    scope: repository

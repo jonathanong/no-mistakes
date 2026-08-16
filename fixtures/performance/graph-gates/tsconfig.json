@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "paths": {
+      "@app/*": ["apps/web/src/*"],
+      "@api/*": ["apps/api/src/*"],
+      "@worker/*": ["apps/worker/src/*"],
+      "@fixture/core": ["packages/core/src/index.ts"],
+      "@fixture/core/*": ["packages/core/src/*"],
+      "@fixture/ui": ["packages/ui/src/index.tsx"],
+      "@fixture/ui/*": ["packages/ui/src/*"],
+      "@fixture/data": ["packages/data/src/index.ts"],
+      "@fixture/data/*": ["packages/data/src/*"],
+      "@fixture/jobs": ["packages/jobs/src/index.ts"],
+      "@fixture/jobs/*": ["packages/jobs/src/*"],
+      "@fixture/http": ["packages/http/src/index.ts"],
+      "@fixture/http/*": ["packages/http/src/*"],
+      "@fixture/config": ["packages/config/src/index.ts"],
+      "@fixture/queue-factory": ["packages/queue-factory/src/index.ts"]
+    }
+  },
+  "include": [
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "scripts/**/*.ts",
+    "tests/**/*.ts"
+  ]
+}
