@@ -100,12 +100,10 @@ fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
     laravel_route_re()
         .captures_iter(source)
         .filter_map(|cap| {
+            let handler = cap.get(2).or_else(|| cap.get(3))?.as_str();
             Some((
-                cap.get(1)?.as_str().to_string(),
-                cap.get(2)
-                    .or_else(|| cap.get(3))?
-                    .as_str()
-                    .replace('\\', "."),
+                cap.get(1)?.as_str().into(),
+                handler.replace('\\', ".").trim_start_matches('.').into(),
             ))
         })
         .collect()
@@ -181,7 +179,7 @@ fn php_class_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r"(?m)^\s*(?:final\s+|abstract\s+)?(?:class|interface|trait|enum)\s+([A-Za-z_][A-Za-z0-9_]*)",
+            r"(?m)^\s*(?:final\s+|abstract\s+|readonly\s+)*(?:class|interface|trait|enum)\s+([A-Za-z_][A-Za-z0-9_]*)",
         )
         .expect("class")
     })
@@ -191,7 +189,7 @@ fn laravel_route_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|([A-Za-z_\\][A-Za-z0-9_\\]*)::class)"#,
+            r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)"#,
         )
         .expect("route")
     })

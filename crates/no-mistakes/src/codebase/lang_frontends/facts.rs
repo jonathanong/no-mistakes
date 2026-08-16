@@ -128,6 +128,9 @@ fn module_from_path_inner(package_root: &Path, path: &Path, rust: bool) -> Optio
     if rust && parts.last().is_some_and(|part| part == "mod") {
         parts.pop();
     }
+    if rust && parts.len() == 1 && matches!(parts[0].as_str(), "lib" | "main") {
+        return None;
+    }
     if parts.is_empty() {
         return None;
     }

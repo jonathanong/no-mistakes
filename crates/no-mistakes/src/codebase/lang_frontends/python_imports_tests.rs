@@ -12,6 +12,10 @@ fn extract_python_imports_covers_unprefixed_and_star_forms() {
     );
     assert!(imports.iter().any(|import| import == "app.tasks"));
     assert!(imports.iter().any(|import| import == "app.mod.helper"));
+    let aliased = extract_python_imports("import app.tasks as celery_tasks", path, None, None);
+    assert!(aliased
+        .iter()
+        .any(|import| import == "celery_tasks=app.tasks"));
     assert_eq!(python_module(None, None, path), None);
     assert_eq!(
         prefix_package(None, "users.models".to_string()),

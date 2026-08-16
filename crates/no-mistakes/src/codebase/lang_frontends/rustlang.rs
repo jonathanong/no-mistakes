@@ -94,7 +94,7 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 fn rust_mod_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?mod\s+([A-Za-z_]\w*)").expect("mod")
+        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?mod\s+([A-Za-z_]\w*)\s*;").expect("mod")
     })
 }
 

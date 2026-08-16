@@ -3,6 +3,7 @@ package worker
 import fmtlib "fmt"
 
 import (
+	"example.com/nested"
 	"github.com/hibiken/asynq"
 )
 

@@ -70,10 +70,11 @@ fn emit_lang_edges(
                 let scoped: std::collections::BTreeSet<_> = targets
                     .iter()
                     .filter(|target| {
-                        facts
-                            .files
-                            .get(*target)
-                            .is_some_and(|other| same_lang_package(file, other))
+                        import_kind == EdgeKind::GoImport
+                            || facts
+                                .files
+                                .get(*target)
+                                .is_some_and(|other| same_lang_package(file, other))
                     })
                     .cloned()
                     .collect();

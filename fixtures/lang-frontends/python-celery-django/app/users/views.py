@@ -3,6 +3,7 @@ from .models import User
 from app.tasks import *
 
 """
+import app.fake_docstring
 class LegacyUser:
     pass
 """

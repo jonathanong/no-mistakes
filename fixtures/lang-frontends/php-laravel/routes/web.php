@@ -8,3 +8,4 @@ use App\Http\Controllers\UserController;
 
 Route::get('/api/users', [UserController::class, 'index']);
 Route::get('/ping', PingController::class);
+Route::get('/fq-users', \App\Http\Controllers\UserController::class);

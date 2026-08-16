@@ -39,15 +39,25 @@ pub(super) fn extract_python_imports(
     package: Option<&str>,
     package_root: Option<&Path>,
 ) -> Vec<String> {
+    let source = super::super::strip::mask_strings(source);
     let mut imports = Vec::new();
-    for raw in extract_named(source, python_import_re()) {
+    for raw in extract_named(&source, python_import_re()) {
         for part in raw.split(',') {
-            if let Some(name) = part.split_whitespace().next() {
+            let mut tokens = part.split_whitespace();
+            if let Some(name) = tokens.next() {
                 imports.push(name.to_string());
+                if tokens
+                    .next()
+                    .is_some_and(|token| token.eq_ignore_ascii_case("as"))
+                {
+                    if let Some(alias) = tokens.next() {
+                        imports.push(format!("{alias}={name}"));
+                    }
+                }
             }
         }
     }
-    for cap in python_from_re().captures_iter(source) {
+    for cap in python_from_re().captures_iter(&source) {
         let Some(module) = cap.get(1).map(|m| m.as_str()) else {
             continue;
         };
