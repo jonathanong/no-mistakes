@@ -14,14 +14,17 @@ struct PreparedScope {
     check: Option<SharedCheckContext>,
     check_uses_traversal_graph: bool,
     playwright: HashMap<String, PreparedPlaywrightView>,
-    queue_reports: HashMap<String, crate::queue::ProjectReport>,
-    queue_indexed_reports: HashMap<String, crate::queue::PreparedProjectReport>,
+    queue_reports: std::sync::Mutex<HashMap<String, crate::queue::ProjectReport>>,
+    queue_indexed_reports: std::sync::Mutex<HashMap<String, crate::queue::PreparedProjectReport>>,
     queue_traversal_keys: std::collections::HashSet<String>,
-    server_indexed_reports: HashMap<String, crate::server_routes::PreparedProjectReport>,
+    server_indexed_reports:
+        std::sync::Mutex<HashMap<String, crate::server_routes::PreparedProjectReport>>,
     server_traversal_keys: std::collections::HashSet<String>,
-    server_reports: HashMap<String, crate::server_routes::ProjectReport>,
-    playwright_analyses: HashMap<String, crate::playwright::analysis::types::Analysis>,
-    react_analyses: HashMap<String, Vec<crate::react_traits::ComponentFacts>>,
+    server_reports: std::sync::Mutex<HashMap<String, crate::server_routes::ProjectReport>>,
+    playwright_analyses: std::sync::Mutex<
+        HashMap<String, std::sync::Arc<crate::playwright::analysis::types::Analysis>>,
+    >,
+    react_analyses: std::sync::Mutex<HashMap<String, Vec<crate::react_traits::ComponentFacts>>>,
 }
 
 struct ScopeFactPlan {

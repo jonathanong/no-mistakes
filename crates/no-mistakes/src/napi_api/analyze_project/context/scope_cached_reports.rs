@@ -1,5 +1,5 @@
 impl PreparedScope {
-    fn queue_report(&mut self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
+    fn queue_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
         let key = canonical_filter_key(&options.filters)?;
         let traversal = matches!(report_type, "queueEdges" | "queueRelated")
             || self.queue_traversal_keys.contains(&key);
@@ -7,9 +7,17 @@ impl PreparedScope {
         let tsconfig_catalog = self.traversal.tsconfig_catalog();
         let session = self.traversal.session_arc();
         let facts = &self.facts;
+        let mut queue_reports = self
+            .queue_reports
+            .lock()
+            .expect("queue report cache is poisoned");
+        let mut queue_indexed_reports = self
+            .queue_indexed_reports
+            .lock()
+            .expect("queue indexed report cache is poisoned");
         let report = cached_analysis(
-            &mut self.queue_reports,
-            &mut self.queue_indexed_reports,
+            &mut queue_reports,
+            &mut queue_indexed_reports,
             &key,
             traversal,
             || {
@@ -45,15 +53,23 @@ impl PreparedScope {
         }
     }
 
-    fn server_report(&mut self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
+    fn server_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
         let prepared = self.server.as_ref().context("server analysis was not prepared")?;
         let filters = server_filters(report_type, options);
         let key = canonical_filter_key(&filters)?;
         let traversal = matches!(report_type, "serverRouteEdges" | "serverRouteRelated")
             || self.server_traversal_keys.contains(&key);
+        let mut server_reports = self
+            .server_reports
+            .lock()
+            .expect("server report cache is poisoned");
+        let mut server_indexed_reports = self
+            .server_indexed_reports
+            .lock()
+            .expect("server indexed report cache is poisoned");
         let report = cached_analysis(
-            &mut self.server_reports,
-            &mut self.server_indexed_reports,
+            &mut server_reports,
+            &mut server_indexed_reports,
             &key,
             traversal,
             || crate::server_routes::analyze_project_with_prepared(prepared, &filters),
@@ -81,7 +97,7 @@ impl PreparedScope {
     }
 
 
-    fn react_report(&mut self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
+    fn react_report(&self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
         if report_type == "reactUsages" {
             let target = options
                 .target
@@ -100,23 +116,32 @@ impl PreparedScope {
             )?);
         }
         let key = canonical_filter_key(&options.targets)?;
-        if !self.react_analyses.contains_key(&key) {
-            self.react_analyses.insert(
-                key.clone(),
-                crate::react_traits::pipeline::run_with_facts::run_analyze_with_loaded_config_and_facts(
+        let analysis = {
+            let cache = self
+                .react_analyses
+                .lock()
+                .expect("react analysis cache is poisoned");
+            cache.get(&key).cloned()
+        };
+        let analysis = match analysis {
+            Some(analysis) => analysis,
+            None => {
+                let computed = crate::react_traits::pipeline::run_with_facts::run_analyze_with_loaded_config_and_facts(
                     self.traversal.root(),
                     self.traversal.config(),
                     &options.targets,
                     &self.facts,
-                )?,
-            );
-        }
-        if report_type == "reactAnalyze" {
-            return Ok(serde_json::to_value(
+                )?;
                 self.react_analyses
-                    .get(&key)
-                    .expect("React analysis is cached"),
-            )?);
+                    .lock()
+                    .expect("react analysis cache is poisoned")
+                    .entry(key)
+                    .or_insert(computed)
+                    .clone()
+            }
+        };
+        if report_type == "reactAnalyze" {
+            return Ok(serde_json::to_value(analysis)?);
         }
         let prepared = crate::react_traits::prepare_check_from_loaded_config(
             self.traversal.config(),

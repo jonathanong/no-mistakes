@@ -24,6 +24,20 @@ fn report_results(value: &Value) -> Vec<Value> {
 }
 
 #[test]
+fn analyze_project_runs_independent_reports_in_parallel() {
+    let source = include_str!("../../analyze_project.rs");
+    let body = source
+        .split("fn analyze_project(")
+        .nth(1)
+        .and_then(|source| source.split("fn run_report(").next())
+        .expect("analyze_project is defined");
+    assert!(
+        body.contains("par_iter") || body.contains("rayon::join"),
+        "analyze_project must run independent prepared reports in parallel"
+    );
+}
+
+#[test]
 fn production_dispatch_has_no_standalone_wrappers_or_placeholder_bails() {
     let sources = [
         (

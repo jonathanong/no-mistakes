@@ -62,9 +62,9 @@ fn prepared_check_advisories_match_standalone_and_share_the_source_store() {
         .to_string(),
     )
     .unwrap();
-    let mut context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    let context = context::AnalyzeProjectContext::prepare(&options).unwrap();
     let reads_before = context.root_source_read_count();
-    let result = run_report(&options.reports[0], &options, &mut context).unwrap();
+    let result = run_report(&options.reports[0], &options, &context).unwrap();
     let reads_after = context.root_source_read_count();
 
     assert_eq!(result, standalone);

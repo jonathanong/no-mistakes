@@ -1,6 +1,6 @@
 impl PreparedScope {
     pub(super) fn project_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -22,7 +22,7 @@ impl PreparedScope {
                 let dependency_graph = if check.graph_plan().is_some()
                     && self.check_uses_traversal_graph
                 {
-                    Some(self.traversal.canonical_graph()?)
+                    Some(self.traversal.graph_shared()?)
                 } else {
                     None
                 };
@@ -38,7 +38,7 @@ impl PreparedScope {
     }
 
     pub(super) fn playwright_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -50,30 +50,41 @@ impl PreparedScope {
                 "distinct Playwright settings require a separate prepared analyzeProject context"
             );
         };
-        if !self.playwright_analyses.contains_key(&key) {
-            let analysis =
-                crate::playwright::analysis::pipeline::analyze_with_policy_and_facts_from_snapshot(
-                    self.traversal.root(),
-                    &prepared.settings,
-                    crate::playwright::playwright_tests::TestPolicy {
-                        assert_conditional_tests: parsed.assert_conditional_tests,
-                        allow_skipped_tests: parsed.allow_skipped_tests,
-                    },
-                    playwright_unique_policy(&parsed),
-                    &self.facts,
-                    self.traversal.visible_paths(),
-                )?;
-            self.playwright_analyses.insert(key.clone(), analysis);
-        }
-        let analysis = self
+        let cached = self
             .playwright_analyses
+            .lock()
+            .expect("playwright analysis cache is poisoned")
             .get(&key)
-            .expect("Playwright analysis is cached");
+            .cloned();
+        let analysis = match cached {
+            Some(analysis) => analysis,
+            None => {
+                let computed = std::sync::Arc::new(
+                    crate::playwright::analysis::pipeline::analyze_with_policy_and_facts_from_snapshot(
+                        self.traversal.root(),
+                        &prepared.settings,
+                        crate::playwright::playwright_tests::TestPolicy {
+                            assert_conditional_tests: parsed.assert_conditional_tests,
+                            allow_skipped_tests: parsed.allow_skipped_tests,
+                        },
+                        playwright_unique_policy(&parsed),
+                        &self.facts,
+                        self.traversal.visible_paths(),
+                    )?,
+                );
+                self.playwright_analyses
+                    .lock()
+                    .expect("playwright analysis cache is poisoned")
+                    .entry(key)
+                    .or_insert_with(|| computed.clone())
+                    .clone()
+            }
+        };
         render_playwright_report(
             &request.report_type,
             &parsed,
             self.traversal.root(),
-            analysis,
+            analysis.as_ref(),
         )
     }
 }

@@ -11,7 +11,7 @@ struct UncachedTraversalRequest<'a> {
 
 fn collect_uncached_entries(
     request: UncachedTraversalRequest<'_>,
-    shared: &mut SharedTraversalContext,
+    shared: &SharedTraversalContext,
 ) -> Result<Vec<graph::NodeEntry>> {
     let UncachedTraversalRequest {
         args,
@@ -48,7 +48,10 @@ fn collect_uncached_entries(
                 },
                 &shared.session,
             );
-            shared.extend_lazy_facts(
+            *shared
+                .pending_lazy_facts
+                .lock()
+                .expect("lazy fact sink is poisoned") = Some(
                 crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
                     collected,
                     shared.fact_plan,
@@ -57,17 +60,17 @@ fn collect_uncached_entries(
             entries
         }
         Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed)?
+            .request_graph_without_symbols_shared(allowed)?
             .deps_of(roots, args.depth, allowed),
-        Direction::Deps => shared.graph()?.deps_of(roots, args.depth, allowed),
+        Direction::Deps => shared.graph_shared()?.deps_of(roots, args.depth, allowed),
         Direction::Dependents if args.include_symbols => {
-            let graph = shared.graph()?;
-            let roots = roots_with_existing_queue_jobs(roots, entrypoints, graph);
-            let roots = roots_with_exported_symbol_roots(&roots, graph);
+            let graph = shared.graph_shared()?;
+            let roots = roots_with_existing_queue_jobs(roots, entrypoints, graph.as_ref());
+            let roots = roots_with_exported_symbol_roots(&roots, graph.as_ref());
             graph.dependents_of_symbol_nodes(&roots, args.depth, allowed)
         }
         Direction::Dependents if any_symbol && shared.build_plan.symbols => {
-            let graph = shared.request_graph_without_symbols(allowed)?;
+            let graph = shared.request_graph_without_symbols_shared(allowed)?;
             resolve_symbol_dependents(
                 &root,
                 entrypoints,
@@ -78,20 +81,22 @@ fn collect_uncached_entries(
                     .expect("symbol index is built for symbol dependents"),
             )
         }
-        Direction::Dependents if any_symbol => resolve_symbol_dependents(
-            &root,
-            entrypoints,
-            args.depth,
-            allowed,
-            shared.graph()?,
-            symbol_index
-                .expect("symbol index is built for symbol dependents"),
-        ),
+        Direction::Dependents if any_symbol => {
+            let graph = shared.graph_shared()?;
+            resolve_symbol_dependents(
+                &root,
+                entrypoints,
+                args.depth,
+                allowed,
+                graph.as_ref(),
+                symbol_index.expect("symbol index is built for symbol dependents"),
+            )
+        }
         Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed)?
+            .request_graph_without_symbols_shared(allowed)?
             .dependents_of(roots, args.depth, allowed),
         Direction::Dependents => shared
-            .graph()?
+            .graph_shared()?
             .dependents_of(roots, args.depth, allowed),
     };
     Ok(entries)
