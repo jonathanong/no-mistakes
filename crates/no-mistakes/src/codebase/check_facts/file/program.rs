@@ -4,6 +4,7 @@ use crate::codebase::dependencies::extract::extract_import_facts_from_program_wi
 use crate::codebase::ts_source::facts::{self, TsFileFacts};
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
+use std::sync::Arc;
 
 pub(crate) fn collect_file_facts_from_program(
     root: &Path,
@@ -12,6 +13,7 @@ pub(crate) fn collect_file_facts_from_program(
     playwright: Option<&PlaywrightFactPlan>,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
+    owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
     let needs_import_facts = plan.imports
         || plan.graph.imports
@@ -122,10 +124,11 @@ pub(crate) fn collect_file_facts_from_program(
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright =
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
-    let stored_source = should_store_source(plan).then(|| std::sync::Arc::<str>::from(source));
+    let stored_source =
+        owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
     let ts = TsFileFacts {
         operational_error: None,
-        source: stored_source.as_deref().map(std::sync::Arc::<str>::from),
+        source: stored_source.clone(),
         parse_error: None,
         fatal_parse_error: false,
         imports: import_facts.imports,

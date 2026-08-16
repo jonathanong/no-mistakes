@@ -85,7 +85,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         .into_iter()
         .map(|(path, ts)| {
             let parse_error = ts.parse_error.clone();
-            let source = ts.source.as_deref().map(std::sync::Arc::<str>::from);
+            let source = ts.source.clone();
             (
                 path,
                 super::CheckFileFacts {
