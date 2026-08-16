@@ -32,7 +32,7 @@ pub(crate) fn collect(
         playwright_fact_plan,
         sources,
     } = input;
-    no_mistakes::diagnostics::measure_if_enabled(
+    let result = no_mistakes::diagnostics::measure_if_enabled(
         "parse",
         no_mistakes::diagnostics::TimingKind::Serial,
         || {
@@ -77,7 +77,27 @@ pub(crate) fn collect(
                 (discovered, Default::default())
             }
         },
-    )
+    );
+    release_extract_programs(session);
+    result
+}
+
+/// Drop request-scoped OXC programs after extract so later check phases do
+/// not retain the full AST set. Records `parse.files` at this boundary so
+/// tests can prove domain checks do not parse again.
+pub(crate) fn release_extract_programs(
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
+) {
+    if let Some(observer) = session.observer() {
+        let parse_files = observer
+            .snapshot()
+            .work
+            .get("parse.files")
+            .copied()
+            .unwrap_or(0);
+        observer.increment("parse.files_after_extract", parse_files);
+    }
+    no_mistakes::ast::clear_request_parse_cache();
 }
 
 fn collect_check_facts(

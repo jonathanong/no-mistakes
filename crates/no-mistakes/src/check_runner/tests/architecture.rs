@@ -55,6 +55,8 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
         1
     );
     assert!(!prepared.contains("resolve_tsconfig_from_visible"));
+    assert!(include_str!("../fact_collection.rs").contains("clear_request_parse_cache"));
+    assert!(include_str!("../fact_collection.rs").contains("parse.files_after_extract"));
     assert!(graph_plan.contains("prepare_graph_config"));
     assert!(graph_plan.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
     assert!(!runner.contains("react_traits::check_enabled"));

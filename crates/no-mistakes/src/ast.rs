@@ -53,10 +53,21 @@ pub(crate) fn request_parse_cache_active() -> bool {
     REQUEST_PARSE_CACHES.with(|caches| !caches.borrow().is_empty())
 }
 
-pub(crate) fn clear_request_parse_cache() {
+/// Drop programs retained by the current request parse cache.
+///
+/// Public so the CLI binary's check runner can release extract ASTs after
+/// fact collection. Library callers already share this crate.
+#[doc(hidden)]
+pub fn clear_request_parse_cache() {
     if let Some(cache) = current_request_parse_cache() {
         cache.clear();
     }
+}
+
+/// Number of programs retained by the current request parse cache.
+#[doc(hidden)]
+pub fn request_parse_cache_len() -> usize {
+    current_request_parse_cache().map_or(0, |cache| cache.entry_count())
 }
 
 #[doc(hidden)]

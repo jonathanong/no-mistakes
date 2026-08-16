@@ -102,6 +102,7 @@ pub(crate) fn run_all_with_suppressed(
         filesystem_rules_enabled,
         no_mistakes::playwright::rules::configured(config),
     ) {
+        fact_collection::release_extract_programs(&session);
         let mut results = empty_results([None]);
         results.include_suppressed = include_suppressed;
         return Ok(results);
