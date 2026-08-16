@@ -1,0 +1,98 @@
+fn lang_fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/lang-frontends")
+            .join(name),
+    )
+}
+
+fn lang_files(root: &Path) -> Vec<PathBuf> {
+    let repo = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
+    );
+    crate::codebase::ts_source::discover_visible_paths(&repo)
+        .into_iter()
+        .map(|path| {
+            let absolute = if path.is_absolute() {
+                path
+            } else {
+                repo.join(path)
+            };
+            crate::codebase::ts_resolver::normalize_path(&absolute)
+        })
+        .filter(|path| path.starts_with(root))
+        .collect()
+}
+
+fn lang_options() -> GraphConfigOptions {
+    GraphConfigOptions {
+        python_packages: vec!["app".into()],
+        go_modules: vec![".".into(), "worker".into()],
+        rust_packages: vec![".".into(), "src".into()],
+        rails_apps: vec![".".into()],
+        php_apps: vec![".".into()],
+        php_framework: Some("laravel".into()),
+        queue_enqueues: vec!["**/*".into()],
+        queue_workers: vec!["**/*".into()],
+        queue_cluster: Some("orders".into()),
+        ..GraphConfigOptions::default()
+    }
+}
+
+#[test]
+fn language_frontend_edges_cover_configured_extractors() {
+    let options = lang_options();
+    let python = lang_fixture("python-celery-django");
+    let python_edges = collect_language_frontend_edges(&python, &lang_files(&python), Some(&options));
+    assert!(python_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::PythonImport));
+    assert!(python_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::QueueEnqueue));
+    assert!(python_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::RouteRef));
+
+    let go = lang_fixture("go-asynq");
+    let go_edges = collect_language_frontend_edges(&go, &lang_files(&go), Some(&options));
+    assert!(go_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::QueueWorker));
+
+    let rust = lang_fixture("rust-mods");
+    let rust_edges = collect_language_frontend_edges(&rust, &lang_files(&rust), Some(&options));
+    assert!(rust_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::RustUse || *kind == EdgeKind::RustMod));
+    assert!(rust_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::RustPackage));
+
+    let rails = lang_fixture("rails-jobs");
+    let rails_edges = collect_language_frontend_edges(&rails, &lang_files(&rails), Some(&options));
+    assert!(rails_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::RouteRef));
+
+    let php = lang_fixture("php-laravel");
+    let php_edges = collect_language_frontend_edges(&php, &lang_files(&php), Some(&options));
+    assert!(php_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::PhpUse || *kind == EdgeKind::PhpPackage));
+
+    let kafka = lang_fixture("kafka-topics");
+    let kafka_edges = collect_language_frontend_edges(&kafka, &lang_files(&kafka), Some(&options));
+    assert!(kafka_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::QueueEnqueue));
+    assert!(collect_language_frontend_edges(&kafka, &lang_files(&kafka), None).is_empty());
+}
+
+#[test]
+fn language_frontend_edges_skip_empty_config() {
+    let root = lang_fixture("python-celery-django");
+    let files = lang_files(&root);
+    assert!(collect_language_frontend_edges(&root, &files, Some(&GraphConfigOptions::default()))
+        .is_empty());
+}

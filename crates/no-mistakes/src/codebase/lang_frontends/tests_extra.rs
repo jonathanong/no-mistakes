@@ -66,3 +66,48 @@ fn php_without_framework_skips_laravel_extractors() {
     let routes = facts.files.values().find(|f| f.path.ends_with("web.php"));
     assert!(routes.is_some_and(|file| file.route_handlers.is_empty()));
 }
+
+#[test]
+fn strip_and_kafka_identity_cover_comment_and_empty_cluster_paths() {
+    let stripped = super::strip::strip_comments_keep_strings(
+        "# hash\n// line\n/* block\nstill */ \"keep // here\" 'ok' \"esc\\\"ape\" done",
+    );
+    assert!(stripped.contains("keep // here"));
+    assert!(stripped.contains("done"));
+    assert_eq!(topic_identity(None, "mail.welcome"), "mail.welcome");
+    assert_eq!(topic_identity(Some(""), "mail.welcome"), "mail.welcome");
+}
+
+#[test]
+fn go_and_rust_collectors_cover_missing_manifest_roots() {
+    let go = fixture("go-asynq");
+    let go_facts = collect_go_facts(&go, &all_files(&go), &["worker".into()]);
+    assert!(!go_facts.files.is_empty());
+    let rust = fixture("rust-mods");
+    let rust_facts = collect_rust_facts(&rust, &all_files(&rust), &["src".into()]);
+    assert!(rust_facts
+        .files
+        .values()
+        .any(|file| file.mods.is_empty() || file.module.is_some()));
+}
+
+#[test]
+fn rails_require_relative_and_python_init_module_keys() {
+    let rails = fixture("rails-jobs");
+    let facts = collect_ruby_facts(&rails, &all_files(&rails), &[".".into()]);
+    let controller = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("users_controller.rb"))
+        .expect("controller");
+    assert!(controller
+        .imports
+        .iter()
+        .any(|import| import == "welcome_job"));
+    let python = fixture("python-celery-django");
+    let facts = collect_python_facts(&python, &all_files(&python), &["app".into()]);
+    assert!(facts
+        .files
+        .values()
+        .any(|file| file.module.as_deref() == Some("app")));
+}
