@@ -273,8 +273,9 @@ for the existing small in-process APIs and
 The 14-file core-analysis corpus is too small for honest visitor-fusion and
 outer-graph-parallelism gates: CodSpeed noise can dominate
 `graph/forward_reverse_query` there. The graph-gates fixture is a step up
-(~75 TypeScript sources, multiple independent edge kinds) rather than a 10x
-blowup of `test-cases/codebase-analysis/large-graph-monorepo`, so fusion
+(~75 TypeScript sources, configured queue/HTTP/route rules, and a
+`GraphBuildPlan::all().with_symbols(true)` end-to-end build) rather than a
+10x blowup of `test-cases/codebase-analysis/large-graph-monorepo`, so fusion
 (≥5% e2e) and outer graph parallelism (≥10% speed, ≤10% peak memory,
 byte-identical output) can be measured without OOMing CI bench jobs.
 
