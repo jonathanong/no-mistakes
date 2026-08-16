@@ -14,43 +14,77 @@ fn collect_fact_domain_remaining_edges(
     resolver: &dyn ImportResolution,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<FactDomainRemainingEdges> {
+    let observer = session.observer().cloned();
     let ((routes, queues), (http_process, (react, resources))) = rayon::join(
         || {
-            rayon::join(
-                || {
-                    crate::perf_trace::trace("graph.routes", || {
-                        collect_route_edges_for_plan(edge_inputs, facts, resolver, session)
-                    })
-                },
-                || {
-                    crate::perf_trace::trace("graph.queues", || {
-                        collect_queue_edges_for_plan(edge_inputs, facts, resolver)
-                    })
-                },
-            )
+            crate::diagnostics::with_observer(observer.clone(), || {
+                rayon::join(
+                    || {
+                        crate::diagnostics::with_observer(observer.clone(), || {
+                            if crate::invocation::check_timeout().is_err() {
+                                return Vec::new();
+                            }
+                            crate::perf_trace::trace("graph.routes", || {
+                                collect_route_edges_for_plan(
+                                    edge_inputs, facts, resolver, session,
+                                )
+                            })
+                        })
+                    },
+                    || {
+                        crate::diagnostics::with_observer(observer.clone(), || {
+                            if crate::invocation::check_timeout().is_err() {
+                                return Vec::new();
+                            }
+                            crate::perf_trace::trace("graph.queues", || {
+                                collect_queue_edges_for_plan(edge_inputs, facts, resolver)
+                            })
+                        })
+                    },
+                )
+            })
         },
         || {
-            rayon::join(
-                || {
-                    crate::perf_trace::trace("graph.http_process", || {
-                        collect_http_process_edges(edge_inputs, facts)
-                    })
-                },
-                || {
-                    rayon::join(
-                        || {
-                            crate::perf_trace::trace("graph.react", || {
-                                collect_react_edges_for_plan(edge_inputs, facts)
+            crate::diagnostics::with_observer(observer.clone(), || {
+                rayon::join(
+                    || {
+                        crate::diagnostics::with_observer(observer.clone(), || {
+                            if crate::invocation::check_timeout().is_err() {
+                                return Vec::new();
+                            }
+                            crate::perf_trace::trace("graph.http_process", || {
+                                collect_http_process_edges(edge_inputs, facts)
                             })
-                        },
-                        || {
-                            crate::perf_trace::trace("graph.resources", || {
-                                collect_resource_edges_for_plan(edge_inputs, facts)
-                            })
-                        },
-                    )
-                },
-            )
+                        })
+                    },
+                    || {
+                        crate::diagnostics::with_observer(observer.clone(), || {
+                            rayon::join(
+                                || {
+                                    crate::diagnostics::with_observer(observer.clone(), || {
+                                        if crate::invocation::check_timeout().is_err() {
+                                            return Vec::new();
+                                        }
+                                        crate::perf_trace::trace("graph.react", || {
+                                            collect_react_edges_for_plan(edge_inputs, facts)
+                                        })
+                                    })
+                                },
+                                || {
+                                    crate::diagnostics::with_observer(observer.clone(), || {
+                                        if crate::invocation::check_timeout().is_err() {
+                                            return Ok(None);
+                                        }
+                                        crate::perf_trace::trace("graph.resources", || {
+                                            collect_resource_edges_for_plan(edge_inputs, facts)
+                                        })
+                                    })
+                                },
+                            )
+                        })
+                    },
+                )
+            })
         },
     );
     Ok(FactDomainRemainingEdges {
