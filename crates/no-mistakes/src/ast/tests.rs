@@ -290,5 +290,5 @@ fn test_expression_path() {
     );
 }
 pub(crate) fn request_parse_cache_len() -> usize {
-    super::current_request_parse_cache().map_or(0, |cache| super::parsed_cache::tests::len(&cache))
+    super::request_parse_cache_len()
 }

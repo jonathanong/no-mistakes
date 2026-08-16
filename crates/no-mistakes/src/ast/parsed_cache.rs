@@ -79,6 +79,10 @@ impl ParsedProgramCache {
         self.entries.borrow_mut().clear();
     }
 
+    pub(crate) fn entry_count(&self) -> usize {
+        self.entries.borrow().len()
+    }
+
     pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
         let cached = self

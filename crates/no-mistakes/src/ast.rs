@@ -64,6 +64,12 @@ pub fn clear_request_parse_cache() {
     }
 }
 
+/// Number of programs retained by the current request parse cache.
+#[doc(hidden)]
+pub fn request_parse_cache_len() -> usize {
+    current_request_parse_cache().map_or(0, |cache| cache.entry_count())
+}
+
 #[doc(hidden)]
 pub fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     let cache = current_request_parse_cache().unwrap_or_default();

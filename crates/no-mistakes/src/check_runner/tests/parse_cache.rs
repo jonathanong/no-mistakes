@@ -14,7 +14,7 @@ fn aggregate_check_releases_cached_asts_after_extract() {
         let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
         run_all(root, None, None).unwrap();
         assert_eq!(
-            no_mistakes::ast::tests::request_parse_cache_len(),
+            no_mistakes::ast::request_parse_cache_len(),
             0,
             "check must drop request-scoped OXC programs after extract"
         );
