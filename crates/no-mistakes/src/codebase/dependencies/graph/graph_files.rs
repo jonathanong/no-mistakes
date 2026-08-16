@@ -210,4 +210,12 @@ impl GraphFiles {
     pub(crate) fn resource_candidates(&self) -> &[PathBuf] {
         &self.resource_candidates
     }
+
+    #[cfg(test)]
+    fn poison_canonical_cache_for_tests(&self) {
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _guard = self.canonical_visible.cache.lock().unwrap();
+            panic!("poison canonical visible cache");
+        }));
+    }
 }

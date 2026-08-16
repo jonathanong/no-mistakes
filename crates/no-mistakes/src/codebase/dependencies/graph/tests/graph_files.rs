@@ -160,3 +160,72 @@ fn graph_files_keeps_uncanonicalizable_paths_under_discovery_spelling() {
     assert_eq!(files.visible_path(&broken), Some(broken.as_path()));
     assert!(broken.canonicalize().is_err());
 }
+
+#[cfg(unix)]
+#[test]
+fn graph_files_visible_path_uses_canonical_spelling_already_in_visible() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/tsconfig/symlink-workspace/link");
+    let via_link = crate::codebase::ts_resolver::normalize_path(&root.join("src/value.ts"));
+    let via_real = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real/src/value.ts"),
+    );
+    let files = GraphFiles::from_files(vec![via_real.clone()]);
+    assert_eq!(files.visible_path(&via_link), Some(via_real.as_path()));
+}
+
+#[cfg(unix)]
+#[test]
+fn graph_files_explicit_root_inserts_unrelated_canonical_key() {
+    let alias_root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/graph-files-dual-alias/fixture"),
+    );
+    let page = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../fixtures/codebase/dependencies/selector-text-sparse-universe/fixture/web/app/page.tsx",
+        ),
+    );
+    let alias_a = alias_root.join("a.ts");
+    let target = alias_root.join("target.ts");
+    let mut files = GraphFiles::from_files(vec![alias_a.clone()]);
+    assert_eq!(files.visible_path(&target), Some(alias_a.as_path()));
+    assert!(files.add_explicit_root(&page));
+    assert_eq!(files.visible_path(&page), Some(page.as_path()));
+    assert_eq!(files.visible_path(&target), Some(alias_a.as_path()));
+}
+
+#[cfg(unix)]
+#[test]
+fn graph_files_builds_reverse_map_skipping_uncanonicalizable_entries() {
+    let page = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../fixtures/codebase/dependencies/selector-text-sparse-universe/fixture/web/app/page.tsx",
+        ),
+    );
+    let broken = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/tests-impact/fixture/broken.test.mts");
+    let via_link = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link/src/value.ts"),
+    );
+    let via_real = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real/src/value.ts"),
+    );
+    let files = GraphFiles::from_files(vec![broken, via_link.clone(), page]);
+    assert_eq!(files.visible_path(&via_real), Some(via_link.as_path()));
+}
+
+#[test]
+fn graph_files_visible_path_recovers_from_poisoned_canonical_cache() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/selector-text-sparse-universe/fixture"),
+    );
+    let page = root.join("web/app/page.tsx");
+    let files = GraphFiles::from_files(vec![page.clone()]);
+    files.poison_canonical_cache_for_tests();
+    assert_eq!(files.visible_path(&page), Some(page.as_path()));
+}
