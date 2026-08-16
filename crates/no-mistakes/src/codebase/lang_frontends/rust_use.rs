@@ -1,3 +1,8 @@
+pub(super) fn rust_path_prefixes(import: &str) -> Vec<String> {
+    let parts: Vec<&str> = import.split('.').filter(|part| !part.is_empty()).collect();
+    (1..parts.len()).map(|end| parts[..end].join(".")).collect()
+}
+
 pub(super) fn qualify_rust_use(kind: &str, item: &str, module: Option<&str>) -> String {
     match kind {
         "self" => match module {

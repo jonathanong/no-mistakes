@@ -82,7 +82,7 @@ fn read_go_module(root: &Path) -> Option<String> {
         .and_then(|source| {
             source.lines().find_map(|line| {
                 line.strip_prefix("module ")
-                    .map(|value| value.trim().to_string())
+                    .map(|value| value.split("//").next().unwrap_or(value).trim().to_string())
             })
         })
 }

@@ -73,7 +73,7 @@ fn rust_imports(source: &str, module: Option<&str>) -> Vec<String> {
     }
     let prefixes: Vec<String> = imports
         .iter()
-        .filter_map(|import| import.split('.').next().map(str::to_string))
+        .flat_map(|import| rust_use::rust_path_prefixes(import))
         .collect();
     imports.extend(prefixes);
     imports.sort();

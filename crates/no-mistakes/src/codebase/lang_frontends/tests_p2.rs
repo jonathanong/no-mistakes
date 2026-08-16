@@ -90,3 +90,54 @@ fn php_queue_identities_are_namespace_qualified() {
         .iter()
         .any(|name| name == "App.Jobs.SomeJob"));
 }
+
+#[test]
+fn rust_keeps_intermediate_use_prefixes() {
+    let root = fixture("rust-mods");
+    let facts = collect_rust_facts(&root, &all_files(&root), &[".".into()]);
+    let lib = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("lib.rs"))
+        .expect("lib");
+    assert!(lib.imports.iter().any(|import| import == "aaa.helper"));
+    assert!(lib.imports.iter().any(|import| import == "aaa"));
+}
+
+#[test]
+fn go_masks_raw_strings_and_strips_mod_comments() {
+    let root = fixture("go-asynq");
+    let facts = collect_go_facts(&root, &all_files(&root), &["worker".into()]);
+    let ping = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("pkg/ping.go"))
+        .expect("ping");
+    assert!(!ping.references.iter().any(|name| name == "LegacyUser"));
+    let nested = collect_go_facts(&root, &all_files(&root), &[".".into(), "nested".into()]);
+    let mail = nested
+        .files
+        .values()
+        .find(|file| file.path.ends_with("nested/mail.go"))
+        .expect("nested");
+    assert_eq!(mail.module.as_deref(), Some("example.com/nested"));
+}
+
+#[test]
+fn php_collects_static_require_stems() {
+    let root = fixture("php-laravel");
+    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], Some("laravel"));
+    let routes = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("web.php"))
+        .expect("routes");
+    assert!(routes.imports.iter().any(|import| import == "helpers"));
+}
+
+#[test]
+fn ruby_tracks_lexical_module_namespaces() {
+    let root = fixture("rails-jobs");
+    let facts = collect_ruby_facts(&root, &all_files(&root), &[".".into()]);
+    assert!(facts.declarations.contains_key("Admin::Ledger"));
+}

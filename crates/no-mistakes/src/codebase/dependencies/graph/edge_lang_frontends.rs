@@ -110,7 +110,17 @@ fn emit_mod_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>) {
                 .get(&qualified)
                 .or_else(|| facts.files_by_module.get(name));
             if let Some(targets) = targets {
-                push_file_edges(edges, &file.path, targets, kind);
+                let scoped: std::collections::BTreeSet<_> = targets
+                    .iter()
+                    .filter(|target| {
+                        facts
+                            .files
+                            .get(*target)
+                            .is_some_and(|other| same_lang_package(file, other))
+                    })
+                    .cloned()
+                    .collect();
+                push_file_edges(edges, &file.path, &scoped, kind);
             }
         }
     }

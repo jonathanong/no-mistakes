@@ -1,6 +1,28 @@
 use super::{extract_named, extract_php_uses, php_namespace_re};
 use regex::Regex;
+use std::path::Path;
 use std::sync::OnceLock;
+
+pub(super) fn extract_php_requires(source: &str) -> Vec<String> {
+    extract_named(source, php_require_re())
+        .into_iter()
+        .filter_map(|raw| {
+            Path::new(&raw)
+                .file_stem()
+                .map(|name| name.to_string_lossy().into_owned())
+        })
+        .collect()
+}
+
+fn php_require_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            r#"(?:require|include)(?:_once)?\s*(?:\(?\s*(?:__DIR__\s*\.\s*)?)['"]([^'"]+)['"]"#,
+        )
+        .expect("php require")
+    })
+}
 
 pub(super) fn extract_laravel_dispatches(source: &str) -> Vec<String> {
     let uses = extract_php_uses(source);

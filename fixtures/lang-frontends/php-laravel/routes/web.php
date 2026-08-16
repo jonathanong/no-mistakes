@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../app/helpers.php';
 use App\Contracts\Mailer;
 use App\Jobs\{SomeJob as WelcomeJob};
 use App\Http\Controllers\{PingController, UserController};

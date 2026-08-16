@@ -25,7 +25,7 @@ fn parse_ruby_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<La
                 .map(|name| name.to_string_lossy().into_owned())
         }),
         imports: extract_requires(&text, path, roots),
-        declarations: extract_named(&text, ruby_decl_re()),
+        declarations: extract_ruby_declarations(&text),
         references: extract_named(&text, ruby_const_re()),
         route_handlers: extract_pairs(&text, rails_route_re()),
         queue_enqueues: extract_named(&text, active_job_re()),
@@ -93,6 +93,41 @@ fn ruby_require_re() -> &'static Regex {
 fn ruby_require_relative_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r#"\brequire_relative\s+["']([^"']+)["']"#).expect("rel"))
+}
+
+fn extract_ruby_declarations(source: &str) -> Vec<String> {
+    let mut stack: Vec<(usize, String)> = Vec::new();
+    let mut names = Vec::new();
+    for line in source.lines() {
+        let indent = line.chars().take_while(|ch| ch.is_whitespace()).count();
+        while stack.last().is_some_and(|(depth, _)| *depth >= indent) {
+            stack.pop();
+        }
+        if let Some(name) = ruby_decl_re()
+            .captures(line)
+            .and_then(|cap| cap.get(1))
+            .map(|m| m.as_str().to_string())
+        {
+            let qualified = if stack.is_empty() || name.contains("::") {
+                name.clone()
+            } else {
+                format!(
+                    "{}::{name}",
+                    stack
+                        .iter()
+                        .map(|(_, part)| part.as_str())
+                        .collect::<Vec<_>>()
+                        .join("::")
+                )
+            };
+            names.push(qualified);
+            names.push(name.clone());
+            stack.push((indent, name));
+        }
+    }
+    names.sort();
+    names.dedup();
+    names
 }
 
 fn ruby_decl_re() -> &'static Regex {

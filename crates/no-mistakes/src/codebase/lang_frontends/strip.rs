@@ -79,7 +79,7 @@ pub(crate) fn mask_strings(source: &str) -> String {
     let mut i = 0;
     while i < chars.len() {
         let ch = chars[i];
-        if ch == '"' || ch == '\'' {
+        if ch == '"' || ch == '\'' || ch == '`' {
             i = mask_quoted(&chars, &mut out, i, ch);
             continue;
         }

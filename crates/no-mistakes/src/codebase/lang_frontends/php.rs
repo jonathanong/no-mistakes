@@ -41,8 +41,15 @@ fn parse_php_file(
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
-        module: classes.first().cloned(),
-        imports: extract_php_uses(&text),
+        module: classes.first().cloned().or_else(|| {
+            path.file_stem()
+                .map(|name| name.to_string_lossy().into_owned())
+        }),
+        imports: {
+            let mut imports = extract_php_uses(&text);
+            imports.extend(queue::extract_php_requires(&text));
+            imports
+        },
         declarations: classes,
         references: extract_named(&text, php_use_re()),
         route_handlers: if laravel {
@@ -104,7 +111,7 @@ fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
         .collect()
 }
 
-pub(super) fn php_namespace_re() -> &'static Regex {
+fn php_namespace_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"(?m)^\s*namespace\s+([A-Za-z_\\][A-Za-z0-9_\\]*)").expect("ns"))
 }

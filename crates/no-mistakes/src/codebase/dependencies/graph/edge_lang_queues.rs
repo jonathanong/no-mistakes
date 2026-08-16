@@ -56,14 +56,10 @@ fn matching_queue_cluster(
         if !matches_any(&rel_s, std::slice::from_ref(glob)) {
             return None;
         }
-        Some(
-            options
-                .queue_glob_clusters
-                .get(glob)
-                .cloned()
-                .flatten()
-                .or_else(|| options.queue_cluster.clone()),
-        )
+        Some(match options.queue_glob_clusters.get(glob) {
+            Some(cluster) => cluster.clone(),
+            None => options.queue_cluster.clone(),
+        })
     })
 }
 

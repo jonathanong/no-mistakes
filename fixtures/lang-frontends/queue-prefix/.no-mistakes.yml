@@ -18,3 +18,11 @@ projects:
         - application/**/*.py
       workers:
         - application/**/*.py
+  bare:
+    type: server
+    root: bare
+    queues:
+      enqueues:
+        - '*.py'
+      workers:
+        - '*.py'

@@ -160,6 +160,7 @@ fn language_frontend_config_keeps_already_prefixed_queue_globs() {
         options.queue_glob_clusters.get("app/application/**/*.py"),
         Some(&Some("other".into()))
     );
+    assert_eq!(options.queue_glob_clusters.get("bare/*.py"), Some(&None));
 }
 
 #[test]

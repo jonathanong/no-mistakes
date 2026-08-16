@@ -10,7 +10,17 @@ fn emit_route_edges(
         }
         for (_, handler) in &file.route_handlers {
             if let Some(targets) = facts.files_by_module.get(handler) {
-                push_file_edges(edges, &file.path, targets, EdgeKind::RouteRef);
+                let scoped: std::collections::BTreeSet<_> = targets
+                    .iter()
+                    .filter(|target| {
+                        facts
+                            .files
+                            .get(*target)
+                            .is_some_and(|other| same_lang_package(file, other))
+                    })
+                    .cloned()
+                    .collect();
+                push_file_edges(edges, &file.path, &scoped, EdgeKind::RouteRef);
             }
             for name in route_handler_names(handler)
                 .into_iter()
