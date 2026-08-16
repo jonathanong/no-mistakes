@@ -54,7 +54,7 @@ fn extract_kafka_consumes(source: &str) -> Vec<String> {
 fn kafka_produce_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"\.send\(\s*\{[^}]*topic\s*:\s*["']([^"']+)["']"#).expect("produce")
+        Regex::new(r#"(?:\.|#)send\(\s*\{[^}]*topic\s*:\s*["']([^"']+)["']"#).expect("produce")
     })
 }
 

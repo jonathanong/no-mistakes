@@ -49,6 +49,12 @@ impl LangFactMap {
                 .entry(declaration.clone())
                 .or_default()
                 .insert(file.path.clone());
+            if file.path.extension().and_then(|ext| ext.to_str()) == Some("php") {
+                self.files_by_module
+                    .entry(declaration.clone())
+                    .or_default()
+                    .insert(file.path.clone());
+            }
         }
         self.files.insert(file.path.clone(), file);
     }

@@ -1,3 +1,17 @@
+pub(super) fn qualify_rust_use(kind: &str, item: &str, module: Option<&str>) -> String {
+    match kind {
+        "self" => match module {
+            Some(module) => format!("{module}.{item}"),
+            None => item.to_string(),
+        },
+        "super" => match module.and_then(|module| module.rsplit_once('.')) {
+            Some((parent, _)) => format!("{parent}.{item}"),
+            None => item.to_string(),
+        },
+        _ => item.to_string(),
+    }
+}
+
 pub(super) fn expand_rust_use(tree: &str) -> Vec<String> {
     let tree = tree.trim();
     let Some(start) = tree.find('{') else {

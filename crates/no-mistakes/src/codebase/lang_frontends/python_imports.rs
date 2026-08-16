@@ -59,7 +59,10 @@ pub(super) fn extract_python_imports(
                     imports.push(format!("{resolved}.{name}"));
                 }
             } else {
-                imports.push(resolved);
+                imports.push(resolved.clone());
+                for name in imported_names(names) {
+                    imports.push(format!("{resolved}.{name}"));
+                }
             }
         } else if !module.starts_with('.') {
             imports.push(module.to_string());

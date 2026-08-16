@@ -41,13 +41,14 @@ fn parse_rust_file(
             pkg.clone()
         }
     });
+    let module = src_root
+        .as_ref()
+        .and_then(|pkg| rust_module_from_path(pkg, path));
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package,
-        module: src_root
-            .as_ref()
-            .and_then(|pkg| rust_module_from_path(pkg, path)),
-        imports: rust_imports(&text),
+        module: module.clone(),
+        imports: rust_imports(&text, module.as_deref()),
         declarations: extract_named(&text, rust_decl_re()),
         references: extract_named(&text, rust_ref_re()),
         route_handlers: Vec::new(),
@@ -57,12 +58,17 @@ fn parse_rust_file(
     })
 }
 
-fn rust_imports(source: &str) -> Vec<String> {
+fn rust_imports(source: &str, module: Option<&str>) -> Vec<String> {
     let mut imports = Vec::new();
     for cap in rust_use_re().captures_iter(source) {
-        let tree = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let kind = cap.get(1).map(|m| m.as_str()).unwrap_or("crate");
+        let tree = cap.get(2).map(|m| m.as_str()).unwrap_or("");
         for item in rust_use::expand_rust_use(tree) {
-            imports.push(item.replace("::", "."));
+            imports.push(rust_use::qualify_rust_use(
+                kind,
+                &item.replace("::", "."),
+                module,
+            ));
         }
     }
     let prefixes: Vec<String> = imports
@@ -95,7 +101,7 @@ fn rust_mod_re() -> &'static Regex {
 fn rust_use_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?use\s+(?:crate|super|self)::(.+?)\s*;")
+        Regex::new(r"(?m)^\s*(?:pub(?:\([^)]+\))?\s+)?use\s+(crate|super|self)::(.+?)\s*;")
             .expect("use")
     })
 }

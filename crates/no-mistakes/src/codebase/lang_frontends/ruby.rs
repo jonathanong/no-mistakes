@@ -121,6 +121,6 @@ fn active_job_re() -> &'static Regex {
 fn ruby_job_class_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*class\s+([A-Z][A-Za-z0-9_]*)\s*<\s*ApplicationJob").expect("job class")
+        Regex::new(r"(?m)^\s*class\s+([A-Z][\w:]*)\s*<\s*ApplicationJob").expect("job class")
     })
 }

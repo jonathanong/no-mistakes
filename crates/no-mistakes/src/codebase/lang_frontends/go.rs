@@ -29,6 +29,7 @@ fn parse_go_file(
 ) -> Option<LangFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
     let text = strip_comments_keep_strings(&source);
+    let symbols = super::strip::mask_strings(&text);
     let package = owning_package(path, roots, modules);
     let module = go_import_path(path, roots, manifests);
     Some(LangFileFacts {
@@ -36,8 +37,8 @@ fn parse_go_file(
         package,
         module,
         imports: extract_go_imports(&text),
-        declarations: extract_go_declarations(&text),
-        references: extract_named(&text, go_ref_re()),
+        declarations: extract_go_declarations(&symbols),
+        references: extract_named(&symbols, go_ref_re()),
         route_handlers: Vec::new(),
         queue_enqueues: extract_named(&text, asynq_task_re()),
         queue_workers: extract_named(&text, asynq_handle_re()),
