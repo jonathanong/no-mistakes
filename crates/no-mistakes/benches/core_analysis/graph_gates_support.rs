@@ -6,12 +6,15 @@ use std::path::{Path, PathBuf};
 
 pub(super) const EXPECTED_SOURCE_FILES: usize = 75;
 pub(super) const EXPECTED_IMPORTS: usize = 159;
+pub(super) const EXPECTED_SYMBOL_IMPORTS: usize = 125;
 pub(super) const EXPECTED_SYMBOL_EXPORTS: usize = 138;
+pub(super) const EXPECTED_SYMBOL_REFS: usize = 222;
 pub(super) const EXPECTED_GRAPH_NODES: usize = 199;
 pub(super) const EXPECTED_SYMBOL_NODES: usize = 111;
 pub(super) const EXPECTED_QUEUE_EDGES: usize = 6;
 pub(super) const EXPECTED_QUEUE_WORKER_EDGES: usize = 12;
 pub(super) const EXPECTED_HTTP_EDGES: usize = 18;
+pub(super) const EXPECTED_MARKDOWN_EDGES: usize = 4;
 pub(super) const EXPECTED_FORWARD_DEPS: usize = 123;
 pub(super) const EXPECTED_REVERSE_DEPENDENTS: usize = 35;
 pub(super) const FORWARD_ROOTS: &[&str] = &[
@@ -108,18 +111,28 @@ pub(super) fn count_kind(graph: &DepGraph, kind: EdgeKind) -> usize {
         .count()
 }
 
-pub(super) fn fact_totals(facts: &TsFactMap) -> (usize, usize) {
-    facts.values().fold((0, 0), |(imports, exports), file| {
-        (
-            imports + file.imports.len(),
-            exports
-                + file
-                    .symbols
-                    .as_ref()
-                    .map(|symbols| symbols.exports.len())
-                    .unwrap_or(0),
-        )
-    })
+pub(super) fn fact_totals(facts: &TsFactMap) -> (usize, usize, usize, usize) {
+    facts.values().fold(
+        (0, 0, 0, 0),
+        |(imports, symbol_imports, exports, refs), file| {
+            (
+                imports + file.imports.len(),
+                symbol_imports
+                    + file
+                        .symbols
+                        .as_ref()
+                        .map(|symbols| symbols.imports.len())
+                        .unwrap_or(0),
+                exports
+                    + file
+                        .symbols
+                        .as_ref()
+                        .map(|symbols| symbols.exports.len())
+                        .unwrap_or(0),
+                refs + file.symbol_references.len(),
+            )
+        },
+    )
 }
 
 pub(super) fn expect_count(label: &str, actual: usize, expected: usize) {

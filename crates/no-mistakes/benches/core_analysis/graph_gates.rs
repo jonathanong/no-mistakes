@@ -13,9 +13,10 @@ use no_mistakes::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 use support::{
     build_graph, count_kind, expect_count, fact_totals, file_nodes, fixture_root, gate_plan,
     source_files, traversal_snapshot, EXPECTED_FORWARD_DEPS, EXPECTED_GRAPH_NODES,
-    EXPECTED_HTTP_EDGES, EXPECTED_IMPORTS, EXPECTED_QUEUE_EDGES, EXPECTED_QUEUE_WORKER_EDGES,
-    EXPECTED_REVERSE_DEPENDENTS, EXPECTED_SOURCE_FILES, EXPECTED_SYMBOL_EXPORTS,
-    EXPECTED_SYMBOL_NODES, FORWARD_ROOTS, REVERSE_ROOTS,
+    EXPECTED_HTTP_EDGES, EXPECTED_IMPORTS, EXPECTED_MARKDOWN_EDGES, EXPECTED_QUEUE_EDGES,
+    EXPECTED_QUEUE_WORKER_EDGES, EXPECTED_REVERSE_DEPENDENTS, EXPECTED_SOURCE_FILES,
+    EXPECTED_SYMBOL_EXPORTS, EXPECTED_SYMBOL_IMPORTS, EXPECTED_SYMBOL_NODES, EXPECTED_SYMBOL_REFS,
+    FORWARD_ROOTS, REVERSE_ROOTS,
 };
 
 pub(super) fn bench_graph_gates(c: &mut Criterion) {
@@ -30,9 +31,11 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
     assert!(facts_preflight
         .values()
         .all(|facts| facts.operational_error.is_none() && facts.parse_error.is_none()));
-    let (imports, symbol_exports) = fact_totals(&facts_preflight);
+    let (imports, symbol_imports, symbol_exports, symbol_refs) = fact_totals(&facts_preflight);
     expect_count("imports", imports, EXPECTED_IMPORTS);
+    expect_count("symbol imports", symbol_imports, EXPECTED_SYMBOL_IMPORTS);
     expect_count("symbol exports", symbol_exports, EXPECTED_SYMBOL_EXPORTS);
+    expect_count("symbol refs", symbol_refs, EXPECTED_SYMBOL_REFS);
 
     let serial = build_graph(&root, &config, &config_path, 1);
     let parallel = build_graph(&root, &config, &config_path, 4);
@@ -70,6 +73,11 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         "http call",
         count_kind(&preflight, EdgeKind::HttpCall),
         EXPECTED_HTTP_EDGES,
+    );
+    expect_count(
+        "markdown link",
+        count_kind(&preflight, EdgeKind::MarkdownLink),
+        EXPECTED_MARKDOWN_EDGES,
     );
     expect_count("forward deps", deps.len(), EXPECTED_FORWARD_DEPS);
     expect_count(
