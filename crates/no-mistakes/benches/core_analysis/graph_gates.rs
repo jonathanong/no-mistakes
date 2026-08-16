@@ -13,10 +13,11 @@ use no_mistakes::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 use support::{
     build_graph, count_kind, expect_count, fact_totals, file_nodes, fixture_root, gate_plan,
     source_files, traversal_snapshot, EXPECTED_FORWARD_DEPS, EXPECTED_GRAPH_NODES,
-    EXPECTED_HTTP_EDGES, EXPECTED_IMPORTS, EXPECTED_MARKDOWN_EDGES, EXPECTED_QUEUE_EDGES,
-    EXPECTED_QUEUE_WORKER_EDGES, EXPECTED_REVERSE_DEPENDENTS, EXPECTED_SOURCE_FILES,
-    EXPECTED_SYMBOL_EXPORTS, EXPECTED_SYMBOL_IMPORTS, EXPECTED_SYMBOL_NODES, EXPECTED_SYMBOL_REFS,
-    FORWARD_ROOTS, REVERSE_ROOTS,
+    EXPECTED_HTTP_EDGES, EXPECTED_IMPORTS, EXPECTED_MARKDOWN_EDGES, EXPECTED_PACKAGE_EDGES,
+    EXPECTED_QUEUE_EDGES, EXPECTED_QUEUE_WORKER_EDGES, EXPECTED_REVERSE_DEPENDENTS,
+    EXPECTED_ROUTE_EDGES, EXPECTED_SELECTOR_EDGES, EXPECTED_SOURCE_FILES, EXPECTED_SYMBOL_EXPORTS,
+    EXPECTED_SYMBOL_IMPORTS, EXPECTED_SYMBOL_NODES, EXPECTED_SYMBOL_REFS, EXPECTED_TEST_EDGES,
+    EXPECTED_WORKSPACE_EDGES, FORWARD_ROOTS, REVERSE_ROOTS,
 };
 
 pub(super) fn bench_graph_gates(c: &mut Criterion) {
@@ -26,16 +27,18 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
     let config_path = root.join(".no-mistakes.yml");
     let plan = TsFactPlan::imports_and_symbols();
 
-    let facts_preflight = collect_ts_facts(&files, plan);
-    expect_count("fact files", facts_preflight.len(), EXPECTED_SOURCE_FILES);
-    assert!(facts_preflight
-        .values()
-        .all(|facts| facts.operational_error.is_none() && facts.parse_error.is_none()));
-    let (imports, symbol_imports, symbol_exports, symbol_refs) = fact_totals(&facts_preflight);
-    expect_count("imports", imports, EXPECTED_IMPORTS);
-    expect_count("symbol imports", symbol_imports, EXPECTED_SYMBOL_IMPORTS);
-    expect_count("symbol exports", symbol_exports, EXPECTED_SYMBOL_EXPORTS);
-    expect_count("symbol refs", symbol_refs, EXPECTED_SYMBOL_REFS);
+    {
+        let facts_preflight = collect_ts_facts(&files, plan);
+        expect_count("fact files", facts_preflight.len(), EXPECTED_SOURCE_FILES);
+        assert!(facts_preflight
+            .values()
+            .all(|facts| facts.operational_error.is_none() && facts.parse_error.is_none()));
+        let (imports, symbol_imports, symbol_exports, symbol_refs) = fact_totals(&facts_preflight);
+        expect_count("imports", imports, EXPECTED_IMPORTS);
+        expect_count("symbol imports", symbol_imports, EXPECTED_SYMBOL_IMPORTS);
+        expect_count("symbol exports", symbol_exports, EXPECTED_SYMBOL_EXPORTS);
+        expect_count("symbol refs", symbol_refs, EXPECTED_SYMBOL_REFS);
+    }
 
     let serial = build_graph(&root, &config, &config_path, 1);
     let parallel = build_graph(&root, &config, &config_path, 4);
@@ -44,6 +47,7 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         traversal_snapshot(&parallel),
         "serial and 4-thread graph builds must preserve traversal order"
     );
+    drop(serial);
     let preflight = parallel;
     let forward_roots = file_nodes(&root, FORWARD_ROOTS);
     let reverse_roots = file_nodes(&root, REVERSE_ROOTS);
@@ -78,6 +82,31 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         "markdown link",
         count_kind(&preflight, EdgeKind::MarkdownLink),
         EXPECTED_MARKDOWN_EDGES,
+    );
+    expect_count(
+        "route ref",
+        count_kind(&preflight, EdgeKind::RouteRef),
+        EXPECTED_ROUTE_EDGES,
+    );
+    expect_count(
+        "test of",
+        count_kind(&preflight, EdgeKind::TestOf),
+        EXPECTED_TEST_EDGES,
+    );
+    expect_count(
+        "package",
+        count_kind(&preflight, EdgeKind::PackageDependency),
+        EXPECTED_PACKAGE_EDGES,
+    );
+    expect_count(
+        "selector",
+        count_kind(&preflight, EdgeKind::Selector),
+        EXPECTED_SELECTOR_EDGES,
+    );
+    expect_count(
+        "workspace",
+        count_kind(&preflight, EdgeKind::WorkspaceImport),
+        EXPECTED_WORKSPACE_EDGES,
     );
     expect_count("forward deps", deps.len(), EXPECTED_FORWARD_DEPS);
     expect_count(
