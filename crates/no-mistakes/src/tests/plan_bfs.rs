@@ -40,19 +40,16 @@ pub(crate) fn symbol_aware_start_nodes(
     include_symbols: bool,
 ) -> Vec<NodeId> {
     if let Some(symbol) = symbol.filter(|_| include_symbols) {
-        return vec![NodeId::Symbol {
-            file: file.to_path_buf(),
-            symbol: symbol.clone(),
-        }];
+        return vec![NodeId::symbol(file, symbol.clone())];
     }
-    let file_node = NodeId::File(file.to_path_buf());
+    let file_node = NodeId::file(file);
     let mut starts = vec![file_node.clone()];
     if include_symbols {
         if let Some(neighbors) = graph.dependencies_of_node(&file_node) {
             starts.extend(neighbors.iter().filter_map(|(node, _)| match node {
                 NodeId::Symbol {
                     file: symbol_file, ..
-                } if symbol_file == file => Some(node.clone()),
+                } if symbol_file.as_ref() == file => Some(node.clone()),
                 _ => None,
             }));
         }

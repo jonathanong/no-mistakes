@@ -139,8 +139,8 @@ fn is_module_local_addr(addr: &str) -> bool {
 fn push_terraform_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path, kind: EdgeKind) {
     if source != target {
         edges.push((
-            NodeId::File(source.to_path_buf()),
-            NodeId::File(target.to_path_buf()),
+            NodeId::file(source),
+            NodeId::file(target),
             kind,
         ));
     }

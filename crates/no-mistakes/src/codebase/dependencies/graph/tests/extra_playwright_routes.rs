@@ -48,13 +48,13 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
     );
     assert!(
         edges.contains(&(
-            NodeId::File(test_file.clone()),
-            NodeId::File(page.clone()),
+            NodeId::file(test_file.clone()),
+            NodeId::file(page.clone()),
             EdgeKind::RouteTest
         )),
         "expected route edge, got {edges:?}"
     );
-    assert!(edges.contains(&(NodeId::File(page.clone()), NodeId::File(layout), EdgeKind::Layout)));
+    assert!(edges.contains(&(NodeId::file(page.clone()), NodeId::file(layout), EdgeKind::Layout)));
 
     let filtered_edges = collect_playwright_route_edges(
         &root,
@@ -64,7 +64,7 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
     );
     assert!(
         !filtered_edges.iter().any(|(_, target, kind)| {
-            target == &NodeId::File(page.clone()) && *kind == EdgeKind::RouteTest
+            target == &NodeId::file(page.clone()) && *kind == EdgeKind::RouteTest
         }),
         "route edges should not introduce files outside the graph file set"
     );
@@ -165,8 +165,8 @@ fn playwright_route_edges_borrow_cached_occurrences_across_repeated_analysis() {
     assert_eq!(std::sync::Arc::strong_count(&occurrences.variant), 2);
     assert_eq!(first, second);
     assert!(first.contains(&(
-        NodeId::File(test_file),
-        NodeId::File(page),
+        NodeId::file(test_file),
+        NodeId::file(page),
         EdgeKind::RouteTest,
     )));
 }
@@ -283,10 +283,10 @@ fn playwright_route_edges_match_unresolved_interpolations_to_dynamic_segment() {
 
     let edges = collect_playwright_route_edges(&root, None, &all_files, None);
 
-    let dynamic_node = NodeId::File(dynamic_page);
-    let literal_node = NodeId::File(literal_page);
+    let dynamic_node = NodeId::file(dynamic_page);
+    let literal_node = NodeId::file(literal_page);
     for spec in &spec_files {
-        let spec_node = NodeId::File(spec.clone());
+        let spec_node = NodeId::file(spec.clone());
         assert!(
             edges.contains(&(spec_node.clone(), dynamic_node.clone(), EdgeKind::RouteTest)),
             "expected route edge from {} to the dynamic page, got {edges:?}",

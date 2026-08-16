@@ -134,7 +134,7 @@ fn check_rule_application(
         let roots = entrypoint_paths
             .iter()
             .cloned()
-            .map(NodeId::File)
+            .map(NodeId::file)
             .collect::<Vec<_>>();
         let mut reachable = graph
             .deps_of_in_file_universe(&roots, options.max_depth, Some(&allowed), file_universe)

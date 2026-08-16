@@ -160,10 +160,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
             },
         ),
         Some((
-            NodeId::Symbol {
-                file: source.clone(),
-                symbol: "alpha".to_string(),
-            },
+            NodeId::symbol(source.clone(), "alpha".to_string()),
             EdgeKind::Import,
         ))
     );

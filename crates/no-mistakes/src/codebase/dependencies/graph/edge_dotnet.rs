@@ -95,8 +95,8 @@ fn push_dotnet_file_edges(
     for target in target_files {
         if target != source {
             edges.push((
-                NodeId::File(source.to_path_buf()),
-                NodeId::File(target.clone()),
+                NodeId::file(source),
+                NodeId::file(target.clone()),
                 kind,
             ));
         }

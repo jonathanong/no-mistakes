@@ -31,17 +31,14 @@ fn collect_symbol_runtime_owner_file_edges(
         return;
     }
     for caller_export in inputs.caller_exports {
-        let from = NodeId::Symbol {
-            file: inputs.path.to_path_buf(),
-            symbol: caller_export.clone(),
-        };
+        let from = NodeId::symbol(inputs.path, caller_export.clone());
         for target in &http_targets {
-            edges.push((from.clone(), NodeId::File(target.clone()), EdgeKind::HttpCall));
+            edges.push((from.clone(), NodeId::file(target.clone()), EdgeKind::HttpCall));
         }
         for target in &process_targets {
             edges.push((
                 from.clone(),
-                NodeId::File(target.clone()),
+                NodeId::file(target.clone()),
                 EdgeKind::ProcessSpawn,
             ));
         }

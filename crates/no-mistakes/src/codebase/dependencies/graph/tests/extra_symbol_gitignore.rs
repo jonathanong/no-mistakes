@@ -16,18 +16,12 @@ fn workspace_symbol_graph_includes_visible_entry_and_excludes_gitignored_entry()
         GraphBuildPlan::imports_and_workspace().with_symbols(true),
     )
     .unwrap();
-    let execute = NodeId::Symbol {
-        file: dir.path().join("packages/app/src/consumer.mts"),
-        symbol: "execute".to_string(),
-    };
+    let execute = NodeId::symbol(dir.path().join("packages/app/src/consumer.mts"), "execute".to_string());
     let ignored_entry = dir
         .path()
         .join("packages/core/generated-output/index.mts");
     let visible_entry = dir.path().join("packages/visible/src/index.mts");
-    let visible_run = NodeId::Symbol {
-        file: visible_entry.clone(),
-        symbol: "visibleRun".to_string(),
-    };
+    let visible_run = NodeId::symbol(visible_entry.clone(), "visibleRun".to_string());
 
     assert!(ignored_entry.exists());
     assert!(graph

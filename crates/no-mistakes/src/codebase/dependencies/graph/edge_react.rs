@@ -27,8 +27,8 @@ fn collect_react_render_edges(
                             return None;
                         }
                         Some((
-                            NodeId::File(path.clone()),
-                            NodeId::File(child_path),
+                            NodeId::file(path.clone()),
+                            NodeId::file(child_path),
                             EdgeKind::ReactRender,
                         ))
                     })

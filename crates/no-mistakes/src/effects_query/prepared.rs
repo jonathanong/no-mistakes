@@ -46,16 +46,16 @@ pub(crate) fn run_with_prepared(
     if !entry_abs.is_file() {
         bail!("entry file not found: {}", entry_abs.display());
     }
-    let entry_node = NodeId::File(normalize_path(&entry_abs));
+    let entry_node = NodeId::file(normalize_path(&entry_abs));
     let allowed = runtime_edges();
     let reachable = graph.deps_of(std::slice::from_ref(&entry_node), depth, Some(&allowed));
     let mut file_depths: HashMap<PathBuf, usize> = HashMap::new();
     if let NodeId::File(path) = &entry_node {
-        file_depths.insert(path.clone(), 0);
+        file_depths.insert(path.to_path_buf(), 0);
     }
     for entry in &reachable {
         if let NodeId::File(path) = &entry.node {
-            file_depths.entry(path.clone()).or_insert(entry.depth);
+            file_depths.entry(path.to_path_buf()).or_insert(entry.depth);
         }
     }
     let mut call_sites: Vec<EffectCallSite> = file_depths

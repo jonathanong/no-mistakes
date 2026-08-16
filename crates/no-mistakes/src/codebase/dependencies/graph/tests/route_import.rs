@@ -433,7 +433,7 @@ fn route_import_edges_are_runtime_only_and_do_not_prune_uncalled_functions() {
     .expect("route-import graph builds");
     let allowed: HashSet<_> = [EdgeKind::RouteImport].into();
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("web/app/page.tsx"))],
+        &[NodeId::file(root.join("web/app/page.tsx"))],
         None,
         Some(&allowed),
     );
@@ -477,7 +477,7 @@ fn route_import_edges_fill_present_but_sparse_check_facts() {
     .expect("route-import graph builds");
     let allowed: HashSet<_> = [EdgeKind::RouteImport].into();
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("web/app/page.tsx"))],
+        &[NodeId::file(root.join("web/app/page.tsx"))],
         None,
         Some(&allowed),
     );

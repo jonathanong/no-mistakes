@@ -96,10 +96,7 @@ impl ReexportNamespaceResolver<'_> {
             );
             if reexported == "*" {
                 return Some((
-                    NodeId::Symbol {
-                        file: target,
-                        symbol: self.member.to_string(),
-                    },
+                    NodeId::symbol(target, self.member.to_string()),
                     edge_kind,
                 ));
             }

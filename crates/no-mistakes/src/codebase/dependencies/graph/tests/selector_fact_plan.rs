@@ -70,11 +70,11 @@ fn text_locator_selector_only_graph_lazily_reads_import_facts() {
 
     assert!(facts.lookups.load(Ordering::Relaxed) > 0);
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("tests/e2e/app.spec.ts"))],
+        &[NodeId::file(root.join("tests/e2e/app.spec.ts"))],
         None,
         Some(&HashSet::from([EdgeKind::Selector])),
     );
     assert!(dependencies.iter().any(|entry| {
-        entry.node == NodeId::File(root.join("web/app/components/discuss-button.tsx"))
+        entry.node == NodeId::file(root.join("web/app/components/discuss-button.tsx"))
     }));
 }

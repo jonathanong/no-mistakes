@@ -41,8 +41,8 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
         },
     );
 
-    let client = NodeId::File(root.join("src/client.ts"));
-    let route = NodeId::File(root.join("backend/api/users.mts"));
+    let client = NodeId::file(root.join("src/client.ts"));
+    let route = NodeId::file(root.join("backend/api/users.mts"));
     let has_route_ref = |graph: &DepGraph| {
         graph.dependents_of_node(&route).is_some_and(|deps| {
             deps.iter()
@@ -173,9 +173,9 @@ fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
     )
     .unwrap();
 
-    let test = NodeId::File(root.join("tests/e2e/app.spec.ts"));
-    let page = NodeId::File(root.join("web/app/page.tsx"));
-    let layout = NodeId::File(root.join("web/app/layout.tsx"));
+    let test = NodeId::file(root.join("tests/e2e/app.spec.ts"));
+    let page = NodeId::file(root.join("web/app/page.tsx"));
+    let layout = NodeId::file(root.join("web/app/layout.tsx"));
     let test_dependencies = graph
         .dependencies_of_node(&test)
         .expect("test file is present in prepared graph");
@@ -237,10 +237,10 @@ fn prepared_graph_playwright_edges_cover_every_frontend_app() {
     )
     .unwrap();
 
-    let control_test = NodeId::File(root.join("tests/e2e/control.spec.ts"));
-    let control_page = NodeId::File(root.join("control-web/app/control/page.tsx"));
-    let agent_test = NodeId::File(root.join("tests/e2e/agent.spec.ts"));
-    let agent_page = NodeId::File(root.join("agent-web/app/agent/page.tsx"));
+    let control_test = NodeId::file(root.join("tests/e2e/control.spec.ts"));
+    let control_page = NodeId::file(root.join("control-web/app/control/page.tsx"));
+    let agent_test = NodeId::file(root.join("tests/e2e/agent.spec.ts"));
+    let agent_page = NodeId::file(root.join("agent-web/app/agent/page.tsx"));
 
     let control_dependencies = graph
         .dependencies_of_node(&control_test)
@@ -380,9 +380,9 @@ fn playwright_route_edges_use_explicit_config_path() {
 
     let custom_config = root.join("custom.no-mistakes.yml");
     let edges = collect_playwright_route_edges(&root, Some(&custom_config), &all_files, None);
-    let test = NodeId::File(root.join("tests/e2e/app.spec.ts"));
-    let page = NodeId::File(root.join("web/app/page.tsx"));
-    let layout = NodeId::File(root.join("web/app/layout.tsx"));
+    let test = NodeId::file(root.join("tests/e2e/app.spec.ts"));
+    let page = NodeId::file(root.join("web/app/page.tsx"));
+    let layout = NodeId::file(root.join("web/app/layout.tsx"));
     assert!(edges.contains(&(test, page.clone(), EdgeKind::RouteTest)));
     assert!(edges.contains(&(page, layout, EdgeKind::Layout)));
 }

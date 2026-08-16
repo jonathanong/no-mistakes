@@ -157,7 +157,7 @@ pub(crate) fn generate_impact_plan_with_prepared(
 
             for (test_node, edge_path) in reachable_tests {
                 let test_path = match &test_node {
-                    NodeId::File(p) => p.clone(),
+                    NodeId::File(p) => p.to_path_buf(),
                     _ => continue,
                 };
                 let rel_test = relative_path(root, &test_path);
@@ -309,7 +309,7 @@ fn push_registry_hints(
     warnings: &mut Vec<Warning>,
     registry_seen: &mut HashSet<(String, String)>,
 ) {
-    let Some(dependents) = graph.dependents_of_node(&NodeId::File(target.to_path_buf())) else {
+    let Some(dependents) = graph.dependents_of_node(&NodeId::file(target)) else {
         return;
     };
     let target_rel = relative_path(root, target);

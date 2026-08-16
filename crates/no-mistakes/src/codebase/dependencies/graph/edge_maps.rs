@@ -2,29 +2,29 @@ fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
     nodes
         .iter()
         .map(|node| match node {
-            NodeId::File(path) => NodeId::File(crate::codebase::ts_resolver::normalize_path(path)),
-            NodeId::Symbol { file, symbol } => NodeId::Symbol {
-                file: crate::codebase::ts_resolver::normalize_path(file),
-                symbol: symbol.clone(),
-            },
+            NodeId::File(path) => NodeId::file(crate::codebase::ts_resolver::normalize_path(path)),
+            NodeId::Symbol { file, symbol } => NodeId::symbol(
+                crate::codebase::ts_resolver::normalize_path(file),
+                symbol.clone(),
+            ),
             NodeId::Module(specifier) => NodeId::Module(specifier.clone()),
-            NodeId::QueueJob { queue_file, job } => NodeId::QueueJob {
-                queue_file: crate::codebase::ts_resolver::normalize_path(queue_file),
-                job: job.clone(),
-            },
-            NodeId::WorkflowJob { workflow_file, job } => NodeId::WorkflowJob {
-                workflow_file: crate::codebase::ts_resolver::normalize_path(workflow_file),
-                job: job.clone(),
-            },
+            NodeId::QueueJob { queue_file, job } => NodeId::queue_job(
+                crate::codebase::ts_resolver::normalize_path(queue_file),
+                job.clone(),
+            ),
+            NodeId::WorkflowJob { workflow_file, job } => NodeId::workflow_job(
+                crate::codebase::ts_resolver::normalize_path(workflow_file),
+                job.clone(),
+            ),
             NodeId::WorkflowStep {
                 workflow_file,
                 job,
                 step,
-            } => NodeId::WorkflowStep {
-                workflow_file: crate::codebase::ts_resolver::normalize_path(workflow_file),
-                job: job.clone(),
-                step: *step,
-            },
+            } => NodeId::workflow_step(
+                crate::codebase::ts_resolver::normalize_path(workflow_file),
+                job.clone(),
+                *step,
+            ),
         })
         .collect()
 }

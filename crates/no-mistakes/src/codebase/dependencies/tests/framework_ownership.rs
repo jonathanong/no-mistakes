@@ -72,7 +72,7 @@ fn assert_owned_route_is_filtered(
     let graph = shared.canonical_graph().unwrap();
     let counts = crate::ast::finish_parse_count(&root);
     let edges = graph
-        .dependencies_of_node(&graph::NodeId::File(client))
+        .dependencies_of_node(&graph::NodeId::file(client))
         .cloned()
         .unwrap_or_default();
 

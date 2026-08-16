@@ -8,10 +8,7 @@ fn caller_parts_ignores_non_file_backed_nodes() {
     assert!(caller_parts(&NodeId::Module("react".to_string()), root).is_none());
     assert!(
         caller_parts(
-            &NodeId::QueueJob {
-                queue_file: PathBuf::from("/repo/queue.mts"),
-                job: "send-email".to_string(),
-            },
+            &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email".to_string()),
             root,
         )
         .is_none()
@@ -49,15 +46,12 @@ fn suggested_tests_merges_duplicate_test_files() {
     let test_file = PathBuf::from("/repo/src/date.test.mts");
     let entries = vec![
         NodeEntry {
-            node: NodeId::File(test_file.clone()),
+            node: NodeId::file(test_file.clone()),
             depth: 3,
             via: vec![EdgeKind::Import],
         },
         NodeEntry {
-            node: NodeId::Symbol {
-                file: test_file,
-                symbol: "coversDate".to_string(),
-            },
+            node: NodeId::symbol(test_file, "coversDate".to_string()),
             depth: 1,
             via: vec![EdgeKind::TestOf],
         },
@@ -98,12 +92,12 @@ fn suggested_tests_filters_file_level_edges_without_matching_target_usage() {
     let filter = TestFileFilter::new(&root, &NoMistakesConfig::default());
     let entries = vec![
         NodeEntry {
-            node: NodeId::File(root.join("dynamic-import-caller.test.mts")),
+            node: NodeId::file(root.join("dynamic-import-caller.test.mts")),
             depth: 1,
             via: vec![EdgeKind::DynamicImport],
         },
         NodeEntry {
-            node: NodeId::File(root.join("dynamic-import-unused.test.mts")),
+            node: NodeId::file(root.join("dynamic-import-unused.test.mts")),
             depth: 1,
             via: vec![EdgeKind::DynamicImport],
         },

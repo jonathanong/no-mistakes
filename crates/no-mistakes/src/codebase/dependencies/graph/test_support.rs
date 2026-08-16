@@ -18,9 +18,9 @@ pub(crate) fn from_raw_maps(
         .into_iter()
         .map(|(k, vs)| {
             (
-                NodeId::File(k),
+                NodeId::file(k),
                 vs.into_iter()
-                    .map(|v| (NodeId::File(v), EdgeKind::Import))
+                    .map(|v| (NodeId::file(v), EdgeKind::Import))
                     .collect(),
             )
         })
@@ -29,9 +29,9 @@ pub(crate) fn from_raw_maps(
         .into_iter()
         .map(|(k, vs)| {
             (
-                NodeId::File(k),
+                NodeId::file(k),
                 vs.into_iter()
-                    .map(|v| (NodeId::File(v), EdgeKind::Import))
+                    .map(|v| (NodeId::file(v), EdgeKind::Import))
                     .collect(),
             )
         })

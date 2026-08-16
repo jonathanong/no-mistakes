@@ -50,9 +50,9 @@ pub(crate) fn add_distinct_worker_file_edges(
         forward
             .entry(queue_job.clone())
             .or_default()
-            .push((NodeId::File(worker_file.clone()), EdgeKind::QueueWorker));
+            .push((NodeId::file(worker_file.clone()), EdgeKind::QueueWorker));
         reverse
-            .entry(NodeId::File(worker_file.clone()))
+            .entry(NodeId::file(worker_file.clone()))
             .or_default()
             .push((queue_job.clone(), EdgeKind::QueueWorker));
     }

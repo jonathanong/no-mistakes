@@ -125,8 +125,8 @@ fn collect_swift_http_edges(
                     && crate::codebase::ts_routes::matcher::matches(path, def_pattern)
                 {
                     edges.push((
-                        NodeId::File(file.path.clone()),
-                        NodeId::File(def_file.clone()),
+                        NodeId::file(file.path.clone()),
+                        NodeId::file(def_file.clone()),
                         EdgeKind::HttpCall,
                     ));
                 }
@@ -190,8 +190,8 @@ fn push_swift_file_edges(
     for target in target_files {
         if target != source {
             edges.push((
-                NodeId::File(source.to_path_buf()),
-                NodeId::File(target.clone()),
+                NodeId::file(source),
+                NodeId::file(target.clone()),
                 kind,
             ));
         }

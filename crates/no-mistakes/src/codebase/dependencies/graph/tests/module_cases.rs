@@ -13,7 +13,7 @@ fn dynamic_imports_inside_uncalled_functions_are_pruned() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/entry.mts"))],
+        &[NodeId::file(root.join("src/entry.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -39,7 +39,7 @@ fn unknown_top_level_calls_keep_function_scoped_dynamic_imports() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/unknown.mts"))],
+        &[NodeId::file(root.join("src/unknown.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -62,7 +62,7 @@ fn named_reexports_keep_function_scoped_dynamic_imports() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/export-named.mts"))],
+        &[NodeId::file(root.join("src/export-named.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -88,7 +88,7 @@ fn default_identifier_exports_keep_function_scoped_dynamic_imports() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/export-default-identifier.mts"))],
+        &[NodeId::file(root.join("src/export-default-identifier.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -114,7 +114,7 @@ fn nested_functions_inside_exported_functions_are_not_exported() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/export-nested.mts"))],
+        &[NodeId::file(root.join("src/export-nested.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -135,7 +135,7 @@ fn same_named_nested_functions_do_not_share_reachability() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/duplicate-name.mts"))],
+        &[NodeId::file(root.join("src/duplicate-name.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -161,7 +161,7 @@ fn nested_function_calls_resolve_sibling_scopes() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/sibling.mts"))],
+        &[NodeId::file(root.join("src/sibling.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -184,7 +184,7 @@ fn uncalled_method_dynamic_imports_are_pruned() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/method.mts"))],
+        &[NodeId::file(root.join("src/method.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -205,7 +205,7 @@ fn unknown_calls_inside_reachable_functions_keep_function_scoped_dynamic_imports
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/unknown-nested.mts"))],
+        &[NodeId::file(root.join("src/unknown-nested.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -228,7 +228,7 @@ fn unknown_calls_inside_unreachable_functions_do_not_broaden_imports() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::File(root.join("src/unknown-uncalled.mts"))],
+        &[NodeId::file(root.join("src/unknown-uncalled.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -247,20 +247,20 @@ fn graph_includes_external_module_and_package_dependency_nodes() {
     };
     let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::all()).unwrap();
 
-    let deps = graph.deps_of(&[NodeId::File(root.join("src/entry.mts"))], None, None);
+    let deps = graph.deps_of(&[NodeId::file(root.join("src/entry.mts"))], None, None);
     assert!(deps.iter().any(|entry| {
         entry.node == NodeId::Module("@react/client".to_string())
             && entry.via.contains(&EdgeKind::Import)
     }));
     assert!(deps.iter().any(|entry| {
-        entry.node == NodeId::File(root.join("packages/local/src/index.mts"))
+        entry.node == NodeId::file(root.join("packages/local/src/index.mts"))
             && entry.via.contains(&EdgeKind::WorkspaceImport)
     }));
     assert!(!deps
         .iter()
         .any(|entry| entry.node == NodeId::Module("@local/pkg".to_string())));
 
-    let manifest_deps = graph.deps_of(&[NodeId::File(root.join("package.json"))], None, None);
+    let manifest_deps = graph.deps_of(&[NodeId::file(root.join("package.json"))], None, None);
     assert!(manifest_deps.iter().any(|entry| {
         entry.node == NodeId::Module("@react/server".to_string())
             && entry.via.contains(&EdgeKind::PackageDependency)

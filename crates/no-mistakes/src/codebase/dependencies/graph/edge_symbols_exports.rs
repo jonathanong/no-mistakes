@@ -29,11 +29,8 @@ fn collect_export_edges(
                 .push(export_symbol.clone());
         }
         edges.push((
-            NodeId::File(inputs.path.to_path_buf()),
-            NodeId::Symbol {
-                file: inputs.path.to_path_buf(),
-                symbol: export_symbol.clone(),
-            },
+            NodeId::file(inputs.path),
+            NodeId::symbol(inputs.path, export_symbol.clone()),
             symbol_edge_kind(export.is_type_only),
         ));
         collect_direct_reexport_edge(&inputs, export, &export_symbol, edges);
@@ -52,22 +49,19 @@ fn collect_direct_reexport_edge(
     if imported == "*" && export_symbol == "*" {
         return;
     }
-    let from = NodeId::Symbol {
-        file: inputs.path.to_path_buf(),
-        symbol: export_symbol.to_string(),
-    };
+    let from = NodeId::symbol(inputs.path, export_symbol.to_string());
     if let Some(target) = inputs.resolver.resolve(source, inputs.path) {
         let Some(target) = inputs.graph_files.visible_path(&target) else {
             return;
         };
         if !is_indexable(target) {
-            edges.push((from, NodeId::File(target.to_path_buf()), EdgeKind::AssetImport));
+            edges.push((from, NodeId::file(target), EdgeKind::AssetImport));
             return;
         }
         if imported == "*" {
             edges.push((
                 from,
-                NodeId::File(target.to_path_buf()),
+                NodeId::file(target),
                 symbol_edge_kind(export.is_type_only),
             ));
             return;
@@ -77,10 +71,7 @@ fn collect_direct_reexport_edge(
         );
         edges.push((
             from,
-            NodeId::Symbol {
-                file: target.to_path_buf(),
-                symbol: imported.clone(),
-            },
+            NodeId::symbol(target, imported.clone()),
             kind,
         ));
     } else if let Some(target) = inputs.workspace.resolve_specifier_from_file_visible(
@@ -93,15 +84,12 @@ fn collect_direct_reexport_edge(
             export.is_type_only || target_export_is_type(target, imported, inputs.facts),
         );
         if imported == "*" {
-            edges.push((from, NodeId::File(target.to_path_buf()), kind));
+            edges.push((from, NodeId::file(target), kind));
             return;
         }
         edges.push((
             from,
-            NodeId::Symbol {
-                file: target.to_path_buf(),
-                symbol: imported.clone(),
-            },
+            NodeId::symbol(target, imported.clone()),
             kind,
         ));
     } else if !inputs
@@ -144,10 +132,7 @@ fn collect_export_reference_edges(
             });
         if let Some((target, kind)) = resolved {
             edges.push((
-                NodeId::Symbol {
-                    file: inputs.path.to_path_buf(),
-                    symbol: export_symbol_name(export),
-                },
+                NodeId::symbol(inputs.path, export_symbol_name(export)),
                 target,
                 kind,
             ));

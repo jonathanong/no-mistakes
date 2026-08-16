@@ -38,11 +38,8 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     };
 
     let roots = vec![
-        NodeId::QueueJob {
-            queue_file: a.clone(),
-            job: "send".to_string(),
-        },
-        NodeId::File(a),
+        NodeId::queue_job(a.clone(), "send".to_string()),
+        NodeId::file(a),
     ];
     let limited =
         lazy_import_deps_of_with_files(&roots, &root, &tsconfig, Some(1), &graph_files, None);
@@ -50,7 +47,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     assert!(!has_file(&limited, &c));
 
     let full = lazy_import_deps_of_with_files(
-        &[NodeId::File(root.join("a.mts"))],
+        &[NodeId::file(root.join("a.mts"))],
         &root,
         &tsconfig,
         None,
@@ -69,7 +66,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     };
     let duplicate_files = GraphFiles::discover(&duplicate_root);
     let duplicate = lazy_import_deps_of_with_files(
-        &[NodeId::File(duplicate_root.join("a.mts"))],
+        &[NodeId::file(duplicate_root.join("a.mts"))],
         &duplicate_root,
         &duplicate_tsconfig,
         None,
@@ -92,7 +89,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     };
     let module_files = GraphFiles::discover(&module_root);
     let module_deps = lazy_import_deps_of_with_files(
-        &[NodeId::File(module_root.join("src/entry.mts"))],
+        &[NodeId::file(module_root.join("src/entry.mts"))],
         &module_root,
         &module_tsconfig,
         None,
@@ -118,7 +115,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         resource_candidates: vec![],
     };
     assert!(lazy_import_deps_of_with_files(
-        &[NodeId::File(hidden_root.join("a.mts"))],
+        &[NodeId::file(hidden_root.join("a.mts"))],
         &hidden_root,
         &hidden_tsconfig,
         None,
@@ -281,7 +278,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     assert!(dependents.iter().any(|entry| {
         matches!(
             entry.node,
-            NodeId::File(ref path) if path == &send_email
+            NodeId::File(ref path) if path.as_ref() == send_email.as_path()
         )
     }));
 
