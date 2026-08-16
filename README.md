@@ -67,6 +67,7 @@ cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 - [Node/N-API guide](docs/node-api.md)
 - [Configuration](docs/configuration/README.md)
 - [Graph edge types](docs/graph-edges.md)
+- [Feature parity](docs/feature-parity.md)
 - [no-mistakes rules](docs/rules/README.md)
 - [ESLint rules](docs/eslint-rules/README.md)
 - [Agent guide](docs/agent-guide.md)

@@ -13,6 +13,7 @@ ignorePaths:
   - "crates/**/target/**"
 words:
   - arm64
+  - asynq
   - Basenames
   - callees
   - callsite
@@ -64,3 +65,4 @@ words:
   - vitest
   - walkdir
   - worktree
+  - zeitwerk
