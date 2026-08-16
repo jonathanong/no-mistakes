@@ -149,12 +149,9 @@ fn emit_queue_edges(
         }
         for job in &file.queue_enqueues {
             let identity = topic_identity(cluster, job);
-            let node = NodeId::QueueJob {
-                queue_file: file.path.clone(),
-                job: identity.clone(),
-            };
+            let node = NodeId::queue_job(&file.path, identity.clone());
             edges.push((
-                NodeId::File(file.path.clone()),
+                NodeId::file(&file.path),
                 node.clone(),
                 EdgeKind::QueueEnqueue,
             ));
@@ -162,7 +159,7 @@ fn emit_queue_edges(
                 for worker in targets {
                     edges.push((
                         node.clone(),
-                        NodeId::File(worker.clone()),
+                        NodeId::file(worker),
                         EdgeKind::QueueWorker,
                     ));
                 }
@@ -187,11 +184,7 @@ fn push_file_edges(
 ) {
     for target in targets {
         if target != source {
-            edges.push((
-                NodeId::File(source.to_path_buf()),
-                NodeId::File(target.clone()),
-                kind,
-            ));
+            edges.push((NodeId::file(source), NodeId::file(target), kind));
         }
     }
 }

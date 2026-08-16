@@ -90,22 +90,15 @@ fn emit_kafka_edges(
     for (path, topics) in produces {
         for topic in topics {
             let identity = topic_identity(cluster, &topic);
-            let node = NodeId::QueueJob {
-                queue_file: path.clone(),
-                job: identity.clone(),
-            };
+            let node = NodeId::queue_job(&path, identity.clone());
             edges.push((
-                NodeId::File(path.clone()),
+                NodeId::file(&path),
                 node.clone(),
                 EdgeKind::QueueEnqueue,
             ));
             if let Some(targets) = workers.get(&identity) {
                 for worker in targets {
-                    edges.push((
-                        node.clone(),
-                        NodeId::File(worker.clone()),
-                        EdgeKind::QueueWorker,
-                    ));
+                    edges.push((node.clone(), NodeId::file(worker), EdgeKind::QueueWorker));
                 }
             }
         }
