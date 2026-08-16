@@ -81,6 +81,10 @@ fn python_collects_relative_import_celery_and_django_routes() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "api/users/" && handler.contains("user_list")));
+    assert!(urls
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "users/" && handler.contains("UserView")));
 }
 
 #[test]
@@ -108,6 +112,13 @@ fn go_collects_asynq_task_and_handler() {
         .declarations
         .iter()
         .any(|name| name == "WelcomePayload" || name == "HandleWelcome"));
+    let nested = collect_go_facts(&root, &all_files(&root), &[".".into(), "nested".into()]);
+    let mail = nested
+        .files
+        .values()
+        .find(|file| file.path.ends_with("nested/mail.go"))
+        .expect("nested");
+    assert_eq!(mail.module.as_deref(), Some("example.com/nested"));
 }
 
 #[test]

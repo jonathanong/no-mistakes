@@ -50,9 +50,11 @@ fn language_frontend_edges_cover_configured_extractors() {
     assert!(python_edges
         .iter()
         .any(|(_, _, kind)| *kind == EdgeKind::QueueEnqueue));
-    assert!(python_edges
-        .iter()
-        .any(|(_, _, kind)| *kind == EdgeKind::RouteRef));
+    assert!(python_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from.as_file().is_some_and(|path| path.ends_with("urls.py"))
+            && to.as_file().is_some_and(|path| path.ends_with("views.py"))
+    }));
 
     let go = lang_fixture("go-asynq");
     let go_edges = collect_language_frontend_edges(&go, &lang_files(&go), Some(&options));
@@ -65,9 +67,15 @@ fn language_frontend_edges_cover_configured_extractors() {
     assert!(rust_edges
         .iter()
         .any(|(_, _, kind)| *kind == EdgeKind::RustUse || *kind == EdgeKind::RustMod));
-    assert!(rust_edges
-        .iter()
-        .any(|(_, _, kind)| *kind == EdgeKind::RustPackage));
+    assert!(rust_edges.iter().any(|(from, _, kind)| {
+        *kind == EdgeKind::RustPackage && from.as_file().is_some_and(|path| path.ends_with("lib.rs"))
+    }));
+    assert!(rust_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RustPackage
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("aaa/mod.rs"))
+    }));
 
     let rails = lang_fixture("rails-jobs");
     let rails_edges = collect_language_frontend_edges(&rails, &lang_files(&rails), Some(&options));

@@ -34,7 +34,10 @@ fn parse_go_file(path: &Path, roots: &[PathBuf], modules: &[String]) -> Option<L
 }
 
 fn go_import_path(path: &Path, roots: &[PathBuf]) -> Option<String> {
-    let root = roots.iter().find(|candidate| path.starts_with(candidate))?;
+    let root = roots
+        .iter()
+        .filter(|candidate| path.starts_with(candidate))
+        .max_by_key(|candidate| candidate.components().count())?;
     let module = std::fs::read_to_string(root.join("go.mod"))
         .ok()
         .and_then(|source| {

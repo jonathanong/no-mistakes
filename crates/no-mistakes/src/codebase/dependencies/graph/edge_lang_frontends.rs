@@ -119,14 +119,15 @@ fn emit_package_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>
 }
 
 fn package_root_file(files: &std::collections::BTreeSet<PathBuf>) -> Option<&Path> {
-    files
-        .iter()
-        .find(|path| {
-            matches!(
-                path.file_name().and_then(|name| name.to_str()),
-                Some("lib.rs" | "main.rs" | "mod.rs" | "composer.json")
-            )
-        })
+    let named = |want: &str| {
+        files
+            .iter()
+            .find(|path| path.file_name().and_then(|name| name.to_str()) == Some(want))
+    };
+    named("lib.rs")
+        .or_else(|| named("main.rs"))
+        .or_else(|| named("composer.json"))
+        .or_else(|| named("mod.rs"))
         .or_else(|| files.iter().next())
         .map(PathBuf::as_path)
 }

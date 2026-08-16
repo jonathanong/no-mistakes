@@ -3,3 +3,6 @@ from .models import User
 
 def user_list():
     return User
+
+class UserView:
+    pass

@@ -34,7 +34,12 @@ fn route_handler_names(handler: &str) -> Vec<String> {
     if let Some((class, _)) = trimmed.split_once("::") {
         return vec![class.rsplit('\\').next().unwrap_or(class).to_string()];
     }
-    vec![trimmed.rsplit('.').next().unwrap_or(&trimmed).to_string()]
+    let view = trimmed
+        .strip_suffix("()")
+        .unwrap_or(trimmed.as_str())
+        .strip_suffix(".as_view")
+        .unwrap_or(trimmed.as_str());
+    vec![view.rsplit('.').next().unwrap_or(view).to_string()]
 }
 
 fn snake_to_pascal(name: &str) -> String {
