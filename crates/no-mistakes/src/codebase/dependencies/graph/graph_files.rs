@@ -1,8 +1,76 @@
+/// Reverse map from `canonicalize(path)` to the discovery spelling.
+///
+/// Built lazily on the first `visible_path` miss. Discovery identities already
+/// live in `visible`; the reverse map exists only for symlink / case-fold
+/// lookups. Eagerly filling it is a `realpath` per file and dominates
+/// `GraphFiles::from_files` on large monorepos.
+struct CanonicalVisible {
+    cache: std::sync::Mutex<Option<HashMap<PathBuf, PathBuf>>>,
+}
+
+impl CanonicalVisible {
+    fn empty() -> Self {
+        Self {
+            cache: std::sync::Mutex::new(None),
+        }
+    }
+
+    fn lock(&self) -> std::sync::MutexGuard<'_, Option<HashMap<PathBuf, PathBuf>>> {
+        self.cache
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    fn insert_if_built(&self, canonical: PathBuf, original: PathBuf) {
+        if let Some(map) = self.lock().as_mut() {
+            match map.entry(canonical) {
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(original);
+                }
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    // Same first-sorted-alias rule as `build_canonical_visible`.
+                    if original < *entry.get() {
+                        entry.insert(original);
+                    }
+                }
+            }
+        }
+    }
+
+    fn get(
+        &self,
+        all: &[PathBuf],
+        visible: &HashSet<PathBuf>,
+        canonical: &Path,
+    ) -> Option<PathBuf> {
+        let mut guard = self.lock();
+        if guard.is_none() {
+            *guard = Some(build_canonical_visible(all, visible));
+        }
+        guard.as_ref()?.get(canonical).cloned()
+    }
+}
+
+fn build_canonical_visible(
+    all: &[PathBuf],
+    visible: &HashSet<PathBuf>,
+) -> HashMap<PathBuf, PathBuf> {
+    // `all` is sorted; first discovery spelling wins on a canonical collision.
+    let mut map = HashMap::new();
+    for path in all.iter().filter(|path| visible.contains(*path)) {
+        if let Ok(canonical) = path.canonicalize() {
+            map.entry(crate::codebase::ts_resolver::normalize_path(&canonical))
+                .or_insert_with(|| path.clone());
+        }
+    }
+    map
+}
+
 pub(crate) struct GraphFiles {
     all: Vec<PathBuf>,
     indexable: Vec<PathBuf>,
     visible: HashSet<PathBuf>,
-    canonical_visible: HashMap<PathBuf, PathBuf>,
+    canonical_visible: CanonicalVisible,
     /// The tracked (or non-Git fallback) files eligible for runtime resource
     /// edges. This intentionally excludes explicit request roots and merely
     /// visible ignored files.
@@ -63,17 +131,6 @@ impl GraphFiles {
         let visible: HashSet<PathBuf> = all.iter().cloned().collect();
         resource_candidates.sort();
         resource_candidates.dedup();
-        let canonical_visible = all
-            .iter()
-            .filter_map(|path| {
-                path.canonicalize().ok().map(|canonical| {
-                    (
-                        crate::codebase::ts_resolver::normalize_path(&canonical),
-                        path.clone(),
-                    )
-                })
-            })
-            .collect();
         let indexable = all
             .iter()
             .filter(|path| is_indexable(path) && !excluded_indexable.contains(*path))
@@ -83,7 +140,7 @@ impl GraphFiles {
             all,
             indexable,
             visible,
-            canonical_visible,
+            canonical_visible: CanonicalVisible::empty(),
             resource_candidates,
         }
     }
@@ -102,8 +159,10 @@ impl GraphFiles {
             self.all.push(path.clone());
             self.all.sort();
             if let Ok(canonical) = path.canonicalize() {
-                self.canonical_visible
-                    .insert(crate::codebase::ts_resolver::normalize_path(&canonical), path.clone());
+                self.canonical_visible.insert_if_built(
+                    crate::codebase::ts_resolver::normalize_path(&canonical),
+                    path.clone(),
+                );
             }
             changed = true;
         }
@@ -127,7 +186,13 @@ impl GraphFiles {
             return Some(path);
         }
         let canonical = crate::codebase::ts_resolver::normalize_path(&path.canonicalize().ok()?);
-        self.canonical_visible.get(&canonical).map(PathBuf::as_path)
+        if let Some(path) = self.visible.get(&canonical) {
+            return Some(path);
+        }
+        let original = self
+            .canonical_visible
+            .get(&self.all, &self.visible, &canonical)?;
+        self.visible.get(&original).map(PathBuf::as_path)
     }
 
     pub(crate) fn indexable(&self) -> &[PathBuf] {

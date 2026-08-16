@@ -7,7 +7,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         all: vec![],
         indexable: vec![],
         visible: HashSet::new(),
-        canonical_visible: HashMap::new(),
+        canonical_visible: CanonicalVisible::empty(),
         resource_candidates: vec![],
     };
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
@@ -107,7 +107,7 @@ fn lazy_import_facts_memoize_parse_errors() {
         all: vec![malformed.clone()],
         indexable: vec![malformed.clone()],
         visible: [malformed.clone()].into(),
-        canonical_visible: HashMap::new(),
+        canonical_visible: CanonicalVisible::empty(),
         resource_candidates: vec![],
     };
     let context = TsFactContext::new(&root);
