@@ -1,13 +1,14 @@
-fn collect_symbol_edges_for_file(
-    root: &Path,
-    path: &Path,
-    facts: &dyn TsFactLookup,
-    resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
-    graph_files: &GraphFiles,
-    http_route_defs: &[(PathBuf, String)],
-) -> Vec<Edge> {
+fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
+    let SymbolFileEdgeInputs {
+        root,
+        path,
+        facts,
+        resolver,
+        workspace,
+        visible_files,
+        graph_files,
+        http_route_defs,
+    } = input;
     let mut edges = Vec::new();
     let Some(file_facts) = facts.get_ts_facts(path) else {
         return edges;

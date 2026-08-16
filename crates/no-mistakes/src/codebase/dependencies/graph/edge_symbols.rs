@@ -16,7 +16,7 @@ fn collect_symbol_edges(
     files
         .par_iter()
         .flat_map(|path| {
-            collect_symbol_edges_for_file(
+            collect_symbol_edges_for_file(SymbolFileEdgeInputs {
                 root,
                 path,
                 facts,
@@ -24,8 +24,19 @@ fn collect_symbol_edges(
                 workspace,
                 visible_files,
                 graph_files,
-                &http_route_defs,
-            )
+                http_route_defs: &http_route_defs,
+            })
         })
         .collect()
+}
+
+struct SymbolFileEdgeInputs<'a> {
+    root: &'a Path,
+    path: &'a Path,
+    facts: &'a dyn TsFactLookup,
+    resolver: &'a dyn ImportResolution,
+    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    visible_files: &'a HashSet<PathBuf>,
+    graph_files: &'a GraphFiles,
+    http_route_defs: &'a [(PathBuf, String)],
 }
