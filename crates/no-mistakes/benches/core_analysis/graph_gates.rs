@@ -6,18 +6,16 @@
 mod support;
 
 use criterion::{black_box, Criterion, Throughput};
-use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind};
+use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::dependencies::NodeId;
 use no_mistakes::codebase::ts_resolver::load_tsconfig;
 use no_mistakes::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 use support::{
-    build_graph, count_kind, expect_count, fact_totals, file_nodes, fixture_root, gate_plan,
-    source_files, traversal_snapshot, EXPECTED_FORWARD_DEPS, EXPECTED_GRAPH_NODES,
-    EXPECTED_HTTP_EDGES, EXPECTED_IMPORTS, EXPECTED_MARKDOWN_EDGES, EXPECTED_PACKAGE_EDGES,
-    EXPECTED_QUEUE_EDGES, EXPECTED_QUEUE_WORKER_EDGES, EXPECTED_REVERSE_DEPENDENTS,
-    EXPECTED_ROUTE_EDGES, EXPECTED_SELECTOR_EDGES, EXPECTED_SOURCE_FILES, EXPECTED_SYMBOL_EXPORTS,
-    EXPECTED_SYMBOL_IMPORTS, EXPECTED_SYMBOL_NODES, EXPECTED_SYMBOL_REFS, EXPECTED_TEST_EDGES,
-    EXPECTED_WORKSPACE_EDGES, FORWARD_ROOTS, REVERSE_ROOTS,
+    build_graph, expect_count, expect_kind_counts, fact_totals, file_nodes, fixture_root,
+    gate_plan, source_files, traversal_snapshot, EXPECTED_FORWARD_DEPS, EXPECTED_GRAPH_NODES,
+    EXPECTED_IMPORTS, EXPECTED_REVERSE_DEPENDENTS, EXPECTED_SOURCE_FILES, EXPECTED_SYMBOL_EXPORTS,
+    EXPECTED_SYMBOL_IMPORTS, EXPECTED_SYMBOL_NODES, EXPECTED_SYMBOL_REFS, FORWARD_ROOTS,
+    REVERSE_ROOTS,
 };
 
 pub(super) fn bench_graph_gates(c: &mut Criterion) {
@@ -63,51 +61,7 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         EXPECTED_GRAPH_NODES,
     );
     expect_count("symbol nodes", symbol_nodes, EXPECTED_SYMBOL_NODES);
-    expect_count(
-        "queue enqueue",
-        count_kind(&preflight, EdgeKind::QueueEnqueue),
-        EXPECTED_QUEUE_EDGES,
-    );
-    expect_count(
-        "queue worker",
-        count_kind(&preflight, EdgeKind::QueueWorker),
-        EXPECTED_QUEUE_WORKER_EDGES,
-    );
-    expect_count(
-        "http call",
-        count_kind(&preflight, EdgeKind::HttpCall),
-        EXPECTED_HTTP_EDGES,
-    );
-    expect_count(
-        "markdown link",
-        count_kind(&preflight, EdgeKind::MarkdownLink),
-        EXPECTED_MARKDOWN_EDGES,
-    );
-    expect_count(
-        "route ref",
-        count_kind(&preflight, EdgeKind::RouteRef),
-        EXPECTED_ROUTE_EDGES,
-    );
-    expect_count(
-        "test of",
-        count_kind(&preflight, EdgeKind::TestOf),
-        EXPECTED_TEST_EDGES,
-    );
-    expect_count(
-        "package",
-        count_kind(&preflight, EdgeKind::PackageDependency),
-        EXPECTED_PACKAGE_EDGES,
-    );
-    expect_count(
-        "selector",
-        count_kind(&preflight, EdgeKind::Selector),
-        EXPECTED_SELECTOR_EDGES,
-    );
-    expect_count(
-        "workspace",
-        count_kind(&preflight, EdgeKind::WorkspaceImport),
-        EXPECTED_WORKSPACE_EDGES,
-    );
+    expect_kind_counts(&preflight);
     expect_count("forward deps", deps.len(), EXPECTED_FORWARD_DEPS);
     expect_count(
         "reverse dependents",

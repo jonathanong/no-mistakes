@@ -11,15 +11,6 @@ pub(super) const EXPECTED_SYMBOL_EXPORTS: usize = 138;
 pub(super) const EXPECTED_SYMBOL_REFS: usize = 222;
 pub(super) const EXPECTED_GRAPH_NODES: usize = 199;
 pub(super) const EXPECTED_SYMBOL_NODES: usize = 111;
-pub(super) const EXPECTED_QUEUE_EDGES: usize = 6;
-pub(super) const EXPECTED_QUEUE_WORKER_EDGES: usize = 12;
-pub(super) const EXPECTED_HTTP_EDGES: usize = 18;
-pub(super) const EXPECTED_MARKDOWN_EDGES: usize = 4;
-pub(super) const EXPECTED_ROUTE_EDGES: usize = 12;
-pub(super) const EXPECTED_TEST_EDGES: usize = 3;
-pub(super) const EXPECTED_PACKAGE_EDGES: usize = 7;
-pub(super) const EXPECTED_SELECTOR_EDGES: usize = 1;
-pub(super) const EXPECTED_WORKSPACE_EDGES: usize = 10;
 pub(super) const EXPECTED_FORWARD_DEPS: usize = 123;
 pub(super) const EXPECTED_REVERSE_DEPENDENTS: usize = 35;
 pub(super) const FORWARD_ROOTS: &[&str] = &[
@@ -142,4 +133,35 @@ pub(super) fn fact_totals(facts: &TsFactMap) -> (usize, usize, usize, usize) {
 
 pub(super) fn expect_count(label: &str, actual: usize, expected: usize) {
     assert_eq!(actual, expected, "{label} actual={actual}");
+}
+
+/// Every populated edge kind in this fixture. Zero-count kinds such as
+/// `ReactRender` and `Layout` are omitted so a later fixture change that
+/// starts emitting them is not frozen at zero.
+pub(super) const EXPECTED_KIND_COUNTS: &[(EdgeKind, usize)] = &[
+    (EdgeKind::Import, 427),
+    (EdgeKind::TypeImport, 55),
+    (EdgeKind::DynamicImport, 2),
+    (EdgeKind::Require, 1),
+    (EdgeKind::TestOf, 3),
+    (EdgeKind::RouteRef, 12),
+    (EdgeKind::QueueEnqueue, 6),
+    (EdgeKind::QueueWorker, 12),
+    (EdgeKind::RouteTest, 3),
+    (EdgeKind::MarkdownLink, 4),
+    (EdgeKind::WorkspaceImport, 10),
+    (EdgeKind::PackageDependency, 7),
+    (EdgeKind::CiInvocation, 1),
+    (EdgeKind::HttpCall, 18),
+    (EdgeKind::ProcessSpawn, 4),
+    (EdgeKind::Selector, 1),
+    (EdgeKind::WorkflowJob, 1),
+    (EdgeKind::WorkflowStep, 2),
+    (EdgeKind::WorkflowRun, 1),
+];
+
+pub(super) fn expect_kind_counts(graph: &DepGraph) {
+    for (kind, expected) in EXPECTED_KIND_COUNTS {
+        expect_count(&format!("{kind:?}"), count_kind(graph, *kind), *expected);
+    }
 }
