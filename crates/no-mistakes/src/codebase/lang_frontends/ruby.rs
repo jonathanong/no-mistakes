@@ -1,6 +1,4 @@
-use super::facts::{
-    configured_roots, files_under, owning_package, LangFactMap, LangFileFacts,
-};
+use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
 use regex::Regex;
 use std::path::{Path, PathBuf};
@@ -28,7 +26,9 @@ fn parse_ruby_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<La
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
-        module: path.file_stem().map(|name| name.to_string_lossy().into_owned()),
+        module: path
+            .file_stem()
+            .map(|name| name.to_string_lossy().into_owned()),
         imports: extract_requires(&text, path),
         declarations: extract_named(&text, ruby_decl_re()),
         references: extract_named(&text, ruby_const_re()),
@@ -62,7 +62,12 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 
 fn extract_pairs(source: &str, re: &Regex) -> Vec<(String, String)> {
     re.captures_iter(source)
-        .filter_map(|cap| Some((cap.get(1)?.as_str().to_string(), cap.get(2)?.as_str().to_string())))
+        .filter_map(|cap| {
+            Some((
+                cap.get(1)?.as_str().to_string(),
+                cap.get(2)?.as_str().to_string(),
+            ))
+        })
         .collect()
 }
 
@@ -101,5 +106,7 @@ fn active_job_re() -> &'static Regex {
 
 fn ruby_job_class_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"(?m)^\s*class\s+([A-Z][A-Za-z0-9_]*)\s*<\s*ApplicationJob").expect("job class"))
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*class\s+([A-Z][A-Za-z0-9_]*)\s*<\s*ApplicationJob").expect("job class")
+    })
 }

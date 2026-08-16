@@ -47,9 +47,7 @@ fn kafka_produce_re() -> &'static Regex {
 fn kafka_consume_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(
-            r#"subscribe\(\s*(?:\{\s*topic\s*:\s*["']([^"']+)["']|\[\s*["']([^"']+)["'])"#,
-        )
-        .expect("consume")
+        Regex::new(r#"subscribe\(\s*(?:\{\s*topic\s*:\s*["']([^"']+)["']|\[\s*["']([^"']+)["'])"#)
+            .expect("consume")
     })
 }

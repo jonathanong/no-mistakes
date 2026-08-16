@@ -61,16 +61,16 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 
 fn rust_use_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*use\s+(?:crate|super|self)::([\w:]+)").expect("use")
-    })
+    RE.get_or_init(|| Regex::new(r"(?m)^\s*use\s+(?:crate|super|self)::([\w:]+)").expect("use"))
 }
 
 fn rust_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*pub(?:\([^)]+\))?\s+(?:fn|struct|enum|trait|type|mod)\s+([A-Za-z_]\w*)")
-            .expect("decl")
+        Regex::new(
+            r"(?m)^\s*pub(?:\([^)]+\))?\s+(?:fn|struct|enum|trait|type|mod)\s+([A-Za-z_]\w*)",
+        )
+        .expect("decl")
     })
 }
 

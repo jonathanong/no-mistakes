@@ -82,7 +82,10 @@ pub(crate) fn module_from_path(package_root: &Path, path: &Path) -> Option<Strin
             *last = stem.to_string();
         }
     }
-    if parts.last().is_some_and(|part| part == "__init__" || part == "mod") {
+    if parts
+        .last()
+        .is_some_and(|part| part == "__init__" || part == "mod")
+    {
         parts.pop();
     }
     if parts.is_empty() {

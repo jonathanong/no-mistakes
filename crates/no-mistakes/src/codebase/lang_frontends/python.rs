@@ -107,7 +107,12 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 
 fn extract_pairs(source: &str, re: &Regex) -> Vec<(String, String)> {
     re.captures_iter(source)
-        .filter_map(|cap| Some((cap.get(1)?.as_str().to_string(), cap.get(2)?.as_str().to_string())))
+        .filter_map(|cap| {
+            Some((
+                cap.get(1)?.as_str().to_string(),
+                cap.get(2)?.as_str().to_string(),
+            ))
+        })
         .collect()
 }
 
@@ -123,7 +128,9 @@ fn python_from_re() -> &'static Regex {
 
 fn python_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"(?m)^\s*(?:async\s+)?(?:def|class)\s+([A-Za-z_]\w*)").expect("decl"))
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*(?:async\s+)?(?:def|class)\s+([A-Za-z_]\w*)").expect("decl")
+    })
 }
 
 fn python_ref_re() -> &'static Regex {

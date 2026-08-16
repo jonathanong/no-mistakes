@@ -1,6 +1,4 @@
-use super::facts::{
-    configured_roots, files_under, owning_package, LangFactMap, LangFileFacts,
-};
+use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
 use regex::Regex;
 use std::path::{Path, PathBuf};
@@ -79,8 +77,10 @@ fn php_class_re() -> &'static Regex {
 fn laravel_route_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*\[([^\]]+)\]"#)
-            .expect("route")
+        Regex::new(
+            r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*\[([^\]]+)\]"#,
+        )
+        .expect("route")
     })
 }
 

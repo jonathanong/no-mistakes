@@ -50,7 +50,11 @@ fn skip_block(chars: &mut std::iter::Peekable<std::str::Chars<'_>>, out: &mut St
     }
 }
 
-fn copy_quoted(chars: &mut std::iter::Peekable<std::str::Chars<'_>>, out: &mut String, quote: char) {
+fn copy_quoted(
+    chars: &mut std::iter::Peekable<std::str::Chars<'_>>,
+    out: &mut String,
+    quote: char,
+) {
     let mut escaped = false;
     for ch in chars.by_ref() {
         out.push(ch);

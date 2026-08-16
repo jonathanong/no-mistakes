@@ -1,6 +1,4 @@
-use super::facts::{
-    configured_roots, files_under, owning_package, LangFactMap, LangFileFacts,
-};
+use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
 use regex::Regex;
 use std::path::{Path, PathBuf};
