@@ -1,3 +1,15 @@
+fn collect_unless_timed_out<T: Default>(collect: impl FnOnce() -> T) -> T {
+    collect_unless_timed_out_or(T::default(), collect)
+}
+
+fn collect_unless_timed_out_or<T>(timed_out: T, collect: impl FnOnce() -> T) -> T {
+    if crate::invocation::check_timeout().is_err() {
+        timed_out
+    } else {
+        collect()
+    }
+}
+
 /// Collect the domain-specific edge kinds that follow the core import, symbol,
 /// workspace, and test relationships. Independent kinds collect `Vec<Edge>`
 /// in parallel and merge on this thread so public graph output stays stable.

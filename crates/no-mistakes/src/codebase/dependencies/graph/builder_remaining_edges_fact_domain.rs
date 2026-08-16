@@ -21,23 +21,21 @@ fn collect_fact_domain_remaining_edges(
                 rayon::join(
                     || {
                         crate::diagnostics::with_observer(observer.clone(), || {
-                            if crate::invocation::check_timeout().is_err() {
-                                return Vec::new();
-                            }
-                            crate::perf_trace::trace("graph.routes", || {
-                                collect_route_edges_for_plan(
-                                    edge_inputs, facts, resolver, session,
-                                )
+                            collect_unless_timed_out(|| {
+                                crate::perf_trace::trace("graph.routes", || {
+                                    collect_route_edges_for_plan(
+                                        edge_inputs, facts, resolver, session,
+                                    )
+                                })
                             })
                         })
                     },
                     || {
                         crate::diagnostics::with_observer(observer.clone(), || {
-                            if crate::invocation::check_timeout().is_err() {
-                                return Vec::new();
-                            }
-                            crate::perf_trace::trace("graph.queues", || {
-                                collect_queue_edges_for_plan(edge_inputs, facts, resolver)
+                            collect_unless_timed_out(|| {
+                                crate::perf_trace::trace("graph.queues", || {
+                                    collect_queue_edges_for_plan(edge_inputs, facts, resolver)
+                                })
                             })
                         })
                     },
@@ -49,11 +47,10 @@ fn collect_fact_domain_remaining_edges(
                 rayon::join(
                     || {
                         crate::diagnostics::with_observer(observer.clone(), || {
-                            if crate::invocation::check_timeout().is_err() {
-                                return Vec::new();
-                            }
-                            crate::perf_trace::trace("graph.http_process", || {
-                                collect_http_process_edges(edge_inputs, facts)
+                            collect_unless_timed_out(|| {
+                                crate::perf_trace::trace("graph.http_process", || {
+                                    collect_http_process_edges(edge_inputs, facts)
+                                })
                             })
                         })
                     },
@@ -62,21 +59,19 @@ fn collect_fact_domain_remaining_edges(
                             rayon::join(
                                 || {
                                     crate::diagnostics::with_observer(observer.clone(), || {
-                                        if crate::invocation::check_timeout().is_err() {
-                                            return Vec::new();
-                                        }
-                                        crate::perf_trace::trace("graph.react", || {
-                                            collect_react_edges_for_plan(edge_inputs, facts)
+                                        collect_unless_timed_out(|| {
+                                            crate::perf_trace::trace("graph.react", || {
+                                                collect_react_edges_for_plan(edge_inputs, facts)
+                                            })
                                         })
                                     })
                                 },
                                 || {
                                     crate::diagnostics::with_observer(observer.clone(), || {
-                                        if crate::invocation::check_timeout().is_err() {
-                                            return Ok(None);
-                                        }
-                                        crate::perf_trace::trace("graph.resources", || {
-                                            collect_resource_edges_for_plan(edge_inputs, facts)
+                                        collect_unless_timed_out_or(Ok(None), || {
+                                            crate::perf_trace::trace("graph.resources", || {
+                                                collect_resource_edges_for_plan(edge_inputs, facts)
+                                            })
                                         })
                                     })
                                 },

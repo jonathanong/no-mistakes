@@ -16,13 +16,14 @@ fn collect_independent_remaining_edges(
     let (markdown, (terraform, (dotnet, swift))) = rayon::join(
         || {
             crate::diagnostics::with_observer(observer.clone(), || {
-                let _ = crate::invocation::check_timeout();
-                crate::perf_trace::trace("graph.markdown", || {
-                    if edge_inputs.plan.markdown {
-                        collect_md_edges(&edge_inputs.graph_files.all, edge_inputs.graph_files)
-                    } else {
-                        Vec::new()
-                    }
+                collect_unless_timed_out(|| {
+                    crate::perf_trace::trace("graph.markdown", || {
+                        if edge_inputs.plan.markdown {
+                            collect_md_edges(&edge_inputs.graph_files.all, edge_inputs.graph_files)
+                        } else {
+                            Vec::new()
+                        }
+                    })
                 })
             })
         },
@@ -31,9 +32,10 @@ fn collect_independent_remaining_edges(
                 rayon::join(
                     || {
                         crate::diagnostics::with_observer(observer.clone(), || {
-                            let _ = crate::invocation::check_timeout();
-                            crate::perf_trace::trace("graph.terraform", || {
-                                collect_terraform_edges_for_plan(edge_inputs)
+                            collect_unless_timed_out(|| {
+                                crate::perf_trace::trace("graph.terraform", || {
+                                    collect_terraform_edges_for_plan(edge_inputs)
+                                })
                             })
                         })
                     },
@@ -42,19 +44,21 @@ fn collect_independent_remaining_edges(
                             rayon::join(
                                 || {
                                     crate::diagnostics::with_observer(observer.clone(), || {
-                                        let _ = crate::invocation::check_timeout();
-                                        crate::perf_trace::trace("graph.dotnet", || {
-                                            collect_dotnet_edges_for_plan(edge_inputs)
+                                        collect_unless_timed_out(|| {
+                                            crate::perf_trace::trace("graph.dotnet", || {
+                                                collect_dotnet_edges_for_plan(edge_inputs)
+                                            })
                                         })
                                     })
                                 },
                                 || {
                                     crate::diagnostics::with_observer(observer.clone(), || {
-                                        let _ = crate::invocation::check_timeout();
-                                        crate::perf_trace::trace("graph.swift", || {
-                                            collect_swift_edges_for_plan(
-                                                edge_inputs, facts, session,
-                                            )
+                                        collect_unless_timed_out(|| {
+                                            crate::perf_trace::trace("graph.swift", || {
+                                                collect_swift_edges_for_plan(
+                                                    edge_inputs, facts, session,
+                                                )
+                                            })
                                         })
                                     })
                                 },

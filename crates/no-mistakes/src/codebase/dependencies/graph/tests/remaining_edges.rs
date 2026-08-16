@@ -20,4 +20,31 @@ fn collect_remaining_edges_parallelizes_independent_kinds() {
             && independent.contains("collect_swift_edges_for_plan"),
         "independent panel must collect terraform/dotnet/swift beside markdown"
     );
+    assert!(
+        independent.contains("collect_unless_timed_out")
+            && !independent.contains("let _ = crate::invocation::check_timeout()"),
+        "independent join leaves must return an empty batch when the deadline has elapsed"
+    );
+}
+
+#[test]
+fn collect_unless_timed_out_skips_work_after_deadline() {
+    let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO)
+        .expect("expired deadline");
+    assert!(super::super::collect_unless_timed_out(|| vec![1]).is_empty());
+    assert!(
+        super::super::collect_unless_timed_out_or(Ok::<Option<()>, ()>(None), || Ok(Some(())))
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn collect_unless_timed_out_runs_when_no_deadline() {
+    assert_eq!(super::super::collect_unless_timed_out(|| vec![1]), vec![1]);
+    assert_eq!(
+        super::super::collect_unless_timed_out_or(Ok::<Option<i32>, ()>(None), || Ok(Some(7)))
+            .unwrap(),
+        Some(7)
+    );
 }
