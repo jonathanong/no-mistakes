@@ -13,9 +13,9 @@ use no_mistakes::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 use support::{
     build_graph, count_kind, expect_count, fact_totals, file_nodes, fixture_root, gate_plan,
     source_files, traversal_snapshot, EXPECTED_FORWARD_DEPS, EXPECTED_GRAPH_NODES,
-    EXPECTED_HTTP_EDGES, EXPECTED_IMPORTS, EXPECTED_QUEUE_EDGES, EXPECTED_REVERSE_DEPENDENTS,
-    EXPECTED_SOURCE_FILES, EXPECTED_SYMBOL_EXPORTS, EXPECTED_SYMBOL_NODES, FORWARD_ROOTS,
-    REVERSE_ROOTS,
+    EXPECTED_HTTP_EDGES, EXPECTED_IMPORTS, EXPECTED_QUEUE_EDGES, EXPECTED_QUEUE_WORKER_EDGES,
+    EXPECTED_REVERSE_DEPENDENTS, EXPECTED_SOURCE_FILES, EXPECTED_SYMBOL_EXPORTS,
+    EXPECTED_SYMBOL_NODES, FORWARD_ROOTS, REVERSE_ROOTS,
 };
 
 pub(super) fn bench_graph_gates(c: &mut Criterion) {
@@ -60,6 +60,11 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         "queue enqueue",
         count_kind(&preflight, EdgeKind::QueueEnqueue),
         EXPECTED_QUEUE_EDGES,
+    );
+    expect_count(
+        "queue worker",
+        count_kind(&preflight, EdgeKind::QueueWorker),
+        EXPECTED_QUEUE_WORKER_EDGES,
     );
     expect_count(
         "http call",
