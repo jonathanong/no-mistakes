@@ -7,17 +7,9 @@ impl PreparedScope {
         let tsconfig_catalog = self.traversal.tsconfig_catalog();
         let session = self.traversal.session_arc();
         let facts = &self.facts;
-        let mut queue_reports = self
-            .queue_reports
-            .lock()
-            .expect("queue report cache is poisoned");
-        let mut queue_indexed_reports = self
-            .queue_indexed_reports
-            .lock()
-            .expect("queue indexed report cache is poisoned");
         let report = cached_analysis(
-            &mut queue_reports,
-            &mut queue_indexed_reports,
+            &self.queue_reports,
+            &self.queue_indexed_reports,
             &key,
             traversal,
             || {
@@ -40,14 +32,16 @@ impl PreparedScope {
             },
         )?;
         match report {
-            CachedAnalysis::Plain(report) => render_queue_report(report_type, options, report, None),
+            CachedAnalysis::Plain(report) => {
+                render_queue_report(report_type, options, &report, None)
+            }
             CachedAnalysis::Indexed(indexed) => {
                 let traversal_report = matches!(report_type, "queueEdges" | "queueRelated");
                 render_queue_report(
                     report_type,
                     options,
                     indexed.report(),
-                    traversal_report.then_some(indexed),
+                    traversal_report.then_some(&indexed),
                 )
             }
         }
@@ -59,17 +53,9 @@ impl PreparedScope {
         let key = canonical_filter_key(&filters)?;
         let traversal = matches!(report_type, "serverRouteEdges" | "serverRouteRelated")
             || self.server_traversal_keys.contains(&key);
-        let mut server_reports = self
-            .server_reports
-            .lock()
-            .expect("server report cache is poisoned");
-        let mut server_indexed_reports = self
-            .server_indexed_reports
-            .lock()
-            .expect("server indexed report cache is poisoned");
         let report = cached_analysis(
-            &mut server_reports,
-            &mut server_indexed_reports,
+            &self.server_reports,
+            &self.server_indexed_reports,
             &key,
             traversal,
             || crate::server_routes::analyze_project_with_prepared(prepared, &filters),
@@ -79,7 +65,7 @@ impl PreparedScope {
         )?;
         match report {
             CachedAnalysis::Plain(report) => {
-                render_server_report(report_type, options, prepared, report, None, &filters)
+                render_server_report(report_type, options, prepared, &report, None, &filters)
             }
             CachedAnalysis::Indexed(indexed) => {
                 let traversal_report =
@@ -89,7 +75,7 @@ impl PreparedScope {
                     options,
                     prepared,
                     indexed.report(),
-                    traversal_report.then_some(indexed),
+                    traversal_report.then_some(&indexed),
                     &filters,
                 )
             }
@@ -116,30 +102,14 @@ impl PreparedScope {
             )?);
         }
         let key = canonical_filter_key(&options.targets)?;
-        let analysis = {
-            let cache = self
-                .react_analyses
-                .lock()
-                .expect("react analysis cache is poisoned");
-            cache.get(&key).cloned()
-        };
-        let analysis = match analysis {
-            Some(analysis) => analysis,
-            None => {
-                let computed = crate::react_traits::pipeline::run_with_facts::run_analyze_with_loaded_config_and_facts(
-                    self.traversal.root(),
-                    self.traversal.config(),
-                    &options.targets,
-                    &self.facts,
-                )?;
-                self.react_analyses
-                    .lock()
-                    .expect("react analysis cache is poisoned")
-                    .entry(key)
-                    .or_insert(computed)
-                    .clone()
-            }
-        };
+        let analysis = cached_once(&self.react_analyses, &key, || {
+            crate::react_traits::pipeline::run_with_facts::run_analyze_with_loaded_config_and_facts(
+                self.traversal.root(),
+                self.traversal.config(),
+                &options.targets,
+                &self.facts,
+            )
+        })?;
         if report_type == "reactAnalyze" {
             return Ok(serde_json::to_value(analysis)?);
         }
@@ -158,36 +128,60 @@ impl PreparedScope {
     }
 }
 
-enum CachedAnalysis<'a, Plain, Indexed> {
-    Plain(&'a Plain),
-    Indexed(&'a Indexed),
+enum CachedAnalysis<Plain, Indexed> {
+    Plain(Plain),
+    Indexed(Indexed),
 }
 
-fn cached_analysis<'a, Plain, Indexed>(
-    plain: &'a mut HashMap<String, Plain>,
-    indexed: &'a mut HashMap<String, Indexed>,
+fn cached_once<T: Clone>(
+    cache: &ReportCache<T>,
+    key: &str,
+    compute: impl FnOnce() -> Result<T>,
+) -> Result<T> {
+    let cell = {
+        let mut cache = cache.lock().expect("report cache is poisoned");
+        cache
+            .entry(key.to_owned())
+            .or_insert_with(|| std::sync::Arc::new(std::sync::OnceLock::new()))
+            .clone()
+    };
+    cell.get_or_init(|| compute().map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}"))))
+        .clone()
+        .map_err(|message| anyhow::anyhow!("{message}"))
+}
+
+fn cached_analysis<Plain, Indexed>(
+    plain: &ReportCache<Plain>,
+    indexed: &ReportCache<Indexed>,
     key: &str,
     traversal: bool,
     analyze_plain: impl FnOnce() -> Result<Plain>,
     analyze_indexed: impl FnOnce() -> Result<Indexed>,
-) -> Result<CachedAnalysis<'a, Plain, Indexed>> {
+) -> Result<CachedAnalysis<Plain, Indexed>>
+where
+    Plain: Clone,
+    Indexed: Clone,
+{
     if traversal {
-        if !indexed.contains_key(key) {
-            indexed.insert(key.to_owned(), analyze_indexed()?);
-        }
+        return cached_once(indexed, key, analyze_indexed).map(CachedAnalysis::Indexed);
+    }
+    let indexed_cell = indexed
+        .lock()
+        .expect("report cache is poisoned")
+        .get(key)
+        .cloned();
+    if let Some(cell) = indexed_cell {
+        let value = loop {
+            if let Some(value) = cell.get() {
+                break value.clone();
+            }
+            std::hint::spin_loop();
+        };
         return Ok(CachedAnalysis::Indexed(
-            indexed.get(key).expect("indexed report is cached"),
+            value.map_err(|message| anyhow::anyhow!("{message}"))?,
         ));
     }
-    if let Some(report) = indexed.get(key) {
-        return Ok(CachedAnalysis::Indexed(report));
-    }
-    if !plain.contains_key(key) {
-        plain.insert(key.to_owned(), analyze_plain()?);
-    }
-    Ok(CachedAnalysis::Plain(
-        plain.get(key).expect("plain report is cached"),
-    ))
+    cached_once(plain, key, analyze_plain).map(CachedAnalysis::Plain)
 }
 
 fn canonical_filter_key(filters: &[String]) -> Result<String> {

@@ -53,7 +53,7 @@ impl SharedTraversalContext {
         self.build_plan
     }
 
-    #[cfg(any(test, feature = "test-instrumentation"))]
+    #[cfg(test)]
     pub(crate) fn canonical_graph(&mut self) -> Result<std::sync::Arc<graph::DepGraph>> {
         self.request_graph(self.build_plan)
     }

@@ -64,6 +64,7 @@ impl TsConfigCatalog {
             forced: true,
             build_diagnostics: BTreeSet::new(),
             diagnostics: Mutex::new(BTreeSet::new()),
+            runtime_diagnostics_gate: Mutex::new(()),
         }
     }
 
@@ -161,6 +162,28 @@ impl TsConfigCatalog {
             .lock()
             .expect("tsconfig catalog diagnostics mutex poisoned")
             .extend(diagnostics.iter().cloned());
+    }
+
+    /// Run `compute` with a private runtime-diagnostic set so concurrent
+    /// reports cannot clear or snapshot each other's resolver diagnostics.
+    pub(crate) fn isolate_runtime_diagnostics<T>(
+        &self,
+        compute: impl FnOnce() -> T,
+    ) -> (T, Vec<TsConfigDiagnostic>) {
+        let _gate = self
+            .runtime_diagnostics_gate
+            .lock()
+            .expect("tsconfig catalog diagnostics gate poisoned");
+        let previous = self.runtime_diagnostics();
+        self.clear_runtime_diagnostics();
+        let result = compute();
+        let produced = self.runtime_diagnostics();
+        *self
+            .diagnostics
+            .lock()
+            .expect("tsconfig catalog diagnostics mutex poisoned") =
+            previous.into_iter().collect();
+        (result, produced)
     }
 
     pub(crate) fn is_forced(&self) -> bool {

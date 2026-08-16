@@ -75,7 +75,14 @@ impl SharedTraversalContext {
                 )
             })
             .extend(collected);
-        self.invalidate_analysis_caches();
+        // Keep the traversal we just published. Graph/symbol caches must still
+        // rebuild against the merged facts, but the generation stays so the
+        // freshly cached traversal remains addressable.
+        self.graph = None;
+        self.graph_cache.clear();
+        self.symbol_index_cache.clear();
+        self.graph_builds = self.graph_cache.build_count();
+        self.symbol_index_builds = self.symbol_index_cache.build_count();
     }
 
     pub(crate) fn add_explicit_roots(&mut self, paths: &[PathBuf]) {

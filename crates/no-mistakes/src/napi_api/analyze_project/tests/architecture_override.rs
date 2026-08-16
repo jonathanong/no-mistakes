@@ -35,6 +35,15 @@ fn analyze_project_runs_independent_reports_in_parallel() {
         body.contains("par_iter") || body.contains("rayon::join"),
         "analyze_project must run independent prepared reports in parallel"
     );
+    assert!(
+        body.contains("with_observer"),
+        "Rayon report workers must install the invocation observer"
+    );
+    assert!(
+        body.contains("collect::<Vec<_>>()")
+            && body.contains("into_iter().collect::<AnyhowResult<Vec<_>>>"),
+        "parallel report errors must be selected in request order"
+    );
 }
 
 #[test]

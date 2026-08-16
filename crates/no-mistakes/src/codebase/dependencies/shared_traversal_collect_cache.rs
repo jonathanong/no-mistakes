@@ -4,39 +4,34 @@ fn cached_traversal_entries(
     compute: impl FnOnce() -> Result<Vec<graph::NodeEntry>>,
 ) -> Result<(Vec<graph::NodeEntry>, Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>)>
 {
-    let (cell, inserted) = {
+    let cell = {
         let mut cache = shared
             .traversal_results
             .lock()
             .expect("traversal result cache is poisoned");
-        match cache.entry(key) {
-            std::collections::hash_map::Entry::Occupied(entry) => (entry.get().clone(), false),
-            std::collections::hash_map::Entry::Vacant(entry) => (
-                entry
-                    .insert(std::sync::Arc::new(std::sync::OnceLock::new()))
-                    .clone(),
-                true,
-            ),
-        }
+        cache
+            .entry(key)
+            .or_insert_with(|| std::sync::Arc::new(std::sync::OnceLock::new()))
+            .clone()
     };
-    if !inserted {
-        shared.session.record_work("traversal.reuses", 1);
-    }
+    let mut computed = false;
     let cached = cell
         .get_or_init(|| {
-            if inserted {
-                shared.session.record_work("traversal.computations", 1);
-            }
-            compute()
-                .map(|entries| CachedTraversal {
-                    entries,
-                    runtime_diagnostics: shared.tsconfig_catalog.runtime_diagnostics(),
-                })
-                .map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}")))
+            computed = true;
+            shared.session.record_work("traversal.computations", 1);
+            let (entries, runtime_diagnostics) = shared
+                .tsconfig_catalog
+                .isolate_runtime_diagnostics(compute);
+            entries.map(|entries| CachedTraversal {
+                entries,
+                runtime_diagnostics,
+            })
+            .map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}")))
         })
         .clone()
         .map_err(|message| anyhow::anyhow!("{message}"))?;
-    if !inserted {
+    if !computed {
+        shared.session.record_work("traversal.reuses", 1);
         shared
             .tsconfig_catalog
             .replay_runtime_diagnostics(&cached.runtime_diagnostics);

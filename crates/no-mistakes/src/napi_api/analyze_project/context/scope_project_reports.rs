@@ -50,36 +50,21 @@ impl PreparedScope {
                 "distinct Playwright settings require a separate prepared analyzeProject context"
             );
         };
-        let cached = self
-            .playwright_analyses
-            .lock()
-            .expect("playwright analysis cache is poisoned")
-            .get(&key)
-            .cloned();
-        let analysis = match cached {
-            Some(analysis) => analysis,
-            None => {
-                let computed = std::sync::Arc::new(
-                    crate::playwright::analysis::pipeline::analyze_with_policy_and_facts_from_snapshot(
-                        self.traversal.root(),
-                        &prepared.settings,
-                        crate::playwright::playwright_tests::TestPolicy {
-                            assert_conditional_tests: parsed.assert_conditional_tests,
-                            allow_skipped_tests: parsed.allow_skipped_tests,
-                        },
-                        playwright_unique_policy(&parsed),
-                        &self.facts,
-                        self.traversal.visible_paths(),
-                    )?,
-                );
-                self.playwright_analyses
-                    .lock()
-                    .expect("playwright analysis cache is poisoned")
-                    .entry(key)
-                    .or_insert_with(|| computed.clone())
-                    .clone()
-            }
-        };
+        let analysis = cached_once(&self.playwright_analyses, &key, || {
+            Ok(std::sync::Arc::new(
+                crate::playwright::analysis::pipeline::analyze_with_policy_and_facts_from_snapshot(
+                    self.traversal.root(),
+                    &prepared.settings,
+                    crate::playwright::playwright_tests::TestPolicy {
+                        assert_conditional_tests: parsed.assert_conditional_tests,
+                        allow_skipped_tests: parsed.allow_skipped_tests,
+                    },
+                    playwright_unique_policy(&parsed),
+                    &self.facts,
+                    self.traversal.visible_paths(),
+                )?,
+            ))
+        })?;
         render_playwright_report(
             &request.report_type,
             &parsed,

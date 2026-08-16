@@ -31,7 +31,6 @@ pub(crate) fn collect_and_filter_entries_prepared(
     shared: &SharedTraversalContext,
 ) -> Result<TraversalResult> {
     shared.session.record_work("traversal.requests", 1);
-    shared.tsconfig_catalog.clear_runtime_diagnostics();
     let workspace = shared.dataset.workspace();
     let entrypoints = resolve_entrypoints_with_files_and_workspace(EntrypointResolution {
         raw_entrypoints: &args.files,

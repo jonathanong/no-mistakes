@@ -67,17 +67,21 @@ fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<
 
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {
     let context = context::AnalyzeProjectContext::prepare(&options)?;
+    let observer = crate::diagnostics::current();
     let reports = options
         .reports
         .par_iter()
         .map(|request| {
-            run_report(request, &options, &context).map(|result| AnalyzeReportResult {
-                id: request.id.clone(),
-                report_type: request.report_type.clone(),
-                result,
+            crate::diagnostics::with_observer(observer.clone(), || {
+                run_report(request, &options, &context).map(|result| AnalyzeReportResult {
+                    id: request.id.clone(),
+                    report_type: request.report_type.clone(),
+                    result,
+                })
             })
         })
-        .collect::<AnyhowResult<Vec<_>>>()?;
+        .collect::<Vec<_>>();
+    let reports = reports.into_iter().collect::<AnyhowResult<Vec<_>>>()?;
 
     Ok(AnalyzeProjectResult { reports })
 }
