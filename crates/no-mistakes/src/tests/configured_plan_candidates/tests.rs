@@ -2,7 +2,7 @@ use super::is_direct_owner_edge;
 use no_mistakes::codebase::dependencies::graph::{EdgeKind, VitestSetupField};
 
 #[test]
-fn direct_owner_edges_are_import_family_test_of_and_native_imports() {
+fn direct_owner_edges_are_import_family_and_test_of() {
     let direct = [
         EdgeKind::Import,
         EdgeKind::TypeImport,
@@ -12,8 +12,6 @@ fn direct_owner_edges_are_import_family_test_of_and_native_imports() {
         EdgeKind::WorkspaceImport,
         EdgeKind::WorkspaceTypeImport,
         EdgeKind::TestOf,
-        EdgeKind::DotnetUsing,
-        EdgeKind::SwiftImport,
     ];
     let indirect = [
         EdgeKind::RouteImport,
@@ -31,8 +29,10 @@ fn direct_owner_edges_are_import_family_test_of_and_native_imports() {
         EdgeKind::Resource,
         EdgeKind::ReactRender,
         EdgeKind::Selector,
+        EdgeKind::SwiftImport,
         EdgeKind::SwiftReference,
         EdgeKind::SwiftPackageDependency,
+        EdgeKind::DotnetUsing,
         EdgeKind::DotnetReference,
         EdgeKind::DotnetProjectDependency,
         EdgeKind::TerraformReference,

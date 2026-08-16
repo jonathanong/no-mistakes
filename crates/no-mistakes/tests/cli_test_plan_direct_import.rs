@@ -88,6 +88,34 @@ fn unlimited_plan_puts_one_hop_imports_in_direct_not_two_hop() {
 }
 
 #[test]
+fn limited_plan_prefers_self_selected_changed_test_over_earlier_importer() {
+    let root = fixture("test-plan-direct-import-limit");
+    let output = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "src/dev-server.mts",
+        "--changed-file",
+        "zzz.test.mts",
+        "--environment",
+        "prePush",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(selected_files(&plan), ["zzz.test.mts"]);
+    assert_eq!(group_selected(&plan, "direct"), ["zzz.test.mts"]);
+}
+
+#[test]
 fn changed_test_file_stays_self_selected_in_direct() {
     let root = fixture("test-plan-direct-import-limit");
     let output = run(&[

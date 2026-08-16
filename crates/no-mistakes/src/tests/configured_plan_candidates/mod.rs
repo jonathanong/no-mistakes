@@ -83,9 +83,15 @@ pub(super) fn group_candidates(
     warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
     match group {
-        TestPlanGroupType::Direct => {
-            direct_candidates(root, changed_files, graph, all_test_set, used)
-        }
+        TestPlanGroupType::Direct => direct_candidates(
+            root,
+            changed_files,
+            graph,
+            all_test_set,
+            used,
+            warnings,
+            warnings_seen,
+        ),
         TestPlanGroupType::Coverage | TestPlanGroupType::Dependencies => graph_candidates(
             group,
             root,
@@ -108,13 +114,16 @@ fn direct_candidates(
     graph: &DepGraph,
     all_test_set: &HashSet<PathBuf>,
     used: &HashSet<String>,
+    warnings: &mut Vec<Warning>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
-    let mut selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
+    let mut self_selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
+    let mut hop_selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
     for changed in changed_files {
         if all_test_set.contains(changed) {
             let rel = relative_path(root, changed);
             if !used.contains(&rel) {
-                selected.insert(
+                self_selected.insert(
                     rel.clone(),
                     SelectedTest {
                         test_file: rel.clone(),
@@ -150,6 +159,8 @@ fn direct_candidates(
             if used.contains(&rel_test) {
                 continue;
             }
+            push_resource_diagnostics(graph, root, test_path.as_ref(), warnings, warnings_seen);
+            push_edge_warning(root, dependent, &start, *kind, warnings, warnings_seen);
             let next = SelectedTest {
                 test_file: rel_test.clone(),
                 confidence: path_confidence(&[*kind]),
@@ -163,18 +174,27 @@ fn direct_candidates(
                     )],
                 }],
             };
-            selected
+            if let Some(existing) = self_selected.get_mut(&rel_test) {
+                merge_selected(existing, &next);
+                continue;
+            }
+            hop_selected
                 .entry(rel_test)
                 .and_modify(|existing| merge_selected(existing, &next))
                 .or_insert(next);
         }
     }
-    selected.into_values().collect()
+    // Self-selected changed tests keep the first-take budget ahead of
+    // alphabetically earlier 1-hop importers.
+    let mut selected: Vec<SelectedTest> = self_selected.into_values().collect();
+    selected.extend(hop_selected.into_values());
+    selected
 }
 
 /// One reverse hop that should win over multi-hop `dependencies` under a limit.
 /// Import-family and same-directory `TestOf` edges are the direct owners;
-/// markdown/resource/route hops stay in `dependencies`.
+/// markdown/resource/route hops and native module/namespace fan-out stay in
+/// `dependencies`.
 fn is_direct_owner_edge(kind: EdgeKind) -> bool {
     matches!(
         kind,
@@ -186,8 +206,6 @@ fn is_direct_owner_edge(kind: EdgeKind) -> bool {
             | EdgeKind::WorkspaceImport
             | EdgeKind::WorkspaceTypeImport
             | EdgeKind::TestOf
-            | EdgeKind::DotnetUsing
-            | EdgeKind::SwiftImport
     )
 }
 
