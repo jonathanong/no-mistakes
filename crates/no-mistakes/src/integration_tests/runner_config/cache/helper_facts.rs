@@ -40,6 +40,7 @@ pub(super) fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<
         playwright,
         source,
         program,
+        None,
     );
     REQUEST_CACHES.with(|caches| {
         if let Some(cache) = caches.borrow_mut().last_mut() {
