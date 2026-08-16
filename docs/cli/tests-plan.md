@@ -67,6 +67,14 @@ confidence, edge kinds, edge provenance when available, fallback state, and
 warnings. Self-selected tests are rendered as node provenance rather than a
 dangling edge. Use JSON when another program needs the same structured fields.
 
+The configured `direct` group selects changed tests (`via: self`) and tests
+one reverse import-family or same-directory `TestOf` edge away from a changed
+file. Those 1-hop importers consume the environment budget before the
+`dependencies` group, so a tight `limit.percent` / `limit.files` cannot drop a
+unit test that directly imports the changed source in favor of a longer
+markdown or resource path. Multi-hop imports and markdown/resource/route hops
+stay in `dependencies`.
+
 `--direct-test-owner` requires an explicit framework and performs a bounded
 owner query instead of configured planning. It selects changed tests owned by
 that framework plus only framework-owned tests connected by exactly one reverse

@@ -292,11 +292,17 @@ fn target_trigger_does_not_enable_an_omitted_graph_dependency_group() {
             "--json",
         ],
     ));
+    // `src/web/web.test.ts` is the 1-hop importer of the changed helper, so
+    // configured `direct` selects it. The synthesized `dependencies` group is
+    // still only the targeted database owners, not a full graph walk.
     assert_eq!(
         selected_files(&report),
-        vec!["src/db/db.test.ts", "src/shared.test.ts"]
+        vec![
+            "src/db/db.test.ts",
+            "src/shared.test.ts",
+            "src/web/web.test.ts"
+        ]
     );
-    assert!(!selected_files(&report).contains(&"src/web/web.test.ts"));
     assert_eq!(
         report["groups"]
             .as_array()

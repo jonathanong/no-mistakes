@@ -19,6 +19,19 @@ testPlan:
 Environment names default to `pre-push`. `prePush` and `pre_push` are accepted
 where supported by the parser.
 
+Group types:
+
+- `direct` — changed tests (`via: self`) plus tests one reverse import-family
+  or same-directory `TestOf` hop from a changed file. Import-family edges are
+  `import`, `type-import`, `dynamic-import`, `require`, `require-resolve`,
+  `workspace`, and the native `dotnet-using` / `swift-import` edges. This
+  group runs first so a percent/file limit cannot evict a direct importer in
+  favor of a longer `dependencies` path.
+- `dependencies` — remaining graph-reachable tests, including multi-hop
+  imports and markdown/resource/route/http/queue hops.
+- `coverage` — Playwright selector/route/layout coverage (Playwright only).
+- `sample` — remaining discovered tests, used to fill leftover budget.
+
 Global full-suite fallback is explicit opt-in through config or
 `--global-config-fallback true`.
 
