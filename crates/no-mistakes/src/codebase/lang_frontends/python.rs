@@ -73,12 +73,14 @@ fn extract_celery_enqueues(source: &str, imports: &[String]) -> Vec<String> {
         .iter()
         .flat_map(|name| {
             imports.iter().filter_map(move |import| {
-                if import == name || import.ends_with(&format!(".{name}")) {
-                    Some(import.clone())
-                } else if !import.contains('.') && import == name {
-                    None
+                let target = import
+                    .split_once('=')
+                    .map(|(_, target)| target)
+                    .unwrap_or(import);
+                if target == name || target.ends_with(&format!(".{name}")) {
+                    Some(target.to_string())
                 } else {
-                    Some(format!("{import}.{name}"))
+                    None
                 }
             })
         })

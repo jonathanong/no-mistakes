@@ -55,20 +55,14 @@ pub(super) fn extract_python_imports(
         if let Some(resolved) = resolve_relative(module, path, package_root) {
             let resolved = prefix_package(package, resolved);
             if module.chars().all(|ch| ch == '.') {
-                for name in imported_names(names) {
-                    imports.push(format!("{resolved}.{name}"));
-                }
+                push_imported_members(&mut imports, &resolved, names);
             } else {
                 imports.push(resolved.clone());
-                for name in imported_names(names) {
-                    imports.push(format!("{resolved}.{name}"));
-                }
+                push_imported_members(&mut imports, &resolved, names);
             }
         } else if !module.starts_with('.') {
             imports.push(module.to_string());
-            for name in imported_names(names) {
-                imports.push(format!("{module}.{name}"));
-            }
+            push_imported_members(&mut imports, module, names);
         }
     }
     imports.sort();
@@ -76,18 +70,34 @@ pub(super) fn extract_python_imports(
     imports
 }
 
-fn imported_names(names: &str) -> Vec<String> {
+fn push_imported_members(imports: &mut Vec<String>, module: &str, names: &str) {
+    for (name, alias) in imported_bindings(names) {
+        let qualified = format!("{module}.{name}");
+        imports.push(qualified.clone());
+        if let Some(alias) = alias {
+            imports.push(format!("{alias}={qualified}"));
+        }
+    }
+}
+
+fn imported_bindings(names: &str) -> Vec<(String, Option<String>)> {
     names
         .trim()
         .trim_start_matches('(')
         .trim_end_matches(')')
         .split(',')
         .filter_map(|part| {
-            let ident = part.split_whitespace().next()?;
+            let mut tokens = part.split_whitespace();
+            let ident = tokens.next()?;
             if ident.is_empty() || ident.starts_with('(') || ident == "*" {
                 return None;
             }
-            Some(ident.to_string())
+            let alias = tokens
+                .next()
+                .filter(|token| token.eq_ignore_ascii_case("as"))
+                .and_then(|_| tokens.next())
+                .map(str::to_string);
+            Some((ident.to_string(), alias))
         })
         .collect()
 }

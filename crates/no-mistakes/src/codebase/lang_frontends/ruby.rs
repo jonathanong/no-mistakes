@@ -115,7 +115,7 @@ fn rails_route_re() -> &'static Regex {
 
 fn active_job_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\b([A-Z][A-Za-z0-9_]*)\.perform_later\b").expect("job"))
+    RE.get_or_init(|| Regex::new(r"\b([A-Z][\w:]*)\.perform_later\b").expect("job"))
 }
 
 fn ruby_job_class_re() -> &'static Regex {

@@ -12,7 +12,10 @@ fn emit_route_edges(
             if let Some(targets) = facts.files_by_module.get(handler) {
                 push_file_edges(edges, &file.path, targets, EdgeKind::RouteRef);
             }
-            for name in route_handler_names(handler) {
+            for name in route_handler_names(handler)
+                .into_iter()
+                .flat_map(|name| aliased_route_names(file, name))
+            {
                 if let Some(targets) = facts.declarations.get(&name) {
                     let scoped: std::collections::BTreeSet<_> = targets
                         .iter()
@@ -44,7 +47,7 @@ fn same_lang_package(file: &LangFileFacts, other: &LangFileFacts) -> bool {
 }
 
 fn handler_module_matches(handler: &str, file: &LangFileFacts) -> bool {
-    let view = normalize_route_handler(handler);
+    let view = remap_aliased_handler(file, &normalize_route_handler(handler));
     if !view.contains('.') || view.contains("::") || view.contains('#') || view.contains('/') {
         return true;
     }
@@ -56,6 +59,35 @@ fn handler_module_matches(handler: &str, file: &LangFileFacts) -> bool {
     }
     view.rsplit_once('.')
         .is_some_and(|(parent, _)| module == parent || module.ends_with(&format!(".{parent}")))
+}
+
+fn aliased_route_names(file: &LangFileFacts, name: String) -> Vec<String> {
+    let mut names = vec![name.clone()];
+    for import in &file.imports {
+        let Some((alias, target)) = import.split_once('=') else {
+            continue;
+        };
+        if alias == name {
+            names.push(target.to_string());
+            if let Some(short) = target.rsplit('.').next() {
+                names.push(short.to_string());
+            }
+        }
+    }
+    names
+}
+
+fn remap_aliased_handler(file: &LangFileFacts, view: &str) -> String {
+    let Some((prefix, rest)) = view.split_once('.') else {
+        return view.to_string();
+    };
+    file.imports
+        .iter()
+        .find_map(|import| {
+            let (alias, target) = import.split_once('=')?;
+            (alias == prefix).then(|| format!("{target}.{rest}"))
+        })
+        .unwrap_or_else(|| view.to_string())
 }
 
 fn normalize_route_handler(handler: &str) -> String {
@@ -104,7 +136,8 @@ fn route_handler_names(handler: &str) -> Vec<String> {
         return rails_controller_names(controller);
     }
     if let Some((class, _)) = trimmed.split_once("::") {
-        return vec![class.rsplit('\\').next().unwrap_or(class).to_string()];
+        let short = class.rsplit('\\').next().unwrap_or(class).to_string();
+        return vec![short, class.to_string()];
     }
     let view = normalize_route_handler(&trimmed);
     let mut names = vec![view.clone()];

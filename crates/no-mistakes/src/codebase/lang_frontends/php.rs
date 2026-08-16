@@ -108,6 +108,15 @@ fn php_namespace_re() -> &'static Regex {
 
 fn extract_php_uses(source: &str) -> Vec<String> {
     let mut imports = extract_named(source, php_use_re());
+    for cap in php_alias_use_re().captures_iter(source) {
+        let path = cap
+            .get(1)
+            .map(|m| m.as_str().replace('\\', "."))
+            .unwrap_or_default();
+        if let Some(alias) = cap.get(2).map(|m| m.as_str()) {
+            imports.push(format!("{alias}={path}"));
+        }
+    }
     for cap in php_group_use_re().captures_iter(source) {
         let prefix = cap
             .get(1)
@@ -121,7 +130,15 @@ fn extract_php_uses(source: &str) -> Vec<String> {
                 .unwrap_or("")
                 .trim();
             if !ident.is_empty() {
-                imports.push(format!("{prefix}.{ident}"));
+                let qualified = format!("{prefix}.{ident}");
+                imports.push(qualified.clone());
+                if let Some(alias) = member
+                    .split_whitespace()
+                    .skip_while(|token| !token.eq_ignore_ascii_case("as"))
+                    .nth(1)
+                {
+                    imports.push(format!("{alias}={qualified}"));
+                }
             }
         }
     }
@@ -134,6 +151,14 @@ fn php_group_use_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(r"(?m)^\s*use\s+([A-Za-z_\\][A-Za-z0-9_\\]*)\\\{([^}]+)\}").expect("group use")
+    })
+}
+
+fn php_alias_use_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*use\s+([A-Za-z_\\][A-Za-z0-9_\\]*)\s+as\s+([A-Za-z_][A-Za-z0-9_]*)")
+            .expect("alias use")
     })
 }
 

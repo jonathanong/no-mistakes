@@ -144,7 +144,9 @@ fn go_decl_re() -> &'static Regex {
 
 fn go_group_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"(?s)(?:const|var|type)\s*\((.*?)\)").expect("group decl"))
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*(?:const|var|type)\s*\((?s)(.*?)\)").expect("group decl")
+    })
 }
 
 fn go_exported_ident_re() -> &'static Regex {
