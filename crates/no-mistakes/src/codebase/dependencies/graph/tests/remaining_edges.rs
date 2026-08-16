@@ -26,8 +26,9 @@ fn collect_remaining_edges_parallelizes_independent_kinds() {
         "independent join leaves must return an empty batch when the deadline has elapsed"
     );
     assert!(
-        independent.contains("with_observer_and_timing"),
-        "independent join leaves must inherit the caller's timing kind"
+        independent.contains("with_observer_and_timing")
+            && independent.contains("TimingKind::Parallel"),
+        "independent join leaves must mark overlapping work as Parallel"
     );
 }
 

@@ -15,7 +15,7 @@ fn collect_fact_domain_remaining_edges(
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<FactDomainRemainingEdges> {
     let observer = session.observer().cloned();
-    let timing_kind = crate::diagnostics::current_timing_kind();
+    let timing_kind = crate::diagnostics::TimingKind::Parallel;
     let ((routes, queues), (http_process, (react, resources))) = rayon::join(
         || {
             crate::diagnostics::with_observer(observer.clone(), || {

@@ -13,7 +13,7 @@ fn collect_independent_remaining_edges(
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> IndependentRemainingEdges {
     let observer = session.observer().cloned();
-    let timing_kind = crate::diagnostics::current_timing_kind();
+    let timing_kind = crate::diagnostics::TimingKind::Parallel;
     let (markdown, (terraform, (dotnet, swift))) = rayon::join(
         || {
             with_observer_and_timing(observer.clone(), timing_kind, || {
