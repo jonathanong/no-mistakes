@@ -69,6 +69,17 @@ pub enum EdgeKind {
     TerraformModuleRef,
     /// Terraform/OpenTofu output consumption reference.
     TerraformOutputRef,
+    PythonImport,
+    PythonReference,
+    GoImport,
+    GoReference,
+    RustUse,
+    RustMod,
+    RustPackage,
+    RubyRequire,
+    RubyReference,
+    PhpUse,
+    PhpPackage,
     /// Workflow file → virtual job node.
     WorkflowJob,
     /// Virtual workflow job → virtual workflow step node.
@@ -156,6 +167,17 @@ impl EdgeKind {
             Self::TerraformReference => "terraform-ref",
             Self::TerraformModuleRef => "terraform-module",
             Self::TerraformOutputRef => "terraform-output",
+            Self::PythonImport => "python-import",
+            Self::PythonReference => "python-ref",
+            Self::GoImport => "go-import",
+            Self::GoReference => "go-ref",
+            Self::RustUse => "rust-use",
+            Self::RustMod => "rust-mod",
+            Self::RustPackage => "rust-package",
+            Self::RubyRequire => "ruby-require",
+            Self::RubyReference => "ruby-ref",
+            Self::PhpUse => "php-use",
+            Self::PhpPackage => "php-package",
             _ => unreachable!("core edge kinds are handled before domain rendering"),
         }
     }

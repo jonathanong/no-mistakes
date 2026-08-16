@@ -33,7 +33,18 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::DotnetProjectDependency
         | EdgeKind::TerraformReference
         | EdgeKind::TerraformModuleRef
-        | EdgeKind::TerraformOutputRef => language(kind),
+        | EdgeKind::TerraformOutputRef
+        | EdgeKind::PythonImport
+        | EdgeKind::PythonReference
+        | EdgeKind::GoImport
+        | EdgeKind::GoReference
+        | EdgeKind::RustUse
+        | EdgeKind::RustMod
+        | EdgeKind::RustPackage
+        | EdgeKind::RubyRequire
+        | EdgeKind::RubyReference
+        | EdgeKind::PhpUse
+        | EdgeKind::PhpPackage => language(kind),
         EdgeKind::WorkflowJob
         | EdgeKind::WorkflowStep
         | EdgeKind::WorkflowNeeds
@@ -90,6 +101,17 @@ const fn language(kind: EdgeKind) -> (u8, u8) {
         EdgeKind::TerraformReference => (27, 0),
         EdgeKind::TerraformModuleRef => (28, 0),
         EdgeKind::TerraformOutputRef => (29, 0),
+        EdgeKind::PythonImport => (39, 0),
+        EdgeKind::PythonReference => (40, 0),
+        EdgeKind::GoImport => (41, 0),
+        EdgeKind::GoReference => (42, 0),
+        EdgeKind::RustUse => (43, 0),
+        EdgeKind::RustMod => (44, 0),
+        EdgeKind::RustPackage => (45, 0),
+        EdgeKind::RubyRequire => (46, 0),
+        EdgeKind::RubyReference => (47, 0),
+        EdgeKind::PhpUse => (48, 0),
+        EdgeKind::PhpPackage => (49, 0),
         _ => panic!("language edge group is exhaustive"),
     }
 }

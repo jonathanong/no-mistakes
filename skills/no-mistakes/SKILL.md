@@ -33,7 +33,7 @@ Dotnet/C# test-impact edges participate in the canonical graph via configured
 prose). For structural graph questions outside TS/JS, see Command Selection:
 `.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
 impact → `--relationship ci` · CSS/JSON asset imports →
-`--relationship asset`. Go source files have no graph domain — use `rg`.
+`--relationship asset`. Go/Python/Rust/Rails/PHP graphs require explicit `tests.<lang>` config — see `docs/feature-parity.md`.
 For "what directly imports this one file?" in a single directory,
 `no-mistakes importers <file>` is faster than a full graph walk.
 
@@ -248,8 +248,8 @@ with `includeSuppressed: true`.
 - `--depth <N>` to limit traversal depth.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
-- `--test vitest|playwright|cargo|dotnet|swift` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|all`.
+- `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php` to filter to test files.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
   `--verbose-timings` (stderr), and `--jobs`.
@@ -308,7 +308,7 @@ member usage.
   static when agent-readable analysis is required.
 - Selector text edges are approximate; exact configured test ID selector edges
   are stronger evidence.
-- Non-TS/JS files are not walked for import edges; use `rg` for Go, Rust, CSS, JSON.
+- Non-TS/JS files are not walked for import edges unless the matching language frontend is configured; use `rg` for CSS/JSON and unconfigured languages.
 - `tests plan` works without `testPlan` in `.no-mistakes.yml` (uses default
   direct + dependencies groups). Configure `testPlan` to add environments,
   custom limits, coverage groups (Playwright only), and global-config triggers.

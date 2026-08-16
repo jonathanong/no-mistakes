@@ -26,6 +26,11 @@ export type Relationship =
   | "dotnet"
   | "swift"
   | "terraform"
+  | "python"
+  | "go"
+  | "rust"
+  | "ruby"
+  | "php"
   | "resource"
   | "all";
 

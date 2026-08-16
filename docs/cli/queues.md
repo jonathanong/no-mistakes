@@ -1,6 +1,7 @@
 # `no-mistakes queues`
 
-Analyze queue producer/worker relationships for BullMQ and glide-mq patterns.
+Analyze queue producer/worker relationships for BullMQ, glide-mq, Celery,
+Asynq, Kafka topics, Active Job, and Laravel `dispatch`.
 
 | Leaf command | Purpose |
 | --- | --- |

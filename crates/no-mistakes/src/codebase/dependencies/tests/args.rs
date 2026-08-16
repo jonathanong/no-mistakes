@@ -224,6 +224,14 @@ fn cargo_globs_include_tests_dir() {
 }
 
 #[test]
+fn language_frontend_globs_are_explicit() {
+    assert!(test_globs("python").iter().any(|glob| glob.contains("test_*.py")));
+    assert!(test_globs("go").iter().any(|glob| glob.contains("*_test.go")));
+    assert!(test_globs("rails").iter().any(|glob| glob.contains("_spec.rb")));
+    assert!(test_globs("php").iter().any(|glob| glob.contains("Test.php")));
+}
+
+#[test]
 fn unknown_framework_returns_empty() {
     let globs = test_globs("unknown");
     assert!(globs.is_empty());

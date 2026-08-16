@@ -1,0 +1,5 @@
+tests:
+  php:
+    framework: laravel
+    apps:
+      - .

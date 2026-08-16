@@ -29,6 +29,23 @@ tests:
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
 
+Language frontends are explicit. Empty lists disable analysis:
+
+```yaml
+tests:
+  python:
+    packages: [backend]
+  go:
+    modules: [services/worker]
+  rust:
+    packages: [crates/api]
+  rails:
+    apps: [apps/web]
+  php:
+    framework: laravel
+    apps: [services/api]
+```
+
 When `tests.playwright.configs` and `--playwright-config` are both omitted,
 `no-mistakes` automatically discovers Git-visible `playwright*.config.*` files
 directly under `--root`. Outside a Git checkout, `.gitignore` and `.ignore`

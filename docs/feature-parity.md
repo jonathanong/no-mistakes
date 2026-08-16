@@ -24,11 +24,12 @@ edges and planners ship.
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
 | Rust | no | `--test cargo` globs only | no | no | partial: project type, check rules, CI Cargo edges |
-| Python, Django, Celery | no | no | no | no | not started |
-| Go, Asynq | no | no | no | no | not started |
-| Kafka | n/a | n/a | n/a | no | not started |
-| Ruby on Rails | no | no | no | no | not started |
-| PHP | no | no | no | no | not started |
+| Python, Django, Celery | `python-import`, `python-ref` | `--test python` globs | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors) |
+| Go, Asynq | `go-import`, `go-ref` | `--test go` globs | no | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors) |
+| Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
+| Rust | `rust-use`, `rust-mod` | `--test cargo` globs | no | no | shipped (v1 extractors) |
+| Ruby on Rails | `ruby-require`, `ruby-ref` | `--test rails` globs | `routes.rb` `to:` | Active Job `perform_later` | shipped (v1 extractors) |
+| PHP | `php-use`, `php-package` | `--test php` globs | Laravel `Route::` | `::dispatch` / `ShouldQueue` | shipped (v1 extractors) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.

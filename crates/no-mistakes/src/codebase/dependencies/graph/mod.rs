@@ -35,6 +35,7 @@ include!("builder_core.rs");
 include!("builder_edges.rs");
 include!("builder_remaining_edges.rs");
 include!("builder_helpers.rs");
+include!("edge_lang_frontends.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy_vitest_setup.rs");
 include!("methods_lazy.rs");

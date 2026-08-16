@@ -26,7 +26,7 @@ pub fn ts_fact_plan_and_context_for_plan_with_config(
     )
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct GraphConfigOptions {
     route: crate::codebase::config::RouteOptions,
     queue: crate::codebase::config::QueueOptions,
@@ -38,6 +38,14 @@ struct GraphConfigOptions {
     queue_project_factory_names: Vec<String>,
     dotnet_projects: Vec<crate::codebase::dotnet::DotnetConfigProject>,
     swift_packages: Vec<String>,
+    python_packages: Vec<String>,
+    go_modules: Vec<String>,
+    rust_packages: Vec<String>,
+    rails_apps: Vec<String>,
+    php_apps: Vec<String>,
+    queue_enqueues: Vec<String>,
+    queue_workers: Vec<String>,
+    queue_cluster: Option<String>,
     terraform: crate::config::v2::schema::TerraformConfig,
     ci: crate::config::v2::schema::CiConfig,
 }
@@ -108,6 +116,25 @@ fn graph_config_options_from_loaded_with_test_filter(
         queue_project_factory_names: v2_config.queues.factories.clone(),
         dotnet_projects: crate::codebase::dotnet::configured_projects(root, &v2_config.tests.dotnet),
         swift_packages: v2_config.tests.swift.packages.clone(),
+        python_packages: v2_config.tests.python.packages.clone(),
+        go_modules: v2_config.tests.go.modules.clone(),
+        rust_packages: v2_config.tests.rust.packages.clone(),
+        rails_apps: v2_config.tests.rails.apps.clone(),
+        php_apps: v2_config.tests.php.apps.clone(),
+        queue_enqueues: v2_config
+            .projects
+            .values()
+            .flat_map(|project| project.queues.enqueues.iter().cloned())
+            .collect(),
+        queue_workers: v2_config
+            .projects
+            .values()
+            .flat_map(|project| project.queues.workers.iter().cloned())
+            .collect(),
+        queue_cluster: v2_config
+            .projects
+            .values()
+            .find_map(|project| project.queues.cluster.clone()),
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
     }

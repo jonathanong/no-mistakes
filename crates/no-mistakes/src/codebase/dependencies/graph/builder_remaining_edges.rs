@@ -165,6 +165,9 @@ fn collect_remaining_edges(
     crate::perf_trace::trace("graph.terraform", || {
         merge_terraform_edges(edge_inputs, forward, reverse);
     });
+    crate::perf_trace::trace("graph.language_frontends", || {
+        merge_language_frontend_edges(edge_inputs, forward, reverse);
+    });
     crate::invocation::check_timeout()?;
     Ok(())
 }
