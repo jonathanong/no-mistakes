@@ -44,17 +44,22 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
         .par_iter()
         .flat_map(|settings| {
             crate::diagnostics::with_observer(observer.clone(), || {
-                crate::ast::with_request_parse_cache(|| {
-                    let Ok(analysis) = run_playwright_selector_analysis_from_snapshot(
-                        root,
-                        config_path,
-                        &inputs,
-                        Some(settings),
-                    ) else {
-                        return Vec::new();
-                    };
-                    selector_edges_from_analysis(root, inputs.all_files, &analysis)
-                })
+                crate::diagnostics::with_timing_kind(
+                    crate::diagnostics::TimingKind::Parallel,
+                    || {
+                        crate::ast::with_owned_request_parse_cache(|| {
+                            let Ok(analysis) = run_playwright_selector_analysis_from_snapshot(
+                                root,
+                                config_path,
+                                &inputs,
+                                Some(settings),
+                            ) else {
+                                return Vec::new();
+                            };
+                            selector_edges_from_analysis(root, inputs.all_files, &analysis)
+                        })
+                    },
+                )
             })
         })
         .collect();

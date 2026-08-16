@@ -66,4 +66,13 @@ fn collect_playwright_selector_edges_analyzes_prepared_apps_in_parallel() {
             && body.contains("edges.dedup()"),
         "parallel app results must flatten, then sort and dedup for byte-identical output"
     );
+    assert!(
+        body.contains("with_owned_request_parse_cache")
+            && !body.contains("with_request_parse_cache("),
+        "Rayon app tasks must install an owned parse cache, not inherit a sibling request's"
+    );
+    assert!(
+        body.contains("TimingKind::Parallel"),
+        "overlapping per-app selector timings must be marked non-additive"
+    );
 }
