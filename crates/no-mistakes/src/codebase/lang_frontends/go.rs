@@ -30,29 +30,19 @@ fn parse_go_file(
     let source = std::fs::read_to_string(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let package = owning_package(path, roots, modules);
-    let module = if is_go_test_file(path) {
-        None
-    } else {
-        go_import_path(path, roots, manifests)
-    };
+    let module = go_import_path(path, roots, manifests);
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package,
         module,
         imports: extract_go_imports(&text),
-        declarations: extract_named(&text, go_decl_re()),
+        declarations: extract_go_declarations(&text),
         references: extract_named(&text, go_ref_re()),
         route_handlers: Vec::new(),
         queue_enqueues: extract_named(&text, asynq_task_re()),
         queue_workers: extract_named(&text, asynq_handle_re()),
         mods: Vec::new(),
     })
-}
-
-fn is_go_test_file(path: &Path) -> bool {
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .is_some_and(|name| name.ends_with("_test.go"))
 }
 
 fn read_go_module(root: &Path) -> Option<String> {
@@ -101,6 +91,19 @@ fn extract_go_imports(source: &str) -> Vec<String> {
     imports
 }
 
+fn extract_go_declarations(source: &str) -> Vec<String> {
+    let mut names = extract_named(source, go_decl_re());
+    for cap in go_group_decl_re().captures_iter(source) {
+        names.extend(extract_named(
+            cap.get(1).map(|m| m.as_str()).unwrap_or(""),
+            go_exported_ident_re(),
+        ));
+    }
+    names.sort();
+    names.dedup();
+    names
+}
+
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     let mut values: Vec<String> = re
         .captures_iter(source)
@@ -136,6 +139,16 @@ fn go_decl_re() -> &'static Regex {
         )
         .expect("func")
     })
+}
+
+fn go_group_decl_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?s)(?:const|var|type)\s*\((.*?)\)").expect("group decl"))
+}
+
+fn go_exported_ident_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?m)^\s*([A-Z][A-Za-z0-9_]*)").expect("exported"))
 }
 
 fn go_ref_re() -> &'static Regex {

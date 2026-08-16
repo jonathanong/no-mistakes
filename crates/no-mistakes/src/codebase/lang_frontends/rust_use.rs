@@ -10,6 +10,11 @@ pub(super) fn expand_rust_use(tree: &str) -> Vec<String> {
     split_use_members(&tree[start + 1..end])
         .into_iter()
         .flat_map(|member| {
+            let member = member
+                .split_whitespace()
+                .take_while(|token| !token.eq_ignore_ascii_case("as"))
+                .collect::<Vec<_>>()
+                .join(" ");
             let member = member.trim();
             if member.is_empty() || member == "self" {
                 return if prefix.is_empty() {

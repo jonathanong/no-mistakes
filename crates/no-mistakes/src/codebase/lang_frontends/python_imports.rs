@@ -75,6 +75,9 @@ pub(super) fn extract_python_imports(
 
 fn imported_names(names: &str) -> Vec<String> {
     names
+        .trim()
+        .trim_start_matches('(')
+        .trim_end_matches(')')
         .split(',')
         .filter_map(|part| {
             let ident = part.split_whitespace().next()?;
@@ -124,7 +127,9 @@ fn python_import_re() -> &'static Regex {
 fn python_from_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*from\s+(\.+(?:[A-Za-z_][\w.]*)?|[A-Za-z_][\w.]*)\s+import\s+([^\n]+)")
-            .expect("from")
+        Regex::new(
+            r"(?ms)^\s*from\s+(\.+(?:[A-Za-z_][\w.]*)?|[A-Za-z_][\w.]*)\s+import\s+(\([^)]+\)|[^\n]+)",
+        )
+        .expect("from")
     })
 }

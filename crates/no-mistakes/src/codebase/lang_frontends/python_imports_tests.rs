@@ -5,7 +5,7 @@ use std::path::Path;
 fn extract_python_imports_covers_unprefixed_and_star_forms() {
     let path = Path::new("/repo/app/users/views.py");
     let imports = extract_python_imports(
-        "import app.tasks, app.models\nfrom . import *\nfrom ...outside import nope\nfrom app.mod import helper",
+        "import app.tasks, app.models\nfrom . import *\nfrom . import (\n    helper,\n)\nfrom ...outside import nope\nfrom app.mod import helper",
         path,
         None,
         None,
@@ -18,6 +18,13 @@ fn extract_python_imports_covers_unprefixed_and_star_forms() {
         "users.models"
     );
     let pkg = Path::new("/repo");
+    let paren = extract_python_imports(
+        "from . import (\n    helper,\n)",
+        path,
+        Some("app"),
+        Some(&pkg.join("app")),
+    );
+    assert!(paren.iter().any(|import| import.ends_with(".helper")));
     assert_eq!(
         python_module(Some("."), Some(pkg), &pkg.join("app/users.py")).as_deref(),
         Some("app.users")

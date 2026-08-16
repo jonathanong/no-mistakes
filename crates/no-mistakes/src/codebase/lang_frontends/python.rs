@@ -38,6 +38,8 @@ fn parse_python_file(
         .map(|name| crate::codebase::ts_resolver::normalize_path(&root.join(name)));
     let module = python_module(package.as_deref(), package_root.as_deref(), path);
     let imports = extract_python_imports(&text, path, package.as_deref(), package_root.as_deref());
+    let queue_enqueues = extract_celery_enqueues(&text, &imports);
+    let queue_workers = extract_celery_workers(&text, module.as_deref());
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package,
@@ -46,15 +48,42 @@ fn parse_python_file(
         declarations: extract_named(&symbols, python_decl_re()),
         references: extract_named(&symbols, python_ref_re()),
         route_handlers: extract_django_routes(&text),
-        queue_enqueues: extract_named(&text, celery_enqueue_re()),
-        queue_workers: extract_celery_workers(&text),
+        queue_enqueues,
+        queue_workers,
         mods: Vec::new(),
     })
 }
 
-fn extract_celery_workers(source: &str) -> Vec<String> {
+fn extract_celery_workers(source: &str, module: Option<&str>) -> Vec<String> {
     let mut names = extract_named(source, celery_named_task_re());
-    names.extend(extract_named(source, celery_fn_task_re()));
+    for name in extract_named(source, celery_fn_task_re()) {
+        names.push(match module {
+            Some(module) => format!("{module}.{name}"),
+            None => name,
+        });
+    }
+    names.sort();
+    names.dedup();
+    names
+}
+
+fn extract_celery_enqueues(source: &str, imports: &[String]) -> Vec<String> {
+    let mut names = extract_named(source, celery_enqueue_re());
+    let extras: Vec<String> = names
+        .iter()
+        .flat_map(|name| {
+            imports.iter().filter_map(move |import| {
+                if import == name || import.ends_with(&format!(".{name}")) {
+                    Some(import.clone())
+                } else if !import.contains('.') && import == name {
+                    None
+                } else {
+                    Some(format!("{import}.{name}"))
+                }
+            })
+        })
+        .collect();
+    names.extend(extras);
     names.sort();
     names.dedup();
     names
@@ -98,7 +127,7 @@ fn django_route_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"\b(?:path|re_path)\(\s*["']([^"']+)["']\s*,\s*(?:include\(\s*["']([^"']+)["']|([A-Za-z_][\w.]*))"#,
+            r#"\b(?:path|re_path)\(\s*["']([^"']*)["']\s*,\s*(?:include\(\s*["']([^"']+)["']|([A-Za-z_][\w.]*))"#,
         )
         .expect("django")
     })

@@ -47,6 +47,10 @@ fn python_masks_docstring_symbols_and_keeps_include_routes() {
     assert!(urls
         .route_handlers
         .iter()
+        .any(|(route, handler)| route.is_empty() && handler.contains("user_list")));
+    assert!(urls
+        .route_handlers
+        .iter()
         .any(|(route, handler)| route == "api/" && handler == "app.api.urls"));
     assert!(!mask_strings(r#"x = "class Hidden:" """class Doc:""" 'ok'"#).contains("Hidden"));
 }
@@ -88,7 +92,11 @@ fn go_skips_test_files_and_scopes_package_modules() {
         .values()
         .find(|file| file.path.ends_with("ping_test.go"))
         .expect("test");
-    assert!(test.module.is_none());
+    assert!(test.module.is_some());
+    assert!(facts
+        .files_by_module
+        .get(test.module.as_ref().expect("test module"))
+        .is_none_or(|paths| paths.iter().all(|path| !path.ends_with("_test.go"))));
     let dot = facts
         .files
         .values()
@@ -108,6 +116,10 @@ fn go_skips_test_files_and_scopes_package_modules() {
             .find(|file| file.path.ends_with("mail/user.go"))
             .and_then(|file| file.module.as_deref())
     );
+    assert!(pkg_user
+        .declarations
+        .iter()
+        .any(|name| name == "DefaultTimeout"));
 }
 
 #[test]

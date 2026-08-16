@@ -72,6 +72,9 @@ fn reference_target_allowed(file: &LangFileFacts, target: &LangFileFacts, refere
     if file.module.is_some() && file.module == target.module {
         return true;
     }
+    if reference.contains("::") && same_lang_package(file, target) {
+        return true;
+    }
     if target.module.as_deref().is_some_and(|module| {
         file.imports
             .iter()

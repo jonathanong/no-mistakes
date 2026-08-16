@@ -169,7 +169,5 @@ fn laravel_dispatch_re() -> &'static Regex {
 
 fn php_should_queue_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"\bimplements\s+\\?(?:[A-Za-z_\\]+\\)*ShouldQueue\b").expect("shouldqueue")
-    })
+    RE.get_or_init(|| Regex::new(r"\bimplements\s+[^{;]*\bShouldQueue\b").expect("shouldqueue"))
 }

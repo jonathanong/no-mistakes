@@ -2,6 +2,6 @@
 
 namespace App\Jobs;
 
-class FqJob implements \Illuminate\Contracts\Queue\ShouldQueue
+class FqJob implements ShouldBeUnique, \Illuminate\Contracts\Queue\ShouldQueue
 {
 }

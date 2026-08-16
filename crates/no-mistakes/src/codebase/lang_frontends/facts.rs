@@ -32,10 +32,17 @@ impl LangFactMap {
                 .insert(file.path.clone());
         }
         if let Some(module) = &file.module {
-            self.files_by_module
-                .entry(module.clone())
-                .or_default()
-                .insert(file.path.clone());
+            if !file
+                .path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with("_test.go"))
+            {
+                self.files_by_module
+                    .entry(module.clone())
+                    .or_default()
+                    .insert(file.path.clone());
+            }
         }
         for declaration in &file.declarations {
             self.declarations

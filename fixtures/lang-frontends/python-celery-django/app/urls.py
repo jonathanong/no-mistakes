@@ -3,6 +3,7 @@ from app.billing import views as billing_views
 from app.users import views
 
 urlpatterns = [
+    path("", views.user_list),
     path("api/", include("app.api.urls")),
     path("api/users/", views.user_list),
     path("users/", views.UserView.as_view()),
