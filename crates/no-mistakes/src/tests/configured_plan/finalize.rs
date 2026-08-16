@@ -60,3 +60,28 @@ pub(super) fn select_limited_group_candidates(
         first_take(candidates, limit)
     }
 }
+
+/// Spend the `direct` budget on changed tests first so `sampleWhenLimited`
+/// hashing cannot evict a self-selected test in favor of a 1-hop importer.
+pub(super) fn select_limited_direct_candidates(
+    candidates: Vec<SelectedTest>,
+    limit: usize,
+    sample_when_limited: bool,
+) -> Vec<SelectedTest> {
+    if limit == 0 {
+        return Vec::new();
+    }
+    let (selves, hops): (Vec<SelectedTest>, Vec<SelectedTest>) = candidates
+        .into_iter()
+        .partition(|test| test.reasons.iter().any(|reason| reason.via == ["self"]));
+    let mut picked = first_take(selves, limit);
+    let remaining = limit.saturating_sub(picked.len());
+    if remaining > 0 {
+        picked.extend(select_limited_group_candidates(
+            hops,
+            remaining,
+            sample_when_limited,
+        ));
+    }
+    picked
+}

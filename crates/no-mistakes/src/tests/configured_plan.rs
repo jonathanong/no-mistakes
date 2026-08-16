@@ -36,8 +36,8 @@ use environment::{
 };
 use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
-    attach_targets, empty_group_result, select_limited_group_candidates, sorted_selected_tests,
-    sorted_warnings,
+    attach_targets, empty_group_result, select_limited_direct_candidates,
+    select_limited_group_candidates, sorted_selected_tests, sorted_warnings,
 };
 use hints::build_coverage_hints_from_prepared;
 use lockfile_seeds::{
@@ -297,8 +297,11 @@ pub(crate) fn generate_configured_plan_with_prepared(
             .and_then(|limit| limit_count(Some(limit), all_tests.len()))
             .unwrap_or(remaining_global)
             .min(remaining_global);
-        let picked =
-            select_limited_group_candidates(candidates, group_limit, group.sample_when_limited);
+        let picked = if group.type_ == TestPlanGroupType::Direct {
+            select_limited_direct_candidates(candidates, group_limit, group.sample_when_limited)
+        } else {
+            select_limited_group_candidates(candidates, group_limit, group.sample_when_limited)
+        };
         for test in &picked {
             used.insert(test.test_file.clone());
             selected_map

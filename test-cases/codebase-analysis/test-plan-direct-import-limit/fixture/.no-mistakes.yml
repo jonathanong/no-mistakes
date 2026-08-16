@@ -13,4 +13,11 @@ test_plan:
         groups:
           - type: direct
           - type: dependencies
+      sampledDirect:
+        limit:
+          files: 1
+        groups:
+          - type: direct
+            sampleWhenLimited: true
+          - type: dependencies
 rules: []
