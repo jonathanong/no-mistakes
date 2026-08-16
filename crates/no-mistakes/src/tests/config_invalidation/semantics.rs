@@ -99,6 +99,7 @@ struct GlobalGraphSemantics {
     // Only these rule options are read by graph configuration preparation.
     rules: Vec<RuleDef>,
     dynamic_runner_tests: DynamicRunnerTests,
+    language_frontends: serde_json::Value,
 }
 
 #[derive(PartialEq)]
@@ -160,6 +161,13 @@ fn global_graph_semantics(config: &NoMistakesConfig) -> GlobalGraphSemantics {
         projects,
         rules: graph_rules(config),
         dynamic_runner_tests: dynamic_runner_tests(config),
+        language_frontends: serde_json::json!({
+            "python": &config.tests.python,
+            "go": &config.tests.go,
+            "rust": &config.tests.rust,
+            "rails": &config.tests.rails,
+            "php": &config.tests.php,
+        }),
     }
 }
 

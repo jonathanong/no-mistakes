@@ -169,12 +169,16 @@ fn language_frontend_edges_scope_routes_and_go_packages() {
         collect_language_frontend_edges(&python, &lang_files(&python), Some(&lang_options()));
     assert!(python_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::RouteRef
-            && from.as_file().is_some_and(|path| path.ends_with("urls.py"))
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("app/urls.py") && !path.ends_with("api/urls.py"))
             && to.as_file().is_some_and(|path| path.ends_with("api/urls.py"))
     }));
     assert!(python_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::RouteRef
-            && from.as_file().is_some_and(|path| path.ends_with("urls.py"))
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("app/urls.py") && !path.ends_with("api/urls.py"))
             && to
                 .as_file()
                 .is_some_and(|path| path.ends_with("billing/views.py"))

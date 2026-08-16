@@ -114,7 +114,7 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 fn go_single_import_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?m)^\s*import\s+(?:(?:[_A-Za-z][\w.]*)\s+)?"([^"]+)""#).expect("import")
+        Regex::new(r#"(?m)^\s*import\s+(?:(?:[_A-Za-z][\w.]*|\.)\s+)?"([^"]+)""#).expect("import")
     })
 }
 

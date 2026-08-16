@@ -67,7 +67,17 @@ fn emit_lang_edges(
     for file in facts.files.values() {
         for import in &file.imports {
             if let Some(targets) = facts.files_by_module.get(import) {
-                push_file_edges(edges, &file.path, targets, import_kind);
+                let scoped: std::collections::BTreeSet<_> = targets
+                    .iter()
+                    .filter(|target| {
+                        facts
+                            .files
+                            .get(*target)
+                            .is_some_and(|other| same_lang_package(file, other))
+                    })
+                    .cloned()
+                    .collect();
+                push_file_edges(edges, &file.path, &scoped, import_kind);
             }
         }
         for reference in &file.references {

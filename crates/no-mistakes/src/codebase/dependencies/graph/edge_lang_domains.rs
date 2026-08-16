@@ -127,7 +127,7 @@ fn rails_controller_names(controller: &str) -> Vec<String> {
         .map(|part| snake_to_pascal(part))
         .collect::<Vec<_>>()
         .join("::");
-    vec![format!("{namespace}::{class}"), class]
+    vec![format!("{namespace}::{class}")]
 }
 
 fn snake_to_pascal(name: &str) -> String {

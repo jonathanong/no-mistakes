@@ -92,6 +92,12 @@ fn go_skips_test_files_and_scopes_package_modules() {
         .find(|file| file.path.ends_with("ping_test.go"))
         .expect("test");
     assert!(test.module.is_none());
+    let dot = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("pkg/dot.go"))
+        .expect("dot import");
+    assert!(dot.imports.iter().any(|import| import == "mail"));
     let pkg_user = facts
         .files
         .values()
