@@ -11,13 +11,7 @@ pub(crate) fn collect_ruby_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, apps);
     let files = files_under(all_files, &roots, "rb");
-    let mut facts = LangFactMap::default();
-    for path in files {
-        if let Some(file) = parse_ruby_file(&path, &roots, apps) {
-            facts.index_file(file);
-        }
-    }
-    facts
+    super::facts::collect_files_parallel(files, |path| parse_ruby_file(path, &roots, apps))
 }
 
 fn parse_ruby_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<LangFileFacts> {

@@ -11,13 +11,7 @@ pub(crate) fn collect_go_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, modules);
     let files = files_under(all_files, &roots, "go");
-    let mut facts = LangFactMap::default();
-    for path in files {
-        if let Some(file) = parse_go_file(&path, &roots, modules) {
-            facts.index_file(file);
-        }
-    }
-    facts
+    super::facts::collect_files_parallel(files, |path| parse_go_file(path, &roots, modules))
 }
 
 fn parse_go_file(path: &Path, roots: &[PathBuf], modules: &[String]) -> Option<LangFileFacts> {
@@ -62,7 +56,7 @@ fn go_import_path(path: &Path, roots: &[PathBuf]) -> Option<String> {
 
 fn extract_go_imports(source: &str) -> Vec<String> {
     let mut imports = extract_named(source, go_single_import_re());
-    if let Some(block) = go_import_block_re().captures(source) {
+    for block in go_import_block_re().captures_iter(source) {
         imports.extend(extract_named(
             block.get(1).map(|m| m.as_str()).unwrap_or(""),
             go_quoted_re(),

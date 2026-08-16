@@ -13,8 +13,8 @@ v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. Playwright, React,
 Next.js fetches, call-sites, dead-exports, ecosystem lockfile diffs, and
 dedicated `no-mistakes python|go|rust|rails|php` CLIs are later work. Agents
-use `dependents --relationship <lang>` and `tests plan <lang>` once those
-edges and planners ship.
+use `dependents --relationship <lang>` now; `tests plan python|go|cargo|rails|php`,
+ecosystem lockfiles, and dedicated language CLIs are not started.
 
 ## Current Status
 
@@ -342,9 +342,8 @@ opt-in.
 ## Agent Fallback
 
 Until a row in the status table is `shipped`, agents should keep using `rg`
-for that language. The shipped `no-mistakes` skill already says Go and Rust
-sources have no import-graph domain. That remains correct until the graph
-edges and test planner land.
+for that language. v1 extractors cover the module graph plus named routes or
+queues; `tests plan <lang>`, lockfiles, and dedicated CLIs remain not started.
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and

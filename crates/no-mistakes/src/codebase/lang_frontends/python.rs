@@ -13,13 +13,9 @@ pub(crate) fn collect_python_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, packages);
     let files = files_under(all_files, &roots, "py");
-    let mut facts = LangFactMap::default();
-    for path in files {
-        if let Some(file) = parse_python_file(root, &path, &roots, packages) {
-            facts.index_file(file);
-        }
-    }
-    facts
+    super::facts::collect_files_parallel(files, |path| {
+        parse_python_file(root, path, &roots, packages)
+    })
 }
 
 fn parse_python_file(
@@ -56,8 +52,15 @@ fn extract_python_imports(source: &str, path: &Path, package_root: Option<&Path>
         let Some(module) = cap.get(1).map(|m| m.as_str()) else {
             continue;
         };
+        let names = cap.get(2).map(|m| m.as_str()).unwrap_or("");
         if let Some(resolved) = resolve_relative(module, path, package_root) {
-            imports.push(resolved);
+            if module.chars().all(|ch| ch == '.') {
+                for name in imported_names(names) {
+                    imports.push(format!("{resolved}.{name}"));
+                }
+            } else {
+                imports.push(resolved);
+            }
         } else if !module.starts_with('.') {
             imports.push(module.to_string());
         }
@@ -65,6 +68,19 @@ fn extract_python_imports(source: &str, path: &Path, package_root: Option<&Path>
     imports.sort();
     imports.dedup();
     imports
+}
+
+fn imported_names(names: &str) -> Vec<String> {
+    names
+        .split(',')
+        .filter_map(|part| {
+            let ident = part.split_whitespace().next()?;
+            if ident.is_empty() || ident.starts_with('(') || ident == "*" {
+                return None;
+            }
+            Some(ident.to_string())
+        })
+        .collect()
 }
 
 fn resolve_relative(module: &str, path: &Path, package_root: Option<&Path>) -> Option<String> {
@@ -124,7 +140,7 @@ fn python_import_re() -> &'static Regex {
 fn python_from_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*from\s+(\.+(?:[A-Za-z_][\w.]*)?|[A-Za-z_][\w.]*)\s+import")
+        Regex::new(r"(?m)^\s*from\s+(\.+(?:[A-Za-z_][\w.]*)?|[A-Za-z_][\w.]*)\s+import\s+([^\n]+)")
             .expect("from")
     })
 }

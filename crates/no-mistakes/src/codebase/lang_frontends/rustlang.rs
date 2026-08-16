@@ -13,13 +13,9 @@ pub(crate) fn collect_rust_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, packages);
     let files = files_under(all_files, &roots, "rs");
-    let mut facts = LangFactMap::default();
-    for path in files {
-        if let Some(file) = parse_rust_file(root, &path, &roots, packages) {
-            facts.index_file(file);
-        }
-    }
-    facts
+    super::facts::collect_files_parallel(files, |path| {
+        parse_rust_file(root, path, &roots, packages)
+    })
 }
 
 fn parse_rust_file(

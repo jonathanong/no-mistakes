@@ -13,13 +13,7 @@ pub(crate) fn collect_php_facts(
     let roots = configured_roots(root, apps);
     let files = files_under(all_files, &roots, "php");
     let laravel = framework.is_none_or(|name| name.eq_ignore_ascii_case("laravel"));
-    let mut facts = LangFactMap::default();
-    for path in files {
-        if let Some(file) = parse_php_file(&path, &roots, apps, laravel) {
-            facts.index_file(file);
-        }
-    }
-    facts
+    super::facts::collect_files_parallel(files, |path| parse_php_file(path, &roots, apps, laravel))
 }
 
 fn parse_php_file(

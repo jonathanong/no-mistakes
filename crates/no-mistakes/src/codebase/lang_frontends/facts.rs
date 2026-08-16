@@ -55,6 +55,24 @@ pub(crate) fn configured_roots(root: &Path, entries: &[String]) -> Vec<PathBuf> 
         .collect()
 }
 
+pub(crate) fn index_parsed_files(mut files: Vec<LangFileFacts>) -> LangFactMap {
+    files.sort_by(|left, right| left.path.cmp(&right.path));
+    let mut facts = LangFactMap::default();
+    for file in files {
+        facts.index_file(file);
+    }
+    facts
+}
+
+pub(crate) fn collect_files_parallel<F>(files: Vec<PathBuf>, parse: F) -> LangFactMap
+where
+    F: Fn(&Path) -> Option<LangFileFacts> + Sync,
+{
+    use rayon::prelude::*;
+    let parsed: Vec<LangFileFacts> = files.par_iter().filter_map(|path| parse(path)).collect();
+    index_parsed_files(parsed)
+}
+
 pub(crate) fn files_under(
     all_files: &[PathBuf],
     roots: &[PathBuf],

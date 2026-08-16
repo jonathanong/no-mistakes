@@ -1,9 +1,13 @@
 package worker
 
-import "github.com/hibiken/asynq"
+import (
+	"context"
 
-func HandleWelcome(ctx interface{}, task *asynq.Task) error {
-    return nil
+	"github.com/hibiken/asynq"
+)
+
+func HandleWelcome(ctx context.Context, task *asynq.Task) error {
+	return nil
 }
 
 func Register(mux *asynq.ServeMux) {

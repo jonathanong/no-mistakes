@@ -41,7 +41,7 @@ fn python_collects_relative_import_celery_and_django_routes() {
     assert!(facts.files[&views]
         .imports
         .iter()
-        .any(|import| import.contains("models")));
+        .any(|import| import.ends_with(".models") || import.contains("models")));
     let tasks = facts
         .files
         .values()
@@ -80,6 +80,11 @@ fn go_collects_asynq_task_and_handler() {
         .values()
         .find(|file| file.path.ends_with("enqueue.go"))
         .expect("enqueue");
+    assert!(enqueue.imports.iter().any(|import| import == "fmt"));
+    assert!(enqueue
+        .imports
+        .iter()
+        .any(|import| import == "github.com/hibiken/asynq"));
     assert_eq!(enqueue.queue_enqueues, vec!["mail:welcome".to_string()]);
     let tasks = facts
         .files
@@ -159,10 +164,13 @@ fn kafka_extracts_static_topics_and_skips_dynamic() {
         producer.send({ topic: "mail.welcome" });
         consumer.subscribe({ topic: "mail.welcome" });
         producer.send({ topic: prefix + name });
+        // producer.send({ topic: "mail.commented" });
         "#,
     );
     assert_eq!(produces, vec!["mail.welcome".to_string()]);
     assert_eq!(consumes, vec!["mail.welcome".to_string()]);
+    let (commented, _) = extract_kafka_topics("// producer.send({ topic: \"mail.commented\" });");
+    assert!(commented.is_empty());
     assert_eq!(
         topic_identity(Some("orders"), "mail.welcome"),
         "orders:mail.welcome"

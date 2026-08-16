@@ -33,7 +33,7 @@ Dotnet/C# test-impact edges participate in the canonical graph via configured
 prose). For structural graph questions outside TS/JS, see Command Selection:
 `.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
 impact → `--relationship ci` · CSS/JSON asset imports →
-`--relationship asset`. Go/Python/Rust/Rails/PHP graphs require explicit `tests.<lang>` config — see `docs/feature-parity.md`.
+`--relationship asset`. Go/Python/Rust/Rails/PHP graphs require explicit `tests.<lang>` config — see https://github.com/jonathanong/no-mistakes/blob/main/docs/feature-parity.md.
 For "what directly imports this one file?" in a single directory,
 `no-mistakes importers <file>` is faster than a full graph walk.
 

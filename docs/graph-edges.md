@@ -70,6 +70,10 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `php-use` | `PhpUse` | `php` | PHP file -> file declaring a used class | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
 | `php-package` | `PhpPackage` | `php` | PHP file -> files in a configured Composer app | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
 
+Python, Go, Rust, Ruby, and PHP edges require matching `tests.<lang>` package,
+module, or app lists. Empty lists disable that frontend. See
+[Tests and selectors](configuration/tests.md).
+
 For `server edges` and `server related`, filters limit client-call source files;
 they do not narrow the prepared resolver/fact universe used to follow a static
 local or imported route helper. Server-route definitions remain constrained by

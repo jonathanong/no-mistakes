@@ -2,6 +2,7 @@ use super::test_support::*;
 use super::*;
 
 mod config_edges;
+mod config_edges_helpers;
 mod config_fact_plan;
 mod config_path_full_graph;
 mod config_plan;

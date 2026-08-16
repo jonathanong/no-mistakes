@@ -3,8 +3,9 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 pub(crate) fn extract_kafka_topics(source: &str) -> (Vec<String>, Vec<String>) {
-    let produces = extract_named(source, kafka_produce_re());
-    let consumes = extract_named(source, kafka_consume_re());
+    let source = super::strip::strip_comments_keep_strings(source);
+    let produces = extract_named(&source, kafka_produce_re());
+    let consumes = extract_named(&source, kafka_consume_re());
     (produces, consumes)
 }
 
