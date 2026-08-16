@@ -130,7 +130,7 @@ fn rails_collects_route_and_active_job() {
 #[test]
 fn php_collects_laravel_route_and_dispatch() {
     let root = fixture("php-laravel");
-    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()]);
+    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], Some("laravel"));
     let routes = facts
         .files
         .values()
@@ -177,5 +177,5 @@ fn empty_config_collects_nothing() {
     assert!(collect_go_facts(&root, &files, &[]).files.is_empty());
     assert!(collect_rust_facts(&root, &files, &[]).files.is_empty());
     assert!(collect_ruby_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_php_facts(&root, &files, &[]).files.is_empty());
+    assert!(collect_php_facts(&root, &files, &[], None).files.is_empty());
 }

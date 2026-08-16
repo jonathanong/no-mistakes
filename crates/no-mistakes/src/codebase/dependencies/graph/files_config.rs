@@ -43,6 +43,7 @@ struct GraphConfigOptions {
     rust_packages: Vec<String>,
     rails_apps: Vec<String>,
     php_apps: Vec<String>,
+    php_framework: Option<String>,
     queue_enqueues: Vec<String>,
     queue_workers: Vec<String>,
     queue_cluster: Option<String>,
@@ -121,6 +122,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         rust_packages: v2_config.tests.rust.packages.clone(),
         rails_apps: v2_config.tests.rails.apps.clone(),
         php_apps: v2_config.tests.php.apps.clone(),
+        php_framework: v2_config.tests.php.framework.clone(),
         queue_enqueues: v2_config
             .projects
             .values()

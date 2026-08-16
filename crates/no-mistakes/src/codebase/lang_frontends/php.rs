@@ -8,19 +8,26 @@ pub(crate) fn collect_php_facts(
     root: &Path,
     all_files: &[PathBuf],
     apps: &[String],
+    framework: Option<&str>,
 ) -> LangFactMap {
     let roots = configured_roots(root, apps);
     let files = files_under(all_files, &roots, "php");
+    let laravel = framework.is_none_or(|name| name.eq_ignore_ascii_case("laravel"));
     let mut facts = LangFactMap::default();
     for path in files {
-        if let Some(file) = parse_php_file(&path, &roots, apps) {
+        if let Some(file) = parse_php_file(&path, &roots, apps, laravel) {
             facts.index_file(file);
         }
     }
     facts
 }
 
-fn parse_php_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<LangFileFacts> {
+fn parse_php_file(
+    path: &Path,
+    roots: &[PathBuf],
+    apps: &[String],
+    laravel: bool,
+) -> Option<LangFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let classes = php_classes(&text);
@@ -31,9 +38,17 @@ fn parse_php_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<Lan
         imports: extract_named(&text, php_use_re()),
         declarations: classes,
         references: extract_named(&text, php_use_re()),
-        route_handlers: extract_pairs(&text, laravel_route_re()),
-        queue_enqueues: extract_named(&text, laravel_dispatch_re()),
-        queue_workers: if php_should_queue_re().is_match(&text) {
+        route_handlers: if laravel {
+            extract_pairs(&text, laravel_route_re())
+        } else {
+            Vec::new()
+        },
+        queue_enqueues: if laravel {
+            extract_named(&text, laravel_dispatch_re())
+        } else {
+            Vec::new()
+        },
+        queue_workers: if laravel && php_should_queue_re().is_match(&text) {
             extract_named(&text, php_class_re())
         } else {
             Vec::new()

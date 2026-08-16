@@ -241,6 +241,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         rust_packages: vec![],
         rails_apps: vec![],
         php_apps: vec![],
+        php_framework: None,
         queue_enqueues: vec![],
         queue_workers: vec![],
         queue_cluster: None,

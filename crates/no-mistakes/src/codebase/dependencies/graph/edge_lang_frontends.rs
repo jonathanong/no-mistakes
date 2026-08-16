@@ -42,6 +42,7 @@ fn lang_config_from_options(options: &GraphConfigOptions) -> LangFrontendConfig 
         rust_packages: options.rust_packages.clone(),
         rails_apps: options.rails_apps.clone(),
         php_apps: options.php_apps.clone(),
+        php_framework: options.php_framework.clone(),
     }
 }
 

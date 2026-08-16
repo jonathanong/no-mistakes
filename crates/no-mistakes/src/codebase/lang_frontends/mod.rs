@@ -27,6 +27,7 @@ pub(crate) struct LangFrontendConfig {
     pub rust_packages: Vec<String>,
     pub rails_apps: Vec<String>,
     pub php_apps: Vec<String>,
+    pub php_framework: Option<String>,
 }
 
 pub(crate) struct CollectedLangFacts {
@@ -47,6 +48,11 @@ pub(crate) fn collect_all_lang_facts(
         go: collect_go_facts(root, all_files, &config.go_modules),
         rust: collect_rust_facts(root, all_files, &config.rust_packages),
         ruby: collect_ruby_facts(root, all_files, &config.rails_apps),
-        php: collect_php_facts(root, all_files, &config.php_apps),
+        php: collect_php_facts(
+            root,
+            all_files,
+            &config.php_apps,
+            config.php_framework.as_deref(),
+        ),
     }
 }
