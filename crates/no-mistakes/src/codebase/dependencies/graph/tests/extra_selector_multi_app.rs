@@ -40,3 +40,52 @@ fn collect_playwright_selector_edges_skips_a_failing_app_but_keeps_the_others() 
         "expected the working app's selector edges to survive the broken app's failure"
     );
 }
+
+/// Source guard: prepared-app selector analysis must stay on `par_iter` and
+/// flatten-then-sort/dedup. A serial `for settings in` loop would still
+/// produce the same edges after sort/dedup, so a behavioral fixture cannot
+/// catch the regression this change is meant to lock in.
+#[test]
+fn collect_playwright_selector_edges_analyzes_prepared_apps_in_parallel() {
+    let source = include_str!("../edge_playwright_selectors.rs");
+    let body = graph_files_source_function_body(
+        source,
+        "pub(super) fn collect_playwright_selector_edges_with_graph(",
+    );
+    assert!(
+        body.contains("par_iter"),
+        "prepared apps are independent after the base graph exists and must be scanned in parallel"
+    );
+    assert!(
+        !body.contains("for settings in"),
+        "serial per-app for-loop must not return; flatten then sort/dedup"
+    );
+    assert!(
+        body.contains("flat_map")
+            && body.contains("edges.sort()")
+            && body.contains("edges.dedup()"),
+        "parallel app results must flatten, then sort and dedup for byte-identical output"
+    );
+    assert!(
+        body.contains("with_owned_request_parse_cache"),
+        "Rayon app tasks must install an owned parse cache, not inherit a sibling request's"
+    );
+    assert!(
+        body.contains("TimingKind::Parallel"),
+        "overlapping per-app selector timings must be marked non-additive"
+    );
+}
+
+#[test]
+fn nested_selector_rayon_scans_install_owned_parse_caches() {
+    for source in [
+        include_str!("../../../../playwright/analysis/pipeline_occurrences.rs"),
+        include_str!("../../../../playwright/analysis/app_collect.rs"),
+        include_str!("../../../../playwright/analysis/app_text.rs"),
+    ] {
+        assert!(
+            source.contains("with_request_parse_cache"),
+            "nested selector Rayon jobs must inherit the app-owned parse cache"
+        );
+    }
+}

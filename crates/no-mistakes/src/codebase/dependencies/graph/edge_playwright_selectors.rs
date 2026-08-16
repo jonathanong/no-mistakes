@@ -28,26 +28,41 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     inputs: PlaywrightSelectorEdgeInputs<'_>,
 ) -> Result<Vec<Edge>> {
     if inputs.prepared_settings.is_empty() {
-        let analysis = run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, None)?;
+        let analysis =
+            run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, None)?;
         return Ok(selector_edges_from_analysis(
             root,
             inputs.all_files,
             &analysis,
         ));
     }
-    let mut edges = Vec::new();
-    for settings in inputs.prepared_settings {
-        let Ok(analysis) =
-            run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, Some(settings))
-        else {
-            continue;
-        };
-        edges.extend(selector_edges_from_analysis(
-            root,
-            inputs.all_files,
-            &analysis,
-        ));
-    }
+    // Apps are independent after the base graph exists: each settings
+    // projection can scan selectors without waiting on the others.
+    let observer = crate::diagnostics::current();
+    let mut edges: Vec<Edge> = inputs
+        .prepared_settings
+        .par_iter()
+        .flat_map(|settings| {
+            crate::diagnostics::with_observer(observer.clone(), || {
+                crate::diagnostics::with_timing_kind(
+                    crate::diagnostics::TimingKind::Parallel,
+                    || {
+                        crate::ast::with_owned_request_parse_cache(|| {
+                            let Ok(analysis) = run_playwright_selector_analysis_from_snapshot(
+                                root,
+                                config_path,
+                                &inputs,
+                                Some(settings),
+                            ) else {
+                                return Vec::new();
+                            };
+                            selector_edges_from_analysis(root, inputs.all_files, &analysis)
+                        })
+                    },
+                )
+            })
+        })
+        .collect();
     edges.sort();
     edges.dedup();
     Ok(edges)

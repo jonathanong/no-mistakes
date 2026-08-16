@@ -78,6 +78,18 @@ pub fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     collect()
 }
 
+/// Install a parse cache owned by this call.
+///
+/// Unlike [`with_request_parse_cache`], this never clones a cache already on
+/// the worker. Nested Rayon work on the shared pool can otherwise inherit
+/// another request's path-keyed programs.
+#[doc(hidden)]
+pub fn with_owned_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
+    REQUEST_PARSE_CACHES.with(|caches| caches.borrow_mut().push(ParsedProgramCache::default()));
+    let _guard = RequestParseCacheGuard;
+    collect()
+}
+
 #[cfg(any(test, feature = "test-instrumentation"))]
 struct ParseCountSession {
     owner: std::thread::ThreadId,
