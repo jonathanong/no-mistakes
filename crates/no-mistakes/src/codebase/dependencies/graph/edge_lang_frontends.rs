@@ -94,7 +94,15 @@ fn emit_lang_edges(
 fn emit_mod_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>) {
     for file in facts.files.values() {
         for name in &file.mods {
-            if let Some(targets) = facts.files_by_module.get(name) {
+            let qualified = match file.module.as_deref() {
+                Some(parent) => format!("{parent}.{name}"),
+                None => name.clone(),
+            };
+            let targets = facts
+                .files_by_module
+                .get(&qualified)
+                .or_else(|| facts.files_by_module.get(name));
+            if let Some(targets) = targets {
                 push_file_edges(edges, &file.path, targets, kind);
             }
         }

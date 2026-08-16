@@ -29,7 +29,7 @@ fn parse_php_file(
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
         module: classes.first().cloned(),
-        imports: extract_named(&text, php_use_re()),
+        imports: extract_php_uses(&text),
         declarations: classes,
         references: extract_named(&text, php_use_re()),
         route_handlers: if laravel {
@@ -94,6 +94,32 @@ fn extract_pairs(source: &str, re: &Regex) -> Vec<(String, String)> {
 fn php_namespace_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"(?m)^\s*namespace\s+([A-Za-z_\\][A-Za-z0-9_\\]*)").expect("ns"))
+}
+
+fn extract_php_uses(source: &str) -> Vec<String> {
+    let mut imports = extract_named(source, php_use_re());
+    for cap in php_group_use_re().captures_iter(source) {
+        let prefix = cap
+            .get(1)
+            .map(|m| m.as_str().replace('\\', "."))
+            .unwrap_or_default();
+        for member in cap.get(2).map(|m| m.as_str()).unwrap_or("").split(',') {
+            let member = member.trim();
+            if !member.is_empty() {
+                imports.push(format!("{prefix}.{member}"));
+            }
+        }
+    }
+    imports.sort();
+    imports.dedup();
+    imports
+}
+
+fn php_group_use_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"(?m)^\s*use\s+([A-Za-z_\\][A-Za-z0-9_\\]*)\\\{([^}]+)\}").expect("group use")
+    })
 }
 
 fn php_use_re() -> &'static Regex {

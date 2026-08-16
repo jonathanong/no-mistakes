@@ -126,12 +126,12 @@ fn graph_config_options_from_loaded_with_test_filter(
         queue_enqueues: v2_config
             .projects
             .values()
-            .flat_map(|project| project.queues.enqueues.iter().cloned())
+            .flat_map(prefixed_queue_globs_enqueues)
             .collect(),
         queue_workers: v2_config
             .projects
             .values()
-            .flat_map(|project| project.queues.workers.iter().cloned())
+            .flat_map(prefixed_queue_globs_workers)
             .collect(),
         queue_cluster: v2_config
             .projects
@@ -140,6 +140,27 @@ fn graph_config_options_from_loaded_with_test_filter(
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
     }
+}
+
+fn prefixed_queue_globs_enqueues(project: &crate::config::v2::schema::Project) -> Vec<String> {
+    prefix_project_globs(project.root.as_deref(), &project.queues.enqueues)
+}
+
+fn prefixed_queue_globs_workers(project: &crate::config::v2::schema::Project) -> Vec<String> {
+    prefix_project_globs(project.root.as_deref(), &project.queues.workers)
+}
+
+fn prefix_project_globs(root: Option<&str>, globs: &[String]) -> Vec<String> {
+    let prefix = root
+        .map(str::trim)
+        .filter(|root| !root.is_empty() && *root != ".");
+    globs
+        .iter()
+        .map(|glob| match prefix {
+            Some(root) if !glob.starts_with(root) => format!("{}/{glob}", root.trim_end_matches('/')),
+            _ => glob.clone(),
+        })
+        .collect()
 }
 
 fn dedup_rewrites(
