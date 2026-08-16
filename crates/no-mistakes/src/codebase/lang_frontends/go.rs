@@ -11,7 +11,7 @@ pub(crate) fn collect_go_facts(
     modules: &[String],
 ) -> LangFactMap {
     let roots = configured_roots(root, modules);
-    let files = files_under(all_files, &roots, "go");
+    let files = exclude_nested_go_modules(files_under(all_files, &roots, "go"), &roots, all_files);
     let manifests: HashMap<PathBuf, Option<String>> = roots
         .iter()
         .map(|module_root| (module_root.clone(), read_go_module(module_root)))
@@ -44,6 +44,36 @@ fn parse_go_file(
         queue_workers: extract_named(&text, asynq_handle_re()),
         mods: Vec::new(),
     })
+}
+
+fn exclude_nested_go_modules(
+    files: Vec<PathBuf>,
+    roots: &[PathBuf],
+    all_files: &[PathBuf],
+) -> Vec<PathBuf> {
+    let go_mod_dirs: Vec<PathBuf> = all_files
+        .iter()
+        .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some("go.mod"))
+        .filter_map(|path| path.parent().map(Path::to_path_buf))
+        .collect();
+    files
+        .into_iter()
+        .filter(|path| {
+            let Some(owner) = roots
+                .iter()
+                .filter(|root| path.starts_with(root))
+                .max_by_key(|root| root.components().count())
+            else {
+                return false;
+            };
+            !go_mod_dirs.iter().any(|dir| {
+                path.starts_with(dir)
+                    && dir.starts_with(owner)
+                    && dir != owner
+                    && !roots.iter().any(|root| root == dir)
+            })
+        })
+        .collect()
 }
 
 fn read_go_module(root: &Path) -> Option<String> {

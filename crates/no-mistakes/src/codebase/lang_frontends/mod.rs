@@ -13,6 +13,8 @@ mod tests;
 mod tests_extra;
 #[cfg(test)]
 mod tests_more;
+#[cfg(test)]
+mod tests_p2;
 
 use std::path::{Path, PathBuf};
 

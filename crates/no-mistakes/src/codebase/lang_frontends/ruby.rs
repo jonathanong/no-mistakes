@@ -48,7 +48,9 @@ fn extract_requires(source: &str, path: &Path, roots: &[PathBuf]) -> Vec<String>
     let mut imports = extract_named(source, ruby_require_re());
     for rel in extract_named(source, ruby_require_relative_re()) {
         if let Some(parent) = path.parent() {
-            let resolved = parent.join(rel).with_extension("rb");
+            let resolved = crate::codebase::ts_resolver::normalize_path(
+                &parent.join(rel).with_extension("rb"),
+            );
             if let Some(key) = ruby_module_key(&resolved, roots) {
                 imports.push(key);
             }

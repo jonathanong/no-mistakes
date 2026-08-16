@@ -1,5 +1,7 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+#[path = "php_queue.rs"]
+mod queue;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -31,6 +33,11 @@ fn parse_php_file(
     let source = std::fs::read_to_string(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let classes = php_classes(&text);
+    let queue_workers = if laravel && queue::php_should_queue_re().is_match(&text) {
+        queue::laravel_queue_identities(&classes)
+    } else {
+        Vec::new()
+    };
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
@@ -44,15 +51,11 @@ fn parse_php_file(
             Vec::new()
         },
         queue_enqueues: if laravel {
-            extract_named(&text, laravel_dispatch_re())
+            queue::extract_laravel_dispatches(&text)
         } else {
             Vec::new()
         },
-        queue_workers: if laravel && php_should_queue_re().is_match(&text) {
-            extract_named(&text, php_class_re())
-        } else {
-            Vec::new()
-        },
+        queue_workers,
         mods: Vec::new(),
     })
 }
@@ -76,7 +79,7 @@ fn php_classes(source: &str) -> Vec<String> {
     names
 }
 
-fn extract_named(source: &str, re: &Regex) -> Vec<String> {
+pub(super) fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     let mut values: Vec<String> = re
         .captures_iter(source)
         .filter_map(|cap| cap.get(1).map(|m| m.as_str().replace('\\', ".")))
@@ -101,12 +104,12 @@ fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
         .collect()
 }
 
-fn php_namespace_re() -> &'static Regex {
+pub(super) fn php_namespace_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"(?m)^\s*namespace\s+([A-Za-z_\\][A-Za-z0-9_\\]*)").expect("ns"))
 }
 
-fn extract_php_uses(source: &str) -> Vec<String> {
+pub(super) fn extract_php_uses(source: &str) -> Vec<String> {
     let mut imports = extract_named(source, php_use_re());
     for cap in php_alias_use_re().captures_iter(source) {
         let path = cap
@@ -185,14 +188,4 @@ fn laravel_route_re() -> &'static Regex {
         )
         .expect("route")
     })
-}
-
-fn laravel_dispatch_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\b([A-Za-z_][A-Za-z0-9_]*)::dispatch\s*\(").expect("dispatch"))
-}
-
-fn php_should_queue_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\bimplements\s+[^{;]*\bShouldQueue\b").expect("shouldqueue"))
 }
