@@ -73,12 +73,12 @@ fn logical_symlink_and_target_paths_remain_distinct() {
     assert!(!symlink_kind.is_lexical_file());
     assert!(symlink_kind.is_lexical_symlink());
     assert!(symlink_kind.target_is_file());
-    assert!(symlink_kind.is_path_entry());
+    assert!(symlink_kind.is_lexical_file() || symlink_kind.is_lexical_symlink());
     let target_kind = inventory.classification_for_path(&target).unwrap();
     assert!(target_kind.is_lexical_file());
     assert!(!target_kind.is_lexical_symlink());
     assert!(target_kind.target_is_file());
-    assert!(target_kind.is_path_entry());
+    assert!(target_kind.is_lexical_file() || target_kind.is_lexical_symlink());
 }
 
 #[test]
@@ -115,8 +115,7 @@ fn non_file_entries_have_no_file_classification() {
     assert!(!classification.is_lexical_file());
     assert!(!classification.is_lexical_symlink());
     assert!(!classification.target_is_file());
-    assert!(!classification.is_path_entry());
-    assert!(inventory.path_entry_paths().is_empty());
+    assert!(!classification.is_lexical_file() && !classification.is_lexical_symlink());
     assert!(inventory.non_file_path_entry_paths().is_empty());
     assert!(inventory.target_file_paths().is_empty());
 }
@@ -133,8 +132,7 @@ fn directory_target_symlink_is_a_path_entry_not_a_target_file() {
     assert!(!classification.is_lexical_file());
     assert!(classification.is_lexical_symlink());
     assert!(!classification.target_is_file());
-    assert!(classification.is_path_entry());
-    assert_eq!(inventory.path_entry_paths(), vec![symlink.clone()]);
+    assert!(classification.is_lexical_file() || classification.is_lexical_symlink());
     assert_eq!(inventory.non_file_path_entry_paths(), vec![symlink.clone()]);
     assert!(inventory.target_file_paths().is_empty());
 }
@@ -151,8 +149,7 @@ fn broken_symlink_is_a_path_entry_not_a_target_file() {
 
     assert!(classification.is_lexical_symlink());
     assert!(!classification.target_is_file());
-    assert!(classification.is_path_entry());
-    assert_eq!(inventory.path_entry_paths(), vec![broken.clone()]);
+    assert!(classification.is_lexical_file() || classification.is_lexical_symlink());
     assert_eq!(inventory.non_file_path_entry_paths(), vec![broken.clone()]);
     assert!(inventory.target_file_paths().is_empty());
 }

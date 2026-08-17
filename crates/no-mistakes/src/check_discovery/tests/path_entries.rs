@@ -24,7 +24,7 @@ fn automatic_check_views_keep_directory_target_symlinks_only_in_inventory() {
         .classification_for_path(&link)
         .expect("directory-target symlink is classified");
     assert!(classification.is_lexical_symlink());
-    assert!(classification.is_path_entry());
+    assert!(classification.is_lexical_file() || classification.is_lexical_symlink());
     assert!(!classification.target_is_file());
 
     let views = discover_check_file_views_from_snapshot(

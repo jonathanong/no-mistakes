@@ -122,6 +122,7 @@ pub fn match_language_frontend_queue_globs(
     }
 }
 
+#[inline(never)]
 fn absolutize_discovered_path(repo: &std::path::Path, path: PathBuf) -> PathBuf {
     if path.is_absolute() {
         path

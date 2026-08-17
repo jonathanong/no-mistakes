@@ -46,15 +46,6 @@ impl FileClassification {
     pub fn target_is_file(self) -> bool {
         self.target_file
     }
-
-    /// Visible lexical path existence: a regular file or any symbolic link.
-    ///
-    /// Directory-target and broken links are included. Ordinary directories
-    /// are not. Use [`Self::target_is_file`] when the path must be readable.
-    #[doc(hidden)]
-    pub fn is_path_entry(self) -> bool {
-        self.lexical_file || self.lexical_symlink
-    }
 }
 
 #[derive(Debug)]
@@ -152,25 +143,14 @@ impl FileInventory {
             .collect()
     }
 
-    /// Return lexical files and symbolic links, including directory-target links.
-    #[doc(hidden)]
-    pub fn path_entry_paths(&self) -> Vec<PathBuf> {
-        self.paths
-            .iter()
-            .zip(self.classifications.iter())
-            .filter(|(_, classification)| classification.is_path_entry())
-            .map(|(path, _)| path.clone())
-            .collect()
-    }
-
-    /// Return path entries whose live targets are not readable files.
+    /// Return lexical symlinks whose live targets are not readable files.
     #[doc(hidden)]
     pub fn non_file_path_entry_paths(&self) -> Vec<PathBuf> {
         self.paths
             .iter()
             .zip(self.classifications.iter())
             .filter(|(_, classification)| {
-                classification.is_path_entry() && !classification.target_is_file()
+                classification.is_lexical_symlink() && !classification.target_is_file()
             })
             .map(|(path, _)| path.clone())
             .collect()
