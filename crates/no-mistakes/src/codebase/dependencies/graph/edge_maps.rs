@@ -60,14 +60,14 @@ pub(crate) fn edge_index_from_maps(
     // of the former global edge comparator without a repository-wide sort.
     sort_adjacency_lists(&mut forward, &mut reverse);
     EdgeIndex::from_normalized_adjacency_maps_by_source(forward, reverse, |left, right| {
+        // Source count is much smaller than adjacency length. Compare borrowed
+        // parts here so the flatten does not re-format a key on every compare.
         cmp_node_sort_keys(left, right).then_with(|| left.cmp(right))
     })
 }
 
 fn sort_edge_index_adjacency(index: &mut EdgeIndex<NodeId, EdgeKind>) {
-    index.sort_adjacency_by(|(left_node, left_kind), (right_node, right_kind)| {
-        cmp_node_sort_keys(left_node, right_node)
-            .then_with(|| left_node.cmp(right_node))
-            .then_with(|| left_kind.sort_key().cmp(&right_kind.sort_key()))
+    index.sort_adjacency_by_cached_key(|(node, kind)| {
+        (node_sort_key(node), node.clone(), kind.sort_key())
     });
 }
