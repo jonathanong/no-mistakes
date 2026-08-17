@@ -130,6 +130,13 @@ mod tests_types {
             step.display_name(Path::new("src")),
             "jobs.ts#job:send/step:2"
         );
+
+        let owned: Arc<str> = Arc::from("reuse");
+        let reused = NodeId::symbol(&path, owned.clone());
+        match reused {
+            NodeId::Symbol { symbol, .. } => assert!(Arc::ptr_eq(&owned, &symbol)),
+            other => panic!("expected Symbol, got {other:?}"),
+        }
     }
 
     #[test]

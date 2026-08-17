@@ -2,8 +2,8 @@ pub(crate) fn intern_node_path(path: impl AsRef<Path>) -> Arc<Path> {
     Arc::from(path.as_ref())
 }
 
-pub(crate) fn intern_node_str(value: impl AsRef<str>) -> Arc<str> {
-    Arc::from(value.as_ref())
+pub(crate) fn intern_node_str(value: impl Into<Arc<str>>) -> Arc<str> {
+    value.into()
 }
 
 impl NodeId {
@@ -13,7 +13,7 @@ impl NodeId {
     }
 
     /// Construct a symbol node. Use in expressions only — match `NodeId::Symbol { .. }`.
-    pub fn symbol(path: impl AsRef<Path>, symbol: impl AsRef<str>) -> Self {
+    pub fn symbol(path: impl AsRef<Path>, symbol: impl Into<Arc<str>>) -> Self {
         Self::Symbol {
             file: intern_node_path(path),
             symbol: intern_node_str(symbol),
@@ -21,7 +21,7 @@ impl NodeId {
     }
 
     /// Construct a queue-job node. Use in expressions only — match `NodeId::QueueJob { .. }`.
-    pub fn queue_job(path: impl AsRef<Path>, job: impl AsRef<str>) -> Self {
+    pub fn queue_job(path: impl AsRef<Path>, job: impl Into<Arc<str>>) -> Self {
         Self::QueueJob {
             queue_file: intern_node_path(path),
             job: intern_node_str(job),
@@ -29,7 +29,7 @@ impl NodeId {
     }
 
     /// Construct a workflow-job node. Use in expressions only — match `NodeId::WorkflowJob { .. }`.
-    pub fn workflow_job(path: impl AsRef<Path>, job: impl AsRef<str>) -> Self {
+    pub fn workflow_job(path: impl AsRef<Path>, job: impl Into<Arc<str>>) -> Self {
         Self::WorkflowJob {
             workflow_file: intern_node_path(path),
             job: intern_node_str(job),
@@ -37,7 +37,7 @@ impl NodeId {
     }
 
     /// Construct a workflow-step node. Use in expressions only — match `NodeId::WorkflowStep { .. }`.
-    pub fn workflow_step(path: impl AsRef<Path>, job: impl AsRef<str>, step: usize) -> Self {
+    pub fn workflow_step(path: impl AsRef<Path>, job: impl Into<Arc<str>>, step: usize) -> Self {
         Self::WorkflowStep {
             workflow_file: intern_node_path(path),
             job: intern_node_str(job),
