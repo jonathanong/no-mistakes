@@ -15,10 +15,13 @@ fn canonicalizes_edges_and_sorts_adjacency() {
     let index = index(&[("a", "c", 2), ("a", "b", 1), ("a", "b", 1)]);
     assert_eq!(index.edges(), &[edge("a", "c", 2), edge("a", "b", 1)]);
     assert_eq!(
-        index.forward().get("a").unwrap(),
-        &[("b".to_owned(), 1), ("c".to_owned(), 2)]
+        index.forward().get("a").map(|adj| adj.neighbors.as_slice()),
+        Some(&[("b".to_owned(), 1), ("c".to_owned(), 2)][..])
     );
-    assert_eq!(index.reverse().get("b").unwrap(), &[("a".to_owned(), 1)]);
+    assert_eq!(
+        index.reverse().get("b").map(|adj| adj.neighbors.as_slice()),
+        Some(&[("a".to_owned(), 1)][..])
+    );
 }
 
 #[test]
@@ -28,8 +31,8 @@ fn unique_edge_constructor_retains_ordinals_and_sorts_adjacency() {
 
     assert_eq!(index.edges(), edges);
     assert_eq!(
-        index.forward().get("a").unwrap(),
-        &[("b".to_owned(), 1), ("c".to_owned(), 2)],
+        index.forward().get("a").map(|adj| adj.neighbors.as_slice()),
+        Some(&[("b".to_owned(), 1), ("c".to_owned(), 2)][..]),
         "ordinal order must be independent from adjacency ordering",
     );
 }

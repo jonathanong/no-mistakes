@@ -85,7 +85,13 @@ fn normalized_adjacency_flatten_matches_global_sort_oracle() {
 
     let index = edge_index_from_maps(forward, reverse);
     assert_eq!(index.edges(), expected);
-    assert_eq!(index.forward().get(&empty), Some(&Vec::new()));
+    assert_eq!(
+        index
+            .forward()
+            .get(&empty)
+            .map(|adj| adj.neighbors.as_slice()),
+        Some(&[][..])
+    );
     assert!(index.forward().get(&target_file).is_none());
     assert!(index.reverse().contains_key(&target_file));
 

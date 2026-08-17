@@ -51,13 +51,13 @@ where
             let mut arcs = BTreeSet::new();
             for node in &frontier {
                 if matches!(direction, EdgeDirection::Dependencies | EdgeDirection::Both) {
-                    if let Some(ordinals) = self.forward_ordinals.get(node) {
-                        arcs.extend(ordinals.iter().map(|ordinal| (*ordinal, false)));
+                    if let Some(adj) = self.forward.get(node) {
+                        arcs.extend(adj.ordinals.iter().map(|ordinal| (*ordinal, false)));
                     }
                 }
                 if matches!(direction, EdgeDirection::Dependents | EdgeDirection::Both) {
-                    if let Some(ordinals) = self.reverse_ordinals.get(node) {
-                        arcs.extend(ordinals.iter().map(|ordinal| (*ordinal, true)));
+                    if let Some(adj) = self.reverse.get(node) {
+                        arcs.extend(adj.ordinals.iter().map(|ordinal| (*ordinal, true)));
                     }
                 }
             }
