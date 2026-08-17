@@ -39,12 +39,14 @@ mux.HandleFunc("mail:welcome", HandleWelcome)
 
 #[test]
 fn comment_route_examples_are_not_routes() {
-    let source = r#"
+    let source = crate::codebase::lang_frontends::strip::strip_comments_keep_strings(
+        r#"
 // http.HandleFunc("/docs-example", Hidden)
 http.HandleFunc("/health", Health)
-"#;
+"#,
+    );
     assert_eq!(
-        extract_http_routes(source),
+        extract_http_routes(&source),
         vec![("/health".into(), "Health".into())]
     );
 }

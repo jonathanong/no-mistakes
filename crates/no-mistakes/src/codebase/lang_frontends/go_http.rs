@@ -2,9 +2,8 @@ use regex::Regex;
 use std::sync::OnceLock;
 
 pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
-    let source = super::super::strip::strip_comments_keep_strings(source);
-    let mut routes = extract_pairs(&source, net_http_route_re());
-    routes.extend(extract_pairs(&source, mux_route_re()));
+    let mut routes = extract_pairs(source, net_http_route_re());
+    routes.extend(extract_pairs(source, mux_route_re()));
     routes.sort();
     routes.dedup();
     routes
