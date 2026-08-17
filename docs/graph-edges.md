@@ -63,8 +63,8 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `go-import` | `GoImport` | `go` | Go file -> local files in an imported configured package | [`go-asynq`](../fixtures/lang-frontends/go-asynq) |
 | `go-ref` | `GoReference` | `go` | Go file -> file declaring an exported name | [`go-asynq`](../fixtures/lang-frontends/go-asynq) |
 | `rust-use` | `RustUse` | `rust` | Rust file -> file reached through `use crate/super/self` | [`rust-mods`](../fixtures/lang-frontends/rust-mods) |
-| `rust-mod` | `RustMod` | `rust` | Rust file -> sibling `mod` file | [`rust-mods`](../fixtures/lang-frontends/rust-mods) |
-| `rust-package` | `RustPackage` | `rust` | Rust crate -> files in a configured package | [`rust-mods`](../fixtures/lang-frontends/rust-mods) |
+| `rust-mod` | `RustMod` | `rust` | Rust file -> sibling `mod` file or `#[path]` target | [`rust-mods`](../fixtures/lang-frontends/rust-mods), [`rust-path-deps`](../fixtures/lang-frontends/rust-path-deps) |
+| `rust-package` | `RustPackage` | `rust` | Rust crate -> files in a configured package, path-dep package, or `tests/` integration target | [`rust-mods`](../fixtures/lang-frontends/rust-mods), [`rust-path-deps`](../fixtures/lang-frontends/rust-path-deps) |
 | `ruby-require` | `RubyRequire` | `ruby` | Ruby file -> required local file | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
 | `ruby-ref` | `RubyReference` | `ruby` | Ruby file -> file declaring a referenced constant | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
 | `php-use` | `PhpUse` | `php` | PHP file -> file declaring a used class | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |

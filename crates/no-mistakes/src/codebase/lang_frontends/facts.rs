@@ -21,6 +21,7 @@ pub(crate) struct LangFactMap {
     pub declarations: HashMap<String, BTreeSet<PathBuf>>,
     pub files_by_module: HashMap<String, BTreeSet<PathBuf>>,
     pub files_by_package: HashMap<String, BTreeSet<PathBuf>>,
+    pub package_path_deps: BTreeSet<(String, String)>,
 }
 
 impl LangFactMap {

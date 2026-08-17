@@ -3,6 +3,8 @@ use super::facts::{
     LangFileFacts,
 };
 use super::strip::strip_comments_keep_strings;
+#[path = "rust_path.rs"]
+mod rust_path;
 #[path = "rust_use.rs"]
 mod rust_use;
 use crate::codebase::ts_source::SourceStore;
@@ -18,9 +20,11 @@ pub(crate) fn collect_rust_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, packages);
     let files = files_under(all_files, &roots, "rs");
-    super::facts::collect_files_parallel(files, |path| {
+    let mut facts = super::facts::collect_files_parallel(files, |path| {
         parse_rust_file(root, path, &roots, packages, sources)
-    })
+    });
+    record_rust_path_deps(&roots, packages, sources, &mut facts);
+    facts
 }
 
 fn parse_rust_file(
@@ -57,8 +61,41 @@ fn parse_rust_file(
         route_handlers: Vec::new(),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
-        mods: extract_named(&text, rust_mod_re()),
+        mods: rust_mod_names(&text, path, src_root.as_deref()),
     })
+}
+
+fn rust_mod_names(text: &str, path: &Path, src_root: Option<&Path>) -> Vec<String> {
+    let mut mods = extract_named(text, rust_mod_re());
+    if let Some(src_root) = src_root {
+        for target in rust_path::path_attr_mods(text, path) {
+            if let Some(module) = rust_module_from_path(src_root, &target) {
+                mods.push(module);
+            }
+        }
+    }
+    mods.sort();
+    mods.dedup();
+    mods
+}
+
+fn record_rust_path_deps(
+    roots: &[PathBuf],
+    packages: &[String],
+    sources: &SourceStore,
+    facts: &mut LangFactMap,
+) {
+    for (pkg_root, pkg_name) in roots.iter().zip(packages.iter()) {
+        for dep in rust_path::cargo_path_deps(sources, &pkg_root.join("Cargo.toml")) {
+            if let Some(target) = owning_package(&dep, roots, packages) {
+                if target != *pkg_name {
+                    facts
+                        .package_path_deps
+                        .insert((pkg_name.trim_end_matches('/').to_string(), target));
+                }
+            }
+        }
+    }
 }
 
 fn rust_imports(source: &str, module: Option<&str>) -> Vec<String> {
