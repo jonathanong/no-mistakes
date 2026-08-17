@@ -15,7 +15,7 @@ use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
-use scan::scan;
+use scan::{scan, ScanInput};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -88,16 +88,16 @@ pub(crate) fn check_with_files_sources_and_facts(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(
+            scan(ScanInput {
                 root,
                 config,
                 rule,
-                &opts,
-                &files,
-                &target_roots,
+                opts: &opts,
+                files: &files,
+                target_roots: &target_roots,
                 sources,
                 facts,
-            )
+            })
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

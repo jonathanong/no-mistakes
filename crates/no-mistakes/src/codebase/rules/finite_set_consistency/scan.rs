@@ -8,16 +8,28 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn scan(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule: &RuleDef,
-    opts: &Options,
-    files: &[PathBuf],
-    target_roots: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    facts: Option<&dyn TsFactLookup>,
-) -> Result<Vec<RuleFinding>> {
+pub(super) struct ScanInput<'a> {
+    pub(super) root: &'a Path,
+    pub(super) config: &'a NoMistakesConfig,
+    pub(super) rule: &'a RuleDef,
+    pub(super) opts: &'a Options,
+    pub(super) files: &'a [PathBuf],
+    pub(super) target_roots: &'a [PathBuf],
+    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(super) facts: Option<&'a dyn TsFactLookup>,
+}
+
+pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
+    let ScanInput {
+        root,
+        config,
+        rule,
+        opts,
+        files,
+        target_roots,
+        sources,
+        facts,
+    } = input;
     let skip = super::super::skip_dir_set(config);
     let path_files = if opts
         .sets
