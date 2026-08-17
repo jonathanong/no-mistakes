@@ -10,12 +10,21 @@ fn collect_playwright_selector_edges(
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
 ) -> Vec<Edge> {
-    let Ok(analysis) =
-        run_playwright_selector_analysis(root, config_path, facts, None, None, all_files)
-    else {
-        return vec![];
-    };
-    selector_edges_from_analysis(root, all_files, &analysis, &intern())
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::from_paths(root, all_files);
+    collect_playwright_selector_edges_with_graph(
+        root,
+        config_path,
+        PlaywrightSelectorEdgeInputs {
+            all_files,
+            facts,
+            partial_graph: None,
+            graph_tsconfig: None,
+            snapshot: &snapshot,
+            prepared_settings: &[],
+            interner: &intern(),
+        },
+    )
+    .unwrap_or_default()
 }
 
 #[test]
