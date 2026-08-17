@@ -49,18 +49,7 @@ fn parse_php_file(
         .and_then(|name| name.to_str())
         .unwrap_or("");
     if matches!(ext, "yaml" | "yml") {
-        if !symfony {
-            return None;
-        }
-        return Some(LangFileFacts {
-            path: path.to_path_buf(),
-            package: owning_package(path, roots, apps),
-            module: path
-                .file_stem()
-                .map(|name| name.to_string_lossy().into_owned()),
-            route_handlers: http::extract_yaml_routes(&source),
-            ..LangFileFacts::default()
-        });
+        return symfony.then(|| http::yaml_route_facts(path, roots, apps, &source));
     }
     let text = strip_comments_keep_strings(&source);
     let classes = php_classes(&text);

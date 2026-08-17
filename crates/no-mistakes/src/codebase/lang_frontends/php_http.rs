@@ -1,5 +1,24 @@
+use super::super::facts::{owning_package, LangFileFacts};
 use regex::Regex;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
+
+pub(super) fn yaml_route_facts(
+    path: &Path,
+    roots: &[PathBuf],
+    apps: &[String],
+    source: &str,
+) -> LangFileFacts {
+    LangFileFacts {
+        path: path.to_path_buf(),
+        package: owning_package(path, roots, apps),
+        module: path
+            .file_stem()
+            .map(|name| name.to_string_lossy().into_owned()),
+        route_handlers: extract_yaml_routes(source),
+        ..LangFileFacts::default()
+    }
+}
 
 pub(super) fn extract_php_routes(
     source: &str,
