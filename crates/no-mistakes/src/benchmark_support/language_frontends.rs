@@ -40,14 +40,7 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
     );
     let mut files = discover_visible_paths(&repo)
         .into_iter()
-        .map(|path| {
-            let absolute = if path.is_absolute() {
-                path
-            } else {
-                repo.join(path)
-            };
-            crate::codebase::ts_resolver::normalize_path(&absolute)
-        })
+        .map(|path| crate::codebase::ts_resolver::normalize_path(&repo.join(path)))
         .filter(|path| path.starts_with(&root))
         .collect::<Vec<_>>();
     files.sort();

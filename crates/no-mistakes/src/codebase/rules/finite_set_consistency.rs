@@ -5,6 +5,7 @@ mod extraction_completeness;
 mod literals;
 mod markdown;
 mod object;
+mod scan;
 mod ts_array;
 mod ts_union;
 mod yaml;
@@ -13,10 +14,9 @@ use super::RuleFinding;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use extract::extract_set_with_sources;
 use rayon::prelude::*;
+use scan::{scan, ScanInput};
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "finite-set-consistency";
@@ -88,7 +88,16 @@ pub(crate) fn check_with_files_sources_and_facts(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, &target_roots, sources, facts)
+            scan(ScanInput {
+                root,
+                config,
+                rule,
+                opts: &opts,
+                files: &files,
+                target_roots: &target_roots,
+                sources,
+                facts,
+            })
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -119,63 +128,6 @@ pub fn required_call_site_fact_files(root: &Path, config: &NoMistakesConfig) -> 
     paths
 }
 
-fn scan(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    target_roots: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    facts: Option<&dyn TsFactLookup>,
-) -> Result<Vec<RuleFinding>> {
-    let mut sets = BTreeMap::new();
-    for spec in &opts.sets {
-        if spec.name.is_empty() {
-            continue;
-        }
-        sets.insert(
-            spec.name.clone(),
-            extract_set_with_sources(root, spec, files, target_roots, sources, facts)?,
-        );
-    }
-
-    let mut findings = sets
-        .values()
-        .flat_map(|set| {
-            set.issues.iter().map(|issue| RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: issue.file.clone(),
-                line: issue.line,
-                message: issue.message.clone(),
-                import: None,
-                target: issue.target.clone(),
-            })
-        })
-        .collect::<Vec<_>>();
-    let incomplete_sets = sets
-        .iter()
-        .filter(|(_, set)| extraction_completeness::has_unsuppressed_issues(root, set, sources))
-        .map(|(name, _)| name.as_str())
-        .collect::<BTreeSet<_>>();
-    for comparison in &opts.comparisons {
-        let (Some(left), Some(right)) = (sets.get(&comparison.left), sets.get(&comparison.right))
-        else {
-            continue;
-        };
-        // An incomplete extraction cannot answer a set comparison soundly.
-        // Suppressed extraction issues are intentionally not incomplete: the
-        // static values retained by the extractor can still be compared, and
-        // the shared suppression pass will remove the issue itself later.
-        if incomplete_sets.contains(comparison.left.as_str())
-            || incomplete_sets.contains(comparison.right.as_str())
-        {
-            continue;
-        }
-        comparison::compare(left, right, comparison, &mut findings);
-    }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
-    Ok(findings)
-}
-
 pub(super) fn finding(
     file: &str,
     comparison: &Comparison,
@@ -204,6 +156,9 @@ mod object_property_tests;
 #[cfg(test)]
 #[path = "finite_set_consistency/tests/object.rs"]
 mod object_tests;
+#[cfg(test)]
+#[path = "finite_set_consistency/tests/path_regex.rs"]
+mod path_regex_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

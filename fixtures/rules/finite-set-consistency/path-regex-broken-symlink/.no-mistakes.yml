@@ -1,0 +1,16 @@
+version: 2
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: fileSet
+          kind: path-regex-capture
+          pattern: "^(?<value>delta)\\.txt$"
+        - name: linkSet
+          kind: path-regex-capture
+          pattern: "^(?<value>delta)$"
+      comparisons:
+        - left: fileSet
+          right: linkSet
+          mode: equal-set

@@ -143,6 +143,18 @@ impl FileInventory {
             .collect()
     }
 
+    /// Return lexical symlinks whose live targets are not readable files.
+    #[doc(hidden)]
+    pub fn non_file_path_entry_paths(&self) -> Vec<PathBuf> {
+        let mut extras = Vec::new();
+        for (path, classification) in self.paths.iter().zip(self.classifications.iter()) {
+            if classification.is_lexical_symlink() && !classification.target_is_file() {
+                extras.push(path.clone());
+            }
+        }
+        extras
+    }
+
     #[doc(hidden)]
     pub fn id_for_path(&self, path: &Path) -> Option<FileId> {
         if let Some(id) = self.id_for_normalized_path(path) {

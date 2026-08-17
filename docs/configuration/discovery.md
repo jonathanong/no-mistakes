@@ -36,3 +36,8 @@ from the policy.
 Explicit paths supplied through CLI flags or configuration remain authoritative
 and may name an ignored file. This exception applies to explicit configuration,
 not to automatically discovered source, test, workflow, or runner-config files.
+
+Check and graph file views stay readable file targets. Path-existence extractors
+such as `finite-set-consistency` `path-regex-capture` use the snapshot
+inventory's lexical path entries, so directory-target and broken symlinks can
+match by path without becoming source or graph files.
