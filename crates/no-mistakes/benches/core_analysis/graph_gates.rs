@@ -87,6 +87,12 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         full_plan,
         &full_context,
     );
+    assert!(
+        full_preflight
+            .values()
+            .all(|facts| facts.operational_error.is_none() && facts.parse_error.is_none()),
+        "full-domain extract must succeed for every graph-gates source"
+    );
     let (imports, symbol_imports, symbol_exports, symbol_refs) = fact_totals(&full_preflight);
     expect_count(
         "full-domain fact files",

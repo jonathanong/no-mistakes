@@ -42,8 +42,9 @@ pub(crate) fn count_queue_glob_matches(
     files
         .iter()
         .filter(|path| {
-            matching_queue_cluster(root, path, enqueue_globs, &options).is_some()
-                || matching_queue_cluster(root, path, worker_globs, &options).is_some()
+            let enqueue = matching_queue_cluster(root, path, enqueue_globs, &options).is_some();
+            let worker = matching_queue_cluster(root, path, worker_globs, &options).is_some();
+            enqueue || worker
         })
         .count()
 }

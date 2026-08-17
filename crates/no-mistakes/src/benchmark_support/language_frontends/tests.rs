@@ -51,3 +51,39 @@ fn language_frontend_adapters_drive_production_collectors() {
         "composed fixture collection must be deterministic"
     );
 }
+
+#[test]
+fn queue_glob_match_evaluates_enqueue_and_worker_lists_independently() {
+    let fixture = language_frontend_fixture();
+    let enqueue_only = crate::codebase::dependencies::graph::count_queue_glob_matches(
+        &fixture.root,
+        &fixture.files,
+        &["kafka-topics/**".into()],
+        &[],
+    );
+    let worker_only = crate::codebase::dependencies::graph::count_queue_glob_matches(
+        &fixture.root,
+        &fixture.files,
+        &[],
+        &["python-celery-django/**".into()],
+    );
+    let both = crate::codebase::dependencies::graph::count_queue_glob_matches(
+        &fixture.root,
+        &fixture.files,
+        &["kafka-topics/**".into()],
+        &["python-celery-django/**".into()],
+    );
+    assert!(
+        enqueue_only > 0,
+        "enqueue globs must match kafka-topics files"
+    );
+    assert!(
+        worker_only > 0,
+        "worker globs must match python-celery-django files"
+    );
+    assert_eq!(
+        both,
+        enqueue_only + worker_only,
+        "independent list evaluation must union disjoint enqueue and worker matches"
+    );
+}

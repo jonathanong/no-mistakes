@@ -142,6 +142,12 @@ fn graph_gates_full_domain_and_check_preflight_counts() {
         );
     let facts =
         crate::codebase::ts_source::facts::collect_ts_facts_with_context(&files, plan, &context);
+    assert!(
+        facts
+            .values()
+            .all(|file| file.operational_error.is_none() && file.parse_error.is_none()),
+        "full-domain extract must succeed for every graph-gates source"
+    );
     let route_refs = facts
         .values()
         .map(|file| file.route_refs.len())
