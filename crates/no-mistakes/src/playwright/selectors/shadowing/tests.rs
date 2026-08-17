@@ -94,15 +94,15 @@ fn identifier_shadow_scan_covers_binding_edge_cases() {
         "dataPw"
     ));
     assert_eq!(
-        bindings::function_destructure_binding_ends("function noParen", "dataPw").count(),
+        bindings::function_destructure_binding_ends("function noParen", "dataPw").len(),
         0
     );
     assert_eq!(
-        bindings::function_destructure_binding_ends("function Inner({ dataPw", "dataPw").count(),
+        bindings::function_destructure_binding_ends("function Inner({ dataPw", "dataPw").len(),
         0
     );
     assert_eq!(
-        bindings::function_destructure_binding_ends("function noParen", "dataPw").count(),
+        bindings::function_destructure_binding_ends("function noParen", "dataPw").len(),
         0
     );
     assert!(!bindings::has_declaration("const", "dataPw"));
@@ -115,11 +115,11 @@ fn identifier_shadow_scan_covers_binding_edge_cases() {
         "dataPw"
     ));
     assert_eq!(
-        bindings::function_destructure_binding_ends("function Inner({ dataPw )", "dataPw").count(),
+        bindings::function_destructure_binding_ends("function Inner({ dataPw )", "dataPw").len(),
         0
     );
     assert_eq!(
-        bindings::function_destructure_binding_ends("function Inner()", "").count(),
+        bindings::function_destructure_binding_ends("function Inner()", "").len(),
         0
     );
     assert!(!has_unclosed_jsx_start("{foo"));

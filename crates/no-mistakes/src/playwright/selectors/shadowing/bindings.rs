@@ -13,41 +13,22 @@ pub(super) fn has_destructuring_declaration(source: &str, name: &str) -> bool {
     for_each_decl_binding_start(source, |start| destructure_end(source, start, name, ';')).is_some()
 }
 
-pub(super) fn function_destructure_binding_ends<'a>(
-    source: &'a str,
-    name: &'a str,
-) -> impl Iterator<Item = usize> + 'a {
-    FunctionDestructureEnds {
-        source,
-        name,
-        search: 0,
-    }
-}
-
-struct FunctionDestructureEnds<'a> {
-    source: &'a str,
-    name: &'a str,
-    search: usize,
-}
-
-impl Iterator for FunctionDestructureEnds<'_> {
-    type Item = usize;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        while let Some(at) = find_keyword(self.source, "function", self.search) {
-            self.search = at + "function".len();
-            let after_fn = &self.source[self.search..];
-            let Some(paren) = after_fn.find('(') else {
-                continue;
-            };
-            let params_start = self.search + paren + 1;
-            if let Some(end) = destructure_end(self.source, params_start, self.name, ')') {
-                self.search = end;
-                return Some(end);
-            }
+pub(super) fn function_destructure_binding_ends(source: &str, name: &str) -> Vec<usize> {
+    let mut ends = Vec::new();
+    let mut search = 0;
+    while let Some(at) = find_keyword(source, "function", search) {
+        search = at + "function".len();
+        let after_fn = &source[search..];
+        let Some(paren) = after_fn.find('(') else {
+            continue;
+        };
+        let params_start = search + paren + 1;
+        if let Some(end) = destructure_end(source, params_start, name, ')') {
+            ends.push(end);
+            search = end;
         }
-        None
     }
+    ends
 }
 
 fn for_each_decl_binding_start<T>(
