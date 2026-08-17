@@ -19,7 +19,11 @@ pub(super) fn language_projects(
             None,
         ),
         TestRunner::Go => (config.tests.go.modules.as_slice(), go_includes(), None),
-        TestRunner::Cargo => (config.tests.rust.packages.as_slice(), cargo_includes(), None),
+        TestRunner::Cargo => (
+            config.tests.rust.packages.as_slice(),
+            cargo_includes(),
+            None,
+        ),
         TestRunner::Rails => (config.tests.rails.apps.as_slice(), rails_includes(), None),
         TestRunner::Php => (
             config.tests.php.apps.as_slice(),

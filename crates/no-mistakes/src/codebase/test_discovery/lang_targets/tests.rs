@@ -3,7 +3,13 @@ use crate::codebase::test_discovery::TestRunner;
 
 #[test]
 fn python_pytest_target_uses_file_path() {
-    let target = target_for(TestRunner::Python, Some("app"), false, None, "app/test_users.py");
+    let target = target_for(
+        TestRunner::Python,
+        Some("app"),
+        false,
+        None,
+        "app/test_users.py",
+    );
     assert_eq!(target.base_command, vec!["pytest"]);
     assert_eq!(target.runner_args, vec!["app/test_users.py"]);
     assert_eq!(target.runner, "python");
@@ -12,10 +18,7 @@ fn python_pytest_target_uses_file_path() {
 #[test]
 fn python_tests_py_uses_unittest_module() {
     let target = target_for(TestRunner::Python, Some("app"), false, None, "app/tests.py");
-    assert_eq!(
-        target.base_command,
-        vec!["python", "-m", "unittest"]
-    );
+    assert_eq!(target.base_command, vec!["python", "-m", "unittest"]);
     assert_eq!(target.runner_args, vec!["app.tests"]);
 }
 
@@ -54,7 +57,10 @@ fn cargo_integration_target_uses_test_flag() {
         Some("app"),
         "app/tests/integration.rs",
     );
-    assert_eq!(target.runner_args, vec!["-p", "app", "--test", "integration"]);
+    assert_eq!(
+        target.runner_args,
+        vec!["-p", "app", "--test", "integration"]
+    );
 }
 
 #[test]

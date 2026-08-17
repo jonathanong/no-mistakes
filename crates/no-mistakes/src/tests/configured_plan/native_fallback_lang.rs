@@ -37,14 +37,17 @@ pub(super) fn language_fallback_tests(
     all_tests
         .iter()
         .filter(|test| {
-            discovered.targets_by_path.get(*test).is_some_and(|targets| {
-                targets.iter().any(|target| {
-                    target
-                        .config
-                        .as_deref()
-                        .is_some_and(|config| normalize_root(config) == owner)
+            discovered
+                .targets_by_path
+                .get(*test)
+                .is_some_and(|targets| {
+                    targets.iter().any(|target| {
+                        target
+                            .config
+                            .as_deref()
+                            .is_some_and(|config| normalize_root(config) == owner)
+                    })
                 })
-            })
         })
         .cloned()
         .collect()
@@ -93,7 +96,10 @@ fn owning_root(
         .iter()
         .map(|entry| normalize_root(entry))
         .filter(|entry| {
-            entry.is_empty() || entry == "." || rel == *entry || rel.starts_with(&format!("{entry}/"))
+            entry.is_empty()
+                || entry == "."
+                || rel == *entry
+                || rel.starts_with(&format!("{entry}/"))
         })
         .max_by_key(|entry| entry.len())
 }
@@ -137,7 +143,9 @@ fn is_python_test(rel: &str) -> bool {
 }
 
 fn is_cargo_test(rel: &str) -> bool {
-    rel.contains("/tests/") && rel.ends_with(".rs") || rel.ends_with("/tests.rs") || rel.ends_with("_test.rs")
+    rel.contains("/tests/") && rel.ends_with(".rs")
+        || rel.ends_with("/tests.rs")
+        || rel.ends_with("_test.rs")
 }
 
 fn is_python_manifest(rel: &str) -> bool {

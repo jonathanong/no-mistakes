@@ -43,7 +43,9 @@ pub(super) fn runner_projects_from_visible_with_catalog(
         ));
     }
     if runner.is_language_frontend() {
-        return Ok(super::lang_projects::language_projects(root, config, runner));
+        return Ok(super::lang_projects::language_projects(
+            root, config, runner,
+        ));
     }
     let (configs, policies) = runner_config(config, runner);
     let mut projects =
