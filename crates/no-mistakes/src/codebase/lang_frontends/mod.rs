@@ -38,6 +38,7 @@ pub(crate) struct LangFrontendConfig {
     pub php_framework: Option<String>,
 }
 
+#[derive(Default)]
 pub(crate) struct CollectedLangFacts {
     pub python: LangFactMap,
     pub go: LangFactMap,
@@ -51,16 +52,37 @@ pub(crate) fn collect_all_lang_facts(
     all_files: &[PathBuf],
     config: &LangFrontendConfig,
 ) -> CollectedLangFacts {
+    let ((python, go), (rust, (ruby, php))) = rayon::join(
+        || {
+            rayon::join(
+                || collect_python_facts(root, all_files, &config.python_packages),
+                || collect_go_facts(root, all_files, &config.go_modules),
+            )
+        },
+        || {
+            rayon::join(
+                || collect_rust_facts(root, all_files, &config.rust_packages),
+                || {
+                    rayon::join(
+                        || collect_ruby_facts(root, all_files, &config.rails_apps),
+                        || {
+                            collect_php_facts(
+                                root,
+                                all_files,
+                                &config.php_apps,
+                                config.php_framework.as_deref(),
+                            )
+                        },
+                    )
+                },
+            )
+        },
+    );
     CollectedLangFacts {
-        python: collect_python_facts(root, all_files, &config.python_packages),
-        go: collect_go_facts(root, all_files, &config.go_modules),
-        rust: collect_rust_facts(root, all_files, &config.rust_packages),
-        ruby: collect_ruby_facts(root, all_files, &config.rails_apps),
-        php: collect_php_facts(
-            root,
-            all_files,
-            &config.php_apps,
-            config.php_framework.as_deref(),
-        ),
+        python,
+        go,
+        rust,
+        ruby,
+        php,
     }
 }

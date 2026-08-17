@@ -39,11 +39,13 @@ pub(crate) fn count_queue_glob_matches(
         queue_workers: worker_globs.to_vec(),
         ..GraphConfigOptions::default()
     };
+    let enqueue = compile_queue_globs(enqueue_globs);
+    let worker = compile_queue_globs(worker_globs);
     files
         .iter()
         .filter(|path| {
-            let enqueue = matching_queue_cluster(root, path, enqueue_globs, &options).is_some();
-            let worker = matching_queue_cluster(root, path, worker_globs, &options).is_some();
+            let enqueue = matching_queue_cluster(root, path, &enqueue, &options).is_some();
+            let worker = matching_queue_cluster(root, path, &worker, &options).is_some();
             enqueue || worker
         })
         .count()
