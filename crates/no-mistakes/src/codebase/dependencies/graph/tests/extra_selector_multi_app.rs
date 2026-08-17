@@ -75,6 +75,10 @@ fn collect_playwright_selector_edges_analyzes_prepared_apps_in_parallel() {
         body.contains("TimingKind::Parallel"),
         "overlapping per-app selector timings must be marked non-additive"
     );
+    assert!(
+        !body.contains("analyze_with_policy") && !body.contains("analyze_selectors_with_policy"),
+        "graph selector edges must emit from prepared facts, not the standalone analysis entrypoint"
+    );
 }
 
 #[test]

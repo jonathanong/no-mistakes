@@ -11,6 +11,15 @@ pub(super) struct PlaywrightSelectorEdgeInputs<'a> {
     interner: &'a PathInterner,
 }
 
+impl PlaywrightSelectorEdgeInputs<'_> {
+    fn route_import(&self) -> Option<(&DepGraph, &crate::codebase::ts_resolver::TsConfig)> {
+        self.partial_graph.zip(self.graph_tsconfig)
+    }
+}
+
+include!("edge_playwright_selector_collect.rs");
+include!("edge_playwright_selector_collect_text.rs");
+
 /// Build selector edges for every resolved frontend app. `prepared_settings`
 /// empty means no app was prepared — fall back to loading exactly one
 /// `Settings` from disk, the pre-multi-app behavior. A prepared caller
@@ -29,14 +38,15 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     inputs: PlaywrightSelectorEdgeInputs<'_>,
 ) -> Result<Vec<Edge>> {
     if inputs.prepared_settings.is_empty() {
-        let analysis =
-            run_playwright_selector_analysis_from_snapshot(root, config_path, &inputs, None)?;
-        return Ok(selector_edges_from_analysis(
+        let settings = crate::playwright::config::load_settings_from_visible(
             root,
-            inputs.all_files,
-            &analysis,
-            inputs.interner,
-        ));
+            config_path,
+            &[],
+            None,
+            None,
+            inputs.snapshot,
+        )?;
+        return collect_playwright_selector_edges_for_settings(root, &settings, &inputs);
     }
     // Apps are independent after the base graph exists: each settings
     // projection can scan selectors without waiting on the others.
@@ -50,20 +60,8 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
                     crate::diagnostics::TimingKind::Parallel,
                     || {
                         crate::ast::with_owned_request_parse_cache(|| {
-                            let Ok(analysis) = run_playwright_selector_analysis_from_snapshot(
-                                root,
-                                config_path,
-                                &inputs,
-                                Some(settings),
-                            ) else {
-                                return Vec::new();
-                            };
-                            selector_edges_from_analysis(
-                                root,
-                                inputs.all_files,
-                                &analysis,
-                                inputs.interner,
-                            )
+                            collect_playwright_selector_edges_for_settings(root, settings, &inputs)
+                                .unwrap_or_default()
                         })
                     },
                 )
@@ -75,16 +73,26 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     Ok(edges)
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 fn selector_edges_from_analysis(
     root: &Path,
     all_files: &[PathBuf],
     analysis: &crate::playwright::analysis::types::Analysis,
     interner: &PathInterner,
 ) -> Vec<Edge> {
+    selector_edges_from_playwright_edges(root, all_files, &analysis.edges.edges, interner)
+}
+
+fn selector_edges_from_playwright_edges(
+    root: &Path,
+    all_files: &[PathBuf],
+    playwright_edges: &[crate::playwright::analysis::types::Edge],
+    interner: &PathInterner,
+) -> Vec<Edge> {
     let file_set: std::collections::HashSet<&Path> =
         all_files.iter().map(PathBuf::as_path).collect();
     let mut edges = Vec::new();
-    for playwright_edge in &analysis.edges.edges {
+    for playwright_edge in playwright_edges {
         if let Some((from, to, kind)) = selector_dep_edge(root, playwright_edge, interner) {
             if from.as_file().is_some_and(|path| file_set.contains(path))
                 && to.as_file().is_some_and(|path| file_set.contains(path))
@@ -119,55 +127,4 @@ fn selector_dep_edge(
         NodeId::file_in(interner, root.join(app_file_rel)),
         EdgeKind::Selector,
     ))
-}
-
-fn run_playwright_selector_analysis_from_snapshot(
-    root: &Path,
-    config_path: Option<&Path>,
-    inputs: &PlaywrightSelectorEdgeInputs<'_>,
-    settings_for_app: Option<&crate::playwright::config::Settings>,
-) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
-    let loaded_settings;
-    let settings = if let Some(settings) = settings_for_app {
-        settings
-    } else {
-        loaded_settings = crate::playwright::config::load_settings_from_visible(
-            root,
-            config_path,
-            &[],
-            None,
-            None,
-            inputs.snapshot,
-        )?;
-        &loaded_settings
-    };
-    let test_policy = crate::playwright::playwright_tests::TestPolicy {
-        assert_conditional_tests: false,
-        allow_skipped_tests: false,
-    };
-    let unique_policy = crate::playwright::analysis::types::UniqueSelectorPolicy::default();
-    let route_import_candidate = inputs.partial_graph.zip(inputs.graph_tsconfig);
-    match inputs.facts {
-        Some(facts) => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy_facts_and_graph_from_snapshot(
-            root,
-            settings,
-            test_policy,
-            unique_policy,
-            crate::playwright::analysis::pipeline_selectors::SelectorFactsGraphInputs {
-                facts,
-                route_import_candidate,
-                graph_file_universe: inputs.all_files,
-                snapshot: inputs.snapshot,
-            },
-        ),
-        None => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy_and_graph_from_snapshot(
-            root,
-            settings,
-            test_policy,
-            unique_policy,
-            route_import_candidate,
-            inputs.all_files,
-            inputs.snapshot,
-        ),
-    }
 }

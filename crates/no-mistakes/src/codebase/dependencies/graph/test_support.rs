@@ -7,10 +7,12 @@ pub(super) fn test_interner() -> PathInterner {
 }
 
 mod edge_maps;
+mod playwright;
 
 pub(crate) use edge_maps::add_distinct_worker_file_edges;
 pub(super) use edge_maps::add_queue_edges;
 use edge_maps::edge_index_from_test_maps;
+pub(super) use playwright::run_playwright_selector_analysis;
 
 /// Construct a graph directly from pre-built maps for tests.
 pub(crate) fn from_raw_maps(
@@ -126,32 +128,6 @@ pub(super) fn collect_playwright_route_edges(
         &snapshot,
         &[],
         &test_interner(),
-    )
-}
-
-pub(super) fn run_playwright_selector_analysis(
-    root: &Path,
-    config_path: Option<&Path>,
-    facts: Option<&dyn TsFactLookup>,
-    partial_graph: Option<&DepGraph>,
-    graph_tsconfig: Option<&TsConfig>,
-    graph_file_universe: &[PathBuf],
-) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
-    let snapshot =
-        crate::playwright::fsutil::VisiblePathSnapshot::from_paths(root, graph_file_universe);
-    run_playwright_selector_analysis_from_snapshot(
-        root,
-        config_path,
-        &PlaywrightSelectorEdgeInputs {
-            all_files: graph_file_universe,
-            facts,
-            partial_graph,
-            graph_tsconfig,
-            snapshot: &snapshot,
-            prepared_settings: &[],
-            interner: &test_interner(),
-        },
-        None,
     )
 }
 
