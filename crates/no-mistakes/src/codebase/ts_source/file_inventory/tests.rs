@@ -73,10 +73,12 @@ fn logical_symlink_and_target_paths_remain_distinct() {
     assert!(!symlink_kind.is_lexical_file());
     assert!(symlink_kind.is_lexical_symlink());
     assert!(symlink_kind.target_is_file());
+    assert!(symlink_kind.is_path_entry());
     let target_kind = inventory.classification_for_path(&target).unwrap();
     assert!(target_kind.is_lexical_file());
     assert!(!target_kind.is_lexical_symlink());
     assert!(target_kind.target_is_file());
+    assert!(target_kind.is_path_entry());
 }
 
 #[test]
@@ -113,4 +115,41 @@ fn non_file_entries_have_no_file_classification() {
     assert!(!classification.is_lexical_file());
     assert!(!classification.is_lexical_symlink());
     assert!(!classification.target_is_file());
+    assert!(!classification.is_path_entry());
+    assert!(inventory.path_entry_paths().is_empty());
+    assert!(inventory.target_file_paths().is_empty());
+}
+
+#[cfg(unix)]
+#[test]
+fn directory_target_symlink_is_a_path_entry_not_a_target_file() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/symlink-workspace");
+    let symlink = crate::codebase::ts_resolver::normalize_path(&root.join("link"));
+    let inventory = FileInventory::from_paths(std::slice::from_ref(&symlink));
+    let classification = inventory.classification_for_path(&symlink).unwrap();
+
+    assert!(!classification.is_lexical_file());
+    assert!(classification.is_lexical_symlink());
+    assert!(!classification.target_is_file());
+    assert!(classification.is_path_entry());
+    assert_eq!(inventory.path_entry_paths(), vec![symlink.clone()]);
+    assert!(inventory.target_file_paths().is_empty());
+}
+
+#[cfg(unix)]
+#[test]
+fn broken_symlink_is_a_path_entry_not_a_target_file() {
+    let broken = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/tests-impact/fixture/broken.test.mts"),
+    );
+    let inventory = FileInventory::from_paths(std::slice::from_ref(&broken));
+    let classification = inventory.classification_for_path(&broken).unwrap();
+
+    assert!(classification.is_lexical_symlink());
+    assert!(!classification.target_is_file());
+    assert!(classification.is_path_entry());
+    assert_eq!(inventory.path_entry_paths(), vec![broken.clone()]);
+    assert!(inventory.target_file_paths().is_empty());
 }

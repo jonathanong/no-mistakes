@@ -20,6 +20,8 @@ non-additive. See [Performance diagnostics](diagnostics.md).
 
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
+`path-regex-capture` matches visible symlink paths, including directory-target
+links; see [finite-set-consistency](../rules/finite-set-consistency.md).
 
 If a configured check cannot run, `check` prints a warning to stderr, includes it
 in structured output as `warnings`, and exits nonzero.

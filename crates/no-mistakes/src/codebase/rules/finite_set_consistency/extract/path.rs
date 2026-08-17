@@ -1,4 +1,28 @@
 use super::*;
+use crate::config::v2::schema::RuleDef;
+use crate::config::v2::NoMistakesConfig;
+use std::collections::HashSet;
+
+pub(in super::super) const PATH_REGEX_CAPTURE: &str = "path-regex-capture";
+
+pub(in super::super) fn path_regex_capture_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    rule: &RuleDef,
+    sources: &crate::codebase::ts_source::SourceStore,
+    skip: &HashSet<&str>,
+    target_roots: &[PathBuf],
+) -> Result<Vec<PathBuf>> {
+    let entries: Vec<PathBuf> = sources
+        .inventory()
+        .path_entry_paths()
+        .into_iter()
+        .filter(|path| {
+            crate::codebase::rules::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
+        })
+        .collect();
+    crate::codebase::rules::path_filter::filter_rule_files(root, config, rule, &entries)
+}
 
 pub(in super::super) fn extract_path_regex_set(
     root: &Path,

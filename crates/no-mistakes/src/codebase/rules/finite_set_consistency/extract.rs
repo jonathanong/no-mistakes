@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 mod call;
 mod path;
 use call::extract_call_first_string_argument;
-pub(super) use path::extract_path_regex_set;
+pub(super) use path::{extract_path_regex_set, path_regex_capture_files, PATH_REGEX_CAPTURE};
 
 #[derive(Debug, Clone)]
 pub(super) struct ExtractedSet {
@@ -42,7 +42,7 @@ pub(super) fn extract_set_with_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&dyn TsFactLookup>,
 ) -> Result<ExtractedSet> {
-    if spec.kind == "path-regex-capture" {
+    if spec.kind == path::PATH_REGEX_CAPTURE {
         return extract_path_regex_set(root, spec, files, target_roots);
     }
     let paths = resolve_spec_files(root, &spec.file, target_roots);

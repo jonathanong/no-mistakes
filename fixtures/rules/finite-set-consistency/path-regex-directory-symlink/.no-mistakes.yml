@@ -1,0 +1,47 @@
+version: 2
+rules:
+  - name: directory-target
+    rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: fileSet
+          kind: path-regex-capture
+          pattern: "^(?<value>alpha)\\.txt$"
+        - name: linkSet
+          kind: path-regex-capture
+          pattern: "^(?<value>alpha)$"
+      comparisons:
+        - left: fileSet
+          right: linkSet
+          mode: equal-set
+  - name: file-target
+    rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: fileSet
+          kind: path-regex-capture
+          pattern: "^(?<value>beta)\\.txt$"
+        - name: linkSet
+          kind: path-regex-capture
+          pattern: "^(?<value>beta)$"
+      comparisons:
+        - left: fileSet
+          right: linkSet
+          mode: equal-set
+  - name: outside-target
+    rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: fileSet
+          kind: path-regex-capture
+          pattern: "^(?<value>gamma)\\.txt$"
+        - name: linkSet
+          kind: path-regex-capture
+          pattern: "^(?<value>gamma)$"
+      comparisons:
+        - left: fileSet
+          right: linkSet
+          mode: equal-set

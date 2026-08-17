@@ -5,6 +5,8 @@ use tempfile::TempDir;
 
 #[path = "tests/mixed_availability.rs"]
 mod mixed_availability;
+#[path = "tests/path_entries.rs"]
+mod path_entries;
 
 fn discover_check_file_views(
     root: &Path,

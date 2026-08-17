@@ -48,6 +48,14 @@ Supported set kinds are `ts-string-union`, `ts-const-object-keys`,
 `ts-call-first-string-argument`, `yaml-sequence`,
 `markdown-table-code-cells`, `sql-enum`, and `path-regex-capture`.
 
+`path-regex-capture` matches visible lexical path entries from the request
+inventory: regular files, file-target symlinks, directory-target symlinks
+(including hidden layouts such as `.claude/skills/<name>` →
+`.agents/skills/<name>/`), and broken tracked or visible links. It compares
+the git/discovery path string and does not follow the link or require a
+regular-file target. Graph and source discovery still use readable file
+targets only, so those views stay unchanged.
+
 `ts-call-first-string-argument` extracts the first argument from every matching
 call in the configured file. The argument must be a quoted string or an
 expression-free template literal. `target` is an exact syntactic callee name,
