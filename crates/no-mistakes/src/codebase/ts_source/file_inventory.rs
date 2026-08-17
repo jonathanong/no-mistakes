@@ -144,28 +144,34 @@ impl FileInventory {
     /// Return paths whose live targets were files when this inventory was frozen.
     #[doc(hidden)]
     pub fn target_file_paths(&self) -> Vec<PathBuf> {
-        self.classified_paths(FileClassification::target_is_file)
+        self.paths
+            .iter()
+            .zip(self.classifications.iter())
+            .filter(|(_, classification)| classification.target_is_file())
+            .map(|(path, _)| path.clone())
+            .collect()
     }
 
     /// Return lexical files and symbolic links, including directory-target links.
     #[doc(hidden)]
     pub fn path_entry_paths(&self) -> Vec<PathBuf> {
-        self.classified_paths(FileClassification::is_path_entry)
+        self.paths
+            .iter()
+            .zip(self.classifications.iter())
+            .filter(|(_, classification)| classification.is_path_entry())
+            .map(|(path, _)| path.clone())
+            .collect()
     }
 
     /// Return path entries whose live targets are not readable files.
     #[doc(hidden)]
     pub fn non_file_path_entry_paths(&self) -> Vec<PathBuf> {
-        self.classified_paths(|classification| {
-            classification.is_path_entry() && !classification.target_is_file()
-        })
-    }
-
-    fn classified_paths(&self, include: impl Fn(FileClassification) -> bool) -> Vec<PathBuf> {
         self.paths
             .iter()
             .zip(self.classifications.iter())
-            .filter(|(_, classification)| include(**classification))
+            .filter(|(_, classification)| {
+                classification.is_path_entry() && !classification.target_is_file()
+            })
             .map(|(path, _)| path.clone())
             .collect()
     }
