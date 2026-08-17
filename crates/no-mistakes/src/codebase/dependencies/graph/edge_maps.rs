@@ -67,7 +67,5 @@ pub(crate) fn edge_index_from_maps(
 }
 
 fn sort_edge_index_adjacency(index: &mut EdgeIndex<NodeId, EdgeKind>) {
-    index.sort_adjacency_by_cached_key(|(node, kind)| {
-        (node_sort_key(node), node.clone(), kind.sort_key())
-    });
+    index.sort_adjacency_by_cached_key(|(node, kind)| adjacency_sort_key(node, *kind));
 }

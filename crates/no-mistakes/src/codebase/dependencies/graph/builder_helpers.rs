@@ -122,7 +122,7 @@ fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
     // Each map entry is independent, so normalize both directional views in
     // parallel before the final source-ordered flatten assigns ordinals.
     let normalize = |adj: &mut Vec<(NodeId, EdgeKind)>| {
-        adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), k.sort_key()));
+        adj.sort_by_cached_key(|(n, k)| adjacency_sort_key(n, *k));
         adj.dedup();
     };
     crate::perf_trace::trace("graph.forward_adjacency_normalization", || {
