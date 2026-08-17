@@ -61,3 +61,7 @@ pub(crate) fn plan_args_for(
         json: false,
     }
 }
+
+#[cfg(test)]
+#[path = "args/tests.rs"]
+mod tests;

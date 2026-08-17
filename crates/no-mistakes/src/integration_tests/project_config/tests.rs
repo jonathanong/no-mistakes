@@ -37,6 +37,25 @@ fn glob_normalization_preserves_parent_segments_after_wildcards() {
 }
 
 #[test]
+fn python_load_projects_has_no_js_config_discovery() {
+    let root = Path::new("");
+    let tsconfig = super::super::test_support::tsconfig_without_config(root);
+    assert!(discovered_config_paths(root, Framework::Python, &[]).is_empty());
+    assert!(!Framework::Python.has_js_runner_config());
+    assert!(load_config_projects(
+        root,
+        Framework::Python,
+        "pyproject.toml",
+        root,
+        "",
+        root,
+        &tsconfig,
+    )
+    .unwrap()
+    .is_empty());
+}
+
+#[test]
 fn swift_load_projects_has_no_config_discovery_or_projects() {
     let root = Path::new("");
     let tsconfig = super::super::test_support::tsconfig_without_config(root);

@@ -179,6 +179,51 @@ fn test_runner_framework_maps_dotnet_and_swift() {
 }
 
 #[test]
+fn language_runners_round_trip_names_and_frameworks() {
+    for (name, runner, framework) in [
+        (
+            "python",
+            TestRunner::Python,
+            crate::integration_tests::types::Framework::Python,
+        ),
+        (
+            "go",
+            TestRunner::Go,
+            crate::integration_tests::types::Framework::Go,
+        ),
+        (
+            "cargo",
+            TestRunner::Cargo,
+            crate::integration_tests::types::Framework::Cargo,
+        ),
+        (
+            "rails",
+            TestRunner::Rails,
+            crate::integration_tests::types::Framework::Rails,
+        ),
+        (
+            "php",
+            TestRunner::Php,
+            crate::integration_tests::types::Framework::Php,
+        ),
+    ] {
+        assert_eq!(TestRunner::from_name(name), Some(runner));
+        assert_eq!(runner.as_str(), name);
+        assert!(runner.is_language_frontend());
+        assert_eq!(runner.framework(), framework);
+        assert_eq!(framework.as_str(), name);
+        assert!(!framework.has_js_runner_config());
+    }
+}
+
+#[test]
+#[should_panic(expected = "language projects are handled before runner_config")]
+fn language_runner_config_is_unreachable() {
+    let config = NoMistakesConfig::default();
+    let _ = super::super::projects::runner_config(&config, TestRunner::Python);
+}
+
+#[test]
 fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
     let root = fixture_root("symbols-output");
     let config = NoMistakesConfig::default();
