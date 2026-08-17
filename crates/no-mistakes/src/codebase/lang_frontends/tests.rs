@@ -240,13 +240,52 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
         )
     );
     assert!(
-        !collected.python.files.is_empty()
-            && !collected.go.files.is_empty()
-            && !collected.rust.files.is_empty()
-            && !collected.ruby.files.is_empty()
-            && !collected.php.files.is_empty(),
-        "composed fixture must produce facts for every configured language"
+        !collected.python.files.is_empty(),
+        "composed fixture must produce python facts"
     );
+    assert!(
+        !collected.go.files.is_empty(),
+        "composed fixture must produce go facts"
+    );
+    assert!(
+        !collected.rust.files.is_empty(),
+        "composed fixture must produce rust facts"
+    );
+    assert!(
+        !collected.ruby.files.is_empty(),
+        "composed fixture must produce ruby facts"
+    );
+    assert!(
+        !collected.php.files.is_empty(),
+        "composed fixture must produce php facts"
+    );
+}
+
+#[test]
+fn collect_all_lang_facts_with_partially_configured_languages() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/lang-frontends"),
+    );
+    let files = all_files(&root);
+    let config = LangFrontendConfig {
+        python_packages: vec!["python-celery-django/app".into()],
+        go_modules: vec!["go-asynq".into(), "go-asynq/worker".into()],
+        ..LangFrontendConfig::default()
+    };
+    let collected = collect_all_lang_facts(&root, &files, &config);
+    assert_eq!(
+        collected.python,
+        collect_python_facts(&root, &files, &config.python_packages)
+    );
+    assert_eq!(
+        collected.go,
+        collect_go_facts(&root, &files, &config.go_modules)
+    );
+    assert!(collected.rust.files.is_empty());
+    assert!(collected.ruby.files.is_empty());
+    assert!(collected.php.files.is_empty());
+    assert!(!collected.python.files.is_empty());
+    assert!(!collected.go.files.is_empty());
 }
 
 #[test]
