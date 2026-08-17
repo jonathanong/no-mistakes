@@ -159,7 +159,15 @@ impl DepGraph {
         config_path: Option<&Path>,
         facts: Option<&dyn TsFactLookup>,
     ) -> Result<Self> {
-        let config_options = graph_config_options_for_plan_with_config(root, plan, config_path);
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+        let config_options = graph_config_options_for_plan_with_config_and_session(
+            root,
+            plan,
+            config_path,
+            Some(&session),
+            Some(graph_files.all()),
+        );
         Self::build_with_plan_files_options_and_facts(
             GraphEdgeBuildInputs {
                 root,
@@ -179,7 +187,7 @@ impl DepGraph {
             },
             facts,
             SuppliedFactPolicy::FillSparse,
-            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
+            session,
         )
     }
 }
