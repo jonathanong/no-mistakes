@@ -29,6 +29,8 @@ words:
   - eprintln
   - errexit
   - extglob
+  - fastapi
+  - FastAPI
   - frontends
   - funcs
   - gitignore
