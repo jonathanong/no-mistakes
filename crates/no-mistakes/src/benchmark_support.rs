@@ -8,9 +8,14 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::path::Path;
 
+mod language_frontends;
 mod production_graph;
 mod relationships;
 mod scoped_resolver;
+pub use language_frontends::{
+    collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,
+    match_language_frontend_queue_globs, LanguageFrontendFixture, LanguageFrontendSummary,
+};
 pub use production_graph::{
     append_production_selectors, finalize_production_graph, production_graph_fixture,
     ProductionGraphFixture, ProductionGraphSummary,
