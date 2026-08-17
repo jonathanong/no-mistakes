@@ -60,3 +60,32 @@ fn empty_language_config_still_emits_kafka_queue_edges() {
         .iter()
         .any(|(_, _, kind)| *kind == EdgeKind::QueueEnqueue));
 }
+
+#[test]
+fn rust_path_deps_emit_package_and_mod_edges() {
+    let root = lang_fixture("rust-path-deps");
+    let options = GraphConfigOptions {
+        rust_packages: vec!["app".into(), "helper".into()],
+        ..GraphConfigOptions::default()
+    };
+    let edges = collect_language_frontend_edges_for_test(&root, &lang_files(&root), Some(&options));
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RustMod
+            && from.as_file().is_some_and(|path| path.ends_with("app/src/lib.rs"))
+            && to.as_file().is_some_and(|path| path.ends_with("app/src/alt.rs"))
+    }));
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RustPackage
+            && from.as_file().is_some_and(|path| path.ends_with("app/src/lib.rs"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("helper/src/lib.rs"))
+    }));
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RustPackage
+            && from.as_file().is_some_and(|path| path.ends_with("app/src/lib.rs"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("tests/integration.rs"))
+    }));
+}

@@ -41,6 +41,7 @@ fn collect_language_frontend_edges(
         emit_lang_edges(&facts.rust, EdgeKind::RustUse, EdgeKind::RustUse, &mut edges);
         emit_mod_edges(&facts.rust, EdgeKind::RustMod, &mut edges);
         emit_package_edges(&facts.rust, EdgeKind::RustPackage, &mut edges);
+        emit_path_dep_package_edges(&facts.rust, EdgeKind::RustPackage, &mut edges);
         emit_lang_edges(&facts.ruby, EdgeKind::RubyRequire, EdgeKind::RubyReference, &mut edges);
         emit_lang_edges(&facts.php, EdgeKind::PhpUse, EdgeKind::PhpUse, &mut edges);
         emit_package_edges(&facts.php, EdgeKind::PhpPackage, &mut edges);
@@ -152,6 +153,21 @@ fn emit_package_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>
             continue;
         };
         push_file_edges(edges, root, files, kind);
+    }
+}
+
+fn emit_path_dep_package_edges(facts: &LangFactMap, kind: EdgeKind, edges: &mut Vec<Edge>) {
+    for (from_pkg, to_pkg) in &facts.package_path_deps {
+        let Some(from_files) = facts.files_by_package.get(from_pkg) else {
+            continue;
+        };
+        let Some(from_root) = package_root_file(from_files) else {
+            continue;
+        };
+        let Some(to_files) = facts.files_by_package.get(to_pkg) else {
+            continue;
+        };
+        push_file_edges(edges, from_root, to_files, kind);
     }
 }
 
