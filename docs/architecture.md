@@ -281,10 +281,12 @@ byte-identical output) can be measured without OOMing CI bench jobs.
 
 The harness measures only in-process APIs: lazy traversal, fact extraction,
 canonical graph build/query, workspace load/resolution, symbols, aggregate
-checks, reused multi-report analysis, impacted checks, and
-disabled/timings/verbose observer overhead. Every workload runs a preflight
-that validates stable, fixture-specific output invariants before the measured
-loop.
+checks, reused multi-report analysis, impacted checks,
+disabled/timings/verbose observer overhead, composed language-frontend
+extract/edges/queue-glob matching on `fixtures/lang-frontends`, full-domain
+fact extract on graph-gates, and an aggregate `check` of that same fixture.
+Every workload runs a preflight that validates stable, fixture-specific
+output invariants before the measured loop.
 
 CI builds the harness once for CodSpeed CPU simulation and memory instrumentation
 and runs those modes serially. New workloads must use checked-in fixtures,

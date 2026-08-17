@@ -57,7 +57,7 @@ jobs:
           changed=false
           while IFS= read -r -d '' path; do
             case "$path" in
-              Cargo.toml|Cargo.lock|crates/*|fixtures/performance/*|.cargo/*|rust-toolchain*|.github/workflows/ci.yml)
+              Cargo.toml|Cargo.lock|crates/*|fixtures/performance/*|fixtures/lang-frontends/*|.cargo/*|rust-toolchain*|.github/workflows/ci.yml)
                 changed=true
                 break
                 ;;

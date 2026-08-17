@@ -13,6 +13,12 @@ pub(super) const EXPECTED_GRAPH_NODES: usize = 200;
 pub(super) const EXPECTED_SYMBOL_NODES: usize = 112;
 pub(super) const EXPECTED_FORWARD_DEPS: usize = 123;
 pub(super) const EXPECTED_REVERSE_DEPENDENTS: usize = 35;
+pub(super) const EXPECTED_ROUTE_REFS: usize = 12;
+pub(super) const EXPECTED_BACKEND_ROUTES: usize = 9;
+pub(super) const EXPECTED_QUEUE_USAGE: usize = 75;
+pub(super) const EXPECTED_HTTP_CALLS: usize = 13;
+pub(super) const EXPECTED_PROCESS_SPAWNS: usize = 4;
+pub(super) const EXPECTED_REACT_COMPONENTS: usize = 19;
 pub(super) const FORWARD_ROOTS: &[&str] = &[
     "apps/web/src/entry.tsx",
     "apps/api/src/entry.ts",
@@ -126,6 +132,22 @@ pub(super) fn fact_totals(facts: &TsFactMap) -> (usize, usize, usize, usize) {
                         .map(|symbols| symbols.exports.len())
                         .unwrap_or(0),
                 refs + file.symbol_references.len(),
+            )
+        },
+    )
+}
+
+pub(super) fn domain_totals(facts: &TsFactMap) -> (usize, usize, usize, usize, usize, usize) {
+    facts.values().fold(
+        (0, 0, 0, 0, 0, 0),
+        |(route_refs, backend_routes, queue_usage, http_calls, process_spawns, react), file| {
+            (
+                route_refs + file.route_refs.len(),
+                backend_routes + file.backend_routes.len(),
+                queue_usage + usize::from(file.queue_usage.is_some()),
+                http_calls + file.http_calls.len(),
+                process_spawns + file.process_spawns.len(),
+                react + file.react_components.len(),
             )
         },
     )
