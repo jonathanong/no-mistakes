@@ -1,4 +1,8 @@
 use crate::playwright::selectors::{compile_selector_regexes_with_html_ids, SelectorRegexes};
+
+#[cfg(test)]
+#[path = "regex_cache_tests.rs"]
+mod tests;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 

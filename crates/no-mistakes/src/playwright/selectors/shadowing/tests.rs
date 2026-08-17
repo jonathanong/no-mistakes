@@ -78,6 +78,32 @@ fn jsx_start_detection_rejects_comparison_operators() {
 }
 
 #[test]
+fn identifier_shadow_scan_covers_binding_edge_cases() {
+    assert!(!prefix_shadows("const", "dataPw"));
+    assert!(!prefix_shadows("constdataPw = 1; return ", "dataPw"));
+    assert!(!prefix_shadows(
+        "function Inner dataPw) { return ",
+        "dataPw"
+    ));
+    assert!(!prefix_shadows("function Inner(dataPw { return ", "dataPw"));
+    assert!(!prefix_shadows("", ""));
+    assert!(!bindings::is_identifier_at("dataPw", 0, "dataPwx"));
+    assert!(!bindings::has_declaration("constx dataPw", "dataPw"));
+    assert!(!bindings::has_destructuring_declaration(
+        "const dataPw = 1;",
+        "dataPw"
+    ));
+    assert_eq!(
+        bindings::function_destructure_binding_ends("function noParen", "dataPw").count(),
+        0
+    );
+    assert_eq!(
+        bindings::function_destructure_binding_ends("function Inner({ dataPw", "dataPw").count(),
+        0
+    );
+}
+
+#[test]
 fn identifier_shadow_scan_matches_declaration_and_function_destructure() {
     assert!(prefix_shadows("const dataPw = 'x'; return ", "dataPw"));
     assert!(prefix_shadows("let dataPw\n", "dataPw"));
