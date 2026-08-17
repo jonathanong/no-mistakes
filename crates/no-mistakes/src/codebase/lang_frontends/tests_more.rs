@@ -11,6 +11,12 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn store_for(files: &[PathBuf]) -> crate::codebase::ts_source::SourceStore {
+    crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(files),
+    ))
+}
+
 fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
     let repo = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
@@ -32,7 +38,9 @@ fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
 #[test]
 fn python_masks_docstring_symbols_and_keeps_include_routes() {
     let root = fixture("python-celery-django");
-    let facts = collect_python_facts(&root, &all_files(&root), &["app".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_python_facts(&root, &files, &["app".into()], &store);
     let views = facts
         .files
         .values()
@@ -58,7 +66,9 @@ fn python_masks_docstring_symbols_and_keeps_include_routes() {
 #[test]
 fn php_collects_invokable_routes_and_fq_should_queue() {
     let root = fixture("php-laravel");
-    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], Some("laravel"));
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_php_facts(&root, &files, &[".".into()], Some("laravel"), &store);
     let routes = facts
         .files
         .values()
@@ -86,7 +96,9 @@ fn kafka_captures_every_subscription_array_topic() {
 #[test]
 fn go_skips_test_files_and_scopes_package_modules() {
     let root = fixture("go-asynq");
-    let facts = collect_go_facts(&root, &all_files(&root), &["worker".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_go_facts(&root, &files, &["worker".into()], &store);
     let test = facts
         .files
         .values()
@@ -125,7 +137,9 @@ fn go_skips_test_files_and_scopes_package_modules() {
 #[test]
 fn rust_expands_grouped_use_trees() {
     let root = fixture("rust-mods");
-    let facts = collect_rust_facts(&root, &all_files(&root), &[".".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_rust_facts(&root, &files, &[".".into()], &store);
     let lib = facts
         .files
         .values()
@@ -138,7 +152,9 @@ fn rust_expands_grouped_use_trees() {
 #[test]
 fn ruby_captures_qualified_constants() {
     let root = fixture("rails-jobs");
-    let facts = collect_ruby_facts(&root, &all_files(&root), &[".".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_ruby_facts(&root, &files, &[".".into()], &store);
     let controller = facts
         .files
         .values()

@@ -1,5 +1,6 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -9,15 +10,16 @@ pub(crate) fn collect_go_facts(
     root: &Path,
     all_files: &[PathBuf],
     modules: &[String],
+    sources: &SourceStore,
 ) -> LangFactMap {
     let roots = configured_roots(root, modules);
     let files = exclude_nested_go_modules(files_under(all_files, &roots, "go"), &roots, all_files);
     let manifests: HashMap<PathBuf, Option<String>> = roots
         .iter()
-        .map(|module_root| (module_root.clone(), read_go_module(module_root)))
+        .map(|module_root| (module_root.clone(), read_go_module(module_root, sources)))
         .collect();
     super::facts::collect_files_parallel(files, |path| {
-        parse_go_file(path, &roots, modules, &manifests)
+        parse_go_file(path, &roots, modules, &manifests, sources)
     })
 }
 
@@ -26,8 +28,9 @@ fn parse_go_file(
     roots: &[PathBuf],
     modules: &[String],
     manifests: &HashMap<PathBuf, Option<String>>,
+    sources: &SourceStore,
 ) -> Option<LangFileFacts> {
-    let source = std::fs::read_to_string(path).ok()?;
+    let source = sources.read_path(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let symbols = super::strip::mask_strings(&text);
     let package = owning_package(path, roots, modules);
@@ -76,8 +79,9 @@ fn exclude_nested_go_modules(
         .collect()
 }
 
-fn read_go_module(root: &Path) -> Option<String> {
-    std::fs::read_to_string(root.join("go.mod"))
+fn read_go_module(root: &Path, sources: &SourceStore) -> Option<String> {
+    sources
+        .read_path(&root.join("go.mod"))
         .ok()
         .and_then(|source| {
             source.lines().find_map(|line| {

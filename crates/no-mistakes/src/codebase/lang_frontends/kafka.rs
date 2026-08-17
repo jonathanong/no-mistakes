@@ -1,3 +1,4 @@
+use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::Path;
 use std::sync::OnceLock;
@@ -16,8 +17,8 @@ pub(crate) fn topic_identity(cluster: Option<&str>, topic: &str) -> String {
     }
 }
 
-pub(crate) fn scan_file(path: &Path) -> Option<(Vec<String>, Vec<String>)> {
-    let source = std::fs::read_to_string(path).ok()?;
+pub(crate) fn scan_file(path: &Path, sources: &SourceStore) -> Option<(Vec<String>, Vec<String>)> {
+    let source = sources.read_path(path).ok()?;
     let text = super::strip::strip_comments_keep_strings(&source);
     Some(extract_kafka_topics(&text))
 }
