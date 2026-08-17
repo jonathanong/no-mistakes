@@ -4,7 +4,10 @@ mod graph_rules;
 mod helpers;
 mod source_store;
 use graph_rules::graph_rule_findings;
-use helpers::{finalize_findings, storybook_findings, suppress_findings, StorybookFindingsRequest};
+use helpers::{
+    finalize_findings, required_graph_facts, storybook_findings, suppress_findings,
+    StorybookFindingsRequest,
+};
 
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,
@@ -40,12 +43,8 @@ pub(super) fn run(
         });
     }
     if let Some(graph_plan) = canonical_graph_plan(config) {
-        let (required_facts, _) = match prepared_graph {
-            Some(prepared) => crate::codebase::dependencies::graph::
-                ts_fact_plan_and_context_for_plan_with_prepared(root, graph_plan, prepared),
-            None => crate::codebase::dependencies::graph::
-                ts_fact_plan_and_context_for_plan_with_config(root, graph_plan, config_path),
-        };
+        let (required_facts, _) =
+            required_graph_facts(root, graph_plan, config_path, prepared_graph, &session);
         if !shared.graph_plan().covers(required_facts) {
             anyhow::bail!(
                 "shared check facts are missing graph facts required by configured codebase rules"

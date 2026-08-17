@@ -21,6 +21,7 @@ include!("build_plan_facts.rs");
 include!("canonical.rs");
 include!("graph_files.rs");
 include!("files_config.rs");
+include!("files_config_session.rs");
 include!("files_config_prepared.rs");
 include!("files_config_fact_context.rs");
 include!("files_config_routes.rs");

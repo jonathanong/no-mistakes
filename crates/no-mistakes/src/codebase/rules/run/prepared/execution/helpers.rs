@@ -1,4 +1,25 @@
 use super::*;
+use crate::codebase::dependencies::graph::PreparedGraphConfig;
+
+pub(super) fn required_graph_facts(
+    root: &Path,
+    graph_plan: GraphBuildPlan,
+    config_path: Option<&Path>,
+    prepared_graph: Option<&PreparedGraphConfig>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> (
+    crate::codebase::ts_source::facts::TsFactPlan,
+    crate::codebase::ts_source::facts::TsFactContext,
+) {
+    match prepared_graph {
+        Some(prepared) => crate::codebase::dependencies::graph::
+            ts_fact_plan_and_context_for_plan_with_prepared(root, graph_plan, prepared),
+        None => crate::codebase::dependencies::graph::
+            ts_fact_plan_and_context_for_plan_with_config_and_session(
+                root, graph_plan, config_path, Some(session), None,
+            ),
+    }
+}
 
 pub(super) struct StorybookFindingsRequest<'a> {
     pub(super) root: &'a Path,
