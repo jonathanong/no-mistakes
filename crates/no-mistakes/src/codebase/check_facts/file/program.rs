@@ -1,8 +1,7 @@
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
+use super::plan::{ts_extract_context, ts_extract_plan};
 use super::should_store_source;
-use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_resource_roots;
-use crate::codebase::ts_source::facts::{self, TsFileFacts};
-use crate::codebase::ts_symbols::extract_symbols_from_program;
+use crate::codebase::ts_source::facts;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -15,50 +14,22 @@ pub(crate) fn collect_file_facts_from_program(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
-    let needs_import_facts = plan.imports
-        || plan.graph.imports
-        || plan.graph.function_calls
-        || playwright.is_some_and(|plan| plan.file(path).is_some());
-    let import_facts = if needs_import_facts {
-        extract_import_facts_from_program_with_source_and_resource_roots(
-            program,
-            source,
-            plan.graph.resources,
-        )
-    } else {
-        Default::default()
-    };
-    let resources = if plan.graph.resources {
-        crate::codebase::ts_resources::extract(program, source)
-    } else {
-        Default::default()
-    };
-    let symbols = if plan.symbols || plan.graph.symbols {
-        Some(std::sync::Arc::new(extract_symbols_from_program(
-            program, source,
-        )))
-    } else {
-        None
-    };
-    let call_sites = if plan.graph.call_sites {
-        facts::call_sites::collect_call_site_facts(program, source)
-    } else {
-        Vec::new()
-    };
-    let react = if plan.react || plan.graph.react {
-        Some(std::sync::Arc::new(
-            match plan.graph_context.visible_files.as_deref() {
-                Some(visible) => crate::react_traits::analyze::file::analyze_program_from_visible(
-                    path, root, source, program, visible,
-                ),
-                None => {
-                    crate::react_traits::analyze::file::analyze_program(path, root, source, program)
-                }
-            },
-        ))
-    } else {
-        None
-    };
+    let stored_source =
+        owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
+    let ts = facts::collect_file_facts_from_program(
+        path,
+        ts_extract_plan(plan, path, playwright),
+        &ts_extract_context(root, plan),
+        source,
+        program,
+        None,
+        stored_source.clone(),
+    );
+    let react = (plan.react || plan.graph.react).then(|| {
+        Arc::new(crate::react_traits::analyze::file::FileAnalysis {
+            components: Arc::new(ts.react_components.clone()),
+        })
+    });
     let react_usages = plan.react_usages.then(|| {
         crate::react_traits::pipeline::usages::collect_usage_file_facts(
             path,
@@ -67,16 +38,6 @@ pub(crate) fn collect_file_facts_from_program(
             plan.graph_context.visible_files.as_deref(),
         )
     });
-    let queue = if plan.queue || plan.graph.queue_project {
-        Some(crate::queue::extract::extract_program_with_factories(
-            path,
-            source,
-            program,
-            &plan.queue_factory_names,
-        ))
-    } else {
-        None
-    };
     let integration = plan
         .integration
         .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
@@ -98,12 +59,6 @@ pub(crate) fn collect_file_facts_from_program(
     let server_route_client_boundary = plan.server_route_client_boundary.then(|| {
         crate::codebase::rules::server_route_client_boundary::extract_program(path, source, program)
     });
-    let domain = if plan.graph.has_domain_facts() {
-        facts::domain::collect_domain_facts(program, path, source, plan.graph, &plan.graph_context)
-    } else {
-        facts::domain::DomainFacts::default()
-    };
-    let queue_project = queue.or(domain.queue_project);
     let playwright_fetch = playwright
         .filter(|plan| plan.contains_source(path))
         .map(|plan| {
@@ -124,44 +79,7 @@ pub(crate) fn collect_file_facts_from_program(
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright =
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
-    let stored_source =
-        owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
-    let ts = TsFileFacts {
-        operational_error: None,
-        source: stored_source.clone(),
-        parse_error: None,
-        fatal_parse_error: false,
-        imports: import_facts.imports,
-        function_calls: import_facts.function_calls,
-        call_sites,
-        resource_calls: resources.calls,
-        resource_diagnostics: resources.diagnostics,
-        symbol_references: import_facts.symbol_references,
-        exported_functions: import_facts.exported_functions,
-        exported_resource_roots: import_facts.exported_resource_roots,
-        exported_resource_scopes: import_facts.exported_resource_scopes,
-        unknown_callers: import_facts.unknown_callers,
-        has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
-        symbols: symbols.as_deref().cloned(),
-        route_refs: domain.route_refs,
-        route_helpers: domain.route_helpers,
-        route_helper_imports: domain.route_helper_imports,
-        route_helper_refs: domain.route_helper_refs,
-        backend_routes: domain.backend_routes,
-        queue_usage: domain.queue_usage,
-        queue_create_line: domain.queue_create_line,
-        queue_name: domain.queue_name,
-        queue_project,
-        http_calls: domain.http_calls,
-        process_spawns: domain.process_spawns,
-        server_routes: domain.server_routes,
-        effect_calls: domain.effect_calls,
-        rsc_environment: domain.rsc_environment,
-        react_components: react
-            .as_ref()
-            .map(|analysis| analysis.components.as_ref().clone())
-            .unwrap_or_default(),
-    };
+    let symbols = ts.symbols.clone().map(Arc::new);
     CheckFileFacts {
         ts: ts.into(),
         source: stored_source,

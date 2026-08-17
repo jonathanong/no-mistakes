@@ -151,6 +151,8 @@ impl DepGraph {
         )
     }
 
+    /// Standalone/lazy graph build. Check, analyzeProject, and prepared-rule
+    /// builders require complete supplied facts instead of filling sparse gaps.
     pub(crate) fn build_with_plan_files_config_and_facts(
         root: &Path,
         tsconfig: &TsConfig,
