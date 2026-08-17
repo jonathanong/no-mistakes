@@ -280,7 +280,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             &workspace,
             &visible,
         ),
-        Some((NodeId::Module("zod".to_string()), EdgeKind::DynamicImport))
+        Some((NodeId::module("zod"), EdgeKind::DynamicImport))
     );
     assert_eq!(
         import_target(

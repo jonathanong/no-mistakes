@@ -42,7 +42,7 @@ pub(super) fn lockfile_seed_candidates(
         // Fall back to File(workspace_entry) for workspace packages whose graph edges
         // point at the entry file rather than a Module node.
         let start_node = {
-            let module_node = NodeId::Module(pkg_name.clone());
+            let module_node = NodeId::module(pkg_name.clone());
             if graph.has_reverse_node(&module_node) {
                 module_node
             } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {

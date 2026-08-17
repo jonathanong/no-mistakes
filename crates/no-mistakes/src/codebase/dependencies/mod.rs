@@ -188,7 +188,7 @@ fn apply_target_module_filters(
     Ok(entries
         .into_iter()
         .filter(|entry| match &entry.node {
-            graph::NodeId::Module(specifier) => filter.is_match(specifier),
+            graph::NodeId::Module(specifier) => filter.is_match(specifier.as_ref()),
             _ => false,
         })
         .collect())

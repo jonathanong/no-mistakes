@@ -10,6 +10,12 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn store_for(files: &[PathBuf]) -> crate::codebase::ts_source::SourceStore {
+    crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(files),
+    ))
+}
+
 fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
     let repo = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
@@ -31,7 +37,9 @@ fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
 #[test]
 fn python_keeps_import_aliases_and_masks_docstring_imports() {
     let root = fixture("python-celery-django");
-    let facts = collect_python_facts(&root, &all_files(&root), &["app".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_python_facts(&root, &files, &["app".into()], &store);
     let enqueue = facts
         .files
         .values()
@@ -55,7 +63,9 @@ fn python_keeps_import_aliases_and_masks_docstring_imports() {
 #[test]
 fn rust_skips_inline_mods_and_treats_crate_root_self_as_root() {
     let root = fixture("rust-mods");
-    let facts = collect_rust_facts(&root, &all_files(&root), &[".".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_rust_facts(&root, &files, &[".".into()], &store);
     let lib = facts
         .files
         .values()
@@ -75,7 +85,9 @@ fn rust_skips_inline_mods_and_treats_crate_root_self_as_root() {
 #[test]
 fn php_reads_readonly_classes_and_leading_route_separators() {
     let root = fixture("php-laravel");
-    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], Some("laravel"));
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_php_facts(&root, &files, &[".".into()], Some("laravel"), &store);
     assert!(facts
         .declarations
         .keys()
@@ -106,11 +118,9 @@ fn kafka_matches_python_send_and_reordered_subscribe() {
 #[test]
 fn go_records_imports_of_configured_sibling_modules() {
     let root = fixture("go-asynq");
-    let facts = collect_go_facts(
-        &root,
-        &all_files(&root),
-        &["worker".into(), "nested".into()],
-    );
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_go_facts(&root, &files, &["worker".into(), "nested".into()], &store);
     let enqueue = facts
         .files
         .values()

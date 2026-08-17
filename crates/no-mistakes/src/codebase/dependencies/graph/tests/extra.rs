@@ -98,7 +98,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     );
     assert!(!module_deps
         .iter()
-        .any(|entry| entry.node == NodeId::Module("@local/pkg".to_string())));
+        .any(|entry| entry.node == NodeId::module("@local/pkg")));
 
     let hidden_root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-hidden"));
     let hidden_tsconfig = TsConfig {

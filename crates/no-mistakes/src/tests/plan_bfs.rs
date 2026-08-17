@@ -5,7 +5,7 @@ pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, file);
             format!("{}#{}", rel, symbol)
         }
-        NodeId::Module(specifier) => specifier.clone(),
+        NodeId::Module(specifier) => specifier.to_string(),
         NodeId::QueueJob { queue_file, job } => {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, queue_file);
             format!("{}#{}", rel, job)

@@ -127,7 +127,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
     }));
     assert!(!edges
         .iter()
-        .any(|(_, to, _)| { *to == NodeId::Module("@fixture/hidden".to_string()) }));
+        .any(|(_, to, _)| { *to == NodeId::module("@fixture/hidden") }));
     assert_eq!(
         import_target(
             "@fixture/hidden",

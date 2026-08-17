@@ -2,18 +2,18 @@ pub use crate::codebase::ts_source::SKIP_DIRS;
 
 /// A node in the dependency graph: a source file, external module, or virtual node.
 ///
-/// File paths are interned as `Arc<Path>` and symbol/job names as `Arc<str>`
+/// File paths are interned as `Arc<Path>` and symbol/job/module names as `Arc<str>`
 /// so cloning a `NodeId` does not copy those bytes. Construct with
-/// `NodeId::file` / `symbol` / …; keep matching `NodeId::File(path)` and
+/// `NodeId::file` / `symbol` / `module` / …; keep matching `NodeId::File(path)` and
 /// `NodeId::Symbol { file, .. }`.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialOrd, Ord)]
 pub enum NodeId {
     File(Arc<Path>),
     Symbol {
         file: Arc<Path>,
         symbol: Arc<str>,
     },
-    Module(String),
+    Module(Arc<str>),
     QueueJob {
         queue_file: Arc<Path>,
         job: Arc<str>,
@@ -62,7 +62,7 @@ impl NodeId {
                 let rel = file.strip_prefix(root).unwrap_or(file);
                 format!("{}#{symbol}", rel.display())
             }
-            NodeId::Module(specifier) => specifier.clone(),
+            NodeId::Module(specifier) => specifier.to_string(),
             NodeId::QueueJob { queue_file, job } => {
                 let rel = queue_file.strip_prefix(root).unwrap_or(queue_file.as_ref());
                 format!("{}#{job}", rel.display())
