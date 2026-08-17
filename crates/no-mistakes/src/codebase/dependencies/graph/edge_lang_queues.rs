@@ -1,14 +1,32 @@
+struct CompiledQueueGlobs {
+    matchers: Vec<(globset::GlobMatcher, String)>,
+}
+
+fn compile_queue_globs(globs: &[String]) -> CompiledQueueGlobs {
+    CompiledQueueGlobs {
+        matchers: globs
+            .iter()
+            .filter_map(|glob| {
+                globset::Glob::new(glob)
+                    .ok()
+                    .map(|compiled| (compiled.compile_matcher(), glob.clone()))
+            })
+            .collect(),
+    }
+}
+
 fn emit_queue_edges(
     root: &Path,
     facts: &LangFactMap,
     options: &GraphConfigOptions,
     edges: &mut Vec<Edge>,
 ) {
+    let worker_globs = compile_queue_globs(&options.queue_workers);
+    let enqueue_globs = compile_queue_globs(&options.queue_enqueues);
     let mut workers: std::collections::HashMap<String, std::collections::BTreeSet<PathBuf>> =
         std::collections::HashMap::new();
     for file in facts.files.values() {
-        let Some(cluster) = matching_queue_cluster(root, &file.path, &options.queue_workers, options)
-        else {
+        let Some(cluster) = matching_queue_cluster(root, &file.path, &worker_globs, options) else {
             continue;
         };
         for job in &file.queue_workers {
@@ -19,8 +37,7 @@ fn emit_queue_edges(
         }
     }
     for file in facts.files.values() {
-        let Some(cluster) =
-            matching_queue_cluster(root, &file.path, &options.queue_enqueues, options)
+        let Some(cluster) = matching_queue_cluster(root, &file.path, &enqueue_globs, options)
         else {
             continue;
         };
@@ -44,22 +61,20 @@ fn emit_queue_edges(
 fn matching_queue_cluster(
     root: &Path,
     path: &Path,
-    globs: &[String],
+    compiled: &CompiledQueueGlobs,
     options: &GraphConfigOptions,
 ) -> Option<Option<String>> {
-    if globs.is_empty() {
+    if compiled.matchers.is_empty() {
         return None;
     }
     let rel = path.strip_prefix(root).unwrap_or(path);
-    let rel_s = rel.to_string_lossy();
-    globs.iter().find_map(|glob| {
-        if !matches_any(&rel_s, std::slice::from_ref(glob)) {
-            return None;
-        }
-        Some(match options.queue_glob_clusters.get(glob) {
-            Some(cluster) => cluster.clone(),
-            None => options.queue_cluster.clone(),
-        })
+    compiled.matchers.iter().find_map(|(matcher, glob)| {
+        matcher
+            .is_match(rel)
+            .then(|| match options.queue_glob_clusters.get(glob) {
+                Some(cluster) => cluster.clone(),
+                None => options.queue_cluster.clone(),
+            })
     })
 }
 
@@ -69,11 +84,13 @@ fn emit_kafka_edges(
     options: &GraphConfigOptions,
     edges: &mut Vec<Edge>,
 ) {
+    let enqueue_globs = compile_queue_globs(&options.queue_enqueues);
+    let worker_globs = compile_queue_globs(&options.queue_workers);
     let mut produces = Vec::new();
     let mut consumes = Vec::new();
     for path in all_files {
-        let enqueue = matching_queue_cluster(root, path, &options.queue_enqueues, options);
-        let worker = matching_queue_cluster(root, path, &options.queue_workers, options);
+        let enqueue = matching_queue_cluster(root, path, &enqueue_globs, options);
+        let worker = matching_queue_cluster(root, path, &worker_globs, options);
         if enqueue.is_none() && worker.is_none() {
             continue;
         }
@@ -101,11 +118,7 @@ fn emit_kafka_edges(
         for topic in topics {
             let identity = topic_identity(cluster.as_deref(), &topic);
             let node = NodeId::queue_job(&path, identity.clone());
-            edges.push((
-                NodeId::file(&path),
-                node.clone(),
-                EdgeKind::QueueEnqueue,
-            ));
+            edges.push((NodeId::file(&path), node.clone(), EdgeKind::QueueEnqueue));
             if let Some(targets) = workers.get(&identity) {
                 for worker in targets {
                     edges.push((node.clone(), NodeId::file(worker), EdgeKind::QueueWorker));
@@ -113,12 +126,4 @@ fn emit_kafka_edges(
             }
         }
     }
-}
-
-fn matches_any(rel: &str, globs: &[String]) -> bool {
-    globs.iter().any(|glob| {
-        globset::Glob::new(glob)
-            .ok()
-            .is_some_and(|g| g.compile_matcher().is_match(rel))
-    })
 }

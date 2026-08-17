@@ -18,24 +18,28 @@ fn collect_language_frontend_edges(
     {
         return Vec::new();
     }
-    let facts = collect_all_lang_facts(root, all_files, &config);
     let mut edges = Vec::new();
-    emit_lang_edges(&facts.python, EdgeKind::PythonImport, EdgeKind::PythonReference, &mut edges);
-    emit_lang_edges(&facts.go, EdgeKind::GoImport, EdgeKind::GoReference, &mut edges);
-    emit_lang_edges(&facts.rust, EdgeKind::RustUse, EdgeKind::RustUse, &mut edges);
-    emit_mod_edges(&facts.rust, EdgeKind::RustMod, &mut edges);
-    emit_package_edges(&facts.rust, EdgeKind::RustPackage, &mut edges);
-    emit_lang_edges(&facts.ruby, EdgeKind::RubyRequire, EdgeKind::RubyReference, &mut edges);
-    emit_lang_edges(&facts.php, EdgeKind::PhpUse, EdgeKind::PhpUse, &mut edges);
-    emit_package_edges(&facts.php, EdgeKind::PhpPackage, &mut edges);
-    emit_queue_edges(root, &facts.python, options, &mut edges);
-    emit_queue_edges(root, &facts.go, options, &mut edges);
-    emit_queue_edges(root, &facts.ruby, options, &mut edges);
-    emit_queue_edges(root, &facts.php, options, &mut edges);
-    emit_route_edges(root, &facts.python, options, &mut edges);
-    emit_route_edges(root, &facts.ruby, options, &mut edges);
-    emit_route_edges(root, &facts.php, options, &mut edges);
-    emit_kafka_edges(root, all_files, options, &mut edges);
+    if !config_is_empty(&config) {
+        let facts = collect_all_lang_facts(root, all_files, &config);
+        emit_lang_edges(&facts.python, EdgeKind::PythonImport, EdgeKind::PythonReference, &mut edges);
+        emit_lang_edges(&facts.go, EdgeKind::GoImport, EdgeKind::GoReference, &mut edges);
+        emit_lang_edges(&facts.rust, EdgeKind::RustUse, EdgeKind::RustUse, &mut edges);
+        emit_mod_edges(&facts.rust, EdgeKind::RustMod, &mut edges);
+        emit_package_edges(&facts.rust, EdgeKind::RustPackage, &mut edges);
+        emit_lang_edges(&facts.ruby, EdgeKind::RubyRequire, EdgeKind::RubyReference, &mut edges);
+        emit_lang_edges(&facts.php, EdgeKind::PhpUse, EdgeKind::PhpUse, &mut edges);
+        emit_package_edges(&facts.php, EdgeKind::PhpPackage, &mut edges);
+        emit_queue_edges(root, &facts.python, options, &mut edges);
+        emit_queue_edges(root, &facts.go, options, &mut edges);
+        emit_queue_edges(root, &facts.ruby, options, &mut edges);
+        emit_queue_edges(root, &facts.php, options, &mut edges);
+        emit_route_edges(root, &facts.python, options, &mut edges);
+        emit_route_edges(root, &facts.ruby, options, &mut edges);
+        emit_route_edges(root, &facts.php, options, &mut edges);
+    }
+    if !options.queue_enqueues.is_empty() || !options.queue_workers.is_empty() {
+        emit_kafka_edges(root, all_files, options, &mut edges);
+    }
     edges
 }
 
