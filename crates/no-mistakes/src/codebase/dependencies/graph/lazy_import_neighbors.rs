@@ -12,26 +12,15 @@ fn import_neighbors(
         .and_then(|facts| facts.get_ts_facts(path))
     {
         return (
-            import_neighbors_from_facts(
-                path,
-                facts,
-                resolver,
-                workspace,
-                graph_files,
-                allowed,
-            ),
+            import_neighbors_from_facts(path, facts, resolver, workspace, graph_files, allowed),
             None,
         );
     }
 
     let facts = {
         let source_result = match fact_source.sources {
-            Some(sources) => sources
-                .read_path(path)
-                .map_err(|error| error.to_string()),
-            None => session
-                .read_source(path)
-                .map_err(|error| error.to_string()),
+            Some(sources) => sources.read_path(path).map_err(|error| error.to_string()),
+            None => session.read_source(path).map_err(|error| error.to_string()),
         };
         let source = match source_result {
             Ok(source) => source,
@@ -67,14 +56,8 @@ fn import_neighbors(
         }
     };
 
-    let neighbors = import_neighbors_from_facts(
-        path,
-        &facts,
-        resolver,
-        workspace,
-        graph_files,
-        allowed,
-    );
+    let neighbors =
+        import_neighbors_from_facts(path, &facts, resolver, workspace, graph_files, allowed);
     (neighbors, Some(facts))
 }
 
@@ -93,12 +76,8 @@ fn import_neighbors_from_facts(
         .filter(|imp| import_is_reachable(imp, file_facts, &reachable))
         .filter_map(|imp| {
             let kind = edge_kind_for_import(imp);
-            let classification = resolver.classify_import(
-                &imp.specifier,
-                path,
-                workspace,
-                graph_files.visible(),
-            );
+            let classification =
+                resolver.classify_import(&imp.specifier, path, workspace, graph_files.visible());
             if let Some(target) = classification.workspace_path() {
                 let target = graph_files.visible_path(target)?;
                 let kind = match imp.kind {
@@ -121,8 +100,9 @@ fn import_neighbors_from_facts(
         })
         .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
         .collect();
-    // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
-    // `node_sort_key` (which involves allocation and formatting) during the sort operations.
-    neighbors.sort_by_cached_key(|(node, kind)| (node_sort_key(node), kind.sort_key()));
+    neighbors.sort_by(|(left_node, left_kind), (right_node, right_kind)| {
+        cmp_node_sort_keys(left_node, right_node)
+            .then_with(|| left_kind.sort_key().cmp(&right_kind.sort_key()))
+    });
     neighbors
 }

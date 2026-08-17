@@ -1,5 +1,6 @@
 use super::super::test_support;
 use super::super::*;
+use super::node_sort_key;
 use std::path::PathBuf;
 
 fn p(path: &str) -> PathBuf {

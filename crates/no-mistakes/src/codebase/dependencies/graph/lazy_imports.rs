@@ -1,9 +1,8 @@
 pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(
     input: LazyImportBuild<'_>,
 ) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
-    let session = crate::codebase::analysis_session::AnalysisSession::new(
-        crate::diagnostics::current(),
-    );
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(input, &session)
 }
 
@@ -54,43 +53,43 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
             .par_iter()
             .map(|node| {
                 crate::invocation::check_timeout().ok().map(|()| {
-                let Some(path) = node.as_file() else {
-                    return ExpandedImportNode {
-                        node: node.clone(),
-                        neighbors: Vec::new(),
-                        collected: None,
+                    let Some(path) = node.as_file() else {
+                        return ExpandedImportNode {
+                            node: node.clone(),
+                            neighbors: Vec::new(),
+                            collected: None,
+                        };
                     };
-                };
-                if !graph_files.is_visible(path) || !is_indexable(path) {
-                    return ExpandedImportNode {
+                    if !graph_files.is_visible(path) || !is_indexable(path) {
+                        return ExpandedImportNode {
+                            node: node.clone(),
+                            neighbors: Vec::new(),
+                            collected: None,
+                        };
+                    }
+                    let (neighbors, collected) = import_neighbors(
+                        path,
+                        &resolver,
+                        workspace,
+                        graph_files,
+                        allowed,
+                        facts,
+                        session,
+                    );
+                    ExpandedImportNode {
                         node: node.clone(),
-                        neighbors: Vec::new(),
-                        collected: None,
-                    };
-                }
-                let (neighbors, collected) = import_neighbors(
-                    path,
-                    &resolver,
-                    workspace,
-                    graph_files,
-                    allowed,
-                    facts,
-                    session,
-                );
-                ExpandedImportNode {
-                    node: node.clone(),
-                    neighbors,
-                    collected: if facts.retain_collected {
-                        collected.map(|facts| (path.to_path_buf(), facts))
-                    } else {
-                        None
-                    },
-                }
+                        neighbors,
+                        collected: if facts.retain_collected {
+                            collected.map(|facts| (path.to_path_buf(), facts))
+                        } else {
+                            None
+                        },
+                    }
                 })
             })
             .while_some()
             .collect();
-        expanded.sort_by_cached_key(|expanded| node_sort_key(&expanded.node));
+        expanded.sort_by(|left, right| cmp_node_sort_keys(&left.node, &right.node));
 
         let next_depth = depth + 1;
         let mut next_frontier = Vec::new();
