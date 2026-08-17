@@ -16,14 +16,8 @@ pub(in super::super) fn path_regex_capture_files(
 ) -> Result<Vec<PathBuf>> {
     let extras: Vec<PathBuf> = sources
         .inventory()
-        .path_entry_paths()
+        .non_file_path_entry_paths()
         .into_iter()
-        .filter(|path| {
-            sources
-                .inventory()
-                .classification_for_path(path)
-                .is_some_and(|classification| !classification.target_is_file())
-        })
         .filter(|path| {
             crate::codebase::rules::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
         })

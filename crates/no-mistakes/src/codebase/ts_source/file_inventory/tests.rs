@@ -117,6 +117,7 @@ fn non_file_entries_have_no_file_classification() {
     assert!(!classification.target_is_file());
     assert!(!classification.is_path_entry());
     assert!(inventory.path_entry_paths().is_empty());
+    assert!(inventory.non_file_path_entry_paths().is_empty());
     assert!(inventory.target_file_paths().is_empty());
 }
 
@@ -134,6 +135,7 @@ fn directory_target_symlink_is_a_path_entry_not_a_target_file() {
     assert!(!classification.target_is_file());
     assert!(classification.is_path_entry());
     assert_eq!(inventory.path_entry_paths(), vec![symlink.clone()]);
+    assert_eq!(inventory.non_file_path_entry_paths(), vec![symlink.clone()]);
     assert!(inventory.target_file_paths().is_empty());
 }
 
@@ -151,5 +153,6 @@ fn broken_symlink_is_a_path_entry_not_a_target_file() {
     assert!(!classification.target_is_file());
     assert!(classification.is_path_entry());
     assert_eq!(inventory.path_entry_paths(), vec![broken.clone()]);
+    assert_eq!(inventory.non_file_path_entry_paths(), vec![broken.clone()]);
     assert!(inventory.target_file_paths().is_empty());
 }

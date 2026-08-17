@@ -153,6 +153,14 @@ impl FileInventory {
         self.classified_paths(FileClassification::is_path_entry)
     }
 
+    /// Return path entries whose live targets are not readable files.
+    #[doc(hidden)]
+    pub fn non_file_path_entry_paths(&self) -> Vec<PathBuf> {
+        self.classified_paths(|classification| {
+            classification.is_path_entry() && !classification.target_is_file()
+        })
+    }
+
     fn classified_paths(&self, include: impl Fn(FileClassification) -> bool) -> Vec<PathBuf> {
         self.paths
             .iter()
