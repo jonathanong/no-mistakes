@@ -198,3 +198,65 @@ fn php_collects_laravel_route_and_dispatch() {
         .any(|import| import == "App.Jobs.SomeJob"));
     assert!(routes.imports.iter().all(|import| !import.contains(" as ")));
 }
+
+#[test]
+fn collect_all_lang_facts_matches_independent_language_collectors() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/lang-frontends"),
+    );
+    let files = all_files(&root);
+    let config = LangFrontendConfig {
+        python_packages: vec!["python-celery-django/app".into()],
+        go_modules: vec!["go-asynq".into(), "go-asynq/worker".into()],
+        rust_packages: vec!["rust-mods".into(), "rust-mods/src".into()],
+        rails_apps: vec!["rails-jobs".into()],
+        php_apps: vec!["php-laravel".into()],
+        php_framework: Some("laravel".into()),
+    };
+    let collected = collect_all_lang_facts(&root, &files, &config);
+    assert_eq!(
+        collected.python,
+        collect_python_facts(&root, &files, &config.python_packages)
+    );
+    assert_eq!(
+        collected.go,
+        collect_go_facts(&root, &files, &config.go_modules)
+    );
+    assert_eq!(
+        collected.rust,
+        collect_rust_facts(&root, &files, &config.rust_packages)
+    );
+    assert_eq!(
+        collected.ruby,
+        collect_ruby_facts(&root, &files, &config.rails_apps)
+    );
+    assert_eq!(
+        collected.php,
+        collect_php_facts(
+            &root,
+            &files,
+            &config.php_apps,
+            config.php_framework.as_deref(),
+        )
+    );
+    assert!(
+        !collected.python.files.is_empty()
+            && !collected.go.files.is_empty()
+            && !collected.rust.files.is_empty()
+            && !collected.ruby.files.is_empty()
+            && !collected.php.files.is_empty(),
+        "composed fixture must produce facts for every configured language"
+    );
+}
+
+#[test]
+fn collect_all_lang_facts_skips_unconfigured_languages() {
+    let root = fixture("python-celery-django");
+    let collected =
+        collect_all_lang_facts(&root, &all_files(&root), &LangFrontendConfig::default());
+    assert!(collected.python.files.is_empty());
+    assert!(collected.go.files.is_empty());
+    assert!(collected.rust.files.is_empty());
+    assert!(collected.ruby.files.is_empty());
+    assert!(collected.php.files.is_empty());
+}
