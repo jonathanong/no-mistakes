@@ -52,7 +52,7 @@ fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
             NodeSortKey::new(Some(Arc::clone(file)), "#", Some(Arc::clone(symbol)), None)
         }
         NodeId::Module(specifier) => {
-            NodeSortKey::new(None, "module:", Some(Arc::from(specifier.as_str())), None)
+            NodeSortKey::new(None, "module:", Some(Arc::clone(specifier)), None)
         }
         NodeId::QueueJob { queue_file, job } => NodeSortKey::new(
             Some(Arc::clone(queue_file)),
@@ -102,7 +102,7 @@ fn node_sort_parts<'a>(
         ],
         NodeId::Module(specifier) => [
             "module:".into(),
-            std::borrow::Cow::Borrowed(specifier),
+            std::borrow::Cow::Borrowed(specifier.as_ref()),
             "".into(),
             "".into(),
         ],
