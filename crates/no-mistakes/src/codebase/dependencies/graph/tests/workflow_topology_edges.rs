@@ -12,11 +12,7 @@ fn workflow_node(root: &Path, job: &str) -> NodeId {
 }
 
 fn workflow_step(root: &Path, job: &str, step: usize) -> NodeId {
-    NodeId::workflow_step(
-        root.join(".github/workflows/main.yml"),
-        job,
-        step,
-    )
+    NodeId::workflow_step(root.join(".github/workflows/main.yml"), job, step)
 }
 
 fn graph_has_edge(graph: &DepGraph, from: NodeId, to: NodeId, kind: EdgeKind) -> bool {
