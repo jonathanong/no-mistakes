@@ -1,5 +1,12 @@
+use crate::codebase::rules::read_source;
+use crate::codebase::ts_source::SourceStore;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+pub(crate) fn lang_source(sources: &SourceStore, path: &Path) -> Option<Arc<str>> {
+    read_source(sources, path)
+}
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LangFileFacts {

@@ -18,11 +18,11 @@ fn compile_queue_globs(globs: &[String]) -> CompiledQueueGlobs {
 fn emit_queue_edges(
     root: &Path,
     facts: &LangFactMap,
+    enqueue_globs: &CompiledQueueGlobs,
+    worker_globs: &CompiledQueueGlobs,
     options: &GraphConfigOptions,
     edges: &mut Vec<Edge>,
 ) {
-    let worker_globs = compile_queue_globs(&options.queue_workers);
-    let enqueue_globs = compile_queue_globs(&options.queue_enqueues);
     let mut workers: std::collections::HashMap<String, std::collections::BTreeSet<PathBuf>> =
         std::collections::HashMap::new();
     for file in facts.files.values() {
@@ -81,20 +81,21 @@ fn matching_queue_cluster(
 fn emit_kafka_edges(
     root: &Path,
     all_files: &[PathBuf],
+    enqueue_globs: &CompiledQueueGlobs,
+    worker_globs: &CompiledQueueGlobs,
     options: &GraphConfigOptions,
+    sources: &crate::codebase::ts_source::SourceStore,
     edges: &mut Vec<Edge>,
 ) {
-    let enqueue_globs = compile_queue_globs(&options.queue_enqueues);
-    let worker_globs = compile_queue_globs(&options.queue_workers);
     let mut produces = Vec::new();
     let mut consumes = Vec::new();
     for path in all_files {
-        let enqueue = matching_queue_cluster(root, path, &enqueue_globs, options);
-        let worker = matching_queue_cluster(root, path, &worker_globs, options);
+        let enqueue = matching_queue_cluster(root, path, enqueue_globs, options);
+        let worker = matching_queue_cluster(root, path, worker_globs, options);
         if enqueue.is_none() && worker.is_none() {
             continue;
         }
-        let Some((prod, cons)) = scan_kafka_file(path) else {
+        let Some((prod, cons)) = scan_kafka_file(path, sources) else {
             continue;
         };
         if let Some(cluster) = enqueue {

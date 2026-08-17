@@ -96,13 +96,16 @@ fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge>
 
 fn merge_language_frontend_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
+    let sources = session.dataset(inputs.root).sources_for(inputs.root);
     let edges = collect_language_frontend_edges(
         inputs.root,
         &inputs.graph_files.all,
         inputs.config_options,
+        &sources,
     );
     for (from, to, _) in &edges {
         forward.entry(from.clone()).or_default();

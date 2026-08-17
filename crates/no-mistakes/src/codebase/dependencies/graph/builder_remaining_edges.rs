@@ -118,11 +118,9 @@ fn collect_remaining_edges(
     })?;
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.language_frontends", || {
-        if edge_inputs.plan.language_frontends
-            || edge_inputs.plan.queues
-            || edge_inputs.plan.routes
+        if edge_inputs.plan.language_frontends || edge_inputs.plan.queues || edge_inputs.plan.routes
         {
-            merge_language_frontend_edges(edge_inputs, forward, reverse);
+            merge_language_frontend_edges(edge_inputs, session, forward, reverse);
         }
     });
     crate::invocation::check_timeout()?;

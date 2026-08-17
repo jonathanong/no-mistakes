@@ -3,7 +3,7 @@ fn language_frontend_edges_keep_go_imports_across_modules() {
     let go = lang_fixture("go-asynq");
     let mut options = lang_options();
     options.go_modules = vec!["worker".into(), "nested".into()];
-    let go_edges = collect_language_frontend_edges(&go, &lang_files(&go), Some(&options));
+    let go_edges = collect_language_frontend_edges(&go, &lang_files(&go), Some(&options), &src(&go));
     assert!(go_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::GoImport
             && from
@@ -55,7 +55,7 @@ fn empty_language_config_still_emits_kafka_queue_edges() {
         queue_cluster: Some("orders".into()),
         ..GraphConfigOptions::default()
     };
-    let edges = collect_language_frontend_edges(&kafka, &lang_files(&kafka), Some(&options));
+    let edges = collect_language_frontend_edges(&kafka, &lang_files(&kafka), Some(&options), &src(&kafka));
     assert!(edges
         .iter()
         .any(|(_, _, kind)| *kind == EdgeKind::QueueEnqueue));

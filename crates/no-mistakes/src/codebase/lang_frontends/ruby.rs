@@ -1,5 +1,6 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -8,14 +9,20 @@ pub(crate) fn collect_ruby_facts(
     root: &Path,
     all_files: &[PathBuf],
     apps: &[String],
+    sources: &SourceStore,
 ) -> LangFactMap {
     let roots = configured_roots(root, apps);
     let files = files_under(all_files, &roots, "rb");
-    super::facts::collect_files_parallel(files, |path| parse_ruby_file(path, &roots, apps))
+    super::facts::collect_files_parallel(files, |path| parse_ruby_file(path, &roots, apps, sources))
 }
 
-fn parse_ruby_file(path: &Path, roots: &[PathBuf], apps: &[String]) -> Option<LangFileFacts> {
-    let source = std::fs::read_to_string(path).ok()?;
+fn parse_ruby_file(
+    path: &Path,
+    roots: &[PathBuf],
+    apps: &[String],
+    sources: &SourceStore,
+) -> Option<LangFileFacts> {
+    let source = super::facts::lang_source(sources, path)?;
     let text = strip_comments_keep_strings(&source);
     Some(LangFileFacts {
         path: path.to_path_buf(),

@@ -7,6 +7,7 @@ use imports::{extract_python_imports, python_module};
 #[cfg(test)]
 #[path = "python_imports_tests.rs"]
 mod tests;
+use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -15,11 +16,12 @@ pub(crate) fn collect_python_facts(
     root: &Path,
     all_files: &[PathBuf],
     packages: &[String],
+    sources: &SourceStore,
 ) -> LangFactMap {
     let roots = configured_roots(root, packages);
     let files = files_under(all_files, &roots, "py");
     super::facts::collect_files_parallel(files, |path| {
-        parse_python_file(root, path, &roots, packages)
+        parse_python_file(root, path, &roots, packages, sources)
     })
 }
 
@@ -28,8 +30,9 @@ fn parse_python_file(
     path: &Path,
     roots: &[PathBuf],
     packages: &[String],
+    sources: &SourceStore,
 ) -> Option<LangFileFacts> {
-    let source = std::fs::read_to_string(path).ok()?;
+    let source = super::facts::lang_source(sources, path)?;
     let text = strip_comments_keep_strings(&source);
     let symbols = super::strip::mask_strings(&text);
     let package = owning_package(path, roots, packages);

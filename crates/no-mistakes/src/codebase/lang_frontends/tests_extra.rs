@@ -28,6 +28,14 @@ fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
         .collect()
 }
 
+fn src(root: &std::path::Path) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
+    crate::codebase::rules::source_store_for_files(&all_files(root))
+}
+
+fn src_files(files: &[PathBuf]) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
+    crate::codebase::rules::source_store_for_files(files)
+}
+
 #[test]
 fn kafka_extracts_static_topics_and_skips_dynamic() {
     let (produces, consumes) = extract_kafka_topics(
@@ -52,17 +60,28 @@ fn kafka_extracts_static_topics_and_skips_dynamic() {
 fn empty_config_collects_nothing() {
     let root = fixture("python-celery-django");
     let files = all_files(&root);
-    assert!(collect_python_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_go_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_rust_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_ruby_facts(&root, &files, &[]).files.is_empty());
-    assert!(collect_php_facts(&root, &files, &[], None).files.is_empty());
+    let sources = src_files(&files);
+    assert!(collect_python_facts(&root, &files, &[], &sources)
+        .files
+        .is_empty());
+    assert!(collect_go_facts(&root, &files, &[], &sources)
+        .files
+        .is_empty());
+    assert!(collect_rust_facts(&root, &files, &[], &sources)
+        .files
+        .is_empty());
+    assert!(collect_ruby_facts(&root, &files, &[], &sources)
+        .files
+        .is_empty());
+    assert!(collect_php_facts(&root, &files, &[], None, &sources)
+        .files
+        .is_empty());
 }
 
 #[test]
 fn php_without_framework_skips_laravel_extractors() {
     let root = fixture("php-laravel");
-    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], None);
+    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], None, &src(&root));
     let routes = facts.files.values().find(|f| f.path.ends_with("web.php"));
     assert!(routes.is_some_and(|file| file.route_handlers.is_empty()));
 }
@@ -82,14 +101,14 @@ fn strip_and_kafka_identity_cover_comment_and_empty_cluster_paths() {
 #[test]
 fn go_and_rust_collectors_cover_missing_manifest_roots() {
     let go = fixture("go-asynq");
-    let go_facts = collect_go_facts(&go, &all_files(&go), &["worker".into()]);
+    let go_facts = collect_go_facts(&go, &all_files(&go), &["worker".into()], &src(&go));
     assert!(!go_facts.files.is_empty());
     assert!(go_facts
         .files
         .values()
         .any(|file| file.path.ends_with("pkg/ping.go") && file.module.as_deref() == Some("pkg")));
     let rust = fixture("rust-mods");
-    let rust_facts = collect_rust_facts(&rust, &all_files(&rust), &["src".into()]);
+    let rust_facts = collect_rust_facts(&rust, &all_files(&rust), &["src".into()], &src(&rust));
     assert!(rust_facts
         .files
         .values()
@@ -99,7 +118,7 @@ fn go_and_rust_collectors_cover_missing_manifest_roots() {
 #[test]
 fn rails_require_relative_and_python_init_module_keys() {
     let rails = fixture("rails-jobs");
-    let facts = collect_ruby_facts(&rails, &all_files(&rails), &[".".into()]);
+    let facts = collect_ruby_facts(&rails, &all_files(&rails), &[".".into()], &src(&rails));
     let controller = facts
         .files
         .values()
@@ -110,7 +129,7 @@ fn rails_require_relative_and_python_init_module_keys() {
         .iter()
         .any(|import| import == "welcome_job" || import.ends_with("welcome_job")));
     let python = fixture("python-celery-django");
-    let facts = collect_python_facts(&python, &all_files(&python), &["app".into()]);
+    let facts = collect_python_facts(&python, &all_files(&python), &["app".into()], &src(&python));
     assert!(facts
         .files
         .values()

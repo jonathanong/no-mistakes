@@ -28,10 +28,14 @@ fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
         .collect()
 }
 
+fn src(root: &std::path::Path) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
+    crate::codebase::rules::source_store_for_files(&all_files(root))
+}
+
 #[test]
 fn python_keeps_import_aliases_and_masks_docstring_imports() {
     let root = fixture("python-celery-django");
-    let facts = collect_python_facts(&root, &all_files(&root), &["app".into()]);
+    let facts = collect_python_facts(&root, &all_files(&root), &["app".into()], &src(&root));
     let enqueue = facts
         .files
         .values()
@@ -55,7 +59,7 @@ fn python_keeps_import_aliases_and_masks_docstring_imports() {
 #[test]
 fn rust_skips_inline_mods_and_treats_crate_root_self_as_root() {
     let root = fixture("rust-mods");
-    let facts = collect_rust_facts(&root, &all_files(&root), &[".".into()]);
+    let facts = collect_rust_facts(&root, &all_files(&root), &[".".into()], &src(&root));
     let lib = facts
         .files
         .values()
@@ -75,7 +79,13 @@ fn rust_skips_inline_mods_and_treats_crate_root_self_as_root() {
 #[test]
 fn php_reads_readonly_classes_and_leading_route_separators() {
     let root = fixture("php-laravel");
-    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], Some("laravel"));
+    let facts = collect_php_facts(
+        &root,
+        &all_files(&root),
+        &[".".into()],
+        Some("laravel"),
+        &src(&root),
+    );
     assert!(facts
         .declarations
         .keys()
@@ -110,6 +120,7 @@ fn go_records_imports_of_configured_sibling_modules() {
         &root,
         &all_files(&root),
         &["worker".into(), "nested".into()],
+        &src(&root),
     );
     let enqueue = facts
         .files

@@ -64,7 +64,8 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
 pub fn collect_language_frontend_facts(
     fixture: &LanguageFrontendFixture,
 ) -> LanguageFrontendSummary {
-    let facts = collect_all_lang_facts(&fixture.root, &fixture.files, &fixture.languages);
+    let sources = crate::codebase::rules::source_store_for_files(&fixture.files);
+    let facts = collect_all_lang_facts(&fixture.root, &fixture.files, &fixture.languages, &sources);
     let maps = [
         &facts.python,
         &facts.go,
