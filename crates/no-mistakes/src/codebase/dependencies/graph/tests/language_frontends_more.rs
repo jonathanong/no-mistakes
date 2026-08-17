@@ -27,6 +27,7 @@ fn matches_any_naive(rel: &Path, globs: &[String]) -> bool {
 fn compiled_queue_globs_agree_with_per_file_glob_new() {
     let kafka = lang_fixture("kafka-topics");
     let files = lang_files(&kafka);
+    // "[" is an invalid glob; compile_queue_globs must ignore it like Glob::new.
     let globs = vec!["**/*".into(), "[".into(), "producer.ts".into()];
     let compiled = compile_queue_globs(&globs);
     for path in &files {
