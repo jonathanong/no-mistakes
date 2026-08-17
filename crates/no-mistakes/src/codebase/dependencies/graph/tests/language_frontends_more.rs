@@ -9,8 +9,18 @@ fn language_frontend_edges_keep_go_imports_across_modules() {
             && from
                 .as_file()
                 .is_some_and(|path| path.ends_with("enqueue.go"))
-            && to.as_file().is_some_and(|path| path.ends_with("nested/mail.go"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("nested/mail.go"))
     }));
+}
+
+fn matches_any_naive(rel: &Path, globs: &[String]) -> bool {
+    globs.iter().any(|glob| {
+        globset::Glob::new(glob)
+            .ok()
+            .is_some_and(|compiled| compiled.compile_matcher().is_match(rel))
+    })
 }
 
 #[test]
@@ -27,7 +37,8 @@ fn compiled_queue_globs_agree_with_per_file_glob_new() {
             .iter()
             .any(|(matcher, _)| matcher.is_match(rel));
         assert_eq!(
-            naive, compiled_hit,
+            naive,
+            compiled_hit,
             "compiled glob match must agree with Glob::new per file for {}",
             path.display()
         );

@@ -26,8 +26,7 @@ fn emit_queue_edges(
     let mut workers: std::collections::HashMap<String, std::collections::BTreeSet<PathBuf>> =
         std::collections::HashMap::new();
     for file in facts.files.values() {
-        let Some(cluster) = matching_queue_cluster(root, &file.path, &worker_globs, options)
-        else {
+        let Some(cluster) = matching_queue_cluster(root, &file.path, &worker_globs, options) else {
             continue;
         };
         for job in &file.queue_workers {
@@ -70,10 +69,12 @@ fn matching_queue_cluster(
     }
     let rel = path.strip_prefix(root).unwrap_or(path);
     compiled.matchers.iter().find_map(|(matcher, glob)| {
-        matcher.is_match(rel).then(|| match options.queue_glob_clusters.get(glob) {
-            Some(cluster) => cluster.clone(),
-            None => options.queue_cluster.clone(),
-        })
+        matcher
+            .is_match(rel)
+            .then(|| match options.queue_glob_clusters.get(glob) {
+                Some(cluster) => cluster.clone(),
+                None => options.queue_cluster.clone(),
+            })
     })
 }
 
@@ -117,11 +118,7 @@ fn emit_kafka_edges(
         for topic in topics {
             let identity = topic_identity(cluster.as_deref(), &topic);
             let node = NodeId::queue_job(&path, identity.clone());
-            edges.push((
-                NodeId::file(&path),
-                node.clone(),
-                EdgeKind::QueueEnqueue,
-            ));
+            edges.push((NodeId::file(&path), node.clone(), EdgeKind::QueueEnqueue));
             if let Some(targets) = workers.get(&identity) {
                 for worker in targets {
                     edges.push((node.clone(), NodeId::file(worker), EdgeKind::QueueWorker));
@@ -129,13 +126,4 @@ fn emit_kafka_edges(
             }
         }
     }
-}
-
-#[cfg(test)]
-fn matches_any_naive(rel: &Path, globs: &[String]) -> bool {
-    globs.iter().any(|glob| {
-        globset::Glob::new(glob)
-            .ok()
-            .is_some_and(|compiled| compiled.compile_matcher().is_match(rel))
-    })
 }
