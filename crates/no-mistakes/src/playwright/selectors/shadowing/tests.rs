@@ -101,6 +101,22 @@ fn identifier_shadow_scan_covers_binding_edge_cases() {
         bindings::function_destructure_binding_ends("function Inner({ dataPw", "dataPw").count(),
         0
     );
+    assert_eq!(
+        bindings::function_destructure_binding_ends("function noParen", "dataPw").count(),
+        0
+    );
+    assert!(!bindings::has_declaration("const", "dataPw"));
+    assert!(!bindings::has_destructuring_declaration(
+        "const { dataPw",
+        "dataPw"
+    ));
+    assert_eq!(
+        bindings::function_destructure_binding_ends("function Inner()", "").count(),
+        0
+    );
+    assert!(!has_unclosed_jsx_start("{foo"));
+    assert_eq!(matching_close_brace("{foo"), None);
+    assert_eq!(matching_close_brace("{foo{bar}"), None);
 }
 
 #[test]
