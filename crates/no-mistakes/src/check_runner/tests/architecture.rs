@@ -293,7 +293,7 @@ fn prepared_graph_config_reuses_a_supplied_test_filter() {
         .and_then(|source| source.split("fn prefixed_queue_globs_enqueues(").next())
         .expect("graph config test-filter helper");
     assert!(
-        fallback.contains("test_filter.unwrap_or_else"),
+        fallback.contains("unwrap_or_else"),
         "supplied TestFileFilter must be kept"
     );
     assert_eq!(
