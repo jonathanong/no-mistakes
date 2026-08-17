@@ -379,3 +379,54 @@ fn fact_plan_reuses_compiled_selector_regexes_by_attribute_set() {
         .selector_regexes;
     assert!(Arc::ptr_eq(left, right));
 }
+
+fn discovered(path: &str) -> crate::playwright::analysis::context::DiscoveredTestFile {
+    crate::playwright::analysis::context::DiscoveredTestFile {
+        path: PathBuf::from(path),
+        contexts: Vec::new(),
+    }
+}
+
+#[test]
+fn fact_plan_merges_test_files_per_project_and_ignores_unknown_html_id_settings() {
+    let mut plan = PlaywrightFactPlan::default();
+    plan.add_test_files_for_project(Some("web".into()), Arc::new(vec![discovered("a.spec.ts")]));
+    plan.add_test_files_for_project(
+        Some("web".into()),
+        Arc::new(vec![discovered("b.spec.ts"), discovered("a.spec.ts")]),
+    );
+    plan.add_test_files_for_project(Some("api".into()), Arc::new(vec![discovered("c.spec.ts")]));
+
+    let web_files = plan
+        .test_files_by_project()
+        .iter()
+        .find(|(project, _)| project.as_deref() == Some("web"))
+        .expect("web project")
+        .1
+        .clone();
+    assert_eq!(
+        web_files
+            .iter()
+            .map(|file| file.path.as_path())
+            .collect::<Vec<_>>(),
+        [Path::new("a.spec.ts"), Path::new("b.spec.ts")]
+    );
+
+    let mut other = PlaywrightFactPlan::default();
+    other.add_test_files_for_project(
+        Some("mobile".into()),
+        Arc::new(vec![discovered("d.spec.ts")]),
+    );
+    other.add_test_files_for_project(Some("web".into()), Arc::new(vec![discovered("e.spec.ts")]));
+    plan.include(other);
+
+    let projects = plan
+        .test_files_by_project()
+        .iter()
+        .map(|(project, files)| (project.clone(), files.len()))
+        .collect::<Vec<_>>();
+    assert!(projects.contains(&(Some("mobile".into()), 1)));
+    assert!(projects.contains(&(Some("web".into()), 3)));
+
+    plan.require_html_id_scan(&base_settings());
+}
