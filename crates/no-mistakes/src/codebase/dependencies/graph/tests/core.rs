@@ -59,7 +59,7 @@ fn build_graph(root: &Path, tsconfig: &TsConfig) -> DepGraph {
 fn node_display_and_normalization_cover_file_and_queue_nodes() {
     let root = p("/repo");
     let file = NodeId::file(p("/repo/src/file.ts"));
-    let module = NodeId::Module("@react/client".to_string());
+    let module = NodeId::module("@react/client");
     let queue = NodeId::queue_job(p("/repo/src/queues.ts"), "send");
 
     assert_eq!(file.display_name(&root), "src/file.ts");

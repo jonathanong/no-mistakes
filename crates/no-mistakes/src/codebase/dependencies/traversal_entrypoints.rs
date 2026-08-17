@@ -92,7 +92,7 @@ fn resolve_entrypoint_node(
         .is_none()
         && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
     {
-        return NodeId::Module(raw.to_string());
+        return NodeId::module(raw);
     }
     if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
         return NodeId::file(path);
@@ -103,7 +103,7 @@ fn resolve_entrypoint_node(
     if raw_looks_like_source_file(raw, path, root_dependencies) {
         return NodeId::file(path);
     }
-    NodeId::Module(raw.to_string())
+    NodeId::module(raw)
 }
 
 fn raw_looks_like_source_file(

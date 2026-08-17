@@ -308,7 +308,7 @@ fn generate_plan_with_prepared_inner(
         // (collect_workspace_manifest_edges resolves the specifier to a file). Try the
         // module node first; fall back to the workspace entry when the module is absent.
         let start_node = {
-            let module_node = NodeId::Module(pkg_name.clone());
+            let module_node = NodeId::module(pkg_name.clone());
             if graph.has_reverse_node(&module_node) {
                 module_node
             } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {

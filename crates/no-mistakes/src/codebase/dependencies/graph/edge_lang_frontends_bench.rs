@@ -25,7 +25,7 @@ pub(crate) fn collect_language_frontend_edges_for_bench(
         queue_cluster: request.queue_cluster,
         ..GraphConfigOptions::default()
     };
-    collect_language_frontend_edges(request.root, request.all_files, Some(&options))
+    collect_language_frontend_edges(request.root, request.all_files, Some(&options), None)
 }
 
 pub(crate) fn count_queue_glob_matches(

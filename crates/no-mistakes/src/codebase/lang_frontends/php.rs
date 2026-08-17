@@ -2,6 +2,7 @@ use super::facts::{configured_roots, files_under, owning_package, LangFactMap, L
 use super::strip::strip_comments_keep_strings;
 #[path = "php_queue.rs"]
 mod queue;
+use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -11,6 +12,7 @@ pub(crate) fn collect_php_facts(
     all_files: &[PathBuf],
     apps: &[String],
     framework: Option<&str>,
+    sources: &SourceStore,
 ) -> LangFactMap {
     let roots = configured_roots(root, apps);
     let mut files = files_under(all_files, &roots, "php");
@@ -21,7 +23,9 @@ pub(crate) fn collect_php_facts(
         }
     }
     let laravel = framework.is_some_and(|name| name.eq_ignore_ascii_case("laravel"));
-    super::facts::collect_files_parallel(files, |path| parse_php_file(path, &roots, apps, laravel))
+    super::facts::collect_files_parallel(files, |path| {
+        parse_php_file(path, &roots, apps, laravel, sources)
+    })
 }
 
 fn parse_php_file(
@@ -29,8 +33,9 @@ fn parse_php_file(
     roots: &[PathBuf],
     apps: &[String],
     laravel: bool,
+    sources: &SourceStore,
 ) -> Option<LangFileFacts> {
-    let source = std::fs::read_to_string(path).ok()?;
+    let source = sources.read_path(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let classes = php_classes(&text);
     let queue_workers = if laravel && queue::php_should_queue_re().is_match(&text) {

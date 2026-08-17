@@ -27,7 +27,7 @@ fn collect_workspace_manifest_edges(
                 let target = workspace_entries
                     .get(name.as_str())
                     .map(|entry| NodeId::file(entry.clone()))
-                    .unwrap_or_else(|| NodeId::Module(name.clone()));
+                    .unwrap_or_else(|| NodeId::module(name.clone()));
                 edges.push((
                     NodeId::file(path.clone()),
                     target,

@@ -3,10 +3,24 @@ use crate::codebase::lang_frontends::{
     LangFrontendConfig,
 };
 
+fn language_frontend_source_store(
+    root: &Path,
+    all_files: &[PathBuf],
+    visible_paths: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+) -> Arc<crate::codebase::ts_source::SourceStore> {
+    if let Some(snapshot) = visible_paths {
+        return snapshot.source_store_for(root);
+    }
+    Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(all_files),
+    )))
+}
+
 fn collect_language_frontend_edges(
     root: &Path,
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
+    visible_paths: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
 ) -> Vec<Edge> {
     let Some(options) = config_options else {
         return Vec::new();
@@ -18,9 +32,10 @@ fn collect_language_frontend_edges(
     {
         return Vec::new();
     }
+    let sources = language_frontend_source_store(root, all_files, visible_paths);
     let mut edges = Vec::new();
     if !config_is_empty(&config) {
-        let facts = collect_all_lang_facts(root, all_files, &config);
+        let facts = collect_all_lang_facts(root, all_files, &config, &sources);
         emit_lang_edges(&facts.python, EdgeKind::PythonImport, EdgeKind::PythonReference, &mut edges);
         emit_lang_edges(&facts.go, EdgeKind::GoImport, EdgeKind::GoReference, &mut edges);
         emit_lang_edges(&facts.rust, EdgeKind::RustUse, EdgeKind::RustUse, &mut edges);
@@ -38,7 +53,7 @@ fn collect_language_frontend_edges(
         emit_route_edges(root, &facts.php, options, &mut edges);
     }
     if !options.queue_enqueues.is_empty() || !options.queue_workers.is_empty() {
-        emit_kafka_edges(root, all_files, options, &mut edges);
+        emit_kafka_edges(root, all_files, options, &sources, &mut edges);
     }
     edges
 }

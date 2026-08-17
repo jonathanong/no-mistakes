@@ -5,7 +5,7 @@ fn scoped_dependency_traversal_rejects_file_bridges_before_expansion() {
     let target = n("/repo/target.ts");
     let symbol = NodeId::symbol(p("/repo/owner.ts"), "owned");
     let queue = NodeId::queue_job(p("/repo/queue.ts"), "work");
-    let module = NodeId::Module("external".to_string());
+    let module = NodeId::module("external");
     let mut forward = EdgeMap::new();
     forward.insert(
         source.clone(),

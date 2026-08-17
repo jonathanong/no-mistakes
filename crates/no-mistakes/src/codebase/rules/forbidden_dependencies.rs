@@ -143,7 +143,9 @@ fn check_rule_application(
         };
         for entry in &entries {
             let matched = match &entry.node {
-                NodeId::Module(spec) => module_matcher.as_ref().is_some_and(|m| m.is_match(spec)),
+                NodeId::Module(spec) => module_matcher
+                    .as_ref()
+                    .is_some_and(|m| m.is_match(spec.as_ref())),
                 NodeId::File(path) | NodeId::Symbol { file: path, .. } => {
                     file_matcher.as_ref().is_some_and(|m| {
                         let rel = path.strip_prefix(root).unwrap_or(path);

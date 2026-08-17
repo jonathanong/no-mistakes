@@ -54,7 +54,7 @@ fn workflow_step_entry(workflow_file: &str, job: &str, step: usize, depth: usize
 
 fn module_entry(specifier: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
     NodeEntry {
-        node: NodeId::Module(specifier.to_string()),
+        node: NodeId::module(specifier),
         depth,
         via,
     }

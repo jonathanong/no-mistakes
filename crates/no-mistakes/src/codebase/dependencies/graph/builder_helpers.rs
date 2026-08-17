@@ -103,6 +103,7 @@ fn merge_language_frontend_edges(
         inputs.root,
         &inputs.graph_files.all,
         inputs.config_options,
+        inputs.visible_paths,
     );
     for (from, to, _) in &edges {
         forward.entry(from.clone()).or_default();

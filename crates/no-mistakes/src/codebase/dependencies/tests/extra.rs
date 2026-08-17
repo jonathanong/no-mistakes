@@ -107,12 +107,12 @@ fn symbol_roots_keep_matching_queue_job_roots() {
 fn target_module_filter_keeps_only_matching_module_nodes() {
     let entries = vec![
         graph::NodeEntry {
-            node: NodeId::Module("@react/client".to_string()),
+            node: NodeId::module("@react/client"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
         graph::NodeEntry {
-            node: NodeId::Module("lodash".to_string()),
+            node: NodeId::module("lodash"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
@@ -128,7 +128,7 @@ fn target_module_filter_keeps_only_matching_module_nodes() {
     assert_eq!(filtered.len(), 1);
     assert_eq!(
         filtered[0].node,
-        NodeId::Module("@react/client".to_string())
+        NodeId::module("@react/client")
     );
 }
 
@@ -170,7 +170,7 @@ fn node_entries_fixture(name: &str) -> Vec<graph::NodeEntry> {
 fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
     let node = value.get("node").unwrap();
     let node = if let Some(module) = node.get("module").and_then(|value| value.as_str()) {
-        NodeId::Module(module.to_string())
+        NodeId::module(module)
     } else if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
         NodeId::file(PathBuf::from(file))
     } else {
