@@ -4,15 +4,12 @@ use crate::playwright::config;
 use crate::playwright::fsutil::VisiblePathSnapshot;
 use crate::playwright::playwright_tests;
 use anyhow::Result;
-use std::path::Path;
-
-#[cfg(test)]
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[cfg(test)]
 pub(crate) mod test_support;
 
-#[cfg(test)]
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) struct SelectorFactsGraphInputs<'a> {
     pub(crate) facts: &'a dyn crate::codebase::dependencies::graph::TsFactLookup,
     pub(crate) route_import_candidate: Option<(
@@ -47,7 +44,7 @@ pub(crate) fn analyze_selectors_with_policy_from_snapshot(
     )
 }
 
-#[cfg(test)]
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn analyze_selectors_with_policy_and_graph_from_snapshot(
     root: &Path,
     settings: &config::Settings,
@@ -98,7 +95,7 @@ pub(crate) fn analyze_selectors_with_policy_and_facts_from_snapshot(
     )
 }
 
-#[cfg(test)]
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn analyze_selectors_with_policy_facts_and_graph_from_snapshot(
     root: &Path,
     settings: &config::Settings,

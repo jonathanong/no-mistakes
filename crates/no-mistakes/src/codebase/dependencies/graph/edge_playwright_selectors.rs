@@ -73,7 +73,7 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     Ok(edges)
 }
 
-#[cfg(test)]
+#[cfg_attr(not(test), allow(dead_code))]
 fn selector_edges_from_analysis(
     root: &Path,
     all_files: &[PathBuf],

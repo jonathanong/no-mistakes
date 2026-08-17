@@ -7,13 +7,11 @@ pub(super) fn test_interner() -> PathInterner {
 }
 
 mod edge_maps;
-#[cfg(test)]
 mod playwright;
 
 pub(crate) use edge_maps::add_distinct_worker_file_edges;
 pub(super) use edge_maps::add_queue_edges;
 use edge_maps::edge_index_from_test_maps;
-#[cfg(test)]
 pub(super) use playwright::run_playwright_selector_analysis;
 
 /// Construct a graph directly from pre-built maps for tests.
