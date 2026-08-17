@@ -20,7 +20,11 @@ pub(super) fn language_target_for(
 fn python_target_for(package: Option<&str>, test_file: &str) -> TestExecutionTarget {
     let (base_command, runner_args) = if uses_unittest(test_file) {
         (
-            vec!["python".to_string(), "-m".to_string(), "unittest".to_string()],
+            vec![
+                "python".to_string(),
+                "-m".to_string(),
+                "unittest".to_string(),
+            ],
             vec![unittest_module(test_file)],
         )
     } else {
@@ -130,7 +134,10 @@ fn package_dir_from_test(test_file: &str) -> String {
 }
 
 fn relative_to_config(config: Option<&str>, path: &str) -> String {
-    let Some(config) = config.map(slash).filter(|value| !value.is_empty() && value != ".") else {
+    let Some(config) = config
+        .map(slash)
+        .filter(|value| !value.is_empty() && value != ".")
+    else {
         return path.trim_start_matches("./").to_string();
     };
     let prefix = format!("{config}/");

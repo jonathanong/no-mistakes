@@ -42,7 +42,10 @@ fn test_plan_python_selects_owning_import_test() {
     let target = &plan["selected_tests"][0]["targets"][0];
     assert_eq!(target["runner"], "python");
     assert_eq!(target["base_command"], serde_json::json!(["pytest"]));
-    assert_eq!(target["runner_args"], serde_json::json!(["app/test_users.py"]));
+    assert_eq!(
+        target["runner_args"],
+        serde_json::json!(["app/test_users.py"])
+    );
 }
 
 #[test]
@@ -193,5 +196,8 @@ fn test_plan_vitest_fields_unchanged_when_language_packages_configured() {
         selected_files(&with_python),
         selected_files(&without_python)
     );
-    assert_eq!(with_python["fallback_triggered"], without_python["fallback_triggered"]);
+    assert_eq!(
+        with_python["fallback_triggered"],
+        without_python["fallback_triggered"]
+    );
 }

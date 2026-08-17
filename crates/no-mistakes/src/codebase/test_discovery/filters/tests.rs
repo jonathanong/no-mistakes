@@ -27,7 +27,10 @@ fn path_segment_pair_handles_empty_paths() {
 
 #[test]
 fn language_fallback_matches_configured_test_shapes() {
-    assert!(fallback_runner_match(TestRunner::Python, "app/test_users.py"));
+    assert!(fallback_runner_match(
+        TestRunner::Python,
+        "app/test_users.py"
+    ));
     assert!(fallback_runner_match(TestRunner::Go, "pkg/ping_test.go"));
     assert!(fallback_runner_match(TestRunner::Cargo, "app/src/tests.rs"));
     assert!(fallback_runner_match(
