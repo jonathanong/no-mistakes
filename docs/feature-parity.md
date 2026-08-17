@@ -133,7 +133,7 @@ domain extractors on top of it.
 | Package identity | `package.json` workspaces | configured package roots; `pyproject.toml` / `setup.cfg` names |
 | Symbols | exports and importers | module-level `def` / `class` and qualified references |
 | Tests | `tests plan vitest` | `tests plan python` over pytest / unittest files |
-| HTTP routes | Express / Hono / Koa | Django URLconf → view, plus Flask / FastAPI if configured |
+| HTTP routes | Express / Hono / Koa | Django URLconf → view, plus configured Flask / FastAPI decorator literals |
 | Queues | BullMQ / glide-mq | Celery `@shared_task` / `@app.task`, `.delay(` / `.apply_async(` |
 | Lockfile | pnpm / npm / yarn / bun | `poetry.lock`, `uv.lock`, `Pipfile.lock` |
 

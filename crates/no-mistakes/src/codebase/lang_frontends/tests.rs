@@ -96,6 +96,42 @@ fn python_collects_relative_import_celery_and_django_routes() {
 }
 
 #[test]
+fn python_collects_flask_and_fastapi_literal_routes() {
+    let root = fixture("python-flask-fastapi");
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_python_facts(&root, &files, &[".".into()], &store);
+    let flask = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("flask_app.py"))
+        .expect("flask");
+    assert!(flask
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/users" && handler == "users"));
+    assert!(flask
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/ping" && handler == "ping"));
+    let fastapi = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("fastapi_app.py"))
+        .expect("fastapi");
+    assert!(fastapi
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/health" && handler == "health"));
+    let computed = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("computed.py"))
+        .expect("computed");
+    assert!(computed.route_handlers.is_empty());
+}
+
+#[test]
 fn go_collects_asynq_task_and_handler() {
     let root = fixture("go-asynq");
     let files = all_files(&root);

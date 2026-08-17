@@ -3,6 +3,8 @@ use super::strip::strip_comments_keep_strings;
 #[path = "python_imports.rs"]
 mod imports;
 use imports::{extract_python_imports, python_module};
+#[path = "python_http.rs"]
+mod http;
 
 #[cfg(test)]
 #[path = "python_imports_tests.rs"]
@@ -50,7 +52,7 @@ fn parse_python_file(
         imports,
         declarations: extract_named(&symbols, python_decl_re()),
         references: extract_named(&symbols, python_ref_re()),
-        route_handlers: extract_django_routes(&text),
+        route_handlers: http::extract_http_routes(&text),
         queue_enqueues,
         queue_workers,
         mods: Vec::new(),
@@ -104,18 +106,6 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
-fn extract_django_routes(source: &str) -> Vec<(String, String)> {
-    django_route_re()
-        .captures_iter(source)
-        .filter_map(|cap| {
-            Some((
-                cap.get(1)?.as_str().to_string(),
-                cap.get(2).or_else(|| cap.get(3))?.as_str().to_string(),
-            ))
-        })
-        .collect()
-}
-
 fn python_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -126,16 +116,6 @@ fn python_decl_re() -> &'static Regex {
 fn python_ref_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"\b([A-Z][A-Za-z0-9_]+)\b").expect("ref"))
-}
-
-fn django_route_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(
-            r#"\b(?:path|re_path)\(\s*["']([^"']*)["']\s*,\s*(?:include\(\s*["']([^"']+)["']|([A-Za-z_][\w.]*))"#,
-        )
-        .expect("django")
-    })
 }
 
 fn celery_enqueue_re() -> &'static Regex {
