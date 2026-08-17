@@ -31,11 +31,14 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
         facts,
     } = input;
     let skip = super::super::skip_dir_set(config);
-    let path_files = if opts
-        .sets
-        .iter()
-        .any(|spec| spec.kind == extract::PATH_REGEX_CAPTURE)
-    {
+    let mut has_path_regex = false;
+    for spec in &opts.sets {
+        if spec.kind == extract::PATH_REGEX_CAPTURE {
+            has_path_regex = true;
+            break;
+        }
+    }
+    let path_files = if has_path_regex {
         extract::path_regex_capture_files(root, config, rule, sources, &skip, target_roots, files)?
     } else {
         Vec::new()
