@@ -121,3 +121,18 @@ fn into_adjacency_map_preserves_keys_and_presizes_ordinals() {
     );
     assert_eq!(mapped.get("a").map(|adj| adj.ordinals.capacity()), Some(1));
 }
+
+#[test]
+fn adjacency_eq_slice_and_vec_compare_neighbors_only() {
+    let adj = Adjacency {
+        neighbors: vec![("b".to_owned(), 1_u8), ("c".to_owned(), 2)],
+        ordinals: vec![9, 8],
+    };
+    let owned = vec![("b".to_owned(), 1_u8), ("c".to_owned(), 2)];
+    let wrong = vec![("b".to_owned(), 1_u8)];
+
+    assert!(adj.eq(owned.as_slice()));
+    assert_eq!(adj, owned);
+    assert!(!adj.eq(wrong.as_slice()));
+    assert_ne!(adj, wrong);
+}
