@@ -18,6 +18,7 @@ impl PlaywrightSelectorEdgeInputs<'_> {
 }
 
 include!("edge_playwright_selector_collect.rs");
+include!("edge_playwright_selector_collect_text.rs");
 
 /// Build selector edges for every resolved frontend app. `prepared_settings`
 /// empty means no app was prepared — fall back to loading exactly one

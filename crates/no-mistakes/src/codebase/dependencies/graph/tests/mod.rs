@@ -76,6 +76,7 @@ include!("extra_cases.rs");
 include!("lazy_import_session.rs");
 include!("extra_playwright_routes.rs");
 include!("extra_selector.rs");
+include!("extra_selector_cache.rs");
 include!("extra_selector_multi_app.rs");
 include!("extra_selector_work.rs");
 include!("extra_symbol_scoped.rs");
