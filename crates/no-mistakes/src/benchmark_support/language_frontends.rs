@@ -3,14 +3,16 @@ use crate::codebase::dependencies::graph::{
     LanguageFrontendEdgeRequest,
 };
 use crate::codebase::lang_frontends::{collect_all_lang_facts, LangFactMap, LangFrontendConfig};
-use crate::codebase::ts_source::discover_visible_paths;
+use crate::codebase::ts_source::{discover_visible_paths, SourceStore};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 /// Composed `fixtures/lang-frontends` trees plus the production collect config.
 #[derive(Clone)]
 pub struct LanguageFrontendFixture {
     pub root: PathBuf,
     pub files: Vec<PathBuf>,
+    sources: Arc<SourceStore>,
     languages: LangFrontendConfig,
     queue_enqueues: Vec<String>,
     queue_workers: Vec<String>,
@@ -44,9 +46,11 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
         .filter(|path| path.starts_with(&root))
         .collect::<Vec<_>>();
     files.sort();
+    let sources = crate::codebase::rules::source_store_for_files(&files);
     LanguageFrontendFixture {
         root,
         files,
+        sources,
         languages: LangFrontendConfig {
             python_packages: vec!["python-celery-django/app".into()],
             go_modules: vec!["go-asynq".into(), "go-asynq/worker".into()],
@@ -64,8 +68,12 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
 pub fn collect_language_frontend_facts(
     fixture: &LanguageFrontendFixture,
 ) -> LanguageFrontendSummary {
-    let sources = crate::codebase::rules::source_store_for_files(&fixture.files);
-    let facts = collect_all_lang_facts(&fixture.root, &fixture.files, &fixture.languages, &sources);
+    let facts = collect_all_lang_facts(
+        &fixture.root,
+        &fixture.files,
+        &fixture.languages,
+        &fixture.sources,
+    );
     let maps = [
         &facts.python,
         &facts.go,
@@ -90,6 +98,7 @@ pub fn collect_language_frontend_edges(
     let edges = collect_language_frontend_edges_for_bench(LanguageFrontendEdgeRequest {
         root: &fixture.root,
         all_files: &fixture.files,
+        sources: &fixture.sources,
         languages: &fixture.languages,
         queue_enqueues: &fixture.queue_enqueues,
         queue_workers: &fixture.queue_workers,

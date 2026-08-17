@@ -209,3 +209,12 @@ fn language_frontend_edges_scope_routes_and_go_packages() {
                 .is_some_and(|path| path.ends_with("mail/user.go"))
     }));
 }
+
+#[test]
+fn package_root_file_falls_back_when_no_manifest_name() {
+    let mut files = std::collections::BTreeSet::new();
+    files.insert(PathBuf::from("z.rs"));
+    files.insert(PathBuf::from("a.rs"));
+    assert_eq!(package_root_file(&files), Some(Path::new("a.rs")));
+    assert!(package_root_file(&std::collections::BTreeSet::new()).is_none());
+}

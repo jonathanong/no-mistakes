@@ -4,6 +4,7 @@
 pub(crate) struct LanguageFrontendEdgeRequest<'a> {
     pub root: &'a Path,
     pub all_files: &'a [PathBuf],
+    pub sources: &'a crate::codebase::ts_source::SourceStore,
     pub languages: &'a crate::codebase::lang_frontends::LangFrontendConfig,
     pub queue_enqueues: &'a [String],
     pub queue_workers: &'a [String],
@@ -25,8 +26,12 @@ pub(crate) fn collect_language_frontend_edges_for_bench(
         queue_cluster: request.queue_cluster,
         ..GraphConfigOptions::default()
     };
-    let sources = crate::codebase::rules::source_store_for_files(request.all_files);
-    collect_language_frontend_edges(request.root, request.all_files, Some(&options), &sources)
+    collect_language_frontend_edges(
+        request.root,
+        request.all_files,
+        Some(&options),
+        request.sources,
+    )
 }
 
 pub(crate) fn count_queue_glob_matches(
