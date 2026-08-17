@@ -96,7 +96,12 @@ impl NodeSortKey {
     ) -> Self {
         let mut suffix = [0u8; 32];
         let step_len = match step {
-            Some(step) => write_step_suffix(step, &mut suffix).len() as u8,
+            Some(step) => {
+                let written = write_step_suffix(step, &mut suffix).len();
+                debug_assert!(written <= suffix.len());
+                debug_assert!(written <= usize::from(u8::MAX));
+                written as u8
+            }
             None => 0,
         };
         Self {
