@@ -48,7 +48,7 @@ fn signature_target_symbols(
                         .max_by_key(|candidate| candidate.matches('.').count())
                         .or_else(|| {
                             (!is_namespace_reexport_symbol(facts, file, symbol))
-                                .then(|| symbol.clone())
+                                .then(|| symbol.to_string())
                         });
                     if let Some(symbol_name) = symbol_name {
                         if target_symbols

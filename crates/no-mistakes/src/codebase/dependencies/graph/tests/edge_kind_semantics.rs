@@ -84,7 +84,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
     );
     assert_eq!(
         edges[1].1,
-        NodeId::symbol(target.clone(), "Shape".to_string()),
+        NodeId::symbol(target.clone(), "Shape"),
         "named re-exports target the workspace symbol"
     );
 

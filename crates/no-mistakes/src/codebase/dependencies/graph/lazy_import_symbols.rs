@@ -20,7 +20,7 @@ fn bfs_skipping_symbol_owner_files(
     let mut result: Vec<NodeEntry> = Vec::new();
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
     let symbol_importer_files_by_owner = symbol_importer_files_by_owner(edges);
-    let root_symbols: HashSet<(PathBuf, String)> = starts
+    let root_symbols: HashSet<(PathBuf, std::sync::Arc<str>)> = starts
         .iter()
         .filter_map(|node| {
             if let NodeId::Symbol { file, symbol } = node {

@@ -35,7 +35,7 @@ fn graph_private_helpers_cover_noop_branches() {
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
     let file = p("/src/worker.mts");
-    let queue_job = NodeId::queue_job(p("/src/queue.mts"), "send".to_string());
+    let queue_job = NodeId::queue_job(p("/src/queue.mts"), "send");
     test_support::add_distinct_worker_file_edges(
         &mut forward,
         &mut reverse,
@@ -50,7 +50,7 @@ fn graph_private_helpers_cover_noop_branches() {
 #[test]
 fn symbol_node_file_helpers_render_paths() {
     let root = p("/repo");
-    let symbol = NodeId::symbol(p("/repo/src/current.mts"), "alpha".to_string());
+    let symbol = NodeId::symbol(p("/repo/src/current.mts"), "alpha");
 
     assert_eq!(symbol.as_file(), Some(p("/repo/src/current.mts").as_path()));
     assert_eq!(symbol.display_name(&root), "src/current.mts#alpha");
@@ -192,17 +192,17 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
 
     assert!(edges.contains(&(
         NodeId::file(current.clone()),
-        NodeId::symbol(current.clone(), "Alias".to_string()),
+        NodeId::symbol(current.clone(), "Alias"),
         EdgeKind::TypeImport
     )));
     assert!(edges.contains(&(
-        NodeId::symbol(current.clone(), "Alias".to_string()),
-        NodeId::symbol(target.clone(), "SourceType".to_string()),
+        NodeId::symbol(current.clone(), "Alias"),
+        NodeId::symbol(target.clone(), "SourceType"),
         EdgeKind::TypeImport
     )));
     assert!(edges.contains(&(
-        NodeId::symbol(current, "run".to_string()),
-        NodeId::symbol(target, "used".to_string()),
+        NodeId::symbol(current, "run"),
+        NodeId::symbol(target, "used"),
         EdgeKind::Import
     )));
 }
@@ -343,7 +343,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
 fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     let owner = p("/repo/src/owner.mts");
     let dep = p("/repo/src/dep.mts");
-    let symbol = NodeId::symbol(owner.clone(), "alpha".to_string());
+    let symbol = NodeId::symbol(owner.clone(), "alpha");
     let mut edges = EdgeMap::new();
     edges.insert(
         symbol.clone(),
@@ -380,8 +380,8 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
 fn symbol_bfs_skips_only_the_current_symbol_owner_file() {
     let owner_a = p("/repo/src/a.mts");
     let owner_b = p("/repo/src/b.mts");
-    let symbol_a = NodeId::symbol(owner_a.clone(), "alpha".to_string());
-    let symbol_b = NodeId::symbol(owner_b.clone(), "beta".to_string());
+    let symbol_a = NodeId::symbol(owner_a.clone(), "alpha");
+    let symbol_b = NodeId::symbol(owner_b.clone(), "beta");
     let mut edges = EdgeMap::new();
     edges.insert(
         symbol_a.clone(),
@@ -406,8 +406,8 @@ fn symbol_bfs_widens_reached_symbols_to_owner_files() {
     let source = p("/repo/src/source.mts");
     let owner = p("/repo/src/owner.mts");
     let unrelated_consumer = p("/repo/src/unrelated-consumer.mts");
-    let source_symbol = NodeId::symbol(source, "alpha".to_string());
-    let owner_symbol = NodeId::symbol(owner.clone(), "usesAlpha".to_string());
+    let source_symbol = NodeId::symbol(source, "alpha");
+    let owner_symbol = NodeId::symbol(owner.clone(), "usesAlpha");
     let mut edges = EdgeMap::new();
     edges.insert(
         source_symbol.clone(),

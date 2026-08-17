@@ -89,8 +89,8 @@ fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
 #[test]
 fn symbol_roots_keep_matching_queue_job_roots() {
     let queue_file = PathBuf::from("/repo/src/queues.ts");
-    let symbol_root = NodeId::symbol(queue_file.clone(), "sendWelcome".to_string());
-    let queue_job = NodeId::queue_job(queue_file.clone(), "sendWelcome".to_string());
+    let symbol_root = NodeId::symbol(queue_file.clone(), "sendWelcome");
+    let queue_job = NodeId::queue_job(queue_file.clone(), "sendWelcome");
     let entrypoints = vec![Entrypoint {
         file: queue_file,
         node: symbol_root.clone(),
@@ -174,7 +174,7 @@ fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
     } else if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
         NodeId::file(PathBuf::from(file))
     } else {
-        NodeId::queue_job(PathBuf::from(node["queue_file"].as_str().unwrap()), node["job"].as_str().unwrap().to_string())
+        NodeId::queue_job(PathBuf::from(node["queue_file"].as_str().unwrap()), node["job"].as_str().unwrap())
     };
     let via = value["via"]
         .as_array()

@@ -307,7 +307,7 @@ fn apply_filter_passes_queue_job_nodes() {
         .unwrap();
     let root = p("/root");
     let queue_job = NodeEntry {
-        node: NodeId::queue_job(p("/root/src/queues.mts"), "sendWelcome".to_string()),
+        node: NodeId::queue_job(p("/root/src/queues.mts"), "sendWelcome"),
         depth: 1,
         via: vec![],
     };

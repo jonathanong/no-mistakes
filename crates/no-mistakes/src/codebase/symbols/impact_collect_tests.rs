@@ -108,7 +108,7 @@ fn signature_target_symbols_keeps_file_entries_and_ignores_non_file_nodes() {
     let export_nodes = BTreeSet::from([
         NodeId::file(barrel.clone()),
         NodeId::Module("external".to_string()),
-        NodeId::queue_job(queue, "send".to_string()),
+        NodeId::queue_job(queue, "send"),
     ]);
 
     let target_symbols = signature_target_symbols(

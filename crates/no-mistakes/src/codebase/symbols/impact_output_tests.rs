@@ -8,7 +8,7 @@ fn caller_parts_ignores_non_file_backed_nodes() {
     assert!(caller_parts(&NodeId::Module("react".to_string()), root).is_none());
     assert!(
         caller_parts(
-            &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email".to_string()),
+            &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email"),
             root,
         )
         .is_none()
@@ -51,7 +51,7 @@ fn suggested_tests_merges_duplicate_test_files() {
             via: vec![EdgeKind::Import],
         },
         NodeEntry {
-            node: NodeId::symbol(test_file, "coversDate".to_string()),
+            node: NodeId::symbol(test_file, "coversDate"),
             depth: 1,
             via: vec![EdgeKind::TestOf],
         },

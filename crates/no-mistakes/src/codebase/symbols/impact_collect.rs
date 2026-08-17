@@ -32,7 +32,7 @@ fn build_report_from_prepared(
         graph_files.visible().iter().cloned(),
     );
     let visible_files = graph_files.visible().clone();
-    let target = NodeId::symbol(target_file, symbol.to_string());
+    let target = NodeId::symbol(target_file, symbol);
     let definition = if let Some(location) =
         export_location(facts, target_file, root, symbol, false)?
     {

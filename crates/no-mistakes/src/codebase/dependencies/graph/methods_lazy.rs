@@ -142,7 +142,7 @@ impl DepGraph {
         }
 
         // Also check if (file, symbol) corresponds to a QueueJob node.
-        let queue_job = NodeId::queue_job(file, symbol.to_string());
+        let queue_job = NodeId::queue_job(file, symbol);
         if self.traversal_edges().reverse().contains_key(&queue_job) {
             direct_importers.insert(queue_job);
         }

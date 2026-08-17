@@ -38,7 +38,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     };
 
     let roots = vec![
-        NodeId::queue_job(a.clone(), "send".to_string()),
+        NodeId::queue_job(a.clone(), "send"),
         NodeId::file(a),
     ];
     let limited =

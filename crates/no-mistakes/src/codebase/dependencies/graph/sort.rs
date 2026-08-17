@@ -44,7 +44,7 @@ fn node_sort_parts<'a>(
         NodeId::Symbol { file, symbol } => [
             file.to_string_lossy(),
             "#".into(),
-            std::borrow::Cow::Borrowed(symbol),
+            std::borrow::Cow::Borrowed(symbol.as_ref()),
             "".into(),
         ],
         NodeId::Module(specifier) => [
@@ -56,13 +56,13 @@ fn node_sort_parts<'a>(
         NodeId::QueueJob { queue_file, job } => [
             queue_file.to_string_lossy(),
             "#".into(),
-            std::borrow::Cow::Borrowed(job),
+            std::borrow::Cow::Borrowed(job.as_ref()),
             "".into(),
         ],
         NodeId::WorkflowJob { workflow_file, job } => [
             workflow_file.to_string_lossy(),
             "#job:".into(),
-            std::borrow::Cow::Borrowed(job),
+            std::borrow::Cow::Borrowed(job.as_ref()),
             "".into(),
         ],
         NodeId::WorkflowStep {
@@ -72,7 +72,7 @@ fn node_sort_parts<'a>(
         } => [
             workflow_file.to_string_lossy(),
             "#job:".into(),
-            std::borrow::Cow::Borrowed(job),
+            std::borrow::Cow::Borrowed(job.as_ref()),
             std::borrow::Cow::Borrowed(write_step_suffix(*step, step_buf)),
         ],
     }

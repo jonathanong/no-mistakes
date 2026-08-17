@@ -2,28 +2,29 @@ pub use crate::codebase::ts_source::SKIP_DIRS;
 
 /// A node in the dependency graph: a source file, external module, or virtual node.
 ///
-/// File paths are interned as `Arc<Path>` so cloning a `NodeId` does not copy
-/// path bytes. Construct with `NodeId::file` / `symbol` / …; keep matching
-/// `NodeId::File(path)` and `NodeId::Symbol { file, .. }`.
+/// File paths are interned as `Arc<Path>` and symbol/job names as `Arc<str>`
+/// so cloning a `NodeId` does not copy those bytes. Construct with
+/// `NodeId::file` / `symbol` / …; keep matching `NodeId::File(path)` and
+/// `NodeId::Symbol { file, .. }`.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum NodeId {
     File(Arc<Path>),
     Symbol {
         file: Arc<Path>,
-        symbol: String,
+        symbol: Arc<str>,
     },
     Module(String),
     QueueJob {
         queue_file: Arc<Path>,
-        job: String,
+        job: Arc<str>,
     },
     WorkflowJob {
         workflow_file: Arc<Path>,
-        job: String,
+        job: Arc<str>,
     },
     WorkflowStep {
         workflow_file: Arc<Path>,
-        job: String,
+        job: Arc<str>,
         step: usize,
     },
 }

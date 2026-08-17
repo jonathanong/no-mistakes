@@ -49,7 +49,7 @@ fn collect_direct_reexport_edge(
     if imported == "*" && export_symbol == "*" {
         return;
     }
-    let from = NodeId::symbol(inputs.path, export_symbol.to_string());
+    let from = NodeId::symbol(inputs.path, export_symbol);
     if let Some(target) = inputs.resolver.resolve(source, inputs.path) {
         let Some(target) = inputs.graph_files.visible_path(&target) else {
             return;

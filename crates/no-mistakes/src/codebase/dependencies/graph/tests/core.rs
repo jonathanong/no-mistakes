@@ -60,7 +60,7 @@ fn node_display_and_normalization_cover_file_and_queue_nodes() {
     let root = p("/repo");
     let file = NodeId::file(p("/repo/src/file.ts"));
     let module = NodeId::Module("@react/client".to_string());
-    let queue = NodeId::queue_job(p("/repo/src/queues.ts"), "send".to_string());
+    let queue = NodeId::queue_job(p("/repo/src/queues.ts"), "send");
 
     assert_eq!(file.display_name(&root), "src/file.ts");
     assert_eq!(module.display_name(&root), "@react/client");
@@ -491,8 +491,8 @@ fn node_sorting_breaks_display_collisions_by_typed_identity() {
     let source = n("/repo/source.ts");
     let targets = vec![
         NodeId::file(p("/repo/item#job")),
-        NodeId::symbol(p("/repo/item"), "job".to_string()),
-        NodeId::queue_job(p("/repo/item"), "job".to_string()),
+        NodeId::symbol(p("/repo/item"), "job"),
+        NodeId::queue_job(p("/repo/item"), "job"),
     ];
 
     let build = |ordered: Vec<NodeId>| {

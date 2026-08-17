@@ -67,7 +67,7 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
         None,
     );
 
-    let standard_node = NodeId::symbol(file.clone(), "javascriptValue".to_string());
+    let standard_node = NodeId::symbol(file.clone(), "javascriptValue");
     assert!(edges.contains(&(
         NodeId::file(file.clone()),
         standard_node,
@@ -75,10 +75,10 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
     )));
     assert!(edges.iter().any(|(_, node, _)| matches!(
         node,
-        NodeId::Symbol { symbol, .. } if symbol == "javascriptValue"
+        NodeId::Symbol { symbol, .. } if symbol.as_ref() == "javascriptValue"
     )));
     assert!(!edges.iter().any(|(from, to, _)| [from, to].iter().any(|node| matches!(
         node,
-        NodeId::Symbol { symbol, .. } if symbol == "JavaScriptShape"
+        NodeId::Symbol { symbol, .. } if symbol.as_ref() == "JavaScriptShape"
     ))));
 }

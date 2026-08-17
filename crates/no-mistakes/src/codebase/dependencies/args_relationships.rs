@@ -142,9 +142,9 @@ pub(crate) fn workflow_node_from_suffix(file: &Path, suffix: &str) -> Option<Nod
         }
         return Some(NodeId::workflow_step(
             file,
-            job.to_string(),
+            job,
             step.parse().ok()?,
         ));
     }
-    (!suffix.is_empty()).then(|| NodeId::workflow_job(file, suffix.to_string()))
+    (!suffix.is_empty()).then(|| NodeId::workflow_job(file, suffix))
 }

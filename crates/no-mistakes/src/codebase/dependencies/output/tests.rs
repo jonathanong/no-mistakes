@@ -30,7 +30,7 @@ fn entry_with_via(path: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
 
 fn queue_job_entry(queue_file: &str, job: &str, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::queue_job(p(queue_file), job.to_string()),
+        node: NodeId::queue_job(p(queue_file), job),
         depth,
         via: vec![],
     }
@@ -38,7 +38,7 @@ fn queue_job_entry(queue_file: &str, job: &str, depth: usize) -> NodeEntry {
 
 fn workflow_job_entry(workflow_file: &str, job: &str, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::workflow_job(p(workflow_file), job.to_string()),
+        node: NodeId::workflow_job(p(workflow_file), job),
         depth,
         via: vec![],
     }
@@ -46,7 +46,7 @@ fn workflow_job_entry(workflow_file: &str, job: &str, depth: usize) -> NodeEntry
 
 fn workflow_step_entry(workflow_file: &str, job: &str, step: usize, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::workflow_step(p(workflow_file), job.to_string(), step),
+        node: NodeId::workflow_step(p(workflow_file), job, step),
         depth,
         via: vec![EdgeKind::WorkflowStep],
     }
@@ -62,7 +62,7 @@ fn module_entry(specifier: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry 
 
 fn symbol_entry(file: &str, symbol: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
     NodeEntry {
-        node: NodeId::symbol(p(file), symbol.to_string()),
+        node: NodeId::symbol(p(file), symbol),
         depth,
         via,
     }

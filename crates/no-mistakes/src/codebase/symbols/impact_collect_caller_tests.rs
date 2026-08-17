@@ -7,7 +7,7 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
     let source = PathBuf::from("/repo/src/source.mts");
     let consumer = PathBuf::from("/repo/src/consumer.mts");
     let test = PathBuf::from("/repo/src/consumer.test.mts");
-    let export_node = NodeId::symbol(source, "parseDate".to_string());
+    let export_node = NodeId::symbol(source, "parseDate");
     let entries = vec![
         NodeEntry {
             node: export_node.clone(),
@@ -20,7 +20,7 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
             via: vec![EdgeKind::Import],
         },
         NodeEntry {
-            node: NodeId::symbol(consumer, "format".to_string()),
+            node: NodeId::symbol(consumer, "format"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
@@ -67,17 +67,17 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
     };
     let entries = vec![
         NodeEntry {
-            node: NodeId::symbol(PathBuf::from("/repo/src/b.mts"), "beta".to_string()),
+            node: NodeId::symbol(PathBuf::from("/repo/src/b.mts"), "beta"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
         NodeEntry {
-            node: NodeId::symbol(PathBuf::from("/repo/src/a.mts"), "alpha".to_string()),
+            node: NodeId::symbol(PathBuf::from("/repo/src/a.mts"), "alpha"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
         NodeEntry {
-            node: NodeId::symbol(PathBuf::from("/repo/src/b.mts"), "beta".to_string()),
+            node: NodeId::symbol(PathBuf::from("/repo/src/b.mts"), "beta"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },

@@ -77,8 +77,8 @@ fn scoped_symbol_aliases_remap_real_targets_to_the_symlink_namespace() {
     let target = root.join("src/symbol-target.ts");
 
     assert!(edges.contains(&(
-        NodeId::symbol(client, "execute".to_string()),
-        NodeId::symbol(target, "linkedSymbol".to_string()),
+        NodeId::symbol(client, "execute"),
+        NodeId::symbol(target, "linkedSymbol"),
         EdgeKind::Import,
     )));
 }
@@ -123,13 +123,13 @@ fn scoped_symbol_reexports_and_function_imports_stay_in_the_symlink_namespace() 
         ("src/reexport-star.ts", "linkedSymbol", EdgeKind::Import),
     ] {
         assert!(edges.contains(&(
-            NodeId::symbol(root.join(source), symbol.to_string()),
-            NodeId::symbol(target.clone(), "linkedSymbol".to_string()),
+            NodeId::symbol(root.join(source), symbol),
+            NodeId::symbol(target.clone(), "linkedSymbol"),
             kind,
         )));
     }
     assert!(edges.contains(&(
-        NodeId::symbol(root.join("src/scoped-import-client.ts"), "loadTarget".to_string()),
+        NodeId::symbol(root.join("src/scoped-import-client.ts"), "loadTarget"),
         NodeId::file(target),
         EdgeKind::DynamicImport,
     )));
