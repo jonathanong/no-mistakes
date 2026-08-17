@@ -31,6 +31,7 @@ fn collect_playwright_selector_edges_skips_a_failing_app_but_keeps_the_others() 
             graph_tsconfig: None,
             snapshot: &snapshot,
             prepared_settings: &prepared_settings,
+            interner: &crate::codebase::analysis_session::PathInterner::new(),
         },
     )
     .unwrap();

@@ -41,6 +41,7 @@ fn imported_symbol_map(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
     for import in &symbols.imports {
@@ -60,15 +61,13 @@ fn imported_symbol_map(
                 }
             } else {
                 ImportedSymbolTarget::Node {
-                    node: NodeId::file(target),
+                    node: NodeId::file_in(interner, target),
                     kind: EdgeKind::AssetImport,
                 }
             }
-        } else if let Some(target) = workspace.resolve_specifier_from_file_visible(
-            &import.source,
-            path,
-            visible_files,
-        ) {
+        } else if let Some(target) =
+            workspace.resolve_specifier_from_file_visible(&import.source, path, visible_files)
+        {
             if !visible_files.contains(&target) {
                 continue;
             }
@@ -96,6 +95,7 @@ fn namespace_import_map(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
     for import in &symbols.imports {
@@ -115,15 +115,13 @@ fn namespace_import_map(
                 }
             } else {
                 ImportedSymbolTarget::Node {
-                    node: NodeId::file(file),
+                    node: NodeId::file_in(interner, file),
                     kind: EdgeKind::AssetImport,
                 }
             }
-        } else if let Some(file) = workspace.resolve_specifier_from_file_visible(
-            &import.source,
-            path,
-            visible_files,
-        ) {
+        } else if let Some(file) =
+            workspace.resolve_specifier_from_file_visible(&import.source, path, visible_files)
+        {
             if !visible_files.contains(&file) {
                 continue;
             }
@@ -187,7 +185,10 @@ fn workspace_symbol_edge_kind(is_type_only: bool) -> EdgeKind {
 fn with_type_only_edge_kind(kind: EdgeKind, is_type_only: bool) -> EdgeKind {
     if !is_type_only {
         kind
-    } else if matches!(kind, EdgeKind::WorkspaceImport | EdgeKind::WorkspaceTypeImport) {
+    } else if matches!(
+        kind,
+        EdgeKind::WorkspaceImport | EdgeKind::WorkspaceTypeImport
+    ) {
         EdgeKind::WorkspaceTypeImport
     } else {
         EdgeKind::TypeImport

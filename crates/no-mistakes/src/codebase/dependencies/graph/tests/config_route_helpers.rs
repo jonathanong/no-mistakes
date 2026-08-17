@@ -13,6 +13,7 @@ fn route_edge_push_skips_missing_pattern_map_entries() {
         "/prefix/*",
         &all_patterns,
         &pattern_to_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(edges.is_empty());
@@ -151,7 +152,11 @@ fn route_helper_ref_patterns_cover_local_and_imported_variants() {
             &facts,
             &resolver,
             &GraphFiles::from_files(
-                facts.keys().cloned().chain(std::iter::once(client.clone())).collect(),
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
             ),
         ),
         vec![
@@ -233,7 +238,11 @@ fn route_helper_ref_patterns_follow_named_reexport_barrels() {
             &facts,
             &resolver,
             &GraphFiles::from_files(
-                facts.keys().cloned().chain(std::iter::once(client.clone())).collect(),
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
             ),
         ),
         vec!["/prefix/*/suffix/*".to_string()]
@@ -294,7 +303,11 @@ fn route_helper_ref_patterns_follow_star_reexport_barrels() {
             &facts,
             &resolver,
             &GraphFiles::from_files(
-                facts.keys().cloned().chain(std::iter::once(client.clone())).collect(),
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
             ),
         ),
         vec!["/prefix/*/suffix/*".to_string()]
@@ -364,7 +377,11 @@ fn route_helper_ref_patterns_try_all_star_reexport_barrels() {
             &facts,
             &resolver,
             &GraphFiles::from_files(
-                facts.keys().cloned().chain(std::iter::once(client.clone())).collect(),
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
             ),
         ),
         vec!["/prefix/*/suffix/*".to_string()]
@@ -425,7 +442,11 @@ fn route_helper_ref_patterns_follow_namespace_reexport_barrels() {
             &facts,
             &resolver,
             &GraphFiles::from_files(
-                facts.keys().cloned().chain(std::iter::once(client.clone())).collect(),
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
             ),
         ),
         vec!["/prefix/*/suffix/*".to_string()]
@@ -476,7 +497,11 @@ fn route_helper_ref_patterns_ignore_unresolved_named_reexport_barrels() {
         &facts,
         &resolver,
         &GraphFiles::from_files(
-            facts.keys().cloned().chain(std::iter::once(client.clone())).collect(),
+            facts
+                .keys()
+                .cloned()
+                .chain(std::iter::once(client.clone()))
+                .collect(),
         ),
     )
     .is_empty());

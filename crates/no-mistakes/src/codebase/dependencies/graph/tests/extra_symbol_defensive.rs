@@ -24,10 +24,13 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
 
     assert!(!target_export_is_type(&source, "missing", &facts));
     assert_eq!(
-        namespace_file_node(&ImportedSymbolTarget::Node {
-            node: NodeId::module("pkg"),
-            kind: EdgeKind::Import,
-        }),
+        namespace_file_node(
+            &ImportedSymbolTarget::Node {
+                node: NodeId::module("pkg"),
+                kind: EdgeKind::Import,
+            },
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (NodeId::module("pkg"), EdgeKind::Import)
     );
 
@@ -63,6 +66,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         workspace: &workspace,
         visible_files: &visible,
         graph_files: &graph_files,
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
     };
     let mut candidates = Vec::new();
     let mut visited = HashSet::new();
@@ -92,6 +96,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         workspace: &workspace,
         visible_files: &visible,
         graph_files: &graph_files,
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
     };
     let star_self = Export {
         name: "*".to_string(),
@@ -104,7 +109,13 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         is_type_only: false,
     };
     let mut edges = Vec::new();
-    collect_direct_reexport_edge(&direct_inputs, &star_self, "*", &mut edges);
+    collect_direct_reexport_edge(
+        &direct_inputs,
+        &star_self,
+        "*",
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert!(edges.is_empty());
 
     facts.insert(
@@ -157,12 +168,10 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                 workspace: &workspace,
                 visible_files: &visible,
                 graph_files: &graph_files,
+                interner: &crate::codebase::analysis_session::PathInterner::new(),
             },
         ),
-        Some((
-            NodeId::symbol(source.clone(), "alpha"),
-            EdgeKind::Import,
-        ))
+        Some((NodeId::symbol(source.clone(), "alpha"), EdgeKind::Import,))
     );
 
     let cycle = p("/repo/src/cycle.mts");
@@ -215,6 +224,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                 workspace: &workspace,
                 visible_files: &visible,
                 graph_files: &cycle_graph_files,
+                interner: &crate::codebase::analysis_session::PathInterner::new(),
             },
         ),
         None

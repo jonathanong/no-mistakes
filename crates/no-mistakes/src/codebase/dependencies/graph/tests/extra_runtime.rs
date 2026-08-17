@@ -37,6 +37,7 @@ fn queue_edges_use_precomputed_shared_facts() {
         &graph_files,
         Some(&facts),
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     let queue_job = NodeId::queue_job(emails.clone(), "sendWelcomeEmail");
 
@@ -110,8 +111,14 @@ fn process_spawn_edges_cover_source_fallback_without_precomputed_facts() {
     let source = std::fs::read_to_string(&spawner).unwrap();
 
     let visible = HashSet::from([spawn_target.clone()]);
-    let edges =
-        collect_process_spawn_edges(&root, None, &[(spawner.clone(), source)], &[], &visible);
+    let edges = collect_process_spawn_edges(
+        &root,
+        None,
+        &[(spawner.clone(), source)],
+        &[],
+        &visible,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::ProcessSpawn
@@ -201,10 +208,8 @@ fn scoped_queue_edges_keep_symlink_root_targets_in_visible_namespace() {
         std::slice::from_ref(&root),
         &catalog_visible,
     );
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new(
-        &catalog,
-        graph_files.visible(),
-    );
+    let resolver =
+        crate::codebase::ts_resolver::ScopedImportResolver::new(&catalog, graph_files.visible());
     let plan = GraphBuildPlan {
         queues: true,
         ..GraphBuildPlan::default()
@@ -222,6 +227,7 @@ fn scoped_queue_edges_keep_symlink_root_targets_in_visible_namespace() {
         &graph_files,
         Some(&facts),
         Some(&options),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     let queue_job = NodeId::queue_job(root.join("src/queues.ts"), "sendEmail");
     assert!(relationships.iter().any(|edge| {

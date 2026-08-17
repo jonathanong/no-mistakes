@@ -7,12 +7,14 @@ struct SymbolRuntimeEdgeInputs<'a> {
     http_route_defs: &'a [(PathBuf, String)],
     process_spawns: &'a [crate::codebase::ts_process_spawn::SpawnEdge],
     visible_files: &'a HashSet<PathBuf>,
+    interner: &'a PathInterner,
 }
 
 fn collect_symbol_runtime_owner_file_edges(
     inputs: SymbolRuntimeEdgeInputs<'_>,
     edges: &mut Vec<Edge>,
 ) {
+    let interner = inputs.interner;
     if inputs.http_route_defs.is_empty() && inputs.process_spawns.is_empty() {
         return;
     }
@@ -31,14 +33,18 @@ fn collect_symbol_runtime_owner_file_edges(
         return;
     }
     for caller_export in inputs.caller_exports {
-        let from = NodeId::symbol(inputs.path, caller_export.clone());
+        let from = NodeId::symbol_in(interner, inputs.path, caller_export.clone());
         for target in &http_targets {
-            edges.push((from.clone(), NodeId::file(target.clone()), EdgeKind::HttpCall));
+            edges.push((
+                from.clone(),
+                NodeId::file_in(interner, target.clone()),
+                EdgeKind::HttpCall,
+            ));
         }
         for target in &process_targets {
             edges.push((
                 from.clone(),
-                NodeId::file(target.clone()),
+                NodeId::file_in(interner, target.clone()),
                 EdgeKind::ProcessSpawn,
             ));
         }
@@ -119,15 +125,13 @@ fn symbol_http_targets(
 fn is_http_callee(callee: &str) -> bool {
     const METHODS: &[&str] = &["delete", "get", "head", "options", "patch", "post", "put"];
     callee == "fetch"
-        || dotted_callee_parts(callee)
-            .is_some_and(|(_, method)| METHODS.contains(&method))
+        || dotted_callee_parts(callee).is_some_and(|(_, method)| METHODS.contains(&method))
 }
 
 fn is_process_spawn_callee(callee: &str) -> bool {
     const FUNCTIONS: &[&str] = &["exec", "execFile", "fork", "spawn"];
     FUNCTIONS.contains(&callee)
-        || dotted_callee_parts(callee)
-            .is_some_and(|(_, method)| FUNCTIONS.contains(&method))
+        || dotted_callee_parts(callee).is_some_and(|(_, method)| FUNCTIONS.contains(&method))
 }
 
 fn dotted_callee_parts(callee: &str) -> Option<(&str, &str)> {

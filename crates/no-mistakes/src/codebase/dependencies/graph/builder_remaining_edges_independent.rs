@@ -20,7 +20,11 @@ fn collect_independent_remaining_edges(
                 collect_unless_timed_out(|| {
                     crate::perf_trace::trace("graph.markdown", || {
                         if edge_inputs.plan.markdown {
-                            collect_md_edges(&edge_inputs.graph_files.all, edge_inputs.graph_files)
+                            collect_md_edges(
+                                &edge_inputs.graph_files.all,
+                                edge_inputs.graph_files,
+                                &edge_inputs.interner,
+                            )
                         } else {
                             Vec::new()
                         }
@@ -57,7 +61,9 @@ fn collect_independent_remaining_edges(
                                         collect_unless_timed_out(|| {
                                             crate::perf_trace::trace("graph.swift", || {
                                                 collect_swift_edges_for_plan(
-                                                    edge_inputs, facts, session,
+                                                    edge_inputs,
+                                                    facts,
+                                                    session,
                                                 )
                                             })
                                         })

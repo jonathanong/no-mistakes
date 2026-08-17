@@ -24,6 +24,7 @@ fn collect_resource_edges(
     files: &[PathBuf],
     facts: &dyn TsFactLookup,
     resource_candidates: &[PathBuf],
+    interner: &PathInterner,
 ) -> (Vec<Edge>, ResourceEdgeDetails, Vec<ResourceGraphDiagnostic>) {
     // Parsing already happened when collecting TS facts.  Each consumer can be
     // filtered independently, so keep this collection parallel and sort below
@@ -119,8 +120,8 @@ fn collect_resource_edges(
             .expect("every collected resource key has a cached expansion");
         for target in targets {
             edges.push((
-                NodeId::file(call.consumer.clone()),
-                NodeId::file(target.clone()),
+                NodeId::file_in(interner, call.consumer.clone()),
+                NodeId::file_in(interner, target.clone()),
                 EdgeKind::Resource,
             ));
             details
@@ -134,11 +135,7 @@ fn collect_resource_edges(
         sites.dedup();
     }
     edges.sort_by(|left, right| {
-        (&left.0, &left.1, left.2.sort_key()).cmp(&(
-            &right.0,
-            &right.1,
-            right.2.sort_key(),
-        ))
+        (&left.0, &left.1, left.2.sort_key()).cmp(&(&right.0, &right.1, right.2.sort_key()))
     });
     edges.dedup();
     (edges, details, diagnostics)

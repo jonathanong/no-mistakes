@@ -30,7 +30,14 @@ fn empty_options() -> GraphConfigOptions {
 #[test]
 fn dotnet_edges_return_empty_without_config_or_files() {
     let root = p("/repo");
-    assert!(collect_dotnet_edges(&root, &[], None, None).is_empty());
+    assert!(collect_dotnet_edges(
+        &root,
+        &[],
+        None,
+        None,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 
     let mut options = empty_options();
     options
@@ -43,7 +50,14 @@ fn dotnet_edges_return_empty_without_config_or_files() {
             test: true,
         });
 
-    assert!(collect_dotnet_edges(&root, &[], Some(&options), None).is_empty());
+    assert!(collect_dotnet_edges(
+        &root,
+        &[],
+        Some(&options),
+        None,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 }
 
 #[test]
@@ -74,7 +88,11 @@ fn dotnet_project_edges_skip_missing_sources_and_references() {
     );
 
     let mut edges = Vec::new();
-    collect_dotnet_project_edges(&facts, &mut edges);
+    collect_dotnet_project_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert!(edges.is_empty());
 
     facts
@@ -83,7 +101,11 @@ fn dotnet_project_edges_skip_missing_sources_and_references() {
     facts
         .files_by_project
         .insert(app_project, [app_file.clone()].into_iter().collect());
-    collect_dotnet_project_edges(&facts, &mut edges);
+    collect_dotnet_project_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert_eq!(
         edges,

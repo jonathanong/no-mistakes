@@ -4,6 +4,7 @@ fn add_ci_edges(
     parsed: &crate::codebase::ci_workflows::ParsedWorkflowSet,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
+    interner: &PathInterner,
 ) {
     let bins = collect_cargo_bins(root, all_files);
     if bins.is_empty() {
@@ -17,8 +18,7 @@ fn add_ci_edges(
             let Ok(value) = document.value.as_ref() else {
                 return Vec::new();
             };
-            let path =
-                crate::codebase::ts_resolver::normalize_path(&root.join(&document.path));
+            let path = crate::codebase::ts_resolver::normalize_path(&root.join(&document.path));
             let invocations = crate::codebase::ci_workflows::extract_invocations_value(value);
 
             let mut edges = Vec::new();
@@ -38,8 +38,8 @@ fn add_ci_edges(
                     .filter_map(|binary_name| bins.by_name.get(binary_name));
                 for source_file in cargo_target_files.chain(direct_binary_files) {
                     edges.push((
-                        NodeId::file(path.clone()),
-                        NodeId::file(source_file.clone()),
+                        NodeId::file_in(interner, path.clone()),
+                        NodeId::file_in(interner, source_file.clone()),
                         EdgeKind::CiInvocation,
                     ));
                 }

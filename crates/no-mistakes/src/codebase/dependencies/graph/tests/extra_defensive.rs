@@ -46,12 +46,35 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
             },
         ]),
         &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
-    assert!(collect_test_edges(Path::new("."), &[PathBuf::from("/")], None).is_empty());
-    assert!(collect_test_edges(Path::new("."), &[PathBuf::from("no-parent.ts")], None).is_empty());
-    assert!(collect_md_edges(&[PathBuf::from("/")], &graph_files).is_empty());
-    assert!(collect_md_edges(&[PathBuf::from("README.md")], &graph_files).is_empty());
+    assert!(collect_test_edges(
+        Path::new("."),
+        &[PathBuf::from("/")],
+        None,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
+    assert!(collect_test_edges(
+        Path::new("."),
+        &[PathBuf::from("no-parent.ts")],
+        None,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
+    assert!(collect_md_edges(
+        &[PathBuf::from("/")],
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
+    assert!(collect_md_edges(
+        &[PathBuf::from("README.md")],
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
@@ -62,6 +85,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &parsed,
         &mut forward,
         &mut reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(forward.is_empty());
 
@@ -83,18 +107,23 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &mut forward,
         &mut reverse,
     );
-    assert!(
-        collect_http_call_edges(&root.join("missing"), &tsconfig, None, &[], &[], &[], None)
-            .is_empty()
-    );
+    assert!(collect_http_call_edges(
+        &root.join("missing"),
+        None,
+        &[],
+        &[],
+        &[],
+        None,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 }
 
 #[test]
 fn lazy_import_facts_memoize_parse_errors() {
     let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-            "../../fixtures/codebase/dependencies/selector-malformed-app-source/fixture",
-        ),
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/selector-malformed-app-source/fixture"),
     );
     let malformed = root.join("web/components/save-button.tsx");
     let tsconfig = TsConfig {
@@ -124,9 +153,7 @@ fn lazy_import_facts_memoize_parse_errors() {
     );
 
     assert!(neighbors.is_empty());
-    assert!(
-        collected
-            .and_then(|facts| facts.parse_error)
-            .is_some_and(|error| error.contains("failed to parse"))
-    );
+    assert!(collected
+        .and_then(|facts| facts.parse_error)
+        .is_some_and(|error| error.contains("failed to parse")));
 }

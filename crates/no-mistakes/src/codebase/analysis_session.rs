@@ -10,8 +10,11 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+mod intern;
 mod io;
 mod parsing;
+
+pub use intern::PathInterner;
 
 /// Invocation-owned analysis gateways and memoized work.
 ///
@@ -27,6 +30,7 @@ pub struct AnalysisSession {
     resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
     registry_extension_reports: DashMap<RegistryExtensionKey, RegistryExtensionCell>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
+    interner: Arc<PathInterner>,
 }
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
@@ -76,6 +80,7 @@ impl AnalysisSession {
             resolver_caches: DashMap::new(),
             registry_extension_reports: DashMap::new(),
             parse_attempts: collect_keyed_work.then(DashMap::new),
+            interner: Arc::new(PathInterner::new()),
         })
     }
 

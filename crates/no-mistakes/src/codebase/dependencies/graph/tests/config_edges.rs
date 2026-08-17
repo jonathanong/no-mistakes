@@ -91,22 +91,22 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
     let sources = vec![(files[0].clone(), "fetch('/api/users')".to_string())];
     assert!(collect_http_call_edges(
         &malformed,
-        &tsconfig,
         None,
         &sources,
         &files,
         &files,
         malformed_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
     assert!(collect_http_call_edges(
         &invalid,
-        &tsconfig,
         None,
         &sources,
         &files,
         &files,
         invalid_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
 }
@@ -176,12 +176,12 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let sources = vec![(client.clone(), std::fs::read_to_string(&client).unwrap())];
     let http_edges = collect_http_call_edges(
         &root,
-        &tsconfig,
         None,
         &sources,
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(http_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -191,12 +191,12 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let route_sources = vec![(route.clone(), std::fs::read_to_string(&route).unwrap())];
     let route_http_edges = collect_http_call_edges(
         &root,
-        &tsconfig,
         None,
         &route_sources,
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(route_http_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -219,12 +219,12 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
 
     let http_edges_with_facts = collect_http_call_edges(
         &root,
-        &tsconfig,
         Some(&facts),
         &[],
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(http_edges_with_facts.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -314,12 +314,12 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
 
     let http_edges = collect_http_call_edges(
         &root,
-        &tsconfig,
         Some(&facts),
         &[],
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(http_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -330,4 +330,3 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
         *kind != EdgeKind::HttpCall || to.as_file() != Some(route_def.as_path())
     }));
 }
-

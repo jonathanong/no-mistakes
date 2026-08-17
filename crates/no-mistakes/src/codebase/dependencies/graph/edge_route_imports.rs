@@ -13,7 +13,8 @@ fn collect_route_import_edges(
     // Route imports intentionally resolve through the real filesystem before
     // mapping symlink targets back to the visible universe. Keep that `None`
     // scope distinct from ordinary graph resolution.
-    let scoped_resolver = tsconfig_catalog.map(crate::codebase::ts_resolver::ScopedImportResolver::unbounded);
+    let scoped_resolver =
+        tsconfig_catalog.map(crate::codebase::ts_resolver::ScopedImportResolver::unbounded);
     let legacy_resolver = tsconfig_catalog
         .is_none()
         .then(|| ImportResolver::new_in_session(tsconfig, None, session));
@@ -28,7 +29,11 @@ fn collect_route_import_edges(
         .expect("a scoped or legacy route-import resolver is initialized");
     let import_files = files
         .par_iter()
-        .filter_map(|path| facts.get_ts_facts(path).map(|file_facts| (path, file_facts)))
+        .filter_map(|path| {
+            facts
+                .get_ts_facts(path)
+                .map(|file_facts| (path, file_facts))
+        })
         .filter(|(_, file_facts)| file_facts.parse_error.is_none())
         .filter(|(_, file_facts)| {
             file_facts
@@ -56,10 +61,7 @@ fn collect_route_import_edges(
     // A symlink-resolved target may live in a directory with no imports of its
     // own. Index all visible files by name in memory, then touch only the small
     // same-name candidate set when a real-to-visible remap is actually needed.
-    let mut visible_by_name = std::collections::BTreeMap::<
-        std::ffi::OsString,
-        Vec<PathBuf>,
-    >::new();
+    let mut visible_by_name = std::collections::BTreeMap::<std::ffi::OsString, Vec<PathBuf>>::new();
     let mut visible_files = graph_files.indexable().to_vec();
     visible_files.sort();
     for visible in visible_files {
@@ -74,8 +76,7 @@ fn collect_route_import_edges(
     import_files
         .par_iter()
         .flat_map_iter(|(path, file_facts)| {
-            let resolution_source =
-                route_import_resolution_source(path, &canonical_directories);
+            let resolution_source = route_import_resolution_source(path, &canonical_directories);
             file_facts
                 .imports
                 .iter()
@@ -87,8 +88,8 @@ fn collect_route_import_edges(
                 .filter(|target| is_indexable(target))
                 .map(|target| {
                     (
-                        NodeId::file((*path).clone()),
-                        NodeId::file(target),
+                        NodeId::file_in(session.interner(), (*path).clone()),
+                        NodeId::file_in(session.interner(), target),
                         EdgeKind::RouteImport,
                     )
                 })

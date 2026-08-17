@@ -188,6 +188,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
         &resolver,
         &Default::default(),
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(edges.contains(&(

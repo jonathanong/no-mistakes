@@ -3,6 +3,7 @@ fn emit_route_edges(
     facts: &LangFactMap,
     options: &GraphConfigOptions,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     for file in facts.files.values() {
         if !route_file_allowed(root, &file.path, options) {
@@ -20,7 +21,7 @@ fn emit_route_edges(
                     })
                     .cloned()
                     .collect();
-                push_file_edges(edges, &file.path, &scoped, EdgeKind::RouteRef);
+                push_file_edges(edges, &file.path, &scoped, EdgeKind::RouteRef, interner);
             }
             for name in route_handler_names(handler)
                 .into_iter()
@@ -37,7 +38,7 @@ fn emit_route_edges(
                         })
                         .cloned()
                         .collect();
-                    push_file_edges(edges, &file.path, &scoped, EdgeKind::RouteRef);
+                    push_file_edges(edges, &file.path, &scoped, EdgeKind::RouteRef, interner);
                 }
             }
         }
@@ -158,7 +159,10 @@ fn route_handler_names(handler: &str) -> Vec<String> {
 }
 
 fn rails_controller_names(controller: &str) -> Vec<String> {
-    let parts: Vec<&str> = controller.split('/').filter(|part| !part.is_empty()).collect();
+    let parts: Vec<&str> = controller
+        .split('/')
+        .filter(|part| !part.is_empty())
+        .collect();
     let last = parts.last().copied().unwrap_or(controller);
     let mut class = last.to_string();
     if !class.ends_with("Controller") {
@@ -186,5 +190,3 @@ fn snake_to_pascal(name: &str) -> String {
         })
         .collect()
 }
-
-

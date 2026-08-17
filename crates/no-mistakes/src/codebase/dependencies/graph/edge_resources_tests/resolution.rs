@@ -71,6 +71,7 @@ fn resource_edges_resolve_exact_directory_and_glob_with_sorted_provenance() {
         std::slice::from_ref(&consumer),
         &facts,
         &[consumer.clone(), page.clone(), button.clone()],
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(diagnostics.is_empty());
     assert_eq!(
@@ -134,6 +135,7 @@ fn resource_edges_exclude_untracked_candidates_and_unreachable_scopes() {
         std::slice::from_ref(&consumer),
         &facts,
         &[consumer.clone(), page],
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(edges.is_empty());
     assert!(details.is_empty());
@@ -166,6 +168,7 @@ fn resource_edges_resolve_absolute_glob_patterns_inside_the_root() {
         std::slice::from_ref(&consumer),
         &facts,
         std::slice::from_ref(&page),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(diagnostics.is_empty());
     assert_eq!(

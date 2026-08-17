@@ -37,6 +37,7 @@ fn resource_edges_keep_dynamic_diagnostics_but_never_invent_untracked_targets() 
         // A visible source file is not enough to make the literal target
         // tracked: only this prepared inventory participates in resource edges.
         std::slice::from_ref(&consumer),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(
         !untracked.exists(),
@@ -85,6 +86,7 @@ fn resource_edges_keep_reachable_dynamic_diagnostics_without_literal_calls() {
         // No literal calls means this inventory must not be needed to preserve
         // the reachable warning.
         &[],
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(edges.is_empty());
     assert!(details.is_empty());
@@ -124,6 +126,7 @@ fn module_relative_resource_paths_resolve_against_the_consumer_directory() {
         std::slice::from_ref(&consumer),
         &facts,
         std::slice::from_ref(&page),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(diagnostics.is_empty());
     assert_eq!(

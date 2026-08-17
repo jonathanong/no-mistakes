@@ -18,6 +18,7 @@ fn push_matching_route_edges(
     route_pattern: &str,
     all_patterns: &[String],
     pattern_to_files: &HashMap<String, Vec<PathBuf>>,
+    interner: &PathInterner,
 ) {
     use crate::codebase::ts_routes::matcher;
 
@@ -25,7 +26,7 @@ fn push_matching_route_edges(
         if matcher::matches(route_pattern, pattern) {
             if let Some(def_files) = pattern_to_files.get(pattern) {
                 for def_file in def_files.iter().filter(|def_file| *def_file != source) {
-                    push_route_ref_edge(edges, source, def_file);
+                    push_route_ref_edge(edges, source, def_file, interner);
                 }
             }
         }
@@ -39,16 +40,11 @@ fn route_helper_ref_patterns(
     resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
     graph_files: &GraphFiles,
 ) -> Vec<String> {
-    let mut patterns: Vec<_> = route_helper_ref_patterns_with_lines(
-        path,
-        file_facts,
-        facts,
-        resolver,
-        graph_files,
-    )
-        .into_iter()
-        .map(|(_, pattern)| pattern)
-        .collect();
+    let mut patterns: Vec<_> =
+        route_helper_ref_patterns_with_lines(path, file_facts, facts, resolver, graph_files)
+            .into_iter()
+            .map(|(_, pattern)| pattern)
+            .collect();
     patterns.sort();
     patterns.dedup();
     patterns
@@ -68,10 +64,8 @@ pub(crate) fn route_helper_ref_patterns_with_lines(
     };
     let mut patterns = Vec::new();
     for helper_ref in &file_facts.route_helper_refs {
-        let mut helper_patterns = local_route_helper_patterns(
-            &helper_ref.callee,
-            &file_facts.route_helpers,
-        );
+        let mut helper_patterns =
+            local_route_helper_patterns(&helper_ref.callee, &file_facts.route_helpers);
         helper_patterns.extend(imported_route_helper_patterns(
             path,
             &helper_ref.callee,

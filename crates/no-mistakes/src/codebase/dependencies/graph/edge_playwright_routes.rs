@@ -19,12 +19,15 @@ fn collect_playwright_route_edges_from_snapshot(
     facts: Option<&dyn TsFactLookup>,
     snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
     prepared_settings: &[crate::playwright::config::Settings],
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     if !prepared_settings.is_empty() {
         let mut edges: Vec<Edge> = prepared_settings
             .iter()
             .flat_map(|settings| {
-                collect_playwright_route_edges_for_settings(root, all_files, facts, snapshot, settings)
+                collect_playwright_route_edges_for_settings(
+                    root, all_files, facts, snapshot, settings, interner,
+                )
             })
             .collect();
         edges.sort();
@@ -41,7 +44,9 @@ fn collect_playwright_route_edges_from_snapshot(
     ) else {
         return Vec::new();
     };
-    collect_playwright_route_edges_for_settings(root, all_files, facts, snapshot, &settings)
+    collect_playwright_route_edges_for_settings(
+        root, all_files, facts, snapshot, &settings, interner,
+    )
 }
 
 fn collect_playwright_route_edges_for_settings(
@@ -50,6 +55,7 @@ fn collect_playwright_route_edges_for_settings(
     facts: Option<&dyn TsFactLookup>,
     snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
     settings: &crate::playwright::config::Settings,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
     let frontend_root = root.join(&settings.frontend_root);
@@ -177,6 +183,7 @@ fn collect_playwright_route_edges_for_settings(
             page_file,
             &frontend_root,
             &all_file_set,
+            interner,
         ));
     }
     edges.sort();

@@ -41,8 +41,13 @@ fn collect_and_merge_all_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.imports", || {
         if plan.imports {
-            let import_edges =
-                collect_import_edges(parsed_imports, resolver, workspace, graph_files);
+            let import_edges = collect_import_edges(
+                parsed_imports,
+                resolver,
+                workspace,
+                graph_files,
+                &edge_inputs.interner,
+            );
             merge_edges(forward, reverse, import_edges);
         }
     });
@@ -69,8 +74,13 @@ fn collect_and_merge_all_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.workspace", || {
         if plan.workspace {
-            let workspace_edges =
-                collect_workspace_edges(parsed_imports, resolver, workspace, graph_files);
+            let workspace_edges = collect_workspace_edges(
+                parsed_imports,
+                resolver,
+                workspace,
+                graph_files,
+                &edge_inputs.interner,
+            );
             merge_edges(forward, reverse, workspace_edges);
         }
     });
@@ -78,8 +88,12 @@ fn collect_and_merge_all_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.package", || {
         if plan.package {
-            let workspace_manifest_edges =
-                collect_workspace_manifest_edges(&graph_files.all, workspace, graph_files);
+            let workspace_manifest_edges = collect_workspace_manifest_edges(
+                &graph_files.all,
+                workspace,
+                graph_files,
+                &edge_inputs.interner,
+            );
             merge_edges(forward, reverse, workspace_manifest_edges);
         }
     });
@@ -90,7 +104,7 @@ fn collect_and_merge_all_edges(
             merge_edges(
                 forward,
                 reverse,
-                collect_asset_edges(parsed_imports, resolver, graph_files),
+                collect_asset_edges(parsed_imports, resolver, graph_files, &edge_inputs.interner),
             );
         }
     });
@@ -113,6 +127,7 @@ fn collect_and_merge_all_edges(
                 resolver,
                 workspace,
                 config_options,
+                &edge_inputs.interner,
             );
             merge_edges(forward, reverse, symbol_edges);
         }
@@ -126,6 +141,7 @@ fn collect_and_merge_all_edges(
                 root,
                 files,
                 config_options.and_then(|options| options.test_filter.as_ref()),
+                &edge_inputs.interner,
             );
             merge_edges(forward, reverse, test_edges);
         }
