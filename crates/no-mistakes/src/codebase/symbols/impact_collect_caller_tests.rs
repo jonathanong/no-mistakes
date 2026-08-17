@@ -15,7 +15,7 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
             via: vec![EdgeKind::Import],
         },
         NodeEntry {
-            node: NodeId::Module("external".to_string()),
+            node: NodeId::module("external"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },

@@ -25,10 +25,10 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     assert!(!target_export_is_type(&source, "missing", &facts));
     assert_eq!(
         namespace_file_node(&ImportedSymbolTarget::Node {
-            node: NodeId::Module("pkg".to_string()),
+            node: NodeId::module("pkg"),
             kind: EdgeKind::Import,
         }),
-        (NodeId::Module("pkg".to_string()), EdgeKind::Import)
+        (NodeId::module("pkg"), EdgeKind::Import)
     );
 
     let non_reexport = Export {

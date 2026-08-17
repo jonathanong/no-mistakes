@@ -460,7 +460,7 @@ fn resolve_entrypoints_strips_symbol_suffix_from_module_node() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::Module("@external/pkg".to_string())
+        graph::NodeId::module("@external/pkg")
     );
     assert_eq!(entrypoints[0].symbol.as_deref(), Some("handler"));
 }
@@ -473,11 +473,11 @@ fn resolve_entrypoints_keeps_package_subpath_with_extension_as_module_node() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::Module("lodash".to_string())
+        graph::NodeId::module("lodash")
     );
     assert_eq!(
         entrypoints[1].node,
-        graph::NodeId::Module("lodash/fp.js".to_string())
+        graph::NodeId::module("lodash/fp.js")
     );
 }
 

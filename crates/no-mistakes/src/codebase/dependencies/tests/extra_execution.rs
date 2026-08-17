@@ -396,14 +396,14 @@ fn traversal_queue_root_helpers_cover_missing_deps_and_module_entrypoints() {
     let file = PathBuf::from("/repo/src/queue.ts");
     let roots = vec![
         NodeId::file(file.clone()),
-        NodeId::Module("queue-package".to_string()),
+        NodeId::module("queue-package"),
     ];
     let expanded = roots_with_exported_symbol_roots_by(&roots, |_| None);
     assert_eq!(expanded, roots);
 
     let entrypoints = vec![Entrypoint {
         file,
-        node: NodeId::Module("queue-package".to_string()),
+        node: NodeId::module("queue-package"),
         symbol: Some("send".to_string()),
     }];
     let queue_roots = roots_with_existing_queue_jobs_by(&expanded, &entrypoints, |_| true);

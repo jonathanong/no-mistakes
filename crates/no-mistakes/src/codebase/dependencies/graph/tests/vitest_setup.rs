@@ -137,7 +137,7 @@ fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
         p("/repo"),
         HashMap::from([
             (NodeId::file(test.clone()), Vec::new()),
-            (NodeId::Module("vitest".to_string()), Vec::new()),
+            (NodeId::module("vitest"), Vec::new()),
         ]),
         EdgeMap::new(),
     )
@@ -181,7 +181,7 @@ fn vitest_setup_root_scope_is_an_ancestor_of_nested_projects() {
         p("/repo"),
         HashMap::from([
             (NodeId::file(test.clone()), Vec::new()),
-            (NodeId::Module("vitest".to_string()), Vec::new()),
+            (NodeId::module("vitest"), Vec::new()),
         ]),
         EdgeMap::new(),
     )

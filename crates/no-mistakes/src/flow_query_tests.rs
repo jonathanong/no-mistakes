@@ -96,7 +96,7 @@ fn flow_query_deps_edges_and_resolvers_cover_path_branches() {
 #[test]
 fn flow_query_helper_nodes_cover_module_and_queue_variants() {
     let root = fixture_root("simple");
-    let module = flow_node(&NodeId::Module("lodash".to_string()), &root, 2);
+    let module = flow_node(&NodeId::module("lodash"), &root, 2);
     assert_eq!(module.kind, "module");
     assert_eq!(module.module.as_deref(), Some("lodash"));
 

@@ -113,7 +113,7 @@ fn suggested_test_entries_ignores_file_level_edges_without_file_nodes() {
         std::collections::HashMap::new(),
     );
     let entries = vec![NodeEntry {
-        node: NodeId::Module("pkg".to_string()),
+        node: NodeId::module("pkg"),
         depth: 1,
         via: vec![EdgeKind::DynamicImport],
     }];
