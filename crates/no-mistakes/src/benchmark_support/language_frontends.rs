@@ -53,7 +53,11 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
                 "python-celery-django/app".into(),
                 "python-flask-fastapi".into(),
             ],
-            go_modules: vec!["go-asynq".into(), "go-asynq/worker".into()],
+            go_modules: vec![
+                "go-asynq".into(),
+                "go-asynq/worker".into(),
+                "go-http".into(),
+            ],
             rust_packages: vec!["rust-mods".into(), "rust-mods/src".into()],
             rails_apps: vec!["rails-jobs".into()],
             php_apps: vec!["php-laravel".into()],

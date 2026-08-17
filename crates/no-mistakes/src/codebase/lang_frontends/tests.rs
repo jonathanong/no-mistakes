@@ -132,6 +132,38 @@ fn python_collects_flask_and_fastapi_literal_routes() {
 }
 
 #[test]
+fn go_collects_http_literal_routes() {
+    let root = fixture("go-http");
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_go_facts(&root, &files, &[".".into()], &store);
+    let routes = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("routes.go"))
+        .expect("routes");
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/health" && handler == "Health"));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/users" && handler == "Users"));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/items" && handler == "CreateItem"));
+    assert!(routes.queue_workers.is_empty());
+    let computed = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("computed.go"))
+        .expect("computed");
+    assert!(computed.route_handlers.is_empty());
+}
+
+#[test]
 fn go_collects_asynq_task_and_handler() {
     let root = fixture("go-asynq");
     let files = all_files(&root);
