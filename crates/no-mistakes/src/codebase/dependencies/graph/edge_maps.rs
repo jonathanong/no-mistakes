@@ -60,7 +60,9 @@ pub(crate) fn edge_index_from_maps(
     // of the former global edge comparator without a repository-wide sort.
     sort_adjacency_lists(&mut forward, &mut reverse);
     EdgeIndex::from_normalized_adjacency_maps_by_source(forward, reverse, |left, right| {
-        (node_sort_key(left), left).cmp(&(node_sort_key(right), right))
+        // Source count is much smaller than adjacency length. Compare borrowed
+        // parts here so the flatten does not re-format a key on every compare.
+        cmp_node_sort_keys(left, right).then_with(|| left.cmp(right))
     })
 }
 
