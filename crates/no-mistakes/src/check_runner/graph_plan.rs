@@ -24,12 +24,14 @@ pub(super) fn prepare(
 ) -> Result<Option<PreparedGraphConfig>> {
     let mut prepared_graph = graph_plan
         .map(|graph_plan| {
-            no_mistakes::codebase::dependencies::graph::prepare_graph_config(
+            let test_filter = no_mistakes::codebase::test_filter::TestFileFilter::new(root, config);
+            no_mistakes::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
                 root,
                 graph_plan,
                 inputs.codebase_config,
                 config,
                 inputs.visible_paths,
+                test_filter,
             )
         })
         .transpose()?;

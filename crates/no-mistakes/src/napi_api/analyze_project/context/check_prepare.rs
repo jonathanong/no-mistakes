@@ -91,12 +91,14 @@ impl SharedCheckContext {
         }
         let mut prepared_graph = graph_plan
             .map(|graph_plan| {
-                crate::codebase::dependencies::graph::prepare_graph_config(
+                let test_filter = crate::codebase::test_filter::TestFileFilter::new(&root, config);
+                crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
                     &root,
                     graph_plan,
                     &prepared.codebase_config,
                     config,
                     prepared.visible_paths.as_ref(),
+                    test_filter,
                 )
             })
             .transpose()?;

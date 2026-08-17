@@ -66,12 +66,10 @@ impl PlaywrightFactPlan {
             .into_iter()
             .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
             .collect();
-        let selector_regexes = Arc::new(
-            crate::playwright::selectors::compile_selector_regexes_with_html_ids(
-                &settings.selector_attributes,
-                &settings.component_selector_attributes,
-                settings.html_ids || scan_html_ids,
-            ),
+        let selector_regexes = self.regex_cache.get_or_compile(
+            &settings.selector_attributes,
+            &settings.component_selector_attributes,
+            settings.html_ids || scan_html_ids,
         );
         let settings_key = PlaywrightSettingsKey::new(&settings);
         self.merge_source_plan(PlaywrightSourceFactPlan {
@@ -108,6 +106,28 @@ impl PlaywrightFactPlan {
         files.sort_by(|left, right| left.0.cmp(&right.0));
         files.dedup_by(|left, right| left.0 == right.0);
         self.test_files_by_project = Arc::new(files);
+    }
+
+    pub(crate) fn add_test_files_for_project(
+        &mut self,
+        project: Option<String>,
+        files: Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>,
+    ) {
+        let mut test_files = self.test_files_by_project.as_ref().clone();
+        match test_files
+            .iter_mut()
+            .find(|(candidate, _)| candidate == &project)
+        {
+            Some((_, existing)) => {
+                let mut merged = existing.as_ref().clone();
+                merged.extend(files.iter().cloned());
+                merged.sort_by(|left, right| left.path.cmp(&right.path));
+                merged.dedup_by(|left, right| left.path == right.path);
+                *existing = Arc::new(merged);
+            }
+            None => test_files.push((project, files)),
+        }
+        self.set_test_files_by_project(test_files);
     }
 
     pub(crate) fn source_files(&self) -> Arc<Vec<PathBuf>> {

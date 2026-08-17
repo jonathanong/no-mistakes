@@ -7,8 +7,10 @@ use std::sync::Arc;
 mod files;
 mod merge;
 mod module_resolution;
+mod regex_cache;
 mod source;
 pub(crate) use module_resolution::PlaywrightModuleResolution;
+use regex_cache::SelectorRegexCache;
 
 #[derive(Clone, Default)]
 pub struct PlaywrightFactPlan {
@@ -19,6 +21,7 @@ pub struct PlaywrightFactPlan {
     source_plans: Vec<PlaywrightSourceFactPlan>,
     test_files_by_project: super::PlaywrightTestFilesByProject,
     module_resolution: Option<Arc<PlaywrightModuleResolution>>,
+    regex_cache: SelectorRegexCache,
 }
 
 #[derive(Clone)]

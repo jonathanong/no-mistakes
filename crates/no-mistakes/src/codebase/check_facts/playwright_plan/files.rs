@@ -4,18 +4,31 @@ use super::{
     VariantPlan,
 };
 use crate::playwright::playwright_tests::TestOccurrenceScope;
-use crate::playwright::selectors::compile_selector_regexes_with_html_ids;
+use crate::playwright::selectors::SelectorRegexes;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 impl PlaywrightFactPlan {
     pub(crate) fn add_file(&mut self, selection: PlaywrightFactSelection<'_>) {
+        let key = PlaywrightOccurrenceKey::new(
+            selection.navigation_helpers,
+            selection.selector_wrappers,
+            selection.selector_attributes,
+            selection.component_selector_attributes,
+            selection.html_ids,
+            selection.test_id_attributes,
+        );
+        let selector_regexes = self.regex_cache.get_or_compile(
+            &key.selector_attributes,
+            &key.component_selector_attributes,
+            key.html_ids,
+        );
         let entry = self
             .files
             .entry(selection.path.clone())
             .or_insert_with(PlaywrightFileFactPlan::empty);
-        entry.merge(&selection);
+        entry.merge(&selection, key, selector_regexes);
     }
 
     pub(crate) fn file(&self, path: &Path) -> Option<&PlaywrightFileFactPlan> {
@@ -52,26 +65,16 @@ impl PlaywrightFileFactPlan {
         }
     }
 
-    fn merge(&mut self, selection: &PlaywrightFactSelection<'_>) {
-        let key = PlaywrightOccurrenceKey::new(
-            selection.navigation_helpers,
-            selection.selector_wrappers,
-            selection.selector_attributes,
-            selection.component_selector_attributes,
-            selection.html_ids,
-            selection.test_id_attributes,
-        );
-        let variant = self
-            .variants
-            .entry(key.clone())
-            .or_insert_with(|| VariantPlan {
-                selector_regexes: Arc::new(compile_selector_regexes_with_html_ids(
-                    &key.selector_attributes,
-                    &key.component_selector_attributes,
-                    key.html_ids,
-                )),
-                policies: Vec::new(),
-            });
+    fn merge(
+        &mut self,
+        selection: &PlaywrightFactSelection<'_>,
+        key: PlaywrightOccurrenceKey,
+        selector_regexes: Arc<SelectorRegexes>,
+    ) {
+        let variant = self.variants.entry(key).or_insert_with(|| VariantPlan {
+            selector_regexes,
+            policies: Vec::new(),
+        });
         if selection.demands_text_imports {
             merge_sorted(&mut variant.policies, [selection.policy]);
         }

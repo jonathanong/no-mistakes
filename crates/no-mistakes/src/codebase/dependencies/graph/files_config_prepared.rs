@@ -22,25 +22,22 @@ impl PreparedGraphConfig {
     ) -> anyhow::Result<Option<crate::codebase::check_facts::PlaywrightFactPlan>> {
         let mut merged: Option<crate::codebase::check_facts::PlaywrightFactPlan> = None;
         for settings in &self.playwright_settings {
-            let mut plan = crate::playwright::analysis::pipeline::standalone_fact_plan(
+            let plan = merged.get_or_insert_with(Default::default);
+            crate::playwright::analysis::pipeline::extend_standalone_fact_plan(
+                plan,
                 root,
                 settings,
                 crate::playwright::analysis::types::UniqueSelectorPolicy::default(),
                 visible_paths,
             )?;
+        }
+        if let Some(plan) = merged.as_mut() {
             plan.configure_module_resolution(
                 std::sync::Arc::new(tsconfig.clone()),
                 std::sync::Arc::clone(&self.workspace),
                 visible_paths,
                 root,
             );
-            merged = Some(match merged {
-                Some(mut acc) => {
-                    acc.include(plan);
-                    acc
-                }
-                None => plan,
-            });
         }
         Ok(merged)
     }

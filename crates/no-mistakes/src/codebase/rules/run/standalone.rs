@@ -40,12 +40,14 @@ pub(super) fn run_check(
         crate::codebase::config::config_from_loaded_v2(root, config_path, &config);
     let prepared_graph = graph_plan
         .map(|plan| {
-            crate::codebase::dependencies::graph::prepare_graph_config(
+            let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, &config);
+            crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
                 root,
                 plan,
                 &codebase_config,
                 &config,
                 snapshot.as_ref(),
+                test_filter,
             )
         })
         .transpose()?;
