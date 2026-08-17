@@ -39,6 +39,7 @@ include!("builder_remaining_edges_independent.rs");
 include!("builder_remaining_edges_fact_domain.rs");
 include!("builder_helpers.rs");
 include!("edge_lang_frontends.rs");
+include!("edge_lang_emit.rs");
 include!("edge_lang_domains.rs");
 include!("edge_lang_queues.rs");
 #[cfg(feature = "test-instrumentation")]
