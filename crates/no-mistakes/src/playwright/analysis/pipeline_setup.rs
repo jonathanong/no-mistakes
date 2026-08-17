@@ -82,14 +82,24 @@ pub(crate) fn collect_app_selectors(
     unique_selector_policy: &UniqueSelectorPolicy,
     facts: Option<&dyn TsFactLookup>,
     snapshot: &VisiblePathSnapshot,
+    prepared_regexes: Option<&selectors::SelectorRegexes>,
 ) -> Result<AppSelectorSetup> {
     validate_prepared_selector_source_errors(root, settings, facts, snapshot)?;
     let unique_html_id_scan = unique_selector_policy.html_ids && !settings.html_ids;
-    let app_selector_regexes = selectors::compile_selector_regexes_with_html_ids(
-        &settings.selector_attributes,
-        &settings.component_selector_attributes,
-        settings.html_ids || unique_html_id_scan,
-    );
+    let need_html_ids = settings.html_ids || unique_html_id_scan;
+    let compiled_regexes;
+    let app_selector_regexes = if let Some(regexes) =
+        prepared_regexes.filter(|regexes| regexes.includes_html_ids() == need_html_ids)
+    {
+        regexes
+    } else {
+        compiled_regexes = selectors::compile_selector_regexes_with_html_ids(
+            &settings.selector_attributes,
+            &settings.component_selector_attributes,
+            need_html_ids,
+        );
+        &compiled_regexes
+    };
     let scan_html_ids = settings.html_ids || unique_html_id_scan;
     let app_selector_occurrences: Arc<Vec<AppSelector>> = if settings.selector_attributes.is_empty()
         && settings.component_selector_attributes.is_empty()

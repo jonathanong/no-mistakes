@@ -57,7 +57,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     assert!(!prepared.contains("resolve_tsconfig_from_visible"));
     assert!(include_str!("../fact_collection.rs").contains("clear_request_parse_cache"));
     assert!(include_str!("../fact_collection.rs").contains("parse.files_after_extract"));
-    assert!(graph_plan.contains("prepare_graph_config"));
+    assert!(graph_plan.contains("prepare_graph_config_with_test_filter"));
     assert!(graph_plan.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
     assert!(!runner.contains("react_traits::check_enabled"));
     assert!(prepared.contains("prepare_from_snapshot_with_catalog"));
@@ -277,4 +277,41 @@ fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     assert!(storybook_block.contains("prepared_tsconfig_catalog"));
     assert!(!storybook_block.contains("prepared_tsconfig,"));
     assert!(!storybook_block.contains("check_with_prepared_facts_and_inferred"));
+}
+
+#[test]
+fn prepared_graph_config_reuses_a_supplied_test_filter() {
+    let files_config = include_str!("../../codebase/dependencies/graph/files_config.rs");
+    let prepared = include_str!("../../codebase/dependencies/graph/files_config_prepared.rs");
+    let graph_plan = include_str!("../graph_plan.rs");
+    let check_prepare = include_str!("../../napi_api/analyze_project/context/check_prepare.rs");
+    let standalone = include_str!("../../codebase/rules/run/standalone.rs");
+
+    let fallback = files_config
+        .split("fn graph_config_options_from_loaded_with_test_filter(")
+        .nth(1)
+        .and_then(|source| source.split("fn prefixed_queue_globs_enqueues(").next())
+        .expect("graph config test-filter helper");
+    assert!(
+        fallback.contains("test_filter.unwrap_or_else"),
+        "supplied TestFileFilter must be kept"
+    );
+    assert_eq!(
+        fallback.matches("TestFileFilter::new(").count(),
+        1,
+        "TestFileFilter::new is only the unprepared fallback"
+    );
+
+    assert!(!prepared.contains("TestFileFilter::new("));
+    assert!(prepared.contains("graph_config_options_from_loaded_with_test_filter("));
+    for source in [graph_plan, check_prepare, standalone] {
+        assert!(
+            source.contains("prepare_graph_config_with_test_filter("),
+            "prepared check/graph path must pass a TestFileFilter"
+        );
+        assert!(
+            !source.contains("prepare_graph_config("),
+            "prepared check/graph path must not rebuild graph config without a filter"
+        );
+    }
 }

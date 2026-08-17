@@ -3,7 +3,7 @@ pub(crate) use crate::playwright::analysis::pipeline_entrypoints::{
     analyze_with_policy_and_facts_from_snapshot, analyze_with_policy_from_snapshot,
 };
 pub(crate) use crate::playwright::analysis::pipeline_facts::{
-    standalone_fact_plan, standalone_facts,
+    extend_standalone_fact_plan, standalone_fact_plan, standalone_facts,
 };
 use crate::playwright::analysis::pipeline_occurrences::{
     prepare_test_files, PrepareTestFilesOptions,
@@ -62,8 +62,14 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         .then(|| collect_playwright_routes(root, settings, true, false, facts, snapshot))
         .transpose()?;
     let test_files = discover_playwright_test_files(root, settings, facts, snapshot)?;
-    let app_selector_setup =
-        collect_app_selectors(root, settings, &unique_selector_policy, facts, snapshot)?;
+    let app_selector_setup = collect_app_selectors(
+        root,
+        settings,
+        &unique_selector_policy,
+        facts,
+        snapshot,
+        Some(&selector_regexes),
+    )?;
     let wrapper_resolution = if settings.selector_wrappers.is_empty() {
         None
     } else {

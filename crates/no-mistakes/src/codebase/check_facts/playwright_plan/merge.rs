@@ -8,6 +8,7 @@ impl PlaywrightFactPlan {
         if self.module_resolution.is_none() {
             self.module_resolution = other.module_resolution.clone();
         }
+        self.regex_cache.extend(other.regex_cache);
         for (path, other_file) in other.files {
             let file = self
                 .files
@@ -64,12 +65,10 @@ impl PlaywrightFactPlan {
             .extend(source_plan.visible_files.iter().cloned());
         if source_plan.scan_html_ids && !existing.scan_html_ids {
             existing.scan_html_ids = true;
-            existing.selector_regexes = Arc::new(
-                crate::playwright::selectors::compile_selector_regexes_with_html_ids(
-                    &existing.settings.selector_attributes,
-                    &existing.settings.component_selector_attributes,
-                    true,
-                ),
+            existing.selector_regexes = self.regex_cache.get_or_compile(
+                &existing.settings.selector_attributes,
+                &existing.settings.component_selector_attributes,
+                true,
             );
         }
     }

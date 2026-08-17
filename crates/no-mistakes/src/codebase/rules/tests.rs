@@ -346,7 +346,12 @@ fn standalone_rules_prepare_one_request_without_nested_rule_discovery() {
     assert_eq!(source.matches("InferredRoots::from_visible(").count(), 1);
     assert_eq!(source.matches("resolve_tsconfig_from_visible(").count(), 1);
     assert_eq!(source.matches("prepare_from_snapshot(").count(), 1);
-    assert_eq!(source.matches("prepare_graph_config(").count(), 1);
+    assert_eq!(
+        source
+            .matches("prepare_graph_config_with_test_filter(")
+            .count(),
+        1
+    );
     assert_eq!(source.matches("standalone_fact_plan(&config)").count(), 1);
     assert_eq!(
         source

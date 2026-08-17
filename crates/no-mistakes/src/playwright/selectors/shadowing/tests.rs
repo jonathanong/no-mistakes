@@ -1,5 +1,5 @@
 use super::*;
-use regex::Regex;
+use oxc_span::Span;
 
 #[test]
 fn identifier_reassignment_uses_identifier_boundaries_and_assignment_operator() {
@@ -41,27 +41,31 @@ fn identifier_reassignment_uses_identifier_boundaries_and_assignment_operator() 
 
 #[test]
 fn enclosing_shadow_binding_requires_an_open_block() {
-    let binding = Regex::new(r"\bfunction\b[^(]*\([^)]*\bdataPw\b").unwrap();
-
     assert!(has_enclosing_shadow_binding(
         "function Inner(dataPw) { return <a data-pw={",
-        &binding
+        function_param_name_ends("function Inner(dataPw) { return <a data-pw={", "dataPw"),
     ));
     assert!(has_enclosing_shadow_binding(
         "function Inner(dataPw) { if (ready) { dataPw; } return <a data-pw={",
-        &binding
+        function_param_name_ends(
+            "function Inner(dataPw) { if (ready) { dataPw; } return <a data-pw={",
+            "dataPw",
+        ),
     ));
     assert!(!has_enclosing_shadow_binding(
         "function Inner(dataPw)",
-        &binding
+        function_param_name_ends("function Inner(dataPw)", "dataPw"),
     ));
     assert!(!has_enclosing_shadow_binding(
         "function Inner(dataPw); return <a data-pw={",
-        &binding
+        function_param_name_ends("function Inner(dataPw); return <a data-pw={", "dataPw"),
     ));
     assert!(!has_enclosing_shadow_binding(
         "function Inner(dataPw) { return dataPw; } return <a data-pw={",
-        &binding
+        function_param_name_ends(
+            "function Inner(dataPw) { return dataPw; } return <a data-pw={",
+            "dataPw",
+        ),
     ));
 }
 
@@ -71,4 +75,77 @@ fn jsx_start_detection_rejects_comparison_operators() {
     assert!(has_unclosed_jsx_start("</"));
     assert!(!has_unclosed_jsx_start("if (count <="));
     assert!(!has_unclosed_jsx_start("value <<"));
+}
+
+#[test]
+fn identifier_shadow_scan_matches_declaration_and_function_destructure() {
+    assert!(prefix_shadows("const dataPw = 'x'; return ", "dataPw"));
+    assert!(prefix_shadows("let dataPw\n", "dataPw"));
+    assert!(prefix_shadows("var dataPw ", "dataPw"));
+    assert!(!prefix_shadows("constantly dataPw ", "dataPw"));
+    assert!(!prefix_shadows("xdataPw ", "dataPw"));
+    assert!(prefix_shadows(
+        "const { dataPw } = props; return ",
+        "dataPw"
+    ));
+    assert!(prefix_shadows("let [dataPw] = items; return ", "dataPw"));
+    assert!(!prefix_shadows(
+        "const { dataPwx } = props; return ",
+        "dataPw"
+    ));
+    assert!(prefix_shadows(
+        "function Inner({ dataPw }) { return <a data-pw={",
+        "dataPw",
+    ));
+    assert!(prefix_shadows(
+        "function Inner([dataPw]) { return <a data-pw={",
+        "dataPw",
+    ));
+    assert!(!prefix_shadows(
+        "function helper(dataPw) { return dataPw; } return ",
+        "dataPw",
+    ));
+    assert!(!prefix_shadows(
+        "function Inner({ dataPw }) { return dataPw; } return ",
+        "dataPw",
+    ));
+}
+
+fn prefix_shadows(prefix: &str, name: &str) -> bool {
+    let source = format!("{prefix}{name}");
+    let start = prefix.len() as u32;
+    identifier_may_be_shadowed_or_reassigned(
+        name,
+        Span::new(start, start + name.len() as u32),
+        Span::new(0, source.len() as u32),
+        &source,
+    )
+}
+
+fn function_param_name_ends(prefix: &str, name: &str) -> Vec<usize> {
+    let mut ends = Vec::new();
+    let mut search = 0;
+    while let Some(rel) = prefix[search..].find("function") {
+        let at = search + rel;
+        if !bindings::is_identifier_at(prefix, at, "function") {
+            search = at + 1;
+            continue;
+        }
+        let after_fn = &prefix[at + "function".len()..];
+        let Some(paren) = after_fn.find('(') else {
+            search = at + 1;
+            continue;
+        };
+        let params = &after_fn[paren + 1..];
+        let params_end = params.find(')').unwrap_or(params.len());
+        let params_region = &params[..params_end];
+        if let Some(name_rel) = params_region.find(name) {
+            let name_at = at + "function".len() + paren + 1 + name_rel;
+            if bindings::is_identifier_at(prefix, name_at, name) {
+                ends.push(name_at + name.len());
+            }
+        }
+        search = at + 1;
+    }
+    ends
 }
