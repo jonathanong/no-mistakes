@@ -24,3 +24,24 @@ fn playwright_fallback_requires_test_shaped_file() {
 fn path_segment_pair_handles_empty_paths() {
     assert!(!has_path_segment_pair("", "tests", "e2e"));
 }
+
+#[test]
+fn language_fallback_matches_configured_test_shapes() {
+    assert!(fallback_runner_match(TestRunner::Python, "app/test_users.py"));
+    assert!(fallback_runner_match(TestRunner::Go, "pkg/ping_test.go"));
+    assert!(fallback_runner_match(TestRunner::Cargo, "app/src/tests.rs"));
+    assert!(fallback_runner_match(
+        TestRunner::Cargo,
+        "app/tests/integration.rs"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Rails,
+        "spec/jobs/welcome_job_spec.rb"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Php,
+        "tests/UserControllerTest.php"
+    ));
+    assert!(!fallback_runner_match(TestRunner::Python, "app/users.py"));
+    assert!(!fallback_runner_match(TestRunner::Cargo, "app/src/lib.rs"));
+}

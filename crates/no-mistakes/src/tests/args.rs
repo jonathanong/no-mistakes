@@ -226,6 +226,11 @@ pub(crate) enum TestFramework {
     Playwright,
     Vitest,
     Swift,
+    Python,
+    Go,
+    Cargo,
+    Rails,
+    Php,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

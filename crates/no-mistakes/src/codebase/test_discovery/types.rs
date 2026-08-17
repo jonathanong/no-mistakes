@@ -10,6 +10,11 @@ pub enum TestRunner {
     Playwright,
     Vitest,
     Swift,
+    Python,
+    Go,
+    Cargo,
+    Rails,
+    Php,
 }
 
 impl TestRunner {
@@ -19,6 +24,11 @@ impl TestRunner {
             "playwright" => Some(Self::Playwright),
             "vitest" => Some(Self::Vitest),
             "swift" => Some(Self::Swift),
+            "python" => Some(Self::Python),
+            "go" => Some(Self::Go),
+            "cargo" => Some(Self::Cargo),
+            "rails" => Some(Self::Rails),
+            "php" => Some(Self::Php),
             _ => None,
         }
     }
@@ -29,7 +39,19 @@ impl TestRunner {
             Self::Playwright => "playwright",
             Self::Vitest => "vitest",
             Self::Swift => "swift",
+            Self::Python => "python",
+            Self::Go => "go",
+            Self::Cargo => "cargo",
+            Self::Rails => "rails",
+            Self::Php => "php",
         }
+    }
+
+    pub(super) fn is_language_frontend(self) -> bool {
+        matches!(
+            self,
+            Self::Python | Self::Go | Self::Cargo | Self::Rails | Self::Php
+        )
     }
 
     pub(super) fn framework(self) -> Framework {
@@ -38,6 +60,11 @@ impl TestRunner {
             Self::Playwright => Framework::Playwright,
             Self::Vitest => Framework::Vitest,
             Self::Swift => Framework::Swift,
+            Self::Python => Framework::Python,
+            Self::Go => Framework::Go,
+            Self::Cargo => Framework::Cargo,
+            Self::Rails => Framework::Rails,
+            Self::Php => Framework::Php,
         }
     }
 }

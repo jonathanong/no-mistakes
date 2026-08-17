@@ -17,6 +17,11 @@ impl FrameworkPreparationPlan {
             TestRunner::Playwright,
             TestRunner::Vitest,
             TestRunner::Swift,
+            TestRunner::Python,
+            TestRunner::Go,
+            TestRunner::Cargo,
+            TestRunner::Rails,
+            TestRunner::Php,
         ])
     }
 

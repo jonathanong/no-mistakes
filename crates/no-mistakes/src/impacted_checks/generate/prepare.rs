@@ -96,6 +96,11 @@ fn configured_frameworks(
         TestFramework::Vitest,
         TestFramework::Playwright,
         TestFramework::Swift,
+        TestFramework::Python,
+        TestFramework::Go,
+        TestFramework::Cargo,
+        TestFramework::Rails,
+        TestFramework::Php,
     ]
     .into_iter()
     .filter(|framework| framework_present(root, config, *framework, visible_paths))

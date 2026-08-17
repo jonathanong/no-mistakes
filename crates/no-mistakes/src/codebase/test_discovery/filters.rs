@@ -78,7 +78,27 @@ pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
                     || rel.starts_with("specs/"))
         }
         TestRunner::Swift => rel.contains("/Tests/") && rel.ends_with(".swift"),
+        TestRunner::Python => is_python_test_path(rel),
+        TestRunner::Go => rel.ends_with("_test.go"),
+        TestRunner::Cargo => is_cargo_test_path(rel),
+        TestRunner::Rails => rel.ends_with("_spec.rb") || rel.ends_with("_test.rb"),
+        TestRunner::Php => rel.ends_with("Test.php") || rel.contains("/tests/"),
     }
+}
+
+fn is_python_test_path(rel: &str) -> bool {
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    name.starts_with("test_") && name.ends_with(".py")
+        || name.ends_with("_test.py")
+        || name == "tests.py"
+        || rel.contains("/tests/") && name.ends_with(".py")
+}
+
+fn is_cargo_test_path(rel: &str) -> bool {
+    let slash = rel.replace('\\', "/");
+    slash.contains("/tests/") && slash.ends_with(".rs")
+        || slash.ends_with("/tests.rs")
+        || slash.ends_with("_test.rs")
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {

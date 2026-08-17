@@ -210,6 +210,11 @@ fn runner_for(framework: TestFramework) -> TestRunner {
         TestFramework::Vitest => TestRunner::Vitest,
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Swift => TestRunner::Swift,
+        TestFramework::Python => TestRunner::Python,
+        TestFramework::Go => TestRunner::Go,
+        TestFramework::Cargo => TestRunner::Cargo,
+        TestFramework::Rails => TestRunner::Rails,
+        TestFramework::Php => TestRunner::Php,
     }
 }
 
@@ -219,5 +224,10 @@ fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Vitest => "vitest",
         TestFramework::Playwright => "playwright",
         TestFramework::Swift => "swift",
+        TestFramework::Python => "python",
+        TestFramework::Go => "go",
+        TestFramework::Cargo => "cargo",
+        TestFramework::Rails => "rails",
+        TestFramework::Php => "php",
     }
 }

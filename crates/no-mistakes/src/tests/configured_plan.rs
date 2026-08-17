@@ -22,6 +22,7 @@ mod hints;
 mod hints_domains;
 mod lockfile_seeds;
 mod native_fallback;
+mod native_fallback_lang;
 mod targeted_triggers;
 #[cfg(test)]
 mod tests;
@@ -239,7 +240,14 @@ pub(crate) fn generate_configured_plan_with_prepared(
         }
         if matches!(
             framework,
-            TestFramework::Dotnet | TestFramework::Vitest | TestFramework::Swift
+            TestFramework::Dotnet
+                | TestFramework::Vitest
+                | TestFramework::Swift
+                | TestFramework::Python
+                | TestFramework::Go
+                | TestFramework::Cargo
+                | TestFramework::Rails
+                | TestFramework::Php
         ) && group.type_ == TestPlanGroupType::Coverage
         {
             anyhow::bail!(

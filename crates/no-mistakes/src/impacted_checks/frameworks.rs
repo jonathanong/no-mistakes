@@ -41,6 +41,22 @@ pub(super) fn framework_present(
                 || !c.projects.is_empty()
                 || test_plan_configured(&config.test_plan.swift)
         }
+        TestFramework::Python => {
+            !config.tests.python.packages.is_empty()
+                || test_plan_configured(&config.test_plan.python)
+        }
+        TestFramework::Go => {
+            !config.tests.go.modules.is_empty() || test_plan_configured(&config.test_plan.go)
+        }
+        TestFramework::Cargo => {
+            !config.tests.rust.packages.is_empty() || test_plan_configured(&config.test_plan.cargo)
+        }
+        TestFramework::Rails => {
+            !config.tests.rails.apps.is_empty() || test_plan_configured(&config.test_plan.rails)
+        }
+        TestFramework::Php => {
+            !config.tests.php.apps.is_empty() || test_plan_configured(&config.test_plan.php)
+        }
     }
 }
 

@@ -92,6 +92,11 @@ fn framework_plan(
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
         TestFramework::Swift => &config.test_plan.swift,
+        TestFramework::Python => &config.test_plan.python,
+        TestFramework::Go => &config.test_plan.go,
+        TestFramework::Cargo => &config.test_plan.cargo,
+        TestFramework::Rails => &config.test_plan.rails,
+        TestFramework::Php => &config.test_plan.php,
     }
 }
 
@@ -156,6 +161,11 @@ fn ignored_changed_test_sets(
             TestPlanIgnoredChangedTestsFramework::Playwright => TestRunner::Playwright,
             TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
             TestPlanIgnoredChangedTestsFramework::Swift => TestRunner::Swift,
+            TestPlanIgnoredChangedTestsFramework::Python => TestRunner::Python,
+            TestPlanIgnoredChangedTestsFramework::Go => TestRunner::Go,
+            TestPlanIgnoredChangedTestsFramework::Cargo => TestRunner::Cargo,
+            TestPlanIgnoredChangedTestsFramework::Rails => TestRunner::Rails,
+            TestPlanIgnoredChangedTestsFramework::Php => TestRunner::Php,
         };
         let set = match prepared.discover_runner_tests(runner) {
             Ok(discovered) => discovered.tests.into_iter().collect(),
@@ -286,5 +296,10 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Vitest => TestRunner::Vitest,
         TestFramework::Swift => TestRunner::Swift,
+        TestFramework::Python => TestRunner::Python,
+        TestFramework::Go => TestRunner::Go,
+        TestFramework::Cargo => TestRunner::Cargo,
+        TestFramework::Rails => TestRunner::Rails,
+        TestFramework::Php => TestRunner::Php,
     }
 }

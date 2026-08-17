@@ -68,7 +68,7 @@ const {
   });
   const plan = await testsPlan({
     root: process.cwd(),
-    framework: "vitest", // also supports "playwright", "dotnet", and "swift"
+    framework: "vitest", // also python, go, cargo, rails, php, playwright, dotnet, swift
     changedFiles: ["src/utils.mts"],
   });
   // Complete changed-file inventory, including paths that selected no tests.

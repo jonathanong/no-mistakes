@@ -129,7 +129,7 @@ pub(super) fn load_config_projects_inner(
         config_dir,
         resolver,
     } = input;
-    if matches!(framework, Framework::Dotnet | Framework::Swift) {
+    if !framework.has_js_runner_config() {
         return Ok(Vec::new());
     }
     if framework == Framework::Vitest
@@ -195,7 +195,7 @@ pub(super) fn load_config_projects_from_program(
                 })
                 .collect())
         }
-        Framework::Swift => Ok(Vec::new()),
+        _ => Ok(Vec::new()),
     }
 }
 

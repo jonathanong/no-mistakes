@@ -484,6 +484,11 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Vitest => TestRunner::Vitest,
         TestFramework::Swift => TestRunner::Swift,
+        TestFramework::Python => TestRunner::Python,
+        TestFramework::Go => TestRunner::Go,
+        TestFramework::Cargo => TestRunner::Cargo,
+        TestFramework::Rails => TestRunner::Rails,
+        TestFramework::Php => TestRunner::Php,
     }
 }
 
@@ -503,6 +508,11 @@ fn test_framework(runner: TestRunner) -> TestFramework {
         TestRunner::Playwright => TestFramework::Playwright,
         TestRunner::Vitest => TestFramework::Vitest,
         TestRunner::Swift => TestFramework::Swift,
+        TestRunner::Python => TestFramework::Python,
+        TestRunner::Go => TestFramework::Go,
+        TestRunner::Cargo => TestFramework::Cargo,
+        TestRunner::Rails => TestFramework::Rails,
+        TestRunner::Php => TestFramework::Php,
     }
 }
 

@@ -1,6 +1,15 @@
 import type { SymbolEntrypoint } from "./traversal-types";
 
-type TestPlanFramework = "vitest" | "playwright" | "dotnet" | "swift";
+type TestPlanFramework =
+  | "vitest"
+  | "playwright"
+  | "dotnet"
+  | "swift"
+  | "python"
+  | "go"
+  | "cargo"
+  | "rails"
+  | "php";
 
 interface TestsPlanOptionsBase {
   framework?: TestPlanFramework;
@@ -65,7 +74,7 @@ export interface TestsImpactOptions {
 }
 
 export interface TestsTargetsOptions {
-  framework: "vitest" | "playwright" | "dotnet" | "swift";
+  framework: TestPlanFramework;
   /** Project root. Defaults to the current working directory. */
   root?: string;
   /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
@@ -91,7 +100,7 @@ export interface SelectedTest {
 }
 
 export interface TestExecutionTarget {
-  runner: "vitest" | "playwright" | "dotnet" | "swift";
+  runner: TestPlanFramework;
   config?: string | null;
   /** True when config is a Vitest workspace/project-array source rendered with --workspace. */
   workspace?: boolean;
@@ -150,7 +159,7 @@ export interface TestPlanWarning {
 }
 
 export interface TestsTargetsReport {
-  framework: "vitest" | "playwright" | "dotnet" | "swift";
+  framework: TestPlanFramework;
   tests: TestTargetRow[];
   warnings: TestTargetWarning[];
 }
