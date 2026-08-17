@@ -1,7 +1,6 @@
 /// Test-instrumentation wrappers around the production language-frontend
 /// collectors. They exist so Criterion can measure the real in-process path
 /// without making `GraphConfigOptions` part of the supported API.
-
 pub(crate) struct LanguageFrontendEdgeRequest<'a> {
     pub root: &'a Path,
     pub all_files: &'a [PathBuf],
