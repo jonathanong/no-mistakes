@@ -248,6 +248,57 @@ fn rails_collects_route_and_active_job() {
 }
 
 #[test]
+fn php_collects_symfony_routes_and_messenger() {
+    let root = fixture("php-symfony");
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_php_facts(&root, &files, &[".".into()], Some("symfony"), &store);
+    let controller = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("HealthController.php"))
+        .expect("controller");
+    assert!(controller
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/health" && handler.contains("HealthController")));
+    let yaml = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("routes.yaml"))
+        .expect("yaml");
+    assert!(yaml
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/users" && handler.contains("UsersController")));
+    let enqueue = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("Enqueue.php"))
+        .expect("enqueue");
+    assert!(enqueue
+        .queue_enqueues
+        .iter()
+        .any(|name| name.contains("WelcomeMessage")));
+    let handler = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("WelcomeHandler.php"))
+        .expect("handler");
+    assert!(handler
+        .queue_workers
+        .iter()
+        .any(|name| name.contains("WelcomeHandler") || name.contains("WelcomeMessage")));
+    let computed = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("Computed.php"))
+        .expect("computed");
+    assert!(computed.route_handlers.is_empty());
+    assert!(computed.queue_enqueues.is_empty());
+}
+
+#[test]
 fn php_collects_laravel_route_and_dispatch() {
     let root = fixture("php-laravel");
     let files = all_files(&root);

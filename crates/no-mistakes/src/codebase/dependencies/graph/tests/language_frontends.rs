@@ -166,6 +166,34 @@ fn language_frontend_edges_cover_configured_extractors() {
         .iter()
         .any(|(_, _, kind)| *kind == EdgeKind::PhpUse || *kind == EdgeKind::PhpPackage));
 
+    let symfony = lang_fixture("php-symfony");
+    let mut symfony_options = options.clone();
+    symfony_options.php_apps = vec![".".into()];
+    symfony_options.php_framework = Some("symfony".into());
+    let symfony_edges = collect_language_frontend_edges_for_test(
+        &symfony,
+        &lang_files(&symfony),
+        Some(&symfony_options),
+    );
+    assert!(symfony_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("routes.yaml"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("UsersController.php"))
+    }));
+    assert!(symfony_edges
+        .iter()
+        .any(|(_, _, kind)| *kind == EdgeKind::QueueEnqueue || *kind == EdgeKind::QueueWorker));
+    assert!(symfony_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("Computed.php"))
+    }));
+
     let kafka = lang_fixture("kafka-topics");
     let kafka_edges =
         collect_language_frontend_edges_for_test(&kafka, &lang_files(&kafka), Some(&options));

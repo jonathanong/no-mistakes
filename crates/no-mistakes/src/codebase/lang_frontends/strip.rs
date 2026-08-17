@@ -3,7 +3,7 @@ pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
     let mut out = String::with_capacity(source.len());
     let mut chars = source.chars().peekable();
     while let Some(ch) = chars.next() {
-        if ch == '#' {
+        if ch == '#' && chars.peek() != Some(&'[') {
             skip_line(&mut chars);
             out.push('\n');
             continue;
