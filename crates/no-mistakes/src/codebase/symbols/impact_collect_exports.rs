@@ -22,8 +22,8 @@ fn export_paths(
                         let local_import_export =
                             local_import_export(facts, file, symbol, &current_symbol);
                         if location.kind == "re-export" || local_import_export {
-                            frontier.push((neighbor.clone(), symbol.clone()));
-                            frontier.push((NodeId::file(file.clone()), symbol.clone()));
+                            frontier.push((neighbor.clone(), symbol.to_string()));
+                            frontier.push((NodeId::file(file.clone()), symbol.to_string()));
                             exports.insert(location);
                             export_nodes.insert(neighbor.clone());
                         }

@@ -11,9 +11,9 @@ fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
     let outer_barrel = root.join("namespace-outer-date-barrel.mts");
     let extensionless_barrel = root.join("namespace-extensionless-date-barrel.mts");
     let export_nodes = BTreeSet::from([
-        NodeId::symbol(namespace_barrel.clone(), "dates".to_string()),
-        NodeId::symbol(outer_barrel.clone(), "outer".to_string()),
-        NodeId::symbol(extensionless_barrel.clone(), "extensionlessDates".to_string()),
+        NodeId::symbol(namespace_barrel.clone(), "dates"),
+        NodeId::symbol(outer_barrel.clone(), "outer"),
+        NodeId::symbol(extensionless_barrel.clone(), "extensionlessDates"),
     ]);
     let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
         .into_iter()

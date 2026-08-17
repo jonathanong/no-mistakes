@@ -8,15 +8,11 @@ fn workflow_topology_fixture() -> PathBuf {
 }
 
 fn workflow_node(root: &Path, job: &str) -> NodeId {
-    NodeId::workflow_job(root.join(".github/workflows/main.yml"), job.to_string())
+    NodeId::workflow_job(root.join(".github/workflows/main.yml"), job)
 }
 
 fn workflow_step(root: &Path, job: &str, step: usize) -> NodeId {
-    NodeId::workflow_step(
-        root.join(".github/workflows/main.yml"),
-        job.to_string(),
-        step,
-    )
+    NodeId::workflow_step(root.join(".github/workflows/main.yml"), job, step)
 }
 
 fn graph_has_edge(graph: &DepGraph, from: NodeId, to: NodeId, kind: EdgeKind) -> bool {
@@ -34,8 +30,8 @@ fn workflow_virtual_nodes_normalize_display_and_track_their_file_universe() {
     let normalized_file =
         crate::codebase::ts_resolver::normalize_path(&root.join(".github/workflows/main.yml"));
     let nodes = normalize_nodes(&[
-        NodeId::workflow_job(workflow_file.clone(), "build".to_string()),
-        NodeId::workflow_step(workflow_file, "build".to_string(), 2),
+        NodeId::workflow_job(workflow_file.clone(), "build"),
+        NodeId::workflow_step(workflow_file, "build", 2),
     ]);
 
     assert_eq!(
@@ -210,7 +206,7 @@ fn workflow_graph_uses_configured_workflow_directories() {
     assert!(graph_has_edge(
         &graph,
         NodeId::file(workflow.clone()),
-        NodeId::workflow_job(workflow, "configured".to_string()),
+        NodeId::workflow_job(workflow, "configured"),
         EdgeKind::WorkflowJob
     ));
 }

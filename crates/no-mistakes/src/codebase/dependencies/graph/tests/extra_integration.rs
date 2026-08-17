@@ -22,11 +22,11 @@ fn codebase_intel_graph_emits_queue_http_route_test_and_process_edges() {
         matches!(
             &entry.node,
             NodeId::QueueJob { queue_file, job }
-                if queue_file.as_ref() == emails.as_path() && job == "sendWelcomeEmail"
+                if queue_file.as_ref() == emails.as_path() && job.as_ref() == "sendWelcomeEmail"
         )
     }));
 
-    let queue_job = NodeId::queue_job(emails, "sendWelcomeEmail".to_string());
+    let queue_job = NodeId::queue_job(emails, "sendWelcomeEmail");
     let workers = graph.deps_of(&[queue_job], None, Some(&[EdgeKind::QueueWorker].into()));
     assert!(has_file(&workers, &processors));
     assert!(has_file(&workers, &worker));

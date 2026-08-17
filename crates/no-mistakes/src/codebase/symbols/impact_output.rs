@@ -156,7 +156,7 @@ fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> 
     match node {
         NodeId::File(path) => Some((relative_slash_path(root, path), None)),
         NodeId::Symbol { file, symbol } => {
-            Some((relative_slash_path(root, file), Some(symbol.clone())))
+            Some((relative_slash_path(root, file), Some(symbol.to_string())))
         }
         NodeId::Module(_)
         | NodeId::QueueJob { .. }

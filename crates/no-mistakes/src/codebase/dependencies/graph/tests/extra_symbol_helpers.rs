@@ -98,7 +98,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     assert_eq!(
         target_node(imported.get("workspaceValue").unwrap()),
         (
-            NodeId::symbol(workspace_target.clone(), "workspaceValue".to_string()),
+            NodeId::symbol(workspace_target.clone(), "workspaceValue"),
             EdgeKind::WorkspaceImport
         )
     );
@@ -123,7 +123,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     assert_eq!(
         namespace_target_node(namespaces.get("core").unwrap(), "parse"),
         (
-            NodeId::symbol(workspace_target.clone(), "parse".to_string()),
+            NodeId::symbol(workspace_target.clone(), "parse"),
             EdgeKind::WorkspaceTypeImport
         )
     );
@@ -182,7 +182,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
             &visible,
         ),
         Some((
-            NodeId::symbol(workspace_target, "member".to_string()),
+            NodeId::symbol(workspace_target, "member"),
             EdgeKind::WorkspaceTypeImport
         ))
     );
@@ -319,13 +319,13 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
     );
 
     assert!(edges.contains(&(
-        NodeId::symbol(current.clone(), "keep".to_string()),
-        NodeId::symbol(target, "keep".to_string()),
+        NodeId::symbol(current.clone(), "keep"),
+        NodeId::symbol(target, "keep"),
         EdgeKind::Import
     )));
     assert!(!edges.iter().any(|(from, _, _)| {
         *from
-            == NodeId::symbol(current.clone(), "default".to_string())
+            == NodeId::symbol(current.clone(), "default")
     }));
 }
 
@@ -419,9 +419,9 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
 
 #[test]
 fn symbol_bfs_records_alternate_via_kinds_for_existing_nodes() {
-    let root = NodeId::symbol(p("/repo/src/root.mts"), "root".to_string());
-    let left = NodeId::symbol(p("/repo/src/left.mts"), "left".to_string());
-    let right = NodeId::symbol(p("/repo/src/right.mts"), "right".to_string());
+    let root = NodeId::symbol(p("/repo/src/root.mts"), "root");
+    let left = NodeId::symbol(p("/repo/src/left.mts"), "left");
+    let right = NodeId::symbol(p("/repo/src/right.mts"), "right");
     let target = NodeId::Module("react".to_string());
     let mut edges = EdgeMap::new();
     edges.insert(

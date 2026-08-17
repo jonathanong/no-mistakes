@@ -102,7 +102,7 @@ fn production_node(index: u32) -> NodeId {
     )));
     match index % 3 {
         0 => NodeId::file(path),
-        1 => NodeId::symbol(path, "value".to_string()),
-        _ => NodeId::queue_job(path, "run".to_string()),
+        1 => NodeId::symbol(path, "value"),
+        _ => NodeId::queue_job(path, "run"),
     }
 }

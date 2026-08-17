@@ -302,11 +302,11 @@ fn workflow_virtual_entrypoint_suffixes_round_trip() {
     let file = Path::new("/repo/.github/workflows/main.yml");
     assert_eq!(
         workflow_node_from_suffix(file, "job:build"),
-        Some(NodeId::workflow_job(file, "build".to_string()))
+        Some(NodeId::workflow_job(file, "build"))
     );
     assert_eq!(
         workflow_node_from_suffix(file, "job:build/step:3"),
-        Some(NodeId::workflow_step(file, "build".to_string(), 3))
+        Some(NodeId::workflow_step(file, "build", 3))
     );
     assert!(workflow_node_from_suffix(file, "job:/step:3").is_none());
     assert!(workflow_node_from_suffix(file, "job:build/step:nope").is_none());
@@ -328,7 +328,7 @@ fn resolve_entrypoints_promotes_workflow_suffixes_to_virtual_nodes() {
     assert_eq!(entrypoints[0].symbol, None);
     assert_eq!(
         entrypoints[0].node,
-        NodeId::workflow_step(root.join(".github/workflows/main.yml"), "build".to_string(), 0)
+        NodeId::workflow_step(root.join(".github/workflows/main.yml"), "build", 0)
     );
 }
 

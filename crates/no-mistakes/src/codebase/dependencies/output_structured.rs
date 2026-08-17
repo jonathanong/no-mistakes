@@ -117,7 +117,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                         let rel = file.strip_prefix(root_dir).unwrap_or(file);
                         OutputNode::Symbol(OutputSymbol {
                             file: rel.to_string_lossy().into_owned(),
-                            symbol: symbol.clone(),
+                            symbol: symbol.to_string(),
                             depth: entry.depth,
                             via,
                         })
@@ -128,7 +128,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                             .unwrap_or(queue_file.as_ref());
                         OutputNode::QueueJob(OutputQueueJob {
                             queue_file: rel.to_string_lossy().into_owned(),
-                            job: job.clone(),
+                            job: job.to_string(),
                             depth: entry.depth,
                             via,
                         })
@@ -139,7 +139,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                             .unwrap_or(workflow_file.as_ref());
                         OutputNode::WorkflowJob(OutputWorkflowJob {
                             workflow_file: rel.to_string_lossy().into_owned(),
-                            job: job.clone(),
+                            job: job.to_string(),
                             depth: entry.depth,
                             via,
                         })
@@ -154,7 +154,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                             .unwrap_or(workflow_file.as_ref());
                         OutputNode::WorkflowStep(OutputWorkflowStep {
                             workflow_file: rel.to_string_lossy().into_owned(),
-                            job: job.clone(),
+                            job: job.to_string(),
                             step: *step,
                             depth: entry.depth,
                             via,

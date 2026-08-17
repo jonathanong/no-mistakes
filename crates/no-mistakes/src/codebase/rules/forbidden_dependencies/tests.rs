@@ -348,7 +348,7 @@ fn queue_job_nodes_are_not_matched() {
     let root_file = crate::codebase::ts_resolver::normalize_path(&root.join("entrypoints/api.mts"));
     let queue_file = crate::codebase::ts_resolver::normalize_path(&root.join("jobs/queue.mts"));
     let root_node = NodeId::file(root_file.clone());
-    let queue_node = NodeId::queue_job(queue_file.clone(), "process".to_string());
+    let queue_node = NodeId::queue_job(queue_file.clone(), "process");
     let forward = std::collections::HashMap::from([(
         root_node.clone(),
         vec![(queue_node.clone(), EdgeKind::QueueEnqueue)],
