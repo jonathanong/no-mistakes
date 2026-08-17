@@ -103,12 +103,12 @@ fn local_names_by_file(
             for (importer, local, is_reexport) in records {
                 if *is_reexport {
                     // Named re-export forwards the symbol under the barrel's name.
-                    worklist.push((importer.clone(), local.clone()));
+                    worklist.push((importer.to_path_buf(), local.to_string()));
                 } else {
                     by_file
-                        .entry(importer.clone())
+                        .entry(importer.to_path_buf())
                         .or_default()
-                        .insert(local.clone());
+                        .insert(local.to_string());
                 }
             }
         }
@@ -118,8 +118,8 @@ fn local_names_by_file(
         if name != "default" {
             if let Some(records) = index.importers_of(&file, "*") {
                 for (importer, local, is_reexport) in records {
-                    if *is_reexport && local == "*" {
-                        worklist.push((importer.clone(), name.clone()));
+                    if *is_reexport && local.as_ref() == "*" {
+                        worklist.push((importer.to_path_buf(), name.clone()));
                     }
                 }
             }

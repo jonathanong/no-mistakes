@@ -44,8 +44,8 @@ fn workspace_symbol_graph_includes_visible_entry_and_excludes_gitignored_entry()
         .into_iter()
         .flatten()
         .any(|(importer, local, is_reexport)| {
-            importer == &dir.path().join("packages/app/src/consumer.mts")
-                && local == "visibleRun"
+            importer.as_ref() == dir.path().join("packages/app/src/consumer.mts").as_path()
+                && local.as_ref() == "visibleRun"
                 && !is_reexport
         }));
     assert!(symbol_index
@@ -89,5 +89,5 @@ fn scoped_symbol_index_keeps_symlink_root_importers_in_visible_namespace() {
         .importers_of(&value, "value")
         .into_iter()
         .flatten()
-        .any(|(path, _, _)| path == &importer));
+        .any(|(path, _, _)| path.as_ref() == importer.as_path()));
 }

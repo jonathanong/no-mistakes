@@ -30,7 +30,12 @@ fn dedup_sorted(mut paths: Vec<String>) -> Vec<String> {
 fn symbol_importers(index: &SymbolIndex, file: &Path, symbol: &str, root: &Path) -> Vec<String> {
     index
         .importers_of(file, symbol)
-        .map(|records| records.iter().map(|(i, _, _)| rel_str(i, root)).collect())
+        .map(|records| {
+            records
+                .iter()
+                .map(|(i, _, _)| rel_str(i.as_ref(), root))
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -52,9 +57,9 @@ fn wildcard_importers(
             records
                 .iter()
                 .filter(|(_, local, is_reexport)| {
-                    !(exclude_anon_star && *is_reexport && local == "*")
+                    !(exclude_anon_star && *is_reexport && local.as_ref() == "*")
                 })
-                .map(|(i, _, _)| rel_str(i, root))
+                .map(|(i, _, _)| rel_str(i.as_ref(), root))
                 .collect()
         })
         .unwrap_or_default()

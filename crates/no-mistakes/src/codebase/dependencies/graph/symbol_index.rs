@@ -1,25 +1,32 @@
-pub type ImporterRecord = (PathBuf, String, bool);
+/// Public importer row. Interned as `Arc<Path>` / `Arc<str>` so clones stay
+/// pointer-sized; convert to `PathBuf` / `String` at output boundaries.
+pub type ImporterRecord = (Arc<Path>, Arc<str>, bool);
 
 /// Index mapping (source_file, exported_symbol) → list of files importing that symbol.
 pub struct SymbolIndex {
-    sources: HashMap<PathBuf, SourceIndex>,
+    sources: HashMap<Arc<Path>, SourceIndex>,
 }
 
 struct SourceIndex {
-    by_symbol: HashMap<String, Vec<ImporterRecord>>,
-    file_importers: Vec<PathBuf>,
+    by_symbol: HashMap<Arc<str>, Vec<ImporterRecord>>,
+    file_importers: Vec<Arc<Path>>,
 }
 
 impl SymbolIndex {
     pub fn build(symbols_by_file: &HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>>) -> Self {
-        let mut source_buckets = SourceBuckets::new();
+        let mut intern = SymbolIndexInterner::default();
+        let mut source_buckets = SourceBuckets::with_capacity(symbols_by_file.len());
 
         for (importer, imports) in symbols_by_file {
+            let importer = intern.path(importer);
             for (source, imported_name, local_name, is_reexport) in imports {
-                source_buckets.entry(source.clone()).or_default().push((
-                    imported_name.clone(),
-                    (importer.clone(), local_name.clone(), *is_reexport),
-                ));
+                source_buckets
+                    .entry(intern.path(source))
+                    .or_insert_with(|| Vec::with_capacity(imports.len()))
+                    .push((
+                        intern.string(imported_name),
+                        (importer.clone(), intern.string(local_name), *is_reexport),
+                    ));
             }
         }
 
@@ -107,45 +114,78 @@ impl SymbolIndex {
         let source_buckets = graph_files
             .indexable()
             .par_iter()
-            .fold(SourceBuckets::new, |mut buckets, path| {
-                let Some(symbols) = facts
-                    .get_ts_facts(path)
-                    .and_then(|facts| facts.symbols.as_ref())
-                else {
-                    return buckets;
-                };
+            .fold(
+                || (SourceBuckets::new(), SymbolIndexInterner::default()),
+                |(mut buckets, mut intern), path| {
+                    let Some(symbols) = facts
+                        .get_ts_facts(path)
+                        .and_then(|facts| facts.symbols.as_ref())
+                    else {
+                        return (buckets, intern);
+                    };
 
-                for ni in &symbols.imports {
-                    if let Some(target) = resolver
-                        .classify_import(&ni.source, path, workspace, graph_files.visible())
-                        .preferred_path()
-                        .and_then(|target| graph_files.visible_path(target))
-                    {
-                        buckets
-                            .entry(target.to_path_buf())
-                            .or_default()
-                            .push((ni.imported.clone(), (path.clone(), ni.local.clone(), false)));
-                    }
-                }
-                for exp in &symbols.exports {
-                    if let crate::codebase::ts_symbols::ExportKind::ReExport { source, imported } =
-                        &exp.kind
-                    {
+                    let expected_entries = symbols.imports.len()
+                        + symbols
+                            .exports
+                            .iter()
+                            .filter(|exp| {
+                                matches!(
+                                    &exp.kind,
+                                    crate::codebase::ts_symbols::ExportKind::ReExport { .. }
+                                )
+                            })
+                            .count();
+                    let importer = intern.path(path);
+
+                    for ni in &symbols.imports {
                         if let Some(target) = resolver
-                            .classify_import(source, path, workspace, graph_files.visible())
+                            .classify_import(&ni.source, path, workspace, graph_files.visible())
                             .preferred_path()
                             .and_then(|target| graph_files.visible_path(target))
                         {
                             buckets
-                                .entry(target.to_path_buf())
-                                .or_default()
-                                .push((imported.clone(), (path.clone(), exp.name.clone(), true)));
+                                .entry(intern.path(target))
+                                .or_insert_with(|| Vec::with_capacity(expected_entries))
+                                .push((
+                                    intern.string(&ni.imported),
+                                    (importer.clone(), intern.string(&ni.local), false),
+                                ));
                         }
                     }
-                }
-                buckets
-            })
-            .reduce(SourceBuckets::new, merge_source_buckets);
+                    for exp in &symbols.exports {
+                        if let crate::codebase::ts_symbols::ExportKind::ReExport {
+                            source,
+                            imported,
+                        } = &exp.kind
+                        {
+                            if let Some(target) = resolver
+                                .classify_import(source, path, workspace, graph_files.visible())
+                                .preferred_path()
+                                .and_then(|target| graph_files.visible_path(target))
+                            {
+                                buckets
+                                    .entry(intern.path(target))
+                                    .or_insert_with(|| Vec::with_capacity(expected_entries))
+                                    .push((
+                                        intern.string(imported),
+                                        (importer.clone(), intern.string(&exp.name), true),
+                                    ));
+                            }
+                        }
+                    }
+                    (buckets, intern)
+                },
+            )
+            .reduce(
+                || (SourceBuckets::new(), SymbolIndexInterner::default()),
+                |(left, _), (right, _)| {
+                    (
+                        merge_source_buckets(left, right),
+                        SymbolIndexInterner::default(),
+                    )
+                },
+            )
+            .0;
 
         Self::from_source_buckets(source_buckets)
     }
@@ -155,7 +195,7 @@ impl SymbolIndex {
 
         for (source, entries) in source_buckets {
             let mut importers = Vec::with_capacity(entries.len());
-            let mut by_symbol = HashMap::new();
+            let mut by_symbol = HashMap::with_capacity(entries.len());
             for (imported_name, importer) in entries {
                 importers.push(importer.0.clone());
                 by_symbol
@@ -163,7 +203,7 @@ impl SymbolIndex {
                     .or_insert_with(Vec::new)
                     .push(importer);
             }
-            importers.sort();
+            importers.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
             importers.dedup();
             sources.insert(
                 source,
@@ -187,17 +227,66 @@ impl SymbolIndex {
     pub fn file_importers(&self, source: &Path) -> Vec<PathBuf> {
         self.sources
             .get(source)
-            .map(|index| index.file_importers.clone())
+            .map(|index| {
+                index
+                    .file_importers
+                    .iter()
+                    .map(|path| path.to_path_buf())
+                    .collect()
+            })
             .unwrap_or_default()
     }
 }
 
-type SourceBucketEntry = (String, ImporterRecord);
-type SourceBuckets = HashMap<PathBuf, Vec<SourceBucketEntry>>;
+type SourceBucketEntry = (Arc<str>, ImporterRecord);
+type SourceBuckets = HashMap<Arc<Path>, Vec<SourceBucketEntry>>;
+
+#[derive(Default)]
+struct SymbolIndexInterner {
+    paths: HashMap<Arc<Path>, ()>,
+    strings: HashMap<Arc<str>, ()>,
+}
+
+impl SymbolIndexInterner {
+    fn path(&mut self, path: &Path) -> Arc<Path> {
+        if let Some((existing, _)) = self.paths.get_key_value(path) {
+            return existing.clone();
+        }
+        let interned = intern_symbol_index_path(path);
+        self.paths.insert(interned.clone(), ());
+        interned
+    }
+
+    fn string(&mut self, value: &str) -> Arc<str> {
+        if let Some((existing, _)) = self.strings.get_key_value(value) {
+            return existing.clone();
+        }
+        let interned = intern_symbol_index_str(value);
+        self.strings.insert(interned.clone(), ());
+        interned
+    }
+}
+
+pub(crate) fn intern_symbol_index_path(path: impl AsRef<Path>) -> Arc<Path> {
+    Arc::from(path.as_ref())
+}
+
+pub(crate) fn intern_symbol_index_str(value: impl Into<Arc<str>>) -> Arc<str> {
+    value.into()
+}
 
 fn merge_source_buckets(mut left: SourceBuckets, right: SourceBuckets) -> SourceBuckets {
     for (source, mut entries) in right {
-        left.entry(source).or_default().append(&mut entries);
+        match left.entry(source) {
+            std::collections::hash_map::Entry::Occupied(mut occupied) => {
+                let slot = occupied.get_mut();
+                slot.reserve(entries.len());
+                slot.append(&mut entries);
+            }
+            std::collections::hash_map::Entry::Vacant(vacant) => {
+                vacant.insert(entries);
+            }
+        }
     }
     left
 }
