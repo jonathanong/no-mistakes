@@ -31,6 +31,9 @@ pub(super) fn target_for(
     if runner == TestRunner::Swift {
         return swift_target_for(config, project, test_file);
     }
+    if runner.is_language_frontend() {
+        return super::lang_targets::language_target_for(runner, config, project, test_file);
+    }
 
     let mut runner_args = Vec::new();
     if let Some(config) = config {
@@ -124,7 +127,12 @@ fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
         TestRunner::Dotnet => test_file.to_string(),
         TestRunner::Playwright => regex_escape(test_file),
         TestRunner::Vitest => test_file.to_string(),
-        TestRunner::Swift => test_file.to_string(),
+        TestRunner::Swift
+        | TestRunner::Python
+        | TestRunner::Go
+        | TestRunner::Cargo
+        | TestRunner::Rails
+        | TestRunner::Php => test_file.to_string(),
     }
 }
 

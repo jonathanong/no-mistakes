@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+  python:
+    packages:
+      - app

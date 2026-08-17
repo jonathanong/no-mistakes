@@ -13,8 +13,9 @@ v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. Playwright, React,
 Next.js fetches, call-sites, dead-exports, ecosystem lockfile diffs, and
 dedicated `no-mistakes python|go|rust|rails|php` CLIs are later work. Agents
-use `dependents --relationship <lang>` now; `tests plan python|go|cargo|rails|php`,
-ecosystem lockfiles, and dedicated language CLIs are not started.
+use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php`
+when those stacks are configured. Ecosystem lockfiles and dedicated language
+CLIs are not started.
 
 ## Current Status
 
@@ -23,12 +24,12 @@ ecosystem lockfiles, and dedicated language CLIs are not started.
 | TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Next.js | BullMQ, glide-mq | shipped |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
-| Python, Django, Celery | `python-import`, `python-ref` | `--test python` globs | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors) |
-| Go, Asynq | `go-import`, `go-ref` | `--test go` globs | no | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors) |
+| Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
+| Go, Asynq | `go-import`, `go-ref` | `tests plan go` | no | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
-| Rust | `rust-use`, `rust-mod` | `--test cargo` globs | no | no | shipped (v1 extractors) |
-| Ruby on Rails | `ruby-require`, `ruby-ref` | `--test rails` globs | `routes.rb` `to:` | Active Job `perform_later` | shipped (v1 extractors) |
-| PHP | `php-use`, `php-package` | `--test php` globs | Laravel `Route::` | `::dispatch` / `ShouldQueue` | shipped (v1 extractors) |
+| Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
+| Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` | Active Job `perform_later` | shipped (v1 extractors + plan) |
+| PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` | `::dispatch` / `ShouldQueue` | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -38,8 +39,8 @@ crate/super/self` and `pub` declarations emit `rust-use` / `rust-mod` edges.
 `#[path]` mods emit `rust-mod`. Static Cargo `path =` deps and `tests/`
 integration files emit `rust-package` from the crate root (not an n² clique).
 The existing `rust-*` filesystem rules, `--test cargo` globs, and `ci` Cargo
-binary edges remain. There is still no `tests plan cargo` and no `no-mistakes
-rust` CLI.
+binary edges remain. `tests plan cargo` now emits `cargo test -p` targets.
+There is still no `no-mistakes rust` CLI.
 
 ## Canonical Feature Set
 

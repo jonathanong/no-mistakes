@@ -7,6 +7,11 @@ pub(super) fn discover_phase(framework: TestFramework) -> &'static str {
         TestFramework::Vitest => "discover.vitest",
         TestFramework::Playwright => "discover.playwright",
         TestFramework::Swift => "discover.swift",
+        TestFramework::Python => "discover.python",
+        TestFramework::Go => "discover.go",
+        TestFramework::Cargo => "discover.cargo",
+        TestFramework::Rails => "discover.rails",
+        TestFramework::Php => "discover.php",
     }
 }
 
@@ -16,6 +21,11 @@ pub(super) fn select_phase(framework: TestFramework) -> &'static str {
         TestFramework::Vitest => "select.vitest",
         TestFramework::Playwright => "select.playwright",
         TestFramework::Swift => "select.swift",
+        TestFramework::Python => "select.python",
+        TestFramework::Go => "select.go",
+        TestFramework::Cargo => "select.cargo",
+        TestFramework::Rails => "select.rails",
+        TestFramework::Php => "select.php",
     }
 }
 

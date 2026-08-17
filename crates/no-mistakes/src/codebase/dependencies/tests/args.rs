@@ -221,6 +221,7 @@ fn playwright_globs_include_e2e() {
 fn cargo_globs_include_tests_dir() {
     let globs = test_globs("cargo");
     assert!(globs.iter().any(|g| g.contains("tests/**/*.rs")));
+    assert!(globs.iter().any(|g| g.contains("src/**/tests.rs")));
 }
 
 #[test]

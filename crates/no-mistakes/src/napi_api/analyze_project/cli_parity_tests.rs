@@ -174,4 +174,24 @@ fn cli_parity_framework_parser_covers_all_public_values() {
         crate::napi_api::cli_parity::parse_test_framework("swift").unwrap(),
         crate::tests::TestFramework::Swift
     );
+    assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("python").unwrap(),
+        crate::tests::TestFramework::Python
+    );
+    assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("go").unwrap(),
+        crate::tests::TestFramework::Go
+    );
+    assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("cargo").unwrap(),
+        crate::tests::TestFramework::Cargo
+    );
+    assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("rails").unwrap(),
+        crate::tests::TestFramework::Rails
+    );
+    assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("php").unwrap(),
+        crate::tests::TestFramework::Php
+    );
 }

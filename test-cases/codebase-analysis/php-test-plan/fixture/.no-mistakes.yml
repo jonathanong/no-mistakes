@@ -1,0 +1,23 @@
+projects:
+  api:
+    type: server
+    root: "."
+    routes:
+      - "routes/**/*.php"
+    queues:
+      enqueues:
+        - "app/Http/**/*.php"
+      workers:
+        - "app/Jobs/**/*.php"
+tests:
+  php:
+    framework: laravel
+    apps:
+      - "."
+testPlan:
+  php:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

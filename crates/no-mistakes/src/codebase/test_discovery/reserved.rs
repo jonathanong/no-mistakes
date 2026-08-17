@@ -18,7 +18,13 @@ pub(super) fn runner_reserved_tests_from_visible(
     let reserved_runner = match runner {
         TestRunner::Vitest => TestRunner::Playwright,
         TestRunner::Playwright => TestRunner::Vitest,
-        TestRunner::Dotnet | TestRunner::Swift => return BTreeSet::new(),
+        TestRunner::Dotnet
+        | TestRunner::Swift
+        | TestRunner::Python
+        | TestRunner::Go
+        | TestRunner::Cargo
+        | TestRunner::Rails
+        | TestRunner::Php => return BTreeSet::new(),
     };
     let reserved_projects = prepared_projects.unwrap_or_else(|| {
         projects::runner_projects_lossy_from_visible(

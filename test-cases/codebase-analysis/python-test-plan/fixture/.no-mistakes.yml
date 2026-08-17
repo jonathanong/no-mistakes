@@ -1,0 +1,22 @@
+projects:
+  app:
+    type: server
+    root: app
+    routes:
+      - "**/*.py"
+    queues:
+      enqueues:
+        - "**/enqueue.py"
+      workers:
+        - "**/tasks.py"
+tests:
+  python:
+    packages:
+      - app
+testPlan:
+  python:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

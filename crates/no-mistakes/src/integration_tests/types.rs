@@ -24,6 +24,11 @@ pub(crate) enum Framework {
     Playwright,
     Vitest,
     Swift,
+    Python,
+    Go,
+    Cargo,
+    Rails,
+    Php,
 }
 
 impl Framework {
@@ -33,7 +38,16 @@ impl Framework {
             Self::Playwright => "playwright",
             Self::Vitest => "vitest",
             Self::Swift => "swift",
+            Self::Python => "python",
+            Self::Go => "go",
+            Self::Cargo => "cargo",
+            Self::Rails => "rails",
+            Self::Php => "php",
         }
+    }
+
+    pub(crate) fn has_js_runner_config(self) -> bool {
+        matches!(self, Self::Playwright | Self::Vitest)
     }
 }
 

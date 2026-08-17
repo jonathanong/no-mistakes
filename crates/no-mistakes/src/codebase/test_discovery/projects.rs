@@ -42,6 +42,9 @@ pub(super) fn runner_projects_from_visible_with_catalog(
             visible_paths,
         ));
     }
+    if runner.is_language_frontend() {
+        return Ok(super::lang_projects::language_projects(root, config, runner));
+    }
     let (configs, policies) = runner_config(config, runner);
     let mut projects =
         crate::integration_tests::project_config::load_projects_from_visible_with_catalog(
@@ -84,6 +87,9 @@ pub(super) fn runner_projects_lossy_from_visible_with_catalog(
     if runner == TestRunner::Swift {
         return super::swift_projects::swift_projects_from_visible(root, config, visible_paths);
     }
+    if runner.is_language_frontend() {
+        return super::lang_projects::language_projects(root, config, runner);
+    }
     let (configs, policies) = runner_config(config, runner);
     let mut projects =
         crate::integration_tests::project_config::load_projects_from_visible_with_catalog(
@@ -113,5 +119,10 @@ pub(super) fn runner_config(
             &config.tests.vitest.projects,
         ),
         TestRunner::Swift => (None, &config.tests.swift.projects),
+        TestRunner::Python
+        | TestRunner::Go
+        | TestRunner::Cargo
+        | TestRunner::Rails
+        | TestRunner::Php => unreachable!("language projects are handled before runner_config"),
     }
 }

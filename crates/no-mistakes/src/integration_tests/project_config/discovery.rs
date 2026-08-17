@@ -38,9 +38,9 @@ pub(crate) fn discovered_config_paths(
     visible_paths: &[PathBuf],
 ) -> Vec<String> {
     let names = match framework {
-        Framework::Dotnet | Framework::Swift => &[],
         Framework::Playwright => PLAYWRIGHT_CONFIGS,
         Framework::Vitest => VITEST_CONFIGS,
+        _ => &[],
     };
     let mut paths = names
         .iter()

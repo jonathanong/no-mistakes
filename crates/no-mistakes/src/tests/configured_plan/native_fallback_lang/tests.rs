@@ -1,0 +1,61 @@
+use super::*;
+use crate::config::v2::schema::NoMistakesConfig;
+use crate::tests::TestFramework;
+use std::path::PathBuf;
+
+#[test]
+fn python_source_under_configured_package_is_native() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.python.packages = vec!["app".to_string()];
+    assert!(is_language_native_change(
+        TestFramework::Python,
+        Path::new("/repo"),
+        &config,
+        "app/users.py",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Python,
+        Path::new("/repo"),
+        &config,
+        "app/test_users.py",
+    ));
+}
+
+#[test]
+fn cargo_manifest_under_configured_package_is_native() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.rust.packages = vec!["app".to_string()];
+    assert!(is_language_native_change(
+        TestFramework::Cargo,
+        Path::new("/repo"),
+        &config,
+        "app/Cargo.toml",
+    ));
+}
+
+#[test]
+fn empty_language_roots_are_not_native() {
+    let config = NoMistakesConfig::default();
+    assert!(!is_language_native_change(
+        TestFramework::Go,
+        Path::new("/repo"),
+        &config,
+        "pkg/ping.go",
+    ));
+}
+
+#[test]
+fn owning_root_picks_longest_configured_prefix() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.python.packages = vec!["app".to_string(), "app/users".to_string()];
+    assert_eq!(
+        owning_root(
+            TestFramework::Python,
+            Path::new("/repo"),
+            &config,
+            &PathBuf::from("/repo/app/users/views.py"),
+        )
+        .as_deref(),
+        Some("app/users")
+    );
+}

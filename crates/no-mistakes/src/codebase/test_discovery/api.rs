@@ -42,7 +42,13 @@ pub fn discover_tests_from_prepared_projects(
         match runner {
             TestRunner::Vitest => Some(TestRunner::Playwright),
             TestRunner::Playwright => Some(TestRunner::Vitest),
-            TestRunner::Dotnet | TestRunner::Swift => None,
+            TestRunner::Dotnet
+            | TestRunner::Swift
+            | TestRunner::Python
+            | TestRunner::Go
+            | TestRunner::Cargo
+            | TestRunner::Rails
+            | TestRunner::Php => None,
         }
         .map(|reserved_runner| {
             prepared
@@ -93,7 +99,17 @@ pub fn project_filters_from_visible(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Vec<(TestRunner, ProjectTestFilter)> {
-    [TestRunner::Dotnet, TestRunner::Vitest, TestRunner::Playwright, TestRunner::Swift]
+    [
+        TestRunner::Dotnet,
+        TestRunner::Vitest,
+        TestRunner::Playwright,
+        TestRunner::Swift,
+        TestRunner::Python,
+        TestRunner::Go,
+        TestRunner::Cargo,
+        TestRunner::Rails,
+        TestRunner::Php,
+    ]
         .into_iter()
         .flat_map(|runner| {
             projects::runner_projects_lossy_from_visible(root, config, runner, visible_paths, tsconfig)
