@@ -29,6 +29,7 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
         &parsed,
         &mut forward,
         &mut reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     let workflow = NodeId::file(root.join(".github/workflows/ci.yml"));
     let targets = forward.get(&workflow).cloned().unwrap_or_default();
@@ -63,7 +64,9 @@ fn process_spawn_edges_exclude_ignored_targets_from_file_and_symbol_graphs() {
     .unwrap();
     let ignored = root.join("ignored-worker.ts");
 
-    assert!(graph.all_files().all(|node| node.as_file() != Some(&ignored)));
+    assert!(graph
+        .all_files()
+        .all(|node| node.as_file() != Some(&ignored)));
     assert!(graph
         .dependencies_of_node(&NodeId::file(root.join("spawn.ts")))
         .into_iter()

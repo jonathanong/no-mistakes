@@ -5,6 +5,7 @@ struct ReexportResolutionInputs<'a> {
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
     graph_files: &'a GraphFiles,
+    interner: &'a PathInterner,
 }
 
 fn resolve_imported_callee_with_graph_files(
@@ -14,14 +15,14 @@ fn resolve_imported_callee_with_graph_files(
     inputs: ReexportResolutionInputs<'_>,
 ) -> Option<(NodeId, EdgeKind)> {
     if let Some(target) = imported_symbols.get(callee) {
-        return Some(target_node(target));
+        return Some(target_node(target, inputs.interner));
     }
     if let Some(target) = namespace_imports.get(callee) {
-        return Some(namespace_file_node(target));
+        return Some(namespace_file_node(target, inputs.interner));
     }
     let (namespace, member) = callee.split_once('.')?;
     if let Some(target) = namespace_imports.get(namespace) {
-        return Some(namespace_target_node(target, member));
+        return Some(namespace_target_node(target, member, inputs.interner));
     }
     let ImportedSymbolTarget::Symbol {
         file: barrel,
@@ -42,6 +43,7 @@ fn resolve_imported_callee_with_graph_files(
             workspace: inputs.workspace,
             visible_files: inputs.visible_files,
             graph_files: inputs.graph_files,
+            interner: inputs.interner,
         },
     )
 }

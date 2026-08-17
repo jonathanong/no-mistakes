@@ -40,7 +40,7 @@ mod tests_types {
     }
 
     #[test]
-    fn interned_file_and_symbol_nodes_compare_hash_and_display_equal() {
+    fn types_node_id_interned_file_and_symbol_nodes_compare_hash_and_display_equal() {
         let left = PathBuf::from("src/widget.ts");
         let right = PathBuf::from("src/widget.ts");
         let file_a = NodeId::file(&left);
@@ -165,7 +165,7 @@ mod tests_types {
     }
 
     #[test]
-    fn file_symbol_and_queue_job_on_same_path_are_not_equal() {
+    fn node_id_file_symbol_and_queue_job_on_same_path_are_not_equal() {
         let path = "src/a.ts";
         let file = NodeId::file(path);
         let symbol = NodeId::symbol(path, "job");

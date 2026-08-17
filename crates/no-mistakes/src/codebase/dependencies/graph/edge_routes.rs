@@ -11,6 +11,7 @@ fn collect_route_edges_with_graph_files(
     graph_files: &GraphFiles,
     facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     use crate::codebase::ts_routes::defs_frontend;
     use globset::{GlobBuilder, GlobSetBuilder};
@@ -149,6 +150,7 @@ fn collect_route_edges_with_graph_files(
                         route_pattern,
                         &all_patterns,
                         &pattern_to_files,
+                        interner,
                     );
                 }
             };

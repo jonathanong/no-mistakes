@@ -32,6 +32,7 @@ fn collect_route_edges(
             .as_ref()
             .map(|facts| facts as &dyn TsFactLookup)),
         config_options,
+        &crate::codebase::analysis_session::PathInterner::new(),
     )
 }
 
@@ -44,7 +45,12 @@ fn scoped_import_map(
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
     let graph_files = GraphFiles::from_files(visible_files.iter().cloned().collect());
     super::scoped_import_map_with_graph_files(
-        imports, path, resolver, workspace, visible_files, &graph_files,
+        imports,
+        path,
+        resolver,
+        workspace,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     )
 }
 
@@ -58,7 +64,13 @@ fn import_target(
 ) -> Option<(NodeId, EdgeKind)> {
     let graph_files = GraphFiles::from_files(visible_files.iter().cloned().collect());
     super::import_target_with_graph_files(
-        specifier, kind, path, resolver, workspace, visible_files, &graph_files,
+        specifier,
+        kind,
+        path,
+        resolver,
+        workspace,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     )
 }
 
@@ -82,6 +94,7 @@ fn resolve_imported_callee(
             workspace,
             visible_files,
             graph_files: &graph_files,
+            interner: &crate::codebase::analysis_session::PathInterner::new(),
         },
     )
 }

@@ -6,16 +6,34 @@ fn terraform_edge_collector_covers_empty_config_branches() {
     let all_files = GraphFiles::discover(&root).all;
 
     // No config options at all.
-    assert!(collect_terraform_edges(&root, &all_files, None).is_empty());
+    assert!(collect_terraform_edges(
+        &root,
+        &all_files,
+        None,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 
     // Configured options but no module roots.
     let mut options = graph_config_options(&root).expect("terraform fixture config should parse");
     options.terraform.module_roots.clear();
-    assert!(collect_terraform_edges(&root, &all_files, Some(&options)).is_empty());
+    assert!(collect_terraform_edges(
+        &root,
+        &all_files,
+        Some(&options),
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 
     // Module roots configured but no files supplied.
     let options = graph_config_options(&root).expect("terraform fixture config should parse");
-    assert!(collect_terraform_edges(&root, &[], Some(&options)).is_empty());
+    assert!(collect_terraform_edges(
+        &root,
+        &[],
+        Some(&options),
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 }
 
 #[test]
@@ -24,7 +42,12 @@ fn terraform_edges_emit_reference_module_and_output_kinds() {
     let all_files = GraphFiles::discover(&root).all;
     let options = graph_config_options(&root).expect("terraform fixture config should parse");
 
-    let edges = collect_terraform_edges(&root, &all_files, Some(&options));
+    let edges = collect_terraform_edges(
+        &root,
+        &all_files,
+        Some(&options),
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(edges
         .iter()
@@ -74,7 +97,11 @@ fn terraform_bare_module_reference_links_module_files() {
     );
 
     let mut edges = Vec::new();
-    collect_terraform_output_edges(&facts, &mut edges);
+    collect_terraform_output_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert!(edges
         .iter()
         .any(|(from, to, kind)| from == &NodeId::file(consumer.clone())
@@ -116,7 +143,11 @@ fn terraform_reference_edges_link_split_var_files() {
     );
 
     let mut edges = Vec::new();
-    collect_terraform_reference_edges(&facts, &mut edges);
+    collect_terraform_reference_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert!(edges
         .iter()
         .any(|(from, to, kind)| from == &NodeId::file(main_tf.clone())
@@ -173,7 +204,11 @@ fn terraform_reference_edges_stay_within_a_module() {
     );
 
     let mut edges = Vec::new();
-    collect_terraform_reference_edges(&facts, &mut edges);
+    collect_terraform_reference_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     // The reference resolves only to the same-module declaration, never m2's.
     assert!(edges
@@ -265,9 +300,21 @@ fn terraform_edge_collectors_handle_missing_lookups() {
     );
 
     let mut edges = Vec::new();
-    collect_terraform_reference_edges(&facts, &mut edges);
-    collect_terraform_module_edges(&facts, &mut edges);
-    collect_terraform_output_edges(&facts, &mut edges);
+    collect_terraform_reference_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    collect_terraform_module_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    collect_terraform_output_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert!(edges.is_empty());
 }
 

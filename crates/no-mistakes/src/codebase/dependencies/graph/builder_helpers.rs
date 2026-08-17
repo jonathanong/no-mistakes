@@ -13,6 +13,7 @@ struct GraphEdgeBuildInputs<'a> {
     import_resolution_cache: Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
     visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
     workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
+    interner: Arc<PathInterner>,
 }
 
 fn parsed_imports_for_plan<'a>(
@@ -42,12 +43,12 @@ fn collect_http_process_edges(
     if inputs.plan.http {
         edges.extend(collect_http_call_edges(
             inputs.root,
-            inputs.tsconfig,
             facts,
             &[],
             inputs.graph_files.indexable(),
             &inputs.graph_files.all,
             inputs.config_options,
+            &inputs.interner,
         ));
     }
     if inputs.plan.process {
@@ -57,6 +58,7 @@ fn collect_http_process_edges(
             &[],
             inputs.graph_files.indexable(),
             inputs.graph_files.visible(),
+            &inputs.interner,
         ));
     }
     edges
@@ -70,16 +72,19 @@ fn collect_swift_edges_for_plan(
     if !inputs.plan.swift {
         return Vec::new();
     }
-    collect_swift_edges_with_facts(SwiftEdgeInputs {
-        root: inputs.root,
-        tsconfig: inputs.tsconfig,
-        tsconfig_catalog: inputs.tsconfig_catalog,
-        all_files: &inputs.graph_files.all,
-        config_options: inputs.config_options,
-        ts_facts,
-        prepared_facts: inputs.swift_facts,
-        session,
-    })
+    collect_swift_edges_with_facts(
+        SwiftEdgeInputs {
+            root: inputs.root,
+            tsconfig: inputs.tsconfig,
+            tsconfig_catalog: inputs.tsconfig_catalog,
+            all_files: &inputs.graph_files.all,
+            config_options: inputs.config_options,
+            ts_facts,
+            prepared_facts: inputs.swift_facts,
+            session,
+        },
+        session.interner(),
+    )
 }
 
 fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge> {
@@ -91,6 +96,7 @@ fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge>
         &inputs.graph_files.all,
         inputs.config_options,
         inputs.dotnet_facts,
+        &inputs.interner,
     )
 }
 
@@ -104,6 +110,7 @@ fn merge_language_frontend_edges(
         &inputs.graph_files.all,
         inputs.config_options,
         inputs.visible_paths,
+        &inputs.interner,
     );
     for (from, to, _) in &edges {
         forward.entry(from.clone()).or_default();
@@ -116,7 +123,12 @@ fn collect_terraform_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Ed
     if !inputs.plan.terraform {
         return Vec::new();
     }
-    collect_terraform_edges(inputs.root, &inputs.graph_files.all, inputs.config_options)
+    collect_terraform_edges(
+        inputs.root,
+        &inputs.graph_files.all,
+        inputs.config_options,
+        &inputs.interner,
+    )
 }
 
 fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
@@ -138,10 +150,15 @@ fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
     });
 }
 
-fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {
+fn push_route_ref_edge(
+    edges: &mut Vec<Edge>,
+    source: &Path,
+    target: &Path,
+    interner: &PathInterner,
+) {
     edges.push((
-        NodeId::file(source),
-        NodeId::file(target),
+        NodeId::file_in(interner, source),
+        NodeId::file_in(interner, target),
         EdgeKind::RouteRef,
     ));
 }

@@ -94,20 +94,30 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         &workspace,
         &visible,
         &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert_eq!(
-        target_node(imported.get("workspaceValue").unwrap()),
+        target_node(
+            imported.get("workspaceValue").unwrap(),
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (
             NodeId::symbol(workspace_target.clone(), "workspaceValue"),
             EdgeKind::WorkspaceImport
         )
     );
     assert_eq!(
-        target_node(imported.get("payload").unwrap()),
+        target_node(
+            imported.get("payload").unwrap(),
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (NodeId::file(asset), EdgeKind::AssetImport)
     );
     assert_eq!(
-        target_node(imported.get("useMemo").unwrap()),
+        target_node(
+            imported.get("useMemo").unwrap(),
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (NodeId::module("react"), EdgeKind::Import)
     );
     assert!(!imported.contains_key("missing"));
@@ -119,16 +129,25 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         &workspace,
         &visible,
         &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert_eq!(
-        namespace_target_node(namespaces.get("core").unwrap(), "parse"),
+        namespace_target_node(
+            namespaces.get("core").unwrap(),
+            "parse",
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (
             NodeId::symbol(workspace_target.clone(), "parse"),
             EdgeKind::WorkspaceTypeImport
         )
     );
     assert_eq!(
-        namespace_target_node(namespaces.get("z").unwrap(), "object"),
+        namespace_target_node(
+            namespaces.get("z").unwrap(),
+            "object",
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (NodeId::module("zod"), EdgeKind::Import)
     );
     assert!(!namespaces.contains_key("nope"));
@@ -316,6 +335,7 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
         &resolver,
         &Default::default(),
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(edges.contains(&(
@@ -323,10 +343,9 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
         NodeId::symbol(target, "keep"),
         EdgeKind::Import
     )));
-    assert!(!edges.iter().any(|(from, _, _)| {
-        *from
-            == NodeId::symbol(current.clone(), "default")
-    }));
+    assert!(!edges
+        .iter()
+        .any(|(from, _, _)| { *from == NodeId::symbol(current.clone(), "default") }));
 }
 
 #[test]
@@ -389,6 +408,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
         workspace: &workspace,
         visible_files: &visible,
         graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
     };
     let mut edges = Vec::new();
     collect_star_reexport_edges(&inputs, &mut edges);

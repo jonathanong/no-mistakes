@@ -119,6 +119,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
         &resolver,
         &workspace,
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(!edges.iter().any(|(from, to, _)| {
@@ -151,6 +152,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
                 workspace: &workspace,
                 visible_files: &visible,
                 graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
+                interner: &crate::codebase::analysis_session::PathInterner::new(),
             },
         ),
         None

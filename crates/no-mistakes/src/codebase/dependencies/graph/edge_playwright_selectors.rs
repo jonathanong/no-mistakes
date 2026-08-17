@@ -8,6 +8,7 @@ pub(super) struct PlaywrightSelectorEdgeInputs<'a> {
     graph_tsconfig: Option<&'a TsConfig>,
     snapshot: &'a crate::playwright::fsutil::VisiblePathSnapshot,
     prepared_settings: &'a [crate::playwright::config::Settings],
+    interner: &'a PathInterner,
 }
 
 /// Build selector edges for every resolved frontend app. `prepared_settings`
@@ -34,6 +35,7 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
             root,
             inputs.all_files,
             &analysis,
+            inputs.interner,
         ));
     }
     // Apps are independent after the base graph exists: each settings
@@ -56,7 +58,12 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
                             ) else {
                                 return Vec::new();
                             };
-                            selector_edges_from_analysis(root, inputs.all_files, &analysis)
+                            selector_edges_from_analysis(
+                                root,
+                                inputs.all_files,
+                                &analysis,
+                                inputs.interner,
+                            )
                         })
                     },
                 )
@@ -72,12 +79,13 @@ fn selector_edges_from_analysis(
     root: &Path,
     all_files: &[PathBuf],
     analysis: &crate::playwright::analysis::types::Analysis,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let file_set: std::collections::HashSet<&Path> =
         all_files.iter().map(PathBuf::as_path).collect();
     let mut edges = Vec::new();
     for playwright_edge in &analysis.edges.edges {
-        if let Some((from, to, kind)) = selector_dep_edge(root, playwright_edge) {
+        if let Some((from, to, kind)) = selector_dep_edge(root, playwright_edge, interner) {
             if from.as_file().is_some_and(|path| file_set.contains(path))
                 && to.as_file().is_some_and(|path| file_set.contains(path))
             {
@@ -88,7 +96,11 @@ fn selector_edges_from_analysis(
     edges
 }
 
-fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edge) -> Option<Edge> {
+fn selector_dep_edge(
+    root: &Path,
+    edge: &crate::playwright::analysis::types::Edge,
+    interner: &PathInterner,
+) -> Option<Edge> {
     let (app_file_rel, test_file_rel) = match edge {
         crate::playwright::analysis::types::Edge::Selector {
             app_file,
@@ -103,8 +115,8 @@ fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edg
         _ => return None,
     };
     Some((
-        NodeId::file(root.join(test_file_rel)),
-        NodeId::file(root.join(app_file_rel)),
+        NodeId::file_in(interner, root.join(test_file_rel)),
+        NodeId::file_in(interner, root.join(app_file_rel)),
         EdgeKind::Selector,
     ))
 }

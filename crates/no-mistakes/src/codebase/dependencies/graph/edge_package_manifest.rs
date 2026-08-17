@@ -2,6 +2,7 @@ fn collect_workspace_manifest_edges(
     all_files: &[PathBuf],
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let workspace_entries: HashMap<_, _> = workspace
         .packages
@@ -26,10 +27,10 @@ fn collect_workspace_manifest_edges(
             for name in dependency_names {
                 let target = workspace_entries
                     .get(name.as_str())
-                    .map(|entry| NodeId::file(entry.clone()))
-                    .unwrap_or_else(|| NodeId::module(name.clone()));
+                    .map(|entry| NodeId::file_in(interner, entry.clone()))
+                    .unwrap_or_else(|| NodeId::module_in(interner, name.clone()));
                 edges.push((
-                    NodeId::file(path.clone()),
+                    NodeId::file_in(interner, path.clone()),
                     target,
                     EdgeKind::PackageDependency,
                 ));
@@ -38,8 +39,6 @@ fn collect_workspace_manifest_edges(
         })
         .collect()
 }
-
-
 
 #[cfg(test)]
 mod edge_package_manifest_tests;

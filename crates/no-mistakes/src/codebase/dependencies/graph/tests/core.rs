@@ -82,7 +82,13 @@ fn react_render_edges_cover_empty_and_same_file_children() {
     let root = p("/repo");
     let parent = root.join("src/Parent.tsx");
 
-    assert!(collect_react_render_edges(&root, None, std::slice::from_ref(&parent)).is_empty());
+    assert!(collect_react_render_edges(
+        &root,
+        None,
+        std::slice::from_ref(&parent),
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 
     let mut facts = TsFactMap::new();
     facts.insert(
@@ -116,7 +122,13 @@ fn react_render_edges_cover_empty_and_same_file_children() {
         },
     );
 
-    assert!(collect_react_render_edges(&root, Some(&facts), &[parent]).is_empty());
+    assert!(collect_react_render_edges(
+        &root,
+        Some(&facts),
+        &[parent],
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 }
 
 // ── bfs ─────────────────────────────────────────────────────────────────

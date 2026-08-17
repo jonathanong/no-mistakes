@@ -2,6 +2,10 @@ use super::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+pub(super) fn test_interner() -> PathInterner {
+    PathInterner::new()
+}
+
 mod edge_maps;
 
 pub(crate) use edge_maps::add_distinct_worker_file_edges;
@@ -121,6 +125,7 @@ pub(super) fn collect_playwright_route_edges(
         facts,
         &snapshot,
         &[],
+        &test_interner(),
     )
 }
 
@@ -144,6 +149,7 @@ pub(super) fn run_playwright_selector_analysis(
             graph_tsconfig,
             snapshot: &snapshot,
             prepared_settings: &[],
+            interner: &test_interner(),
         },
         None,
     )
@@ -159,16 +165,19 @@ pub(super) fn collect_swift_edges(
     let Some(config_options) = config_options else {
         return Vec::new();
     };
-    collect_swift_edges_with_facts(SwiftEdgeInputs {
-        root,
-        tsconfig,
-        tsconfig_catalog: None,
-        all_files,
-        config_options: Some(config_options),
-        ts_facts: None,
-        prepared_facts: None,
-        session: &session,
-    })
+    collect_swift_edges_with_facts(
+        SwiftEdgeInputs {
+            root,
+            tsconfig,
+            tsconfig_catalog: None,
+            all_files,
+            config_options: Some(config_options),
+            ts_facts: None,
+            prepared_facts: None,
+            session: &session,
+        },
+        session.interner(),
+    )
 }
 
 pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {

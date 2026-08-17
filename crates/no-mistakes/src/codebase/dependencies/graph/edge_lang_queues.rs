@@ -20,6 +20,7 @@ fn emit_queue_edges(
     facts: &LangFactMap,
     options: &GraphConfigOptions,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     let worker_globs = compile_queue_globs(&options.queue_workers);
     let enqueue_globs = compile_queue_globs(&options.queue_enqueues);
@@ -43,15 +44,19 @@ fn emit_queue_edges(
         };
         for job in &file.queue_enqueues {
             let identity = topic_identity(cluster.as_deref(), job);
-            let node = NodeId::queue_job(&file.path, identity.clone());
+            let node = NodeId::queue_job_in(interner, &file.path, identity.clone());
             edges.push((
-                NodeId::file(&file.path),
+                NodeId::file_in(interner, &file.path),
                 node.clone(),
                 EdgeKind::QueueEnqueue,
             ));
             if let Some(targets) = workers.get(&identity) {
                 for worker in targets {
-                    edges.push((node.clone(), NodeId::file(worker), EdgeKind::QueueWorker));
+                    edges.push((
+                        node.clone(),
+                        NodeId::file_in(interner, worker),
+                        EdgeKind::QueueWorker,
+                    ));
                 }
             }
         }
@@ -84,6 +89,7 @@ fn emit_kafka_edges(
     options: &GraphConfigOptions,
     sources: &crate::codebase::ts_source::SourceStore,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     let enqueue_globs = compile_queue_globs(&options.queue_enqueues);
     let worker_globs = compile_queue_globs(&options.queue_workers);
@@ -118,11 +124,19 @@ fn emit_kafka_edges(
     for (path, topics, cluster) in produces {
         for topic in topics {
             let identity = topic_identity(cluster.as_deref(), &topic);
-            let node = NodeId::queue_job(&path, identity.clone());
-            edges.push((NodeId::file(&path), node.clone(), EdgeKind::QueueEnqueue));
+            let node = NodeId::queue_job_in(interner, &path, identity.clone());
+            edges.push((
+                NodeId::file_in(interner, &path),
+                node.clone(),
+                EdgeKind::QueueEnqueue,
+            ));
             if let Some(targets) = workers.get(&identity) {
                 for worker in targets {
-                    edges.push((node.clone(), NodeId::file(worker), EdgeKind::QueueWorker));
+                    edges.push((
+                        node.clone(),
+                        NodeId::file_in(interner, worker),
+                        EdgeKind::QueueWorker,
+                    ));
                 }
             }
         }

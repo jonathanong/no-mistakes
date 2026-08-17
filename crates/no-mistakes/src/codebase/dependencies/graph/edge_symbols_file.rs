@@ -8,6 +8,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
         visible_files,
         graph_files,
         http_route_defs,
+        interner,
     } = input;
     let mut edges = Vec::new();
     let Some(file_facts) = facts.get_ts_facts(path) else {
@@ -19,55 +20,60 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
 
     let mut exported_values = Vec::new();
     let mut caller_to_export = HashMap::new();
+    let exports = ExportEdgeInputs {
+        path,
+        symbols,
+        facts,
+        resolver,
+        workspace,
+        visible_files,
+        graph_files,
+        interner,
+    };
     collect_export_edges(
-        ExportEdgeInputs {
-            path,
-            symbols,
-            facts,
-            resolver,
-            workspace,
-            visible_files,
-            graph_files,
-        },
+        exports,
         &mut exported_values,
         &mut caller_to_export,
         &mut edges,
     );
 
-    let imported_symbols =
-        imported_symbol_map(path, symbols, resolver, workspace, visible_files, graph_files);
-    let namespace_imports =
-        namespace_import_map(path, symbols, resolver, workspace, visible_files, graph_files);
+    let imported_symbols = imported_symbol_map(
+        path,
+        symbols,
+        resolver,
+        workspace,
+        visible_files,
+        graph_files,
+        interner,
+    );
+    let namespace_imports = namespace_import_map(
+        path,
+        symbols,
+        resolver,
+        workspace,
+        visible_files,
+        graph_files,
+        interner,
+    );
     for imported in fallback_imported_symbols(
         symbols.exports.is_empty(),
         &file_facts.function_calls,
         &file_facts.symbol_references,
         &imported_symbols,
+        interner,
     ) {
-        let (node, kind) = target_node(imported);
-        edges.push((NodeId::file(path), node, kind));
+        let (node, kind) = target_node(imported, interner);
+        edges.push((NodeId::file_in(interner, path), node, kind));
     }
     for (node, kind) in fallback_namespace_symbols(
         &file_facts.function_calls,
         &file_facts.symbol_references,
         &namespace_imports,
+        interner,
     ) {
-        edges.push((NodeId::file(path), node, kind));
+        edges.push((NodeId::file_in(interner, path), node, kind));
     }
-    collect_export_reference_edges(
-        ExportEdgeInputs {
-            path,
-            symbols,
-            facts,
-            resolver,
-            workspace,
-            visible_files,
-            graph_files,
-        },
-        &imported_symbols,
-        &namespace_imports,
-        &mut edges,
-    );
+    collect_export_reference_edges(exports, &imported_symbols, &namespace_imports, &mut edges);
 
     let calls_by_caller = local_call_graph(&file_facts.function_calls);
     let call_records_by_caller = local_call_records(&file_facts.function_calls);
@@ -78,8 +84,8 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
         path,
         resolver,
         workspace,
-        visible_files,
         graph_files,
+        interner,
     );
     let local_scopes = local_scope_names(&calls_by_caller, &refs_by_caller, &scoped_imports);
     exported_values.sort();
@@ -97,6 +103,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
         &imported_symbols,
         &value_exports,
         &mut edges,
+        interner,
     );
     for exported_value in exported_values {
         let caller_exports = caller_to_export
@@ -110,6 +117,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
                 &value_exports,
                 imports,
                 &mut edges,
+                interner,
             );
         }
         let mut visited = HashSet::new();
@@ -131,6 +139,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
                     http_route_defs: scoped_http_route_defs,
                     process_spawns: &file_facts.process_spawns,
                     visible_files,
+                    interner,
                 },
                 &mut edges,
             );
@@ -138,7 +147,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
                 for (target, kind) in imports {
                     for caller_export in &caller_exports {
                         edges.push((
-                            NodeId::symbol(path, caller_export.clone()),
+                            NodeId::symbol_in(interner, path, caller_export.clone()),
                             target.clone(),
                             *kind,
                         ));
@@ -165,17 +174,17 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
                         workspace,
                         visible_files,
                         graph_files,
+                        interner,
                     },
                 ) {
                     for caller_export in &caller_exports {
                         edges.push((
-                            NodeId::symbol(path, caller_export.clone()),
+                            NodeId::symbol_in(interner, path, caller_export.clone()),
                             target.clone(),
                             kind,
                         ));
                     }
-                } else if let Some(scope) =
-                    resolve_local_scope(&caller, symbol_ref, &local_scopes)
+                } else if let Some(scope) = resolve_local_scope(&caller, symbol_ref, &local_scopes)
                 {
                     let scope_is_callable = calls_by_caller.contains_key(&scope);
                     if !root_is_callable || !scope_is_callable {

@@ -3,8 +3,8 @@ fn scoped_import_map_with_graph_files(
     path: &Path,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
     const TOP_LEVEL_SIDE_EFFECT_SCOPE: &str = "";
     let mut map: HashMap<String, Vec<(NodeId, EdgeKind)>> = HashMap::new();
@@ -22,8 +22,8 @@ fn scoped_import_map_with_graph_files(
             path,
             resolver,
             workspace,
-            visible_files,
             graph_files,
+            interner,
         ) else {
             continue;
         };
@@ -42,8 +42,8 @@ fn import_target_with_graph_files(
     path: &Path,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Option<(NodeId, EdgeKind)> {
     let edge_kind = match kind {
         ImportKind::Static => EdgeKind::Import,
@@ -63,10 +63,10 @@ fn import_target_with_graph_files(
         } else {
             EdgeKind::AssetImport
         };
-        return Some((NodeId::file(target), edge_kind));
+        return Some((NodeId::file_in(interner, target), edge_kind));
     }
     if let Some(target) =
-        workspace.resolve_specifier_from_file_visible(specifier, path, visible_files)
+        workspace.resolve_specifier_from_file_visible(specifier, path, graph_files.visible())
     {
         let target = graph_files.visible_path(&target)?;
         let edge_kind = match kind {
@@ -74,7 +74,7 @@ fn import_target_with_graph_files(
             ImportKind::RequireResolve => EdgeKind::RequireResolve,
             _ => EdgeKind::WorkspaceImport,
         };
-        return Some((NodeId::file(target), edge_kind));
+        return Some((NodeId::file_in(interner, target), edge_kind));
     }
     if workspace.recognizes_specifier_from(specifier, path) {
         return None;

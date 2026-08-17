@@ -51,6 +51,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
         workspace: &workspace,
         visible_files: &visible,
         graph_files: &graph_files,
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
     };
     let exports = [
         ("core", "*", EdgeKind::WorkspaceImport),
@@ -72,6 +73,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
             },
             name,
             &mut edges,
+            &crate::codebase::analysis_session::PathInterner::new(),
         );
     }
     assert_eq!(edges.len(), 2);
@@ -95,8 +97,8 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
             &current,
             &resolver,
             &workspace,
-            &visible,
             &graph_files,
+            &crate::codebase::analysis_session::PathInterner::new()
         ),
         None,
         "type-only asset imports do not create runtime edges"
@@ -108,8 +110,8 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
             &current,
             &resolver,
             &workspace,
-            &visible,
             &graph_files,
+            &crate::codebase::analysis_session::PathInterner::new()
         ),
         Some((NodeId::file(asset), EdgeKind::RequireResolve))
     );
@@ -124,8 +126,8 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
                 &current,
                 &resolver,
                 &workspace,
-                &visible,
                 &graph_files,
+                &crate::codebase::analysis_session::PathInterner::new()
             ),
             Some((NodeId::file(target.clone()), expected))
         );

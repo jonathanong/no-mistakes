@@ -26,6 +26,7 @@ fn collect_dashboard_queue_relationships(
     graph_files: &GraphFiles,
     facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
+    interner: &PathInterner,
 ) -> Vec<DashboardQueueRelationship> {
     use globset::GlobBuilder;
 
@@ -178,12 +179,12 @@ fn collect_dashboard_queue_relationships(
                 continue;
             };
 
-            let queue_job = NodeId::queue_job(queue_def.clone(), job.clone());
+            let queue_job = NodeId::queue_job_in(interner, queue_def.clone(), job.clone());
 
             // Enqueue site → QueueJob.
             for enqueue_file in enqueue_files {
                 relationships.push(DashboardQueueRelationship::new(
-                    NodeId::file(enqueue_file.clone()),
+                    NodeId::file_in(interner, enqueue_file.clone()),
                     queue_job.clone(),
                     EdgeKind::QueueEnqueue,
                 ));
@@ -192,13 +193,13 @@ fn collect_dashboard_queue_relationships(
             // QueueJob → processor file.
             relationships.push(DashboardQueueRelationship::new(
                 queue_job.clone(),
-                NodeId::file(processor_file.clone()),
+                NodeId::file_in(interner, processor_file.clone()),
                 EdgeKind::QueueWorker,
             ));
             if worker_file != processor_file {
                 relationships.push(DashboardQueueRelationship::new(
                     queue_job.clone(),
-                    NodeId::file(worker_file.clone()),
+                    NodeId::file_in(interner, worker_file.clone()),
                     EdgeKind::QueueWorker,
                 ));
             }
@@ -213,9 +214,17 @@ fn collect_queue_edges(
     graph_files: &GraphFiles,
     facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
-    collect_dashboard_queue_relationships(root, resolver, graph_files, facts, config_options)
-        .into_iter()
-        .map(DashboardQueueRelationship::into_edge)
-        .collect()
+    collect_dashboard_queue_relationships(
+        root,
+        resolver,
+        graph_files,
+        facts,
+        config_options,
+        interner,
+    )
+    .into_iter()
+    .map(DashboardQueueRelationship::into_edge)
+    .collect()
 }

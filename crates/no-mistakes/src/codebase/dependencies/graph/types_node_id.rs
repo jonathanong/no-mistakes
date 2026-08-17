@@ -28,13 +28,27 @@ impl PartialEq for NodeId {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::File(a), Self::File(b)) => interned_path_eq(a, b),
-            (Self::Symbol { file: fa, symbol: sa }, Self::Symbol { file: fb, symbol: sb }) => {
-                interned_path_eq(fa, fb) && interned_str_eq(sa, sb)
-            }
+            (
+                Self::Symbol {
+                    file: fa,
+                    symbol: sa,
+                },
+                Self::Symbol {
+                    file: fb,
+                    symbol: sb,
+                },
+            ) => interned_path_eq(fa, fb) && interned_str_eq(sa, sb),
             (Self::Module(a), Self::Module(b)) => interned_str_eq(a, b),
-            (Self::QueueJob { queue_file: fa, job: ja }, Self::QueueJob { queue_file: fb, job: jb }) => {
-                interned_path_eq(fa, fb) && interned_str_eq(ja, jb)
-            }
+            (
+                Self::QueueJob {
+                    queue_file: fa,
+                    job: ja,
+                },
+                Self::QueueJob {
+                    queue_file: fb,
+                    job: jb,
+                },
+            ) => interned_path_eq(fa, fb) && interned_str_eq(ja, jb),
             (
                 Self::WorkflowJob {
                     workflow_file: fa,
@@ -101,6 +115,11 @@ impl NodeId {
         Self::File(intern_node_path(path))
     }
 
+    /// Session-interned file node. Match `NodeId::File(path)`.
+    pub fn file_in(interner: &PathInterner, path: impl AsRef<Path>) -> Self {
+        Self::File(interner.intern_path(path))
+    }
+
     /// Construct a symbol node. Use in expressions only — match `NodeId::Symbol { .. }`.
     pub fn symbol(path: impl AsRef<Path>, symbol: impl Into<Arc<str>>) -> Self {
         Self::Symbol {
@@ -109,9 +128,26 @@ impl NodeId {
         }
     }
 
+    /// Session-interned symbol node. Match `NodeId::Symbol { .. }`.
+    pub fn symbol_in(
+        interner: &PathInterner,
+        path: impl AsRef<Path>,
+        symbol: impl Into<Arc<str>>,
+    ) -> Self {
+        Self::Symbol {
+            file: interner.intern_path(path),
+            symbol: interner.intern_str(symbol),
+        }
+    }
+
     /// Construct a module node. Use in expressions only — match `NodeId::Module(...)`.
     pub fn module(value: impl Into<Arc<str>>) -> Self {
         Self::Module(intern_node_str(value))
+    }
+
+    /// Session-interned module node. Match `NodeId::Module(...)`.
+    pub fn module_in(interner: &PathInterner, value: impl Into<Arc<str>>) -> Self {
+        Self::Module(interner.intern_str(value))
     }
 
     /// Construct a queue-job node. Use in expressions only — match `NodeId::QueueJob { .. }`.
@@ -119,6 +155,18 @@ impl NodeId {
         Self::QueueJob {
             queue_file: intern_node_path(path),
             job: intern_node_str(job),
+        }
+    }
+
+    /// Session-interned queue-job node. Match `NodeId::QueueJob { .. }`.
+    pub fn queue_job_in(
+        interner: &PathInterner,
+        path: impl AsRef<Path>,
+        job: impl Into<Arc<str>>,
+    ) -> Self {
+        Self::QueueJob {
+            queue_file: interner.intern_path(path),
+            job: interner.intern_str(job),
         }
     }
 
@@ -130,11 +178,37 @@ impl NodeId {
         }
     }
 
+    /// Session-interned workflow-job node. Match `NodeId::WorkflowJob { .. }`.
+    pub fn workflow_job_in(
+        interner: &PathInterner,
+        path: impl AsRef<Path>,
+        job: impl Into<Arc<str>>,
+    ) -> Self {
+        Self::WorkflowJob {
+            workflow_file: interner.intern_path(path),
+            job: interner.intern_str(job),
+        }
+    }
+
     /// Construct a workflow-step node. Use in expressions only — match `NodeId::WorkflowStep { .. }`.
     pub fn workflow_step(path: impl AsRef<Path>, job: impl Into<Arc<str>>, step: usize) -> Self {
         Self::WorkflowStep {
             workflow_file: intern_node_path(path),
             job: intern_node_str(job),
+            step,
+        }
+    }
+
+    /// Session-interned workflow-step node. Match `NodeId::WorkflowStep { .. }`.
+    pub fn workflow_step_in(
+        interner: &PathInterner,
+        path: impl AsRef<Path>,
+        job: impl Into<Arc<str>>,
+        step: usize,
+    ) -> Self {
+        Self::WorkflowStep {
+            workflow_file: interner.intern_path(path),
+            job: interner.intern_str(job),
             step,
         }
     }

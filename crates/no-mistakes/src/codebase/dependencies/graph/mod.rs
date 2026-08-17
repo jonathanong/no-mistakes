@@ -13,6 +13,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+use crate::codebase::analysis_session::PathInterner;
 use crate::edge_index::{CanonicalEdge, EdgeIndex};
 
 include!("types.rs");
@@ -39,6 +40,7 @@ include!("builder_remaining_edges_independent.rs");
 include!("builder_remaining_edges_fact_domain.rs");
 include!("builder_helpers.rs");
 include!("edge_lang_frontends.rs");
+include!("edge_lang_frontends_emit.rs");
 include!("edge_lang_domains.rs");
 include!("edge_lang_queues.rs");
 #[cfg(feature = "test-instrumentation")]
@@ -97,6 +99,7 @@ include!("edge_resource_resolution.rs");
 mod edge_resources_tests;
 include!("edge_dotnet.rs");
 include!("edge_swift.rs");
+include!("edge_swift_collect.rs");
 include!("edge_terraform.rs");
 include!("filter.rs");
 include!("symbol_index.rs");

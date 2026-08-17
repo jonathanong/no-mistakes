@@ -3,6 +3,7 @@ fn collect_dotnet_edges(
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
     prepared_facts: Option<&crate::codebase::dotnet::DotnetFactMap>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let Some(config_options) = config_options else {
         return Vec::new();
@@ -25,20 +26,27 @@ fn collect_dotnet_edges(
     }
 
     let mut edges = Vec::new();
-    collect_dotnet_using_edges(facts, &mut edges);
-    collect_dotnet_reference_edges(facts, &mut edges);
-    collect_dotnet_project_edges(facts, &mut edges);
+    collect_dotnet_using_edges(facts, &mut edges, interner);
+    collect_dotnet_reference_edges(facts, &mut edges, interner);
+    collect_dotnet_project_edges(facts, &mut edges, interner);
     edges
 }
 
 fn collect_dotnet_using_edges(
     facts: &crate::codebase::dotnet::DotnetFactMap,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     for file in facts.files.values() {
         for using in &file.usings {
             if let Some(target_files) = facts.files_by_namespace.get(using) {
-                push_dotnet_file_edges(edges, &file.path, target_files, EdgeKind::DotnetUsing);
+                push_dotnet_file_edges(
+                    edges,
+                    &file.path,
+                    target_files,
+                    EdgeKind::DotnetUsing,
+                    interner,
+                );
             }
         }
     }
@@ -47,11 +55,18 @@ fn collect_dotnet_using_edges(
 fn collect_dotnet_reference_edges(
     facts: &crate::codebase::dotnet::DotnetFactMap,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     for file in facts.files.values() {
         for reference in &file.references {
             if let Some(target_files) = facts.declarations.get(reference) {
-                push_dotnet_file_edges(edges, &file.path, target_files, EdgeKind::DotnetReference);
+                push_dotnet_file_edges(
+                    edges,
+                    &file.path,
+                    target_files,
+                    EdgeKind::DotnetReference,
+                    interner,
+                );
             }
         }
     }
@@ -60,6 +75,7 @@ fn collect_dotnet_reference_edges(
 fn collect_dotnet_project_edges(
     facts: &crate::codebase::dotnet::DotnetFactMap,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     for project in facts.projects.values() {
         let Some(source_files) = facts.files_by_project.get(&project.project_path) else {
@@ -79,6 +95,7 @@ fn collect_dotnet_project_edges(
                         source,
                         target_files,
                         EdgeKind::DotnetProjectDependency,
+                        interner,
                     );
                 }
             }
@@ -91,12 +108,13 @@ fn push_dotnet_file_edges(
     source: &Path,
     target_files: &std::collections::BTreeSet<PathBuf>,
     kind: EdgeKind,
+    interner: &PathInterner,
 ) {
     for target in target_files {
         if target != source {
             edges.push((
-                NodeId::file(source),
-                NodeId::file(target.clone()),
+                NodeId::file_in(interner, source),
+                NodeId::file_in(interner, target.clone()),
                 kind,
             ));
         }

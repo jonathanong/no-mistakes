@@ -224,7 +224,12 @@ fn test_of_edges_do_not_make_source_depend_on_test() {
     merge_edges(
         &mut forward,
         &mut reverse,
-        collect_test_edges(Path::new("/root"), &[src.clone(), test.clone()], None),
+        collect_test_edges(
+            Path::new("/root"),
+            &[src.clone(), test.clone()],
+            None,
+            &crate::codebase::analysis_session::PathInterner::new(),
+        ),
     );
 
     // forward: test→src only (test depends on source)

@@ -4,6 +4,7 @@ struct ReexportNamespaceInputs<'a> {
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
     graph_files: &'a GraphFiles,
+    interner: &'a PathInterner,
 }
 
 fn resolve_reexported_namespace_member(
@@ -19,6 +20,7 @@ fn resolve_reexported_namespace_member(
         workspace,
         visible_files,
         graph_files,
+        interner,
     } = inputs;
     ReexportNamespaceResolver {
         member,
@@ -27,6 +29,7 @@ fn resolve_reexported_namespace_member(
         workspace,
         visible_files,
         graph_files,
+        interner,
         visited: HashSet::new(),
     }
     .resolve(barrel, imported, kind)
@@ -39,6 +42,7 @@ struct ReexportNamespaceResolver<'a> {
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
     graph_files: &'a GraphFiles,
+    interner: &'a PathInterner,
     visited: HashSet<(PathBuf, String)>,
 }
 
@@ -73,19 +77,25 @@ impl ReexportNamespaceResolver<'_> {
                     self.workspace,
                     self.visible_files,
                     self.graph_files,
+                    self.interner,
                 );
                 if let Some(target) = namespace_imports.get(&local) {
-                    return Some(namespace_target_node(target, self.member));
+                    return Some(namespace_target_node(target, self.member, self.interner));
                 }
                 continue;
             };
-            let (target, source_kind) = if let Some(target) = self.resolver.resolve(source, barrel) {
+            let (target, source_kind) = if let Some(target) = self.resolver.resolve(source, barrel)
+            {
                 (self.graph_files.visible_path(&target)?.to_path_buf(), kind)
             } else {
                 (
-                    self.graph_files.visible_path(&self.workspace.resolve_specifier_from_file_visible(
-                        source, barrel, self.visible_files,
-                    )?)?.to_path_buf(),
+                    self.graph_files
+                        .visible_path(&self.workspace.resolve_specifier_from_file_visible(
+                            source,
+                            barrel,
+                            self.visible_files,
+                        )?)?
+                        .to_path_buf(),
                     workspace_symbol_edge_kind(export.is_type_only),
                 )
             };
@@ -96,7 +106,7 @@ impl ReexportNamespaceResolver<'_> {
             );
             if reexported == "*" {
                 return Some((
-                    NodeId::symbol(target, self.member),
+                    NodeId::symbol_in(self.interner, target, self.member),
                     edge_kind,
                 ));
             }
