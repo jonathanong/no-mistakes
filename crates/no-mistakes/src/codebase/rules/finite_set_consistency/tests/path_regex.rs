@@ -231,3 +231,57 @@ comparisons:
     .unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[cfg(unix)]
+#[test]
+fn path_regex_capture_uses_first_group_when_value_is_unnamed() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let files = [root.join("alpha.txt"), root.join("alpha")];
+    let set = extract::extract_path_regex_set(
+        &root,
+        &SetSpec {
+            name: "unnamed".to_string(),
+            file: "labeled-paths".to_string(),
+            kind: extract::PATH_REGEX_CAPTURE.to_string(),
+            pattern: "^(alpha)(?:\\.txt)?$".to_string(),
+            ..Default::default()
+        },
+        &files,
+        &[],
+    )
+    .unwrap();
+
+    assert_eq!(set.file, "labeled-paths");
+    assert_eq!(
+        set.values.iter().map(String::as_str).collect::<Vec<_>>(),
+        ["alpha"]
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn scan_without_path_regex_sets_skips_missing_comparisons() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let findings = check_with_files_and_sources(
+        &root,
+        &path_regex_config(
+            r#"
+sets:
+  - name: names
+    file: alpha.txt
+    kind: yaml-sequence
+    key: packages
+comparisons:
+  - left: names
+    right: missingRight
+    mode: equal-set
+"#,
+        ),
+        &[root.join("alpha.txt")],
+        &sources,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
