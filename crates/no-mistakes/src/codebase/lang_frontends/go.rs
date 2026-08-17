@@ -1,5 +1,7 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+#[path = "go_http.rs"]
+mod http;
 use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::collections::HashMap;
@@ -42,7 +44,7 @@ fn parse_go_file(
         imports: extract_go_imports(&text),
         declarations: extract_go_declarations(&symbols),
         references: extract_named(&symbols, go_ref_re()),
-        route_handlers: Vec::new(),
+        route_handlers: http::extract_http_routes(&text),
         queue_enqueues: extract_named(&text, asynq_task_re()),
         queue_workers: extract_named(&text, asynq_handle_re()),
         mods: Vec::new(),
@@ -200,5 +202,5 @@ fn asynq_task_re() -> &'static Regex {
 
 fn asynq_handle_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"HandleFunc\(\s*"([^"]+)""#).expect("handle"))
+    RE.get_or_init(|| Regex::new(r#"HandleFunc\(\s*"([^"/][^"]*)""#).expect("handle"))
 }

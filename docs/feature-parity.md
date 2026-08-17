@@ -25,7 +25,7 @@ CLIs are not started.
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
 | Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
-| Go, Asynq | `go-import`, `go-ref` | `tests plan go` | no | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
+| Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
 | Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
 | Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` | Active Job `perform_later` | shipped (v1 extractors + plan) |
@@ -172,9 +172,11 @@ path(prefix + "/users/", views.user_list)
 Django settings, middleware, and model graphs are out of scope for the first
 cut unless they are needed to resolve a static import or route.
 
-## Go, Asynq
+## Go, Asynq, HTTP
 
-Go support is the language frontend. Asynq is the queue extractor.
+Go support is the language frontend. Asynq is the queue extractor. Configured
+`net/http`, Chi, Gin, Echo, and Fiber string-literal registrations emit
+`RouteRef` edges.
 
 | Feature | TS/JS reference | Go equivalent |
 | --- | --- | --- |
@@ -193,6 +195,8 @@ name. A producer file gets `queue-enqueue`; the handler file gets
 ```go
 client.Enqueue(asynq.NewTask("mail:welcome", payload), asynq.Queue("default"))
 mux.HandleFunc("mail:welcome", HandleWelcome)
+http.HandleFunc("/health", Health)
+r.Get("/users", Users)
 ```
 
 Computed task types and `http.Handle(pattern, …)` where `pattern` is not a

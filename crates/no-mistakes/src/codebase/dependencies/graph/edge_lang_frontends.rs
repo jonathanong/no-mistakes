@@ -81,6 +81,7 @@ fn collect_language_frontend_edges(
         emit_queue_edges(root, &facts.ruby, options, &mut edges, interner);
         emit_queue_edges(root, &facts.php, options, &mut edges, interner);
         emit_route_edges(root, &facts.python, options, &mut edges, interner);
+        emit_route_edges(root, &facts.go, options, &mut edges, interner);
         emit_route_edges(root, &facts.ruby, options, &mut edges, interner);
         emit_route_edges(root, &facts.php, options, &mut edges, interner);
     }
