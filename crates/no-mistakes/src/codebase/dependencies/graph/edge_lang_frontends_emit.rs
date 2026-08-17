@@ -87,6 +87,26 @@ fn emit_package_edges(
     }
 }
 
+fn emit_path_dep_package_edges(
+    facts: &LangFactMap,
+    kind: EdgeKind,
+    edges: &mut Vec<Edge>,
+    interner: &PathInterner,
+) {
+    for (from_pkg, to_pkg) in &facts.package_path_deps {
+        let Some(from_files) = facts.files_by_package.get(from_pkg) else {
+            continue;
+        };
+        let Some(from_root) = package_root_file(from_files) else {
+            continue;
+        };
+        let Some(to_files) = facts.files_by_package.get(to_pkg) else {
+            continue;
+        };
+        push_file_edges(edges, from_root, to_files, kind, interner);
+    }
+}
+
 fn package_root_file(files: &std::collections::BTreeSet<PathBuf>) -> Option<&Path> {
     let named = |want: &str| {
         files

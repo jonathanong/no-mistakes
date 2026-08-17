@@ -60,19 +60,7 @@ fn graph_config_options_with_config(
     root: &Path,
     config_path: Option<&Path>,
 ) -> Option<GraphConfigOptions> {
-    let config = match config_path {
-        Some(path) => crate::codebase::config::load_config_with_path(root, Some(path)),
-        None => crate::codebase::config::load_config(root),
-    }
-    .ok()?;
-    let v2_config = load_v2_config(root, config_path).ok();
-    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
-    Some(graph_config_options_from_loaded(
-        root,
-        &config,
-        v2_config.as_ref()?,
-        &visible_paths,
-    ))
+    graph_config_options_with_config_and_session(root, config_path, None, None)
 }
 
 fn graph_config_options_from_loaded(
@@ -92,9 +80,10 @@ fn graph_config_options_from_loaded_with_test_filter(
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
 ) -> GraphConfigOptions {
     let project_route_globs = ConfigView::new(v2_config).server_route_globs();
-    let test_filter = Some(test_filter.unwrap_or_else(|| {
-        crate::codebase::test_filter::TestFileFilter::new(root, v2_config)
-    }));
+    let test_filter = Some(
+        test_filter
+            .unwrap_or_else(|| crate::codebase::test_filter::TestFileFilter::new(root, v2_config)),
+    );
     // Union of every configured frontend app's rewrites. #624 was caused by
     // this list being sourced from whichever `type: nextjs` project sorted
     // first. `frontend_apps_lenient` resolves each `type: nextjs` project
@@ -116,7 +105,10 @@ fn graph_config_options_from_loaded_with_test_filter(
         test_filter,
         rewrites,
         queue_project_factory_names: v2_config.queues.factories.clone(),
-        dotnet_projects: crate::codebase::dotnet::configured_projects(root, &v2_config.tests.dotnet),
+        dotnet_projects: crate::codebase::dotnet::configured_projects(
+            root,
+            &v2_config.tests.dotnet,
+        ),
         swift_packages: v2_config.tests.swift.packages.clone(),
         python_packages: v2_config.tests.python.packages.clone(),
         go_modules: v2_config.tests.go.modules.clone(),
@@ -199,12 +191,10 @@ fn graph_config_options_for_plan_with_config(
     plan: GraphBuildPlan,
     config_path: Option<&Path>,
 ) -> Option<GraphConfigOptions> {
-    if graph_plan_needs_config(plan) {
-        match config_path {
+    graph_plan_needs_config(plan)
+        .then(|| match config_path {
             Some(_) => graph_config_options_with_config(root, config_path),
             None => graph_config_options(root),
-        }
-    } else {
-        None
-    }
+        })
+        .flatten()
 }

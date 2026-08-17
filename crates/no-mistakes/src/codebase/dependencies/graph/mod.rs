@@ -22,6 +22,7 @@ include!("build_plan_facts.rs");
 include!("canonical.rs");
 include!("graph_files.rs");
 include!("files_config.rs");
+include!("files_config_session.rs");
 include!("files_config_prepared.rs");
 include!("files_config_fact_context.rs");
 include!("files_config_routes.rs");
@@ -103,6 +104,8 @@ include!("edge_swift_collect.rs");
 include!("edge_terraform.rs");
 include!("filter.rs");
 include!("symbol_index.rs");
+include!("symbol_index_intern.rs");
+include!("symbol_index_build.rs");
 
 #[cfg(test)]
 pub(crate) mod test_support;

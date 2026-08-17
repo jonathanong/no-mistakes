@@ -60,6 +60,7 @@ fn collect_language_frontend_edges(
         );
         emit_mod_edges(&facts.rust, EdgeKind::RustMod, &mut edges, interner);
         emit_package_edges(&facts.rust, EdgeKind::RustPackage, &mut edges, interner);
+        emit_path_dep_package_edges(&facts.rust, EdgeKind::RustPackage, &mut edges, interner);
         emit_lang_edges(
             &facts.ruby,
             EdgeKind::RubyRequire,
@@ -107,3 +108,4 @@ fn config_is_empty(config: &LangFrontendConfig) -> bool {
         && config.rails_apps.is_empty()
         && config.php_apps.is_empty()
 }
+
