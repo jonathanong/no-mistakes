@@ -6,15 +6,17 @@ pub(super) fn language_target_for(
     config: Option<&str>,
     project: Option<&str>,
     test_file: &str,
-) -> TestExecutionTarget {
-    match runner {
+) -> Option<TestExecutionTarget> {
+    Some(match runner {
         TestRunner::Python => python_target_for(config, test_file),
         TestRunner::Go => go_target_for(config, test_file),
         TestRunner::Cargo => cargo_target_for(config, project, test_file),
         TestRunner::Rails => rails_target_for(config, test_file),
         TestRunner::Php => php_target_for(config, project, test_file),
-        _ => unreachable!("language_target_for is only for language frontends"),
-    }
+        TestRunner::Dotnet | TestRunner::Playwright | TestRunner::Vitest | TestRunner::Swift => {
+            return None;
+        }
+    })
 }
 
 fn python_target_for(package: Option<&str>, test_file: &str) -> TestExecutionTarget {

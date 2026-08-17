@@ -31,8 +31,10 @@ pub(super) fn target_for(
     if runner == TestRunner::Swift {
         return swift_target_for(config, project, test_file);
     }
-    if runner.is_language_frontend() {
-        return super::lang_targets::language_target_for(runner, config, project, test_file);
+    if let Some(target) =
+        super::lang_targets::language_target_for(runner, config, project, test_file)
+    {
+        return target;
     }
 
     let mut runner_args = Vec::new();

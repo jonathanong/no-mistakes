@@ -84,6 +84,13 @@ fn rails_picks_rspec_or_minitest_from_filename() {
 }
 
 #[test]
+fn language_target_for_rejects_js_runners() {
+    assert!(
+        super::language_target_for(TestRunner::Vitest, None, None, "src/value.test.ts").is_none()
+    );
+}
+
+#[test]
 fn php_laravel_uses_artisan_test() {
     let target = target_for(
         TestRunner::Php,

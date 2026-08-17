@@ -46,9 +46,22 @@ fn cargo_projects_read_package_name_from_manifest() {
             .join("../../test-cases/codebase-analysis/cargo-test-plan/fixture"),
     );
     let mut config = NoMistakesConfig::default();
-    config.tests.rust.packages = vec!["app".to_string()];
+    config.tests.rust.packages = vec![
+        "app".to_string(),
+        "missing".to_string(),
+        "unnamed".to_string(),
+    ];
     let projects = language_projects(&root, &config, TestRunner::Cargo);
     assert_eq!(projects[0].runner_project_arg.as_deref(), Some("app"));
+    assert_eq!(projects[1].runner_project_arg.as_deref(), Some("missing"));
+    assert_eq!(projects[2].runner_project_arg.as_deref(), Some("unnamed"));
+}
+
+#[test]
+fn non_language_runner_returns_no_projects() {
+    let root = fixture_root();
+    let config = NoMistakesConfig::default();
+    assert!(language_projects(&root, &config, TestRunner::Vitest).is_empty());
 }
 
 #[test]
