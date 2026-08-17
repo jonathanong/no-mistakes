@@ -41,6 +41,8 @@ include!("builder_helpers.rs");
 include!("edge_lang_frontends.rs");
 include!("edge_lang_domains.rs");
 include!("edge_lang_queues.rs");
+#[cfg(feature = "test-instrumentation")]
+include!("edge_lang_frontends_bench.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy_vitest_setup.rs");
 include!("methods_lazy.rs");
