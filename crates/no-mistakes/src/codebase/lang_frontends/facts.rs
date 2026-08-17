@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LangFileFacts {
     pub path: PathBuf,
     pub package: Option<String>,
@@ -15,7 +15,7 @@ pub(crate) struct LangFileFacts {
     pub mods: Vec<String>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct LangFactMap {
     pub files: BTreeMap<PathBuf, LangFileFacts>,
     pub declarations: HashMap<String, BTreeSet<PathBuf>>,

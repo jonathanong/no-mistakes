@@ -52,37 +52,19 @@ pub(crate) fn collect_all_lang_facts(
     all_files: &[PathBuf],
     config: &LangFrontendConfig,
 ) -> CollectedLangFacts {
-    let ((python, go), (rust, (ruby, php))) = rayon::join(
-        || {
-            rayon::join(
-                || collect_python_facts(root, all_files, &config.python_packages),
-                || collect_go_facts(root, all_files, &config.go_modules),
-            )
-        },
-        || {
-            rayon::join(
-                || collect_rust_facts(root, all_files, &config.rust_packages),
-                || {
-                    rayon::join(
-                        || collect_ruby_facts(root, all_files, &config.rails_apps),
-                        || {
-                            collect_php_facts(
-                                root,
-                                all_files,
-                                &config.php_apps,
-                                config.php_framework.as_deref(),
-                            )
-                        },
-                    )
-                },
-            )
-        },
-    );
+    // Each collect_*_facts already file-parallelizes. Overlapping the five
+    // extractors with nested rayon::join raised language_frontends::extract
+    // peak memory 260.8 KB → 688.5 KB, past the extra-join ≤10% memory gate.
     CollectedLangFacts {
-        python,
-        go,
-        rust,
-        ruby,
-        php,
+        python: collect_python_facts(root, all_files, &config.python_packages),
+        go: collect_go_facts(root, all_files, &config.go_modules),
+        rust: collect_rust_facts(root, all_files, &config.rust_packages),
+        ruby: collect_ruby_facts(root, all_files, &config.rails_apps),
+        php: collect_php_facts(
+            root,
+            all_files,
+            &config.php_apps,
+            config.php_framework.as_deref(),
+        ),
     }
 }
