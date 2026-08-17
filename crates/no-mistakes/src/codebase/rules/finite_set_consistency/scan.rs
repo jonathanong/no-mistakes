@@ -36,7 +36,7 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
         .iter()
         .any(|spec| spec.kind == extract::PATH_REGEX_CAPTURE)
     {
-        extract::path_regex_capture_files(root, config, rule, sources, &skip, target_roots)?
+        extract::path_regex_capture_files(root, config, rule, sources, &skip, target_roots, files)?
     } else {
         Vec::new()
     };

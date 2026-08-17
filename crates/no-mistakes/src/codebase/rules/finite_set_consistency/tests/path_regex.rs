@@ -86,7 +86,8 @@ comparisons:
     );
     config.rules[0].exclude = vec![".claude/**".to_string()];
 
-    let findings = check_with_files_and_sources(&root, &config, &[], &sources).unwrap();
+    let files = sources.inventory().target_file_paths();
+    let findings = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
 
     assert!(
         findings.iter().any(|finding| {
@@ -153,4 +154,47 @@ comparisons:
     )
     .unwrap();
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[cfg(unix)]
+#[test]
+fn path_regex_capture_does_not_reopen_regular_files_omitted_from_the_work_list() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let findings = check_with_files_and_sources(
+        &root,
+        &path_regex_config(
+            r#"
+sets:
+  - name: kept
+    kind: path-regex-capture
+    pattern: "^(?<value>alpha)\\.txt$"
+  - name: omitted
+    kind: path-regex-capture
+    pattern: "^(?<value>beta)\\.txt$"
+comparisons:
+  - left: kept
+    right: omitted
+    mode: equal-set
+"#,
+        ),
+        &[root.join("alpha.txt")],
+        &sources,
+    )
+    .unwrap();
+
+    assert!(
+        findings.iter().any(|finding| {
+            finding.message.contains("kept contains `alpha`")
+                && finding.message.contains("omitted does not")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("`beta`")),
+        "{findings:?}"
+    );
 }

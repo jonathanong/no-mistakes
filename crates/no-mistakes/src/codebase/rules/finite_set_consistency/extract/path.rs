@@ -12,16 +12,29 @@ pub(in super::super) fn path_regex_capture_files(
     sources: &crate::codebase::ts_source::SourceStore,
     skip: &HashSet<&str>,
     target_roots: &[PathBuf],
+    files: &[PathBuf],
 ) -> Result<Vec<PathBuf>> {
-    let entries: Vec<PathBuf> = sources
+    let extras: Vec<PathBuf> = sources
         .inventory()
         .path_entry_paths()
         .into_iter()
         .filter(|path| {
+            sources
+                .inventory()
+                .classification_for_path(path)
+                .is_some_and(|classification| !classification.target_is_file())
+        })
+        .filter(|path| {
             crate::codebase::rules::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
         })
         .collect();
-    crate::codebase::rules::path_filter::filter_rule_files(root, config, rule, &entries)
+    let extras =
+        crate::codebase::rules::path_filter::filter_rule_files(root, config, rule, &extras)?;
+    let mut entries = files.to_vec();
+    entries.extend(extras);
+    entries.sort();
+    entries.dedup();
+    Ok(entries)
 }
 
 pub(in super::super) fn extract_path_regex_set(
