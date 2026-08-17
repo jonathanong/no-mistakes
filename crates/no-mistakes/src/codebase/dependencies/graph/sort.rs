@@ -5,26 +5,6 @@ fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
     }
 }
 
-#[cfg(test)]
-fn node_sort_key(n: &NodeId) -> String {
-    match n {
-        NodeId::File(p) => p.to_string_lossy().into_owned(),
-        NodeId::Symbol { file, symbol } => format!("{}#{symbol}", file.to_string_lossy()),
-        NodeId::Module(specifier) => format!("module:{specifier}"),
-        NodeId::QueueJob { queue_file, job } => {
-            format!("{}#{}", queue_file.to_string_lossy(), job)
-        }
-        NodeId::WorkflowJob { workflow_file, job } => {
-            format!("{}#job:{job}", workflow_file.to_string_lossy())
-        }
-        NodeId::WorkflowStep {
-            workflow_file,
-            job,
-            step,
-        } => format!("{}#job:{job}/step:{step}", workflow_file.to_string_lossy()),
-    }
-}
-
 fn cmp_node_sort_keys(left: &NodeId, right: &NodeId) -> std::cmp::Ordering {
     cmp_concatenated(&node_sort_parts(left), &node_sort_parts(right))
 }
