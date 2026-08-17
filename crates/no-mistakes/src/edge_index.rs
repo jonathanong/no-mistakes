@@ -89,4 +89,16 @@ where
             adjacent.dedup();
         }
     }
+
+    pub(crate) fn sort_adjacency_by_cached_key<K>(
+        &mut self,
+        mut key: impl FnMut(&(Node, Kind)) -> K,
+    ) where
+        K: Ord,
+    {
+        for adjacent in self.forward.values_mut().chain(self.reverse.values_mut()) {
+            adjacent.sort_by_cached_key(&mut key);
+            adjacent.dedup();
+        }
+    }
 }
