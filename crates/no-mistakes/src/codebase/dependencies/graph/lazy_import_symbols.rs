@@ -9,12 +9,15 @@ fn push_unvisited_symbol_pair(
     }
 }
 
-fn bfs_skipping_symbol_owner_files(
+fn bfs_skipping_symbol_owner_files<A>(
     starts: &[NodeId],
-    edges: &EdgeMap,
+    edges: &HashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
-) -> Vec<NodeEntry> {
+) -> Vec<NodeEntry>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
     let mut visited: HashSet<(NodeId, Option<PathBuf>)> = HashSet::new();
     let mut queue: VecDeque<(NodeId, usize, Option<PathBuf>)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
@@ -49,7 +52,7 @@ fn bfs_skipping_symbol_owner_files(
         }
 
         if let Some(neighbors) = edges.get(&node) {
-            for (neighbor, kind) in neighbors {
+            for (neighbor, kind) in neighbors.as_ref() {
                 if let (
                     NodeId::Symbol {
                         file: owner,
@@ -108,14 +111,19 @@ fn bfs_skipping_symbol_owner_files(
     result
 }
 
-fn symbol_importer_files_by_owner(edges: &EdgeMap) -> HashMap<PathBuf, HashSet<PathBuf>> {
+fn symbol_importer_files_by_owner<A>(
+    edges: &HashMap<NodeId, A>,
+) -> HashMap<PathBuf, HashSet<PathBuf>>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
     let mut map: HashMap<PathBuf, HashSet<PathBuf>> = HashMap::new();
     for (target, importers) in edges {
         let NodeId::Symbol { file: owner, .. } = target else {
             continue;
         };
         let files = map.entry(owner.to_path_buf()).or_default();
-        for (importer, _) in importers {
+        for (importer, _) in importers.as_ref() {
             match importer {
                 NodeId::File(file) | NodeId::Symbol { file, .. } => {
                     files.insert(file.to_path_buf());

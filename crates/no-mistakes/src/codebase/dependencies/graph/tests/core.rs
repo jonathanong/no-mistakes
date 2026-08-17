@@ -535,7 +535,19 @@ fn node_sorting_breaks_display_collisions_by_typed_identity() {
         .map(|target| (target, EdgeKind::Import))
         .collect::<Vec<_>>();
 
-    assert_eq!(first.forward().get(&source), Some(&expected));
-    assert_eq!(second.forward().get(&source), Some(&expected));
+    assert_eq!(
+        first
+            .forward()
+            .get(&source)
+            .map(|adj| adj.neighbors.as_slice()),
+        Some(expected.as_slice())
+    );
+    assert_eq!(
+        second
+            .forward()
+            .get(&source)
+            .map(|adj| adj.neighbors.as_slice()),
+        Some(expected.as_slice())
+    );
     assert_eq!(first.edges(), second.edges());
 }

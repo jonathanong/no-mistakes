@@ -1,3 +1,4 @@
+use super::adjacency::{into_adjacency_map, push_ordinal};
 use super::{CanonicalEdge, EdgeIndex};
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
@@ -25,21 +26,17 @@ where
         edges.sort_by(&mut compare);
         edges.dedup();
 
-        let mut forward_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
-        let mut reverse_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
+        let mut forward = into_adjacency_map(forward);
+        let mut reverse = into_adjacency_map(reverse);
         for (ordinal, edge) in edges.iter().enumerate() {
-            let forward = forward_ordinals.entry(edge.from.clone()).or_default();
-            forward.push(ordinal);
-            let reverse = reverse_ordinals.entry(edge.to.clone()).or_default();
-            reverse.push(ordinal);
+            push_ordinal(&mut forward, &edge.from, ordinal);
+            push_ordinal(&mut reverse, &edge.to, ordinal);
         }
 
         Self {
             edges,
             forward,
             reverse,
-            forward_ordinals,
-            reverse_ordinals,
         }
     }
 }
