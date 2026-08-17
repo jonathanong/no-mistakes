@@ -1,3 +1,4 @@
+use super::super::adjacency;
 use super::super::{CanonicalEdge, EdgeIndex};
 #[cfg(debug_assertions)]
 use std::collections::HashSet;
@@ -20,26 +21,18 @@ where
         let mut index = Self::default();
         for edge in edges {
             let ordinal = index.edges.len();
-            index
-                .forward
-                .entry(edge.from.clone())
-                .or_default()
-                .push((edge.to.clone(), edge.kind.clone()));
-            index
-                .reverse
-                .entry(edge.to.clone())
-                .or_default()
-                .push((edge.from.clone(), edge.kind.clone()));
-            index
-                .forward_ordinals
-                .entry(edge.from.clone())
-                .or_default()
-                .push(ordinal);
-            index
-                .reverse_ordinals
-                .entry(edge.to.clone())
-                .or_default()
-                .push(ordinal);
+            adjacency::push_neighbor(
+                &mut index.forward,
+                &edge.from,
+                (edge.to.clone(), edge.kind.clone()),
+                ordinal,
+            );
+            adjacency::push_neighbor(
+                &mut index.reverse,
+                &edge.to,
+                (edge.from.clone(), edge.kind.clone()),
+                ordinal,
+            );
             index.edges.push(edge);
         }
         index.sort_adjacency_by(|left, right| left.cmp(right));

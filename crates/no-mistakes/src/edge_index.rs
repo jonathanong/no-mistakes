@@ -2,11 +2,13 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::Hash;
 
+mod adjacency;
 mod aliases;
 mod build;
 mod prepared;
 mod traversal;
 
+pub(crate) use adjacency::Adjacency;
 pub(crate) use aliases::NodeAliases;
 pub(crate) use prepared::PreparedRelationshipIndex;
 
@@ -14,6 +16,8 @@ pub(crate) use prepared::PreparedRelationshipIndex;
 mod test_support;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_extend;
 
 /// One canonical, typed relationship in a request-scoped edge index.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -45,10 +49,8 @@ pub(crate) enum EdgeDirection {
 #[derive(Debug, Clone)]
 pub(crate) struct EdgeIndex<Node, Kind> {
     edges: Vec<CanonicalEdge<Node, Kind>>,
-    forward: HashMap<Node, Vec<(Node, Kind)>>,
-    reverse: HashMap<Node, Vec<(Node, Kind)>>,
-    forward_ordinals: HashMap<Node, Vec<usize>>,
-    reverse_ordinals: HashMap<Node, Vec<usize>>,
+    forward: HashMap<Node, Adjacency<Node, Kind>>,
+    reverse: HashMap<Node, Adjacency<Node, Kind>>,
 }
 
 impl<Node, Kind> Default for EdgeIndex<Node, Kind> {
@@ -57,8 +59,6 @@ impl<Node, Kind> Default for EdgeIndex<Node, Kind> {
             edges: Vec::new(),
             forward: HashMap::new(),
             reverse: HashMap::new(),
-            forward_ordinals: HashMap::new(),
-            reverse_ordinals: HashMap::new(),
         }
     }
 }
@@ -72,11 +72,11 @@ where
         &self.edges
     }
 
-    pub(crate) fn forward(&self) -> &HashMap<Node, Vec<(Node, Kind)>> {
+    pub(crate) fn forward(&self) -> &HashMap<Node, Adjacency<Node, Kind>> {
         &self.forward
     }
 
-    pub(crate) fn reverse(&self) -> &HashMap<Node, Vec<(Node, Kind)>> {
+    pub(crate) fn reverse(&self) -> &HashMap<Node, Adjacency<Node, Kind>> {
         &self.reverse
     }
 
@@ -86,7 +86,6 @@ where
     ) {
         for adjacent in self.forward.values_mut().chain(self.reverse.values_mut()) {
             adjacent.sort_by(&mut compare);
-            adjacent.dedup();
         }
     }
 
@@ -98,7 +97,6 @@ where
     {
         for adjacent in self.forward.values_mut().chain(self.reverse.values_mut()) {
             adjacent.sort_by_cached_key(&mut key);
-            adjacent.dedup();
         }
     }
 }

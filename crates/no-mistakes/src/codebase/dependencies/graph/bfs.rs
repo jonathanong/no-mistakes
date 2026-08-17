@@ -1,29 +1,38 @@
-fn bfs(
+fn bfs<A>(
     starts: &[NodeId],
-    edges: &EdgeMap,
+    edges: &HashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
-) -> Vec<NodeEntry> {
+) -> Vec<NodeEntry>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
     bfs_with_file_universe(starts, edges, max_depth, allowed, None)
 }
 
-fn bfs_in_file_universe(
+fn bfs_in_file_universe<A>(
     starts: &[NodeId],
-    edges: &EdgeMap,
+    edges: &HashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
     file_universe: &HashSet<PathBuf>,
-) -> Vec<NodeEntry> {
+) -> Vec<NodeEntry>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
     bfs_with_file_universe(starts, edges, max_depth, allowed, Some(file_universe))
 }
 
-fn bfs_with_file_universe(
+fn bfs_with_file_universe<A>(
     starts: &[NodeId],
-    edges: &EdgeMap,
+    edges: &HashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
     file_universe: Option<&HashSet<PathBuf>>,
-) -> Vec<NodeEntry> {
+) -> Vec<NodeEntry>
+where
+    A: AsRef<[(NodeId, EdgeKind)]>,
+{
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
@@ -51,17 +60,20 @@ fn bfs_with_file_universe(
         }
 
         if let Some(neighbors) = edges.get(&node) {
-            for (neighbor, kind) in neighbors {
+            for (neighbor, kind) in neighbors.as_ref() {
                 if file_universe.is_some_and(|universe| !neighbor.is_in_file_universe(universe)) {
                     continue;
                 }
-                if dynamic_import_files.contains(&node)
-                    && matches!(neighbor, NodeId::Symbol { .. })
+                if dynamic_import_files.contains(&node) && matches!(neighbor, NodeId::Symbol { .. })
                 {
                     continue;
                 }
-                let owner_bridge_allowed =
-                    symbol_owner_bridge_allowed(&node, neighbor, &root_nodes, &dynamic_import_files);
+                let owner_bridge_allowed = symbol_owner_bridge_allowed(
+                    &node,
+                    neighbor,
+                    &root_nodes,
+                    &dynamic_import_files,
+                );
                 if is_symbol_owner_bridge(&node, neighbor) && !owner_bridge_allowed {
                     continue;
                 }
