@@ -22,6 +22,28 @@ async def create_item():
 }
 
 #[test]
+fn docstring_decorator_examples_are_not_routes() {
+    let source = r#"
+def example():
+    """
+    @app.route("/docs-example")
+    def docs_example():
+        return []
+    """
+    return None
+
+@app.route("/users")
+def users():
+    return []
+"#;
+    let routes = extract_http_routes(source);
+    assert_eq!(routes, vec![("/users".into(), "users".into())]);
+    assert!(!routes
+        .iter()
+        .any(|(route, handler)| route == "/docs-example" || handler == "docs_example"));
+}
+
+#[test]
 fn computed_flask_path_is_not_a_route() {
     let source = r#"
 prefix = "/api"

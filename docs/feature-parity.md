@@ -122,10 +122,10 @@ Counterexample: a `no-mistakes python` command that walks the tree, parses
 files again, and builds a standalone import graph. That violates prepared
 analysis ownership.
 
-## Python, Django, Celery
+## Python, Django, Flask, FastAPI, Celery
 
-Python support is the language frontend. Django and Celery are configured
-domain extractors on top of it.
+Python support is the language frontend. Django, Flask, FastAPI, and Celery
+are configured domain extractors on top of it.
 
 | Feature | TS/JS reference | Python equivalent |
 | --- | --- | --- |
@@ -165,6 +165,8 @@ Dynamic forms do not:
 importlib.import_module(module_name)
 celery_app.send_task(task_name, args=args)
 path(prefix + "/users/", views.user_list)
+@app.route(prefix + "/users")
+@router.post(prefix + "/items")
 ```
 
 Django settings, middleware, and model graphs are out of scope for the first

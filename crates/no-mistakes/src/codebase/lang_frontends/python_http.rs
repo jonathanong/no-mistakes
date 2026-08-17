@@ -2,8 +2,9 @@ use regex::Regex;
 use std::sync::OnceLock;
 
 pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
-    let mut routes = extract_django_routes(source);
-    routes.extend(extract_decorator_routes(source));
+    let source = super::super::strip::mask_triple_quoted_strings(source);
+    let mut routes = extract_django_routes(&source);
+    routes.extend(extract_decorator_routes(&source));
     routes.sort();
     routes.dedup();
     routes

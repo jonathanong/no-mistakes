@@ -87,6 +87,15 @@ fn language_frontend_edges_cover_configured_extractors() {
                 .as_file()
                 .is_some_and(|path| path.ends_with("handlers.py"))
     }));
+    assert!(flask_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("fastapi_app.py"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("handlers.py"))
+    }));
     assert!(flask_edges.iter().all(|(from, _, kind)| {
         *kind != EdgeKind::RouteRef
             || from

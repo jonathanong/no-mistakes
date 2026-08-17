@@ -61,6 +61,15 @@ fn python_masks_docstring_symbols_and_keeps_include_routes() {
         .iter()
         .any(|(route, handler)| route == "api/" && handler == "app.api.urls"));
     assert!(!mask_strings(r#"x = "class Hidden:" """class Doc:""" 'ok'"#).contains("Hidden"));
+    assert!(!super::strip::mask_triple_quoted_strings(
+        r#"'''@app.route("/docs")
+def hidden():
+    pass
+'''
+@app.route("/users")
+"#
+    )
+    .contains("/docs"));
 }
 
 #[test]
