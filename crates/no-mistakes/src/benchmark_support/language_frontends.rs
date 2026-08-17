@@ -49,7 +49,10 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
         root,
         files,
         languages: LangFrontendConfig {
-            python_packages: vec!["python-celery-django/app".into()],
+            python_packages: vec![
+                "python-celery-django/app".into(),
+                "python-flask-fastapi".into(),
+            ],
             go_modules: vec!["go-asynq".into(), "go-asynq/worker".into()],
             rust_packages: vec!["rust-mods".into(), "rust-mods/src".into()],
             rails_apps: vec!["rails-jobs".into()],

@@ -71,6 +71,38 @@ fn language_frontend_edges_cover_configured_extractors() {
             && to.as_file().is_some_and(|path| path.ends_with("views.py"))
     }));
 
+    let flask = lang_fixture("python-flask-fastapi");
+    let flask_options = GraphConfigOptions {
+        python_packages: vec![".".into()],
+        ..options.clone()
+    };
+    let flask_edges =
+        collect_language_frontend_edges_for_test(&flask, &lang_files(&flask), Some(&flask_options));
+    assert!(flask_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("flask_app.py"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("handlers.py"))
+    }));
+    assert!(flask_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("fastapi_app.py"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("handlers.py"))
+    }));
+    assert!(flask_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("computed.py"))
+    }));
+
     let go = lang_fixture("go-asynq");
     let go_edges = collect_language_frontend_edges_for_test(&go, &lang_files(&go), Some(&options));
     assert!(go_edges

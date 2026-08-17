@@ -72,6 +72,26 @@ fn copy_quoted(
     }
 }
 
+/// Replace triple-quoted contents so docstring examples are not routes.
+pub(crate) fn mask_triple_quoted_strings(source: &str) -> String {
+    let chars: Vec<char> = source.chars().collect();
+    let mut out = String::with_capacity(source.len());
+    let mut i = 0;
+    while i < chars.len() {
+        let ch = chars[i];
+        if (ch == '"' || ch == '\'')
+            && chars.get(i + 1) == Some(&ch)
+            && chars.get(i + 2) == Some(&ch)
+        {
+            i = mask_quoted(&chars, &mut out, i, ch);
+            continue;
+        }
+        out.push(ch);
+        i += 1;
+    }
+    out
+}
+
 /// Replace string contents with spaces so docstring examples are not symbols.
 pub(crate) fn mask_strings(source: &str) -> String {
     let chars: Vec<char> = source.chars().collect();

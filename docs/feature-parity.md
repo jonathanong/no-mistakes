@@ -122,10 +122,10 @@ Counterexample: a `no-mistakes python` command that walks the tree, parses
 files again, and builds a standalone import graph. That violates prepared
 analysis ownership.
 
-## Python, Django, Celery
+## Python, Django, Flask, FastAPI, Celery
 
-Python support is the language frontend. Django and Celery are configured
-domain extractors on top of it.
+Python support is the language frontend. Django, Flask, FastAPI, and Celery
+are configured domain extractors on top of it.
 
 | Feature | TS/JS reference | Python equivalent |
 | --- | --- | --- |
@@ -133,7 +133,7 @@ domain extractors on top of it.
 | Package identity | `package.json` workspaces | configured package roots; `pyproject.toml` / `setup.cfg` names |
 | Symbols | exports and importers | module-level `def` / `class` and qualified references |
 | Tests | `tests plan vitest` | `tests plan python` over pytest / unittest files |
-| HTTP routes | Express / Hono / Koa | Django URLconf → view, plus Flask / FastAPI if configured |
+| HTTP routes | Express / Hono / Koa | Django URLconf → view, plus configured Flask / FastAPI decorator literals |
 | Queues | BullMQ / glide-mq | Celery `@shared_task` / `@app.task`, `.delay(` / `.apply_async(` |
 | Lockfile | pnpm / npm / yarn / bun | `poetry.lock`, `uv.lock`, `Pipfile.lock` |
 
@@ -165,6 +165,8 @@ Dynamic forms do not:
 importlib.import_module(module_name)
 celery_app.send_task(task_name, args=args)
 path(prefix + "/users/", views.user_list)
+@app.route(prefix + "/users")
+@router.post(prefix + "/items")
 ```
 
 Django settings, middleware, and model graphs are out of scope for the first
