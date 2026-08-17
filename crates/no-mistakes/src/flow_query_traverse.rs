@@ -123,7 +123,7 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             depth,
             file: None,
             symbol: None,
-            module: Some(module.clone()),
+            module: Some(module.to_string()),
             queue_file: None,
             job: None,
             workflow_file: None,

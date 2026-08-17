@@ -161,7 +161,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                         })
                     }
                     NodeId::Module(specifier) => OutputNode::Module(OutputModule {
-                        module: specifier.clone(),
+                        module: specifier.to_string(),
                         depth: entry.depth,
                         via,
                     }),

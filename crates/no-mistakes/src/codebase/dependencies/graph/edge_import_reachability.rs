@@ -197,5 +197,5 @@ fn bare_module_node(specifier: &str) -> Option<NodeId> {
     {
         return None;
     }
-    Some(NodeId::Module(specifier.to_string()))
+    Some(NodeId::module(specifier))
 }

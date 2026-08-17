@@ -249,7 +249,7 @@ fn graph_includes_external_module_and_package_dependency_nodes() {
 
     let deps = graph.deps_of(&[NodeId::file(root.join("src/entry.mts"))], None, None);
     assert!(deps.iter().any(|entry| {
-        entry.node == NodeId::Module("@react/client".to_string())
+        entry.node == NodeId::module("@react/client")
             && entry.via.contains(&EdgeKind::Import)
     }));
     assert!(deps.iter().any(|entry| {
@@ -258,11 +258,11 @@ fn graph_includes_external_module_and_package_dependency_nodes() {
     }));
     assert!(!deps
         .iter()
-        .any(|entry| entry.node == NodeId::Module("@local/pkg".to_string())));
+        .any(|entry| entry.node == NodeId::module("@local/pkg")));
 
     let manifest_deps = graph.deps_of(&[NodeId::file(root.join("package.json"))], None, None);
     assert!(manifest_deps.iter().any(|entry| {
-        entry.node == NodeId::Module("@react/server".to_string())
+        entry.node == NodeId::module("@react/server")
             && entry.via.contains(&EdgeKind::PackageDependency)
     }));
 }

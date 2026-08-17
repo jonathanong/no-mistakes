@@ -5,7 +5,7 @@ use crate::config::v2::NoMistakesConfig;
 fn caller_parts_ignores_non_file_backed_nodes() {
     let root = Path::new("/repo");
 
-    assert!(caller_parts(&NodeId::Module("react".to_string()), root).is_none());
+    assert!(caller_parts(&NodeId::module("react"), root).is_none());
     assert!(
         caller_parts(
             &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email"),
@@ -56,7 +56,7 @@ fn suggested_tests_merges_duplicate_test_files() {
             via: vec![EdgeKind::TestOf],
         },
         NodeEntry {
-            node: NodeId::Module("vitest".to_string()),
+            node: NodeId::module("vitest"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },

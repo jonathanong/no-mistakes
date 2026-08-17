@@ -22,7 +22,7 @@ mod tests_types {
         assert_eq!(symbol_node.as_file(), Some(file_path.as_path()));
         assert_eq!(symbol_node.as_path(), Some(file_path.as_path()));
 
-        let module_node = NodeId::Module("react".to_string());
+        let module_node = NodeId::Module("react".to_string().into());
         assert_eq!(module_node.as_file(), None);
         assert_eq!(module_node.as_path(), None);
 
@@ -137,6 +137,56 @@ mod tests_types {
             NodeId::Symbol { symbol, .. } => assert!(Arc::ptr_eq(&owned, &symbol)),
             other => panic!("expected Symbol, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn interned_paths_normalize_dot_dotdot_and_trailing_slash() {
+        let cases = [
+            ("src/./a.ts", "src/a.ts"),
+            ("src/foo/../a.ts", "src/a.ts"),
+            ("src/a.ts/", "src/a.ts"),
+            ("src/./foo/../a.ts", "src/a.ts"),
+        ];
+        for (raw, expected) in cases {
+            let left = NodeId::file(raw);
+            let right = NodeId::file(expected);
+            assert_eq!(left, right, "eq {raw} vs {expected}");
+            assert_eq!(hash_of(&left), hash_of(&right), "hash {raw} vs {expected}");
+
+            let left_path = left.as_path().expect("file node");
+            let right_path = right.as_path().expect("file node");
+            assert_eq!(
+                left_path.as_os_str(),
+                right_path.as_os_str(),
+                "os-str bytes {raw} vs {expected}"
+            );
+            assert_eq!(left_path, right_path, "path eq {raw} vs {expected}");
+        }
+    }
+
+    #[test]
+    fn file_symbol_and_queue_job_on_same_path_are_not_equal() {
+        let path = "src/a.ts";
+        let file = NodeId::file(path);
+        let symbol = NodeId::symbol(path, "job");
+        let queue = NodeId::queue_job(path, "job");
+        assert_ne!(file, symbol);
+        assert_ne!(file, queue);
+        assert_ne!(symbol, queue);
+        assert_ne!(hash_of(&file), hash_of(&symbol));
+        assert_ne!(hash_of(&file), hash_of(&queue));
+        assert_ne!(hash_of(&symbol), hash_of(&queue));
+    }
+
+    #[test]
+    fn module_constructor_matches_interned_variant() {
+        let via_ctor = NodeId::module("lodash");
+        let via_variant = NodeId::Module("lodash".into());
+        let via_string = NodeId::Module("lodash".to_string().into());
+        assert_eq!(via_ctor, via_variant);
+        assert_eq!(via_ctor, via_string);
+        assert_eq!(hash_of(&via_ctor), hash_of(&via_variant));
+        assert_eq!(hash_of(&via_ctor), hash_of(&via_string));
     }
 
     #[test]

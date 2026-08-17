@@ -108,7 +108,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     );
     assert_eq!(
         target_node(imported.get("useMemo").unwrap()),
-        (NodeId::Module("react".to_string()), EdgeKind::Import)
+        (NodeId::module("react"), EdgeKind::Import)
     );
     assert!(!imported.contains_key("missing"));
 
@@ -129,7 +129,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     );
     assert_eq!(
         namespace_target_node(namespaces.get("z").unwrap(), "object"),
-        (NodeId::Module("zod".to_string()), EdgeKind::Import)
+        (NodeId::module("zod"), EdgeKind::Import)
     );
     assert!(!namespaces.contains_key("nope"));
 
@@ -422,7 +422,7 @@ fn symbol_bfs_records_alternate_via_kinds_for_existing_nodes() {
     let root = NodeId::symbol(p("/repo/src/root.mts"), "root");
     let left = NodeId::symbol(p("/repo/src/left.mts"), "left");
     let right = NodeId::symbol(p("/repo/src/right.mts"), "right");
-    let target = NodeId::Module("react".to_string());
+    let target = NodeId::module("react");
     let mut edges = EdgeMap::new();
     edges.insert(
         root.clone(),
