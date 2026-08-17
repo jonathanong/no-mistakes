@@ -3,7 +3,7 @@ use crate::playwright::selectors::{compile_selector_regexes_with_html_ids, Selec
 #[cfg(test)]
 #[path = "regex_cache_tests.rs"]
 mod tests;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 #[derive(Clone, Default)]
@@ -53,7 +53,12 @@ impl SelectorRegexKey {
         html_ids: bool,
     ) -> Self {
         Self {
-            selector_attributes: selector_attributes.to_vec(),
+            selector_attributes: selector_attributes
+                .iter()
+                .cloned()
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect(),
             component_selector_attributes: component_selector_attributes
                 .iter()
                 .map(|(component, attribute)| (component.clone(), attribute.clone()))

@@ -122,6 +122,11 @@ fn identifier_shadow_scan_covers_binding_edge_cases() {
         bindings::function_destructure_binding_ends("function Inner()", "").len(),
         0
     );
+    assert!(!bindings::is_identifier_at("cafédataPw", 0, "dataPw"));
+    assert_eq!(
+        bindings::function_destructure_binding_ends("function café({ dataPw }) {", "dataPw").len(),
+        1
+    );
     assert!(!has_unclosed_jsx_start("{foo"));
     assert_eq!(matching_close_brace("{foo"), None);
     assert_eq!(matching_close_brace("{foo{bar}"), None);

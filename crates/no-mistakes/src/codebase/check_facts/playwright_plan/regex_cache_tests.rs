@@ -15,6 +15,19 @@ fn get_or_compile_reuses_the_same_regex_set_for_identical_attributes() {
 }
 
 #[test]
+fn get_or_compile_reuses_reversed_and_duplicated_selector_attributes() {
+    let mut cache = SelectorRegexCache::default();
+    let components = BTreeMap::new();
+    let first = cache.get_or_compile(
+        &["data-b".into(), "data-a".into(), "data-b".into()],
+        &components,
+        false,
+    );
+    let second = cache.get_or_compile(&["data-a".into(), "data-b".into()], &components, false);
+    assert!(Arc::ptr_eq(&first, &second));
+}
+
+#[test]
 fn extend_keeps_the_first_compiled_entry_for_a_key() {
     let attributes = vec!["data-pw".to_string()];
     let components = BTreeMap::new();

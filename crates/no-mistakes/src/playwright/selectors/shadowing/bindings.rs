@@ -99,7 +99,12 @@ fn find_identifier(source: &str, name: &str, start: usize, end: usize) -> Option
         if is_identifier_at(source, at, name) {
             return Some(at);
         }
-        search += rel + 1;
+        let skip = haystack[search + rel..]
+            .chars()
+            .next()
+            .map(char::len_utf8)
+            .unwrap_or(1);
+        search += rel + skip;
     }
     None
 }
