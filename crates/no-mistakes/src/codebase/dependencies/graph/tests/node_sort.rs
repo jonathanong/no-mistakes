@@ -1,6 +1,7 @@
-#[test]
-fn borrowed_node_sort_keys_match_formatted_string_order() {
-    let nodes = [
+use super::super::*;
+
+fn node_sort_table() -> [NodeId; 12] {
+    [
         NodeId::file("/repo/a.ts"),
         NodeId::symbol("/repo/a.ts", "z"),
         NodeId::symbol("/repo/a.ts", "job"),
@@ -13,7 +14,12 @@ fn borrowed_node_sort_keys_match_formatted_string_order() {
         NodeId::Module("pkg".into()),
         NodeId::Module("other".into()),
         NodeId::file("module:pkg"),
-    ];
+    ]
+}
+
+#[test]
+fn borrowed_node_sort_keys_match_formatted_string_order() {
+    let nodes = node_sort_table();
     for left in &nodes {
         for right in &nodes {
             assert_eq!(
@@ -41,6 +47,51 @@ fn workflow_step_decimal_suffix_matches_formatted_string_order() {
                 node_sort_key(left).cmp(&node_sort_key(right)),
                 "step suffix mismatch for {left:?} vs {right:?}"
             );
+            assert_eq!(
+                cached_node_sort_key(left).cmp(&cached_node_sort_key(right)),
+                node_sort_key(left).cmp(&node_sort_key(right)),
+                "cached step suffix mismatch for {left:?} vs {right:?}"
+            );
         }
     }
+}
+
+#[test]
+fn cached_node_sort_key_matches_formatted_string_order() {
+    let nodes = node_sort_table();
+    for left in &nodes {
+        for right in &nodes {
+            assert_eq!(
+                cached_node_sort_key(left).cmp(&cached_node_sort_key(right)),
+                node_sort_key(left).cmp(&node_sort_key(right)),
+                "cached sort key mismatch for {left:?} vs {right:?}"
+            );
+            assert_eq!(
+                cached_node_sort_key(left) == cached_node_sort_key(right),
+                node_sort_key(left) == node_sort_key(right),
+                "cached sort key eq mismatch for {left:?} vs {right:?}"
+            );
+            assert_eq!(
+                cached_node_sort_key(left).partial_cmp(&cached_node_sort_key(right)),
+                Some(node_sort_key(left).cmp(&node_sort_key(right))),
+                "cached sort key partial_cmp mismatch for {left:?} vs {right:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn cached_adjacency_sort_matches_formatted_node_id_key() {
+    let kinds = [EdgeKind::Import, EdgeKind::Selector, EdgeKind::WorkflowStep];
+    let mut pairs = Vec::new();
+    for node in node_sort_table() {
+        for kind in kinds {
+            pairs.push((node.clone(), kind));
+        }
+    }
+    let mut cached = pairs.clone();
+    cached.sort_by_cached_key(|(n, k)| adjacency_sort_key(n, *k));
+    let mut formatted = pairs;
+    formatted.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), k.sort_key()));
+    assert_eq!(cached, formatted);
 }

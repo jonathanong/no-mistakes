@@ -5,8 +5,8 @@ fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
     }
 }
 
-/// Historical formatted sort key. Built once per node via `sort_by_cached_key`
-/// so large adjacency sorts do n key allocations instead of n log n part walks.
+/// Historical formatted sort key. Test oracle for `cached_node_sort_key`.
+#[cfg_attr(not(test), allow(dead_code))]
 fn node_sort_key(n: &NodeId) -> String {
     match n {
         NodeId::File(p) => p.to_string_lossy().into_owned(),
@@ -23,6 +23,59 @@ fn node_sort_key(n: &NodeId) -> String {
             job,
             step,
         } => format!("{}#job:{job}/step:{step}", workflow_file.to_string_lossy()),
+    }
+}
+
+include!("sort_key.rs");
+
+/// File < Symbol < Module < QueueJob < … so display-key collisions keep
+/// historical NodeId order without cloning the node into the cached key.
+fn node_variant_rank(n: &NodeId) -> u8 {
+    match n {
+        NodeId::File(_) => 0,
+        NodeId::Symbol { .. } => 1,
+        NodeId::Module(_) => 2,
+        NodeId::QueueJob { .. } => 3,
+        NodeId::WorkflowJob { .. } => 4,
+        NodeId::WorkflowStep { .. } => 5,
+    }
+}
+
+fn adjacency_sort_key(n: &NodeId, kind: EdgeKind) -> (NodeSortKey, u8, (u8, u8)) {
+    (cached_node_sort_key(n), node_variant_rank(n), kind.sort_key())
+}
+
+fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
+    match n {
+        NodeId::File(path) => NodeSortKey::new(Some(Arc::clone(path)), "", None, None),
+        NodeId::Symbol { file, symbol } => {
+            NodeSortKey::new(Some(Arc::clone(file)), "#", Some(Arc::clone(symbol)), None)
+        }
+        NodeId::Module(specifier) => {
+            NodeSortKey::new(None, "module:", Some(Arc::clone(specifier)), None)
+        }
+        NodeId::QueueJob { queue_file, job } => NodeSortKey::new(
+            Some(Arc::clone(queue_file)),
+            "#",
+            Some(Arc::clone(job)),
+            None,
+        ),
+        NodeId::WorkflowJob { workflow_file, job } => NodeSortKey::new(
+            Some(Arc::clone(workflow_file)),
+            "#job:",
+            Some(Arc::clone(job)),
+            None,
+        ),
+        NodeId::WorkflowStep {
+            workflow_file,
+            job,
+            step,
+        } => NodeSortKey::new(
+            Some(Arc::clone(workflow_file)),
+            "#job:",
+            Some(Arc::clone(job)),
+            Some(*step),
+        ),
     }
 }
 
@@ -49,7 +102,7 @@ fn node_sort_parts<'a>(
         ],
         NodeId::Module(specifier) => [
             "module:".into(),
-            std::borrow::Cow::Borrowed(specifier),
+            std::borrow::Cow::Borrowed(specifier.as_ref()),
             "".into(),
             "".into(),
         ],
@@ -105,7 +158,7 @@ fn cmp_concatenated(
     left: &[std::borrow::Cow<'_, str>],
     right: &[std::borrow::Cow<'_, str>],
 ) -> std::cmp::Ordering {
-    let left_bytes = left.iter().flat_map(|part| part.as_bytes());
-    let right_bytes = right.iter().flat_map(|part| part.as_bytes());
-    left_bytes.cmp(right_bytes)
+    left.iter()
+        .flat_map(|part| part.as_bytes())
+        .cmp(right.iter().flat_map(|part| part.as_bytes()))
 }

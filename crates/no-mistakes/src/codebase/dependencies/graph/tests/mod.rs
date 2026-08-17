@@ -65,7 +65,7 @@ include!("core_resolution.rs");
 include!("core.rs");
 include!("language_frontends.rs");
 include!("language_frontends_more.rs");
-include!("node_sort.rs");
+mod node_sort;
 include!("scoped_universe.rs");
 include!("legacy_symbol_channel.rs");
 include!("session_resolver_cache.rs");
