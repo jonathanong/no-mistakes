@@ -41,12 +41,7 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
     let mut files = discover_visible_paths(&repo)
         .into_iter()
         .map(|path| {
-            let absolute = if path.is_absolute() {
-                path
-            } else {
-                repo.join(path)
-            };
-            crate::codebase::ts_resolver::normalize_path(&absolute)
+            crate::codebase::ts_resolver::normalize_path(&absolutize_discovered_path(&repo, path))
         })
         .filter(|path| path.starts_with(&root))
         .collect::<Vec<_>>();
@@ -124,6 +119,14 @@ pub fn match_language_frontend_queue_globs(
             &fixture.queue_workers,
         ),
         ..LanguageFrontendSummary::default()
+    }
+}
+
+fn absolutize_discovered_path(repo: &std::path::Path, path: PathBuf) -> PathBuf {
+    if path.is_absolute() {
+        path
+    } else {
+        repo.join(path)
     }
 }
 

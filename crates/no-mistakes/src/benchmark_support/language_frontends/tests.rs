@@ -87,3 +87,16 @@ fn queue_glob_match_evaluates_enqueue_and_worker_lists_independently() {
         "independent list evaluation must union disjoint enqueue and worker matches"
     );
 }
+
+#[test]
+fn absolutize_discovered_path_joins_relative_entries() {
+    let repo = std::path::PathBuf::from("/repo");
+    assert_eq!(
+        super::absolutize_discovered_path(&repo, PathBuf::from("/abs/file.rs")),
+        PathBuf::from("/abs/file.rs")
+    );
+    assert_eq!(
+        super::absolutize_discovered_path(&repo, PathBuf::from("rel/file.rs")),
+        repo.join("rel/file.rs")
+    );
+}

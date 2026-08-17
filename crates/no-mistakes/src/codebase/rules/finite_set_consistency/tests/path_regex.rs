@@ -198,3 +198,36 @@ comparisons:
         "{findings:?}"
     );
 }
+
+#[cfg(unix)]
+#[test]
+fn scan_skips_sets_with_empty_names() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let findings = check_with_files_and_sources(
+        &root,
+        &path_regex_config(
+            r#"
+sets:
+  - name: ""
+    kind: path-regex-capture
+    pattern: "^(?<value>missing)$"
+  - name: fileSet
+    kind: path-regex-capture
+    pattern: "^(?<value>alpha)\\.txt$"
+  - name: linkSet
+    kind: path-regex-capture
+    pattern: "^(?<value>alpha)$"
+comparisons:
+  - left: fileSet
+    right: linkSet
+    mode: equal-set
+"#,
+        ),
+        &[root.join("alpha.txt")],
+        &sources,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
