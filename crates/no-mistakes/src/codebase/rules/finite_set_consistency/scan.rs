@@ -59,24 +59,25 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
         );
     }
 
-    let mut findings = sets
-        .values()
-        .flat_map(|set| {
-            set.issues.iter().map(|issue| RuleFinding {
+    let mut findings = Vec::new();
+    for set in sets.values() {
+        for issue in &set.issues {
+            findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: issue.file.clone(),
                 line: issue.line,
                 message: issue.message.clone(),
                 import: None,
                 target: issue.target.clone(),
-            })
-        })
-        .collect::<Vec<_>>();
-    let incomplete_sets = sets
-        .iter()
-        .filter(|(_, set)| extraction_completeness::has_unsuppressed_issues(root, set, sources))
-        .map(|(name, _)| name.as_str())
-        .collect::<BTreeSet<_>>();
+            });
+        }
+    }
+    let mut incomplete_sets = BTreeSet::new();
+    for (name, set) in &sets {
+        if extraction_completeness::has_unsuppressed_issues(root, set, sources) {
+            incomplete_sets.insert(name.as_str());
+        }
+    }
     for comparison in &opts.comparisons {
         let (Some(left), Some(right)) = (sets.get(&comparison.left), sets.get(&comparison.right))
         else {

@@ -117,12 +117,9 @@ fn finite_set_skill_directory_symlinks_match_standalone_and_analyze_project() {
     let result = &aggregate["reports"][0]["result"];
 
     assert_eq!(result, &standalone);
-    assert!(
-        result["rules"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .all(|finding| finding["rule"] != "finite-set-consistency"),
-        "{result}"
-    );
+    // Iterate without a closure: an empty rules array would leave
+    // Iterator::all's predicate as an uncovered function.
+    for finding in result["rules"].as_array().unwrap() {
+        assert_ne!(finding["rule"], "finite-set-consistency", "{result}");
+    }
 }
