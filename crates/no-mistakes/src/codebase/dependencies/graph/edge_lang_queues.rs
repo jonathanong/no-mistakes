@@ -26,7 +26,7 @@ fn emit_queue_edges(
     let mut workers: std::collections::HashMap<String, std::collections::BTreeSet<PathBuf>> =
         std::collections::HashMap::new();
     for file in facts.files.values() {
-        let Some(cluster) = matching_queue_cluster(root, &file.path, &worker_globs, options) else {
+        let Some(cluster) = matching_queue_cluster(root, &file.path, worker_globs, options) else {
             continue;
         };
         for job in &file.queue_workers {
@@ -37,7 +37,7 @@ fn emit_queue_edges(
         }
     }
     for file in facts.files.values() {
-        let Some(cluster) = matching_queue_cluster(root, &file.path, &enqueue_globs, options)
+        let Some(cluster) = matching_queue_cluster(root, &file.path, enqueue_globs, options)
         else {
             continue;
         };
