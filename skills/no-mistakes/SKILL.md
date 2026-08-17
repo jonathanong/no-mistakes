@@ -42,6 +42,7 @@ planner before editing to discover affected tests first (for new files,
 rerun after creating them):
 - Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
 - Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
+- Python / Go / Cargo / Rails / PHP: `no-mistakes tests plan python|go|cargo|rails|php --changed-file <file> --format paths`
 
 See `references/tests.md`.
 For high-signal multi-command workflows around UI selectors, selector-root
@@ -114,6 +115,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, shared-helper test discovery, test deletion, or queue call-disposition question? | Read `references/impact-recipes.md` |
 | Which tests should rerun for everything changed in a diff? | `no-mistakes tests plan vitest --from-git-diff <base>...<head> --format paths` |
 | Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
+| Which Python/Go/Cargo/Rails/PHP tests should rerun? | `no-mistakes tests plan python\|go\|cargo\|rails\|php --changed-file <file> --format paths` |
 | Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
 | Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both` |
@@ -161,6 +163,8 @@ no-mistakes dependents src/utils.mts --root /path/to/project --format json
 # Test selection (preferred over dependents --test)
 no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
 no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+no-mistakes tests plan python --changed-file app/users.py --format paths
+no-mistakes tests plan cargo --changed-file app/src/lib.rs --format commands
 
 # Explain why a test was selected
 no-mistakes tests why tests/users.test.mts --plan plan.json

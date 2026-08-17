@@ -29,6 +29,11 @@ fn framework_test_plan(
         TestFramework::Playwright => config.test_plan.playwright.clone(),
         TestFramework::Vitest => config.test_plan.vitest.clone(),
         TestFramework::Swift => config.test_plan.swift.clone(),
+        TestFramework::Python => config.test_plan.python.clone(),
+        TestFramework::Go => config.test_plan.go.clone(),
+        TestFramework::Cargo => config.test_plan.cargo.clone(),
+        TestFramework::Rails => config.test_plan.rails.clone(),
+        TestFramework::Php => config.test_plan.php.clone(),
     };
     // Compatibility warning bookkeeping is not behavior.
     plan.deprecated_dependencies_key = false;
@@ -45,6 +50,11 @@ fn framework_tests(config: &NoMistakesConfig, framework: TestFramework) -> serde
             serde_json::to_value((&config.tests.vitest, playwright_discovery_ownership(config)))
         }
         TestFramework::Swift => serde_json::to_value(&config.tests.swift),
+        TestFramework::Python => serde_json::to_value(&config.tests.python),
+        TestFramework::Go => serde_json::to_value(&config.tests.go),
+        TestFramework::Cargo => serde_json::to_value(&config.tests.rust),
+        TestFramework::Rails => serde_json::to_value(&config.tests.rails),
+        TestFramework::Php => serde_json::to_value(&config.tests.php),
     }
     .expect("test configuration must serialize")
 }
@@ -73,6 +83,11 @@ fn framework_trigger_projects(
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
         TestFramework::Swift => &config.test_plan.swift,
+        TestFramework::Python => &config.test_plan.python,
+        TestFramework::Go => &config.test_plan.go,
+        TestFramework::Cargo => &config.test_plan.cargo,
+        TestFramework::Rails => &config.test_plan.rails,
+        TestFramework::Php => &config.test_plan.php,
     };
     plan.full_suite_triggers
         .projects

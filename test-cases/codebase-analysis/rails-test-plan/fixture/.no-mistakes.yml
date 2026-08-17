@@ -1,0 +1,22 @@
+projects:
+  web:
+    type: server
+    root: "."
+    routes:
+      - "config/routes.rb"
+    queues:
+      enqueues:
+        - "app/controllers/**/*.rb"
+      workers:
+        - "app/jobs/**/*.rb"
+tests:
+  rails:
+    apps:
+      - "."
+testPlan:
+  rails:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

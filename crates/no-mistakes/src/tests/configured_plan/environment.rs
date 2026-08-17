@@ -20,6 +20,11 @@ pub(super) fn configured_environment(
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
         TestFramework::Swift => &config.test_plan.swift,
+        TestFramework::Python => &config.test_plan.python,
+        TestFramework::Go => &config.test_plan.go,
+        TestFramework::Cargo => &config.test_plan.cargo,
+        TestFramework::Rails => &config.test_plan.rails,
+        TestFramework::Php => &config.test_plan.php,
     };
     let key = normalize_environment(&args.environment);
     for (name, env) in &plan.environments {
@@ -78,6 +83,11 @@ pub(super) fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Vitest => "vitest",
         TestFramework::Dotnet => "dotnet",
         TestFramework::Swift => "swift",
+        TestFramework::Python => "python",
+        TestFramework::Go => "go",
+        TestFramework::Cargo => "cargo",
+        TestFramework::Rails => "rails",
+        TestFramework::Php => "php",
     }
 }
 

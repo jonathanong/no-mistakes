@@ -22,7 +22,7 @@ pub(super) fn native_traceable_changed_files(
     test_filter: &TestFileFilter,
     coverage_hints: &CoverageHints,
 ) -> HashSet<String> {
-    if !matches!(framework, TestFramework::Dotnet | TestFramework::Swift) {
+    if !is_native_framework(framework) {
         return HashSet::new();
     }
     let mut warnings: Vec<Warning> = Vec::new();
@@ -129,7 +129,7 @@ pub(super) fn untraced_native_changes(
     selected_map: &BTreeMap<PathBuf, SelectedTest>,
     extra_traced_changed_files: &HashSet<String>,
 ) -> Vec<PathBuf> {
-    if !matches!(framework, TestFramework::Dotnet | TestFramework::Swift) {
+    if !is_native_framework(framework) {
         return Vec::new();
     }
 
@@ -178,6 +178,18 @@ pub(super) fn native_fallback_tests(
             discovered,
             visible_paths,
         ),
+        TestFramework::Python
+        | TestFramework::Go
+        | TestFramework::Cargo
+        | TestFramework::Rails
+        | TestFramework::Php => super::native_fallback_lang::language_fallback_tests(
+            framework,
+            root,
+            config,
+            trigger_file,
+            all_tests,
+            discovered,
+        ),
         TestFramework::Playwright | TestFramework::Vitest => Vec::new(),
     };
     if scoped.is_empty() && allow_full_suite_fallback {
@@ -207,8 +219,28 @@ fn is_native_source_or_project_change(
                         .split('/')
                         .any(|part| part.eq_ignore_ascii_case("tests")))
         }
+        TestFramework::Python
+        | TestFramework::Go
+        | TestFramework::Cargo
+        | TestFramework::Rails
+        | TestFramework::Php => {
+            super::native_fallback_lang::is_language_native_change(framework, root, config, &rel)
+        }
         TestFramework::Playwright | TestFramework::Vitest => false,
     }
+}
+
+fn is_native_framework(framework: TestFramework) -> bool {
+    matches!(
+        framework,
+        TestFramework::Dotnet
+            | TestFramework::Swift
+            | TestFramework::Python
+            | TestFramework::Go
+            | TestFramework::Cargo
+            | TestFramework::Rails
+            | TestFramework::Php
+    )
 }
 
 fn is_configured_dotnet_solution(root: &Path, config: &NoMistakesConfig, rel: &str) -> bool {
@@ -451,7 +483,7 @@ fn tests_with_target_config_set(
         .collect()
 }
 
-fn slash_path(path: &str) -> String {
+pub(super) fn slash_path(path: &str) -> String {
     path.replace('\\', "/")
 }
 
@@ -473,6 +505,11 @@ fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Vitest => "vitest",
         TestFramework::Dotnet => "dotnet",
         TestFramework::Swift => "swift",
+        TestFramework::Python => "python",
+        TestFramework::Go => "go",
+        TestFramework::Cargo => "cargo",
+        TestFramework::Rails => "rails",
+        TestFramework::Php => "php",
     }
 }
 

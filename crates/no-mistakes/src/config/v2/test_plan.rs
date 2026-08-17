@@ -8,6 +8,11 @@ pub struct TestPlanConfig {
     pub playwright: TestPlanFrameworkConfig,
     pub vitest: TestPlanFrameworkConfig,
     pub swift: TestPlanFrameworkConfig,
+    pub python: TestPlanFrameworkConfig,
+    pub go: TestPlanFrameworkConfig,
+    pub cargo: TestPlanFrameworkConfig,
+    pub rails: TestPlanFrameworkConfig,
+    pub php: TestPlanFrameworkConfig,
 }
 
 /// Raw deserialization target that accepts both `fullSuiteTriggers` (current)
@@ -72,6 +77,11 @@ pub enum TestPlanIgnoredChangedTestsFramework {
     Playwright,
     Vitest,
     Swift,
+    Python,
+    Go,
+    Cargo,
+    Rails,
+    Php,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

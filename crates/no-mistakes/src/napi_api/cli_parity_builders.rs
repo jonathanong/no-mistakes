@@ -64,6 +64,11 @@ pub(crate) fn parse_test_framework(value: &str) -> AnyhowResult<crate::tests::Te
         "playwright" => Ok(crate::tests::TestFramework::Playwright),
         "vitest" => Ok(crate::tests::TestFramework::Vitest),
         "swift" => Ok(crate::tests::TestFramework::Swift),
+        "python" => Ok(crate::tests::TestFramework::Python),
+        "go" => Ok(crate::tests::TestFramework::Go),
+        "cargo" => Ok(crate::tests::TestFramework::Cargo),
+        "rails" => Ok(crate::tests::TestFramework::Rails),
+        "php" => Ok(crate::tests::TestFramework::Php),
         _ => bail!("unknown test framework: {value}"),
     }
 }

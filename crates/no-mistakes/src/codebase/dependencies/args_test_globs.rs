@@ -35,7 +35,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "**/playwright/**/*.spec.js",
         "**/playwright/**/*.spec.jsx",
     ];
-    const CARGO: &[&str] = &["**/tests/**/*.rs", "src/**/*_test.rs"];
+    const CARGO: &[&str] = &["**/tests/**/*.rs", "**/src/**/tests.rs", "src/**/*_test.rs"];
     const DOTNET: &[&str] = &["**/Tests/**/*.cs", "**/*.Tests/**/*.cs", "**/*Tests/**/*.cs"];
     const SWIFT: &[&str] = &["**/Tests/**/*.swift"];
 

@@ -72,6 +72,14 @@ repository-wide project or package scans. When `tests plan dotnet` or
 source/project change, the plan falls back to framework-scoped discovered tests
 and sets `fallback_triggered`/`fallback_reason`.
 
+Language test plans follow the same native shape. Configure
+`tests.python.packages`, `tests.go.modules`, `tests.rust.packages`,
+`tests.rails.apps`, or `tests.php.apps`. Empty lists disable that frontend.
+`tests plan python|go|cargo|rails|php` then emits `pytest` /
+`python -m unittest`, `go test`, `cargo test -p`, `bin/rails test` / `rspec`,
+or `phpunit` / `php artisan test` targets. Untraceable source under those
+roots falls back to discovered tests in the owning package, module, or app.
+
 ## Explicit Vitest projects
 
 `tests.vitest.projects` can declare project ownership directly when a Vitest
