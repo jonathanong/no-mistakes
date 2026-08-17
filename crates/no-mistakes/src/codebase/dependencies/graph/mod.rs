@@ -101,6 +101,8 @@ include!("edge_swift.rs");
 include!("edge_terraform.rs");
 include!("filter.rs");
 include!("symbol_index.rs");
+include!("symbol_index_intern.rs");
+include!("symbol_index_build.rs");
 
 #[cfg(test)]
 pub(crate) mod test_support;

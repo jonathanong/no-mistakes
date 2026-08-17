@@ -132,9 +132,9 @@ impl DepGraph {
         while let Some((src_file, sym)) = queue.pop_front() {
             if let Some(importers) = symbol_index.importers_of(&src_file, &sym) {
                 for (importer, local_name, is_reexport) in importers {
-                    direct_importers.insert(NodeId::file(importer.clone()));
+                    direct_importers.insert(NodeId::file(importer.as_ref()));
                     if *is_reexport {
-                        let pair = (importer.clone(), local_name.clone());
+                        let pair = (importer.to_path_buf(), local_name.to_string());
                         push_unvisited_symbol_pair(&mut visited_pairs, &mut queue, pair);
                     }
                 }
