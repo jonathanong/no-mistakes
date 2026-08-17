@@ -110,6 +110,14 @@ fn identifier_shadow_scan_covers_binding_edge_cases() {
         "const { dataPw",
         "dataPw"
     ));
+    assert!(!bindings::has_destructuring_declaration(
+        "const { dataPw ;",
+        "dataPw"
+    ));
+    assert_eq!(
+        bindings::function_destructure_binding_ends("function Inner({ dataPw )", "dataPw").count(),
+        0
+    );
     assert_eq!(
         bindings::function_destructure_binding_ends("function Inner()", "").count(),
         0
