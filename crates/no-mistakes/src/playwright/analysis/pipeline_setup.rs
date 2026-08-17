@@ -114,7 +114,7 @@ pub(crate) fn collect_app_selectors(
                     collect_app_selector_occurrences_from_visible(
                         root,
                         settings,
-                        &app_selector_regexes,
+                        app_selector_regexes,
                         snapshot,
                     )
                 })
@@ -122,7 +122,7 @@ pub(crate) fn collect_app_selectors(
             None => collect_app_selector_occurrences_from_visible(
                 root,
                 settings,
-                &app_selector_regexes,
+                app_selector_regexes,
                 snapshot,
             )
             .map(Arc::new),
