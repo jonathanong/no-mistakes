@@ -73,6 +73,7 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     Ok(edges)
 }
 
+#[cfg(test)]
 fn selector_edges_from_analysis(
     root: &Path,
     all_files: &[PathBuf],

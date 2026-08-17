@@ -4,7 +4,10 @@ use crate::playwright::config;
 use crate::playwright::fsutil::VisiblePathSnapshot;
 use crate::playwright::playwright_tests;
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+#[cfg(test)]
+use std::path::PathBuf;
 
 #[cfg(test)]
 pub(crate) mod test_support;
