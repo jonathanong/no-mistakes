@@ -65,20 +65,19 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
         &resolver,
         &Default::default(),
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     let standard_node = NodeId::symbol(file.clone(), "javascriptValue");
-    assert!(edges.contains(&(
-        NodeId::file(file.clone()),
-        standard_node,
-        EdgeKind::Import,
-    )));
+    assert!(edges.contains(&(NodeId::file(file.clone()), standard_node, EdgeKind::Import,)));
     assert!(edges.iter().any(|(_, node, _)| matches!(
         node,
         NodeId::Symbol { symbol, .. } if symbol.as_ref() == "javascriptValue"
     )));
-    assert!(!edges.iter().any(|(from, to, _)| [from, to].iter().any(|node| matches!(
-        node,
-        NodeId::Symbol { symbol, .. } if symbol.as_ref() == "JavaScriptShape"
-    ))));
+    assert!(!edges
+        .iter()
+        .any(|(from, to, _)| [from, to].iter().any(|node| matches!(
+            node,
+            NodeId::Symbol { symbol, .. } if symbol.as_ref() == "JavaScriptShape"
+        ))));
 }

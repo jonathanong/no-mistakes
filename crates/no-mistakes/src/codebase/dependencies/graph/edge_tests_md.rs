@@ -2,6 +2,7 @@ fn collect_test_edges(
     root: &Path,
     files: &[PathBuf],
     test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let file_set: HashSet<&PathBuf> = files.iter().collect();
 
@@ -29,8 +30,8 @@ fn collect_test_edges(
                     let src_path = dir.join(format!("{src_stem}.{ext}"));
                     if file_set.contains(&src_path) {
                         edges.push((
-                            NodeId::file(path.clone()),
-                            NodeId::file(src_path),
+                            NodeId::file_in(interner, path.clone()),
+                            NodeId::file_in(interner, src_path),
                             EdgeKind::TestOf,
                         ));
                     }
@@ -42,7 +43,11 @@ fn collect_test_edges(
 }
 
 /// Collect `MarkdownLink` edges from `.md` files to the files they link to.
-fn collect_md_edges(all_files: &[PathBuf], graph_files: &GraphFiles) -> Vec<Edge> {
+fn collect_md_edges(
+    all_files: &[PathBuf],
+    graph_files: &GraphFiles,
+    interner: &PathInterner,
+) -> Vec<Edge> {
     let md_files: Vec<PathBuf> = all_files
         .iter()
         .filter(|p| matches!(p.extension().and_then(|e| e.to_str()), Some("md" | "mdx")))
@@ -78,8 +83,8 @@ fn collect_md_edges(all_files: &[PathBuf], graph_files: &GraphFiles) -> Vec<Edge
                     let target = crate::codebase::ts_resolver::normalize_path(&target);
                     if graph_files.is_visible(&target) {
                         Some((
-                            NodeId::file(path.clone()),
-                            NodeId::file(target),
+                            NodeId::file_in(interner, path.clone()),
+                            NodeId::file_in(interner, target),
                             EdgeKind::MarkdownLink,
                         ))
                     } else {

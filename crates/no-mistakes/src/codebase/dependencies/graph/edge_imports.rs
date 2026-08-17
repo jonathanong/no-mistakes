@@ -18,6 +18,7 @@ fn collect_import_edges(
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     parsed_imports
         .par_iter()
@@ -36,17 +37,20 @@ fn collect_import_edges(
                     );
                     if let Some(target) = classification.resolver_path() {
                         let target = graph_files.visible_path(target)?;
-                        return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(|| {
-                            (
-                                NodeId::file((*path).clone()),
-                                NodeId::file(target),
-                                kind,
-                            )
-                        });
+                        return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(
+                            || {
+                                (
+                                    NodeId::file_in(interner, (*path).clone()),
+                                    NodeId::file_in(interner, target),
+                                    kind,
+                                )
+                            },
+                        );
                     }
                     if classification.is_unresolved_external() {
-                        return bare_module_node(&imp.specifier)
-                            .map(|module| (NodeId::file((*path).clone()), module, kind));
+                        return bare_module_node_in(interner, &imp.specifier).map(|module| {
+                            (NodeId::file_in(interner, (*path).clone()), module, kind)
+                        });
                     }
                     None
                 })
@@ -59,6 +63,7 @@ fn collect_asset_edges(
     parsed_imports: &ParsedImports<'_>,
     resolver: &dyn ImportResolution,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     parsed_imports
         .par_iter()
@@ -76,8 +81,8 @@ fn collect_asset_edges(
                             return None;
                         }
                         Some((
-                            NodeId::file((*path).clone()),
-                            NodeId::file(target),
+                            NodeId::file_in(interner, (*path).clone()),
+                            NodeId::file_in(interner, target),
                             EdgeKind::AssetImport,
                         ))
                     })
@@ -92,6 +97,7 @@ fn collect_workspace_edges(
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     if workspace.packages.is_empty() {
         return vec![];
@@ -120,8 +126,8 @@ fn collect_workspace_edges(
                                 _ => EdgeKind::WorkspaceImport,
                             };
                             (
-                                NodeId::file((*path).clone()),
-                                NodeId::file(entry),
+                                NodeId::file_in(interner, (*path).clone()),
+                                NodeId::file_in(interner, entry),
                                 kind,
                             )
                         })

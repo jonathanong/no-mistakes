@@ -104,13 +104,26 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
     ];
 
-    let selected = fallback_imported_symbols(false, &calls, &[], &imports);
+    let selected = fallback_imported_symbols(
+        false,
+        &calls,
+        &[],
+        &imports,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(selected.len(), 2);
-    assert!(selected
-        .iter()
-        .any(|target| target_node(target) == target_node(&alpha)));
+    assert!(selected.iter().any(|target| {
+        let interner = crate::codebase::analysis_session::PathInterner::new();
+        target_node(target, &interner) == target_node(&alpha, &interner)
+    }));
 
     imports.insert("alpha_alias".to_string(), alpha.clone());
-    let all = fallback_imported_symbols(true, &[], &[], &imports);
+    let all = fallback_imported_symbols(
+        true,
+        &[],
+        &[],
+        &imports,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(all.len(), 2);
 }

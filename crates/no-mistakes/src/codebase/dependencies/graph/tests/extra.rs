@@ -37,10 +37,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         resource_candidates: vec![],
     };
 
-    let roots = vec![
-        NodeId::queue_job(a.clone(), "send"),
-        NodeId::file(a),
-    ];
+    let roots = vec![NodeId::queue_job(a.clone(), "send"), NodeId::file(a)];
     let limited =
         lazy_import_deps_of_with_files(&roots, &root, &tsconfig, Some(1), &graph_files, None);
     assert!(has_file(&limited, &b));
@@ -142,28 +139,32 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         resource_candidates: vec![],
     };
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
-            crate::codebase::workspaces::WorkspacePackage {
-                name: "@x/web".to_string(),
-                dir: root.join("packages/web"),
-                entry: Some(web_entry.clone()),
-                exports: None,
-                imports: None,
-            },
-            crate::codebase::workspaces::WorkspacePackage {
-                name: "@x/hidden".to_string(),
-                dir: root.join("hidden"),
-                entry: Some(root.join("hidden/index.ts")),
-                exports: None,
-                imports: None,
-            },
-        ])
-        .with_manifest_dependency_names(package.clone(), vec!["@x/web".to_string()]);
+        crate::codebase::workspaces::WorkspacePackage {
+            name: "@x/web".to_string(),
+            dir: root.join("packages/web"),
+            entry: Some(web_entry.clone()),
+            exports: None,
+            imports: None,
+        },
+        crate::codebase::workspaces::WorkspacePackage {
+            name: "@x/hidden".to_string(),
+            dir: root.join("hidden"),
+            entry: Some(root.join("hidden/index.ts")),
+            exports: None,
+            imports: None,
+        },
+    ])
+    .with_manifest_dependency_names(package.clone(), vec!["@x/web".to_string()]);
 
     let empty_imports = Vec::new();
-    assert!(
-        collect_workspace_edges(&empty_imports, &resolver, &Default::default(), &graph_files)
-            .is_empty()
-    );
+    assert!(collect_workspace_edges(
+        &empty_imports,
+        &resolver,
+        &Default::default(),
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
     let imports_path = root.join("packages/api/src/users.mts");
     let imports_items = vec![ExtractedImport {
         specifier: "@x/web".to_string(),
@@ -179,7 +180,13 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         ..Default::default()
     };
     let imports = vec![(&imports_path, &imports_facts, Default::default())];
-    let edges = collect_workspace_edges(&imports, &resolver, &workspace, &graph_files);
+    let edges = collect_workspace_edges(
+        &imports,
+        &resolver,
+        &workspace,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(edges.len(), 1);
     let hidden_workspace_path = root.join("packages/api/src/users.mts");
     let hidden_workspace_items = vec![ExtractedImport {
@@ -204,7 +211,8 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         &hidden_workspace_import,
         &resolver,
         &workspace,
-        &graph_files
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
 
@@ -217,13 +225,21 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         ],
         &workspace,
         &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(manifest_edges.iter().any(|(_, to, kind)| {
         *kind == EdgeKind::PackageDependency && to.as_file() == Some(web_entry.as_path())
     }));
 
     assert_eq!(
-        collect_import_edges(&imports, &resolver, &Default::default(), &graph_files).len(),
+        collect_import_edges(
+            &imports,
+            &resolver,
+            &Default::default(),
+            &graph_files,
+            &crate::codebase::analysis_session::PathInterner::new()
+        )
+        .len(),
         1
     );
     let hidden_imports_path = root.join("packages/api/src/users.mts");
@@ -249,7 +265,8 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         &hidden_imports,
         &resolver,
         &Default::default(),
-        &graph_files
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
@@ -298,8 +315,17 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
 
     let graph_files = GraphFiles::discover(&root);
     let missing = root.join("missing.md");
-    assert!(collect_md_edges(&[missing], &graph_files).is_empty());
-    let md_edges = collect_md_edges(&[root.join("README.md")], &graph_files);
+    assert!(collect_md_edges(
+        &[missing],
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
+    let md_edges = collect_md_edges(
+        &[root.join("README.md")],
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert!(md_edges.iter().any(|(_, to, kind)| {
         *kind == EdgeKind::MarkdownLink
             && to.as_file() == Some(root.join("packages/api/src/index.mts").as_path())
@@ -314,6 +340,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &parsed,
         &mut forward,
         &mut reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(!forward.is_empty());
 
@@ -333,6 +360,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &missing_parsed,
         &mut missing_forward,
         &mut missing_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(missing_forward.is_empty());
 
@@ -356,6 +384,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &nested_parsed,
         &mut nested_forward,
         &mut nested_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(nested_forward.is_empty());
 
@@ -374,6 +403,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &no_workflow_parsed,
         &mut no_workflows_forward,
         &mut no_workflows_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(no_workflows_forward.is_empty());
     let nested_without_workflow = [
@@ -387,6 +417,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &nested_without_parsed,
         &mut nested_forward,
         &mut nested_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(nested_forward.is_empty());
     let mut bins = CargoBinIndex::default();

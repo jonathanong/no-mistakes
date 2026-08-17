@@ -5,6 +5,7 @@ fn collect_symbol_edges(
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     config_options: Option<&GraphConfigOptions>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let SymbolGraphFiles {
         indexable: files,
@@ -25,6 +26,7 @@ fn collect_symbol_edges(
                 visible_files,
                 graph_files,
                 http_route_defs: &http_route_defs,
+                interner,
             })
         })
         .collect()
@@ -39,4 +41,5 @@ struct SymbolFileEdgeInputs<'a> {
     visible_files: &'a HashSet<PathBuf>,
     graph_files: &'a GraphFiles,
     http_route_defs: &'a [(PathBuf, String)],
+    interner: &'a PathInterner,
 }

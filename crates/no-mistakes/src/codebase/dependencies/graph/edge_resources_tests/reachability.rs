@@ -21,8 +21,13 @@ fn eager_aggregate_initializers_create_edges_while_callable_members_stay_pruned(
         eager_static.clone(),
         deferred.clone(),
     ];
-    let (edges, _, diagnostics) =
-        collect_resource_edges(&root, std::slice::from_ref(&consumer), &facts, &candidates);
+    let (edges, _, diagnostics) = collect_resource_edges(
+        &root,
+        std::slice::from_ref(&consumer),
+        &facts,
+        &candidates,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(diagnostics.is_empty());
     for eager in [eager_object, eager_static] {
@@ -119,6 +124,7 @@ fn symbol_mode_does_not_widen_exported_aggregate_resource_reachability() {
         std::slice::from_ref(&consumer),
         &facts,
         &[nested_target.clone(), unused_target.clone()],
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(diagnostics.is_empty());
     assert!(edges.contains(&(

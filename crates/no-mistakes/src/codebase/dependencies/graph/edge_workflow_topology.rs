@@ -37,6 +37,7 @@ fn collect_workflow_topology_edges(
     ci: &crate::config::v2::schema::CiConfig,
     parsed: &crate::codebase::ci_workflows::ParsedWorkflowSet,
     topology: &crate::codebase::workflow_topology::model::WorkflowTopology,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let universe: HashSet<PathBuf> = all_files.iter().cloned().collect();
@@ -60,21 +61,30 @@ fn collect_workflow_topology_edges(
         if !universe.contains(&workflow_file) {
             continue;
         }
-        let job_node = NodeId::workflow_job(workflow_file.clone(), job.key.clone());
+        let job_node = NodeId::workflow_job_in(interner, workflow_file.clone(), job.key.clone());
         jobs.insert(job.id.clone(), job_node.clone());
         edges.push((
-            NodeId::file(workflow_file.clone()),
+            NodeId::file_in(interner, workflow_file.clone()),
             job_node.clone(),
             EdgeKind::WorkflowJob,
         ));
         for step in &job.steps {
-            let step_node = NodeId::workflow_step(workflow_file.clone(), job.key.clone(), step.index as usize);
+            let step_node = NodeId::workflow_step_in(
+                interner,
+                workflow_file.clone(),
+                job.key.clone(),
+                step.index as usize,
+            );
             steps.insert((job.id.clone(), step.index as usize), step_node.clone());
             edges.push((job_node.clone(), step_node.clone(), EdgeKind::WorkflowStep));
             if let Some(target) = step.uses.as_deref().and_then(|target| {
                 resolve_local_action_descriptor(&root, target, &universe, &action_dirs)
             }) {
-                edges.push((step_node, NodeId::file(target), EdgeKind::WorkflowUses));
+                edges.push((
+                    step_node,
+                    NodeId::file_in(interner, target),
+                    EdgeKind::WorkflowUses,
+                ));
             }
         }
     }
@@ -96,7 +106,11 @@ fn collect_workflow_topology_edges(
                     .get(&edge.from)
                     .filter(|_| workflow_files.contains(&target))
                 {
-                    edges.push((from.clone(), NodeId::file(target), EdgeKind::WorkflowUses));
+                    edges.push((
+                        from.clone(),
+                        NodeId::file_in(interner, target),
+                        EdgeKind::WorkflowUses,
+                    ));
                 }
             }
             WorkflowTopologyEdge::Artifact(edge) => {
@@ -110,7 +124,9 @@ fn collect_workflow_topology_edges(
         }
     }
 
-    add_workflow_run_edges(&root, &universe, parsed, &jobs, &steps, &mut edges);
+    add_workflow_run_edges(
+        &root, &universe, parsed, &jobs, &steps, &mut edges, interner,
+    );
     edges.sort();
     edges.dedup();
     edges
@@ -123,6 +139,7 @@ fn add_workflow_run_edges(
     jobs: &HashMap<String, NodeId>,
     steps: &HashMap<(String, usize), NodeId>,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     let mut all_files: Vec<PathBuf> = universe.iter().cloned().collect();
     all_files.sort();
@@ -164,7 +181,7 @@ fn add_workflow_run_edges(
                 for target in resolver.resolve(run, &working_directory) {
                     edges.push((
                         step_node.clone(),
-                        NodeId::file(target),
+                        NodeId::file_in(interner, target),
                         EdgeKind::WorkflowRun,
                     ));
                 }

@@ -1,5 +1,9 @@
 // ── EdgeKind::Selector / playwright selector edges ───────────────────────
 
+fn intern() -> crate::codebase::analysis_session::PathInterner {
+    crate::codebase::analysis_session::PathInterner::new()
+}
+
 fn collect_playwright_selector_edges(
     root: &Path,
     config_path: Option<&Path>,
@@ -11,7 +15,7 @@ fn collect_playwright_selector_edges(
     else {
         return vec![];
     };
-    selector_edges_from_analysis(root, all_files, &analysis)
+    selector_edges_from_analysis(root, all_files, &analysis, &intern())
 }
 
 #[test]
@@ -33,7 +37,7 @@ fn selector_dep_edge_maps_selector_edge_to_dep_graph_edge() {
         line: 5,
     };
 
-    let result = selector_dep_edge(&root, &edge).unwrap();
+    let result = selector_dep_edge(&root, &edge, &intern()).unwrap();
     // test_file → app_file (mirrors TestOf direction so dependents_of(app_file) returns tests)
     assert_eq!(result.0, NodeId::file(p("/root/tests/e2e/nav.spec.ts")));
     assert_eq!(result.1, NodeId::file(p("/root/web/components/nav.tsx")));
@@ -66,7 +70,7 @@ fn selector_dep_edge_maps_locator_text_edge_to_dep_graph_edge() {
         line: 10,
     };
 
-    let result = selector_dep_edge(&root, &edge).unwrap();
+    let result = selector_dep_edge(&root, &edge, &intern()).unwrap();
     // test_file → app_file (mirrors TestOf direction so dependents_of(app_file) returns tests)
     assert_eq!(result.0, NodeId::file(p("/root/tests/e2e/button.spec.ts")));
     assert_eq!(result.1, NodeId::file(p("/root/web/components/button.tsx")));
@@ -89,7 +93,7 @@ fn selector_dep_edge_returns_none_for_route_edge() {
         hook: false,
         line: 1,
     };
-    assert!(selector_dep_edge(&root, &edge).is_none());
+    assert!(selector_dep_edge(&root, &edge, &intern()).is_none());
 }
 
 #[test]
@@ -284,10 +288,11 @@ fn selector_analysis_reuses_matching_route_import_graph() {
         .expect("fixture root resolves");
     let settings = crate::playwright::config::test_support::load_settings(&root, None, &[], None)
         .expect("Playwright settings load");
-    let tsconfig = crate::playwright::analysis::pipeline_text_test_support::load_route_import_tsconfig(
-        &root, &settings,
-    )
-    .expect("route-import tsconfig loads");
+    let tsconfig =
+        crate::playwright::analysis::pipeline_text_test_support::load_route_import_tsconfig(
+            &root, &settings,
+        )
+        .expect("route-import tsconfig loads");
     let graph_files = GraphFiles::discover(&root).all().to_vec();
     let facts = CountingFacts {
         facts: collect_ts_facts(&graph_files, TsFactPlan::imports()),
@@ -328,8 +333,9 @@ fn selector_analysis_reuses_matching_route_import_graph() {
     .expect("selector analysis rebuilds mismatched graph");
     assert!(facts.lookups.load(Ordering::Relaxed) > 0);
 
-    let matching_edges = selector_edges_from_analysis(&root, &graph_files, &matching);
-    let mismatched_edges = selector_edges_from_analysis(&root, &graph_files, &mismatched);
+    let matching_edges = selector_edges_from_analysis(&root, &graph_files, &matching, &intern());
+    let mismatched_edges =
+        selector_edges_from_analysis(&root, &graph_files, &mismatched, &intern());
     assert!(!matching_edges.is_empty());
     assert_eq!(matching_edges, mismatched_edges);
 }

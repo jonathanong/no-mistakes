@@ -129,12 +129,12 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     .is_empty());
     assert!(collect_http_call_edges(
         &explicit,
-        &tsconfig,
         None,
         &[],
         &[],
         &[],
         Some(&explicit_options),
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
 
@@ -181,22 +181,22 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
 
     assert!(collect_http_call_edges(
         &explicit,
-        &tsconfig,
         None,
         &[],
         &[],
         &[],
         Some(&missing_register_options),
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
     assert!(collect_http_call_edges(
         &explicit,
-        &tsconfig,
         None,
         &[],
         &[],
         &[],
         Some(&invalid_glob_options),
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
 }

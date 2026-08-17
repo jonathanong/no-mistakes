@@ -231,6 +231,7 @@ fn workflow_topology_excludes_jobs_outside_the_graph_file_universe() {
         &crate::config::v2::schema::CiConfig::default(),
         &parsed,
         &topology,
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
 }
@@ -256,6 +257,7 @@ fn workflow_run_collection_skips_steps_absent_from_the_topology_graph() {
         &jobs,
         &HashMap::new(),
         &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(edges.is_empty());

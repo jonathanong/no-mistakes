@@ -106,7 +106,9 @@ impl DepGraph {
         let files = &graph_files.indexable;
 
         for file in files {
-            forward.entry(NodeId::file(file.clone())).or_default();
+            forward
+                .entry(NodeId::file_in(&edge_inputs.interner, file))
+                .or_default();
         }
 
         let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
@@ -178,6 +180,7 @@ impl DepGraph {
                         graph_tsconfig: plan.route_imports.then_some(tsconfig),
                         snapshot,
                         prepared_settings: edge_inputs.playwright_settings,
+                        interner: &edge_inputs.interner,
                     },
                 )
             })?;

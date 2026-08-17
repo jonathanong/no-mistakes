@@ -13,12 +13,12 @@
 /// `http-call-static-paths` guardrail enforces literal discipline.
 fn collect_http_call_edges(
     root: &Path,
-    tsconfig: &TsConfig,
     facts: Option<&dyn TsFactLookup>,
     files: &[(PathBuf, String)],
     graph_files: &[PathBuf],
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     use crate::codebase::ts_http_calls::extract_http_calls;
 
@@ -49,13 +49,15 @@ fn collect_http_call_edges(
             .unwrap_or_default(),
         _ => Vec::new(),
     };
-    route_defs.extend(collect_next_route_handler_defs(root, all_files, config_options));
+    route_defs.extend(collect_next_route_handler_defs(
+        root,
+        all_files,
+        config_options,
+    ));
     if route_defs.is_empty() {
         return vec![];
     }
     let prefix_strs: Vec<&str> = backend_prefixes.iter().map(String::as_str).collect();
-
-    let _ = tsconfig; // reserved for future alias-aware call resolution
 
     if let Some(facts) = facts {
         return graph_files
@@ -65,7 +67,9 @@ fn collect_http_call_edges(
                     .get_ts_facts(caller)
                     .map(|file_facts| (caller.as_path(), file_facts.http_calls.as_slice()))
             })
-            .flat_map_iter(|(caller, calls)| http_edges_for_calls(caller, calls, &route_defs))
+            .flat_map_iter(|(caller, calls)| {
+                http_edges_for_calls(caller, calls, &route_defs, interner)
+            })
             .collect();
     }
 
@@ -74,7 +78,7 @@ fn collect_http_call_edges(
         .par_iter()
         .flat_map_iter(|(caller, source)| {
             let calls = extract_http_calls(source, &prefix_strs);
-            http_edges_for_calls(caller, &calls, &route_defs)
+            http_edges_for_calls(caller, &calls, &route_defs, interner)
         })
         .collect()
 }
@@ -116,6 +120,7 @@ fn http_edges_for_calls(
     caller: &Path,
     calls: &[crate::codebase::ts_http_calls::HttpCall],
     route_defs: &[(PathBuf, String)],
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     use crate::codebase::ts_routes::matcher;
 
@@ -124,8 +129,8 @@ fn http_edges_for_calls(
         for (def_file, def_pattern) in route_defs {
             if def_file != caller && matcher::matches(&call.path, def_pattern) {
                 edges.push((
-                    NodeId::file(caller),
-                    NodeId::file(def_file.clone()),
+                    NodeId::file_in(interner, caller),
+                    NodeId::file_in(interner, def_file.clone()),
                     EdgeKind::HttpCall,
                 ));
             }
@@ -147,6 +152,7 @@ fn collect_process_spawn_edges(
     files: &[(PathBuf, String)],
     graph_files: &[PathBuf],
     visible_files: &HashSet<PathBuf>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     use crate::codebase::ts_process_spawn::extract_spawn_edges_from_visible;
 
@@ -160,11 +166,11 @@ fn collect_process_spawn_edges(
                     .iter()
                     .filter(|edge| visible_files.contains(&edge.entry))
                     .map(|e| {
-                    (
-                        NodeId::file(e.spawner.clone()),
-                        NodeId::file(e.entry.clone()),
-                        EdgeKind::ProcessSpawn,
-                    )
+                        (
+                            NodeId::file_in(interner, e.spawner.clone()),
+                            NodeId::file_in(interner, e.entry.clone()),
+                            EdgeKind::ProcessSpawn,
+                        )
                     })
             })
             .collect();
@@ -178,8 +184,8 @@ fn collect_process_spawn_edges(
                 .filter(|edge| visible_files.contains(&edge.entry))
                 .map(|e| {
                     (
-                        NodeId::file(e.spawner),
-                        NodeId::file(e.entry),
+                        NodeId::file_in(interner, e.spawner),
+                        NodeId::file_in(interner, e.entry),
                         EdgeKind::ProcessSpawn,
                     )
                 })

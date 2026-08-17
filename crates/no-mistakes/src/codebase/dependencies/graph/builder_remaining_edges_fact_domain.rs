@@ -25,7 +25,10 @@ fn collect_fact_domain_remaining_edges(
                             collect_unless_timed_out(|| {
                                 crate::perf_trace::trace("graph.routes", || {
                                     collect_route_edges_for_plan(
-                                        edge_inputs, facts, resolver, session,
+                                        edge_inputs,
+                                        facts,
+                                        resolver,
+                                        session,
                                     )
                                 })
                             })
@@ -132,6 +135,7 @@ fn collect_route_edges_for_plan(
         edge_inputs.graph_files,
         facts,
         edge_inputs.config_options,
+        &edge_inputs.interner,
     )
 }
 
@@ -149,6 +153,7 @@ fn collect_queue_edges_for_plan(
         edge_inputs.graph_files,
         facts,
         edge_inputs.config_options,
+        &edge_inputs.interner,
     )
 }
 
@@ -159,7 +164,12 @@ fn collect_react_edges_for_plan(
     if !edge_inputs.plan.react {
         return Vec::new();
     }
-    collect_react_render_edges(edge_inputs.root, facts, edge_inputs.graph_files.indexable())
+    collect_react_render_edges(
+        edge_inputs.root,
+        facts,
+        edge_inputs.graph_files.indexable(),
+        &edge_inputs.interner,
+    )
 }
 
 type ResourceEdgeBatch = (Vec<Edge>, ResourceEdgeDetails, Vec<ResourceGraphDiagnostic>);
@@ -179,6 +189,7 @@ fn collect_resource_edges_for_plan(
         edge_inputs.graph_files.indexable(),
         facts,
         edge_inputs.graph_files.resource_candidates(),
+        &edge_inputs.interner,
     )))
 }
 

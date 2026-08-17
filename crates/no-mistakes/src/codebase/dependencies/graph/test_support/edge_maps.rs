@@ -71,6 +71,13 @@ pub(in super::super) fn add_queue_edges(
     super::super::merge_edges(
         forward,
         reverse,
-        super::super::collect_queue_edges(root, resolver, &graph_files, facts, config_options),
+        super::super::collect_queue_edges(
+            root,
+            resolver,
+            &graph_files,
+            facts,
+            config_options,
+            &crate::codebase::analysis_session::PathInterner::new(),
+        ),
     );
 }

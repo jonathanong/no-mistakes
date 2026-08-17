@@ -65,6 +65,7 @@ fn collect_remaining_edges(
                     .expect("CI graph plan prepares parsed workflows"),
                 forward,
                 reverse,
+                session.interner(),
             );
         }
     });
@@ -83,7 +84,14 @@ fn collect_remaining_edges(
             merge_edges(
                 forward,
                 reverse,
-                collect_workflow_topology_edges(root, &graph_files.all, ci, parsed, &topology),
+                collect_workflow_topology_edges(
+                    root,
+                    &graph_files.all,
+                    ci,
+                    parsed,
+                    &topology,
+                    session.interner(),
+                ),
             );
         }
     });
@@ -111,6 +119,7 @@ fn collect_remaining_edges(
                 facts,
                 snapshot,
                 edge_inputs.playwright_settings,
+                &edge_inputs.interner,
             );
             merge_edges(forward, reverse, edges);
         }
@@ -118,9 +127,7 @@ fn collect_remaining_edges(
     })?;
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.language_frontends", || {
-        if edge_inputs.plan.language_frontends
-            || edge_inputs.plan.queues
-            || edge_inputs.plan.routes
+        if edge_inputs.plan.language_frontends || edge_inputs.plan.queues || edge_inputs.plan.routes
         {
             merge_language_frontend_edges(edge_inputs, forward, reverse);
         }

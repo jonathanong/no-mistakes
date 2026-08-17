@@ -72,7 +72,12 @@ fn text_locator_edges_match_without_facts_and_with_default_or_sparse_facts() {
         locator_test_files,
         std::collections::BTreeSet::from(["tests/e2e/app.spec.ts", "tests/e2e/secondary.spec.ts",])
     );
-    let mut expected = selector_edges_from_analysis(&root, &all_files, &analysis);
+    let mut expected = selector_edges_from_analysis(
+        &root,
+        &all_files,
+        &analysis,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     let mut with_default =
         collect_playwright_selector_edges(&root, None, &all_files, Some(&default_facts));
     let mut with_sparse =

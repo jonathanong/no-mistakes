@@ -112,6 +112,7 @@ impl DepGraph {
                 import_resolution_cache,
                 visible_paths,
                 workflow_documents: prepared.workflow_documents(),
+                interner: session.interner_arc(),
             },
             facts,
             SuppliedFactPolicy::RequireComplete,
@@ -128,6 +129,8 @@ impl DepGraph {
         prepared: &PreparedGraphConfig,
         swift_facts: &crate::codebase::swift::SwiftFactMap,
     ) -> Result<Self> {
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
         Self::build_with_plan_files_options_and_facts(
             GraphEdgeBuildInputs {
                 root,
@@ -144,10 +147,11 @@ impl DepGraph {
                 import_resolution_cache: None,
                 visible_paths: None,
                 workflow_documents: prepared.workflow_documents(),
+                interner: session.interner_arc(),
             },
             None,
             SuppliedFactPolicy::RequireComplete,
-            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
+            session,
         )
     }
 
@@ -186,6 +190,7 @@ impl DepGraph {
                 import_resolution_cache: None,
                 visible_paths: None,
                 workflow_documents: None,
+                interner: session.interner_arc(),
             },
             facts,
             SuppliedFactPolicy::FillSparse,

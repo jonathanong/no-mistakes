@@ -1,3 +1,4 @@
+#[derive(Clone, Copy)]
 struct ExportEdgeInputs<'a> {
     path: &'a Path,
     symbols: &'a crate::codebase::ts_symbols::FileSymbols,
@@ -6,6 +7,7 @@ struct ExportEdgeInputs<'a> {
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
     graph_files: &'a GraphFiles,
+    interner: &'a PathInterner,
 }
 
 fn collect_export_edges(
@@ -14,6 +16,7 @@ fn collect_export_edges(
     caller_to_export: &mut HashMap<String, Vec<String>>,
     edges: &mut Vec<Edge>,
 ) {
+    let interner = inputs.interner;
     collect_star_reexport_edges(&inputs, edges);
     for export in &inputs.symbols.exports {
         if export.name == "*" {
@@ -29,11 +32,11 @@ fn collect_export_edges(
                 .push(export_symbol.clone());
         }
         edges.push((
-            NodeId::file(inputs.path),
-            NodeId::symbol(inputs.path, export_symbol.clone()),
+            NodeId::file_in(interner, inputs.path),
+            NodeId::symbol_in(interner, inputs.path, export_symbol.clone()),
             symbol_edge_kind(export.is_type_only),
         ));
-        collect_direct_reexport_edge(&inputs, export, &export_symbol, edges);
+        collect_direct_reexport_edge(&inputs, export, &export_symbol, edges, interner);
     }
 }
 
@@ -42,6 +45,7 @@ fn collect_direct_reexport_edge(
     export: &crate::codebase::ts_symbols::Export,
     export_symbol: &str,
     edges: &mut Vec<Edge>,
+    interner: &PathInterner,
 ) {
     let ExportKind::ReExport { source, imported } = &export.kind else {
         return;
@@ -49,19 +53,23 @@ fn collect_direct_reexport_edge(
     if imported == "*" && export_symbol == "*" {
         return;
     }
-    let from = NodeId::symbol(inputs.path, export_symbol);
+    let from = NodeId::symbol_in(interner, inputs.path, export_symbol);
     if let Some(target) = inputs.resolver.resolve(source, inputs.path) {
         let Some(target) = inputs.graph_files.visible_path(&target) else {
             return;
         };
         if !is_indexable(target) {
-            edges.push((from, NodeId::file(target), EdgeKind::AssetImport));
+            edges.push((
+                from,
+                NodeId::file_in(interner, target),
+                EdgeKind::AssetImport,
+            ));
             return;
         }
         if imported == "*" {
             edges.push((
                 from,
-                NodeId::file(target),
+                NodeId::file_in(interner, target),
                 symbol_edge_kind(export.is_type_only),
             ));
             return;
@@ -71,7 +79,7 @@ fn collect_direct_reexport_edge(
         );
         edges.push((
             from,
-            NodeId::symbol(target, imported.clone()),
+            NodeId::symbol_in(interner, target, imported.clone()),
             kind,
         ));
     } else if let Some(target) = inputs.workspace.resolve_specifier_from_file_visible(
@@ -79,17 +87,19 @@ fn collect_direct_reexport_edge(
         inputs.path,
         inputs.visible_files,
     ) {
-        let Some(target) = inputs.graph_files.visible_path(&target) else { return; };
+        let Some(target) = inputs.graph_files.visible_path(&target) else {
+            return;
+        };
         let kind = workspace_symbol_edge_kind(
             export.is_type_only || target_export_is_type(target, imported, inputs.facts),
         );
         if imported == "*" {
-            edges.push((from, NodeId::file(target), kind));
+            edges.push((from, NodeId::file_in(interner, target), kind));
             return;
         }
         edges.push((
             from,
-            NodeId::symbol(target, imported.clone()),
+            NodeId::symbol_in(interner, target, imported.clone()),
             kind,
         ));
     } else if !inputs
@@ -108,6 +118,7 @@ fn collect_export_reference_edges(
     namespace_imports: &HashMap<String, ImportedSymbolTarget>,
     edges: &mut Vec<Edge>,
 ) {
+    let interner = inputs.interner;
     for export in &inputs.symbols.exports {
         if matches!(export.kind, ExportKind::ReExport { .. }) || export.name == "*" {
             continue;
@@ -115,7 +126,7 @@ fn collect_export_reference_edges(
         let local_symbol = export_local_name(export);
         let resolved = namespace_imports
             .get(&local_symbol)
-            .map(namespace_file_node)
+            .map(|target| namespace_file_node(target, interner))
             .or_else(|| {
                 resolve_imported_callee_with_graph_files(
                     &local_symbol,
@@ -127,12 +138,13 @@ fn collect_export_reference_edges(
                         workspace: inputs.workspace,
                         visible_files: inputs.visible_files,
                         graph_files: inputs.graph_files,
+                        interner,
                     },
                 )
             });
         if let Some((target, kind)) = resolved {
             edges.push((
-                NodeId::symbol(inputs.path, export_symbol_name(export)),
+                NodeId::symbol_in(interner, inputs.path, export_symbol_name(export)),
                 target,
                 kind,
             ));
