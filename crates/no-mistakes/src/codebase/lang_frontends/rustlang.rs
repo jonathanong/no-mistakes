@@ -5,6 +5,9 @@ use super::facts::{
 use super::strip::strip_comments_keep_strings;
 #[path = "rust_path.rs"]
 mod rust_path;
+#[cfg(test)]
+#[path = "rust_path_tests.rs"]
+mod rust_path_tests;
 #[path = "rust_use.rs"]
 mod rust_use;
 use crate::codebase::ts_source::SourceStore;
