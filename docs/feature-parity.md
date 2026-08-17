@@ -35,6 +35,8 @@ frontends. They stay available to every language once files are tracked.
 
 Rust v1 is a language frontend for configured `tests.rust.packages`: `use
 crate/super/self` and `pub` declarations emit `rust-use` / `rust-mod` edges.
+`#[path]` mods emit `rust-mod`. Static Cargo `path =` deps and `tests/`
+integration files emit `rust-package` from the crate root (not an n² clique).
 The existing `rust-*` filesystem rules, `--test cargo` globs, and `ci` Cargo
 binary edges remain. There is still no `tests plan cargo` and no `no-mistakes
 rust` CLI.

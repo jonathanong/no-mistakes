@@ -4,7 +4,7 @@ use no_mistakes::benchmark_support::{
     match_language_frontend_queue_globs, LanguageFrontendSummary,
 };
 
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 53;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 61;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_PARSED: usize = 39;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_IMPORTS: usize = 49;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_ENQUEUES: usize = 7;
@@ -12,7 +12,7 @@ pub(super) const EXPECTED_LANGUAGE_FRONTEND_WORKERS: usize = 6;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 12;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 68;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_QUEUE_EDGES: usize = 14;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 53;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 61;
 
 pub(super) fn bench_language_frontends(c: &mut Criterion) {
     let fixture = language_frontend_fixture();

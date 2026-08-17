@@ -131,3 +131,28 @@ fn go_records_imports_of_configured_sibling_modules() {
         .iter()
         .any(|import| import == "example.com/nested"));
 }
+
+#[test]
+fn rust_records_path_attr_mods_and_cargo_path_deps() {
+    let root = fixture("rust-path-deps");
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_rust_facts(&root, &files, &["app".into(), "helper".into()], &store);
+    let lib = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("app/src/lib.rs"))
+        .expect("app lib");
+    assert!(lib.mods.iter().any(|name| name == "alt"));
+    assert!(facts
+        .package_path_deps
+        .contains(&("app".to_string(), "helper".to_string())));
+    assert!(facts
+        .files
+        .keys()
+        .any(|path| path.ends_with("tests/integration.rs")));
+    assert!(facts
+        .files
+        .keys()
+        .any(|path| path.ends_with("src/tests.rs")));
+}

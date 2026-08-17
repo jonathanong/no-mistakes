@@ -15,7 +15,7 @@ fn symbol_index_basic_lookup() {
         .importers_of(p("/src/a.mts").as_path(), "alpha")
         .unwrap();
     assert_eq!(importers.len(), 1);
-    assert_eq!(importers[0].0, p("/src/b.mts"));
+    assert_eq!(importers[0].0.as_ref(), p("/src/b.mts").as_path());
 }
 
 #[test]
@@ -73,4 +73,61 @@ fn symbol_index_caches_sorted_unique_file_importers_across_symbols_and_reexports
 
     assert_eq!(index.file_importers(&source), vec![importer_a, importer_b]);
     assert_eq!(index.importers_of(&source, "beta").unwrap().len(), 2);
+}
+
+fn interned_path_hash(path: &std::sync::Arc<std::path::Path>) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    path.hash(&mut hasher);
+    hasher.finish()
+}
+
+#[test]
+fn symbol_index_interned_paths_from_distinct_pathbuf_allocations_sort_and_hash_equal() {
+    use std::cmp::Ordering;
+    use std::sync::Arc;
+
+    let cases = [
+        "/src/a.mts",
+        "src/widget.ts",
+        "/tmp/foo/bar.ts",
+        "C:\\repo\\app\\index.ts",
+    ];
+    for path in cases {
+        let left = PathBuf::from(path);
+        let right = PathBuf::from(String::from(path));
+        assert_ne!(
+            left.as_os_str().as_encoded_bytes().as_ptr(),
+            right.as_os_str().as_encoded_bytes().as_ptr(),
+            "table case {path} should use distinct PathBuf allocations"
+        );
+
+        let interned_left = intern_symbol_index_path(&left);
+        let interned_right = intern_symbol_index_path(&right);
+        assert!(!Arc::ptr_eq(&interned_left, &interned_right));
+        assert_eq!(interned_left, interned_right);
+        assert_eq!(
+            interned_path_hash(&interned_left),
+            interned_path_hash(&interned_right)
+        );
+        assert_eq!(
+            interned_left.as_os_str().cmp(interned_right.as_os_str()),
+            Ordering::Equal
+        );
+
+        let source = PathBuf::from("/src/source.mts");
+        let lookup = PathBuf::from(String::from("/src/source.mts"));
+        let map = HashMap::from([(
+            left.clone(),
+            vec![(
+                source.clone(),
+                "alpha".to_string(),
+                "alpha".to_string(),
+                false,
+            )],
+        )]);
+        let index = SymbolIndex::build(&map);
+        assert!(index.importers_of(&lookup, "alpha").is_some());
+        assert_eq!(index.file_importers(&lookup), vec![right]);
+    }
 }

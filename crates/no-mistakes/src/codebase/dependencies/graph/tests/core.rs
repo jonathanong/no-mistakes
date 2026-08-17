@@ -13,6 +13,7 @@ mod config_route_helpers;
 mod dotnet_edges;
 mod extra;
 mod extra_runtime;
+mod files_config;
 mod module_cases;
 mod swift_edges;
 mod terraform_edges;

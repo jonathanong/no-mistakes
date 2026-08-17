@@ -315,3 +315,40 @@ fn prepared_graph_config_reuses_a_supplied_test_filter() {
         );
     }
 }
+
+#[test]
+fn check_facts_program_delegates_ts_extract_to_the_shared_collector() {
+    let program = include_str!("../../codebase/check_facts/file/program.rs");
+
+    assert!(program.contains("facts::collect_file_facts_from_program("));
+    assert!(!program.contains("extract_import_facts_from_program"));
+    assert!(!program.contains("extract_symbols_from_program"));
+    assert!(!program.contains("collect_call_site_facts"));
+    assert!(!program.contains("collect_domain_facts"));
+}
+
+#[test]
+fn prepared_check_and_analyze_graph_builders_require_complete_facts() {
+    let prepared = include_str!("../../codebase/dependencies/graph/builder.rs");
+    let check_facts = include_str!("../../codebase/dependencies/graph/builder_check_facts.rs");
+    let standalone = prepared
+        .split("pub(crate) fn build_with_plan_files_config_and_facts(")
+        .nth(1)
+        .and_then(|source| source.split("impl ").next())
+        .expect("standalone config-and-facts builder");
+
+    assert_eq!(
+        prepared
+            .matches("SuppliedFactPolicy::RequireComplete")
+            .count(),
+        2
+    );
+    assert_eq!(
+        check_facts
+            .matches("SuppliedFactPolicy::RequireComplete")
+            .count(),
+        2
+    );
+    assert!(standalone.contains("SuppliedFactPolicy::FillSparse"));
+    assert!(!standalone.contains("SuppliedFactPolicy::RequireComplete"));
+}
