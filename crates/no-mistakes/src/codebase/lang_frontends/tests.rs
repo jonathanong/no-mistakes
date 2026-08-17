@@ -9,6 +9,12 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn store_for(files: &[PathBuf]) -> crate::codebase::ts_source::SourceStore {
+    crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(files),
+    ))
+}
+
 fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
     let repo = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),
@@ -30,7 +36,9 @@ fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
 #[test]
 fn python_collects_relative_import_celery_and_django_routes() {
     let root = fixture("python-celery-django");
-    let facts = collect_python_facts(&root, &all_files(&root), &["app".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_python_facts(&root, &files, &["app".into()], &store);
     let views = facts
         .files
         .keys()
@@ -90,7 +98,9 @@ fn python_collects_relative_import_celery_and_django_routes() {
 #[test]
 fn go_collects_asynq_task_and_handler() {
     let root = fixture("go-asynq");
-    let facts = collect_go_facts(&root, &all_files(&root), &["worker".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_go_facts(&root, &files, &["worker".into()], &store);
     let enqueue = facts
         .files
         .values()
@@ -112,7 +122,7 @@ fn go_collects_asynq_task_and_handler() {
         .declarations
         .iter()
         .any(|name| name == "WelcomePayload" || name == "HandleWelcome"));
-    let nested = collect_go_facts(&root, &all_files(&root), &[".".into(), "nested".into()]);
+    let nested = collect_go_facts(&root, &files, &[".".into(), "nested".into()], &store);
     let mail = nested
         .files
         .values()
@@ -124,7 +134,9 @@ fn go_collects_asynq_task_and_handler() {
 #[test]
 fn rust_collects_use_and_declaration() {
     let root = fixture("rust-mods");
-    let facts = collect_rust_facts(&root, &all_files(&root), &[".".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_rust_facts(&root, &files, &[".".into()], &store);
     let lib = facts
         .files
         .values()
@@ -142,7 +154,9 @@ fn rust_collects_use_and_declaration() {
 #[test]
 fn rails_collects_route_and_active_job() {
     let root = fixture("rails-jobs");
-    let facts = collect_ruby_facts(&root, &all_files(&root), &[".".into()]);
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_ruby_facts(&root, &files, &[".".into()], &store);
     let routes = facts
         .files
         .values()
@@ -168,7 +182,9 @@ fn rails_collects_route_and_active_job() {
 #[test]
 fn php_collects_laravel_route_and_dispatch() {
     let root = fixture("php-laravel");
-    let facts = collect_php_facts(&root, &all_files(&root), &[".".into()], Some("laravel"));
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_php_facts(&root, &files, &[".".into()], Some("laravel"), &store);
     let routes = facts
         .files
         .values()
@@ -213,22 +229,23 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
         php_apps: vec!["php-laravel".into()],
         php_framework: Some("laravel".into()),
     };
-    let collected = collect_all_lang_facts(&root, &files, &config);
+    let store = store_for(&files);
+    let collected = collect_all_lang_facts(&root, &files, &config, &store);
     assert_eq!(
         collected.python,
-        collect_python_facts(&root, &files, &config.python_packages)
+        collect_python_facts(&root, &files, &config.python_packages, &store)
     );
     assert_eq!(
         collected.go,
-        collect_go_facts(&root, &files, &config.go_modules)
+        collect_go_facts(&root, &files, &config.go_modules, &store)
     );
     assert_eq!(
         collected.rust,
-        collect_rust_facts(&root, &files, &config.rust_packages)
+        collect_rust_facts(&root, &files, &config.rust_packages, &store)
     );
     assert_eq!(
         collected.ruby,
-        collect_ruby_facts(&root, &files, &config.rails_apps)
+        collect_ruby_facts(&root, &files, &config.rails_apps, &store)
     );
     assert_eq!(
         collected.php,
@@ -237,6 +254,7 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
             &files,
             &config.php_apps,
             config.php_framework.as_deref(),
+            &store,
         )
     );
     assert!(
@@ -272,14 +290,15 @@ fn collect_all_lang_facts_with_partially_configured_languages() {
         go_modules: vec!["go-asynq".into(), "go-asynq/worker".into()],
         ..LangFrontendConfig::default()
     };
-    let collected = collect_all_lang_facts(&root, &files, &config);
+    let store = store_for(&files);
+    let collected = collect_all_lang_facts(&root, &files, &config, &store);
     assert_eq!(
         collected.python,
-        collect_python_facts(&root, &files, &config.python_packages)
+        collect_python_facts(&root, &files, &config.python_packages, &store)
     );
     assert_eq!(
         collected.go,
-        collect_go_facts(&root, &files, &config.go_modules)
+        collect_go_facts(&root, &files, &config.go_modules, &store)
     );
     assert!(collected.rust.files.is_empty());
     assert!(collected.ruby.files.is_empty());
@@ -291,11 +310,44 @@ fn collect_all_lang_facts_with_partially_configured_languages() {
 #[test]
 fn collect_all_lang_facts_skips_unconfigured_languages() {
     let root = fixture("python-celery-django");
-    let collected =
-        collect_all_lang_facts(&root, &all_files(&root), &LangFrontendConfig::default());
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let collected = collect_all_lang_facts(&root, &files, &LangFrontendConfig::default(), &store);
     assert!(collected.python.files.is_empty());
     assert!(collected.go.files.is_empty());
     assert!(collected.rust.files.is_empty());
     assert!(collected.ruby.files.is_empty());
     assert!(collected.php.files.is_empty());
+}
+
+#[test]
+fn second_language_collect_reuses_source_store_reads() {
+    let root = fixture("python-celery-django");
+    let files = all_files(&root);
+    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+        &files,
+    ));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let store = crate::codebase::ts_source::SourceStore::new_observed(
+        inventory,
+        Some(std::sync::Arc::clone(&observer)),
+    );
+    let first = collect_python_facts(&root, &files, &["app".into()], &store);
+    assert!(!first.files.is_empty());
+    let reads_after_first = observer
+        .snapshot()
+        .work
+        .get("source.reads")
+        .copied()
+        .unwrap_or(0);
+    assert!(reads_after_first > 0);
+    let second = collect_python_facts(&root, &files, &["app".into()], &store);
+    assert_eq!(first, second);
+    let reads_after_second = observer
+        .snapshot()
+        .work
+        .get("source.reads")
+        .copied()
+        .unwrap_or(0);
+    assert_eq!(reads_after_first, reads_after_second);
 }

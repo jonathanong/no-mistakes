@@ -5,6 +5,7 @@ use super::facts::{
 use super::strip::strip_comments_keep_strings;
 #[path = "rust_use.rs"]
 mod rust_use;
+use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -13,11 +14,12 @@ pub(crate) fn collect_rust_facts(
     root: &Path,
     all_files: &[PathBuf],
     packages: &[String],
+    sources: &SourceStore,
 ) -> LangFactMap {
     let roots = configured_roots(root, packages);
     let files = files_under(all_files, &roots, "rs");
     super::facts::collect_files_parallel(files, |path| {
-        parse_rust_file(root, path, &roots, packages)
+        parse_rust_file(root, path, &roots, packages, sources)
     })
 }
 
@@ -26,8 +28,9 @@ fn parse_rust_file(
     path: &Path,
     roots: &[PathBuf],
     packages: &[String],
+    sources: &SourceStore,
 ) -> Option<LangFileFacts> {
-    let source = std::fs::read_to_string(path).ok()?;
+    let source = sources.read_path(path).ok()?;
     let text = strip_comments_keep_strings(&source);
     let package = owning_package(path, roots, packages);
     let package_root = package

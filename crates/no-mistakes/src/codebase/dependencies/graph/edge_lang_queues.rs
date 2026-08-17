@@ -82,6 +82,7 @@ fn emit_kafka_edges(
     root: &Path,
     all_files: &[PathBuf],
     options: &GraphConfigOptions,
+    sources: &crate::codebase::ts_source::SourceStore,
     edges: &mut Vec<Edge>,
 ) {
     let enqueue_globs = compile_queue_globs(&options.queue_enqueues);
@@ -94,7 +95,7 @@ fn emit_kafka_edges(
         if enqueue.is_none() && worker.is_none() {
             continue;
         }
-        let Some((prod, cons)) = scan_kafka_file(path) else {
+        let Some((prod, cons)) = scan_kafka_file(path, sources) else {
             continue;
         };
         if let Some(cluster) = enqueue {
