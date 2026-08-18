@@ -78,14 +78,24 @@ fn extract_requires(source: &str, path: &Path, roots: &[PathBuf]) -> Vec<String>
 }
 
 fn extract_static_consts(source: &str) -> Vec<String> {
-    extract_named(source, ruby_const_re())
-        .into_iter()
-        .filter(|name| {
-            !source.contains(&format!("{name}.constantize"))
-                && !source.contains(&format!("\"{name}\""))
-                && !source.contains(&format!("'{name}'"))
-        })
-        .collect()
+    let mut names = Vec::new();
+    for cap in ruby_const_re().captures_iter(source) {
+        let Some(matched) = cap.get(1) else {
+            continue;
+        };
+        let before = source.get(..matched.start()).unwrap_or("");
+        let after = source.get(matched.end()..).unwrap_or("");
+        if after.trim_start().starts_with(".constantize")
+            || before.ends_with('"')
+            || before.ends_with('\'')
+        {
+            continue;
+        }
+        names.push(matched.as_str().to_string());
+    }
+    names.sort();
+    names.dedup();
+    names
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {

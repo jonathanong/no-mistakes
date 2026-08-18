@@ -10,8 +10,7 @@ pub(super) fn attach_zeitwerk_refs(
         .iter()
         .filter(|path| {
             path.extension().and_then(|ext| ext.to_str()) == Some("rb")
-                && path.components().any(|part| part.as_os_str() == "app")
-                && roots.iter().any(|root| path.starts_with(root))
+                && roots.iter().any(|root| under_app(root, path))
         })
         .collect();
     let refs: Vec<(PathBuf, Vec<String>)> = facts
@@ -30,7 +29,7 @@ pub(super) fn attach_zeitwerk_refs(
         for reference in references {
             let rel = zeitwerk_rel(&reference);
             let Some(target) = app_files.iter().copied().find(|candidate| {
-                candidate.starts_with(owner)
+                under_app(owner, candidate)
                     && candidate
                         .to_string_lossy()
                         .replace('\\', "/")
@@ -47,6 +46,13 @@ pub(super) fn attach_zeitwerk_refs(
     }
 }
 
+fn under_app(root: &std::path::Path, path: &std::path::Path) -> bool {
+    path.strip_prefix(root)
+        .ok()
+        .and_then(|rel| rel.components().next())
+        .is_some_and(|part| part.as_os_str() == "app")
+}
+
 fn zeitwerk_rel(name: &str) -> String {
     let mut parts = Vec::new();
     for segment in name.split("::") {
@@ -56,10 +62,13 @@ fn zeitwerk_rel(name: &str) -> String {
 }
 
 fn underscore(name: &str) -> String {
+    let chars: Vec<char> = name.chars().collect();
     let mut out = String::new();
-    for (index, ch) in name.chars().enumerate() {
+    for (index, &ch) in chars.iter().enumerate() {
         if ch.is_uppercase() {
-            if index > 0 {
+            let prev_lower = index > 0 && chars[index - 1].is_lowercase();
+            let next_lower = chars.get(index + 1).is_some_and(|next| next.is_lowercase());
+            if index > 0 && (prev_lower || next_lower) {
                 out.push('_');
             }
             out.extend(ch.to_lowercase());
