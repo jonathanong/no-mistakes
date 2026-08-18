@@ -145,6 +145,51 @@ fn flags_tuple_assignments_merge_row_and_set_operations() {
 }
 
 #[test]
+fn insert_into_query_target_and_derived_update_are_skipped() {
+    use sqlparser::ast::{Statement, TableObject};
+
+    let Statement::Insert(mut insert) = crate::codebase::postgres::parse_postgres_sql(
+        "INSERT INTO items VALUES (1, now(), 'n')",
+    )
+    .unwrap()
+    .pop()
+    .expect("insert") else {
+        panic!("expected insert");
+    };
+    let Statement::Query(query) = crate::codebase::postgres::parse_postgres_sql("SELECT 1")
+        .unwrap()
+        .pop()
+        .expect("query")
+    else {
+        panic!("expected query");
+    };
+    insert.table = TableObject::TableQuery(query);
+    let mut writes = Vec::new();
+    super::insert::collect_insert_writes(&insert, &catalog(), &mut writes);
+    assert!(writes.is_empty(), "{writes:?}");
+    assert!(columns("UPDATE (SELECT * FROM items) SET created_at = now()").is_empty());
+}
+
+#[test]
+fn merging_catalog_entries_fills_missing_column_order() {
+    let mut tables = GeneratedTableColumns::default();
+    tables.insert_table(GeneratedTable {
+        name: "items".to_string(),
+        generated: ["created_at".to_string()].into_iter().collect(),
+        column_order: None,
+    });
+    tables.insert_table(GeneratedTable {
+        name: "items".to_string(),
+        generated: ["created_at".to_string()].into_iter().collect(),
+        column_order: Some(vec!["id".to_string(), "created_at".to_string()]),
+    });
+    assert_eq!(
+        tables.get("items").expect("items").column_order.as_deref(),
+        Some(["id".to_string(), "created_at".to_string()].as_slice())
+    );
+}
+
+#[test]
 fn merging_catalog_entries_keeps_schema_order() {
     let mut tables = catalog();
     tables.insert_table(GeneratedTable {

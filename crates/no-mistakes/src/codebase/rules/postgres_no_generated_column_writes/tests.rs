@@ -135,6 +135,27 @@ fn invalid_include_glob_errors_and_missing_files_are_skipped() {
 }
 
 #[test]
+fn missing_dml_files_with_a_schema_are_silent() {
+    let root = fixture();
+    let findings = check_with_files(
+        &root,
+        &config_with_options("{}"),
+        &[
+            root.join("schema.sql"),
+            root.join("missing.ts"),
+            root.join("missing.sql"),
+        ],
+    )
+    .unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file == "schema.sql"),
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn check_entry_point_uses_discovery() {
     let root = fixture();
     let findings = super::check(&root, &config_with_options("{}")).unwrap();

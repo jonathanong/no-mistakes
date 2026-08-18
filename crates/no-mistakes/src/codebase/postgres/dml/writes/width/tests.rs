@@ -25,4 +25,16 @@ fn query_width_covers_values_select_union_and_unknown() {
         )),
         Some(2)
     );
+    let unknown = parse_postgres_sql("INSERT INTO t VALUES (1)")
+        .unwrap()
+        .pop()
+        .expect("insert");
+    let mut table_query = insert_source("INSERT INTO t SELECT 1");
+    table_query.body = Box::new(sqlparser::ast::SetExpr::Insert(unknown.clone()));
+    assert_eq!(query_value_width(&table_query), None);
+    let mut union_query = insert_source("INSERT INTO t SELECT 1 UNION ALL SELECT 2");
+    if let sqlparser::ast::SetExpr::SetOperation { right, .. } = union_query.body.as_mut() {
+        *right = Box::new(sqlparser::ast::SetExpr::Insert(unknown));
+    }
+    assert_eq!(query_value_width(&union_query), Some(1));
 }
