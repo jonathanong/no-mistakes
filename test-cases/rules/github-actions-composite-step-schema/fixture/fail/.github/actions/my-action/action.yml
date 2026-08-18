@@ -1,0 +1,9 @@
+name: Timeout Action
+description: Composite action with an unsupported step timeout
+runs:
+  using: composite
+  steps:
+    - name: Do something
+      timeout-minutes: 5
+      run: echo hello
+      shell: bash

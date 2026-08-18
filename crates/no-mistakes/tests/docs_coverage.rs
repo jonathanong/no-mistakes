@@ -230,6 +230,7 @@ fn no_mistakes_rules_have_docs() {
         rules::CSHARP_MAX_LINES_PER_FILE,
         rules::DOC_CONSISTENCY,
         rules::FILE_EXTENSION_POLICY,
+        rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
         rules::FORBIDDEN_DEPENDENCIES,
         rules::FORBIDDEN_WORKSPACE_CLOSURE,
         rules::INTEGRATION_TEST_NO_MOCKS,
