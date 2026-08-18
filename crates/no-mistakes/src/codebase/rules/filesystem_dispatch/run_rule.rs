@@ -79,6 +79,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         TEST_EMAIL_DOMAIN_POLICY => {
             test_email_domain_policy::check_with_files_and_sources(root, config, files, sources)
         }
+        TEST_NO_DEPENDENCY_PINS => {
+            test_no_dependency_pins::check_with_files_and_sources(root, config, files, sources)
+        }
         INTEGRATION_TEST_NO_MOCKS => {
             integration_test_no_mocks::check_with_files_and_sources(root, config, files, sources)
         }

@@ -475,3 +475,65 @@ fn rust_no_inline_allows_filesystem_runner_accepts_absolute_roots() {
     assert_eq!(findings[0].file, "src/a.rs");
     assert_eq!(findings[1].file, "src/b.rs");
 }
+
+// ── test-no-dependency-pins ──────────────────────────────────────────────────
+
+#[test]
+fn test_no_dependency_pins_fails_for_exact_pins() {
+    let root = fixture("test-no-dependency-pins", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("test-no-dependency-pins"), "{body}");
+    assert!(body.contains("action-ref.test.mts"), "{body}");
+    assert!(body.contains("tool-version.test.mts"), "{body}");
+    assert!(body.contains("release-url.test.mts"), "{body}");
+    assert!(body.contains("release-asset.test.mts"), "{body}");
+    assert!(body.contains("tool-log.test.mts"), "{body}");
+}
+
+#[test]
+fn test_no_dependency_pins_passes_for_negatives_and_suppressions() {
+    let root = fixture("test-no-dependency-pins", "pass");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn test_no_dependency_pins_json_has_rule_id() {
+    let root = fixture("test-no-dependency-pins", "fail");
+    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
+    std::fs::write(
+        config.path(),
+        "rules:\n  - rule: test-no-dependency-pins\n    scope: repository\n",
+    )
+    .unwrap();
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(config.path())
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    assert!(body.contains("test-no-dependency-pins"), "{body}");
+    assert!(!out.status.success());
+}
+
+#[test]
+fn test_no_dependency_pins_filesystem_runner_discovers_files() {
+    let root = fixture("test-no-dependency-pins", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("test-no-dependency-pins"), "{body}");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.rule == no_mistakes::codebase::rules::TEST_NO_DEPENDENCY_PINS),
+        "{body}"
+    );
+}
