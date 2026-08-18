@@ -15,6 +15,7 @@ pub mod markdown_sections;
 pub mod md_links;
 pub mod package_deps;
 pub mod pnpm_lock;
+pub mod postgres;
 pub mod queries;
 pub mod rules;
 pub(crate) mod storybook;
