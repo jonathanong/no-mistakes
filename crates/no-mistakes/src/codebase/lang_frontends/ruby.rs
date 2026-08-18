@@ -1,5 +1,7 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+#[path = "ruby_zeitwerk.rs"]
+mod zeitwerk;
 use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::{Path, PathBuf};
@@ -13,7 +15,11 @@ pub(crate) fn collect_ruby_facts(
 ) -> LangFactMap {
     let roots = configured_roots(root, apps);
     let files = files_under(all_files, &roots, "rb");
-    super::facts::collect_files_parallel(files, |path| parse_ruby_file(path, &roots, apps, sources))
+    let mut facts = super::facts::collect_files_parallel(files, |path| {
+        parse_ruby_file(path, &roots, apps, sources)
+    });
+    zeitwerk::attach_zeitwerk_refs(&mut facts, &roots, all_files);
+    facts
 }
 
 fn parse_ruby_file(
@@ -33,7 +39,7 @@ fn parse_ruby_file(
         }),
         imports: extract_requires(&text, path, roots),
         declarations: extract_ruby_declarations(&text),
-        references: extract_named(&text, ruby_const_re()),
+        references: extract_static_consts(&text),
         route_handlers: extract_pairs(&text, rails_route_re()),
         queue_enqueues: extract_named(&text, active_job_re()),
         queue_workers: extract_named(&text, ruby_job_class_re()),
@@ -69,6 +75,27 @@ fn extract_requires(source: &str, path: &Path, roots: &[PathBuf]) -> Vec<String>
     imports.sort();
     imports.dedup();
     imports
+}
+
+fn extract_static_consts(source: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    for cap in ruby_const_re().captures_iter(source) {
+        let Some(matched) = cap.get(1) else {
+            continue;
+        };
+        let before = source.get(..matched.start()).unwrap_or("");
+        let after = source.get(matched.end()..).unwrap_or("");
+        if after.trim_start().starts_with(".constantize")
+            || before.ends_with('"')
+            || before.ends_with('\'')
+        {
+            continue;
+        }
+        names.push(matched.as_str().to_string());
+    }
+    names.sort();
+    names.dedup();
+    names
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {

@@ -158,6 +158,21 @@ fn language_frontend_edges_cover_configured_extractors() {
     assert!(rails_edges
         .iter()
         .any(|(_, _, kind)| *kind == EdgeKind::RouteRef));
+    assert!(rails_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RubyReference
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("notifier.rb"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("admin/user.rb"))
+    }));
+    assert!(rails_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RubyReference
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("dynamic.rb"))
+    }));
 
     let php = lang_fixture("php-laravel");
     let php_edges =

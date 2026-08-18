@@ -245,6 +245,18 @@ fn rails_collects_route_and_active_job() {
         .find(|file| file.path.ends_with("controllers/users_controller.rb"))
         .expect("controller");
     assert_eq!(controller.queue_enqueues, vec!["WelcomeJob".to_string()]);
+    let notifier = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("notifier.rb"))
+        .expect("notifier");
+    assert!(notifier.references.iter().any(|name| name == "Admin::User"));
+    let dynamic = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("dynamic.rb"))
+        .expect("dynamic");
+    assert!(dynamic.references.iter().all(|name| name != "Admin::User"));
 }
 
 #[test]
