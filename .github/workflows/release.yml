@@ -49,8 +49,6 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        with:
-          toolchain: "1.96.0"
 
       - name: Install Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
@@ -154,7 +152,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
         with:
-          toolchain: "1.96.0"
           components: clippy, rustfmt
 
       - name: Install Node.js
@@ -279,7 +276,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
         with:
-          toolchain: "1.96.0"
           targets: ${{ matrix.target }}
 
       - name: Cache Rust build artifacts
@@ -428,8 +424,6 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        with:
-          toolchain: "1.96.0"
 
       - name: Install Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
