@@ -114,6 +114,7 @@ fn analyze_project_with_prepared_inner<T>(
             }
         }
     }
+    crate::server_routes::lang::merge_language_route_facts(prepared, &mut facts, filter.as_ref());
     Ok(builder(prepared, &facts, &client_paths))
 }
 
@@ -139,7 +140,7 @@ pub(crate) fn configure_fact_context(
     }
 }
 
-fn build_filter(filters: &[String]) -> anyhow::Result<Option<GlobSet>> {
+pub(super) fn build_filter(filters: &[String]) -> anyhow::Result<Option<GlobSet>> {
     if filters.is_empty() {
         return Ok(None);
     }

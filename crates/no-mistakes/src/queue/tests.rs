@@ -1,4 +1,5 @@
 mod collisions;
+mod lang;
 mod prepared;
 mod resolver;
 use super::*;

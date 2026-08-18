@@ -1,3 +1,4 @@
+mod cli;
 mod facts;
 mod go;
 mod kafka;
@@ -20,6 +21,10 @@ mod tests_p3;
 
 use std::path::{Path, PathBuf};
 
+pub(crate) use cli::{
+    each_lang_map, lang_config_from_v2, lang_config_is_empty, matching_cluster,
+    queue_globs_from_v2, QueueGlobMatchers,
+};
 pub(crate) use facts::{LangFactMap, LangFileFacts};
 pub(crate) use go::collect_go_facts;
 pub(crate) use kafka::{scan_file as scan_kafka_file, topic_identity};

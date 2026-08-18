@@ -9,6 +9,7 @@ mod graph_entities;
 mod graph_model;
 mod graph_related;
 mod graph_resolution;
+mod lang;
 mod resolver;
 mod source;
 mod types;

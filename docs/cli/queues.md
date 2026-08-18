@@ -2,11 +2,11 @@
 
 Analyze queue producer/worker relationships for BullMQ and glide-mq.
 
-Configured Celery, Asynq, Kafka, Active Job, and Laravel sites emit the same
-canonical `queue-enqueue` / `queue-worker` graph edges. Query those through
-`dependents --relationship queue` (or the language filter). The dedicated
-`queues` command still reports the TypeScript queue pipeline; wiring those
-language edges into `queues edges|related|check` is later work.
+Configured Celery, Asynq, Kafka, Active Job, Laravel, and Symfony Messenger
+sites emit the same canonical `queue-enqueue` / `queue-worker` graph edges.
+`queues edges|related|check` projects those language edges from the same
+facts as the dependency graph. TypeScript baseline fields stay identical
+when language packages are configured on a TypeScript-only tree.
 
 | Leaf command | Purpose |
 | --- | --- |

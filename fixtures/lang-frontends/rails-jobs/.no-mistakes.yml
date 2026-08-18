@@ -2,3 +2,10 @@ tests:
   rails:
     apps:
       - .
+projects:
+  app:
+    type: server
+    root: .
+    queues:
+      enqueues: ["**/*"]
+      workers: ["**/*"]

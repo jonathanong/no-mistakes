@@ -1,14 +1,14 @@
 use super::*;
 
-const EXPECTED_FILES: usize = 80;
-const EXPECTED_PARSED: usize = 48;
-const EXPECTED_IMPORTS: usize = 57;
+const EXPECTED_FILES: usize = 84;
+const EXPECTED_PARSED: usize = 49;
+const EXPECTED_IMPORTS: usize = 58;
 const EXPECTED_ENQUEUES: usize = 7;
 const EXPECTED_WORKERS: usize = 6;
-const EXPECTED_ROUTES: usize = 22;
-const EXPECTED_EDGES: usize = 87;
+const EXPECTED_ROUTES: usize = 23;
+const EXPECTED_EDGES: usize = 89;
 const EXPECTED_QUEUE_EDGES: usize = 14;
-const EXPECTED_GLOB_MATCHES: usize = 80;
+const EXPECTED_GLOB_MATCHES: usize = 84;
 
 #[test]
 fn language_frontend_adapters_drive_production_collectors() {

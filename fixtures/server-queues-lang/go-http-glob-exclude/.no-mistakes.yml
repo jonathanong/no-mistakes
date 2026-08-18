@@ -1,0 +1,9 @@
+tests:
+  go:
+    modules: ["."]
+projects:
+  app:
+    type: server
+    root: .
+    routes:
+      - computed.go

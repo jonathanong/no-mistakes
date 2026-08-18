@@ -24,7 +24,7 @@ CLIs are not started.
 | TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Next.js | BullMQ, glide-mq | shipped |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
-| Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
+| Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(`, Flask, FastAPI | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
 | Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
 | Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
@@ -66,16 +66,18 @@ graph exists. Full-suite fallback remains explicit opt-in.
 **HTTP routes.** `server routes`, `server edges`, `server related`, and
 `server contracts` list configured TS/JS route definitions and static client
 calls. Language v1 extractors emit `route` edges into `DepGraph` for Django,
-Rails, and Laravel; query those with `dependents --relationship route`.
-`server routes` does not consume language `RouteRef` facts yet. Do not invent
+Flask, FastAPI, Go HTTP, Rails, Laravel, and Symfony; query those with
+`dependents --relationship route`. `server routes|edges|related` also project
+those language `RouteRef` facts into the existing server report. Do not invent
 a second route graph.
 
 **Queues.** `queues edges`, `queues related`, and `queues check` connect
 TS/JS producers to virtual job nodes to workers. Celery, Asynq, Kafka, Active
-Job, and Laravel emit the same `queue-enqueue` / `queue-worker` edges into
-`DepGraph`; query those with `dependents --relationship queue`. The dedicated
-`queues` commands still report the TypeScript pipeline. They do not get
-private graph shapes.
+Job, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
+`queue-worker` edges into `DepGraph`; query those with
+`dependents --relationship queue`. The dedicated `queues` commands project
+those language edges into the existing report. They do not get private graph
+shapes.
 
 **HTTP clients.** Static client calls produce `http` edges to matching route
 files, the same way TS `fetch` and Swift `Endpoint` literals do.
