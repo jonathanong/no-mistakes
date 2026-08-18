@@ -75,6 +75,7 @@ words:
   - subdirs
   - subpaths
   - tokei
+  - timestamptz
   - tsconfig
   - ungated
   - urlpatterns

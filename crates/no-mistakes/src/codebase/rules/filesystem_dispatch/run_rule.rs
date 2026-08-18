@@ -82,6 +82,11 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         TEST_NO_DEPENDENCY_PINS => {
             test_no_dependency_pins::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_NO_GENERATED_COLUMN_WRITES => {
+            postgres_no_generated_column_writes::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         INTEGRATION_TEST_NO_MOCKS => {
             integration_test_no_mocks::check_with_files_and_sources(root, config, files, sources)
         }

@@ -68,8 +68,14 @@ A call is a database call when:
 `collect_postgres_facts` runs these extractors only when
 `CheckFactPlan.postgres_schema` or `CheckFactPlan.embedded_sql` is set.
 
+`postgres-no-generated-column-writes` consumes these facts. It demands both
+`postgres_schema` and `embedded_sql`, then matches parsed DML writes against
+generated columns. Tables that are not declared in SQL go through that
+rule's `extraGeneratedColumns` option; this layer does not scrape
+`voteTable:` literals.
+
 ## Out of scope
 
-Lock-ordering, generated-column, and runtime-query *rules* are not part of
-this fact layer. Query-name annotations, election-schema vote tables, and
-UUIDv7 predicates are also out of scope.
+Lock-ordering and runtime-query *rules* are not part of this fact layer.
+Query-name annotations, election-schema vote tables, and UUIDv7 predicates
+are also out of scope.

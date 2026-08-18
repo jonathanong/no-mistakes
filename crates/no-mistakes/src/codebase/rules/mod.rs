@@ -27,6 +27,7 @@ pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
 pub mod package_json_registry_only;
 pub mod package_json_workspace_coverage;
+pub mod postgres_no_generated_column_writes;
 pub mod production_dependency_declarations;
 pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;
