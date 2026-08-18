@@ -57,7 +57,9 @@ fn queues_edges_json_lists_celery_jobs() {
     ]);
     assert!(output.status.success(), "{}", stdout(&output));
     let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(json.as_array().unwrap().iter().any(|edge| {
-        edge["kind"] == "queue-enqueue" || edge["kind"] == "queue-worker"
-    }));
+    assert!(json
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|edge| { edge["kind"] == "queue-enqueue" || edge["kind"] == "queue-worker" }));
 }
