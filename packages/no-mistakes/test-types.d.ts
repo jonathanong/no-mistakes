@@ -1,6 +1,7 @@
 import type { SymbolEntrypoint } from "./traversal-types";
 
-type TestPlanFramework =
+/** Runner accepted by `testsPlan`, `testsTargets`, and `TestExecutionTarget`. */
+export type TestPlanFramework =
   | "vitest"
   | "playwright"
   | "dotnet"

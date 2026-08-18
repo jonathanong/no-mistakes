@@ -39,6 +39,7 @@ pub(crate) struct SetSpec {
     pub(crate) property: String,
     pub(crate) pattern: String,
     pub(crate) key: String,
+    pub(crate) min_size: usize,
 }
 
 #[derive(Deserialize, Default)]
@@ -147,6 +148,9 @@ pub(super) fn finding(
 #[cfg(test)]
 #[path = "finite_set_consistency/tests/config_sets.rs"]
 mod config_set_tests;
+#[cfg(test)]
+#[path = "finite_set_consistency/tests/min_size.rs"]
+mod min_size_tests;
 #[cfg(test)]
 #[path = "finite_set_consistency/tests/object_comment.rs"]
 mod object_comment_tests;

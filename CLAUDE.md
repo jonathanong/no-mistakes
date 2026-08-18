@@ -106,16 +106,31 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   Shepherd Journal before resolving the thread.
 - Rule suppression must work consistently for every `no-mistakes` rule. Use `no-mistakes` suppression directives, never `guardrails`, and support top-of-file opt-outs (`no-mistakes-disable-file`) plus line-specific opt-outs (`no-mistakes-disable-line` and `no-mistakes-disable-next-line`) where findings have line numbers.
 - All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
-- When adding or changing a CLI-facing capability, update the Rust library entrypoint,
-  N-API binding, JS exports/types, and fixture-backed tests in the same change.
-- When adding or changing a CLI command, update `docs/cli/*`, the Node API docs
-  when there is programmatic parity, and the `skills/no-mistakes` references.
-- When adding or changing a `no-mistakes check` rule, update `docs/rules/*`
-  with a clear example, counterexample, fix guidance, and any suppression caveats.
-- When adding or changing an ESLint/Oxlint rule, update
-  `docs/eslint-rules/*` with a clear example, counterexample, and fix guidance.
-- When adding a graph edge kind or relationship filter, update
-  `docs/graph-edges.md` with direction, filter mapping, examples, and caveats.
+
+### Public surface checklist
+
+A feature is not done until the matching rows land in the same change. Do not
+land a CLI or N-API capability without the binding, types, docs, and fixtures
+in that PR.
+
+- **Rust library** — the entrypoint, rule, or planner that implements the
+  behavior.
+- **N-API** — async binding (`json_binding!`), JS facade, and
+  `packages/no-mistakes/*.d.ts`. New or widened unions, option fields, and
+  report types that callers need to name must be `export`ed. Do not leave a
+  public contract only as `SomeType['field']`.
+- **Docs (required, not optional)** — `docs/cli/*` for commands,
+  `docs/node-api.md` (CLI mapping and runtime export table) for any
+  programmatic API, `docs/rules/*` for check rules (example, counterexample,
+  fix, suppression, new options), `docs/eslint-rules/*` for lint rules,
+  `docs/graph-edges.md` for new edge kinds or filters, `docs/configuration/*`
+  for new config knobs, `docs/feature-parity.md` when language or framework
+  surface changes, and `skills/no-mistakes` references for agent-facing
+  commands.
+- **Tests** — fixture-backed behavior, plus declaration locks in
+  `packages/no-mistakes/scripts/api.test.js` when `.d.ts` contracts change,
+  plus `crates/no-mistakes/tests/docs_coverage.rs` when adding a CLI command
+  or rule page.
 
 ## Agent Best Practices
 

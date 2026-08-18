@@ -285,3 +285,146 @@ comparisons:
     .unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[cfg(unix)]
+#[test]
+fn empty_path_regex_sets_pass_equal_set_without_min_size() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let findings = check_with_files_and_sources(
+        &root,
+        &path_regex_config(
+            r#"
+sets:
+  - name: missingFiles
+    kind: path-regex-capture
+    pattern: "^does-not-exist/(?<value>[^/]+)\\.ts$"
+  - name: missingLinks
+    kind: path-regex-capture
+    pattern: "^also-missing/(?<value>[^/]+)$"
+comparisons:
+  - left: missingFiles
+    right: missingLinks
+    mode: equal-set
+"#,
+        ),
+        &[root.join("alpha.txt")],
+        &sources,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[cfg(unix)]
+#[test]
+fn empty_path_regex_sets_fail_closed_when_min_size_is_one() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let findings = check_with_files_and_sources(
+        &root,
+        &path_regex_config(
+            r#"
+sets:
+  - name: missingFiles
+    kind: path-regex-capture
+    pattern: "^does-not-exist/(?<value>[^/]+)\\.ts$"
+    minSize: 1
+  - name: missingLinks
+    kind: path-regex-capture
+    pattern: "^also-missing/(?<value>[^/]+)$"
+    minSize: 1
+comparisons:
+  - left: missingFiles
+    right: missingLinks
+    mode: equal-set
+"#,
+        ),
+        &[root.join("alpha.txt")],
+        &sources,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings.iter().all(|finding| {
+        finding.rule == RULE_ID
+            && finding
+                .message
+                .contains("extracted 0 values but minSize is 1")
+            && !finding.message.contains("contains")
+    }));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("missingFiles")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("missingLinks")));
+}
+
+#[cfg(unix)]
+#[test]
+fn path_regex_min_size_fails_when_extract_is_smaller_than_required() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let findings = check_with_files_and_sources(
+        &root,
+        &path_regex_config(
+            r#"
+sets:
+  - name: kept
+    kind: path-regex-capture
+    pattern: "^(?<value>alpha)\\.txt$"
+    minSize: 2
+comparisons:
+  - left: kept
+    right: kept
+    mode: equal-set
+"#,
+        ),
+        &[root.join("alpha.txt")],
+        &sources,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0]
+            .message
+            .contains("finite set 'kept' extracted 1 values but minSize is 2"),
+        "{findings:?}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn path_regex_min_size_passes_when_extract_meets_required_size() {
+    let root = saved_fixture("path-regex-directory-symlink");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+    let findings = check_with_files_and_sources(
+        &root,
+        &path_regex_config(
+            r#"
+sets:
+  - name: kept
+    kind: path-regex-capture
+    pattern: "^(?<value>alpha)\\.txt$"
+    minSize: 1
+  - name: linkSet
+    kind: path-regex-capture
+    pattern: "^(?<value>alpha)$"
+    minSize: 1
+comparisons:
+  - left: kept
+    right: linkSet
+    mode: equal-set
+"#,
+        ),
+        &[root.join("alpha.txt")],
+        &sources,
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}

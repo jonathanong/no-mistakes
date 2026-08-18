@@ -16,6 +16,7 @@ rules:
         - name: routeFiles
           kind: path-regex-capture
           pattern: "^src/routes/(?<value>[^/]+)\\.ts$"
+          minSize: 1
         - name: workspaceExcludes
           file: pnpm-workspace.yaml
           kind: yaml-sequence
@@ -56,6 +57,13 @@ the git/discovery path string and does not follow the link or require a
 regular-file target. Graph and source discovery still use readable file
 targets only, so those views stay unchanged.
 
+Set `minSize` on any set when an empty extract must fail closed. `equal-set`
+treats two empty sets as equal, so a renamed pattern or missing directory
+would otherwise pass. When an extract has fewer members than `minSize`, the
+rule reports that set and skips comparisons that use it. `minSize` defaults
+to `0` and is kind-agnostic. Use `minSize: 1` for live inventories such as
+skill-directory captures.
+
 `ts-call-first-string-argument` extracts the first argument from every matching
 call in the configured file. The argument must be a quoted string or an
 expression-free template literal. `target` is an exact syntactic callee name,
@@ -82,12 +90,14 @@ Comparison modes:
 Counterexample: a TypeScript union includes `"settings"` but no matching route
 file exists, a workspace YAML allowlist names a package missing from a TS
 registry, a registry package is not covered by any dependabot glob, a package
-is missing from a markdown policy table, or a scheduler registration is missing
-from its registry.
+is missing from a markdown policy table, a scheduler registration is missing
+from its registry, or two `path-regex-capture` sets both extract nothing and
+would pass `equal-set` without `minSize: 1`.
 
 Fix: add the missing value to the other set, remove stale values, replace a
 dynamic call argument with a static string when it is part of the checked
-finite set, or narrow the configured extraction.
+finite set, restore the files or pattern that should populate a `minSize`
+set, or narrow the configured extraction.
 
 Suppression: use `no-mistakes` suppression directives. Findings currently report
 line 1 for finite set mismatches.

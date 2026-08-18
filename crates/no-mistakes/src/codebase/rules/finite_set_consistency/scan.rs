@@ -1,4 +1,4 @@
-use super::extract::{self, extract_set_with_sources};
+use super::extract::{self, extract_set_with_sources, ExtractedSet, ExtractionIssue};
 use super::extraction_completeness;
 use super::{comparison, Options, RuleFinding, RULE_ID};
 use crate::codebase::dependencies::graph::TsFactLookup;
@@ -53,10 +53,10 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
         } else {
             files
         };
-        sets.insert(
-            spec.name.clone(),
-            extract_set_with_sources(root, spec, extract_files, target_roots, sources, facts)?,
-        );
+        let mut extracted =
+            extract_set_with_sources(root, spec, extract_files, target_roots, sources, facts)?;
+        enforce_min_size(spec, &mut extracted);
+        sets.insert(spec.name.clone(), extracted);
     }
 
     let mut findings = Vec::new();
@@ -96,4 +96,21 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
+}
+
+fn enforce_min_size(spec: &super::SetSpec, set: &mut ExtractedSet) {
+    if spec.min_size == 0 || set.values.len() >= spec.min_size {
+        return;
+    }
+    set.issues.push(ExtractionIssue {
+        file: set.file.clone(),
+        line: 1,
+        message: format!(
+            "finite set '{}' extracted {} values but minSize is {}",
+            spec.name,
+            set.values.len(),
+            spec.min_size
+        ),
+        target: None,
+    });
 }
