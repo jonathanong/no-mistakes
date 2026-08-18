@@ -40,6 +40,7 @@ rules:
 | [`markdown-structure-budget`](markdown-structure-budget.md)                   | Limit tables and Mermaid diagrams in oversized Markdown.                        |
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md)                             | Ban Next.js API route files.                                                    |
 | [`nextjs-no-caching`](nextjs-no-caching.md)                                   | Ban Next.js caching features.                                                   |
+| [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md)       | Ban empty/comment-only files.                                                   |
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |

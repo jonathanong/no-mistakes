@@ -111,6 +111,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
                 root, config, files, sources,
             )
         }
+        NEXTJS_REDIRECT_DESTINATIONS => {
+            nextjs_redirect_destinations::check_with_files_and_sources(root, config, files, sources)
+        }
         _ => fallback(root, config, files),
     }
 }

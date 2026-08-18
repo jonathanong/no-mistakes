@@ -173,6 +173,60 @@ fn nextjs_no_api_routes_fails_for_app_and_pages_routes() {
 }
 
 #[test]
+fn nextjs_redirect_destinations_passes_for_existing_page() {
+    let root = fixture("nextjs-redirect-destinations", "pass");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn nextjs_redirect_destinations_fails_for_missing_page() {
+    let root = fixture("nextjs-redirect-destinations", "fail-missing");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("nextjs-redirect-destinations"), "{body}");
+    assert!(body.contains("/gone"), "{body}");
+}
+
+#[test]
+fn nextjs_redirect_destinations_flags_private_underscore_routes() {
+    let root = fixture("nextjs-redirect-destinations", "skip-private");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("nextjs-redirect-destinations"), "{body}");
+    assert!(body.contains("/secret"), "{body}");
+}
+
+#[test]
+fn nextjs_redirect_destinations_checks_rewrites_by_default() {
+    let root = fixture("nextjs-redirect-destinations", "rewrite-fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("nextjs-redirect-destinations"), "{body}");
+    assert!(body.contains("rewrite destination"), "{body}");
+}
+
+#[test]
+fn nextjs_redirect_destinations_flags_extractor_drift() {
+    let root = fixture("nextjs-redirect-destinations", "fail-extractor");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("nextjs-redirect-destinations"), "{body}");
+    assert!(
+        body.contains("could not locate the redirects() body"),
+        "{body}"
+    );
+}
+
+#[test]
 fn nextjs_no_caching_fails_for_cache_features() {
     let root = codebase_fixture("no-nextjs-caching");
     let out = check_fixture_config(&root, ".no-mistakes.yml");

@@ -16,6 +16,7 @@ pub use super::markdown_reachability::RULE_ID as MARKDOWN_REACHABILITY;
 pub use super::markdown_structure_budget::RULE_ID as MARKDOWN_STRUCTURE_BUDGET;
 pub use super::nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use super::nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
+pub use super::nextjs_redirect_destinations::RULE_ID as NEXTJS_REDIRECT_DESTINATIONS;
 pub use super::no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_ONLY_FILES;
 pub use super::no_git_identity_mutation::RULE_ID as NO_GIT_IDENTITY_MUTATION;
 pub use super::package_json_registry_only::RULE_ID as PACKAGE_JSON_REGISTRY_ONLY;

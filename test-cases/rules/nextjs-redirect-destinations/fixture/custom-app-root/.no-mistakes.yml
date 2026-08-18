@@ -1,0 +1,6 @@
+rules:
+  - rule: nextjs-redirect-destinations
+    scope: repository
+    options:
+      appRoot: src/app
+      configPath: configs/next.config.ts

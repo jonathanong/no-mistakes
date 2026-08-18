@@ -240,6 +240,7 @@ fn no_mistakes_rules_have_docs() {
         rules::MARKDOWN_STRUCTURE_BUDGET,
         rules::NEXTJS_NO_API_ROUTES,
         rules::NEXTJS_NO_CACHING,
+        rules::NEXTJS_REDIRECT_DESTINATIONS,
         rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,
         rules::NO_GIT_IDENTITY_MUTATION,
         rules::PACKAGE_JSON_REGISTRY_ONLY,
