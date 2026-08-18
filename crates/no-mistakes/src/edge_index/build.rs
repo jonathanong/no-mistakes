@@ -1,6 +1,8 @@
 use super::adjacency;
 use super::{CanonicalEdge, EdgeIndex};
-use std::collections::{HashMap, HashSet};
+#[cfg(debug_assertions)]
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::hash::Hash;
 
 mod extend;

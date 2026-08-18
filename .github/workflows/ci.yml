@@ -16,6 +16,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  RUSTFLAGS: "-D warnings"
 
 jobs:
   changes:
@@ -146,6 +147,18 @@ jobs:
 
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Deny rustc warnings in release
+        run: >
+          cargo check --locked --workspace --release
+          --lib --bins --benches
+          --no-default-features
+          --features test-instrumentation
+
+      - name: Deny rustc warnings in coverage test builds
+        env:
+          RUSTFLAGS: "-D warnings --cfg coverage"
+        run: cargo check --locked --workspace --lib --tests --all-features
 
       - name: Run Oxlint
         run: npm run lint:js
@@ -366,6 +379,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RAYON_NUM_THREADS: "4"
+      # Full LTO + one codegen unit is memory-heavy on shared runners.
+      CARGO_BUILD_JOBS: "2"
 
     steps:
       - name: Checkout
@@ -382,6 +397,8 @@ jobs:
           key: bench
 
       - name: Install cargo-codspeed
+        env:
+          RUSTFLAGS: ""
         run: cargo install cargo-codspeed --version 5.0.1 --locked
 
       - name: Build CPU and memory benchmarks
