@@ -74,6 +74,8 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,
+        postgres_schema: false,
+        embedded_sql: false,
         graph: if enabled.dynamic_import_rules {
             no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
         } else {

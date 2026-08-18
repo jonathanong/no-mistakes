@@ -20,6 +20,7 @@ request structured output, understand config, and keep source code analyzable.
 
 ## Reference
 
+- [PostgreSQL facts](postgres-facts.md) describes the schema and embedded-SQL fact sources used by later SQL rules.
 - [Architecture](architecture.md) describes the one-pass, in-memory, graph-based
   execution model.
 - [AST-grep regression rules](ast-grep-rules.md) guard the source shapes that
