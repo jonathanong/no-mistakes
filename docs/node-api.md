@@ -68,7 +68,7 @@ const {
 | `effects` | `effects(options)` |
 | `rsc-callers` | `rscCallers(options)` |
 | `registry-extension` | `registryExtension(options)` |
-| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, or `php` |
+| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, or `php`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
 | `tests targets` | `testsTargets(options)` |
 | `tests impact` | `testsImpact(options)` |
 | `tests why` | `testsWhy(options)` |

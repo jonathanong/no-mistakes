@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: missingFiles
+          kind: path-regex-capture
+          pattern: "^does-not-exist/(?<value>[^/]+)\\.ts$"
+          minSize: 1
+        - name: missingLinks
+          kind: path-regex-capture
+          pattern: "^also-missing/(?<value>[^/]+)$"
+          minSize: 1
+      comparisons:
+        - left: missingFiles
+          right: missingLinks
+          mode: equal-set

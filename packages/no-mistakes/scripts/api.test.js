@@ -539,6 +539,10 @@ test("test plan declarations require current results but accept saved legacy pla
   );
   assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
   assert.match(declarations, /export type TestsPlanOptions =/);
+  assert.match(
+    declarations,
+    /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php";/,
+  );
   assert.match(declarations, /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/);
   assert.match(declarations, /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/);
   assert.match(declarations, /limitPercent\?: never;[\s\S]*limitFiles\?: never;/);

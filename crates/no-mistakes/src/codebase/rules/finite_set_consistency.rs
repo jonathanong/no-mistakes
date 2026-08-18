@@ -39,6 +39,7 @@ pub(crate) struct SetSpec {
     pub(crate) property: String,
     pub(crate) pattern: String,
     pub(crate) key: String,
+    pub(crate) min_size: usize,
 }
 
 #[derive(Deserialize, Default)]
