@@ -317,6 +317,97 @@ fn rust_max_lines_per_file_json_has_rule_id() {
     );
 }
 
+// ── csharp-max-lines-per-file ─────────────────────────────────────────────────
+
+#[test]
+fn csharp_max_lines_per_file_passes_under_limit() {
+    let root = fixture("csharp-max-lines-per-file", "pass");
+    let out = check(
+        &root,
+        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 20\n",
+    );
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn csharp_max_lines_per_file_fails_over_limit() {
+    let root = fixture("csharp-max-lines-per-file", "fail");
+    let out = check(
+        &root,
+        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
+    );
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(stdout(&out).contains("physical lines"), "{}", stdout(&out));
+    assert!(!stdout(&out).contains("code lines"), "{}", stdout(&out));
+    assert!(stdout(&out).contains("TooLong.cs"), "{}", stdout(&out));
+}
+
+#[test]
+fn csharp_max_lines_per_file_disabled_skips() {
+    let root = fixture("csharp-max-lines-per-file", "fail");
+    let out = check(
+        &root,
+        "rules:\n  - rule: csharp-max-lines-per-file\n    enabled: false\n    scope: repository\n    options:\n      srcMax: 3\n",
+    );
+    assert!(
+        out.status.success(),
+        "disabled rule must not fail: {}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn csharp_max_lines_per_file_json_has_rule_id() {
+    let root = fixture("csharp-max-lines-per-file", "fail");
+    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
+    std::fs::write(
+        config.path(),
+        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
+    )
+    .unwrap();
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(config.path())
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(
+        stdout(&out).contains("csharp-max-lines-per-file"),
+        "{}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn csharp_max_lines_per_file_skips_generated() {
+    let root = fixture("csharp-max-lines-per-file", "generated");
+    let out = check(
+        &root,
+        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
+    );
+    assert!(
+        out.status.success(),
+        "generated files should be excluded: {}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn csharp_max_lines_per_file_uses_test_max() {
+    let root = fixture("csharp-max-lines-per-file", "test");
+    let out = check(
+        &root,
+        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n      testMax: 20\n",
+    );
+    assert!(
+        out.status.success(),
+        "test files should use testMax: {}",
+        stdout(&out)
+    );
+}
+
 // ── no-git-identity-mutation ────────────────────────────────────────────────
 
 #[test]

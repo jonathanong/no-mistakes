@@ -286,6 +286,7 @@ fn run_check_with_facts_reports_test_file_parse_error() {
 fn filesystem_rule_ids_are_distinct() {
     let ids = [
         AGENTS_MD_MAX_SIZE,
+        CSHARP_MAX_LINES_PER_FILE,
         RUST_MAX_LINES_PER_FILE,
         RUST_NO_INLINE_TESTS,
         RUST_NO_INLINE_ALLOWS,
@@ -310,6 +311,10 @@ fn run_filesystem_rules_execute_enabled_rules() {
         (
             "codebase-analysis/filesystem-rules/agents-md-max-size",
             AGENTS_MD_MAX_SIZE,
+        ),
+        (
+            "rules/csharp-max-lines-per-file/fail",
+            CSHARP_MAX_LINES_PER_FILE,
         ),
         (
             "codebase-analysis/filesystem-rules/rust-max-lines-per-file",

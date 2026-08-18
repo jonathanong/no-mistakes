@@ -3,11 +3,11 @@ use std::path::{Path, PathBuf};
 
 use super::{
     agents_md_max_size, banned_paths, banned_renamed_files, config_path_references,
-    doc_consistency, file_extension_policy, finite_set_consistency, forbidden_workspace_closure,
-    github_actions_pinned_hash, integration_test_no_mocks, lockfile_allowlist,
-    markdown_link_display_text, markdown_mermaid_validation, markdown_reachability,
-    markdown_structure_budget, no_empty_or_comments_only_files, no_git_identity_mutation,
-    package_json_registry_only, package_json_workspace_coverage,
+    csharp_max_lines_per_file, doc_consistency, file_extension_policy, finite_set_consistency,
+    forbidden_workspace_closure, github_actions_pinned_hash, integration_test_no_mocks,
+    lockfile_allowlist, markdown_link_display_text, markdown_mermaid_validation,
+    markdown_reachability, markdown_structure_budget, no_empty_or_comments_only_files,
+    no_git_identity_mutation, package_json_registry_only, package_json_workspace_coverage,
     production_dependency_declarations, require_files_in_subdirs, require_test_per_subdir,
     required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
     strict_package_layout, structured_config_policy, test_email_domain_policy,
@@ -28,8 +28,8 @@ mod run_rule;
 mod registry;
 use super::{
     rule_enabled, suppress_rule_findings_with_sources_except, RuleFinding, AGENTS_MD_MAX_SIZE,
-    BANNED_PATHS, BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES, DOC_CONSISTENCY,
-    FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_WORKSPACE_CLOSURE,
+    BANNED_PATHS, BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES, CSHARP_MAX_LINES_PER_FILE,
+    DOC_CONSISTENCY, FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY, FORBIDDEN_WORKSPACE_CLOSURE,
     INTEGRATION_TEST_NO_MOCKS, LOCKFILE_ALLOWLIST, MARKDOWN_LINK_DISPLAY_TEXT,
     MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
     NO_EMPTY_OR_COMMENTS_ONLY_FILES, NO_GIT_IDENTITY_MUTATION, PACKAGE_JSON_REGISTRY_ONLY,
