@@ -1,4 +1,7 @@
-use super::{extract_create_table_metadata, extract_embedded_sql_from_source, EmbeddedSqlOptions};
+use super::{
+    extract_create_table_metadata, extract_dml_write_targets, extract_embedded_sql_from_source,
+    EmbeddedSqlOptions,
+};
 use crate::codebase::check_facts::CheckFactPlan;
 
 #[test]
@@ -33,4 +36,8 @@ fn public_extractors_are_callable_from_the_module_root() {
         &EmbeddedSqlOptions::default(),
     );
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 1"));
+    assert_eq!(
+        extract_dml_write_targets("UPDATE items SET note = 1"),
+        ["items"]
+    );
 }

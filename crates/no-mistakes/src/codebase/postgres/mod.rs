@@ -1,9 +1,9 @@
 //! PostgreSQL schema and embedded-SQL fact sources.
 //!
-//! Later check rules consume these facts instead of re-parsing SQL or
-//! TypeScript. There is no CLI command and no check rule in this module.
+//! Check rules consume these facts instead of re-parsing SQL or TypeScript.
 
 mod collect;
+pub mod dml;
 mod embedded;
 mod parse;
 mod schema;
@@ -11,6 +11,10 @@ mod types;
 
 pub use collect::{
     collect_postgres_facts, collect_schema_facts, extract_embedded_sql_facts, extract_schema_facts,
+};
+pub use dml::{
+    extract_dml_write_targets, find_generated_column_writes, GeneratedColumnWrite, GeneratedTable,
+    GeneratedTableColumns,
 };
 pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
