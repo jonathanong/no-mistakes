@@ -1,3 +1,8 @@
+use super::directive::{
+    call_offset, comment_contains_directive, contains_for_update, floor_char_boundary,
+    has_safe_directive, line_start_offset, DEFAULT_SAFE_DIRECTIVE,
+};
+use super::scan::{findings_for_call, LOCK_ORDERING_TARGET, UNPARSEABLE_TARGET};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
