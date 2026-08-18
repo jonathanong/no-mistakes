@@ -140,7 +140,7 @@ pub(crate) fn configure_fact_context(
     }
 }
 
-fn build_filter(filters: &[String]) -> anyhow::Result<Option<GlobSet>> {
+pub(super) fn build_filter(filters: &[String]) -> anyhow::Result<Option<GlobSet>> {
     if filters.is_empty() {
         return Ok(None);
     }

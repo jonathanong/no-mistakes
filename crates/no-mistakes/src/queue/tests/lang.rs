@@ -16,9 +16,14 @@ fn ts_fixture(name: &str) -> PathBuf {
 
 #[test]
 fn language_packages_do_not_change_typescript_queue_edges() {
-    let root = ts_fixture("basic");
-    let off = analyze_project(&root, None, &[]).unwrap();
-    let on = analyze_project(&root, None, &[]).unwrap();
+    let off = analyze_project(&ts_fixture("basic"), None, &[]).unwrap();
+    let on = analyze_project(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/server-queues-lang/queue-ts-with-lang"),
+        None,
+        &[],
+    )
+    .unwrap();
     assert_eq!(off.edges, on.edges);
     assert_eq!(off.producers, on.producers);
     assert_eq!(off.workers, on.workers);

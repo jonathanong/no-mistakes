@@ -47,11 +47,23 @@ fn go_http_fixture_lists_literal_routes() {
         .routes
         .iter()
         .all(|route| !route.file.ends_with("computed.go")));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| route.route != "/from-test"));
 }
 
 #[test]
 fn go_http_filter_excludes_route_file() {
     let report = analyze_project(&lang_fixture("go-http"), None, &["computed.go".into()]).unwrap();
+    assert!(report.routes.iter().all(|route| route.route != "/health"));
+}
+
+#[test]
+fn server_route_globs_exclude_language_route_files() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/server-queues-lang/go-http-glob-exclude");
+    let report = analyze_project(&root, None, &[]).unwrap();
     assert!(report.routes.iter().all(|route| route.route != "/health"));
 }
 

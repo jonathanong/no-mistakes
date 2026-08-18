@@ -24,7 +24,7 @@ CLIs are not started.
 | TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Next.js | BullMQ, glide-mq | shipped |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
-| Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(` → handler | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
+| Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(`, Flask, FastAPI | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
 | Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
 | Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
