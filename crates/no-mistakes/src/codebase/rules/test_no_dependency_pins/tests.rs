@@ -28,25 +28,16 @@ fn config_with_options(yaml: &str) -> NoMistakesConfig {
     config
 }
 
-fn files_under(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    let mut stack = vec![root.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        for entry in std::fs::read_dir(&dir).unwrap() {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            if path.is_dir() {
-                stack.push(path);
-            } else if path
-                .file_name()
-                .is_some_and(|name| name != ".no-mistakes.yml")
-            {
-                files.push(path);
-            }
-        }
-    }
-    files.sort();
-    files
+fn fail_files(root: &Path) -> Vec<PathBuf> {
+    vec![
+        root.join("src/action-ref.test.mts"),
+        root.join("src/tool-version.test.mts"),
+        root.join("src/release-url.test.mts"),
+        root.join("src/release-asset.test.mts"),
+        root.join("src/tool-log.test.mts"),
+        root.join("src/__tests__/nested.ts"),
+        root.join("src/helper.mock.test.js"),
+    ]
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
@@ -85,8 +76,7 @@ fn default_include_matches_filaments_test_file_re() {
 #[test]
 fn fail_fixture_reports_all_five_pin_shapes() {
     let root = fixture("fail");
-    let findings =
-        check_with_files(&root, &config_with_options("{}"), &files_under(&root)).unwrap();
+    let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
     let reasons: Vec<&str> = findings
         .iter()
         .filter_map(|finding| finding.target.as_deref())
@@ -153,7 +143,7 @@ fn honors_disable_comments() {
 #[test]
 fn custom_include_globs_replace_default_test_file_re() {
     let root = fixture("fail");
-    let files = files_under(&root);
+    let files = fail_files(&root);
     let only_action = check_with_files(
         &root,
         &config_with_options("include: ['**/action-ref.test.mts']"),
