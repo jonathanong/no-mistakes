@@ -1,5 +1,7 @@
+use crate::codebase::lang_frontends::LangFileFacts;
 use crate::server_routes::{analyze_project, prepare_analysis};
-use std::path::PathBuf;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 
 fn lang_fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -65,6 +67,18 @@ fn server_route_globs_exclude_language_route_files() {
         .join("../../fixtures/server-queues-lang/go-http-glob-exclude");
     let report = analyze_project(&root, None, &[]).unwrap();
     assert!(report.routes.iter().all(|route| route.route != "/health"));
+}
+
+#[test]
+fn merge_file_routes_skips_files_without_handlers() {
+    let root = Path::new("/repo");
+    let file = LangFileFacts {
+        path: root.join("app.go"),
+        ..Default::default()
+    };
+    let mut facts = HashMap::new();
+    super::merge_file_routes(root, &file, &mut facts, None, None, None);
+    assert!(facts.is_empty());
 }
 
 #[test]

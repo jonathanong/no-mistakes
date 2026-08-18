@@ -83,4 +83,64 @@ fn prefixed_globs_keep_or_add_project_root() {
         prefixed_globs(Some("worker"), &["worker/**/*".into()]),
         vec!["worker/**/*"]
     );
+    assert_eq!(prefixed_globs(None, &["app/**".into()]), vec!["app/**"]);
+    assert_eq!(prefixed_globs(Some(""), &["app/**".into()]), vec!["app/**"]);
+    assert_eq!(
+        prefixed_globs(Some("  "), &["app/**".into()]),
+        vec!["app/**"]
+    );
+    assert_eq!(
+        prefixed_globs(Some("worker/"), &["**/*".into()]),
+        vec!["worker/**/*"]
+    );
+}
+
+#[test]
+fn queue_globs_from_v2_skips_invalid_patterns() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+projects:
+  worker:
+    type: server
+    root: .
+    queues:
+      enqueues: ["[", "**/*.py"]
+      workers: ["[", "**/*.go"]
+"#,
+    )
+    .unwrap();
+    let globs = queue_globs_from_v2(&config);
+    assert_eq!(globs.enqueues.len(), 1);
+    assert_eq!(globs.workers.len(), 1);
+    assert_eq!(globs.enqueues[0].1, "**/*.py");
+    assert_eq!(globs.workers[0].1, "**/*.go");
+}
+
+#[test]
+fn lang_config_from_v2_copies_configured_packages() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+tests:
+  python:
+    packages: ["app"]
+  go:
+    modules: ["."]
+  rust:
+    packages: ["crate"]
+  rails:
+    apps: ["web"]
+  php:
+    apps: ["api"]
+    framework: symfony
+"#,
+    )
+    .unwrap();
+    let lang = lang_config_from_v2(&config);
+    assert!(!lang_config_is_empty(&lang));
+    assert_eq!(lang.python_packages, vec!["app"]);
+    assert_eq!(lang.go_modules, vec!["."]);
+    assert_eq!(lang.rust_packages, vec!["crate"]);
+    assert_eq!(lang.rails_apps, vec!["web"]);
+    assert_eq!(lang.php_apps, vec!["api"]);
+    assert_eq!(lang.php_framework.as_deref(), Some("symfony"));
 }
