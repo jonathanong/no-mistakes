@@ -80,6 +80,9 @@ pub(crate) fn check_with_files_and_sources(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        if files.is_empty() {
+            continue;
+        }
         let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
         findings.extend(scan_files(root, &opts, &files, sources));
     }
