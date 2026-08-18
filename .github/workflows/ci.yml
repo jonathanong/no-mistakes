@@ -155,6 +155,11 @@ jobs:
           --no-default-features
           --features test-instrumentation
 
+      - name: Deny rustc warnings in coverage test builds
+        env:
+          RUSTFLAGS: "-D warnings --cfg coverage"
+        run: cargo check --locked --workspace --lib --tests --all-features
+
       - name: Run Oxlint
         run: npm run lint:js
 
