@@ -61,11 +61,12 @@ fn collect_schema_facts_honors_include_globs() {
 fn collect_schema_facts_custom_glob_matches_basename() {
     let root = fixture_root();
     let generated = schema_path("generated-column.sql");
-    let sources = store(&[generated.clone()]);
+    let sources = store(std::slice::from_ref(&generated));
     let options = PostgresSchemaOptions {
         sql_include: vec!["generated-column.sql".to_string()],
     };
-    let facts = collect_schema_facts(&root, &sources, &[generated], &options).unwrap();
+    let facts =
+        collect_schema_facts(&root, &sources, std::slice::from_ref(&generated), &options).unwrap();
     assert_eq!(facts.len(), 1);
 }
 
@@ -87,8 +88,9 @@ fn invalid_sql_include_glob_returns_error() {
 #[test]
 fn extract_schema_facts_reports_unparseable_sql() {
     let path = schema_path("invalid.sql");
-    let sources = store(&[path.clone()]);
-    let error = extract_schema_facts(Path::new("/repo"), &sources, &[path.clone()]).unwrap_err();
+    let sources = store(std::slice::from_ref(&path));
+    let error = extract_schema_facts(Path::new("/repo"), &sources, std::slice::from_ref(&path))
+        .unwrap_err();
     assert_eq!(error.path.as_deref(), Some(path.as_path()));
     assert!(!error.message.is_empty());
 }
@@ -97,7 +99,8 @@ fn extract_schema_facts_reports_unparseable_sql() {
 fn extract_schema_facts_reports_read_errors() {
     let missing = fixture_root().join("schema/does-not-exist.sql");
     let sources = store(&[]);
-    let error = extract_schema_facts(Path::new("/repo"), &sources, &[missing.clone()]).unwrap_err();
+    let error = extract_schema_facts(Path::new("/repo"), &sources, std::slice::from_ref(&missing))
+        .unwrap_err();
     assert_eq!(error.path.as_deref(), Some(missing.as_path()));
     assert!(error.to_string().contains("failed to read"));
 }
@@ -105,11 +108,11 @@ fn extract_schema_facts_reports_read_errors() {
 #[test]
 fn extract_embedded_sql_facts_reads_through_source_store() {
     let tagged = embedded_path("tagged-template.ts");
-    let sources = store(&[tagged.clone()]);
+    let sources = store(std::slice::from_ref(&tagged));
     let facts = extract_embedded_sql_facts(
         Path::new("/repo"),
         &sources,
-        &[tagged.clone()],
+        std::slice::from_ref(&tagged),
         &EmbeddedSqlOptions::default(),
     )
     .unwrap();
