@@ -370,14 +370,26 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       RAYON_NUM_THREADS: "4"
       # Full LTO + one codegen unit is memory-heavy on shared runners.
-      CARGO_BUILD_JOBS: "2"
+      CARGO_BUILD_JOBS: "1"
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Add swap for instrumented rustc
+        run: |
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
@@ -392,7 +404,7 @@ jobs:
           RUSTFLAGS: ""
         run: cargo install cargo-codspeed --version 5.0.1 --locked
 
-      - name: Build CPU and memory benchmarks
+      - name: Build CPU benchmarks
         run: >-
           cargo codspeed build
           -p no-mistakes
@@ -400,6 +412,14 @@ jobs:
           --features test-instrumentation
           --bench core_analysis
           -m simulation
+
+      - name: Build memory benchmarks
+        run: >-
+          cargo codspeed build
+          -p no-mistakes
+          --no-default-features
+          --features test-instrumentation
+          --bench core_analysis
           -m memory
 
       - name: Package benchmark executables

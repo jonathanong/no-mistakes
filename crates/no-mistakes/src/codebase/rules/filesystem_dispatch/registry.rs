@@ -3,6 +3,7 @@ macro_rules! filesystem_rules {
     ($macro:ident) => {
         $macro! {
             AGENTS_MD_MAX_SIZE => agents_md_max_size::check_with_files,
+            GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files,
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files,
             CONFIG_PATH_REFERENCES => config_path_references::check_with_files,
             CSHARP_MAX_LINES_PER_FILE => csharp_max_lines_per_file::check_with_files,

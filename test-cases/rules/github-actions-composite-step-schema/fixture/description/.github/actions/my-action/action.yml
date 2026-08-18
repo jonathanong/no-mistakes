@@ -1,0 +1,9 @@
+name: With Docs
+description: >
+  Set timeout-minutes on the calling workflow step, not on composite steps.
+runs:
+  using: composite
+  steps:
+    - name: Run
+      run: echo ok
+      shell: bash

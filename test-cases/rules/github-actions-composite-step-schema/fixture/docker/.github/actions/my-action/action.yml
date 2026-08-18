@@ -1,0 +1,6 @@
+name: Docker Action
+description: Docker actions may mention timeout-minutes
+runs:
+  using: docker
+  image: Dockerfile
+  timeout-minutes: 5

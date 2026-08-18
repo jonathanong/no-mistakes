@@ -103,6 +103,11 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
                 defer_suppression,
             )
         }
+        GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => {
+            github_actions_composite_step_schema::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
         }
