@@ -22,6 +22,7 @@ pub use super::no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_
 pub use super::no_git_identity_mutation::RULE_ID as NO_GIT_IDENTITY_MUTATION;
 pub use super::package_json_registry_only::RULE_ID as PACKAGE_JSON_REGISTRY_ONLY;
 pub use super::package_json_workspace_coverage::RULE_ID as PACKAGE_JSON_WORKSPACE_COVERAGE;
+pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
 pub use super::production_dependency_declarations::RULE_ID as PRODUCTION_DEPENDENCY_DECLARATIONS;
 pub use super::require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;

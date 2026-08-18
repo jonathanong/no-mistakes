@@ -1,0 +1,3 @@
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository

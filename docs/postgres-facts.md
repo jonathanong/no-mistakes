@@ -74,6 +74,18 @@ generated columns. Tables that are not declared in SQL go through that
 rule's `extraGeneratedColumns` option; this layer does not scrape
 `voteTable:` literals.
 
+## Locking-select facts
+
+`extract_locking_select_metadata(sql)` parses PostgreSQL SQL and returns one
+`LockingSelectMetadata` per `SELECT` that uses `FOR UPDATE`:
+
+- `has_multi_row_predicate` — the locked select's `WHERE` uses `IN` or `= ANY`
+- `has_order_by` — the locked query has `ORDER BY`
+- `skips_locked_rows` — the lock uses `SKIP LOCKED`
+
+Unparseable SQL returns an error. The lock-ordering rule consumes this helper
+instead of re-parsing SQL with a private parser.
+
 ## Out of scope
 
 Lock-ordering and runtime-query *rules* are not part of this fact layer.

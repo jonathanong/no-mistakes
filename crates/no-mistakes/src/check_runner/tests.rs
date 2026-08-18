@@ -426,6 +426,13 @@ fn fact_plan_keeps_boundary_only_rules_to_boundary_facts() {
     assert!(nextjs_api_routes.raw_source);
     assert!(!nextjs_api_routes.source);
     assert!(!nextjs_api_routes.nextjs_caching);
+
+    let lock_ordering = fact_plan(EnabledChecks {
+        embedded_sql: true,
+        ..Default::default()
+    });
+    assert!(lock_ordering.embedded_sql);
+    assert!(!lock_ordering.postgres_schema);
 }
 
 #[test]

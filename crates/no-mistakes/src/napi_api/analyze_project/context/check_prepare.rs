@@ -77,6 +77,7 @@ impl SharedCheckContext {
             storybook_stories: enabled.storybook_stories,
             integration: integration_enabled,
             unique_exports: unique_exports_enabled,
+            embedded_sql: enabled.embedded_sql,
         });
         if integration_enabled {
             plan.integration_runner_configs = Some(std::sync::Arc::new(

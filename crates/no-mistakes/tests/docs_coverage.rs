@@ -245,6 +245,7 @@ fn no_mistakes_rules_have_docs() {
         rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,
         rules::NO_GIT_IDENTITY_MUTATION,
         rules::PACKAGE_JSON_REGISTRY_ONLY,
+        rules::POSTGRES_LOCK_ORDERING,
         rules::POSTGRES_NO_GENERATED_COLUMN_WRITES,
         playwright_rules::PLAYWRIGHT_COVERAGE,
         playwright_rules::PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,

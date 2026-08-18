@@ -7,6 +7,7 @@ pub(crate) struct ConfiguredChecks {
     pub(crate) nextjs_api_routes: bool,
     pub(crate) nextjs_caching: bool,
     pub(crate) storybook_stories: bool,
+    pub(crate) embedded_sql: bool,
 }
 
 impl ConfiguredChecks {
@@ -32,6 +33,10 @@ impl ConfiguredChecks {
                 config,
                 no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES,
             ),
+            embedded_sql: rule_configured(
+                config,
+                no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
+            ),
         }
     }
 }
@@ -48,6 +53,7 @@ pub(crate) struct EnabledChecks {
     pub(crate) storybook_stories: bool,
     pub(crate) integration: bool,
     pub(crate) unique_exports: bool,
+    pub(crate) embedded_sql: bool,
 }
 
 pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
@@ -75,7 +81,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.unique_exports
             || enabled.storybook_stories,
         postgres_schema: false,
-        embedded_sql: false,
+        embedded_sql: enabled.embedded_sql,
         graph: if enabled.dynamic_import_rules {
             no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
         } else {
