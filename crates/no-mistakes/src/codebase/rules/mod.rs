@@ -202,10 +202,8 @@ fn target_project_root(
     Some(root.to_path_buf())
 }
 
-pub(crate) fn sort_findings(findings: &mut Vec<RuleFinding>) {
-    findings.sort();
-    findings.dedup();
-}
+mod sort_findings;
+pub(crate) use sort_findings::sort_findings;
 
 #[cfg(test)]
 mod suppression_absolute_paths_tests;
