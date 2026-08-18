@@ -148,9 +148,7 @@ fn missing_dml_files_with_a_schema_are_silent() {
     )
     .unwrap();
     assert!(
-        findings
-            .iter()
-            .all(|finding| finding.file == "schema.sql"),
+        findings.iter().all(|finding| finding.file == "schema.sql"),
         "{findings:#?}"
     );
 }

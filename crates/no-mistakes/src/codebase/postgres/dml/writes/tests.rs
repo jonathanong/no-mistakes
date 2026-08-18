@@ -148,12 +148,12 @@ fn flags_tuple_assignments_merge_row_and_set_operations() {
 fn insert_into_query_target_and_derived_update_are_skipped() {
     use sqlparser::ast::{Statement, TableObject};
 
-    let Statement::Insert(mut insert) = crate::codebase::postgres::parse_postgres_sql(
-        "INSERT INTO items VALUES (1, now(), 'n')",
-    )
-    .unwrap()
-    .pop()
-    .expect("insert") else {
+    let Statement::Insert(mut insert) =
+        crate::codebase::postgres::parse_postgres_sql("INSERT INTO items VALUES (1, now(), 'n')")
+            .unwrap()
+            .pop()
+            .expect("insert")
+    else {
         panic!("expected insert");
     };
     let Statement::Query(query) = crate::codebase::postgres::parse_postgres_sql("SELECT 1")
