@@ -1,3 +1,7 @@
+use super::prepared::{
+    count_physical_lines, is_test_file, DEFAULT_SRC_MAX, DEFAULT_TEST_MAX, DEFAULT_TEST_ROOTS,
+};
+use super::scan::{check_file, check_source};
 use super::*;
 use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::config::v2::{
