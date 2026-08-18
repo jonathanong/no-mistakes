@@ -21,6 +21,7 @@ pub(crate) mod markdown_scope;
 pub mod markdown_structure_budget;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
+pub mod nextjs_redirect_destinations;
 pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
 pub mod package_json_registry_only;

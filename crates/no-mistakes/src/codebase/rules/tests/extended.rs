@@ -292,6 +292,7 @@ fn filesystem_rule_ids_are_distinct() {
         RUST_NO_INLINE_ALLOWS,
         NEXTJS_NO_API_ROUTES,
         NEXTJS_NO_CACHING,
+        NEXTJS_REDIRECT_DESTINATIONS,
     ];
     for (index, id) in ids.iter().enumerate() {
         assert!(!ids[index + 1..].contains(id));
