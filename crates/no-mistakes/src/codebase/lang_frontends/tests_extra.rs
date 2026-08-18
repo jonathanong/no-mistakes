@@ -93,6 +93,10 @@ fn strip_and_kafka_identity_cover_comment_and_empty_cluster_paths() {
     );
     assert!(stripped.contains("keep // here"));
     assert!(stripped.contains("done"));
+    assert!(
+        super::strip::strip_comments_keep_strings("#[Route('/health')]\n# real\n")
+            .contains("#[Route('/health')]")
+    );
     assert!(!super::strip::mask_strings("const doc = `LegacyUser`").contains("LegacyUser"));
     assert_eq!(topic_identity(None, "mail.welcome"), "mail.welcome");
     assert_eq!(topic_identity(Some(""), "mail.welcome"), "mail.welcome");

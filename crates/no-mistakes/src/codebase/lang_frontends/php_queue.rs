@@ -89,3 +89,49 @@ pub(super) fn php_should_queue_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"\bimplements\s+[^{;]*\bShouldQueue\b").expect("shouldqueue"))
 }
+
+pub(super) fn extract_messenger_dispatches(source: &str) -> Vec<String> {
+    extract_named(source, messenger_dispatch_re())
+}
+
+pub(super) fn extract_messenger_workers(source: &str) -> Vec<String> {
+    let mut names = extract_named(source, messenger_as_handler_re());
+    names.extend(extract_named(source, messenger_interface_re()));
+    names.extend(extract_named(source, messenger_invoke_re()));
+    names.sort();
+    names.dedup();
+    names
+}
+
+fn messenger_dispatch_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"\bdispatch\(\s*new\s+([A-Za-z_\\][A-Za-z0-9_\\]*)")
+            .expect("messenger dispatch")
+    })
+}
+
+fn messenger_as_handler_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"#\[AsMessageHandler[^\]]*\]\s*(?:final\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*)")
+            .expect("as handler")
+    })
+}
+
+fn messenger_interface_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            r"class\s+([A-Za-z_][A-Za-z0-9_]*)\s+implements\s+[^{]*\bMessageHandlerInterface\b",
+        )
+        .expect("handler interface")
+    })
+}
+
+fn messenger_invoke_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"function\s+__invoke\s*\(\s*([A-Za-z_\\][A-Za-z0-9_\\]*)").expect("invoke")
+    })
+}

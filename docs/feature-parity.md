@@ -29,7 +29,7 @@ CLIs are not started.
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
 | Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
 | Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` | Active Job `perform_later` | shipped (v1 extractors + plan) |
-| PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` | `::dispatch` / `ShouldQueue` | shipped (v1 extractors + plan) |
+| PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -292,9 +292,14 @@ framework from files, and do not enable both extractors from a missing value.
 ```php
 Route::get('/api/users', [UserController::class, 'index']);
 SomeJob::dispatch($user);
+#[Route('/health', methods: ['GET'])]
+class HealthController {}
+$bus->dispatch(new WelcomeMessage());
 ```
 
-`__DIR__ . '/' . $name` and `app($abstract)` lookups are non-edges.
+`__DIR__ . '/' . $name`, `app($abstract)`, `#[Route($prefix . '/users')]`, and
+`$bus->dispatch($message)` lookups are non-edges. Missing `tests.php.framework`
+still enables neither Laravel nor Symfony extractors.
 
 ## Shared Domain Rules
 

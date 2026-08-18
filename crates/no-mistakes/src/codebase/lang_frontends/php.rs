@@ -1,5 +1,7 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+#[path = "php_http.rs"]
+mod http;
 #[path = "php_queue.rs"]
 mod queue;
 use crate::codebase::ts_source::SourceStore;
@@ -23,8 +25,13 @@ pub(crate) fn collect_php_facts(
         }
     }
     let laravel = framework.is_some_and(|name| name.eq_ignore_ascii_case("laravel"));
+    let symfony = framework.is_some_and(|name| name.eq_ignore_ascii_case("symfony"));
+    if symfony {
+        files.extend(files_under(all_files, &roots, "yaml"));
+        files.extend(files_under(all_files, &roots, "yml"));
+    }
     super::facts::collect_files_parallel(files, |path| {
-        parse_php_file(path, &roots, apps, laravel, sources)
+        parse_php_file(path, &roots, apps, laravel, symfony, sources)
     })
 }
 
@@ -33,13 +40,23 @@ fn parse_php_file(
     roots: &[PathBuf],
     apps: &[String],
     laravel: bool,
+    symfony: bool,
     sources: &SourceStore,
 ) -> Option<LangFileFacts> {
     let source = sources.read_path(path).ok()?;
+    let ext = path
+        .extension()
+        .and_then(|name| name.to_str())
+        .unwrap_or("");
+    if matches!(ext, "yaml" | "yml") {
+        return symfony.then(|| http::yaml_route_facts(path, roots, apps, &source));
+    }
     let text = strip_comments_keep_strings(&source);
     let classes = php_classes(&text);
     let queue_workers = if laravel && queue::php_should_queue_re().is_match(&text) {
         queue::laravel_queue_identities(&classes)
+    } else if symfony {
+        queue::extract_messenger_workers(&text)
     } else {
         Vec::new()
     };
@@ -57,13 +74,11 @@ fn parse_php_file(
         },
         declarations: classes,
         references: extract_named(&text, php_use_re()),
-        route_handlers: if laravel {
-            extract_laravel_routes(&text)
-        } else {
-            Vec::new()
-        },
+        route_handlers: http::extract_php_routes(&text, laravel, symfony),
         queue_enqueues: if laravel {
             queue::extract_laravel_dispatches(&text)
+        } else if symfony {
+            queue::extract_messenger_dispatches(&text)
         } else {
             Vec::new()
         },
@@ -99,19 +114,6 @@ pub(super) fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values.sort();
     values.dedup();
     values
-}
-
-fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
-    laravel_route_re()
-        .captures_iter(source)
-        .filter_map(|cap| {
-            let handler = cap.get(2).or_else(|| cap.get(3))?.as_str();
-            Some((
-                cap.get(1)?.as_str().into(),
-                handler.replace('\\', ".").trim_start_matches('.').into(),
-            ))
-        })
-        .collect()
 }
 
 fn php_namespace_re() -> &'static Regex {
@@ -187,15 +189,5 @@ fn php_class_re() -> &'static Regex {
             r"(?m)^\s*(?:final\s+|abstract\s+|readonly\s+)*(?:class|interface|trait|enum)\s+([A-Za-z_][A-Za-z0-9_]*)",
         )
         .expect("class")
-    })
-}
-
-fn laravel_route_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(
-            r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)"#,
-        )
-        .expect("route")
     })
 }
