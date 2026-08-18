@@ -260,6 +260,7 @@ fn no_mistakes_rules_have_docs() {
         rules::SHELLCHECK_RUNNER,
         rules::STRICT_PACKAGE_LAYOUT,
         rules::TEST_EMAIL_DOMAIN_POLICY,
+        rules::TEST_NO_DEPENDENCY_PINS,
         rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
         rules::TSCONFIG_ALIAS_FOLDER_MAPPING,
         rules::TSCONFIG_GATE_COVERAGE,

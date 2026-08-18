@@ -27,6 +27,7 @@ macro_rules! filesystem_rules {
             BANNED_RENAMED_FILES => banned_renamed_files::check_with_files,
             INTEGRATION_TEST_NO_MOCKS => integration_test_no_mocks::check_with_files,
             TEST_EMAIL_DOMAIN_POLICY => test_email_domain_policy::check_with_files,
+            TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,
             DOC_CONSISTENCY => doc_consistency::check_with_files,
             SHELLCHECK_RUNNER => shellcheck_runner::check_with_files,

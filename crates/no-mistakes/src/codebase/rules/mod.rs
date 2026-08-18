@@ -40,6 +40,7 @@ pub mod shellcheck_runner;
 pub mod strict_package_layout;
 pub mod structured_config_policy;
 pub mod test_email_domain_policy;
+pub mod test_no_dependency_pins;
 pub mod test_no_unmocked_dynamic_imports;
 pub mod tsconfig_alias_folder_mapping;
 pub mod tsconfig_gate_coverage;
