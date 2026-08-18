@@ -38,6 +38,27 @@ fn celery_fixture_projects_queue_edges() {
 }
 
 #[test]
+fn celery_filter_excludes_enqueue_file() {
+    let report = analyze_project(
+        &lang_fixture("python-celery-django"),
+        None,
+        &["app/tasks.py".into()],
+    )
+    .unwrap();
+    assert!(report
+        .edges
+        .iter()
+        .all(|edge| edge.kind != EdgeKind::QueueEnqueue || !edge.from.ends_with("enqueue.py")));
+}
+
+#[test]
+fn kafka_filter_skips_unselected_topic_files() {
+    let report =
+        analyze_project(&lang_fixture("kafka-topics"), None, &["producer.py".into()]).unwrap();
+    assert!(report.edges.is_empty());
+}
+
+#[test]
 fn kafka_fixture_projects_topic_edges() {
     let report = analyze_project(&lang_fixture("kafka-topics"), None, &[]).unwrap();
     assert!(report

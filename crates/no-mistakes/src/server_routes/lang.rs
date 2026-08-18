@@ -57,11 +57,7 @@ fn merge_file_routes(
             path: raw_path.clone(),
             query_params: Vec::new(),
             framework: Framework::Heuristic,
-        })
-        .collect::<Vec<_>>();
-    if sites.is_empty() {
-        return;
-    }
+        });
     facts
         .entry(file.path.clone())
         .or_default()

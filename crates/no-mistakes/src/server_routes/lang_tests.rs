@@ -15,6 +15,14 @@ fn ts_fixture(name: &str) -> PathBuf {
 }
 
 #[test]
+fn missing_config_does_not_add_language_routes() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/analysis-dataset/source-store");
+    let report = analyze_project(&root, None, &[]).unwrap();
+    assert!(report.routes.is_empty());
+}
+
+#[test]
 fn language_packages_do_not_change_typescript_routes() {
     let root = ts_fixture("express");
     let off = analyze_project(&root, None, &[]).unwrap();

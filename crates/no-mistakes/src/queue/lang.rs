@@ -150,3 +150,7 @@ fn queue_key(root: &Path, cluster: Option<&str>) -> QueueKey {
 fn cli_allows(root: &Path, path: &Path, filter: Option<&GlobSet>) -> bool {
     filter.is_none_or(|filter| filter.is_match(path.strip_prefix(root).unwrap_or(path)))
 }
+
+#[cfg(test)]
+#[path = "lang_unit_tests.rs"]
+mod unit_tests;
