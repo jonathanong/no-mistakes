@@ -7,7 +7,7 @@ const DEFAULT_EXECUTOR_NAMES = ["query", "read", "write"];
 const DEFAULT_CHUNK_FUNCTION_NAMES = ["chunkArray"];
 const TRANSACTION_IMPORTS = new Set(["withTransaction", "withTransactionOptions"]);
 const QUERY_PROPERTY = "query";
-const TRANSACTION_COMMAND = /^\s*(?:\/\*[\s\S]*?\*\/\s*)?(?:BEGIN|COMMIT|ROLLBACK)\b/i;
+const TRANSACTION_COMMAND = /^\s*(?:BEGIN|COMMIT|ROLLBACK)\b/i;
 
 function executorOptionDefaults(options = {}) {
   return {
@@ -91,8 +91,12 @@ function firstCallArgument(call) {
   return argument;
 }
 
+function stripSqlComments(text) {
+  return text.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/--[^\n]*/g, " ");
+}
+
 function isManualTransactionText(text) {
-  return typeof text === "string" && TRANSACTION_COMMAND.test(text);
+  return typeof text === "string" && TRANSACTION_COMMAND.test(stripSqlComments(text));
 }
 
 module.exports = {

@@ -17,7 +17,9 @@ import { chunkArray } from "../lib/chunk";
 const KNOWN_IDS = ["a", "b"];
 
 await Promise.all(KNOWN_IDS.map((id) => query("SELECT 1 FROM t WHERE id = $1", [id])));
-await Promise.all(chunkArray(ids, 25).map((id) => query("SELECT 1 FROM t WHERE id = $1", [id])));
+await Promise.all(
+  chunkArray(ids, 25).map((batch) => query("SELECT 1 FROM t WHERE id = ANY($1::text[])", [batch])),
+);
 ```
 
 Counterexample: `Promise.all` fans out an executor over an unbounded map.
@@ -39,6 +41,8 @@ A source is statically bounded when it is:
 - an `ArrayExpression` (`[a, b].map(...)`)
 - a `SCREAMING_CASE` identifier (`KNOWN_IDS.map(...)`)
 - a `CallExpression` whose name is in `chunkFunctionNames`
+- an identifier whose declared initializer is one of the forms above
+  (`const bounded = ["x"]; bounded.map(...)`)
 
 Executor detection uses the same import bindings as
 [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md):

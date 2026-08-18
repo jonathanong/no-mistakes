@@ -49,8 +49,8 @@ Options:
 - `importSpecifier` (default `@data-stores/psql`)
 - `executorNames` (default `["query", "read", "write"]`)
 - `owners` — path allowlist so the transaction helper can issue those
-  commands. Each entry matches an absolute path suffix or a repo-relative
-  path.
+  commands. Each entry matches a full path or a `/`-delimited path suffix
+  (`src/db.js` matches `app/src/db.js`, not `app/legacy-db.js`).
 
 Not in `configs.recommended` or `configs.strict`. Enable it with executor
 config for the project.

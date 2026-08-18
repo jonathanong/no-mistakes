@@ -42,8 +42,8 @@ function pathMatchesOwner(path, owner) {
   const needle = String(owner ?? "").replace(/\\/g, "/");
   if (!needle) return false;
   if (path === needle) return true;
-  if (needle.startsWith("/")) return path.endsWith(needle);
-  return path.endsWith(`/${needle}`) || path.endsWith(needle);
+  const suffix = needle.replace(/^\/+/, "");
+  return Boolean(suffix) && path.endsWith(`/${suffix}`);
 }
 
 function callName(node) {

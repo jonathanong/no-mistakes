@@ -418,6 +418,9 @@ describe("postgres runtime helpers", () => {
     assert.equal(isOwnerFile("/abs/repo/src/db/tx.ts", ["/abs/repo/src/db/tx.ts"]), true);
     assert.equal(isOwnerFile("src\\db\\tx.ts", ["src/db/tx.ts"]), true);
     assert.equal(isOwnerFile("src/other.ts", ["src/db/tx.ts"]), false);
+    assert.equal(isOwnerFile("src/legacy-db.js", ["db.js"]), false);
+    assert.equal(isOwnerFile("src/legacydb/tx.ts", ["db/tx.ts"]), false);
+    assert.equal(isOwnerFile("src/db.js", ["db.js"]), true);
 
     assert.equal(isStaticallyBounded(null, ["chunkArray"]), false);
     assert.equal(
@@ -674,6 +677,8 @@ describe("postgres runtime helpers", () => {
 
     assert.equal(isManualTransactionText("BEGIN"), true);
     assert.equal(isManualTransactionText("  /* c */ ROLLBACK"), true);
+    assert.equal(isManualTransactionText("  -- note\n  COMMIT"), true);
+    assert.equal(isManualTransactionText("-- BEGIN\nSELECT 1"), false);
     assert.equal(isManualTransactionText("SELECT 1"), false);
     assert.equal(isManualTransactionText(null), false);
     assert.equal(isManualTransactionText("BEGINNING"), false);
