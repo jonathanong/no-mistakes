@@ -1,0 +1,11 @@
+name: Block Scalar And Key
+description: |
+  timeout-minutes:
+    mentioned here is documentation, not a composite step key.
+runs:
+  using: composite
+  steps:
+    - name: Run
+      timeout-minutes: 5
+      run: echo ok
+      shell: bash

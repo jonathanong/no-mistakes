@@ -68,6 +68,9 @@ calling workflow step instead:
 ```
 
 Use `# no-mistakes-disable-file github-actions-composite-step-schema` to
-suppress an entire action file.
+suppress an entire action file. Line-level
+`# no-mistakes-disable-next-line` / `# no-mistakes-disable-line` comments
+also apply to the flagged key line. A `timeout-minutes:` mention inside a
+YAML `|` / `>` block scalar is documentation, not a step key.
 
 **Scope:** Checks `.github/actions/**/action.{yml,yaml}` by default.

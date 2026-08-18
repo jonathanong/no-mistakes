@@ -11,21 +11,25 @@ pub(super) fn check_file(
     opts: &CompiledOptions,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let rel = relative_slash_path(root, path);
-    let Some(source) = super::super::read_source(sources, path) else {
-        return Vec::new();
-    };
-    check_source(&rel, &source, opts)
+    crate::perf_trace::trace("github-actions-composite-step-schema.scan", || {
+        let rel = relative_slash_path(root, path);
+        let Some(source) = super::super::read_source(sources, path) else {
+            return Vec::new();
+        };
+        check_source(&rel, &source, opts)
+    })
 }
 
 fn check_source(rel: &str, source: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     if crate::codebase::ts_source::has_disable_file_comment(source, RULE_ID) {
         return Vec::new();
     }
-    match serde_yaml::from_str::<Value>(source) {
+    let mut findings = match serde_yaml::from_str::<Value>(source) {
         Ok(value) => check_parsed(rel, source, &value, opts),
         Err(err) => vec![invalid_yaml_finding(rel, &err)],
-    }
+    };
+    super::super::suppress_rule_findings_with_source(&mut findings, source);
+    findings
 }
 
 fn check_parsed(
@@ -116,12 +120,65 @@ pub(crate) fn yaml_parse_line(err: &serde_yaml::Error) -> usize {
 }
 
 pub(crate) fn mapping_key_line(source: &str, key: &str, occurrence: usize) -> usize {
-    source
-        .lines()
-        .enumerate()
-        .filter_map(|(index, line)| contains_mapping_key(line, key).then_some(index + 1))
+    mapping_key_candidate_lines(source, key)
         .nth(occurrence)
         .unwrap_or(1)
+}
+
+/// Mapping-key lines that are not inside a `|` / `>` block scalar.
+///
+/// A block-scalar body can contain `timeout-minutes:` as documentation. Those
+/// lines must not steal the occurrence index of a later real sibling key.
+fn mapping_key_candidate_lines<'a>(
+    source: &'a str,
+    key: &'a str,
+) -> impl Iterator<Item = usize> + 'a {
+    let mut block_indent = None;
+    source.lines().enumerate().filter_map(move |(index, line)| {
+        let indent = leading_indent(line);
+        let trimmed = line.trim();
+        if let Some(key_indent) = block_indent {
+            if trimmed.is_empty() || trimmed.starts_with('#') || indent > key_indent {
+                return None;
+            }
+            block_indent = None;
+        }
+        if starts_block_scalar(line) {
+            block_indent = Some(indent);
+        }
+        contains_mapping_key(line, key).then_some(index + 1)
+    })
+}
+
+fn leading_indent(line: &str) -> usize {
+    line.chars()
+        .take_while(|ch| matches!(ch, ' ' | '\t'))
+        .count()
+}
+
+pub(crate) fn starts_block_scalar(line: &str) -> bool {
+    let comment_free = line.split('#').next().unwrap_or(line);
+    let Some(colon) = comment_free.find(':') else {
+        return false;
+    };
+    if comment_free[..colon].trim().is_empty() {
+        return false;
+    }
+    is_block_indicator(comment_free[colon + 1..].trim())
+}
+
+fn is_block_indicator(value: &str) -> bool {
+    let rest = match value.as_bytes().first() {
+        Some(b'|' | b'>') => &value[1..],
+        _ => return false,
+    };
+    let rest = rest
+        .strip_prefix('+')
+        .or_else(|| rest.strip_prefix('-'))
+        .unwrap_or(rest);
+    rest.trim_start_matches(|ch: char| ch.is_ascii_digit())
+        .trim()
+        .is_empty()
 }
 
 pub(crate) fn contains_mapping_key(line: &str, key: &str) -> bool {

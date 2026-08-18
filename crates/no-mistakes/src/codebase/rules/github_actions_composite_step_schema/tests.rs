@@ -1,4 +1,4 @@
-use super::scan::{contains_mapping_key, mapping_key_line, yaml_parse_line};
+use super::scan::{contains_mapping_key, mapping_key_line, starts_block_scalar, yaml_parse_line};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -80,6 +80,36 @@ fn pass_fixture_has_no_findings() {
 #[test]
 fn description_fixture_does_not_flag_prose() {
     let root = fixture("description");
+    let findings = run_on_files(&root, &[action_path(&root)], "{}");
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn block_scalar_fixture_does_not_flag_documented_key() {
+    let root = fixture("block-scalar");
+    let findings = run_on_files(&root, &[action_path(&root)], "{}");
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn block_scalar_and_key_fixture_flags_the_real_key_line() {
+    let root = fixture("block-scalar-and-key");
+    let findings = run_on_files(&root, &[action_path(&root)], "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].target.as_deref(), Some("timeout-minutes"));
+    assert_eq!(findings[0].line, 9);
+}
+
+#[test]
+fn disable_next_line_fixture_skips_findings() {
+    let root = fixture("disable-next-line");
+    let findings = run_on_files(&root, &[action_path(&root)], "{}");
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn disable_line_fixture_skips_findings() {
+    let root = fixture("disable-line");
     let findings = run_on_files(&root, &[action_path(&root)], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
@@ -408,6 +438,28 @@ fn mapping_key_line_falls_back_when_key_text_is_absent() {
         "      timeout-minutes : 5",
         "timeout-minutes"
     ));
+}
+
+#[test]
+fn mapping_key_line_skips_block_scalar_bodies() {
+    let source = "\
+description: |
+  timeout-minutes:
+    documented
+timeout-minutes: 5
+";
+    assert_eq!(mapping_key_line(source, "timeout-minutes", 0), 4);
+    let folded = "\
+description: >
+  timeout-minutes: documented
+timeout-minutes: 7
+";
+    assert_eq!(mapping_key_line(folded, "timeout-minutes", 0), 3);
+    assert!(starts_block_scalar("description: |-"));
+    assert!(starts_block_scalar("description: |+2"));
+    assert!(starts_block_scalar("description: >-"));
+    assert!(!starts_block_scalar("timeout-minutes: 5"));
+    assert!(!starts_block_scalar("url: https://example.com"));
 }
 
 #[test]

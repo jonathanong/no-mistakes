@@ -120,10 +120,12 @@ fn scan_files(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    files
-        .par_iter()
-        .flat_map(|path| check_file(root, path, opts, sources))
-        .collect()
+    crate::perf_trace::trace("github-actions-composite-step-schema.scan-files", || {
+        files
+            .par_iter()
+            .flat_map(|path| check_file(root, path, opts, sources))
+            .collect()
+    })
 }
 
 #[cfg(test)]
