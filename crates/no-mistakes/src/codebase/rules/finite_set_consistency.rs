@@ -149,6 +149,9 @@ pub(super) fn finding(
 #[path = "finite_set_consistency/tests/config_sets.rs"]
 mod config_set_tests;
 #[cfg(test)]
+#[path = "finite_set_consistency/tests/min_size.rs"]
+mod min_size_tests;
+#[cfg(test)]
 #[path = "finite_set_consistency/tests/object_comment.rs"]
 mod object_comment_tests;
 #[cfg(test)]

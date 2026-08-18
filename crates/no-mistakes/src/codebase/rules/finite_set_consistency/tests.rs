@@ -206,38 +206,6 @@ comparisons:
 }
 
 #[test]
-fn string_union_min_size_fails_closed_when_the_target_is_missing() {
-    let root = fixture_root("fixture");
-    let files = vec![root.join("src/types.ts")];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-sets:
-  - name: missingUnion
-    file: src/types.ts
-    kind: ts-string-union
-    target: MissingRouteName
-    minSize: 1
-comparisons:
-  - left: missingUnion
-    right: missingUnion
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0]
-            .message
-            .contains("finite set 'missingUnion' extracted 0 values but minSize is 1"),
-        "{findings:?}"
-    );
-}
-
-#[test]
 fn extraction_helpers_return_empty_sets_when_targets_are_missing() {
     assert!(extract_ts_string_union("type Other = 'a';", "Missing").is_empty());
     assert!(extract_ts_const_object_keys("const Other = { a: 1 };", "Missing").is_empty());
