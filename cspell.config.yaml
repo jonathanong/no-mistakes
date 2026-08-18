@@ -29,6 +29,7 @@ words:
   - eprintln
   - errexit
   - extglob
+  - fanout
   - fastapi
   - FastAPI
   - frontends

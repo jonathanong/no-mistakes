@@ -47,6 +47,10 @@ describe("docs coverage", () => {
       "handlers",
       "sourceSpecifierPatterns",
       "calleeNamePatterns",
+      "importSpecifier",
+      "executorNames",
+      "owners",
+      "chunkFunctionNames",
     ]) {
       assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);
     }
