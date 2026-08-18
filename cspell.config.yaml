@@ -12,6 +12,7 @@ ignorePaths:
   - "test-cases/**"
   - "crates/**/target/**"
 words:
+  - ABBA
   - Actix
   - arm64
   - asynq

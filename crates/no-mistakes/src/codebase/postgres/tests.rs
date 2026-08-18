@@ -1,6 +1,6 @@
 use super::{
     extract_create_table_metadata, extract_dml_write_targets, extract_embedded_sql_from_source,
-    EmbeddedSqlOptions,
+    extract_locking_select_metadata, EmbeddedSqlOptions,
 };
 use crate::codebase::check_facts::CheckFactPlan;
 
@@ -40,4 +40,7 @@ fn public_extractors_are_callable_from_the_module_root() {
         extract_dml_write_targets("UPDATE items SET note = 1"),
         ["items"]
     );
+    let locks =
+        extract_locking_select_metadata("SELECT * FROM t WHERE id = ANY($1) FOR UPDATE").unwrap();
+    assert!(locks[0].has_multi_row_predicate);
 }

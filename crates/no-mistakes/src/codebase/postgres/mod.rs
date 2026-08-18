@@ -5,6 +5,7 @@
 mod collect;
 pub mod dml;
 mod embedded;
+mod locking;
 mod parse;
 mod schema;
 mod types;
@@ -21,6 +22,7 @@ pub use embedded::{
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,
     EmbeddedSqlFileFacts, EmbeddedSqlOptions,
 };
+pub use locking::{extract_locking_select_metadata, LockingSelectMetadata};
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use schema::extract_create_table_metadata;
 pub use types::{

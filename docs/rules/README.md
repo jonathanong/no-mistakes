@@ -51,6 +51,7 @@ rules:
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |
 | [`playwright-unique-html-ids`](playwright-unique-html-ids.md)                 | Require unique HTML `id` values in Playwright analysis.                         |
 | [`playwright-unique-test-ids`](playwright-unique-test-ids.md)                 | Require unique test ID values in Playwright analysis.                           |
+| [`postgres-lock-ordering`](postgres-lock-ordering.md)                         | Require ORDER BY or SKIP LOCKED on multi-row FOR UPDATE locks.                  |
 | [`production-dependency-declarations`](production-dependency-declarations.md) | Require production-reachable imports to be declared as runtime dependencies.    |
 | [`require-files-in-subdirs`](require-files-in-subdirs.md)                     | Require files under matching subdirectories.                                    |
 | [`require-storybook-stories`](require-storybook-stories.md)                   | Require Storybook coverage for selected components.                             |

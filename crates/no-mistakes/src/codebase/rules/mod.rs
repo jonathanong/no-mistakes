@@ -27,6 +27,7 @@ pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
 pub mod package_json_registry_only;
 pub mod package_json_workspace_coverage;
+pub mod postgres_lock_ordering;
 pub mod postgres_no_generated_column_writes;
 pub mod production_dependency_declarations;
 pub mod require_files_in_subdirs;
@@ -201,10 +202,8 @@ fn target_project_root(
     Some(root.to_path_buf())
 }
 
-pub(crate) fn sort_findings(findings: &mut Vec<RuleFinding>) {
-    findings.sort();
-    findings.dedup();
-}
+mod sort_findings;
+pub(crate) use sort_findings::sort_findings;
 
 #[cfg(test)]
 mod suppression_absolute_paths_tests;

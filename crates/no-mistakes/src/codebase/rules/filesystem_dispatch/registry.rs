@@ -32,6 +32,7 @@ macro_rules! filesystem_rules {
             TEST_EMAIL_DOMAIN_POLICY => test_email_domain_policy::check_with_files,
             TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files,
             POSTGRES_NO_GENERATED_COLUMN_WRITES => postgres_no_generated_column_writes::check_with_files,
+            POSTGRES_LOCK_ORDERING => postgres_lock_ordering::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,
             DOC_CONSISTENCY => doc_consistency::check_with_files,
             SHELLCHECK_RUNNER => shellcheck_runner::check_with_files,

@@ -87,6 +87,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
                 root, config, files, sources,
             )
         }
+        POSTGRES_LOCK_ORDERING => {
+            postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources)
+        }
         INTEGRATION_TEST_NO_MOCKS => {
             integration_test_no_mocks::check_with_files_and_sources(root, config, files, sources)
         }
