@@ -254,6 +254,14 @@ fn lookback_handles_line_one_and_unclosed_block_comment() {
         "deadlock-safe outside a comment",
         DEFAULT_SAFE_DIRECTIVE,
     ));
+    assert!(!comment_contains_directive(
+        "/* other */ leftover",
+        DEFAULT_SAFE_DIRECTIVE,
+    ));
+    assert!(!comment_contains_directive(
+        "-- other\nleftover",
+        DEFAULT_SAFE_DIRECTIVE,
+    ));
 }
 
 #[test]

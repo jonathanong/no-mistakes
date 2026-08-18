@@ -237,6 +237,14 @@ fn constructed_set_expr_and_unnest_helpers() {
     assert!(expr_has_multi_row(&unary));
     let mut locks = Vec::new();
     collect_from_set_expr(&nested, &mut locks);
+    collect_from_set_expr(
+        &SetExpr::Values(Values {
+            explicit_row: false,
+            rows: Vec::new(),
+            value_keyword: false,
+        }),
+        &mut locks,
+    );
     collect_from_query(&empty_query(), &mut locks);
     collect_queries_from_expr(
         &Expr::UnaryOp {

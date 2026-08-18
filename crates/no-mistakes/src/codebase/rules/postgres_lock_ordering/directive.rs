@@ -17,12 +17,12 @@ fn lookback_window(source: &str, line: u32) -> String {
     let offset = call_offset(source, line);
     let start = floor_char_boundary(source, offset.saturating_sub(DIRECTIVE_LOOKBACK));
     let end = floor_char_boundary(source, offset);
-    source.get(start..end).unwrap_or("").to_string()
+    source[start..end].to_string()
 }
 
 pub(super) fn call_offset(source: &str, line: u32) -> usize {
     let line_start = line_start_offset(source, line);
-    let haystack = source.get(line_start..).unwrap_or("");
+    let haystack = &source[line_start..];
     let rel = haystack
         .to_ascii_lowercase()
         .find("for update")
