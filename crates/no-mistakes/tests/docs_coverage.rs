@@ -227,6 +227,7 @@ fn no_mistakes_rules_have_docs() {
     let rule_ids = [
         rules::AGENTS_MD_MAX_SIZE,
         rules::BANNED_RENAMED_FILES,
+        rules::CSHARP_MAX_LINES_PER_FILE,
         rules::DOC_CONSISTENCY,
         rules::FILE_EXTENSION_POLICY,
         rules::FORBIDDEN_DEPENDENCIES,

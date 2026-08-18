@@ -2,6 +2,7 @@ pub mod agents_md_max_size;
 pub mod banned_paths;
 pub mod banned_renamed_files;
 pub mod config_path_references;
+pub mod csharp_max_lines_per_file;
 pub mod doc_consistency;
 pub mod file_extension_policy;
 mod file_matching;

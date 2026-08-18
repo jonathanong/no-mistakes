@@ -10,6 +10,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::github_actions_pinned_hash::RULE_ID,
     rules::BANNED_RENAMED_FILES,
     rules::CONFIG_PATH_REFERENCES,
+    rules::CSHARP_MAX_LINES_PER_FILE,
     rules::DOC_CONSISTENCY,
     rules::FILE_EXTENSION_POLICY,
     rules::FINITE_SET_CONSISTENCY,

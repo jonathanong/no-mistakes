@@ -94,6 +94,15 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         CONFIG_PATH_REFERENCES => {
             config_path_references::check_with_files_and_sources(root, config, files, sources)
         }
+        CSHARP_MAX_LINES_PER_FILE => {
+            csharp_max_lines_per_file::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
         }

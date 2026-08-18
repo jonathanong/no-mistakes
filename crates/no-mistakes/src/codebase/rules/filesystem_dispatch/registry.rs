@@ -5,6 +5,7 @@ macro_rules! filesystem_rules {
             AGENTS_MD_MAX_SIZE => agents_md_max_size::check_with_files,
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files,
             CONFIG_PATH_REFERENCES => config_path_references::check_with_files,
+            CSHARP_MAX_LINES_PER_FILE => csharp_max_lines_per_file::check_with_files,
             FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files,
             FORBIDDEN_WORKSPACE_CLOSURE => forbidden_workspace_closure::check_with_files,
             STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files,
