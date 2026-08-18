@@ -10,12 +10,11 @@ use super::{
     nextjs_redirect_destinations, no_empty_or_comments_only_files, no_git_identity_mutation,
     package_json_registry_only, package_json_workspace_coverage,
     postgres_no_generated_column_writes, production_dependency_declarations,
-    require_files_in_subdirs, require_test_per_subdir,
-    required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
-    strict_package_layout, structured_config_policy, test_email_domain_policy,
-    test_no_dependency_pins, tsconfig_alias_folder_mapping, tsconfig_gate_coverage,
-    vitest_ci_path_coverage, vitest_project_mapping, vitest_test_correspondence,
-    workspace_package_cycles,
+    require_files_in_subdirs, require_test_per_subdir, required_companion_imports,
+    required_local_docs, rust_rules_combined, shellcheck_runner, strict_package_layout,
+    structured_config_policy, test_email_domain_policy, test_no_dependency_pins,
+    tsconfig_alias_folder_mapping, tsconfig_gate_coverage, vitest_ci_path_coverage,
+    vitest_project_mapping, vitest_test_correspondence, workspace_package_cycles,
 };
 
 mod candidate_helpers;
