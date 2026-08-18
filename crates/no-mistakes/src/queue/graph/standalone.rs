@@ -116,7 +116,17 @@ fn analyze_project_inner<T>(
     .with_queue_compatibility(root);
     let remapper =
         crate::codebase::ts_source::FrozenPathRemapper::from_paths(facts.keys().cloned());
-    let producers = resolve_producers(&facts, &queue_defs, &resolver, &remapper);
-    let workers = resolve_workers(&facts, &queue_defs, &resolver, &remapper);
+    let mut producers = resolve_producers(&facts, &queue_defs, &resolver, &remapper);
+    let mut workers = resolve_workers(&facts, &queue_defs, &resolver, &remapper);
+    if let Ok(config) = dataset.config(None) {
+        let (lang_producers, lang_workers) = crate::queue::lang::language_queue_sites(
+            root,
+            &session,
+            config.as_ref(),
+            filter.as_ref(),
+        );
+        producers.extend(lang_producers);
+        workers.extend(lang_workers);
+    }
     Ok(builder(root, producers, workers, &facts))
 }

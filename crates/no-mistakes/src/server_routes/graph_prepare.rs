@@ -6,10 +6,13 @@ pub fn prepare_analysis(
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new_observed(
-        &root,
-        session.observer().cloned(),
+    let snapshot = std::sync::Arc::new(
+        crate::codebase::ts_source::VisiblePathSnapshot::new_observed(
+            &root,
+            session.observer().cloned(),
+        ),
     );
+    session.insert_visible_paths(&root, snapshot.clone());
     let visible_paths = snapshot.paths_for(&root);
     let sources = snapshot.source_store_for(&root);
     let tsconfig = resolve_tsconfig(&root, tsconfig_path, &visible_paths, &sources)?;

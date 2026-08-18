@@ -66,16 +66,18 @@ graph exists. Full-suite fallback remains explicit opt-in.
 **HTTP routes.** `server routes`, `server edges`, `server related`, and
 `server contracts` list configured TS/JS route definitions and static client
 calls. Language v1 extractors emit `route` edges into `DepGraph` for Django,
-Rails, and Laravel; query those with `dependents --relationship route`.
-`server routes` does not consume language `RouteRef` facts yet. Do not invent
+Flask, FastAPI, Go HTTP, Rails, Laravel, and Symfony; query those with
+`dependents --relationship route`. `server routes|edges|related` also project
+those language `RouteRef` facts into the existing server report. Do not invent
 a second route graph.
 
 **Queues.** `queues edges`, `queues related`, and `queues check` connect
 TS/JS producers to virtual job nodes to workers. Celery, Asynq, Kafka, Active
-Job, and Laravel emit the same `queue-enqueue` / `queue-worker` edges into
-`DepGraph`; query those with `dependents --relationship queue`. The dedicated
-`queues` commands still report the TypeScript pipeline. They do not get
-private graph shapes.
+Job, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
+`queue-worker` edges into `DepGraph`; query those with
+`dependents --relationship queue`. The dedicated `queues` commands project
+those language edges into the existing report. They do not get private graph
+shapes.
 
 **HTTP clients.** Static client calls produce `http` edges to matching route
 files, the same way TS `fetch` and Swift `Endpoint` literals do.

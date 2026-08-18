@@ -114,6 +114,7 @@ fn analyze_project_with_prepared_inner<T>(
             }
         }
     }
+    crate::server_routes::lang::merge_language_route_facts(prepared, &mut facts, filter.as_ref());
     Ok(builder(prepared, &facts, &client_paths))
 }
 

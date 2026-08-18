@@ -2,3 +2,10 @@ tests:
   go:
     modules:
       - worker
+projects:
+  worker:
+    type: server
+    root: worker
+    queues:
+      enqueues: ["**/*"]
+      workers: ["**/*"]

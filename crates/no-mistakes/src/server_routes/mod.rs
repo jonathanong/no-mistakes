@@ -1,6 +1,7 @@
 mod contracts;
 pub(crate) mod extract;
 mod graph;
+mod lang;
 pub(crate) mod model;
 mod mounts;
 mod normalize;

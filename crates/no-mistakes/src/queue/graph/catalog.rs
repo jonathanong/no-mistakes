@@ -43,7 +43,23 @@ pub(super) fn analyze_with<T>(
         session,
     )
     .with_queue_compatibility(root);
-    Ok(resolve_queue_relationships_with_resolver(
-        root, &facts, &resolver, builder,
-    ))
+    let report = resolve_queue_relationships_with_resolver(
+        root,
+        &facts,
+        &resolver,
+        |root, mut producers, mut workers, facts| {
+            if let Ok(config) = session.dataset(root).config(None) {
+                let (lang_producers, lang_workers) = crate::queue::lang::language_queue_sites(
+                    root,
+                    session,
+                    config.as_ref(),
+                    filter.as_ref(),
+                );
+                producers.extend(lang_producers);
+                workers.extend(lang_workers);
+            }
+            builder(root, producers, workers, facts)
+        },
+    );
+    Ok(report)
 }

@@ -1,6 +1,7 @@
 # `no-mistakes queues edges`
 
-Print queue dependency edges.
+Print queue dependency edges, including configured language
+`queue-enqueue` / `queue-worker` rows.
 
 ```sh
 no-mistakes queues edges src/jobs/enqueue.mts --format json

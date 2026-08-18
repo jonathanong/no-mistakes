@@ -1,8 +1,7 @@
 tests:
   php:
-    framework: laravel
-    apps:
-      - .
+    framework: symfony
+    apps: ["."]
 projects:
   app:
     type: server
