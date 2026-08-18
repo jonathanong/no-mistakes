@@ -66,7 +66,7 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `rust-mod` | `RustMod` | `rust` | Rust file -> sibling `mod` file or `#[path]` target | [`rust-mods`](../fixtures/lang-frontends/rust-mods), [`rust-path-deps`](../fixtures/lang-frontends/rust-path-deps) |
 | `rust-package` | `RustPackage` | `rust` | Rust crate -> files in a configured package, path-dep package, or `tests/` integration target | [`rust-mods`](../fixtures/lang-frontends/rust-mods), [`rust-path-deps`](../fixtures/lang-frontends/rust-path-deps) |
 | `ruby-require` | `RubyRequire` | `ruby` | Ruby file -> required local file | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
-| `ruby-ref` | `RubyReference` | `ruby` | Ruby file -> file declaring a referenced constant | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
+| `ruby-ref` | `RubyReference` | `ruby` | Ruby file -> file declaring a referenced constant, including Zeitwerk path matches under configured `app/` | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
 | `php-use` | `PhpUse` | `php` | PHP file -> file declaring a used class | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
 | `php-package` | `PhpPackage` | `php` | PHP file -> files in a configured Composer app | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
 
