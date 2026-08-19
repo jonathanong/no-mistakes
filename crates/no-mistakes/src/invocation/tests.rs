@@ -53,6 +53,7 @@ fn cli_defaults_and_zero_values_have_napi_parity() {
             timeout: None,
             lock_timeout: None,
             fail_on_lock: true,
+            jobs: None,
         }
     );
 }
@@ -129,6 +130,7 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
             timeout: Some(Duration::from_secs(5)),
             lock_timeout: Some(Duration::from_secs(1)),
             fail_on_lock: false,
+            jobs: None,
         },
         &directory.path().join("invocation.lock"),
         true,

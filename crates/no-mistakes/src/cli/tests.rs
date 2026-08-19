@@ -1,6 +1,8 @@
 use super::traversal::EdgeTraversalIndex;
-use super::{edge_view, TraversableEdge};
-use super::{init_rayon_threads, rayon_thread_count, resolve_optional_root, resolve_root, JobsArg};
+use super::{
+    edge_view, init_rayon_threads, init_rayon_threads_if_requested, rayon_thread_count,
+    resolve_optional_root, resolve_root, JobsArg, TraversableEdge,
+};
 use crate::queue::{Edge, EdgeKind};
 use std::path::Path;
 
@@ -73,6 +75,12 @@ fn resolve_optional_root_resolves_provided_root() {
 #[test]
 fn init_rayon_threads_uses_cpu_default_without_jobs_or_env() {
     init_rayon_threads(JobsArg { jobs: 0 });
+}
+
+#[test]
+fn init_rayon_threads_if_requested_skips_unset_jobs() {
+    init_rayon_threads_if_requested(None);
+    init_rayon_threads_if_requested(Some(0));
 }
 
 #[test]

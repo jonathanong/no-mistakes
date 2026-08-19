@@ -165,3 +165,28 @@ fn extract_file_ignores_named_handlers_without_collectable_bodies() {
         .expect("declared route");
     assert!(declared.query_params.is_empty());
 }
+
+#[test]
+fn extract_file_recognizes_fastify_imports_and_verbs() {
+    let facts = extract_file(&fixture("fastify-app.ts")).unwrap();
+
+    assert_eq!(facts.bindings["app"].framework, Framework::Fastify);
+    assert_eq!(facts.bindings["named"].framework, Framework::Fastify);
+    assert_eq!(facts.bindings["cjs"].framework, Framework::Fastify);
+
+    let route_pairs: Vec<_> = facts
+        .routes
+        .iter()
+        .map(|route| {
+            (
+                route.method.as_str(),
+                route.raw_path.as_str(),
+                route.framework,
+            )
+        })
+        .collect();
+    assert!(route_pairs.contains(&("get", "/health", Framework::Fastify)));
+    assert!(route_pairs.contains(&("post", "/users", Framework::Fastify)));
+    assert!(route_pairs.contains(&("delete", "/named", Framework::Fastify)));
+    assert!(route_pairs.contains(&("put", "/cjs", Framework::Fastify)));
+}

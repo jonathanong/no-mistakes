@@ -22,6 +22,9 @@ All `playwright` subcommands accept:
   multiple configs).
 - `--project <NAME>` — filter by top-level no-mistakes Playwright config name
   (not Playwright's inner `projects` array).
+- `--app <NAME>` — `.no-mistakes.yml` `projects:` key of the frontend app to
+  analyze (matches the Node `app` option). Only needed with multiple `type:
+  nextjs` projects when `tests.playwright.apps.<project>.project` is unset.
 - `--root <PATH>` — project root.
 - `--config <FILE>` — path to `.no-mistakes.yml`.
 - `--json` — emit JSON output.

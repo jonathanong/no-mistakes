@@ -200,3 +200,23 @@ fn omitted_automatic_and_explicit_tsconfig_use_separate_scopes() {
     automatic_modes.sort();
     assert_eq!(automatic_modes, vec![false, true]);
 }
+
+#[test]
+fn command_report_rejects_unknown_type() {
+    let request = super::super::types::AnalyzeReportRequest {
+        id: None,
+        report_type: "missing".to_string(),
+        options: serde_json::Map::new(),
+    };
+    let options = super::super::types::AnalyzeProjectOptions {
+        root: None,
+        tsconfig: None,
+        config: None,
+        filters: Vec::new(),
+        reports: Vec::new(),
+    };
+    let error = super::run_command_report(&request, &options).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("unknown analyzeProject report type: missing"));
+}

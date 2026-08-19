@@ -28,6 +28,7 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
         config: None,
         playwright_config: vec![],
         project: None,
+        app: None,
         json: true,
         assert_conditional_tests: false,
         allow_skipped_tests: false,

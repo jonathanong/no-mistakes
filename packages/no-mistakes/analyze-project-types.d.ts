@@ -1,12 +1,42 @@
-import type { FlowOptions } from "./flow-types";
-import type { ImportUsagesOptions } from "./import-usage-types";
 import type {
+  CiEnvOptions,
+  CiImpactOptions,
+  CiTopologyOptions,
+  ImpactedChecksOptions,
+} from "./ci-types";
+import type { FetchesOptions, FlowOptions } from "./flow-types";
+import type { ImportUsagesOptions } from "./import-usage-types";
+import type { MermaidValidationOptions } from "./mermaid-types";
+import type {
+  DataPwOptions,
   EffectsOptions,
   EffectsReport,
+  RegistryExtensionOptions,
   RscCallersOptions,
   RscCallersReport,
 } from "./named-query-types";
-import type { PlaywrightOptions, PlaywrightRelatedOptions } from "./report-types";
+import type {
+  CallSitesOptions,
+  DeadExportsOptions,
+  ExportsOfOptions,
+  ImportersOptions,
+  ResolveCheckFilesOptions,
+  ResolveCheckOptions,
+} from "./query-types";
+import type {
+  InfraOptions,
+  PlaywrightOptions,
+  PlaywrightRelatedOptions,
+  SwiftOptions,
+} from "./report-types";
+import type {
+  LockfileDiffOptions,
+  TestsImpactOptions,
+  TestsPlanDocumentOptions,
+  TestsPlanOptions,
+  TestsTargetsOptions,
+  TestsWhyOptions,
+} from "./test-types";
 import type {
   CheckOptions,
   ProjectOptions,
@@ -27,6 +57,9 @@ type BatchedReactUsagesOptions = Pick<
 > &
   Required<Pick<ProjectOptions, "target">>;
 type BatchedCheckOptions = Pick<CheckOptions, "root" | "tsconfig" | "config" | "includeSuppressed">;
+type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;
+type BatchedRootConfigOptions<T> = Omit<T, "root" | "config">;
+type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "config">;
 
 export type AnalyzeProjectReportRequest =
   | ({ type: "dependencies" | "dependents" | "related"; id?: string } & BatchedTraverseOptions)
@@ -53,7 +86,40 @@ export type AnalyzeProjectReportRequest =
       id?: string;
     } & Omit<PlaywrightOptions, "root" | "config">)
   | ({ type: "playwrightRelated"; id?: string } & Omit<PlaywrightRelatedOptions, "root" | "config">)
-  | ({ type: "check"; id?: string } & BatchedCheckOptions);
+  | ({ type: "check"; id?: string } & BatchedCheckOptions)
+  | ({ type: "importers"; id?: string } & BatchedQueryFileOptions<ImportersOptions>)
+  | ({ type: "exportsOf"; id?: string } & BatchedQueryFileOptions<ExportsOfOptions>)
+  | ({ type: "deadExports"; id?: string } & BatchedQueryFileOptions<DeadExportsOptions>)
+  | ({ type: "callSites"; id?: string } & BatchedQueryFileOptions<CallSitesOptions>)
+  | ({
+      type: "resolveCheck";
+      id?: string;
+    } & BatchedQueryFileOptions<ResolveCheckOptions | ResolveCheckFilesOptions>)
+  | ({ type: "fetches"; id?: string } & BatchedRootConfigOptions<FetchesOptions>)
+  | ({ type: "dataPw"; id?: string } & BatchedRootConfigOptions<DataPwOptions>)
+  | ({ type: "registryExtension"; id?: string } & Omit<RegistryExtensionOptions, "root">)
+  | ({ type: "testsPlan"; id?: string } & BatchedRootTsConfigOptions<TestsPlanOptions>)
+  | ({ type: "testsImpact"; id?: string } & BatchedRootTsConfigOptions<TestsImpactOptions>)
+  | ({ type: "testsTargets"; id?: string } & Omit<TestsTargetsOptions, "root" | "config">)
+  | ({ type: "testsWhy"; id?: string } & BatchedRootTsConfigOptions<TestsWhyOptions>)
+  | ({
+      type: "testsComment" | "testsGraph" | "testsGraphMermaid";
+      id?: string;
+    } & TestsPlanDocumentOptions)
+  | ({ type: "lockfileDiff"; id?: string } & Omit<LockfileDiffOptions, "root">)
+  | ({ type: "ciImpact"; id?: string } & BatchedRootConfigOptions<CiImpactOptions>)
+  | ({ type: "ciEnv"; id?: string } & BatchedRootConfigOptions<CiEnvOptions>)
+  | ({ type: "ciTopology"; id?: string } & BatchedRootConfigOptions<CiTopologyOptions>)
+  | ({ type: "impactedChecks"; id?: string } & BatchedRootTsConfigOptions<ImpactedChecksOptions>)
+  | ({
+      type: "infraResourceRefs" | "infraOutputs" | "infraTestFor";
+      id?: string;
+    } & BatchedRootConfigOptions<InfraOptions>)
+  | ({
+      type: "swiftImporters" | "swiftTestTargets";
+      id?: string;
+    } & BatchedRootConfigOptions<SwiftOptions>)
+  | ({ type: "validateMermaidMarkdown"; id?: string } & MermaidValidationOptions);
 
 export interface AnalyzeProjectOptions {
   /** Project root. Defaults to the current working directory. */

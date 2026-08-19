@@ -19,6 +19,12 @@ pub struct PlaywrightArgs {
     #[arg(long, global = true)]
     pub project: Option<String>,
 
+    /// The `.no-mistakes.yml` `projects:` key of the frontend app to analyze.
+    /// Only needed when the repository configures more than one `type: nextjs`
+    /// project and `tests.playwright.apps.<project>.project` is not set.
+    #[arg(long, global = true)]
+    pub app: Option<String>,
+
     /// Emit JSON instead of text output.
     #[arg(long, global = true)]
     pub json: bool,

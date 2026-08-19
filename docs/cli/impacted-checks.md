@@ -24,6 +24,8 @@ no-mistakes impacted-checks --diagnose-empty --format human
 | `--changed-file` | Specific changed file (repeatable). |
 | `--changed-files` | File listing changed files, one per line. |
 | `--diff` | Unified diff file. |
+| `--diff-stdin` | Read a unified diff from stdin. Conflicts with `--diff` and `--diff-command`. |
+| `--diff-command` | Run a command and parse its stdout as a unified diff. |
 | `--generic-only` | Return configured `checks.commands` entries only; skip test-framework discovery and selection. |
 | `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
 | `--json` | Shorthand for `--format json`. |
@@ -73,8 +75,9 @@ parse or pipe. If a phase fails, stderr reports the phase and elapsed time befor
 the normal actionable error. See [Performance diagnostics](diagnostics.md) for
 the shared stderr contract and verbose work counters.
 
-`--diff-stdin` / `--diff-command` are not supported by this command; use a
-reusable `--diff <file>` input instead.
+`--diff`, `--diff-stdin`, and `--diff-command` match [`tests plan`](tests-plan.md):
+supply a unified diff file, pipe a diff on stdin, or run a command whose stdout
+is a unified diff. The three flags conflict with each other.
 
 Known limitation: an explicit changed path that is a symlink is canonicalized to
 its target before glob matching (the shared change-collection step resolves

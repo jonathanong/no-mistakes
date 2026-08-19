@@ -225,19 +225,23 @@ All analysis invocations share a per-user machine-wide lock. By default,
 allows 30 seconds of execution after acquisition. Use `--fail-on-lock` when an
 agent should fail immediately instead of queueing; use `0` to disable either
 CLI timeout. Lock waits are silent, failures go to stderr, and successful JSON
-output is unchanged. The async Node API accepts `timeout`, `lockTimeout`, and
-`failOnLock` with the same semantics; `0` or `null` disables a Node timeout,
-and failures reject the Promise.
+output is unchanged. The async Node API accepts `timeout`, `lockTimeout`, `failOnLock`, and `jobs`
+with the same semantics; `0` or `null` disables a Node timeout, `jobs: 0`
+matches CLI `--jobs 0`, and failures reject the Promise.
 
 For repeated graph/symbol/playwright/project queries in the same process,
 prefer `analyzeProject({reports:[…]})` from the async Node API documented at
 https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api.md — it
 shares one request-scoped analysis dataset and one graph build per normalized
 effective plan and file universe across all requested
-reports. `analyzeProject` does not support `testsPlan`, `fetches`,
-`lockfileDiff`, `importers`, `exportsOf`, `deadExports`, `callSites`,
-`resolveCheck`, `dataPw`, `registryExtension`, `impactedChecks`, `ci*`,
-`infra*`, or `swift*`; call those dedicated Node API functions directly.
+reports. `analyzeProject` also batches the remaining dedicated Node APIs
+(`importers`, `exportsOf`, `deadExports`, `callSites`, `resolveCheck`,
+`fetches`, `dataPw`, `registryExtension`, `testsPlan`/`testsImpact`/
+`testsTargets`/`testsWhy`/`testsComment`/`testsGraph`/`testsGraphMermaid`,
+`lockfileDiff`, `ciImpact`/`ciEnv`/`ciTopology`, `impactedChecks`,
+`infraResourceRefs`/`infraOutputs`/`infraTestFor`, `swiftImporters`/
+`swiftTestTargets`, and `validateMermaidMarkdown`). Dedicated functions still
+work; they rebuild analysis instead of sharing the request session.
 
 The shipped Node declarations expose precise DTOs for `fetches()`, `queues()`,
 `reactAnalyze()`, and `check()` through the

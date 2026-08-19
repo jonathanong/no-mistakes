@@ -128,8 +128,8 @@ unmatched rather than guessed.
 `no-mistakes server` and `no-mistakes server` extract route definitions and edges
 from Node.js server frameworks.
 
-Supported frameworks include Express, Hono, Koa router patterns, and known
-project helper shapes. The analyzer records method, normalized route pattern,
+Supported frameworks include Express, Hono, Fastify, Koa router patterns, and
+known project helper shapes. The analyzer records method, normalized route pattern,
 source file, and route edges. Dynamic route paths are skipped because guessing
 would create noisy graph edges.
 

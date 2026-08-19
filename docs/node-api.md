@@ -279,7 +279,12 @@ repository files.
 Each `analyzeProject()` report may use its report-specific options. Graph
 reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts
 `target`, `targets`, `include`, and scope options; and `check` may override
-`root`, `tsconfig`, and `config`. Reports with the same effective scope share
+`root`, `tsconfig`, and `config`. Lightweight queries (`importers`, `exportsOf`,
+`deadExports`, `callSites`, `resolveCheck`), `fetches`, test-plan reports,
+`lockfileDiff`, CI/infra/swift reports, `impactedChecks`, and
+`validateMermaidMarkdown` are also valid `reports[].type` values. They inherit
+the request `root`/`tsconfig`/`config` and dispatch through the dedicated Node
+APIs. Reports with the same effective scope share
 one request-scoped in-memory dataset. Sources, parsed metadata, and compact file
 facts are reused; each normalized graph or symbol-index plan is built at most
 once for its file universe. Distinct effective scopes are prepared independently.
@@ -356,6 +361,7 @@ interface InvocationOptions {
   timeout?: number | null;
   lockTimeout?: number | null;
   failOnLock?: boolean;
+  jobs?: number | null;
 }
 ```
 
@@ -363,7 +369,9 @@ Durations are non-negative integer seconds. `timeout` limits command execution
 after the lock is acquired, while `lockTimeout` limits only the lock wait. Both
 default to 30 seconds; `0` or `null` disables the corresponding timeout.
 `failOnLock: true` fails immediately on contention and overrides
-`lockTimeout`.
+`lockTimeout`. `jobs` sets the rayon worker count for that invocation;
+omit it to leave the process pool unchanged, and pass `0` to use the CPU
+count (matching CLI `--jobs 0`).
 
 The lock is shared by CLI and Node/N-API analyses for the current OS user across
 all repositories. Waiting is silent, successful return values keep their

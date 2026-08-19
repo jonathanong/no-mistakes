@@ -22,7 +22,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         cli.config.as_deref(),
         &cli.playwright_config,
         cli.project.clone(),
-        None,
+        cli.app.clone(),
         &snapshot,
     )?;
     let analysis = crate::playwright::analysis::pipeline::analyze_with_policy_from_snapshot(

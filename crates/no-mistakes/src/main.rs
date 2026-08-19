@@ -78,7 +78,7 @@ enum Command {
     React(react::ReactArgs),
     /// Analyze queue producer/worker relationships (BullMQ, glide-mq).
     Queues(queues::QueuesArgs),
-    /// Analyze server route graphs (Express, Hono, Koa).
+    /// Analyze server route graphs (Express, Hono, Fastify, Koa).
     Server(server::ServerArgs),
     /// Analyze Terraform/OpenTofu resource, module, and output relationships.
     Infra(infra::InfraArgs),

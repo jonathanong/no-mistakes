@@ -40,6 +40,12 @@ pub fn init_rayon_threads(args: JobsArg) {
         .build_global();
 }
 
+pub fn init_rayon_threads_if_requested(jobs: Option<usize>) {
+    if let Some(jobs) = jobs {
+        init_rayon_threads(JobsArg { jobs });
+    }
+}
+
 fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> usize {
     if args.jobs > 0 {
         args.jobs

@@ -7,6 +7,7 @@ use std::path::PathBuf;
 pub enum Framework {
     ApiServer,
     Express,
+    Fastify,
     Hono,
     KoaPathMatch,
     KoaRouter,

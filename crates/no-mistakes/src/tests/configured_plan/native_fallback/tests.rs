@@ -77,6 +77,11 @@ fn native_source_detection_handles_backslash_paths() {
         .dotnet
         .solutions
         .push("dotnet-clients/App.sln".to_string());
+    config
+        .tests
+        .rust
+        .packages
+        .push("crates/tool".to_string());
     assert!(is_native_source_or_project_change(
         TestFramework::Swift,
         root,
@@ -94,6 +99,24 @@ fn native_source_detection_handles_backslash_paths() {
         root,
         &config,
         r"swift-clients\core\tests\AppTests\ConfigTests.swift"
+    ));
+    assert!(is_native_source_or_project_change(
+        TestFramework::Cargo,
+        root,
+        &config,
+        r"crates\tool\src\lib.rs"
+    ));
+    assert!(is_native_source_or_project_change(
+        TestFramework::Cargo,
+        root,
+        &config,
+        r"crates\tool\Cargo.toml"
+    ));
+    assert!(!is_native_source_or_project_change(
+        TestFramework::Cargo,
+        root,
+        &config,
+        r"crates\tool\tests\plan.rs"
     ));
     assert!(is_native_source_or_project_change(
         TestFramework::Dotnet,

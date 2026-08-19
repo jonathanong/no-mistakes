@@ -29,6 +29,7 @@ impl Task for JsonValueTask {
             crate::invocation::extract_napi_options_value(options_json).map_err(to_napi_error)?;
         let _guard = crate::invocation::InvocationGuard::acquire(invocation_options)
             .map_err(to_napi_error)?;
+        crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let output = crate::ast::with_request_parse_cache(|| (self.run)(options));
         crate::invocation::check_timeout().map_err(to_napi_error)?;
@@ -56,6 +57,7 @@ impl Task for JsonTask {
             crate::invocation::extract_napi_options(options_json).map_err(to_napi_error)?;
         let _guard = crate::invocation::InvocationGuard::acquire(invocation_options)
             .map_err(to_napi_error)?;
+        crate::cli::init_rayon_threads_if_requested(invocation_options.jobs);
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let output = crate::ast::with_request_parse_cache(|| (self.run)(options_json));
         crate::invocation::check_timeout().map_err(to_napi_error)?;
