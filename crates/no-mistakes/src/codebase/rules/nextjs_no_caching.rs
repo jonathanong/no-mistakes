@@ -16,6 +16,7 @@ mod cache_imports;
 mod config;
 mod patterns;
 mod visitor;
+mod visitor_visit;
 pub(crate) use visitor::NextjsCachingVisitor;
 
 pub const RULE_ID: &str = "nextjs-no-caching";
