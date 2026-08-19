@@ -363,9 +363,17 @@ opt-in.
 
 ## Agent Fallback
 
-Until a row in the status table is `shipped`, agents should keep using `rg`
-for that language. v1 extractors cover the module graph plus named routes or
-queues; `tests plan <lang>`, lockfiles, and dedicated CLIs remain not started.
+v1 module graphs, `tests plan <lang>`, and named route/queue extractors are
+shipped for configured Python, Go, Rust, Rails, and PHP packages. Use
+`dependents --relationship <lang|route|queue>` and
+`tests plan python|go|cargo|rails|php` for those questions instead of `rg`.
+
+Keep using `rg` for holes the status table still marks `no` or later:
+ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
+`Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Rails
+`resources` / Laravel `Route::resource`, Rust Axum/Actix/Rocket routes, Kafka
+outside TS/Python literal shapes, language `symbols`/`call-sites`, and
+dedicated `no-mistakes python|go|rust|rails|php` CLIs.
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and

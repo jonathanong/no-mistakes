@@ -1,6 +1,6 @@
 ---
 name: no-mistakes
-description: "Core: TS/JS module graph (imports, dependents, exports, test impact, Playwright, React, queue/server, fetches, lockfile, no-mistakes checks). Also: CI-workflow, Terraform/OpenTofu, and Swift graphs. Prefer over rg when a question spans >2 workspace dirs or >5 import hops."
+description: "Core: TS/JS module graph (imports, dependents, exports, test impact, Playwright, React, queue/server, fetches, lockfile, no-mistakes checks). Also: CI, Terraform/OpenTofu, Swift/.NET, and configured Python/Go/Rust/Rails/PHP graphs plus tests plan. Prefer over rg when a question spans >2 workspace dirs or >5 import hops."
 allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 ---
 
@@ -18,11 +18,13 @@ test impact, Playwright coverage, React traits, queue/server routes, Next.js
 fetches, lockfile diffs, and `no-mistakes check` rules.
 
 **Adjacent graph domains**:
-Dotnet/C# test-impact edges participate in the canonical graph via configured
-`tests.dotnet.projects`.
+Configured `tests.python|go|rust|rails|php` and `tests.dotnet.projects` /
+`tests.swift.packages` participate in the canonical graph. Query them with
+`dependents --relationship python|go|rust|ruby|php|dotnet|swift` and
+`tests plan python|go|cargo|rails|php|dotnet|swift`.
 `no-mistakes ci` — GitHub Actions workflow graphs ·
 `no-mistakes infra` — Terraform/OpenTofu resource graphs ·
-`no-mistakes swift` — Swift package graphs.
+`no-mistakes swift` — Swift package importers and test targets.
 
 ## When To Reach For It
 
@@ -34,8 +36,9 @@ prose). For structural graph questions outside TS/JS, see Command Selection:
 `.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
 impact → `--relationship ci` · CSS/JSON asset imports →
 `--relationship asset`. Go/Python/Rust/Rails/PHP graphs require explicit `tests.<lang>` config — see https://github.com/jonathanong/no-mistakes/blob/main/docs/feature-parity.md.
-For "what directly imports this one file?" in a single directory,
-`no-mistakes importers <file>` is faster than a full graph walk.
+For "what directly imports this one TS/JS file?" in a single directory,
+`no-mistakes importers <file>` is faster than a full graph walk. Language
+graphs use `dependents --relationship <lang>` instead.
 
 **Pre-implementation:** for existing TS/JS files, run the appropriate test
 planner before editing to discover affected tests first (for new files,
@@ -104,7 +107,8 @@ scope the review and `rg` to inspect exact argument objects such as
 | What does this file transitively import? | `no-mistakes dependencies <file>` |
 | What runtime modules can a Playwright route conservatively reach? | `no-mistakes dependencies <route-file> --relationship route-import` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
-| Which files directly import this one file? (fast) | `no-mistakes importers <file>` |
+| Which files directly import this one TS/JS file? (fast) | `no-mistakes importers <file>` (TS/JS static imports only) |
+| Which Python/Go/Rust/Ruby/PHP/Swift/.NET files depend on this file? | `no-mistakes dependents <file> --relationship python\|go\|rust\|ruby\|php\|swift\|dotnet --format json` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
 | What does this file export, and who imports each export? | `no-mistakes exports-of <file>` |
 | Is this export still used anywhere? (yes/no) | `no-mistakes dead-exports <file> [NAME...]` |
@@ -230,8 +234,10 @@ prefer `analyzeProject({reports:[…]})` from the async Node API documented at
 https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api.md — it
 shares one request-scoped analysis dataset and one graph build per normalized
 effective plan and file universe across all requested
-reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
-`lockfileDiff`; call those dedicated Node API functions directly.
+reports. `analyzeProject` does not support `testsPlan`, `fetches`,
+`lockfileDiff`, `importers`, `exportsOf`, `deadExports`, `callSites`,
+`resolveCheck`, `dataPw`, `registryExtension`, `impactedChecks`, `ci*`,
+`infra*`, or `swift*`; call those dedicated Node API functions directly.
 
 The shipped Node declarations expose precise DTOs for `fetches()`, `queues()`,
 `reactAnalyze()`, and `check()` through the

@@ -1,11 +1,12 @@
 # PostgreSQL fact sources
 
 `no-mistakes` exposes two reusable, rule-free fact sources for PostgreSQL
-work. Later check rules should consume these facts instead of re-parsing SQL
-or TypeScript.
+work. Check rules consume these facts instead of re-parsing SQL or
+TypeScript.
 
-These extractors are library APIs. There is no CLI command and no check rule
-in this change.
+These extractors are library APIs. There is no CLI command or N-API dump.
+`postgres-lock-ordering` and `postgres-no-generated-column-writes` consume
+the facts through `no-mistakes check`.
 
 ## Schema facts
 
