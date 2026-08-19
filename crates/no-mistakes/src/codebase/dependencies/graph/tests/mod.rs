@@ -90,6 +90,7 @@ include!("extra_gitignore_pass3.rs");
 include!("types.rs");
 include!("vitest_setup.rs");
 
+mod core_independent_edges;
 mod edge_kind_semantics;
 mod finalization;
 mod remaining_edges;
