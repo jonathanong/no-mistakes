@@ -52,7 +52,7 @@ pub(super) fn scan(
     Ok(findings)
 }
 
-fn scan_fk(
+pub(super) fn scan_fk(
     rel: &str,
     source: &str,
     fk: &SqlForeignKeyMetadata,
@@ -95,7 +95,7 @@ fn scan_fk(
     }]
 }
 
-fn covers(index: &SqlCreateIndexMetadata, column: &str) -> bool {
+pub(super) fn covers(index: &SqlCreateIndexMetadata, column: &str) -> bool {
     let leading = index.leading_column.as_deref();
     if !leading.is_some_and(|name| name.eq_ignore_ascii_case(column)) {
         return false;
@@ -127,7 +127,7 @@ fn indexes_by_table(
     indexes
 }
 
-fn directive_on_line(source: &str, line: usize, directive: &str) -> bool {
+pub(super) fn directive_on_line(source: &str, line: usize, directive: &str) -> bool {
     if directive.is_empty() || line == 0 {
         return false;
     }

@@ -45,3 +45,11 @@ fn converts_json_number_shapes() {
     assert!(value["empty"].is_null());
     assert!(value["f"].as_f64().unwrap() > 1.0);
 }
+
+#[test]
+fn converts_json_integers_that_do_not_fit_i64() {
+    let source = r#"{ "u": 18446744073709551615 }"#;
+    let value = parse_structured_value(Path::new("n.json"), source).unwrap();
+    assert!(value["u"].as_i64().is_none());
+    assert_eq!(value["u"].as_u64(), Some(u64::MAX));
+}

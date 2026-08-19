@@ -1,8 +1,10 @@
 use super::*;
+use crate::codebase::ts_source::FrozenPathRemapper;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 fn fixture(name: &str) -> PathBuf {
@@ -65,4 +67,48 @@ fn fragment_only_link_is_ignored_when_require_whole_file() {
 #[test]
 fn fragment_link_counts_when_whole_file_is_not_required() {
     assert!(run(&fixture("fragment"), false).is_empty());
+}
+
+#[test]
+fn missing_child_link_without_whole_file_requirement() {
+    let findings = run(&fixture("fail"), false);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("markdown link"),
+        "{findings:?}"
+    );
+    assert!(!findings[0].message.contains("whole-file"), "{findings:?}");
+}
+
+#[test]
+fn parent_link_resolution_covers_external_absolute_and_dot_paths() {
+    let root = fixture("pass");
+    let readme = root.join("docs/README.md");
+    let guide = root.join("docs/guide.md");
+    let known = BTreeSet::from([readme.clone(), guide.clone()]);
+    let remapper = FrozenPathRemapper::from_paths([readme.clone(), guide.clone()]);
+    let links = super::links::resolve_parent_links(
+        &root,
+        &readme,
+        &[
+            String::new(),
+            "https://example.com".to_string(),
+            "#anchor".to_string(),
+            "%2Fguide.md".to_string(),
+            "/docs/guide.md".to_string(),
+            "./guide.md".to_string(),
+            "../docs/guide.md".to_string(),
+            "../../outside.md".to_string(),
+            "missing.md".to_string(),
+            "guide.md".to_string(),
+        ],
+        &known,
+        &remapper,
+    );
+    assert!(
+        links
+            .iter()
+            .any(|link| link.path == guide && link.whole_file),
+        "{links:?}"
+    );
 }

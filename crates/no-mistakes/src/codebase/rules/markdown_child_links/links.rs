@@ -3,6 +3,7 @@ use crate::codebase::ts_source::FrozenPathRemapper;
 use std::collections::BTreeSet;
 use std::path::{Component, Path, PathBuf};
 
+#[derive(Debug)]
 pub(super) struct ResolvedLink {
     pub(super) path: PathBuf,
     pub(super) whole_file: bool,

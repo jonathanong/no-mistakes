@@ -69,3 +69,11 @@ fn stale_allowlist_entry_is_a_finding() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(findings[0].message.contains("stale"));
 }
+
+#[test]
+fn unreadable_eval_candidates_are_skipped() {
+    let root = fixture("fail");
+    let files = vec![root.join("missing.test.mts")];
+    let findings = check_with_files(&root, &config(&[]), &files).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
