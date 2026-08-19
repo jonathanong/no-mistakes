@@ -65,3 +65,10 @@ fn async_version_task_runs_on_task_interface() {
         "0.0.0"
     );
 }
+
+#[test]
+fn async_json_task_installs_the_global_rayon_pool() {
+    let mut task = JsonTask::new("{}".to_string(), echo_task);
+    task.compute().unwrap();
+    assert!(rayon::current_num_threads() >= 1);
+}

@@ -24,6 +24,7 @@ impl Task for JsonValueTask {
     type JsValue = String;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
+        ensure_rayon_threads();
         let options_json = std::mem::take(&mut self.options_json);
         let (options, invocation_options) =
             crate::invocation::extract_napi_options_value(options_json).map_err(to_napi_error)?;
@@ -51,6 +52,7 @@ impl Task for JsonTask {
     type JsValue = String;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
+        ensure_rayon_threads();
         let options_json = std::mem::take(&mut self.options_json);
         let (options_json, invocation_options) =
             crate::invocation::extract_napi_options(options_json).map_err(to_napi_error)?;
@@ -65,6 +67,10 @@ impl Task for JsonTask {
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         Ok(output)
     }
+}
+
+fn ensure_rayon_threads() {
+    crate::cli::init_rayon_threads(crate::cli::JobsArg { jobs: 0 });
 }
 
 fn to_napi_error(error: anyhow::Error) -> napi::Error {

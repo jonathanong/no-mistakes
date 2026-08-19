@@ -1328,7 +1328,6 @@ dependencies = [
  "toml",
  "unicode-id-start",
  "wait-timeout",
- "walkdir",
  "windows-sys",
 ]
 
