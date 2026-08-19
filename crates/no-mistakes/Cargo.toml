@@ -47,7 +47,6 @@ sqlparser = "0.62"
 syn = { version = "3", features = ["full", "visit"] }
 toml = "1.1"
 unicode-id-start = "1.4.0"
-walkdir = "2"
 wait-timeout = "0.2"
 
 [target.'cfg(unix)'.dependencies]

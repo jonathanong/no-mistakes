@@ -33,11 +33,14 @@ pub struct JobsArg {
 }
 
 pub fn init_rayon_threads(args: JobsArg) {
+    static INIT: std::sync::Once = std::sync::Once::new();
     let raw_threads = std::env::var("RAYON_NUM_THREADS").ok();
     let threads = rayon_thread_count(args, raw_threads.as_deref());
-    let _ = rayon::ThreadPoolBuilder::new()
-        .num_threads(threads)
-        .build_global();
+    INIT.call_once(|| {
+        let _ = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build_global();
+    });
 }
 
 pub fn init_rayon_threads_if_requested(jobs: Option<usize>) {
