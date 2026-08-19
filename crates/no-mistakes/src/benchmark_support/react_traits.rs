@@ -32,7 +32,14 @@ pub fn react_traits_many_components_fixture() -> ReactTraitsFixture {
 
 pub fn analyze_react_traits_file(fixture: &ReactTraitsFixture) -> ReactTraitsSummary {
     let analysis = crate::react_traits::analyze::file::analyze_file(&fixture.file, &fixture.root)
-        .expect("react-traits performance fixture should analyze");
+        .unwrap_or_else(|error| {
+            panic!(
+                "Failed to analyze React trait benchmark fixture '{}': {error}. \
+                 Fix the fixture syntax or analyzer support. The benchmark requires stable \
+                 trait counts to measure file-level analysis.",
+                fixture.file.display()
+            )
+        });
     let mut summary = ReactTraitsSummary {
         components: analysis.components.len(),
         ..ReactTraitsSummary::default()
