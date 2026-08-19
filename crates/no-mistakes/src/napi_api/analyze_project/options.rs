@@ -81,6 +81,8 @@ pub(super) fn traverse_options(
     Ok(serde_json::from_value(value)?)
 }
 
+include!("options_command.rs");
+
 fn merged_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,

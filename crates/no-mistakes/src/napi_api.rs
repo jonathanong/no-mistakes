@@ -31,7 +31,7 @@ pub(crate) use analyze_project::analyze_project_json_impl;
 mod async_task;
 mod cli_parity;
 mod codebase;
-mod infra_swift;
+pub(crate) mod infra_swift;
 mod lockfile_diff;
 #[cfg(feature = "mermaid-validation")]
 mod mermaid;
@@ -57,8 +57,8 @@ pub use infra_swift::{
     infra_outputs_json, infra_resource_refs_json, infra_test_for_json, swift_importers_json,
     swift_test_targets_json,
 };
-// json_binding! is compiled out under coverage; tests call the impl via the module.
-#[cfg(not(coverage))]
+// json_binding! is compiled out under coverage; tests and analyzeProject
+// command reports still call the impl.
 pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 #[cfg(feature = "mermaid-validation")]
 pub(crate) use mermaid::validate_mermaid_markdown_json_impl;

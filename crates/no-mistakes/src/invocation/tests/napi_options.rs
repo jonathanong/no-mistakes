@@ -9,6 +9,7 @@ fn napi_options_default_and_strip_controls() {
     assert_eq!(options.timeout, Some(Duration::from_secs(4)));
     assert_eq!(options.lock_timeout, Some(Duration::from_secs(5)));
     assert!(options.fail_on_lock);
+    assert_eq!(options.jobs, None);
     assert_eq!(
         serde_json::from_str::<Value>(&json).unwrap(),
         serde_json::json!({"root":"."})
@@ -39,12 +40,24 @@ fn napi_missing_controls_use_defaults() {
 }
 
 #[test]
+fn napi_jobs_parses_non_negative_integer_or_null() {
+    let (_, options) = extract_napi_options(r#"{"jobs":4}"#.to_string()).unwrap();
+    assert_eq!(options.jobs, Some(4));
+    let (_, options) = extract_napi_options(r#"{"jobs":0}"#.to_string()).unwrap();
+    assert_eq!(options.jobs, Some(0));
+    let (_, options) = extract_napi_options(r#"{"jobs":null}"#.to_string()).unwrap();
+    assert_eq!(options.jobs, None);
+}
+
+#[test]
 fn napi_controls_validate_types() {
     for json in [
         r#"{"timeout":-1}"#,
         r#"{"timeout":1.5}"#,
         r#"{"lockTimeout":"30"}"#,
         r#"{"failOnLock":1}"#,
+        r#"{"jobs":-1}"#,
+        r#"{"jobs":"4"}"#,
         "[]",
         "not-json",
     ] {

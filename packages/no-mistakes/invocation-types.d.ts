@@ -6,6 +6,11 @@ export interface InvocationOptions {
   lockTimeout?: number | null;
   /** Fail immediately instead of waiting when another invocation holds the lock. */
   failOnLock?: boolean;
+  /**
+   * Rayon worker count. Omit to leave the process pool unchanged.
+   * `0` uses the CPU count, matching CLI `--jobs 0`.
+   */
+  jobs?: number | null;
 }
 
 export type WithInvocationOptions<T> = T & InvocationOptions;

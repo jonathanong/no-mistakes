@@ -22,6 +22,8 @@ fn impacted_checks_reuse_one_parse_pass_without_cross_runner_tests() {
         changed_file: Vec::new(),
         changed_files: None,
         diff: None,
+        diff_stdin: false,
+        diff_command: None,
         diff_content: None,
         format: None,
         json: false,

@@ -31,7 +31,12 @@ export interface ImpactedChecksOptions {
   head?: string;
   changedFiles?: string[];
   changedFilesFile?: string;
+  /** Unified diff file path. Conflicts with `diffStdin` and `diffCommand`. */
   diff?: string;
+  /** Read a unified diff from stdin. Conflicts with `diff` and `diffCommand`. */
+  diffStdin?: boolean;
+  /** Shell command whose stdout is a unified diff. Conflicts with `diff` and `diffStdin`. */
+  diffCommand?: string;
   /** Return configured generic commands only; skip test-framework discovery and selection. */
   genericOnly?: boolean;
   /** Include ordered analysis phase timings in the returned report. */

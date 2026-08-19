@@ -39,6 +39,7 @@ fn is_commonjs_interop_wrapper(name: &str) -> bool {
 pub(super) fn commonjs_framework_binding(source: &str) -> Option<Binding> {
     let framework = match source {
         "express" => Framework::Express,
+        "fastify" => Framework::Fastify,
         "hono" | "@hono/hono" => Framework::Hono,
         "@koa/router" | "koa-router" => Framework::KoaRouter,
         "koa-path-match" | "@koa/path-match" => Framework::KoaPathMatch,
@@ -51,6 +52,8 @@ pub(super) fn commonjs_framework_binding(source: &str) -> Option<Binding> {
 pub(super) fn commonjs_property_is_framework(source: &str, key: &str) -> bool {
     const FRAMEWORK_PROPERTIES: &[(&str, &str)] = &[
         ("express", "Router"),
+        ("fastify", "fastify"),
+        ("fastify", "Fastify"),
         ("hono", "Hono"),
         ("@hono/hono", "Hono"),
         ("@koa/router", "Router"),
@@ -61,4 +64,22 @@ pub(super) fn commonjs_property_is_framework(source: &str, key: &str) -> bool {
         ("api-server", "createApp"),
     ];
     FRAMEWORK_PROPERTIES.contains(&(source, key))
+}
+
+pub(crate) fn is_client_http_module(source: &str) -> bool {
+    matches!(
+        source,
+        "axios"
+            | "got"
+            | "ky"
+            | "supertest"
+            | "superagent"
+            | "undici"
+            | "node-fetch"
+            | "http"
+            | "https"
+            | "node:http"
+            | "node:https"
+            | "@playwright/test"
+    )
 }

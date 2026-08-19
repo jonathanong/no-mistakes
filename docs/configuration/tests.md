@@ -25,6 +25,9 @@ tests:
       swift-core:
         include:
           - swift-clients/core/Tests/**/*.swift
+  cargo:
+    packages:
+      - crates/tool
 ```
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
@@ -64,13 +67,16 @@ over sibling default `vitest.config.*` files; list a root config in that array
 when it must also run as a project. Explicit `tests.vitest.configs` remains
 authoritative.
 
-Dotnet and Swift test plans use explicit config for source-graph targeting.
-`tests.dotnet.projects` or `tests.dotnet.solutions`, and
-`tests.swift.packages`, are the explicit inputs; `no-mistakes` does not infer
-repository-wide project or package scans. When `tests plan dotnet` or
-`tests plan swift` can discover native tests but cannot trace the native
-source/project change, the plan falls back to framework-scoped discovered tests
-and sets `fallback_triggered`/`fallback_reason`.
+Dotnet, Swift, and Cargo test plans use explicit config for source-graph
+targeting. `tests.dotnet.projects` or `tests.dotnet.solutions`,
+`tests.swift.packages`, and `tests.cargo.packages` are the explicit inputs;
+`no-mistakes` does not infer repository-wide project or package scans. When
+`tests plan dotnet`, `tests plan swift`, or `tests plan cargo` can discover
+native tests but cannot trace the native source/project change, the plan falls
+back to framework-scoped discovered tests and sets
+`fallback_triggered`/`fallback_reason`. Cargo has no import graph, so a changed
+`.rs` file outside `tests/` (or a `Cargo.toml`) in a configured package selects
+that package's discovered tests.
 
 Language test plans follow the same native shape. Configure
 `tests.python.packages`, `tests.go.modules`, `tests.rust.packages`,

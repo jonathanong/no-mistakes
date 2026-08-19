@@ -508,6 +508,26 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
   assert.match(
+    analyzeProjectDeclarations,
+    /type: "importers"; id\?: string } & BatchedQueryFileOptions<ImportersOptions>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "fetches"; id\?: string } & BatchedRootConfigOptions<FetchesOptions>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "testsPlan"; id\?: string } & BatchedRootTsConfigOptions<TestsPlanOptions>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "lockfileDiff"; id\?: string } & Omit<LockfileDiffOptions, "root">/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "validateMermaidMarkdown"; id\?: string } & MermaidValidationOptions/,
+  );
+  assert.match(
     readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
     /domain:[\s\S]*\| "advisories";/,
   );
@@ -579,6 +599,7 @@ test("declarations expose invocation controls on every analysis", () => {
   assert.match(invocationDeclarations, /timeout\?: number \| null;/);
   assert.match(invocationDeclarations, /lockTimeout\?: number \| null;/);
   assert.match(invocationDeclarations, /failOnLock\?: boolean;/);
+  assert.match(invocationDeclarations, /jobs\?: number \| null;/);
   assert.match(
     indexDeclarations,
     /analyzeProject\(\n  options: WithInvocationOptions<AnalyzeProjectOptions>/,

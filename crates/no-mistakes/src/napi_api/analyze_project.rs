@@ -13,7 +13,9 @@ mod dispatch;
 mod options;
 mod types;
 
-use dispatch::{graph_direction, is_playwright_report, is_project_report, is_symbols_report};
+use dispatch::{
+    graph_direction, is_command_report, is_playwright_report, is_project_report, is_symbols_report,
+};
 use options::{flow_options, import_usages_options, symbols_options};
 use types::{
     AnalyzeProjectOptions, AnalyzeProjectResult, AnalyzeReportRequest, AnalyzeReportResult,
@@ -25,6 +27,9 @@ mod architecture_override_tests;
 #[cfg(test)]
 #[path = "analyze_project/cli_parity_tests.rs"]
 mod cli_parity_tests;
+#[cfg(test)]
+#[path = "analyze_project/command_report_tests.rs"]
+mod command_report_tests;
 #[cfg(test)]
 #[path = "analyze_project/domain_parity_tests.rs"]
 mod domain_parity_tests;
@@ -114,6 +119,9 @@ fn run_report(
     }
     if is_project_report(&request.report_type) {
         return context.project_report(request, options);
+    }
+    if is_command_report(&request.report_type) {
+        return context.command_report(request, options);
     }
     bail!(
         "unknown analyzeProject report type: {}",

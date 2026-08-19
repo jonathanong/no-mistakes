@@ -9,7 +9,7 @@ mod napi_options;
 pub use child::command_output;
 pub(crate) use child::stream::stream_command_lines;
 pub use deadline::{check_timeout, commit_timeout};
-pub use napi_options::{extract_napi_options, extract_napi_options_value};
+pub use napi_options::{extract_napi_options, extract_napi_options_value, InvocationOptions};
 
 use anyhow::Result;
 use deadline::DeadlineGuard;
@@ -85,20 +85,8 @@ impl InvocationArgs {
             timeout: nonzero_seconds(self.timeout),
             lock_timeout: nonzero_seconds(self.lock_timeout),
             fail_on_lock: self.fail_on_lock,
+            jobs: None,
         }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct InvocationOptions {
-    pub timeout: Option<Duration>,
-    pub lock_timeout: Option<Duration>,
-    pub fail_on_lock: bool,
-}
-
-impl Default for InvocationOptions {
-    fn default() -> Self {
-        InvocationArgs::default().options()
     }
 }
 
