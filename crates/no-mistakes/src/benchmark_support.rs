@@ -10,6 +10,7 @@ use std::path::Path;
 
 mod language_frontends;
 mod production_graph;
+mod react_traits;
 mod relationships;
 mod scoped_resolver;
 pub use language_frontends::{
@@ -19,6 +20,10 @@ pub use language_frontends::{
 pub use production_graph::{
     append_production_selectors, finalize_production_graph, production_graph_fixture,
     ProductionGraphFixture, ProductionGraphSummary,
+};
+pub use react_traits::{
+    analyze_react_traits_file, react_traits_many_components_fixture, ReactTraitsFixture,
+    ReactTraitsSummary,
 };
 pub use relationships::{
     project_all_relationship_edges, project_relationship_edges, relationship_construction_fixture,
