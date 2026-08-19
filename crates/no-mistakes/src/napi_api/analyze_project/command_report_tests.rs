@@ -118,3 +118,67 @@ fn analyze_project_additive_importers_report_keeps_dependents_fields() {
     let standalone: Value = serde_json::from_str(&standalone).unwrap();
     assert_eq!(mixed["reports"][1]["result"], standalone);
 }
+
+#[test]
+fn command_options_forward_top_level_tsconfig_and_config() {
+    let root = fixture_root("simple");
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": root,
+            "tsconfig": "tsconfig.json",
+            "config": "no-mistakes.json",
+            "reports": [
+                { "type": "importers", "file": "b.mts" },
+                { "type": "ciImpact", "file": "b.mts" },
+                { "type": "testsPlan" },
+                { "type": "lockfileDiff" },
+                { "type": "registryExtension" },
+                { "type": "importers", "file": "b.mts", "tsconfig": "keep.json" },
+                { "type": "ciImpact", "file": "b.mts", "config": "keep.yml" }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    let importers: Value =
+        serde_json::from_str(&options::command_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert_eq!(importers["root"], root);
+    assert_eq!(importers["tsconfig"], format!("{root}/tsconfig.json"));
+    assert!(importers.get("config").is_none());
+
+    let ci: Value =
+        serde_json::from_str(&options::command_options(&options.reports[1], &options).unwrap())
+            .unwrap();
+    assert_eq!(ci["config"], format!("{root}/no-mistakes.json"));
+    assert!(ci.get("tsconfig").is_none());
+
+    let tests_plan: Value =
+        serde_json::from_str(&options::command_options(&options.reports[2], &options).unwrap())
+            .unwrap();
+    assert_eq!(tests_plan["tsconfig"], format!("{root}/tsconfig.json"));
+    assert_eq!(tests_plan["config"], format!("{root}/no-mistakes.json"));
+
+    let lockfile: Value =
+        serde_json::from_str(&options::command_options(&options.reports[3], &options).unwrap())
+            .unwrap();
+    assert!(lockfile.get("tsconfig").is_none());
+    assert!(lockfile.get("config").is_none());
+
+    let registry: Value =
+        serde_json::from_str(&options::command_options(&options.reports[4], &options).unwrap())
+            .unwrap();
+    assert!(registry.get("tsconfig").is_none());
+    assert_eq!(registry["config"], format!("{root}/no-mistakes.json"));
+
+    let keep_tsconfig: Value =
+        serde_json::from_str(&options::command_options(&options.reports[5], &options).unwrap())
+            .unwrap();
+    assert_eq!(keep_tsconfig["tsconfig"], "keep.json");
+
+    let keep_config: Value =
+        serde_json::from_str(&options::command_options(&options.reports[6], &options).unwrap())
+            .unwrap();
+    assert_eq!(keep_config["config"], "keep.yml");
+}

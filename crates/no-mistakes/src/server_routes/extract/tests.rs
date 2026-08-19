@@ -172,6 +172,8 @@ fn extract_file_recognizes_fastify_imports_and_verbs() {
 
     assert_eq!(facts.bindings["app"].framework, Framework::Fastify);
     assert_eq!(facts.bindings["named"].framework, Framework::Fastify);
+    assert_eq!(facts.bindings["ctor"].framework, Framework::Fastify);
+    assert_eq!(facts.bindings["equals"].framework, Framework::Fastify);
     assert_eq!(facts.bindings["cjs"].framework, Framework::Fastify);
 
     let route_pairs: Vec<_> = facts
@@ -188,5 +190,7 @@ fn extract_file_recognizes_fastify_imports_and_verbs() {
     assert!(route_pairs.contains(&("get", "/health", Framework::Fastify)));
     assert!(route_pairs.contains(&("post", "/users", Framework::Fastify)));
     assert!(route_pairs.contains(&("delete", "/named", Framework::Fastify)));
+    assert!(route_pairs.contains(&("head", "/ctor", Framework::Fastify)));
+    assert!(route_pairs.contains(&("patch", "/equals", Framework::Fastify)));
     assert!(route_pairs.contains(&("put", "/cjs", Framework::Fastify)));
 }
