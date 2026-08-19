@@ -112,3 +112,13 @@ fn parent_link_resolution_covers_external_absolute_and_dot_paths() {
         "{links:?}"
     );
 }
+
+#[test]
+fn normalize_inside_rejects_paths_that_escape_the_root() {
+    let root = PathBuf::from("/repo");
+    assert_eq!(
+        super::links::normalize_inside(&root, &root.join("docs").join("guide.md")),
+        Some(root.join("docs").join("guide.md"))
+    );
+    assert!(super::links::normalize_inside(&root, &root.join("..").join("outside.md")).is_none());
+}

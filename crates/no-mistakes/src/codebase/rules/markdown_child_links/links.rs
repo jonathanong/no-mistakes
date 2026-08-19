@@ -45,14 +45,13 @@ fn split_destination(destination: &str) -> (&str, bool) {
     (path_part, !destination.contains('#'))
 }
 
-fn normalize_inside(root: &Path, path: &Path) -> Option<PathBuf> {
+pub(super) fn normalize_inside(root: &Path, path: &Path) -> Option<PathBuf> {
     let mut relative = PathBuf::new();
     for component in path.strip_prefix(root).ok()?.components() {
         match component {
             Component::Normal(part) => relative.push(part),
             Component::CurDir => {}
-            Component::ParentDir if !relative.pop() => return None,
-            Component::ParentDir => {}
+            Component::ParentDir if relative.pop() => {}
             _ => return None,
         }
     }

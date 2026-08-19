@@ -111,3 +111,16 @@ ALTER TABLE accounts DROP COLUMN unused;
         .iter()
         .any(|constraint| constraint.name == "accounts_pk_not_valid"));
 }
+
+#[test]
+fn index_table_constraints_do_not_contribute_not_valid_names() {
+    use sqlparser::ast::{IndexConstraint, TableConstraint};
+    let constraint = TableConstraint::Index(IndexConstraint {
+        display_as_key: false,
+        name: Some(sqlparser::ast::Ident::new("idx")),
+        index_type: None,
+        columns: Vec::new(),
+        index_options: Vec::new(),
+    });
+    assert!(super::constraints::constraint_name(&constraint).is_none());
+}

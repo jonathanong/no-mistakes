@@ -119,7 +119,7 @@ fn fk_metadata(
     }
 }
 
-fn constraint_name(constraint: &TableConstraint) -> Option<String> {
+pub(super) fn constraint_name(constraint: &TableConstraint) -> Option<String> {
     match constraint {
         TableConstraint::ForeignKey(fk) => fk.name.as_ref().map(|ident| ident.value.clone()),
         TableConstraint::Check(check) => check.name.as_ref().map(|ident| ident.value.clone()),
