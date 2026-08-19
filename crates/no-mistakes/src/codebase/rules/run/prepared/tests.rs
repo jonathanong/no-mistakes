@@ -32,3 +32,21 @@ fn legacy_prepared_request_without_sources_uses_the_request_session() {
 
     assert!(findings.is_empty());
 }
+
+#[test]
+fn prepared_rules_collect_independent_rule_bodies_in_parallel() {
+    let source = include_str!("execution.rs");
+    assert!(
+        source.contains("independent::collect"),
+        "canonical graph must stay first, then independent rules"
+    );
+    assert!(
+        !source.contains("rayon::join"),
+        "rule parallelism belongs in the independent collector"
+    );
+    let collector = include_str!("execution/independent.rs");
+    assert!(
+        collector.contains("rayon::join"),
+        "independent rule bodies must collect in parallel"
+    );
+}
