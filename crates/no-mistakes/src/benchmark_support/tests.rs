@@ -215,3 +215,38 @@ fn scoped_resolver_fixture_caches_one_selection_per_importer() {
         }
     );
 }
+
+#[test]
+fn bench_shard_unset_and_general_memory_run_every_named_surface() {
+    for current in [None, Some(""), Some(GENERAL_MEMORY)] {
+        assert_eq!(parse_bench_shard(current), Ok(BenchShard::All));
+        for requested in [CHECK, TESTS_PLAN, GRAPH, GRAPH_PRODUCTION, QUERY] {
+            assert_eq!(shard_should_run(requested, current), Ok(true));
+        }
+    }
+}
+
+#[test]
+fn bench_shard_named_values_isolate_one_surface() {
+    for requested in [CHECK, TESTS_PLAN, GRAPH, GRAPH_PRODUCTION, QUERY] {
+        assert_eq!(
+            parse_bench_shard(Some(requested)),
+            Ok(BenchShard::Named(requested))
+        );
+        assert_eq!(shard_should_run(requested, Some(requested)), Ok(true));
+        for other in [CHECK, TESTS_PLAN, GRAPH, GRAPH_PRODUCTION, QUERY] {
+            if other != requested {
+                assert_eq!(shard_should_run(other, Some(requested)), Ok(false));
+            }
+        }
+    }
+}
+
+#[test]
+fn bench_shard_rejects_unknown_values() {
+    for current in [Some("grap"), Some("GRAPH"), Some("cpu")] {
+        let err = parse_bench_shard(current).expect_err("unknown shard names must fail");
+        assert!(err.contains("unknown NO_MISTAKES_BENCH_SHARD"));
+        assert!(shard_should_run(GRAPH, current).is_err());
+    }
+}

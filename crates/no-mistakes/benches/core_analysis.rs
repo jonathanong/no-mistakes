@@ -23,7 +23,10 @@ mod shard;
 
 use aggregate::{bench_configured_checks, bench_impacted_checks, bench_reused_multi_report};
 use criterion::{criterion_group, criterion_main};
-use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
+use graph::{
+    bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal,
+    bench_production_finalization,
+};
 use graph_gates::bench_graph_gates;
 use language_frontends::bench_language_frontends;
 use observer::bench_observer_overhead;
@@ -39,6 +42,7 @@ criterion_group!(
     bench_graph_gates,
     bench_language_frontends,
     bench_high_fanout_finalization,
+    bench_production_finalization,
     bench_symbol_index_build_and_lookup,
     bench_scoped_resolver_selection,
     bench_symbols,

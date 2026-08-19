@@ -130,10 +130,15 @@ pub(super) fn bench_high_fanout_finalization(c: &mut Criterion) {
         );
     }
     group.finish();
+}
 
+pub(super) fn bench_production_finalization(c: &mut Criterion) {
+    if !shard::should_run_any(&[shard::GRAPH, shard::GRAPH_PRODUCTION]) {
+        return;
+    }
     // The general memory shard excludes the two expensive production cases;
     // dedicated shards run each one under its existing benchmark identity.
-    if std::env::var("NO_MISTAKES_BENCH_SHARD").as_deref() == Ok("general-memory") {
+    if std::env::var("NO_MISTAKES_BENCH_SHARD").as_deref() == Ok(shard::GENERAL_MEMORY) {
         return;
     }
 

@@ -546,13 +546,13 @@ jobs:
           - name: node memory
             mode: memory
             filter: "graph_production_finalization::node_id_finalization$"
-            benchmark-shard: graph
+            benchmark-shard: graph-production
             timeout-minutes: 8
             run-timeout-minutes: 5
           - name: selector memory
             mode: memory
             filter: "graph_production_finalization::selector_append$"
-            benchmark-shard: graph
+            benchmark-shard: graph-production
             timeout-minutes: 8
             run-timeout-minutes: 5
     env:
