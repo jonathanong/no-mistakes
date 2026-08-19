@@ -139,7 +139,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
     facts.insert(
         current.clone(),
         TsFileFacts {
-            symbols: Some(symbols),
+            symbols: Some(std::sync::Arc::new(symbols)),
             function_calls: vec![
                 FunctionCall {
                     caller: None,

@@ -156,7 +156,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     facts.insert(
         barrel.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "ignored".to_string(),
@@ -177,7 +177,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
                     },
                 ],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -283,14 +283,14 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
     facts.insert(
         current.clone(),
         TsFileFacts {
-            symbols: Some(symbols),
+            symbols: Some(std::sync::Arc::new(symbols)),
             ..TsFileFacts::default()
         },
     );
     facts.insert(
         target.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "default".to_string(),
@@ -318,7 +318,7 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
                     },
                 ],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -370,7 +370,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
     facts.insert(
         barrel.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "barrelValue".to_string(),
@@ -391,7 +391,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
                     },
                 ],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );

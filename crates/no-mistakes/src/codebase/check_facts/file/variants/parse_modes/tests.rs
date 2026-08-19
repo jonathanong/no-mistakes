@@ -18,7 +18,7 @@ fn mixed_legacy_failure_preserves_standard_diagnostic_and_rejects_symbols() {
     let symbols = Arc::new(crate::codebase::ts_symbols::FileSymbols::default());
     let mut results = vec![Some(CheckFileFacts {
         ts: Arc::new(TsFileFacts {
-            symbols: Some(symbols.as_ref().clone()),
+            symbols: Some(Arc::clone(&symbols)),
             parse_error: Some("standard diagnostic".to_string()),
             ..TsFileFacts::default()
         }),
@@ -78,7 +78,7 @@ fn mixed_legacy_success_keeps_standard_symbols_isolated() {
     });
     let mut results = vec![Some(CheckFileFacts {
         ts: Arc::new(TsFileFacts {
-            symbols: Some(standard.as_ref().clone()),
+            symbols: Some(Arc::clone(&standard)),
             ..TsFileFacts::default()
         }),
         symbols: Some(standard.clone()),
@@ -89,6 +89,6 @@ fn mixed_legacy_success_keeps_standard_symbols_isolated() {
 
     let facts = results[0].as_ref().unwrap();
     assert_eq!(facts.symbols.as_ref(), Some(&standard));
-    assert_eq!(facts.ts.symbols.as_ref(), Some(standard.as_ref()));
+    assert_eq!(facts.ts.symbols.as_ref(), Some(&standard));
     assert_eq!(facts.legacy_symbols.as_ref(), Some(&legacy));
 }

@@ -308,7 +308,7 @@ fn type_imports_in_exported_symbol_scopes_are_reachable() {
         runtime_reachable: false,
     };
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
-        symbols: Some(crate::codebase::ts_symbols::FileSymbols {
+        symbols: Some(std::sync::Arc::new(crate::codebase::ts_symbols::FileSymbols {
             exports: vec![crate::codebase::ts_symbols::Export {
                 name: "PublicShape".to_string(),
                 local: None,
@@ -317,7 +317,7 @@ fn type_imports_in_exported_symbol_scopes_are_reachable() {
                 is_type_only: true,
             }],
             imports: vec![],
-        }),
+        })),
         ..Default::default()
     };
 

@@ -44,10 +44,10 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     facts.insert(
         current.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![non_reexport.clone()],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -121,7 +121,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     facts.insert(
         barrel.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![Export {
                     name: "api".to_string(),
                     local: None,
@@ -133,14 +133,14 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                     is_type_only: false,
                 }],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
     facts.insert(
         mid.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![Export {
                     name: "api".to_string(),
                     local: None,
@@ -152,7 +152,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                     is_type_only: false,
                 }],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -181,7 +181,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     facts.insert(
         cycle.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "other".to_string(),
@@ -208,7 +208,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                     line: 3,
                     is_type_only: false,
                 }],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );

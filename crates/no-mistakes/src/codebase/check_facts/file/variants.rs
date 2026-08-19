@@ -133,7 +133,7 @@ fn recovered_error_facts(
         ))
     });
     if let Some(symbols) = &symbols {
-        ts.symbols = Some(symbols.as_ref().clone());
+        ts.symbols = Some(Arc::clone(symbols));
     }
     let integration_runner_config = plan.integration_runner_configs.as_ref().and_then(|runner| {
         runner.parse_error(

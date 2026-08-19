@@ -10,6 +10,7 @@ use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 pub(crate) mod call_sites;
 mod collect;
@@ -74,7 +75,7 @@ pub struct TsFileFacts {
     pub exported_resource_scopes: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
-    pub symbols: Option<FileSymbols>,
+    pub symbols: Option<Arc<FileSymbols>>,
     pub route_refs: Vec<RouteRef>,
     pub route_helpers: Vec<RouteHelper>,
     pub route_helper_imports: Vec<RouteHelperImport>,

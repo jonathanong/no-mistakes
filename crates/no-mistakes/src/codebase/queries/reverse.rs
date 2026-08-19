@@ -3,6 +3,7 @@ use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::ts_symbols::{extract_symbols_from_program, Export, ExportKind, FileSymbols};
 use anyhow::{Context, Result};
 use std::path::Path;
+use std::sync::Arc;
 
 mod build;
 mod importers;
@@ -71,7 +72,7 @@ impl ReverseAnalysis {
         // diagnostic. Direct symbol extraction does the same unless the
         // parser panicked, which is tracked separately above.
         if let Some(symbols) = facts.symbols.clone() {
-            return Ok(symbols);
+            return Ok(Arc::unwrap_or_clone(symbols));
         }
         if let Some(error) = &facts.parse_error {
             anyhow::bail!(

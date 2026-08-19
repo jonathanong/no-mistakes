@@ -157,10 +157,11 @@ generic Rust/JS patterns can observe:
   normalized-adjacency flatten, not globally sorted and deduplicated after the
   fact. Deduplication belongs to per-source adjacency normalization or
   `EdgeIndex`'s keyed batch insertion.
-- `no-temporary-arc-symbol-facts` protects the standalone TS fact collector
-  from wrapping owned `FileSymbols` in an `Arc` that is immediately
-  deep-cloned into `TsFileFacts`. Shared aggregate facts may retain `Arc`
-  ownership; the standalone collector has only one owner.
+- `no-temporary-arc-symbol-facts` protects shared `FileSymbols` ownership.
+  `TsFileFacts.symbols` is `Arc<FileSymbols>`; assigning a deep-cloned inner
+  table or wrapping `ts.symbols.clone()` in a new `Arc` duplicates export and
+  import tables across check and graph facts. Clone the `Arc` instead. The
+  standalone collector may wrap extraction in `Arc::new` once.
 - `no-handwritten-json-napi-wrapper` protects the stable Rust N-API
   registration surface, including the query and infrastructure modules.
   Direct `AsyncTask::new(JsonTask::new(...))` functions must be registered via

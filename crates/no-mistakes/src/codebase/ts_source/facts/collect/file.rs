@@ -108,7 +108,7 @@ pub(crate) fn collect_file_facts_from_program(
     };
     let symbols = plan
         .symbols
-        .then(|| extract_symbols_from_program(program, source));
+        .then(|| Arc::new(extract_symbols_from_program(program, source)));
     let call_sites = if plan.call_sites {
         super::super::call_sites::collect_call_site_facts(program, source)
     } else {
