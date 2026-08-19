@@ -36,9 +36,15 @@ fn legacy_prepared_request_without_sources_uses_the_request_session() {
 #[test]
 fn prepared_rules_collect_independent_rule_bodies_in_parallel() {
     let source = include_str!("execution.rs");
+    let graph_start = source
+        .find("let owned_graph;")
+        .expect("canonical graph handling");
+    let independent_start = source
+        .find("independent::collect")
+        .expect("independent rule collection");
     assert!(
-        source.contains("independent::collect"),
-        "canonical graph must stay first, then independent rules"
+        graph_start < independent_start,
+        "canonical graph handling must stay before independent rules"
     );
     assert!(
         !source.contains("rayon::join"),
