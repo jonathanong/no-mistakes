@@ -3,18 +3,15 @@ use oxc_ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Program, Statement,
 };
 
-#[cfg(test)]
 use oxc_ast_visit::{walk, Visit};
-#[cfg(test)]
 use oxc_span::Span;
 
-#[cfg(test)]
+#[allow(dead_code)]
 struct MemoVisitor {
     has_use_memo: bool,
     span: Span,
 }
 
-#[cfg(test)]
 fn within(node_span: Span, component_span: Span) -> bool {
     node_span.start >= component_span.start && node_span.end <= component_span.end
 }
@@ -23,7 +20,6 @@ pub(crate) fn call_is_use_memo(expr: &oxc_ast::ast::CallExpression<'_>) -> bool 
     memo_callee_name(&expr.callee) == "useMemo"
 }
 
-#[cfg(test)]
 impl<'a> Visit<'a> for MemoVisitor {
     fn visit_call_expression(&mut self, expr: &oxc_ast::ast::CallExpression<'a>) {
         if !within(expr.span, self.span) {
@@ -92,7 +88,7 @@ pub(crate) fn is_wrapped_in_memo(program: &Program<'_>, def: &ComponentDef) -> b
     false
 }
 
-#[cfg(test)]
+#[allow(dead_code)]
 pub(crate) fn detect_uses_memo(program: &Program<'_>, span: Span, def: &ComponentDef) -> bool {
     let mut visitor = MemoVisitor {
         has_use_memo: false,

@@ -18,7 +18,7 @@ pub(crate) fn collect_fetch_calls_in_file(
         .collect()
 }
 
-#[cfg(test)]
+#[allow(dead_code)]
 pub(crate) fn collect_fetch_calls(
     program: &Program<'_>,
     source: &str,

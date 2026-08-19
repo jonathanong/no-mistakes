@@ -1,19 +1,15 @@
 use oxc_ast::ast::Expression;
 
-#[cfg(test)]
 use oxc_ast::ast::Program;
-#[cfg(test)]
 use oxc_ast_visit::{walk, Visit};
-#[cfg(test)]
 use oxc_span::Span;
 
-#[cfg(test)]
+#[allow(dead_code)]
 struct StateVisitor {
     has_state: bool,
     span: Span,
 }
 
-#[cfg(test)]
 fn within(node_span: Span, component_span: Span) -> bool {
     node_span.start >= component_span.start && node_span.end <= component_span.end
 }
@@ -46,7 +42,6 @@ pub(crate) fn member_is_this_state(expr: &oxc_ast::ast::StaticMemberExpression<'
         && matches!(expr.property.name.as_ref(), "state" | "setState")
 }
 
-#[cfg(test)]
 impl<'a> Visit<'a> for StateVisitor {
     fn visit_call_expression(&mut self, expr: &oxc_ast::ast::CallExpression<'a>) {
         if !within(expr.span, self.span) {
@@ -69,7 +64,7 @@ impl<'a> Visit<'a> for StateVisitor {
     }
 }
 
-#[cfg(test)]
+#[allow(dead_code)]
 pub(crate) fn detect_has_state(program: &Program<'_>, span: Span) -> bool {
     let mut visitor = StateVisitor {
         has_state: false,

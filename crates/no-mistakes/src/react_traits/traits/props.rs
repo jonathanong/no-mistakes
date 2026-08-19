@@ -4,16 +4,14 @@ use oxc_ast::ast::{
 };
 use oxc_span::Span;
 
-#[cfg(test)]
 use oxc_ast_visit::{walk, Visit};
 
-#[cfg(test)]
+#[allow(dead_code)]
 struct PropsVisitor {
     passes_props: bool,
     span: Span,
 }
 
-#[cfg(test)]
 fn within(node_span: Span, component_span: Span) -> bool {
     node_span.start >= component_span.start && node_span.end <= component_span.end
 }
@@ -44,7 +42,6 @@ pub(crate) fn jsx_passes_component_props(elem: &oxc_ast::ast::JSXOpeningElement<
     })
 }
 
-#[cfg(test)]
 impl<'a> Visit<'a> for PropsVisitor {
     fn visit_jsx_opening_element(&mut self, elem: &oxc_ast::ast::JSXOpeningElement<'a>) {
         if !within(elem.span, self.span) {
@@ -154,7 +151,7 @@ pub(crate) fn has_function_params(program: &Program<'_>, span: Span) -> bool {
     false
 }
 
-#[cfg(test)]
+#[allow(dead_code)]
 pub(crate) fn detect_props(program: &Program<'_>, span: Span) -> (bool, bool) {
     let has_props = has_function_params(program, span);
     let mut visitor = PropsVisitor {

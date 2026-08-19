@@ -3,16 +3,12 @@ use crate::react_traits::analyze::jsx_resolve::{element_root_and_suffix, resolve
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-#[cfg(test)]
 use crate::react_traits::analyze::jsx_resolve::collect_local_components;
-#[cfg(test)]
 use oxc_ast::ast::Program;
-#[cfg(test)]
 use oxc_ast_visit::{walk, Visit};
-#[cfg(test)]
 use oxc_span::Span;
 
-#[cfg(test)]
+#[allow(dead_code)]
 struct JsxChildrenVisitor<'a> {
     import_table: &'a ImportTable,
     local_components: &'a HashMap<String, String>,
@@ -21,7 +17,6 @@ struct JsxChildrenVisitor<'a> {
     children: Vec<(PathBuf, String)>,
 }
 
-#[cfg(test)]
 impl<'a> JsxChildrenVisitor<'a> {
     fn new(
         import_table: &'a ImportTable,
@@ -39,7 +34,6 @@ impl<'a> JsxChildrenVisitor<'a> {
     }
 }
 
-#[cfg(test)]
 impl<'a> Visit<'a> for JsxChildrenVisitor<'a> {
     fn visit_jsx_element(&mut self, elem: &oxc_ast::ast::JSXElement<'a>) {
         let s = elem.span;
@@ -79,7 +73,7 @@ pub(crate) fn jsx_element_child(
     )
 }
 
-#[cfg(test)]
+#[allow(dead_code)]
 pub(crate) fn collect_jsx_children(
     program: &Program<'_>,
     import_table: &ImportTable,

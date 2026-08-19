@@ -95,7 +95,7 @@ pub(crate) fn is_dynamic_or_lazy_call_by_callee(callee: &Expression<'_>) -> bool
     }
 }
 
-#[cfg(test)]
+#[allow(dead_code)]
 pub(crate) fn collect_dynamic_names(program: &Program<'_>, span: Span) -> HashSet<String> {
     collect_dynamic_names_for_spans(program, &[span])
         .into_iter()
