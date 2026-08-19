@@ -86,13 +86,27 @@ fn invalid_sql_include_glob_returns_error() {
 }
 
 #[test]
-fn extract_schema_facts_reports_unparseable_sql() {
+fn extract_schema_facts_skips_unparseable_sql() {
     let path = schema_path("invalid.sql");
     let sources = store(std::slice::from_ref(&path));
-    let error = extract_schema_facts(Path::new("/repo"), &sources, std::slice::from_ref(&path))
-        .unwrap_err();
-    assert_eq!(error.path.as_deref(), Some(path.as_path()));
-    assert!(!error.message.is_empty());
+    let facts = extract_schema_facts(Path::new("/repo"), &sources, std::slice::from_ref(&path))
+        .expect("skip unparseable");
+    assert_eq!(facts.len(), 1);
+    assert!(facts[0].tables.is_empty());
+}
+
+#[test]
+fn extract_schema_facts_reads_create_table_from_mixed_migrations() {
+    let path = schema_path("mixed-do-block.sql");
+    let sources = store(std::slice::from_ref(&path));
+    let facts = extract_schema_facts(Path::new("/repo"), &sources, std::slice::from_ref(&path))
+        .expect("mixed");
+    assert_eq!(facts[0].tables.len(), 1);
+    assert_eq!(facts[0].tables[0].table_name, "items");
+    assert!(facts[0].tables[0]
+        .columns
+        .iter()
+        .any(|column| column.name == "created_at" && column.is_generated));
 }
 
 #[test]

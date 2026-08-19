@@ -10,7 +10,8 @@ in this change.
 ## Schema facts
 
 `extract_create_table_metadata(sql)` parses PostgreSQL SQL with the Rust
-`sqlparser` crate and returns one `SqlCreateTableMetadata` per `CREATE TABLE`:
+`sqlparser` crate and returns one `SqlCreateTableMetadata` per parseable
+`CREATE TABLE`:
 
 - table name (the relation name, not the schema qualifier)
 - columns: name, type string, constraint tokens, primary-key flag
@@ -19,10 +20,15 @@ in this change.
 
 Primary keys are recognized from both `col TYPE PRIMARY KEY` and table-level
 `PRIMARY KEY (col)`. Generated columns use `GENERATED ALWAYS AS (...)`
-(including `STORED`). Constraint tokens are stable strings such as
-`CONSTR_PRIMARY` and `CONSTR_GENERATED`.
+(including `STORED` and PostgreSQL 18 `VIRTUAL`). Constraint tokens are
+stable strings such as `CONSTR_PRIMARY` and `CONSTR_GENERATED`.
 
-Unparseable SQL returns an error. The extractors do not panic.
+Unparseable statements are skipped. Mixed files that contain `DO $$`
+blocks, `chr()`-built fragments, or other sqlparser-rejected SQL still
+yield `CREATE TABLE` facts from the parseable statements. PostgreSQL 18
+`GENERATED ALWAYS AS (...) VIRTUAL` is accepted (rewritten to `STORED`
+for the parser). A file that cannot be tokenized yields no tables. The
+extractors do not panic.
 
 `extract_schema_facts(root, sources, sql_paths)` reads each path through the
 request `SourceStore`. `collect_schema_facts` first filters candidates with

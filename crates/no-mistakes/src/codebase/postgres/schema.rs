@@ -1,4 +1,4 @@
-use super::parse::{parse_postgres_sql, PostgresParseError};
+use super::parse::parse_postgres_sql_lenient;
 use super::types::{SqlColumnMetadata, SqlCreateTableMetadata};
 use sqlparser::ast::{
     ColumnOption, DataType, Expr, FunctionArg, FunctionArgExpr, FunctionArguments, IndexColumn,
@@ -6,17 +6,17 @@ use sqlparser::ast::{
 };
 
 /// Parse `sql` and return one metadata record per `CREATE TABLE`.
-pub fn extract_create_table_metadata(
-    sql: &str,
-) -> Result<Vec<SqlCreateTableMetadata>, PostgresParseError> {
-    let statements = parse_postgres_sql(sql)?;
-    Ok(statements
+///
+/// Unparseable statements are skipped so mixed migration files still yield
+/// tables. The extractor does not fail closed on `DO $$` or similar SQL.
+pub fn extract_create_table_metadata(sql: &str) -> Vec<SqlCreateTableMetadata> {
+    parse_postgres_sql_lenient(sql)
         .into_iter()
         .filter_map(|statement| match statement {
             Statement::CreateTable(table) => Some(table_metadata(&table)),
             _ => None,
         })
-        .collect())
+        .collect()
 }
 
 fn table_metadata(table: &sqlparser::ast::CreateTable) -> SqlCreateTableMetadata {

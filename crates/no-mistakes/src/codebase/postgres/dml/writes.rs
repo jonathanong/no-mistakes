@@ -1,4 +1,4 @@
-use super::super::parse::parse_postgres_sql;
+use super::super::parse::parse_postgres_sql_lenient;
 use super::extract_dml_write_targets;
 use sqlparser::ast::Statement;
 use std::collections::{BTreeMap, BTreeSet};
@@ -72,9 +72,7 @@ pub fn find_generated_column_writes(
     {
         return Vec::new();
     }
-    let Ok(statements) = parse_postgres_sql(sql) else {
-        return Vec::new();
-    };
+    let statements = parse_postgres_sql_lenient(sql);
     let mut writes = Vec::new();
     for statement in &statements {
         collect_statement_writes(statement, catalog, &mut writes);

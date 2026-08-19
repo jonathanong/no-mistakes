@@ -22,7 +22,7 @@ fn read_fixture(name: &str) -> String {
 
 #[test]
 fn extracts_generated_column_and_quoted_table_name() {
-    let tables = extract_create_table_metadata(&read_fixture("generated-column.sql")).unwrap();
+    let tables = extract_create_table_metadata(&read_fixture("generated-column.sql"));
     assert_eq!(tables.len(), 1);
     let table = &tables[0];
     assert_eq!(table.table_name, "MixedCase");
@@ -52,7 +52,7 @@ fn extracts_generated_column_and_quoted_table_name() {
 
 #[test]
 fn recognizes_table_level_primary_key() {
-    let tables = extract_create_table_metadata(&read_fixture("table-level-pk.sql")).unwrap();
+    let tables = extract_create_table_metadata(&read_fixture("table-level-pk.sql"));
     let id = tables[0].columns.iter().find(|c| c.name == "id").unwrap();
     let name = tables[0].columns.iter().find(|c| c.name == "name").unwrap();
     assert!(id.is_primary_key);
@@ -63,7 +63,7 @@ fn recognizes_table_level_primary_key() {
 
 #[test]
 fn extracts_additional_column_constraints() {
-    let tables = extract_create_table_metadata(&read_fixture("constraints.sql")).unwrap();
+    let tables = extract_create_table_metadata(&read_fixture("constraints.sql"));
     let table = &tables[0];
     assert_eq!(table.table_name, "constraint_kitchen");
     let by_name = |name: &str| table.columns.iter().find(|c| c.name == name).unwrap();
@@ -101,14 +101,47 @@ fn extracts_additional_column_constraints() {
 }
 
 #[test]
-fn unparseable_sql_returns_error() {
-    let error = extract_create_table_metadata(&read_fixture("invalid.sql")).expect_err("invalid");
-    assert!(!error.message.is_empty());
+fn unparseable_sql_is_skipped() {
+    assert!(extract_create_table_metadata(&read_fixture("invalid.sql")).is_empty());
+    assert!(
+        extract_create_table_metadata("CREATE TABLE t (id text, note 'unterminated").is_empty()
+    );
+}
+
+#[test]
+fn mixed_do_block_and_virtual_generated_column_still_extracts() {
+    let tables = extract_create_table_metadata(&read_fixture("mixed-do-block.sql"));
+    assert_eq!(tables.len(), 1, "{tables:#?}");
+    assert_eq!(tables[0].table_name, "items");
+    let created = tables[0]
+        .columns
+        .iter()
+        .find(|column| column.name == "created_at")
+        .expect("created_at");
+    assert!(created.is_generated);
+    assert_eq!(
+        created.generated_function.as_deref(),
+        Some("uuid_extract_timestamp")
+    );
+}
+
+#[test]
+fn omitted_virtual_mode_is_still_generated() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE items (\n  id uuid,\n  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) NOT NULL,\n  note text\n);",
+    );
+    assert!(
+        tables[0]
+            .columns
+            .iter()
+            .any(|column| column.name == "created_at" && column.is_generated),
+        "{tables:#?}"
+    );
 }
 
 #[test]
 fn non_create_statements_are_ignored() {
-    let tables = extract_create_table_metadata("SELECT 1; COMMENT ON TABLE t IS 'x';").unwrap();
+    let tables = extract_create_table_metadata("SELECT 1; COMMENT ON TABLE t IS 'x';");
     assert!(tables.is_empty());
 }
 
@@ -283,8 +316,7 @@ fn unspecified_type_is_none() {
 fn ignored_options_and_table_constraints_do_not_panic() {
     let tables = extract_create_table_metadata(
         "CREATE TABLE t (id text COLLATE \"C\", name text, UNIQUE (name));",
-    )
-    .unwrap();
+    );
     assert_eq!(tables[0].table_name, "t");
     assert!(!tables[0].columns[0].is_primary_key);
 }

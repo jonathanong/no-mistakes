@@ -104,6 +104,14 @@ fn unparseable_sql_and_empty_catalog_are_silent() {
 }
 
 #[test]
+fn mixed_do_block_still_flags_parseable_generated_writes() {
+    assert_eq!(
+        columns("DO $$ BEGIN NULL; END $$;\nUPDATE items SET created_at = now();"),
+        ["created_at"]
+    );
+}
+
+#[test]
 fn flags_tuple_assignments_merge_row_and_set_operations() {
     assert_eq!(
         columns("UPDATE items SET (created_at, note) = (now(), 'n')"),

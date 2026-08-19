@@ -81,9 +81,12 @@ fn production_oxc_parses_use_the_observable_chokepoint() {
         .filter_map(|path| {
             let source = sources.read_path(path).ok()?;
             let lines = source.lines().collect::<Vec<_>>();
+            let imports_oxc_parser = source.contains("oxc_parser");
             let has_production_reference = lines.iter().enumerate().any(|(index, line)| {
-                let references_parser =
-                    line.contains("oxc_parser") || line.contains("Parser::new(");
+                // sqlparser also exposes Parser::new; only OXC parses must
+                // go through crate::ast::parse.
+                let references_parser = line.contains("oxc_parser")
+                    || (imports_oxc_parser && line.contains("Parser::new("));
                 let test_only_import = index > 0
                     && lines[index - 1].trim() == "#[cfg(test)]"
                     && line.trim_start().starts_with("use ");

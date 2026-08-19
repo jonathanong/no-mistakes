@@ -86,11 +86,9 @@ fn schema_file_facts(
     sources: &SourceStore,
 ) -> Result<SqlSchemaFileFacts, PostgresFactError> {
     let source = read_source(path, sources)?;
-    let tables = extract_create_table_metadata(&source)
-        .map_err(|error| PostgresFactError::for_path(path, error.message))?;
     Ok(SqlSchemaFileFacts {
         path: path.to_path_buf(),
-        tables,
+        tables: extract_create_table_metadata(&source),
     })
 }
 
