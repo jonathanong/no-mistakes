@@ -80,6 +80,8 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
         include_str!("../../codebase/rules/run/prepared.rs"),
         include_str!("../../codebase/rules/run/prepared/execution.rs"),
         include_str!("../../codebase/rules/run/prepared/execution/helpers.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/independent.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/independent_collect.rs"),
     );
     let rule_roots = include_str!("../../codebase/rules/mod.rs");
     let unique_exports = include_str!("../../codebase/unique_exports/with_facts/prepared.rs");
@@ -88,7 +90,10 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     assert_eq!(prepared.matches("InferredRoots::from_visible").count(), 1);
     assert!(runner.contains("&prepared.inferred_roots"));
     assert!(discovery.contains("unique_exports_project_roots_with_inferred"));
-    assert!(rules.contains("Some(inferred_roots)"));
+    assert!(
+        rules.contains("req.inferred_roots"),
+        "independent rule bodies must reuse the precomputed inferred_roots option"
+    );
     assert!(rule_roots.contains("target_roots_with_inferred"));
     assert!(unique_exports.contains("project_roots_for_rule_with_inferred"));
 
@@ -242,35 +247,25 @@ fn aggregate_storybook_reuses_the_scoped_tsconfig_catalog() {
 fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     let execution = include_str!("../../codebase/rules/run/prepared/execution.rs");
     let helpers = include_str!("../../codebase/rules/run/prepared/execution/helpers.rs");
+    let independent_collect =
+        include_str!("../../codebase/rules/run/prepared/execution/independent_collect.rs");
     let coordinator = execution
         .split("pub(super) fn run")
         .nth(1)
         .expect("prepared rule coordinator");
-    let storybook_block = coordinator
-        .split("if rule_enabled(config, REQUIRE_STORYBOOK_STORIES)")
+    let storybook_block = independent_collect
+        .split("pub(super) fn storybook(")
         .nth(1)
-        .and_then(|source| {
-            source
-                .split("if crate::playwright::rules::configured")
-                .next()
-        })
-        .expect("Storybook coordinator block");
+        .and_then(|source| source.split("pub(super) fn playwright(").next())
+        .expect("Storybook independent collector");
 
     // Keep per-rule variant selection out of the aggregate coordinator so its
     // complexity remains bounded as additional rules are introduced.
     assert!(execution.contains("mod helpers;"));
-    // Keep this structural: the helper request type may grow with prepared
-    // inputs without invalidating the coordinator ownership assertion.
-    for symbol in [
-        "storybook_findings",
-        "suppress_findings",
-        "StorybookFindingsRequest",
-    ] {
-        assert!(
-            execution.contains(symbol),
-            "expanded helper import must include {symbol}"
-        );
-    }
+    assert!(execution.contains("mod independent;"));
+    assert!(coordinator.contains("independent::collect"));
+    assert!(!coordinator.contains("REQUIRE_STORYBOOK_STORIES"));
+    assert!(!coordinator.contains("storybook_findings"));
     assert!(helpers.contains("pub(super) fn storybook_findings("));
     assert!(helpers.contains("check_with_prepared_facts_for_aggregate"));
     assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);
