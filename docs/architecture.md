@@ -291,7 +291,7 @@ output invariants before the measured loop.
 CI builds the harness once, then runs CodSpeed CPU simulation in four
 function-type shards (`check`, `tests-plan`, `graph`, `query`) plus the
 existing memory shards. `NO_MISTAKES_BENCH_SHARD` skips unused `bench_*`
-preflights; unset or `general-memory` still runs every non-production
+preflight work; unset or `general-memory` still runs every non-production
 workload locally. New workloads must use checked-in fixtures,
 `BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
 and must not generate repositories or launch the CLI as a subprocess.
