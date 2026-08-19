@@ -86,3 +86,21 @@ fn multi_component_scopes_fetch_to_component_span() {
         "PureComponent should not inherit FetchingComponent's fetch"
     );
 }
+
+#[test]
+fn analyze_program_inner_fuses_per_component_trait_walks() {
+    let source = include_str!("../file.rs");
+    assert!(
+        source.contains("collect_file_trait_hits"),
+        "file analysis must walk traits once per file"
+    );
+    assert!(
+        !source.contains("detect_has_state")
+            && !source.contains("detect_props")
+            && !source.contains("detect_uses_memo")
+            && !source.contains("detect_context_provider")
+            && !source.contains("detect_uses_suspense")
+            && !source.contains("collect_jsx_children"),
+        "per-component trait detectors must not walk the program again"
+    );
+}

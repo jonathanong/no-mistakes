@@ -2,14 +2,18 @@ use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, JSXAttributeItem, JSXElementName,
     Program, Statement,
 };
-use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
 
+#[cfg(test)]
+use oxc_ast_visit::{walk, Visit};
+
+#[cfg(test)]
 struct PropsVisitor {
     passes_props: bool,
     span: Span,
 }
 
+#[cfg(test)]
 fn within(node_span: Span, component_span: Span) -> bool {
     node_span.start >= component_span.start && node_span.end <= component_span.end
 }
@@ -18,26 +22,36 @@ fn overlaps(a: Span, b: Span) -> bool {
     a.start < b.end && a.end > b.start
 }
 
+fn jsx_is_component_name(elem: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
+    match &elem.name {
+        JSXElementName::IdentifierReference(id) => {
+            id.name.chars().next().is_some_and(|c| c.is_uppercase())
+        }
+        JSXElementName::MemberExpression(_) => true,
+        _ => false,
+    }
+}
+
+pub(crate) fn jsx_passes_component_props(elem: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
+    if !jsx_is_component_name(elem) || elem.attributes.is_empty() {
+        return false;
+    }
+    elem.attributes.iter().any(|attr| {
+        matches!(
+            attr,
+            JSXAttributeItem::Attribute(_) | JSXAttributeItem::SpreadAttribute(_)
+        )
+    })
+}
+
+#[cfg(test)]
 impl<'a> Visit<'a> for PropsVisitor {
     fn visit_jsx_opening_element(&mut self, elem: &oxc_ast::ast::JSXOpeningElement<'a>) {
         if !within(elem.span, self.span) {
             return;
         }
-        let is_component = match &elem.name {
-            JSXElementName::IdentifierReference(id) => {
-                id.name.chars().next().is_some_and(|c| c.is_uppercase())
-            }
-            JSXElementName::MemberExpression(_) => true,
-            _ => false,
-        };
-        if is_component && !elem.attributes.is_empty() {
-            for attr in &elem.attributes {
-                match attr {
-                    JSXAttributeItem::Attribute(_) | JSXAttributeItem::SpreadAttribute(_) => {
-                        self.passes_props = true;
-                    }
-                }
-            }
+        if jsx_passes_component_props(elem) {
+            self.passes_props = true;
         }
         walk::walk_jsx_opening_element(self, elem);
     }
@@ -66,7 +80,7 @@ fn expr_or_wrapped_has_params(init: &Option<Expression<'_>>) -> bool {
     false
 }
 
-fn has_function_params(program: &Program<'_>, span: Span) -> bool {
+pub(crate) fn has_function_params(program: &Program<'_>, span: Span) -> bool {
     for stmt in &program.body {
         match stmt {
             Statement::ExportDefaultDeclaration(e) => match &e.declaration {
@@ -140,6 +154,7 @@ fn has_function_params(program: &Program<'_>, span: Span) -> bool {
     false
 }
 
+#[cfg(test)]
 pub(crate) fn detect_props(program: &Program<'_>, span: Span) -> (bool, bool) {
     let has_props = has_function_params(program, span);
     let mut visitor = PropsVisitor {

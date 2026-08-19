@@ -2,38 +2,35 @@ use crate::react_traits::analyze::components::ComponentDef;
 use oxc_ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Program, Statement,
 };
+
+#[cfg(test)]
 use oxc_ast_visit::{walk, Visit};
+#[cfg(test)]
 use oxc_span::Span;
 
+#[cfg(test)]
 struct MemoVisitor {
     has_use_memo: bool,
     span: Span,
 }
 
+#[cfg(test)]
 fn within(node_span: Span, component_span: Span) -> bool {
     node_span.start >= component_span.start && node_span.end <= component_span.end
 }
 
+pub(crate) fn call_is_use_memo(expr: &oxc_ast::ast::CallExpression<'_>) -> bool {
+    memo_callee_name(&expr.callee) == "useMemo"
+}
+
+#[cfg(test)]
 impl<'a> Visit<'a> for MemoVisitor {
     fn visit_call_expression(&mut self, expr: &oxc_ast::ast::CallExpression<'a>) {
         if !within(expr.span, self.span) {
             return;
         }
-        let name = match &expr.callee {
-            Expression::Identifier(id) => Some(id.name.as_ref().to_string()),
-            Expression::StaticMemberExpression(m) => {
-                if matches!(&m.object, Expression::Identifier(id) if id.name == "React") {
-                    Some(m.property.name.as_ref().to_string())
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        };
-        if let Some(name) = name {
-            if name == "useMemo" {
-                self.has_use_memo = true;
-            }
+        if call_is_use_memo(expr) {
+            self.has_use_memo = true;
         }
         walk::walk_call_expression(self, expr);
     }
@@ -49,7 +46,7 @@ fn memo_callee_name<'a>(callee: &'a Expression<'_>) -> &'a str {
     }
 }
 
-fn is_wrapped_in_memo(program: &Program<'_>, def: &ComponentDef) -> bool {
+pub(crate) fn is_wrapped_in_memo(program: &Program<'_>, def: &ComponentDef) -> bool {
     for stmt in &program.body {
         match stmt {
             Statement::ExportDefaultDeclaration(e) if def.name == "default" => {
@@ -95,6 +92,7 @@ fn is_wrapped_in_memo(program: &Program<'_>, def: &ComponentDef) -> bool {
     false
 }
 
+#[cfg(test)]
 pub(crate) fn detect_uses_memo(program: &Program<'_>, span: Span, def: &ComponentDef) -> bool {
     let mut visitor = MemoVisitor {
         has_use_memo: false,

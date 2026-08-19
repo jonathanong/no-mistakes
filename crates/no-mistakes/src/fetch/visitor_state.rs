@@ -18,6 +18,7 @@ pub struct FetchVisitor<'a> {
     pub promise_all_depth: u32,
     pub try_depth: u32,
     pub pending_var_name: Option<String>,
+    pub fetch_spans: Vec<Span>,
 }
 
 #[derive(Default)]
@@ -47,6 +48,7 @@ impl<'a> FetchVisitor<'a> {
             promise_all_depth: 0,
             try_depth: 0,
             pending_var_name: None,
+            fetch_spans: Vec::new(),
         }
     }
 
