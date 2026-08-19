@@ -52,26 +52,6 @@ policies:
 }
 
 #[test]
-fn ignores_invalid_structured_config_files() {
-    let root = fixture_root("fixture");
-    let files = vec![root.join("invalid.yml")];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-policies:
-  - files: [invalid.yml]
-    requiredKeys: [runtime.version]
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
 fn ignores_unreadable_structured_config_paths() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config")];

@@ -1,0 +1,3 @@
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository

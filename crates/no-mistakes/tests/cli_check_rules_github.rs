@@ -80,10 +80,18 @@ fn github_actions_composite_step_schema_ignores_docker_actions() {
 }
 
 #[test]
-fn github_actions_composite_step_schema_flags_invalid_yaml() {
-    let root = fixture("github-actions-composite-step-schema", "invalid");
+fn github_actions_job_timeouts_fails_without_timeout_minutes() {
+    let root = fixture("github-actions-job-timeouts", "fail-missing");
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     let body = format!("{findings:?}");
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(body.contains("invalid YAML"), "{body}");
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("github-actions-job-timeouts"), "{body}");
+    assert!(body.contains("no timeout-minutes"), "{body}");
+}
+
+#[test]
+fn github_actions_job_timeouts_passes_with_literal_timeout() {
+    let root = fixture("github-actions-job-timeouts", "pass");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
 }

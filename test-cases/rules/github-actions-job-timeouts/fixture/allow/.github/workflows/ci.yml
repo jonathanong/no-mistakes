@@ -1,0 +1,8 @@
+name: ci
+on: push
+jobs:
+  coverage:
+    runs-on: ubuntu-slim
+    timeout-minutes: 20
+    steps:
+      - run: echo hi

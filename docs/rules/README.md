@@ -30,11 +30,14 @@ rules:
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets extracted from source and paths.                     |
 | [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md) | Validate composite-action steps against GitHub's documented step keys.     |
+| [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
 | [`forbidden-dependencies`](forbidden-dependencies.md)                         | Prevent configured files/modules from depending on forbidden targets.           |
 | [`forbidden-workspace-closure`](forbidden-workspace-closure.md)               | Prevent workspace package closures from reaching forbidden packages.            |
 | [`integration-test-no-mocks`](integration-test-no-mocks.md)                   | Ban mocking libraries and mock helpers in integration tests.                    |
 | [`lockfile-allowlist`](lockfile-allowlist.md)                                 | Allow only configured package lock files.                                       |
+| [`markdown-child-links`](markdown-child-links.md)                                 | Require parent Markdown files to link every matching child.                 |
+| [`markdown-eval-tests`](markdown-eval-tests.md)                                   | Ban tests that eval markdown shell blocks unless exact-path allowlisted.    |
 | [`markdown-link-display-text`](markdown-link-display-text.md)                 | Require Markdown link text to match the linked file basename.                   |
 | [`markdown-mermaid-validation`](markdown-mermaid-validation.md)               | Validate Mermaid diagrams embedded in Markdown fences.                          |
 | [`markdown-reachability`](markdown-reachability.md)                           | Require Markdown docs to be reachable from instruction roots.                   |
@@ -46,6 +49,8 @@ rules:
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
+| [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
+| [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |
 | [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md) | Ban DML writes to PostgreSQL generated columns.                               |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |

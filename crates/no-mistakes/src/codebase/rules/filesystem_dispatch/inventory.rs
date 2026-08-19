@@ -1,6 +1,6 @@
 use super::{
-    candidate_index::RuleCandidateIndex, preserved, rule_enabled, MARKDOWN_MERMAID_VALIDATION,
-    MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
+    candidate_index::RuleCandidateIndex, preserved, rule_enabled, MARKDOWN_CHILD_LINKS,
+    MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
 };
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -15,6 +15,7 @@ pub(super) fn tracked_inventory_with_markdown_project_roots(
 ) -> Arc<Vec<PathBuf>> {
     let mut inventory = snapshot.tracked_paths_for(root).as_ref().clone();
     for rule_id in [
+        MARKDOWN_CHILD_LINKS,
         MARKDOWN_MERMAID_VALIDATION,
         MARKDOWN_REACHABILITY,
         MARKDOWN_STRUCTURE_BUDGET,
@@ -41,6 +42,7 @@ pub(super) fn register_trusted_external_candidates(
         root,
         config,
         &[
+            MARKDOWN_CHILD_LINKS,
             MARKDOWN_MERMAID_VALIDATION,
             MARKDOWN_REACHABILITY,
             MARKDOWN_STRUCTURE_BUDGET,

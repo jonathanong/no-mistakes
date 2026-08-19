@@ -1,6 +1,6 @@
 use super::{
     extract_create_table_metadata, extract_dml_write_targets, extract_embedded_sql_from_source,
-    extract_locking_select_metadata, EmbeddedSqlOptions,
+    extract_locking_select_metadata, extract_migration_facts, EmbeddedSqlOptions,
 };
 use crate::codebase::check_facts::CheckFactPlan;
 
@@ -30,6 +30,8 @@ fn check_fact_plan_include_merges_postgres_flags() {
 fn public_extractors_are_callable_from_the_module_root() {
     let tables = extract_create_table_metadata("CREATE TABLE t (id int);");
     assert_eq!(tables[0].table_name, "t");
+    let schema = extract_migration_facts("CREATE TABLE t (id int PRIMARY KEY);");
+    assert_eq!(schema.indexes[0].leading_column.as_deref(), Some("id"));
     let facts = extract_embedded_sql_from_source(
         std::path::Path::new("root.ts"),
         "import { query } from '@data-stores/psql'\nquery('SELECT 1')\n",

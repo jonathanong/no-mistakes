@@ -1,0 +1,5 @@
+rules:
+  - rule: markdown-eval-tests
+    scope: repository
+    options:
+      include: ["**/*.test.mts"]

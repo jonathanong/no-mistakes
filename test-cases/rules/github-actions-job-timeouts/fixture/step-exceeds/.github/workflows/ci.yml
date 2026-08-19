@@ -1,0 +1,10 @@
+name: ci
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - name: slow
+        timeout-minutes: 20
+        run: echo hi

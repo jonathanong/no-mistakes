@@ -82,6 +82,12 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         TEST_NO_DEPENDENCY_PINS => {
             test_no_dependency_pins::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_CONSTRAINT_VALIDATE => {
+            postgres_constraint_validate::check_with_files_and_sources(root, config, files, sources)
+        }
+        POSTGRES_FK_INDEX => {
+            postgres_fk_index::check_with_files_and_sources(root, config, files, sources)
+        }
         POSTGRES_NO_GENERATED_COLUMN_WRITES => {
             postgres_no_generated_column_writes::check_with_files_and_sources(
                 root, config, files, sources,
@@ -95,6 +101,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         }
         MARKDOWN_LINK_DISPLAY_TEXT => {
             markdown_link_display_text::check_with_files_and_sources(root, config, files, sources)
+        }
+        MARKDOWN_EVAL_TESTS => {
+            markdown_eval_tests::check_with_files_and_sources(root, config, files, sources)
         }
         STRUCTURED_CONFIG_POLICY => {
             structured_config_policy::check_with_files_and_sources(root, config, files, sources)
@@ -115,6 +124,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             github_actions_composite_step_schema::check_with_files_and_sources(
                 root, config, files, sources,
             )
+        }
+        GITHUB_ACTIONS_JOB_TIMEOUTS => {
+            github_actions_job_timeouts::check_with_files_and_sources(root, config, files, sources)
         }
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)

@@ -6,6 +6,7 @@ mod collect;
 pub mod dml;
 mod embedded;
 mod locking;
+mod migration;
 mod parse;
 mod schema;
 mod types;
@@ -23,11 +24,13 @@ pub use embedded::{
     EmbeddedSqlFileFacts, EmbeddedSqlOptions,
 };
 pub use locking::{extract_locking_select_metadata, LockingSelectMetadata};
+pub use migration::extract_migration_facts;
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use schema::extract_create_table_metadata;
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlColumnMetadata,
-    SqlCreateTableMetadata, SqlSchemaFileFacts,
+    SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlForeignKeyMetadata, SqlNamedConstraint,
+    SqlSchemaFileFacts,
 };
 
 #[cfg(test)]
