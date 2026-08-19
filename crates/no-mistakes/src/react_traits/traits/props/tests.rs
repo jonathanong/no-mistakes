@@ -293,3 +293,18 @@ fn no_props_named_export_memo_wrapped_no_params() {
     let (has_props, _) = check("export const Foo = memo(() => <div/>);");
     assert!(!has_props);
 }
+
+#[test]
+fn no_props_local_let_without_init() {
+    // `let Foo;` has no initializer; expr_or_wrapped_has_params must return false.
+    let (has_props, _) = check("let Foo;\nexport default function App() { return <div/>; }");
+    assert!(!has_props);
+}
+
+#[test]
+fn namespaced_jsx_is_not_a_component_prop_target() {
+    // `<svg:Rect prop="x"/>` is JSXNamespacedName; jsx_is_component_name's `_` arm.
+    let (_, passes_props) =
+        check("export default function App() { return <svg:Rect prop=\"x\" />; }");
+    assert!(!passes_props);
+}

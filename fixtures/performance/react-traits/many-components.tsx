@@ -38,7 +38,7 @@ export function Suspense0() {
   );
 }
 export function Fetch0() {
-  fetch("/api/0");
+  fetch("./fetch-0");
   return null;
 }
 export function Child0() {
@@ -74,7 +74,7 @@ export function Suspense1() {
   );
 }
 export function Fetch1() {
-  fetch("/api/1");
+  fetch("./fetch-1");
   return null;
 }
 export function Child1() {
@@ -110,7 +110,7 @@ export function Suspense2() {
   );
 }
 export function Fetch2() {
-  fetch("/api/2");
+  fetch("./fetch-2");
   return null;
 }
 export function Child2() {
@@ -146,7 +146,7 @@ export function Suspense3() {
   );
 }
 export function Fetch3() {
-  fetch("/api/3");
+  fetch("./fetch-3");
   return null;
 }
 export function Child3() {

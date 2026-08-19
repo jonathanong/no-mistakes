@@ -121,3 +121,6 @@ pub(crate) fn collect_file_trait_hits(
     visitor.visit_program(program);
     visitor.hits
 }
+
+#[cfg(test)]
+mod tests;
