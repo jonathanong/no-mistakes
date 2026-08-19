@@ -10,49 +10,46 @@ use std::path::PathBuf;
 
 const EXPECTED_GRAPH_GATES_CHECK_KEYS: usize = 7;
 
-pub(super) fn bench_configured_checks(c: &mut Criterion) {
-    if !shard::should_run(shard::CHECK) {
-        return;
+pub(super) fn bench_aggregate_and_multi_report(c: &mut Criterion) {
+    if shard::should_run(shard::CHECK) {
+        let root = fixture_root();
+        let check_preflight =
+            benchmark_support::check_json(&root).expect("check preflight should succeed");
+        let check_value: serde_json::Value =
+            serde_json::from_str(&check_preflight).expect("check report should be JSON");
+        assert_eq!(check_value.as_object().map(|value| value.len()), Some(7));
+
+        c.bench_function("aggregate/all_configured_check_domains", |b| {
+            b.iter(|| {
+                black_box(
+                    benchmark_support::check_json(black_box(&root)).expect("check should succeed"),
+                )
+            });
+        });
+
+        let gates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/performance/graph-gates")
+            .canonicalize()
+            .expect("graph-gates performance fixture should exist");
+        let gates_check = benchmark_support::check_json(&gates_root)
+            .expect("graph-gates check preflight should succeed");
+        let gates_value: serde_json::Value =
+            serde_json::from_str(&gates_check).expect("graph-gates check report should be JSON");
+        assert_eq!(
+            gates_value.as_object().map(|value| value.len()),
+            Some(EXPECTED_GRAPH_GATES_CHECK_KEYS),
+            "graph-gates check top-level keys drifted"
+        );
+        c.bench_function("aggregate/graph_gates_check", |b| {
+            b.iter(|| {
+                black_box(
+                    benchmark_support::check_json(black_box(&gates_root))
+                        .expect("graph-gates check should succeed"),
+                )
+            });
+        });
     }
-    let root = fixture_root();
-    let check_preflight =
-        benchmark_support::check_json(&root).expect("check preflight should succeed");
-    let check_value: serde_json::Value =
-        serde_json::from_str(&check_preflight).expect("check report should be JSON");
-    assert_eq!(check_value.as_object().map(|value| value.len()), Some(7));
 
-    c.bench_function("aggregate/all_configured_check_domains", |b| {
-        b.iter(|| {
-            black_box(
-                benchmark_support::check_json(black_box(&root)).expect("check should succeed"),
-            )
-        });
-    });
-
-    let gates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/performance/graph-gates")
-        .canonicalize()
-        .expect("graph-gates performance fixture should exist");
-    let gates_check = benchmark_support::check_json(&gates_root)
-        .expect("graph-gates check preflight should succeed");
-    let gates_value: serde_json::Value =
-        serde_json::from_str(&gates_check).expect("graph-gates check report should be JSON");
-    assert_eq!(
-        gates_value.as_object().map(|value| value.len()),
-        Some(EXPECTED_GRAPH_GATES_CHECK_KEYS),
-        "graph-gates check top-level keys drifted"
-    );
-    c.bench_function("aggregate/graph_gates_check", |b| {
-        b.iter(|| {
-            black_box(
-                benchmark_support::check_json(black_box(&gates_root))
-                    .expect("graph-gates check should succeed"),
-            )
-        });
-    });
-}
-
-pub(super) fn bench_reused_multi_report(c: &mut Criterion) {
     if !shard::should_run(shard::QUERY) {
         return;
     }
@@ -78,7 +75,7 @@ pub(super) fn bench_reused_multi_report(c: &mut Criterion) {
     assert_eq!(observed_multi, multi_preflight);
     assert_eq!(multi_diagnostics.work["graph.builds"], 1);
     assert!(multi_diagnostics.work["graph.reuses"] >= 1);
-    assert_eq!(multi_diagnostics.work["symbol_index.builds"], 1);
+    assert_eq!(multi_diagnostics.work["symbol_index.builds"], 1,);
     assert_eq!(
         multi_diagnostics.work["resolver.computations"],
         EXPECTED_MULTI_REPORT_RESOLVER_KEYS,
