@@ -1,5 +1,48 @@
-use super::detect_has_state;
+use super::{call_sets_state, member_is_this_state};
 use crate::ast;
+use oxc_ast::ast::Program;
+use oxc_ast_visit::{walk, Visit};
+use oxc_span::Span;
+
+struct StateVisitor {
+    has_state: bool,
+    span: Span,
+}
+
+fn within(node_span: Span, component_span: Span) -> bool {
+    node_span.start >= component_span.start && node_span.end <= component_span.end
+}
+
+impl<'a> Visit<'a> for StateVisitor {
+    fn visit_call_expression(&mut self, expr: &oxc_ast::ast::CallExpression<'a>) {
+        if !within(expr.span, self.span) {
+            return;
+        }
+        if call_sets_state(expr) {
+            self.has_state = true;
+        }
+        walk::walk_call_expression(self, expr);
+    }
+
+    fn visit_static_member_expression(&mut self, expr: &oxc_ast::ast::StaticMemberExpression<'a>) {
+        if !within(expr.span, self.span) {
+            return;
+        }
+        if member_is_this_state(expr) {
+            self.has_state = true;
+        }
+        walk::walk_static_member_expression(self, expr);
+    }
+}
+
+fn detect_has_state(program: &Program<'_>, span: Span) -> bool {
+    let mut visitor = StateVisitor {
+        has_state: false,
+        span,
+    };
+    visitor.visit_program(program);
+    visitor.has_state
+}
 
 fn check(source: &str) -> bool {
     let path = std::path::Path::new("test.tsx");
@@ -50,7 +93,7 @@ fn hook_outside_span_not_detected() {
     let source = "const [x, setX] = useState(0);";
     let path = std::path::Path::new("test.tsx");
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_has_state(program, oxc_span::Span::new(0, 0))
+        detect_has_state(program, oxc_span::Span::new(0, 0))
     })
     .unwrap();
     assert!(!result);
@@ -70,7 +113,7 @@ fn static_member_outside_span_not_detected() {
     let source = "function App() { const s = this.state; }";
     let path = std::path::Path::new("test.tsx");
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_has_state(program, oxc_span::Span::new(0, 0))
+        detect_has_state(program, oxc_span::Span::new(0, 0))
     })
     .unwrap();
     assert!(!result);

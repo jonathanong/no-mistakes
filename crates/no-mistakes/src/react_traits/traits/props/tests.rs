@@ -1,5 +1,39 @@
-use super::detect_props;
+use super::{has_function_params, jsx_passes_component_props};
 use crate::ast;
+use oxc_ast::ast::Program;
+use oxc_ast_visit::{walk, Visit};
+use oxc_span::Span;
+
+struct PropsVisitor {
+    passes_props: bool,
+    span: Span,
+}
+
+fn within(node_span: Span, component_span: Span) -> bool {
+    node_span.start >= component_span.start && node_span.end <= component_span.end
+}
+
+impl<'a> Visit<'a> for PropsVisitor {
+    fn visit_jsx_opening_element(&mut self, elem: &oxc_ast::ast::JSXOpeningElement<'a>) {
+        if !within(elem.span, self.span) {
+            return;
+        }
+        if jsx_passes_component_props(elem) {
+            self.passes_props = true;
+        }
+        walk::walk_jsx_opening_element(self, elem);
+    }
+}
+
+fn detect_props(program: &Program<'_>, span: Span) -> (bool, bool) {
+    let has_props = has_function_params(program, span);
+    let mut visitor = PropsVisitor {
+        passes_props: false,
+        span,
+    };
+    visitor.visit_program(program);
+    (has_props, visitor.passes_props)
+}
 
 fn check(source: &str) -> (bool, bool) {
     let path = std::path::Path::new("test.tsx");
@@ -156,7 +190,7 @@ fn jsx_props_outside_span_not_detected() {
     let source = "export default function App() { return <Child name=\"x\" />; }";
     let path = std::path::Path::new("test.tsx");
     let (_, passes_props) = crate::ast::with_program(path, source, |program, _| {
-        super::detect_props(program, oxc_span::Span::new(0, 0))
+        detect_props(program, oxc_span::Span::new(0, 0))
     })
     .unwrap();
     assert!(
@@ -197,7 +231,7 @@ fn non_overlapping_named_decl_declarator_skipped() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let b = defs.iter().find(|d| d.name == "B").expect("B");
-        super::detect_props(program, b.span)
+        detect_props(program, b.span)
     })
     .unwrap();
     assert!(result.0, "B has props");
@@ -212,7 +246,7 @@ fn non_overlapping_local_decl_declarator_skipped() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let def = defs.first().expect("default");
-        super::detect_props(program, def.span)
+        detect_props(program, def.span)
     })
     .unwrap();
     assert!(result.0, "B has props");

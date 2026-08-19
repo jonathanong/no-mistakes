@@ -4,18 +4,6 @@ use oxc_ast::ast::{
 };
 use oxc_span::Span;
 
-use oxc_ast_visit::{walk, Visit};
-
-#[allow(dead_code)]
-struct PropsVisitor {
-    passes_props: bool,
-    span: Span,
-}
-
-fn within(node_span: Span, component_span: Span) -> bool {
-    node_span.start >= component_span.start && node_span.end <= component_span.end
-}
-
 fn overlaps(a: Span, b: Span) -> bool {
     a.start < b.end && a.end > b.start
 }
@@ -40,18 +28,6 @@ pub(crate) fn jsx_passes_component_props(elem: &oxc_ast::ast::JSXOpeningElement<
             JSXAttributeItem::Attribute(_) | JSXAttributeItem::SpreadAttribute(_)
         )
     })
-}
-
-impl<'a> Visit<'a> for PropsVisitor {
-    fn visit_jsx_opening_element(&mut self, elem: &oxc_ast::ast::JSXOpeningElement<'a>) {
-        if !within(elem.span, self.span) {
-            return;
-        }
-        if jsx_passes_component_props(elem) {
-            self.passes_props = true;
-        }
-        walk::walk_jsx_opening_element(self, elem);
-    }
 }
 
 fn fn_has_params(expr: &Expression<'_>) -> bool {
@@ -149,17 +125,6 @@ pub(crate) fn has_function_params(program: &Program<'_>, span: Span) -> bool {
         }
     }
     false
-}
-
-#[allow(dead_code)]
-pub(crate) fn detect_props(program: &Program<'_>, span: Span) -> (bool, bool) {
-    let has_props = has_function_params(program, span);
-    let mut visitor = PropsVisitor {
-        passes_props: false,
-        span,
-    };
-    visitor.visit_program(program);
-    (has_props, visitor.passes_props)
 }
 
 #[cfg(test)]

@@ -1,5 +1,49 @@
-use super::detect_uses_suspense;
+use super::{collect_dynamic_names_for_spans, is_component_direct_lazy, jsx_opening_is_suspense};
 use crate::ast;
+use oxc_ast::ast::Program;
+use oxc_ast_visit::{walk, Visit};
+use oxc_span::Span;
+use std::collections::HashSet;
+
+struct SuspenseVisitor<'a> {
+    has_suspense: bool,
+    span: Span,
+    dynamic_names: &'a HashSet<String>,
+}
+
+fn within(node_span: Span, component_span: Span) -> bool {
+    node_span.start >= component_span.start && node_span.end <= component_span.end
+}
+
+impl<'a> Visit<'a> for SuspenseVisitor<'a> {
+    fn visit_jsx_opening_element(&mut self, elem: &oxc_ast::ast::JSXOpeningElement<'a>) {
+        if !within(elem.span, self.span) {
+            walk::walk_jsx_opening_element(self, elem);
+            return;
+        }
+        if jsx_opening_is_suspense(elem, self.dynamic_names) {
+            self.has_suspense = true;
+        }
+        walk::walk_jsx_opening_element(self, elem);
+    }
+}
+
+fn detect_uses_suspense(program: &Program<'_>, span: Span) -> bool {
+    if is_component_direct_lazy(program, span) {
+        return true;
+    }
+    let dynamic_names = collect_dynamic_names_for_spans(program, &[span])
+        .into_iter()
+        .next()
+        .unwrap_or_default();
+    let mut visitor = SuspenseVisitor {
+        has_suspense: false,
+        span,
+        dynamic_names: &dynamic_names,
+    };
+    visitor.visit_program(program);
+    visitor.has_suspense
+}
 
 fn check(source: &str) -> bool {
     let path = std::path::Path::new("test.tsx");
@@ -47,7 +91,7 @@ fn dynamic_component_outside_span_not_detected() {
     let source = "const Lazy = dynamic(() => import('./Foo')); export default function App() { return <Lazy/>; }";
     let path = std::path::Path::new("test.tsx");
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_uses_suspense(program, oxc_span::Span::new(0, 0))
+        detect_uses_suspense(program, oxc_span::Span::new(0, 0))
     })
     .unwrap();
     assert!(!result);
@@ -100,7 +144,7 @@ fn suspense_outside_span_not_detected() {
         "export default function App() { return <Suspense fallback={null}><div/></Suspense>; }";
     let path = std::path::Path::new("test.tsx");
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_uses_suspense(program, oxc_span::Span::new(0, 0))
+        detect_uses_suspense(program, oxc_span::Span::new(0, 0))
     })
     .unwrap();
     assert!(!result);
@@ -171,7 +215,7 @@ fn exported_const_dynamic_detected_via_named_branch() {
     let app_start = source.find("export default").unwrap() as u32;
     let span = oxc_span::Span::new(app_start, source.len() as u32);
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_uses_suspense(program, span)
+        detect_uses_suspense(program, span)
     })
     .unwrap();
     assert!(
@@ -206,7 +250,7 @@ fn outer_dynamic_shadowed_by_inner_non_dynamic_not_suspense() {
     let app_start = source.find("export default").unwrap() as u32;
     let span = oxc_span::Span::new(app_start, source.len() as u32);
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_uses_suspense(program, span)
+        detect_uses_suspense(program, span)
     })
     .unwrap();
     assert!(
@@ -224,7 +268,7 @@ fn function_parameter_shadows_outer_dynamic() {
     let app_start = source.find("function App").unwrap() as u32;
     let span = oxc_span::Span::new(app_start, source.len() as u32);
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_uses_suspense(program, span)
+        detect_uses_suspense(program, span)
     })
     .unwrap();
     assert!(
@@ -242,7 +286,7 @@ fn function_declaration_shadows_outer_dynamic() {
     let app_start = source.find("function App").unwrap() as u32;
     let span = oxc_span::Span::new(app_start, source.len() as u32);
     let result = crate::ast::with_program(path, source, |program, _| {
-        super::detect_uses_suspense(program, span)
+        detect_uses_suspense(program, span)
     })
     .unwrap();
     assert!(

@@ -1,6 +1,39 @@
-use super::detect_uses_memo;
+use super::{call_is_use_memo, is_wrapped_in_memo};
 use crate::ast;
-use crate::react_traits::analyze::components::extract_components;
+use crate::react_traits::analyze::components::{extract_components, ComponentDef};
+use oxc_ast::ast::Program;
+use oxc_ast_visit::{walk, Visit};
+use oxc_span::Span;
+
+struct MemoVisitor {
+    has_use_memo: bool,
+    span: Span,
+}
+
+fn within(node_span: Span, component_span: Span) -> bool {
+    node_span.start >= component_span.start && node_span.end <= component_span.end
+}
+
+impl<'a> Visit<'a> for MemoVisitor {
+    fn visit_call_expression(&mut self, expr: &oxc_ast::ast::CallExpression<'a>) {
+        if !within(expr.span, self.span) {
+            return;
+        }
+        if call_is_use_memo(expr) {
+            self.has_use_memo = true;
+        }
+        walk::walk_call_expression(self, expr);
+    }
+}
+
+fn detect_uses_memo(program: &Program<'_>, span: Span, def: &ComponentDef) -> bool {
+    let mut visitor = MemoVisitor {
+        has_use_memo: false,
+        span,
+    };
+    visitor.visit_program(program);
+    visitor.has_use_memo || is_wrapped_in_memo(program, def)
+}
 
 fn check(source: &str) -> bool {
     let path = std::path::Path::new("test.tsx");
@@ -76,7 +109,7 @@ fn memo_wrapper_only_for_default_component() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let foo_def = defs.iter().find(|d| d.name == "Foo").cloned().unwrap();
-        super::detect_uses_memo(program, span, &foo_def)
+        detect_uses_memo(program, span, &foo_def)
     })
     .unwrap();
     assert!(!result);
@@ -133,7 +166,7 @@ fn named_export_memo_wrapper_detected() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let foo_def = defs.iter().find(|d| d.name == "Foo").cloned().unwrap();
-        super::detect_uses_memo(program, span, &foo_def)
+        detect_uses_memo(program, span, &foo_def)
     })
     .unwrap();
     assert!(result);
@@ -148,7 +181,7 @@ fn named_export_react_memo_wrapper_detected() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let foo_def = defs.iter().find(|d| d.name == "Foo").cloned().unwrap();
-        super::detect_uses_memo(program, span, &foo_def)
+        detect_uses_memo(program, span, &foo_def)
     })
     .unwrap();
     assert!(result);
@@ -165,7 +198,7 @@ fn named_export_non_memo_call_not_detected() {
             name: "Foo".to_string(),
             span: oxc_span::Span::default(),
         };
-        super::detect_uses_memo(program, span, &def)
+        detect_uses_memo(program, span, &def)
     })
     .unwrap();
     assert!(!result);
@@ -182,7 +215,7 @@ fn named_export_name_mismatch_not_detected() {
             name: "Foo".to_string(),
             span: oxc_span::Span::default(),
         };
-        super::detect_uses_memo(program, span, &def)
+        detect_uses_memo(program, span, &def)
     })
     .unwrap();
     assert!(!result);
@@ -199,7 +232,7 @@ fn named_export_destructured_not_detected() {
             name: "Foo".to_string(),
             span: oxc_span::Span::default(),
         };
-        super::detect_uses_memo(program, span, &def)
+        detect_uses_memo(program, span, &def)
     })
     .unwrap();
     assert!(!result);
@@ -218,7 +251,7 @@ fn use_memo_outside_span_not_detected() {
                 span: oxc_span::Span::default(),
             }
         });
-        super::detect_uses_memo(program, oxc_span::Span::new(0, 0), &def)
+        detect_uses_memo(program, oxc_span::Span::new(0, 0), &def)
     })
     .unwrap();
     assert!(!result);
@@ -234,7 +267,7 @@ fn local_memo_then_default_export_is_memo() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let def = defs.first().cloned().unwrap();
-        super::detect_uses_memo(program, span, &def)
+        detect_uses_memo(program, span, &def)
     })
     .unwrap();
     assert!(
@@ -253,7 +286,7 @@ fn alias_export_memo_detected_by_span() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let bar_def = defs.iter().find(|d| d.name == "Bar").cloned().unwrap();
-        super::detect_uses_memo(program, span, &bar_def)
+        detect_uses_memo(program, span, &bar_def)
     })
     .unwrap();
     assert!(
@@ -289,7 +322,7 @@ fn local_var_span_mismatch_not_detected() {
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
         let def = defs.first().cloned().unwrap();
-        super::detect_uses_memo(program, span, &def)
+        detect_uses_memo(program, span, &def)
     })
     .unwrap();
     assert!(result, "Page should be detected as memo-wrapped");

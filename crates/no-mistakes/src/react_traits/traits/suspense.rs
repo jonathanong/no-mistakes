@@ -1,6 +1,5 @@
 mod dynamic_names;
 
-pub(crate) use dynamic_names::collect_dynamic_names;
 pub(crate) use dynamic_names::{
     collect_dynamic_names_for_spans, is_dynamic_or_lazy_call, is_dynamic_or_lazy_call_by_callee,
 };
@@ -11,19 +10,6 @@ use oxc_ast::ast::{
 };
 use oxc_span::Span;
 use std::collections::HashSet;
-
-use oxc_ast_visit::{walk, Visit};
-
-#[allow(dead_code)]
-struct SuspenseVisitor<'a> {
-    has_suspense: bool,
-    span: Span,
-    dynamic_names: &'a HashSet<String>,
-}
-
-fn within(node_span: Span, component_span: Span) -> bool {
-    node_span.start >= component_span.start && node_span.end <= component_span.end
-}
 
 pub(crate) fn jsx_opening_is_suspense(
     elem: &oxc_ast::ast::JSXOpeningElement<'_>,
@@ -41,19 +27,6 @@ pub(crate) fn jsx_opening_is_suspense(
                 )
         }
         _ => false,
-    }
-}
-
-impl<'a> Visit<'a> for SuspenseVisitor<'a> {
-    fn visit_jsx_opening_element(&mut self, elem: &oxc_ast::ast::JSXOpeningElement<'a>) {
-        if !within(elem.span, self.span) {
-            walk::walk_jsx_opening_element(self, elem);
-            return;
-        }
-        if jsx_opening_is_suspense(elem, self.dynamic_names) {
-            self.has_suspense = true;
-        }
-        walk::walk_jsx_opening_element(self, elem);
     }
 }
 
@@ -99,21 +72,6 @@ pub(crate) fn is_component_direct_lazy(program: &Program<'_>, span: Span) -> boo
         }
     }
     false
-}
-
-#[allow(dead_code)]
-pub(crate) fn detect_uses_suspense(program: &Program<'_>, span: Span) -> bool {
-    if is_component_direct_lazy(program, span) {
-        return true;
-    }
-    let dynamic_names = collect_dynamic_names(program, span);
-    let mut visitor = SuspenseVisitor {
-        has_suspense: false,
-        span,
-        dynamic_names: &dynamic_names,
-    };
-    visitor.visit_program(program);
-    visitor.has_suspense
 }
 
 #[cfg(test)]

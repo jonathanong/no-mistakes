@@ -18,18 +18,5 @@ pub(crate) fn collect_fetch_calls_in_file(
         .collect()
 }
 
-#[allow(dead_code)]
-pub(crate) fn collect_fetch_calls(
-    program: &Program<'_>,
-    source: &str,
-    rel_file: &str,
-    span: Span,
-) -> Vec<FetchOccurrence> {
-    let mut visitor = FetchVisitor::new(source, rel_file, false, false);
-    visitor.component_span = Some(span);
-    visitor.visit_program(program);
-    visitor.fetches
-}
-
 #[cfg(test)]
 mod tests;
