@@ -22,6 +22,7 @@ fn fixture(name: &str) -> PathBuf {
 }
 
 include!("tests/collection.rs");
+include!("tests/session_reuse.rs");
 
 #[test]
 fn pass4b_react_graph_facts_skip_ignored_child_for_visible_fallback() {

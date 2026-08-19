@@ -117,7 +117,7 @@ fn collect_with_timings(
         &session,
         prepared.files(),
         TsFactPlan::imports(),
-        &TsFactContext::default(),
+        &TsFactContext::new(&root),
     );
     crate::invocation::check_timeout()?;
     if let Some(timings) = &mut timings {

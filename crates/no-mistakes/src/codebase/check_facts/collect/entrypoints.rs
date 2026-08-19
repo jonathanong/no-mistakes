@@ -53,7 +53,9 @@ pub fn collect_check_facts_with_graph_files_playwright_and_session(
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
 ) -> CheckFactMap {
-    let sources = super::request_sources(&files, &graph_files, &plan, playwright.as_ref());
+    let sources = session.existing_sources_for(root).unwrap_or_else(|| {
+        super::request_sources(&files, &graph_files, &plan, playwright.as_ref())
+    });
     collect_check_facts_with_graph_files_playwright_sources_and_session(
         session,
         root,

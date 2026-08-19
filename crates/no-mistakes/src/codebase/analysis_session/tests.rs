@@ -47,6 +47,21 @@ fn discovery_is_memoized_by_normalized_root() {
 }
 
 #[test]
+fn existing_sources_are_absent_until_discovery_and_then_stable() {
+    let session = AnalysisSession::disabled();
+    let root = fixture_root();
+    assert!(session.existing_sources_for(&root).is_none());
+    assert!(session
+        .existing_sources_for(std::path::Path::new(""))
+        .is_none());
+
+    let _ = session.visible_paths(&root);
+    let first = session.existing_sources_for(&root).unwrap();
+    let second = session.existing_sources_for(&root).unwrap();
+    assert!(Arc::ptr_eq(&first, &second));
+}
+
+#[test]
 fn dataset_initialization_releases_registry_guard_and_preserves_identity() {
     let observer = InvocationObserver::new(true);
     let session = AnalysisSession::new(Some(Arc::clone(&observer)));
