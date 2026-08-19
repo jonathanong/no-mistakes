@@ -1,6 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod classify;
+pub(crate) use classify::classify_relative_paths;
+
 /// Stable identity for a lexical path in a frozen request file inventory.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FileId(u32);
@@ -69,25 +72,8 @@ pub struct FileInventory {
 impl FileInventory {
     #[doc(hidden)]
     pub fn from_paths(paths: &[PathBuf]) -> Self {
-        let mut metadata_stats = 0;
-        let paths = paths
-            .iter()
-            .take_while(|_| crate::invocation::check_timeout().is_ok())
-            .map(|path| {
-                let path = super::normalize_discovery_path(path);
-                metadata_stats += 1;
-                let classification = std::fs::symlink_metadata(&path)
-                    .ok()
-                    .map_or_else(FileClassification::default, |metadata| {
-                        FileClassification::from_file_type(&path, metadata.file_type())
-                    });
-                ClassifiedPath {
-                    path,
-                    classification,
-                }
-            })
-            .collect::<Vec<_>>();
-        Self::from_classified_paths_counted(paths, metadata_stats)
+        let (entries, metadata_stats) = classify::inventory_paths(paths);
+        Self::from_classified_paths_counted(entries, metadata_stats)
     }
 
     pub(crate) fn from_classified_paths(entries: Vec<ClassifiedPath>) -> Self {

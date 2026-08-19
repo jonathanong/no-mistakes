@@ -44,18 +44,7 @@ fn try_discover_classified_path_views(
 }
 
 fn classify_existing_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<ClassifiedPath> {
-    paths
-        .into_iter()
-        .take_while(|_| crate::invocation::check_timeout().is_ok())
-        .filter_map(|relative| {
-            let path = root.join(relative);
-            let metadata = std::fs::symlink_metadata(&path).ok()?;
-            Some(ClassifiedPath {
-                classification: FileClassification::from_file_type(&path, metadata.file_type()),
-                path,
-            })
-        })
-        .collect()
+    file_inventory::classify_relative_paths(root, paths)
 }
 
 fn discover_fallback_classified_paths(root: &Path) -> Vec<ClassifiedPath> {

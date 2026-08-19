@@ -1,5 +1,6 @@
-use super::{FileId, FileInventory};
+use super::{ClassifiedPath, FileClassification, FileId, FileInventory};
 use std::path::PathBuf;
+use std::time::Instant;
 
 fn fixture(path: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -152,4 +153,106 @@ fn broken_symlink_is_a_path_entry_not_a_target_file() {
     assert!(classification.is_lexical_file() || classification.is_lexical_symlink());
     assert_eq!(inventory.non_file_path_entry_paths(), vec![broken.clone()]);
     assert!(inventory.target_file_paths().is_empty());
+}
+
+fn serial_inventory(paths: &[PathBuf]) -> FileInventory {
+    let entries = paths
+        .iter()
+        .take_while(|_| crate::invocation::check_timeout().is_ok())
+        .map(|path| {
+            let path = crate::codebase::ts_source::normalize_discovery_path(path);
+            let classification = std::fs::symlink_metadata(&path)
+                .ok()
+                .map_or_else(FileClassification::default, |metadata| {
+                    FileClassification::from_file_type(&path, metadata.file_type())
+                });
+            ClassifiedPath {
+                path,
+                classification,
+            }
+        })
+        .collect();
+    FileInventory::from_classified_paths(entries)
+}
+
+fn assert_same_inventory(left: &FileInventory, right: &FileInventory) {
+    assert_eq!(left.paths(), right.paths());
+    for path in left.paths().iter() {
+        let left_kind = left.classification_for_path(path).unwrap();
+        let right_kind = right.classification_for_path(path).unwrap();
+        assert_eq!(left_kind.is_lexical_file(), right_kind.is_lexical_file());
+        assert_eq!(
+            left_kind.is_lexical_symlink(),
+            right_kind.is_lexical_symlink()
+        );
+        assert_eq!(left_kind.target_is_file(), right_kind.target_is_file());
+    }
+}
+
+#[test]
+fn parallel_inventory_matches_serial_classification() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/scan-config/symlinked-default-playwright/fixture");
+    let missing = fixture("missing.ts");
+    let paths = vec![
+        fixture("beta.ts"),
+        fixture("alpha.ts"),
+        root.join("playwright.config.ts"),
+        root.join("configs/shared.playwright.config.ts"),
+        fixture("alpha.ts").parent().unwrap().to_path_buf(),
+        missing,
+    ];
+
+    assert_same_inventory(
+        &serial_inventory(&paths),
+        &FileInventory::from_paths(&paths),
+    );
+}
+
+#[test]
+fn parallel_inventory_is_stable_across_runs() {
+    let paths = vec![fixture("alpha.ts"), fixture("beta.ts")];
+    assert_same_inventory(
+        &FileInventory::from_paths(&paths),
+        &FileInventory::from_paths(&paths),
+    );
+}
+
+#[test]
+fn git_classify_drops_missing_relative_paths() {
+    let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
+    let classified = super::classify_relative_paths(
+        &root,
+        vec![PathBuf::from("alpha.ts"), PathBuf::from("missing.ts")],
+    );
+    assert_eq!(classified.len(), 1);
+    assert!(classified[0].path.ends_with("alpha.ts"));
+}
+
+#[test]
+#[ignore = "manual discovery-classify benchmark"]
+fn time_parallel_vs_serial_classification() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/large-graph-monorepo/fixture");
+    let mut paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    paths.extend(crate::codebase::ts_source::discover_visible_paths(&repo));
+    paths.sort();
+    paths.dedup();
+    let _ = serial_inventory(&paths);
+    let _ = FileInventory::from_paths(&paths);
+
+    let started = Instant::now();
+    let serial = serial_inventory(&paths);
+    let serial_elapsed = started.elapsed();
+    let started = Instant::now();
+    let parallel = FileInventory::from_paths(&paths);
+    let parallel_elapsed = started.elapsed();
+    eprintln!(
+        "discovery classify paths={} serial={:?} parallel={:?}",
+        paths.len(),
+        serial_elapsed,
+        parallel_elapsed
+    );
+    assert_same_inventory(&serial, &parallel);
 }
