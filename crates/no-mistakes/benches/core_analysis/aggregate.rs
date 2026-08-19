@@ -1,15 +1,19 @@
 use super::fixtures::{
     fixture_root, impacted_args, EXPECTED_IMPACTED_CHECKS, EXPECTED_MULTI_REPORT_RESOLVER_KEYS,
 };
-use std::path::PathBuf;
-
-const EXPECTED_GRAPH_GATES_CHECK_KEYS: usize = 7;
+use super::shard;
 use criterion::{black_box, Criterion};
 use no_mistakes::benchmark_support;
 use no_mistakes::impacted_checks::generate_impacted_checks;
 use serde_json::json;
+use std::path::PathBuf;
 
-pub(super) fn bench_aggregate_and_multi_report(c: &mut Criterion) {
+const EXPECTED_GRAPH_GATES_CHECK_KEYS: usize = 7;
+
+pub(super) fn bench_configured_checks(c: &mut Criterion) {
+    if !shard::should_run(shard::CHECK) {
+        return;
+    }
     let root = fixture_root();
     let check_preflight =
         benchmark_support::check_json(&root).expect("check preflight should succeed");
@@ -25,8 +29,35 @@ pub(super) fn bench_aggregate_and_multi_report(c: &mut Criterion) {
         });
     });
 
+    let gates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/performance/graph-gates")
+        .canonicalize()
+        .expect("graph-gates performance fixture should exist");
+    let gates_check = benchmark_support::check_json(&gates_root)
+        .expect("graph-gates check preflight should succeed");
+    let gates_value: serde_json::Value =
+        serde_json::from_str(&gates_check).expect("graph-gates check report should be JSON");
+    assert_eq!(
+        gates_value.as_object().map(|value| value.len()),
+        Some(EXPECTED_GRAPH_GATES_CHECK_KEYS),
+        "graph-gates check top-level keys drifted"
+    );
+    c.bench_function("aggregate/graph_gates_check", |b| {
+        b.iter(|| {
+            black_box(
+                benchmark_support::check_json(black_box(&gates_root))
+                    .expect("graph-gates check should succeed"),
+            )
+        });
+    });
+}
+
+pub(super) fn bench_reused_multi_report(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
     let options = json!({
-        "root": root,
+        "root": fixture_root(),
         "tsconfig": fixture_root().join("tsconfig.json"),
         "reports": [
             {"id": "dependencies", "type": "dependencies", "files": ["src/app.tsx"], "relationships": ["all"]},
@@ -69,31 +100,12 @@ pub(super) fn bench_aggregate_and_multi_report(c: &mut Criterion) {
             )
         });
     });
-
-    let gates_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/performance/graph-gates")
-        .canonicalize()
-        .expect("graph-gates performance fixture should exist");
-    let gates_check = benchmark_support::check_json(&gates_root)
-        .expect("graph-gates check preflight should succeed");
-    let gates_value: serde_json::Value =
-        serde_json::from_str(&gates_check).expect("graph-gates check report should be JSON");
-    assert_eq!(
-        gates_value.as_object().map(|value| value.len()),
-        Some(EXPECTED_GRAPH_GATES_CHECK_KEYS),
-        "graph-gates check top-level keys drifted"
-    );
-    c.bench_function("aggregate/graph_gates_check", |b| {
-        b.iter(|| {
-            black_box(
-                benchmark_support::check_json(black_box(&gates_root))
-                    .expect("graph-gates check should succeed"),
-            )
-        });
-    });
 }
 
 pub(super) fn bench_impacted_checks(c: &mut Criterion) {
+    if !shard::should_run(shard::TESTS_PLAN) {
+        return;
+    }
     let root = fixture_root();
     let preflight = generate_impacted_checks(&impacted_args(&root))
         .expect("impacted-checks preflight should succeed");

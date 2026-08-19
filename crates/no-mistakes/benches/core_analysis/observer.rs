@@ -2,6 +2,7 @@ use super::fixtures::{
     fixture_root, EXPECTED_CHECK_MANIFEST_PARSES, EXPECTED_CHECK_RESOLVER_KEYS,
     EXPECTED_CHECK_SOURCE_READS,
 };
+use super::shard;
 use criterion::{black_box, BenchmarkId, Criterion};
 use no_mistakes::benchmark_support;
 use no_mistakes::diagnostics::DiagnosticsSnapshot;
@@ -28,6 +29,9 @@ fn observed_check(root: &Path, mode: &str) -> (String, Option<DiagnosticsSnapsho
 }
 
 pub(super) fn bench_observer_overhead(c: &mut Criterion) {
+    if !shard::should_run(shard::CHECK) {
+        return;
+    }
     let root = fixture_root();
     let (disabled_output, disabled_snapshot) = observed_check(&root, "disabled");
     let (timed_output, timed_snapshot) = observed_check(&root, "timings");

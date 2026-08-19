@@ -510,15 +510,33 @@ jobs:
       contents: read
       id-token: write
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
-          - name: CPU
+          - name: CPU check
             mode: simulation
             filter: ""
-            benchmark-shard: ""
-            timeout-minutes: 25
-            run-timeout-minutes: 20
+            benchmark-shard: check
+            timeout-minutes: 15
+            run-timeout-minutes: 12
+          - name: CPU tests-plan
+            mode: simulation
+            filter: ""
+            benchmark-shard: tests-plan
+            timeout-minutes: 10
+            run-timeout-minutes: 8
+          - name: CPU graph
+            mode: simulation
+            filter: ""
+            benchmark-shard: graph
+            timeout-minutes: 15
+            run-timeout-minutes: 12
+          - name: CPU query
+            mode: simulation
+            filter: ""
+            benchmark-shard: query
+            timeout-minutes: 15
+            run-timeout-minutes: 12
           - name: memory
             mode: memory
             filter: ""
@@ -528,13 +546,13 @@ jobs:
           - name: node memory
             mode: memory
             filter: "graph_production_finalization::node_id_finalization$"
-            benchmark-shard: ""
+            benchmark-shard: graph
             timeout-minutes: 8
             run-timeout-minutes: 5
           - name: selector memory
             mode: memory
             filter: "graph_production_finalization::selector_append$"
-            benchmark-shard: ""
+            benchmark-shard: graph
             timeout-minutes: 8
             run-timeout-minutes: 5
     env:
