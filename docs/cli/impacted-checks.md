@@ -37,7 +37,8 @@ Changed files may also be passed as positional arguments.
 
 - Changed files, repository files, parsed facts, and the dependency graph are
   prepared once per invocation and reused across the
-  configured frameworks (`dotnet`, `vitest`, `playwright`, and `swift`). Each
+  configured frameworks (`dotnet`, `vitest`, `playwright`, `swift`, `python`,
+  `go`, `cargo`, `rails`, and `php`). Each
   selected `TestExecutionTarget` becomes a `test` check; emitted commands match
   `tests plan` exactly. Runner ownership is preserved, so a Vitest-owned
   `.test.*` path is never rewritten into a Playwright command merely because

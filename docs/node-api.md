@@ -18,7 +18,7 @@ const {
   const impact = await dependents({
     root: process.cwd(),
     files: ["src/api.mts#handler"],
-    tests: ["vitest", "dotnet", "swift"],
+    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php"],
   });
 
   const report = await analyzeProject({
