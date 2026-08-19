@@ -5,7 +5,7 @@ use crate::codebase::ts_source::{
 };
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Result};
-pub(crate) use ast::extract_program;
+pub(crate) use ast::{extract_program, finish_visitor, prepare_visitor};
 use rayon::prelude::*;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
@@ -16,6 +16,7 @@ mod cache_imports;
 mod config;
 mod patterns;
 mod visitor;
+pub(crate) use visitor::NextjsCachingVisitor;
 
 pub const RULE_ID: &str = "nextjs-no-caching";
 

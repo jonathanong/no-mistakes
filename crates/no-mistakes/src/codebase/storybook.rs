@@ -1,6 +1,6 @@
 use crate::import_shape::is_runtime_import;
-use crate::imports::collect_identifier_references;
 use oxc_ast::ast::{ImportDeclarationSpecifier, Program};
+use std::collections::HashSet;
 
 pub(crate) use crate::codebase::storybook_mdx::extract_mdx_source;
 
@@ -25,8 +25,11 @@ pub(crate) struct StorybookSideEffectImport {
     pub(crate) line: u32,
 }
 
-pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> StorybookFileFacts {
-    let referenced = collect_identifier_references(program);
+pub(crate) fn extract_program_with_references(
+    source: &str,
+    program: &Program<'_>,
+    referenced: &HashSet<String>,
+) -> StorybookFileFacts {
     let mut used_runtime_imports = Vec::new();
     let mut side_effect_imports = Vec::new();
     for stmt in &program.body {

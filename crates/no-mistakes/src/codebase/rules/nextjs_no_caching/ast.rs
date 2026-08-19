@@ -1,6 +1,5 @@
 use std::path::Path;
 
-use super::visitor::NextjsCachingVisitor;
 use super::NextjsCachingFinding;
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::Program;
@@ -11,6 +10,16 @@ pub(crate) fn extract_program(
     source: &str,
     program: &Program<'_>,
 ) -> Vec<NextjsCachingFinding> {
+    let mut visitor = prepare_visitor(path, source, program);
+    visitor.visit_program(program);
+    finish_visitor(visitor)
+}
+
+pub(crate) fn prepare_visitor<'a>(
+    path: &Path,
+    source: &'a str,
+    program: &Program<'_>,
+) -> super::NextjsCachingVisitor<'a> {
     let mut findings = Vec::new();
     for directive in &program.directives {
         if is_cache_directive(directive.directive.as_str()) {
@@ -24,9 +33,12 @@ pub(crate) fn extract_program(
     let segment_config = is_route_segment_file(path);
     let next_config = is_next_config_file(path);
     let bindings = super::bindings::top_level_bindings(program, segment_config);
-    let mut visitor =
-        NextjsCachingVisitor::new(source, findings, bindings, segment_config, next_config);
-    visitor.visit_program(program);
+    super::NextjsCachingVisitor::new(source, findings, bindings, segment_config, next_config)
+}
+
+pub(crate) fn finish_visitor(
+    mut visitor: super::NextjsCachingVisitor<'_>,
+) -> Vec<NextjsCachingFinding> {
     visitor.findings.sort();
     visitor.findings.dedup();
     visitor.findings

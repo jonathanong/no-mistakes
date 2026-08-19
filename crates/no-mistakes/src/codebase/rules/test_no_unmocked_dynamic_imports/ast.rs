@@ -31,16 +31,12 @@ pub fn extract(path: &Path, source: &str) -> Result<TestFacts> {
 }
 
 pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> TestFacts {
-    let mut visitor = Collector {
-        source,
-        facts: TestFacts::default(),
-        mock_import_starts: HashSet::new(),
-    };
+    let mut visitor = Collector::new(source);
     visitor.visit_program(program);
     visitor.facts
 }
 
-struct Collector<'s> {
+pub(crate) struct Collector<'s> {
     source: &'s str,
     facts: TestFacts,
     /// Byte offsets (`Span::start`) of `ImportExpression`s used as the first argument of a
@@ -50,13 +46,21 @@ struct Collector<'s> {
     mock_import_starts: HashSet<u32>,
 }
 
-impl<'a> Visit<'a> for Collector<'_> {
-    fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
+impl<'s> Collector<'s> {
+    pub(crate) fn new(source: &'s str) -> Self {
+        Self {
+            source,
+            facts: TestFacts::default(),
+            mock_import_starts: HashSet::new(),
+        }
+    }
+
+    pub(crate) fn into_facts(self) -> TestFacts {
+        self.facts
+    }
+
+    pub(crate) fn record_import_expression(&mut self, import: &ImportExpression<'_>) {
         if self.mock_import_starts.contains(&import.span.start) {
-            // Type-carrier import for a typed mock specifier; already recorded (if static)
-            // into `mock_specifiers` by `visit_call_expression`. Still walk its children so
-            // any nested dynamic import is not missed.
-            walk::walk_import_expression(self, import);
             return;
         }
         let line = crate::codebase::ts_source::byte_offset_to_line(
@@ -67,34 +71,36 @@ impl<'a> Visit<'a> for Collector<'_> {
             specifier: string_expr(&import.source),
             line,
         });
+    }
+
+    pub(crate) fn record_call_expression(&mut self, call: &CallExpression<'_>) {
+        if !is_mock_call(call) {
+            return;
+        }
+        let Some(first) = call.arguments.first() else {
+            return;
+        };
+        if let Some(specifier) = string_arg(first) {
+            self.facts.mock_specifiers.push(specifier);
+        } else if accepts_typed_import_specifier(call) {
+            if let Argument::ImportExpression(import) = first {
+                if let Some(specifier) = string_expr(&import.source) {
+                    self.facts.mock_specifiers.push(specifier);
+                    self.mock_import_starts.insert(import.span.start);
+                }
+            }
+        }
+    }
+}
+
+impl<'a> Visit<'a> for Collector<'_> {
+    fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
+        self.record_import_expression(import);
         walk::walk_import_expression(self, import);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if is_mock_call(call) {
-            if let Some(first) = call.arguments.first() {
-                if let Some(specifier) = string_arg(first) {
-                    self.facts.mock_specifiers.push(specifier);
-                } else if accepts_typed_import_specifier(call) {
-                    if let Argument::ImportExpression(import) = first {
-                        // Typed Vitest/Jest mock specifier, e.g.
-                        // `vi.mock(import("./dep"), factory)` — bare `import(...)` form only
-                        // (a TS-wrapped carrier like `import("./dep") as unknown` is not
-                        // matched). The import exists only so TypeScript can infer the mocked
-                        // module's shape; it is not a runtime dynamic import. Only exclude it
-                        // from `dynamic_imports` when the specifier is statically known:
-                        // `import(name)` with a non-static specifier is not a verifiable mock
-                        // and must still surface as a reportable dynamic import, the same as
-                        // a bare `import(name)` elsewhere — otherwise a test could evade the
-                        // rule entirely by wrapping an unknown dynamic import in `vi.mock(...)`.
-                        if let Some(specifier) = string_expr(&import.source) {
-                            self.facts.mock_specifiers.push(specifier);
-                            self.mock_import_starts.insert(import.span.start);
-                        }
-                    }
-                }
-            }
-        }
+        self.record_call_expression(call);
         walk::walk_call_expression(self, call);
     }
 }

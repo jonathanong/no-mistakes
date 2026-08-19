@@ -45,17 +45,7 @@ pub(crate) fn collect_file_facts_from_program(
         .integration_runner_configs
         .as_ref()
         .and_then(|plan| plan.parse_program(path, program, source));
-    let dynamic_imports = plan.dynamic_imports.then(|| {
-        crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::extract_program(
-            source, program,
-        )
-    });
-    let nextjs_caching = plan
-        .nextjs_caching
-        .then(|| crate::codebase::rules::nextjs_no_caching::extract_program(path, source, program));
-    let storybook = plan
-        .storybook
-        .then(|| crate::codebase::storybook::extract_program(source, program));
+    let fused = super::program_walk::collect_fused_check_program(path, source, program, plan);
     let server_route_client_boundary = plan.server_route_client_boundary.then(|| {
         crate::codebase::rules::server_route_client_boundary::extract_program(path, source, program)
     });
@@ -89,9 +79,9 @@ pub(crate) fn collect_file_facts_from_program(
         react_usages,
         integration,
         integration_runner_config,
-        dynamic_imports,
-        nextjs_caching,
-        storybook,
+        dynamic_imports: fused.dynamic_imports,
+        nextjs_caching: fused.nextjs_caching,
+        storybook: fused.storybook,
         server_route_client_boundary,
         playwright,
         playwright_fetch,

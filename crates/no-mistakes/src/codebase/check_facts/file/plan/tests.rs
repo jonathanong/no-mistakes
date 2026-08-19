@@ -136,3 +136,18 @@ fn playwright_test_files_request_shared_import_facts() {
     assert!(ts_plan.function_calls);
     assert!(!plan.collected_ts_plan().imports);
 }
+
+#[test]
+fn collect_file_facts_from_program_fuses_check_only_walks() {
+    let source = include_str!("../program.rs");
+    assert!(
+        source.contains("collect_fused_check_program"),
+        "check facts must walk dynamic imports, nextjs, and storybook together"
+    );
+    assert!(
+        !source.contains("test_no_unmocked_dynamic_imports::ast::extract_program")
+            && !source.contains("nextjs_no_caching::extract_program")
+            && !source.contains("storybook::extract_program"),
+        "check-only extractors must not walk the program again"
+    );
+}

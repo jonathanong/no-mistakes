@@ -9,9 +9,9 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 
-pub(super) struct NextjsCachingVisitor<'a> {
+pub(crate) struct NextjsCachingVisitor<'a> {
     pub(super) source: &'a str,
-    pub(super) findings: Vec<NextjsCachingFinding>,
+    pub(crate) findings: Vec<NextjsCachingFinding>,
     unstable_cache_bindings: HashSet<String>,
     next_cache_namespaces: HashSet<String>,
     next_config_bindings: HashMap<String, Vec<(u32, String)>>,
@@ -49,7 +49,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         });
     }
 
-    fn check_fetch_call(&mut self, call: &CallExpression<'a>) {
+    pub(crate) fn check_fetch_call(&mut self, call: &CallExpression<'a>) {
         let Expression::Identifier(callee) = &call.callee else {
             return;
         };
@@ -64,7 +64,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn check_call(&mut self, call: &CallExpression<'a>) {
+    pub(crate) fn check_call(&mut self, call: &CallExpression<'a>) {
         match &call.callee {
             Expression::Identifier(callee)
                 if self.unstable_cache_bindings.contains(callee.name.as_str()) =>
@@ -81,7 +81,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn check_import(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
+    pub(crate) fn check_import(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
         let Some(effects) = super::cache_imports::effects(import) else {
             return;
         };
@@ -93,7 +93,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn check_export(&mut self, export: &oxc_ast::ast::ExportDeclaration<'a>) {
+    pub(crate) fn check_export(&mut self, export: &oxc_ast::ast::ExportDeclaration<'a>) {
         if !self.segment_config {
             return;
         }
@@ -113,7 +113,10 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn check_export_specifiers(&mut self, export: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
+    pub(crate) fn check_export_specifiers(
+        &mut self,
+        export: &oxc_ast::ast::ExportNamedDeclaration<'a>,
+    ) {
         for specifier in &export.specifiers {
             if let Some(message) = self
                 .segment_config_bindings
@@ -124,7 +127,10 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn check_default_export(&mut self, export: &oxc_ast::ast::ExportDefaultDeclaration<'a>) {
+    pub(crate) fn check_default_export(
+        &mut self,
+        export: &oxc_ast::ast::ExportDefaultDeclaration<'a>,
+    ) {
         if !self.next_config {
             return;
         }
@@ -134,7 +140,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         ));
     }
 
-    fn check_assignment(&mut self, assignment: &AssignmentExpression<'a>) {
+    pub(crate) fn check_assignment(&mut self, assignment: &AssignmentExpression<'a>) {
         if !self.next_config {
             return;
         }
@@ -150,7 +156,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn check_function_body_directives(&mut self, body: &FunctionBody<'a>) {
+    pub(crate) fn check_function_body_directives(&mut self, body: &FunctionBody<'a>) {
         for directive in &body.directives {
             if is_cache_directive(directive.directive.as_str()) {
                 self.push(
