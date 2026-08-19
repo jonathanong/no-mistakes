@@ -1,5 +1,5 @@
 use super::TsFactPlan;
-use crate::codebase::ts_http_calls::{extract_http_calls_from_program, HttpCall};
+use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::{
     extract_spawn_edges_from_program, extract_spawn_edges_from_program_from_visible, SpawnEdge,
 };
@@ -14,6 +14,8 @@ use std::path::Path;
 
 #[path = "domain_types.rs"]
 mod domain_types;
+#[path = "domain_walk.rs"]
+mod domain_walk;
 #[path = "effect_calls.rs"]
 mod effect_calls;
 pub use domain_types::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
@@ -79,11 +81,13 @@ pub(crate) fn collect_domain_facts<'a>(
         )
     });
     let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();
-    let http_calls = if plan.http_calls {
-        extract_http_calls_from_program(program, source, &http_prefixes)
-    } else {
-        Vec::new()
-    };
+    let fused = domain_walk::collect_fused_domain_calls(
+        program,
+        source,
+        plan,
+        &http_prefixes,
+        &context.effect_functions,
+    );
     let process_spawns = if plan.process_spawns {
         match context.visible_files.as_deref() {
             Some(visible) => extract_spawn_edges_from_program_from_visible(
@@ -100,11 +104,6 @@ pub(crate) fn collect_domain_facts<'a>(
     };
     let server_routes = (plan.server_routes && context.matches_server_route(path))
         .then(|| crate::server_routes::extract::extract_program(path, source, program));
-    let effect_calls = if plan.effect_calls {
-        effect_calls::extract(program, source, &context.effect_functions)
-    } else {
-        Vec::new()
-    };
     let rsc_environment = plan
         .rsc_environment
         .then(|| classify_rsc_environment(program));
@@ -118,10 +117,10 @@ pub(crate) fn collect_domain_facts<'a>(
         queue_create_line,
         queue_name,
         queue_project,
-        http_calls,
+        http_calls: fused.http_calls,
         process_spawns,
         server_routes,
-        effect_calls,
+        effect_calls: fused.effect_calls,
         rsc_environment,
     }
 }

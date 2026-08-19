@@ -146,3 +146,17 @@ fn empty_serial_paths_collect_symbols_with_the_parallel_fact_path() {
     assert_eq!(facts[&file].imports.len(), 1);
     assert_eq!(sources.physical_read_count(), 1);
 }
+
+#[test]
+fn collect_domain_facts_fuses_http_and_effect_call_walks() {
+    let source = include_str!("../domain.rs");
+    assert!(
+        source.contains("collect_fused_domain_calls"),
+        "domain facts must walk HTTP and effect calls together"
+    );
+    assert!(
+        !source.contains("extract_http_calls_from_program")
+            && !source.contains("effect_calls::extract"),
+        "HTTP and effect extractors must not walk the program again"
+    );
+}
