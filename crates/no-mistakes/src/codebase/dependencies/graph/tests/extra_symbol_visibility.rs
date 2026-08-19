@@ -77,7 +77,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
     facts.insert(
         current.clone(),
         TsFileFacts {
-            symbols: Some(symbols),
+            symbols: Some(std::sync::Arc::new(symbols)),
             imports: vec![ExtractedImport {
                 specifier: "@fixture/hidden".to_string(),
                 kind: ImportKind::Dynamic,
@@ -93,7 +93,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
     facts.insert(
         hidden_target.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![Export {
                     name: "hiddenNamed".to_string(),
                     local: None,
@@ -102,7 +102,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
                     is_type_only: false,
                 }],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );

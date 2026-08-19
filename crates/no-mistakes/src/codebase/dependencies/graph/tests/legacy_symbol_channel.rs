@@ -11,7 +11,7 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
     let file = root.join("types.js");
     assert!(file.is_file(), "fixture must remain on disk");
 
-    let standard = FileSymbols {
+    let standard = Arc::new(FileSymbols {
         exports: vec![Export {
             name: "javascriptValue".to_string(),
             local: None,
@@ -20,7 +20,7 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
             is_type_only: false,
         }],
         imports: Vec::new(),
-    };
+    });
     let legacy = FileSymbols {
         exports: vec![Export {
             name: "JavaScriptShape".to_string(),
@@ -36,10 +36,10 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
         file.clone(),
         Arc::new(CheckFileFacts {
             ts: Arc::new(TsFileFacts {
-                symbols: Some(standard.clone()),
+                symbols: Some(Arc::clone(&standard)),
                 ..TsFileFacts::default()
             }),
-            symbols: Some(Arc::new(standard)),
+            symbols: Some(Arc::clone(&standard)),
             legacy_symbols: Some(Arc::new(legacy)),
             ..CheckFileFacts::default()
         }),

@@ -29,7 +29,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
     let facts = TsFactMap::from([(
         target.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![Export {
                     name: "Shape".to_string(),
                     local: None,
@@ -38,7 +38,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
                     is_type_only: true,
                 }],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     )]);

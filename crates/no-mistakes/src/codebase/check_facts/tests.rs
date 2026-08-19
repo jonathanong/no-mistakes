@@ -345,7 +345,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
     assert!(file_facts.react.is_some());
     assert_eq!(
         file_facts.symbols.as_deref(),
-        file_facts.ts.symbols.as_ref(),
+        file_facts.ts.symbols.as_deref(),
     );
     assert_eq!(
         format!("{:?}", file_facts.react.as_ref().unwrap().components),

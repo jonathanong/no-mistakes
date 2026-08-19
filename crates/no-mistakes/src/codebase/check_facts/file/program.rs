@@ -79,7 +79,7 @@ pub(crate) fn collect_file_facts_from_program(
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright =
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
-    let symbols = ts.symbols.clone().map(Arc::new);
+    let symbols = ts.symbols.clone();
     CheckFileFacts {
         ts: ts.into(),
         source: stored_source,

@@ -102,7 +102,11 @@ fn check_file_facts_reuse_the_shared_ts_extract() {
         check.ts.queue_project.is_some(),
         shared.queue_project.is_some()
     );
-    assert_eq!(check.symbols.as_deref(), check.ts.symbols.as_ref());
+    assert_eq!(check.symbols.as_deref(), check.ts.symbols.as_deref());
+    assert!(std::sync::Arc::ptr_eq(
+        check.symbols.as_ref().unwrap(),
+        check.ts.symbols.as_ref().unwrap(),
+    ));
     assert_eq!(
         format!("{:?}", check.react.as_ref().unwrap().components),
         format!("{:?}", check.ts.react_components),
