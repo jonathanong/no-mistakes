@@ -47,12 +47,14 @@ pub fn collect_ts_facts_with_session_and_context(
     plan: TsFactPlan,
     context: &TsFactContext,
 ) -> TsFactMap {
-    let inventory =
-        std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(files));
-    let sources = crate::codebase::ts_source::SourceStore::new_observed(
-        inventory,
-        session.observer().cloned(),
-    );
+    let sources = session
+        .existing_sources_for(&context.root)
+        .unwrap_or_else(|| {
+            std::sync::Arc::new(crate::codebase::ts_source::SourceStore::new_observed(
+                std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(files)),
+                session.observer().cloned(),
+            ))
+        });
     collect_ts_facts_with_context_sources_and_session(session, files, plan, context, &sources)
 }
 
