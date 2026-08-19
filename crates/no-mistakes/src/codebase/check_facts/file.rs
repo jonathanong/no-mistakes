@@ -6,6 +6,7 @@ use std::sync::Arc;
 mod plan;
 mod playwright_source;
 mod program;
+mod program_walk;
 mod variants;
 
 use plan::{requires_parse, should_store_source, ts_source};

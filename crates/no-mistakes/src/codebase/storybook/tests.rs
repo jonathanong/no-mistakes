@@ -1,7 +1,12 @@
-use super::extract_program;
+use super::extract_program_with_references;
+use crate::imports::collect_identifier_references;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+
+fn extract_program(source: &str, program: &oxc_ast::ast::Program<'_>) -> super::StorybookFileFacts {
+    extract_program_with_references(source, program, &collect_identifier_references(program))
+}
 
 #[test]
 fn extracts_used_and_side_effect_story_imports() {
