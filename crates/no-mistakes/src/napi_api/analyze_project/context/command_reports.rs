@@ -1,12 +1,11 @@
 impl AnalyzeProjectContext {
     pub(super) fn command_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
-        let scope = self.scope_mut(request, options)?;
-        let scoped_options = scope.options.clone();
-        run_command_report(request, &scoped_options)
+        let scope = self.scope(request, options)?;
+        run_command_report(request, &scope.options)
     }
 }
 
