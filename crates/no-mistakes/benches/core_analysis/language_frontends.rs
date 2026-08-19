@@ -1,3 +1,4 @@
+use super::shard;
 use criterion::{black_box, Criterion, Throughput};
 use no_mistakes::benchmark_support::{
     collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,
@@ -15,6 +16,9 @@ pub(super) const EXPECTED_LANGUAGE_FRONTEND_QUEUE_EDGES: usize = 14;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 84;
 
 pub(super) fn bench_language_frontends(c: &mut Criterion) {
+    if !shard::should_run(shard::GRAPH) {
+        return;
+    }
     let fixture = language_frontend_fixture();
     let facts = collect_language_frontend_facts(&fixture);
     let edges = collect_language_frontend_edges(&fixture);

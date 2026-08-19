@@ -18,6 +18,8 @@ mod react_traits;
 mod relationships;
 #[path = "core_analysis/reports.rs"]
 mod reports;
+#[path = "core_analysis/shard.rs"]
+mod shard;
 
 use aggregate::{bench_aggregate_and_multi_report, bench_impacted_checks};
 use criterion::{criterion_group, criterion_main};

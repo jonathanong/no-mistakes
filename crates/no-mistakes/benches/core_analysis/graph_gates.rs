@@ -5,6 +5,7 @@
 #[path = "graph_gates_support.rs"]
 mod support;
 
+use super::shard;
 use criterion::{black_box, BenchmarkId, Criterion, Throughput};
 use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::dependencies::NodeId;
@@ -21,6 +22,9 @@ use support::{
 };
 
 pub(super) fn bench_graph_gates(c: &mut Criterion) {
+    if !shard::should_run(shard::GRAPH) {
+        return;
+    }
     let root = fixture_root();
     let files = source_files(&root);
     let config = load_tsconfig(&root.join("tsconfig.json")).expect("graph-gates tsconfig");

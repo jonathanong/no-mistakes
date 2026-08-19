@@ -1,4 +1,5 @@
 use super::fixtures::fixture_root;
+use super::shard;
 use clap::Parser;
 use criterion::{black_box, Criterion, Throughput};
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
@@ -6,6 +7,9 @@ use no_mistakes::codebase::ts_source::discover_visible_paths;
 use no_mistakes::codebase::workspaces;
 
 pub(super) fn bench_symbols(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
     let root = fixture_root();
     let args = SymbolsArgs::try_parse_from([
         "symbols",
@@ -46,6 +50,9 @@ pub(super) fn bench_symbols(c: &mut Criterion) {
 }
 
 pub(super) fn bench_workspace(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
     let root = fixture_root();
     let visible = discover_visible_paths(&root)
         .into_iter()

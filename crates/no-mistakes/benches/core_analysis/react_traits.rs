@@ -1,3 +1,4 @@
+use super::shard;
 use criterion::{black_box, Criterion, Throughput};
 use no_mistakes::benchmark_support::{
     analyze_react_traits_file, react_traits_many_components_fixture, ReactTraitsSummary,
@@ -13,6 +14,9 @@ pub(super) const EXPECTED_WITH_FETCH: usize = 4;
 pub(super) const EXPECTED_WITH_CHILDREN: usize = 4;
 
 pub(super) fn bench_react_traits(c: &mut Criterion) {
+    if !shard::should_run(shard::CHECK) {
+        return;
+    }
     let fixture = react_traits_many_components_fixture();
     let preflight = analyze_react_traits_file(&fixture);
     assert_eq!(

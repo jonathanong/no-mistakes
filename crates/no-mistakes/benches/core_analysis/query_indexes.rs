@@ -1,9 +1,13 @@
+use super::shard;
 use criterion::{black_box, Criterion, Throughput};
 use no_mistakes::benchmark_support;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub(super) fn bench_symbol_index_build_and_lookup(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
     const IMPORTERS: usize = 1_024;
     const SYMBOLS_PER_IMPORTER: usize = 8;
 
@@ -56,6 +60,9 @@ pub(super) fn bench_symbol_index_build_and_lookup(c: &mut Criterion) {
 }
 
 pub(super) fn bench_scoped_resolver_selection(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
     const REQUESTS: usize = 1_024;
     let fixture = benchmark_support::scoped_resolver_selection_fixture();
     assert_eq!(

@@ -8,11 +8,16 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::path::Path;
 
+mod bench_shard;
 mod language_frontends;
 mod production_graph;
 mod react_traits;
 mod relationships;
 mod scoped_resolver;
+pub use bench_shard::{
+    parse_bench_shard, shard_should_run, BenchShard, CHECK, GENERAL_MEMORY, GRAPH,
+    GRAPH_PRODUCTION, QUERY, TESTS_PLAN,
+};
 pub use language_frontends::{
     collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,
     match_language_frontend_queue_globs, LanguageFrontendFixture, LanguageFrontendSummary,

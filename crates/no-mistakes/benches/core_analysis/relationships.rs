@@ -1,3 +1,4 @@
+use super::shard;
 use criterion::{black_box, BatchSize, BenchmarkId, Criterion, Throughput};
 use no_mistakes::benchmark_support::{
     project_all_relationship_edges, project_relationship_edges, relationship_construction_fixture,
@@ -6,6 +7,9 @@ use no_mistakes::benchmark_support::{
 };
 
 pub(super) fn bench_relationship_projection(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
     let mut group = c.benchmark_group("relationship_projection");
     for logical_edges in [4_096, 16_384] {
         let construction_fixture = relationship_construction_fixture(logical_edges);
