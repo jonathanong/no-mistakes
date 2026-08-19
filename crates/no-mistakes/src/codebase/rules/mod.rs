@@ -195,16 +195,12 @@ fn target_project_root(
     if let Some(project_root) = project.root.as_deref() {
         return Some(root.join(project_root));
     }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Nextjs) {
-        return inferred_roots.nextjs_root(root);
+    match project.type_ {
+        Some(crate::config::v2::schema::ProjectType::Nextjs) => inferred_roots.nextjs_root(root),
+        Some(crate::config::v2::schema::ProjectType::Remix) => inferred_roots.remix_root(root),
+        Some(crate::config::v2::schema::ProjectType::Vitejs) => inferred_roots.vitejs_root(root),
+        _ => Some(root.to_path_buf()),
     }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Remix) {
-        return inferred_roots.remix_root(root);
-    }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Vitejs) {
-        return inferred_roots.vitejs_root(root);
-    }
-    Some(root.to_path_buf())
 }
 
 mod sort_findings;
