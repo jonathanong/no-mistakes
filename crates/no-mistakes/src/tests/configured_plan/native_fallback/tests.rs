@@ -77,11 +77,7 @@ fn native_source_detection_handles_backslash_paths() {
         .dotnet
         .solutions
         .push("dotnet-clients/App.sln".to_string());
-    config
-        .tests
-        .rust
-        .packages
-        .push("crates/tool".to_string());
+    config.tests.rust.packages.push("crates/tool".to_string());
     assert!(is_native_source_or_project_change(
         TestFramework::Swift,
         root,
