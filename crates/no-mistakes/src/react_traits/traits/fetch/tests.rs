@@ -1,6 +1,21 @@
-use super::collect_fetch_calls;
+use super::collect_fetch_calls_in_file;
 use crate::ast;
+use crate::fetch::types::FetchOccurrence;
+use oxc_span::Span;
 use std::path::PathBuf;
+
+fn collect_fetch_calls(
+    program: &oxc_ast::ast::Program<'_>,
+    source: &str,
+    rel_file: &str,
+    span: Span,
+) -> Vec<FetchOccurrence> {
+    collect_fetch_calls_in_file(program, source, rel_file)
+        .into_iter()
+        .filter(|(call_span, _)| call_span.start >= span.start && call_span.end <= span.end)
+        .map(|(_, fetch)| fetch)
+        .collect()
+}
 
 fn fixture(category: &str, name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

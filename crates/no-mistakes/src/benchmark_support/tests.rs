@@ -186,6 +186,24 @@ fn graph_gates_full_domain_and_check_preflight_counts() {
 }
 
 #[test]
+fn react_traits_many_components_fixture_locks_trait_counts() {
+    let fixture = react_traits_many_components_fixture();
+    assert_eq!(
+        analyze_react_traits_file(&fixture),
+        ReactTraitsSummary {
+            components: 32,
+            with_state: 4,
+            with_props: 8,
+            with_memo: 4,
+            with_context: 4,
+            with_suspense: 4,
+            with_fetch: 4,
+            with_children: 4,
+        }
+    );
+}
+
+#[test]
 fn scoped_resolver_fixture_caches_one_selection_per_importer() {
     let fixture = scoped_resolver_selection_fixture();
 
