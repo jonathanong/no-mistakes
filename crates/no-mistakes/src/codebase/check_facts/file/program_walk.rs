@@ -123,3 +123,6 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
         walk::walk_assignment_expression(self, assignment);
     }
 }
+
+#[cfg(test)]
+mod tests;
