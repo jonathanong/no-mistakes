@@ -28,7 +28,7 @@ fn check_fact_plan_include_merges_postgres_flags() {
 
 #[test]
 fn public_extractors_are_callable_from_the_module_root() {
-    let tables = extract_create_table_metadata("CREATE TABLE t (id int);").unwrap();
+    let tables = extract_create_table_metadata("CREATE TABLE t (id int);");
     assert_eq!(tables[0].table_name, "t");
     let facts = extract_embedded_sql_from_source(
         std::path::Path::new("root.ts"),

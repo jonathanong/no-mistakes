@@ -1,4 +1,4 @@
-use super::{parse_postgres_sql, PostgresParseError};
+use super::{parse_postgres_sql, parse_postgres_sql_lenient, PostgresParseError};
 
 #[test]
 fn parse_postgres_sql_accepts_create_table() {
@@ -40,4 +40,30 @@ fn parse_error_from_tokenizer_error_preserves_message() {
 fn parse_error_from_recursion_limit_is_not_empty() {
     let error = PostgresParseError::from(sqlparser::parser::ParserError::RecursionLimitExceeded);
     assert!(!error.message.is_empty());
+}
+
+#[test]
+fn lenient_parse_skips_do_blocks_and_accepts_virtual_generated() {
+    let statements = parse_postgres_sql_lenient(
+        "DO $$ BEGIN CREATE TYPE t AS ENUM ('a'); END $$;\n\
+         CREATE TABLE items (\n\
+           id uuid,\n\
+           created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) VIRTUAL\n\
+         );",
+    );
+    assert_eq!(statements.len(), 1, "{statements:#?}");
+    assert!(matches!(
+        statements[0],
+        sqlparser::ast::Statement::CreateTable(_)
+    ));
+}
+
+#[test]
+fn lenient_parse_skips_tokenizer_failures_and_empty_chunks() {
+    assert!(parse_postgres_sql_lenient("CREATE TABLE t (id text, note 'unterminated").is_empty());
+    assert!(parse_postgres_sql_lenient(";;;").is_empty());
+    assert!(!parse_postgres_sql_lenient("GENERATED ALWAYS; CREATE TABLE t (id int);").is_empty());
+    let identity =
+        parse_postgres_sql_lenient("CREATE TABLE t (id int GENERATED ALWAYS AS IDENTITY);");
+    assert_eq!(identity.len(), 1, "{identity:#?}");
 }

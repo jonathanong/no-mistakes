@@ -3,6 +3,8 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::{Parser, ParserError};
 use std::fmt;
 
+mod lenient;
+
 /// Parse failure for PostgreSQL SQL. Never panics.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostgresParseError {
@@ -30,6 +32,16 @@ impl From<ParserError> for PostgresParseError {
 /// Parse `sql` with the PostgreSQL dialect.
 pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseError> {
     Parser::parse_sql(&PostgreSqlDialect {}, sql).map_err(PostgresParseError::from)
+}
+
+/// Parse `sql`, skipping unparseable statements instead of failing the file.
+///
+/// Migration trees mix parseable `CREATE TABLE` with `DO $$` blocks and other
+/// statements sqlparser rejects. Schema facts still come from the parseable
+/// statements. PostgreSQL 18 `GENERATED ALWAYS AS (...) VIRTUAL` is rewritten
+/// to `STORED` so those `CREATE TABLE` statements parse.
+pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
+    lenient::parse_postgres_sql_lenient(sql)
 }
 
 #[cfg(test)]

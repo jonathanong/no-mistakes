@@ -188,13 +188,23 @@ fn empty_catalog_dynamic_sql_and_invalid_schema() {
     assert!(unresolved.is_empty(), "{unresolved:#?}");
 
     let invalid = unit_fixture("invalid-schema");
-    let error = check_with_files(
+    let skipped = check_with_files(
         &invalid,
         &config_with_options("sqlInclude: ['**/broken.sql']"),
         &[invalid.join("broken.sql")],
     )
-    .expect_err("unparseable schema");
-    assert!(error.to_string().contains(RULE_ID), "{error:#}");
+    .expect("unparseable schema is skipped");
+    assert!(skipped.is_empty(), "{skipped:#?}");
+
+    let mixed = unit_fixture("mixed-unparseable");
+    let findings = check_with_files(
+        &mixed,
+        &config_with_options("sqlInclude: ['**/schema.sql']"),
+        &[mixed.join("schema.sql"), mixed.join("write.ts")],
+    )
+    .expect("mixed schema");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].import.as_deref(), Some("items.created_at"));
 }
 
 #[test]

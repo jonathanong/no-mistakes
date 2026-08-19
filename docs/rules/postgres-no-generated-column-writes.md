@@ -14,9 +14,12 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. There is no hardcoded `backend/` or
-migrations root. `include` selects DML files (`.ts`, `.mts`, `.tsx`, `.js`,
-`.sql` when unset). `importSpecifier` / `executorNames` select TypeScript
-call sites and default to `@data-stores/psql` and `query` / `read` / `write`.
+migrations root. Mixed migration files are usable: unparseable statements
+such as `DO $$` blocks are skipped, and PostgreSQL 18 `VIRTUAL` generated
+columns still populate the catalog. `include` selects DML files (`.ts`,
+`.mts`, `.tsx`, `.js`, `.sql` when unset). `importSpecifier` /
+`executorNames` select TypeScript call sites and default to
+`@data-stores/psql` and `query` / `read` / `write`.
 
 Tables that are not declared in SQL — for example Filaments election
 `voteTable` relations — must be listed in `extraGeneratedColumns`. This rule
