@@ -28,6 +28,7 @@ mod markdown_dispatch;
 mod metadata;
 mod preserved;
 mod run_rule;
+mod run_rule_engines;
 #[macro_use]
 mod registry;
 use super::{
