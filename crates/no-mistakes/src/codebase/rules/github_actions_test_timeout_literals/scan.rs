@@ -12,7 +12,7 @@ static TIMEOUT_PROPERTY: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r#"\[['"]timeout-minutes['"]\]|\.timeoutMinutes\b"#).expect("property")
 });
 static LITERAL_EQUALITY: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"\)\.(?:toBe|toEqual)\(\s*(?:['"]\d+['"]|\d+)"#).expect("equality")
+    Regex::new(r#"\)\.(?:toBe|toEqual|toStrictEqual)\(\s*(?:['"]\d+['"]|\d+)"#).expect("equality")
 });
 static CONTAIN_DIGIT: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\)\.toContain\([^)]*\d[^)]*\)").expect("contain"));
@@ -22,16 +22,22 @@ pub(super) fn check_file(
     path: &Path,
     opts: &CompiledOptions,
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
     let Some(source) = super::super::read_source(sources, path) else {
         return Vec::new();
     };
-    check_source(&rel, &source, opts)
+    check_source(&rel, &source, opts, defer_suppression)
 }
 
-pub(super) fn check_source(rel: &str, source: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
-    if crate::codebase::ts_source::has_disable_file_comment(source, RULE_ID) {
+pub(super) fn check_source(
+    rel: &str,
+    source: &str,
+    opts: &CompiledOptions,
+    defer_suppression: bool,
+) -> Vec<RuleFinding> {
+    if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(source, RULE_ID) {
         return Vec::new();
     }
     let mut findings = Vec::new();
@@ -40,7 +46,9 @@ pub(super) fn check_source(rel: &str, source: &str, opts: &CompiledOptions) -> V
         findings.extend(line_findings(rel, index + 1, line, opts, &mut used_allow));
     }
     findings.extend(stale_allow_findings(rel, opts, &used_allow));
-    super::super::suppress_rule_findings_with_source(&mut findings, source);
+    if !defer_suppression {
+        super::super::suppress_rule_findings_with_source(&mut findings, source);
+    }
     findings
 }
 

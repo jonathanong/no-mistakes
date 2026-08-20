@@ -44,6 +44,7 @@ fn scan_source(source: &str, yaml: &str) -> Vec<RuleFinding> {
         ".github/workflows/ci.test.mts",
         source,
         &compile_options(serde_yaml::from_str(yaml).unwrap()),
+        false,
     )
 }
 
@@ -88,6 +89,25 @@ fn double_quoted_bracket_property_to_be_is_a_finding() {
 #[test]
 fn property_to_equal_is_a_finding() {
     let findings = scan_source("expect(job.timeoutMinutes).toEqual(8)\n", "{}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+}
+
+#[test]
+fn property_to_strict_equal_is_a_finding() {
+    assert_eq!(
+        scan_source("expect(job.timeoutMinutes).toStrictEqual(10)\n", "{}").len(),
+        1
+    );
+}
+
+#[test]
+fn deferred_suppression_still_emits_disabled_file() {
+    let findings = scan::check_source(
+        ".github/workflows/ci.test.mts",
+        "// no-mistakes-disable-file github-actions-test-timeout-literals\nexpect(job.timeoutMinutes).toBe(10)\n",
+        &compile_options(Options::default()),
+        true,
+    );
     assert_eq!(findings.len(), 1, "{findings:?}");
 }
 
@@ -224,7 +244,7 @@ fn unreadable_test_is_skipped() {
     let path = root.join(".github/workflows/missing.test.mts");
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(Options::default());
-    assert!(scan::check_file(&root, &path, &opts, &sources).is_empty());
+    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
 }
 
 #[test]

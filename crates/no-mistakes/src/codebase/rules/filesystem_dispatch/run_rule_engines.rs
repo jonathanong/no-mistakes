@@ -61,7 +61,11 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         }
         GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS => {
             github_actions_test_timeout_literals::check_with_files_and_sources(
-                root, config, files, sources,
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
             )
         }
         GITHUB_ACTIONS_PINNED_HASH => {
