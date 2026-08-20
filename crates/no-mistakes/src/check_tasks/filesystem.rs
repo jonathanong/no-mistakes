@@ -68,20 +68,16 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.filesystem_rules",
         no_mistakes::diagnostics::TimingKind::Parallel,
-        || -> Result<_> {
-            Ok(if enabled {
-                if defer_suppression {
-                    rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
-                        root, config, files, prepared, facts,
-                    )?
-                } else {
-                    rules::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
-                        root, config, files, prepared, facts,
-                    )?
-                }
-            } else {
-                Vec::new()
-            })
+        || {
+            run_enabled_filesystem_rules(
+                root,
+                config,
+                enabled,
+                files,
+                prepared,
+                facts,
+                defer_suppression,
+            )
         },
     );
     let findings = findings?;
@@ -92,6 +88,29 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
         warning: None,
         duration,
     })
+}
+
+fn run_enabled_filesystem_rules(
+    root: &Path,
+    config: &NoMistakesConfig,
+    enabled: bool,
+    files: &[PathBuf],
+    prepared: rules::filesystem_dispatch::PreparedFilesystemRuleInputs<'_>,
+    facts: Option<&no_mistakes::codebase::check_facts::CheckFactMap>,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
+    if !enabled {
+        return Ok(Vec::new());
+    }
+    if defer_suppression {
+        rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
+            root, config, files, prepared, facts,
+        )
+    } else {
+        rules::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
+            root, config, files, prepared, facts,
+        )
+    }
 }
 
 pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
