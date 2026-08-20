@@ -1,0 +1,8 @@
+name: Setup lychee
+runs:
+  using: composite
+  steps:
+    - run: echo "${LYCHEE_VERSION}"
+      shell: bash
+      env:
+        LYCHEE_VERSION: 0.24.2

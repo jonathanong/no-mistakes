@@ -62,6 +62,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
         }
+        VERSION_PIN_CONSISTENCY => {
+            version_pin_consistency::check_with_files_and_sources(root, config, files, sources)
+        }
         NO_EMPTY_OR_COMMENTS_ONLY_FILES => {
             no_empty_or_comments_only_files::check_with_files_and_sources(
                 root, config, files, sources,

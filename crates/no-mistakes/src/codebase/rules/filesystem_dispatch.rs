@@ -15,8 +15,8 @@ use super::{
     required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
     strict_package_layout, structured_config_policy, test_email_domain_policy,
     test_no_dependency_pins, tsconfig_alias_folder_mapping, tsconfig_gate_coverage,
-    vitest_ci_path_coverage, vitest_project_mapping, vitest_test_correspondence,
-    workspace_package_cycles,
+    version_pin_consistency, vitest_ci_path_coverage, vitest_project_mapping,
+    vitest_test_correspondence, workspace_package_cycles,
 };
 
 mod candidate_helpers;
@@ -58,6 +58,7 @@ pub(super) const GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA: &str =
     github_actions_composite_step_schema::RULE_ID;
 pub(super) const GITHUB_ACTIONS_JOB_TIMEOUTS: &str = github_actions_job_timeouts::RULE_ID;
 pub(super) const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
+pub(super) const VERSION_PIN_CONSISTENCY: &str = version_pin_consistency::RULE_ID;
 
 macro_rules! define_filesystem_rule_ids {
     ($($id:expr => $call:path),* $(,)?) => {
