@@ -83,3 +83,36 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
 
     assert!(!results.findings.is_empty());
 }
+
+fn filesystem_inputs(
+    root: &std::path::Path,
+) -> no_mistakes::codebase::ts_source::VisiblePathSnapshot {
+    no_mistakes::codebase::ts_source::VisiblePathSnapshot::from_paths(root, &[])
+}
+
+#[test]
+fn enabled_filesystem_check_runs_both_suppression_modes() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
+    let config = no_mistakes::config::v2::NoMistakesConfig::default();
+    let snapshot = filesystem_inputs(&root);
+    for defer_suppression in [false, true] {
+        let task = super::run_filesystem_rules_check_with_facts(
+            &root,
+            &config,
+            true,
+            &[],
+            no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+                snapshot: &snapshot,
+                vitest_catalog: None,
+                sources: snapshot.source_store_for(&root),
+                workflow_documents: None,
+                tsconfig_gate_project_inputs: None,
+                config_path: None,
+            },
+            None,
+            defer_suppression,
+        )
+        .unwrap();
+        assert!(task.findings.is_empty(), "{defer_suppression}");
+    }
+}
