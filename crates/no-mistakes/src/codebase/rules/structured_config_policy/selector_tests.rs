@@ -118,3 +118,32 @@ items:
     .unwrap();
     assert!(not_seq_index.is_empty(), "{not_seq_index:?}");
 }
+
+fn any_equals(key: &str, root: &serde_yaml::Value) -> Vec<crate::codebase::rules::RuleFinding> {
+    assert_value(
+        "app.yml",
+        root,
+        &ValueAssertion {
+            key: key.to_string(),
+            kind: Some(AssertionKind::Equals),
+            match_mode: MatchMode::Any,
+            value: Some(serde_yaml::Value::String("keep".to_string())),
+            ..Default::default()
+        },
+    )
+    .unwrap()
+}
+
+#[test]
+fn match_any_skips_non_array_wildcards_inside_parent_walk() {
+    let items: serde_yaml::Value = serde_yaml::from_str(
+        r#"
+items:
+  - name: keep
+  - extra: 1
+"#,
+    )
+    .unwrap();
+    assert!(any_equals("items.[].tags.[]", &items).is_empty());
+    assert_eq!(any_equals("items.[].0", &items).len(), 1);
+}
