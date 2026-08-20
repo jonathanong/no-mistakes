@@ -77,8 +77,15 @@ fn run_rule_dispatches_markdown_link_display_text() {
 #[test]
 fn mermaid_invalid_include_glob_fails_markdown_prepare() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/filesystem-dispatch/invalid-mermaid-include");
-    let error = run_filesystem_rules_with_files(&root, Some(&root.join(".no-mistakes.yml")), &[])
-        .unwrap_err();
-    assert!(error.to_string().contains("invalid glob"), "{error:#}");
+        .join("../../fixtures/rules/markdown-mermaid-validation");
+    let mut config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    config.rules[0].include = vec!["[".to_string()];
+    let error = run_filesystem_rules_with_config(&root, &config, &[]).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("rule `markdown-mermaid-validation` include contains invalid glob"),
+        "{error:#}"
+    );
 }

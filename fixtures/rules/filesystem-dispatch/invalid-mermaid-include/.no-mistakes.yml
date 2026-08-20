@@ -1,5 +1,0 @@
-# Intentionally invalid glob so markdown_dispatch::prepare hits the mermaid filter error path.
-rules:
-  - rule: markdown-mermaid-validation
-    scope: repository
-    include: ["["]
