@@ -1,37 +1,5 @@
 use super::*;
-use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
-    NoMistakesConfig,
-};
 use std::path::PathBuf;
-
-const OPTIONS: &str = r#"
-uses:
-  - ./.github/actions/setup-aws
-  - aws-actions/configure-aws-credentials@
-stepTimeoutMinutes: 2
-nestedInput: action-timeout-s
-nestedTimeoutSeconds: 90
-forbidNestedInComposite: true
-"#;
-
-fn config(yaml: &str) -> NoMistakesConfig {
-    NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(yaml).unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    }
-}
-
-fn parsed(rel: &str, source: &str, yaml: &str) -> Vec<RuleFinding> {
-    let opts = compile_options(serde_yaml::from_str(yaml).unwrap());
-    let value = serde_yaml::from_str(source).unwrap();
-    scan::check_parsed(rel, source, &value, &opts)
-}
 
 fn written_ci(source: &str) -> (tempfile::TempDir, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
@@ -43,14 +11,14 @@ fn written_ci(source: &str) -> (tempfile::TempDir, PathBuf) {
 
 fn scan_written(source: &str, defer_suppression: bool) -> Vec<RuleFinding> {
     let (tmp, path) = written_ci(source);
-    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
     scan::check_file(tmp.path(), &path, &opts, &sources, defer_suppression)
 }
 
 fn check_written(source: &str, defer_suppression: bool) -> Vec<RuleFinding> {
     let (tmp, path) = written_ci(source);
-    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
     check_with_files_and_sources(
         tmp.path(),
         &config(OPTIONS),
@@ -98,27 +66,27 @@ jobs:
 #[test]
 fn nested_timeout_line_falls_back_without_steps_or_keys() {
     assert_eq!(
-        super::line::nested_timeout_line("name: ci\n", "missing", 0, "action-timeout-s"),
+        super::super::line::nested_timeout_line("name: ci\n", "missing", 0, "action-timeout-s"),
         1
     );
     let with_only = "runs:\n  using: composite\n  steps:\n    - with:\n        role: x\n";
     assert_eq!(
-        super::line::nested_timeout_line(with_only, "(composite)", 0, "action-timeout-s"),
+        super::super::line::nested_timeout_line(with_only, "(composite)", 0, "action-timeout-s"),
         4
     );
     let name_only =
         "jobs:\n  deploy:\n    steps:\n      - name: only\n        timeout-minutes: 2\n";
     assert_eq!(
-        super::line::nested_timeout_line(name_only, "deploy", 0, "action-timeout-s"),
+        super::super::line::nested_timeout_line(name_only, "deploy", 0, "action-timeout-s"),
         4
     );
     let gapped = "jobs:\n  deploy:\n    steps:\n      - uses: x\n\n      - uses: y\n";
     assert_eq!(
-        super::line::nested_timeout_line(gapped, "deploy", 1, "action-timeout-s"),
+        super::super::line::nested_timeout_line(gapped, "deploy", 1, "action-timeout-s"),
         6
     );
     assert_eq!(
-        super::line::nested_timeout_line(gapped, "deploy", 8, "action-timeout-s"),
+        super::super::line::nested_timeout_line(gapped, "deploy", 8, "action-timeout-s"),
         1
     );
 }

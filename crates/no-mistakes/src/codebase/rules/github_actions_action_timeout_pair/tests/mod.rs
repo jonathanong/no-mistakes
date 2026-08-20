@@ -6,6 +6,8 @@ use crate::config::v2::{
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
+mod review;
+
 const OPTIONS: &str = r#"
 uses:
   - ./.github/actions/setup-aws
