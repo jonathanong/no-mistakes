@@ -28,6 +28,7 @@ pub mod nextjs_no_caching;
 pub mod nextjs_redirect_destinations;
 pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
+pub mod no_raw_ephemeral_port;
 pub mod package_json_registry_only;
 pub mod package_json_workspace_coverage;
 pub mod postgres_constraint_validate;
@@ -94,7 +95,7 @@ pub use run::{
 #[doc(hidden)]
 pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestProjectCatalog};
 
-pub(crate) use file_matching::matching_files;
+pub(crate) use file_matching::{matching_files, skip_dir_set};
 pub(crate) use source_access::{read_source, source_store_for_files};
 #[doc(hidden)]
 pub use suppression::{
@@ -176,15 +177,6 @@ pub(crate) fn file_allowed_by_roots_and_skip(
 
     matching_roots
         .any(|rule_root| !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip))
-}
-
-pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {
-    config
-        .filesystem
-        .skip_directories
-        .iter()
-        .map(String::as_str)
-        .collect()
 }
 
 fn target_project_root(
