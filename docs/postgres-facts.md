@@ -44,7 +44,7 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
   name (schema-qualified when written that way), key columns (name, opclass,
   ordering, nulls), `INCLUDE` columns, uniqueness, access method (`USING`
   defaults to btree), whether a `WHERE` predicate is present, a predicate key
-  that lowercases keywords and unquoted idents but keeps string literals and
+  that lowercases keywords and unquoted identifiers but keeps string literals and
   quoted identifiers, a `col IS NOT NULL` predicate column when that is the
   whole predicate, and a source line taken from that statement's occurrence in
   the file (so a wrapped `CREATE INDEX` still points at the `CREATE` line)

@@ -25,7 +25,7 @@ Unique shorter indexes are never redundant: the longer index enforces
 uniqueness on its full key, not the prefix. `INCLUDE` columns on the shorter
 index must already be present on the longer index (as keys or includes).
 Omitted btree `ASC` / `NULLS LAST` match the explicit defaults. Partial-index
-predicates compare after lowercasing keywords and unquoted idents, leaving
+predicates compare after lowercasing keywords and unquoted identifiers, leaving
 string literals and quoted identifiers unchanged.
 
 Skip unnamed/implicit indexes; they cannot be dropped with `DROP INDEX`.
