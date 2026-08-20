@@ -26,19 +26,13 @@ fn config(yaml: &str) -> NoMistakesConfig {
 }
 
 fn workflow_tests(root: &Path) -> Vec<PathBuf> {
-    let dir = root.join(".github/workflows");
-    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
-        .unwrap()
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.ends_with(".test.mts") || name.ends_with(".test.ts"))
-        })
-        .collect();
-    files.sort();
-    files
+    [
+        root.join(".github/workflows/ci.test.mts"),
+        root.join(".github/workflows/ci.test.ts"),
+    ]
+    .into_iter()
+    .filter(|path| path.exists())
+    .collect()
 }
 
 fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
