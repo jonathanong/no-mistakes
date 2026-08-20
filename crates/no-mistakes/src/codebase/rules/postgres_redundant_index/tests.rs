@@ -30,13 +30,11 @@ fn config(extra: &str) -> NoMistakesConfig {
 }
 
 fn sql_files(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    let dir = root.join("migrations");
-    if let Ok(entries) = std::fs::read_dir(dir) {
-        files.extend(entries.flatten().map(|entry| entry.path()));
-    }
-    files.sort();
-    files
+    ["001.sql", "0001.sql", "0002.sql"]
+        .into_iter()
+        .map(|name| root.join("migrations").join(name))
+        .filter(|path| path.is_file())
+        .collect()
 }
 
 fn run(root: &Path, extra: &str) -> Vec<RuleFinding> {
