@@ -40,6 +40,16 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_deferred_suppression(root, config, all_files, sources, false)
+}
+
+pub(crate) fn check_with_files_sources_and_deferred_suppression(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
@@ -54,7 +64,7 @@ pub(crate) fn check_with_files_and_sources(
         if files.is_empty() {
             continue;
         }
-        findings.extend(scan::scan(root, &opts, &files, sources));
+        findings.extend(scan::scan(root, &opts, &files, sources, defer_suppression));
     }
     super::sort_findings(&mut findings);
     Ok(findings)

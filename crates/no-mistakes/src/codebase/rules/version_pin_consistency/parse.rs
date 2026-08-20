@@ -13,10 +13,14 @@ pub(super) fn read_text(
         .unwrap_or_else(|| std::fs::read_to_string(path).unwrap_or_default())
 }
 
+pub(super) fn configured_rel(rel: &str) -> &str {
+    rel.trim_start_matches("./")
+}
+
 pub(super) fn tracked_rels(root: &Path, files: &[PathBuf]) -> std::collections::HashSet<String> {
     files
         .iter()
-        .map(|path| relative_slash_path(root, path))
+        .map(|path| configured_rel(&relative_slash_path(root, path)).to_string())
         .collect()
 }
 

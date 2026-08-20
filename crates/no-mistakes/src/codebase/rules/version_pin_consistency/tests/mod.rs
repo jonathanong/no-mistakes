@@ -14,6 +14,8 @@ anchors:
     label: lychee
 "#;
 
+const PAIR: [&str; 2] = [".mise.toml", ".github/actions/setup-lychee/action.yml"];
+
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -23,11 +25,17 @@ fn fixture(name: &str) -> PathBuf {
 }
 
 fn config(yaml: &str) -> NoMistakesConfig {
+    config_filtered(yaml, &[], &[])
+}
+
+fn config_filtered(yaml: &str, include: &[&str], exclude: &[&str]) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),
             scope: Some(RuleScope::Repository),
             options: serde_yaml::from_str(yaml).unwrap(),
+            include: include.iter().map(|path| path.to_string()).collect(),
+            exclude: exclude.iter().map(|path| path.to_string()).collect(),
             ..Default::default()
         }],
         ..Default::default()
@@ -35,8 +43,12 @@ fn config(yaml: &str) -> NoMistakesConfig {
 }
 
 fn run(root: &Path, yaml: &str, files: &[&str]) -> Vec<RuleFinding> {
+    run_config(root, &config(yaml), files)
+}
+
+fn run_config(root: &Path, cfg: &NoMistakesConfig, files: &[&str]) -> Vec<RuleFinding> {
     let files: Vec<PathBuf> = files.iter().map(|file| root.join(file)).collect();
-    check_with_files(root, &config(yaml), &files).unwrap()
+    check_with_files(root, cfg, &files).unwrap()
 }
 
 fn write_pair(root: &Path, source: &str, source_name: &str, anchor: &str) {
@@ -46,24 +58,21 @@ fn write_pair(root: &Path, source: &str, source_name: &str, anchor: &str) {
     std::fs::write(action, anchor).unwrap();
 }
 
+fn tmp_pair(source: &str, anchor: &str) -> tempfile::TempDir {
+    let tmp = tempfile::tempdir().unwrap();
+    write_pair(tmp.path(), source, ".mise.toml", anchor);
+    tmp
+}
+
 #[test]
 fn matching_pins_pass() {
     let root = fixture("pass");
-    assert!(run(
-        &root,
-        OPTIONS,
-        &[".mise.toml", ".github/actions/setup-lychee/action.yml"]
-    )
-    .is_empty());
+    assert!(run(&root, OPTIONS, &PAIR).is_empty());
 }
 
 #[test]
 fn mismatch_is_a_finding() {
-    let findings = run(
-        &fixture("fail"),
-        OPTIONS,
-        &[".mise.toml", ".github/actions/setup-lychee/action.yml"],
-    );
+    let findings = run(&fixture("fail"), OPTIONS, &PAIR);
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains("version mismatch"),
@@ -93,18 +102,8 @@ fn empty_options_are_silent() {
 
 #[test]
 fn missing_source_key_is_a_finding() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "[tools]\nfoo = \"1.0.0\"\n",
-        ".mise.toml",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
-    let findings = run(
-        tmp.path(),
-        OPTIONS,
-        &[".mise.toml", ".github/actions/setup-lychee/action.yml"],
-    );
+    let tmp = tmp_pair("[tools]\nfoo = \"1.0.0\"\n", "LYCHEE_VERSION: 0.24.2\n");
+    let findings = run(tmp.path(), OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -115,18 +114,11 @@ fn missing_source_key_is_a_finding() {
 
 #[test]
 fn non_string_pin_is_a_finding() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
+    let tmp = tmp_pair(
         "[tools]\n\"aqua:lycheeverse/lychee\" = 8\n",
-        ".mise.toml",
         "LYCHEE_VERSION: 0.24.2\n",
     );
-    let findings = run(
-        tmp.path(),
-        OPTIONS,
-        &[".mise.toml", ".github/actions/setup-lychee/action.yml"],
-    );
+    let findings = run(tmp.path(), OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -137,18 +129,11 @@ fn non_string_pin_is_a_finding() {
 
 #[test]
 fn missing_capture_is_a_finding() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
+    let tmp = tmp_pair(
         "[tools]\n\"aqua:lycheeverse/lychee\" = \"0.24.2\"\n",
-        ".mise.toml",
         "# no version here\n",
     );
-    let findings = run(
-        tmp.path(),
-        OPTIONS,
-        &[".mise.toml", ".github/actions/setup-lychee/action.yml"],
-    );
+    let findings = run(tmp.path(), OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -159,18 +144,8 @@ fn missing_capture_is_a_finding() {
 
 #[test]
 fn invalid_toml_is_a_finding() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "[tools]\n\"broken",
-        ".mise.toml",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
-    let findings = run(
-        tmp.path(),
-        OPTIONS,
-        &[".mise.toml", ".github/actions/setup-lychee/action.yml"],
-    );
+    let tmp = tmp_pair("[tools]\n\"broken", "LYCHEE_VERSION: 0.24.2\n");
+    let findings = run(tmp.path(), OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -189,12 +164,7 @@ fn json_source_file_is_supported() {
         "LYCHEE_VERSION: 0.24.2\n",
     );
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: versions.json");
-    assert!(run(
-        tmp.path(),
-        &yaml,
-        &["versions.json", ".github/actions/setup-lychee/action.yml"]
-    )
-    .is_empty());
+    assert!(run(tmp.path(), &yaml, &["versions.json", PAIR[1]]).is_empty());
 }
 
 #[test]
@@ -207,12 +177,7 @@ fn yaml_source_file_is_supported() {
         "LYCHEE_VERSION: 0.24.2\n",
     );
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: versions.yml");
-    assert!(run(
-        tmp.path(),
-        &yaml,
-        &["versions.yml", ".github/actions/setup-lychee/action.yml"]
-    )
-    .is_empty());
+    assert!(run(tmp.path(), &yaml, &["versions.yml", PAIR[1]]).is_empty());
 }
 
 #[test]
@@ -232,32 +197,20 @@ anchors:
     pattern: 'NODE_VERSION:\s*(\d+\.\d+\.\d+)'
     label: node
 "#;
-    assert!(run(
-        tmp.path(),
-        yaml,
-        &["package.json", ".github/actions/setup-lychee/action.yml"]
-    )
-    .is_empty());
+    assert!(run(tmp.path(), yaml, &["package.json", PAIR[1]]).is_empty());
 }
 
 #[test]
 fn pattern_must_have_one_capturing_group() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
+    let tmp = tmp_pair(
         "[tools]\n\"aqua:lycheeverse/lychee\" = \"0.24.2\"\n",
-        ".mise.toml",
         "LYCHEE_VERSION: 0.24.2\n",
     );
     let yaml = OPTIONS.replace(
         r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)",
         r"LYCHEE_VERSION:\s*\d+\.\d+\.\d+",
     );
-    let findings = run(
-        tmp.path(),
-        &yaml,
-        &[".mise.toml", ".github/actions/setup-lychee/action.yml"],
-    );
+    let findings = run(tmp.path(), &yaml, &PAIR);
     assert!(
         findings
             .iter()
@@ -268,11 +221,7 @@ fn pattern_must_have_one_capturing_group() {
 
 #[test]
 fn runs_when_only_the_anchor_is_tracked() {
-    let findings = run(
-        &fixture("fail"),
-        OPTIONS,
-        &[".github/actions/setup-lychee/action.yml"],
-    );
+    let findings = run(&fixture("fail"), OPTIONS, &[PAIR[1]]);
     assert!(
         findings
             .iter()
@@ -282,12 +231,9 @@ fn runs_when_only_the_anchor_is_tracked() {
 }
 
 #[test]
-fn runs_when_only_the_source_file_is_tracked() {
+fn does_not_report_untracked_anchors_when_only_source_is_listed() {
     let findings = run(&fixture("fail"), OPTIONS, &[".mise.toml"]);
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("version mismatch")),
-        "{findings:?}"
-    );
+    assert!(findings.is_empty(), "{findings:?}");
 }
+
+mod extra;

@@ -1,4 +1,4 @@
-use super::parse::{key_line, parse_source, pin_kind, read_text, tracked_rels, value_at_key};
+use super::parse::{configured_rel, key_line, parse_source, pin_kind, read_text, tracked_rels};
 use super::{Anchor, Options, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::line_number;
 use regex::Regex;
@@ -10,98 +10,89 @@ pub(super) fn scan(
     opts: &Options,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     if opts.source_file.is_empty() || opts.anchors.is_empty() {
         return Vec::new();
     }
     let tracked = tracked_rels(root, files);
-    let relevant: Vec<&str> = std::iter::once(opts.source_file.as_str())
-        .chain(opts.anchors.iter().map(|anchor| anchor.file.as_str()))
-        .filter(|rel| !rel.is_empty())
+    let source_rel = configured_rel(&opts.source_file);
+    let source_tracked = tracked.contains(source_rel);
+    let remaining: Vec<&Anchor> = opts
+        .anchors
+        .iter()
+        .filter(|anchor| !anchor.file.is_empty() && tracked.contains(configured_rel(&anchor.file)))
         .collect();
-    if relevant.iter().all(|rel| !tracked.contains(*rel)) {
+    if !source_tracked && remaining.is_empty() {
         return Vec::new();
     }
-    let source_text = read_text(root, &opts.source_file, sources);
-    let parsed = match parse_source(Path::new(&opts.source_file), &source_text) {
+    let source_text = read_text(root, source_rel, sources);
+    let parsed = match parse_source(Path::new(source_rel), &source_text) {
         Ok(value) => value,
         Err(error) => {
-            return vec![finding(
-                &opts.source_file,
-                1,
-                format!("{}: {error}", opts.source_file),
-            )];
+            return finish(
+                root,
+                sources,
+                defer_suppression,
+                source_finding(
+                    source_tracked,
+                    source_rel,
+                    1,
+                    format!("{source_rel}: {error}"),
+                ),
+            );
         }
     };
     let mut findings = Vec::new();
-    for anchor in &opts.anchors {
-        findings.extend(check_anchor(
-            root,
-            opts,
-            &parsed,
-            &source_text,
-            anchor,
-            sources,
-        ));
+    let source = SourcePin {
+        rel: source_rel,
+        tracked: source_tracked,
+        text: &source_text,
+        parsed: &parsed,
+    };
+    for anchor in remaining {
+        findings.extend(check_anchor(root, opts, source, anchor, sources));
     }
-    super::super::suppress_rule_findings_with_sources(root, &mut findings, sources);
-    findings
+    finish(root, sources, defer_suppression, findings)
+}
+
+#[derive(Clone, Copy)]
+struct SourcePin<'a> {
+    rel: &'a str,
+    tracked: bool,
+    text: &'a str,
+    parsed: &'a Value,
 }
 
 fn check_anchor(
     root: &Path,
     opts: &Options,
-    parsed: &Value,
-    source_text: &str,
+    source: SourcePin<'_>,
     anchor: &Anchor,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    if anchor.file.is_empty() {
-        return Vec::new();
-    }
+    let anchor_rel = configured_rel(&anchor.file);
     let label = if anchor.label.is_empty() {
-        anchor.file.as_str()
+        anchor_rel
     } else {
         anchor.label.as_str()
     };
-    let regex = match compile_pattern(&anchor.pattern, &opts.source_file, label) {
+    let regex = match compile_pattern(&anchor.pattern, source.rel, label) {
         Ok(regex) => regex,
-        Err(message) => return vec![finding(&opts.source_file, 1, message)],
+        Err(message) => return source_finding(source.tracked, source.rel, 1, message),
     };
-    let line = key_line(source_text, &opts.source_key);
-    let pin = match value_at_key(parsed, &opts.source_key) {
-        None => {
-            return vec![finding(
-                &opts.source_file,
-                line,
-                format!(
-                    "{}: expected key \"{}\" for {label} not found",
-                    opts.source_file, opts.source_key
-                ),
-            )];
-        }
-        Some(Value::String(pin)) => pin.as_str(),
-        Some(value) => {
-            return vec![finding(
-                &opts.source_file,
-                line,
-                format!(
-                    "{}: expected key \"{}\" for {label} to be a string pin, got {} — invalid pin",
-                    opts.source_file,
-                    opts.source_key,
-                    pin_kind(value)
-                ),
-            )];
-        }
+    let line = key_line(source.text, &opts.source_key);
+    let pin = match value_pin(source.parsed, opts, source.rel, label) {
+        Ok(pin) => pin,
+        Err(message) => return source_finding(source.tracked, source.rel, line, message),
     };
-    let anchor_text = read_text(root, &anchor.file, sources);
+    let anchor_text = read_text(root, anchor_rel, sources);
     let Some(captures) = regex.captures(&anchor_text) else {
         return vec![finding(
-            &anchor.file,
+            anchor_rel,
             1,
             format!(
-                "{}: could not find {label} version reference matching expected pattern",
-                anchor.file
+                "{anchor_rel}: could not find {label} version reference matching expected pattern"
             ),
         )];
     };
@@ -112,15 +103,35 @@ fn check_anchor(
     let line = captures
         .get(1)
         .map_or(1, |m| line_number(&anchor_text, m.start() as u32));
+    let source_rel = source.rel;
     vec![finding(
-        &anchor.file,
+        anchor_rel,
         line,
         format!(
-            "{}: {label} version mismatch — {} says \"{captured}\" but {} pins \"{pin}\". \
-             Update both in the same commit.",
-            anchor.file, anchor.file, opts.source_file
+            "{anchor_rel}: {label} version mismatch — {anchor_rel} says \"{captured}\" but {source_rel} pins \"{pin}\". \
+             Update both in the same commit."
         ),
     )]
+}
+
+fn value_pin<'a>(
+    parsed: &'a Value,
+    opts: &Options,
+    source_rel: &str,
+    label: &str,
+) -> Result<&'a str, String> {
+    match super::parse::value_at_key(parsed, &opts.source_key) {
+        None => Err(format!(
+            "{source_rel}: expected key \"{}\" for {label} not found",
+            opts.source_key
+        )),
+        Some(Value::String(pin)) => Ok(pin.as_str()),
+        Some(value) => Err(format!(
+            "{source_rel}: expected key \"{}\" for {label} to be a string pin, got {} — invalid pin",
+            opts.source_key,
+            pin_kind(value)
+        )),
+    }
 }
 
 fn compile_pattern(pattern: &str, source_file: &str, label: &str) -> Result<Regex, String> {
@@ -132,6 +143,26 @@ fn compile_pattern(pattern: &str, source_file: &str, label: &str) -> Result<Rege
         ));
     }
     Ok(regex)
+}
+
+fn source_finding(tracked: bool, file: &str, line: usize, message: String) -> Vec<RuleFinding> {
+    if tracked {
+        vec![finding(file, line, message)]
+    } else {
+        Vec::new()
+    }
+}
+
+fn finish(
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+    mut findings: Vec<RuleFinding>,
+) -> Vec<RuleFinding> {
+    if !defer_suppression {
+        super::super::suppress_rule_findings_with_sources(root, &mut findings, sources);
+    }
+    findings
 }
 
 fn finding(file: &str, line: usize, message: String) -> RuleFinding {

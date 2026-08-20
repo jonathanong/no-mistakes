@@ -46,7 +46,7 @@ impl RuleCandidateIndex {
                         .collect(),
                     rule_id == FORBIDDEN_WORKSPACE_CLOSURE
                         || rule_id == PRODUCTION_DEPENDENCY_DECLARATIONS,
-                    rule_id == BANNED_PATHS,
+                    rule_id == BANNED_PATHS || rule_id == super::VERSION_PIN_CONSISTENCY,
                     (rule_id == BANNED_PATHS
                         && config
                             .rule_applications(rule_id)
