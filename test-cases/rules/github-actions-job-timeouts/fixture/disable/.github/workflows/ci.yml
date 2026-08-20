@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-job-timeouts
+name: ci
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    steps:
+      - run: echo hi

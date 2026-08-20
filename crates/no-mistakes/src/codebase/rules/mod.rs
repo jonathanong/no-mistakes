@@ -10,10 +10,13 @@ pub mod finite_set_consistency;
 pub mod forbidden_dependencies;
 pub mod forbidden_workspace_closure;
 pub mod github_actions_composite_step_schema;
+pub mod github_actions_job_timeouts;
 pub mod github_actions_pinned_hash;
 mod ids;
 pub mod integration_test_no_mocks;
 pub mod lockfile_allowlist;
+pub mod markdown_child_links;
+pub mod markdown_eval_tests;
 pub(crate) mod markdown_facts;
 pub mod markdown_link_display_text;
 pub mod markdown_mermaid_validation;
@@ -27,6 +30,8 @@ pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
 pub mod package_json_registry_only;
 pub mod package_json_workspace_coverage;
+pub mod postgres_constraint_validate;
+pub mod postgres_fk_index;
 pub mod postgres_lock_ordering;
 pub mod postgres_no_generated_column_writes;
 pub mod production_dependency_declarations;
@@ -190,16 +195,12 @@ fn target_project_root(
     if let Some(project_root) = project.root.as_deref() {
         return Some(root.join(project_root));
     }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Nextjs) {
-        return inferred_roots.nextjs_root(root);
+    match project.type_ {
+        Some(crate::config::v2::schema::ProjectType::Nextjs) => inferred_roots.nextjs_root(root),
+        Some(crate::config::v2::schema::ProjectType::Remix) => inferred_roots.remix_root(root),
+        Some(crate::config::v2::schema::ProjectType::Vitejs) => inferred_roots.vitejs_root(root),
+        _ => Some(root.to_path_buf()),
     }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Remix) {
-        return inferred_roots.remix_root(root);
-    }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Vitejs) {
-        return inferred_roots.vitejs_root(root);
-    }
-    Some(root.to_path_buf())
 }
 
 mod sort_findings;

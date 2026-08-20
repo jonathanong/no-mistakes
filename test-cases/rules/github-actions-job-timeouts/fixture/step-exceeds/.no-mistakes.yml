@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      maxMinutes: 10
+      rejectStepExceedingJob: true

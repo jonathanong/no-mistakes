@@ -5,7 +5,8 @@ work. Check rules consume these facts instead of re-parsing SQL or
 TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
-`postgres-lock-ordering` and `postgres-no-generated-column-writes` consume
+`postgres-lock-ordering`, `postgres-no-generated-column-writes`,
+`postgres-fk-index`, and `postgres-constraint-validate` consume
 the facts through `no-mistakes check`.
 
 ## Schema facts
@@ -32,9 +33,26 @@ for the parser). A file that cannot be tokenized yields no tables. The
 extractors do not panic.
 
 `extract_schema_facts(root, sources, sql_paths)` reads each path through the
-request `SourceStore`. `collect_schema_facts` first filters candidates with
-`PostgresSchemaOptions.sql_include` (default `['**/*.sql']`). There is no
-hardcoded `backend/migrations/` root.
+request `SourceStore` and runs `extract_migration_facts`, which includes
+`CREATE TABLE` plus:
+
+- `CREATE INDEX` / unique and primary-key covering indexes: table, leading
+  column, access method (`USING` defaults to btree), whether a `WHERE`
+  predicate is present, and a `col IS NOT NULL` predicate column when that is
+  the whole predicate
+- Foreign keys from `CREATE TABLE` and `ALTER TABLE`: table, columns,
+  referenced table, optional `ON DELETE` action, and a source line
+- Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows
+- `ALTER TABLE … VALIDATE CONSTRAINT` rows
+
+Unparseable statements are skipped. `collect_schema_facts` first filters
+candidates with `PostgresSchemaOptions.sql_include` (default `['**/*.sql']`).
+There is no hardcoded `backend/migrations/` root.
+
+`postgres-fk-index` and `postgres-constraint-validate` consume these
+migration facts. `postgres-lock-ordering` and
+`postgres-no-generated-column-writes` consume
+the facts through `no-mistakes check`.
 
 ## Embedded-SQL facts
 

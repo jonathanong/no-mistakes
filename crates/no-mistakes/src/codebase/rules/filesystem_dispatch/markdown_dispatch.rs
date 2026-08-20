@@ -1,8 +1,8 @@
 use super::{
-    candidate_index::RuleCandidateIndex, markdown_link_display_text, markdown_mermaid_validation,
-    markdown_reachability, markdown_structure_budget, rule_enabled, RuleFinding,
-    MARKDOWN_LINK_DISPLAY_TEXT, MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY,
-    MARKDOWN_STRUCTURE_BUDGET,
+    candidate_index::RuleCandidateIndex, markdown_child_links, markdown_link_display_text,
+    markdown_mermaid_validation, markdown_reachability, markdown_structure_budget, rule_enabled,
+    RuleFinding, MARKDOWN_CHILD_LINKS, MARKDOWN_LINK_DISPLAY_TEXT, MARKDOWN_MERMAID_VALIDATION,
+    MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -31,7 +31,11 @@ pub(super) fn prepare(
             candidates.candidates(MARKDOWN_MERMAID_VALIDATION),
         )?);
     }
-    for rule_id in [MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET] {
+    for rule_id in [
+        MARKDOWN_CHILD_LINKS,
+        MARKDOWN_REACHABILITY,
+        MARKDOWN_STRUCTURE_BUDGET,
+    ] {
         if rule_enabled(config, rule_id) {
             plan.request_pulldown(super::super::markdown_scope::markdown_files(
                 candidates.candidates(rule_id),
@@ -51,6 +55,14 @@ pub(super) fn spawn<'scope>(
     facts: &'scope super::super::markdown_facts::MarkdownFactMap,
     results: &'scope RuleResults,
 ) {
+    spawn_rule(scope, config, MARKDOWN_CHILD_LINKS, results, || {
+        markdown_child_links::check_with_files_sources_and_facts(
+            root,
+            config,
+            candidates.candidates(MARKDOWN_CHILD_LINKS),
+            facts,
+        )
+    });
     spawn_rule(scope, config, MARKDOWN_LINK_DISPLAY_TEXT, results, || {
         markdown_link_display_text::check_with_files_sources_and_facts(
             root,

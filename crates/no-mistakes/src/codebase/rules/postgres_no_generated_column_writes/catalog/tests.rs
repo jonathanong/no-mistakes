@@ -36,6 +36,7 @@ fn collects_generated_columns_and_extra_tables() {
             table_name: "items".to_string(),
             columns: vec![plain_col("id"), generated_col("created_at")],
         }],
+        ..Default::default()
     }];
     let extra = [ExtraGeneratedColumn {
         table: "votes".to_string(),
@@ -58,6 +59,7 @@ fn ignores_tables_without_generated_columns_and_blank_extras() {
             table_name: "plain".to_string(),
             columns: vec![plain_col("id")],
         }],
+        ..Default::default()
     }];
     let extra = [
         ExtraGeneratedColumn {

@@ -1,5 +1,5 @@
 use super::embedded::{extract_embedded_sql_from_source, EmbeddedSqlFileFacts, EmbeddedSqlOptions};
-use super::schema::extract_create_table_metadata;
+use super::migration::extract_migration_facts;
 use super::types::{PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlSchemaFileFacts};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::dependencies::extract::is_indexable;
@@ -9,7 +9,7 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
-/// Read `sql_paths` through `sources` and extract CREATE TABLE facts.
+/// Read `sql_paths` through `sources` and extract migration schema facts.
 pub fn extract_schema_facts(
     _root: &Path,
     sources: &SourceStore,
@@ -86,10 +86,9 @@ fn schema_file_facts(
     sources: &SourceStore,
 ) -> Result<SqlSchemaFileFacts, PostgresFactError> {
     let source = read_source(path, sources)?;
-    Ok(SqlSchemaFileFacts {
-        path: path.to_path_buf(),
-        tables: extract_create_table_metadata(&source),
-    })
+    let mut facts = extract_migration_facts(&source);
+    facts.path = path.to_path_buf();
+    Ok(facts)
 }
 
 fn embedded_file_facts(

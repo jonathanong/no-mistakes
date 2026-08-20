@@ -28,17 +28,34 @@ rules:
 
 Supported assertion kinds are `boolean`, `positive-number`, `string-array`,
 `record-of-boolean`, `string-prefix`, `string-glob`, `not-single-file`, `equals`, and
-`object-shape`. Selectors are dotted paths; use numeric parts for array indexes
-and `[]` to apply an assertion to every array entry.
+`object-shape`. JSON and JSONC files (`.json`, `.jsonc`) are parsed with comment
+support; YAML is used for other extensions. A file that cannot be parsed is a
+finding, not a silent skip.
+
+Selectors are dotted paths; use numeric parts for array indexes and `[]` to apply
+an assertion to every array entry. On `[]` selectors, `match: all` (default)
+requires every entry to satisfy the assertion; `match: any` requires at least one.
+`object-shape` accepts `requiredKeys`, `forbiddenKeys`, and `requiredValues`.
+
+```yaml
+            - key: rules.no-restricted-properties.[]
+              kind: object-shape
+              match: any
+              requiredKeys: [message]
+              forbiddenKeys: [object]
+              requiredValues:
+                property: bind
+```
 
 Counterexample: a config file omits a required key, still contains a banned
 legacy key, uses a string where a boolean is required, contains a single-file
-entry where a glob is required, or has a nested rule object with the wrong
-severity.
+entry where a glob is required, has a nested rule object with the wrong
+severity, or is invalid JSONC/YAML.
 
 Fix: add the required key, remove the banned key, update the value to match the
-configured assertion, or narrow the file glob to the configs where the policy
-applies.
+configured assertion, make one array entry satisfy `match: any`, or narrow the
+file glob to the configs where the policy applies. Repair parse errors so the
+file is valid JSONC or YAML.
 
 Suppression: use `no-mistakes` suppression directives. Findings currently report
 line 1 for structured config shape violations, so prefer file-level suppression

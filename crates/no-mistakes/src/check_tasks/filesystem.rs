@@ -8,6 +8,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::AGENTS_MD_MAX_SIZE,
     rules::BANNED_PATHS,
     rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
+    rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
     rules::github_actions_pinned_hash::RULE_ID,
     rules::BANNED_RENAMED_FILES,
     rules::CONFIG_PATH_REFERENCES,
@@ -18,6 +19,8 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::FORBIDDEN_WORKSPACE_CLOSURE,
     rules::INTEGRATION_TEST_NO_MOCKS,
     rules::LOCKFILE_ALLOWLIST,
+    rules::MARKDOWN_CHILD_LINKS,
+    rules::MARKDOWN_EVAL_TESTS,
     rules::MARKDOWN_LINK_DISPLAY_TEXT,
     rules::MARKDOWN_MERMAID_VALIDATION,
     rules::MARKDOWN_REACHABILITY,
@@ -27,6 +30,8 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::NO_GIT_IDENTITY_MUTATION,
     rules::PACKAGE_JSON_REGISTRY_ONLY,
     rules::PACKAGE_JSON_WORKSPACE_COVERAGE,
+    rules::POSTGRES_CONSTRAINT_VALIDATE,
+    rules::POSTGRES_FK_INDEX,
     rules::POSTGRES_NO_GENERATED_COLUMN_WRITES,
     rules::PRODUCTION_DEPENDENCY_DECLARATIONS,
     rules::REQUIRED_COMPANION_IMPORTS,
@@ -63,20 +68,16 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
     let (findings, duration) = no_mistakes::diagnostics::measure_if_enabled(
         "analysis.filesystem_rules",
         no_mistakes::diagnostics::TimingKind::Parallel,
-        || -> Result<_> {
-            Ok(if enabled {
-                if defer_suppression {
-                    rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
-                        root, config, files, prepared, facts,
-                    )?
-                } else {
-                    rules::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
-                        root, config, files, prepared, facts,
-                    )?
-                }
-            } else {
-                Vec::new()
-            })
+        || {
+            run_enabled_filesystem_rules(
+                root,
+                config,
+                enabled,
+                files,
+                prepared,
+                facts,
+                defer_suppression,
+            )
         },
     );
     let findings = findings?;
@@ -87,6 +88,29 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
         warning: None,
         duration,
     })
+}
+
+fn run_enabled_filesystem_rules(
+    root: &Path,
+    config: &NoMistakesConfig,
+    enabled: bool,
+    files: &[PathBuf],
+    prepared: rules::filesystem_dispatch::PreparedFilesystemRuleInputs<'_>,
+    facts: Option<&no_mistakes::codebase::check_facts::CheckFactMap>,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
+    if !enabled {
+        return Ok(Vec::new());
+    }
+    if defer_suppression {
+        rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
+            root, config, files, prepared, facts,
+        )
+    } else {
+        rules::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
+            root, config, files, prepared, facts,
+        )
+    }
 }
 
 pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {

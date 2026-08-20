@@ -37,10 +37,42 @@ pub struct SqlColumnMetadata {
 }
 
 /// Schema facts for one SQL file read through [`crate::codebase::ts_source::SourceStore`].
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlSchemaFileFacts {
     pub path: PathBuf,
     pub tables: Vec<SqlCreateTableMetadata>,
+    pub indexes: Vec<SqlCreateIndexMetadata>,
+    pub foreign_keys: Vec<SqlForeignKeyMetadata>,
+    pub not_valid_constraints: Vec<SqlNamedConstraint>,
+    pub validated_constraints: Vec<SqlNamedConstraint>,
+}
+
+/// One `CREATE INDEX` or unique/primary-key covering index.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlCreateIndexMetadata {
+    pub table_name: String,
+    pub leading_column: Option<String>,
+    pub access_method: String,
+    pub has_predicate: bool,
+    pub not_null_predicate_column: Option<String>,
+}
+
+/// One foreign key from `CREATE TABLE` or `ALTER TABLE`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlForeignKeyMetadata {
+    pub table_name: String,
+    pub column_names: Vec<String>,
+    pub referenced_table_name: String,
+    pub delete_action: Option<String>,
+    pub line: usize,
+}
+
+/// A named constraint add or `VALIDATE CONSTRAINT`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlNamedConstraint {
+    pub table_name: String,
+    pub name: String,
+    pub line: usize,
 }
 
 /// Combined schema and embedded-SQL facts for one request.

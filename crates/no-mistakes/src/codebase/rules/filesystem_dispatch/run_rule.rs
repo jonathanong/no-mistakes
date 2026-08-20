@@ -82,51 +82,15 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         TEST_NO_DEPENDENCY_PINS => {
             test_no_dependency_pins::check_with_files_and_sources(root, config, files, sources)
         }
-        POSTGRES_NO_GENERATED_COLUMN_WRITES => {
-            postgres_no_generated_column_writes::check_with_files_and_sources(
-                root, config, files, sources,
-            )
-        }
-        POSTGRES_LOCK_ORDERING => {
-            postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources)
-        }
-        INTEGRATION_TEST_NO_MOCKS => {
-            integration_test_no_mocks::check_with_files_and_sources(root, config, files, sources)
-        }
-        MARKDOWN_LINK_DISPLAY_TEXT => {
-            markdown_link_display_text::check_with_files_and_sources(root, config, files, sources)
-        }
-        STRUCTURED_CONFIG_POLICY => {
-            structured_config_policy::check_with_files_and_sources(root, config, files, sources)
-        }
-        CONFIG_PATH_REFERENCES => {
-            config_path_references::check_with_files_and_sources(root, config, files, sources)
-        }
-        CSHARP_MAX_LINES_PER_FILE => {
-            csharp_max_lines_per_file::check_with_files_sources_and_deferred_suppression(
-                root,
-                config,
-                files,
-                sources,
-                defer_suppression,
-            )
-        }
-        GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => {
-            github_actions_composite_step_schema::check_with_files_and_sources(
-                root, config, files, sources,
-            )
-        }
-        GITHUB_ACTIONS_PINNED_HASH => {
-            github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
-        }
-        NO_EMPTY_OR_COMMENTS_ONLY_FILES => {
-            no_empty_or_comments_only_files::check_with_files_and_sources(
-                root, config, files, sources,
-            )
-        }
-        NEXTJS_REDIRECT_DESTINATIONS => {
-            nextjs_redirect_destinations::check_with_files_and_sources(root, config, files, sources)
-        }
-        _ => fallback(root, config, files),
+        _ => super::run_rule_engines::run(RunRuleRequest {
+            rule_id,
+            fallback,
+            root,
+            config,
+            files,
+            sources,
+            facts,
+            defer_suppression,
+        }),
     }
 }

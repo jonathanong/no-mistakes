@@ -20,6 +20,7 @@ pub mod queries;
 pub mod rules;
 pub(crate) mod storybook;
 pub(crate) mod storybook_mdx;
+pub(crate) mod structured_value;
 pub mod swift;
 pub mod symbols;
 pub mod terraform;
