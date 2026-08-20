@@ -126,6 +126,54 @@ fn index_table_constraints_do_not_contribute_not_valid_names() {
 }
 
 #[test]
+fn extracts_not_valid_and_fk_index_from_do_block() {
+    let sql = r#"
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_posts_community_id' AND conrelid = 'posts'::regclass
+  ) THEN
+    ALTER TABLE posts ADD CONSTRAINT fk_posts_community_id
+      FOREIGN KEY (community_id) REFERENCES communities(id)
+      ON DELETE SET NULL NOT VALID;
+  END IF;
+END $$;
+ALTER TABLE posts VALIDATE CONSTRAINT fk_posts_community_id;
+DO $$ BEGIN
+  CREATE INDEX idx_posts__community_id ON posts (community_id);
+END $$;
+"#;
+    let facts = extract_migration_facts(sql);
+    assert!(
+        facts
+            .not_valid_constraints
+            .iter()
+            .any(|constraint| constraint.name == "fk_posts_community_id"),
+        "{facts:?}"
+    );
+    assert!(
+        facts
+            .validated_constraints
+            .iter()
+            .any(|constraint| constraint.name == "fk_posts_community_id"),
+        "{facts:?}"
+    );
+    assert!(
+        facts
+            .foreign_keys
+            .iter()
+            .any(|fk| fk.column_names == ["community_id"] && fk.table_name == "posts"),
+        "{facts:?}"
+    );
+    assert!(
+        facts.indexes.iter().any(|index| {
+            index.table_name == "posts" && index.leading_column.as_deref() == Some("community_id")
+        }),
+        "{facts:?}"
+    );
+}
+
+#[test]
 fn extracted_schema_records_clone_eq_and_debug() {
     let facts = extract_migration_facts(
         "CREATE TABLE t (id uuid PRIMARY KEY, other_id uuid REFERENCES other);\n\

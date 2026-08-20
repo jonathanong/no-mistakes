@@ -8,7 +8,8 @@ use sqlparser::ast::{
 /// Parse `sql` and return one metadata record per `CREATE TABLE`.
 ///
 /// Unparseable statements are skipped so mixed migration files still yield
-/// tables. The extractor does not fail closed on `DO $$` or similar SQL.
+/// tables. `DO $$` bodies are peeled for schema DDL; other rejected SQL is
+/// skipped rather than failing the file.
 pub fn extract_create_table_metadata(sql: &str) -> Vec<SqlCreateTableMetadata> {
     parse_postgres_sql_lenient(sql)
         .into_iter()

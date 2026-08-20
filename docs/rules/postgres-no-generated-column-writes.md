@@ -14,8 +14,9 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. There is no hardcoded `backend/` or
-migrations root. Mixed migration files are usable: unparseable statements
-such as `DO $$` blocks are skipped, and PostgreSQL 18 `VIRTUAL` generated
+migrations root. Mixed migration files are usable: schema DDL inside `DO $$`
+blocks is collected into the catalog, DML (`UPDATE` / `INSERT` / `MERGE`)
+inside `DO $$` is still skipped, and PostgreSQL 18 `VIRTUAL` generated
 columns still populate the catalog. `include` selects DML files (`.ts`,
 `.mts`, `.tsx`, `.js`, `.sql` when unset). `importSpecifier` /
 `executorNames` select TypeScript call sites and default to
