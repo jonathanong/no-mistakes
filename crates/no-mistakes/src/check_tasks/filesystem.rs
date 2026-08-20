@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::AGENTS_MD_MAX_SIZE,
     rules::BANNED_PATHS,
+    rules::GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR,
     rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
     rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
     rules::github_actions_pinned_hash::RULE_ID,

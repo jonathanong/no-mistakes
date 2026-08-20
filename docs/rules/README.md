@@ -29,6 +29,7 @@ rules:
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, and banned-substring checks.               |
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets extracted from source and paths.                     |
+| [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md) | Validate composite-action steps against GitHub's documented step keys.     |
 | [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Require every `uses:` step to be pinned to a commit SHA with a version comment. |

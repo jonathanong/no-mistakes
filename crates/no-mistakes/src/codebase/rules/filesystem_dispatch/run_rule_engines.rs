@@ -51,6 +51,11 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
                 defer_suppression,
             )
         }
+        GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => {
+            github_actions_action_timeout_pair::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => {
             github_actions_composite_step_schema::check_with_files_and_sources(
                 root, config, files, sources,

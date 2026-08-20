@@ -4,19 +4,19 @@ use std::path::{Path, PathBuf};
 use super::{
     agents_md_max_size, banned_paths, banned_renamed_files, config_path_references,
     csharp_max_lines_per_file, doc_consistency, file_extension_policy, finite_set_consistency,
-    forbidden_workspace_closure, github_actions_composite_step_schema, github_actions_job_timeouts,
-    github_actions_pinned_hash, integration_test_no_mocks, lockfile_allowlist,
-    markdown_child_links, markdown_eval_tests, markdown_link_display_text,
-    markdown_mermaid_validation, markdown_reachability, markdown_structure_budget,
-    nextjs_redirect_destinations, no_empty_or_comments_only_files, no_git_identity_mutation,
-    package_json_registry_only, package_json_workspace_coverage, postgres_constraint_validate,
-    postgres_fk_index, postgres_lock_ordering, postgres_no_generated_column_writes,
-    production_dependency_declarations, require_files_in_subdirs, require_test_per_subdir,
-    required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
-    strict_package_layout, structured_config_policy, test_email_domain_policy,
-    test_no_dependency_pins, tsconfig_alias_folder_mapping, tsconfig_gate_coverage,
-    vitest_ci_path_coverage, vitest_project_mapping, vitest_test_correspondence,
-    workspace_package_cycles,
+    forbidden_workspace_closure, github_actions_action_timeout_pair,
+    github_actions_composite_step_schema, github_actions_job_timeouts, github_actions_pinned_hash,
+    integration_test_no_mocks, lockfile_allowlist, markdown_child_links, markdown_eval_tests,
+    markdown_link_display_text, markdown_mermaid_validation, markdown_reachability,
+    markdown_structure_budget, nextjs_redirect_destinations, no_empty_or_comments_only_files,
+    no_git_identity_mutation, package_json_registry_only, package_json_workspace_coverage,
+    postgres_constraint_validate, postgres_fk_index, postgres_lock_ordering,
+    postgres_no_generated_column_writes, production_dependency_declarations,
+    require_files_in_subdirs, require_test_per_subdir, required_companion_imports,
+    required_local_docs, rust_rules_combined, shellcheck_runner, strict_package_layout,
+    structured_config_policy, test_email_domain_policy, test_no_dependency_pins,
+    tsconfig_alias_folder_mapping, tsconfig_gate_coverage, vitest_ci_path_coverage,
+    vitest_project_mapping, vitest_test_correspondence, workspace_package_cycles,
 };
 
 mod candidate_helpers;
@@ -54,6 +54,8 @@ pub use entrypoints::{
     run_filesystem_rules_with_config_snapshot_and_vitest_catalog, run_filesystem_rules_with_files,
     run_filesystem_rules_with_visible_and_snapshot,
 };
+pub(super) const GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR: &str =
+    github_actions_action_timeout_pair::RULE_ID;
 pub(super) const GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA: &str =
     github_actions_composite_step_schema::RULE_ID;
 pub(super) const GITHUB_ACTIONS_JOB_TIMEOUTS: &str = github_actions_job_timeouts::RULE_ID;

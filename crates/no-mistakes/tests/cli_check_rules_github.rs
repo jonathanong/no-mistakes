@@ -80,6 +80,52 @@ fn github_actions_composite_step_schema_ignores_docker_actions() {
 }
 
 #[test]
+fn github_actions_action_timeout_pair_fails_without_step_timeout() {
+    let root = fixture("github-actions-action-timeout-pair", "fail-step");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(
+        body.contains("github-actions-action-timeout-pair"),
+        "{body}"
+    );
+    assert!(body.contains("timeout-minutes"), "{body}");
+}
+
+#[test]
+fn github_actions_action_timeout_pair_fails_without_nested_timeout() {
+    let root = fixture("github-actions-action-timeout-pair", "fail-nested");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(
+        body.contains("github-actions-action-timeout-pair"),
+        "{body}"
+    );
+    assert!(body.contains("action-timeout-s"), "{body}");
+}
+
+#[test]
+fn github_actions_action_timeout_pair_fails_for_nested_composite() {
+    let root = fixture("github-actions-action-timeout-pair", "fail-composite");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(
+        body.contains("github-actions-action-timeout-pair"),
+        "{body}"
+    );
+    assert!(body.contains("nests a configured action"), "{body}");
+}
+
+#[test]
+fn github_actions_action_timeout_pair_passes_with_paired_timeouts() {
+    let root = fixture("github-actions-action-timeout-pair", "pass");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn github_actions_job_timeouts_fails_without_timeout_minutes() {
     let root = fixture("github-actions-job-timeouts", "fail-missing");
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();

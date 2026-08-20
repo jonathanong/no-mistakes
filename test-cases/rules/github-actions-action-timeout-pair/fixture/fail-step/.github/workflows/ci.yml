@@ -1,0 +1,10 @@
+name: ci
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Configure credentials
+        uses: ./.github/actions/setup-aws
+        with:
+          role-arn: ${{ vars.ROLE_ARN }}
