@@ -5,12 +5,15 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::LazyLock;
 
-static YAML_FRAGMENT: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"timeout-minutes:\s*\d+").expect("yaml fragment"));
-static TIMEOUT_PROPERTY: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\['timeout-minutes'\]|\.timeoutMinutes\b").expect("property"));
-static LITERAL_EQUALITY: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\)\.(?:toBe|toEqual)\(").expect("equality"));
+static YAML_FRAGMENT: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?:^|[^A-Za-z0-9_-])timeout-minutes:\s*['"]?\d+['"]?"#).expect("yaml fragment")
+});
+static TIMEOUT_PROPERTY: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"\[['"]timeout-minutes['"]\]|\.timeoutMinutes\b"#).expect("property")
+});
+static LITERAL_EQUALITY: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"\)\.(?:toBe|toEqual)\(\s*(?:['"]\d+['"]|\d+)"#).expect("equality")
+});
 static CONTAIN_DIGIT: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\)\.toContain\([^)]*\d[^)]*\)").expect("contain"));
 
@@ -96,6 +99,9 @@ fn stale_allow_findings(
 }
 
 fn is_violation(line: &str) -> bool {
+    if line.trim_start().starts_with("//") {
+        return false;
+    }
     YAML_FRAGMENT.is_match(line)
         || (TIMEOUT_PROPERTY.is_match(line)
             && (LITERAL_EQUALITY.is_match(line) || CONTAIN_DIGIT.is_match(line)))

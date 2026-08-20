@@ -70,6 +70,22 @@ fn property_to_be_is_a_finding() {
 }
 
 #[test]
+fn unquoted_bracket_property_to_be_is_a_finding() {
+    assert_eq!(
+        scan_source("expect(job['timeout-minutes']).toBe(10)\n", "{}").len(),
+        1
+    );
+}
+
+#[test]
+fn double_quoted_bracket_property_to_be_is_a_finding() {
+    assert_eq!(
+        scan_source(r#"expect(job["timeout-minutes"]).toBe(10)"#, "{}").len(),
+        1
+    );
+}
+
+#[test]
 fn property_to_equal_is_a_finding() {
     let findings = scan_source("expect(job.timeoutMinutes).toEqual(8)\n", "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
@@ -217,9 +233,32 @@ fn yaml_without_digits_is_silent() {
 }
 
 #[test]
+fn quoted_yaml_numeric_string_is_a_finding() {
+    assert_eq!(scan_source("timeout-minutes: '15'\n", "{}").len(), 1);
+    assert_eq!(scan_source("timeout-minutes: \"15\"\n", "{}").len(), 1);
+}
+
+#[test]
+fn longer_yaml_key_is_silent() {
+    assert!(scan_source("default-timeout-minutes: 15\n", "{}").is_empty());
+}
+
+#[test]
+fn equality_without_literal_is_silent() {
+    assert!(scan_source("expect(job.timeoutMinutes).toBe(expectedTimeout)\n", "{}").is_empty());
+}
+
+#[test]
+fn full_line_comment_is_silent() {
+    assert!(scan_source("// expect(job.timeoutMinutes).toBe(10)\n", "{}").is_empty());
+    assert!(scan_source("// previous value: timeout-minutes: 15\n", "{}").is_empty());
+}
+
+#[test]
 fn allow_entry_default_is_empty() {
     let allow = AllowEntry::default();
-    assert_eq!(allow.clone().file, allow.file);
-    assert!(allow.text.is_empty());
-    assert!(allow.reason.is_empty());
+    let cloned = allow.clone();
+    assert!(cloned.file.is_empty());
+    assert!(cloned.text.is_empty());
+    assert!(cloned.reason.is_empty());
 }

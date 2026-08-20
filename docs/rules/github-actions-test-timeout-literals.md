@@ -37,3 +37,5 @@ expect(step?.['timeout-minutes']).toBeLessThanOrEqual(job?.['timeout-minutes'])
 
 Use `no-mistakes-disable-next-line github-actions-test-timeout-literals` or
 `no-mistakes-disable-file` for a one-off test exception.
+Line and next-line suppressions require an exact finding line.
+Use file suppression when the exception applies to the full file.
