@@ -120,5 +120,9 @@ fn normalize_inside_rejects_paths_that_escape_the_root() {
         super::links::normalize_inside(&root, &root.join("docs").join("guide.md")),
         Some(root.join("docs").join("guide.md"))
     );
+    assert_eq!(
+        super::links::normalize_inside(&root, &root.join("docs").join(".").join("guide.md")),
+        Some(root.join("docs").join("guide.md"))
+    );
     assert!(super::links::normalize_inside(&root, &root.join("..").join("outside.md")).is_none());
 }
