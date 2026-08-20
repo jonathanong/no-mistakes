@@ -1,5 +1,6 @@
 use super::*;
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
+use std::collections::HashSet;
 
 fn fixture(path: &str) -> std::path::PathBuf {
     let mut parts = path.splitn(3, '/');

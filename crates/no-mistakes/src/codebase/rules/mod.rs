@@ -41,6 +41,7 @@ pub mod require_test_per_subdir;
 pub mod required_companion_imports;
 pub mod required_entrypoint_reachability;
 pub mod required_local_docs;
+mod roots;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
@@ -68,8 +69,6 @@ mod source_access;
 mod suppression;
 
 use serde::Serialize;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
 
 pub use filesystem_dispatch::{
     run_filesystem_rules, run_filesystem_rules_with_config,
@@ -96,6 +95,10 @@ pub use run::{
 pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestProjectCatalog};
 
 pub(crate) use file_matching::matching_files;
+pub(crate) use roots::{
+    file_allowed_by_roots_and_skip, rule_enabled, skip_dir_set, target_project_root, target_roots,
+    target_roots_with_inferred,
+};
 pub(crate) use source_access::{read_source, source_store_for_files};
 #[doc(hidden)]
 pub use suppression::{
@@ -118,90 +121,6 @@ pub struct RuleFinding {
     pub import: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,
-}
-
-pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id: &str) -> bool {
-    config.rule_configured(rule_id)
-}
-
-pub(crate) fn target_roots(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    rule: &crate::config::v2::schema::RuleDef,
-) -> Vec<PathBuf> {
-    let mut inferred_roots = crate::codebase::config::InferredRoots::default();
-    target_roots_with_inferred(root, config, rule, &mut inferred_roots)
-}
-
-pub(crate) fn target_roots_with_inferred(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    rule: &crate::config::v2::schema::RuleDef,
-    inferred_roots: &mut crate::codebase::config::InferredRoots,
-) -> Vec<PathBuf> {
-    let mut roots = Vec::new();
-    if rule.applies_to_repository() {
-        roots.push(root.to_path_buf());
-    }
-    for project_name in &rule.projects {
-        let Some(project) = config.projects.get(project_name) else {
-            continue;
-        };
-        if let Some(project_root) = target_project_root(root, project, inferred_roots) {
-            roots.push(project_root);
-        }
-    }
-    roots.sort();
-    roots.dedup();
-    roots
-}
-
-pub(crate) fn file_allowed_by_roots_and_skip(
-    root: &Path,
-    skip: &HashSet<&str>,
-    path: &Path,
-    roots: &[PathBuf],
-) -> bool {
-    let mut matching_roots = roots.iter().filter(|rule_root| path.starts_with(rule_root));
-    let Some(first_root) = matching_roots.next() else {
-        return false;
-    };
-
-    if !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip) {
-        return true;
-    }
-
-    if !crate::codebase::ts_source::is_under_skipped_dir(first_root, path, skip) {
-        return true;
-    }
-
-    matching_roots
-        .any(|rule_root| !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip))
-}
-
-pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {
-    config
-        .filesystem
-        .skip_directories
-        .iter()
-        .map(String::as_str)
-        .collect()
-}
-
-fn target_project_root(
-    root: &Path,
-    project: &crate::config::v2::schema::Project,
-    inferred_roots: &mut crate::codebase::config::InferredRoots,
-) -> Option<PathBuf> {
-    if let Some(project_root) = project.root.as_deref() {
-        return Some(root.join(project_root));
-    }
-    match project.type_ {
-        Some(crate::config::v2::schema::ProjectType::Nextjs) => inferred_roots.nextjs_root(root),
-        Some(crate::config::v2::schema::ProjectType::Remix) => inferred_roots.remix_root(root),
-        Some(crate::config::v2::schema::ProjectType::Vitejs) => inferred_roots.vitejs_root(root),
-        _ => Some(root.to_path_buf()),
-    }
 }
 
 mod sort_findings;
