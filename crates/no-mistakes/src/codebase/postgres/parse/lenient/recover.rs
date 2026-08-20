@@ -45,7 +45,10 @@ fn peel_do_body(tokens: &[Token]) -> Option<String> {
         index = skip_ws(tokens, index + 1);
     }
     match tokens.get(index)? {
-        Token::DollarQuotedString(body) => Some(body.value.clone()),
+        Token::DollarQuotedString(body) => {
+            let rest = skip_ws(tokens, index + 1);
+            (rest >= tokens.len()).then(|| body.value.clone())
+        }
         _ => None,
     }
 }

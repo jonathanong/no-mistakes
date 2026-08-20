@@ -29,6 +29,10 @@ fn peel_do_body_rejects_non_do_and_malformed_language() {
     assert!(peel_do_body(&tokens("DO LANGUAGE plpgsql")).is_none());
     assert!(peel_do_body(&tokens("DO LANGUAGE plpgsql;")).is_none());
     assert!(peel_do_body(&tokens("DO plpgsql")).is_none());
+    assert!(peel_do_body(&tokens(
+        "DO $$ ALTER TABLE t ADD COLUMN id int $$ unexpected"
+    ))
+    .is_none());
     assert!(peel_do_body(&[]).is_none());
 }
 

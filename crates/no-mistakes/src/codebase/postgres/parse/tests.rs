@@ -126,6 +126,19 @@ fn lenient_parse_peels_language_tagged_do_and_ignores_function_bodies() {
 }
 
 #[test]
+fn lenient_parse_skips_do_blocks_with_trailing_junk() {
+    let statements = parse_postgres_sql_lenient(
+        "DO $$ ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID $$ unexpected;",
+    );
+    assert!(
+        statements
+            .iter()
+            .all(|statement| !matches!(statement, sqlparser::ast::Statement::AlterTable(_))),
+        "{statements:#?}"
+    );
+}
+
+#[test]
 fn lenient_parse_keeps_top_level_begin_commit() {
     let statements = parse_postgres_sql_lenient("BEGIN; COMMIT;");
     assert_eq!(statements.len(), 2, "{statements:#?}");
