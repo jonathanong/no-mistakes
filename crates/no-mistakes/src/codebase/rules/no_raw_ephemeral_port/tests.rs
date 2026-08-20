@@ -161,6 +161,13 @@ fn bind_regex_accepts_whitespace_and_single_quotes() {
 }
 
 #[test]
+fn bind_regex_accepts_non_literal_hosts() {
+    assert_eq!(bind_lines("sock.bind((host, 0))\n"), vec![1]);
+    assert_eq!(bind_lines("sock.bind((get_host(), 0))\n"), vec![1]);
+    assert!(bind_lines("sock.bind((host, port))\n").is_empty());
+}
+
+#[test]
 fn bind_regex_accepts_ipv6_four_tuples() {
     assert_eq!(bind_lines("sock.bind((\"::1\", 0, 0, 0))\n"), vec![1]);
     assert_eq!(bind_lines("sock.bind(('::1', 0, 0, 0))\n"), vec![1]);
@@ -205,6 +212,10 @@ fn listen_numeric_zero_and_object_port_are_flagged() {
     );
     assert_eq!(
         ast::scan_lines(Path::new("server.ts"), "server.listen({ 'port': 0 });\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), r#"server["listen"](0);"#),
         vec![1]
     );
 }

@@ -54,10 +54,14 @@ fn is_ephemeral_listen(call: &CallExpression<'_>) -> bool {
 }
 
 fn is_listen_callee(callee: &Expression<'_>) -> bool {
-    matches!(
-        callee,
-        Expression::StaticMemberExpression(member) if member.property.name.as_str() == "listen"
-    )
+    match callee {
+        Expression::StaticMemberExpression(member) => member.property.name.as_str() == "listen",
+        Expression::ComputedMemberExpression(member) => matches!(
+            unwrap_ts_wrappers(&member.expression),
+            Expression::StringLiteral(literal) if literal.value.as_str() == "listen"
+        ),
+        _ => false,
+    }
 }
 
 fn argument_is_ephemeral_port(argument: &Argument<'_>) -> bool {
