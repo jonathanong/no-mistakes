@@ -158,3 +158,10 @@ fn directive_on_line_ignores_empty_or_missing_lines() {
         "skip-fk"
     ));
 }
+
+#[test]
+fn option_defaults_use_empty_includes() {
+    let compiled = compile_options(&Options::default());
+    assert!(compiled.allowed_columns.is_empty());
+    assert!(compiled.allowed_tables.is_empty());
+}

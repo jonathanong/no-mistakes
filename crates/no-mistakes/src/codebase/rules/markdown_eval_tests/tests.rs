@@ -77,3 +77,10 @@ fn unreadable_eval_candidates_are_skipped() {
     let findings = check_with_files(&root, &config(&[]), &files).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn option_defaults_are_empty() {
+    let opts = Options::default();
+    assert!(opts.include.is_empty());
+    assert!(opts.allow.is_empty());
+}

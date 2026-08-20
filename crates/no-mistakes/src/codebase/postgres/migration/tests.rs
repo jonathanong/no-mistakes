@@ -124,3 +124,21 @@ fn index_table_constraints_do_not_contribute_not_valid_names() {
     });
     assert!(super::constraints::constraint_name(&constraint).is_none());
 }
+
+#[test]
+fn extracted_schema_records_clone_eq_and_debug() {
+    let facts = extract_migration_facts(
+        "CREATE TABLE t (id uuid PRIMARY KEY, other_id uuid REFERENCES other);\n\
+         ALTER TABLE t ADD CONSTRAINT t_id_check CHECK (id IS NOT NULL) NOT VALID;\n\
+         ALTER TABLE t VALIDATE CONSTRAINT t_id_check;\n",
+    );
+    let indexes = facts.indexes.clone();
+    let foreign_keys = facts.foreign_keys.clone();
+    let not_valid = facts.not_valid_constraints.clone();
+    let validated = facts.validated_constraints.clone();
+    assert_eq!(indexes, facts.indexes);
+    assert_eq!(foreign_keys, facts.foreign_keys);
+    assert_eq!(not_valid, facts.not_valid_constraints);
+    assert_eq!(validated, facts.validated_constraints);
+    assert!(format!("{indexes:?}{foreign_keys:?}{not_valid:?}{validated:?}").contains("t"));
+}

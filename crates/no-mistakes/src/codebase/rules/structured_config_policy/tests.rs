@@ -398,3 +398,16 @@ policies:
     assert_eq!(findings.len(), 1, "unexpected findings: {findings:?}");
     assert!(findings[0].message.contains("missingRequiredKey"));
 }
+
+#[test]
+fn assertion_enums_clone_eq_and_debug() {
+    assert_eq!(MatchMode::All, MatchMode::default());
+    assert_ne!(MatchMode::All, MatchMode::Any);
+    assert_eq!(AssertionKind::Boolean, AssertionKind::Boolean);
+    let _ = format!(
+        "{:?}{:?}{:?}",
+        MatchMode::All,
+        MatchMode::Any,
+        AssertionKind::ObjectShape
+    );
+}

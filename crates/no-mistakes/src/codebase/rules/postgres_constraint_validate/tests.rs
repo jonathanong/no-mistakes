@@ -48,3 +48,12 @@ fn flags_validate_without_not_valid() {
 fn paired_not_valid_and_validate_pass() {
     assert!(run(&fixture("pass")).is_empty());
 }
+
+#[test]
+fn option_defaults_use_schema_sql_include() {
+    let compiled = compile_options(&Options::default());
+    assert_eq!(
+        compiled.schema.sql_include,
+        crate::codebase::postgres::PostgresSchemaOptions::default().sql_include
+    );
+}

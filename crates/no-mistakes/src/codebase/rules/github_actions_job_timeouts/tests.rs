@@ -230,5 +230,9 @@ fn timeout_minutes_accepts_strings_and_rejects_other_values() {
         Some(10)
     );
     assert_eq!(yaml::timeout_minutes(&Value::Bool(true)), None);
+    assert_eq!(yaml::timeout_minutes(&Value::Number((-1i64).into())), None);
     assert_eq!(yaml::step_label(&serde_yaml::Mapping::new(), 2), "step #3");
+    assert_eq!(yaml::key_line("name: ci\n", "missing"), 1);
+    let allow = AllowEntry::default();
+    assert_eq!(allow.clone().job, allow.job);
 }

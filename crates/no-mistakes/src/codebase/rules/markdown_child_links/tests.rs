@@ -122,3 +122,9 @@ fn normalize_inside_rejects_paths_that_escape_the_root() {
     );
     assert!(super::links::normalize_inside(&root, &root.join("..").join("outside.md")).is_none());
 }
+
+#[test]
+fn option_defaults_are_empty() {
+    assert!(Options::default().groups.is_empty());
+    assert!(Group::default().parents.is_empty());
+}
