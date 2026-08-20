@@ -82,11 +82,10 @@ pub use filesystem_dispatch::{
 };
 pub use ids::*;
 #[doc(hidden)]
-pub use run::run_check_with_config_facts_playwright_and_graph_with_suppression;
-#[doc(hidden)]
 pub use run::{
     canonical_graph_plan, canonical_graph_requires_full_file_universe,
     run_check_with_config_facts_playwright_and_graph,
+    run_check_with_config_facts_playwright_and_graph_with_suppression,
 };
 pub use run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,
