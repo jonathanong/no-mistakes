@@ -168,10 +168,13 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
         None,
     );
 
-    assert_eq!(index.candidates(BANNED_PATHS), [tracked.clone()]);
+    assert_eq!(
+        index.candidates(BANNED_PATHS),
+        std::slice::from_ref(&tracked)
+    );
     assert_eq!(
         index.candidates(super::super::VERSION_PIN_CONSISTENCY),
-        [tracked]
+        std::slice::from_ref(&tracked)
     );
     assert_eq!(
         index.candidates(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
