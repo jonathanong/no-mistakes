@@ -41,8 +41,16 @@ fn is_strict_column_prefix(
 fn same_index_param(left: &SqlIndexParam, right: &SqlIndexParam) -> bool {
     matches!((&left.name, &right.name), (Some(a), Some(b)) if a == b)
         && left.opclass == right.opclass
-        && left.ordering == right.ordering
-        && left.nulls_ordering == right.nulls_ordering
+        && btree_ordering(left) == btree_ordering(right)
+        && btree_nulls(left) == btree_nulls(right)
+}
+
+fn btree_ordering(param: &SqlIndexParam) -> &str {
+    param.ordering.as_deref().unwrap_or("asc")
+}
+
+fn btree_nulls(param: &SqlIndexParam) -> &str {
+    param.nulls_ordering.as_deref().unwrap_or("last")
 }
 
 fn included_columns_subsumed(

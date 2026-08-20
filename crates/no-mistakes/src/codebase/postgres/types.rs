@@ -43,6 +43,7 @@ pub struct SqlSchemaFileFacts {
     pub tables: Vec<SqlCreateTableMetadata>,
     pub indexes: Vec<SqlCreateIndexMetadata>,
     pub dropped_indexes: Vec<SqlDropIndexMetadata>,
+    pub dropped_tables: Vec<SqlDropIndexMetadata>,
     pub foreign_keys: Vec<SqlForeignKeyMetadata>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,

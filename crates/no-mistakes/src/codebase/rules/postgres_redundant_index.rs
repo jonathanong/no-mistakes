@@ -7,6 +7,7 @@ use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+mod order;
 mod redundancy;
 mod scan;
 

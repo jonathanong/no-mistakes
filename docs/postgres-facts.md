@@ -41,12 +41,17 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
 `CREATE TABLE` plus:
 
 - `CREATE INDEX` / unique and primary-key covering indexes: table, optional
-  name, key columns (name, opclass, ordering, nulls), `INCLUDE` columns,
-  uniqueness, access method (`USING` defaults to btree), whether a `WHERE`
-  predicate is present, a normalized predicate key, a `col IS NOT NULL`
-  predicate column when that is the whole predicate, and a source line
-- `DROP INDEX` names and source lines, so later drops can remove earlier
-  creates
+  name (schema-qualified when written that way), key columns (name, opclass,
+  ordering, nulls), `INCLUDE` columns, uniqueness, access method (`USING`
+  defaults to btree), whether a `WHERE` predicate is present, a predicate key
+  that lowercases keywords and unquoted idents but keeps string literals and
+  quoted identifiers, a `col IS NOT NULL` predicate column when that is the
+  whole predicate, and a source line taken from that statement's occurrence in
+  the file (so a wrapped `CREATE INDEX` still points at the `CREATE` line)
+- `DROP INDEX` names (schema-qualified) and source lines, so later drops can
+  remove earlier creates of the same identity
+- `DROP TABLE` names and source lines, so later table drops can remove that
+  table's indexes
 - Foreign keys from `CREATE TABLE` and `ALTER TABLE`: table, columns,
   referenced table, optional `ON DELETE` action, and a source line
 - Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows

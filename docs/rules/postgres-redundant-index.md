@@ -15,15 +15,24 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. Indexes are considered across every
-included SQL file. A later `DROP INDEX` removes an earlier create of the same
-name. Unique shorter indexes are never redundant: the longer index enforces
+included SQL file. Table and index names keep schema qualifiers, so
+`public.events` and `audit.events` are distinct, and `DROP INDEX audit.idx`
+does not remove `public.idx`. A later `DROP INDEX` or `DROP TABLE` removes
+earlier indexes of the matching name (or every index on the dropped table).
+File order uses the first numeric run in the filename (`2.sql` before
+`10.sql`, `V2__` before `V10__`); names without digits stay lexicographic.
+Unique shorter indexes are never redundant: the longer index enforces
 uniqueness on its full key, not the prefix. `INCLUDE` columns on the shorter
 index must already be present on the longer index (as keys or includes).
+Omitted btree `ASC` / `NULLS LAST` match the explicit defaults. Partial-index
+predicates compare after lowercasing keywords and unquoted idents, leaving
+string literals and quoted identifiers unchanged.
 
 Skip unnamed/implicit indexes; they cannot be dropped with `DROP INDEX`.
 Same-line `-- allowDirective:` comments (default `redundant-index-allow`) skip
-that create. `allowedIndexes` entries are `table.index`. Stale allowlist
-entries are findings.
+that create (the comment must sit on the `CREATE INDEX` keyword line, which
+may be above a wrapped name). `allowedIndexes` entries are `table.index`,
+including any schema qualifier. Stale allowlist entries are findings.
 
 Counterexample: `events.idx_events__topic_id` is a prefix of
 `idx_events__topic_id__created_at`.

@@ -1,18 +1,19 @@
-use super::{leading_index_column, line_containing, relation};
+use super::{leading_index_column, qualified_relation};
 use crate::codebase::postgres::types::{
     SqlCreateIndexMetadata, SqlDropIndexMetadata, SqlIndexParam,
 };
-use sqlparser::ast::{ColumnOption, Expr, IndexColumn, IndexType, ObjectName, TableConstraint};
+use sqlparser::ast::{ColumnOption, IndexColumn, IndexType, ObjectName, TableConstraint};
 
 pub(super) fn from_create_index(
     sql: &str,
+    occurrence: usize,
     index: &sqlparser::ast::CreateIndex,
 ) -> SqlCreateIndexMetadata {
-    let name = index.name.as_ref().map(relation);
+    let name = index.name.as_ref().map(qualified_relation);
     let columns = index_params(&index.columns);
     let leading_column = columns.first().and_then(|column| column.name.clone());
     SqlCreateIndexMetadata {
-        table_name: relation(&index.table_name),
+        table_name: qualified_relation(&index.table_name),
         name: name.clone(),
         leading_column: leading_column.clone(),
         columns,
@@ -24,21 +25,40 @@ pub(super) fn from_create_index(
         access_method: access_method(index.using.as_ref()),
         unique: index.unique,
         has_predicate: index.predicate.is_some(),
-        not_null_predicate_column: index.predicate.as_ref().and_then(not_null_predicate_column),
-        predicate_key: index.predicate.as_ref().map(predicate_key),
-        line: create_index_line(sql, name.as_deref(), leading_column.as_deref()),
+        not_null_predicate_column: index
+            .predicate
+            .as_ref()
+            .and_then(super::predicate::not_null_predicate_column),
+        predicate_key: index
+            .predicate
+            .as_ref()
+            .map(super::predicate::predicate_key),
+        line: super::lines::nth_create_index_line(sql, occurrence),
     }
 }
 
-pub(super) fn from_drop_index(sql: &str, names: &[ObjectName]) -> Vec<SqlDropIndexMetadata> {
+pub(super) fn from_drop_index(
+    sql: &str,
+    occurrence: usize,
+    names: &[ObjectName],
+) -> Vec<SqlDropIndexMetadata> {
+    drop_names(names, super::lines::nth_drop_index_line(sql, occurrence))
+}
+
+pub(super) fn from_drop_table(
+    sql: &str,
+    occurrence: usize,
+    names: &[ObjectName],
+) -> Vec<SqlDropIndexMetadata> {
+    drop_names(names, super::lines::nth_drop_table_line(sql, occurrence))
+}
+
+fn drop_names(names: &[ObjectName], line: usize) -> Vec<SqlDropIndexMetadata> {
     names
         .iter()
-        .map(|name| {
-            let name = relation(name);
-            SqlDropIndexMetadata {
-                name: name.clone(),
-                line: line_containing(sql, &["drop", "index", &name]),
-            }
+        .map(|name| SqlDropIndexMetadata {
+            name: qualified_relation(name),
+            line,
         })
         .collect()
 }
@@ -110,7 +130,7 @@ fn index_params(columns: &[IndexColumn]) -> Vec<SqlIndexParam> {
 fn index_param(column: &IndexColumn) -> SqlIndexParam {
     SqlIndexParam {
         name: leading_index_column(column),
-        opclass: column.operator_class.as_ref().map(relation),
+        opclass: column.operator_class.as_ref().map(qualified_relation),
         ordering: match column.column.options.asc {
             Some(true) => Some("asc".to_string()),
             Some(false) => Some("desc".to_string()),
@@ -124,50 +144,10 @@ fn index_param(column: &IndexColumn) -> SqlIndexParam {
     }
 }
 
-fn create_index_line(sql: &str, name: Option<&str>, leading: Option<&str>) -> usize {
-    if let Some(name) = name {
-        return line_containing(sql, &["create", "index", name]);
-    }
-    leading
-        .map(|column| line_containing(sql, &["create", "index", column]))
-        .unwrap_or(1)
-}
-
 fn access_method(using: Option<&IndexType>) -> String {
     match using {
         None | Some(IndexType::BTree) => "btree".to_string(),
         Some(IndexType::Hash) => "hash".to_string(),
         Some(other) => other.to_string().to_ascii_lowercase(),
-    }
-}
-
-fn predicate_key(expr: &Expr) -> String {
-    unwrap_expr(expr)
-        .to_string()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .to_ascii_lowercase()
-}
-
-fn not_null_predicate_column(expr: &Expr) -> Option<String> {
-    match unwrap_expr(expr) {
-        Expr::IsNotNull(inner) => expr_column_name(inner),
-        _ => None,
-    }
-}
-
-fn unwrap_expr(expr: &Expr) -> &Expr {
-    match expr {
-        Expr::Nested(inner) => unwrap_expr(inner),
-        other => other,
-    }
-}
-
-fn expr_column_name(expr: &Expr) -> Option<String> {
-    match unwrap_expr(expr) {
-        Expr::Identifier(ident) => Some(ident.value.clone()),
-        Expr::CompoundIdentifier(parts) => parts.last().map(|ident| ident.value.clone()),
-        _ => None,
     }
 }

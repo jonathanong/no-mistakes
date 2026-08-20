@@ -30,11 +30,19 @@ fn config(extra: &str) -> NoMistakesConfig {
 }
 
 fn sql_files(root: &Path) -> Vec<PathBuf> {
-    ["001.sql", "0001.sql", "0002.sql"]
-        .into_iter()
-        .map(|name| root.join("migrations").join(name))
-        .filter(|path| path.is_file())
-        .collect()
+    [
+        "001.sql",
+        "0001.sql",
+        "0002.sql",
+        "2.sql",
+        "10.sql",
+        "V2__create.sql",
+        "V10__drop.sql",
+    ]
+    .into_iter()
+    .map(|name| root.join("migrations").join(name))
+    .filter(|path| path.is_file())
+    .collect()
 }
 
 fn run(root: &Path, extra: &str) -> Vec<RuleFinding> {
@@ -187,7 +195,7 @@ fn prefix_helpers_cover_predicate_include_and_sort() {
             param("topic_id", None, None),
         ],
     );
-    assert!(!redundancy::is_redundant_prefix(
+    assert!(redundancy::is_redundant_prefix(
         &live(&desc),
         &live(&desc_long)
     ));
@@ -248,4 +256,110 @@ fn different_tables_are_not_redundant() {
         &live(&short),
         &live(&other)
     ));
+}
+
+#[test]
+fn omitted_btree_sort_options_match_asc_nulls_last() {
+    let short = idx("short", vec![param("topic_id", None, None)]);
+    let long = idx(
+        "long",
+        vec![
+            param("topic_id", Some("asc"), Some("last")),
+            param("created_at", None, None),
+        ],
+    );
+    assert!(redundancy::is_redundant_prefix(&live(&short), &live(&long)));
+    let first = idx("first", vec![param("topic_id", Some("asc"), Some("first"))]);
+    assert!(!redundancy::is_redundant_prefix(
+        &live(&first),
+        &live(&long)
+    ));
+}
+
+#[test]
+fn numeric_filename_prefixes_sort_before_lexicographic_digits() {
+    use super::order::cmp_sql_rel;
+    use std::cmp::Ordering;
+    assert_eq!(cmp_sql_rel("2.sql", "10.sql"), Ordering::Less);
+    assert_eq!(
+        cmp_sql_rel("migrations/V2__create.sql", "migrations/V10__drop.sql"),
+        Ordering::Less
+    );
+    assert_eq!(
+        cmp_sql_rel("migrations/2.sql", "other/10.sql"),
+        Ordering::Less
+    );
+    assert_eq!(
+        cmp_sql_rel("migrations/notes.sql", "migrations/schema.sql"),
+        "migrations/notes.sql".cmp("migrations/schema.sql")
+    );
+    let overflow = format!("migrations/{}.sql", "9".repeat(40));
+    assert_eq!(
+        cmp_sql_rel(&overflow, "migrations/1.sql"),
+        overflow.as_str().cmp("migrations/1.sql")
+    );
+}
+
+#[test]
+fn schema_qualified_tables_are_not_compared_together() {
+    assert!(run(&fixture("schema"), "").is_empty());
+}
+
+#[test]
+fn drop_index_in_another_schema_does_not_remove_the_prefix() {
+    let findings = run(&fixture("schema-drop"), "");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("public.events.idx_events__topic_id")
+    );
+}
+
+#[test]
+fn drop_table_removes_that_table_indexes() {
+    assert!(run(&fixture("dropped-table"), "").is_empty());
+}
+
+#[test]
+fn numeric_later_drop_removes_the_prefix_index() {
+    assert!(run(&fixture("numeric-order"), "").is_empty());
+}
+
+#[test]
+fn flyway_version_prefix_drop_removes_the_prefix_index() {
+    assert!(run(&fixture("flyway-order"), "").is_empty());
+}
+
+#[test]
+fn multiline_create_index_allow_directive_uses_the_create_line() {
+    assert!(run(&fixture("multiline"), "").is_empty());
+}
+
+#[test]
+fn describe_index_falls_back_to_columns_for_unnamed_indexes() {
+    let unnamed = SqlCreateIndexMetadata {
+        name: None,
+        columns: vec![
+            param("topic_id", None, None),
+            SqlIndexParam {
+                name: None,
+                ..Default::default()
+            },
+        ],
+        ..idx("unused", vec![param("topic_id", None, None)])
+    };
+    let described = redundancy::describe_index(&unnamed);
+    assert!(described.contains("implicit index"));
+    assert!(described.contains("<expr>"));
+}
+
+#[test]
+fn earlier_drop_does_not_remove_a_later_prefix_create() {
+    let findings = run(&fixture("earlier-drop"), "");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+}
+
+#[test]
+fn predicate_string_literals_are_case_sensitive() {
+    assert!(run(&fixture("predicate-case"), "").is_empty());
 }

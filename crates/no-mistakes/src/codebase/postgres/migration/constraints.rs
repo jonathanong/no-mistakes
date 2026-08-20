@@ -30,6 +30,7 @@ pub(super) fn collect_alter_table(
     facts: &mut SqlSchemaFileFacts,
 ) {
     let table_name = relation(&alter.name);
+    let index_table = super::qualified_relation(&alter.name);
     for operation in &alter.operations {
         match operation {
             AlterTableOperation::AddConstraint {
@@ -46,7 +47,7 @@ pub(super) fn collect_alter_table(
                         facts
                             .indexes
                             .push(super::indexes::covering_from_index_columns(
-                                &table_name,
+                                &index_table,
                                 &unique.columns,
                             ));
                     }
@@ -54,7 +55,7 @@ pub(super) fn collect_alter_table(
                         facts
                             .indexes
                             .push(super::indexes::covering_from_index_columns(
-                                &table_name,
+                                &index_table,
                                 &primary.columns,
                             ));
                     }

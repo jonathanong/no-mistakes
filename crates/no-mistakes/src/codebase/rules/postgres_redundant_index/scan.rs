@@ -1,7 +1,8 @@
+use super::order::cmp_sql_rel;
 use super::redundancy::{describe_index, is_redundant_prefix, LiveIndex};
 use super::{sql_rel, CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactPlan;
-use crate::codebase::postgres::{collect_postgres_facts, SqlSchemaFileFacts};
+use crate::codebase::postgres::{collect_postgres_facts, SqlDropIndexMetadata, SqlSchemaFileFacts};
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Context;
 use std::cmp::Ordering;
@@ -32,8 +33,9 @@ pub(super) fn scan(
         &Default::default(),
     )
     .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let drops = collect_drops(root, &facts.schema);
-    let indexes = live_indexes(root, &facts.schema, &drops);
+    let index_drops = named_drops(root, &facts.schema, |file| &file.dropped_indexes);
+    let table_drops = named_drops(root, &facts.schema, |file| &file.dropped_tables);
+    let indexes = live_indexes(root, &facts.schema, &index_drops, &table_drops);
     let mut used = BTreeSet::new();
     let mut findings = Vec::new();
     for table_indexes in indexes.values() {
@@ -88,19 +90,21 @@ fn scan_table(
 fn live_indexes<'a>(
     root: &Path,
     schema: &'a [SqlSchemaFileFacts],
-    drops: &[LiveDrop],
+    index_drops: &[LiveDrop],
+    table_drops: &[LiveDrop],
 ) -> BTreeMap<String, Vec<LiveIndex<'a>>> {
     let mut indexes = BTreeMap::<String, Vec<LiveIndex<'a>>>::new();
     for file in schema {
         let rel = sql_rel(root, &file.path);
         for index in &file.indexes {
-            let dropped = drops.iter().any(|drop| {
-                index
-                    .name
-                    .as_deref()
-                    .is_some_and(|name| drop.name == name && is_later(drop, &rel, index.line))
-            });
-            if dropped {
+            if dropped_later(index_drops, index.name.as_deref(), &rel, index.line)
+                || dropped_later(
+                    table_drops,
+                    Some(index.table_name.as_str()),
+                    &rel,
+                    index.line,
+                )
+            {
                 continue;
             }
             indexes
@@ -116,12 +120,16 @@ fn live_indexes<'a>(
     indexes
 }
 
-fn collect_drops(root: &Path, schema: &[SqlSchemaFileFacts]) -> Vec<LiveDrop> {
+fn named_drops(
+    root: &Path,
+    schema: &[SqlSchemaFileFacts],
+    names: impl Fn(&SqlSchemaFileFacts) -> &[SqlDropIndexMetadata],
+) -> Vec<LiveDrop> {
     schema
         .iter()
         .flat_map(|file| {
             let rel = sql_rel(root, &file.path);
-            file.dropped_indexes.iter().map(move |drop| LiveDrop {
+            names(file).iter().map(move |drop| LiveDrop {
                 file: rel.clone(),
                 name: drop.name.clone(),
                 line: drop.line,
@@ -130,8 +138,17 @@ fn collect_drops(root: &Path, schema: &[SqlSchemaFileFacts]) -> Vec<LiveDrop> {
         .collect()
 }
 
+fn dropped_later(drops: &[LiveDrop], name: Option<&str>, file: &str, line: usize) -> bool {
+    let Some(name) = name else {
+        return false;
+    };
+    drops
+        .iter()
+        .any(|drop| drop.name == name && is_later(drop, file, line))
+}
+
 fn is_later(drop: &LiveDrop, index_file: &str, index_line: usize) -> bool {
-    match drop.file.as_str().cmp(index_file) {
+    match cmp_sql_rel(&drop.file, index_file) {
         Ordering::Greater => true,
         Ordering::Equal => drop.line > index_line,
         Ordering::Less => false,
