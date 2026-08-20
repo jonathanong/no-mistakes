@@ -42,8 +42,13 @@ pub(crate) struct CompiledAuxiliary {
 pub(crate) struct CompiledOptions {
     pub(super) allow: Vec<ReasonedPath>,
     pub(super) auxiliary: Vec<CompiledAuxiliary>,
+    pub(super) invalid: Vec<(String, String)>,
 }
 
+/// Run coverage against `all_files`. The filesystem dispatcher passes the
+/// tracked inventory so untracked scratch files are omitted. Direct callers
+/// should pass `snapshot.tracked_paths_from(files)` when a discovery snapshot
+/// is available; otherwise this uses the supplied list unchanged.
 pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -65,13 +70,13 @@ pub(crate) fn check_with_files_and_sources(
         let compiled = compile_options(&opts);
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
+        let in_scope: Vec<PathBuf> = all_files
             .iter()
             .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
             .cloned()
             .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan::scan(root, &compiled, &files, sources));
+        let candidates = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
+        findings.extend(scan::scan(root, &compiled, all_files, &candidates, sources));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -84,20 +89,19 @@ fn compile_options(opts: &Options) -> CompiledOptions {
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .unwrap_or(DEFAULT_AUXILIARY_BASENAME);
-    CompiledOptions {
-        allow: opts
-            .allow
-            .iter()
-            .map(|entry| ReasonedPath {
-                path: normalize_rel(&entry.path),
-                reason: entry.reason.clone(),
-            })
-            .collect(),
-        auxiliary: opts
-            .auxiliary_configs
-            .iter()
-            .map(|entry| CompiledAuxiliary {
-                path: normalize_rel(&entry.path),
+    let mut invalid = Vec::new();
+    let allow = opts
+        .allow
+        .iter()
+        .filter_map(|entry| compiled_reasoned("allow", entry, &mut invalid))
+        .collect();
+    let auxiliary = opts
+        .auxiliary_configs
+        .iter()
+        .filter_map(|entry| {
+            let path = compiled_path("auxiliaryConfigs", &entry.path, &mut invalid)?;
+            Some(CompiledAuxiliary {
+                path,
                 reason: entry.reason.clone(),
                 required_basename: entry
                     .required_basename
@@ -107,16 +111,50 @@ fn compile_options(opts: &Options) -> CompiledOptions {
                     .unwrap_or(default_basename)
                     .to_string(),
             })
-            .collect(),
+        })
+        .collect();
+    CompiledOptions {
+        allow,
+        auxiliary,
+        invalid,
     }
 }
 
-pub(super) fn normalize_rel(path: &str) -> String {
-    path.replace('\\', "/")
-        .split('/')
-        .filter(|part| !part.is_empty() && *part != ".")
-        .collect::<Vec<_>>()
-        .join("/")
+fn compiled_reasoned(
+    kind: &str,
+    entry: &ReasonedPath,
+    invalid: &mut Vec<(String, String)>,
+) -> Option<ReasonedPath> {
+    Some(ReasonedPath {
+        path: compiled_path(kind, &entry.path, invalid)?,
+        reason: entry.reason.clone(),
+    })
+}
+
+fn compiled_path(kind: &str, path: &str, invalid: &mut Vec<(String, String)>) -> Option<String> {
+    match normalize_rel(path) {
+        Some(normalized) => Some(normalized),
+        None => {
+            invalid.push((kind.to_string(), path.to_string()));
+            None
+        }
+    }
+}
+
+pub(super) fn normalize_rel(path: &str) -> Option<String> {
+    let normalized = path.replace('\\', "/");
+    if Path::new(path).is_absolute() || normalized.starts_with('/') {
+        return None;
+    }
+    let mut parts = Vec::new();
+    for part in normalized.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => return None,
+            part => parts.push(part),
+        }
+    }
+    Some(parts.join("/"))
 }
 
 pub(super) fn finding(file: &str, message: String) -> RuleFinding {

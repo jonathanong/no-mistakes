@@ -17,7 +17,18 @@ pub(super) fn list_findings(
         .iter()
         .map(|(_, rel)| rel.as_str())
         .collect::<BTreeSet<_>>();
-    let mut findings = Vec::new();
+    let mut findings = opts
+        .invalid
+        .iter()
+        .map(|(kind, path)| {
+            finding(
+                path,
+                format!(
+                    "tsconfig-file-coverage {kind} entry `{path}` must be a repository-relative path without parent traversals"
+                ),
+            )
+        })
+        .collect::<Vec<_>>();
     for entry in &opts.allow {
         findings.extend(reasoned_path_findings(
             "allow",

@@ -3,5 +3,5 @@ rules:
     scope: repository
     options:
       allow:
-        - path: scripts/codegen.ts
+        - path: scripts/generate.ts
           reason: generated entrypoint kept outside the app program

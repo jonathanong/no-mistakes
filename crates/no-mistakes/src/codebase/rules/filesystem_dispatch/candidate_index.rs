@@ -2,7 +2,7 @@ use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{
     rule_enabled, BANNED_PATHS, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_MERMAID_VALIDATION,
     MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET, PRODUCTION_DEPENDENCY_DECLARATIONS,
-    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS,
+    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, TSCONFIG_FILE_COVERAGE,
 };
 use crate::config::v2::NoMistakesConfig;
 use std::collections::BTreeMap;
@@ -46,7 +46,7 @@ impl RuleCandidateIndex {
                         .collect(),
                     rule_id == FORBIDDEN_WORKSPACE_CLOSURE
                         || rule_id == PRODUCTION_DEPENDENCY_DECLARATIONS,
-                    rule_id == BANNED_PATHS,
+                    rule_id == BANNED_PATHS || rule_id == TSCONFIG_FILE_COVERAGE,
                     (rule_id == BANNED_PATHS
                         && config
                             .rule_applications(rule_id)

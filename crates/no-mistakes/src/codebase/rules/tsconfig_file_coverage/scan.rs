@@ -8,16 +8,17 @@ use std::path::{Path, PathBuf};
 pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
-    files: &[PathBuf],
+    inventory: &[PathBuf],
+    candidate_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let tsconfigs = tracked_tsconfigs(root, files);
+    let tsconfigs = tracked_tsconfigs(root, inventory);
     if tsconfigs.is_empty() {
         return Vec::new();
     }
-    let candidates = typescript_candidates(root, files);
+    let candidates = typescript_candidates(root, candidate_files);
     let mut findings =
-        super::lists::list_findings(root, opts, &tsconfigs, &candidates, files, sources);
+        super::lists::list_findings(root, opts, &tsconfigs, &candidates, inventory, sources);
     let auxiliary = opts
         .auxiliary
         .iter()
@@ -28,7 +29,7 @@ pub(super) fn scan(
         .filter(|path| !auxiliary.contains(path.as_str()))
         .map(|path| root.join(path))
         .collect::<Vec<_>>();
-    let covered = covered_sources(root, &program_configs, files, sources);
+    let covered = covered_sources(root, &program_configs, candidate_files, sources);
     let allowed = opts
         .allow
         .iter()
