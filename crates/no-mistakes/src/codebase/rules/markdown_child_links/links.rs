@@ -48,9 +48,6 @@ fn split_destination(destination: &str) -> (&str, bool) {
 pub(super) fn normalize_inside(root: &Path, path: &Path) -> Option<PathBuf> {
     let mut relative = PathBuf::new();
     for component in path.strip_prefix(root).ok()?.components() {
-        if matches!(component, Component::CurDir) {
-            continue;
-        }
         match component {
             Component::Normal(part) => relative.push(part),
             Component::ParentDir if relative.pop() => {}
