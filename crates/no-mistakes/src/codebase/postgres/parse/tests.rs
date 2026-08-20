@@ -43,7 +43,7 @@ fn parse_error_from_recursion_limit_is_not_empty() {
 }
 
 #[test]
-fn lenient_parse_skips_do_blocks_and_accepts_virtual_generated() {
+fn lenient_parse_skips_create_type_in_do_and_accepts_virtual_generated() {
     let statements = parse_postgres_sql_lenient(
         "DO $$ BEGIN CREATE TYPE t AS ENUM ('a'); END $$;\n\
          CREATE TABLE items (\n\
@@ -55,6 +55,100 @@ fn lenient_parse_skips_do_blocks_and_accepts_virtual_generated() {
     assert!(matches!(
         statements[0],
         sqlparser::ast::Statement::CreateTable(_)
+    ));
+}
+
+#[test]
+fn lenient_parse_recovers_alter_table_from_plpgsql_do_body() {
+    let statements = parse_postgres_sql_lenient(
+        "DO $$ BEGIN\n\
+           IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 't_id_check') THEN\n\
+             ALTER TABLE t ADD CONSTRAINT t_id_check CHECK (id IS NOT NULL) NOT VALID;\n\
+           END IF;\n\
+         END $$;\n\
+         ALTER TABLE t VALIDATE CONSTRAINT t_id_check;",
+    );
+    assert_eq!(statements.len(), 2, "{statements:#?}");
+    assert!(
+        matches!(statements[0], sqlparser::ast::Statement::AlterTable(_)),
+        "{statements:#?}"
+    );
+    assert!(matches!(
+        statements[1],
+        sqlparser::ast::Statement::AlterTable(_)
+    ));
+}
+
+#[test]
+fn lenient_parse_peels_language_tagged_do_and_ignores_function_bodies() {
+    let language = parse_postgres_sql_lenient(
+        "DO LANGUAGE plpgsql $body$\n\
+           CREATE TABLE items (id int);\n\
+         $body$;",
+    );
+    assert_eq!(language.len(), 1, "{language:#?}");
+    assert!(matches!(
+        language[0],
+        sqlparser::ast::Statement::CreateTable(_)
+    ));
+    let function = parse_postgres_sql_lenient(
+        "CREATE FUNCTION f() RETURNS void LANGUAGE plpgsql AS $$\n\
+           BEGIN\n\
+             ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID;\n\
+           END\n\
+         $$;",
+    );
+    assert!(
+        function
+            .iter()
+            .all(|statement| !matches!(statement, sqlparser::ast::Statement::AlterTable(_))),
+        "{function:#?}"
+    );
+    let unique = parse_postgres_sql_lenient(
+        "DO $$ BEGIN\n\
+           IF true THEN\n\
+             CREATE UNIQUE INDEX t_id ON t (id);\n\
+           END IF;\n\
+         END $$;",
+    );
+    assert!(
+        unique
+            .iter()
+            .any(|statement| matches!(statement, sqlparser::ast::Statement::CreateIndex(_))),
+        "{unique:#?}"
+    );
+    let dml = parse_postgres_sql_lenient("DO $$ BEGIN UPDATE items SET n = 1; END $$;");
+    assert!(
+        dml.iter()
+            .all(|statement| !matches!(statement, sqlparser::ast::Statement::Update(_))),
+        "{dml:#?}"
+    );
+}
+
+#[test]
+fn lenient_parse_skips_do_blocks_with_trailing_junk() {
+    let statements = parse_postgres_sql_lenient(
+        "DO $$ ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID $$ unexpected;",
+    );
+    assert!(
+        statements
+            .iter()
+            .all(|statement| !matches!(statement, sqlparser::ast::Statement::AlterTable(_))),
+        "{statements:#?}"
+    );
+}
+
+#[test]
+fn lenient_parse_keeps_top_level_begin_commit() {
+    let statements = parse_postgres_sql_lenient("BEGIN; COMMIT;");
+    assert_eq!(statements.len(), 2, "{statements:#?}");
+    assert!(matches!(
+        statements[0],
+        sqlparser::ast::Statement::StartTransaction { .. }
+    ));
+    assert!(matches!(
+        statements[1],
+        sqlparser::ast::Statement::Commit { .. }
     ));
 }
 

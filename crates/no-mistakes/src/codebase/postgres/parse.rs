@@ -37,9 +37,11 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 /// Parse `sql`, skipping unparseable statements instead of failing the file.
 ///
 /// Migration trees mix parseable `CREATE TABLE` with `DO $$` blocks and other
-/// statements sqlparser rejects. Schema facts still come from the parseable
-/// statements. PostgreSQL 18 `GENERATED ALWAYS AS (...) VIRTUAL` is rewritten
-/// to `STORED` so those `CREATE TABLE` statements parse.
+/// statements sqlparser rejects. `DO $tag$` bodies are peeled and schema DDL
+/// inside them is recovered, including `ALTER TABLE` after PL/pgSQL `IF/THEN`.
+/// Other unparseable SQL is still skipped. PostgreSQL 18
+/// `GENERATED ALWAYS AS (...) VIRTUAL` is rewritten to `STORED` so those
+/// `CREATE TABLE` statements parse.
 pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     lenient::parse_postgres_sql_lenient(sql)
 }

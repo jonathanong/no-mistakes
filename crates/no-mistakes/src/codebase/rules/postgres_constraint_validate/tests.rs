@@ -50,6 +50,18 @@ fn paired_not_valid_and_validate_pass() {
 }
 
 #[test]
+fn paired_not_valid_inside_do_block_passes() {
+    assert!(run(&fixture("pass-do-block")).is_empty());
+}
+
+#[test]
+fn flags_not_valid_inside_do_block_without_validate() {
+    let findings = run(&fixture("fail-do-missing"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("VALIDATE CONSTRAINT"));
+}
+
+#[test]
 fn option_defaults_use_schema_sql_include() {
     let compiled = compile_options(&Options::default());
     assert_eq!(

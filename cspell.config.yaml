@@ -21,6 +21,8 @@ words:
   - callsite
   - callsites
   - constantize
+  - conname
+  - conrelid
   - cooldown
   - dedup
   - dtolnay
@@ -63,6 +65,7 @@ words:
   - refspec
   - refspecs
   - redirections
+  - regclass
   - rustfmt
   - serde
   - sqlparser

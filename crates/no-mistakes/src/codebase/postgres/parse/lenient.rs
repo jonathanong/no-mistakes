@@ -1,25 +1,22 @@
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
-use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, Tokenizer, Word};
 
+mod recover;
+
 /// Tokenize, rewrite PG18 virtual generated columns, then parse each statement.
+///
+/// Unparseable `DO $tag$ … $tag$` statements are peeled so schema DDL inside
+/// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
+/// `CREATE TABLE`, and `CREATE [UNIQUE] INDEX` after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     let dialect = PostgreSqlDialect {};
     let Ok(mut tokens) = Tokenizer::new(&dialect, sql).tokenize() else {
         return Vec::new();
     };
     rewrite_virtual_generated_columns(&mut tokens);
-    split_statement_tokens(tokens)
-        .into_iter()
-        .filter_map(|chunk| {
-            Parser::new(&dialect)
-                .with_tokens(chunk)
-                .parse_statement()
-                .ok()
-        })
-        .collect()
+    recover::parse_chunks(split_statement_tokens(tokens))
 }
 
 fn rewrite_virtual_generated_columns(tokens: &mut Vec<Token>) {
@@ -100,14 +97,14 @@ fn split_statement_tokens(tokens: Vec<Token>) -> Vec<Vec<Token>> {
     statements
 }
 
-fn skip_ws(tokens: &[Token], mut index: usize) -> usize {
+pub(super) fn skip_ws(tokens: &[Token], mut index: usize) -> usize {
     while index < tokens.len() && matches!(tokens[index], Token::Whitespace(_)) {
         index += 1;
     }
     index
 }
 
-fn next_non_ws(tokens: &[Token], start: usize) -> Option<usize> {
+pub(super) fn next_non_ws(tokens: &[Token], start: usize) -> Option<usize> {
     let index = skip_ws(tokens, start);
     (index < tokens.len()).then_some(index)
 }
@@ -118,7 +115,7 @@ fn has_non_ws(tokens: &[Token]) -> bool {
         .any(|token| !matches!(token, Token::Whitespace(_)))
 }
 
-fn keyword_of(token: &Token) -> Option<Keyword> {
+pub(super) fn keyword_of(token: &Token) -> Option<Keyword> {
     match token {
         Token::Word(word) => Some(word.keyword),
         _ => None,
