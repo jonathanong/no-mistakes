@@ -51,46 +51,8 @@ fn walk<'a>(value: &'a Value, selector: &str, skip_missing: bool) -> SelectorVal
     let mut has_missing = false;
     for part in selector.split('.').filter(|part| !part.is_empty()) {
         let mut next = Vec::new();
-        if part == "[]" {
-            for selected in current {
-                match selected {
-                    Some(Value::Sequence(items)) => next.extend(items.iter().map(Some)),
-                    Some(_) | None if skip_missing => {}
-                    Some(_) | None => {
-                        has_missing = true;
-                        next.push(None);
-                    }
-                }
-            }
-        } else if let Ok(index) = part.parse::<usize>() {
-            for selected in current {
-                match selected {
-                    Some(Value::Sequence(items)) => match items.get(index) {
-                        Some(item) => next.push(Some(item)),
-                        None if skip_missing => {}
-                        None => {
-                            has_missing = true;
-                            next.push(None);
-                        }
-                    },
-                    Some(_) | None if skip_missing => {}
-                    Some(_) | None => {
-                        has_missing = true;
-                        next.push(None);
-                    }
-                }
-            }
-        } else {
-            for selected in current {
-                match selected.and_then(|selected| selected.get(part)) {
-                    Some(child) => next.push(Some(child)),
-                    None if skip_missing => {}
-                    None => {
-                        has_missing = true;
-                        next.push(None);
-                    }
-                }
-            }
+        for selected in current {
+            step_part(selected, part, skip_missing, &mut next, &mut has_missing);
         }
         current = next;
     }
@@ -98,4 +60,44 @@ fn walk<'a>(value: &'a Value, selector: &str, skip_missing: bool) -> SelectorVal
         values: current.into_iter().flatten().collect(),
         has_missing,
     }
+}
+
+fn step_part<'a>(
+    selected: Option<&'a Value>,
+    part: &str,
+    skip_missing: bool,
+    next: &mut Vec<Option<&'a Value>>,
+    has_missing: &mut bool,
+) {
+    if part == "[]" {
+        if let Some(Value::Sequence(items)) = selected {
+            next.extend(items.iter().map(Some));
+            return;
+        }
+        push_missing(skip_missing, next, has_missing);
+        return;
+    }
+    if let Ok(index) = part.parse::<usize>() {
+        if let Some(Value::Sequence(items)) = selected {
+            match items.get(index) {
+                Some(item) => next.push(Some(item)),
+                None => push_missing(skip_missing, next, has_missing),
+            }
+            return;
+        }
+        push_missing(skip_missing, next, has_missing);
+        return;
+    }
+    match selected.and_then(|selected| selected.get(part)) {
+        Some(child) => next.push(Some(child)),
+        None => push_missing(skip_missing, next, has_missing),
+    }
+}
+
+fn push_missing(skip_missing: bool, next: &mut Vec<Option<&Value>>, has_missing: &mut bool) {
+    if skip_missing {
+        return;
+    }
+    *has_missing = true;
+    next.push(None);
 }
