@@ -9,6 +9,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::BANNED_PATHS,
     rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
     rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
+    rules::GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS,
     rules::github_actions_pinned_hash::RULE_ID,
     rules::BANNED_RENAMED_FILES,
     rules::CONFIG_PATH_REFERENCES,

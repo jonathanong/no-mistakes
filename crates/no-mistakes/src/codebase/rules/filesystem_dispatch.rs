@@ -5,8 +5,8 @@ use super::{
     agents_md_max_size, banned_paths, banned_renamed_files, config_path_references,
     csharp_max_lines_per_file, doc_consistency, file_extension_policy, finite_set_consistency,
     forbidden_workspace_closure, github_actions_composite_step_schema, github_actions_job_timeouts,
-    github_actions_pinned_hash, integration_test_no_mocks, lockfile_allowlist,
-    markdown_child_links, markdown_eval_tests, markdown_link_display_text,
+    github_actions_pinned_hash, github_actions_test_timeout_literals, integration_test_no_mocks,
+    lockfile_allowlist, markdown_child_links, markdown_eval_tests, markdown_link_display_text,
     markdown_mermaid_validation, markdown_reachability, markdown_structure_budget,
     nextjs_redirect_destinations, no_empty_or_comments_only_files, no_git_identity_mutation,
     package_json_registry_only, package_json_workspace_coverage, postgres_constraint_validate,
@@ -58,6 +58,8 @@ pub(super) const GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA: &str =
     github_actions_composite_step_schema::RULE_ID;
 pub(super) const GITHUB_ACTIONS_JOB_TIMEOUTS: &str = github_actions_job_timeouts::RULE_ID;
 pub(super) const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
+pub(super) const GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS: &str =
+    github_actions_test_timeout_literals::RULE_ID;
 
 macro_rules! define_filesystem_rule_ids {
     ($($id:expr => $call:path),* $(,)?) => {

@@ -6,6 +6,7 @@ macro_rules! filesystem_rules {
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files,
             GITHUB_ACTIONS_JOB_TIMEOUTS => github_actions_job_timeouts::check_with_files,
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files,
+            GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS => github_actions_test_timeout_literals::check_with_files,
             CONFIG_PATH_REFERENCES => config_path_references::check_with_files,
             CSHARP_MAX_LINES_PER_FILE => csharp_max_lines_per_file::check_with_files,
             FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files,

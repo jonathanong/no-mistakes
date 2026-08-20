@@ -12,6 +12,7 @@ pub mod forbidden_workspace_closure;
 pub mod github_actions_composite_step_schema;
 pub mod github_actions_job_timeouts;
 pub mod github_actions_pinned_hash;
+pub mod github_actions_test_timeout_literals;
 mod ids;
 pub mod integration_test_no_mocks;
 pub mod lockfile_allowlist;
