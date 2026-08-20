@@ -5,6 +5,8 @@ use serde_yaml::Value;
 
 mod kinds;
 mod selector;
+#[cfg(test)]
+mod tests;
 use kinds::kind_violation;
 use selector::{any_groups, values_at_selector};
 

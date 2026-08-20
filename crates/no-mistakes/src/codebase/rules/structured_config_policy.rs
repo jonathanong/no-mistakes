@@ -147,8 +147,12 @@ fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
 }
 
 #[cfg(test)]
+mod bind_tests;
+#[cfg(test)]
 mod jsonc_tests;
 #[cfg(test)]
-mod oxlintrc_tests;
+mod plugins_tests;
+#[cfg(test)]
+mod selector_tests;
 #[cfg(test)]
 mod tests;
