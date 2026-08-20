@@ -12,6 +12,7 @@ macro_rules! filesystem_rules {
             FORBIDDEN_WORKSPACE_CLOSURE => forbidden_workspace_closure::check_with_files,
             STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files,
             TSCONFIG_ALIAS_FOLDER_MAPPING => tsconfig_alias_folder_mapping::check_with_files,
+            TSCONFIG_FILE_COVERAGE => tsconfig_file_coverage::check_with_files,
             NO_GIT_IDENTITY_MUTATION => no_git_identity_mutation::check_with_files,
             MARKDOWN_EVAL_TESTS => markdown_eval_tests::check_with_files,
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files,

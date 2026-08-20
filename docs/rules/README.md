@@ -76,6 +76,7 @@ rules:
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency-version assertions in tests.                               |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
+| [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to belong to a tsconfig program.               |
 | [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md)                         | Require tracked TypeScript projects to have CI and local typecheck registrations. |
 | [`unique-exports`](unique-exports.md)                                         | Prevent ambiguous duplicate public export names.                                |
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |
