@@ -8,6 +8,7 @@ pub(super) fn check_file(
     path: &Path,
     opts: &CompiledOptions,
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
     if opts.allow.is_match(&rel) {
@@ -16,7 +17,8 @@ pub(super) fn check_file(
     let Some(source) = super::super::read_source(sources, path) else {
         return Vec::new();
     };
-    if crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID) {
+    if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
+    {
         return Vec::new();
     }
     let mut seen = BTreeSet::new();
@@ -29,7 +31,9 @@ pub(super) fn check_file(
             push_finding(&mut findings, &mut seen, &rel, line, &opts.message);
         }
     }
-    super::super::suppress_rule_findings_with_source(&mut findings, &source);
+    if !defer_suppression {
+        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+    }
     findings
 }
 

@@ -30,6 +30,19 @@ fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
     check_with_files(root, &config(yaml), &files).unwrap()
 }
 
+fn run_deferred(root: &Path, yaml: &str, defer_suppression: bool) -> Vec<RuleFinding> {
+    let files = crate::codebase::ts_source::discover_files(root, &[]);
+    let sources = super::super::source_store_for_files(&files);
+    check_with_files_sources_and_deferred_suppression(
+        root,
+        &config(yaml),
+        &files,
+        &sources,
+        defer_suppression,
+    )
+    .unwrap()
+}
+
 fn bind_lines(source: &str) -> Vec<usize> {
     python::scan_lines(source, &regex::Regex::new(python::BIND_PATTERN).unwrap())
 }
@@ -41,6 +54,12 @@ fn python_tuple_bind_zero_is_a_finding() {
         findings
             .iter()
             .any(|finding| finding.file == "server.py" && finding.line == 3),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file == "server.py" && finding.line == 4),
         "{findings:?}"
     );
     assert!(
@@ -74,6 +93,7 @@ fn listen_zero_forms_are_findings() {
     assert!(files.contains(&"server.ts"), "{findings:?}");
     assert!(files.contains(&"options.ts"), "{findings:?}");
     assert!(files.contains(&"trailing.ts"), "{findings:?}");
+    assert!(files.contains(&"app.jsx"), "{findings:?}");
 }
 
 #[test]
@@ -129,7 +149,7 @@ fn unreadable_file_is_skipped() {
     let path = root.join("missing.py");
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(Options::default()).unwrap();
-    assert!(scan::check_file(&root, &path, &opts, &sources).is_empty());
+    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
 }
 
 #[test]
@@ -138,6 +158,28 @@ fn bind_regex_accepts_whitespace_and_single_quotes() {
     assert_eq!(bind_lines(". bind ( ( \"x\" , 0 ) )\n"), vec![1]);
     assert!(bind_lines("sock.bind((\"127.0.0.1\", 8080))\n").is_empty());
     assert!(bind_lines("sock.bind(0)\n").is_empty());
+}
+
+#[test]
+fn bind_regex_accepts_ipv6_four_tuples() {
+    assert_eq!(bind_lines("sock.bind((\"::1\", 0, 0, 0))\n"), vec![1]);
+    assert_eq!(bind_lines("sock.bind(('::1', 0, 0, 0))\n"), vec![1]);
+    assert_eq!(bind_lines(".bind( ( '::1' , 0 , 0 , 0 ) )\n"), vec![1]);
+    assert!(bind_lines("sock.bind((\"::1\", 8080, 0, 0))\n").is_empty());
+}
+
+#[test]
+fn bind_regex_skips_comment_lines_but_keeps_command_strings() {
+    assert!(bind_lines("# sock.bind((\"127.0.0.1\", 0))\n").is_empty());
+    assert!(bind_lines("  // sock.bind((\"127.0.0.1\", 0))\n").is_empty());
+    assert_eq!(
+        bind_lines("command: python -c 's.bind((\"127.0.0.1\", 0))'\n"),
+        vec![1]
+    );
+    assert_eq!(
+        bind_lines("python -c 's.bind((\"0.0.0.0\", 0))'\n"),
+        vec![1]
+    );
 }
 
 #[test]
@@ -175,6 +217,8 @@ fn listen_non_literal_ports_are_ignored() {
     assert!(ast::scan_lines(Path::new("server.ts"), "server.listen({ port });\n").is_empty());
     assert!(ast::scan_lines(Path::new("server.ts"), "server.listen({ port: '0' });\n").is_empty());
     assert!(ast::scan_lines(Path::new("server.ts"), "listen(0);\n").is_empty());
+    assert!(ast::scan_lines(Path::new("server.ts"), "server.listen({ ...opts });\n").is_empty());
+    assert!(ast::scan_lines(Path::new("server.py"), "server.listen(0);\n").is_empty());
 }
 
 #[test]
@@ -190,6 +234,51 @@ fn jsx_and_cjs_listen_zero_are_flagged() {
         ast::scan_lines(Path::new("server.cjs"), "server.listen(0);\n"),
         vec![1]
     );
+    assert_eq!(
+        ast::scan_lines(Path::new("app.jsx"), "server.listen(0);\n"),
+        vec![1]
+    );
+}
+
+#[test]
+fn listen_ts_wrappers_are_unwrapped() {
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen(0 as number);\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(
+            Path::new("server.ts"),
+            "server.listen(0 satisfies number);\n"
+        ),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen((0));\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen(0!);\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen(<number>0);\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(
+            Path::new("server.ts"),
+            "server.listen({ port: 0 as number });\n"
+        ),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(
+            Path::new("server.ts"),
+            "server.listen({ ...opts, port: 0! });\n"
+        ),
+        vec![1]
+    );
 }
 
 #[test]
@@ -199,4 +288,63 @@ fn empty_message_keeps_the_default() {
     let clone = Options::default();
     assert!(clone.include.is_empty());
     assert!(clone.allow.is_empty());
+}
+
+#[test]
+fn default_include_covers_jsx() {
+    let opts = compile_options(Options::default()).unwrap();
+    assert!(opts.include.contains(&"**/*.jsx".to_string()));
+}
+
+#[test]
+fn empty_file_list_is_silent() {
+    let root = fixture("pass");
+    let findings = check_with_files(&root, &config("{}"), &[]).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn invalid_allow_glob_is_an_error() {
+    let error = compile_options(serde_yaml::from_str("allow: [\"[\"]\n").unwrap())
+        .err()
+        .expect("invalid allow glob")
+        .to_string();
+    assert!(error.contains("no-raw-ephemeral-port allow"), "{error}");
+}
+
+#[test]
+fn deferred_suppression_still_emits_disabled_file() {
+    let findings = run_deferred(&fixture("disable"), "{}", true);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "server.ts");
+}
+
+#[test]
+fn next_line_disable_is_skipped_unless_deferred() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("server.ts");
+    std::fs::write(
+        &path,
+        "// no-mistakes-disable-next-line no-raw-ephemeral-port\nserver.listen(0);\n",
+    )
+    .unwrap();
+    let sources = super::super::source_store_for_files(&[path.clone()]);
+    let opts = compile_options(Options::default()).unwrap();
+    assert!(scan::check_file(dir.path(), &path, &opts, &sources, false).is_empty());
+    assert_eq!(
+        scan::check_file(dir.path(), &path, &opts, &sources, true).len(),
+        1
+    );
+}
+
+#[test]
+fn same_line_bind_and_listen_dedup() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("server.ts");
+    std::fs::write(&path, "s.listen(0); s.bind((\"127.0.0.1\", 0));\n").unwrap();
+    let sources = super::super::source_store_for_files(&[path.clone()]);
+    let opts = compile_options(Options::default()).unwrap();
+    let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 1);
 }

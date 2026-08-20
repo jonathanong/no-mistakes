@@ -1,3 +1,4 @@
+use crate::codebase::ts_source::{static_property_key_name, unwrap_ts_wrappers};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind, Program,
@@ -60,14 +61,16 @@ fn is_listen_callee(callee: &Expression<'_>) -> bool {
 }
 
 fn argument_is_ephemeral_port(argument: &Argument<'_>) -> bool {
-    match argument {
-        Argument::NumericLiteral(literal) => literal.value == 0.0,
-        Argument::ObjectExpression(object) => object_has_port_zero(object),
-        other => other.as_expression().is_some_and(|expr| match expr {
-            Expression::NumericLiteral(literal) => literal.value == 0.0,
-            Expression::ObjectExpression(object) => object_has_port_zero(object),
-            _ => false,
-        }),
+    argument
+        .as_expression()
+        .is_some_and(|expr| expression_is_ephemeral_port(unwrap_ts_wrappers(expr)))
+}
+
+fn expression_is_ephemeral_port(expr: &Expression<'_>) -> bool {
+    match expr {
+        Expression::NumericLiteral(literal) => literal.value == 0.0,
+        Expression::ObjectExpression(object) => object_has_port_zero(object),
+        _ => false,
     }
 }
 
@@ -76,7 +79,10 @@ fn object_has_port_zero(object: &ObjectExpression<'_>) -> bool {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return false;
         };
-        crate::codebase::ts_source::static_property_key_name(&property.key) == Some("port")
-            && matches!(&property.value, Expression::NumericLiteral(literal) if literal.value == 0.0)
+        static_property_key_name(&property.key) == Some("port")
+            && matches!(
+                unwrap_ts_wrappers(&property.value),
+                Expression::NumericLiteral(literal) if literal.value == 0.0
+            )
     })
 }

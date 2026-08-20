@@ -18,7 +18,7 @@ rules:
       message: use a configured allocator
 ```
 
-`include` defaults to `*.bash`, `*.cjs`, `*.cts`, `*.js`, `*.mjs`, `*.mts`,
+`include` defaults to `*.bash`, `*.cjs`, `*.cts`, `*.js`, `*.jsx`, `*.mjs`, `*.mts`,
 `*.py`, `*.sh`, `*.ts`, `*.tsx`, `*.yaml`, `*.yml`, and `*.zsh`.
 `allow` skips binder implementations by relative path glob.
 `message` appends an optional hint after the default finding text.
