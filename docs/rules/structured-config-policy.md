@@ -37,7 +37,7 @@ an assertion to every array entry. On `[]` selectors, `match: all` (default)
 requires every entry to satisfy the assertion; `match: any` requires at least one
 entry in each parent array. Missing parent keys are skipped for `match: any`, so
 an override that never mentions a rule is not a failure. `not-single-file` strips a
-leading `**/` before looking for glob metacharacters, so `**/exact/file.ts` is still
+leading `**/` before looking for glob wildcards, so `**/exact/file.ts` is still
 a single-file entry.
 
 `object-shape` accepts `requiredKeys`, `forbiddenKeys`, and `requiredValues`.
