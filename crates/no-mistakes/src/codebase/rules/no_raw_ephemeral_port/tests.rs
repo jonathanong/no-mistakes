@@ -328,7 +328,7 @@ fn next_line_disable_is_skipped_unless_deferred() {
         "// no-mistakes-disable-next-line no-raw-ephemeral-port\nserver.listen(0);\n",
     )
     .unwrap();
-    let sources = super::super::source_store_for_files(&[path.clone()]);
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(Options::default()).unwrap();
     assert!(scan::check_file(dir.path(), &path, &opts, &sources, false).is_empty());
     assert_eq!(
@@ -342,7 +342,7 @@ fn same_line_bind_and_listen_dedup() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("server.ts");
     std::fs::write(&path, "s.listen(0); s.bind((\"127.0.0.1\", 0));\n").unwrap();
-    let sources = super::super::source_store_for_files(&[path.clone()]);
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(Options::default()).unwrap();
     let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
     assert_eq!(findings.len(), 1, "{findings:?}");
