@@ -121,6 +121,7 @@ fn covering_index_shapes() {
         access_method: "btree".to_string(),
         has_predicate: false,
         not_null_predicate_column: None,
+        ..Default::default()
     };
     let hash = SqlCreateIndexMetadata {
         access_method: "hash".to_string(),

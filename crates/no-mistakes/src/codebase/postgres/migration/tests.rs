@@ -17,7 +17,11 @@ ALTER TABLE comments VALIDATE CONSTRAINT comments_body_check;
         |index| index.table_name == "comments" && index.leading_column.as_deref() == Some("id")
     ));
     assert!(facts.indexes.iter().any(|index| {
-        index.leading_column.as_deref() == Some("post_id") && index.access_method == "btree"
+        index.name.as_deref() == Some("comments_post_id_idx")
+            && index.leading_column.as_deref() == Some("post_id")
+            && index.access_method == "btree"
+            && !index.unique
+            && index.columns.len() == 1
     }));
     assert!(facts.indexes.iter().any(|index| {
         index.leading_column.as_deref() == Some("author_id")
@@ -189,4 +193,39 @@ fn extracted_schema_records_clone_eq_and_debug() {
     assert_eq!(not_valid, facts.not_valid_constraints);
     assert_eq!(validated, facts.validated_constraints);
     assert!(format!("{indexes:?}{foreign_keys:?}{not_valid:?}{validated:?}").contains("t"));
+}
+
+#[test]
+fn extracts_index_prefix_fields_includes_and_drops() {
+    let sql = r#"
+CREATE UNIQUE INDEX idx_accounts__email ON accounts (email DESC NULLS LAST) INCLUDE (region);
+CREATE INDEX idx_accounts__org ON accounts (org_id) WHERE deleted_at IS NULL;
+DROP INDEX IF EXISTS public.first_index, second_index;
+"#;
+    let facts = extract_migration_facts(sql);
+    let unique = facts
+        .indexes
+        .iter()
+        .find(|index| index.name.as_deref() == Some("idx_accounts__email"))
+        .expect("unique");
+    assert!(unique.unique);
+    assert_eq!(unique.include_columns, ["region"]);
+    assert_eq!(unique.columns[0].name.as_deref(), Some("email"));
+    assert_eq!(unique.columns[0].ordering.as_deref(), Some("desc"));
+    assert_eq!(unique.columns[0].nulls_ordering.as_deref(), Some("last"));
+    let partial = facts
+        .indexes
+        .iter()
+        .find(|index| index.name.as_deref() == Some("idx_accounts__org"))
+        .expect("partial");
+    assert_eq!(partial.predicate_key.as_deref(), Some("deleted_at is null"));
+    assert_eq!(
+        facts
+            .dropped_indexes
+            .iter()
+            .map(|drop| drop.name.as_str())
+            .collect::<Vec<_>>(),
+        ["first_index", "second_index"]
+    );
+    assert!(facts.dropped_indexes.iter().all(|drop| drop.line > 0));
 }

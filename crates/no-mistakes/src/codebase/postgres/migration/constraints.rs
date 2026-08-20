@@ -43,19 +43,20 @@ pub(super) fn collect_alter_table(
                             .push(fk_metadata(sql, &table_name, None, fk))
                     }
                     TableConstraint::Unique(unique) => {
-                        facts.indexes.push(super::indexes::covering_unique(
-                            &table_name,
-                            unique.columns.first().and_then(super::leading_index_column),
-                        ));
+                        facts
+                            .indexes
+                            .push(super::indexes::covering_from_index_columns(
+                                &table_name,
+                                &unique.columns,
+                            ));
                     }
                     TableConstraint::PrimaryKey(primary) => {
-                        facts.indexes.push(super::indexes::covering_unique(
-                            &table_name,
-                            primary
-                                .columns
-                                .first()
-                                .and_then(super::leading_index_column),
-                        ));
+                        facts
+                            .indexes
+                            .push(super::indexes::covering_from_index_columns(
+                                &table_name,
+                                &primary.columns,
+                            ));
                     }
                     _ => {}
                 }

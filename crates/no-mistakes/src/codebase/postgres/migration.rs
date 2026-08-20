@@ -1,6 +1,6 @@
 use super::schema::{extract_create_table_metadata, index_column_name, relation_name};
 use super::types::SqlSchemaFileFacts;
-use sqlparser::ast::Statement;
+use sqlparser::ast::{ObjectType, Statement};
 
 mod constraints;
 mod indexes;
@@ -12,7 +12,16 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     };
     for statement in super::parse::parse_postgres_sql_lenient(sql) {
         match statement {
-            Statement::CreateIndex(index) => facts.indexes.push(indexes::from_create_index(&index)),
+            Statement::CreateIndex(index) => {
+                facts.indexes.push(indexes::from_create_index(sql, &index))
+            }
+            Statement::Drop {
+                object_type: ObjectType::Index,
+                names,
+                ..
+            } => facts
+                .dropped_indexes
+                .extend(indexes::from_drop_index(sql, &names)),
             Statement::CreateTable(table) => {
                 let table_name = relation_name(&table.name);
                 facts
