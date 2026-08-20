@@ -1,7 +1,7 @@
+use super::line::nested_input_finding;
 use super::yaml::{
     finding, is_direct_third_party, is_local_wrapper, key_line, literal_u64, mapping_get,
-    mapping_string, nested_composite_message, nested_message, step_label, timeout_message,
-    uses_matches, yaml_got,
+    mapping_string, nested_composite_message, step_label, timeout_message, uses_matches, yaml_got,
 };
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
@@ -13,19 +13,23 @@ pub(super) fn check_file(
     path: &Path,
     opts: &CompiledOptions,
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
     let Some(source) = super::super::read_source(sources, path) else {
         return Vec::new();
     };
-    if crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID) {
+    if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
+    {
         return Vec::new();
     }
     let mut findings = match serde_yaml::from_str::<Value>(&source) {
         Ok(value) => check_parsed(&rel, &source, &value, opts),
         Err(_) => Vec::new(),
     };
-    super::super::suppress_rule_findings_with_source(&mut findings, &source);
+    if !defer_suppression {
+        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+    }
     findings
 }
 
@@ -102,7 +106,7 @@ fn check_workflow_step(
     }
     if is_direct_third_party(&uses, &opts.uses) {
         findings.extend(nested_input_finding(
-            rel, source, job_id, &label, step, opts,
+            rel, source, job_id, &label, step, index, opts,
         ));
     }
     findings
@@ -141,6 +145,7 @@ fn check_composite(
                     "(composite)",
                     &label,
                     step,
+                    index,
                     opts,
                 ));
             }
@@ -156,39 +161,4 @@ fn check_composite(
         }
     }
     findings
-}
-
-fn nested_input_finding(
-    rel: &str,
-    source: &str,
-    job_id: &str,
-    label: &str,
-    step: &Mapping,
-    opts: &CompiledOptions,
-) -> Vec<RuleFinding> {
-    if opts.nested_input.is_empty() {
-        return Vec::new();
-    }
-    let Some(expected) = opts.nested_timeout_seconds else {
-        return Vec::new();
-    };
-    let raw = mapping_get(step, "with")
-        .and_then(Value::as_mapping)
-        .and_then(|with| mapping_get(with, &opts.nested_input));
-    if raw.and_then(literal_u64) == Some(expected) {
-        return Vec::new();
-    }
-    vec![finding(
-        rel,
-        key_line(source, &opts.nested_input),
-        nested_message(
-            rel,
-            job_id,
-            label,
-            &opts.nested_input,
-            expected,
-            &yaml_got(raw),
-        ),
-        job_id,
-    )]
 }

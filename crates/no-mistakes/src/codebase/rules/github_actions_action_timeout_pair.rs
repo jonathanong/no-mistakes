@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod line;
 mod scan;
 mod yaml;
 
@@ -66,7 +67,7 @@ pub(crate) fn check_with_files(
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
+    check_with_files_and_sources(root, config, all_files, &sources, false)
 }
 
 pub(crate) fn check_with_files_and_sources(
@@ -74,6 +75,7 @@ pub(crate) fn check_with_files_and_sources(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
@@ -93,7 +95,7 @@ pub(crate) fn check_with_files_and_sources(
             continue;
         }
         let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
-        findings.extend(scan_files(root, &opts, &files, sources));
+        findings.extend(scan_files(root, &opts, &files, sources, defer_suppression));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -136,12 +138,15 @@ fn scan_files(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Vec<RuleFinding> {
     files
         .par_iter()
-        .flat_map(|path| scan::check_file(root, path, opts, sources))
+        .flat_map(|path| scan::check_file(root, path, opts, sources, defer_suppression))
         .collect()
 }
 
+#[cfg(test)]
+mod review_tests;
 #[cfg(test)]
 mod tests;

@@ -86,15 +86,26 @@ pub(super) fn is_direct_third_party(uses: &str, specs: &[UsesSpec]) -> bool {
 }
 
 pub(super) fn is_local_wrapper(rel: &str, specs: &[UsesSpec]) -> bool {
-    specs.iter().any(|spec| {
-        let UsesSpec::Exact(path) = spec else {
-            return false;
-        };
-        let Some(local) = path.strip_prefix("./") else {
-            return false;
-        };
-        rel.starts_with(&format!("{local}/"))
+    specs.iter().any(|spec| match spec {
+        UsesSpec::Exact(path) => path
+            .strip_prefix("./")
+            .is_some_and(|local| is_wrapper_action_file(rel, local)),
+        UsesSpec::Prefix(_) => false,
     })
+}
+
+fn is_wrapper_action_file(rel: &str, local: &str) -> bool {
+    let rest = if rel == local {
+        rel.rsplit('/').next().unwrap_or(rel)
+    } else if let Some(rest) = rel
+        .strip_prefix(local)
+        .and_then(|rest| rest.strip_prefix('/'))
+    {
+        rest
+    } else {
+        return false;
+    };
+    matches!(rest, "action.yml" | "action.yaml")
 }
 
 pub(super) fn timeout_message(

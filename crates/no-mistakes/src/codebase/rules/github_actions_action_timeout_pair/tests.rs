@@ -112,7 +112,7 @@ fn invalid_yaml_is_skipped() {
     std::fs::write(&path, "jobs: {broken: [{{").unwrap();
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(tmp.path(), &path, &opts, &sources).is_empty());
+    assert!(scan::check_file(tmp.path(), &path, &opts, &sources, false).is_empty());
 }
 
 #[test]
@@ -224,7 +224,7 @@ fn disable_file_comment_skips() {
     .unwrap();
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(tmp.path(), &path, &opts, &sources).is_empty());
+    assert!(scan::check_file(tmp.path(), &path, &opts, &sources, false).is_empty());
 }
 
 #[test]
@@ -233,7 +233,7 @@ fn unreadable_and_include_misses_are_silent() {
     let missing = root.join(".github/workflows/missing.yml");
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(&root, &missing, &opts, &sources).is_empty());
+    assert!(scan::check_file(&root, &missing, &opts, &sources, false).is_empty());
     assert!(run(
         &root,
         "include: [\"nope.yml\"]\nuses: [\"./.github/actions/setup-aws\"]\n",
@@ -274,6 +274,35 @@ fn yaml_helpers_cover_literals_and_labels() {
     );
     assert!(Options::default().forbid_nested_in_composite);
     assert!(Options::default().uses.is_empty());
+    let uses = compile_options(serde_yaml::from_str(OPTIONS).unwrap()).uses;
+    assert!(yaml::is_local_wrapper(
+        ".github/actions/setup-aws/action.yml",
+        &uses
+    ));
+    assert!(yaml::is_local_wrapper(
+        ".github/actions/setup-aws/action.yaml",
+        &uses
+    ));
+    assert!(!yaml::is_local_wrapper(
+        ".github/actions/setup-aws/nested/action.yml",
+        &uses
+    ));
+    assert!(!yaml::is_local_wrapper(
+        ".github/actions/setup-aws/action.yml",
+        &[UsesSpec::Prefix(
+            "aws-actions/configure-aws-credentials@".into()
+        )]
+    ));
+    assert!(!yaml::is_local_wrapper(
+        ".github/actions/setup-aws/action.yml",
+        &[UsesSpec::Exact(".github/actions/setup-aws".into())]
+    ));
+    assert!(yaml::is_local_wrapper(
+        ".github/actions/setup-aws/action.yml",
+        &[UsesSpec::Exact(
+            "./.github/actions/setup-aws/action.yml".into()
+        )]
+    ));
 }
 
 #[test]
