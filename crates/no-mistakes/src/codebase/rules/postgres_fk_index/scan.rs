@@ -25,7 +25,7 @@ pub(super) fn scan(
         &opts.schema,
         &Default::default(),
     )
-    .with_context(|| format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let indexes = indexes_by_table(&facts.schema);
     let mut used_columns = BTreeSet::new();
     let mut used_tables = BTreeSet::new();

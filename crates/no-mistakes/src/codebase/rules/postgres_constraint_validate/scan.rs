@@ -23,7 +23,7 @@ pub(super) fn scan(
         &opts.schema,
         &Default::default(),
     )
-    .with_context(|| format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
+    .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut not_valid = BTreeMap::<String, (String, usize)>::new();
     let mut validated = BTreeMap::<String, (String, usize)>::new();
     for file in &facts.schema {

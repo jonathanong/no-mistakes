@@ -106,16 +106,22 @@ fn fk_metadata(
     } else {
         fk.columns.iter().map(|ident| ident.value.clone()).collect()
     };
-    let needle = column_names
-        .first()
-        .cloned()
-        .unwrap_or_else(|| "references".to_string());
+    let line = line_containing(
+        sql,
+        &[
+            column_names
+                .first()
+                .map(String::as_str)
+                .unwrap_or("references"),
+            "references",
+        ],
+    );
     SqlForeignKeyMetadata {
         table_name: table_name.to_string(),
         column_names,
         referenced_table_name: relation(&fk.foreign_table),
         delete_action: fk.on_delete.as_ref().map(ToString::to_string),
-        line: line_containing(sql, &[&needle, "references"]),
+        line,
     }
 }
 
