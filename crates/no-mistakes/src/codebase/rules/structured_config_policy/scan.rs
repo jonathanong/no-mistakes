@@ -1,4 +1,6 @@
-use super::{assert_value, value_at_key, Options, RULE_ID};
+use super::equals_file::check_equals_file;
+use super::when::policy_applies;
+use super::{assert_value, value_at_key, AssertionKind, Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
@@ -34,6 +36,9 @@ pub(super) fn scan(
                         continue;
                     }
                 };
+            if !policy_applies(&value, &policy.when) {
+                continue;
+            }
             for key in &policy.required_keys {
                 if value_at_key(&value, key).is_none() {
                     findings.push(RuleFinding {
@@ -59,6 +64,10 @@ pub(super) fn scan(
                 }
             }
             for assertion in &policy.value_assertions {
+                if assertion.kind == Some(AssertionKind::EqualsFile) {
+                    findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
+                    continue;
+                }
                 findings.extend(assert_value(&rel, &value, assertion)?);
             }
         }

@@ -1,0 +1,4 @@
+{
+  "extends": true,
+  "plugins": ["wrong"]
+}

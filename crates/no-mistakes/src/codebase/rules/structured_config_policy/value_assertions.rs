@@ -4,7 +4,9 @@ use anyhow::Result;
 use serde_yaml::Value;
 
 mod kinds;
+mod selector;
 use kinds::kind_violation;
+use selector::{any_groups, values_at_selector};
 
 pub(super) fn assert_value(
     rel: &str,
@@ -14,13 +16,13 @@ pub(super) fn assert_value(
     let Some(kind) = assertion.kind else {
         return Ok(Vec::new());
     };
-    if assertion.key.is_empty() {
+    if assertion.key.is_empty() || kind == AssertionKind::EqualsFile {
         return Ok(Vec::new());
     }
-    let selected = values_at_selector(root, &assertion.key);
     if assertion.match_mode == MatchMode::Any {
-        return Ok(assert_any(rel, assertion, kind, &selected));
+        return Ok(assert_any(rel, root, assertion, kind));
     }
+    let selected = values_at_selector(root, &assertion.key);
     let mut findings = Vec::new();
     if selected.has_missing {
         findings.push(assertion_finding(
@@ -49,15 +51,16 @@ pub(super) fn assert_value(
 
 fn assert_any(
     rel: &str,
+    root: &Value,
     assertion: &ValueAssertion,
     kind: AssertionKind,
-    selected: &SelectorValues<'_>,
 ) -> Vec<RuleFinding> {
-    if selected
-        .values
-        .iter()
-        .any(|value| kind_violation(value, assertion, kind).is_none())
-    {
+    let failed = any_groups(root, &assertion.key).into_iter().any(|group| {
+        !group
+            .iter()
+            .any(|value| kind_violation(value, assertion, kind).is_none())
+    });
+    if !failed {
         return Vec::new();
     }
     vec![assertion_finding(
@@ -68,61 +71,6 @@ fn assert_any(
             assertion.key
         ),
     )]
-}
-
-struct SelectorValues<'a> {
-    values: Vec<&'a Value>,
-    has_missing: bool,
-}
-
-fn values_at_selector<'a>(value: &'a Value, selector: &str) -> SelectorValues<'a> {
-    let mut current = vec![Some(value)];
-    let mut has_missing = false;
-    for part in selector.split('.') {
-        let mut next = Vec::new();
-        if part == "[]" {
-            for value in current {
-                match value {
-                    Some(Value::Sequence(items)) => next.extend(items.iter().map(Some)),
-                    Some(_) | None => {
-                        has_missing = true;
-                        next.push(None);
-                    }
-                }
-            }
-        } else if let Ok(index) = part.parse::<usize>() {
-            for value in current {
-                match value {
-                    Some(Value::Sequence(items)) => match items.get(index) {
-                        Some(item) => next.push(Some(item)),
-                        None => {
-                            has_missing = true;
-                            next.push(None);
-                        }
-                    },
-                    Some(_) | None => {
-                        has_missing = true;
-                        next.push(None);
-                    }
-                }
-            }
-        } else {
-            for value in current {
-                match value.and_then(|value| value.get(part)) {
-                    Some(child) => next.push(Some(child)),
-                    None => {
-                        has_missing = true;
-                        next.push(None);
-                    }
-                }
-            }
-        }
-        current = next;
-    }
-    SelectorValues {
-        values: current.into_iter().flatten().collect(),
-        has_missing,
-    }
 }
 
 fn assertion_finding(rel: &str, assertion: &ValueAssertion, fallback: String) -> RuleFinding {

@@ -1,0 +1,4 @@
+overrides:
+  - files:
+      - "**/src/button.ts"
+      - "**/*.ts"
