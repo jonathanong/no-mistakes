@@ -1,17 +1,7 @@
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use globset::{Glob, GlobSetBuilder};
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-
-pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {
-    config
-        .filesystem
-        .skip_directories
-        .iter()
-        .map(String::as_str)
-        .collect()
-}
 
 pub(crate) fn matching_files(
     root: &Path,

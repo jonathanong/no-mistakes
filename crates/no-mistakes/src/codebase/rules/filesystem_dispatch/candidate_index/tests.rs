@@ -153,6 +153,7 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
     let config = NoMistakesConfig {
         rules: vec![
             repository_rule(BANNED_PATHS),
+            repository_rule(super::super::VERSION_PIN_CONSISTENCY),
             repository_rule(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
         ],
         ..Default::default()
@@ -167,7 +168,14 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
         None,
     );
 
-    assert_eq!(index.candidates(BANNED_PATHS), [tracked]);
+    assert_eq!(
+        index.candidates(BANNED_PATHS),
+        std::slice::from_ref(&tracked)
+    );
+    assert_eq!(
+        index.candidates(super::super::VERSION_PIN_CONSISTENCY),
+        std::slice::from_ref(&tracked)
+    );
     assert_eq!(
         index.candidates(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
         files

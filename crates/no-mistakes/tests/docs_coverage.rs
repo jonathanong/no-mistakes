@@ -233,6 +233,7 @@ fn no_mistakes_rules_have_docs() {
         rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
         rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
         rules::GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS,
+        rules::VERSION_PIN_CONSISTENCY,
         rules::FORBIDDEN_DEPENDENCIES,
         rules::FORBIDDEN_WORKSPACE_CLOSURE,
         rules::INTEGRATION_TEST_NO_MOCKS,
