@@ -4,6 +4,7 @@ mod helpers;
 mod imports;
 mod literals;
 mod named_handlers;
+mod nestjs;
 mod query_params;
 mod records;
 mod shape;
@@ -135,6 +136,11 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
         self.record_call(call);
         walk::walk_call_expression(self, call);
     }
+
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        self.record_nestjs_class(class);
+        walk::walk_class(self, class);
+    }
 }
 
 pub(super) fn module_export_name(name: &ModuleExportName<'_>) -> String {
@@ -152,7 +158,7 @@ fn default_export_name(decl: &ExportDefaultDeclarationKind<'_>) -> Option<String
     }
 }
 
-fn const_string(expr: &Expression<'_>) -> Option<String> {
+pub(super) fn const_string(expr: &Expression<'_>) -> Option<String> {
     match expr {
         Expression::StringLiteral(value) => Some(value.value.as_str().to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(

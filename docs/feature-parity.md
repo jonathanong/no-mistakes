@@ -21,7 +21,7 @@ CLIs are not started.
 
 | Domain | Module graph | Test plan | HTTP routes | Queues | Status |
 | --- | --- | --- | --- | --- | --- |
-| TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Next.js | BullMQ, glide-mq | shipped |
+| TypeScript / JavaScript | yes | Vitest, Playwright | Express, Hono, Koa, Fastify, NestJS, Next.js | BullMQ, glide-mq | shipped |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
 | Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(`, Flask, FastAPI | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |

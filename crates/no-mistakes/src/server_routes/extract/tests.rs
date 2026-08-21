@@ -194,3 +194,62 @@ fn extract_file_recognizes_fastify_imports_and_verbs() {
     assert!(route_pairs.contains(&("patch", "/equals", Framework::Fastify)));
     assert!(route_pairs.contains(&("put", "/cjs", Framework::Fastify)));
 }
+
+#[test]
+fn extract_file_recognizes_nestjs_controller_and_verb_decorators() {
+    let facts = extract_file(&fixture("nestjs-app.ts")).unwrap();
+    assert_eq!(
+        facts.bindings["UsersController"].framework,
+        Framework::Nestjs
+    );
+    assert_eq!(facts.bindings["UsersController"].prefixes, vec!["users"]);
+    assert_eq!(facts.bindings["HealthController"].prefixes, vec!["health"]);
+    let route_pairs: Vec<_> = facts
+        .routes
+        .iter()
+        .map(|route| {
+            (
+                route.method.as_str(),
+                route.raw_path.as_str(),
+                route.framework,
+            )
+        })
+        .collect();
+    assert!(route_pairs.contains(&("get", "/", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/:id", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("post", "/", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("head", "/", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("put", "/ready", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("patch", "/ready", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("options", "/ready", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("all", "/any", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/host", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("delete", "/gone", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/hdr", Framework::Nestjs)));
+    assert_eq!(facts.bindings["InjController"].prefixes, vec!["inj"]);
+    assert_eq!(facts.bindings["ExtraController"].prefixes, vec!["extra"]);
+    assert!(route_pairs.contains(&("get", "/anon", Framework::Nestjs)));
+    assert!(!route_pairs
+        .iter()
+        .any(|(_, path, _)| path.contains("static")));
+
+    let path = fixture("nestjs-app.ts");
+    let map = std::collections::HashMap::from([(path.clone(), facts.clone())]);
+    let member = facts
+        .routes
+        .iter()
+        .find(|route| route.binding == "UsersController" && route.raw_path == "/:id")
+        .expect("member");
+    let expanded: Vec<_> = crate::server_routes::mounts::prefixes_for(member, &map, &[])
+        .into_iter()
+        .map(|prefix| crate::server_routes::normalize::join_paths(&prefix, &member.raw_path))
+        .collect();
+    assert_eq!(expanded, vec!["/users/:id".to_string()]);
+}
+
+#[test]
+fn extract_file_skips_computed_nestjs_paths() {
+    let facts = extract_file(&fixture("nestjs-computed.ts")).unwrap();
+    assert!(facts.routes.is_empty());
+    assert!(!facts.bindings.contains_key("ComputedController"));
+}
