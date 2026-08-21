@@ -1,27 +1,23 @@
 pub(super) fn key_line(source: &str, source_key: &str) -> usize {
-    let mut cursor = 0;
-    let mut line = 1;
-    for segment in segments(source_key) {
+    let Some((section, rest)) = source_key.split_once('.') else {
+        return locate(source, source_key, 0).map_or(1, |(line, _)| line);
+    };
+    let Some((mut line, mut cursor)) = locate(source, section, 0) else {
+        return 1;
+    };
+    if let Some((found, _)) = locate(source, rest, cursor) {
+        return found;
+    }
+    for segment in rest.split('.') {
         match locate(source, segment, cursor) {
             Some((found, end)) => {
                 line = found;
                 cursor = end;
             }
-            None => return line,
+            None => break,
         }
     }
     line
-}
-
-fn segments(key: &str) -> Vec<&str> {
-    match key.split_once('.') {
-        None => vec![key],
-        Some((section, rest)) => {
-            let mut parts = vec![section];
-            parts.extend(rest.split('.'));
-            parts
-        }
-    }
 }
 
 fn locate(source: &str, key: &str, from: usize) -> Option<(usize, usize)> {
@@ -61,32 +57,31 @@ fn strip_inline_comment(line: &str) -> &str {
 }
 
 fn quoted_end(code: &str, key: &str, quote: char) -> Option<usize> {
-    let mut search = 0;
-    while let Some(rel) = code[search..].find(key) {
-        let start = search + rel;
-        let after = start + key.len();
+    let qlen = quote.len_utf8();
+    find_key(code, key, |start, after| {
         let quoted = start
-            .checked_sub(quote.len_utf8())
+            .checked_sub(qlen)
             .is_some_and(|i| code[i..].starts_with(quote))
             && code[after..].starts_with(quote);
-        if quoted && mapping_separator(&code[after + quote.len_utf8()..]) {
-            return Some(after + quote.len_utf8());
-        }
-        search = start + 1;
-    }
-    None
+        (quoted && mapping_separator(&code[after + qlen..])).then_some(after + qlen)
+    })
 }
 
 fn bare_end(code: &str, key: &str) -> Option<usize> {
-    let mut search = 0;
-    while let Some(rel) = code[search..].find(key) {
-        let start = search + rel;
-        let after = start + key.len();
+    find_key(code, key, |start, after| {
         let before_ok = start == 0 || !is_key_char(code.as_bytes()[start - 1]);
-        if before_ok && mapping_separator(&code[after..]) {
-            return Some(after);
+        (before_ok && mapping_separator(&code[after..])).then_some(after)
+    })
+}
+
+fn find_key(code: &str, key: &str, ok: impl Fn(usize, usize) -> Option<usize>) -> Option<usize> {
+    let mut search = 0;
+    while let Some(rel) = code.get(search..)?.find(key) {
+        let start = search + rel;
+        if let Some(end) = ok(start, start + key.len()) {
+            return Some(end);
         }
-        search = start + 1;
+        search = start + code.get(start..)?.chars().next()?.len_utf8();
     }
     None
 }

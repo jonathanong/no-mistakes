@@ -363,3 +363,68 @@ fn empty_source_file_option_is_silent() {
     );
     assert!(run(&fixture("fail"), &yaml, &PAIR).is_empty());
 }
+
+#[test]
+fn unicode_value_before_mapping_key_does_not_panic() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_pair(
+        tmp.path(),
+        "description: 版本\nnote: \"版本\"\n版本: 123\n",
+        "versions.yml",
+        "TOOL_VERSION: 1.2.3\n",
+    );
+    let yaml = r#"
+sourceFile: versions.yml
+sourceKey: 版本
+anchors:
+  - file: .github/actions/setup-lychee/action.yml
+    pattern: 'TOOL_VERSION:\s*(\d+\.\d+\.\d+)'
+    label: tool
+"#;
+    let findings = run(tmp.path(), yaml, &["versions.yml", PAIR[1]]);
+    assert_eq!(findings[0].line, 3, "{findings:?}");
+    assert!(findings[0].message.contains("invalid pin"), "{findings:?}");
+}
+
+#[test]
+fn tracked_source_without_anchors_reports_missing_key() {
+    let tmp = tmp_pair("[tools]\nfoo = \"1.0.0\"\n", "LYCHEE_VERSION: 0.24.2\n");
+    let findings = run(tmp.path(), OPTIONS, &[".mise.toml"]);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("not found")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn tracked_source_without_anchors_reports_non_string_pin() {
+    let tmp = tmp_pair(
+        "[tools]\n\"aqua:lycheeverse/lychee\" = 8\n",
+        "LYCHEE_VERSION: 0.24.2\n",
+    );
+    let findings = run(tmp.path(), OPTIONS, &[".mise.toml"]);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("invalid pin")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn exclude_all_anchors_still_validates_source_pin() {
+    let tmp = tmp_pair("[tools]\nfoo = \"1.0.0\"\n", "LYCHEE_VERSION: 0.24.2\n");
+    let findings = run_config(
+        tmp.path(),
+        &config_filtered(OPTIONS, &[], &[".github/**"]),
+        &PAIR,
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("not found")),
+        "{findings:?}"
+    );
+}

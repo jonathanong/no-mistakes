@@ -45,13 +45,25 @@ pub(super) fn scan(
             );
         }
     };
-    let mut findings = Vec::new();
     let source = SourcePin {
         rel: source_rel,
         tracked: source_tracked,
         text: &source_text,
         parsed: &parsed,
     };
+    if remaining.is_empty() {
+        let findings = match value_pin(source.parsed, opts, source.rel, source.rel) {
+            Ok(_) => Vec::new(),
+            Err(message) => source_finding(
+                source.tracked,
+                source.rel,
+                key_line(source.text, &opts.source_key),
+                message,
+            ),
+        };
+        return finish(root, sources, defer_suppression, findings);
+    }
+    let mut findings = Vec::new();
     for anchor in remaining {
         findings.extend(check_anchor(root, opts, source, anchor, sources));
     }
@@ -77,7 +89,7 @@ fn check_anchor(
     let label = if anchor.label.is_empty() {
         anchor_rel
     } else {
-        anchor.label.as_str()
+        &anchor.label
     };
     let regex = match compile_pattern(&anchor.pattern, source.rel, label) {
         Ok(regex) => regex,
@@ -152,20 +164,16 @@ fn value_pin<'a>(
 fn compile_pattern(pattern: &str, source_file: &str, label: &str) -> Result<Regex, String> {
     let regex = Regex::new(pattern)
         .map_err(|error| format!("{source_file}: {label} pattern is invalid ({error})"))?;
-    if regex.captures_len() != 2 {
-        return Err(format!(
-            "{source_file}: {label} pattern must have exactly one capturing group"
-        ));
-    }
-    Ok(regex)
+    (regex.captures_len() == 2).then_some(regex).ok_or_else(|| {
+        format!("{source_file}: {label} pattern must have exactly one capturing group")
+    })
 }
 
 fn source_finding(tracked: bool, file: &str, line: usize, message: String) -> Vec<RuleFinding> {
-    if tracked {
-        vec![finding(file, line, message)]
-    } else {
-        Vec::new()
-    }
+    tracked
+        .then(|| finding(file, line, message))
+        .into_iter()
+        .collect()
 }
 
 fn finish(

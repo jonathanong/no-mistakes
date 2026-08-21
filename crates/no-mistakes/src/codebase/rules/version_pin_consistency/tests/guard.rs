@@ -133,3 +133,49 @@ fn directory_symlink_escape_is_not_read() {
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: escape/pin.toml");
     assert_no_leak(&run(tmp.path(), &yaml, &["escape/pin.toml", PAIR[1]]));
 }
+
+fn dotted_remainder_yaml() -> &'static str {
+    r#"
+sourceFile: versions.yml
+sourceKey: tools.foo.bar
+anchors:
+  - file: .github/actions/setup-lychee/action.yml
+    pattern: 'TOOL_VERSION:\s*(\d+\.\d+\.\d+)'
+    label: tool
+"#
+}
+
+#[test]
+fn literal_dotted_remainder_is_the_mapping_key_line() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_pair(
+        tmp.path(),
+        "tools:\n  \"foo.bar\": 8\n",
+        "versions.yml",
+        "TOOL_VERSION: 1.2.3\n",
+    );
+    let findings = run(
+        tmp.path(),
+        dotted_remainder_yaml(),
+        &["versions.yml", PAIR[1]],
+    );
+    assert_eq!(findings[0].line, 2, "{findings:?}");
+    assert!(findings[0].message.contains("invalid pin"), "{findings:?}");
+}
+
+#[test]
+fn disable_next_line_targets_literal_dotted_key() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_pair(
+        tmp.path(),
+        "tools:\n  # no-mistakes-disable-next-line version-pin-consistency\n  \"foo.bar\": 8\n",
+        "versions.yml",
+        "TOOL_VERSION: 1.2.3\n",
+    );
+    assert!(run(
+        tmp.path(),
+        dotted_remainder_yaml(),
+        &["versions.yml", PAIR[1]]
+    )
+    .is_empty());
+}
