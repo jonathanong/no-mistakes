@@ -53,6 +53,7 @@ pub use super::test_no_dependency_pins::RULE_ID as TEST_NO_DEPENDENCY_PINS;
 pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
 pub use super::tsconfig_alias_folder_mapping::RULE_ID as TSCONFIG_ALIAS_FOLDER_MAPPING;
 pub use super::tsconfig_gate_coverage::RULE_ID as TSCONFIG_GATE_COVERAGE;
+pub use super::version_pin_consistency::RULE_ID as VERSION_PIN_CONSISTENCY;
 pub use super::vitest_ci_path_coverage::RULE_ID as VITEST_CI_PATH_COVERAGE;
 pub use super::vitest_project_mapping::RULE_ID as VITEST_PROJECT_MAPPING;
 pub use super::vitest_test_correspondence::RULE_ID as VITEST_TEST_CORRESPONDENCE;

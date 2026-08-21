@@ -56,6 +56,15 @@ pub(crate) fn file_allowed_by_roots_and_skip(
         .any(|rule_root| !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip))
 }
 
+pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {
+    config
+        .filesystem
+        .skip_directories
+        .iter()
+        .map(String::as_str)
+        .collect()
+}
+
 pub(crate) fn target_project_root(
     root: &Path,
     project: &crate::config::v2::schema::Project,

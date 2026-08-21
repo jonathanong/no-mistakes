@@ -58,6 +58,7 @@ pub mod test_no_dependency_pins;
 pub mod test_no_unmocked_dynamic_imports;
 pub mod tsconfig_alias_folder_mapping;
 pub mod tsconfig_gate_coverage;
+pub mod version_pin_consistency;
 pub mod vitest_ci_path_coverage;
 mod vitest_project_catalog;
 pub mod vitest_project_mapping;
@@ -95,7 +96,7 @@ pub use run::{
 #[doc(hidden)]
 pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestProjectCatalog};
 
-pub(crate) use file_matching::{matching_files, skip_dir_set};
+pub(crate) use file_matching::matching_files;
 pub(crate) use source_access::{read_source, source_store_for_files};
 #[doc(hidden)]
 pub use suppression::{
@@ -124,13 +125,13 @@ pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id
     config.rule_configured(rule_id)
 }
 
-mod target_roots;
-pub(crate) use target_roots::{
-    file_allowed_by_roots_and_skip, target_project_root, target_roots, target_roots_with_inferred,
-};
-
 mod sort_findings;
+mod target_roots;
 pub(crate) use sort_findings::sort_findings;
+pub(crate) use target_roots::{
+    file_allowed_by_roots_and_skip, skip_dir_set, target_project_root, target_roots,
+    target_roots_with_inferred,
+};
 
 #[cfg(test)]
 mod suppression_absolute_paths_tests;
