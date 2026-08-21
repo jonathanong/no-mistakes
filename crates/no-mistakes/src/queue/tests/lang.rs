@@ -80,3 +80,16 @@ fn symfony_fixture_projects_messenger_edges() {
         .iter()
         .any(|edge| edge.kind == EdgeKind::QueueEnqueue || edge.kind == EdgeKind::QueueWorker));
 }
+
+#[test]
+fn rails_sidekiq_fixture_projects_queue_edges() {
+    let report = analyze_project(&lang_fixture("rails-sidekiq"), None, &[]).unwrap();
+    assert!(report
+        .edges
+        .iter()
+        .any(|edge| edge.kind == EdgeKind::QueueEnqueue));
+    assert!(report
+        .edges
+        .iter()
+        .any(|edge| edge.kind == EdgeKind::QueueWorker));
+}

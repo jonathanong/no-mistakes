@@ -453,6 +453,7 @@ fn review_found_doc_regressions_stay_fixed() {
         "Rust",
         "Ruby on Rails",
         "PHP",
+        "Sidekiq",
         "Counterexample:",
         "not started",
     ] {

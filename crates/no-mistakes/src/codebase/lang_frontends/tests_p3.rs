@@ -156,3 +156,42 @@ fn rust_records_path_attr_mods_and_cargo_path_deps() {
         .keys()
         .any(|path| path.ends_with("src/tests.rs")));
 }
+
+#[test]
+fn rails_collects_sidekiq_enqueue_and_workers() {
+    let root = fixture("rails-sidekiq");
+    let files = all_files(&root);
+    let store = store_for(&files);
+    let facts = collect_ruby_facts(&root, &files, &[".".into()], &store);
+    let controller = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("controllers/users_controller.rb"))
+        .expect("controller");
+    assert!(controller
+        .queue_enqueues
+        .iter()
+        .any(|name| name == "MailWorker"));
+    assert!(controller
+        .queue_enqueues
+        .iter()
+        .any(|name| name == "DigestJob"));
+    let mail = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("mail_worker.rb"))
+        .expect("mail worker");
+    assert!(mail.queue_workers.iter().any(|name| name == "MailWorker"));
+    let digest = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("digest_job.rb"))
+        .expect("digest job");
+    assert!(digest.queue_workers.iter().any(|name| name == "DigestJob"));
+    let dynamic = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("dynamic.rb"))
+        .expect("dynamic");
+    assert!(dynamic.queue_enqueues.is_empty());
+}
