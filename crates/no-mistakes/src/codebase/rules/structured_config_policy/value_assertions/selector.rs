@@ -9,7 +9,7 @@ pub(crate) fn values_at_selector<'a>(value: &'a Value, selector: &str) -> Select
     walk(value, selector, false)
 }
 
-pub(super) fn any_groups<'a>(value: &'a Value, selector: &str) -> Vec<Vec<&'a Value>> {
+pub(crate) fn any_groups<'a>(value: &'a Value, selector: &str) -> Vec<Vec<&'a Value>> {
     let parts: Vec<&str> = selector
         .split('.')
         .filter(|part| !part.is_empty())
@@ -31,6 +31,7 @@ pub(super) fn any_groups<'a>(value: &'a Value, selector: &str) -> Vec<Vec<&'a Va
     let mut groups = Vec::new();
     for parent in parents {
         let Some(items) = parent.as_sequence() else {
+            groups.push(Vec::new());
             continue;
         };
         let mut group = Vec::new();

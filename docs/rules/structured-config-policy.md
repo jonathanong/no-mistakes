@@ -36,7 +36,8 @@ Selectors are dotted paths; use numeric parts for array indexes and `[]` to appl
 an assertion to every array entry. On `[]` selectors, `match: all` (default)
 requires every entry to satisfy the assertion; `match: any` requires at least one
 entry in each parent array. Missing parent keys are skipped for `match: any`, so
-an override that never mentions a rule is not a failure. `not-single-file` strips a
+an override that never mentions a rule is not a failure. A parent key that is
+present but not an array still fails `match: any`. `not-single-file` strips a
 leading `**/` before looking for glob wildcards, so `**/exact/file.ts` is still
 a single-file entry.
 

@@ -1,5 +1,5 @@
-use super::value_assertions::selector::values_at_selector;
-use super::{ValueAssertion, RULE_ID};
+use super::value_assertions::selector::{any_groups, values_at_selector};
+use super::{MatchMode, ValueAssertion, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::structured_value::parse_structured_value;
 use crate::codebase::ts_resolver::normalize_path;
@@ -14,6 +14,13 @@ pub(super) fn check_equals_file(
     value: &Value,
     assertion: &ValueAssertion,
 ) -> Vec<RuleFinding> {
+    if assertion.key.is_empty() {
+        return vec![finding(
+            rel,
+            assertion,
+            format!("{rel}: equals-file assertion is missing `key`"),
+        )];
+    }
     if assertion.file.is_empty() {
         return vec![finding(
             rel,
@@ -55,9 +62,7 @@ pub(super) fn check_equals_file(
             )];
         }
     };
-    let left = values_at_selector(value, &assertion.key);
-    let right = values_at_selector(&other, from_key);
-    if !left.has_missing && !right.has_missing && left.values == right.values {
+    if values_match(value, &other, assertion, from_key) {
         return Vec::new();
     }
     vec![finding(
@@ -68,6 +73,20 @@ pub(super) fn check_equals_file(
             assertion.key, from_key, assertion.file
         ),
     )]
+}
+
+fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_key: &str) -> bool {
+    let expected = values_at_selector(right, from_key);
+    if expected.has_missing {
+        return false;
+    }
+    if assertion.match_mode == MatchMode::Any {
+        return !any_groups(left, &assertion.key)
+            .into_iter()
+            .any(|group| !group.iter().any(|value| expected.values.contains(value)));
+    }
+    let actual = values_at_selector(left, &assertion.key);
+    !actual.has_missing && actual.values == expected.values
 }
 
 fn finding(file: &str, assertion: &ValueAssertion, fallback: String) -> RuleFinding {

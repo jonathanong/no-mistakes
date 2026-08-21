@@ -102,7 +102,7 @@ items:
         },
     )
     .unwrap();
-    assert!(not_array.is_empty(), "{not_array:?}");
+    assert!(!not_array.is_empty(), "{not_array:?}");
 
     let not_seq_index = assert_value(
         "app.yml",

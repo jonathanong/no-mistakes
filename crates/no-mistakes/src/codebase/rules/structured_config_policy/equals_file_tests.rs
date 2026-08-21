@@ -54,6 +54,61 @@ policies:
 }
 
 #[test]
+fn equals_file_match_any_passes_when_one_entry_equals_the_other_file() {
+    let root = fixture_root("equals-file-selector");
+    let files = vec![
+        root.join("root.yml"),
+        root.join("any.yml"),
+        root.join("drift.yml"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: ["any.yml", "drift.yml"]
+    valueAssertions:
+      - key: items.[].name
+        kind: equals-file
+        match: any
+        file: root.yml
+        fromKey: items.0.name
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    let body = format!("{findings:?}");
+    assert!(body.contains("drift.yml"), "{body}");
+    assert!(!body.contains("any.yml"), "{body}");
+    assert_eq!(findings.len(), 1, "{body}");
+}
+
+#[test]
+fn equals_file_reports_missing_key() {
+    let root = fixture_root("nested-plugins");
+    let files = vec![root.join("pkg/.oxlintrc.json"), root.join(".oxlintrc.json")];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: ["pkg/.oxlintrc.json"]
+    valueAssertions:
+      - kind: equals-file
+        file: .oxlintrc.json
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    assert!(
+        findings[0].message.contains("missing `key`"),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn equals_file_rejects_paths_outside_the_repository_root() {
     let root = fixture_root("nested-plugins");
     let files = vec![root.join("pkg/.oxlintrc.json")];
