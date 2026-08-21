@@ -22,17 +22,7 @@ fn error_from(config: &crate::config::v2::NoMistakesConfig) -> anyhow::Error {
         HashMap::new(),
         HashMap::new(),
     );
-    graph_rule_findings(
-        root,
-        config,
-        None,
-        &shared,
-        None,
-        Some(&graph),
-        None,
-        &crate::codebase::analysis_session::PathInterner::new(),
-    )
-    .unwrap_err()
+    graph_rule_findings(root, config, None, &shared, None, Some(&graph), None).unwrap_err()
 }
 
 #[test]

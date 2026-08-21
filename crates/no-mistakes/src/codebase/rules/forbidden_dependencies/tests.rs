@@ -39,16 +39,7 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
         }],
         ..Default::default()
     };
-    check_rule_application(
-        root,
-        &config,
-        &config.rules[0],
-        opts,
-        graph,
-        None,
-        None,
-        &crate::codebase::analysis_session::PathInterner::new(),
-    )
+    check_rule_application(root, &config, &config.rules[0], opts, graph, None, None)
 }
 
 fn check_with_facts(
@@ -407,17 +398,9 @@ fn source_filter_excludes_matching_forbidden_root() {
     )
     .unwrap();
 
-    let findings = check_rule_application(
-        &root,
-        &config,
-        &config.rules[0],
-        &opts,
-        &graph,
-        None,
-        None,
-        &crate::codebase::analysis_session::PathInterner::new(),
-    )
-    .unwrap();
+    let findings =
+        check_rule_application(&root, &config, &config.rules[0], &opts, &graph, None, None)
+            .unwrap();
 
     assert!(findings.is_empty());
 }

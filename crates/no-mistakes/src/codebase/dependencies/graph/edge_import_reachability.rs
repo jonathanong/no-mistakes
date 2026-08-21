@@ -189,6 +189,7 @@ fn resolve_callee_scope(
     callee.to_string()
 }
 
+#[cfg(test)]
 fn bare_module_node(specifier: &str) -> Option<NodeId> {
     if specifier.starts_with('.')
         || specifier.starts_with('/')

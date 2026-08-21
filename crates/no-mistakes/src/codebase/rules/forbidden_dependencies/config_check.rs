@@ -45,11 +45,10 @@ fn check_with_config_tsconfig_and_files(
     let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
     let graph =
         DepGraph::build_with_plan_and_files_config(root, tsconfig, plan, graph_files, config_path)?;
-    let interner = crate::codebase::analysis_session::PathInterner::new();
     let mut findings = Vec::new();
     for (rule, opts) in applications.iter().zip(opts_list.iter()) {
         findings.extend(check_rule_application(
-            root, config, rule, opts, &graph, None, None, &interner,
+            root, config, rule, opts, &graph, None, None,
         )?);
     }
     crate::codebase::rules::sort_findings(&mut findings);

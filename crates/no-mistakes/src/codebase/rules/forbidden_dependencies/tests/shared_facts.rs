@@ -56,7 +56,6 @@ pub(super) fn check_with_prepared_facts_and_session(
         prepared_graph,
         None,
         &graph,
-        &crate::codebase::analysis_session::PathInterner::new(),
     )
 }
 
