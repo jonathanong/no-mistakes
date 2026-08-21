@@ -4,7 +4,9 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod key;
 mod parse;
+mod path;
 mod scan;
 
 pub const RULE_ID: &str = "version-pin-consistency";

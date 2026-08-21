@@ -1,4 +1,6 @@
-use super::parse::{configured_rel, key_line, parse_source, pin_kind, read_text, tracked_rels};
+use super::key::key_line;
+use super::parse::{configured_rel, parse_source, pin_kind, tracked_rels};
+use super::path::read_text;
 use super::{Anchor, Options, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::line_number;
 use regex::Regex;
@@ -87,30 +89,43 @@ fn check_anchor(
         Err(message) => return source_finding(source.tracked, source.rel, line, message),
     };
     let anchor_text = read_text(root, anchor_rel, sources);
-    let Some(captures) = regex.captures(&anchor_text) else {
+    capture_findings(&regex, &anchor_text, pin, anchor_rel, source.rel, label)
+}
+
+fn capture_findings(
+    regex: &Regex,
+    anchor_text: &str,
+    pin: &str,
+    anchor_rel: &str,
+    source_rel: &str,
+    label: &str,
+) -> Vec<RuleFinding> {
+    let mut found = false;
+    for captures in regex.captures_iter(anchor_text) {
+        found = true;
+        let captured = captures.get(1).map_or("", |m| m.as_str());
+        if captured == pin {
+            continue;
+        }
+        let line = captures
+            .get(1)
+            .map_or(1, |m| line_number(anchor_text, m.start() as u32));
         return vec![finding(
             anchor_rel,
-            1,
+            line,
             format!(
-                "{anchor_rel}: could not find {label} version reference matching expected pattern"
+                "{anchor_rel}: {label} version mismatch — {anchor_rel} says \"{captured}\" but {source_rel} pins \"{pin}\". \
+                 Update both in the same commit."
             ),
         )];
-    };
-    let captured = captures.get(1).map_or("", |m| m.as_str());
-    if captured == pin {
+    }
+    if found {
         return Vec::new();
     }
-    let line = captures
-        .get(1)
-        .map_or(1, |m| line_number(&anchor_text, m.start() as u32));
-    let source_rel = source.rel;
     vec![finding(
         anchor_rel,
-        line,
-        format!(
-            "{anchor_rel}: {label} version mismatch — {anchor_rel} says \"{captured}\" but {source_rel} pins \"{pin}\". \
-             Update both in the same commit."
-        ),
+        1,
+        format!("{anchor_rel}: could not find {label} version reference matching expected pattern"),
     )]
 }
 

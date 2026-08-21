@@ -237,3 +237,4 @@ fn does_not_report_untracked_anchors_when_only_source_is_listed() {
 }
 
 mod extra;
+mod guard;

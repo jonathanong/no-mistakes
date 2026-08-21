@@ -2,17 +2,6 @@ use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
-pub(super) fn read_text(
-    root: &Path,
-    rel: &str,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> String {
-    let path = root.join(rel);
-    super::super::read_source(sources, &path)
-        .map(|source| source.to_string())
-        .unwrap_or_else(|| std::fs::read_to_string(path).unwrap_or_default())
-}
-
 pub(super) fn configured_rel(rel: &str) -> &str {
     rel.trim_start_matches("./")
 }
@@ -55,16 +44,6 @@ pub(super) fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value>
         rest.split('.')
             .try_fold(child, |current, part| current.get(part))
     })
-}
-
-pub(super) fn key_line(source: &str, source_key: &str) -> usize {
-    let needle = source_key
-        .rsplit_once('.')
-        .map_or(source_key, |(_, key)| key);
-    source
-        .lines()
-        .position(|line| line.contains(needle))
-        .map_or(1, |index| index + 1)
 }
 
 pub(super) fn pin_kind(value: &Value) -> String {

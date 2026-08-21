@@ -1,6 +1,6 @@
 use super::*;
 
-const PIN: &str = "[tools]\n\"aqua:lycheeverse/lychee\" = \"0.24.2\"\n";
+pub(super) const PIN: &str = "[tools]\n\"aqua:lycheeverse/lychee\" = \"0.24.2\"\n";
 
 fn extra_yaml(source_file: &str, extra: &str) -> String {
     format!(
