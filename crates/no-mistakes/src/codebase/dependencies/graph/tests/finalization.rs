@@ -20,12 +20,16 @@ fn edge_maps_and_edge_index_use_fx_hash() {
 fn bfs_visited_sets_use_fx_hash() {
     let bfs = include_str!("../bfs.rs");
     assert!(
-        bfs.contains("let mut visited: FxHashSet<NodeId> = fx_set()"),
+        bfs.contains("let mut visited: FxHashSet<&NodeId> = fx_set()"),
         "BFS visited set must use rustc-hash FxHashSet"
     );
     assert!(
-        bfs.contains("let mut dynamic_import_files: FxHashSet<NodeId> = fx_set()"),
+        bfs.contains("let mut dynamic_import_files: FxHashSet<&NodeId> = fx_set()"),
         "BFS dynamic-import set must use rustc-hash FxHashSet"
+    );
+    assert!(
+        bfs.contains("let mut result_idx: FxHashMap<&NodeId, usize> = fx_map()"),
+        "BFS result index must use rustc-hash FxHashMap of borrowed NodeIds"
     );
     assert!(
         bfs.contains("let root_nodes: FxHashSet<NodeId>"),
@@ -37,8 +41,20 @@ fn bfs_visited_sets_use_fx_hash() {
 fn bfs_clones_neighbor_once_on_first_visit() {
     let bfs = include_str!("../bfs.rs");
     assert!(
-        bfs.contains("let next = neighbor.clone();"),
-        "BFS must clone NodeId once per first visit"
+        bfs.contains("node: neighbor.clone()"),
+        "BFS must clone NodeId only when emitting an owned NodeEntry"
+    );
+    assert!(
+        bfs.contains("visited.insert(neighbor)"),
+        "BFS visited set must store borrowed NodeIds from the graph"
+    );
+    assert!(
+        bfs.contains("queue.push_back((neighbor, next_depth))"),
+        "BFS queue must store borrowed NodeIds instead of cloned owners"
+    );
+    assert!(
+        !bfs.contains("let next = neighbor.clone();"),
+        "BFS must not clone into a local just to clone that local again"
     );
     assert!(
         !bfs.contains("visited.insert(neighbor.clone())"),
