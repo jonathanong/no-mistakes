@@ -18,6 +18,12 @@ export class SpreadController {
   hidden() {}
 }
 
+@Controller({ path: prefix })
+export class ComputedObjectController {
+  @Get()
+  hidden() {}
+}
+
 @Nest.Controller("ns")
 export class NamespaceController {
   @Nest.Get()

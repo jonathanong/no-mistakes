@@ -1,4 +1,4 @@
-import { All, Controller, Delete, Get, Head, Options, Patch, Post, Put } from "@nestjs/common";
+import { All, Controller, Delete, Get, Head, Header, Injectable, Options, Patch, Post, Put } from "@nestjs/common";
 
 @Controller("users")
 export class UsersController {
@@ -13,6 +13,10 @@ export class UsersController {
 
   @Get("static")
   static hidden() {}
+
+  @Header("X-Test", "1")
+  @Get("hdr")
+  hdr() {}
 }
 
 @Controller({ path: "health" })
@@ -55,6 +59,13 @@ const { Controller: CjsController, Delete } = require("@nestjs/common");
 export class CjsControllerClass {
   @Delete("gone")
   remove() {}
+}
+
+@Injectable()
+@Controller("inj")
+export class InjController {
+  @Get()
+  inj() {}
 }
 
 function extra(_target: unknown) {}
