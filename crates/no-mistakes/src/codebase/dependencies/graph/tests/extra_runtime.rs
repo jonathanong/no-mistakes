@@ -9,8 +9,8 @@ fn queue_edges_use_precomputed_shared_facts() {
     let graph_files = GraphFiles::discover(&root);
     let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
     let config_options = graph_config_options(&root);
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let send_email = root.join("packages/api/src/send-email.mts");
     let emails = root.join("packages/api/src/emails.mts");
     let processors = root.join("packages/api/src/processors.mts");
@@ -156,8 +156,8 @@ fn queue_edges_skip_files_missing_shared_queue_facts() {
     let config_options = graph_config_options(&root);
     let emails = root.join("packages/api/src/emails.mts");
     let processors = root.join("packages/api/src/processors.mts");
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let facts = TsFactMap::new();
 
     test_support::add_queue_edges(

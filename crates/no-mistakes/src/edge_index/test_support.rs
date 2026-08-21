@@ -1,7 +1,8 @@
 use super::adjacency::{into_adjacency_map, push_ordinal};
 use super::{CanonicalEdge, EdgeIndex};
+use crate::fx::FxHashMap;
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::hash::Hash;
 
 impl<Node, Kind> EdgeIndex<Node, Kind>
@@ -11,8 +12,8 @@ where
 {
     /// Test-only legacy constructor used by the global-sort oracle.
     pub(crate) fn from_adjacency_maps_by(
-        forward: HashMap<Node, Vec<(Node, Kind)>>,
-        reverse: HashMap<Node, Vec<(Node, Kind)>>,
+        forward: FxHashMap<Node, Vec<(Node, Kind)>>,
+        reverse: FxHashMap<Node, Vec<(Node, Kind)>>,
         mut compare: impl FnMut(&CanonicalEdge<Node, Kind>, &CanonicalEdge<Node, Kind>) -> Ordering,
     ) -> Self {
         assert_adjacency_maps_are_consistent(&forward, &reverse);
@@ -42,8 +43,8 @@ where
 }
 
 pub(super) fn assert_adjacency_maps_are_consistent<Node, Kind>(
-    forward: &HashMap<Node, Vec<(Node, Kind)>>,
-    reverse: &HashMap<Node, Vec<(Node, Kind)>>,
+    forward: &FxHashMap<Node, Vec<(Node, Kind)>>,
+    reverse: &FxHashMap<Node, Vec<(Node, Kind)>>,
 ) where
     Node: Clone + Eq + Hash,
     Kind: Clone + Eq + Hash,

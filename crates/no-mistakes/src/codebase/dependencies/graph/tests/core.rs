@@ -136,7 +136,7 @@ fn react_render_edges_cover_empty_and_same_file_children() {
 
 #[test]
 fn bfs_linear_chain() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/b"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/c"), EdgeKind::Import)]);
     fwd.insert(n("/c"), vec![]);
@@ -151,7 +151,7 @@ fn bfs_linear_chain() {
 
 #[test]
 fn bfs_depth_limit() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/b"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/c"), EdgeKind::Import)]);
     fwd.insert(n("/c"), vec![]);
@@ -163,7 +163,7 @@ fn bfs_depth_limit() {
 
 #[test]
 fn bfs_diamond_no_duplicates() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(
         n("/a"),
         vec![(n("/b"), EdgeKind::Import), (n("/c"), EdgeKind::Import)],
@@ -181,7 +181,7 @@ fn bfs_diamond_no_duplicates() {
 
 #[test]
 fn bfs_multiple_roots() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/c"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/d"), EdgeKind::Import)]);
     fwd.insert(n("/c"), vec![]);
@@ -193,7 +193,7 @@ fn bfs_multiple_roots() {
 
 #[test]
 fn bfs_cycle_terminates() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/b"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/a"), EdgeKind::Import)]);
 
@@ -204,14 +204,14 @@ fn bfs_cycle_terminates() {
 
 #[test]
 fn bfs_empty_starts() {
-    let fwd: EdgeMap = HashMap::new();
+    let fwd: EdgeMap = EdgeMap::default();
     let entries = bfs(&[], &fwd, None, None);
     assert!(entries.is_empty());
 }
 
 #[test]
 fn bfs_node_with_no_edges() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![]);
     let entries = bfs(&[n("/a")], &fwd, None, None);
     assert!(entries.is_empty());
@@ -219,7 +219,7 @@ fn bfs_node_with_no_edges() {
 
 #[test]
 fn bfs_relationship_filter_excludes_wrong_kind() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(
         n("/a"),
         vec![(n("/b"), EdgeKind::Import), (n("/c"), EdgeKind::TestOf)],
@@ -236,7 +236,7 @@ fn bfs_relationship_filter_excludes_wrong_kind() {
 #[test]
 fn bfs_via_accumulated_from_two_paths() {
     // a → b via Import; a → b via TestOf (same destination, different kinds)
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(
         n("/a"),
         vec![(n("/b"), EdgeKind::Import), (n("/b"), EdgeKind::TestOf)],
@@ -509,8 +509,8 @@ fn node_sorting_breaks_display_collisions_by_typed_identity() {
     ];
 
     let build = |ordered: Vec<NodeId>| {
-        let mut forward = HashMap::new();
-        let mut reverse = HashMap::new();
+        let mut forward = EdgeMap::default();
+        let mut reverse = EdgeMap::default();
         forward.insert(
             source.clone(),
             ordered

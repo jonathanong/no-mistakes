@@ -219,8 +219,8 @@ fn test_of_edges_do_not_make_source_depend_on_test() {
     // made `dependencies foo.mts` return its test file as a forward dep.
     let src = p("/root/foo.mts");
     let test = p("/root/foo.test.mts");
-    let mut forward: EdgeMap = HashMap::new();
-    let mut reverse: EdgeMap = HashMap::new();
+    let mut forward: EdgeMap = EdgeMap::default();
+    let mut reverse: EdgeMap = EdgeMap::default();
     merge_edges(
         &mut forward,
         &mut reverse,

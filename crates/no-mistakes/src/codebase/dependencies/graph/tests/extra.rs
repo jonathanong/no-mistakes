@@ -331,8 +331,8 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
             && to.as_file() == Some(root.join("packages/api/src/index.mts").as_path())
     }));
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let parsed = parsed_workflow_set(&root, &graph_files.all);
     add_ci_edges(
         &root,
@@ -344,8 +344,8 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     );
     assert!(!forward.is_empty());
 
-    let mut missing_forward = EdgeMap::new();
-    let mut missing_reverse = EdgeMap::new();
+    let mut missing_forward = EdgeMap::default();
+    let mut missing_reverse = EdgeMap::default();
     let missing_workflow = root.join(".github/workflows/missing.yml");
     let missing_files = [
         root.join("Cargo.toml"),
@@ -370,8 +370,8 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         resolve_cargo_bin_source(&nested_root, "nested", "missing.rs", &nested_visible),
         Some(nested_root.join("src/bin/nested/main.rs"))
     );
-    let mut nested_forward = EdgeMap::new();
-    let mut nested_reverse = EdgeMap::new();
+    let mut nested_forward = EdgeMap::default();
+    let mut nested_reverse = EdgeMap::default();
     let nested_files = [
         nested_root.join("Cargo.toml"),
         nested_root.join("src/bin/nested/main.rs"),
@@ -390,8 +390,8 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
 
     let no_workflows_root =
         crate::codebase::ts_resolver::normalize_path(&fixture("cargo-no-workflows"));
-    let mut no_workflows_forward = EdgeMap::new();
-    let mut no_workflows_reverse = EdgeMap::new();
+    let mut no_workflows_forward = EdgeMap::default();
+    let mut no_workflows_reverse = EdgeMap::default();
     let no_workflow_files = [
         no_workflows_root.join("Cargo.toml"),
         no_workflows_root.join("src/bin/standalone.rs"),

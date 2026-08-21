@@ -99,8 +99,8 @@ impl DepGraph {
             .or(facts)
             .or_else(|| owned_facts.as_ref().map(|facts| facts as &dyn TsFactLookup));
 
-        let mut forward: EdgeMap = HashMap::new();
-        let mut reverse: EdgeMap = HashMap::new();
+        let mut forward: EdgeMap = EdgeMap::default();
+        let mut reverse: EdgeMap = EdgeMap::default();
         let mut resource_edge_details: ResourceEdgeDetails = HashMap::new();
         let mut resource_diagnostics = Vec::new();
         let files = &graph_files.indexable;

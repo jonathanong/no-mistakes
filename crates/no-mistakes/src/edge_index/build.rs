@@ -1,7 +1,7 @@
 use super::adjacency;
 use super::{CanonicalEdge, EdgeIndex};
 #[cfg(debug_assertions)]
-use std::collections::HashMap;
+use crate::fx::FxHashMap;
 use std::collections::HashSet;
 use std::hash::Hash;
 
@@ -55,8 +55,8 @@ where
 
 #[cfg(debug_assertions)]
 pub(super) fn assert_adjacency_maps_are_consistent<Node, Kind>(
-    forward: &HashMap<Node, Vec<(Node, Kind)>>,
-    reverse: &HashMap<Node, Vec<(Node, Kind)>>,
+    forward: &FxHashMap<Node, Vec<(Node, Kind)>>,
+    reverse: &FxHashMap<Node, Vec<(Node, Kind)>>,
 ) where
     Node: Clone + Eq + Hash,
     Kind: Clone + Eq + Hash,

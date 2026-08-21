@@ -28,7 +28,7 @@ pub(super) fn edge_index_from_test_maps(
         .into_iter()
         .map(|node| (node, Vec::new()))
         .collect::<EdgeMap>();
-    let mut canonical_reverse = EdgeMap::new();
+    let mut canonical_reverse = EdgeMap::default();
     for (from, to, kind) in edges {
         canonical_forward
             .entry(from.clone())

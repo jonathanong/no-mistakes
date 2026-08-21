@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::hash::Hash;
+
+use crate::fx::{fx_map, FxHashMap};
 
 mod adjacency;
 mod aliases;
@@ -49,16 +50,16 @@ pub(crate) enum EdgeDirection {
 #[derive(Debug, Clone)]
 pub(crate) struct EdgeIndex<Node, Kind> {
     edges: Vec<CanonicalEdge<Node, Kind>>,
-    forward: HashMap<Node, Adjacency<Node, Kind>>,
-    reverse: HashMap<Node, Adjacency<Node, Kind>>,
+    forward: FxHashMap<Node, Adjacency<Node, Kind>>,
+    reverse: FxHashMap<Node, Adjacency<Node, Kind>>,
 }
 
 impl<Node, Kind> Default for EdgeIndex<Node, Kind> {
     fn default() -> Self {
         Self {
             edges: Vec::new(),
-            forward: HashMap::new(),
-            reverse: HashMap::new(),
+            forward: fx_map(),
+            reverse: fx_map(),
         }
     }
 }
@@ -72,11 +73,11 @@ where
         &self.edges
     }
 
-    pub(crate) fn forward(&self) -> &HashMap<Node, Adjacency<Node, Kind>> {
+    pub(crate) fn forward(&self) -> &FxHashMap<Node, Adjacency<Node, Kind>> {
         &self.forward
     }
 
-    pub(crate) fn reverse(&self) -> &HashMap<Node, Adjacency<Node, Kind>> {
+    pub(crate) fn reverse(&self) -> &FxHashMap<Node, Adjacency<Node, Kind>> {
         &self.reverse
     }
 

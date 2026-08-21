@@ -55,7 +55,7 @@ fn vitest_setup_edges_keep_explicit_non_indexable_project_matches() {
     let setup = p("/repo/setup/contracts.ts");
     let mut project = vitest_project("contracts", Some("."), "contracts/**/*.snapshot", &setup);
     project.tests = vec![test.clone()];
-    let graph = from_typed_maps(p("/repo"), HashMap::new(), EdgeMap::new())
+    let graph = from_typed_maps(p("/repo"), EdgeMap::default(), EdgeMap::default())
         .with_vitest_setup_projects(vec![project]);
 
     assert_eq!(
@@ -135,11 +135,13 @@ fn vitest_setup_prefers_nested_owner_without_suppressing_unscoped_owner() {
     let unscoped_setup = p("/repo/setup/unscoped.ts");
     let graph = from_typed_maps(
         p("/repo"),
-        HashMap::from([
+        [
             (NodeId::file(test.clone()), Vec::new()),
             (NodeId::module("vitest"), Vec::new()),
-        ]),
-        EdgeMap::new(),
+        ]
+        .into_iter()
+        .collect(),
+        EdgeMap::default(),
     )
     .with_vitest_setup_projects(vec![
         vitest_project("root", Some("src"), "src/**/*.test.ts", &root_setup),
@@ -179,11 +181,13 @@ fn vitest_setup_root_scope_is_an_ancestor_of_nested_projects() {
     let nested_setup = p("/repo/setup/nested.ts");
     let graph = from_typed_maps(
         p("/repo"),
-        HashMap::from([
+        [
             (NodeId::file(test.clone()), Vec::new()),
             (NodeId::module("vitest"), Vec::new()),
-        ]),
-        EdgeMap::new(),
+        ]
+        .into_iter()
+        .collect(),
+        EdgeMap::default(),
     )
     .with_vitest_setup_projects(vec![
         vitest_project("root", Some("."), "src/**/*.test.ts", &root_setup),

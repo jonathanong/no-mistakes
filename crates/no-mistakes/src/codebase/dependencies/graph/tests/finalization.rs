@@ -2,6 +2,20 @@ use super::super::test_support;
 use super::super::*;
 use std::path::PathBuf;
 
+#[test]
+fn edge_maps_and_edge_index_use_fx_hash() {
+    let types = include_str!("../types.rs");
+    assert!(
+        types.contains("type EdgeMap = FxHashMap"),
+        "graph EdgeMap must use rustc-hash FxHashMap"
+    );
+    let index = include_str!("../../../../edge_index.rs");
+    assert!(
+        index.contains("forward: FxHashMap") && index.contains("reverse: FxHashMap"),
+        "EdgeIndex adjacency must use rustc-hash FxHashMap"
+    );
+}
+
 fn p(path: &str) -> PathBuf {
     PathBuf::from(path)
 }
@@ -40,8 +54,8 @@ fn normalized_adjacency_flatten_matches_global_sort_oracle() {
         ),
         (source_file.clone(), target_queue.clone(), EdgeKind::Import),
     ];
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     forward.insert(empty.clone(), Vec::new());
     for (from, to, kind) in &edges {
         forward
@@ -109,8 +123,8 @@ fn direct_selector_append_matches_historical_rebuild_ordinals() {
     let base_target = n("/repo/base-target.ts");
     let selector_source = n("/repo/test.spec.ts");
     let selector_target = n("/repo/component.tsx");
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     merge_edges(
         &mut forward,
         &mut reverse,
@@ -154,8 +168,8 @@ fn direct_selector_append_matches_historical_rebuild_ordinals() {
 #[test]
 fn high_fanout_selector_append_matches_historical_rebuild() {
     let source = n("/repo/test.spec.ts");
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let base_edges = (0..1_024)
         .map(|index| {
             (
