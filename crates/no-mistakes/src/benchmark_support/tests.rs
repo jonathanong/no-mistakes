@@ -17,6 +17,10 @@ fn benchmark_adapters_preserve_output_with_and_without_observers() {
         check_json_observed(&root, true).expect("observed check should succeed");
     assert_eq!(observed_check, plain_check);
     assert!(!check_diagnostics.work.is_empty());
+    assert_eq!(check_diagnostics.work["source.reads"], 19);
+    assert_eq!(check_diagnostics.work["manifest.parses"], 4);
+    assert_eq!(check_diagnostics.work["manifest.requests"], 10);
+    assert_eq!(check_diagnostics.work["manifest.cache_hits"], 6);
 
     let options = json!({
         "root": root,

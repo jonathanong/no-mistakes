@@ -1,5 +1,6 @@
 use super::*;
 use crate::codebase::ts_source::{FileInventory, SourceStore};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 #[test]
@@ -46,5 +47,31 @@ fn markdown_and_cargo_edge_collectors_reuse_prepared_source_store() {
         store.physical_read_count(),
         after_bins,
         "markdown and cargo collectors must reuse the prepared SourceStore"
+    );
+}
+
+#[test]
+fn cargo_bin_collector_skips_unreadable_and_out_of_root_manifests() {
+    let ts_root = crate::codebase::ts_resolver::normalize_path(&fixture("unique-exports-basic"));
+    assert!(
+        collect_cargo_bins(&ts_root, &[ts_root.join("Cargo.toml")], None)
+            .by_name
+            .is_empty(),
+        "a listed root Cargo.toml that cannot be read must yield no bins"
+    );
+
+    let workspace = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-workspace-ci"));
+    let bins = collect_cargo_bins(
+        &workspace,
+        &[
+            workspace.join("Cargo.toml"),
+            workspace.join("crates/missing-member/Cargo.toml"),
+            PathBuf::from("/outside/Cargo.toml"),
+        ],
+        None,
+    );
+    assert!(
+        !bins.by_name.contains_key("outside"),
+        "manifests outside the workspace root must not contribute cargo bins"
     );
 }

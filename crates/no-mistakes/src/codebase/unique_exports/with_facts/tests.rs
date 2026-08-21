@@ -68,6 +68,31 @@ fn filter_application_files_matches_project_and_rule_relative_filters() {
 }
 
 #[test]
+fn filter_application_files_falls_back_when_project_root_cannot_be_inferred() {
+    let root = Path::new("/repo");
+    let config = config_with_projects(
+        [(
+            "unrooted".to_string(),
+            ProjectConfig {
+                include: vec!["src/**".to_string()],
+                ..Default::default()
+            },
+        )]
+        .into_iter()
+        .collect(),
+    );
+    let application = RuleApplicationConfig {
+        projects: vec!["unrooted".to_string()],
+        ..Default::default()
+    };
+    let files = vec![root.join("src/app.ts"), root.join("lib/util.ts")];
+
+    let filtered = filter_application_files(root, &config, &application, files, None).unwrap();
+
+    assert_eq!(filtered, vec![root.join("src/app.ts")]);
+}
+
+#[test]
 fn filter_application_files_skips_invalid_project_filters() {
     let root = Path::new("/repo");
     let config = config_with_projects(

@@ -231,6 +231,25 @@ fn static_export_collection_covers_default_and_destructured_declarations() {
         &["obj-a-val".to_string(), "obj-b-val".to_string()]
     );
 
+    let computed_path = root.join("default-obj-computed.ts");
+    let computed_source = std::fs::read_to_string(&computed_path).unwrap();
+    let computed_values = ast::with_program(&computed_path, &computed_source, |program, _| {
+        super::super::cross_file::collect_static_export_values(program)
+    })
+    .unwrap();
+    assert_eq!(
+        computed_values.values("ignored", true),
+        &["static-val".to_string()]
+    );
+
+    let anonymous = ast::with_program(
+        Path::new("anon-default.ts"),
+        "export default function() { return { a: 'anon-val' }; }",
+        |program, _| super::super::cross_file::collect_static_export_values(program),
+    )
+    .unwrap();
+    assert!(anonymous.values("ignored", true).is_empty());
+
     let extras_path = root.join("extras.ts");
     let extras_source = std::fs::read_to_string(&extras_path).unwrap();
     let extras = ast::with_program(&extras_path, &extras_source, |program, _| {

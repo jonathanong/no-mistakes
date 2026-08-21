@@ -80,12 +80,8 @@ fn analyze_one(
     visible_files: &HashSet<PathBuf>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<FileHit> {
-    let source = match sources {
-        Some(store) => store
-            .read_path(file)
-            .map_err(|error| anyhow::anyhow!("{error}"))?,
-        None => std::fs::read_to_string(file)?.into(),
-    };
+    let source = crate::codebase::ts_source::SourceStore::read_optional(sources, file)
+        .ok_or_else(|| anyhow::anyhow!("failed to read {}", file.display()))?;
     ast::with_program(file, &source, |program, _src| {
         let import_table = build_import_table_from_visible(file, program, visible_files);
         let importer = import_table

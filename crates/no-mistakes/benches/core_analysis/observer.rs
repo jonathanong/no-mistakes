@@ -1,6 +1,6 @@
 use super::fixtures::{
-    fixture_root, EXPECTED_CHECK_MANIFEST_PARSES, EXPECTED_CHECK_RESOLVER_KEYS,
-    EXPECTED_CHECK_SOURCE_READS,
+    fixture_root, EXPECTED_CHECK_MANIFEST_CACHE_HITS, EXPECTED_CHECK_MANIFEST_PARSES,
+    EXPECTED_CHECK_MANIFEST_REQUESTS, EXPECTED_CHECK_RESOLVER_KEYS, EXPECTED_CHECK_SOURCE_READS,
 };
 use super::shard;
 use criterion::{black_box, BenchmarkId, Criterion};
@@ -52,8 +52,14 @@ pub(super) fn bench_observer_overhead(c: &mut Criterion) {
         verbose_snapshot.work["manifest.parses"],
         EXPECTED_CHECK_MANIFEST_PARSES
     );
-    assert_eq!(verbose_snapshot.work["manifest.requests"], 8);
-    assert_eq!(verbose_snapshot.work["manifest.cache_hits"], 4);
+    assert_eq!(
+        verbose_snapshot.work["manifest.requests"],
+        EXPECTED_CHECK_MANIFEST_REQUESTS
+    );
+    assert_eq!(
+        verbose_snapshot.work["manifest.cache_hits"],
+        EXPECTED_CHECK_MANIFEST_CACHE_HITS
+    );
     assert_eq!(verbose_snapshot.work["parse.requests"], 14);
     assert_eq!(verbose_snapshot.work["parse.files"], 13);
     // All configured check domains share one canonical union graph.
