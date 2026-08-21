@@ -54,3 +54,54 @@ fn empty_selector_root_scans_the_whole_repository() {
     );
     assert!(root_cta.file.ends_with("src/app/page.tsx"), "{root_cta:?}");
 }
+
+#[test]
+fn app_selector_and_text_collectors_read_through_snapshot_source_store() {
+    let app_collect = include_str!("../app_collect.rs");
+    let app_text = include_str!("../app_text.rs");
+    assert!(
+        !app_collect.contains("std::fs::read_to_string"),
+        "selector scans must reuse the snapshot SourceStore"
+    );
+    assert!(app_collect.contains("read_snapshot_source"));
+    assert!(
+        !app_text.contains("std::fs::read_to_string"),
+        "text scans must reuse the snapshot SourceStore"
+    );
+    assert!(app_text.contains("read_snapshot_source"));
+}
+
+/// Selector and text scans walk the same files. The second pass must hit the
+/// snapshot store instead of opening those files again.
+#[test]
+fn app_text_scan_reuses_selector_scan_source_cache() {
+    let root =
+        crate::playwright::test_support::fixture_path(&["config-v2", "frontend-apps-inferred"]);
+    let settings = root_selector_settings();
+    let regexes = compile_selector_regexes(&settings.selector_attributes, &BTreeMap::new());
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let snapshot = VisiblePathSnapshot::new_observed(&root, Some(observer.clone()));
+    let sources = snapshot.source_store_for(&root);
+
+    collect_app_selector_occurrences_from_visible(&root, &settings, &regexes, &snapshot).unwrap();
+    let after_selectors = sources.physical_read_count();
+    assert!(
+        after_selectors > 0,
+        "selector scan should read app sources once"
+    );
+
+    crate::playwright::analysis::app_text::collect_app_text_targets_from_visible(
+        &root, &settings, &snapshot,
+    )
+    .unwrap();
+    assert_eq!(
+        sources.physical_read_count(),
+        after_selectors,
+        "text scan must reuse selector-scan source cache"
+    );
+    let work = observer.snapshot().work;
+    assert!(
+        work.get("source.cache_hits").copied().unwrap_or_default() > 0,
+        "expected SourceStore cache hits during the text scan: {work:#?}"
+    );
+}

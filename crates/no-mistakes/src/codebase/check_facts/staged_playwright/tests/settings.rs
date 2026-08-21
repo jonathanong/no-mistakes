@@ -82,6 +82,7 @@ fn assert_missing_variant_is_an_error(facts: &CheckFactMap, path: &std::path::Pa
             facts: Some(facts),
             selection: CachedOccurrenceSelection::Exact,
             module_resolution: None,
+            sources: None,
         },
     )
     .err()
@@ -143,6 +144,7 @@ fn prepare(
             facts: Some(facts),
             selection: CachedOccurrenceSelection::Exact,
             module_resolution: None,
+            sources: None,
         },
     )
     .unwrap()

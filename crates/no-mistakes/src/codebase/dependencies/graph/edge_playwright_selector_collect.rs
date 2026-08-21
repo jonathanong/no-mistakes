@@ -31,6 +31,7 @@ fn collect_playwright_selector_edges_for_settings(
     )?;
     let wrapper_resolution =
         selector_wrapper_resolution(root, settings, inputs.snapshot, inputs.route_import())?;
+    let sources = inputs.snapshot.source_store_for(root);
     let (prepared, demand) = crate::playwright::analysis::pipeline_occurrences::prepare_test_files(
         test_files,
         settings,
@@ -42,6 +43,7 @@ fn collect_playwright_selector_edges_for_settings(
             selection:
                 crate::playwright::analysis::pipeline_occurrences::CachedOccurrenceSelection::Exact,
             module_resolution: wrapper_resolution.as_ref(),
+            sources: Some(sources.as_ref()),
         },
     )?;
     finish_selector_edges_for_settings(

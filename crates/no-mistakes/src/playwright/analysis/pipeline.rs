@@ -92,6 +92,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         )
     };
     let (prepared, demand) = crate::perf_trace::trace("playwright.test_occurrences", || {
+        let sources = snapshot.source_store_for(root);
         prepare_test_files(
             test_files,
             settings,
@@ -102,6 +103,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
                 facts,
                 selection: occurrence_selection,
                 module_resolution: wrapper_resolution.as_ref(),
+                sources: Some(sources.as_ref()),
             },
         )
     })?;

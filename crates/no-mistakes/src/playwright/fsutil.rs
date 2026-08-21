@@ -91,3 +91,23 @@ pub(crate) fn absolutize(path: &Path) -> Result<PathBuf> {
         Ok(cwd.join(path))
     }
 }
+
+pub(crate) fn read_source_text(
+    path: &Path,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> std::io::Result<std::sync::Arc<str>> {
+    match sources {
+        Some(store) => store
+            .read_path(path)
+            .map_err(|error| std::io::Error::new(error.kind(), error.to_string())),
+        None => std::fs::read_to_string(path).map(std::sync::Arc::from),
+    }
+}
+
+pub(crate) fn read_snapshot_source(
+    snapshot: &VisiblePathSnapshot,
+    root: &Path,
+    path: &Path,
+) -> std::io::Result<std::sync::Arc<str>> {
+    read_source_text(path, Some(snapshot.source_store_for(root).as_ref()))
+}
