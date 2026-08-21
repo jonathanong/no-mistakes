@@ -238,6 +238,18 @@ fn rails_collects_route_and_active_job() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "/admin/users" && handler == "admin/users#index"));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/users" && handler == "users#index"));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/users/:id" && handler == "users#show"));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .all(|(route, _)| route != "/hidden" && route != "/profile" && route != "/accounts"));
     assert!(facts.declarations.contains_key("Admin::UsersController"));
     let controller = facts
         .files
