@@ -27,7 +27,7 @@ CLIs are not started.
 | Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(`, Flask, FastAPI | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
 | Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
-| Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
+| Rust | `rust-use`, `rust-mod` | `tests plan cargo` | Axum, Actix, Rocket literals | no | shipped (v1 extractors + plan) |
 | Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` / `resources` | Active Job `perform_later`, Sidekiq `perform_async` | shipped (v1 extractors + plan) |
 | PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` / `Route::resource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
 
@@ -66,7 +66,7 @@ graph exists. Full-suite fallback remains explicit opt-in.
 **HTTP routes.** `server routes`, `server edges`, `server related`, and
 `server contracts` list configured TS/JS route definitions and static client
 calls. Language v1 extractors emit `route` edges into `DepGraph` for Django,
-Flask, FastAPI, Go HTTP, Rails, Laravel, and Symfony; query those with
+Flask, FastAPI, Go HTTP, Rails, Laravel, Symfony, and Rust Axum/Actix/Rocket; query those with
 `dependents --relationship route`. `server routes|edges|related` also project
 those language `RouteRef` facts into the existing server report. Do not invent
 a second route graph.
@@ -249,6 +249,18 @@ routes and queues from the shared domains.
 it with `use`/`mod` edges. `workflow` already resolves supported Cargo
 `run:` lines.
 
+Static Axum `.route("/users", get(list_users))`, Actix
+`web::resource("/ready").route(web::get().to(ready))`, and Actix/Rocket
+`#[get("/health")]` attributes emit `route` edges. Handler names are the bare
+function ident. Computed paths, `#[get(prefix)]`, and chained
+`.route("/x", get(a).post(b))` produce no edge.
+
+```rust
+.route("/users", get(list_users))
+#[get("/health")]
+pub async fn health() {}
+```
+
 Inline `#[cfg(test)]` modules are banned by `rust-no-inline-tests` in this
 repo; discovery should prefer `tests/**/*.rs` and sibling `tests.rs` files.
 
@@ -378,7 +390,7 @@ shipped for configured Python, Go, Rust, Rails, and PHP packages. Use
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Laravel
-`Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Rust Axum/Actix/Rocket routes, Kafka
+`Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
 dedicated `no-mistakes python|go|rust|rails|php` CLIs.
 

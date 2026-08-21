@@ -97,3 +97,20 @@ fn flask_fastapi_fixture_lists_literal_routes() {
         .iter()
         .all(|route| !route.file.ends_with("computed.py")));
 }
+
+#[test]
+fn rust_http_fixture_lists_literal_routes() {
+    let report = analyze_project(&lang_fixture("rust-http"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| route.route == "/users" && route.file.ends_with("routes.rs")));
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| route.route == "/health" && route.file.ends_with("handlers.rs")));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| !route.file.ends_with("computed.rs")));
+}

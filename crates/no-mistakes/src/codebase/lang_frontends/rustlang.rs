@@ -3,6 +3,8 @@ use super::facts::{
     LangFileFacts,
 };
 use super::strip::strip_comments_keep_strings;
+#[path = "rust_http.rs"]
+mod http;
 #[path = "rust_path.rs"]
 mod rust_path;
 #[cfg(test)]
@@ -61,7 +63,7 @@ fn parse_rust_file(
         imports: rust_imports(&text, module.as_deref()),
         declarations: extract_named(&text, rust_decl_re()),
         references: extract_named(&text, rust_ref_re()),
-        route_handlers: Vec::new(),
+        route_handlers: http::extract_http_routes(&text),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
         mods: rust_mod_names(&text, path, src_root.as_deref()),
@@ -153,7 +155,7 @@ fn rust_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r"(?m)^\s*pub(?:\([^)]+\))?\s+(?:fn|struct|enum|trait|type|mod)\s+([A-Za-z_]\w*)",
+            r"(?m)^\s*pub(?:\([^)]+\))?\s+(?:async\s+)?(?:fn|struct|enum|trait|type|mod)\s+([A-Za-z_]\w*)",
         )
         .expect("decl")
     })

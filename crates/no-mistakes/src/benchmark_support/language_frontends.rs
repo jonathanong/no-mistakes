@@ -58,7 +58,11 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
                 "go-asynq/worker".into(),
                 "go-http".into(),
             ],
-            rust_packages: vec!["rust-mods".into(), "rust-mods/src".into()],
+            rust_packages: vec![
+                "rust-mods".into(),
+                "rust-mods/src".into(),
+                "rust-http".into(),
+            ],
             rails_apps: vec!["rails-jobs".into()],
             php_apps: vec!["php-laravel".into()],
             php_framework: Some("laravel".into()),

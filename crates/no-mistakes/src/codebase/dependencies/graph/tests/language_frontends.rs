@@ -135,6 +135,32 @@ fn language_frontend_edges_cover_configured_extractors() {
                 .is_none_or(|path| !path.ends_with("computed.go"))
     }));
 
+    let rust_http = lang_fixture("rust-http");
+    let rust_http_options = GraphConfigOptions {
+        rust_packages: vec![".".into()],
+        ..options.clone()
+    };
+    let rust_http_edges = collect_language_frontend_edges_for_test(
+        &rust_http,
+        &lang_files(&rust_http),
+        Some(&rust_http_options),
+    );
+    assert!(rust_http_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("routes.rs"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("handlers.rs"))
+    }));
+    assert!(rust_http_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("computed.rs"))
+    }));
+
     let rust = lang_fixture("rust-mods");
     let rust_edges =
         collect_language_frontend_edges_for_test(&rust, &lang_files(&rust), Some(&options));
