@@ -101,6 +101,13 @@ impl ServerRouteVisitor<'_> {
                 if commonjs_property_is_framework(source, key.as_ref()) {
                     self.record_commonjs_module(&local, source);
                 }
+                if source == "@nestjs/common" {
+                    self.facts.imports.push(ImportBinding {
+                        local: local.clone(),
+                        imported: key.as_ref().to_string(),
+                        source: source.to_string(),
+                    });
+                }
                 if is_client_http_module(source) {
                     self.client_http_names.insert(local);
                 }

@@ -194,3 +194,36 @@ fn extract_file_recognizes_fastify_imports_and_verbs() {
     assert!(route_pairs.contains(&("patch", "/equals", Framework::Fastify)));
     assert!(route_pairs.contains(&("put", "/cjs", Framework::Fastify)));
 }
+
+#[test]
+fn extract_file_recognizes_nestjs_controller_and_verb_decorators() {
+    let facts = extract_file(&fixture("nestjs-app.ts")).unwrap();
+    assert_eq!(
+        facts.bindings["UsersController"].framework,
+        Framework::Nestjs
+    );
+    let route_pairs: Vec<_> = facts
+        .routes
+        .iter()
+        .map(|route| {
+            (
+                route.method.as_str(),
+                route.raw_path.as_str(),
+                route.framework,
+            )
+        })
+        .collect();
+    assert!(route_pairs.contains(&("get", "/users", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/users/:id", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("post", "/users", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/health", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("put", "/ready", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("delete", "/cjs/gone", Framework::Nestjs)));
+}
+
+#[test]
+fn extract_file_skips_computed_nestjs_paths() {
+    let facts = extract_file(&fixture("nestjs-computed.ts")).unwrap();
+    assert!(facts.routes.is_empty());
+    assert!(!facts.bindings.contains_key("ComputedController"));
+}

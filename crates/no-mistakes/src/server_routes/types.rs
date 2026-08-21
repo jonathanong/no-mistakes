@@ -11,6 +11,7 @@ pub enum Framework {
     Hono,
     KoaPathMatch,
     KoaRouter,
+    Nestjs,
     Heuristic,
 }
 
