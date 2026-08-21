@@ -44,13 +44,20 @@ pub(super) fn nested_timeout_line(
     index: usize,
     nested_input: &str,
 ) -> usize {
+    step_key_line_in(source, job_id, index, &[nested_input, "uses", "with"])
+}
+
+pub(super) fn step_key_line(source: &str, job_id: &str, index: usize, key: &str) -> usize {
+    step_key_line_in(source, job_id, index, &[key, "uses"])
+}
+
+fn step_key_line_in(source: &str, job_id: &str, index: usize, keys: &[&str]) -> usize {
     let Some(start) = step_start_line(source, job_id, index) else {
         return 1;
     };
     let end = next_step_end(source, start);
-    key_between(source, start, end, nested_input)
-        .or_else(|| key_between(source, start, end, "uses"))
-        .or_else(|| key_between(source, start, end, "with"))
+    keys.iter()
+        .find_map(|key| key_between(source, start, end, key))
         .unwrap_or(start)
 }
 

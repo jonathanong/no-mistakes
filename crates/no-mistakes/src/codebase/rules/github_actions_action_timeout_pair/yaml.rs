@@ -1,5 +1,7 @@
 use super::{RuleFinding, UsesSpec, RULE_ID};
+use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::{Mapping, Value};
+use std::path::{Path, PathBuf};
 
 pub(super) fn mapping_get<'a>(map: &'a Mapping, key: &str) -> Option<&'a Value> {
     map.get(Value::String(key.to_string()))
@@ -92,6 +94,17 @@ pub(super) fn is_local_wrapper(rel: &str, specs: &[UsesSpec]) -> bool {
             .is_some_and(|local| is_wrapper_action_file(rel, local)),
         UsesSpec::Prefix(_) => false,
     })
+}
+
+pub(super) fn wrapper_rel(root: &Path, path: &Path, target_roots: &[PathBuf]) -> String {
+    target_roots
+        .iter()
+        .map(PathBuf::as_path)
+        .chain(std::iter::once(root))
+        .filter(|base| path.starts_with(base))
+        .max_by_key(|base| base.as_os_str().len())
+        .map(|base| relative_slash_path(base, path))
+        .unwrap_or_else(|| relative_slash_path(root, path))
 }
 
 fn is_wrapper_action_file(rel: &str, local: &str) -> bool {

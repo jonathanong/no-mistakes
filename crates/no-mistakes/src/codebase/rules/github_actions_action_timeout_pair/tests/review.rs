@@ -89,6 +89,10 @@ fn nested_timeout_line_falls_back_without_steps_or_keys() {
         super::super::line::nested_timeout_line(gapped, "deploy", 8, "action-timeout-s"),
         1
     );
+    assert_eq!(
+        super::super::line::step_key_line("name: ci\n", "missing", 0, "timeout-minutes"),
+        1
+    );
 }
 
 #[test]
@@ -160,6 +164,93 @@ fn disable_file_comment_is_kept_when_deferred() {
     assert_eq!(deferred.len(), 1, "{deferred:?}");
     assert!(check_written(DISABLED_THIRD_PARTY, false).is_empty());
     assert_eq!(check_written(DISABLED_THIRD_PARTY, true).len(), 1);
+}
+
+#[test]
+fn forbid_nested_false_still_checks_third_party_nested_input() {
+    let source = r#"
+runs:
+  using: composite
+  steps:
+    - uses: aws-actions/configure-aws-credentials@v4
+"#;
+    let yaml = r#"
+uses:
+  - ./.github/actions/setup-aws
+  - aws-actions/configure-aws-credentials@
+nestedInput: action-timeout-s
+nestedTimeoutSeconds: 90
+forbidNestedInComposite: false
+"#;
+    let findings = parsed(".github/actions/other/action.yml", source, yaml);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("action-timeout-s"));
+}
+
+#[test]
+fn timeout_minutes_line_is_on_the_violating_step() {
+    let source = r#"
+jobs:
+  deploy:
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+        with:
+          action-timeout-s: 90
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          action-timeout-s: 90
+"#;
+    let findings = parsed(".github/workflows/ci.yml", source, OPTIONS);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let expected = source
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| line.contains("configure-aws-credentials"))
+        .nth(1)
+        .map(|(index, _)| index + 1)
+        .unwrap();
+    assert_eq!(findings[0].line, expected);
+}
+
+#[test]
+fn wrapper_identity_uses_project_target_root() {
+    // Include globs are project-relative; wrapper identity must use that same
+    // target root or packages/app/.github/actions/setup-aws is not a wrapper.
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp
+        .path()
+        .join("packages/app/.github/actions/setup-aws/action.yml");
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    std::fs::write(
+        &path,
+        "runs:\n  using: composite\n  steps:\n    - uses: aws-actions/configure-aws-credentials@v4\n",
+    )
+    .unwrap();
+    let config = NoMistakesConfig {
+        projects: [(
+            "app".to_string(),
+            crate::config::v2::schema::Project {
+                root: Some("packages/app".to_string()),
+                ..Default::default()
+            },
+        )]
+        .into(),
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            projects: vec!["app".to_string()],
+            options: serde_yaml::from_str(OPTIONS).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let findings = check_with_files(tmp.path(), &config, std::slice::from_ref(&path)).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("action-timeout-s"),
+        "{findings:?}"
+    );
+    assert!(!findings[0].message.contains("nests a configured action"));
 }
 
 #[test]

@@ -1,7 +1,7 @@
-use super::line::nested_input_finding;
+use super::line::{nested_input_finding, step_key_line};
 use super::yaml::{
-    finding, is_direct_third_party, is_local_wrapper, key_line, literal_u64, mapping_get,
-    mapping_string, nested_composite_message, step_label, timeout_message, uses_matches, yaml_got,
+    finding, is_direct_third_party, is_local_wrapper, literal_u64, mapping_get, mapping_string,
+    nested_composite_message, step_label, timeout_message, uses_matches, wrapper_rel, yaml_got,
 };
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
@@ -23,8 +23,9 @@ pub(super) fn check_file(
     {
         return Vec::new();
     }
+    let wrapper_rel = wrapper_rel(root, path, &opts.target_roots);
     let mut findings = match serde_yaml::from_str::<Value>(&source) {
-        Ok(value) => check_parsed(&rel, &source, &value, opts),
+        Ok(value) => check_parsed(&rel, &wrapper_rel, &source, &value, opts),
         Err(_) => Vec::new(),
     };
     if !defer_suppression {
@@ -35,6 +36,7 @@ pub(super) fn check_file(
 
 pub(super) fn check_parsed(
     rel: &str,
+    wrapper_rel: &str,
     source: &str,
     value: &Value,
     opts: &CompiledOptions,
@@ -42,7 +44,7 @@ pub(super) fn check_parsed(
     if let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) {
         return check_workflow(rel, source, jobs, opts);
     }
-    check_composite(rel, source, value, opts)
+    check_composite(rel, wrapper_rel, source, value, opts)
 }
 
 fn check_workflow(
@@ -98,7 +100,7 @@ fn check_workflow_step(
             };
             findings.push(finding(
                 rel,
-                key_line(source, key),
+                step_key_line(source, job_id, index, key),
                 timeout_message(rel, job_id, &label, expected, &yaml_got(raw)),
                 job_id,
             ));
@@ -114,6 +116,7 @@ fn check_workflow_step(
 
 fn check_composite(
     rel: &str,
+    wrapper_rel: &str,
     source: &str,
     value: &Value,
     opts: &CompiledOptions,
@@ -127,7 +130,7 @@ fn check_composite(
     let Some(steps) = mapping_get(runs, "steps").and_then(Value::as_sequence) else {
         return Vec::new();
     };
-    let wrapper = is_local_wrapper(rel, &opts.uses);
+    let wrapper = is_local_wrapper(wrapper_rel, &opts.uses);
     let mut findings = Vec::new();
     for (index, step) in steps.iter().enumerate() {
         let Some(step) = step.as_mapping() else {
@@ -137,26 +140,24 @@ fn check_composite(
             continue;
         };
         let label = step_label(step, index);
-        if wrapper {
-            if is_direct_third_party(&uses, &opts.uses) {
-                findings.extend(nested_input_finding(
-                    rel,
-                    source,
-                    "(composite)",
-                    &label,
-                    step,
-                    index,
-                    opts,
-                ));
-            }
-            continue;
-        }
-        if opts.forbid_nested_in_composite && uses_matches(&uses, &opts.uses) {
+        if !wrapper && opts.forbid_nested_in_composite && uses_matches(&uses, &opts.uses) {
             findings.push(finding(
                 rel,
-                key_line(source, "uses"),
+                step_key_line(source, "(composite)", index, "uses"),
                 nested_composite_message(rel, &label),
                 &label,
+            ));
+            continue;
+        }
+        if is_direct_third_party(&uses, &opts.uses) {
+            findings.extend(nested_input_finding(
+                rel,
+                source,
+                "(composite)",
+                &label,
+                step,
+                index,
+                opts,
             ));
         }
     }

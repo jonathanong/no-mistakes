@@ -59,6 +59,7 @@ pub(super) struct CompiledOptions {
     nested_input: String,
     nested_timeout_seconds: Option<u64>,
     forbid_nested_in_composite: bool,
+    target_roots: Vec<PathBuf>,
 }
 
 pub(crate) fn check_with_files(
@@ -79,22 +80,24 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = compile_options(rule.rule_options());
+        let mut opts = compile_options(rule.rule_options());
         if opts.uses.is_empty() {
             continue;
         }
-        let target_roots = super::target_roots(root, config, rule);
+        opts.target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
             .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
+            .filter(|path| {
+                super::file_allowed_by_roots_and_skip(root, &skip, path, &opts.target_roots)
+            })
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
         if files.is_empty() {
             continue;
         }
-        let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
+        let files = super::matching_files(root, &opts.include, &files, &opts.target_roots)?;
         findings.extend(scan_files(root, &opts, &files, sources, defer_suppression));
     }
     super::sort_findings(&mut findings);
@@ -130,6 +133,7 @@ fn compile_options(opts: Options) -> CompiledOptions {
         nested_input: opts.nested_input,
         nested_timeout_seconds: opts.nested_timeout_seconds,
         forbid_nested_in_composite: opts.forbid_nested_in_composite,
+        target_roots: Vec::new(),
     }
 }
 

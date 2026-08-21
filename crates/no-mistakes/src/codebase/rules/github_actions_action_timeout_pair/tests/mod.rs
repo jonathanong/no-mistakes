@@ -46,7 +46,7 @@ fn run(root: &Path, yaml: &str, rels: &[&str]) -> Vec<RuleFinding> {
 fn parsed(rel: &str, source: &str, yaml: &str) -> Vec<RuleFinding> {
     let opts = compile_options(serde_yaml::from_str(yaml).unwrap());
     let value = serde_yaml::from_str(source).unwrap();
-    scan::check_parsed(rel, source, &value, &opts)
+    scan::check_parsed(rel, rel, source, &value, &opts)
 }
 
 #[test]
