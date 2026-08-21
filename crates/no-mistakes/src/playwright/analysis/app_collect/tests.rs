@@ -85,6 +85,12 @@ fn app_text_scan_reuses_selector_scan_source_cache() {
 
     collect_app_selector_occurrences_from_visible(&root, &settings, &regexes, &snapshot).unwrap();
     let after_selectors = sources.physical_read_count();
+    let after_selector_hits = observer
+        .snapshot()
+        .work
+        .get("source.cache_hits")
+        .copied()
+        .unwrap_or_default();
     assert!(
         after_selectors > 0,
         "selector scan should read app sources once"
@@ -99,9 +105,14 @@ fn app_text_scan_reuses_selector_scan_source_cache() {
         after_selectors,
         "text scan must reuse selector-scan source cache"
     );
-    let work = observer.snapshot().work;
+    let after_text_hits = observer
+        .snapshot()
+        .work
+        .get("source.cache_hits")
+        .copied()
+        .unwrap_or_default();
     assert!(
-        work.get("source.cache_hits").copied().unwrap_or_default() > 0,
-        "expected SourceStore cache hits during the text scan: {work:#?}"
+        after_text_hits > after_selector_hits,
+        "text scan must record SourceStore cache hits: {after_selector_hits} -> {after_text_hits}"
     );
 }
