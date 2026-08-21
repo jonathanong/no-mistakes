@@ -307,7 +307,7 @@ $bus->dispatch(new WelcomeMessage());
 `__DIR__ . '/' . $name`, `app($abstract)`, `#[Route($prefix . '/users')]`,
 `$bus->dispatch($message)` lookups, `Route::resource(..., ['only' => ...])`,
 `Route::resource(...)->only([...])`, nested dotted `Route::resource` names,
-and `Route::apiResource` are non-edges. Missing `tests.php.framework`
+named-argument `Route::resource` calls, and `Route::apiResource` are non-edges. Missing `tests.php.framework`
 still enables neither Laravel nor Symfony extractors.
 
 ## Shared Domain Rules
@@ -378,7 +378,7 @@ shipped for configured Python, Go, Rust, Rails, and PHP packages. Use
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Laravel
-`Route::resource` `only`/`except` and `Route::apiResource`, Rust Axum/Actix/Rocket routes, Kafka
+`Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Rust Axum/Actix/Rocket routes, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
 dedicated `no-mistakes python|go|rust|rails|php` CLIs.
 

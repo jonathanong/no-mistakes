@@ -72,11 +72,8 @@ fn extract_laravel_resources(source: &str) -> Vec<(String, String)> {
         .filter_map(|cap| {
             let matched = cap.get(0)?;
             let after = source.get(matched.end()..).unwrap_or("").trim_start();
-            if after.starts_with("->only") || after.starts_with("->except") {
-                return None;
-            }
             let raw_path = cap.get(1)?.as_str();
-            if raw_path.contains('.') {
+            if skip_laravel_resource(raw_path, after) {
                 return None;
             }
             let handler = cap.get(2).or_else(|| cap.get(3))?.as_str();
@@ -85,6 +82,14 @@ fn extract_laravel_resources(source: &str) -> Vec<(String, String)> {
         })
         .flatten()
         .collect()
+}
+
+fn skip_laravel_resource(raw_path: &str, after: &str) -> bool {
+    let stmt = after.split(';').next().unwrap_or(after);
+    stmt.contains("->only")
+        || stmt.contains("->except")
+        || raw_path.contains('.')
+        || raw_path.contains('$')
 }
 
 fn laravel_resource_paths(raw_path: &str, handler: String) -> Vec<(String, String)> {

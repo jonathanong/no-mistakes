@@ -46,6 +46,8 @@ fn laravel_resource_only_api_and_computed_are_non_edges() {
     let source = r#"
 Route::resource('hidden', UserController::class, ['only' => ['index']]);
 Route::resource('limited', UserController::class)->only(['index']);
+Route::resource('named', UserController::class)->names(['index' => 'users.index'])->only(['index']);
+Route::resource("$prefix/users", UserController::class);
 Route::apiResource('accounts', UserController::class);
 Route::resource($name, UserController::class);
 Route::resource('photos.comments', PhotoCommentController::class);
