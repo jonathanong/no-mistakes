@@ -43,24 +43,38 @@ pub(super) fn expand_explicit_config_values(
     visible_files: &HashSet<PathBuf>,
 ) -> Vec<String> {
     let mut values = Vec::new();
+    let mut seen = HashSet::new();
     for pattern in patterns {
         if is_glob(pattern) {
             if let Ok(glob) = Glob::new(pattern) {
                 let matcher = glob.compile_matcher();
+                let mut matches = Vec::new();
                 for file in visible_files {
                     let rel = relative_slash_path(root, file);
                     if matcher.is_match(&rel) {
-                        values.push(rel);
+                        matches.push(rel);
                     }
                 }
+                matches.sort();
+                push_unique(&mut values, &mut seen, matches);
             }
         } else {
-            values.push(pattern.clone());
+            push_unique(&mut values, &mut seen, [pattern.clone()]);
         }
     }
-    values.sort();
-    values.dedup();
     values
+}
+
+fn push_unique(
+    values: &mut Vec<String>,
+    seen: &mut HashSet<String>,
+    items: impl IntoIterator<Item = String>,
+) {
+    for item in items {
+        if seen.insert(item.clone()) {
+            values.push(item);
+        }
+    }
 }
 
 fn is_glob(pattern: &str) -> bool {
