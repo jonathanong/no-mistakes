@@ -35,16 +35,16 @@ fn extract_declared_workers(source: &str) -> Vec<String> {
             if stmt.is_empty() {
                 continue;
             }
-            if let Some(name) = class_name_re()
+            if singleton_class_re().is_match(stmt) {
+                scopes.push(Scope::Block);
+            } else if let Some(name) = class_name_re()
                 .captures(stmt)
                 .and_then(|cap| cap.get(1))
                 .map(|m| m.as_str().to_string())
             {
                 scopes.push(Scope::Named(name));
                 if application_job_class_re().is_match(stmt) {
-                    if let Some(qualified) = qualified_name(&scopes) {
-                        names.push(qualified);
-                    }
+                    names.extend(qualified_name(&scopes));
                 }
             } else if let Some(name) = module_name_re()
                 .captures(stmt)
@@ -56,9 +56,7 @@ fn extract_declared_workers(source: &str) -> Vec<String> {
                 scopes.push(Scope::Block);
             }
             if sidekiq_include_re().is_match(stmt) {
-                if let Some(qualified) = qualified_name(&scopes) {
-                    names.push(qualified);
-                }
+                names.extend(qualified_name(&scopes));
             }
             if end_re().is_match(stmt) {
                 scopes.pop();
@@ -89,7 +87,10 @@ fn qualified_name(scopes: &[Scope]) -> Option<String> {
 
 fn job_enqueue_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\b([A-Z][\w:]*)\.perform_(?:later|async)\b").expect("enqueue"))
+    RE.get_or_init(|| {
+        Regex::new(r"\b([A-Z][\w:]*)(?:\.set\([^)]*\))?\.perform_(?:later|async)\b")
+            .expect("enqueue")
+    })
 }
 
 fn application_job_class_re() -> &'static Regex {
@@ -100,6 +101,11 @@ fn application_job_class_re() -> &'static Regex {
 fn class_name_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"^class\s+([A-Z][\w:]*)").expect("class"))
+}
+
+fn singleton_class_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"^class\s+<<").expect("singleton class"))
 }
 
 fn module_name_re() -> &'static Regex {

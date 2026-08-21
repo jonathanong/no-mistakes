@@ -16,6 +16,12 @@ Workers::DigestJob.perform_async
 }
 
 #[test]
+fn set_configuration_before_perform_async_is_an_enqueue() {
+    let enqueues = extract_enqueues(r#"MailWorker.set(queue: "critical").perform_async(user_id)"#);
+    assert_eq!(enqueues, vec!["MailWorker".to_string()]);
+}
+
+#[test]
 fn application_job_and_sidekiq_includes_are_workers() {
     let source = r#"
 class WelcomeJob < ApplicationJob
@@ -94,6 +100,27 @@ end
 "#,
     );
     assert_eq!(workers, vec!["BillingWorker".to_string()]);
+}
+
+#[test]
+fn singleton_class_end_does_not_drop_enclosing_worker() {
+    let workers = extract_workers(
+        r#"
+class MailWorker
+  class << self
+  end
+  def perform
+  end
+  include Sidekiq::Worker
+end
+"#,
+    );
+    assert_eq!(workers, vec!["MailWorker".to_string()]);
+}
+
+#[test]
+fn top_level_include_is_not_a_worker() {
+    assert!(extract_workers("include Sidekiq::Worker\n; ;\n").is_empty());
 }
 
 #[test]
