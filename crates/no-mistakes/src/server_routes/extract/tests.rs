@@ -218,12 +218,12 @@ fn extract_file_recognizes_nestjs_controller_and_verb_decorators() {
     assert!(route_pairs.contains(&("get", "/", Framework::Nestjs)));
     assert!(route_pairs.contains(&("get", "/:id", Framework::Nestjs)));
     assert!(route_pairs.contains(&("post", "/", Framework::Nestjs)));
-    assert!(route_pairs.contains(&("get", "/bare", Framework::Nestjs)));
     assert!(route_pairs.contains(&("head", "/", Framework::Nestjs)));
     assert!(route_pairs.contains(&("put", "/ready", Framework::Nestjs)));
     assert!(route_pairs.contains(&("patch", "/ready", Framework::Nestjs)));
     assert!(route_pairs.contains(&("options", "/ready", Framework::Nestjs)));
     assert!(route_pairs.contains(&("all", "/any", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/host", Framework::Nestjs)));
     assert!(route_pairs.contains(&("delete", "/gone", Framework::Nestjs)));
     assert!(!route_pairs
         .iter()

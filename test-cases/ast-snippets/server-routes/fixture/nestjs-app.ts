@@ -24,6 +24,12 @@ export class HealthController {
   ping() {}
 }
 
+@Controller({ host: "localhost" })
+export class HostController {
+  @Get("host")
+  host() {}
+}
+
 @Controller()
 export class RootController {
   @Put("ready")
@@ -37,12 +43,10 @@ export class RootController {
 
   @All("any")
   any() {}
-}
 
-@Controller
-export class BareController {
-  @Get("bare")
-  bare() {}
+  get ignored() {
+    return 1;
+  }
 }
 
 const { Controller: CjsController, Delete } = require("@nestjs/common");

@@ -76,22 +76,13 @@ impl ServerRouteVisitor<'_> {
 
     fn decorator_path(&self, decorator: &Decorator<'_>) -> Option<String> {
         let Expression::CallExpression(call) = &decorator.expression else {
-            return Some(String::new());
+            return None;
         };
         let Some(arg) = call.arguments.first() else {
             return Some(String::new());
         };
         if let Argument::ObjectExpression(object) = arg {
-            for prop in &object.properties {
-                let ObjectPropertyKind::ObjectProperty(property) = prop else {
-                    continue;
-                };
-                if property.key.static_name().as_deref() != Some("path") {
-                    continue;
-                }
-                return super::const_string(&property.value);
-            }
-            return Some(String::new());
+            return object_path(object);
         }
         arg.as_expression().and_then(super::const_string)
     }
@@ -109,14 +100,33 @@ impl ServerRouteVisitor<'_> {
 }
 
 fn decorator_callee<'a>(decorator: &'a Decorator<'a>) -> Option<(&'a str, u32)> {
-    match &decorator.expression {
-        Expression::Identifier(id) => Some((id.name.as_str(), decorator.span.start)),
-        Expression::CallExpression(call) => match &call.callee {
-            Expression::Identifier(id) => Some((id.name.as_str(), call.span.start)),
-            _ => None,
-        },
+    let Expression::CallExpression(call) = &decorator.expression else {
+        return None;
+    };
+    match &call.callee {
+        Expression::Identifier(id) => Some((id.name.as_str(), call.span.start)),
         _ => None,
     }
+}
+
+fn object_path(object: &oxc_ast::ast::ObjectExpression<'_>) -> Option<String> {
+    let mut path = None;
+    let mut spread = false;
+    for prop in &object.properties {
+        match prop {
+            ObjectPropertyKind::SpreadProperty(_) => spread = true,
+            ObjectPropertyKind::ObjectProperty(property)
+                if property.key.static_name().as_deref() == Some("path") =>
+            {
+                path = Some(super::const_string(&property.value)?);
+            }
+            _ => {}
+        }
+    }
+    if spread && path.is_none() {
+        return None;
+    }
+    Some(path.unwrap_or_default())
 }
 
 fn nestjs_http_method(imported: &str) -> Option<String> {
