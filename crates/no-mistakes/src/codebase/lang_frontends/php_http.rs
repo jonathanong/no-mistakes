@@ -50,7 +50,7 @@ pub(super) fn extract_yaml_routes(source: &str) -> Vec<(String, String)> {
 }
 
 fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
-    laravel_route_re()
+    let mut routes = laravel_route_re()
         .captures_iter(source)
         .filter_map(|cap| {
             let handler = cap.get(2).or_else(|| cap.get(3))?.as_str();
@@ -59,7 +59,42 @@ fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
                 handler.replace('\\', ".").trim_start_matches('.').into(),
             ))
         })
+        .collect::<Vec<_>>();
+    routes.extend(extract_laravel_resources(source));
+    routes.sort();
+    routes.dedup();
+    routes
+}
+
+fn extract_laravel_resources(source: &str) -> Vec<(String, String)> {
+    laravel_resource_re()
+        .captures_iter(source)
+        .filter_map(|cap| {
+            let raw_path = cap.get(1)?.as_str();
+            if raw_path.contains('.') {
+                return None;
+            }
+            let handler = cap.get(2).or_else(|| cap.get(3))?.as_str();
+            let handler = handler.replace('\\', ".").trim_start_matches('.').into();
+            Some(laravel_resource_paths(raw_path, handler))
+        })
+        .flatten()
         .collect()
+}
+
+fn laravel_resource_paths(raw_path: &str, handler: String) -> Vec<(String, String)> {
+    let collection = if raw_path.starts_with('/') {
+        raw_path.to_string()
+    } else {
+        format!("/{raw_path}")
+    };
+    let segment = collection.rsplit('/').next().unwrap_or("id");
+    let param = segment
+        .strip_suffix('s')
+        .filter(|name| !name.is_empty())
+        .unwrap_or(segment);
+    let member = format!("{collection}/:{param}");
+    vec![(collection, handler.clone()), (member, handler)]
 }
 
 fn extract_attribute_routes(source: &str) -> Vec<(String, String)> {
@@ -102,6 +137,16 @@ fn laravel_route_re() -> &'static Regex {
             r#"Route::(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)"#,
         )
         .expect("laravel route")
+    })
+}
+
+fn laravel_resource_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            r#"Route::resource\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)\s*,?\s*\)(?!\s*->(?:only|except)\b)"#,
+        )
+        .expect("laravel resource")
     })
 }
 

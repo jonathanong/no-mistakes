@@ -29,7 +29,7 @@ CLIs are not started.
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
 | Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
 | Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` / `resources` | Active Job `perform_later`, Sidekiq `perform_async` | shipped (v1 extractors + plan) |
-| PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
+| PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` / `Route::resource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -291,20 +291,23 @@ framework from files, and do not enable both extractors from a missing value.
 | Module graph | `import` | `use`, `require`/`include` of local files, PSR-4 from configured `composer.json` |
 | Package identity | workspace packages | configured Composer packages / path repositories |
 | Tests | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files |
-| HTTP routes | `server routes` | configured Laravel `Route::` or Symfony attribute/YAML routes |
+| HTTP routes | `server routes` | configured Laravel `Route::` / bare `Route::resource` or Symfony attribute/YAML routes |
 | Queues | BullMQ | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers |
 | Lockfile | npm-family | `composer.lock` |
 
 ```php
 Route::get('/api/users', [UserController::class, 'index']);
+Route::resource('users', UserController::class);
 SomeJob::dispatch($user);
 #[Route('/health', methods: ['GET'])]
 class HealthController {}
 $bus->dispatch(new WelcomeMessage());
 ```
 
-`__DIR__ . '/' . $name`, `app($abstract)`, `#[Route($prefix . '/users')]`, and
-`$bus->dispatch($message)` lookups are non-edges. Missing `tests.php.framework`
+`__DIR__ . '/' . $name`, `app($abstract)`, `#[Route($prefix . '/users')]`,
+`$bus->dispatch($message)` lookups, `Route::resource(..., ['only' => ...])`,
+`Route::resource(...)->only([...])`, nested dotted `Route::resource` names,
+and `Route::apiResource` are non-edges. Missing `tests.php.framework`
 still enables neither Laravel nor Symfony extractors.
 
 ## Shared Domain Rules
@@ -375,7 +378,7 @@ shipped for configured Python, Go, Rust, Rails, and PHP packages. Use
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Laravel
-`Route::resource`, Rust Axum/Actix/Rocket routes, Kafka
+`Route::resource` `only`/`except` and `Route::apiResource`, Rust Axum/Actix/Rocket routes, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
 dedicated `no-mistakes python|go|rust|rails|php` CLIs.
 
