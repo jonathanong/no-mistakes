@@ -70,6 +70,11 @@ fn extract_laravel_resources(source: &str) -> Vec<(String, String)> {
     laravel_resource_re()
         .captures_iter(source)
         .filter_map(|cap| {
+            let matched = cap.get(0)?;
+            let after = source.get(matched.end()..).unwrap_or("").trim_start();
+            if after.starts_with("->only") || after.starts_with("->except") {
+                return None;
+            }
             let raw_path = cap.get(1)?.as_str();
             if raw_path.contains('.') {
                 return None;
@@ -144,7 +149,7 @@ fn laravel_resource_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"Route::resource\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)\s*,?\s*\)(?!\s*->(?:only|except)\b)"#,
+            r#"Route::resource\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)\s*,?\s*\)"#,
         )
         .expect("laravel resource")
     })
