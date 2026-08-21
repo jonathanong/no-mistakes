@@ -134,14 +134,6 @@ pub fn parse_entrypoint(s: &str) -> (PathBuf, Option<String>) {
     }
 }
 
-#[cfg(test)]
-pub(crate) fn workflow_node_from_suffix(file: &Path, suffix: &str) -> Option<NodeId> {
-    parsed_workflow_suffix(suffix).map(|(job, step)| match step {
-        Some(step) => NodeId::workflow_step(file, job, step),
-        None => NodeId::workflow_job(file, job),
-    })
-}
-
 pub(crate) fn workflow_node_from_suffix_in(
     interner: &PathInterner,
     file: &Path,
