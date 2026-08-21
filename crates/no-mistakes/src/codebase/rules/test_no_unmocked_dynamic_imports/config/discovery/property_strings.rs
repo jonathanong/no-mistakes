@@ -1,9 +1,6 @@
 use regex::Regex;
 
-pub(in crate::codebase::rules::test_no_unmocked_dynamic_imports::config) fn extract_property_strings(
-    source: &str,
-    property: &str,
-) -> Vec<String> {
+pub(crate) fn extract_property_strings(source: &str, property: &str) -> Vec<String> {
     let re = Regex::new(&format!(r#"\b{}\s*:\s*"#, regex::escape(property)))
         .expect("property regex compiles");
     let mut strings = Vec::new();

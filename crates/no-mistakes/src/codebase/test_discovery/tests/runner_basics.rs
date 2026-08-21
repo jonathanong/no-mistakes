@@ -217,6 +217,18 @@ fn language_runners_round_trip_names_and_frameworks() {
 }
 
 #[test]
+fn jest_is_a_js_runner_not_a_language_frontend() {
+    assert_eq!(TestRunner::from_name("jest"), Some(TestRunner::Jest));
+    assert_eq!(TestRunner::Jest.as_str(), "jest");
+    assert!(!TestRunner::Jest.is_language_frontend());
+    assert_eq!(
+        TestRunner::Jest.framework(),
+        crate::integration_tests::types::Framework::Jest
+    );
+    assert!(crate::integration_tests::types::Framework::Jest.has_js_runner_config());
+}
+
+#[test]
 #[should_panic(expected = "language projects are handled before runner_config")]
 fn language_runner_config_is_unreachable() {
     let config = NoMistakesConfig::default();
@@ -261,7 +273,7 @@ fn framework_preparation_plan_expands_only_required_runner_dependencies() {
             tests: true,
             ..Default::default()
         });
-    assert_eq!(tests.runners().count(), 9);
+    assert_eq!(tests.runners().count(), 10);
 
     let vitest = FrameworkPreparationPlan::for_runners([TestRunner::Vitest]);
     assert!(vitest.contains(TestRunner::Vitest));

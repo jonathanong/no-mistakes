@@ -10,7 +10,8 @@ export type TestPlanFramework =
   | "go"
   | "cargo"
   | "rails"
-  | "php";
+  | "php"
+  | "jest";
 
 interface TestsPlanOptionsBase {
   framework?: TestPlanFramework;

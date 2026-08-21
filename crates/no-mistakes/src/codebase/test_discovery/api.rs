@@ -48,7 +48,8 @@ pub fn discover_tests_from_prepared_projects(
             | TestRunner::Go
             | TestRunner::Cargo
             | TestRunner::Rails
-            | TestRunner::Php => None,
+            | TestRunner::Php
+            | TestRunner::Jest => None,
         }
         .map(|reserved_runner| {
             prepared
@@ -103,6 +104,7 @@ pub fn project_filters_from_visible(
         TestRunner::Dotnet,
         TestRunner::Vitest,
         TestRunner::Playwright,
+        TestRunner::Jest,
         TestRunner::Swift,
         TestRunner::Python,
         TestRunner::Go,
