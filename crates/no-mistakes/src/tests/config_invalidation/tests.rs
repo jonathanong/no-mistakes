@@ -25,6 +25,7 @@ fn ignores_deprecated_marker_but_compares_the_selected_framework_only() {
     };
     assert!(!invalidation.framework_changed(TestFramework::Vitest));
     assert!(!invalidation.framework_changed(TestFramework::Playwright));
+    assert!(!invalidation.framework_changed(TestFramework::Jest));
 }
 
 #[test]
