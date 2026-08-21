@@ -19,6 +19,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         POSTGRES_FK_INDEX => {
             postgres_fk_index::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_REDUNDANT_INDEX => {
+            postgres_redundant_index::check_with_files_and_sources(root, config, files, sources)
+        }
         POSTGRES_NO_GENERATED_COLUMN_WRITES => {
             postgres_no_generated_column_writes::check_with_files_and_sources(
                 root, config, files, sources,
@@ -67,6 +70,15 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         }
         GITHUB_ACTIONS_JOB_TIMEOUTS => {
             github_actions_job_timeouts::check_with_files_and_sources(root, config, files, sources)
+        }
+        GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS => {
+            github_actions_test_timeout_literals::check_with_files_and_sources(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
         }
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)

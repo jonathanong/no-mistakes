@@ -54,6 +54,7 @@ words:
   - noprofile
   - norc
   - Ong
+  - opclass
   - oxlint
   - PCRE
   - phpunit

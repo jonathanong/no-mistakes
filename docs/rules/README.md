@@ -33,6 +33,7 @@ rules:
 | [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md) | Validate composite-action steps against GitHub's documented step keys.     |
 | [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
+| [`github-actions-test-timeout-literals`](github-actions-test-timeout-literals.md) | Reject timeout-minutes literals restated in workflow tests.                 |
 | [`forbidden-dependencies`](forbidden-dependencies.md)                         | Prevent configured files/modules from depending on forbidden targets.           |
 | [`forbidden-workspace-closure`](forbidden-workspace-closure.md)               | Prevent workspace package closures from reaching forbidden packages.            |
 | [`integration-test-no-mocks`](integration-test-no-mocks.md)                   | Ban mocking libraries and mock helpers in integration tests.                    |
@@ -52,6 +53,7 @@ rules:
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
 | [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |
+| [`postgres-redundant-index`](postgres-redundant-index.md)                         | Flag btree indexes whose keys are a strict prefix of another live index.    |
 | [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md) | Ban DML writes to PostgreSQL generated columns.                               |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |
