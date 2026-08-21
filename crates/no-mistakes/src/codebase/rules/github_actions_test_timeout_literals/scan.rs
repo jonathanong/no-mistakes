@@ -6,16 +6,23 @@ use std::path::Path;
 use std::sync::LazyLock;
 
 static YAML_FRAGMENT: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?:^|[^A-Za-z0-9_-])timeout-minutes:\s*['"]?\d+['"]?"#).expect("yaml fragment")
+    Regex::new(
+        r#"(?:^|[^A-Za-z0-9_-])(?:'timeout-minutes'|"timeout-minutes"|timeout-minutes):\s*(?:'\d+'|"\d+"|\d+\b)"#,
+    )
+    .expect("yaml fragment")
 });
-static TIMEOUT_PROPERTY: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"\[['"]timeout-minutes['"]\]|\.timeoutMinutes\b"#).expect("property")
+static TIMEOUT_EQUALITY: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r#"expect\([^;]*?(?:\[['"]timeout-minutes['"]\]|\.timeoutMinutes\b)[^;]*?\)(?:\.not)?\.(?:toBe|toEqual|toStrictEqual)\(\s*(?:['"]\d+['"]|\d+)"#,
+    )
+    .expect("equality")
 });
-static LITERAL_EQUALITY: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"\)\.(?:toBe|toEqual|toStrictEqual)\(\s*(?:['"]\d+['"]|\d+)"#).expect("equality")
+static TIMEOUT_CONTAIN: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r#"expect\([^;]*?(?:\[['"]timeout-minutes['"]\]|\.timeoutMinutes\b)[^;]*?\)\.toContain\([^)]*\d[^)]*\)"#,
+    )
+    .expect("contain")
 });
-static CONTAIN_DIGIT: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\)\.toContain\([^)]*\d[^)]*\)").expect("contain"));
 
 pub(super) fn check_file(
     root: &Path,
@@ -111,8 +118,8 @@ fn is_violation(line: &str) -> bool {
         return false;
     }
     YAML_FRAGMENT.is_match(line)
-        || (TIMEOUT_PROPERTY.is_match(line)
-            && (LITERAL_EQUALITY.is_match(line) || CONTAIN_DIGIT.is_match(line)))
+        || TIMEOUT_EQUALITY.is_match(line)
+        || TIMEOUT_CONTAIN.is_match(line)
 }
 
 fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {

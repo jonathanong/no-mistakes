@@ -275,6 +275,44 @@ fn full_line_comment_is_silent() {
 }
 
 #[test]
+fn quoted_yaml_keys_are_findings() {
+    assert_eq!(scan_source("'timeout-minutes': 15\n", "{}").len(), 1);
+    assert_eq!(scan_source("\"timeout-minutes\": 15\n", "{}").len(), 1);
+}
+
+#[test]
+fn same_line_independent_expects_are_silent() {
+    assert!(scan_source(
+        "expect(job.timeoutMinutes).toBeDefined(); expect(retries).toBe(3)\n",
+        "{}"
+    )
+    .is_empty());
+}
+
+#[test]
+fn yaml_number_must_consume_the_scalar() {
+    assert!(scan_source("timeout-minutes: 15m\n", "{}").is_empty());
+    assert!(scan_source("timeout-minutes: '15m'\n", "{}").is_empty());
+    assert_eq!(scan_source("timeout-minutes: 15\n", "{}").len(), 1);
+}
+
+#[test]
+fn negated_equality_is_a_finding() {
+    assert_eq!(
+        scan_source("expect(job.timeoutMinutes).not.toBe(10)\n", "{}").len(),
+        1
+    );
+    assert_eq!(
+        scan_source("expect(job.timeoutMinutes).not.toEqual(8)\n", "{}").len(),
+        1
+    );
+    assert_eq!(
+        scan_source("expect(job.timeoutMinutes).not.toStrictEqual(10)\n", "{}").len(),
+        1
+    );
+}
+
+#[test]
 fn allow_entry_default_is_empty() {
     let allow = AllowEntry::default();
     let cloned = allow.clone();
