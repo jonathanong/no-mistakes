@@ -215,6 +215,7 @@ fn runner_for(framework: TestFramework) -> TestRunner {
         TestFramework::Cargo => TestRunner::Cargo,
         TestFramework::Rails => TestRunner::Rails,
         TestFramework::Php => TestRunner::Php,
+        TestFramework::Jest => TestRunner::Jest,
     }
 }
 
@@ -229,5 +230,6 @@ fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Cargo => "cargo",
         TestFramework::Rails => "rails",
         TestFramework::Php => "php",
+        TestFramework::Jest => "jest",
     }
 }

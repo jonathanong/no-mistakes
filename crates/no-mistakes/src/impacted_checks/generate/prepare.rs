@@ -101,6 +101,7 @@ fn configured_frameworks(
         TestFramework::Cargo,
         TestFramework::Rails,
         TestFramework::Php,
+        TestFramework::Jest,
     ]
     .into_iter()
     .filter(|framework| framework_present(root, config, *framework, visible_paths))

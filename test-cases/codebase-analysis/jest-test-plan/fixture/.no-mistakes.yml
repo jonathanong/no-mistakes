@@ -1,0 +1,5 @@
+tests:
+  jest:
+    configs: jest.config.js
+  vitest:
+    configs: vitest.config.ts

@@ -29,6 +29,7 @@ pub(crate) enum Framework {
     Cargo,
     Rails,
     Php,
+    Jest,
 }
 
 impl Framework {
@@ -43,11 +44,12 @@ impl Framework {
             Self::Cargo => "cargo",
             Self::Rails => "rails",
             Self::Php => "php",
+            Self::Jest => "jest",
         }
     }
 
     pub(crate) fn has_js_runner_config(self) -> bool {
-        matches!(self, Self::Playwright | Self::Vitest)
+        matches!(self, Self::Playwright | Self::Vitest | Self::Jest)
     }
 }
 

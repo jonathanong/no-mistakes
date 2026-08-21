@@ -96,15 +96,23 @@ fn cli_parity_builders_cover_defaults_and_validation() {
     assert_eq!(impact.entrypoint_symbols, vec![Some("handler".to_string())]);
     assert!(impact.include_symbols);
 
-    let invalid_framework =
+    let jest =
         crate::napi_api::cli_parity::build_plan_args(crate::napi_api::options::TestsPlanOptions {
             framework: Some("jest".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+    assert_eq!(jest.framework, Some(crate::tests::TestFramework::Jest));
+
+    let invalid_framework =
+        crate::napi_api::cli_parity::build_plan_args(crate::napi_api::options::TestsPlanOptions {
+            framework: Some("mocha".to_string()),
             ..Default::default()
         })
         .unwrap_err();
     assert!(invalid_framework
         .to_string()
-        .contains("unknown test framework: jest"));
+        .contains("unknown test framework: mocha"));
 
     let missing_test = crate::napi_api::cli_parity::build_why_args(Default::default()).unwrap_err();
     assert!(missing_test.to_string().contains("test is required"));
@@ -203,5 +211,9 @@ fn cli_parity_framework_parser_covers_all_public_values() {
     assert_eq!(
         crate::napi_api::cli_parity::parse_test_framework("php").unwrap(),
         crate::tests::TestFramework::Php
+    );
+    assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("jest").unwrap(),
+        crate::tests::TestFramework::Jest
     );
 }

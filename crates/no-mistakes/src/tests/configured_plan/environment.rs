@@ -25,6 +25,7 @@ pub(super) fn configured_environment(
         TestFramework::Cargo => &config.test_plan.cargo,
         TestFramework::Rails => &config.test_plan.rails,
         TestFramework::Php => &config.test_plan.php,
+        TestFramework::Jest => &config.test_plan.jest,
     };
     let key = normalize_environment(&args.environment);
     for (name, env) in &plan.environments {
@@ -88,6 +89,7 @@ pub(super) fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Cargo => "cargo",
         TestFramework::Rails => "rails",
         TestFramework::Php => "php",
+        TestFramework::Jest => "jest",
     }
 }
 
@@ -127,3 +129,6 @@ pub(super) fn limit_count(limit: Option<&TestPlanLimit>, total: usize) -> Option
         (None, None) => None,
     }
 }
+
+#[cfg(test)]
+mod tests;

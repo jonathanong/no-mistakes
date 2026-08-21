@@ -381,3 +381,8 @@ fn empty_scoped_configs_do_not_select_unscoped_tests() {
             .is_empty()
     );
 }
+
+#[test]
+fn framework_name_includes_jest() {
+    assert_eq!(framework_name(TestFramework::Jest), "jest");
+}

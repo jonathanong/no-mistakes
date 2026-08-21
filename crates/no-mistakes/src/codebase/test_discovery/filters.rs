@@ -83,6 +83,7 @@ pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
         TestRunner::Cargo => is_cargo_test_path(rel),
         TestRunner::Rails => rel.ends_with("_spec.rb") || rel.ends_with("_test.rb"),
         TestRunner::Php => rel.ends_with("Test.php") || rel.contains("/tests/"),
+        TestRunner::Jest => fallback_test_path(rel),
     }
 }
 
