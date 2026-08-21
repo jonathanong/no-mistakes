@@ -30,16 +30,19 @@ impl ServerRouteVisitor<'_> {
             let ClassElement::MethodDefinition(method) = element else {
                 continue;
             };
-            self.record_nestjs_method(&binding, &prefix, method);
+            if method.r#static {
+                continue;
+            }
+            self.record_nestjs_method(&binding, method);
         }
     }
 
-    fn record_nestjs_method(&mut self, binding: &str, prefix: &str, method: &MethodDefinition<'_>) {
+    fn record_nestjs_method(&mut self, binding: &str, method: &MethodDefinition<'_>) {
         for decorator in &method.decorators {
             let Some((http_method, path, start)) = self.nestjs_verb_decorator(decorator) else {
                 continue;
             };
-            let raw_path = join_paths(prefix, &path);
+            let raw_path = join_paths("", &path);
             self.facts.routes.push(RouteSite {
                 file: self.path.to_path_buf(),
                 line: line_number(self.source, start),

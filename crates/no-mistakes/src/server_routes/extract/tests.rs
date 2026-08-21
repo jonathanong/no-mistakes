@@ -202,6 +202,8 @@ fn extract_file_recognizes_nestjs_controller_and_verb_decorators() {
         facts.bindings["UsersController"].framework,
         Framework::Nestjs
     );
+    assert_eq!(facts.bindings["UsersController"].prefixes, vec!["users"]);
+    assert_eq!(facts.bindings["HealthController"].prefixes, vec!["health"]);
     let route_pairs: Vec<_> = facts
         .routes
         .iter()
@@ -213,12 +215,32 @@ fn extract_file_recognizes_nestjs_controller_and_verb_decorators() {
             )
         })
         .collect();
-    assert!(route_pairs.contains(&("get", "/users", Framework::Nestjs)));
-    assert!(route_pairs.contains(&("get", "/users/:id", Framework::Nestjs)));
-    assert!(route_pairs.contains(&("post", "/users", Framework::Nestjs)));
-    assert!(route_pairs.contains(&("get", "/health", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/:id", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("post", "/", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("get", "/bare", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("head", "/", Framework::Nestjs)));
     assert!(route_pairs.contains(&("put", "/ready", Framework::Nestjs)));
-    assert!(route_pairs.contains(&("delete", "/cjs/gone", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("patch", "/ready", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("options", "/ready", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("all", "/any", Framework::Nestjs)));
+    assert!(route_pairs.contains(&("delete", "/gone", Framework::Nestjs)));
+    assert!(!route_pairs
+        .iter()
+        .any(|(_, path, _)| path.contains("static")));
+
+    let path = fixture("nestjs-app.ts");
+    let map = std::collections::HashMap::from([(path.clone(), facts.clone())]);
+    let member = facts
+        .routes
+        .iter()
+        .find(|route| route.binding == "UsersController" && route.raw_path == "/:id")
+        .expect("member");
+    let expanded: Vec<_> = crate::server_routes::mounts::prefixes_for(member, &map, &[])
+        .into_iter()
+        .map(|prefix| crate::server_routes::normalize::join_paths(&prefix, &member.raw_path))
+        .collect();
+    assert_eq!(expanded, vec!["/users/:id".to_string()]);
 }
 
 #[test]
