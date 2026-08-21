@@ -88,6 +88,134 @@ fn nearest_tsconfig_is_discovered_and_explicit_errors_are_reported() {
 }
 
 #[test]
+fn exempts_remix_route_module_exports_only_under_configured_roots() {
+    let findings = findings("unique-exports-remix");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.export_name == "SharedFlag"));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.export_name == "loader"
+            && finding.file.starts_with("web/app/components/")));
+    assert!(!findings.iter().any(|finding| {
+        finding.file.contains("app/routes/")
+            && matches!(finding.export_name.as_str(), "loader" | "action")
+    }));
+    assert!(remix::is_framework_export("loader", true));
+    assert!(!remix::is_framework_export("loader", false));
+    assert!(!remix::is_framework_export("SharedFlag", true));
+}
+
+#[test]
+fn remix_package_dependency_does_not_enable_unique_export_exemptions() {
+    // @remix-run/react in package.json is not a substitute for `type: remix`.
+    let findings = findings("unique-exports-remix-unconfigured");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.export_name == "loader"));
+}
+
+#[test]
+fn classifies_configured_remix_route_modules() {
+    let root = PathBuf::from("/repo/web");
+    let roots = [root.clone()];
+    assert!(remix::is_route_module(&root.join("app/root.tsx"), &roots));
+    assert!(remix::is_route_module(
+        &root.join("app/routes/users.tsx"),
+        &roots
+    ));
+    assert!(remix::is_route_module(
+        &root.join("routes/legacy.tsx"),
+        &roots
+    ));
+    assert!(!remix::is_route_module(
+        &root.join("app/routes/users.server.ts"),
+        &roots
+    ));
+    assert!(!remix::is_route_module(
+        &root.join("app/routes/users.client.ts"),
+        &roots
+    ));
+    assert!(!remix::is_route_module(
+        &root.join("app/components/a.ts"),
+        &roots
+    ));
+    assert!(!remix::is_route_module(
+        &root.join("app/routes/readme.md"),
+        &roots
+    ));
+    assert!(!remix::is_route_module(
+        &root.join("app/routes/users.tsx"),
+        &[]
+    ));
+}
+
+#[test]
+fn configured_remix_roots_ignore_non_remix_projects() {
+    use crate::codebase::config::{Config, InferredRoots, ProjectConfig};
+    use crate::config::v2::schema::ProjectType;
+    use std::collections::HashMap;
+
+    let workspace = Path::new("/repo");
+    let empty = Config::default();
+    assert!(remix::configured_roots(workspace, &empty, None).is_empty());
+
+    let config = Config {
+        projects: HashMap::from([
+            (
+                "web".to_string(),
+                ProjectConfig {
+                    type_: Some(ProjectType::Remix),
+                    root: Some("web".to_string()),
+                    ..Default::default()
+                },
+            ),
+            (
+                "lib".to_string(),
+                ProjectConfig {
+                    type_: Some(ProjectType::Library),
+                    root: Some("lib".to_string()),
+                    ..Default::default()
+                },
+            ),
+            (
+                "inferred".to_string(),
+                ProjectConfig {
+                    type_: Some(ProjectType::Remix),
+                    ..Default::default()
+                },
+            ),
+        ]),
+        ..Default::default()
+    };
+    let inferred = InferredRoots {
+        remix: Some(Some(workspace.join("app"))),
+        ..Default::default()
+    };
+    let roots = remix::configured_roots(workspace, &config, Some(&inferred));
+    assert!(roots.contains(&workspace.join("web")));
+    assert!(roots.contains(&workspace.join("app")));
+    let failed = InferredRoots {
+        remix: Some(None),
+        ..Default::default()
+    };
+    let fallback = Config {
+        projects: HashMap::from([(
+            "web".to_string(),
+            ProjectConfig {
+                type_: Some(ProjectType::Remix),
+                ..Default::default()
+            },
+        )]),
+        ..Default::default()
+    };
+    assert_eq!(
+        remix::configured_roots(workspace, &fallback, Some(&failed)),
+        vec![workspace.to_path_buf()]
+    );
+}
+
+#[test]
 fn covers_reexport_resolution_edge_cases() {
     let findings = findings("unique-exports-edge-cases");
     let names = finding_names(&findings);

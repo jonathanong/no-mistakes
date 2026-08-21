@@ -1,0 +1,9 @@
+projects:
+  web:
+    type: remix
+    root: .
+
+rules:
+  - rule: unique-exports
+    projects:
+      - web

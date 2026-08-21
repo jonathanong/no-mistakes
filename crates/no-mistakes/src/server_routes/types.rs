@@ -13,6 +13,7 @@ pub enum Framework {
     KoaRouter,
     Nestjs,
     Heuristic,
+    Remix,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]

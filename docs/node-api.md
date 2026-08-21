@@ -140,7 +140,7 @@ does not have a one-to-one CLI command:
 | `serverRouteEdges` | `serverRouteEdges(options)` |
 | `serverRouteList` | `serverRouteList(options)` |
 | `serverRouteRelated` | `serverRouteRelated(options)` |
-| `serverRoutes` | `serverRoutes(options)` |
+| `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
 | `testsGraph` | `testsGraph(options)` |
 | `testsImpact` | `testsImpact(options)` |
 | `testsPlan` | `testsPlan(options)` |
