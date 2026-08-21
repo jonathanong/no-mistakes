@@ -44,22 +44,23 @@ fn playwright_program_parse_errors_propagate() {
     let source = "export default { testMatch: 1 };";
     let tsconfig = crate::integration_tests::test_support::tsconfig_without_config(root);
     let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let error = crate::integration_tests::runner_config::with_program(&path, source, |program, _| {
-        load_config_projects_from_program(
-            ConfigProjectInput {
-                root,
-                framework: Framework::Playwright,
-                raw: "playwright.config.ts",
-                path: &path,
-                source,
-                config_dir: root,
-                resolver: &resolver,
-            },
-            program,
-            None,
-        )
-    })
-    .unwrap()
-    .unwrap_err();
+    let error =
+        crate::integration_tests::runner_config::with_program(&path, source, |program, _| {
+            load_config_projects_from_program(
+                ConfigProjectInput {
+                    root,
+                    framework: Framework::Playwright,
+                    raw: "playwright.config.ts",
+                    path: &path,
+                    source,
+                    config_dir: root,
+                    resolver: &resolver,
+                },
+                program,
+                None,
+            )
+        })
+        .unwrap()
+        .unwrap_err();
     assert!(error.to_string().contains("expected string literal"));
 }
