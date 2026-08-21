@@ -27,8 +27,8 @@ fn should_emit_node(
 fn symbol_owner_bridge_allowed(
     from: &NodeId,
     to: &NodeId,
-    root_nodes: &HashSet<NodeId>,
-    dynamic_import_files: &HashSet<NodeId>,
+    root_nodes: &FxHashSet<NodeId>,
+    dynamic_import_files: &FxHashSet<NodeId>,
 ) -> bool {
     is_symbol_owner_bridge(from, to)
         && !dynamic_import_files.contains(from)

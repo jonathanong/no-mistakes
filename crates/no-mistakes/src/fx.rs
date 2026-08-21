@@ -5,7 +5,7 @@
 //! imposed by explicit sorts after insert.
 //!
 //! rustc-hash 2 aliases these to `std` maps with `FxBuildHasher`, so `new()`
-//! and `with_capacity()` are not available. Use [`fx_map`] and
+//! and `with_capacity()` are not available. Use [`fx_map`], [`fx_set`], and
 //! [`fx_map_with_capacity`] instead.
 
 pub(crate) use rustc_hash::{FxHashMap, FxHashSet};
@@ -13,6 +13,11 @@ pub(crate) use rustc_hash::{FxHashMap, FxHashSet};
 #[inline]
 pub(crate) fn fx_map<K, V>() -> FxHashMap<K, V> {
     FxHashMap::with_hasher(Default::default())
+}
+
+#[inline]
+pub(crate) fn fx_set<K>() -> FxHashSet<K> {
+    FxHashSet::with_hasher(Default::default())
 }
 
 #[inline]

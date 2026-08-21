@@ -33,11 +33,11 @@ fn bfs_with_file_universe<A>(
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
-    let mut visited: HashSet<NodeId> = HashSet::new();
+    let mut visited: FxHashSet<NodeId> = fx_set();
     let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: FxHashMap<NodeId, usize> = FxHashMap::default();
-    let mut dynamic_import_files: HashSet<NodeId> = HashSet::new();
+    let mut result_idx: FxHashMap<NodeId, usize> = fx_map();
+    let mut dynamic_import_files: FxHashSet<NodeId> = fx_set();
 
     for start in starts {
         if file_universe.is_some_and(|universe| !start.is_in_file_universe(universe)) {
@@ -48,7 +48,7 @@ where
             queue.push_back((start.clone(), 0));
         }
     }
-    let root_nodes: HashSet<NodeId> = starts.iter().cloned().collect();
+    let root_nodes: FxHashSet<NodeId> = starts.iter().cloned().collect();
 
     let mut check_counter = 0u32;
     while let Some((node, depth)) = queue.pop_front().filter(|_| {
