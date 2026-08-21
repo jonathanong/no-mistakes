@@ -33,7 +33,9 @@ fn extract_actix_resources(source: &str) -> Vec<(String, String)> {
         let rest = source.get(matched.end()..).unwrap_or("");
         let stmt = rest.split(';').next().unwrap_or(rest);
         for route in actix_route_re().captures_iter(stmt) {
-            let Some(handler) = route.get(1) else { continue };
+            let Some(handler) = route.get(1) else {
+                continue;
+            };
             routes.push((
                 path.as_str().to_string(),
                 handler_from_path(handler.as_str()),
