@@ -22,14 +22,11 @@ fn extract_to_routes(source: &str) -> Vec<(String, String)> {
 }
 
 fn expand_resources(source: &str) -> Vec<(String, String)> {
-    let mut routes = Vec::new();
-    for cap in rails_resources_re().captures_iter(source) {
-        let Some(name) = cap.get(1).or_else(|| cap.get(2)).map(|m| m.as_str()) else {
-            continue;
-        };
-        routes.extend(resource_rest_routes(name));
-    }
-    routes
+    rails_resources_re()
+        .captures_iter(source)
+        .filter_map(|cap| cap.get(1).or_else(|| cap.get(2)))
+        .flat_map(|name| resource_rest_routes(name.as_str()))
+        .collect()
 }
 
 fn resource_rest_routes(name: &str) -> Vec<(String, String)> {
