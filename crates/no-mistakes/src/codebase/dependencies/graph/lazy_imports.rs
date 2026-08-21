@@ -29,10 +29,10 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
         session,
     );
     let fact_plan = facts.collect_plan;
-    let mut visited: HashSet<NodeId> = HashSet::new();
+    let mut visited: FxHashSet<NodeId> = fx_set();
     let mut frontier: Vec<NodeId> = Vec::new();
     let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: FxHashMap<NodeId, usize> = FxHashMap::default();
+    let mut result_idx: FxHashMap<NodeId, usize> = fx_map();
     let mut collected_facts = Vec::new();
 
     for root in roots {
@@ -41,7 +41,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
             frontier.push(root.clone());
         }
     }
-    let root_nodes: HashSet<NodeId> = roots.iter().cloned().collect();
+    let root_nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
 
     let mut depth = 0;
     while !frontier.is_empty() && crate::invocation::check_timeout().is_ok() {

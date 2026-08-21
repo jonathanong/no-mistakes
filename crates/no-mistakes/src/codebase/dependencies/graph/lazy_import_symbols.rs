@@ -18,10 +18,10 @@ fn bfs_skipping_symbol_owner_files<A>(
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
-    let mut visited: HashSet<(NodeId, Option<PathBuf>)> = HashSet::new();
+    let mut visited: FxHashSet<(NodeId, Option<PathBuf>)> = fx_set();
     let mut queue: VecDeque<(NodeId, usize, Option<PathBuf>)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: FxHashMap<NodeId, usize> = FxHashMap::default();
+    let mut result_idx: FxHashMap<NodeId, usize> = fx_map();
     let symbol_importer_files_by_owner = symbol_importer_files_by_owner(edges);
     let root_symbols: HashSet<(PathBuf, std::sync::Arc<str>)> = starts
         .iter()

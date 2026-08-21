@@ -16,6 +16,23 @@ fn edge_maps_and_edge_index_use_fx_hash() {
     );
 }
 
+#[test]
+fn bfs_visited_sets_use_fx_hash() {
+    let bfs = include_str!("../bfs.rs");
+    assert!(
+        bfs.contains("let mut visited: FxHashSet<NodeId> = fx_set()"),
+        "BFS visited set must use rustc-hash FxHashSet"
+    );
+    assert!(
+        bfs.contains("let mut dynamic_import_files: FxHashSet<NodeId> = fx_set()"),
+        "BFS dynamic-import set must use rustc-hash FxHashSet"
+    );
+    assert!(
+        bfs.contains("let root_nodes: FxHashSet<NodeId>"),
+        "BFS root-node set must use rustc-hash FxHashSet"
+    );
+}
+
 fn p(path: &str) -> PathBuf {
     PathBuf::from(path)
 }
