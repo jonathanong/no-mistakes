@@ -158,40 +158,45 @@ fn rust_records_path_attr_mods_and_cargo_path_deps() {
 }
 
 #[test]
-fn rails_collects_sidekiq_enqueue_and_workers() {
-    let root = fixture("rails-sidekiq");
+    assert!(dynamic.queue_enqueues.is_empty());
+}
+
+#[test]
+fn rust_collects_http_literal_routes() {
+    let root = fixture("rust-http");
     let files = all_files(&root);
     let store = store_for(&files);
-    let facts = collect_ruby_facts(&root, &files, &[".".into()], &store);
-    let controller = facts
+    let facts = collect_rust_facts(&root, &files, &[".".into()], &store);
+    let routes = facts
         .files
         .values()
-        .find(|file| file.path.ends_with("controllers/users_controller.rb"))
-        .expect("controller");
-    assert!(controller
-        .queue_enqueues
+        .find(|file| file.path.ends_with("routes.rs"))
+        .expect("routes");
+    assert!(routes
+        .route_handlers
         .iter()
-        .any(|name| name == "MailWorker"));
-    assert!(controller
-        .queue_enqueues
+        .any(|(route, handler)| route == "/users" && handler == "list_users"));
+    assert!(routes
+        .route_handlers
         .iter()
-        .any(|name| name == "DigestJob"));
-    let mail = facts
+        .any(|(route, handler)| route == "/ready" && handler == "ready"));
+    let handlers = facts
         .files
         .values()
-        .find(|file| file.path.ends_with("mail_worker.rb"))
-        .expect("mail worker");
-    assert!(mail.queue_workers.iter().any(|name| name == "MailWorker"));
-    let digest = facts
+        .find(|file| file.path.ends_with("handlers.rs"))
+        .expect("handlers");
+    assert!(handlers
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/health" && handler == "health"));
+    assert!(handlers
+        .declarations
+        .iter()
+        .any(|name| name == "list_users"));
+    let computed = facts
         .files
         .values()
-        .find(|file| file.path.ends_with("digest_job.rb"))
-        .expect("digest job");
-    assert!(digest.queue_workers.iter().any(|name| name == "DigestJob"));
-    let dynamic = facts
-        .files
-        .values()
-        .find(|file| file.path.ends_with("dynamic.rb"))
-        .expect("dynamic");
-    assert!(dynamic.queue_enqueues.is_empty());
+        .find(|file| file.path.ends_with("computed.rs"))
+        .expect("computed");
+    assert!(computed.route_handlers.is_empty());
 }

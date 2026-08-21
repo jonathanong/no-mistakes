@@ -1,7 +1,7 @@
 # `no-mistakes server routes`
 
 List extracted server routes, including configured language HTTP
-registrations (Django, Flask, FastAPI, Go, Rails, Laravel, Symfony).
+registrations (Django, Flask, FastAPI, Go, Rails, Laravel, Symfony, Rust).
 
 ```sh
 no-mistakes server routes --format json
