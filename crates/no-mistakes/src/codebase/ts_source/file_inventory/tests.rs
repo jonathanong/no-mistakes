@@ -428,6 +428,20 @@ fn git_classify_drops_missing_relative_paths() {
 }
 
 #[test]
+fn git_classify_tracked_regular_missing_paths_skip_metadata() {
+    let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
+    let (classified, stats) = super::classify_git_listed_paths(
+        &root,
+        vec![(
+            PathBuf::from("missing-regular.ts"),
+            Some(super::GitIndexKind::RegularFile),
+        )],
+    );
+    assert_eq!(classified.len(), 1);
+    assert_eq!(stats, 0);
+}
+
+#[test]
 #[ignore = "manual discovery-classify benchmark"]
 fn time_parallel_vs_serial_classification() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

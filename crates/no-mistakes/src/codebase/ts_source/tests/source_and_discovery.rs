@@ -282,6 +282,35 @@ fn staged_git_paths_do_not_trust_unmerged_index_mode() {
 }
 
 #[test]
+fn staged_git_paths_cover_malformed_stage_payloads_and_dedup() {
+    use super::super::file_inventory::GitIndexKind;
+
+    // Each malformed `--stage` payload must fall back to a literal path instead
+    // of panicking or inventing a replacement. Duplicate paths keep the first
+    // kind unless it is missing.
+    let views = parse_git_tagged_paths(
+        b"H 10064 abcdef 0\tshort-mode.mts\0H 10064x abcdef 0\tnon-digit-mode.mts\0H 100644  0\tempty-object.mts\0H 100644 zzzzzz 0\tnon-hex.mts\0H 100644 abcdef 0 no-tab.mts\0H 100644 abcdef \tempty-stage.mts\0H 100644 abcdef x\tnon-digit-stage.mts\0H 100644 abcdef 0\t\0S 100644 abcdef 0\tshared.mts\0H 100644 abcdef 0\tshared.mts\0H 100644 abcdef 0\tdup.mts\0H 120000 abcdef 0\tdup.mts\0H 100644 abcdef 0\tkept.mts\0",
+    );
+
+    let visible: Vec<_> = views
+        .visible
+        .iter()
+        .map(|entry| (entry.path.clone(), entry.index_kind))
+        .collect();
+    assert!(!visible.iter().any(|(path, _)| path.as_os_str().is_empty()));
+    assert!(visible.contains(&(PathBuf::from("kept.mts"), Some(GitIndexKind::RegularFile))));
+    assert!(visible.contains(&(PathBuf::from("shared.mts"), Some(GitIndexKind::RegularFile))));
+    assert_eq!(
+        visible
+            .iter()
+            .filter(|(path, _)| path == Path::new("dup.mts"))
+            .count(),
+        1
+    );
+    assert!(visible.contains(&(PathBuf::from("dup.mts"), Some(GitIndexKind::RegularFile))));
+}
+
+#[test]
 fn discover_files_falls_back_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     write(dir.path(), "src/main.mts", "");
