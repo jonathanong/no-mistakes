@@ -5,7 +5,7 @@ use no_mistakes::benchmark_support::{
     match_language_frontend_queue_globs, LanguageFrontendSummary,
 };
 
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 84;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 89;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_PARSED: usize = 49;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_IMPORTS: usize = 58;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_ENQUEUES: usize = 7;
@@ -13,7 +13,7 @@ pub(super) const EXPECTED_LANGUAGE_FRONTEND_WORKERS: usize = 6;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 23;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 89;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_QUEUE_EDGES: usize = 14;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 84;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 89;
 
 pub(super) fn bench_language_frontends(c: &mut Criterion) {
     if !shard::should_run(shard::GRAPH) {

@@ -28,7 +28,7 @@ CLIs are not started.
 | Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
 | Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
-| Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` | Active Job `perform_later` | shipped (v1 extractors + plan) |
+| Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` | Active Job `perform_later`, Sidekiq `perform_async` | shipped (v1 extractors + plan) |
 | PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
@@ -73,7 +73,7 @@ a second route graph.
 
 **Queues.** `queues edges`, `queues related`, and `queues check` connect
 TS/JS producers to virtual job nodes to workers. Celery, Asynq, Kafka, Active
-Job, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
+Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 `queue-worker` edges into `DepGraph`; query those with
 `dependents --relationship queue`. The dedicated `queues` commands project
 those language edges into the existing report. They do not get private graph
@@ -254,8 +254,8 @@ repo; discovery should prefer `tests/**/*.rs` and sibling `tests.rs` files.
 
 ## Ruby on Rails
 
-Rails support is Ruby module facts plus configured route and Active Job
-extractors.
+Rails support is Ruby module facts plus configured route, Active Job, and
+Sidekiq extractors.
 
 | Feature | TS/JS reference | Rails equivalent |
 | --- | --- | --- |
@@ -263,17 +263,18 @@ extractors.
 | Package identity | workspace packages | configured engine/app roots and `Gemfile` path gems |
 | Tests | `tests plan vitest` | `tests plan rails` over Minitest / RSpec files |
 | HTTP routes | `server routes` | configured `config/routes.rb` (and engine routes) → controller#action |
-| Queues | BullMQ | Active Job `SomeJob.perform_later` → job class. Sidekiq `perform_async` is a later extractor, not v1. |
+| Queues | BullMQ | Active Job `SomeJob.perform_later` or Sidekiq `SomeWorker.perform_async` → job class |
 | Lockfile | npm-family | `Gemfile.lock` |
 
 Zeitwerk inference is heuristic and must stay inside configured roots. Do not
 scan the whole repository for `app/models`. Dynamic `constantize`,
-`send(:"#{name}_path")`, and `perform_later` on a computed job class produce
-no edge.
+`send(:"#{name}_path")`, and `perform_later` / `perform_async` on a computed
+job class produce no edge.
 
 ```ruby
 get "/api/users", to: "users#index"
 WelcomeJob.perform_later(user)
+MailWorker.perform_async(user)
 ```
 
 ## PHP

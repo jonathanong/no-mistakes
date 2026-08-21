@@ -1,5 +1,7 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+#[path = "ruby_queue.rs"]
+mod queue;
 #[path = "ruby_zeitwerk.rs"]
 mod zeitwerk;
 use crate::codebase::ts_source::SourceStore;
@@ -41,8 +43,8 @@ fn parse_ruby_file(
         declarations: extract_ruby_declarations(&text),
         references: extract_static_consts(&text),
         route_handlers: extract_pairs(&text, rails_route_re()),
-        queue_enqueues: extract_named(&text, active_job_re()),
-        queue_workers: extract_named(&text, ruby_job_class_re()),
+        queue_enqueues: queue::extract_enqueues(&text),
+        queue_workers: queue::extract_workers(&text),
         mods: Vec::new(),
     })
 }
@@ -181,17 +183,5 @@ fn rails_route_re() -> &'static Regex {
     RE.get_or_init(|| {
         Regex::new(r#"(?m)^\s*(?:get|post|put|patch|delete)\s+["']([^"']+)["']\s*,\s*to:\s*["']([^"']+)["']"#)
             .expect("route")
-    })
-}
-
-fn active_job_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\b([A-Z][\w:]*)\.perform_later\b").expect("job"))
-}
-
-fn ruby_job_class_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*class\s+([A-Z][\w:]*)\s*<\s*ApplicationJob").expect("job class")
     })
 }

@@ -89,3 +89,26 @@ fn rust_path_deps_emit_package_and_mod_edges() {
                 .is_some_and(|path| path.ends_with("tests/integration.rs"))
     }));
 }
+
+#[test]
+fn rails_sidekiq_emits_queue_enqueue_and_worker_edges() {
+    let root = lang_fixture("rails-sidekiq");
+    let edges =
+        collect_language_frontend_edges_for_test(&root, &lang_files(&root), Some(&lang_options()));
+    assert!(edges.iter().any(|(from, _, kind)| {
+        *kind == EdgeKind::QueueEnqueue
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("users_controller.rb"))
+    }));
+    assert!(edges.iter().any(|(_, to, kind)| {
+        *kind == EdgeKind::QueueWorker
+            && to.as_file().is_some_and(|path| path.ends_with("mail_worker.rb"))
+    }));
+    assert!(edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::QueueEnqueue
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("dynamic.rb"))
+    }));
+}
