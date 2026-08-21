@@ -38,8 +38,8 @@ fn add_ci_edges(
                     .filter_map(|binary_name| bins.by_name.get(binary_name));
                 for source_file in cargo_target_files.chain(direct_binary_files) {
                     edges.push((
-                        NodeId::file_in(interner, path.clone()),
-                        NodeId::file_in(interner, source_file.clone()),
+                        NodeId::file_in(interner, path.as_path()),
+                        NodeId::file_in(interner, source_file),
                         EdgeKind::CiInvocation,
                     ));
                 }
@@ -85,7 +85,7 @@ impl CargoBinIndex {
 }
 
 fn collect_cargo_bins(root: &Path, all_files: &[PathBuf]) -> CargoBinIndex {
-    let visible_files: HashSet<PathBuf> = all_files.iter().cloned().collect();
+    let visible_files: crate::fx::PathSet = all_files.iter().cloned().collect();
     let root_manifest = crate::codebase::ts_resolver::normalize_path(&root.join("Cargo.toml"));
     if !visible_files.contains(&root_manifest) {
         return CargoBinIndex::default();
@@ -156,7 +156,7 @@ fn cargo_member_globset(members: &[String]) -> Option<globset::GlobSet> {
 fn add_manifest_bins(
     manifest: &Path,
     cargo_toml: &str,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     bins: &mut CargoBinIndex,
 ) {
     let Ok(parsed_bins) = crate::codebase::ci_workflows::parse_cargo_bins(cargo_toml) else {
@@ -181,7 +181,7 @@ fn resolve_cargo_bin_source(
     manifest_dir: &Path,
     name: &str,
     rel_path: &str,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     let declared = crate::codebase::ts_resolver::normalize_path(&manifest_dir.join(rel_path));
     if visible_files.contains(&declared) {

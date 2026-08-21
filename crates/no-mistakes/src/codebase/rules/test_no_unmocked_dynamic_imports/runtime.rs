@@ -1,11 +1,10 @@
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn runtime_deps(
     graph: &DepGraph,
     target: PathBuf,
-    file_universe: Option<&HashSet<PathBuf>>,
+    file_universe: Option<&crate::fx::PathSet>,
 ) -> Vec<PathBuf> {
     let allowed = [
         EdgeKind::Import,

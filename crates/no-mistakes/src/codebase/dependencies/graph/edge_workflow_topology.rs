@@ -64,7 +64,7 @@ fn collect_workflow_topology_edges(
         let job_node = NodeId::workflow_job_in(interner, workflow_file.clone(), job.key.clone());
         jobs.insert(job.id.clone(), job_node.clone());
         edges.push((
-            NodeId::file_in(interner, workflow_file.clone()),
+            NodeId::file_in(interner, workflow_file.as_path()),
             job_node.clone(),
             EdgeKind::WorkflowJob,
         ));

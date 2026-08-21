@@ -9,7 +9,7 @@ pub(crate) fn route_defs_from_prepared_facts_with_catalog(
 ) -> Vec<(PathBuf, String)> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let facts = prepared.into_iter().collect::<HashMap<_, _>>();
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
     if let Some(catalog) = tsconfig_catalog {
         let resolver = ScopedImportResolver::new_in_session(catalog, &visible, session);
         return route_defs_from_facts_with_resolver(&root, &facts, &resolver);

@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::ts_resolver::{ImportClassification, ImportResolution};
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -21,7 +21,7 @@ impl ImportResolution for MissingWorkspaceSourceResolver {
         self.resolve(specifier, Path::new("")).into_iter().collect()
     }
 
-    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
         None
     }
 
@@ -30,7 +30,7 @@ impl ImportResolution for MissingWorkspaceSourceResolver {
         _: &str,
         _: &Path,
         _: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        _: &HashSet<PathBuf>,
+        _: &crate::fx::PathSet,
     ) -> ImportClassification {
         unreachable!("workspace export parsing only resolves direct literal requires")
     }

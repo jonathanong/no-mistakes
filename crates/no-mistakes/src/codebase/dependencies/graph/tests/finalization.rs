@@ -31,6 +31,63 @@ fn bfs_visited_sets_use_fx_hash() {
         bfs.contains("let root_nodes: FxHashSet<NodeId>"),
         "BFS root-node set must use rustc-hash FxHashSet"
     );
+    assert!(
+        bfs.contains("file_universe: &crate::fx::PathSet")
+            || bfs.contains("file_universe: &FxHashSet<PathBuf>"),
+        "BFS file_universe must use rustc-hash PathSet/FxHashSet"
+    );
+}
+
+#[test]
+fn remaining_path_keyed_maps_use_fx_hash() {
+    let graph_files = include_str!("../graph_files.rs");
+    assert!(
+        graph_files.contains("visible: crate::fx::PathSet")
+            || graph_files.contains("visible: FxHashSet<PathBuf>"),
+        "GraphFiles.visible must use rustc-hash PathSet/FxHashSet"
+    );
+    let types = include_str!("../types.rs");
+    assert!(
+        types.contains("type ResourceEdgeDetails = crate::fx::FxHashMap")
+            || types.contains("type ResourceEdgeDetails = FxHashMap"),
+        "ResourceEdgeDetails must use rustc-hash FxHashMap"
+    );
+    assert!(
+        types.contains("universe: &crate::fx::PathSet")
+            || types.contains("universe: &FxHashSet<PathBuf>"),
+        "NodeId::is_in_file_universe must use rustc-hash PathSet/FxHashSet"
+    );
+    let facts = include_str!("../../../ts_source/facts.rs");
+    assert!(
+        facts.contains("owned: FxHashMap<PathBuf, TsFileFacts>")
+            && facts.contains("shared: FxHashMap<PathBuf, std::sync::Arc<TsFileFacts>>"),
+        "TsFactMap owned/shared must use rustc-hash FxHashMap"
+    );
+    let check_facts = include_str!("../../../check_facts/map.rs");
+    assert!(
+        check_facts.contains("ts: FxHashMap<PathBuf, Arc<CheckFileFacts>>"),
+        "CheckFactMap.ts must use rustc-hash FxHashMap"
+    );
+}
+
+#[test]
+fn leftover_path_keyed_maps_use_fx_hash() {
+    let facts = include_str!("../../../ts_source/facts.rs");
+    assert!(
+        facts.contains("owned: FxHashMap<PathBuf, TsFileFacts>"),
+        "TsFactMap.owned must use rustc-hash FxHashMap"
+    );
+    let types = include_str!("../types.rs");
+    assert!(
+        types.contains("type ResourceEdgeDetails = crate::fx::FxHashMap")
+            || types.contains("type ResourceEdgeDetails = FxHashMap"),
+        "ResourceEdgeDetails must use rustc-hash FxHashMap"
+    );
+    let cache = include_str!("../../../../ast/parsed_cache.rs");
+    assert!(
+        cache.contains("type CachedPrograms = FxHashMap"),
+        "ParsedProgramCache must use rustc-hash FxHashMap"
+    );
 }
 
 fn p(path: &str) -> PathBuf {

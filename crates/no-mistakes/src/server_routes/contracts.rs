@@ -7,7 +7,7 @@ use crate::server_routes::source::relative_string;
 use crate::server_routes::types::ServerRoute;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::Serialize;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::Path;
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -81,7 +81,7 @@ pub fn analyze_contracts_with_prepared(
             }),
         prepared.facts.plan(),
     );
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
     let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(
         visible.iter().cloned().collect(),
     );

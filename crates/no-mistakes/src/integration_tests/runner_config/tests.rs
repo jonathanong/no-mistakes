@@ -289,7 +289,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
             path: config_path,
         }],
         tsconfig_catalog,
-        visible_files: [root.join("vitest.config.ts")].into(),
+        visible_files: [root.join("vitest.config.ts")].into_iter().collect(),
         sources: None,
     };
 
@@ -309,7 +309,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
             raw: "missing.vitest.config.ts".to_string(),
             path: missing_path.clone(),
         }],
-        visible_files: [missing_path].into(),
+        visible_files: [missing_path].into_iter().collect(),
         ..plan
     };
     assert!(parsed

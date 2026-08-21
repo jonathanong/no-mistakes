@@ -123,7 +123,9 @@ fn fact_runner_ignores_missing_facts_outside_target_roots() {
     let outside = root.join("other/app/bad.ts");
     let facts = CheckFactMap {
         files: vec![outside.clone()],
-        ts: HashMap::from([(outside, std::sync::Arc::new(CheckFileFacts::default()))]),
+        ts: HashMap::from([(outside, std::sync::Arc::new(CheckFileFacts::default()))])
+            .into_iter()
+            .collect(),
         ..Default::default()
     };
     let findings = check_with_facts(&root, &config(), &facts).unwrap();
@@ -140,7 +142,9 @@ fn fact_runner_requires_source_and_cache_facts_for_target_files() {
         ts: HashMap::from([(
             inside.clone(),
             std::sync::Arc::new(CheckFileFacts::default()),
-        )]),
+        )])
+        .into_iter()
+        .collect(),
         ..Default::default()
     };
     let err = check_with_facts(&root, &config(), &missing_source).unwrap_err();
@@ -155,7 +159,9 @@ fn fact_runner_requires_source_and_cache_facts_for_target_files() {
                 ..Default::default()
             }
             .into(),
-        )]),
+        )])
+        .into_iter()
+        .collect(),
         ..Default::default()
     };
     let err = check_with_facts(&root, &config(), &missing_cache).unwrap_err();

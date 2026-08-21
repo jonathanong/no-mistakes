@@ -108,7 +108,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         defer_suppression,
     } = request;
     let files = shared.files().to_vec();
-    let visible_files = files.iter().cloned().collect::<HashSet<_>>();
+    let visible_files = files.iter().cloned().collect::<crate::fx::PathSet>();
     // Dynamic-import policy is filesystem-scoped even when another consumer
     // shares a graph built from the complete repository universe.
     let graph_files = GraphFiles::from_files(files.clone());

@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::ts_resolver::{ImportClassification, ImportResolution};
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 struct UnreadableExtendsResolver {
@@ -16,7 +16,7 @@ impl ImportResolution for UnreadableExtendsResolver {
         self.resolve(specifier, Path::new("")).into_iter().collect()
     }
 
-    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
         None
     }
 
@@ -25,7 +25,7 @@ impl ImportResolution for UnreadableExtendsResolver {
         _: &str,
         _: &Path,
         _: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        _: &HashSet<PathBuf>,
+        _: &crate::fx::PathSet,
     ) -> ImportClassification {
         unreachable!("config extends parsing only resolves the literal extends source")
     }

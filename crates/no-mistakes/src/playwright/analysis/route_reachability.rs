@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 pub(crate) struct RouteSourceFiles {
     pub(crate) graph_files: Vec<PathBuf>,
-    visible_files: HashSet<PathBuf>,
+    visible_files: crate::fx::PathSet,
     selector_rel_by_file: HashMap<PathBuf, Arc<String>>,
 }
 
@@ -27,7 +27,7 @@ pub(crate) fn collect_route_source_files_from_visible(
         .paths_for(root)
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let mut graph_files = BTreeSet::new();
     let mut selector_rel_by_file = HashMap::new();
 
@@ -118,7 +118,7 @@ fn route_entry_files(
     root: &Path,
     settings: &config::Settings,
     route_file: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     let frontend_root = root.join(&settings.frontend_root);
     let mut files = vec![route_file.to_path_buf()];

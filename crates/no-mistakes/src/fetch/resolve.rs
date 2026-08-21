@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub fn resolve_import(current_file: &Path, specifier: &str) -> Option<PathBuf> {
@@ -8,7 +7,7 @@ pub fn resolve_import(current_file: &Path, specifier: &str) -> Option<PathBuf> {
 pub(crate) fn resolve_import_from_visible(
     current_file: &Path,
     specifier: &str,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     resolve_import_inner(current_file, specifier, Some(visible_files))
 }
@@ -16,7 +15,7 @@ pub(crate) fn resolve_import_from_visible(
 fn resolve_import_inner(
     current_file: &Path,
     specifier: &str,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Option<PathBuf> {
     const RUNTIME_EXTENSIONS: [&str; 4] = ["tsx", "ts", "jsx", "js"];
 
@@ -47,7 +46,7 @@ fn resolve_import_inner(
     None
 }
 
-fn is_visible_file(path: &Path, visible_files: Option<&HashSet<PathBuf>>) -> bool {
+fn is_visible_file(path: &Path, visible_files: Option<&crate::fx::PathSet>) -> bool {
     visible_files.map_or_else(
         || path.is_file(),
         |visible| visible.contains(&crate::codebase::ts_resolver::normalize_path(path)),

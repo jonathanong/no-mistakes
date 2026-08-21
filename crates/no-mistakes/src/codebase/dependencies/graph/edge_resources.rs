@@ -91,7 +91,7 @@ fn collect_resource_edges(
     // Avoid canonicalizing every tracked file when there are no literal calls to
     // expand, which is the common case in projects that only use dynamic paths.
     if calls.is_empty() {
-        return (Vec::new(), HashMap::new(), diagnostics);
+        return (Vec::new(), fx_map(), diagnostics);
     }
     let candidates = safe_resource_candidates(root, resource_candidates);
     let candidate_set: HashSet<PathBuf> = candidates.iter().cloned().collect();
@@ -113,15 +113,15 @@ fn collect_resource_edges(
         })
         .collect();
     let mut edges = Vec::new();
-    let mut details: ResourceEdgeDetails = HashMap::new();
+    let mut details: ResourceEdgeDetails = fx_map();
     for call in calls {
         let targets = expansion_cache
             .get(&call.key)
             .expect("every collected resource key has a cached expansion");
         for target in targets {
             edges.push((
-                NodeId::file_in(interner, call.consumer.clone()),
-                NodeId::file_in(interner, target.clone()),
+                NodeId::file_in(interner, call.consumer.as_path()),
+                NodeId::file_in(interner, target),
                 EdgeKind::Resource,
             ));
             details

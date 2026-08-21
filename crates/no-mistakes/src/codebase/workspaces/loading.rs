@@ -61,11 +61,11 @@ fn load_from_files_with_sources(
     let workspace_dirs = expand_workspace_globs_from_files(root, &metadata.globs, files)
         .into_iter()
         .map(|path| normalize_path(&path))
-        .collect::<std::collections::HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let visible = files
         .iter()
         .map(|path| normalize_path(path))
-        .collect::<std::collections::HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let root_manifest = normalize_path(&root.join("package.json"));
     let mut manifest_paths = visible
         .iter()

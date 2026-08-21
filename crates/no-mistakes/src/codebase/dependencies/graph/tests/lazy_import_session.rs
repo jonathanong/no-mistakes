@@ -14,7 +14,7 @@ fn lazy_import_facts_memoize_parse_errors() {
     let graph_files = GraphFiles {
         all: vec![malformed.clone()],
         indexable: vec![malformed.clone()],
-        visible: [malformed.clone()].into(),
+        visible: [malformed.clone()].into_iter().collect(),
         canonical_visible: CanonicalVisible::empty(),
         resource_candidates: vec![],
     };

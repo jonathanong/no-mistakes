@@ -10,6 +10,9 @@
 
 pub(crate) use rustc_hash::{FxHashMap, FxHashSet};
 
+/// Interned local-path membership set. Skip SipHash; keys are not untrusted.
+pub(crate) type PathSet = FxHashSet<std::path::PathBuf>;
+
 #[inline]
 pub(crate) fn fx_map<K, V>() -> FxHashMap<K, V> {
     FxHashMap::with_hasher(Default::default())

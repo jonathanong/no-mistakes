@@ -35,7 +35,7 @@ pub(super) fn route_and_layout_edges(
 ) -> Vec<Edge> {
     let mut edges = vec![(
         NodeId::file_in(interner, test_file),
-        NodeId::file_in(interner, page_file.clone()),
+        NodeId::file_in(interner, page_file.as_path()),
         EdgeKind::RouteTest,
     )];
     edges.extend(
@@ -43,7 +43,7 @@ pub(super) fn route_and_layout_edges(
             .into_iter()
             .map(|layout_file| {
                 (
-                    NodeId::file_in(interner, page_file.clone()),
+                    NodeId::file_in(interner, page_file.as_path()),
                     NodeId::file_in(interner, layout_file),
                     EdgeKind::Layout,
                 )

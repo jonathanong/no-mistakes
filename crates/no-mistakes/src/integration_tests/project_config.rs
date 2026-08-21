@@ -3,7 +3,6 @@ use super::types::{ConfigProject, Framework};
 use crate::codebase::ts_resolver::{ImportResolution, TsConfig};
 use crate::config::v2::schema::StringOrList;
 use anyhow::{Context, Result};
-use std::collections::HashSet;
 use std::path::Path;
 
 mod discovery;
@@ -52,7 +51,7 @@ pub(crate) fn load_projects_from_visible_with_catalog(
     let mut visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let config_values = if let Some(configs) = configs {
         let config_values = configs.values();
         // Explicit runner configs are authoritative even when Git ignores
@@ -118,7 +117,7 @@ pub(super) struct ConfigProjectInput<'a> {
 
 pub(super) fn load_config_projects_inner(
     input: ConfigProjectInput<'_>,
-    visible_files: Option<&HashSet<std::path::PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<ConfigProject>> {
     let ConfigProjectInput {
         root,
@@ -162,7 +161,7 @@ pub(super) fn load_config_projects_inner(
 pub(super) fn load_config_projects_from_program(
     input: ConfigProjectInput<'_>,
     program: &oxc_ast::ast::Program<'_>,
-    _visible_files: Option<&HashSet<std::path::PathBuf>>,
+    _visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<ConfigProject>> {
     let ConfigProjectInput {
         root,

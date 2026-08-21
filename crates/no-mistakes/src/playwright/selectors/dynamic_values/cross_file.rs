@@ -3,7 +3,6 @@ use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
     ObjectPropertyKind, Program, Statement,
 };
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 const DEFERRED_IMPORT_PREFIX: &str = "\0no-mistakes-playwright-import:";
@@ -39,7 +38,7 @@ pub(crate) fn resolve_imported_values_from_visible(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<String> {
     resolve_imported_values_inner(local_name, program, importing_file, Some(visible_files))
 }
@@ -48,7 +47,7 @@ pub(crate) fn defer_imported_values_from_visible(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<String> {
     let Some((source, exported_name, is_default)) = find_import_info(local_name, program) else {
         return Vec::new();
@@ -124,7 +123,7 @@ fn resolve_imported_values_inner(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Vec<String> {
     let Some((source_str, exported_name, is_default)) = find_import_info(local_name, program)
     else {

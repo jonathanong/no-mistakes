@@ -42,7 +42,7 @@ pub(crate) fn run_with_base_root_and_session(
     let visible_files = visible_paths
         .iter()
         .map(|path| no_mistakes::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let stems = ["page", "route"];
 
     let mut cache = Cache {
@@ -116,7 +116,7 @@ struct AnalyzeRoutesContext<'a> {
     cache: &'a mut Cache,
     session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
     parsed_files: &'a mut no_mistakes::fetch::ParsedFileCache,
-    visible_files: &'a HashSet<std::path::PathBuf>,
+    visible_files: &'a crate::fx::PathSet,
 }
 
 fn analyze_routes(

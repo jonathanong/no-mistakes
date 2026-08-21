@@ -101,7 +101,7 @@ impl DepGraph {
 
         let mut forward: EdgeMap = EdgeMap::default();
         let mut reverse: EdgeMap = EdgeMap::default();
-        let mut resource_edge_details: ResourceEdgeDetails = HashMap::new();
+        let mut resource_edge_details: ResourceEdgeDetails = fx_map();
         let mut resource_diagnostics = Vec::new();
         let files = &graph_files.indexable;
 

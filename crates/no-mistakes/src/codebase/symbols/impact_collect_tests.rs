@@ -65,7 +65,7 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
     };
     let mut target_symbols = BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
     let workspace = crate::codebase::workspaces::WorkspaceMap::default();
-    let visible = HashSet::new();
+    let visible = crate::fx::PathSet::default();
     let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
         visible.iter().cloned(),
     );
@@ -115,7 +115,7 @@ fn signature_target_symbols_keeps_file_entries_and_ignores_non_file_nodes() {
         &target,
         "parseDate",
         &export_nodes,
-        &HashSet::new(),
+        &crate::fx::PathSet::default(),
         &TsFactMap::new(),
     );
 
@@ -137,7 +137,7 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
     let visible = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let importer = root.join("impact/importer.ts");
     let source = std::fs::read_to_string(&importer).unwrap();
     let symbols =

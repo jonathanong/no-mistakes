@@ -50,7 +50,7 @@ impl CanonicalVisible {
     fn get(
         &self,
         all: &[PathBuf],
-        visible: &HashSet<PathBuf>,
+        visible: &crate::fx::PathSet,
         canonical: &Path,
     ) -> Option<PathBuf> {
         let mut guard = self.lock();
@@ -63,7 +63,7 @@ impl CanonicalVisible {
 
 fn build_canonical_visible(
     all: &[PathBuf],
-    visible: &HashSet<PathBuf>,
+    visible: &crate::fx::PathSet,
 ) -> HashMap<PathBuf, PathBuf> {
     // `all` is sorted; first discovery spelling wins on a canonical collision.
     let mut map = HashMap::new();

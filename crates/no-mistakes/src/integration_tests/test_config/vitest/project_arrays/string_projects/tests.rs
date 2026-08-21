@@ -3,7 +3,7 @@ use super::{
     parse_string_project_with_resolver, slash_path, string_project_paths_with_resolver,
 };
 use crate::codebase::ts_resolver::{ImportClassification, ImportResolution};
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 struct DirectProjectResolver {
@@ -19,7 +19,7 @@ impl ImportResolution for DirectProjectResolver {
         BTreeSet::from([self.target.clone()])
     }
 
-    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
         None
     }
 
@@ -28,7 +28,7 @@ impl ImportResolution for DirectProjectResolver {
         _: &str,
         _: &Path,
         _: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        _: &HashSet<PathBuf>,
+        _: &crate::fx::PathSet,
     ) -> ImportClassification {
         unreachable!("direct project resolution does not classify imports")
     }
