@@ -32,6 +32,7 @@ pub(crate) struct PrepareTestFilesOptions<'a> {
     pub(crate) selection: CachedOccurrenceSelection,
     pub(crate) module_resolution:
         Option<&'a crate::codebase::check_facts::PlaywrightModuleResolution>,
+    pub(crate) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
 
 pub(crate) fn prepare_test_files(
@@ -46,6 +47,7 @@ pub(crate) fn prepare_test_files(
         facts,
         selection,
         module_resolution,
+        sources,
     } = options;
     let prepared: Vec<_> = test_files
         .into_par_iter()
@@ -90,6 +92,7 @@ pub(crate) fn prepare_test_files(
                                 selector_regexes,
                                 &settings.selector_wrappers,
                                 module_resolution,
+                                sources,
                             ) {
                                 Ok(occurrences) => vec![occurrences],
                                 Err(_) if skip_test_file_errors => return Ok(None),
@@ -137,8 +140,9 @@ pub(crate) fn extract_test_file_occurrences(
     selector_regexes: &SelectorRegexes,
     selector_wrappers: &[crate::config::v2::schema::PlaywrightSelectorWrapper],
     module_resolution: Option<&crate::codebase::check_facts::PlaywrightModuleResolution>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<TestFileOccurrences> {
-    let source = std::fs::read_to_string(&test_file.path)
+    let source = crate::playwright::fsutil::read_source_text(&test_file.path, sources)
         .context(format!("reading test file {}", test_file.path.display()))?;
     let test_id_attributes = test_file.test_id_attributes();
     crate::playwright::ast::with_program(&test_file.path, &source, |program, source| {
