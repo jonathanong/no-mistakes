@@ -134,6 +134,27 @@ policies:
         findings[0].message.contains("outside the repository root"),
         "{findings:?}"
     );
+
+    let symlink = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: ["pkg/.oxlintrc.json"]
+    valueAssertions:
+      - key: plugins
+        kind: equals-file
+        file: escape-link/root.yml
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    assert_eq!(symlink.len(), 1, "{symlink:?}");
+    assert!(
+        symlink[0].message.contains("outside the repository root"),
+        "{symlink:?}"
+    );
 }
 
 #[test]

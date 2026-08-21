@@ -34,7 +34,7 @@ pub(super) fn check_equals_file(
         assertion.from_key.as_str()
     };
     let other_path = normalize_path(&root.join(&assertion.file));
-    if other_path.strip_prefix(root).is_err() {
+    if !contained_in_root(root, &other_path) {
         return vec![finding(
             rel,
             assertion,
@@ -89,6 +89,17 @@ fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_ke
     }
     let actual = values_at_selector(left, &assertion.key);
     !actual.has_missing && actual.values == expected.values
+}
+
+fn contained_in_root(root: &Path, path: &Path) -> bool {
+    if path.strip_prefix(root).is_err() {
+        return false;
+    }
+    match (path.canonicalize(), root.canonicalize()) {
+        (Ok(resolved), Ok(resolved_root)) => resolved.strip_prefix(resolved_root).is_ok(),
+        (Err(_), _) => true,
+        (Ok(resolved), Err(_)) => resolved.strip_prefix(root).is_ok(),
+    }
 }
 
 fn finding(file: &str, assertion: &ValueAssertion, message: String) -> RuleFinding {
