@@ -76,8 +76,8 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     )
     .is_empty());
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let parsed = parsed_workflow_set(&root.join("missing"), &[]);
     add_ci_edges(
         &root.join("missing"),

@@ -1,6 +1,6 @@
 fn bfs<A>(
     starts: &[NodeId],
-    edges: &HashMap<NodeId, A>,
+    edges: &FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry>
@@ -12,7 +12,7 @@ where
 
 fn bfs_in_file_universe<A>(
     starts: &[NodeId],
-    edges: &HashMap<NodeId, A>,
+    edges: &FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
     file_universe: &HashSet<PathBuf>,
@@ -25,7 +25,7 @@ where
 
 fn bfs_with_file_universe<A>(
     starts: &[NodeId],
-    edges: &HashMap<NodeId, A>,
+    edges: &FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
     file_universe: Option<&HashSet<PathBuf>>,
@@ -36,7 +36,7 @@ where
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
+    let mut result_idx: FxHashMap<NodeId, usize> = FxHashMap::default();
     let mut dynamic_import_files: HashSet<NodeId> = HashSet::new();
 
     for start in starts {

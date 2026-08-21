@@ -166,8 +166,8 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         terraform: Default::default(),
         ci: crate::config::v2::schema::CiConfig::default(),
     };
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     test_support::add_queue_edges(
         &explicit,
         &resolver,

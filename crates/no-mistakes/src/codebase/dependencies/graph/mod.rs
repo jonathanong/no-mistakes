@@ -15,6 +15,7 @@ use std::sync::{Arc, OnceLock};
 
 use crate::codebase::analysis_session::PathInterner;
 use crate::edge_index::{CanonicalEdge, EdgeIndex};
+use crate::fx::FxHashMap;
 
 include!("types.rs");
 include!("build_plan.rs");

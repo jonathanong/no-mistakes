@@ -20,8 +20,8 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
         .by_name
         .is_empty());
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let parsed = parsed_workflow_set(&root, graph_files.all());
     add_ci_edges(
         &root,

@@ -349,14 +349,18 @@ fn queue_job_nodes_are_not_matched() {
     let queue_file = crate::codebase::ts_resolver::normalize_path(&root.join("jobs/queue.mts"));
     let root_node = NodeId::file(root_file.clone());
     let queue_node = NodeId::queue_job(queue_file.clone(), "process");
-    let forward = std::collections::HashMap::from([(
+    let forward = [(
         root_node.clone(),
         vec![(queue_node.clone(), EdgeKind::QueueEnqueue)],
-    )]);
-    let reverse = std::collections::HashMap::from([(
+    )]
+    .into_iter()
+    .collect();
+    let reverse = [(
         queue_node.clone(),
         vec![(root_node.clone(), EdgeKind::QueueEnqueue)],
-    )]);
+    )]
+    .into_iter()
+    .collect();
     let graph = from_typed_maps(root.clone(), forward, reverse);
     let opts = Options {
         roots: vec!["entrypoints/api.mts".to_string()],

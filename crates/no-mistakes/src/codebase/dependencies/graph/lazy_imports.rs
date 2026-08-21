@@ -32,7 +32,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut frontier: Vec<NodeId> = Vec::new();
     let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
+    let mut result_idx: FxHashMap<NodeId, usize> = FxHashMap::default();
     let mut collected_facts = Vec::new();
 
     for root in roots {

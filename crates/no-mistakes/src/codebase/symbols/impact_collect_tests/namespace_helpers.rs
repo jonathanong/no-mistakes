@@ -109,8 +109,8 @@ fn suggested_test_entries_ignores_file_level_edges_without_file_nodes() {
     let root = PathBuf::from("/repo");
     let graph = crate::codebase::dependencies::graph::test_support::from_typed_maps(
         root.clone(),
-        std::collections::HashMap::new(),
-        std::collections::HashMap::new(),
+        Default::default(),
+        Default::default(),
     );
     let entries = vec![NodeEntry {
         node: NodeId::module("pkg"),

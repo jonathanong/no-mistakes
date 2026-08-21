@@ -1,6 +1,6 @@
 use super::super::adjacency::{push_neighbor, seed_known_targets};
 use super::super::{CanonicalEdge, EdgeIndex};
-use std::collections::{HashMap, HashSet};
+use crate::fx::{fx_map_with_capacity, FxHashMap, FxHashSet};
 use std::hash::Hash;
 
 impl<Node, Kind> EdgeIndex<Node, Kind>
@@ -19,8 +19,7 @@ where
     ) {
         let edges = edges.into_iter();
         let (lower, upper) = edges.size_hint();
-        let mut known_by_source =
-            HashMap::<Node, HashMap<Node, HashSet<Kind>>>::with_capacity(upper.unwrap_or(lower));
+        let mut known_by_source = fx_map_with_capacity(upper.unwrap_or(lower));
         for edge in edges {
             if !known_by_source.contains_key(&edge.from) {
                 known_by_source.insert(
@@ -56,7 +55,11 @@ where
     }
 }
 
-fn pair_is_known<Node, Kind>(known: &HashMap<Node, HashSet<Kind>>, to: &Node, kind: &Kind) -> bool
+fn pair_is_known<Node, Kind>(
+    known: &FxHashMap<Node, FxHashSet<Kind>>,
+    to: &Node,
+    kind: &Kind,
+) -> bool
 where
     Node: Eq + Hash,
     Kind: Eq + Hash,

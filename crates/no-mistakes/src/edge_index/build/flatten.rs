@@ -1,7 +1,7 @@
 use super::super::adjacency::{into_adjacency_map, push_ordinal};
 use super::super::{CanonicalEdge, EdgeIndex};
+use crate::fx::FxHashMap;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::hash::Hash;
 
 impl<Node, Kind> EdgeIndex<Node, Kind>
@@ -17,8 +17,8 @@ where
     /// vector. Empty forward nodes and reverse-only targets remain in their
     /// respective maps unchanged.
     pub(crate) fn from_normalized_adjacency_maps_by_source(
-        forward: HashMap<Node, Vec<(Node, Kind)>>,
-        reverse: HashMap<Node, Vec<(Node, Kind)>>,
+        forward: FxHashMap<Node, Vec<(Node, Kind)>>,
+        reverse: FxHashMap<Node, Vec<(Node, Kind)>>,
         mut compare_sources: impl FnMut(&Node, &Node) -> Ordering,
     ) -> Self {
         #[cfg(debug_assertions)]

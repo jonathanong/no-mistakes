@@ -11,7 +11,7 @@ fn push_unvisited_symbol_pair(
 
 fn bfs_skipping_symbol_owner_files<A>(
     starts: &[NodeId],
-    edges: &HashMap<NodeId, A>,
+    edges: &FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry>
@@ -21,7 +21,7 @@ where
     let mut visited: HashSet<(NodeId, Option<PathBuf>)> = HashSet::new();
     let mut queue: VecDeque<(NodeId, usize, Option<PathBuf>)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
+    let mut result_idx: FxHashMap<NodeId, usize> = FxHashMap::default();
     let symbol_importer_files_by_owner = symbol_importer_files_by_owner(edges);
     let root_symbols: HashSet<(PathBuf, std::sync::Arc<str>)> = starts
         .iter()
@@ -112,7 +112,7 @@ where
 }
 
 fn symbol_importer_files_by_owner<A>(
-    edges: &HashMap<NodeId, A>,
+    edges: &FxHashMap<NodeId, A>,
 ) -> HashMap<PathBuf, HashSet<PathBuf>>
 where
     A: AsRef<[(NodeId, EdgeKind)]>,

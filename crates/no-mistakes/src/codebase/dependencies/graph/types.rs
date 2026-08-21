@@ -96,7 +96,7 @@ pub struct NodeEntry {
     pub via: Vec<EdgeKind>,
 }
 
-type EdgeMap = HashMap<NodeId, Vec<(NodeId, EdgeKind)>>;
+type EdgeMap = FxHashMap<NodeId, Vec<(NodeId, EdgeKind)>>;
 type Edge = (NodeId, NodeId, EdgeKind);
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

@@ -4,8 +4,8 @@
 //! the real in-process aggregate paths without making their internal result
 //! types part of the supported Rust API.
 
+use crate::fx::{fx_map_with_capacity, FxHashMap};
 use anyhow::Result;
-use std::collections::HashMap;
 use std::path::Path;
 
 mod bench_shard;
@@ -46,8 +46,8 @@ pub use scoped_resolver::{
 /// the internal edge index nor a supported programmatic API.
 #[derive(Clone)]
 pub struct HighFanoutFinalizationFixture {
-    forward: HashMap<u32, Vec<(u32, u8)>>,
-    reverse: HashMap<u32, Vec<(u32, u8)>>,
+    forward: FxHashMap<u32, Vec<(u32, u8)>>,
+    reverse: FxHashMap<u32, Vec<(u32, u8)>>,
 }
 
 /// Small stable summary of a finalized synthetic graph.
@@ -73,8 +73,8 @@ pub fn high_fanout_finalization_fixture(
     );
     assert!(fanout > 0, "fanout must be nonzero");
 
-    let mut forward = HashMap::with_capacity(node_count as usize);
-    let mut reverse = HashMap::with_capacity(node_count as usize);
+    let mut forward = fx_map_with_capacity(node_count as usize);
+    let mut reverse = fx_map_with_capacity(node_count as usize);
     for source in 0..node_count {
         let mut adjacent = Vec::with_capacity((fanout * 2) as usize);
         for offset in 1..=fanout {

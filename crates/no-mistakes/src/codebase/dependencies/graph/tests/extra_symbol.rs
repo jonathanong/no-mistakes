@@ -32,8 +32,8 @@ fn graph_private_helpers_cover_noop_branches() {
     push_unvisited_symbol_pair(&mut visited_pairs, &mut queue, pair);
     assert!(queue.is_empty());
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let file = p("/src/worker.mts");
     let queue_job = NodeId::queue_job(p("/src/queue.mts"), "send");
     test_support::add_distinct_worker_file_edges(
@@ -345,7 +345,7 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     let owner = p("/repo/src/owner.mts");
     let dep = p("/repo/src/dep.mts");
     let symbol = NodeId::symbol(owner.clone(), "alpha");
-    let mut edges = EdgeMap::new();
+    let mut edges = EdgeMap::default();
     edges.insert(
         symbol.clone(),
         vec![
@@ -383,7 +383,7 @@ fn symbol_bfs_skips_only_the_current_symbol_owner_file() {
     let owner_b = p("/repo/src/b.mts");
     let symbol_a = NodeId::symbol(owner_a.clone(), "alpha");
     let symbol_b = NodeId::symbol(owner_b.clone(), "beta");
-    let mut edges = EdgeMap::new();
+    let mut edges = EdgeMap::default();
     edges.insert(
         symbol_a.clone(),
         vec![
@@ -409,7 +409,7 @@ fn symbol_bfs_widens_reached_symbols_to_owner_files() {
     let unrelated_consumer = p("/repo/src/unrelated-consumer.mts");
     let source_symbol = NodeId::symbol(source, "alpha");
     let owner_symbol = NodeId::symbol(owner.clone(), "usesAlpha");
-    let mut edges = EdgeMap::new();
+    let mut edges = EdgeMap::default();
     edges.insert(
         source_symbol.clone(),
         vec![(owner_symbol.clone(), EdgeKind::Import)],

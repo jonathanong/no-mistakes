@@ -57,8 +57,8 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
     )
     .is_empty());
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     test_support::add_queue_edges(
         &malformed,
         &resolver,

@@ -1,13 +1,13 @@
 use crate::codebase::dependencies::{EdgeKind, NodeId};
 use crate::edge_index::CanonicalEdge;
-use std::collections::HashMap;
+use crate::fx::{fx_map_with_capacity, FxHashMap};
 use std::path::PathBuf;
 
 /// Production-shaped adjacency and selector input for the graph hot paths.
 #[derive(Clone)]
 pub struct ProductionGraphFixture {
-    forward: HashMap<NodeId, Vec<(NodeId, EdgeKind)>>,
-    reverse: HashMap<NodeId, Vec<(NodeId, EdgeKind)>>,
+    forward: FxHashMap<NodeId, Vec<(NodeId, EdgeKind)>>,
+    reverse: FxHashMap<NodeId, Vec<(NodeId, EdgeKind)>>,
     selectors: Vec<CanonicalEdge<NodeId, EdgeKind>>,
 }
 
@@ -28,8 +28,8 @@ pub fn production_graph_fixture(node_count: u32, fanout: u32) -> ProductionGraph
     assert!(fanout > 0, "fanout must be nonzero");
 
     let nodes = (0..node_count).map(production_node).collect::<Vec<_>>();
-    let mut forward = HashMap::with_capacity(node_count as usize);
-    let mut reverse = HashMap::with_capacity(node_count as usize);
+    let mut forward = fx_map_with_capacity(node_count as usize);
+    let mut reverse = fx_map_with_capacity(node_count as usize);
     let mut selectors = Vec::with_capacity((node_count * fanout * 3) as usize);
     for (source_index, source) in nodes.iter().enumerate() {
         let mut adjacent = Vec::with_capacity((fanout * 2) as usize);

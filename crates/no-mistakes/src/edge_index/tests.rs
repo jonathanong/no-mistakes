@@ -1,6 +1,6 @@
 use super::*;
+use crate::fx::FxHashMap;
 use std::cell::Cell;
-use std::collections::HashMap;
 
 fn edge(from: &str, to: &str, kind: u8) -> CanonicalEdge<String, u8> {
     CanonicalEdge::new(from.to_owned(), to.to_owned(), kind)
@@ -262,9 +262,9 @@ fn direct_adjacency_constructor_and_invariant_cover_both_map_states() {
         left.cmp(right)
     }
 
-    let mut forward = HashMap::new();
+    let mut forward = FxHashMap::default();
     forward.insert("a".to_owned(), vec![("b".to_owned(), 1_u8)]);
-    let mut reverse = HashMap::new();
+    let mut reverse = FxHashMap::default();
     reverse.insert("b".to_owned(), vec![("a".to_owned(), 1_u8)]);
 
     let index = EdgeIndex::from_adjacency_maps_by(forward.clone(), reverse.clone(), compare_edges);

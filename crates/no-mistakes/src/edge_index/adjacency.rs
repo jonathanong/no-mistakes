@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use crate::fx::{fx_map_with_capacity, FxHashMap, FxHashSet};
 use std::hash::Hash;
 use std::ops::Deref;
 
@@ -99,12 +99,12 @@ impl<'a, Node, Kind> IntoIterator for &'a Adjacency<Node, Kind> {
 }
 
 pub(crate) fn into_adjacency_map<Node, Kind>(
-    map: HashMap<Node, Vec<(Node, Kind)>>,
-) -> HashMap<Node, Adjacency<Node, Kind>>
+    map: FxHashMap<Node, Vec<(Node, Kind)>>,
+) -> FxHashMap<Node, Adjacency<Node, Kind>>
 where
     Node: Eq + Hash,
 {
-    let mut out = HashMap::with_capacity(map.len());
+    let mut out = fx_map_with_capacity(map.len());
     for (node, neighbors) in map {
         out.insert(node, Adjacency::from_neighbors(neighbors));
     }
@@ -112,7 +112,7 @@ where
 }
 
 pub(crate) fn push_neighbor<Node, Kind>(
-    map: &mut HashMap<Node, Adjacency<Node, Kind>>,
+    map: &mut FxHashMap<Node, Adjacency<Node, Kind>>,
     key: &Node,
     neighbor: (Node, Kind),
     ordinal: usize,
@@ -128,7 +128,7 @@ pub(crate) fn push_neighbor<Node, Kind>(
 }
 
 pub(crate) fn push_ordinal<Node, Kind>(
-    map: &mut HashMap<Node, Adjacency<Node, Kind>>,
+    map: &mut FxHashMap<Node, Adjacency<Node, Kind>>,
     key: &Node,
     ordinal: usize,
 ) where
@@ -146,21 +146,21 @@ pub(crate) fn push_ordinal<Node, Kind>(
 
 pub(crate) fn seed_known_targets<Node, Kind>(
     existing: Option<&Adjacency<Node, Kind>>,
-) -> HashMap<Node, HashSet<Kind>>
+) -> FxHashMap<Node, FxHashSet<Kind>>
 where
     Node: Clone + Eq + Hash,
     Kind: Clone + Eq + Hash,
 {
     match existing {
         Some(adj) => {
-            let mut known: HashMap<Node, HashSet<Kind>> =
-                HashMap::with_capacity(adj.neighbors.len());
+            let mut known: FxHashMap<Node, FxHashSet<Kind>> =
+                fx_map_with_capacity(adj.neighbors.len());
             for (to, kind) in &adj.neighbors {
                 known.entry(to.clone()).or_default().insert(kind.clone());
             }
             known
         }
-        None => HashMap::new(),
+        None => FxHashMap::default(),
     }
 }
 

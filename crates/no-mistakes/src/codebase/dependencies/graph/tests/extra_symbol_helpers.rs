@@ -443,7 +443,7 @@ fn symbol_bfs_records_alternate_via_kinds_for_existing_nodes() {
     let left = NodeId::symbol(p("/repo/src/left.mts"), "left");
     let right = NodeId::symbol(p("/repo/src/right.mts"), "right");
     let target = NodeId::module("react");
-    let mut edges = EdgeMap::new();
+    let mut edges = EdgeMap::default();
     edges.insert(
         root.clone(),
         vec![
