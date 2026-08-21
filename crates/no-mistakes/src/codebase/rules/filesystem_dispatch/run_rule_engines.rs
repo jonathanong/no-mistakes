@@ -88,6 +88,15 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
                 root, config, files, sources,
             )
         }
+        NO_RAW_EPHEMERAL_PORT => {
+            no_raw_ephemeral_port::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         NEXTJS_REDIRECT_DESTINATIONS => {
             nextjs_redirect_destinations::check_with_files_and_sources(root, config, files, sources)
         }

@@ -249,6 +249,7 @@ fn no_mistakes_rules_have_docs() {
         rules::NEXTJS_REDIRECT_DESTINATIONS,
         rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,
         rules::NO_GIT_IDENTITY_MUTATION,
+        rules::NO_RAW_EPHEMERAL_PORT,
         rules::PACKAGE_JSON_REGISTRY_ONLY,
         rules::POSTGRES_CONSTRAINT_VALIDATE,
         rules::POSTGRES_FK_INDEX,
