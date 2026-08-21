@@ -329,12 +329,16 @@ fn git_untracked_files_still_stat() {
 #[test]
 fn git_classify_drops_missing_relative_paths() {
     let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
-    let classified = super::classify_relative_paths(
+    let (classified, stats) = super::classify_git_listed_paths(
         &root,
-        vec![PathBuf::from("alpha.ts"), PathBuf::from("missing.ts")],
+        vec![
+            (PathBuf::from("alpha.ts"), None),
+            (PathBuf::from("missing.ts"), None),
+        ],
     );
     assert_eq!(classified.len(), 1);
     assert!(classified[0].path.ends_with("alpha.ts"));
+    assert_eq!(stats, 1);
 }
 
 #[test]

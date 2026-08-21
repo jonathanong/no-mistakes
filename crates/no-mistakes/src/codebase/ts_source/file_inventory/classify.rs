@@ -27,19 +27,6 @@ pub(super) fn inventory_paths(paths: &[PathBuf]) -> (Vec<ClassifiedPath>, usize)
     })
 }
 
-#[cfg(test)]
-pub(crate) fn classify_relative_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<ClassifiedPath> {
-    crate::perf_trace::trace("discovery.classify", || {
-        paths
-            .into_par_iter()
-            .filter_map(|relative| {
-                crate::invocation::check_timeout().ok()?;
-                stat_existing_path(root.join(relative))
-            })
-            .collect()
-    })
-}
-
 /// Classify Git-listed relative paths. Tracked regular files (`100644`/`100755`)
 /// use index mode and skip worktree metadata; tracked symlinks (`120000`) still
 /// call `Path::is_file`. Untracked paths and other modes keep `symlink_metadata`.

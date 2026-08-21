@@ -3,8 +3,6 @@ use std::sync::Arc;
 
 mod classify;
 mod kind;
-#[cfg(test)]
-pub(crate) use classify::classify_relative_paths;
 pub(crate) use classify::{classify_git_listed_paths, GitIndexKind};
 pub use kind::FileClassification;
 
