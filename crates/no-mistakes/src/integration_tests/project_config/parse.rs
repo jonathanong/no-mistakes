@@ -21,7 +21,6 @@ pub(in crate::integration_tests) fn load_config_projects_from_program(
         resolver,
     } = input;
     match framework {
-        Framework::Dotnet => Ok(Vec::new()),
         Framework::Playwright => {
             let parsed = test_config::playwright::parse_program_with_resolver(
                 program, source, path, config_dir, resolver,
@@ -45,3 +44,6 @@ pub(in crate::integration_tests) fn load_config_projects_from_program(
         _ => Ok(Vec::new()),
     }
 }
+
+#[cfg(test)]
+mod tests;
