@@ -298,3 +298,19 @@ fn framework_preparation_plan_expands_only_required_runner_dependencies() {
         assert!(!plan.contains(TestRunner::Swift));
     }
 }
+
+#[test]
+fn jest_discovers_from_explicit_config_and_skips_filename_fallback() {
+    let root = super::fixture_root("jest-test-plan");
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(StringOrList::One("jest.config.js".to_string()));
+    let discovered = discover_tests(&root, &config, TestRunner::Jest).unwrap();
+    assert!(discovered
+        .tests
+        .iter()
+        .any(|path| path.ends_with("value.test.ts")));
+
+    config.tests.jest.configs = Some(StringOrList::Many(Vec::new()));
+    let empty = discover_tests(&root, &config, TestRunner::Jest).unwrap();
+    assert!(empty.tests.is_empty());
+}
