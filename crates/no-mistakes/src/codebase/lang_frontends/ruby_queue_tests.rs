@@ -11,8 +11,8 @@ Workers::DigestJob.perform_async
     let enqueues = extract_enqueues(source);
     assert!(enqueues.iter().any(|name| name == "WelcomeJob"));
     assert!(enqueues.iter().any(|name| name == "MailWorker"));
-    assert!(enqueues.iter().any(|name| name == "Workers::DigestJob"));
     assert!(enqueues.iter().any(|name| name == "DigestJob"));
+    assert!(!enqueues.iter().any(|name| name == "Workers::DigestJob"));
 }
 
 #[test]
@@ -33,6 +33,27 @@ end
     assert!(workers.iter().any(|name| name == "WelcomeJob"));
     assert!(workers.iter().any(|name| name == "MailWorker"));
     assert!(workers.iter().any(|name| name == "DigestJob"));
+}
+
+#[test]
+fn compact_class_include_and_namespaced_class_share_short_identity() {
+    let workers = extract_workers(
+        "class MailWorker; include Sidekiq::Worker; end\nclass Workers::DigestJob\n  include Sidekiq::Job\nend\n",
+    );
+    assert!(workers.iter().any(|name| name == "MailWorker"));
+    assert!(workers.iter().any(|name| name == "DigestJob"));
+    assert!(!workers.iter().any(|name| name == "Workers::DigestJob"));
+}
+
+#[test]
+fn string_literal_enqueue_examples_are_not_jobs() {
+    let source = strip_comments_keep_strings(
+        r#"
+logger.info("MailWorker.perform_async failed")
+WelcomeJob.perform_later(user)
+"#,
+    );
+    assert_eq!(extract_enqueues(&source), vec!["WelcomeJob".to_string()]);
 }
 
 #[test]

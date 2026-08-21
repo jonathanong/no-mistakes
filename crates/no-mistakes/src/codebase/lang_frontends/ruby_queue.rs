@@ -2,24 +2,14 @@ use regex::Regex;
 use std::sync::OnceLock;
 
 pub(super) fn extract_enqueues(source: &str) -> Vec<String> {
-    let mut names = Vec::new();
-    for raw in extract_named(source, job_enqueue_re()) {
-        names.push(raw.clone());
-        if let Some((_, short)) = raw.rsplit_once("::") {
-            names.push(short.to_string());
-        }
-    }
-    names.sort();
-    names.dedup();
-    names
+    let masked = super::super::strip::mask_strings(source);
+    canonicalize_names(extract_named(&masked, job_enqueue_re()))
 }
 
 pub(super) fn extract_workers(source: &str) -> Vec<String> {
     let mut names = extract_named(source, application_job_class_re());
     names.extend(extract_sidekiq_workers(source));
-    names.sort();
-    names.dedup();
-    names
+    canonicalize_names(names)
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
@@ -42,8 +32,9 @@ fn extract_sidekiq_workers(source: &str) -> Vec<String> {
             .map(|m| m.as_str().to_string())
         {
             current = Some(name);
-        } else if sidekiq_include_re().is_match(line) {
-            if let Some(name) = current.take() {
+        }
+        if sidekiq_include_re().is_match(line) {
+            if let Some(name) = current.clone() {
                 names.push(name);
             }
         }
@@ -51,6 +42,19 @@ fn extract_sidekiq_workers(source: &str) -> Vec<String> {
     names.sort();
     names.dedup();
     names
+}
+
+fn canonicalize_names(names: Vec<String>) -> Vec<String> {
+    let mut values: Vec<String> = names
+        .into_iter()
+        .map(|raw| match raw.rsplit_once("::") {
+            Some((_, short)) => short.to_string(),
+            None => raw,
+        })
+        .collect();
+    values.sort();
+    values.dedup();
+    values
 }
 
 fn job_enqueue_re() -> &'static Regex {
