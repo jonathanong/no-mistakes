@@ -1,5 +1,7 @@
 use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
 use super::strip::strip_comments_keep_strings;
+#[path = "ruby_http.rs"]
+mod http;
 #[path = "ruby_queue.rs"]
 mod queue;
 #[path = "ruby_zeitwerk.rs"]
@@ -42,7 +44,7 @@ fn parse_ruby_file(
         imports: extract_requires(&text, path, roots),
         declarations: extract_ruby_declarations(&text),
         references: extract_static_consts(&text),
-        route_handlers: extract_pairs(&text, rails_route_re()),
+        route_handlers: http::extract_routes(&text),
         queue_enqueues: queue::extract_enqueues(&text),
         queue_workers: queue::extract_workers(&text),
         mods: Vec::new(),
@@ -110,17 +112,6 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
-fn extract_pairs(source: &str, re: &Regex) -> Vec<(String, String)> {
-    re.captures_iter(source)
-        .filter_map(|cap| {
-            Some((
-                cap.get(1)?.as_str().to_string(),
-                cap.get(2)?.as_str().to_string(),
-            ))
-        })
-        .collect()
-}
-
 fn ruby_require_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r#"\brequire\s+["']([^"']+)["']"#).expect("require"))
@@ -175,13 +166,5 @@ fn ruby_const_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(r"\b([A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*)\b").expect("const")
-    })
-}
-
-fn rails_route_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r#"(?m)^\s*(?:get|post|put|patch|delete)\s+["']([^"']+)["']\s*,\s*to:\s*["']([^"']+)["']"#)
-            .expect("route")
     })
 }

@@ -28,7 +28,7 @@ CLIs are not started.
 | Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
 | Rust | `rust-use`, `rust-mod` | `tests plan cargo` | no | no | shipped (v1 extractors + plan) |
-| Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` | Active Job `perform_later`, Sidekiq `perform_async` | shipped (v1 extractors + plan) |
+| Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` / `resources` | Active Job `perform_later`, Sidekiq `perform_async` | shipped (v1 extractors + plan) |
 | PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
@@ -262,17 +262,20 @@ Sidekiq extractors.
 | Module graph | `import` | `require`, `require_relative`, Zeitwerk-constant references inside configured app roots |
 | Package identity | workspace packages | configured engine/app roots and `Gemfile` path gems |
 | Tests | `tests plan vitest` | `tests plan rails` over Minitest / RSpec files |
-| HTTP routes | `server routes` | configured `config/routes.rb` (and engine routes) → controller#action |
+| HTTP routes | `server routes` | configured `config/routes.rb` (and engine routes) → controller#action, including bare `resources :name` |
 | Queues | BullMQ | Active Job `SomeJob.perform_later` or Sidekiq `SomeWorker.perform_async` → job class |
 | Lockfile | npm-family | `Gemfile.lock` |
 
 Zeitwerk inference is heuristic and must stay inside configured roots. Do not
 scan the whole repository for `app/models`. Dynamic `constantize`,
 `send(:"#{name}_path")`, and `perform_later` / `perform_async` on a computed
-job class produce no edge.
+job class produce no edge. `only:` / `except:`, singular `resource`, and
+namespaced `resources` produce no extra route edges. Bare `resources :users`
+expands to index/show/create/update/destroy.
 
 ```ruby
 get "/api/users", to: "users#index"
+resources :users
 WelcomeJob.perform_later(user)
 MailWorker.perform_async(user)
 ```
@@ -371,8 +374,8 @@ shipped for configured Python, Go, Rust, Rails, and PHP packages. Use
 
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
-`Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Rails
-`resources` / Laravel `Route::resource`, Rust Axum/Actix/Rocket routes, Kafka
+`Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Laravel
+`Route::resource`, Rust Axum/Actix/Rocket routes, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
 dedicated `no-mistakes python|go|rust|rails|php` CLIs.
 
