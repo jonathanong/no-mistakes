@@ -50,7 +50,11 @@ fn btree_ordering(param: &SqlIndexParam) -> &str {
 }
 
 fn btree_nulls(param: &SqlIndexParam) -> &str {
-    param.nulls_ordering.as_deref().unwrap_or("last")
+    match param.nulls_ordering.as_deref() {
+        Some(nulls) => nulls,
+        None if btree_ordering(param) == "desc" => "first",
+        None => "last",
+    }
 }
 
 fn included_columns_subsumed(

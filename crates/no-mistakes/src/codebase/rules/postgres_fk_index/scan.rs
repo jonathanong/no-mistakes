@@ -112,7 +112,7 @@ pub(super) fn covers(index: &SqlCreateIndexMetadata, column: &str) -> bool {
         .is_some_and(|name| name.eq_ignore_ascii_case(column))
 }
 
-fn indexes_by_table(
+pub(super) fn indexes_by_table(
     schema: &[SqlSchemaFileFacts],
 ) -> BTreeMap<String, Vec<&SqlCreateIndexMetadata>> {
     let mut indexes = BTreeMap::<String, Vec<&SqlCreateIndexMetadata>>::new();
@@ -122,6 +122,9 @@ fn indexes_by_table(
                 .entry(index.table_name.clone())
                 .or_default()
                 .push(index);
+            if let Some((_, name)) = index.table_name.rsplit_once('.') {
+                indexes.entry(name.to_string()).or_default().push(index);
+            }
         }
     }
     indexes

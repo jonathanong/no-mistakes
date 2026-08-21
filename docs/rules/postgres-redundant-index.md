@@ -24,9 +24,10 @@ File order uses the first numeric run in the filename (`2.sql` before
 Unique shorter indexes are never redundant: the longer index enforces
 uniqueness on its full key, not the prefix. `INCLUDE` columns on the shorter
 index must already be present on the longer index (as keys or includes).
-Omitted btree `ASC` / `NULLS LAST` match the explicit defaults. Partial-index
-predicates compare after lowercasing keywords and unquoted identifiers, leaving
-string literals and quoted identifiers unchanged.
+Omitted btree `ASC` matches `ASC NULLS LAST`; omitted `DESC` matches
+`DESC NULLS FIRST`. Partial-index predicates compare after lowercasing
+keywords and unquoted identifiers, leaving string literals and quoted
+identifiers unchanged.
 
 Skip unnamed/implicit indexes; they cannot be dropped with `DROP INDEX`.
 Same-line `-- allowDirective:` comments (default `redundant-index-allow`) skip
@@ -53,3 +54,9 @@ CREATE INDEX idx_events__topic_id__created_at ON events (topic_id, created_at);
 Use `no-mistakes-disable-next-line postgres-redundant-index` for a one-off, or
 the configured SQL comment directive when the exemption should stay next to
 the DDL.
+
+v1 does not model quoted mixed-case identifier quote semantics (`"Events"`
+versus `Events`), implicit constraint indexes at line 1,
+`CREATE INDEX IF NOT EXISTS` no-ops, `ALTER INDEX ... RENAME TO`,
+`DROP INDEX` / `DROP TABLE` inside `DO $$` blocks, or `ALTER TABLE ... DROP
+COLUMN` invalidating indexes.

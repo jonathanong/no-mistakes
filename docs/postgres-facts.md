@@ -130,3 +130,10 @@ instead of re-parsing SQL with a private parser.
 Lock-ordering and runtime-query *rules* are not part of this fact layer.
 Query-name annotations, election-schema vote tables, and UUIDv7 predicates
 are also out of scope.
+
+`postgres-redundant-index` v1 also leaves these migration index transitions
+unmodeled: quoted mixed-case identifier quote semantics (`"Events"` versus
+`Events`), implicit constraint indexes always recorded at line 1,
+`CREATE INDEX IF NOT EXISTS` no-ops, `ALTER INDEX ... RENAME TO`,
+`DROP INDEX` / `DROP TABLE` inside `DO $$` blocks, and `ALTER TABLE ...
+DROP COLUMN` invalidating indexes.

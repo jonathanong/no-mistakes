@@ -195,7 +195,7 @@ fn prefix_helpers_cover_predicate_include_and_sort() {
             param("topic_id", None, None),
         ],
     );
-    assert!(redundancy::is_redundant_prefix(
+    assert!(!redundancy::is_redundant_prefix(
         &live(&desc),
         &live(&desc_long)
     ));
@@ -273,6 +273,33 @@ fn omitted_btree_sort_options_match_asc_nulls_last() {
     assert!(!redundancy::is_redundant_prefix(
         &live(&first),
         &live(&long)
+    ));
+}
+
+#[test]
+fn omitted_desc_nulls_default_to_first_not_last() {
+    let omitted = idx("omitted", vec![param("created_at", Some("desc"), None)]);
+    let last = idx(
+        "last",
+        vec![
+            param("created_at", Some("desc"), Some("last")),
+            param("topic_id", None, None),
+        ],
+    );
+    assert!(!redundancy::is_redundant_prefix(
+        &live(&omitted),
+        &live(&last)
+    ));
+    let first = idx(
+        "first",
+        vec![
+            param("created_at", Some("desc"), Some("first")),
+            param("topic_id", None, None),
+        ],
+    );
+    assert!(redundancy::is_redundant_prefix(
+        &live(&omitted),
+        &live(&first)
     ));
 }
 
