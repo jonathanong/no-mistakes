@@ -278,6 +278,7 @@ fn no_mistakes_rules_have_docs() {
         rules::TEST_NO_DEPENDENCY_PINS,
         rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
         rules::TSCONFIG_ALIAS_FOLDER_MAPPING,
+        rules::TSCONFIG_FILE_COVERAGE,
         rules::TSCONFIG_GATE_COVERAGE,
         unique_exports::RULE_ID,
         rules::VITEST_TEST_CORRESPONDENCE,

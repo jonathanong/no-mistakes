@@ -83,6 +83,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         GITHUB_ACTIONS_PINNED_HASH => {
             github_actions_pinned_hash::check_with_files_and_sources(root, config, files, sources)
         }
+        TSCONFIG_FILE_COVERAGE => {
+            tsconfig_file_coverage::check_with_files_and_sources(root, config, files, sources)
+        }
         VERSION_PIN_CONSISTENCY => {
             version_pin_consistency::check_with_files_sources_and_deferred_suppression(
                 root,

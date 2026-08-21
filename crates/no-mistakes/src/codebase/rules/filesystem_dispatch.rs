@@ -16,9 +16,9 @@ use super::{
     production_dependency_declarations, require_files_in_subdirs, require_test_per_subdir,
     required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
     strict_package_layout, structured_config_policy, test_email_domain_policy,
-    test_no_dependency_pins, tsconfig_alias_folder_mapping, tsconfig_gate_coverage,
-    version_pin_consistency, vitest_ci_path_coverage, vitest_project_mapping,
-    vitest_test_correspondence, workspace_package_cycles,
+    test_no_dependency_pins, tsconfig_alias_folder_mapping, tsconfig_file_coverage,
+    tsconfig_gate_coverage, version_pin_consistency, vitest_ci_path_coverage,
+    vitest_project_mapping, vitest_test_correspondence, workspace_package_cycles,
 };
 
 mod candidate_helpers;
@@ -47,9 +47,9 @@ use super::{
     REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
     STRICT_PACKAGE_LAYOUT, STRUCTURED_CONFIG_POLICY, TEST_EMAIL_DOMAIN_POLICY,
-    TEST_NO_DEPENDENCY_PINS, TSCONFIG_ALIAS_FOLDER_MAPPING, TSCONFIG_GATE_COVERAGE,
-    VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE,
-    WORKSPACE_PACKAGE_CYCLES,
+    TEST_NO_DEPENDENCY_PINS, TSCONFIG_ALIAS_FOLDER_MAPPING, TSCONFIG_FILE_COVERAGE,
+    TSCONFIG_GATE_COVERAGE, VITEST_CI_PATH_COVERAGE, VITEST_PROJECT_MAPPING,
+    VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
 };
 pub use entrypoints::{
     run_filesystem_rules, run_filesystem_rules_with_config,

@@ -97,7 +97,9 @@ impl ConfigMatcher {
         if matches!(self.files.as_ref(), Some(files) if files.contains(file)) {
             return true;
         }
-        if self.files.is_some()
+        // TypeScript unions `files` and `include`. `files` is exclusive only
+        // when `include` is absent.
+        if (self.files.is_some() && self.includes.is_none())
             || !is_config_source(file, self.allow_js)
             || (!file.starts_with(&self.dir) && self.includes.is_none())
             || self.out_dir.as_ref().is_some_and(|out_dir| file.starts_with(out_dir))

@@ -1,0 +1,7 @@
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      allow:
+        - path: scripts/generate.ts
+          reason: generated entrypoint kept outside the app program
