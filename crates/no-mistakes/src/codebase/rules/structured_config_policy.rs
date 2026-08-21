@@ -149,6 +149,8 @@ fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
 #[cfg(test)]
 mod bind_tests;
 #[cfg(test)]
+mod equals_file_tests;
+#[cfg(test)]
 mod jsonc_tests;
 #[cfg(test)]
 mod plugins_tests;

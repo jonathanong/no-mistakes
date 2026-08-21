@@ -4,7 +4,7 @@ use anyhow::Result;
 use serde_yaml::Value;
 
 mod kinds;
-mod selector;
+pub(crate) mod selector;
 #[cfg(test)]
 mod tests;
 use kinds::kind_violation;

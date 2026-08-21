@@ -42,8 +42,11 @@ a single-file entry.
 
 `object-shape` accepts `requiredKeys`, `forbiddenKeys`, and `requiredValues`.
 `equals-file` compares a key to the same (or `fromKey`) value in another file
-relative to the repository root. `when` skips the rest of a policy for a file
-unless each listed key is a non-empty array or non-empty string.
+relative to the repository root, using the same selectors as other assertions.
+The comparison file must stay inside the repository root after normalization;
+parse errors are reported on that referenced file. `when` skips the rest of a
+policy for a file unless each listed key is a non-empty array or non-empty
+string.
 
 ```yaml
 policies:

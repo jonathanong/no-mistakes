@@ -1,11 +1,11 @@
 use serde_yaml::Value;
 
-pub(super) struct SelectorValues<'a> {
-    pub(super) values: Vec<&'a Value>,
-    pub(super) has_missing: bool,
+pub(crate) struct SelectorValues<'a> {
+    pub(crate) values: Vec<&'a Value>,
+    pub(crate) has_missing: bool,
 }
 
-pub(super) fn values_at_selector<'a>(value: &'a Value, selector: &str) -> SelectorValues<'a> {
+pub(crate) fn values_at_selector<'a>(value: &'a Value, selector: &str) -> SelectorValues<'a> {
     walk(value, selector, false)
 }
 

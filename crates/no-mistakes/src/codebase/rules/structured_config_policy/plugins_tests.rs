@@ -124,6 +124,7 @@ policies:
         &files,
     )
     .unwrap();
+    assert_eq!(findings[0].file, "invalid.json", "{findings:?}");
     assert!(
         findings[0].message.contains("failed to parse JSONC"),
         "{findings:?}"
