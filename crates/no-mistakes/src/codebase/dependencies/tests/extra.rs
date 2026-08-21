@@ -98,7 +98,12 @@ fn symbol_roots_keep_matching_queue_job_roots() {
     }];
 
     let roots =
-        roots_with_existing_queue_jobs_by(&[symbol_root], &entrypoints, |node| node == &queue_job);
+        roots_with_existing_queue_jobs_by(
+            &[symbol_root],
+            &entrypoints,
+            |node| node == &queue_job,
+            &crate::codebase::analysis_session::PathInterner::new(),
+        );
 
     assert!(roots.contains(&queue_job));
 }

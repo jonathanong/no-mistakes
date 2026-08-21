@@ -54,6 +54,20 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     assert!(has_file(&full, &b));
     assert!(has_file(&full, &c));
 
+    let overlapping = lazy_import_deps_of_with_files(
+        &[
+            NodeId::file(root.join("a.mts")),
+            NodeId::file(root.join("a.mts")),
+            NodeId::file(b.clone()),
+        ],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        None,
+    );
+    assert!(has_file(&overlapping, &c));
+
     let duplicate_root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-duplicates"));
     let duplicate_tsconfig = TsConfig {
         dir: duplicate_root.clone(),

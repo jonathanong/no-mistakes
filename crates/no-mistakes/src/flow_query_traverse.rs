@@ -172,21 +172,6 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
     }
 }
 
-fn resolve_target(root: &Path, raw: &str) -> NodeId {
-    let (file, symbol) = parse_entrypoint(raw);
-    let path = if file.is_absolute() {
-        file
-    } else {
-        root.join(file)
-    };
-    let path = normalize_path(&path);
-    match symbol {
-        Some(symbol) => workflow_node_from_suffix(&path, &symbol)
-            .unwrap_or(NodeId::symbol(path, symbol)),
-        None => NodeId::file(path),
-    }
-}
-
 fn node_key(node: &NodeId, root: &Path) -> String {
     node.display_name(root).replace('\\', "/")
 }

@@ -54,3 +54,9 @@ struct ExpandedImportNode {
     neighbors: Vec<(NodeId, EdgeKind)>,
     collected: Option<(PathBuf, TsFileFacts)>,
 }
+
+struct LazyVisit {
+    result_order: Option<usize>,
+    depth: usize,
+    via: Vec<EdgeKind>,
+}

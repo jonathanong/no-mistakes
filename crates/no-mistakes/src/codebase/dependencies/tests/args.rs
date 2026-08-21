@@ -301,17 +301,18 @@ fn parse_path_multiple_hashes_splits_on_first() {
 #[test]
 fn workflow_virtual_entrypoint_suffixes_round_trip() {
     let file = Path::new("/repo/.github/workflows/main.yml");
+    let interner = crate::codebase::analysis_session::PathInterner::new();
     assert_eq!(
-        workflow_node_from_suffix(file, "job:build"),
+        workflow_node_from_suffix_in(&interner, file, "job:build"),
         Some(NodeId::workflow_job(file, "build"))
     );
     assert_eq!(
-        workflow_node_from_suffix(file, "job:build/step:3"),
+        workflow_node_from_suffix_in(&interner, file, "job:build/step:3"),
         Some(NodeId::workflow_step(file, "build", 3))
     );
-    assert!(workflow_node_from_suffix(file, "job:/step:3").is_none());
-    assert!(workflow_node_from_suffix(file, "job:build/step:nope").is_none());
-    assert!(workflow_node_from_suffix(file, "ordinary-symbol").is_none());
+    assert!(workflow_node_from_suffix_in(&interner, file, "job:/step:3").is_none());
+    assert!(workflow_node_from_suffix_in(&interner, file, "job:build/step:nope").is_none());
+    assert!(workflow_node_from_suffix_in(&interner, file, "ordinary-symbol").is_none());
 }
 
 #[test]
