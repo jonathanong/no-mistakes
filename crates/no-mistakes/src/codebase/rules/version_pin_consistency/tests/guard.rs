@@ -50,6 +50,24 @@ fn mapping_key_line_skips_earlier_substring() {
 }
 
 #[test]
+fn ascii_key_after_multibyte_prefix_does_not_panic() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_pair(
+        tmp.path(),
+        "package:\n  engines:\n    description: énode\n    node: 20\n",
+        "versions.yml",
+        "NODE_VERSION: 20.0.0\n",
+    );
+    let findings = run(
+        tmp.path(),
+        &node_yaml("versions.yml"),
+        &["versions.yml", PAIR[1]],
+    );
+    assert_eq!(findings[0].line, 4, "{findings:?}");
+    assert!(findings[0].message.contains("invalid pin"), "{findings:?}");
+}
+
+#[test]
 fn disable_next_line_targets_the_mapping_key() {
     let tmp = tempfile::tempdir().unwrap();
     write_pair(
@@ -114,6 +132,7 @@ fn parent_dir_source_file_does_not_leak_external_contents() {
     assert_no_leak(&run(&root, &yaml, &PAIR));
 }
 
+#[cfg(unix)]
 #[test]
 fn symlink_source_outside_repo_is_not_read() {
     let outside = tempfile::Builder::new().suffix(".toml").tempfile().unwrap();
@@ -124,6 +143,7 @@ fn symlink_source_outside_repo_is_not_read() {
     assert_no_leak(&run(tmp.path(), &yaml, &["pin.toml", PAIR[1]]));
 }
 
+#[cfg(unix)]
 #[test]
 fn directory_symlink_escape_is_not_read() {
     let outside = tempfile::tempdir().unwrap();

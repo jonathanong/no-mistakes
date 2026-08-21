@@ -52,4 +52,4 @@ EXAMPLE_TOOL_VERSION: 0.24.2
 ```
 
 Use `no-mistakes-disable-next-line version-pin-consistency` or
-`no-mistakes-disable-file` for a one-off exception.
+`no-mistakes-disable-file version-pin-consistency` for a one-off exception.

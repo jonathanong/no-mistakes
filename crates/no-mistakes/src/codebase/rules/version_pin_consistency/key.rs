@@ -59,12 +59,16 @@ fn strip_inline_comment(line: &str) -> &str {
 fn quoted_end(code: &str, key: &str, quote: char) -> Option<usize> {
     let qlen = quote.len_utf8();
     find_key(code, key, |start, after| {
-        let quoted = start
-            .checked_sub(qlen)
-            .is_some_and(|i| code[i..].starts_with(quote))
-            && code[after..].starts_with(quote);
-        (quoted && mapping_separator(&code[after + qlen..])).then_some(after + qlen)
+        let quoted = preceding_char(code, start) == Some(quote)
+            && code
+                .get(after..)
+                .is_some_and(|rest| rest.starts_with(quote));
+        (quoted && mapping_separator(code.get(after + qlen..)?)).then_some(after + qlen)
     })
+}
+
+fn preceding_char(code: &str, index: usize) -> Option<char> {
+    code.get(..index)?.chars().next_back()
 }
 
 fn bare_end(code: &str, key: &str) -> Option<usize> {
