@@ -61,14 +61,38 @@ fn step_key_line_in(source: &str, job_id: &str, index: usize, keys: &[&str]) -> 
         .unwrap_or(start)
 }
 
+fn job_offset(lines: &[&str], job_id: &str) -> Option<usize> {
+    let jobs_at = lines
+        .iter()
+        .position(|line| indent(line) == 0 && is_key(trim_comment(line), "jobs"))?;
+    let parent = indent(lines[jobs_at]);
+    let mut child = None;
+    for (offset, line) in lines.iter().enumerate().skip(jobs_at + 1) {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let indent = indent(line);
+        if indent <= parent {
+            break;
+        }
+        match child {
+            None => child = Some(indent),
+            Some(expected) if indent != expected => continue,
+            Some(_) => {}
+        }
+        if is_key(trim_comment(line), job_id) {
+            return Some(offset);
+        }
+    }
+    None
+}
+
 fn step_start_line(source: &str, job_id: &str, index: usize) -> Option<usize> {
     let lines: Vec<&str> = source.lines().collect();
     let from = if job_id == "(composite)" {
         0
     } else {
-        lines
-            .iter()
-            .position(|line| is_key(trim_comment(line), job_id))?
+        job_offset(&lines, job_id)?
     };
     let steps_at = lines
         .iter()

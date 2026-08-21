@@ -105,6 +105,7 @@ fn empty_uses_is_silent() {
         &[".github/workflows/ci.yml"],
     )
     .is_empty());
+    assert!(run(&fixture("fail-step"), OPTIONS, &[]).is_empty());
 }
 
 #[test]
@@ -270,6 +271,14 @@ fn yaml_helpers_cover_literals_and_labels() {
         ),
         ".github/actions/setup-aws/action.yml"
     );
+    assert_eq!(
+        yaml::wrapper_rel(
+            Path::new("/repo"),
+            Path::new("/elsewhere/action.yml"),
+            &[PathBuf::from("/repo/packages/app")],
+        ),
+        "/elsewhere/action.yml"
+    );
     assert_eq!(yaml::yaml_got(None), "null");
     assert_eq!(yaml::yaml_got(Some(&Value::Bool(true))), "true");
     assert_eq!(yaml::yaml_got(Some(&Value::Number(90u64.into()))), "90");
@@ -284,6 +293,12 @@ fn yaml_helpers_cover_literals_and_labels() {
     assert!(Options::default().forbid_nested_in_composite);
     assert!(Options::default().uses.is_empty());
     let uses = compile_options(serde_yaml::from_str(OPTIONS).unwrap()).uses;
+    assert_eq!(
+        compile_options(serde_yaml::from_str("uses: ['', '  ', './x']\n").unwrap())
+            .uses
+            .len(),
+        1
+    );
     assert!(yaml::is_local_wrapper(
         ".github/actions/setup-aws/action.yml",
         &uses
@@ -335,4 +350,41 @@ uses:
   - aws-actions/configure-aws-credentials@
 "#;
     assert!(parsed("ci.yml", source, yaml).is_empty());
+}
+
+#[test]
+fn nested_input_without_seconds_skips_nested_check() {
+    let source = r#"
+jobs:
+  deploy:
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+"#;
+    let yaml = r#"
+uses:
+  - aws-actions/configure-aws-credentials@
+stepTimeoutMinutes: 2
+nestedInput: action-timeout-s
+"#;
+    assert!(parsed("ci.yml", source, yaml).is_empty());
+}
+
+#[test]
+fn composite_without_steps_or_uses_is_silent() {
+    assert!(parsed(
+        ".github/actions/other/action.yml",
+        "runs:\n  using: composite\n",
+        OPTIONS
+    )
+    .is_empty());
+    let source = r#"
+runs:
+  using: composite
+  steps:
+    - ~
+    - run: echo hi
+    - uses: actions/checkout@v4
+"#;
+    assert!(parsed(".github/actions/other/action.yml", source, OPTIONS).is_empty());
 }

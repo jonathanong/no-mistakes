@@ -69,6 +69,21 @@ fn nested_timeout_line_falls_back_without_steps_or_keys() {
         super::super::line::nested_timeout_line("name: ci\n", "missing", 0, "action-timeout-s"),
         1
     );
+    let jobs_without_target = "jobs:\n  other:\n    steps:\n      - uses: x\nname: ci\n";
+    assert_eq!(
+        super::super::line::nested_timeout_line(
+            jobs_without_target,
+            "deploy",
+            0,
+            "action-timeout-s"
+        ),
+        1
+    );
+    let no_steps = "jobs:\n  deploy:\n    name: only\n";
+    assert_eq!(
+        super::super::line::nested_timeout_line(no_steps, "deploy", 0, "action-timeout-s"),
+        1
+    );
     let with_only = "runs:\n  using: composite\n  steps:\n    - with:\n        role: x\n";
     assert_eq!(
         super::super::line::nested_timeout_line(with_only, "(composite)", 0, "action-timeout-s"),
@@ -82,6 +97,10 @@ fn nested_timeout_line_falls_back_without_steps_or_keys() {
     );
     let gapped = "jobs:\n  deploy:\n    steps:\n      - uses: x\n\n      - uses: y\n";
     assert_eq!(
+        super::super::line::nested_timeout_line(gapped, "deploy", 0, "action-timeout-s"),
+        4
+    );
+    assert_eq!(
         super::super::line::nested_timeout_line(gapped, "deploy", 1, "action-timeout-s"),
         6
     );
@@ -90,9 +109,50 @@ fn nested_timeout_line_falls_back_without_steps_or_keys() {
         1
     );
     assert_eq!(
+        super::super::line::nested_timeout_line(gapped, "missing", 0, "action-timeout-s"),
+        1
+    );
+    let ended = "jobs:\n  deploy:\n    steps:\n      - uses: x\n    env:\n      FOO: 1\n";
+    assert_eq!(
+        super::super::line::nested_timeout_line(ended, "deploy", 3, "action-timeout-s"),
+        1
+    );
+    assert_eq!(
         super::super::line::step_key_line("name: ci\n", "missing", 0, "timeout-minutes"),
         1
     );
+}
+
+#[test]
+fn job_lookup_ignores_env_keys_before_and_inside_jobs() {
+    let source = r#"
+env:
+  deploy: production
+jobs:
+
+  setup:
+    env:
+      deploy: nested
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+        with:
+          action-timeout-s: 90
+  deploy:
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+"#;
+    let findings = parsed(".github/workflows/ci.yml", source, OPTIONS);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let expected = source
+        .lines()
+        .enumerate()
+        .filter(|(_, line)| line.contains("configure-aws-credentials"))
+        .nth(1)
+        .map(|(index, _)| index + 1)
+        .unwrap();
+    assert_eq!(findings[0].line, expected);
 }
 
 #[test]
