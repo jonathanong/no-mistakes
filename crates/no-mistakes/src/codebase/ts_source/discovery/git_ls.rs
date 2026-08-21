@@ -54,7 +54,7 @@ fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {
         if rest.is_empty() {
             continue;
         }
-        let (path, index_kind) = parse_git_listed_rest(rest);
+        let (path, index_kind) = parse_git_listed_rest(*tag, rest);
         if path.as_os_str().is_empty() {
             continue;
         }
@@ -78,11 +78,25 @@ fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {
     DiscoveredPathViews { visible, tracked }
 }
 
-fn parse_git_listed_rest(rest: &[u8]) -> (PathBuf, Option<file_inventory::GitIndexKind>) {
+fn parse_git_listed_rest(tag: u8, rest: &[u8]) -> (PathBuf, Option<file_inventory::GitIndexKind>) {
+    if !stage_record_tag(tag) {
+        return (git_output_path(rest), None);
+    }
     parse_stage_path(rest).map_or_else(
         || (git_output_path(rest), None),
-        |(index_kind, path)| (git_output_path(path), index_kind),
+        |(index_kind, path)| {
+            (
+                git_output_path(path),
+                // `--deleted` emits `R` only for missing worktree paths, not
+                // skip-worktree/`S` entries, so sparse files need a metadata check.
+                if tag == b'S' { None } else { index_kind },
+            )
+        },
     )
+}
+
+fn stage_record_tag(tag: u8) -> bool {
+    matches!(tag, b'H' | b'S' | b'M' | b'R' | b'C')
 }
 
 fn parse_stage_path(rest: &[u8]) -> Option<(Option<file_inventory::GitIndexKind>, &[u8])> {

@@ -26,3 +26,7 @@ pub(crate) fn git_commit_all(root: &Path, message: &str) {
 pub(crate) fn git_config(root: &Path, key: &str, value: &Path) {
     super::git::run_git(root, &["config", key, value.to_str().unwrap()]);
 }
+
+pub(crate) fn git_skip_worktree(root: &Path, path: &str) {
+    super::git::run_git(root, &["update-index", "--skip-worktree", "--", path]);
+}

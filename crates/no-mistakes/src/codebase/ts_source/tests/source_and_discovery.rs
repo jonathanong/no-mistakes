@@ -215,6 +215,47 @@ fn staged_git_paths_drop_deleted_worktree_entries() {
 }
 
 #[test]
+fn staged_git_paths_do_not_trust_skip_worktree_index_mode() {
+    use super::super::file_inventory::GitIndexKind;
+
+    let views =
+        parse_git_tagged_paths(b"H 100644 abcdef 0\tkept.mts\0S 100644 abcdef 0\tsparse.mts\0");
+
+    assert_eq!(
+        views
+            .visible
+            .iter()
+            .map(|entry| (entry.path.clone(), entry.index_kind))
+            .collect::<Vec<_>>(),
+        vec![
+            (PathBuf::from("kept.mts"), Some(GitIndexKind::RegularFile)),
+            (PathBuf::from("sparse.mts"), None),
+        ]
+    );
+    assert_eq!(
+        views.tracked,
+        vec![PathBuf::from("kept.mts"), PathBuf::from("sparse.mts")]
+    );
+}
+
+#[test]
+fn staged_git_paths_keep_literal_untracked_stage_shaped_names() {
+    // `?` records are a literal path. A name that matches `--stage` metadata
+    // must not be decoded into mode/object/stage.
+    let views = parse_git_tagged_paths(b"? 100644 abcdef 0\tactual.mts\0");
+
+    assert_eq!(
+        views
+            .visible
+            .iter()
+            .map(|entry| (entry.path.clone(), entry.index_kind))
+            .collect::<Vec<_>>(),
+        vec![(PathBuf::from("100644 abcdef 0\tactual.mts"), None)]
+    );
+    assert!(views.tracked.is_empty());
+}
+
+#[test]
 fn discover_files_falls_back_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     write(dir.path(), "src/main.mts", "");

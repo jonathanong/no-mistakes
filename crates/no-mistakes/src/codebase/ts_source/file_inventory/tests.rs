@@ -327,6 +327,66 @@ fn git_untracked_files_still_stat() {
 }
 
 #[test]
+fn git_skip_worktree_missing_files_are_omitted() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    crate::test_support::git_skip_worktree(dir.path(), "extra.mts");
+    std::fs::remove_file(dir.path().join("extra.mts")).unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    assert!(
+        !inventory
+            .paths()
+            .iter()
+            .any(|path| path.ends_with("extra.mts")),
+        "absent skip-worktree files must not stay in the inventory"
+    );
+    assert_eq!(
+        inventory.metadata_stat_count(),
+        0,
+        "remaining tracked regular files must still skip stats"
+    );
+}
+
+#[test]
+fn git_skip_worktree_present_files_still_stat() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    crate::test_support::git_skip_worktree(dir.path(), "extra.mts");
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    assert!(inventory
+        .paths()
+        .iter()
+        .any(|path| path.ends_with("extra.mts")));
+    assert_eq!(inventory.metadata_stat_count(), 1);
+}
+
+#[cfg(unix)]
+#[test]
+fn git_untracked_stage_shaped_names_keep_the_literal_path() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let spoofed = dir.path().join("100644 abcdef 0\tactual.mts");
+    std::fs::write(&spoofed, "export {}\n").unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    assert!(
+        inventory.paths().iter().any(|path| path == &spoofed),
+        "untracked names that resemble --stage metadata must stay literal"
+    );
+}
+
+#[test]
 fn git_classify_drops_missing_relative_paths() {
     let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
     let (classified, stats) = super::classify_git_listed_paths(

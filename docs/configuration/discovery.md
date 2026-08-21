@@ -23,12 +23,15 @@ an ignore pattern, but excludes all untracked files. Both views come from the
 same `git ls-files -z -t --stage --cached --others --deleted --exclude-standard`
 command and are reused throughout the request.
 
-Tracked regular files (index mode `100644`/`100755`) are classified from that
-index mode without a worktree `lstat`. An unstaged replacement of a tracked
-file by a symlink is therefore still treated as a regular file. Missing
+Tracked regular files (index mode `100644`/`100755`) tagged `H` are classified
+from that index mode without a worktree `lstat`. An unstaged replacement of a
+tracked file by a symlink is therefore still treated as a regular file. Missing
 worktree paths are omitted from the `--deleted` `R` records rather than by
-running `lstat` on every tracked file. Tracked symlinks (`120000`) and untracked files
-still consult worktree metadata.
+running `lstat` on every tracked file. Skip-worktree (`S`) entries, including
+sparse-checkout files, still consult worktree metadata because `--deleted` does
+not emit `R` for them. Tracked symlinks (`120000`) and untracked files also
+consult worktree metadata. Untracked (`?`) records keep their literal path;
+stage fields are parsed only for index record tags.
 
 Outside a Git checkout, `.gitignore` and `.ignore` files are still applied by
 the fallback walker. Because there is no Git index, rules that normally use the

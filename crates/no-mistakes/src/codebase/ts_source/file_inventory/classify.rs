@@ -33,7 +33,9 @@ pub(super) fn inventory_paths(paths: &[PathBuf]) -> (Vec<ClassifiedPath>, usize)
 ///
 /// Skipping stats for `100644` trusts the index: an unstaged file→symlink swap
 /// is still classified as a regular file. Missing worktree paths are dropped
-/// from the `R` records produced by `git ls-files --deleted`, not by statting.
+/// from the `R` records produced by `git ls-files --deleted`, not by `lstat`.
+/// Skip-worktree (`S`) entries still take the metadata path because `--deleted`
+/// does not emit `R` for them.
 pub(crate) fn classify_git_listed_paths(
     root: &Path,
     paths: Vec<(PathBuf, Option<GitIndexKind>)>,
