@@ -57,6 +57,32 @@ WelcomeJob.perform_later(user)
 }
 
 #[test]
+fn string_literal_include_is_not_a_worker() {
+    let source = strip_comments_keep_strings(
+        r#"
+class Other
+  logger.info("include Sidekiq::Worker")
+end
+"#,
+    );
+    assert!(extract_workers(&source).is_empty());
+}
+
+#[test]
+fn nested_class_include_binds_outer_worker() {
+    let workers = extract_workers(
+        r#"
+class BillingWorker
+  class Helper
+  end
+  include Sidekiq::Worker
+end
+"#,
+    );
+    assert_eq!(workers, vec!["BillingWorker".to_string()]);
+}
+
+#[test]
 fn computed_enqueue_and_unrelated_class_are_non_edges() {
     let source = r#"
 class Other

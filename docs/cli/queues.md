@@ -1,6 +1,6 @@
 # `no-mistakes queues`
 
-Analyze queue producer/worker relationships for BullMQ and glide-mq.
+Analyze queue producer/worker relationships for configured queue frameworks.
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony Messenger
 sites emit the same canonical `queue-enqueue` / `queue-worker` graph edges.
