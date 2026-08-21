@@ -81,7 +81,7 @@ fn collect_md_edges(
                     // Resolve `..` lexically (no filesystem access) so the path
                     // matches the normalized form used elsewhere in the graph.
                     let target = crate::codebase::ts_resolver::normalize_path(&target);
-                    if graph_files.is_visible(&target) {
+                    if graph_files.contains_visible(&target) {
                         Some((
                             NodeId::file_in(interner, path.clone()),
                             NodeId::file_in(interner, target),

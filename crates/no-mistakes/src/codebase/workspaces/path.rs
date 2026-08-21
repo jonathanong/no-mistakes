@@ -4,14 +4,14 @@ fn try_resolve(path: &Path) -> Option<PathBuf> {
 
 fn try_resolve_from_visible(
     path: &Path,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &dyn VisiblePathLookup,
 ) -> Option<PathBuf> {
     try_resolve_inner(path, Some(visible_files))
 }
 
 fn try_resolve_inner(
     path: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&dyn VisiblePathLookup>,
 ) -> Option<PathBuf> {
     let path = normalize_path(path);
     if workspace_path_is_file(&path, visible_files) {
@@ -45,10 +45,10 @@ fn try_resolve_inner(
 
 fn workspace_path_is_file(
     path: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&dyn VisiblePathLookup>,
 ) -> bool {
     visible_files.map_or_else(
         || path.is_file(),
-        |visible| visible.contains(&normalize_path(path)),
+        |visible| visible.contains_visible(&normalize_path(path)),
     )
 }

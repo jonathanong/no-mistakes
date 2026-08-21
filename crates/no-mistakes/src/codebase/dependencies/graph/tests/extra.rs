@@ -29,13 +29,12 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     let b = root.join("b.mts");
     let c = root.join("c.mts");
     let hidden = root.join("hidden.mts");
-    let graph_files = GraphFiles {
-        all: vec![a.clone(), b.clone(), c.clone(), hidden.clone()],
-        indexable: vec![a.clone(), b.clone(), c.clone(), hidden],
-        visible: [a.clone(), b.clone(), c.clone()].into(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![a.clone(), b.clone(), c.clone(), hidden.clone()],
+        vec![a.clone(), b.clone(), c.clone(), hidden],
+        [a.clone(), b.clone(), c.clone()],
+        vec![],
+    );
 
     let roots = vec![NodeId::queue_job(a.clone(), "send"), NodeId::file(a)];
     let limited =
@@ -104,13 +103,12 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         paths_dir: hidden_root.clone(),
         base_url: None,
     };
-    let hidden_graph_files = GraphFiles {
-        all: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
-        indexable: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
-        visible: [hidden_root.join("a.mts")].into(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let hidden_graph_files = GraphFiles::from_parts(
+        vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
+        vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
+        [hidden_root.join("a.mts")],
+        vec![],
+    );
     assert!(lazy_import_deps_of_with_files(
         &[NodeId::file(hidden_root.join("a.mts"))],
         &hidden_root,
@@ -131,13 +129,12 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let package = root.join("package.json");
     let web_entry = root.join("packages/web/src/index.tsx");
     let hidden = root.join("packages/api/src/index.mts");
-    let graph_files = GraphFiles {
-        all: vec![package.clone(), web_entry.clone(), hidden],
-        indexable: vec![web_entry.clone()],
-        visible: [package.clone(), web_entry.clone()].into(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![package.clone(), web_entry.clone(), hidden],
+        vec![web_entry.clone()],
+        [package.clone(), web_entry.clone()],
+        vec![],
+    );
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
         crate::codebase::workspaces::WorkspacePackage {
             name: "@x/web".to_string(),

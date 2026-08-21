@@ -25,11 +25,12 @@ impl<'a> ImportResolver<'a> {
     /// request-scoped analysis session.
     pub(crate) fn new_owned_in_session(
         tsconfig: std::sync::Arc<TsConfig>,
-        visible: std::sync::Arc<HashSet<PathBuf>>,
+        visible: std::sync::Arc<dyn VisiblePathLookup>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> ImportResolver<'static> {
         let mut resolver = Self::new_owned(tsconfig);
-        resolver.cache = session.resolver_cache(resolver.tsconfig(), Some(&visible));
+        let visible_paths = visible.visible_cache_key();
+        resolver.cache = session.resolver_cache(resolver.tsconfig(), Some(&visible_paths));
         resolver.visible = Some(ResolverVisible::Owned(visible));
         resolver.session_scoped = true;
         resolver.observer = session.observer().cloned();
@@ -72,17 +73,22 @@ impl<'a> ImportResolver<'a> {
 
     pub(crate) fn new_in_session(
         tsconfig: &'a TsConfig,
-        visible: Option<&'a HashSet<PathBuf>>,
+        visible: Option<&'a dyn VisiblePathLookup>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
         let mut resolver = Self::new_observed(tsconfig, session.observer().cloned());
-        resolver.cache = session.resolver_cache(tsconfig, visible);
+        let visible_paths = visible.map(VisiblePathLookup::visible_cache_key);
+        resolver.cache = session.resolver_cache(tsconfig, visible_paths.as_deref());
         resolver.visible = visible.map(ResolverVisible::Borrowed);
         resolver.session_scoped = true;
         resolver
     }
 
-    pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
+    pub fn with_visible(self, visible: &'a HashSet<PathBuf>) -> Self {
+        self.with_visible_lookup(visible)
+    }
+
+    pub(crate) fn with_visible_lookup(mut self, visible: &'a dyn VisiblePathLookup) -> Self {
         // Any entries cached before this call were resolved under different
         // visibility (real filesystem, or an earlier `visible` set) and would
         // otherwise leak stale answers into the new scope.
@@ -95,7 +101,14 @@ impl<'a> ImportResolver<'a> {
     /// Keep an owned frozen visibility universe with an owned resolver.
     /// This is intentionally separate from `with_visible` so common borrowed
     /// consumers retain their no-Arc fast path.
-    pub(crate) fn with_owned_visible(mut self, visible: std::sync::Arc<HashSet<PathBuf>>) -> Self {
+    pub(crate) fn with_owned_visible(self, visible: std::sync::Arc<HashSet<PathBuf>>) -> Self {
+        self.with_owned_visible_lookup(visible)
+    }
+
+    pub(crate) fn with_owned_visible_lookup(
+        mut self,
+        visible: std::sync::Arc<dyn VisiblePathLookup>,
+    ) -> Self {
         self.cache.clear();
         self.shared_cache = None;
         self.visible = Some(ResolverVisible::Owned(visible));
@@ -113,8 +126,8 @@ impl<'a> ImportResolver<'a> {
         self
     }
 
-    pub(crate) fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
-        self.visible.as_ref().map(ResolverVisible::files)
+    pub(crate) fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
+        self.visible.as_ref().map(ResolverVisible::lookup)
     }
 
     /// Returns `true` if `specifier` matches any configured tsconfig path

@@ -78,7 +78,7 @@ impl IndexedWorkspaceMap {    fn new(
     pub(crate) fn resolve_specifier_from_visible(
         &self,
         specifier: &str,
-        visible_files: &std::collections::HashSet<PathBuf>,
+        visible_files: &dyn VisiblePathLookup,
     ) -> Option<PathBuf> {
         self.resolve_specifier_inner(specifier, None, Some(visible_files))
     }
@@ -87,7 +87,7 @@ impl IndexedWorkspaceMap {    fn new(
         &self,
         specifier: &str,
         importing_file: &Path,
-        visible_files: &std::collections::HashSet<PathBuf>,
+        visible_files: &dyn VisiblePathLookup,
     ) -> Option<PathBuf> {
         self.resolve_specifier_inner(specifier, Some(importing_file), Some(visible_files))
     }
@@ -109,7 +109,7 @@ impl IndexedWorkspaceMap {    fn new(
         &self,
         specifier: &str,
         importing_file: Option<&Path>,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
+        visible_files: Option<&dyn VisiblePathLookup>,
     ) -> Option<PathBuf> {
         if specifier.starts_with("#") {
             return self
@@ -122,7 +122,7 @@ impl IndexedWorkspaceMap {    fn new(
             package.resolve_subpath(&subpath, visible_files)
         } else {
             package.entry.clone().filter(|entry| {
-                visible_files.is_none_or(|visible| visible.contains(&normalize_path(entry)))
+                visible_files.is_none_or(|visible| visible.contains_visible(&normalize_path(entry)))
             })
         }
     }

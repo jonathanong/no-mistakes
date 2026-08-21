@@ -6,7 +6,7 @@ struct SymbolRuntimeEdgeInputs<'a> {
     calls_by_caller: &'a HashMap<String, Vec<FunctionCall>>,
     http_route_defs: &'a [(PathBuf, String)],
     process_spawns: &'a [crate::codebase::ts_process_spawn::SpawnEdge],
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     interner: &'a PathInterner,
 }
 
@@ -56,7 +56,7 @@ fn symbol_process_targets(
     path: &Path,
     calls: &[FunctionCall],
     process_spawns: &[crate::codebase::ts_process_spawn::SpawnEdge],
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Vec<PathBuf> {
     let mut targets = Vec::new();
     for call in calls {
@@ -85,7 +85,7 @@ fn symbol_process_targets(
         };
         if let Some(resolved) = resolved {
             for spawn in process_spawns {
-                if spawn.entry == resolved && visible_files.contains(&spawn.entry) {
+                if spawn.entry == resolved && visible_files.contains_visible(&spawn.entry) {
                     targets.push(spawn.entry.clone());
                 }
             }

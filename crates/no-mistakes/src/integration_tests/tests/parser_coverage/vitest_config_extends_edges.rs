@@ -16,7 +16,7 @@ impl ImportResolution for UnreadableExtendsResolver {
         self.resolve(specifier, Path::new("")).into_iter().collect()
     }
 
-    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    fn visible_files(&self) -> Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup> {
         None
     }
 
@@ -25,7 +25,7 @@ impl ImportResolution for UnreadableExtendsResolver {
         _: &str,
         _: &Path,
         _: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        _: &HashSet<PathBuf>,
+        _: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> ImportClassification {
         unreachable!("config extends parsing only resolves the literal extends source")
     }

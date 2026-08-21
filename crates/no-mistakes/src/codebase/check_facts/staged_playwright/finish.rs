@@ -49,10 +49,9 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         files,
         graph_files,
         graph_files_complete,
-        ts: ts
-            .into_iter()
-            .map(|(path, facts)| (path, Arc::new(facts)))
-            .collect(),
+        ts: crate::codebase::ts_source::FileIdMap::from_entries(
+            ts.into_iter().map(|(path, facts)| (path, Arc::new(facts))),
+        ),
         graph_plan: if has_indexable_graph_only {
             plan.graph
         } else {

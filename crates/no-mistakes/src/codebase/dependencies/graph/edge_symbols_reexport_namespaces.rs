@@ -2,7 +2,7 @@ struct ReexportNamespaceInputs<'a> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &'a GraphFiles,
     interner: &'a PathInterner,
 }
@@ -40,7 +40,7 @@ struct ReexportNamespaceResolver<'a> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &'a GraphFiles,
     interner: &'a PathInterner,
     visited: HashSet<(PathBuf, String)>,

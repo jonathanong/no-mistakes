@@ -2,7 +2,6 @@ use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::react_traits::analyze::file::FileAnalysis;
 use crate::react_traits::report::types::{ComponentRef, Environment, FetchCall};
-use std::collections::HashMap;
 
 mod suppression;
 
@@ -50,7 +49,7 @@ fn facts(entries: Vec<(PathBuf, Vec<ComponentFacts>)>) -> CheckFactMap {
                     }),
                 )
             })
-            .collect::<HashMap<_, _>>(),
+            .collect::<crate::codebase::ts_source::FileIdMap<_>>(),
         stats: Default::default(),
         ..Default::default()
     }

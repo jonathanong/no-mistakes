@@ -8,7 +8,9 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ScopedArc::new(normalized_visible(visible))),
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
+                visible,
+            )))),
             None,
         )
     }

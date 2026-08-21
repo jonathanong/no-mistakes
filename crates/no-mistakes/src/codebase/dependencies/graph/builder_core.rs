@@ -16,7 +16,7 @@ impl DepGraph {
         let resolver = graph_import_resolver(&edge_inputs, &session);
         let fact_plan = effective_ts_fact_plan(plan, config_options);
         let mut fact_context = ts_fact_context_from_options(root, plan, config_options);
-        fact_context.set_visible_files(graph_files.visible().iter().cloned());
+        fact_context.set_visible_files(graph_files.iter_visible().cloned());
         let owned_facts = if !fact_plan.is_empty() && facts.is_none() {
             Some(collect_ts_facts_with_session_and_context(
                 &session,
@@ -33,7 +33,7 @@ impl DepGraph {
                 let covers_plan = primary.covers_ts_fact_plan(fact_plan);
                 let universe_mismatch = primary
                     .graph_files()
-                    .is_some_and(|files| !same_graph_universe(files, graph_files.visible()));
+                    .is_some_and(|files| !same_graph_universe(files, graph_files));
                 let missing = if fact_plan.is_empty() {
                     Vec::new()
                 } else {
@@ -90,7 +90,7 @@ impl DepGraph {
                     fallback,
                     !primary.covers_ts_fact_plan(fact_plan),
                     graph_files.all(),
-                    graph_files.visible(),
+                    graph_files,
                 )
             });
         let facts: Option<&dyn TsFactLookup> = fallback_lookup

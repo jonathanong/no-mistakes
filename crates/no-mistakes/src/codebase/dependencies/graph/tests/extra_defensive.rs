@@ -3,13 +3,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let graph_files = GraphFiles {
-        all: vec![],
-        indexable: vec![],
-        visible: HashSet::new(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(vec![], vec![], Vec::<PathBuf>::new(), vec![]);
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let fact_context = TsFactContext::default();
 
@@ -132,13 +126,12 @@ fn lazy_import_facts_memoize_parse_errors() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph_files = GraphFiles {
-        all: vec![malformed.clone()],
-        indexable: vec![malformed.clone()],
-        visible: [malformed.clone()].into(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![malformed.clone()],
+        vec![malformed.clone()],
+        [malformed.clone()],
+        vec![],
+    );
     let context = TsFactContext::new(&root);
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 

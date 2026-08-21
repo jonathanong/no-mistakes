@@ -1,3 +1,4 @@
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum ProjectImportResolver<'a> {
     Scoped(ScopedImportResolver<'a>),
     Legacy(ImportResolver<'a>),
@@ -7,13 +8,13 @@ impl<'a> ProjectImportResolver<'a> {
     pub(crate) fn new(
         tsconfig: &'a TsConfig,
         catalog: Option<&'a TsConfigCatalog>,
-        visible: &'a HashSet<PathBuf>,
+        visible: &'a dyn VisiblePathLookup,
         shared_cache: Option<&'a ImportResolutionCache>,
         session: &'a crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
         match catalog {
             Some(catalog) => {
-                let resolver = ScopedImportResolver::new_in_session(catalog, visible, session);
+                let resolver = ScopedImportResolver::from_lookup(catalog, visible, Some(session));
                 Self::Scoped(match shared_cache {
                     Some(cache) => resolver.with_shared_cache(cache),
                     None => resolver,
@@ -49,7 +50,7 @@ impl ImportResolution for ProjectImportResolver<'_> {
         }
     }
 
-    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
         match self {
             Self::Scoped(resolver) => ImportResolution::visible_files(resolver),
             Self::Legacy(resolver) => ImportResolution::visible_files(resolver),
@@ -61,7 +62,7 @@ impl ImportResolution for ProjectImportResolver<'_> {
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &HashSet<PathBuf>,
+        visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         match self {
             Self::Scoped(resolver) => {

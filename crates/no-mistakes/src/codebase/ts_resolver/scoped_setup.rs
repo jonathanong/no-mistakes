@@ -14,7 +14,7 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ScopedArc::new(normalized_visible(visible))),
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(visible)))),
             None,
         )
     }
@@ -27,14 +27,22 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ScopedArc::new(normalized_visible(visible))),
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(visible)))),
             Some(session),
         )
     }
 
+    pub(crate) fn from_lookup(
+        catalog: &'a TsConfigCatalog,
+        visible: &'a dyn VisiblePathLookup,
+        session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
+    ) -> Self {
+        Self::build(catalog, Some(ResolverVisible::Borrowed(visible)), session)
+    }
+
     fn build(
         catalog: &'a TsConfigCatalog,
-        visible: Option<ScopedArc<ScopedHashSet<ScopedPathBuf>>>,
+        visible: Option<ResolverVisible<'a>>,
         session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     ) -> Self {
         let fixed_resolver = Self::fixed_resolver(catalog, visible.as_ref(), session);
@@ -66,7 +74,7 @@ impl<'a> ScopedImportResolver<'a> {
 
     fn fixed_resolver(
         catalog: &'a TsConfigCatalog,
-        visible: Option<&ScopedArc<ScopedHashSet<ScopedPathBuf>>>,
+        visible: Option<&ResolverVisible<'a>>,
         session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     ) -> Option<ImportResolver<'a>> {
         let config = catalog.fixed_config()?;
@@ -75,9 +83,10 @@ impl<'a> ScopedImportResolver<'a> {
             None => None,
         };
         let mut resolver = ImportResolver::new_observed(config, observer);
-        resolver.visible = visible.cloned().map(ResolverVisible::Owned);
+        resolver.visible = visible.cloned();
         if let Some(session) = session {
-            resolver.cache = session.resolver_cache(config, visible.map(|files| files.as_ref()));
+            let visible_paths = visible.map(ResolverVisible::cache_paths);
+            resolver.cache = session.resolver_cache(config, visible_paths.as_deref());
         }
         resolver.session_scoped = session.is_some();
         Some(resolver)

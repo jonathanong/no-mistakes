@@ -15,10 +15,11 @@ fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
         NodeId::symbol(outer_barrel.clone(), "outer"),
         NodeId::symbol(extensionless_barrel.clone(), "extensionlessDates"),
     ]);
-    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
-        .into_iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-        .collect();
+    let visible_files: std::collections::HashSet<PathBuf> =
+        crate::codebase::ts_source::discover_visible_paths(&root)
+            .into_iter()
+            .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+            .collect();
     let facts = impact_test_support::signature_test_facts(&root);
     let target_symbols = signature_target_symbols(
         &target,
@@ -54,10 +55,11 @@ fn namespace_target_helpers_handle_defensive_paths() {
     );
     let namespace_barrel = root.join("namespace-date-barrel.mts");
     let mut symbols = crate::codebase::ts_symbols::FileSymbols::default();
-    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
-        .into_iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-        .collect();
+    let visible_files: std::collections::HashSet<PathBuf> =
+        crate::codebase::ts_source::discover_visible_paths(&root)
+            .into_iter()
+            .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+            .collect();
     let facts = impact_test_support::signature_test_facts(&root);
     assert!(!is_namespace_reexport_symbol(
         &facts,

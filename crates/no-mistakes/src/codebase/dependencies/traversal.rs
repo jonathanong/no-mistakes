@@ -73,7 +73,7 @@ pub(super) fn dependents_entries(
         fact_plan.symbols = true;
         let mut fact_context =
             graph::test_support::ts_fact_context_for_plan(ctx.root, ctx.build_plan);
-        fact_context.set_visible_files(ctx.graph_files.visible().iter().cloned());
+        fact_context.set_visible_files(ctx.graph_files.iter_visible().cloned());
         crate::codebase::ts_source::facts::collect_ts_facts_with_context(
             ctx.graph_files.indexable(),
             fact_plan,

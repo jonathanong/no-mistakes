@@ -1,7 +1,7 @@
 use super::{is_vitest_project_config, slash_path, Ctx};
 use crate::codebase::ts_resolver::ImportResolution;
 use globset::GlobBuilder;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 /// Vitest project strings may point at a folder without a local config. Keep
@@ -32,8 +32,9 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_roots_wi
             .build()
             .map(|glob| glob.compile_matcher())
     });
+    let visible_paths = visible.visible_cache_key();
     let mut roots = BTreeSet::new();
-    for path in visible {
+    for path in &visible_paths {
         let mut parent = path.parent();
         while let Some(root) = parent {
             if root == base.parent().unwrap_or(base) {
@@ -53,8 +54,12 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_roots_wi
     roots.into_iter().collect()
 }
 
-fn has_project_config(root: &Path, visible: &HashSet<PathBuf>) -> bool {
+fn has_project_config(
+    root: &Path,
+    visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
+) -> bool {
     visible
+        .visible_cache_key()
         .iter()
         .any(|path| path.parent() == Some(root) && is_vitest_project_config(path))
 }

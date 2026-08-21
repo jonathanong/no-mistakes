@@ -27,7 +27,8 @@ fn graph_resolver_forwards_deleted_target_candidates_and_visibility_for_scoped_a
     ];
 
     for resolver in resolvers {
-        assert_eq!(ImportResolution::visible_files(&resolver), Some(&visible));
+        assert!(ImportResolution::visible_files(&resolver)
+            .is_some_and(|files| files.visible_len() == 1 && files.contains_visible(&importer)));
         assert!(
             ImportResolution::resolution_candidates(&resolver, "@app/deleted", &importer)
                 .contains(&root.join("src/deleted.ts"))

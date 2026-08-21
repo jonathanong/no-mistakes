@@ -3,7 +3,7 @@ fn collect_from_stmt(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     match stmt {
@@ -77,7 +77,7 @@ fn collect_from_optional_expr(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let _ = expr.map(|expr| {
@@ -90,7 +90,7 @@ fn collect_from_export_default(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     match kind {

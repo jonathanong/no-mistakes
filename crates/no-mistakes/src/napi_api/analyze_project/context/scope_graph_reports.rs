@@ -53,7 +53,7 @@ impl PreparedScope {
             &args,
             self.traversal.root(),
             self.traversal.tsconfig_catalog(),
-            self.traversal.graph_files().visible(),
+            self.traversal.graph_files(),
             &self.facts,
             &self.symbol_facts,
             &session,

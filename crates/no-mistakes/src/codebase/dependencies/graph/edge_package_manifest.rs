@@ -10,7 +10,7 @@ fn collect_workspace_manifest_edges(
         .filter_map(|package| {
             let entry = package.entry.as_ref()?;
             graph_files
-                .is_visible(entry)
+                .contains_visible(entry)
                 .then(|| (package.name.as_str(), entry.clone()))
         })
         .collect();

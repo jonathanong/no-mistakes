@@ -112,7 +112,7 @@ fn deferred_suppression_sources_use_prepared_component_text() {
     };
     let path = normalize_path(&root.join(&component.file));
     let prepared_without_directive = CheckFactMap {
-        ts: HashMap::from([(
+        ts: crate::codebase::ts_source::FileIdMap::from([(
             path.clone(),
             std::sync::Arc::new(CheckFileFacts {
                 source: Some("export function DisabledFile() { return <div />; }".into()),
@@ -133,7 +133,7 @@ fn deferred_suppression_sources_use_prepared_component_text() {
     ));
 
     let prepared_with_directive = CheckFactMap {
-        ts: HashMap::from([(
+        ts: crate::codebase::ts_source::FileIdMap::from([(
             path,
             std::sync::Arc::new(CheckFileFacts {
                 source: Some(

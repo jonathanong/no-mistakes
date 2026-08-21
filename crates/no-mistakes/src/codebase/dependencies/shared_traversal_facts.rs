@@ -93,7 +93,7 @@ impl SharedTraversalContext {
         }
         self.import_resolution_cache.clear();
         self.fact_context
-            .set_visible_files(self.graph_files.visible().iter().cloned());
+            .set_visible_files(self.graph_files.iter_visible().cloned());
         self.invalidate_analysis_caches();
         // Keep discovery authoritative without eagerly reparsing explicit
         // ignored roots. A prepared supplemental fact view may still supply

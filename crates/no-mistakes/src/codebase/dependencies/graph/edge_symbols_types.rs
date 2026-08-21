@@ -1,7 +1,7 @@
 struct SymbolGraphFiles<'a> {
     indexable: &'a [PathBuf],
     all: &'a [PathBuf],
-    visible: &'a HashSet<PathBuf>,
+    visible: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &'a GraphFiles,
 }
 

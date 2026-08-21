@@ -209,7 +209,11 @@ fn scoped_queue_edges_keep_symlink_root_targets_in_visible_namespace() {
         &catalog_visible,
     );
     let resolver =
-        crate::codebase::ts_resolver::ScopedImportResolver::new(&catalog, graph_files.visible());
+        crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+            &catalog,
+            &graph_files,
+            None,
+        );
     let plan = GraphBuildPlan {
         queues: true,
         ..GraphBuildPlan::default()

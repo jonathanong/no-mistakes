@@ -118,7 +118,8 @@ fn fact_view_with_supplemental_preserves_the_primary_file_and_graph_universes() 
         ts: std::collections::HashMap::from([(
             supplemental.clone(),
             std::sync::Arc::new(super::CheckFileFacts::default()),
-        )]),
+        )])
+        .into(),
         graph_plan: crate::codebase::ts_source::facts::TsFactPlan {
             call_sites: true,
             ..Default::default()

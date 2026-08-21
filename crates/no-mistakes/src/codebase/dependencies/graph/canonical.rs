@@ -47,12 +47,7 @@ impl CanonicalVisible {
         }
     }
 
-    fn get(
-        &self,
-        all: &[PathBuf],
-        visible: &HashSet<PathBuf>,
-        canonical: &Path,
-    ) -> Option<PathBuf> {
+    fn get(&self, all: &[PathBuf], visible: &[u8], canonical: &Path) -> Option<PathBuf> {
         let mut guard = self.lock();
         if guard.is_none() {
             *guard = Some(build_canonical_visible(all, visible));
@@ -61,13 +56,13 @@ impl CanonicalVisible {
     }
 }
 
-fn build_canonical_visible(
-    all: &[PathBuf],
-    visible: &HashSet<PathBuf>,
-) -> HashMap<PathBuf, PathBuf> {
+fn build_canonical_visible(all: &[PathBuf], visible: &[u8]) -> HashMap<PathBuf, PathBuf> {
     // `all` is sorted; first discovery spelling wins on a canonical collision.
     let mut map = HashMap::new();
-    for path in all.iter().filter(|path| visible.contains(*path)) {
+    for (path, flag) in all.iter().zip(visible.iter()) {
+        if *flag == 0 {
+            continue;
+        }
         if let Ok(canonical) = path.canonicalize() {
             map.entry(crate::codebase::ts_resolver::normalize_path(&canonical))
                 .or_insert_with(|| path.clone());

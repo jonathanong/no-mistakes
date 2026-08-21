@@ -33,7 +33,7 @@ impl SymbolIndex {
 
                     for ni in &symbols.imports {
                         if let Some(target) = resolver
-                            .classify_import(&ni.source, path, workspace, graph_files.visible())
+                            .classify_import(&ni.source, path, workspace, graph_files)
                             .preferred_path()
                             .and_then(|target| graph_files.visible_path(target))
                         {
@@ -53,7 +53,7 @@ impl SymbolIndex {
                         } = &exp.kind
                         {
                             if let Some(target) = resolver
-                                .classify_import(source, path, workspace, graph_files.visible())
+                                .classify_import(source, path, workspace, graph_files)
                                 .preferred_path()
                                 .and_then(|target| graph_files.visible_path(target))
                             {

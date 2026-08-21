@@ -29,9 +29,9 @@ fn build_report_from_prepared(
         facts,
     } = context;
     let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
-        graph_files.visible().iter().cloned(),
+        graph_files.iter_visible().cloned(),
     );
-    let visible_files = graph_files.visible().clone();
+    let visible_files = graph_files;
     let target = NodeId::symbol(target_file, symbol);
     let definition = if let Some(location) =
         export_location(facts, target_file, root, symbol, false)?
@@ -103,10 +103,10 @@ fn build_report_from_prepared(
     }
     let local_caller_context =
         prepare_local_caller_context(facts, workspace, &visible_files, &remapper);
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
         tsconfig_catalog,
         local_caller_context.visible_files,
-        session,
+        Some(session),
     );
     let production_extra_callers = local_caller_entries(
         &local_caller_context,
@@ -170,7 +170,7 @@ fn build_report_from_prepared(
 struct LocalCallerContext<'a> {
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 }
 
@@ -185,7 +185,7 @@ struct LocalCallerContext<'a> {
 fn prepare_local_caller_context<'a>(
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 ) -> LocalCallerContext<'a> {
     LocalCallerContext {

@@ -38,7 +38,7 @@ struct SymbolFileEdgeInputs<'a> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &'a GraphFiles,
     http_route_defs: &'a [(PathBuf, String)],
     interner: &'a PathInterner,

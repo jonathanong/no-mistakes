@@ -33,7 +33,7 @@ fn collect_import_edges(
                         &imp.specifier,
                         path,
                         workspace,
-                        graph_files.visible(),
+                        graph_files,
                     );
                     if let Some(target) = classification.resolver_path() {
                         let target = graph_files.visible_path(target)?;
@@ -116,7 +116,7 @@ fn collect_workspace_edges(
                         return None;
                     }
                     resolver
-                        .classify_import(spec, path, workspace, graph_files.visible())
+                        .classify_import(spec, path, workspace, graph_files)
                         .workspace_path()
                         .and_then(|entry| graph_files.visible_path(entry))
                         .map(|entry| {

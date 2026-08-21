@@ -11,13 +11,12 @@ fn lazy_import_facts_memoize_parse_errors() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph_files = GraphFiles {
-        all: vec![malformed.clone()],
-        indexable: vec![malformed.clone()],
-        visible: [malformed.clone()].into(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![malformed.clone()],
+        vec![malformed.clone()],
+        [malformed.clone()],
+        vec![],
+    );
     let context = TsFactContext::new(&root);
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let session = crate::codebase::analysis_session::AnalysisSession::new(Some(
@@ -25,7 +24,7 @@ fn lazy_import_facts_memoize_parse_errors() {
     ));
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,
-        Some(&graph_files.visible),
+        Some(&graph_files),
         &session,
     );
 

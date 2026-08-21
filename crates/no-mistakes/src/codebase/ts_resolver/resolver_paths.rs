@@ -152,14 +152,14 @@ impl<'a> ImportResolver<'a> {
     fn path_exists(&self, path: &Path) -> bool {
         self.visible
             .as_ref()
-            .map(|visible| visible.files().contains(path))
+            .map(|visible| visible.contains_visible(path))
             .unwrap_or_else(|| path.exists())
     }
 
     fn path_is_file(&self, path: &Path) -> bool {
         self.visible
             .as_ref()
-            .map(|visible| visible.files().contains(path))
+            .map(|visible| visible.contains_visible(path))
             .unwrap_or_else(|| path.is_file())
     }
 }

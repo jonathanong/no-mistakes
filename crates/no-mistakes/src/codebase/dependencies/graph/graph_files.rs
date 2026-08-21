@@ -1,7 +1,9 @@
 pub(crate) struct GraphFiles {
     all: Vec<PathBuf>,
     indexable: Vec<PathBuf>,
-    visible: HashSet<PathBuf>,
+    /// 1 if `all[i]` is visible. Kept parallel to `all` so lookup can binary
+    /// search paths without cloning them into a second set.
+    visible: Vec<u8>,
     canonical_visible: CanonicalVisible,
     /// The tracked (or non-Git fallback) files eligible for runtime resource
     /// edges. This intentionally excludes explicit request roots and merely
@@ -60,7 +62,7 @@ impl GraphFiles {
     ) -> Self {
         all.sort();
         all.dedup();
-        let visible: HashSet<PathBuf> = all.iter().cloned().collect();
+        let visible = vec![1u8; all.len()];
         resource_candidates.sort();
         resource_candidates.dedup();
         let indexable = all
@@ -77,61 +79,37 @@ impl GraphFiles {
         }
     }
 
-    /// Add one existing, explicitly requested file to the request graph.
-    ///
-    /// This grants authority only to the root target itself. Imports still
-    /// resolve against `visible`, so ignored transitive files remain excluded.
-    pub(crate) fn add_explicit_root(&mut self, path: &Path) -> bool {
-        let path = crate::codebase::ts_resolver::normalize_path(path);
-        if !path.is_file() {
-            return false;
+    #[cfg(test)]
+    pub(crate) fn from_parts(
+        mut all: Vec<PathBuf>,
+        mut indexable: Vec<PathBuf>,
+        visible: impl IntoIterator<Item = PathBuf>,
+        mut resource_candidates: Vec<PathBuf>,
+    ) -> Self {
+        all.sort();
+        all.dedup();
+        indexable.sort();
+        indexable.dedup();
+        resource_candidates.sort();
+        resource_candidates.dedup();
+        let mut visible_paths: Vec<_> = visible.into_iter().collect();
+        visible_paths.sort();
+        visible_paths.dedup();
+        let flags = all
+            .iter()
+            .map(|path| u8::from(visible_paths.binary_search(path).is_ok()))
+            .collect();
+        Self {
+            all,
+            indexable,
+            visible: flags,
+            canonical_visible: CanonicalVisible::empty(),
+            resource_candidates,
         }
-        let mut changed = false;
-        if self.visible.insert(path.clone()) {
-            self.all.push(path.clone());
-            self.all.sort();
-            if let Ok(canonical) = path.canonicalize() {
-                self.canonical_visible.insert_if_built(
-                    crate::codebase::ts_resolver::normalize_path(&canonical),
-                    path.clone(),
-                );
-            }
-            changed = true;
-        }
-        // A demand plan may leave an unrequested runner config visible for import resolution
-        // while excluding it from eager graph parsing. An explicit query restores that ordinary
-        // source file to the indexable universe even though it was already visible.
-        if is_indexable(&path) && !self.indexable.contains(&path) {
-            self.indexable.push(path);
-            self.indexable.sort();
-            changed = true;
-        }
-        if changed {
-            self.canonical_visible.bump_universe();
-        }
-        changed
     }
 
     pub(crate) fn universe_identity(&self) -> &std::sync::Arc<()> {
         self.canonical_visible.universe()
-    }
-
-    fn is_visible(&self, path: &Path) -> bool {
-        self.visible_path(path).is_some()
-    }
-
-    pub(crate) fn visible_path(&self, path: &Path) -> Option<&Path> {
-        if let Some(path) = self.visible.get(path) {
-            return Some(path);
-        }
-        let canonical = crate::codebase::ts_resolver::normalize_path(&path.canonicalize().ok()?);
-        if let Some(path) = self.visible.get(&canonical) {
-            return Some(path);
-        }
-        let original = self
-            .canonical_visible
-            .get(&self.all, &self.visible, &canonical)?;
-        self.visible.get(&original).map(PathBuf::as_path)
     }
 
     pub(crate) fn indexable(&self) -> &[PathBuf] {
@@ -140,10 +118,6 @@ impl GraphFiles {
 
     pub(crate) fn all(&self) -> &[PathBuf] {
         &self.all
-    }
-
-    pub(crate) fn visible(&self) -> &HashSet<PathBuf> {
-        &self.visible
     }
 
     pub(crate) fn resource_candidates(&self) -> &[PathBuf] {

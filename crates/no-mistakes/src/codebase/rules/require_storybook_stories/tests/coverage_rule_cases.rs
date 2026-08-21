@@ -8,7 +8,7 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
     let resolver = empty_resolver(&root);
     let mut shared = CheckFactMap {
         files: vec![root.join("components/Card.tsx")],
-        ts: HashMap::from([(
+        ts: crate::codebase::ts_source::FileIdMap::from([(
             story.clone(),
             CheckFileFacts {
                 storybook: Some(StorybookFileFacts {

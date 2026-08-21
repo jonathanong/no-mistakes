@@ -8,14 +8,13 @@ use crate::codebase::ts_symbols::FileSymbols;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
-use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 pub(crate) mod call_sites;
 mod collect;
 pub(crate) mod domain;
 mod map;
+mod map_iter;
 mod plan;
 
 pub use call_sites::CallSiteFact;
@@ -93,11 +92,38 @@ pub struct TsFileFacts {
     pub rsc_environment: Option<RscEnvironmentFact>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone)]
+enum TsFactSlot {
+    Owned(Box<TsFileFacts>),
+    Shared(Arc<TsFileFacts>),
+}
+
+impl TsFactSlot {
+    fn as_facts(&self) -> &TsFileFacts {
+        match self {
+            Self::Owned(facts) => facts,
+            Self::Shared(facts) => facts.as_ref(),
+        }
+    }
+
+    fn into_owned(self) -> TsFileFacts {
+        match self {
+            Self::Owned(facts) => *facts,
+            Self::Shared(facts) => Arc::unwrap_or_clone(facts),
+        }
+    }
+}
+
+#[derive(Clone, Default)]
 pub struct TsFactMap {
-    owned: HashMap<PathBuf, TsFileFacts>,
-    shared: HashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
+    facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
+}
+
+impl std::fmt::Debug for TsFactMap {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_map().entries(self.iter()).finish()
+    }
 }
 
 #[cfg(test)]

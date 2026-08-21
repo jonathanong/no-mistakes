@@ -33,10 +33,42 @@ fn graph_files_constructor_does_not_eagerly_canonicalize() {
         !constructor.contains("canonicalize"),
         "from_files must not realpath every visible path"
     );
-    let visible_path = graph_files_source_function_body(source, "pub(crate) fn visible_path(");
+    let visible_path_source = include_str!("../graph_files_visible.rs");
+    let visible_path = graph_files_source_function_body(
+        visible_path_source,
+        "pub(crate) fn visible_path(",
+    );
     assert!(
         visible_path.contains("canonicalize"),
         "visible_path must keep the lazy canonicalize fallback"
+    );
+}
+
+#[test]
+fn graph_files_visible_does_not_build_a_pathbuf_hashset() {
+    let source = include_str!("../graph_files.rs");
+    assert!(
+        source.contains("visible: Vec<u8>"),
+        "GraphFiles must store visible membership as a dense bitset"
+    );
+    let constructor = graph_files_source_function_body(
+        source,
+        "pub(crate) fn from_files_with_resource_candidates_excluding_indexable(",
+    );
+    assert!(
+        constructor.contains("vec![1u8; all.len()]"),
+        "from_files must mark visibility with a parallel bitset, not a cloned path set"
+    );
+    assert!(
+        !constructor.contains("visible:")
+            || constructor.contains("let visible = vec![1u8; all.len()]"),
+        "from_files must not assign a HashSet to visible"
+    );
+    let visible_source = include_str!("../graph_files_visible.rs");
+    assert!(
+        !visible_source.contains("HashSet<PathBuf>")
+            && !visible_source.contains("FxHashSet<PathBuf>"),
+        "visible lookup must not clone paths into a HashSet"
     );
 }
 

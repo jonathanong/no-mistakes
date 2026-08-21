@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod classify;
+mod lookup;
 pub(crate) use classify::classify_relative_paths;
 
 /// Stable identity for a lexical path in a frozen request file inventory.

@@ -57,7 +57,7 @@ fn collect_http_process_edges(
             facts,
             &[],
             inputs.graph_files.indexable(),
-            inputs.graph_files.visible(),
+            inputs.graph_files,
             &inputs.interner,
         ));
     }

@@ -151,7 +151,7 @@ fn collect_process_spawn_edges(
     facts: Option<&dyn TsFactLookup>,
     files: &[(PathBuf, String)],
     graph_files: &[PathBuf],
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     interner: &PathInterner,
 ) -> Vec<Edge> {
     use crate::codebase::ts_process_spawn::extract_spawn_edges_from_visible;
@@ -164,7 +164,7 @@ fn collect_process_spawn_edges(
                 file_facts
                     .process_spawns
                     .iter()
-                    .filter(|edge| visible_files.contains(&edge.entry))
+                    .filter(|edge| visible_files.contains_visible(&edge.entry))
                     .map(|e| {
                         (
                             NodeId::file_in(interner, e.spawner.clone()),
@@ -181,7 +181,7 @@ fn collect_process_spawn_edges(
         .flat_map_iter(|(spawner, source)| {
             extract_spawn_edges_from_visible(source, spawner, root, visible_files)
                 .into_iter()
-                .filter(|edge| visible_files.contains(&edge.entry))
+                .filter(|edge| visible_files.contains_visible(&edge.entry))
                 .map(|e| {
                     (
                         NodeId::file_in(interner, e.spawner),
