@@ -68,10 +68,12 @@ pub(super) fn check_equals_file(
     vec![finding(
         rel,
         assertion,
-        format!(
-            "{rel}: config value `{}` must equal `{}` from `{}`",
-            assertion.key, from_key, assertion.file
-        ),
+        assertion.message.clone().unwrap_or_else(|| {
+            format!(
+                "{rel}: config value `{}` must equal `{}` from `{}`",
+                assertion.key, from_key, assertion.file
+            )
+        }),
     )]
 }
 
@@ -89,12 +91,12 @@ fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_ke
     !actual.has_missing && actual.values == expected.values
 }
 
-fn finding(file: &str, assertion: &ValueAssertion, fallback: String) -> RuleFinding {
+fn finding(file: &str, assertion: &ValueAssertion, message: String) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,
-        message: assertion.message.clone().unwrap_or(fallback),
+        message,
         import: None,
         target: Some(assertion.key.clone()),
     }

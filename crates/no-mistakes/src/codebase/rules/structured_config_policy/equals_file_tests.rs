@@ -42,6 +42,7 @@ policies:
       - key: items.0.name
         kind: equals-file
         file: root.yml
+        message: names must match
 "#,
         ),
         &files,
@@ -49,6 +50,7 @@ policies:
     .unwrap();
     let body = format!("{findings:?}");
     assert!(body.contains("drift.yml"), "{body}");
+    assert!(body.contains("names must match"), "{body}");
     assert!(!body.contains("match.yml"), "{body}");
     assert_eq!(findings.len(), 1, "{body}");
 }
@@ -130,6 +132,37 @@ policies:
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains("outside the repository root"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn equals_file_keeps_parse_errors_when_a_custom_message_is_set() {
+    let root = fixture_root("nested-plugins");
+    let files = vec![root.join("pkg/.oxlintrc.json"), root.join("invalid.json")];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: ["pkg/.oxlintrc.json"]
+    valueAssertions:
+      - key: plugins
+        kind: equals-file
+        file: invalid.json
+        message: plugins must match root
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    assert_eq!(findings[0].file, "invalid.json", "{findings:?}");
+    assert!(
+        findings[0].message.contains("failed to parse JSONC"),
+        "{findings:?}"
+    );
+    assert!(
+        !findings[0].message.contains("plugins must match root"),
         "{findings:?}"
     );
 }
