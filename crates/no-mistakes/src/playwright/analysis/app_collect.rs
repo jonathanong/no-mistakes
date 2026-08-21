@@ -30,6 +30,7 @@ pub(crate) fn collect_app_selector_occurrences_from_visible(
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<HashSet<_>>();
+    let sources = snapshot.source_store_for(root);
     let app_selectors = source_files
         .par_iter()
         .try_fold(Vec::new, |mut app_selectors, path| -> Result<_> {
@@ -41,6 +42,7 @@ pub(crate) fn collect_app_selector_occurrences_from_visible(
                     &source,
                     selector_regexes,
                     &visible_files,
+                    Some(sources.as_ref()),
                 )?);
                 Ok(app_selectors)
             })

@@ -1,5 +1,7 @@
 use super::dynamic_values::DynamicIdentifierValues;
-use super::jsx_resolve::{app_selector_values, app_selector_values_from_visible};
+use super::jsx_resolve::{
+    app_selector_values, app_selector_values_from_visible, SelectorFileContext,
+};
 use super::scoped_defaults::{
     collect_scoped_static_identifier_defaults, ScopedStaticIdentifierDefault,
 };
@@ -47,6 +49,7 @@ pub fn collect_app_selectors(
                             &source,
                             &regexes,
                             &visible_files,
+                            None,
                         )
                     }),
             )
@@ -74,7 +77,7 @@ pub fn extract_app_selectors_with_regexes(
     source: &str,
     regexes: &SelectorRegexes,
 ) -> anyhow::Result<Vec<AppSelector>> {
-    extract_app_selectors_with_regexes_inner(path, source, regexes, None)
+    extract_app_selectors_with_regexes_inner(path, source, regexes, None, None)
 }
 
 pub(crate) fn extract_app_selectors_with_regexes_from_visible(
@@ -82,8 +85,9 @@ pub(crate) fn extract_app_selectors_with_regexes_from_visible(
     source: &str,
     regexes: &SelectorRegexes,
     visible_files: &HashSet<PathBuf>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> anyhow::Result<Vec<AppSelector>> {
-    extract_app_selectors_with_regexes_inner(path, source, regexes, Some(visible_files))
+    extract_app_selectors_with_regexes_inner(path, source, regexes, Some(visible_files), sources)
 }
 
 fn extract_app_selectors_with_regexes_inner(
@@ -91,9 +95,18 @@ fn extract_app_selectors_with_regexes_inner(
     source: &str,
     regexes: &SelectorRegexes,
     visible_files: Option<&HashSet<PathBuf>>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> anyhow::Result<Vec<AppSelector>> {
     ast::with_program(path, source, |program, source| {
-        extract_app_selectors_from_program(path, source, program, regexes, visible_files, false)
+        extract_app_selectors_from_program(
+            path,
+            source,
+            program,
+            regexes,
+            visible_files,
+            false,
+            sources,
+        )
     })
 }
 
@@ -104,7 +117,15 @@ pub(crate) fn extract_app_selectors_from_program_from_visible_deferred(
     regexes: &SelectorRegexes,
     visible_files: &HashSet<PathBuf>,
 ) -> Vec<AppSelector> {
-    extract_app_selectors_from_program(path, source, program, regexes, Some(visible_files), true)
+    extract_app_selectors_from_program(
+        path,
+        source,
+        program,
+        regexes,
+        Some(visible_files),
+        true,
+        None,
+    )
 }
 
 fn extract_app_selectors_from_program(
@@ -114,6 +135,7 @@ fn extract_app_selectors_from_program(
     regexes: &SelectorRegexes,
     visible_files: Option<&HashSet<PathBuf>>,
     defer_cross_file: bool,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Vec<AppSelector> {
     let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
     let dynamic_identifier_values = match (visible_files, defer_cross_file) {
@@ -124,7 +146,7 @@ fn extract_app_selectors_from_program(
         }
         (Some(visible), false) => {
             super::dynamic_values::collect_dynamic_identifier_values_with_file_from_visible(
-                program, source, path, visible,
+                program, source, path, visible, sources,
             )
         }
         (None, _) => super::dynamic_values::collect_dynamic_identifier_values_with_file(
@@ -141,6 +163,7 @@ fn extract_app_selectors_from_program(
         dynamic_identifier_values: &dynamic_identifier_values,
         program,
         visible_files,
+        sources,
         selectors: Vec::new(),
     };
     visitor.visit_program(program);

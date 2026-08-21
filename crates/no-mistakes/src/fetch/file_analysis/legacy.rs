@@ -5,8 +5,12 @@ fn analyze_file_inner(
     fetches: &mut Vec<FetchOccurrence>,
     cache: &mut Cache,
     inherited: (bool, bool),
-    visible_files: Option<&HashSet<PathBuf>>,
+    scope: (
+        Option<&HashSet<PathBuf>>,
+        Option<&crate::codebase::analysis_session::AnalysisSession>,
+    ),
 ) -> Result<bool> {
+    let (visible_files, session) = scope;
     let (inherited_is_client, inherited_is_route_handler) = inherited;
     if !path.exists() {
         return Ok(false);
@@ -25,7 +29,12 @@ fn analyze_file_inner(
         fetches.extend(cached_fetches.fetches.clone());
         return Ok(cached_fetches.is_client);
     }
-    let source = std::fs::read_to_string(&abs_path)?;
+    let source = match session {
+        Some(session) => session
+            .read_source(&abs_path)
+            .map_err(|error| anyhow::anyhow!(error.to_string()))?,
+        None => std::fs::read_to_string(&abs_path)?.into(),
+    };
     let rel_file = relative_string(root, &abs_path);
     let mut file_fetches = Vec::new();
     let is_client = ast::with_program(path, &source, |program, _| -> Result<bool> {
@@ -52,7 +61,7 @@ fn analyze_file_inner(
                 &mut file_fetches,
                 cache,
                 (is_client, inherited_is_route_handler),
-                visible_files,
+                (visible_files, session),
             )?;
         }
         Ok(is_client)

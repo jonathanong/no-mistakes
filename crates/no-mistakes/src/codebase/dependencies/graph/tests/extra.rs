@@ -318,13 +318,15 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     assert!(collect_md_edges(
         &[missing],
         &graph_files,
-        &crate::codebase::analysis_session::PathInterner::new()
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     )
     .is_empty());
     let md_edges = collect_md_edges(
         &[root.join("README.md")],
         &graph_files,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(md_edges.iter().any(|(_, to, kind)| {
         *kind == EdgeKind::MarkdownLink
@@ -341,6 +343,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut forward,
         &mut reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(!forward.is_empty());
 
@@ -361,6 +364,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut missing_forward,
         &mut missing_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(missing_forward.is_empty());
 
@@ -385,6 +389,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut nested_forward,
         &mut nested_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(nested_forward.is_empty());
 
@@ -404,6 +409,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut no_workflows_forward,
         &mut no_workflows_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(no_workflows_forward.is_empty());
     let nested_without_workflow = [
@@ -418,6 +424,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut nested_forward,
         &mut nested_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(nested_forward.is_empty());
     let mut bins = CargoBinIndex::default();
@@ -434,13 +441,14 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &empty_visible,
         &mut bins,
     );
-    let outside = collect_cargo_bins(&root, &[PathBuf::from("/outside/Cargo.toml")]);
+    let outside = collect_cargo_bins(&root, &[PathBuf::from("/outside/Cargo.toml")], None);
     assert!(outside.by_name.is_empty());
-    let missing_member_manifest = collect_cargo_bins(&root, &[root.join("missing/Cargo.toml")]);
+    let missing_member_manifest =
+        collect_cargo_bins(&root, &[root.join("missing/Cargo.toml")], None);
     assert!(missing_member_manifest.by_name.is_empty());
     let invalid_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-invalid"));
     assert!(
-        collect_cargo_bins(&invalid_root, &[invalid_root.join("Cargo.toml")])
+        collect_cargo_bins(&invalid_root, &[invalid_root.join("Cargo.toml")], None)
             .by_name
             .is_empty()
     );

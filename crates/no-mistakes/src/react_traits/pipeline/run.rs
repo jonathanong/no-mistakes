@@ -15,11 +15,19 @@ pub fn run_analyze(
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let visible_paths = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
     let stems = [".no-mistakes"];
     let root_config: RootConfig =
         crate::config::load_config_from_visible(&root, config_path, &stems, &visible_paths)?;
     let file_config = root_config.into_file_config();
-    run_analyze_inner_from_visible(&root, &file_config, targets, depth, &visible_paths)
+    run_analyze_inner_from_visible(
+        &root,
+        &file_config,
+        targets,
+        depth,
+        &visible_paths,
+        Some(&sources),
+    )
 }
 
 /// Discover the candidate React source files for an analysis run.
@@ -66,6 +74,7 @@ pub(crate) fn run_analyze_inner_from_visible(
     targets: &[String],
     _depth: Option<usize>,
     visible_paths: &[PathBuf],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<ComponentFacts>> {
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let visible_files = visible_paths
@@ -78,7 +87,7 @@ pub(crate) fn run_analyze_inner_from_visible(
     let analyses = files
         .par_iter()
         .map(|file| {
-            analyze_file_from_visible(file, &root, &visible_files)
+            analyze_file_from_visible(file, &root, &visible_files, sources)
                 .map(|analysis| (file.clone(), analysis.components))
         })
         .collect::<Result<Vec<_>>>()?;
@@ -94,11 +103,12 @@ pub(crate) fn run_analyze_inner_from_visible(
 
     let mut all_results = Vec::new();
     for mut facts in results {
-        let agg = aggregate_children_from_visible(
+        let agg = aggregate_children_inner(
             &facts,
             &mut file_cache,
             &root,
-            &visible_files,
+            Some(&visible_files),
+            sources,
             &mut HashSet::new(),
         );
         if agg != AggregatedFacts::default() {
@@ -115,21 +125,12 @@ mod test_support;
 #[cfg(test)]
 mod tests;
 
-fn aggregate_children_from_visible(
-    facts: &ComponentFacts,
-    file_cache: &mut HashMap<PathBuf, Vec<ComponentFacts>>,
-    root: &Path,
-    visible_files: &HashSet<PathBuf>,
-    visited: &mut HashSet<String>,
-) -> AggregatedFacts {
-    aggregate_children_inner(facts, file_cache, root, Some(visible_files), visited)
-}
-
 fn aggregate_children_inner(
     facts: &ComponentFacts,
     file_cache: &mut HashMap<PathBuf, Vec<ComponentFacts>>,
     root: &Path,
     visible_files: Option<&HashSet<PathBuf>>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
     visited: &mut HashSet<String>,
 ) -> AggregatedFacts {
     let mut agg = AggregatedFacts::default();
@@ -146,7 +147,7 @@ fn aggregate_children_inner(
         // Analyze on-demand and cache so repeated child refs avoid redundant parsing (Cgv-B).
         if !file_cache.contains_key(&child_path) {
             let analysis = match visible_files {
-                Some(visible) => analyze_file_from_visible(&child_path, root, visible),
+                Some(visible) => analyze_file_from_visible(&child_path, root, visible, sources),
                 None => crate::react_traits::analyze::file::analyze_file(&child_path, root),
             };
             match analysis {
@@ -170,8 +171,14 @@ fn aggregate_children_inner(
             agg.uses_context_provider |= child_facts.uses_context_provider;
             agg.uses_suspense |= child_facts.uses_suspense;
             agg.has_fetch |= !child_facts.fetches.is_empty();
-            let child_agg =
-                aggregate_children_inner(&child_facts, file_cache, root, visible_files, visited);
+            let child_agg = aggregate_children_inner(
+                &child_facts,
+                file_cache,
+                root,
+                visible_files,
+                sources,
+                visited,
+            );
             agg.has_state |= child_agg.has_state;
             agg.has_fetch |= child_agg.has_fetch;
             agg.uses_suspense |= child_agg.uses_suspense;

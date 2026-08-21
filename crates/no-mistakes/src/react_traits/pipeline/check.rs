@@ -27,6 +27,7 @@ pub fn run_check(
 ) -> Result<Vec<Violation>> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
+    let sources = snapshot.source_store_for(root);
     let stems = [".no-mistakes"];
     let root_config: RootConfig =
         crate::config::load_config_from_visible(root, config_path, &stems, &visible_paths)?;
@@ -40,6 +41,7 @@ pub fn run_check(
         targets,
         None,
         &visible_paths,
+        Some(sources.as_ref()),
     )?;
     Ok(assert_no_fetch_violations(&facts_list))
 }

@@ -489,4 +489,5 @@ fn exempts_known_nextjs_framework_exports_only_in_convention_files() {
 }
 
 mod helper_edges;
+mod source_store;
 mod tail;

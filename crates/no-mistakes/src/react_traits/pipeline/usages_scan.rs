@@ -5,6 +5,7 @@ fn run_usages_from_visible(
     include: &UsagesInclude,
     file_config: &crate::react_traits::report::types::FileConfig,
     visible_paths: &[PathBuf],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<UsagesReport> {
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let (path_part, symbol) = split_target(target);
@@ -27,7 +28,15 @@ fn run_usages_from_visible(
     let hits: Vec<FileHit> = files
         .par_iter()
         .filter_map(|file| {
-            analyze_one(file, &root, &target_abs, symbol.as_deref(), &visible_files).ok()
+            analyze_one(
+                file,
+                &root,
+                &target_abs,
+                symbol.as_deref(),
+                &visible_files,
+                sources,
+            )
+            .ok()
         })
         .collect();
 
@@ -47,7 +56,9 @@ fn run_usages_from_visible(
     let tests = include
         .tests
         .then(|| filter_importers(&importer_files, is_test));
-    let prop_types = include.prop_types.then(|| prop_type_names(&candidate));
+    let prop_types = include
+        .prop_types
+        .then(|| prop_type_names_with_sources(&candidate, sources));
 
     Ok(UsagesReport {
         target: UsagesTarget {
@@ -67,8 +78,14 @@ fn analyze_one(
     target_abs: &Path,
     symbol: Option<&str>,
     visible_files: &HashSet<PathBuf>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<FileHit> {
-    let source = std::fs::read_to_string(file)?;
+    let source = match sources {
+        Some(store) => store
+            .read_path(file)
+            .map_err(|error| anyhow::anyhow!("{error}"))?,
+        None => std::fs::read_to_string(file)?.into(),
+    };
     ast::with_program(file, &source, |program, _src| {
         let import_table = build_import_table_from_visible(file, program, visible_files);
         let importer = import_table

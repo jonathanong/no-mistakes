@@ -51,7 +51,8 @@ fn collect_remaining_edges(
     });
 
     crate::invocation::check_timeout()?;
-    let independent = collect_independent_remaining_edges(edge_inputs, facts, session);
+    let sources = graph_edge_sources(session, edge_inputs);
+    let independent = collect_independent_remaining_edges(edge_inputs, facts, session, &sources);
     merge_independent_remaining_edges(forward, reverse, independent);
 
     crate::invocation::check_timeout()?;
@@ -66,6 +67,7 @@ fn collect_remaining_edges(
                 forward,
                 reverse,
                 session.interner(),
+                Some(&sources),
             );
         }
     });
@@ -91,6 +93,7 @@ fn collect_remaining_edges(
                     parsed,
                     &topology,
                     session.interner(),
+                    Some(&sources),
                 ),
             );
         }

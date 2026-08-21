@@ -87,7 +87,7 @@ fn visible_collector_resolves_imported_function_and_object_values() {
 
     let collected = ast::with_program(&page_path, &source, |program, source| {
         super::collect_dynamic_identifier_values_with_file_from_visible(
-            program, source, &page_path, &visible,
+            program, source, &page_path, &visible, None,
         )
     })
     .unwrap();
@@ -99,6 +99,63 @@ fn visible_collector_resolves_imported_function_and_object_values() {
     assert!(values.contains("imported-fn-val"));
     assert!(values.contains("imported-obj-a"));
     assert!(values.contains("imported-obj-b"));
+}
+
+#[test]
+fn visible_cross_file_resolution_reuses_prepared_source_store() {
+    let page_path = crate::codebase::ts_resolver::normalize_path(&fixture_path(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-cross-file",
+        "page.tsx",
+    ]));
+    let selectors_path = page_path.with_file_name("selectors.ts");
+    let visible = std::collections::HashSet::from([page_path.clone(), selectors_path.clone()]);
+    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
+        page_path.clone(),
+        selectors_path.clone(),
+    ]));
+    let store = crate::codebase::ts_source::SourceStore::new(inventory);
+    let page_source = store.read_path(&page_path).unwrap();
+    let after_page = store.physical_read_count();
+
+    let collected = ast::with_program(&page_path, &page_source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible(
+            program,
+            source,
+            &page_path,
+            &visible,
+            Some(&store),
+        )
+    })
+    .unwrap();
+    let after_import = store.physical_read_count();
+    assert!(
+        after_import > after_page,
+        "imported selector source must be read through the prepared SourceStore"
+    );
+
+    let _ = ast::with_program(&page_path, &page_source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible(
+            program,
+            source,
+            &page_path,
+            &visible,
+            Some(&store),
+        )
+    })
+    .unwrap();
+    let values = collected
+        .into_iter()
+        .flat_map(|entry| entry.values)
+        .collect::<std::collections::HashSet<_>>();
+
+    assert!(values.contains("imported-fn-val"));
+    assert_eq!(
+        store.physical_read_count(),
+        after_import,
+        "imported selector source must hit the prepared SourceStore"
+    );
 }
 
 #[test]
@@ -203,7 +260,7 @@ fn visible_cross_file_resolution_handles_missing_bindings_and_unreadable_targets
         );
         assert!(
             super::super::cross_file::resolve_imported_values_from_visible(
-                "value", program, page_path, &visible,
+                "value", program, page_path, &visible, None,
             )
             .is_empty()
         );
