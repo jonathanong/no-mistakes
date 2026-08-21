@@ -33,6 +33,15 @@ fn namespaced_only_except_and_singular_resource_are_non_edges() {
 }
 
 #[test]
+fn shallow_indented_namespaced_resources_are_non_edges() {
+    let source = "namespace :admin do\n  resources :users\nend\nresources :posts\n";
+    let routes = extract_routes(source);
+    assert!(routes.iter().all(|(path, _)| path != "/users"));
+    assert!(routes.contains(&("/posts".into(), "posts#index".into())));
+    assert!(extract_routes("namespace \"admin\" do\n  resources :users\nend\nend\n").is_empty());
+}
+
+#[test]
 fn comment_resources_are_not_routes() {
     let source = strip_comments_keep_strings(
         r#"

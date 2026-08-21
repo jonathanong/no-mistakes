@@ -22,11 +22,24 @@ fn extract_to_routes(source: &str) -> Vec<(String, String)> {
 }
 
 fn expand_resources(source: &str) -> Vec<(String, String)> {
-    rails_resources_re()
-        .captures_iter(source)
-        .filter_map(|cap| cap.get(1).or_else(|| cap.get(2)))
-        .flat_map(|name| resource_rest_routes(name.as_str()))
-        .collect()
+    let mut namespace_depth: usize = 0;
+    let mut routes = Vec::new();
+    for line in source.lines() {
+        let trimmed = line.trim_start();
+        if namespace_do_re().is_match(trimmed) {
+            namespace_depth += 1;
+        }
+        if namespace_depth == 0 {
+            if let Some(cap) = rails_resources_re().captures(line) {
+                let name = cap.get(1).or_else(|| cap.get(2)).unwrap();
+                routes.extend(resource_rest_routes(name.as_str()));
+            }
+        }
+        if end_re().is_match(trimmed) {
+            namespace_depth = namespace_depth.saturating_sub(1);
+        }
+    }
+    routes
 }
 
 fn resource_rest_routes(name: &str) -> Vec<(String, String)> {
@@ -53,11 +66,23 @@ fn rails_route_re() -> &'static Regex {
 
 fn rails_resources_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    // 0–2 spaces so namespaced `    resources :users` stays a non-edge.
+    // 0–2 spaces so deeply indented nested resources stay a non-edge.
     RE.get_or_init(|| {
         Regex::new(r#"(?m)^[ \t]{0,2}resources\s+(?::([a-z]\w*)|["']([a-z]\w*)["'])\s*$"#)
             .expect("resources")
     })
+}
+
+fn namespace_do_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"^namespace\s+(?::[a-z]\w*|["'][a-z]\w*["'])\s+do\b"#).expect("namespace")
+    })
+}
+
+fn end_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"^end\b").expect("end"))
 }
 
 #[cfg(test)]

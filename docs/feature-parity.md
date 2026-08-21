@@ -271,7 +271,7 @@ scan the whole repository for `app/models`. Dynamic `constantize`,
 `send(:"#{name}_path")`, and `perform_later` / `perform_async` on a computed
 job class produce no edge. `only:` / `except:`, singular `resource`, and
 namespaced `resources` produce no extra route edges. Bare `resources :users`
-expands to index/show/create/update/destroy.
+and `resources "users"` expand to index/show/create/update/destroy.
 
 ```ruby
 get "/api/users", to: "users#index"
