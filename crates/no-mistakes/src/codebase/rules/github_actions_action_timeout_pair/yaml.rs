@@ -22,17 +22,6 @@ pub(super) fn step_label(step: &Mapping, index: usize) -> String {
         .unwrap_or_else(|| format!("step #{}", index + 1))
 }
 
-pub(super) fn key_line(source: &str, key: &str) -> usize {
-    source
-        .lines()
-        .position(|line| {
-            let trimmed = line.split('#').next().unwrap_or(line).trim();
-            trimmed == format!("{key}:") || trimmed.starts_with(&format!("{key}:"))
-        })
-        .map(|index| index + 1)
-        .unwrap_or(1)
-}
-
 pub(super) fn finding(file: &str, line: usize, message: String, target: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),

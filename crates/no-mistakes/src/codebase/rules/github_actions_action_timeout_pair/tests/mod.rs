@@ -262,7 +262,14 @@ fn yaml_helpers_cover_literals_and_labels() {
     assert_eq!(yaml::literal_u64(&Value::Number(2u64.into())), Some(2));
     assert_eq!(yaml::normalize_uses(" ./path/ "), "./path");
     assert_eq!(yaml::step_label(&serde_yaml::Mapping::new(), 2), "step #3");
-    assert_eq!(yaml::key_line("name: ci\n", "missing"), 1);
+    assert_eq!(
+        yaml::wrapper_rel(
+            Path::new("/repo"),
+            Path::new("/repo/packages/app/.github/actions/setup-aws/action.yml"),
+            &[PathBuf::from("/repo/packages/app")],
+        ),
+        ".github/actions/setup-aws/action.yml"
+    );
     assert_eq!(yaml::yaml_got(None), "null");
     assert_eq!(yaml::yaml_got(Some(&Value::Bool(true))), "true");
     assert_eq!(yaml::yaml_got(Some(&Value::Number(90u64.into()))), "90");
