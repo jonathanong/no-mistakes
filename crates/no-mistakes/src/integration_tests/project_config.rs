@@ -56,10 +56,8 @@ pub(crate) fn load_projects_from_visible_with_catalog(
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<HashSet<_>>();
     let config_values = if let Some(configs) = configs {
-        let config_values = configs.values();
-        // Explicit runner configs are authoritative even when Git ignores
-        // them. Authorize only those config paths in this local parse view;
-        // ignored helpers remain outside the frozen visible file set.
+        let config_values =
+            globs::expand_explicit_config_values(root, &configs.values(), &visible_files);
         visible_files.extend(
             config_values
                 .iter()

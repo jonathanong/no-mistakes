@@ -41,13 +41,10 @@ fn include_globs(
 ) -> Result<Vec<String>> {
     let test_match = extract_property_strings(source, "testMatch");
     let test_regex = extract_test_regexes(source);
-    let mut include = prefix_globs(
-        root,
-        config_dir,
-        &normalize_matcher_patterns(root, config_dir, test_match),
-    );
+    let configured = !test_match.is_empty() || !test_regex.is_empty();
+    let mut include = prefix_globs(root, config_dir, &normalize_matcher_patterns(test_match));
     include.extend(regex_matched_files(root, &test_regex, visible_files)?);
-    if include.is_empty() {
+    if include.is_empty() && !configured {
         include = prefix_globs(
             root,
             config_dir,
@@ -92,22 +89,22 @@ fn compile_regexes(patterns: &[String]) -> Result<Vec<Regex>> {
         .collect()
 }
 
-fn normalize_matcher_patterns(root: &Path, base: &Path, patterns: Vec<String>) -> Vec<String> {
+fn normalize_matcher_patterns(patterns: Vec<String>) -> Vec<String> {
     patterns
         .into_iter()
-        .map(|pattern| normalize_matcher_pattern(root, base, pattern))
+        .map(normalize_matcher_pattern)
         .collect()
 }
 
-fn normalize_matcher_pattern(root: &Path, base: &Path, pattern: String) -> String {
+fn normalize_matcher_pattern(pattern: String) -> String {
     if pattern == "<rootDir>" {
-        return relative_slash_path(root, base);
+        return ".".to_string();
     }
     if let Some(rest) = pattern.strip_prefix("<rootDir>/") {
-        return relative_slash_path(root, &base.join(rest));
+        return rest.to_string();
     }
     if let Some(rest) = pattern.strip_prefix("./") {
-        return relative_slash_path(root, &base.join(rest));
+        return rest.to_string();
     }
     pattern
 }

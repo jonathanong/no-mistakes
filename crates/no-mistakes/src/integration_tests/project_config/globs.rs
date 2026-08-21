@@ -2,7 +2,8 @@ use crate::codebase::glob_normalize;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use std::path::Path;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 pub(crate) fn prefix_globs(root: &Path, base: &Path, patterns: &[String]) -> Vec<String> {
     let rel = relative_slash_path(root, base);
@@ -34,4 +35,59 @@ fn glob_escape_literal(value: &str) -> String {
             }
         })
         .collect()
+}
+
+pub(super) fn expand_explicit_config_values(
+    root: &Path,
+    patterns: &[String],
+    visible_files: &HashSet<PathBuf>,
+) -> Vec<String> {
+    let mut values = Vec::new();
+    for pattern in patterns {
+        if is_glob(pattern) {
+            if let Ok(glob) = Glob::new(pattern) {
+                let matcher = glob.compile_matcher();
+                for file in visible_files {
+                    let rel = relative_slash_path(root, file);
+                    if matcher.is_match(&rel) {
+                        values.push(rel);
+                    }
+                }
+            }
+        } else {
+            values.push(pattern.clone());
+        }
+    }
+    values.sort();
+    values.dedup();
+    values
+}
+
+fn is_glob(pattern: &str) -> bool {
+    pattern.contains('*') || pattern.contains('?') || pattern.contains('[')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn explicit_glob_configs_expand_against_visible_files() {
+        let root = Path::new("/repo");
+        let visible = HashSet::from([
+            PathBuf::from("/repo/packages/app/jest.config.js"),
+            PathBuf::from("/repo/packages/app/src/value.test.ts"),
+        ]);
+        let expanded =
+            expand_explicit_config_values(root, &["**/jest.config.js".to_string()], &visible);
+        assert_eq!(expanded, vec!["packages/app/jest.config.js".to_string()]);
+    }
+
+    #[test]
+    fn literal_config_paths_are_kept() {
+        let root = Path::new("/repo");
+        let expanded =
+            expand_explicit_config_values(root, &["jest.config.js".to_string()], &HashSet::new());
+        assert_eq!(expanded, vec!["jest.config.js".to_string()]);
+    }
 }

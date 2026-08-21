@@ -107,10 +107,7 @@ fn missing_visible_files_skips_test_regex_matches() {
         None,
     )
     .unwrap();
-    assert!(parsed
-        .include
-        .iter()
-        .any(|pattern| pattern == "**/*.test.ts"));
+    assert!(parsed.include.is_empty());
 }
 
 #[test]
@@ -126,4 +123,41 @@ fn invalid_test_regex_is_an_error() {
     )
     .unwrap_err();
     assert!(error.to_string().contains("invalid Jest testRegex"));
+}
+
+#[test]
+fn nested_root_dir_test_match_is_not_double_prefixed() {
+    let root = Path::new("/repo");
+    let config_dir = root.join("packages/app");
+    let files = HashSet::new();
+    let parsed = config_project(
+        root,
+        "packages/app/jest.config.js",
+        &config_dir,
+        r#"module.exports = { testMatch: ["<rootDir>/src/**/*.test.ts"] };"#,
+        Some(&files),
+    )
+    .unwrap();
+    assert_eq!(
+        parsed.include,
+        vec!["packages/app/src/**/*.test.ts".to_string()]
+    );
+}
+
+#[test]
+fn unmatched_test_regex_does_not_fall_back_to_default_globs() {
+    let parsed = project(
+        r#"module.exports = { testRegex: "integration/.*" };"#,
+        &["src/value.test.ts"],
+    );
+    assert!(parsed.include.is_empty());
+}
+
+#[test]
+fn quoted_json_test_match_keys_are_parsed() {
+    let parsed = project(
+        r#"{ "testMatch": ["integration/**/*.test.js"] }"#,
+        &["src/value.test.ts"],
+    );
+    assert_eq!(parsed.include, vec!["integration/**/*.test.js".to_string()]);
 }
