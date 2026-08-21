@@ -27,7 +27,7 @@ Tracked regular files (index mode `100644`/`100755`) are classified from that
 index mode without a worktree `lstat`. An unstaged replacement of a tracked
 file by a symlink is therefore still treated as a regular file. Missing
 worktree paths are omitted from the `--deleted` `R` records rather than by
-statting every tracked file. Tracked symlinks (`120000`) and untracked files
+running `lstat` on every tracked file. Tracked symlinks (`120000`) and untracked files
 still consult worktree metadata.
 
 Outside a Git checkout, `.gitignore` and `.ignore` files are still applied by
