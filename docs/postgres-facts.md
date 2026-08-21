@@ -6,7 +6,8 @@ TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-lock-ordering`, `postgres-no-generated-column-writes`,
-`postgres-fk-index`, and `postgres-constraint-validate` consume
+`postgres-fk-index`, `postgres-redundant-index`, and
+`postgres-constraint-validate` consume
 the facts through `no-mistakes check`.
 
 ## Schema facts
@@ -39,10 +40,18 @@ extractors do not panic.
 request `SourceStore` and runs `extract_migration_facts`, which includes
 `CREATE TABLE` plus:
 
-- `CREATE INDEX` / unique and primary-key covering indexes: table, leading
-  column, access method (`USING` defaults to btree), whether a `WHERE`
-  predicate is present, and a `col IS NOT NULL` predicate column when that is
-  the whole predicate
+- `CREATE INDEX` / unique and primary-key covering indexes: table, optional
+  name (schema-qualified when written that way), key columns (name, opclass,
+  ordering, nulls), `INCLUDE` columns, uniqueness, access method (`USING`
+  defaults to btree), whether a `WHERE` predicate is present, a predicate key
+  that lowercases keywords and unquoted identifiers but keeps string literals and
+  quoted identifiers, a `col IS NOT NULL` predicate column when that is the
+  whole predicate, and a source line taken from that statement's occurrence in
+  the file (so a wrapped `CREATE INDEX` still points at the `CREATE` line)
+- `DROP INDEX` names (schema-qualified) and source lines, so later drops can
+  remove earlier creates of the same identity
+- `DROP TABLE` names and source lines, so later table drops can remove that
+  table's indexes
 - Foreign keys from `CREATE TABLE` and `ALTER TABLE`: table, columns,
   referenced table, optional `ON DELETE` action, and a source line
 - Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows
@@ -53,7 +62,8 @@ $tag$` bodies as described above. `collect_schema_facts` first filters
 candidates with `PostgresSchemaOptions.sql_include` (default `['**/*.sql']`).
 There is no hardcoded `backend/migrations/` root.
 
-`postgres-fk-index` and `postgres-constraint-validate` consume these
+`postgres-fk-index`, `postgres-redundant-index`, and
+`postgres-constraint-validate` consume these
 migration facts. `postgres-lock-ordering` and
 `postgres-no-generated-column-writes` consume
 the facts through `no-mistakes check`.
@@ -120,3 +130,10 @@ instead of re-parsing SQL with a private parser.
 Lock-ordering and runtime-query *rules* are not part of this fact layer.
 Query-name annotations, election-schema vote tables, and UUIDv7 predicates
 are also out of scope.
+
+`postgres-redundant-index` v1 also leaves these migration index transitions
+unmodeled: quoted mixed-case identifier quote semantics (`"Events"` versus
+`Events`), implicit constraint indexes always recorded at line 1,
+`CREATE INDEX IF NOT EXISTS` no-ops, `ALTER INDEX ... RENAME TO`,
+`DROP INDEX` / `DROP TABLE` inside `DO $$` blocks, and `ALTER TABLE ...
+DROP COLUMN` invalidating indexes.

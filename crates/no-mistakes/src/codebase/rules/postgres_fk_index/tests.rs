@@ -1,5 +1,7 @@
 use super::*;
-use crate::codebase::postgres::{SqlCreateIndexMetadata, SqlForeignKeyMetadata};
+use crate::codebase::postgres::{
+    extract_migration_facts, SqlCreateIndexMetadata, SqlForeignKeyMetadata, SqlSchemaFileFacts,
+};
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
@@ -121,6 +123,7 @@ fn covering_index_shapes() {
         access_method: "btree".to_string(),
         has_predicate: false,
         not_null_predicate_column: None,
+        ..Default::default()
     };
     let hash = SqlCreateIndexMetadata {
         access_method: "hash".to_string(),
@@ -164,4 +167,33 @@ fn option_defaults_use_empty_includes() {
     let compiled = compile_options(&Options::default());
     assert!(compiled.allowed_columns.is_empty());
     assert!(compiled.allowed_tables.is_empty());
+}
+
+#[test]
+fn schema_qualified_index_covers_unqualified_fk() {
+    let sql = concat!(
+        "CREATE TABLE public.child (parent_id uuid REFERENCES parent);\n",
+        "CREATE INDEX ON public.child(parent_id);"
+    );
+    let facts = extract_migration_facts(sql);
+    assert_eq!(facts.foreign_keys[0].table_name, "child");
+    assert!(facts.indexes.iter().any(|index| {
+        index.table_name == "public.child" && index.leading_column.as_deref() == Some("parent_id")
+    }));
+    let file = SqlSchemaFileFacts {
+        indexes: facts.indexes,
+        foreign_keys: facts.foreign_keys.clone(),
+        ..Default::default()
+    };
+    let indexes = scan::indexes_by_table(std::slice::from_ref(&file));
+    let findings = scan::scan_fk(
+        "migrations/001.sql",
+        sql,
+        &file.foreign_keys[0],
+        &indexes,
+        &compile_options(&Options::default()),
+        &mut Default::default(),
+        &mut Default::default(),
+    );
+    assert!(findings.is_empty(), "{findings:?}");
 }
