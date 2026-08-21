@@ -71,6 +71,7 @@ fn check_rule_application(
     graph: &DepGraph,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     file_universe: Option<&HashSet<std::path::PathBuf>>,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Result<Vec<RuleFinding>> {
     if opts.roots.is_empty()
         || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())
@@ -134,7 +135,7 @@ fn check_rule_application(
             .unwrap_or(&resolved_path)
             .to_string_lossy()
             .replace('\\', "/");
-        let root_node = NodeId::file(resolved_path);
+        let root_node = NodeId::file_in(interner, resolved_path);
         let entries = match file_universe {
             Some(universe) => {
                 graph.deps_of_in_file_universe(&[root_node], None, allowed.as_ref(), universe)

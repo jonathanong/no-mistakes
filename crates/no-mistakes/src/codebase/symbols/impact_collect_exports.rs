@@ -5,12 +5,16 @@ fn export_paths(
     target_symbol: &str,
     root: &Path,
     definition: &SymbolLocation,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> (Vec<SymbolLocation>, BTreeSet<NodeId>) {
     let mut exports = BTreeSet::from([definition.clone()]);
     let mut export_nodes = BTreeSet::from([target.clone()]);
     let mut frontier = vec![(target.clone(), target_symbol.to_string())];
     let mut seen = BTreeSet::from([target.clone()]);
-    frontier.push((NodeId::file(root.join(&definition.file)), target_symbol.to_string()));
+    frontier.push((
+        NodeId::file_in(interner, root.join(&definition.file)),
+        target_symbol.to_string(),
+    ));
     while let Some((node, current_symbol)) = frontier.pop() {
         if let Some(neighbors) = graph.dependents_of_node(&node) {
             for (neighbor, _) in neighbors {
@@ -18,12 +22,18 @@ fn export_paths(
                     continue;
                 };
                 if seen.insert(neighbor.clone()) {
-                    if let Some(location) = export_location(facts, file, root, symbol, true).ok().flatten() {
+                    if let Some(location) = export_location(facts, file, root, symbol, true)
+                        .ok()
+                        .flatten()
+                    {
                         let local_import_export =
                             local_import_export(facts, file, symbol, &current_symbol);
                         if location.kind == "re-export" || local_import_export {
                             frontier.push((neighbor.clone(), symbol.to_string()));
-                            frontier.push((NodeId::file(file.clone()), symbol.to_string()));
+                            frontier.push((
+                                NodeId::file_in(interner, file.clone()),
+                                symbol.to_string(),
+                            ));
                             exports.insert(location);
                             export_nodes.insert(neighbor.clone());
                         }
@@ -35,12 +45,7 @@ fn export_paths(
     (exports.into_iter().collect(), export_nodes)
 }
 
-fn local_import_export(
-    facts: &TsFactMap,
-    file: &Path,
-    symbol: &str,
-    current_symbol: &str,
-) -> bool {
+fn local_import_export(facts: &TsFactMap, file: &Path, symbol: &str, current_symbol: &str) -> bool {
     facts
         .get(file)
         .and_then(|facts| Some((facts.source.as_ref()?, facts.symbols.as_ref()?)))
@@ -54,7 +59,8 @@ fn local_import_export(
                 Some(export.local.as_deref().unwrap_or(&export.name))
             })?;
             let direct_import_export = symbols.imports.iter().any(|import| {
-                import.local == local && (import.imported == current_symbol || import.imported == "*")
+                import.local == local
+                    && (import.imported == current_symbol || import.imported == "*")
             });
             (direct_import_export
                 || value_alias_export(source, &symbols.imports, symbol, current_symbol))

@@ -26,7 +26,12 @@ impl SharedTraversalContext {
         options: &crate::flow_query::FlowOptions,
     ) -> Result<crate::flow_query::FlowReport> {
         let graph = self.graph_shared()?;
-        crate::flow_query::run_with_prepared_graph(options, &self.root, graph.as_ref())
+        crate::flow_query::run_with_prepared_graph(
+            options,
+            &self.root,
+            graph.as_ref(),
+            self.session.interner(),
+        )
     }
 
     pub(crate) fn effects_report(
@@ -43,6 +48,7 @@ impl SharedTraversalContext {
             depth,
             graph.as_ref(),
             self.prepared_facts(),
+            self.session.interner(),
         )
     }
 
@@ -58,6 +64,7 @@ impl SharedTraversalContext {
             depth,
             graph.as_ref(),
             self.prepared_facts(),
+            self.session.interner(),
         )
     }
 }

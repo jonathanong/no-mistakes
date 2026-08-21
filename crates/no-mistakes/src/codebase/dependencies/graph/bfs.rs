@@ -44,8 +44,9 @@ where
             continue;
         }
         if !visited.contains(start) {
-            visited.insert(start.clone());
-            queue.push_back((start.clone(), 0));
+            let start_node = start.clone();
+            visited.insert(start_node.clone());
+            queue.push_back((start_node, 0));
         }
     }
     let root_nodes: FxHashSet<NodeId> = starts.iter().cloned().collect();
@@ -82,22 +83,23 @@ where
                 }
 
                 if !visited.contains(neighbor) {
-                    visited.insert(neighbor.clone());
+                    let next = neighbor.clone();
+                    visited.insert(next.clone());
                     let next_depth = depth + 1;
                     if should_emit_node(&node, neighbor, *kind, allowed, owner_bridge_allowed) {
                         let index = result.len();
                         result.push(NodeEntry {
-                            node: neighbor.clone(),
+                            node: next.clone(),
                             depth: next_depth,
                             via: vec![*kind],
                         });
-                        result_idx.insert(neighbor.clone(), index);
+                        result_idx.insert(next.clone(), index);
                     }
                     if *kind == EdgeKind::DynamicImport && matches!(neighbor, NodeId::File(_)) {
-                        dynamic_import_files.insert(neighbor.clone());
+                        dynamic_import_files.insert(next.clone());
                     }
                     if should_expand_node(&node, neighbor, owner_bridge_allowed) {
-                        queue.push_back((neighbor.clone(), next_depth));
+                        queue.push_back((next, next_depth));
                     }
                 } else if let Some(&index) = result_idx.get(neighbor) {
                     add_via_kind(&mut result[index], *kind);

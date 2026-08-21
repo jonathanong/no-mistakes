@@ -41,6 +41,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
         graph_files: &shared.graph_files,
         include_symbols: args.include_symbols,
         workspace: &workspace,
+        interner: shared.session.interner(),
     });
     validate_direction(&direction, &entrypoints)?;
 
@@ -109,8 +110,9 @@ pub(crate) fn collect_and_filter_entries_prepared(
                         .strip_prefix(&shared.root)
                         .unwrap_or(&provenance.importer)
                         .to_path_buf();
-                    provenance.config =
-                        provenance.config.map(|config| visible_provenance_path(shared, config));
+                    provenance.config = provenance
+                        .config
+                        .map(|config| visible_provenance_path(shared, config));
                     provenance
                 })
                 .collect();
@@ -136,9 +138,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
         .chain(runtime_diagnostics)
         .map(|mut diagnostic| {
             let root_text = shared.root.to_string_lossy();
-            diagnostic.detail = diagnostic
-                .detail
-                .replace(&format!("{root_text}/"), "");
+            diagnostic.detail = diagnostic.detail.replace(&format!("{root_text}/"), "");
             diagnostic.config = diagnostic.config.map(|config| {
                 config
                     .strip_prefix(&shared.root)

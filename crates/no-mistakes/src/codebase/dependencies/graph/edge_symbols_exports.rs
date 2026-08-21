@@ -106,7 +106,7 @@ fn collect_direct_reexport_edge(
         .workspace
         .recognizes_specifier_from(source, inputs.path)
     {
-        if let Some(node) = bare_module_node(source) {
+        if let Some(node) = bare_module_node_in(interner, source) {
             edges.push((from, node, symbol_edge_kind(export.is_type_only)));
         }
     }

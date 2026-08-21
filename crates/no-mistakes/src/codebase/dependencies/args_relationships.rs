@@ -135,16 +135,30 @@ pub fn parse_entrypoint(s: &str) -> (PathBuf, Option<String>) {
 }
 
 pub(crate) fn workflow_node_from_suffix(file: &Path, suffix: &str) -> Option<NodeId> {
+    parsed_workflow_suffix(suffix).map(|(job, step)| match step {
+        Some(step) => NodeId::workflow_step(file, job, step),
+        None => NodeId::workflow_job(file, job),
+    })
+}
+
+pub(crate) fn workflow_node_from_suffix_in(
+    interner: &PathInterner,
+    file: &Path,
+    suffix: &str,
+) -> Option<NodeId> {
+    parsed_workflow_suffix(suffix).map(|(job, step)| match step {
+        Some(step) => NodeId::workflow_step_in(interner, file, job, step),
+        None => NodeId::workflow_job_in(interner, file, job),
+    })
+}
+
+fn parsed_workflow_suffix(suffix: &str) -> Option<(&str, Option<usize>)> {
     let suffix = suffix.strip_prefix("job:")?;
     if let Some((job, step)) = suffix.split_once("/step:") {
         if job.is_empty() {
             return None;
         }
-        return Some(NodeId::workflow_step(
-            file,
-            job,
-            step.parse().ok()?,
-        ));
+        return Some((job, Some(step.parse().ok()?)));
     }
-    (!suffix.is_empty()).then(|| NodeId::workflow_job(file, suffix))
+    (!suffix.is_empty()).then_some((suffix, None))
 }

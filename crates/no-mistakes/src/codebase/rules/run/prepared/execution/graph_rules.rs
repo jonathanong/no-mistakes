@@ -8,6 +8,7 @@ pub(super) fn graph_rule_findings(
     prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
     dependency_graph: Option<&DepGraph>,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
@@ -22,6 +23,7 @@ pub(super) fn graph_rule_findings(
                     prepared_graph,
                     inferred_roots,
                     dependency_graph.expect("forbidden-dependencies requires canonical graph"),
+                    interner,
                 )
             },
         )?);

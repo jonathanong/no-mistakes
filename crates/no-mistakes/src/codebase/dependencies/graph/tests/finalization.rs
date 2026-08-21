@@ -33,6 +33,19 @@ fn bfs_visited_sets_use_fx_hash() {
     );
 }
 
+#[test]
+fn bfs_clones_neighbor_once_on_first_visit() {
+    let bfs = include_str!("../bfs.rs");
+    assert!(
+        bfs.contains("let next = neighbor.clone();"),
+        "BFS must clone NodeId once per first visit"
+    );
+    assert!(
+        !bfs.contains("visited.insert(neighbor.clone())"),
+        "BFS must not clone neighbor separately for visited insert"
+    );
+}
+
 fn p(path: &str) -> PathBuf {
     PathBuf::from(path)
 }

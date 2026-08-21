@@ -124,5 +124,6 @@ pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk>
         req.prepared_graph,
         req.dependency_graph,
         req.inferred_roots,
+        req.session.interner(),
     )?))
 }

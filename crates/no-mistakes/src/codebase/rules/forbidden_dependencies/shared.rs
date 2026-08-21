@@ -1,4 +1,5 @@
 use super::{check_rule_application, union_allowed_set, Options, RULE_ID};
+use crate::codebase::analysis_session::PathInterner;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
@@ -42,6 +43,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
     prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     graph: &DepGraph,
+    interner: &PathInterner,
 ) -> Result<Vec<RuleFinding>> {
     let applications = config.rule_applications(RULE_ID);
     if applications.is_empty() {
@@ -68,6 +70,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
             graph,
             inferred_roots,
             Some(&file_universe),
+            interner,
         )?);
     }
     crate::codebase::rules::sort_findings(&mut findings);

@@ -107,15 +107,16 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
                     continue;
                 }
                 if !visited.contains(&neighbor) {
-                    visited.insert(neighbor.clone());
+                    let next = neighbor;
+                    visited.insert(next.clone());
                     let idx = result.len();
                     result.push(NodeEntry {
-                        node: neighbor.clone(),
+                        node: next.clone(),
                         depth: next_depth,
                         via: vec![kind],
                     });
-                    result_idx.insert(neighbor.clone(), idx);
-                    next_frontier.push(neighbor);
+                    result_idx.insert(next.clone(), idx);
+                    next_frontier.push(next);
                 } else if let Some(&idx) = result_idx.get(&neighbor) {
                     add_via_kind(&mut result[idx], kind);
                 }
