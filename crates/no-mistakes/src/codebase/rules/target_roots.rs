@@ -1,10 +1,6 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id: &str) -> bool {
-    config.rule_configured(rule_id)
-}
-
 pub(crate) fn target_roots(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,

@@ -154,6 +154,7 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
         rules: vec![
             repository_rule(BANNED_PATHS),
             repository_rule(TSCONFIG_FILE_COVERAGE),
+            repository_rule(super::super::VERSION_PIN_CONSISTENCY),
             repository_rule(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
         ],
         ..Default::default()
@@ -174,6 +175,10 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
     );
     assert_eq!(
         index.candidates(TSCONFIG_FILE_COVERAGE),
+        std::slice::from_ref(&tracked)
+    );
+    assert_eq!(
+        index.candidates(super::super::VERSION_PIN_CONSISTENCY),
         std::slice::from_ref(&tracked)
     );
     assert_eq!(

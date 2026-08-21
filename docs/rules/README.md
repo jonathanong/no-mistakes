@@ -82,6 +82,7 @@ rules:
 | [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to belong to a tsconfig program.               |
 | [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md)                         | Require tracked TypeScript projects to have CI and local typecheck registrations. |
 | [`unique-exports`](unique-exports.md)                                         | Prevent ambiguous duplicate public export names.                                |
+| [`version-pin-consistency`](version-pin-consistency.md)                       | Keep a structured source pin in lockstep with other files.                      |
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |
 | [`vitest-project-mapping`](vitest-project-mapping.md)                         | Require Vitest tests to map to exactly one project.                             |
 | [`vitest-test-correspondence`](vitest-test-correspondence.md)                 | Enforce source/test correspondence for Vitest.                                  |

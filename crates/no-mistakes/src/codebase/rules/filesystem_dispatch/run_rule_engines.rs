@@ -77,6 +77,15 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         TSCONFIG_FILE_COVERAGE => {
             tsconfig_file_coverage::check_with_files_and_sources(root, config, files, sources)
         }
+        VERSION_PIN_CONSISTENCY => {
+            version_pin_consistency::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         NO_EMPTY_OR_COMMENTS_ONLY_FILES => {
             no_empty_or_comments_only_files::check_with_files_and_sources(
                 root, config, files, sources,
