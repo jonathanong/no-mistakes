@@ -188,7 +188,7 @@ fn default_vitest_discovery_includes_workspace_and_projects_configs() {
 
 #[test]
 fn jest_invalid_regex_through_config_loader_is_an_error() {
-    let root = Path::new("/repo");
+    let root = Path::new("/nm-jest-invalid-regex");
     let tsconfig = super::super::test_support::tsconfig_without_config(root);
     let error = load_config_projects(
         root,
