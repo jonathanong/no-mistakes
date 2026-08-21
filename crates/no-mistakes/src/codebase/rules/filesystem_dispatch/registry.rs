@@ -3,6 +3,7 @@ macro_rules! filesystem_rules {
     ($macro:ident) => {
         $macro! {
             AGENTS_MD_MAX_SIZE => agents_md_max_size::check_with_files,
+            GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => github_actions_action_timeout_pair::check_with_files,
             GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => github_actions_composite_step_schema::check_with_files,
             GITHUB_ACTIONS_JOB_TIMEOUTS => github_actions_job_timeouts::check_with_files,
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files,

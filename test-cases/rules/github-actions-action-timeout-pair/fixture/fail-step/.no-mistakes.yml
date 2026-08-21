@@ -1,0 +1,11 @@
+rules:
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    options:
+      uses:
+        - ./.github/actions/setup-aws
+        - aws-actions/configure-aws-credentials@
+      stepTimeoutMinutes: 2
+      nestedInput: action-timeout-s
+      nestedTimeoutSeconds: 90
+      forbidNestedInComposite: true

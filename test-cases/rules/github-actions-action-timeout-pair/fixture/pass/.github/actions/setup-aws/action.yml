@@ -1,0 +1,9 @@
+name: Setup
+runs:
+  using: composite
+  steps:
+    - name: Configure credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.role-arn }}
+        action-timeout-s: 90
