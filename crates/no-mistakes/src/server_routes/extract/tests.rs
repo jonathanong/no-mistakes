@@ -225,6 +225,8 @@ fn extract_file_recognizes_nestjs_controller_and_verb_decorators() {
     assert!(route_pairs.contains(&("all", "/any", Framework::Nestjs)));
     assert!(route_pairs.contains(&("get", "/host", Framework::Nestjs)));
     assert!(route_pairs.contains(&("delete", "/gone", Framework::Nestjs)));
+    assert_eq!(facts.bindings["ExtraController"].prefixes, vec!["extra"]);
+    assert!(route_pairs.contains(&("get", "/anon", Framework::Nestjs)));
     assert!(!route_pairs
         .iter()
         .any(|(_, path, _)| path.contains("static")));

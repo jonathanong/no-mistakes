@@ -56,3 +56,18 @@ export class CjsControllerClass {
   @Delete("gone")
   remove() {}
 }
+
+function extra(_target: unknown) {}
+
+@extra
+@Controller("extra")
+export class ExtraController {
+  @Get()
+  extra() {}
+}
+
+@Controller()
+export default class {
+  @Get("anon")
+  anon() {}
+}

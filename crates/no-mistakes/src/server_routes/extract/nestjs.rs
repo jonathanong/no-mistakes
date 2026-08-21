@@ -4,7 +4,8 @@ use crate::server_routes::normalize::join_paths;
 use crate::server_routes::source::line_number;
 use crate::server_routes::types::Framework;
 use oxc_ast::ast::{
-    Argument, Class, ClassElement, Decorator, Expression, MethodDefinition, ObjectPropertyKind,
+    Argument, CallExpression, Class, ClassElement, Decorator, Expression, MethodDefinition,
+    ObjectPropertyKind,
 };
 
 const NESTJS_COMMON: &str = "@nestjs/common";
@@ -58,33 +59,20 @@ impl ServerRouteVisitor<'_> {
 
     fn nestjs_controller_prefix(&self, decorators: &[Decorator<'_>]) -> Option<String> {
         decorators.iter().find_map(|decorator| {
-            let (name, _) = decorator_callee(decorator)?;
+            let (name, _, call) = decorator_callee(decorator)?;
             if !self.nestjs_imported(name, "Controller") {
                 return None;
             }
-            self.decorator_path(decorator)
+            decorator_path(call)
         })
     }
 
     fn nestjs_verb_decorator(&self, decorator: &Decorator<'_>) -> Option<(String, String, u32)> {
-        let (name, start) = decorator_callee(decorator)?;
+        let (name, start, call) = decorator_callee(decorator)?;
         let imported = self.nestjs_imported_name(name)?;
         let method = nestjs_http_method(imported)?;
-        let path = self.decorator_path(decorator)?;
+        let path = decorator_path(call)?;
         Some((method, path, start))
-    }
-
-    fn decorator_path(&self, decorator: &Decorator<'_>) -> Option<String> {
-        let Expression::CallExpression(call) = &decorator.expression else {
-            return None;
-        };
-        let Some(arg) = call.arguments.first() else {
-            return Some(String::new());
-        };
-        if let Argument::ObjectExpression(object) = arg {
-            return object_path(object);
-        }
-        arg.as_expression().and_then(super::const_string)
     }
 
     fn nestjs_imported(&self, local: &str, imported: &str) -> bool {
@@ -99,14 +87,26 @@ impl ServerRouteVisitor<'_> {
     }
 }
 
-fn decorator_callee<'a>(decorator: &'a Decorator<'a>) -> Option<(&'a str, u32)> {
+fn decorator_callee<'a>(
+    decorator: &'a Decorator<'a>,
+) -> Option<(&'a str, u32, &'a CallExpression<'a>)> {
     let Expression::CallExpression(call) = &decorator.expression else {
         return None;
     };
     match &call.callee {
-        Expression::Identifier(id) => Some((id.name.as_str(), call.span.start)),
+        Expression::Identifier(id) => Some((id.name.as_str(), call.span.start, call)),
         _ => None,
     }
+}
+
+fn decorator_path(call: &CallExpression<'_>) -> Option<String> {
+    let Some(arg) = call.arguments.first() else {
+        return Some(String::new());
+    };
+    if let Argument::ObjectExpression(object) = arg {
+        return object_path(object);
+    }
+    arg.as_expression().and_then(super::const_string)
 }
 
 fn object_path(object: &oxc_ast::ast::ObjectExpression<'_>) -> Option<String> {
