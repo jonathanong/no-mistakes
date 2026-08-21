@@ -6,8 +6,10 @@ use serde::{Deserialize, Deserializer};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
+mod equals_file;
 mod scan;
 mod value_assertions;
+mod when;
 use scan::scan;
 use value_assertions::assert_value;
 
@@ -26,6 +28,13 @@ pub(crate) struct Policy {
     pub(crate) required_keys: Vec<String>,
     pub(crate) banned_keys: Vec<String>,
     pub(crate) value_assertions: Vec<ValueAssertion>,
+    pub(crate) when: Vec<PolicyWhen>,
+}
+
+#[derive(Deserialize, Default)]
+#[serde(default, rename_all = "camelCase")]
+pub(crate) struct PolicyWhen {
+    pub(crate) key: String,
 }
 
 #[derive(Deserialize, Default)]
@@ -41,6 +50,8 @@ pub(crate) struct ValueAssertion {
     pub(crate) forbidden_keys: Vec<String>,
     pub(crate) required_values: std::collections::BTreeMap<String, Value>,
     pub(crate) message: Option<String>,
+    pub(crate) file: String,
+    pub(crate) from_key: String,
     #[serde(rename = "match", default)]
     pub(crate) match_mode: MatchMode,
 }
@@ -64,6 +75,7 @@ pub(crate) enum AssertionKind {
     StringGlob,
     NotSingleFile,
     Equals,
+    EqualsFile,
     ObjectShape,
 }
 
@@ -78,6 +90,7 @@ impl AssertionKind {
             "string-glob" => Some(Self::StringGlob),
             "not-single-file" => Some(Self::NotSingleFile),
             "equals" => Some(Self::Equals),
+            "equals-file" => Some(Self::EqualsFile),
             "object-shape" => Some(Self::ObjectShape),
             _ => None,
         }
@@ -134,6 +147,14 @@ fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
 }
 
 #[cfg(test)]
+mod bind_tests;
+#[cfg(test)]
+mod equals_file_tests;
+#[cfg(test)]
 mod jsonc_tests;
+#[cfg(test)]
+mod plugins_tests;
+#[cfg(test)]
+mod selector_tests;
 #[cfg(test)]
 mod tests;

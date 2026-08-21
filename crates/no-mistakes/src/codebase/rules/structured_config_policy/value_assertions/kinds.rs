@@ -33,6 +33,7 @@ pub(super) fn kind_violation(
             .as_ref()
             .is_some_and(|expected| expected != value)
             .then(|| "must equal the configured value".to_string()),
+        AssertionKind::EqualsFile => None,
         AssertionKind::ObjectShape => object_shape_violation(value, assertion),
     }
 }
@@ -70,7 +71,8 @@ fn string_value(value: &Value) -> Option<&str> {
 }
 
 fn single_file_entry(value: &str) -> bool {
-    !value
+    let stripped = value.strip_prefix("**/").unwrap_or(value);
+    !stripped
         .chars()
         .any(|ch| matches!(ch, '*' | '?' | '[' | ']' | '{' | '}'))
 }

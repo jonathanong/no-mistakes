@@ -27,24 +27,47 @@ rules:
 ```
 
 Supported assertion kinds are `boolean`, `positive-number`, `string-array`,
-`record-of-boolean`, `string-prefix`, `string-glob`, `not-single-file`, `equals`, and
-`object-shape`. JSON and JSONC files (`.json`, `.jsonc`) are parsed with comment
-support; YAML is used for other extensions. A file that cannot be parsed is a
-finding, not a silent skip.
+`record-of-boolean`, `string-prefix`, `string-glob`, `not-single-file`, `equals`,
+`equals-file`, and `object-shape`. JSON and JSONC files (`.json`, `.jsonc`) are
+parsed with comment support; YAML is used for other extensions. A file that cannot
+be parsed is a finding, not a silent skip.
 
 Selectors are dotted paths; use numeric parts for array indexes and `[]` to apply
 an assertion to every array entry. On `[]` selectors, `match: all` (default)
-requires every entry to satisfy the assertion; `match: any` requires at least one.
+requires every entry to satisfy the assertion; `match: any` requires at least one
+entry in each parent array. Missing parent keys are skipped for `match: any`, so
+an override that never mentions a rule is not a failure. A parent key that is
+present but not an array still fails `match: any`. `not-single-file` strips a
+leading `**/` before looking for glob wildcards, so `**/exact/file.ts` is still
+a single-file entry.
+
 `object-shape` accepts `requiredKeys`, `forbiddenKeys`, and `requiredValues`.
+`equals-file` compares a key to the same (or `fromKey`) value in another file
+relative to the repository root, using the same selectors as other assertions.
+The comparison file must stay inside the repository root after normalization;
+parse errors are reported on that referenced file. `when` skips the rest of a
+policy for a file unless each listed key is a non-empty array or non-empty
+string.
 
 ```yaml
-            - key: rules.no-restricted-properties.[]
-              kind: object-shape
-              match: any
-              requiredKeys: [message]
-              forbiddenKeys: [object]
-              requiredValues:
-                property: bind
+policies:
+  - files: [.oxlintrc.json]
+    valueAssertions:
+      - key: rules.no-restricted-properties.[]
+        kind: object-shape
+        match: any
+        requiredKeys: [message]
+        forbiddenKeys: [object]
+        requiredValues:
+          property: bind
+  - files: ["**/.oxlintrc.json"]
+    when:
+      - key: extends
+    valueAssertions:
+      - key: plugins
+        kind: equals-file
+        file: .oxlintrc.json
+        fromKey: plugins
 ```
 
 Counterexample: a config file omits a required key, still contains a banned

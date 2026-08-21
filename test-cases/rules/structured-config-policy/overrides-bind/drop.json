@@ -1,0 +1,28 @@
+{
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "rules": {
+        "no-restricted-properties": [
+          "error",
+          {
+            "property": "bind",
+            "message": "Function.prototype.bind is banned"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.tsx"],
+      "rules": {
+        "no-restricted-properties": [
+          "error",
+          {
+            "property": "assign",
+            "message": "Object.assign is banned"
+          }
+        ]
+      }
+    }
+  ]
+}
