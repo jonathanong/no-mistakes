@@ -87,9 +87,13 @@ fn parse_git_listed_rest(tag: u8, rest: &[u8]) -> (PathBuf, Option<file_inventor
         |(index_kind, path)| {
             (
                 git_output_path(path),
-                // `--deleted` emits `R` only for missing worktree paths, not
-                // skip-worktree/`S` entries, so sparse files need a metadata check.
-                if tag == b'S' { None } else { index_kind },
+                // Skip-worktree and unmerged records can disagree with one
+                // stage's mode, so they take the worktree metadata path.
+                if matches!(tag, b'S' | b'M') {
+                    None
+                } else {
+                    index_kind
+                },
             )
         },
     )

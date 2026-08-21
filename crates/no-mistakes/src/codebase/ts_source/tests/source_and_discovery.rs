@@ -256,6 +256,32 @@ fn staged_git_paths_keep_literal_untracked_stage_shaped_names() {
 }
 
 #[test]
+fn staged_git_paths_do_not_trust_unmerged_index_mode() {
+    let views = parse_git_tagged_paths(
+        b"M 100644 abcdef 1\tconflict.mts\0M 120000 abcdef 3\tconflict.mts\0C 100644 abcdef 0\tstaged.mts\0",
+    );
+
+    assert_eq!(
+        views
+            .visible
+            .iter()
+            .map(|entry| (entry.path.clone(), entry.index_kind))
+            .collect::<Vec<_>>(),
+        vec![
+            (PathBuf::from("conflict.mts"), None),
+            (
+                PathBuf::from("staged.mts"),
+                Some(super::super::file_inventory::GitIndexKind::RegularFile)
+            ),
+        ]
+    );
+    assert_eq!(
+        views.tracked,
+        vec![PathBuf::from("conflict.mts"), PathBuf::from("staged.mts")]
+    );
+}
+
+#[test]
 fn discover_files_falls_back_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     write(dir.path(), "src/main.mts", "");

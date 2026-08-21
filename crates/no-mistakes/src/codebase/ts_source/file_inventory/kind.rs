@@ -26,14 +26,6 @@ impl FileClassification {
         }
     }
 
-    pub(crate) fn from_tracked_symlink(path: &Path) -> Self {
-        Self {
-            lexical_file: false,
-            lexical_symlink: true,
-            target_file: path.is_file(),
-        }
-    }
-
     #[doc(hidden)]
     pub fn is_lexical_file(self) -> bool {
         self.lexical_file

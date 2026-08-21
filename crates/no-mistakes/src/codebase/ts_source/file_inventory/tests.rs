@@ -309,6 +309,28 @@ fn git_tracked_symlink_still_consults_worktree_metadata() {
     assert_eq!(inventory.metadata_stat_count(), 1);
 }
 
+#[cfg(unix)]
+#[test]
+fn git_tracked_symlink_replaced_by_regular_file_uses_worktree_type() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let link = dir.path().join("link.mts");
+    std::os::unix::fs::symlink("regular.mts", &link).unwrap();
+    crate::test_support::git_add_all(dir.path());
+    std::fs::remove_file(&link).unwrap();
+    std::fs::write(&link, "export {}\n").unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    let kind = inventory.classification_for_path(&link).unwrap();
+    assert!(kind.is_lexical_file());
+    assert!(!kind.is_lexical_symlink());
+    assert!(kind.target_is_file());
+    assert_eq!(inventory.metadata_stat_count(), 1);
+}
+
 #[test]
 fn git_untracked_files_still_stat() {
     let dir = saved_ts_source("git-index-classify");
@@ -346,8 +368,8 @@ fn git_skip_worktree_missing_files_are_omitted() {
     );
     assert_eq!(
         inventory.metadata_stat_count(),
-        0,
-        "remaining tracked regular files must still skip stats"
+        1,
+        "absent skip-worktree files still require a metadata attempt"
     );
 }
 
@@ -394,11 +416,15 @@ fn git_classify_drops_missing_relative_paths() {
         vec![
             (PathBuf::from("alpha.ts"), None),
             (PathBuf::from("missing.ts"), None),
+            (
+                PathBuf::from("missing-link.ts"),
+                Some(super::GitIndexKind::Symlink),
+            ),
         ],
     );
     assert_eq!(classified.len(), 1);
     assert!(classified[0].path.ends_with("alpha.ts"));
-    assert_eq!(stats, 1);
+    assert_eq!(stats, 3);
 }
 
 #[test]
