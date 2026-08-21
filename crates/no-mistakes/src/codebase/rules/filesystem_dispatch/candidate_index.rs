@@ -56,7 +56,8 @@ impl RuleCandidateIndex {
                             .any(|rule| rule.applies_to_repository()))
                         || matches!(
                             rule_id,
-                            MARKDOWN_MERMAID_VALIDATION
+                            TSCONFIG_FILE_COVERAGE
+                                | MARKDOWN_MERMAID_VALIDATION
                                 | MARKDOWN_REACHABILITY
                                 | MARKDOWN_STRUCTURE_BUDGET
                         ),
