@@ -185,3 +185,20 @@ fn default_vitest_discovery_includes_workspace_and_projects_configs() {
         ["vitest.workspace.ts", "vitest.projects.ts"]
     );
 }
+
+#[test]
+fn jest_invalid_regex_through_config_loader_is_an_error() {
+    let root = Path::new("/repo");
+    let tsconfig = super::super::test_support::tsconfig_without_config(root);
+    let error = load_config_projects(
+        root,
+        Framework::Jest,
+        "jest.config.js",
+        root,
+        r#"module.exports = { testRegex: "(" };"#,
+        root,
+        &tsconfig,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("invalid Jest testRegex"));
+}

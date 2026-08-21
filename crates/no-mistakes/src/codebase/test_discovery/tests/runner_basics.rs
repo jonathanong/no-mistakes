@@ -225,6 +225,10 @@ fn jest_is_a_js_runner_not_a_language_frontend() {
         TestRunner::Jest.framework(),
         crate::integration_tests::types::Framework::Jest
     );
+    assert_eq!(
+        crate::integration_tests::types::Framework::Jest.as_str(),
+        "jest"
+    );
     assert!(crate::integration_tests::types::Framework::Jest.has_js_runner_config());
 }
 
