@@ -27,9 +27,10 @@ rules:
 Tracked `tsconfig.json` / `tsconfig.*.json` files (not under `node_modules`)
 are the candidate programs, including tsconfigs that a rule `include` filter
 would otherwise drop. Repositories with no tracked tsconfig produce no
-findings, so fixtures without compiler config stay silent. `auxiliaryConfigs`
-entries are not compiler programs: they must not declare `files`, `include`,
-`exclude`, or `references`, and their basename defaults to
+source-coverage findings, so fixtures without compiler config stay silent.
+Configured `allow` and `auxiliaryConfigs` entries are still validated.
+`auxiliaryConfigs` entries are not compiler programs: they must not declare
+`files`, `include`, `exclude`, or `references`, and their basename defaults to
 `tsconfig.dependency-cruiser.json`. Empty `reason` values, stale paths, and
 absolute or `..` option paths are findings.
 

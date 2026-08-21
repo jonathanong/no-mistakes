@@ -13,12 +13,12 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let tsconfigs = tracked_tsconfigs(root, inventory);
-    if tsconfigs.is_empty() {
-        return Vec::new();
-    }
     let candidates = typescript_candidates(root, candidate_files);
     let mut findings =
         super::lists::list_findings(root, opts, &tsconfigs, &candidates, inventory, sources);
+    if tsconfigs.is_empty() {
+        return findings;
+    }
     let auxiliary = opts
         .auxiliary
         .iter()

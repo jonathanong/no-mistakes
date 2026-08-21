@@ -22,6 +22,56 @@ fn missing_tsconfig_is_silent() {
 }
 
 #[test]
+fn missing_tsconfig_still_rejects_malformed_options() {
+    let (_dir, root) = temp_root();
+    let files = vec![
+        write(&root, "index.ts", "export {}\n"),
+        write(&root, "helper.json", "{}\n"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+allow:
+  - path: /index.ts
+    reason: must not rewrite
+  - path: index.ts
+    reason: ""
+auxiliaryConfigs:
+  - path: helper.json
+    reason: misnamed helper
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    assert!(
+        findings.iter().any(|finding| finding
+            .message
+            .contains("must be a repository-relative path without parent traversals")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("empty reason")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("basename must be")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("not covered by any tsconfig")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn source_include_keeps_root_tsconfig_membership() {
     let (_dir, root) = temp_root();
     let files = vec![
