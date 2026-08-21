@@ -30,6 +30,21 @@ fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
     check_with_files(root, &config(yaml), &files).unwrap()
 }
 
+fn assert_rejected_option_path(findings: &[RuleFinding]) {
+    assert!(
+        findings.iter().any(|finding| finding
+            .message
+            .contains("must be a repository-relative path without parent traversals")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("stale")),
+        "{findings:?}"
+    );
+}
+
 #[test]
 fn uncovered_file_is_a_finding() {
     let findings = run(&fixture("fail"), "{}");
@@ -165,16 +180,6 @@ auxiliaryConfigs:
 }
 
 #[test]
-fn missing_tsconfig_is_silent() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(&dir.path().canonicalize().unwrap());
-    let ts = root.join("index.ts");
-    std::fs::write(&ts, "export {}\n").unwrap();
-    let findings = check_with_files(&root, &config("{}"), &[ts]).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
 fn javascript_and_node_modules_are_skipped() {
     let root = fixture("fail");
     let files = vec![
@@ -231,46 +236,10 @@ fn normalize_rel_strips_dot_segments_and_rejects_escapes() {
         Some("scripts/generate.ts")
     );
     assert_eq!(normalize_rel("/scripts/generate.ts"), None);
+    assert_eq!(normalize_rel(r"C:\repo\scripts\generate.ts"), None);
+    assert_eq!(normalize_rel("C:/repo/scripts/generate.ts"), None);
     assert_eq!(normalize_rel("../src/foo.ts"), None);
     assert_eq!(normalize_rel("src/../foo.ts"), None);
-}
-
-#[test]
-fn source_include_keeps_root_tsconfig_membership() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(&dir.path().canonicalize().unwrap());
-    std::fs::create_dir_all(root.join("src")).unwrap();
-    std::fs::create_dir_all(root.join("scripts")).unwrap();
-    std::fs::write(
-        root.join("tsconfig.json"),
-        "{ \"files\": [\"src/index.ts\"] }\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("src/index.ts"), "export {}\n").unwrap();
-    std::fs::write(root.join("src/extra.ts"), "export {}\n").unwrap();
-    std::fs::write(root.join("scripts/scratch.ts"), "export {}\n").unwrap();
-    let files = vec![
-        root.join("tsconfig.json"),
-        root.join("src/index.ts"),
-        root.join("src/extra.ts"),
-        root.join("scripts/scratch.ts"),
-    ];
-    let mut cfg = config("{}");
-    cfg.rules[0].include = vec!["src/**/*.ts".into()];
-    let findings = check_with_files(&root, &cfg, &files).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.file.contains("extra.ts")
-                && finding.message.contains("not covered by any tsconfig")),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.file.contains("scratch.ts")),
-        "{findings:?}"
-    );
 }
 
 #[test]
@@ -283,18 +252,20 @@ allow:
     reason: must not rewrite into the covered source
 "#,
     );
-    assert!(
-        findings.iter().any(|finding| finding
-            .message
-            .contains("must be a repository-relative path without parent traversals")),
-        "{findings:?}"
+    assert_rejected_option_path(&findings);
+}
+
+#[test]
+fn windows_absolute_allow_path_is_rejected_instead_of_rewritten() {
+    let findings = run(
+        &fixture("pass"),
+        r#"
+allow:
+  - path: 'C:\repo\scripts\generate.ts'
+    reason: must not rewrite a Windows absolute path
+"#,
     );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("stale")),
-        "{findings:?}"
-    );
+    assert_rejected_option_path(&findings);
 }
 
 #[test]
@@ -307,12 +278,7 @@ allow:
     reason: must not collapse traversals
 "#,
     );
-    assert!(
-        findings.iter().any(|finding| finding
-            .message
-            .contains("must be a repository-relative path without parent traversals")),
-        "{findings:?}"
-    );
+    assert_rejected_option_path(&findings);
 }
 
 #[test]
@@ -348,145 +314,6 @@ auxiliaryConfigs:
 }
 
 #[test]
-fn auxiliary_only_inventory_leaves_sources_uncovered() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(&dir.path().canonicalize().unwrap());
-    std::fs::write(root.join("index.ts"), "export {}\n").unwrap();
-    std::fs::write(root.join("tsconfig.dependency-cruiser.json"), "{}\n").unwrap();
-    let files = vec![
-        root.join("index.ts"),
-        root.join("tsconfig.dependency-cruiser.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-auxiliaryConfigs:
-  - path: tsconfig.dependency-cruiser.json
-    reason: resolver config
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.file.contains("index.ts")
-                && finding.message.contains("not covered by any tsconfig")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn missing_auxiliary_source_is_not_a_json_object() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(&dir.path().canonicalize().unwrap());
-    std::fs::write(root.join("index.ts"), "export {}\n").unwrap();
-    std::fs::write(
-        root.join("tsconfig.json"),
-        "{ \"include\": [\"index.ts\"] }\n",
-    )
-    .unwrap();
-    let files = vec![
-        root.join("tsconfig.json"),
-        root.join("index.ts"),
-        root.join("tsconfig.dependency-cruiser.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-auxiliaryConfigs:
-  - path: tsconfig.dependency-cruiser.json
-    reason: missing from disk
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("not a JSON object")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn auxiliary_array_json_is_not_an_object() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(&dir.path().canonicalize().unwrap());
-    std::fs::write(root.join("index.ts"), "export {}\n").unwrap();
-    std::fs::write(
-        root.join("tsconfig.json"),
-        "{ \"include\": [\"index.ts\"] }\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("tsconfig.dependency-cruiser.json"), "[]\n").unwrap();
-    let files = vec![
-        root.join("tsconfig.json"),
-        root.join("index.ts"),
-        root.join("tsconfig.dependency-cruiser.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-auxiliaryConfigs:
-  - path: tsconfig.dependency-cruiser.json
-    reason: array document
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("not a JSON object")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn tracked_non_tsconfig_auxiliary_is_still_read() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(&dir.path().canonicalize().unwrap());
-    std::fs::write(root.join("index.ts"), "export {}\n").unwrap();
-    std::fs::write(
-        root.join("tsconfig.json"),
-        "{ \"include\": [\"index.ts\"] }\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("foo.json"), "{ \"include\": [\"index.ts\"] }\n").unwrap();
-    let files = vec![
-        root.join("tsconfig.json"),
-        root.join("index.ts"),
-        root.join("foo.json"),
-    ];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-auxiliaryConfigs:
-  - path: foo.json
-    reason: misnamed helper
-    requiredBasename: foo.json
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-    assert!(
-        findings.iter().any(|finding| finding
-            .message
-            .contains("must not declare files, include, exclude, or references")),
-        "{findings:?}"
-    );
-}
-
-#[test]
 fn invalid_rule_include_glob_is_a_configuration_error() {
     let root = fixture("pass");
     let mut cfg = config("{}");
@@ -506,10 +333,7 @@ auxiliaryConfigs:
     reason: must not rewrite
 "#,
     );
-    assert!(
-        findings.iter().any(|finding| finding
-            .message
-            .contains("must be a repository-relative path without parent traversals")),
-        "{findings:?}"
-    );
+    assert_rejected_option_path(&findings);
 }
+
+include!("tests/inventory.rs");

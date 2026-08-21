@@ -29,7 +29,7 @@ pub(super) fn scan(
         .filter(|path| !auxiliary.contains(path.as_str()))
         .map(|path| root.join(path))
         .collect::<Vec<_>>();
-    let covered = covered_sources(root, &program_configs, candidate_files, sources);
+    let covered = covered_sources(root, &program_configs, inventory, sources);
     let allowed = opts
         .allow
         .iter()

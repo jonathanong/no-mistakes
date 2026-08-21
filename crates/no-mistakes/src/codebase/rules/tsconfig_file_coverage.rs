@@ -143,7 +143,7 @@ fn compiled_path(kind: &str, path: &str, invalid: &mut Vec<(String, String)>) ->
 
 pub(super) fn normalize_rel(path: &str) -> Option<String> {
     let normalized = path.replace('\\', "/");
-    if Path::new(path).is_absolute() || normalized.starts_with('/') {
+    if crate::codebase::ts_source::is_portably_absolute_path(Path::new(path)) {
         return None;
     }
     let mut parts = Vec::new();
