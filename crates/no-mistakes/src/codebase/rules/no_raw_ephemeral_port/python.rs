@@ -1,7 +1,9 @@
 pub(super) const BIND_PATTERN: &str = concat!(
     r#"\.\s*bind\s*\(\s*\(\s*"#,
     r#"[^,]+"#,
-    r#"\s*,\s*0(?:\s*,[^)]*)?\s*\)\s*\)"#,
+    r#"\s*,\s*"#,
+    r#"(?:0(?:_?0)*|0[xXoObB](?:_?0)+)"#,
+    r#"(?:\s*,[^)]*)?\s*\)\s*\)"#,
 );
 
 pub(super) fn scan_lines(source: &str, bind: &regex::Regex) -> Vec<usize> {

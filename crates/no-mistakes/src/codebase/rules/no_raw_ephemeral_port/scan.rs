@@ -23,8 +23,10 @@ pub(super) fn check_file(
     }
     let mut seen = BTreeSet::new();
     let mut findings = Vec::new();
-    for line in super::python::scan_lines(&source, &opts.bind) {
-        push_finding(&mut findings, &mut seen, &rel, line, &opts.message);
+    if is_tuple_bind_source(path) {
+        for line in super::python::scan_lines(&source, &opts.bind) {
+            push_finding(&mut findings, &mut seen, &rel, line, &opts.message);
+        }
     }
     if is_js_ts(path) {
         for line in super::ast::scan_lines(path, &source) {
@@ -55,6 +57,13 @@ fn push_finding(
         import: None,
         target: None,
     });
+}
+
+fn is_tuple_bind_source(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|ext| ext.to_str()),
+        Some("py" | "sh" | "bash" | "zsh" | "yml" | "yaml")
+    )
 }
 
 fn is_js_ts(path: &Path) -> bool {

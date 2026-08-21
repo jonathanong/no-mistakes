@@ -71,10 +71,10 @@ fn argument_is_ephemeral_port(argument: &Argument<'_>) -> bool {
 }
 
 fn expression_is_ephemeral_port(expr: &Expression<'_>) -> bool {
+    let expr = unwrap_ts_wrappers(expr);
     match expr {
-        Expression::NumericLiteral(literal) => literal.value == 0.0,
         Expression::ObjectExpression(object) => object_has_port_zero(object),
-        _ => false,
+        _ => expression_is_numeric_zero(expr),
     }
 }
 
@@ -84,9 +84,19 @@ fn object_has_port_zero(object: &ObjectExpression<'_>) -> bool {
             return false;
         };
         static_property_key_name(&property.key) == Some("port")
-            && matches!(
-                unwrap_ts_wrappers(&property.value),
-                Expression::NumericLiteral(literal) if literal.value == 0.0
-            )
+            && expression_is_numeric_zero(&property.value)
     })
+}
+
+fn expression_is_numeric_zero(expr: &Expression<'_>) -> bool {
+    unwrap_signed_zero(unwrap_ts_wrappers(expr)).is_number_0()
+}
+
+fn unwrap_signed_zero<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
+    match expr {
+        Expression::UnaryExpression(unary) if unary.operator.is_arithmetic() => {
+            unwrap_signed_zero(unwrap_ts_wrappers(&unary.argument))
+        }
+        other => other,
+    }
 }

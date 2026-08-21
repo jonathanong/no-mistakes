@@ -161,6 +161,29 @@ fn bind_regex_accepts_whitespace_and_single_quotes() {
 }
 
 #[test]
+fn bind_regex_accepts_python_integer_zero_literals() {
+    for source in [
+        "sock.bind((host, 0))\n",
+        "sock.bind((host, 00))\n",
+        "sock.bind((host, 0_0))\n",
+        "sock.bind((host, 0x0))\n",
+        "sock.bind((host, 0X0))\n",
+        "sock.bind((host, 0o0))\n",
+        "sock.bind((host, 0O0))\n",
+        "sock.bind((host, 0b0))\n",
+        "sock.bind((host, 0B0))\n",
+        "sock.bind((\"::1\", 0x0, 0, 0))\n",
+    ] {
+        assert_eq!(bind_lines(source), vec![1], "{source}");
+    }
+    assert!(bind_lines("sock.bind((host, 0x1))\n").is_empty());
+    assert!(bind_lines("sock.bind((host, 0o7))\n").is_empty());
+    assert!(bind_lines("sock.bind((host, 0b1))\n").is_empty());
+    assert!(bind_lines("sock.bind((host, 10))\n").is_empty());
+    assert!(bind_lines("sock.bind((host, 0.0))\n").is_empty());
+}
+
+#[test]
 fn bind_regex_accepts_non_literal_hosts() {
     assert_eq!(bind_lines("sock.bind((host, 0))\n"), vec![1]);
     assert_eq!(bind_lines("sock.bind((get_host(), 0))\n"), vec![1]);
@@ -216,6 +239,22 @@ fn listen_numeric_zero_and_object_port_are_flagged() {
     );
     assert_eq!(
         ast::scan_lines(Path::new("server.ts"), r#"server["listen"](0);"#),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen(+0);\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen(-0);\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen({ port: -0 });\n"),
+        vec![1]
+    );
+    assert_eq!(
+        ast::scan_lines(Path::new("server.ts"), "server.listen({ port: +0 });\n"),
         vec![1]
     );
 }
@@ -351,10 +390,29 @@ fn next_line_disable_is_skipped_unless_deferred() {
 #[test]
 fn same_line_bind_and_listen_dedup() {
     let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("server.ts");
-    std::fs::write(&path, "s.listen(0); s.bind((\"127.0.0.1\", 0));\n").unwrap();
+    let path = dir.path().join("server.py");
+    std::fs::write(&path, "s.bind((\"127.0.0.1\", 0)); s.bind((host, 0x0))\n").unwrap();
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(Options::default()).unwrap();
+    let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 1);
+}
+
+#[test]
+fn js_function_bind_is_silent() {
+    let dir = tempfile::tempdir().unwrap();
+    let opts = compile_options(Options::default()).unwrap();
+    for name in ["handler.ts", "handler.js"] {
+        let path = dir.path().join(name);
+        std::fs::write(&path, "handler.bind((context, 0));\n").unwrap();
+        let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+        let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
+        assert!(findings.is_empty(), "{name}: {findings:?}");
+    }
+    let path = dir.path().join("server.ts");
+    std::fs::write(&path, "handler.bind((context, 0)); server.listen(0);\n").unwrap();
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 1);
