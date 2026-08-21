@@ -70,6 +70,15 @@ fn graph_files_visible_does_not_build_a_pathbuf_hashset() {
             && !visible_source.contains("FxHashSet<PathBuf>"),
         "visible lookup must not clone paths into a HashSet"
     );
+    let trait_contains = graph_files_source_function_body(
+        visible_source,
+        "impl crate::codebase::ts_resolver::VisiblePathLookup for GraphFiles",
+    );
+    assert!(
+        trait_contains.contains("GraphFiles::contains_visible(self, path)")
+            && !trait_contains.contains("self.visible_path"),
+        "VisiblePathLookup::contains_visible must stay exact HashSet-style membership"
+    );
 }
 
 #[test]
@@ -263,4 +272,40 @@ fn graph_files_visible_path_recovers_from_poisoned_canonical_cache() {
         panic!("poison canonical visible cache");
     }));
     assert_eq!(files.visible_path(&page), Some(page.as_path()));
+}
+
+#[test]
+fn graph_files_explicit_root_marks_existing_hidden_path_visible() {
+    let page = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../fixtures/codebase/dependencies/selector-text-sparse-universe/fixture/web/app/page.tsx",
+        ),
+    );
+    let mut files = GraphFiles::from_parts(vec![page.clone()], vec![], vec![], vec![]);
+    assert!(!files.contains_visible(&page));
+    assert!(files.add_explicit_root(&page));
+    assert!(files.contains_visible(&page));
+    assert!(!files.add_explicit_root(&page));
+}
+
+#[cfg(unix)]
+#[test]
+fn graph_files_trait_contains_visible_is_exact_membership() {
+    use crate::codebase::ts_resolver::VisiblePathLookup;
+
+    let via_link = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link/src/value.ts"),
+    );
+    let via_real = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real/src/value.ts"),
+    );
+    let files = GraphFiles::from_files(vec![via_link.clone()]);
+
+    assert!(VisiblePathLookup::contains_visible(&files, &via_link));
+    assert!(!VisiblePathLookup::contains_visible(&files, &via_real));
+    assert_eq!(files.visible_path(&via_real), Some(via_link.as_path()));
+    assert!(same_graph_universe(std::slice::from_ref(&via_link), &files));
+    assert!(!same_graph_universe(std::slice::from_ref(&via_real), &files));
 }

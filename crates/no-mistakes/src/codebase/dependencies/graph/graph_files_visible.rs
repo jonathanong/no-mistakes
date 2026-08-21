@@ -86,7 +86,9 @@ impl GraphFiles {
 
 impl crate::codebase::ts_resolver::VisiblePathLookup for GraphFiles {
     fn contains_visible(&self, path: &Path) -> bool {
-        self.visible_path(path).is_some()
+        // Exact membership only. Canonical remapping belongs in `visible_path`;
+        // resolver probes must not canonicalize every miss the way HashSet did not.
+        GraphFiles::contains_visible(self, path)
     }
 
     fn visible_cache_key(&self) -> Vec<PathBuf> {

@@ -73,8 +73,10 @@ impl<T> FileIdMap<T> {
 
     pub(crate) fn get_mut(&mut self, path: &Path) -> Option<&mut T> {
         if let Some(index) = self.slot_index(path) {
-            if self.slots.get(index).is_some_and(Option::is_some) {
-                return self.slots.get_mut(index).and_then(Option::as_mut);
+            if let Some(slot) = self.slots.get_mut(index) {
+                if slot.is_some() {
+                    return slot.as_mut();
+                }
             }
         }
         self.overflow.get_mut(path)
@@ -143,3 +145,6 @@ impl<T> FileIdMap<T> {
 
 #[path = "file_id_map_iter.rs"]
 mod iter;
+
+#[cfg(test)]
+mod tests;
