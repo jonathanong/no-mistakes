@@ -252,6 +252,7 @@ fn no_mistakes_rules_have_docs() {
         rules::POSTGRES_FK_INDEX,
         rules::POSTGRES_LOCK_ORDERING,
         rules::POSTGRES_NO_GENERATED_COLUMN_WRITES,
+        rules::POSTGRES_REDUNDANT_INDEX,
         playwright_rules::PLAYWRIGHT_COVERAGE,
         playwright_rules::PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,
         playwright_rules::PLAYWRIGHT_UNIQUE_HTML_IDS,

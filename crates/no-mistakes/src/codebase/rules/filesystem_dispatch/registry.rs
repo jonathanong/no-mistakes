@@ -35,6 +35,7 @@ macro_rules! filesystem_rules {
             TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files,
             POSTGRES_CONSTRAINT_VALIDATE => postgres_constraint_validate::check_with_files,
             POSTGRES_FK_INDEX => postgres_fk_index::check_with_files,
+            POSTGRES_REDUNDANT_INDEX => postgres_redundant_index::check_with_files,
             POSTGRES_NO_GENERATED_COLUMN_WRITES => postgres_no_generated_column_writes::check_with_files,
             POSTGRES_LOCK_ORDERING => postgres_lock_ordering::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,

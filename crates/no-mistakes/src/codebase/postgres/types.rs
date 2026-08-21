@@ -42,19 +42,61 @@ pub struct SqlSchemaFileFacts {
     pub path: PathBuf,
     pub tables: Vec<SqlCreateTableMetadata>,
     pub indexes: Vec<SqlCreateIndexMetadata>,
+    pub dropped_indexes: Vec<SqlDropIndexMetadata>,
+    pub dropped_tables: Vec<SqlDropIndexMetadata>,
     pub foreign_keys: Vec<SqlForeignKeyMetadata>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
+}
+
+/// One key column of a btree index, including opclass and sort options.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct SqlIndexParam {
+    pub name: Option<String>,
+    pub opclass: Option<String>,
+    pub ordering: Option<String>,
+    pub nulls_ordering: Option<String>,
+}
+
+/// One `DROP INDEX` so later migrations can remove earlier creates.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlDropIndexMetadata {
+    pub name: String,
+    pub line: usize,
 }
 
 /// One `CREATE INDEX` or unique/primary-key covering index.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlCreateIndexMetadata {
     pub table_name: String,
+    pub name: Option<String>,
     pub leading_column: Option<String>,
+    pub columns: Vec<SqlIndexParam>,
+    pub include_columns: Vec<String>,
     pub access_method: String,
+    pub unique: bool,
     pub has_predicate: bool,
     pub not_null_predicate_column: Option<String>,
+    pub predicate_key: Option<String>,
+    pub line: usize,
+}
+
+impl Default for SqlCreateIndexMetadata {
+    fn default() -> Self {
+        Self {
+            table_name: String::new(),
+            name: None,
+            leading_column: None,
+            columns: Vec::new(),
+            include_columns: Vec::new(),
+            access_method: "btree".to_string(),
+            unique: false,
+            has_predicate: false,
+            not_null_predicate_column: None,
+            predicate_key: None,
+            line: 1,
+        }
+    }
 }
 
 /// One foreign key from `CREATE TABLE` or `ALTER TABLE`.

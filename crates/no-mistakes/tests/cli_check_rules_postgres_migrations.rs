@@ -47,6 +47,30 @@ fn postgres_fk_index_passes_with_a_btree_index() {
 }
 
 #[test]
+fn postgres_redundant_index_fails_on_a_prefix_btree() {
+    let root = fixture("postgres-redundant-index", "fail");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("postgres-redundant-index"), "{body}");
+    assert!(body.contains("events.idx_events__topic_id"), "{body}");
+}
+
+#[test]
+fn postgres_redundant_index_passes_when_the_shorter_index_is_unique() {
+    let root = fixture("postgres-redundant-index", "pass");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_redundant_index_passes_when_a_later_migration_drops_the_prefix() {
+    let root = fixture("postgres-redundant-index", "dropped");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
 fn postgres_constraint_validate_fails_without_validate() {
     let root = fixture("postgres-constraint-validate", "fail-missing");
     let out = check_fixture_config(&root);

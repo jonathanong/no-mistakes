@@ -19,6 +19,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         POSTGRES_FK_INDEX => {
             postgres_fk_index::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_REDUNDANT_INDEX => {
+            postgres_redundant_index::check_with_files_and_sources(root, config, files, sources)
+        }
         POSTGRES_NO_GENERATED_COLUMN_WRITES => {
             postgres_no_generated_column_writes::check_with_files_and_sources(
                 root, config, files, sources,

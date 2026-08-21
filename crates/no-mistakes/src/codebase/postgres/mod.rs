@@ -29,8 +29,8 @@ pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use schema::extract_create_table_metadata;
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlColumnMetadata,
-    SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlForeignKeyMetadata, SqlNamedConstraint,
-    SqlSchemaFileFacts,
+    SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata, SqlForeignKeyMetadata,
+    SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts,
 };
 
 #[cfg(test)]

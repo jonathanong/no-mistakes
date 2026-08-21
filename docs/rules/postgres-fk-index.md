@@ -19,7 +19,9 @@ rules:
 `sqlInclude` defaults to `**/*.sql`. Unique and primary-key columns count as
 covering btree indexes. A partial index is accepted only when its predicate is
 exactly `WHERE <fk-column> IS NOT NULL`. Indexes are considered across every
-included SQL file, not only the file that declares the foreign key.
+included SQL file, not only the file that declares the foreign key. A
+schema-qualified index table such as `public.child` still covers an
+unqualified foreign-key table name `child`.
 
 Same-line `-- allowDirective:` comments (default `fk-index-allow`) skip that
 foreign key. `allowedColumns` entries are `table.column`. `allowedTables`

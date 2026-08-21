@@ -34,6 +34,7 @@ pub mod postgres_constraint_validate;
 pub mod postgres_fk_index;
 pub mod postgres_lock_ordering;
 pub mod postgres_no_generated_column_writes;
+pub mod postgres_redundant_index;
 pub mod production_dependency_declarations;
 pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;
@@ -81,11 +82,10 @@ pub use filesystem_dispatch::{
 };
 pub use ids::*;
 #[doc(hidden)]
-pub use run::run_check_with_config_facts_playwright_and_graph_with_suppression;
-#[doc(hidden)]
 pub use run::{
     canonical_graph_plan, canonical_graph_requires_full_file_universe,
     run_check_with_config_facts_playwright_and_graph,
+    run_check_with_config_facts_playwright_and_graph_with_suppression,
 };
 pub use run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,
