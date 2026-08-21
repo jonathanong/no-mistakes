@@ -1,28 +1,29 @@
 use super::SourceStore;
-use std::path::Path;
+use crate::codebase::ts_source::FileInventory;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 impl SourceStore {
-    /// Read through a prepared store, falling back to a one-shot filesystem
-    /// read only when tests invoke a helper without a session.
+    /// Read through a prepared store, or a one-file store when tests omit a session.
     pub(crate) fn read_optional(sources: Option<&Self>, path: &Path) -> Option<Arc<str>> {
         match sources {
             Some(store) => store.read_path(path).ok(),
-            None => std::fs::read_to_string(path).ok().map(Arc::from),
+            None => one_file_store(path).read_path(path).ok(),
         }
     }
 
-    /// Parse JSON through a prepared store, with a test-only filesystem fallback.
+    /// Parse JSON through a prepared store, or a one-file store when tests omit a session.
     pub(crate) fn parse_json_optional(
         sources: Option<&Self>,
         path: &Path,
     ) -> Option<Arc<serde_json::Value>> {
         match sources {
             Some(store) => store.parse_json_path(path).ok(),
-            None => std::fs::read_to_string(path)
-                .ok()
-                .and_then(|source| serde_json::from_str(&source).ok())
-                .map(Arc::new),
+            None => one_file_store(path).parse_json_path(path).ok(),
         }
     }
+}
+
+fn one_file_store(path: &Path) -> SourceStore {
+    SourceStore::new(Arc::new(FileInventory::from_paths(&[PathBuf::from(path)])))
 }
