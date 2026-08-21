@@ -11,8 +11,8 @@ Workers::DigestJob.perform_async
     let enqueues = extract_enqueues(source);
     assert!(enqueues.iter().any(|name| name == "WelcomeJob"));
     assert!(enqueues.iter().any(|name| name == "MailWorker"));
-    assert!(enqueues.iter().any(|name| name == "DigestJob"));
-    assert!(!enqueues.iter().any(|name| name == "Workers::DigestJob"));
+    assert!(enqueues.iter().any(|name| name == "Workers::DigestJob"));
+    assert!(!enqueues.iter().any(|name| name == "DigestJob"));
 }
 
 #[test]
@@ -36,13 +36,27 @@ end
 }
 
 #[test]
-fn compact_class_include_and_namespaced_class_share_short_identity() {
+fn compact_class_include_and_namespaced_class_keep_qualified_identity() {
     let workers = extract_workers(
         "class MailWorker; include Sidekiq::Worker; end\nclass Workers::DigestJob\n  include Sidekiq::Job\nend\n",
     );
     assert!(workers.iter().any(|name| name == "MailWorker"));
-    assert!(workers.iter().any(|name| name == "DigestJob"));
-    assert!(!workers.iter().any(|name| name == "Workers::DigestJob"));
+    assert!(workers.iter().any(|name| name == "Workers::DigestJob"));
+    assert!(!workers.iter().any(|name| name == "DigestJob"));
+}
+
+#[test]
+fn module_wrapped_class_keeps_qualified_identity() {
+    let workers = extract_workers(
+        r#"
+module Workers
+  class DigestJob
+    include Sidekiq::Job
+  end
+end
+"#,
+    );
+    assert_eq!(workers, vec!["Workers::DigestJob".to_string()]);
 }
 
 #[test]

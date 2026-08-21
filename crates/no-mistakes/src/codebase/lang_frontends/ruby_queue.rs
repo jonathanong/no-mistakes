@@ -3,14 +3,12 @@ use std::sync::OnceLock;
 
 pub(super) fn extract_enqueues(source: &str) -> Vec<String> {
     let masked = super::super::strip::mask_strings(source);
-    canonicalize_names(extract_named(&masked, job_enqueue_re()))
+    extract_named(&masked, job_enqueue_re())
 }
 
 pub(super) fn extract_workers(source: &str) -> Vec<String> {
     let masked = super::super::strip::mask_strings(source);
-    let mut names = extract_named(&masked, application_job_class_re());
-    names.extend(extract_sidekiq_workers(&masked));
-    canonicalize_names(names)
+    extract_declared_workers(&masked)
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
@@ -23,8 +21,13 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
-fn extract_sidekiq_workers(source: &str) -> Vec<String> {
-    let mut scopes: Vec<Option<String>> = Vec::new();
+enum Scope {
+    Named(String),
+    Block,
+}
+
+fn extract_declared_workers(source: &str) -> Vec<String> {
+    let mut scopes: Vec<Scope> = Vec::new();
     let mut names = Vec::new();
     for line in source.lines() {
         for stmt in line.split(';') {
@@ -37,13 +40,24 @@ fn extract_sidekiq_workers(source: &str) -> Vec<String> {
                 .and_then(|cap| cap.get(1))
                 .map(|m| m.as_str().to_string())
             {
-                scopes.push(Some(name));
+                scopes.push(Scope::Named(name));
+                if application_job_class_re().is_match(stmt) {
+                    if let Some(qualified) = qualified_name(&scopes) {
+                        names.push(qualified);
+                    }
+                }
+            } else if let Some(name) = module_name_re()
+                .captures(stmt)
+                .and_then(|cap| cap.get(1))
+                .map(|m| m.as_str().to_string())
+            {
+                scopes.push(Scope::Named(name));
             } else if block_open_re().is_match(stmt) {
-                scopes.push(None);
+                scopes.push(Scope::Block);
             }
             if sidekiq_include_re().is_match(stmt) {
-                if let Some(name) = scopes.iter().rev().find_map(|scope| scope.clone()) {
-                    names.push(name);
+                if let Some(qualified) = qualified_name(&scopes) {
+                    names.push(qualified);
                 }
             }
             if end_re().is_match(stmt) {
@@ -56,17 +70,21 @@ fn extract_sidekiq_workers(source: &str) -> Vec<String> {
     names
 }
 
-fn canonicalize_names(names: Vec<String>) -> Vec<String> {
-    let mut values: Vec<String> = names
-        .into_iter()
-        .map(|raw| match raw.rsplit_once("::") {
-            Some((_, short)) => short.to_string(),
-            None => raw,
-        })
-        .collect();
-    values.sort();
-    values.dedup();
-    values
+fn qualified_name(scopes: &[Scope]) -> Option<String> {
+    let mut parts = Vec::new();
+    for scope in scopes {
+        if let Scope::Named(name) = scope {
+            if name.contains("::") {
+                parts.clear();
+            }
+            parts.push(name.as_str());
+        }
+    }
+    if parts.is_empty() {
+        None
+    } else {
+        Some(parts.join("::"))
+    }
 }
 
 fn job_enqueue_re() -> &'static Regex {
@@ -76,9 +94,7 @@ fn job_enqueue_re() -> &'static Regex {
 
 fn application_job_class_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*class\s+([A-Z][\w:]*)\s*<\s*ApplicationJob").expect("job class")
-    })
+    RE.get_or_init(|| Regex::new(r"<\s*ApplicationJob\b").expect("job class"))
 }
 
 fn class_name_re() -> &'static Regex {
@@ -86,10 +102,15 @@ fn class_name_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"^class\s+([A-Z][\w:]*)").expect("class"))
 }
 
+fn module_name_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"^module\s+([A-Z][\w:]*)").expect("module"))
+}
+
 fn block_open_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"^(?:module|def|begin|case|if|unless|while|until)\b|\bdo\b").expect("block")
+        Regex::new(r"^(?:def|begin|case|if|unless|while|until)\b|\bdo\b").expect("block")
     })
 }
 
