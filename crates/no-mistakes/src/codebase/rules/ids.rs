@@ -10,6 +10,7 @@ pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
 pub use super::forbidden_workspace_closure::RULE_ID as FORBIDDEN_WORKSPACE_CLOSURE;
 pub use super::github_actions_composite_step_schema::RULE_ID as GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA;
 pub use super::github_actions_job_timeouts::RULE_ID as GITHUB_ACTIONS_JOB_TIMEOUTS;
+pub use super::github_actions_test_timeout_literals::RULE_ID as GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS;
 pub use super::integration_test_no_mocks::RULE_ID as INTEGRATION_TEST_NO_MOCKS;
 pub use super::lockfile_allowlist::RULE_ID as LOCKFILE_ALLOWLIST;
 pub use super::markdown_child_links::RULE_ID as MARKDOWN_CHILD_LINKS;
@@ -29,6 +30,7 @@ pub use super::postgres_constraint_validate::RULE_ID as POSTGRES_CONSTRAINT_VALI
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
+pub use super::postgres_redundant_index::RULE_ID as POSTGRES_REDUNDANT_INDEX;
 pub use super::production_dependency_declarations::RULE_ID as PRODUCTION_DEPENDENCY_DECLARATIONS;
 pub use super::require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;
 pub use super::require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;

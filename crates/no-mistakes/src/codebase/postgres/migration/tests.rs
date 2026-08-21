@@ -17,7 +17,11 @@ ALTER TABLE comments VALIDATE CONSTRAINT comments_body_check;
         |index| index.table_name == "comments" && index.leading_column.as_deref() == Some("id")
     ));
     assert!(facts.indexes.iter().any(|index| {
-        index.leading_column.as_deref() == Some("post_id") && index.access_method == "btree"
+        index.name.as_deref() == Some("comments_post_id_idx")
+            && index.leading_column.as_deref() == Some("post_id")
+            && index.access_method == "btree"
+            && !index.unique
+            && index.columns.len() == 1
     }));
     assert!(facts.indexes.iter().any(|index| {
         index.leading_column.as_deref() == Some("author_id")
@@ -189,4 +193,161 @@ fn extracted_schema_records_clone_eq_and_debug() {
     assert_eq!(not_valid, facts.not_valid_constraints);
     assert_eq!(validated, facts.validated_constraints);
     assert!(format!("{indexes:?}{foreign_keys:?}{not_valid:?}{validated:?}").contains("t"));
+}
+
+#[test]
+fn extracts_index_prefix_fields_includes_and_drops() {
+    let sql = r#"
+CREATE UNIQUE INDEX idx_accounts__email ON accounts (email DESC NULLS LAST) INCLUDE (region);
+CREATE INDEX idx_accounts__org ON accounts (org_id) WHERE deleted_at IS NULL;
+DROP INDEX IF EXISTS public.first_index, second_index;
+"#;
+    let facts = extract_migration_facts(sql);
+    let unique = facts
+        .indexes
+        .iter()
+        .find(|index| index.name.as_deref() == Some("idx_accounts__email"))
+        .expect("unique");
+    assert!(unique.unique);
+    assert_eq!(unique.include_columns, ["region"]);
+    assert_eq!(unique.columns[0].name.as_deref(), Some("email"));
+    assert_eq!(unique.columns[0].ordering.as_deref(), Some("desc"));
+    assert_eq!(unique.columns[0].nulls_ordering.as_deref(), Some("last"));
+    let partial = facts
+        .indexes
+        .iter()
+        .find(|index| index.name.as_deref() == Some("idx_accounts__org"))
+        .expect("partial");
+    assert_eq!(partial.predicate_key.as_deref(), Some("deleted_at is null"));
+    assert_eq!(
+        facts
+            .dropped_indexes
+            .iter()
+            .map(|drop| drop.name.as_str())
+            .collect::<Vec<_>>(),
+        ["public.first_index", "second_index"]
+    );
+    assert!(facts.dropped_indexes.iter().all(|drop| drop.line > 0));
+    let ordered = extract_migration_facts(
+        "CREATE INDEX idx_asc ON t (email ASC NULLS FIRST);\n\
+         CREATE INDEX idx_gin ON t USING gin (email);",
+    );
+    let asc = ordered
+        .indexes
+        .iter()
+        .find(|index| index.name.as_deref() == Some("idx_asc"))
+        .expect("asc");
+    assert_eq!(asc.columns[0].ordering.as_deref(), Some("asc"));
+    assert_eq!(asc.columns[0].nulls_ordering.as_deref(), Some("first"));
+    assert!(ordered
+        .indexes
+        .iter()
+        .any(|index| index.name.as_deref() == Some("idx_gin") && index.access_method == "gin"));
+}
+
+#[test]
+fn preserves_schema_qualified_index_identities_and_drop_tables() {
+    let sql = r#"
+CREATE INDEX idx ON public.events (topic_id);
+CREATE INDEX idx ON audit.events (topic_id);
+DROP INDEX audit.idx;
+DROP TABLE public.events;
+"#;
+    let facts = extract_migration_facts(sql);
+    assert_eq!(
+        facts
+            .indexes
+            .iter()
+            .map(|index| (index.table_name.as_str(), index.name.as_deref()))
+            .collect::<Vec<_>>(),
+        [
+            ("public.events", Some("idx")),
+            ("audit.events", Some("idx"))
+        ]
+    );
+    assert_eq!(
+        facts
+            .dropped_indexes
+            .iter()
+            .map(|drop| drop.name.as_str())
+            .collect::<Vec<_>>(),
+        ["audit.idx"]
+    );
+    assert_eq!(
+        facts
+            .dropped_tables
+            .iter()
+            .map(|drop| drop.name.as_str())
+            .collect::<Vec<_>>(),
+        ["public.events"]
+    );
+}
+
+#[test]
+fn predicate_keys_preserve_literal_and_quoted_ident_case() {
+    let sql = r#"
+CREATE INDEX idx_active ON events (topic_id) WHERE status = 'ACTIVE';
+CREATE INDEX idx_active_lower ON events (topic_id) WHERE status = 'active';
+CREATE INDEX idx_quoted ON events (topic_id) WHERE "Status" IS NOT NULL;
+"#;
+    let facts = extract_migration_facts(sql);
+    let keys: Vec<_> = facts
+        .indexes
+        .iter()
+        .filter_map(|index| index.predicate_key.as_deref())
+        .collect();
+    assert_eq!(
+        keys,
+        [
+            "status = 'ACTIVE'",
+            "status = 'active'",
+            "\"Status\" is not null"
+        ]
+    );
+}
+
+#[test]
+fn multiline_create_index_line_matches_the_create_keyword() {
+    let sql = "SELECT 1;\nCREATE INDEX\n  idx_events__topic_id\n  ON events (topic_id);";
+    let facts = extract_migration_facts(sql);
+    assert_eq!(facts.indexes[0].line, 2);
+    assert_eq!(
+        facts.indexes[0].name.as_deref(),
+        Some("idx_events__topic_id")
+    );
+}
+
+#[test]
+fn covering_indexes_keep_schema_qualifiers() {
+    let sql = "CREATE TABLE public.accounts (id uuid PRIMARY KEY);";
+    let facts = extract_migration_facts(sql);
+    assert!(facts
+        .indexes
+        .iter()
+        .any(|index| index.table_name == "public.accounts" && index.unique));
+    let alter = extract_migration_facts(
+        "ALTER TABLE public.accounts ADD CONSTRAINT accounts_email_key UNIQUE (email);",
+    );
+    assert!(alter
+        .indexes
+        .iter()
+        .any(|index| index.table_name == "public.accounts" && index.unique));
+}
+
+#[test]
+fn qualified_relation_joins_identifiers_and_skips_functions() {
+    use sqlparser::ast::{Ident, ObjectName, ObjectNamePart};
+    let name = ObjectName(vec![
+        ObjectNamePart::Identifier(Ident::new("public")),
+        ObjectNamePart::Identifier(Ident::new("events")),
+    ]);
+    assert_eq!(super::qualified_relation(&name), "public.events");
+    assert_eq!(super::qualified_relation(&ObjectName(Vec::new())), "");
+    let function = ObjectName(vec![ObjectNamePart::Function(
+        sqlparser::ast::ObjectNamePartFunction {
+            name: Ident::new("fn"),
+            args: Vec::new(),
+        },
+    )]);
+    assert_eq!(super::qualified_relation(&function), "");
 }
