@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::ts_resolver::{ImportClassification, ImportResolution};
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 

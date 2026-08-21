@@ -296,7 +296,7 @@ fn reachable_story_files_skip_unreadable_story_facts() {
     );
     assert_eq!(files, [story.clone()].into_iter().collect());
 
-    parse_error_facts.ts.clear();
+    parse_error_facts.ts = Default::default();
     let files = coverage::reachable_story_files(
         &root,
         &parse_error_facts,

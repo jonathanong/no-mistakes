@@ -2,6 +2,34 @@ use super::super::*;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+impl TsFactMap {
+    pub(crate) fn extend_shared(
+        &mut self,
+        facts: impl IntoIterator<Item = (PathBuf, Arc<TsFileFacts>)>,
+    ) {
+        for (path, facts) in facts {
+            self.facts.insert(path, TsFactSlot::Shared(facts));
+        }
+    }
+
+    pub(crate) fn shared_arc(&self, path: &Path) -> Option<&Arc<TsFileFacts>> {
+        match self.facts.get(path)? {
+            TsFactSlot::Shared(facts) => Some(facts),
+            TsFactSlot::Owned(_) => None,
+        }
+    }
+
+    pub(crate) fn has_owned(&self, path: &Path) -> bool {
+        matches!(self.facts.get(path), Some(TsFactSlot::Owned(_)))
+    }
+
+    pub(crate) fn shared_is_empty(&self) -> bool {
+        self.facts
+            .iter()
+            .all(|(_, slot)| matches!(slot, TsFactSlot::Owned(_)))
+    }
+}
+
 #[test]
 fn shared_fact_map_reuses_file_fact_allocations() {
     let path = PathBuf::from("/fixture/source.ts");

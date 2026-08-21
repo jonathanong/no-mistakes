@@ -1,7 +1,6 @@
 use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
-use std::collections::HashMap;
 
 fn check_with_facts(
     root: &Path,

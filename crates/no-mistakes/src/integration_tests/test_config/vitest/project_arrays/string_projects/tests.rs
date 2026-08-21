@@ -3,7 +3,7 @@ use super::{
     parse_string_project_with_resolver, slash_path, string_project_paths_with_resolver,
 };
 use crate::codebase::ts_resolver::{ImportClassification, ImportResolution};
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 struct DirectProjectResolver {

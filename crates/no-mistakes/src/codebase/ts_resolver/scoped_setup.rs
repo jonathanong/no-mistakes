@@ -10,7 +10,7 @@ impl<'a> ScopedImportResolver<'a> {
     /// session exists, while still selecting configuration per importer.
     pub(crate) fn from_visible(
         catalog: &'a TsConfigCatalog,
-        visible: &ScopedHashSet<ScopedPathBuf>,
+        visible: &HashSet<PathBuf>,
     ) -> Self {
         Self::build(
             catalog,
@@ -22,7 +22,7 @@ impl<'a> ScopedImportResolver<'a> {
     /// Reuse the invocation-owned cache registry for each selected config.
     pub(crate) fn new_in_session(
         catalog: &'a TsConfigCatalog,
-        visible: &ScopedHashSet<ScopedPathBuf>,
+        visible: &HashSet<PathBuf>,
         session: &'a crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
         Self::build(
@@ -93,9 +93,22 @@ impl<'a> ScopedImportResolver<'a> {
     }
 }
 
-fn canonical_or_normalized(path: &ScopedPath) -> ScopedPathBuf {
+fn canonical_or_normalized(path: &Path) -> PathBuf {
     match path.canonicalize() {
         Ok(path) => normalize_path(&path),
         Err(_) => normalize_path(path),
     }
+}
+
+fn normalized_visible(visible: &HashSet<PathBuf>) -> HashSet<PathBuf> {
+    visible
+        .iter()
+        .flat_map(|path| {
+            let normalized = normalize_path(path);
+            path.canonicalize().ok().map_or_else(
+                || vec![normalized.clone()],
+                |real| vec![normalized.clone(), normalize_path(&real)],
+            )
+        })
+        .collect()
 }

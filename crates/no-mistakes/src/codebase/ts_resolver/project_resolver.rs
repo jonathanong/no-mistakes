@@ -1,6 +1,5 @@
-#[allow(clippy::large_enum_variant)]
 pub(crate) enum ProjectImportResolver<'a> {
-    Scoped(ScopedImportResolver<'a>),
+    Scoped(Box<ScopedImportResolver<'a>>),
     Legacy(ImportResolver<'a>),
 }
 
@@ -15,10 +14,10 @@ impl<'a> ProjectImportResolver<'a> {
         match catalog {
             Some(catalog) => {
                 let resolver = ScopedImportResolver::from_lookup(catalog, visible, Some(session));
-                Self::Scoped(match shared_cache {
+                Self::Scoped(Box::new(match shared_cache {
                     Some(cache) => resolver.with_shared_cache(cache),
                     None => resolver,
-                })
+                }))
             }
             None => {
                 let resolver = ImportResolver::new_in_session(tsconfig, Some(visible), session);
@@ -52,7 +51,7 @@ impl ImportResolution for ProjectImportResolver<'_> {
 
     fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
         match self {
-            Self::Scoped(resolver) => ImportResolution::visible_files(resolver),
+            Self::Scoped(resolver) => ImportResolution::visible_files(resolver.as_ref()),
             Self::Legacy(resolver) => ImportResolution::visible_files(resolver),
         }
     }

@@ -1,6 +1,5 @@
 use dashmap::mapref::entry::Entry as ScopedEntry;
 use dashmap::DashMap as ScopedDashMap;
-use std::collections::HashSet as ScopedHashSet;
 use std::path::{Path as ScopedPath, PathBuf as ScopedPathBuf};
 use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
 use std::sync::Arc as ScopedArc;
@@ -220,17 +219,4 @@ impl<'a> ScopedImportResolver<'a> {
         };
         (importer.starts_with(root) || importer.starts_with(config_dir)).then_some(resolver)
     }
-}
-
-fn normalized_visible(visible: &ScopedHashSet<ScopedPathBuf>) -> ScopedHashSet<ScopedPathBuf> {
-    visible
-        .iter()
-        .flat_map(|path| {
-            let normalized = normalize_path(path);
-            path.canonicalize().ok().map_or_else(
-                || vec![normalized.clone()],
-                |real| vec![normalized.clone(), normalize_path(&real)],
-            )
-        })
-        .collect()
 }

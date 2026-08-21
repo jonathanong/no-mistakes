@@ -111,36 +111,6 @@ impl TsFactMap {
     pub(crate) fn extend(&mut self, other: Self) {
         self.facts.extend(other.facts);
     }
-
-    #[cfg(test)]
-    pub(crate) fn extend_shared(
-        &mut self,
-        facts: impl IntoIterator<Item = (PathBuf, Arc<TsFileFacts>)>,
-    ) {
-        for (path, facts) in facts {
-            self.facts.insert(path, TsFactSlot::Shared(facts));
-        }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn shared_arc(&self, path: &Path) -> Option<&Arc<TsFileFacts>> {
-        match self.facts.get(path)? {
-            TsFactSlot::Shared(facts) => Some(facts),
-            TsFactSlot::Owned(_) => None,
-        }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn has_owned(&self, path: &Path) -> bool {
-        matches!(self.facts.get(path), Some(TsFactSlot::Owned(_)))
-    }
-
-    #[cfg(test)]
-    pub(crate) fn shared_is_empty(&self) -> bool {
-        self.facts
-            .iter()
-            .all(|(_, slot)| matches!(slot, TsFactSlot::Owned(_)))
-    }
 }
 
 impl std::ops::Index<&PathBuf> for TsFactMap {

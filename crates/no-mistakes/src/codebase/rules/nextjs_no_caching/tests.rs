@@ -8,8 +8,8 @@ fn check_with_facts(
     check_with_facts_for_aggregate(root, config, facts, None, false)
 }
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::ts_source::FileIdMap;
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
-use std::collections::HashMap;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -123,10 +123,7 @@ fn fact_runner_ignores_missing_facts_outside_target_roots() {
     let outside = root.join("other/app/bad.ts");
     let facts = CheckFactMap {
         files: vec![outside.clone()],
-        ts: crate::codebase::ts_source::FileIdMap::from([(
-            outside,
-            std::sync::Arc::new(CheckFileFacts::default()),
-        )]),
+        ts: FileIdMap::from([(outside, std::sync::Arc::new(CheckFileFacts::default()))]),
         ..Default::default()
     };
     let findings = check_with_facts(&root, &config(), &facts).unwrap();
@@ -140,7 +137,7 @@ fn fact_runner_requires_source_and_cache_facts_for_target_files() {
     let inside = root.join("web/app/bad.ts");
     let missing_source = CheckFactMap {
         files: vec![inside.clone()],
-        ts: crate::codebase::ts_source::FileIdMap::from([(
+        ts: FileIdMap::from([(
             inside.clone(),
             std::sync::Arc::new(CheckFileFacts::default()),
         )]),
@@ -151,7 +148,7 @@ fn fact_runner_requires_source_and_cache_facts_for_target_files() {
 
     let missing_cache = CheckFactMap {
         files: vec![inside.clone()],
-        ts: crate::codebase::ts_source::FileIdMap::from([(
+        ts: FileIdMap::from([(
             inside,
             CheckFileFacts {
                 source: Some("export const value = 1".into()),

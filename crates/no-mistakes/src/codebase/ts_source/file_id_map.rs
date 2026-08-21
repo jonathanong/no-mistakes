@@ -109,12 +109,6 @@ impl<T> FileIdMap<T> {
         self.slots.iter().filter(|slot| slot.is_some()).count() + self.overflow.len()
     }
 
-    #[cfg(test)]
-    pub(crate) fn clear(&mut self) {
-        self.slots.fill_with(|| None);
-        self.overflow.clear();
-    }
-
     pub(crate) fn keys(&self) -> impl Iterator<Item = &PathBuf> {
         self.inventory
             .as_paths()

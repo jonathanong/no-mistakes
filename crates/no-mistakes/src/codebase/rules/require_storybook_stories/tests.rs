@@ -6,7 +6,7 @@ use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
 use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef, StringOrList};
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {

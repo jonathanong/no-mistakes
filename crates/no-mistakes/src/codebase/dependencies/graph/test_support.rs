@@ -7,6 +7,7 @@ pub(super) fn test_interner() -> PathInterner {
 }
 
 mod edge_maps;
+mod graph_files;
 mod playwright;
 
 pub(crate) use edge_maps::add_distinct_worker_file_edges;

@@ -1,6 +1,5 @@
 use super::*;
 use crate::codebase::ts_resolver::ImportClassification;
-use std::collections::HashSet;
 
 struct MissingSourceResolver;
 
