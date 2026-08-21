@@ -16,18 +16,18 @@ Route::resource('users', UserController::class);
 Route::resource('/posts', \App\Http\Controllers\PostController::class);
 "#;
     let routes = extract_php_routes(source, true, false);
-    assert!(routes.iter().any(|(path, handler)| {
-        path == "/users" && handler.contains("UserController")
-    }));
-    assert!(routes.iter().any(|(path, handler)| {
-        path == "/users/:user" && handler.contains("UserController")
-    }));
-    assert!(routes.iter().any(|(path, handler)| {
-        path == "/posts" && handler.contains("PostController")
-    }));
-    assert!(routes.iter().any(|(path, handler)| {
-        path == "/posts/:post" && handler.contains("PostController")
-    }));
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/users" && handler.contains("UserController") }));
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/users/:user" && handler.contains("UserController") }));
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/posts" && handler.contains("PostController") }));
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/posts/:post" && handler.contains("PostController") }));
 }
 
 #[test]
