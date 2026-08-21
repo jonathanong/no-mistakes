@@ -20,7 +20,15 @@ pattern. The request snapshot also retains a tracked-only view for
 repository-state rules such as `banned-paths`; that view contains files present
 in both the Git index and working tree, including tracked files that now match
 an ignore pattern, but excludes all untracked files. Both views come from the
-same Git discovery command and are reused throughout the request.
+same `git ls-files -z -t --stage --cached --others --deleted --exclude-standard`
+command and are reused throughout the request.
+
+Tracked regular files (index mode `100644`/`100755`) are classified from that
+index mode without a worktree `lstat`. An unstaged replacement of a tracked
+file by a symlink is therefore still treated as a regular file. Missing
+worktree paths are omitted from the `--deleted` `R` records rather than by
+statting every tracked file. Tracked symlinks (`120000`) and untracked files
+still consult worktree metadata.
 
 Outside a Git checkout, `.gitignore` and `.ignore` files are still applied by
 the fallback walker. Because there is no Git index, rules that normally use the

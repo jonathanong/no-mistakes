@@ -120,19 +120,22 @@ fn tagged_git_paths_separate_index_entries_from_untracked_entries() {
     );
 
     assert_eq!(
-        views.visible,
+        views
+            .visible
+            .iter()
+            .map(|entry| entry.path.clone())
+            .collect::<Vec<_>>(),
         vec![
-            PathBuf::from("deleted.mts"),
             PathBuf::from("killed.mts"),
             PathBuf::from("sparse.mts"),
             PathBuf::from("tracked file.mts"),
             PathBuf::from("untracked file.mts"),
         ]
     );
+    assert!(views.visible.iter().all(|entry| entry.index_kind.is_none()));
     assert_eq!(
         views.tracked,
         vec![
-            PathBuf::from("deleted.mts"),
             PathBuf::from("sparse.mts"),
             PathBuf::from("tracked file.mts"),
         ]
@@ -148,10 +151,67 @@ fn tagged_git_paths_preserve_non_utf8_path_bytes() {
 
     assert_eq!(views.visible.len(), 1);
     assert_eq!(
-        views.visible[0].as_os_str().as_bytes(),
+        views.visible[0].path.as_os_str().as_bytes(),
         b"src/non-utf8-\xff.mts"
     );
-    assert_eq!(views.tracked, views.visible);
+    assert!(views.visible[0].index_kind.is_none());
+    assert_eq!(views.tracked, vec![views.visible[0].path.clone()]);
+}
+
+#[test]
+fn staged_git_paths_classify_regular_files_and_symlinks_from_index_mode() {
+    use super::super::file_inventory::GitIndexKind;
+
+    let views = parse_git_tagged_paths(
+        b"H 100644 abcdef 0\ttracked file.mts\0? untracked.mts\0K killed.mts\0H 120000 abcdef 0\tlink.mts\0H 100755 abcdef 0\texec.mts\0H 160000 abcdef 0\tsubmodule\0",
+    );
+
+    assert_eq!(
+        views
+            .visible
+            .iter()
+            .map(|entry| (entry.path.clone(), entry.index_kind))
+            .collect::<Vec<_>>(),
+        vec![
+            (PathBuf::from("exec.mts"), Some(GitIndexKind::RegularFile)),
+            (PathBuf::from("killed.mts"), None),
+            (PathBuf::from("link.mts"), Some(GitIndexKind::Symlink)),
+            (PathBuf::from("submodule"), None),
+            (
+                PathBuf::from("tracked file.mts"),
+                Some(GitIndexKind::RegularFile)
+            ),
+            (PathBuf::from("untracked.mts"), None),
+        ]
+    );
+    assert_eq!(
+        views.tracked,
+        vec![
+            PathBuf::from("exec.mts"),
+            PathBuf::from("link.mts"),
+            PathBuf::from("submodule"),
+            PathBuf::from("tracked file.mts"),
+        ]
+    );
+}
+
+#[test]
+fn staged_git_paths_drop_deleted_worktree_entries() {
+    use super::super::file_inventory::GitIndexKind;
+
+    let views = parse_git_tagged_paths(
+        b"H 100644 abcdef 0\tdeleted.mts\0R 100644 abcdef 0\tdeleted.mts\0H 100644 abcdef 0\tkept.mts\0",
+    );
+
+    assert_eq!(
+        views
+            .visible
+            .iter()
+            .map(|entry| (entry.path.clone(), entry.index_kind))
+            .collect::<Vec<_>>(),
+        vec![(PathBuf::from("kept.mts"), Some(GitIndexKind::RegularFile))]
+    );
+    assert_eq!(views.tracked, vec![PathBuf::from("kept.mts")]);
 }
 
 #[test]
