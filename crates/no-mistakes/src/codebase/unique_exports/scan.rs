@@ -20,16 +20,6 @@ pub(super) fn filter_source_files(files: &[PathBuf]) -> Vec<PathBuf> {
         .collect()
 }
 
-#[cfg(test)]
-pub(super) fn collect_source_files_from_facts(
-    root: &Path,
-    files: &[PathBuf],
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    defer_suppression: bool,
-) -> Result<Vec<SourceFile>> {
-    collect_source_files_from_facts_with_sources(root, files, shared, defer_suppression, None)
-}
-
 pub(super) fn collect_source_files_from_facts_with_sources(
     root: &Path,
     files: &[PathBuf],
@@ -76,11 +66,6 @@ pub(super) struct NextJsProjectLookup {
 }
 
 impl NextJsProjectLookup {
-    #[cfg(test)]
-    pub(super) fn new(root: &Path, files: &[PathBuf], visible_files: &[PathBuf]) -> Self {
-        Self::with_sources(root, files, visible_files, None)
-    }
-
     pub(super) fn with_sources(
         root: &Path,
         files: &[PathBuf],
@@ -134,12 +119,7 @@ impl NextJsProjectLookup {
     }
 }
 
-#[cfg(test)]
-pub(super) fn package_json_has_next_dependency(path: &Path) -> bool {
-    package_json_has_next_from(path, None)
-}
-
-fn package_json_has_next_from(
+pub(super) fn package_json_has_next_from(
     path: &Path,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> bool {

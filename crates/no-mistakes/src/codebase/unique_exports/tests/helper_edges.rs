@@ -34,7 +34,7 @@ fn scan_helpers_cover_filter_and_parse_edges() {
     // PathBuf::from("/") has parent() == None, exercising the unwrap_or_else fallback.
     let lookup = scan::NextJsProjectLookup::new(&root, &[PathBuf::from("/")], &[]);
     assert!(!lookup.contains_file(Path::new("/")));
-    assert!(!scan::package_json_has_next_dependency(
+    assert!(!scan::test_support::package_json_has_next_dependency(
         &fixture("unique-exports-malformed-package").join("package.json")
     ));
 }
@@ -234,10 +234,10 @@ fn deferred_reexports_keep_named_reexports_lexically_visible() {
         Some(std::cmp::Ordering::Equal)
     );
 
-    assert!(!scan::package_json_has_next_dependency(
+    assert!(!scan::test_support::package_json_has_next_dependency(
         &root.join("package.json")
     ));
-    assert!(!scan::package_json_has_next_dependency(
+    assert!(!scan::test_support::package_json_has_next_dependency(
         &root.join("missing-package.json")
     ));
 }

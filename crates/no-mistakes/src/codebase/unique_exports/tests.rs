@@ -327,7 +327,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
     let missing = crate::codebase::check_facts::CheckFactMap::default();
 
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing, false)
+        scan::test_support::collect_source_files_from_facts(&root, &files, &missing, false)
             .unwrap_err()
             .to_string()
             .contains("missing shared facts")
@@ -343,21 +343,27 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
         }
         .into(),
     );
-    assert!(
-        scan::collect_source_files_from_facts(&root, &files, &parse_error, false)
-            .unwrap_err()
-            .to_string()
-            .contains("bad syntax")
-    );
+    assert!(scan::test_support::collect_source_files_from_facts(
+        &root,
+        &files,
+        &parse_error,
+        false
+    )
+    .unwrap_err()
+    .to_string()
+    .contains("bad syntax"));
 
     let mut missing_source = crate::codebase::check_facts::CheckFactMap::default();
     missing_source.ts.insert(file.clone(), Default::default());
-    assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_source, false)
-            .unwrap_err()
-            .to_string()
-            .contains("missing source facts")
-    );
+    assert!(scan::test_support::collect_source_files_from_facts(
+        &root,
+        &files,
+        &missing_source,
+        false
+    )
+    .unwrap_err()
+    .to_string()
+    .contains("missing source facts"));
 
     let mut missing_symbols = crate::codebase::check_facts::CheckFactMap::default();
     missing_symbols.ts.insert(
@@ -368,12 +374,15 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
         }
         .into(),
     );
-    assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_symbols, false)
-            .unwrap_err()
-            .to_string()
-            .contains("missing symbol facts")
-    );
+    assert!(scan::test_support::collect_source_files_from_facts(
+        &root,
+        &files,
+        &missing_symbols,
+        false
+    )
+    .unwrap_err()
+    .to_string()
+    .contains("missing symbol facts"));
 }
 
 #[test]
