@@ -95,3 +95,42 @@ fn github_actions_job_timeouts_passes_with_literal_timeout() {
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn github_actions_test_timeout_literals_fails_for_restated_values() {
+    let root = fixture("github-actions-test-timeout-literals", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(
+        body.contains("github-actions-test-timeout-literals"),
+        "{body}"
+    );
+    assert!(
+        body.contains("duplicates a timeout-minutes value"),
+        "{body}"
+    );
+}
+
+#[test]
+fn github_actions_test_timeout_literals_passes_range_assertions() {
+    let root = fixture("github-actions-test-timeout-literals", "pass");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn github_actions_test_timeout_literals_cli_fails_for_yaml_fragments() {
+    let root = fixture("github-actions-test-timeout-literals", "fail");
+    let output = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&output);
+    assert!(!output.status.success(), "expected exit 1");
+    assert!(
+        body.contains("github-actions-test-timeout-literals"),
+        "{body}"
+    );
+    assert!(
+        body.contains("duplicates a timeout-minutes value"),
+        "{body}"
+    );
+}

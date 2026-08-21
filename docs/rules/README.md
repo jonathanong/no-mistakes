@@ -32,6 +32,7 @@ rules:
 | [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md) | Validate composite-action steps against GitHub's documented step keys.     |
 | [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md)                 | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
+| [`github-actions-test-timeout-literals`](github-actions-test-timeout-literals.md) | Reject timeout-minutes literals restated in workflow tests.                 |
 | [`forbidden-dependencies`](forbidden-dependencies.md)                         | Prevent configured files/modules from depending on forbidden targets.           |
 | [`forbidden-workspace-closure`](forbidden-workspace-closure.md)               | Prevent workspace package closures from reaching forbidden packages.            |
 | [`integration-test-no-mocks`](integration-test-no-mocks.md)                   | Ban mocking libraries and mock helpers in integration tests.                    |
