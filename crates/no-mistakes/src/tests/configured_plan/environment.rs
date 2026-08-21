@@ -129,3 +129,6 @@ pub(super) fn limit_count(limit: Option<&TestPlanLimit>, total: usize) -> Option
         (None, None) => None,
     }
 }
+
+#[cfg(test)]
+mod tests;

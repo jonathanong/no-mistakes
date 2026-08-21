@@ -499,7 +499,7 @@ fn normalize_config_path(path: &str) -> String {
     }
 }
 
-fn framework_name(framework: TestFramework) -> &'static str {
+pub(super) fn framework_name(framework: TestFramework) -> &'static str {
     match framework {
         TestFramework::Playwright => "playwright",
         TestFramework::Vitest => "vitest",
