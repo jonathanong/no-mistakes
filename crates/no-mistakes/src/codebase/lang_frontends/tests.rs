@@ -337,6 +337,18 @@ fn php_collects_laravel_route_and_dispatch() {
         .route_handlers
         .iter()
         .any(|(route, _)| route == "/api/users"));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/users" && handler.contains("UserController")));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/users/:user" && handler.contains("UserController")));
+    assert!(routes
+        .route_handlers
+        .iter()
+        .all(|(route, _)| route != "/hidden" && route != "/accounts"));
     let job = facts
         .files
         .values()
