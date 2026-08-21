@@ -64,11 +64,9 @@ fn build_report_from_prepared(
         signature_target_symbols(target_file, symbol, &export_nodes, &visible_files, facts);
     let file_import_edges = HashSet::from([EdgeKind::DynamicImport, EdgeKind::Require]);
     let mut file_entry_target_symbols: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for file_root in interned_file_roots(&export_nodes, target_file, interner) {
-        let Some(root_file) = file_root.as_file() else {
-            continue;
-        };
-        let symbols_for_root = target_symbols.get(root_file).cloned().unwrap_or_default();
+    for root_path in interned_file_root_paths(&export_nodes, target_file) {
+        let file_root = NodeId::file_in(interner, &root_path);
+        let symbols_for_root = target_symbols.get(&root_path).cloned().unwrap_or_default();
         let file_entries = graph.dependents_of(
             std::slice::from_ref(&file_root),
             Some(1),

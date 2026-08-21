@@ -29,17 +29,26 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
         session,
     );
     let fact_plan = facts.collect_plan;
-    let mut visited: FxHashSet<NodeId> = fx_set();
+    // Intern owns each NodeId once. Clone a neighbor only into that map, then
+    // move it onto the next frontier; rebuild NodeEntry results at the end.
+    let mut intern: FxHashMap<NodeId, LazyVisit> = fx_map();
     let mut frontier: Vec<NodeId> = Vec::new();
-    let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: FxHashMap<NodeId, usize> = fx_map();
     let mut collected_facts = Vec::new();
+    let mut emit_order = 0usize;
 
     for root in roots {
-        if !visited.contains(root) {
-            visited.insert(root.clone());
-            frontier.push(root.clone());
+        if intern.contains_key(root) {
+            continue;
         }
+        intern.insert(
+            root.clone(),
+            LazyVisit {
+                result_order: None,
+                depth: 0,
+                via: Vec::new(),
+            },
+        );
+        frontier.push(root.clone());
     }
     let root_nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
 
@@ -106,25 +115,43 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
                 if is_symbol_owner_bridge(&node, &neighbor) && !root_nodes.contains(&node) {
                     continue;
                 }
-                if !visited.contains(&neighbor) {
-                    let next = neighbor;
-                    visited.insert(next.clone());
-                    let idx = result.len();
-                    result.push(NodeEntry {
-                        node: next.clone(),
-                        depth: next_depth,
-                        via: vec![kind],
-                    });
-                    result_idx.insert(next.clone(), idx);
-                    next_frontier.push(next);
-                } else if let Some(&idx) = result_idx.get(&neighbor) {
-                    add_via_kind(&mut result[idx], kind);
+                if let Some(visit) = intern.get_mut(&neighbor) {
+                    if visit.result_order.is_some() {
+                        add_via_kind_to(&mut visit.via, kind);
+                    }
+                } else {
+                    intern.insert(
+                        neighbor.clone(),
+                        LazyVisit {
+                            result_order: Some(emit_order),
+                            depth: next_depth,
+                            via: vec![kind],
+                        },
+                    );
+                    emit_order += 1;
+                    next_frontier.push(neighbor);
                 }
             }
         }
         frontier = next_frontier;
         depth = next_depth;
     }
+
+    let mut ordered: Vec<(usize, NodeEntry)> = intern
+        .into_iter()
+        .filter_map(|(node, visit)| {
+            Some((
+                visit.result_order?,
+                NodeEntry {
+                    node,
+                    depth: visit.depth,
+                    via: visit.via,
+                },
+            ))
+        })
+        .collect();
+    ordered.sort_unstable_by_key(|(order, _)| *order);
+    let result: Vec<NodeEntry> = ordered.into_iter().map(|(_, entry)| entry).collect();
 
     session.record_work("traversal.lazy_nodes", result.len() as u64);
     (

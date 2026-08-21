@@ -62,6 +62,27 @@ fn bfs_clones_neighbor_once_on_first_visit() {
     );
 }
 
+#[test]
+fn lazy_import_clones_neighbor_once_on_first_visit() {
+    let lazy = include_str!("../lazy_imports.rs");
+    assert!(
+        lazy.contains("neighbor.clone(),"),
+        "lazy import traversal must clone NodeId once into the intern map"
+    );
+    assert!(
+        lazy.contains("next_frontier.push(neighbor)"),
+        "lazy import traversal must move the owned neighbor onto the next frontier"
+    );
+    assert!(
+        !lazy.contains("visited.insert(next.clone())"),
+        "lazy import traversal must not clone into visited, result, and result_idx separately"
+    );
+    assert!(
+        !lazy.contains("result_idx.insert(next.clone()"),
+        "lazy import traversal must not keep a cloned result_idx map"
+    );
+}
+
 fn p(path: &str) -> PathBuf {
     PathBuf::from(path)
 }

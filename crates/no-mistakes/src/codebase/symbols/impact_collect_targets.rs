@@ -72,17 +72,13 @@ fn signature_target_symbols(
     target_symbols
 }
 
-fn interned_file_roots(
-    export_nodes: &BTreeSet<NodeId>,
-    target_file: &Path,
-    interner: &crate::codebase::analysis_session::PathInterner,
-) -> Vec<NodeId> {
-    let mut file_roots: Vec<_> = export_nodes
+fn interned_file_root_paths(export_nodes: &BTreeSet<NodeId>, target_file: &Path) -> Vec<PathBuf> {
+    let mut file_roots: Vec<PathBuf> = export_nodes
         .iter()
         .filter_map(NodeId::as_file)
-        .map(|path| NodeId::file_in(interner, path))
+        .map(Path::to_path_buf)
         .collect();
-    file_roots.push(NodeId::file_in(interner, target_file));
+    file_roots.push(target_file.to_path_buf());
     file_roots.sort();
     file_roots.dedup();
     file_roots
