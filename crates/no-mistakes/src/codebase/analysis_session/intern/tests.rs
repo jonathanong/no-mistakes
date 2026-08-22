@@ -6,6 +6,12 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+impl PathInterner {
+    pub(crate) fn interned_str_count(&self) -> usize {
+        self.strings.len()
+    }
+}
+
 fn hash_of(node: &NodeId) -> u64 {
     let mut hasher = DefaultHasher::new();
     node.hash(&mut hasher);
