@@ -62,17 +62,21 @@ fn deferred_cross_file_exports_resolve_against_precollected_static_values() {
     let resolved = super::super::cross_file::resolve_deferred_import(&marker, &exports)
         .expect("precollected named export resolves");
     assert_eq!(resolved, &["imported-fn-val".to_string()]);
-    assert!(super::super::cross_file::resolve_deferred_import(
-        "\0no-mistakes-playwright-import:not-json",
-        &exports,
-    )
-    .is_none());
-    assert!(super::super::cross_file::resolve_deferred_import(
-        &marker,
-        &std::collections::HashMap::new(),
-    )
-    .expect("a valid marker with no matching export resolves empty")
-    .is_empty());
+    assert!(
+        super::super::cross_file::resolve_deferred_import(
+            "\0no-mistakes-playwright-import:not-json",
+            &exports,
+        )
+        .is_none()
+    );
+    assert!(
+        super::super::cross_file::resolve_deferred_import(
+            &marker,
+            &std::collections::HashMap::new(),
+        )
+        .expect("a valid marker with no matching export resolves empty")
+        .is_empty()
+    );
 }
 
 #[test]
@@ -189,9 +193,11 @@ fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
         .flat_map(|entry| entry.values.iter())
         .collect::<Vec<_>>();
     assert_eq!(imported_values.len(), 2);
-    assert!(imported_values
-        .iter()
-        .all(|value| value.starts_with("\0no-mistakes-playwright-import:")));
+    assert!(
+        imported_values
+            .iter()
+            .all(|value| value.starts_with("\0no-mistakes-playwright-import:"))
+    );
 
     let local_path = fixture_path(&["ast-snippets", "selectors", "dynamic-function-return.tsx"]);
     let local_source = std::fs::read_to_string(&local_path).unwrap();
@@ -446,4 +452,32 @@ function Page() {
     assert_eq!(a_entry.values, vec!["val-a"]);
     let b_entry = collected.iter().find(|e| e.name == "b").expect("b entry");
     assert_eq!(b_entry.values, vec!["val-b"]);
+}
+
+#[test]
+fn collect_object_string_values_non_object_returns_empty() {
+    let source = r#"const x = 42;"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let values = super::super::collect::collect_object_string_values(init);
+                        assert!(values.is_empty());
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_function_return_strings_from_exported_declaration() {
+    let source = r#"export function getSelector() { return 'exported'; }"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        let values = super::super::collect::collect_function_return_strings("getSelector", program);
+        assert_eq!(values, vec!["exported"]);
+    })
+    .unwrap();
 }

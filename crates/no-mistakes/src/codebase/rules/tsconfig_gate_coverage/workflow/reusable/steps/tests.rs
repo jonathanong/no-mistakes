@@ -242,4 +242,16 @@ fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
         BTreeSet::new(),
     );
     assert!(uncertain_false_config.indeterminate || uncertain_false_config.failed);
+
+    let missing_local_action = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: github.event.unknown\n    uses: ./missing-action",
+        BTreeSet::new(),
+    );
+    assert!(missing_local_action.indeterminate || missing_local_action.failed);
+
+    let invalid_action_inputs = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    uses: actions/checkout@v4\n    with: { ref: [] }",
+        BTreeSet::new(),
+    );
+    assert!(!invalid_action_inputs.failed);
 }

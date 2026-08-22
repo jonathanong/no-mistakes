@@ -376,3 +376,90 @@ fn route_import_edges_resolve_through_an_unbounded_catalog() {
         "{edges:#?}"
     );
 }
+
+#[test]
+fn route_import_edges_skip_uncanonical_parents_and_nameless_visible_files() {
+    let missing = PathBuf::from("/no-mistakes-missing-route-import/file.ts");
+    let facts = TsFactMap::from([(
+        missing.clone(),
+        TsFileFacts {
+            imports: vec![ExtractedImport {
+                specifier: "./sibling.ts".to_string(),
+                kind: ImportKind::Dynamic,
+                line: 1,
+                function_scope: None,
+                side_effect_only: false,
+                re_export: false,
+                runtime_reachable: true,
+            }],
+            ..TsFileFacts::default()
+        },
+    )]);
+    let tsconfig = TsConfig {
+        dir: PathBuf::from("/no-mistakes-missing-route-import"),
+        paths: vec![],
+        paths_dir: PathBuf::from("/no-mistakes-missing-route-import"),
+        base_url: None,
+    };
+    let nameless = PathBuf::from("/");
+    let graph_files = GraphFiles::from_parts(
+        vec![missing.clone(), nameless.clone()],
+        vec![missing.clone(), nameless],
+        Vec::<PathBuf>::new(),
+        vec![],
+    );
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(
+        &tsconfig.dir,
+        tsconfig.clone(),
+        None,
+    );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let edges = collect_route_import_edges(
+        std::slice::from_ref(&missing),
+        &facts,
+        &tsconfig,
+        Some(&catalog),
+        &graph_files,
+        &session,
+    );
+    assert!(edges.is_empty(), "{edges:#?}");
+
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("simple"));
+    let nameless_source = root.join("..");
+    let existing = root.join("a.mts");
+    let facts = TsFactMap::from([(
+        nameless_source.clone(),
+        TsFileFacts {
+            imports: vec![ExtractedImport {
+                specifier: "./a.mts".to_string(),
+                kind: ImportKind::Static,
+                line: 1,
+                function_scope: None,
+                side_effect_only: false,
+                re_export: false,
+                runtime_reachable: true,
+            }],
+            ..TsFileFacts::default()
+        },
+    )]);
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = GraphFiles::from_files(vec![existing, nameless_source.clone()]);
+    let edges = collect_route_import_edges(
+        std::slice::from_ref(&nameless_source),
+        &facts,
+        &tsconfig,
+        None,
+        &graph_files,
+        &session,
+    );
+    assert!(
+        edges
+            .iter()
+            .all(|(_, _, kind)| *kind == EdgeKind::RouteImport)
+    );
+}
