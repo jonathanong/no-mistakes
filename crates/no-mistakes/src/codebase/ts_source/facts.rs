@@ -112,6 +112,23 @@ impl TsFactSlot {
             Self::Shared(facts) => Arc::unwrap_or_clone(facts),
         }
     }
+
+    fn materialize_owned(&mut self) {
+        if matches!(self, Self::Owned(_)) {
+            return;
+        }
+        // Take the slot first so a uniquely owned Shared Arc can unwrap
+        // instead of cloning after a temporary extra strong count.
+        let taken = std::mem::replace(self, Self::Owned(Box::new(TsFileFacts::default())));
+        *self = Self::Owned(Box::new(taken.into_owned()));
+    }
+
+    fn as_facts_mut(&mut self) -> &mut TsFileFacts {
+        match self {
+            Self::Owned(facts) => facts,
+            Self::Shared(_) => unreachable!("shared slots were materialized"),
+        }
+    }
 }
 
 #[derive(Clone, Default)]

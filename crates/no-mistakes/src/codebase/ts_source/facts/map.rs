@@ -62,14 +62,8 @@ impl TsFactMap {
 
     pub fn get_mut(&mut self, path: &Path) -> Option<&mut TsFileFacts> {
         let slot = self.facts.get_mut(path)?;
-        if matches!(slot, TsFactSlot::Shared(_)) {
-            let owned = slot.clone().into_owned();
-            *slot = TsFactSlot::Owned(Box::new(owned));
-        }
-        match slot {
-            TsFactSlot::Owned(facts) => Some(facts),
-            TsFactSlot::Shared(_) => unreachable!("shared slots were materialized"),
-        }
+        slot.materialize_owned();
+        Some(slot.as_facts_mut())
     }
 
     pub fn insert(&mut self, path: PathBuf, facts: TsFileFacts) -> Option<TsFileFacts> {

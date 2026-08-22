@@ -65,6 +65,49 @@ fn shared_fact_map_materializes_only_mutated_entries() {
         facts.shared_arc(&second_path).unwrap(),
         &second
     ));
+    assert!(!first.fatal_parse_error);
+}
+
+#[test]
+fn unique_shared_fact_is_unwrapped_on_get_mut() {
+    let path = PathBuf::from("/fixture/source.ts");
+    let mut facts = TsFactMap::from_shared_iter_with_plan(
+        [(
+            path.clone(),
+            Arc::new(TsFileFacts {
+                fatal_parse_error: true,
+                ..TsFileFacts::default()
+            }),
+        )],
+        TsFactPlan::default(),
+    );
+
+    facts.get_mut(&path).unwrap().fatal_parse_error = false;
+
+    assert!(!facts[&path].fatal_parse_error);
+    assert!(facts.has_owned(&path));
+}
+
+#[test]
+fn unique_shared_facts_are_unwrapped_when_iterating_mutably() {
+    let path = PathBuf::from("/fixture/source.ts");
+    let mut facts = TsFactMap::from_shared_iter_with_plan(
+        [(
+            path.clone(),
+            Arc::new(TsFileFacts {
+                fatal_parse_error: true,
+                ..TsFileFacts::default()
+            }),
+        )],
+        TsFactPlan::default(),
+    );
+
+    for (_, fact) in &mut facts {
+        fact.fatal_parse_error = false;
+    }
+
+    assert!(!facts[&path].fatal_parse_error);
+    assert!(facts.has_owned(&path));
 }
 
 #[test]

@@ -1,12 +1,10 @@
-use super::{TsFactMap, TsFactSlot, TsFileFacts};
+use super::{TsFactMap, TsFileFacts};
 use std::path::PathBuf;
 
 impl TsFactMap {
     fn materialize_shared(&mut self) {
         for (_, slot) in &mut self.facts {
-            if matches!(slot, TsFactSlot::Shared(_)) {
-                *slot = TsFactSlot::Owned(Box::new(slot.clone().into_owned()));
-            }
+            slot.materialize_owned();
         }
     }
 }
@@ -41,10 +39,7 @@ impl<'a> IntoIterator for &'a mut TsFactMap {
         self.materialize_shared();
         (&mut self.facts)
             .into_iter()
-            .map(|(path, slot)| match slot {
-                TsFactSlot::Owned(facts) => (path, facts.as_mut()),
-                TsFactSlot::Shared(_) => unreachable!("shared slots were materialized"),
-            })
+            .map(|(path, slot)| (path, slot.as_facts_mut()))
             .collect::<Vec<_>>()
             .into_iter()
     }
