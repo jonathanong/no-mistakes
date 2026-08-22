@@ -90,9 +90,7 @@ async function ciTopology(options) {
   } catch {
     mtime = 0;
   }
-  const workflows = JSON.stringify(
-    [...((options && options.workflows) || [])].map(String).sort(),
-  );
+  const workflows = JSON.stringify([...((options && options.workflows) || [])].map(String).sort());
   const identity = `${root}\0${configPath}\0`;
   const key = `${identity}${mtime}\0${workflows}`;
   for (const memoKey of [...topologyMemo.keys()]) {
