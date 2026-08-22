@@ -21,11 +21,21 @@ impl PathInterner {
         Self::default()
     }
 
-    /// Normalize `path` and return the request-owned `Arc<Path>`.
+    /// Return the request-owned `Arc<Path>` for `path`.
+    ///
+    /// Look up the borrowed path first so already-normalized inventory and
+    /// discovery paths do not allocate a `PathBuf` on cache hits. Unnormalized
+    /// spellings still go through [`normalize_path`] before insert.
     pub fn intern_path(&self, path: impl AsRef<Path>) -> Arc<Path> {
-        let normalized = normalize_path(path.as_ref());
-        if let Some(hit) = self.paths.get(normalized.as_path()) {
+        let path = path.as_ref();
+        if let Some(hit) = self.paths.get(path) {
             return Arc::clone(hit.key());
+        }
+        let normalized = normalize_path(path);
+        if normalized.as_path() != path {
+            if let Some(hit) = self.paths.get(normalized.as_path()) {
+                return Arc::clone(hit.key());
+            }
         }
         self.insert_path_arc(Arc::<Path>::from(normalized))
     }

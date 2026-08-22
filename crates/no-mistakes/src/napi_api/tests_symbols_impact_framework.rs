@@ -19,13 +19,13 @@ fn signature_impact_cli_and_napi_share_configured_nonworkspace_framework_aliases
     })
     .unwrap();
     let napi = symbols_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "files": ["apps/web/src/project-options.ts"],
             "mode": "signature-impact",
             "symbol": "projects"
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let cli: serde_json::Value = serde_json::from_str(&cli).unwrap();
@@ -58,13 +58,13 @@ fn signature_impact_uses_prepared_runner_projects_for_test_of_suggestions() {
     })
     .unwrap();
     let napi = symbols_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "files": ["apps/web/src/value.ts"],
             "mode": "signature-impact",
             "symbol": "value"
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let cli: serde_json::Value = serde_json::from_str(&cli).unwrap();

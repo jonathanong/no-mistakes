@@ -168,7 +168,9 @@ pub fn check_json_observed(
 /// Run the same multi-report engine used by the asynchronous N-API task.
 pub fn analyze_project_json(options_json: String) -> napi::Result<String> {
     crate::ast::with_request_parse_cache(|| {
-        crate::napi_api::analyze_project_json_impl(options_json)
+        crate::napi_api::analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            options_json,
+        ))
     })
 }
 

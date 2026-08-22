@@ -5,7 +5,7 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-project-route-config"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let client = root.join("src/client.ts");
     let route = root.join("backend/api/users.mts");
     let client_route = root.join("backend/api/client.mts");
@@ -82,7 +82,7 @@ fn configured_project_routes_reuse_prepared_server_facts() {
     );
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).unwrap();
     let route_globset = options.project_route_globset.as_ref().unwrap();
     let plan = GraphBuildPlan {
@@ -139,7 +139,7 @@ fn prepared_project_route_facts_preserve_imported_mounts_and_test_exclusions() {
     );
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).unwrap();
     let route_globset = options.project_route_globset.as_ref().unwrap();
     let plan = GraphBuildPlan {
@@ -205,7 +205,7 @@ fn workspace_project_routes_resolve_mount_aliases_with_the_owning_tsconfig() {
     );
 
     let options = graph_config_options(&root).unwrap();
-    let all_files = shared.graph_files().all.clone();
+    let all_files = shared.graph_files().all().to_vec();
     let tsconfig = shared.tsconfig().clone();
     let tsconfig_catalog = shared.tsconfig_catalog_arc();
     let session = shared.session_arc();

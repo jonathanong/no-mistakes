@@ -11,11 +11,11 @@ fn resource_edges_are_available_through_tests_and_traversal_napi_apis() {
     let root = fixture.path().canonicalize().unwrap();
 
     let plan = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "changedFiles": ["resources/page.txt"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&plan).unwrap();
@@ -33,11 +33,11 @@ fn resource_edges_are_available_through_tests_and_traversal_napi_apis() {
     );
 
     let impact = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["resources/page.txt"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let impact: serde_json::Value = serde_json::from_str(&impact).unwrap();
@@ -47,12 +47,12 @@ fn resource_edges_are_available_through_tests_and_traversal_napi_apis() {
     );
 
     let dependencies = dependencies_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "files": ["impact-consumer.ts"],
             "relationships": ["resource"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let dependencies: serde_json::Value = serde_json::from_str(&dependencies).unwrap();
@@ -65,12 +65,12 @@ fn resource_edges_are_available_through_tests_and_traversal_napi_apis() {
         }));
 
     let dependents = dependents_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "files": ["resources/page.txt"],
             "relationships": ["resource"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let dependents: serde_json::Value = serde_json::from_str(&dependents).unwrap();
@@ -93,11 +93,11 @@ deleted file mode 100644\n\
 @@ -1,1 +0,0 @@\n\
 --- This tracked runtime input intentionally lives under a source-skipped directory.\n";
     let plan = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "diff": diff
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&plan).unwrap();

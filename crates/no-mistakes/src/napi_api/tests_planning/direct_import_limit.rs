@@ -1,13 +1,13 @@
 #[test]
 fn tests_plan_json_direct_group_keeps_same_directory_importer_under_limit() {
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("test-plan-direct-import-limit"),
             "framework": "vitest",
             "changedFiles": ["src/dev-server.mts"],
             "environment": "prePush",
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -32,13 +32,13 @@ fn tests_plan_json_direct_group_keeps_same_directory_importer_under_limit() {
 #[test]
 fn tests_plan_json_direct_group_excludes_two_hop_dependents() {
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("test-plan-direct-import-limit"),
             "framework": "vitest",
             "changedFiles": ["src/dev-server.mts"],
             "environment": "full",
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();

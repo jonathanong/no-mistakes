@@ -111,7 +111,7 @@ pub(in crate::integration_tests::test_config::vitest) fn parse_string_project_wi
         }
         Ok(source) => crate::ast::with_recovered_typescript_program_observed(
             path,
-            &source,
+            source,
             || {},
             |program, source, diagnostic| {
                 diagnostic.map_or_else(

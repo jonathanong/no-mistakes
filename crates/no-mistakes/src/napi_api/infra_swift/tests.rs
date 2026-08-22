@@ -20,7 +20,7 @@ fn infra_resource_refs_impl_returns_referencing_blocks() {
         "address": "aws_route53_record.foo",
     })
     .to_string();
-    let output = infra_resource_refs_json_impl(options).unwrap();
+    let output = infra_resource_refs_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     assert!(output.contains("aws_lb.web"));
 }
 
@@ -31,7 +31,7 @@ fn infra_outputs_impl_returns_exports() {
         "moduleDir": "infra/modules/network",
     })
     .to_string();
-    let output = infra_outputs_json_impl(options).unwrap();
+    let output = infra_outputs_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     assert!(output.contains("zone_id"));
 }
 
@@ -42,16 +42,16 @@ fn infra_test_for_impl_returns_covering_tests() {
         "tfFile": "infra/envs/prod/main.tf",
     })
     .to_string();
-    let output = infra_test_for_json_impl(options).unwrap();
+    let output = infra_test_for_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     assert!(output.contains("network.test.mts"));
 }
 
 #[test]
 fn infra_impls_require_their_arguments() {
     let options = json!({ "root": fixture_root("terraform-basic") }).to_string();
-    assert!(infra_resource_refs_json_impl(options.clone()).is_err());
-    assert!(infra_outputs_json_impl(options.clone()).is_err());
-    assert!(infra_test_for_json_impl(options).is_err());
+    assert!(infra_resource_refs_json_impl(crate::napi_api::options::test_json_arg(options.clone())).is_err());
+    assert!(infra_outputs_json_impl(crate::napi_api::options::test_json_arg(options.clone())).is_err());
+    assert!(infra_test_for_json_impl(crate::napi_api::options::test_json_arg(options)).is_err());
 }
 
 #[test]
@@ -61,7 +61,7 @@ fn swift_importers_impl_returns_importers() {
         "file": "swift-clients/core/Sources/VouchaAPI/Endpoint.swift",
     })
     .to_string();
-    let output = swift_importers_json_impl(options).unwrap();
+    let output = swift_importers_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     assert!(output.contains("APIClient.swift"));
 }
 
@@ -72,15 +72,15 @@ fn swift_test_targets_impl_returns_targets() {
         "file": "swift-clients/core/Sources/VouchaAPI/Endpoint.swift",
     })
     .to_string();
-    let output = swift_test_targets_json_impl(options).unwrap();
+    let output = swift_test_targets_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     assert!(output.contains("VouchaCoreTests"));
 }
 
 #[test]
 fn swift_impls_require_file() {
     let options = json!({ "root": fixture_root("swift-test-plan") }).to_string();
-    assert!(swift_importers_json_impl(options.clone()).is_err());
-    assert!(swift_test_targets_json_impl(options).is_err());
+    assert!(swift_importers_json_impl(crate::napi_api::options::test_json_arg(options.clone())).is_err());
+    assert!(swift_test_targets_json_impl(crate::napi_api::options::test_json_arg(options)).is_err());
 }
 
 #[test]

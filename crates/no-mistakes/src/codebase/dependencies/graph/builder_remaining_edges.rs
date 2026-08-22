@@ -47,7 +47,7 @@ fn collect_remaining_edges(
         .map(|options| &options.ci)
         .unwrap_or(&default_ci);
     let parsed_workflows = (plan.ci || plan.workflow_topology).then(|| {
-        parsed_workflows_for_graph(root, &graph_files.all, ci, edge_inputs.workflow_documents)
+        parsed_workflows_for_graph(root, graph_files.all(), ci, edge_inputs.workflow_documents)
     });
 
     crate::invocation::check_timeout()?;
@@ -60,7 +60,7 @@ fn collect_remaining_edges(
         if plan.ci {
             add_ci_edges(
                 root,
-                &graph_files.all,
+                graph_files.all(),
                 parsed_workflows
                     .as_ref()
                     .expect("CI graph plan prepares parsed workflows"),
@@ -88,7 +88,7 @@ fn collect_remaining_edges(
                 reverse,
                 collect_workflow_topology_edges(
                     root,
-                    &graph_files.all,
+                    graph_files.all(),
                     ci,
                     parsed,
                     &topology,
@@ -116,7 +116,7 @@ fn collect_remaining_edges(
             let edges = collect_playwright_route_edges_from_snapshot(
                 root,
                 edge_inputs.config_path,
-                &graph_files.all,
+                graph_files.all(),
                 facts,
                 snapshot,
                 edge_inputs.playwright_settings,

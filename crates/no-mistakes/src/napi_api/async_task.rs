@@ -35,7 +35,7 @@ impl Task for JsonValueTask {
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let output = crate::ast::with_request_parse_cache(|| (self.run)(options));
         crate::invocation::check_timeout().map_err(to_napi_error)?;
-        output.map(Buffer::from)
+        output.map(|json| Buffer::from(json.into_bytes()))
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
@@ -64,7 +64,7 @@ impl Task for JsonTask {
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let output = crate::ast::with_request_parse_cache(|| (self.run)(options_json));
         crate::invocation::check_timeout().map_err(to_napi_error)?;
-        output.map(Buffer::from)
+        output.map(|json| Buffer::from(json.into_bytes()))
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
@@ -72,8 +72,8 @@ impl Task for JsonTask {
     }
 }
 
-fn utf8_json(options_json: &Buffer) -> napi::Result<String> {
-    String::from_utf8(options_json.to_vec())
+fn utf8_json(options_json: &Buffer) -> napi::Result<&str> {
+    std::str::from_utf8(options_json.as_ref())
         .map_err(|error| napi::Error::from_reason(format!("options JSON must be UTF-8: {error}")))
 }
 

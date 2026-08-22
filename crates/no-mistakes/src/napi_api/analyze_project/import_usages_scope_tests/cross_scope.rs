@@ -5,12 +5,12 @@ fn external_import_usage_files_do_not_widen_mixed_check_findings() {
     let external = fixture.join("external-root");
     let config = fixture.join("isolation.no-mistakes.yml");
     let standalone = parse_json(
-        crate::napi_api::check_json_impl(json!({ "root": root, "config": config }).to_string())
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root, "config": config }).to_string()))
             .unwrap(),
     );
     assert!(standalone["codebase"].as_array().unwrap().is_empty());
     let expanded = parse_json(
-        crate::napi_api::check_json_impl(json!({ "root": fixture, "config": config }).to_string())
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": fixture, "config": config }).to_string()))
             .unwrap(),
     );
     assert!(
@@ -27,7 +27,7 @@ fn external_import_usage_files_do_not_widen_mixed_check_findings() {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
         parse_json(
             analyze_project_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "config": config,
                     "reports": [
@@ -35,7 +35,7 @@ fn external_import_usage_files_do_not_widen_mixed_check_findings() {
                         { "type": "importUsages", "scanRoots": [external] }
                     ]
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         )
@@ -76,12 +76,12 @@ fn all_effective_scope_snapshots_are_seeded_before_scope_preparation() {
     let report_root = fixture.join("report-root");
     let inherited = parse_json(
         crate::napi_api::import_usages_json_impl(
-            json!({ "root": root, "scanRoots": [report_root] }).to_string(),
+            crate::napi_api::options::test_json_arg(json!({ "root": root, "scanRoots": [report_root] }).to_string(),)
         )
         .unwrap(),
     );
     let overridden = parse_json(
-        crate::napi_api::import_usages_json_impl(json!({ "root": report_root }).to_string())
+        crate::napi_api::import_usages_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": report_root }).to_string()))
             .unwrap(),
     );
     let observer = crate::diagnostics::InvocationObserver::new(true);
@@ -89,7 +89,7 @@ fn all_effective_scope_snapshots_are_seeded_before_scope_preparation() {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
         parse_json(
             analyze_project_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "reports": [
                         {
@@ -104,7 +104,7 @@ fn all_effective_scope_snapshots_are_seeded_before_scope_preparation() {
                         }
                     ]
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         )

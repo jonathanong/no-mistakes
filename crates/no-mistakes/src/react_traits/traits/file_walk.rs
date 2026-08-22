@@ -1,3 +1,4 @@
+use crate::react_traits::analyze::components::ComponentDef;
 use crate::react_traits::analyze::import_table::ImportTable;
 use crate::react_traits::analyze::jsx_children::jsx_element_child;
 use crate::react_traits::analyze::jsx_resolve::collect_local_components;
@@ -14,6 +15,7 @@ pub(crate) struct FileTraitHits {
     pub uses_memo: Vec<bool>,
     pub uses_context_provider: Vec<bool>,
     pub uses_suspense_jsx: Vec<bool>,
+    pub has_props: Vec<bool>,
     pub children: Vec<Vec<(PathBuf, String)>>,
 }
 
@@ -96,21 +98,24 @@ impl<'a> Visit<'a> for FileTraitVisitor<'a> {
 
 pub(crate) fn collect_file_trait_hits(
     program: &Program<'_>,
-    spans: &[Span],
+    defs: &[ComponentDef],
     dynamic_names: &[HashSet<String>],
     import_table: &ImportTable,
     file_path: &Path,
 ) -> FileTraitHits {
+    crate::diagnostics::record_ast_walk();
+    let spans: Vec<Span> = defs.iter().map(|def| def.span).collect();
     let n = spans.len();
     let local_components = collect_local_components(program);
     let mut visitor = FileTraitVisitor {
-        spans,
+        spans: &spans,
         hits: FileTraitHits {
             has_state: vec![false; n],
             passes_props: vec![false; n],
             uses_memo: vec![false; n],
             uses_context_provider: vec![false; n],
             uses_suspense_jsx: vec![false; n],
+            has_props: vec![false; n],
             children: vec![Vec::new(); n],
         },
         import_table,
@@ -119,8 +124,12 @@ pub(crate) fn collect_file_trait_hits(
         dynamic_names,
     };
     visitor.visit_program(program);
-    visitor.hits
+    let mut hits = visitor.hits;
+    declaration::fill_declaration_traits(program, defs, &mut hits);
+    hits
 }
+
+mod declaration;
 
 #[cfg(test)]
 mod tests;

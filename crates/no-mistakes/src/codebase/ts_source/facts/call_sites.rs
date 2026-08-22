@@ -86,7 +86,7 @@ fn arg_tag(arg: &Argument<'_>) -> &'static str {
 
 pub(crate) fn record_call_site(
     source: &str,
-    caller: Option<&String>,
+    caller: Option<&str>,
     call: &CallExpression<'_>,
     sites: &mut Vec<CallSiteFact>,
 ) {
@@ -102,7 +102,7 @@ pub(crate) fn record_call_site(
         callee,
         is_optional,
         line: byte_offset_to_line(source, call.span.start as usize),
-        caller: caller.cloned(),
+        caller: caller.map(str::to_string),
         static_arg_source: static_first_string_arg_source(call, source),
         arg_count: call.arguments.len(),
         has_spread: call

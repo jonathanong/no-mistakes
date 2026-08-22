@@ -32,7 +32,7 @@ fn workspace_dependency_paths(file: &str, tsconfig: Option<&str>) -> Vec<String>
     if let Some(tsconfig) = tsconfig {
         options["tsconfig"] = serde_json::Value::String(tsconfig.to_string());
     }
-    let output = dependencies_json_impl(options.to_string()).unwrap();
+    let output = dependencies_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     serde_json::from_str::<serde_json::Value>(&output).unwrap()["files"]
         .as_array()
         .unwrap()
@@ -50,7 +50,7 @@ fn dependency_rows(root: &std::path::Path, tsconfig: Option<&str>) -> Vec<serde_
     if let Some(tsconfig) = tsconfig {
         options["tsconfig"] = serde_json::Value::String(tsconfig.to_string());
     }
-    let output = dependencies_json_impl(options.to_string()).unwrap();
+    let output = dependencies_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     serde_json::from_str::<serde_json::Value>(&output).unwrap()["files"]
         .as_array()
         .unwrap()
@@ -64,7 +64,7 @@ fn import_usages_json_impl_reports_direct_imports() {
         "files": ["src/main.mts"]
     });
 
-    let json = import_usages_json_impl(options.to_string()).unwrap();
+    let json = import_usages_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&json).unwrap();
 
     assert_eq!(value["files"][0]["path"], "src/main.mts");
@@ -136,7 +136,7 @@ fn dependencies_napi_honors_explicit_ignored_root_but_not_ignored_transitives() 
         if let Some(relationships) = relationships {
             options["relationships"] = relationships;
         }
-        let output = dependencies_json_impl(options.to_string()).unwrap();
+        let output = dependencies_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
         let value: serde_json::Value = serde_json::from_str(&output).unwrap();
         let paths = value["files"]
             .as_array()
@@ -159,7 +159,7 @@ fn queues_napi_ignores_automatic_tsconfig_but_honors_explicit_ignored_config() {
     let root = fixture.path().display().to_string();
 
     let automatic =
-        crate::napi_api::queues_json_impl(serde_json::json!({ "root": root }).to_string()).unwrap();
+        crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({ "root": root }).to_string())).unwrap();
     let automatic: serde_json::Value = serde_json::from_str(&automatic).unwrap();
     assert!(automatic["producers"]
         .as_array()
@@ -168,7 +168,7 @@ fn queues_napi_ignores_automatic_tsconfig_but_honors_explicit_ignored_config() {
         .any(|producer| { producer["file"] == "enqueue.ts" && producer["queueFile"].is_null() }));
 
     let explicit = crate::napi_api::queues_json_impl(
-        serde_json::json!({ "root": root, "tsconfig": "tsconfig.json" }).to_string(),
+        crate::napi_api::options::test_json_arg(serde_json::json!({ "root": root, "tsconfig": "tsconfig.json" }).to_string(),)
     )
     .unwrap();
     let explicit: serde_json::Value = serde_json::from_str(&explicit).unwrap();
@@ -191,7 +191,7 @@ fn queues_napi_uses_package_tsconfig_aliases_automatically() {
 
     crate::ast::begin_parse_count(&root_path);
     let output =
-        crate::napi_api::queues_json_impl(serde_json::json!({ "root": root }).to_string()).unwrap();
+        crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({ "root": root }).to_string())).unwrap();
     let parse_counts = crate::ast::finish_parse_count(&root_path);
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
 

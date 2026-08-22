@@ -25,11 +25,11 @@ fn aggregate_import_usages(
     let output = {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
         analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "reports": [report]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap()
     };
@@ -52,7 +52,7 @@ fn external_scan_root_matches_standalone_and_is_prepared_once() {
     let external = fixture.join("external-root");
     let standalone = parse_json(
         crate::napi_api::import_usages_json_impl(
-            json!({ "root": root, "scanRoots": [external] }).to_string(),
+            crate::napi_api::options::test_json_arg(json!({ "root": root, "scanRoots": [external] }).to_string(),)
         )
         .unwrap(),
     );
@@ -87,7 +87,7 @@ fn external_scan_root_matches_standalone_and_is_prepared_once() {
 fn omitted_files_reuse_the_same_root_snapshot_without_a_second_discovery() {
     let root = fixture_root().join("report-root");
     let standalone = parse_json(
-        crate::napi_api::import_usages_json_impl(json!({ "root": root }).to_string()).unwrap(),
+        crate::napi_api::import_usages_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap(),
     );
     let (aggregate, observer) = aggregate_import_usages(&root, json!({ "type": "importUsages" }));
 
@@ -113,14 +113,14 @@ fn equivalent_reports_share_one_prepared_file_universe() {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
         parse_json(
             analyze_project_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "reports": [
                         { "type": "importUsages", "id": "first" },
                         { "type": "importUsages", "id": "second" }
                     ]
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         )

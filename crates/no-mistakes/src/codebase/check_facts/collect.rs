@@ -1,7 +1,8 @@
 use super::{CheckFactMap, CheckFactPlan, CheckFactStats, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::dependencies::extract::is_indexable;
+use crate::codebase::ts_source::FileIdMap;
 use dashmap::DashMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -30,8 +31,13 @@ fn collect_check_facts_inner(
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
-    mut ts: HashMap<PathBuf, CheckFileFacts>,
+    ts: FileIdMap<CheckFileFacts>,
 ) -> CheckFactMap {
+    let mut ts = if ts.is_empty() {
+        FileIdMap::with_inventory(Arc::clone(sources.inventory()))
+    } else {
+        ts
+    };
     let (files, graph_files, graph_files_complete) = file_scope;
     let graph_only_files = graph_only_files(&files, &graph_files);
     let collected_ts_plan = if graph_only_files.iter().any(|path| is_indexable(path)) {
@@ -91,10 +97,7 @@ fn collect_check_facts_inner(
         files,
         graph_files,
         graph_files_complete,
-        ts: crate::codebase::ts_source::FileIdMap::from_iter_with_inventory(
-            ts.into_iter().map(|(path, facts)| (path, Arc::new(facts))),
-            Arc::clone(sources.inventory()),
-        ),
+        ts: ts.map_values(Arc::new),
         graph_plan: collected_ts_plan,
         integration_runner_configs,
         playwright_source_files: Arc::new(Vec::new()),

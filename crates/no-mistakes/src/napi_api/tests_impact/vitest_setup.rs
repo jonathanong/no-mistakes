@@ -10,7 +10,7 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
         "entrypoints": ["setup/resolved-helper.ts"]
     })
     .to_string();
-    let output = tests_impact_json_impl(options).unwrap();
+    let output = tests_impact_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
     assert!(
@@ -19,11 +19,11 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
     );
 
     let output = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["shared-setup/named-member-star.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -35,11 +35,11 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
     );
 
     let output = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["inherits/setup/missing.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -53,11 +53,11 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
     }), "{selected:#?}");
 
     let output = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["arbitrary-project-match/setup/arbitrary.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -68,7 +68,7 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
     );
 
     let output = tests_impact_json_impl(
-        json!({ "root": root, "entrypoints": ["config/setup-selector.ts"] }).to_string(),
+        crate::napi_api::options::test_json_arg(json!({ "root": root, "entrypoints": ["config/setup-selector.ts"] }).to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -76,11 +76,11 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
     assert_eq!(plan["selected_tests"][0]["test_file"], "inherits/inherited.test.ts");
 
     let output = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["runtime-owner/setup/deleted-runtime-helper.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -95,8 +95,8 @@ fn tests_impact_json_traverses_prepared_vitest_setup_edges() {
         .is_some_and(|reason| reason.contains("transitive dependency of a resolved setup was deleted")), "{plan:#}");
 
     let output = tests_impact_json_impl(
-        json!({ "root": root, "entrypoints": ["configless-project/default.test.ts"] })
-            .to_string(),
+        crate::napi_api::options::test_json_arg(json!({ "root": root, "entrypoints": ["configless-project/default.test.ts"] })
+            .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -114,7 +114,7 @@ fn tests_impact_json_keeps_native_tests_when_optional_vitest_is_invalid() {
             .join("../../fixtures/test-plan/impact-invalid-vitest-config"),
     );
     let output = tests_impact_json_impl(
-        json!({ "root": root, "entrypoints": ["tests/ServiceTests.cs"] }).to_string(),
+        crate::napi_api::options::test_json_arg(json!({ "root": root, "entrypoints": ["tests/ServiceTests.cs"] }).to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -130,7 +130,7 @@ fn tests_impact_json_rejects_valid_vitest_discovery_errors() {
             .join("../../fixtures/test-plan/impact-invalid-vitest-discovery"),
     );
     let result = tests_impact_json_impl(
-        json!({ "root": root, "entrypoints": ["tests/ServiceTests.cs"] }).to_string(),
+        crate::napi_api::options::test_json_arg(json!({ "root": root, "entrypoints": ["tests/ServiceTests.cs"] }).to_string(),)
     );
 
     assert!(result.is_err());
@@ -153,7 +153,7 @@ fn tests_impact_json_keeps_commonjs_object_setup_owners_exact() {
         ),
     ] {
         let output = tests_impact_json_impl(
-            json!({ "root": root, "entrypoints": [entrypoint] }).to_string(),
+            crate::napi_api::options::test_json_arg(json!({ "root": root, "entrypoints": [entrypoint] }).to_string(),)
         )
         .unwrap();
         let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -170,11 +170,11 @@ fn tests_impact_json_keeps_standalone_imported_setup_config_owner_exact() {
             .join("../../fixtures/test-plan/vitest-setup-dependencies"),
     );
     let output = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["vitest.standalone-imported-project.ts"],
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();

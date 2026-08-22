@@ -1,11 +1,9 @@
 pub(super) fn command_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
-) -> AnyhowResult<String> {
+) -> AnyhowResult<Value> {
     let flags = command_merge_flags(&request.report_type);
-    Ok(serde_json::to_string(&merged_command_options(
-        request, options, flags,
-    )?)?)
+    merged_command_options(request, options, flags)
 }
 
 #[derive(Clone, Copy)]

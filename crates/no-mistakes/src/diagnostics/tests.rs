@@ -274,3 +274,14 @@ fn timing_order_prefers_exact_rank_over_matching_prefix() {
     assert_eq!(timing_order("analysis.react"), 200);
     assert_eq!(timing_order("analysis.react.child"), 500);
 }
+
+#[test]
+fn record_ast_walk_increments_only_when_an_observer_is_installed() {
+    record_ast_walk();
+    let observer = InvocationObserver::new(true);
+    let guard = InvocationGuard::install(observer.clone());
+    record_ast_walk();
+    record_ast_walk();
+    drop(guard);
+    assert_eq!(observer.snapshot().work["ast.walks"], 2);
+}

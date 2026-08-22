@@ -4,7 +4,7 @@ impl PreparedScope {
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
         direction: Direction,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let args = super::traverse_args(request, options)?;
         let cwd = std::env::current_dir().context("reading current directory")?;
         let result = crate::codebase::dependencies::collect_and_filter_entries_prepared(
@@ -13,8 +13,9 @@ impl PreparedScope {
             &cwd,
             &self.traversal,
         )?;
-        let json = crate::codebase::dependencies::result_json(&args, &result)?;
-        Ok(serde_json::from_str(&json)?)
+        json_raw_bytes(crate::codebase::dependencies::result_json_bytes(
+            &args, &result,
+        )?)
     }
 
     pub(super) fn import_usages_report(

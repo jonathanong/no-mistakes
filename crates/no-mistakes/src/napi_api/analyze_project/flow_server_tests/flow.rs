@@ -1,7 +1,7 @@
 #[test]
 fn analyze_project_dispatches_flow_report() {
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "reports": [{
                 "type": "flow",
@@ -12,7 +12,7 @@ fn analyze_project_dispatches_flow_report() {
                 "relationships": ["import"]
             }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -31,12 +31,12 @@ fn analyze_project_dispatches_flow_report() {
 #[test]
 fn flow_napi_rejects_unknown_direction() {
     let error = crate::napi_api::flow_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "target": "utils.mts#parseDate",
             "direction": "sideways"
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap_err();
 
@@ -46,24 +46,24 @@ fn flow_napi_rejects_unknown_direction() {
 #[test]
 fn flow_napi_direct_impl_returns_report_and_validates_options() {
     let output = crate::napi_api::flow_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "target": "utils.mts#parseDate",
             "direction": "deps",
             "depth": 1,
             "relationships": ["import"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["target"], "utils.mts#parseDate");
 
     let missing_target = crate::napi_api::flow_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol")
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap_err();
     assert!(missing_target
@@ -71,12 +71,12 @@ fn flow_napi_direct_impl_returns_report_and_validates_options() {
         .contains("target is required for flow"));
 
     let bad_relationship = crate::napi_api::flow_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "target": "utils.mts#parseDate",
             "relationships": ["missing"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap_err();
     assert!(bad_relationship.reason.contains("unknown relationship"));
@@ -87,14 +87,14 @@ fn flow_napi_direct_impl_includes_vitest_setup_relationships() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/vitest-setup-dependencies");
     let output = crate::napi_api::flow_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "target": "setup/conditional-a.ts",
             "direction": "dependents",
             "depth": 1,
             "relationships": ["test"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -110,14 +110,14 @@ fn flow_napi_import_only_target_keeps_vitest_config_imports() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/vitest-setup-dependencies");
     let output = crate::napi_api::flow_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "target": "vitest.config.ts",
             "direction": "deps",
             "depth": 1,
             "relationships": ["import"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();

@@ -4,33 +4,33 @@
 //! `napi_api::playwright_check_json_impl` re-export) keep working
 //! unchanged.
 
-use super::super::options::{parse_options, to_napi_error, PlaywrightOptions};
+use super::super::options::{parse_options_value, to_napi_error, PlaywrightOptions};
 use std::path::PathBuf;
 
-pub(crate) fn playwright_check_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Check)
+pub(crate) fn playwright_check_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    playwright_json(options, crate::playwright::PlaywrightReportKind::Check)
 }
 
-pub(crate) fn playwright_edges_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Edges)
+pub(crate) fn playwright_edges_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    playwright_json(options, crate::playwright::PlaywrightReportKind::Edges)
 }
 
-pub(crate) fn playwright_related_json_impl(options_json: String) -> napi::Result<String> {
+pub(crate) fn playwright_related_json_impl(options: serde_json::Value) -> napi::Result<String> {
     playwright_json(
-        options_json,
+        options,
         crate::playwright::PlaywrightReportKind::Related,
     )
 }
 
-pub(crate) fn playwright_tests_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Tests)
+pub(crate) fn playwright_tests_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    playwright_json(options, crate::playwright::PlaywrightReportKind::Tests)
 }
 
 fn playwright_json(
-    options_json: String,
+    options: serde_json::Value,
     kind: crate::playwright::PlaywrightReportKind,
 ) -> napi::Result<String> {
-    let options = parse_options::<PlaywrightOptions>(&options_json)?;
+    let options = parse_options_value::<PlaywrightOptions>(options)?;
     let report_options = crate::playwright::PlaywrightReportOptions {
         root: options
             .root

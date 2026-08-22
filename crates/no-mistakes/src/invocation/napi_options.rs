@@ -20,7 +20,7 @@ impl Default for InvocationOptions {
 }
 
 /// Remove invocation controls before strict command-specific N-API option parsing.
-pub fn extract_napi_options(options_json: String) -> Result<(String, InvocationOptions)> {
+pub fn extract_napi_options(options_json: impl AsRef<str>) -> Result<(String, InvocationOptions)> {
     let (value, options) = extract_napi_options_value(options_json)?;
     Ok((
         serde_json::to_string(&value).context("serializing command options")?,
@@ -30,8 +30,11 @@ pub fn extract_napi_options(options_json: String) -> Result<(String, InvocationO
 
 /// Parse N-API invocation controls while retaining the command options as a
 /// structured value for entrypoints that can avoid a second JSON parse.
-pub fn extract_napi_options_value(options_json: String) -> Result<(Value, InvocationOptions)> {
-    let mut value: Value = serde_json::from_str(&options_json).context("invalid options JSON")?;
+pub fn extract_napi_options_value(
+    options_json: impl AsRef<str>,
+) -> Result<(Value, InvocationOptions)> {
+    let mut value: Value =
+        serde_json::from_str(options_json.as_ref()).context("invalid options JSON")?;
     let object = value
         .as_object_mut()
         .context("invalid options JSON: expected an object")?;

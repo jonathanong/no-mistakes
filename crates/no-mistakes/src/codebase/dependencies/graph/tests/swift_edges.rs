@@ -6,7 +6,7 @@ fn swift_edge_collector_covers_empty_config_branches() {
     let root = fixture("swift-test-plan");
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
 
     assert!(collect_swift_edges(&root, &tsconfig, &all_files, None).is_empty());
 
@@ -99,7 +99,7 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
     let root = fixture("swift-test-plan");
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).expect("swift fixture config should parse");
     let swift_file = root.join("swift-clients/core/Sources/VouchaAPI/Endpoint.swift");
     let mut facts = crate::codebase::swift::SwiftFactMap::default();
@@ -136,7 +136,7 @@ fn swift_http_edges_include_backend_route_defs() {
     let root = fixture("swift-test-plan");
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let mut options = graph_config_options(&root).expect("swift fixture config should parse");
     options.route.backend_pattern = "backend/api/**/*.mts".to_string();
     options.route.backend_register_object = "app".to_string();
@@ -206,7 +206,7 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     );
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).unwrap();
     let plan = GraphBuildPlan {
         swift: true,

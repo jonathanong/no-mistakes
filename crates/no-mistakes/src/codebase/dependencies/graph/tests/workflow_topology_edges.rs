@@ -124,7 +124,7 @@ fn prepared_check_fact_graph_reuses_preparsed_workflows() {
     let source = workflow_topology_fixture();
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let plan = GraphBuildPlan {
         workflow_topology: true,
         ..GraphBuildPlan::default()

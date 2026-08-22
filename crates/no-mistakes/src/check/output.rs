@@ -17,11 +17,7 @@ pub(super) fn print(results: &CheckResults, format: Format) {
 }
 
 fn print_check_json(results: &CheckResults) {
-    println!(
-        "{}",
-        serde_json::to_string(&check_runner::json_value(results))
-            .expect("serialization of Rust structs never fails")
-    );
+    crate::cli::print_json(&check_runner::json_value(results));
 }
 
 fn print_check_yml(results: &CheckResults) {

@@ -7,8 +7,8 @@ use napi_derive::napi;
 use serde::Deserialize;
 
 #[cfg(not(coverage))]
-use super::async_task::JsonTask;
-use super::options::{parse_options, to_napi_error};
+use super::async_task::JsonValueTask;
+use super::options::{parse_options_value, to_napi_error};
 use crate::cli::Format;
 use crate::codebase::queries::{
     CallSitesArgs, DeadExportsArgs, ExportsOfArgs, ImportersArgs, ResolveCheckArgs,
@@ -76,8 +76,8 @@ fn require_file(file: &str) -> napi::Result<()> {
     Ok(())
 }
 
-pub(crate) fn importers_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<ImportersOptions>(&options_json)?;
+pub(crate) fn importers_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ImportersOptions>(options)?;
     require_file(&options.file)?;
     crate::codebase::queries::importers::run_json(ImportersArgs {
         file: PathBuf::from(options.file),
@@ -90,8 +90,8 @@ pub(crate) fn importers_json_impl(options_json: String) -> napi::Result<String> 
     .map_err(to_napi_error)
 }
 
-pub(crate) fn exports_of_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<ExportsOfOptions>(&options_json)?;
+pub(crate) fn exports_of_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ExportsOfOptions>(options)?;
     require_file(&options.file)?;
     crate::codebase::queries::exports_of::run_json(ExportsOfArgs {
         file: PathBuf::from(options.file),
@@ -104,8 +104,8 @@ pub(crate) fn exports_of_json_impl(options_json: String) -> napi::Result<String>
     .map_err(to_napi_error)
 }
 
-pub(crate) fn dead_exports_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<DeadExportsOptions>(&options_json)?;
+pub(crate) fn dead_exports_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<DeadExportsOptions>(options)?;
     require_file(&options.file)?;
     crate::codebase::queries::dead_exports::run_json(DeadExportsArgs {
         file: PathBuf::from(options.file),
@@ -118,8 +118,8 @@ pub(crate) fn dead_exports_json_impl(options_json: String) -> napi::Result<Strin
     .map_err(to_napi_error)
 }
 
-pub(crate) fn call_sites_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<CallSitesOptions>(&options_json)?;
+pub(crate) fn call_sites_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CallSitesOptions>(options)?;
     require_file(&options.file)?;
     if options.export_name.trim().is_empty() {
         return Err(napi::Error::from_reason("exportName is required"));
@@ -135,8 +135,8 @@ pub(crate) fn call_sites_json_impl(options_json: String) -> napi::Result<String>
     .map_err(to_napi_error)
 }
 
-pub(crate) fn resolve_check_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<ResolveCheckOptions>(&options_json)?;
+pub(crate) fn resolve_check_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ResolveCheckOptions>(options)?;
     let (files, batch) = match (options.file, options.files) {
         (Some(file), None) => {
             require_file(&file)?;

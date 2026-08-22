@@ -3,7 +3,7 @@ use anyhow::Context;
 
 pub(super) fn parse_program(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     mode: ParseMode,
 ) -> Result<CachedProgram, String> {
     let source_type = source_type(path, mode)
@@ -11,7 +11,7 @@ pub(super) fn parse_program(
         .map_err(|error| error.to_string())?;
     let owner = ProgramOwner {
         allocator: Allocator::default(),
-        source: source.to_string(),
+        source,
         source_type,
     };
     CachedProgram::try_new(owner, |owner| {

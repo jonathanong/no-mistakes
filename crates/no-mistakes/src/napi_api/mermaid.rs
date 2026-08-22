@@ -1,4 +1,4 @@
-use super::options::parse_options;
+use super::options::parse_options_value;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -8,8 +8,8 @@ struct ValidateMermaidMarkdownOptions {
     file: Option<String>,
 }
 
-pub(crate) fn validate_mermaid_markdown_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<ValidateMermaidMarkdownOptions>(&options_json)?;
+pub(crate) fn validate_mermaid_markdown_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ValidateMermaidMarkdownOptions>(options)?;
     let result = no_mistakes::mermaid_validation::validate_markdown(
         &options.content,
         options.file.as_deref(),

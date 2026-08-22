@@ -19,7 +19,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     collect_resource_roots: bool,
 ) -> ImportFacts {
     let mut collector = ImportCollector {
-        source: source.to_string(),
+        line_starts: import_line_starts(source),
         collect_resource_roots,
         ..ImportCollector::default()
     };
@@ -58,5 +58,51 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         exported_resource_scopes,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
+    }
+}
+
+fn import_line_starts(source: &str) -> Vec<u32> {
+    if source.is_empty() {
+        return Vec::new();
+    }
+    let mut starts = vec![0u32];
+    for (index, byte) in source.bytes().enumerate() {
+        if byte == b'\n' {
+            starts.push((index + 1) as u32);
+        }
+    }
+    starts
+}
+
+#[cfg(test)]
+mod import_line_tests {
+    use super::{import_line_at, import_line_starts};
+
+    #[test]
+    fn empty_source_uses_line_one() {
+        assert!(import_line_starts("").is_empty());
+        assert_eq!(import_line_at(&[], 0), 1);
+        assert_eq!(import_line_at(&[], 12), 1);
+    }
+
+    #[test]
+    fn binary_search_maps_offsets_onto_one_based_lines() {
+        let starts = import_line_starts("a\nbc\n");
+        assert_eq!(starts, vec![0, 2, 5]);
+        assert_eq!(import_line_at(&starts, 0), 1);
+        assert_eq!(import_line_at(&starts, 2), 2);
+        assert_eq!(import_line_at(&starts, 4), 2);
+        assert_eq!(import_line_at(&starts, 5), 3);
+    }
+}
+
+fn import_line_at(line_starts: &[u32], byte_offset: usize) -> u32 {
+    if line_starts.is_empty() {
+        return 1;
+    }
+    let offset = byte_offset as u32;
+    match line_starts.binary_search(&offset) {
+        Ok(index) => index as u32 + 1,
+        Err(index) => index as u32,
     }
 }

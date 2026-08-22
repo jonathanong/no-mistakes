@@ -93,7 +93,7 @@ fn collect_route_import_edges_for_core(
         return Vec::new();
     }
     collect_route_import_edges(
-        &edge_inputs.graph_files.indexable,
+        edge_inputs.graph_files.indexable(),
         facts.expect("route-import plan requires TS facts"),
         edge_inputs.tsconfig,
         edge_inputs.tsconfig_catalog,
@@ -128,7 +128,7 @@ fn collect_package_edges_for_core(
         return Vec::new();
     }
     collect_workspace_manifest_edges(
-        &edge_inputs.graph_files.all,
+        edge_inputs.graph_files.all(),
         workspace,
         edge_inputs.graph_files,
         &edge_inputs.interner,
@@ -163,8 +163,8 @@ fn collect_symbol_edges_for_core(
     collect_symbol_edges(
         edge_inputs.root,
         SymbolGraphFiles {
-            indexable: &edge_inputs.graph_files.indexable,
-            all: &edge_inputs.graph_files.all,
+            indexable: edge_inputs.graph_files.indexable(),
+            all: edge_inputs.graph_files.all(),
             visible: edge_inputs.graph_files,
             graph_files: edge_inputs.graph_files,
         },
@@ -182,7 +182,7 @@ fn collect_test_edges_for_core(edge_inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Ed
     }
     collect_test_edges(
         edge_inputs.root,
-        &edge_inputs.graph_files.indexable,
+        edge_inputs.graph_files.indexable(),
         edge_inputs
             .config_options
             .and_then(|options| options.test_filter.as_ref()),

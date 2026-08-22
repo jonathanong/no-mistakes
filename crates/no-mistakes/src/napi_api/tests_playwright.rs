@@ -7,7 +7,7 @@ fn playwright_check_napi_parses_each_source_file_once() {
     let root = fixture.path().canonicalize().unwrap();
 
     crate::ast::begin_parse_count(&root);
-    let output = playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let output = playwright_check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
     let counts = crate::ast::finish_parse_count(&root);
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
     let expected = [
@@ -34,7 +34,7 @@ fn playwright_wrapper_edges_have_cli_napi_and_analyze_project_parity() {
     );
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
-    let check = playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let check = playwright_check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
     let check_value: serde_json::Value = serde_json::from_str(&check).unwrap();
     assert_eq!(check_value["summary"]["coveredSelectors"], 6);
     assert_eq!(check_value["summary"]["uncoveredSelectors"], 6);
@@ -55,7 +55,7 @@ fn playwright_wrapper_edges_have_cli_napi_and_analyze_project_parity() {
         .unwrap();
     assert!(mode.get("helperReferences").is_none());
 
-    let standalone = playwright_edges_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let standalone = playwright_edges_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
     let standalone_value: serde_json::Value = serde_json::from_str(&standalone).unwrap();
     let selectors = standalone_value["edges"]
         .as_array()
@@ -94,7 +94,7 @@ fn playwright_wrapper_edges_have_cli_napi_and_analyze_project_parity() {
         })
         .to_string();
     crate::ast::begin_parse_count(&root);
-    let batched = super::analyze_project::analyze_project_json_impl(request).unwrap();
+    let batched = super::analyze_project::analyze_project_json_impl(crate::napi_api::options::test_json_arg(request)).unwrap();
     let counts = crate::ast::finish_parse_count(&root);
     let expected = [
         root.join("playwright.config.ts"),
@@ -125,7 +125,7 @@ fn playwright_wrapper_check_parses_each_requested_source_once() {
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
     crate::ast::begin_parse_count(&root);
-    playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    playwright_check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
     let counts = crate::ast::finish_parse_count(&root);
 
     assert_eq!(

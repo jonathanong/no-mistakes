@@ -200,6 +200,7 @@ impl DepGraph {
         self.traversal_edges().forward().keys()
     }
 
+    #[cfg(test)]
     fn merge_canonical_edges(&mut self, edges: Vec<Edge>) {
         let current = std::mem::take(&mut self.edges);
         let nodes = current.forward().keys().cloned().collect::<Vec<_>>();

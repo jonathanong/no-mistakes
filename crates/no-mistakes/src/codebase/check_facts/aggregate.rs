@@ -1,9 +1,9 @@
 use super::{CheckFileFacts, PlaywrightSettingsKey};
+use crate::codebase::ts_source::FileIdMap;
 use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::selectors::{AppSelector, AppSelectorValue};
 use dashmap::DashMap;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 type AppSelectorOccurrencesCache =
@@ -11,7 +11,7 @@ type AppSelectorOccurrencesCache =
 type AppTextTargetsCache = DashMap<PlaywrightSettingsKey, Result<Arc<Vec<AppTextTarget>>, String>>;
 
 pub(crate) fn playwright_aggregate_facts(
-    facts: &HashMap<PathBuf, CheckFileFacts>,
+    facts: &FileIdMap<CheckFileFacts>,
 ) -> (AppSelectorOccurrencesCache, AppTextTargetsCache) {
     let static_exports = facts
         .iter()

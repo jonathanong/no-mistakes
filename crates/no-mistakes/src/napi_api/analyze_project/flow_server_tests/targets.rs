@@ -1,12 +1,12 @@
 #[test]
 fn tests_targets_napi_reports_project_commands() {
     let output = crate::napi_api::cli_parity::tests_targets_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("test-plan-project-discovery"),
             "framework": "vitest",
             "files": ["web/storybook/button.stories.tsx"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -21,8 +21,8 @@ fn tests_targets_napi_preserves_vitest_workspace_source() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-config/vitest-projects-target");
     let output = crate::napi_api::cli_parity::tests_targets_json_impl(
-        json!({ "root": root, "framework": "vitest", "files": ["tests/unit.test.ts"] })
-            .to_string(),
+        crate::napi_api::options::test_json_arg(json!({ "root": root, "framework": "vitest", "files": ["tests/unit.test.ts"] })
+            .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -45,12 +45,12 @@ fn tests_targets_napi_preserves_json_workspace_sources() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-config/vitest-workspace-json");
     let output = crate::napi_api::cli_parity::tests_targets_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "framework": "vitest",
             "files": ["inline/inline.test.ts", "string-project/string.test.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -75,7 +75,7 @@ fn tests_targets_napi_rejects_missing_files() {
         json!({ "root": fixture_root("test-plan-project-discovery"), "framework": "vitest" }),
         json!({ "root": fixture_root("test-plan-project-discovery"), "framework": "vitest", "files": [] }),
     ] {
-        let error = crate::napi_api::cli_parity::tests_targets_json_impl(options.to_string())
+        let error = crate::napi_api::cli_parity::tests_targets_json_impl(crate::napi_api::options::test_json_arg(options))
             .expect_err("missing files should fail");
         assert!(error.reason.contains("files is required"));
     }

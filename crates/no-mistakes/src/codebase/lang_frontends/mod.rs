@@ -10,6 +10,7 @@ mod python;
 mod ruby;
 mod rustlang;
 mod strip;
+mod partition;
 
 #[cfg(test)]
 mod tests;
@@ -72,23 +73,24 @@ pub(crate) fn collect_all_lang_facts(
     config: &LangFrontendConfig,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> CollectedLangFacts {
-    // Each collect_*_facts already file-parallelizes. Overlapping the eight
+    let parts = partition::partition_files_by_extension(all_files);
+    // Each collect_*_facts already file-parallelizes. Overlapping language
     // extractors with nested rayon::join raised language_frontends::extract
     // peak memory 260.8 KB → 688.5 KB, past the extra-join ≤10% memory gate.
     CollectedLangFacts {
-        python: collect_python_facts(root, all_files, &config.python_packages, sources),
-        go: collect_go_facts(root, all_files, &config.go_modules, sources),
-        rust: collect_rust_facts(root, all_files, &config.rust_packages, sources),
-        ruby: collect_ruby_facts(root, all_files, &config.rails_apps, sources),
+        python: collect_python_facts(root, &parts.py, &config.python_packages, sources),
+        go: collect_go_facts(root, &parts.go, &config.go_modules, sources),
+        rust: collect_rust_facts(root, &parts.rs, &config.rust_packages, sources),
+        ruby: collect_ruby_facts(root, &parts.rb, &config.rails_apps, sources),
         php: collect_php_facts(
             root,
-            all_files,
+            &parts.php_universe(),
             &config.php_apps,
             config.php_framework.as_deref(),
             sources,
         ),
-        java: collect_java_facts(root, all_files, &config.java_packages, sources),
-        kotlin: collect_kotlin_facts(root, all_files, &config.kotlin_packages, sources),
-        elixir: collect_elixir_facts(root, all_files, &config.elixir_apps, sources),
+        java: collect_java_facts(root, &parts.java, &config.java_packages, sources),
+        kotlin: collect_kotlin_facts(root, &parts.kt, &config.kotlin_packages, sources),
+        elixir: collect_elixir_facts(root, &parts.elixir, &config.elixir_apps, sources),
     }
 }
