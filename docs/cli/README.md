@@ -72,7 +72,7 @@ filters used by the graph commands.
 ## Shared Output Formats
 
 Most commands accept `--format json|yml|md|paths|human` plus `--json`.
-`human` is for reading, `json` is for agents, and `paths` is for follow-up test
+`human` is for reading, `json` is compact JSON for agents, and `paths` is for follow-up test
 or lint commands.
 
 ## Examples And Counterexamples

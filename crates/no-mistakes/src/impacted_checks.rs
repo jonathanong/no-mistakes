@@ -168,7 +168,7 @@ const _: fn(ImpactedChecksArgs) -> Result<ExitCode> = run;
 
 fn render(report: &ImpactedChecksReport, format: Format) -> Result<String> {
     Ok(match format {
-        Format::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
+        Format::Json => format!("{}\n", serde_json::to_string(report)?),
         Format::Yml => serde_yaml::to_string(report)?,
         Format::Paths => report
             .checks

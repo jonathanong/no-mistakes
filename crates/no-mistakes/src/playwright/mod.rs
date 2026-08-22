@@ -135,5 +135,5 @@ fn require_files(files: &[PathBuf]) -> Result<()> {
 }
 
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> Result<String> {
-    serde_json::to_string_pretty(value).map_err(Into::into)
+    serde_json::to_string(value).map_err(Into::into)
 }

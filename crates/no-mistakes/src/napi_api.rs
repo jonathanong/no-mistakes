@@ -12,14 +12,14 @@ macro_rules! json_binding {
     ($rust_name:ident, $js_name:literal, $implementation:path) => {
         #[cfg(not(coverage))]
         #[cfg_attr(not(test), napi(js_name = $js_name))]
-        pub fn $rust_name(options_json: String) -> AsyncTask<JsonTask> {
+        pub fn $rust_name(options_json: napi::bindgen_prelude::Buffer) -> AsyncTask<JsonTask> {
             AsyncTask::new(JsonTask::new(options_json, $implementation))
         }
     };
     ($rust_name:ident, $js_name:literal, $implementation:path, value) => {
         #[cfg(not(coverage))]
         #[cfg_attr(not(test), napi(js_name = $js_name))]
-        pub fn $rust_name(options_json: String) -> AsyncTask<JsonValueTask> {
+        pub fn $rust_name(options_json: napi::bindgen_prelude::Buffer) -> AsyncTask<JsonValueTask> {
             AsyncTask::new(JsonValueTask::new(options_json, $implementation))
         }
     };

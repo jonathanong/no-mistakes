@@ -72,7 +72,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                 Format::Json => {
                     println!(
                         "{}",
-                        serde_json::to_string_pretty(&results)
+                        serde_json::to_string(&results)
                             .expect("serialization of Rust structs never fails")
                     );
                 }
@@ -108,7 +108,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                 Format::Json => {
                     println!(
                         "{}",
-                        serde_json::to_string_pretty(&violations)
+                        serde_json::to_string(&violations)
                             .expect("serialization of Rust structs never fails")
                     );
                 }
@@ -143,7 +143,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                 Format::Json => {
                     println!(
                         "{}",
-                        serde_json::to_string_pretty(&report)
+                        serde_json::to_string(&report)
                             .expect("serialization of Rust structs never fails")
                     );
                 }

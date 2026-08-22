@@ -404,6 +404,10 @@ const report = await analyzeProject({
 });
 ```
 
+Public JavaScript APIs take options objects and return parsed values. Native
+JSON entrypoints accept and return Node `Buffer` values of UTF-8 JSON so the
+addon avoids UTF-16 string copies at the N-API boundary.
+
 ## Agent Defaults
 
 - Pass `root` explicitly.

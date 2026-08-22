@@ -65,7 +65,7 @@ pub(crate) fn run(args: FlowArgs) -> Result<ExitCode> {
 
 fn render(report: &flow_query::FlowReport, format: Format) -> Result<String> {
     Ok(match format {
-        Format::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
+        Format::Json => format!("{}\n", serde_json::to_string(report)?),
         Format::Yml => serde_yaml::to_string(report)?,
         Format::Paths => report
             .nodes

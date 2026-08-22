@@ -127,7 +127,7 @@ fn trace_queue_analysis<T>(operation: impl FnOnce() -> Result<T>) -> Result<T> {
 
 fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Json => println!("{}", serde_json::to_string(edges)?),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Queue edges");
@@ -147,7 +147,7 @@ fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
 
 fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Json => println!("{}", serde_json::to_string(edges)?),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Related queue files");
@@ -178,7 +178,7 @@ fn print_edge_paths(edges: &[Edge]) {
 
 fn print_check(findings: &[CheckFinding], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(findings)?),
+        Format::Json => println!("{}", serde_json::to_string(findings)?),
         Format::Yml => println!("{}", serde_yaml::to_string(findings)?),
         Format::Md => {
             println!("# Queue check");

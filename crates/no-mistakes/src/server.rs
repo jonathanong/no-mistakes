@@ -153,7 +153,7 @@ fn print_routes(report: &ProjectReport, files: &[String], format: Format) -> Res
             .collect()
     };
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(&routes)?),
+        Format::Json => println!("{}", serde_json::to_string(&routes)?),
         Format::Yml => println!("{}", serde_yaml::to_string(&routes)?),
         Format::Md => {
             println!("# Server routes");
@@ -178,7 +178,7 @@ fn print_routes(report: &ProjectReport, files: &[String], format: Format) -> Res
 
 fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Json => println!("{}", serde_json::to_string(edges)?),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Server route edges");
@@ -198,7 +198,7 @@ fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
 
 fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Json => println!("{}", serde_json::to_string(edges)?),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Related server routes");

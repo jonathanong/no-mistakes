@@ -2,7 +2,8 @@ id: no-handwritten-js-json-wrapper
 valid:
   - |
     async function callJson(fn, options) {
-      return JSON.parse(await fn(JSON.stringify(options || {})));
+      const input = Buffer.from(JSON.stringify(options || {}));
+      return JSON.parse(await fn(input));
     }
   - |
     const api = async (options) => callJson(native.symbolsJson, options);
