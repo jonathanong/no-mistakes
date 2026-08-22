@@ -291,6 +291,15 @@ fn language_frontend_edges_cover_configured_extractors() {
             && from.as_file().is_some_and(|path| path.ends_with("app.ex"))
             && to.as_file().is_some_and(|path| path.ends_with("user.ex"))
     }));
+    assert!(elixir_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("router.ex"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("user_controller.ex"))
+    }));
     assert!(elixir_edges.iter().all(|(from, _, kind)| {
         *kind != EdgeKind::RouteRef
             || from

@@ -2,8 +2,9 @@ use regex::Regex;
 use std::sync::OnceLock;
 
 pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
+    let source = super::super::strip::mask_triple_quoted_strings(source);
     let mut routes = phoenix_route_re()
-        .captures_iter(source)
+        .captures_iter(&source)
         .filter_map(|cap| {
             let path = cap.get(1)?.as_str();
             let controller = cap.get(2)?.as_str();

@@ -78,11 +78,15 @@ fn elixir_pascal_case(stem: &str) -> String {
     stem.split('_')
         .filter(|part| !part.is_empty())
         .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-                None => String::new(),
+            let mut out = String::new();
+            for (i, ch) in part.chars().enumerate() {
+                if i == 0 {
+                    out.extend(ch.to_uppercase());
+                } else {
+                    out.push(ch);
+                }
             }
+            out
         })
         .collect()
 }

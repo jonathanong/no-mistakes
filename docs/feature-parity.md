@@ -462,7 +462,7 @@ Phoenix HTTP v1 matches literal `get "/users", Controller, :index` (and
 | --- | --- | --- |
 | Module graph | `import` | exact `alias`/`import`/`use MyApp.User` |
 | Package identity | workspace packages | configured `tests.elixir.apps` |
-| Tests | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix [-C <app>] test <rel-path>` |
+| Tests | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <rel-path>` or `mix cmd --cd <app> mix test <rel-path>` |
 | HTTP routes | `server routes` | Phoenix `get`/`post`/`put`/`patch`/`delete` literals |
 | Queues | BullMQ | no |
 | Lockfile | npm-family | later (`mix.exs` native fallback only) |

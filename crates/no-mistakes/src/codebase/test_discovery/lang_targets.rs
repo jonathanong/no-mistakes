@@ -112,8 +112,7 @@ fn elixir_target_for(app: Option<&str>, test_file: &str) -> TestExecutionTarget 
         .filter(|value| !value.is_empty() && value != ".");
     let mut base_command = vec!["mix".to_string()];
     if let Some(app) = nested {
-        base_command.push("-C".into());
-        base_command.push(app);
+        base_command.extend(["cmd".into(), "--cd".into(), app, "mix".into()]);
     }
     base_command.push("test".into());
     language_target(TestRunner::Elixir, app, None, base_command, vec![rel])

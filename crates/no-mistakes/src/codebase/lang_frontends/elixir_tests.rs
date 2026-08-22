@@ -24,6 +24,14 @@ fn primary_module_prefers_filename_over_nested_builder() {
 }
 
 #[test]
+fn primary_module_matches_underscored_file_stem() {
+    assert_eq!(
+        primary_module(&["MyAppWeb.UserController".into()], Some("user_controller")).as_deref(),
+        Some("MyAppWeb.UserController")
+    );
+}
+
+#[test]
 fn elixir_collects_aliases_and_phoenix_routes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

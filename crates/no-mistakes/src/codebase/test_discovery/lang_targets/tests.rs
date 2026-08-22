@@ -178,7 +178,7 @@ fn elixir_target_uses_mix_test() {
 }
 
 #[test]
-fn elixir_nested_app_passes_mix_change_directory_flag() {
+fn elixir_nested_app_uses_mix_cmd_cd() {
     let target = target_for(
         TestRunner::Elixir,
         Some("apps/web"),
@@ -186,7 +186,10 @@ fn elixir_nested_app_passes_mix_change_directory_flag() {
         None,
         "apps/web/test/my_app/user_test.exs",
     );
-    assert_eq!(target.base_command, vec!["mix", "-C", "apps/web", "test"]);
+    assert_eq!(
+        target.base_command,
+        vec!["mix", "cmd", "--cd", "apps/web", "mix", "test"]
+    );
     assert_eq!(target.runner_args, vec!["test/my_app/user_test.exs"]);
 }
 
