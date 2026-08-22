@@ -46,6 +46,7 @@ fn unparseable_sql_returns_error() {
 #[test]
 fn non_query_statements_are_clean() {
     assert!(!sql_has_offset_clause("CREATE TABLE t (id int)").unwrap());
+    assert!(!sql_has_offset_clause("DROP TABLE t").unwrap());
 }
 
 #[test]
@@ -140,6 +141,18 @@ fn join_on_exists_offset_is_detected() {
         "SELECT * FROM t FULL JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)"
     )
     .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM t INNER JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM t LEFT OUTER JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM t RIGHT OUTER JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)"
+    )
+    .unwrap());
 }
 
 #[test]
@@ -148,6 +161,7 @@ fn order_by_subquery_offset_is_detected() {
         sql_has_offset_clause("SELECT id FROM t ORDER BY (SELECT id FROM u OFFSET 1 LIMIT 1)")
             .unwrap()
     );
+    assert!(!sql_has_offset_clause("SELECT id FROM t ORDER BY id").unwrap());
 }
 
 #[test]
@@ -180,6 +194,14 @@ fn update_and_delete_subquery_offsets_are_detected() {
         sql_has_offset_clause("DELETE FROM users WHERE id IN (SELECT id FROM stale OFFSET 1)")
             .unwrap()
     );
+    assert!(sql_has_offset_clause(
+        "UPDATE users SET rank = 1 WHERE id IN (SELECT id FROM stale OFFSET 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "UPDATE users SET rank = 1 FROM (SELECT id FROM stale OFFSET 1) AS s WHERE users.id = s.id"
+    )
+    .unwrap());
     assert!(sql_has_offset_clause(
         "DELETE FROM users USING (SELECT id FROM stale OFFSET 1) AS s WHERE users.id = s.id"
     )

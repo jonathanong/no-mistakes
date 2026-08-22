@@ -20,6 +20,7 @@ fn statement_has_offset(statement: &Statement) -> bool {
             assignments,
             selection,
             table,
+            from,
             ..
         }) => {
             assignments
@@ -27,6 +28,11 @@ fn statement_has_offset(statement: &Statement) -> bool {
                 .any(|assignment| expr_has_offset_query(&assignment.value))
                 || selection.as_ref().is_some_and(expr_has_offset_query)
                 || table_with_joins_has_offset(table)
+                || matches!(
+                    from.as_ref(),
+                    Some(sqlparser::ast::UpdateTableFromKind::AfterSet(tables))
+                        if tables.iter().any(table_with_joins_has_offset)
+                )
         }
         Statement::Delete(Delete {
             selection, using, ..
