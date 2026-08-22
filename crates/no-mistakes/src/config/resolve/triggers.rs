@@ -23,7 +23,11 @@ pub(super) fn resolved_triggers(config: &NoMistakesConfig) -> Vec<ResolvedTrigge
 fn named_trigger(trigger: &NamedFullSuiteTrigger) -> ResolvedTrigger {
     ResolvedTrigger {
         name: trigger.name.clone(),
-        paths: trigger.paths.clone(),
+        paths: trigger
+            .paths
+            .iter()
+            .map(|pattern| project_relative_pattern(".", pattern))
+            .collect(),
         targets: trigger.targets.clone(),
         source: "triggers",
     }
@@ -34,6 +38,9 @@ fn project_trigger(
     name: &str,
     dependency: &TestPlanProjectDependency,
 ) -> Option<ResolvedTrigger> {
+    if !config.projects.contains_key(name) {
+        return None;
+    }
     Some(match dependency {
         TestPlanProjectDependency::All(false) => return None,
         TestPlanProjectDependency::All(true) => ResolvedTrigger {

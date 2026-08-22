@@ -1,7 +1,8 @@
 use super::resolve_config;
 use super::triggers::resolved_triggers;
 use crate::config::v2::schema::{
-    NoMistakesConfig, Project, TestPlanProjectDependency, TestPlanTargetedProjectDependency,
+    NamedFullSuiteTrigger, NoMistakesConfig, Project, TestPlanProjectDependency,
+    TestPlanTargetedProjectDependency,
 };
 use serde_json::json;
 use std::path::PathBuf;
@@ -75,6 +76,13 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
             ..Project::default()
         },
     );
+    config.projects.insert(
+        "skip".to_string(),
+        Project {
+            root: Some("unused".to_string()),
+            ..Project::default()
+        },
+    );
     config
         .test_plan
         .vitest
@@ -111,6 +119,16 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         "prefixed".to_string(),
         TestPlanProjectDependency::Patterns(vec!["packages/generated/src/**".to_string()]),
     );
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "resources".to_string(),
+            paths: vec!["./db/**".to_string(), " !./db/tmp/**".to_string()],
+            targets: vec!["backend".to_string()],
+        });
 
     let triggers = resolved_triggers(&config);
     let by_name = triggers
@@ -118,6 +136,7 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         .map(|trigger| (trigger.name.as_str(), trigger))
         .collect::<std::collections::BTreeMap<_, _>>();
     assert!(!by_name.contains_key("skip"));
+    assert!(!by_name.contains_key("orphan"));
     assert_eq!(by_name["generated"].paths.len(), 0);
     assert_eq!(by_name["generated"].targets.len(), 0);
     assert_eq!(
@@ -129,9 +148,13 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         ]
     );
     assert_eq!(by_name["root-app"].targets, vec!["unit".to_string()]);
-    assert_eq!(by_name["orphan"].paths, vec!["!orphan/dist/**".to_string()]);
     assert_eq!(
         by_name["prefixed"].paths,
         vec!["packages/generated/src/**".to_string()]
     );
+    assert_eq!(
+        by_name["resources"].paths,
+        vec!["db/**".to_string(), "!db/tmp/**".to_string()]
+    );
+    assert_eq!(by_name["resources"].source, "triggers");
 }

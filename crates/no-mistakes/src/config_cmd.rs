@@ -27,6 +27,7 @@ pub fn run(args: ConfigArgs) -> anyhow::Result<ExitCode> {
     match args.command {
         ConfigCommand::Resolve(resolve) => {
             let report = resolve_config(&resolve.root, resolve.config.as_deref())?;
+            no_mistakes::invocation::commit_timeout()?;
             println!("{}", serde_json::to_string_pretty(&report)?);
             Ok(ExitCode::SUCCESS)
         }
