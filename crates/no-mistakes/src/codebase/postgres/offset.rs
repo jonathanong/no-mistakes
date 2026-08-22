@@ -40,6 +40,7 @@ fn statement_has_offset(statement: &Statement) -> bool {
             query.as_deref().is_some_and(query_has_offset)
         }
         Statement::CreateView(CreateView { query, .. }) => query_has_offset(query),
+        Statement::Explain { statement, .. } => statement_has_offset(statement),
         _ => false,
     }
 }

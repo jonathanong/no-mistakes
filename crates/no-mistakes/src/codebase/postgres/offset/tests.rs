@@ -194,3 +194,9 @@ fn values_row_subquery_offset_is_detected() {
     .unwrap());
     assert!(sql_has_offset_clause("VALUES ((SELECT id FROM u OFFSET 1 LIMIT 1))").unwrap());
 }
+
+#[test]
+fn explain_analyze_offset_is_detected() {
+    assert!(sql_has_offset_clause("EXPLAIN ANALYZE SELECT id FROM posts OFFSET 10").unwrap());
+    assert!(!sql_has_offset_clause("EXPLAIN SELECT id FROM posts LIMIT 10").unwrap());
+}
