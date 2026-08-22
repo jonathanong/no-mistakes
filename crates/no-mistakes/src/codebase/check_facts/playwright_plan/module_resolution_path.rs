@@ -12,7 +12,10 @@ pub(super) fn looks_like_repo_relative_module(specifier: &str) -> bool {
 pub(super) fn path_ends_with_module(path: &Path, module: &str) -> bool {
     let normalized = path.to_string_lossy().replace('\\', "/");
     let module = module.trim_start_matches("./").replace('\\', "/");
-    normalized.ends_with(&module) || normalized.ends_with(&format!("{module}.ts"))
+    normalized.ends_with(&module)
+        || [".ts", ".tsx", ".js", ".jsx", ".mts", ".cts", ".mjs", ".cjs"]
+            .iter()
+            .any(|ext| normalized.ends_with(&format!("{module}{ext}")))
 }
 
 #[derive(PartialEq)]

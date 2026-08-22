@@ -200,7 +200,7 @@ pub(super) fn compile_ordered_patterns(patterns: &[String]) -> Result<Vec<Ordere
             let (negated, pattern) = pattern
                 .strip_prefix('!')
                 .map_or((false, pattern.as_str()), |pattern| (true, pattern));
-            let matcher = GlobBuilder::new(pattern)
+            let matcher = GlobBuilder::new(&normalize_trigger_glob(pattern))
                 .literal_separator(false)
                 .build()?
                 .compile_matcher();
@@ -218,6 +218,14 @@ pub(super) fn matches_ordered(patterns: &[OrderedPattern], path: &str) -> bool {
         }
     }
     matched
+}
+
+fn normalize_trigger_glob(pattern: &str) -> String {
+    let mut part = pattern.trim().to_string();
+    while let Some(rest) = part.strip_prefix("./") {
+        part = rest.trim().to_string();
+    }
+    part
 }
 
 fn project_root_patterns(project_root: &str) -> Vec<String> {

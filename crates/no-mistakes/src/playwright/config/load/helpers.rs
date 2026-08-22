@@ -51,6 +51,7 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || !playwright.navigation_helpers.is_empty()
         || playwright.frontend_root.is_some()
         || playwright.ignore_routes.is_some()
+        || !playwright.apps.is_empty()
 }
 
 pub(super) fn find_default_playwright_configs_from_snapshot(

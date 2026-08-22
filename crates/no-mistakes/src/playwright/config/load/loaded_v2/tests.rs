@@ -139,7 +139,7 @@ fn default_frontend_root_falls_back_to_the_bare_literal() {
 #[test]
 fn rule_scoped_playwright_target_alone_opts_into_v2_resolution() {
     let config = NoMistakesConfig {
-        projects: BTreeMap::from([("web".to_string(), nextjs_project("web/src/app"))]),
+        projects: BTreeMap::from([("web".to_string(), nextjs_project("web"))]),
         rules: vec![RuleDef {
             rule: "playwright-coverage".to_string(),
             projects: vec!["web".to_string()],
@@ -152,11 +152,44 @@ fn rule_scoped_playwright_target_alone_opts_into_v2_resolution() {
         ..NoMistakesConfig::default()
     };
     let root = Path::new("/repo");
-    let snapshot = VisiblePathSnapshot::from_paths(root, &[]);
+    let snapshot = VisiblePathSnapshot::from_paths(root, &[root.join("web/src/app/page.tsx")]);
 
     let settings =
         settings_from_loaded_v2(root, &config, &[], None, Some("web".to_string()), &snapshot)
             .unwrap();
+
+    assert_eq!(settings.frontend_root, "web/src/app");
+}
+
+#[test]
+fn apps_map_alone_opts_into_v2_resolution() {
+    let mut config = NoMistakesConfig {
+        projects: BTreeMap::from([("web".to_string(), nextjs_project("web"))]),
+        rules: vec![RuleDef {
+            rule: "playwright-coverage".to_string(),
+            ..RuleDef::default()
+        }],
+        ..NoMistakesConfig::default()
+    };
+    config.tests.playwright.apps.insert(
+        "chromium".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let root = Path::new("/repo");
+    let snapshot = VisiblePathSnapshot::from_paths(root, &[root.join("web/src/app/page.tsx")]);
+
+    let settings = settings_from_loaded_v2(
+        root,
+        &config,
+        &[],
+        Some("chromium".to_string()),
+        None,
+        &snapshot,
+    )
+    .unwrap();
 
     assert_eq!(settings.frontend_root, "web/src/app");
 }

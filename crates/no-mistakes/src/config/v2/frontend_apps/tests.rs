@@ -1,7 +1,7 @@
 use super::{frontend_apps, frontend_apps_lenient};
 use crate::codebase::ts_source::discover_visible_paths;
 use crate::config::v2::discover::load_v2_config;
-use crate::config::v2::schema::NoMistakesConfig;
+use crate::config::v2::schema::{NoMistakesConfig, PlaywrightAppBinding};
 use std::path::Path;
 
 fn fixture(sub: &str) -> std::path::PathBuf {
@@ -59,6 +59,24 @@ fn named_project_without_app_dir_is_an_error() {
         message.contains("frontendRoot") || message.contains("app"),
         "{message}"
     );
+}
+
+#[test]
+fn named_project_uses_playwright_frontend_root_override() {
+    let dir = fixture("frontend-apps-no-app-dir");
+    let mut cfg = load_v2_config(&dir, None).unwrap();
+    cfg.tests.playwright.apps.insert(
+        "chromium".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            frontend_root: Some("web/pages".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let visible = discover_visible_paths(&dir);
+    let apps = frontend_apps(&dir, &cfg, &visible).unwrap();
+    assert_eq!(apps.len(), 1);
+    assert_eq!(apps[0].route_root, "web/pages");
 }
 
 /// No `type: nextjs` project is configured at all: a single anonymous app is

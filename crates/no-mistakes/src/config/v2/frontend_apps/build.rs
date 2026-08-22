@@ -10,14 +10,17 @@ pub(super) fn build_app(
     visible_paths: &[PathBuf],
     rewrites: &[RewriteRule],
     fallback: RouteRootFallback,
+    route_override: Option<String>,
 ) -> Result<FrontendApp> {
     let route_root = match (
         probe_route_root(root, &package_root, visible_paths),
         fallback,
+        route_override,
     ) {
-        (Some(route_root), _) => route_root,
-        (None, RouteRootFallback::PackageRoot) => package_root.clone(),
-        (None, RouteRootFallback::Error) => {
+        (Some(route_root), _, _) => route_root,
+        (None, _, Some(override_root)) => override_root,
+        (None, RouteRootFallback::PackageRoot, None) => package_root.clone(),
+        (None, RouteRootFallback::Error, None) => {
             let name = project.as_deref().unwrap_or("<anonymous>");
             anyhow::bail!(
                 "cannot resolve the Next.js App Router directory for project `{name}` \
@@ -62,4 +65,15 @@ fn join_relative(base: &str, suffix: &str) -> String {
 
 pub(super) fn relative_string(root: &Path, path: &Path) -> String {
     crate::codebase::ts_source::relative_slash_path(root, path)
+}
+
+pub(super) fn playwright_route_override(
+    config: &crate::config::v2::schema::NoMistakesConfig,
+    project: &str,
+) -> Option<String> {
+    config.tests.playwright.apps.values().find_map(|binding| {
+        (binding.project.as_deref() == Some(project))
+            .then(|| binding.frontend_root.clone())
+            .flatten()
+    })
 }

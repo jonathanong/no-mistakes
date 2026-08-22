@@ -433,6 +433,11 @@ fn dependency_patterns_use_ordered_negation_and_reinclusion() {
         "src/generated/drop.ts"
     ));
     assert!(super::dep_triggers::compile_ordered_patterns(&["[".to_string()]).is_err());
+    let dotted = super::dep_triggers::compile_ordered_patterns(&["./db/**".to_string()]).unwrap();
+    assert!(super::dep_triggers::matches_ordered(
+        &dotted,
+        "db/schema.sql"
+    ));
 }
 
 #[test]

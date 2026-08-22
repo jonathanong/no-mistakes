@@ -57,8 +57,8 @@ pub fn resolve_config(root: &Path, config: Option<&Path>) -> Result<ResolvedConf
     let apps = frontend_apps(root, &config, &visible)?;
     Ok(ResolvedConfig {
         config_path: config_path.map(|path| display_rel(root, &path)),
+        playwright: resolved_playwright(&config, &apps),
         frontend_apps: apps.into_iter().map(resolved_app).collect(),
-        playwright: resolved_playwright(&config),
         vitest_full_suite_triggers: resolved_triggers(&config),
     })
 }
@@ -72,7 +72,7 @@ fn resolved_app(app: FrontendApp) -> ResolvedFrontendApp {
     }
 }
 
-fn resolved_playwright(config: &NoMistakesConfig) -> ResolvedPlaywright {
+fn resolved_playwright(config: &NoMistakesConfig, apps: &[FrontendApp]) -> ResolvedPlaywright {
     let playwright = &config.tests.playwright;
     ResolvedPlaywright {
         coverage_routes: playwright.coverage.routes,
@@ -82,13 +82,34 @@ fn resolved_playwright(config: &NoMistakesConfig) -> ResolvedPlaywright {
         apps: playwright
             .apps
             .iter()
-            .map(|(name, binding)| ResolvedPlaywrightApp {
-                playwright_project: name.clone(),
-                project: binding.project.clone(),
-                frontend_root: binding.frontend_root.clone(),
-                selector_roots: binding.selector_roots.clone(),
-            })
+            .map(|(name, binding)| resolved_playwright_app(name, binding, apps))
             .collect(),
+    }
+}
+
+fn resolved_playwright_app(
+    name: &str,
+    binding: &crate::config::v2::schema::PlaywrightAppBinding,
+    apps: &[FrontendApp],
+) -> ResolvedPlaywrightApp {
+    let inherited = binding.project.as_ref().and_then(|project| {
+        apps.iter()
+            .find(|app| app.project.as_deref() == Some(project.as_str()))
+    });
+    ResolvedPlaywrightApp {
+        playwright_project: name.to_string(),
+        project: binding.project.clone(),
+        frontend_root: binding
+            .frontend_root
+            .clone()
+            .or_else(|| inherited.map(|app| app.route_root.clone())),
+        selector_roots: if binding.selector_roots.is_empty() {
+            inherited
+                .map(|app| app.selector_roots.clone())
+                .unwrap_or_default()
+        } else {
+            binding.selector_roots.clone()
+        },
     }
 }
 
@@ -102,7 +123,9 @@ fn resolved_triggers(config: &NoMistakesConfig) -> Vec<ResolvedTrigger> {
         .map(named_trigger)
         .collect::<Vec<_>>();
     for (name, dependency) in &config.test_plan.vitest.full_suite_triggers.projects {
-        triggers.push(project_trigger(name, dependency));
+        if let Some(trigger) = project_trigger(name, dependency) {
+            triggers.push(trigger);
+        }
     }
     triggers
 }
@@ -119,16 +142,11 @@ fn named_trigger(trigger: &NamedFullSuiteTrigger) -> ResolvedTrigger {
 fn project_trigger(
     name: &str,
     dependency: &crate::config::v2::schema::TestPlanProjectDependency,
-) -> ResolvedTrigger {
+) -> Option<ResolvedTrigger> {
     use crate::config::v2::schema::TestPlanProjectDependency;
-    match dependency {
+    Some(match dependency {
+        TestPlanProjectDependency::All(false) => return None,
         TestPlanProjectDependency::All(true) => ResolvedTrigger {
-            name: name.to_string(),
-            paths: Vec::new(),
-            targets: Vec::new(),
-            source: "projects",
-        },
-        TestPlanProjectDependency::All(false) => ResolvedTrigger {
             name: name.to_string(),
             paths: Vec::new(),
             targets: Vec::new(),
@@ -146,7 +164,7 @@ fn project_trigger(
             targets: targeted.targets.clone(),
             source: "projects",
         },
-    }
+    })
 }
 
 fn display_rel(root: &Path, path: &Path) -> String {
