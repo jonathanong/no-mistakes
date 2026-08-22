@@ -97,13 +97,12 @@ fn symbol_roots_keep_matching_queue_job_roots() {
         symbol: Some("sendWelcome".to_string()),
     }];
 
-    let roots =
-        roots_with_existing_queue_jobs_by(
-            &[symbol_root],
-            &entrypoints,
-            |node| node == &queue_job,
-            &crate::codebase::analysis_session::PathInterner::new(),
-        );
+    let roots = roots_with_existing_queue_jobs_by(
+        &[symbol_root],
+        &entrypoints,
+        |node| node == &queue_job,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(roots.contains(&queue_job));
 }
@@ -131,10 +130,7 @@ fn target_module_filter_keeps_only_matching_module_nodes() {
     let filtered = apply_target_module_filters(entries, &["@react/*".to_string()]).unwrap();
 
     assert_eq!(filtered.len(), 1);
-    assert_eq!(
-        filtered[0].node,
-        NodeId::module("@react/client")
-    );
+    assert_eq!(filtered[0].node, NodeId::module("@react/client"));
 }
 
 #[test]
@@ -179,7 +175,10 @@ fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
     } else if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
         NodeId::file(PathBuf::from(file))
     } else {
-        NodeId::queue_job(PathBuf::from(node["queue_file"].as_str().unwrap()), node["job"].as_str().unwrap())
+        NodeId::queue_job(
+            PathBuf::from(node["queue_file"].as_str().unwrap()),
+            node["job"].as_str().unwrap(),
+        )
     };
     let via = value["via"]
         .as_array()
@@ -269,6 +268,22 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         json: false,
         timings: false,
     }
+}
+
+#[test]
+fn resolve_entrypoints_promotes_trpc_suffixes_to_virtual_nodes() {
+    let root = super::fixture_root("trpc-basic");
+    let entrypoints = super::resolve_entrypoints(
+        &[PathBuf::from("src/router.ts#procedure:user.get")],
+        &root,
+        &root,
+    );
+
+    assert_eq!(entrypoints[0].symbol, None);
+    assert_eq!(
+        entrypoints[0].node,
+        NodeId::trpc_procedure(root.join("src/router.ts"), "user.get")
+    );
 }
 
 include!("extra_execution.rs");

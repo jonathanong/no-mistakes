@@ -347,22 +347,6 @@ fn resolve_entrypoints_promotes_workflow_suffixes_to_virtual_nodes() {
 }
 
 #[test]
-fn resolve_entrypoints_promotes_trpc_suffixes_to_virtual_nodes() {
-    let root = fixture_root("trpc-basic");
-    let entrypoints = resolve_entrypoints(
-        &[PathBuf::from("src/router.ts#procedure:user.get")],
-        &root,
-        &root,
-    );
-
-    assert_eq!(entrypoints[0].symbol, None);
-    assert_eq!(
-        entrypoints[0].node,
-        NodeId::trpc_procedure(root.join("src/router.ts"), "user.get")
-    );
-}
-
-#[test]
 fn resolve_root_uses_absolute_path() {
     let root = fixture_root("simple");
     let args = {
