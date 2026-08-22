@@ -89,3 +89,33 @@ fn java_source_under_configured_package_is_native() {
         "pom.xml",
     ));
 }
+
+#[test]
+fn kotlin_source_under_configured_package_is_native() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.kotlin.packages = vec![".".to_string()];
+    assert!(is_language_native_change(
+        TestFramework::Kotlin,
+        Path::new("/repo"),
+        &config,
+        "src/main/kotlin/com/example/User.kt",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Kotlin,
+        Path::new("/repo"),
+        &config,
+        "src/test/kotlin/com/example/UserTest.kt",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Kotlin,
+        Path::new("/repo"),
+        &config,
+        "src/test/kotlin/com/example/Helper.kt",
+    ));
+    assert!(is_language_native_change(
+        TestFramework::Kotlin,
+        Path::new("/repo"),
+        &config,
+        "build.gradle.kts",
+    ));
+}

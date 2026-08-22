@@ -1,13 +1,11 @@
 use crate::codebase::ts_source::byte_offset_to_line;
-use oxc_ast::ast::{Argument, CallExpression, Expression, Function, Program};
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
-use oxc_syntax::scope::ScopeFlags;
 
 /// A direct identifier or one-level static member call recorded during the
 /// shared TypeScript fact pass. Query consumers select the relevant callee
 /// names without reparsing callers.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CallSiteFact {
     pub callee: String,
     /// Whether invocation is conditional through an optional call or member chain.
@@ -18,22 +16,6 @@ pub struct CallSiteFact {
     pub arg_count: usize,
     pub has_spread: bool,
     pub args: Vec<&'static str>,
-}
-
-pub(crate) fn collect_call_site_facts(program: &Program<'_>, source: &str) -> Vec<CallSiteFact> {
-    let mut visitor = CallSiteVisitor {
-        source,
-        scope: Vec::new(),
-        sites: Vec::new(),
-    };
-    visitor.visit_program(program);
-    visitor.sites
-}
-
-struct CallSiteVisitor<'a> {
-    source: &'a str,
-    scope: Vec<String>,
-    sites: Vec<CallSiteFact>,
 }
 
 fn callee_name(callee: &Expression<'_>) -> Option<String> {
@@ -102,39 +84,31 @@ fn arg_tag(arg: &Argument<'_>) -> &'static str {
     }
 }
 
-impl<'a> Visit<'a> for CallSiteVisitor<'a> {
-    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
-        let name = function.id.as_ref().map(|id| id.name.as_str().to_string());
-        if let Some(name) = &name {
-            self.scope.push(name.clone());
-        }
-        walk::walk_function(self, function, flags);
-        if name.is_some() {
-            self.scope.pop();
-        }
-    }
-
-    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Some(callee) = callee_name(&call.callee) {
-            let is_optional = call.optional
-                || matches!(
-                    &call.callee,
-                    Expression::StaticMemberExpression(member) if member.optional
-                );
-            self.sites.push(CallSiteFact {
-                callee,
-                is_optional,
-                line: byte_offset_to_line(self.source, call.span.start as usize),
-                caller: self.scope.last().cloned(),
-                static_arg_source: static_first_string_arg_source(call, self.source),
-                arg_count: call.arguments.len(),
-                has_spread: call
-                    .arguments
-                    .iter()
-                    .any(|arg| matches!(arg, Argument::SpreadElement(_))),
-                args: call.arguments.iter().map(arg_tag).collect(),
-            });
-        }
-        walk::walk_call_expression(self, call);
-    }
+pub(crate) fn record_call_site(
+    source: &str,
+    caller: Option<&String>,
+    call: &CallExpression<'_>,
+    sites: &mut Vec<CallSiteFact>,
+) {
+    let Some(callee) = callee_name(&call.callee) else {
+        return;
+    };
+    let is_optional = call.optional
+        || matches!(
+            &call.callee,
+            Expression::StaticMemberExpression(member) if member.optional
+        );
+    sites.push(CallSiteFact {
+        callee,
+        is_optional,
+        line: byte_offset_to_line(source, call.span.start as usize),
+        caller: caller.cloned(),
+        static_arg_source: static_first_string_arg_source(call, source),
+        arg_count: call.arguments.len(),
+        has_spread: call
+            .arguments
+            .iter()
+            .any(|arg| matches!(arg, Argument::SpreadElement(_))),
+        args: call.arguments.iter().map(arg_tag).collect(),
+    });
 }

@@ -183,7 +183,8 @@ pub(super) fn native_fallback_tests(
         | TestFramework::Cargo
         | TestFramework::Rails
         | TestFramework::Php
-        | TestFramework::Java => super::native_fallback_lang::language_fallback_tests(
+        | TestFramework::Java
+        | TestFramework::Kotlin => super::native_fallback_lang::language_fallback_tests(
             framework,
             root,
             config,
@@ -225,7 +226,8 @@ fn is_native_source_or_project_change(
         | TestFramework::Cargo
         | TestFramework::Rails
         | TestFramework::Php
-        | TestFramework::Java => {
+        | TestFramework::Java
+        | TestFramework::Kotlin => {
             super::native_fallback_lang::is_language_native_change(framework, root, config, &rel)
         }
         TestFramework::Playwright | TestFramework::Vitest | TestFramework::Jest => false,
@@ -243,6 +245,7 @@ fn is_native_framework(framework: TestFramework) -> bool {
             | TestFramework::Rails
             | TestFramework::Php
             | TestFramework::Java
+            | TestFramework::Kotlin
     )
 }
 
@@ -514,6 +517,7 @@ pub(super) fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Rails => "rails",
         TestFramework::Php => "php",
         TestFramework::Java => "java",
+        TestFramework::Kotlin => "kotlin",
         TestFramework::Jest => "jest",
     }
 }

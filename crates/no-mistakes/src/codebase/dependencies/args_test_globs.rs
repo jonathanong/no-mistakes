@@ -56,6 +56,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "rails" => globs_to_strings(&["**/spec/**/*_spec.rb", "**/test/**/*_test.rb"]),
         "php" => globs_to_strings(&["**/*Test.php", "**/tests/**/*.php"]),
         "java" => globs_to_strings(&["**/*Test.java", "**/*Tests.java", "**/*IT.java"]),
+        "kotlin" => globs_to_strings(&["**/*Test.kt", "**/*Tests.kt", "**/*IT.kt"]),
         _ => vec![],
     }
 }

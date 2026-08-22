@@ -24,6 +24,7 @@ impl FrameworkPreparationPlan {
             TestRunner::Rails,
             TestRunner::Php,
             TestRunner::Java,
+            TestRunner::Kotlin,
         ])
     }
 

@@ -1,3 +1,4 @@
+use super::call_sites::CallSiteFact;
 use super::TsFactPlan;
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::{
@@ -38,6 +39,7 @@ pub(crate) struct DomainFacts {
     pub rsc_environment: Option<RscEnvironmentFact>,
     pub trpc_procedures: Vec<String>,
     pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
+    pub call_sites: Vec<CallSiteFact>,
 }
 
 pub(crate) fn collect_domain_facts<'a>(
@@ -109,7 +111,11 @@ pub(crate) fn collect_domain_facts<'a>(
     let rsc_environment = plan
         .rsc_environment
         .then(|| classify_rsc_environment(program));
-    let (trpc_procedures, trpc_calls) = collect_trpc_facts(program, path, plan, context);
+    let trpc_procedures = if plan.trpc_router && context.matches_trpc_router(path) {
+        crate::codebase::ts_trpc::extract_trpc_router_from_program(program).procedures
+    } else {
+        Vec::new()
+    };
     DomainFacts {
         route_refs: route_ref_facts.route_refs,
         route_helpers: route_ref_facts.route_helpers,
@@ -126,27 +132,9 @@ pub(crate) fn collect_domain_facts<'a>(
         effect_calls: fused.effect_calls,
         rsc_environment,
         trpc_procedures,
-        trpc_calls,
+        trpc_calls: fused.trpc_calls,
+        call_sites: fused.call_sites,
     }
-}
-
-fn collect_trpc_facts(
-    program: &Program<'_>,
-    path: &Path,
-    plan: TsFactPlan,
-    context: &TsFactContext,
-) -> (Vec<String>, Vec<crate::codebase::ts_trpc::TrpcCallFact>) {
-    let procedures = if plan.trpc_router && context.matches_trpc_router(path) {
-        crate::codebase::ts_trpc::extract_trpc_router_from_program(program).procedures
-    } else {
-        Vec::new()
-    };
-    let calls = if plan.trpc_calls {
-        crate::codebase::ts_trpc::extract_trpc_calls_from_program(program)
-    } else {
-        Vec::new()
-    };
-    (procedures, calls)
 }
 
 fn classify_rsc_environment(program: &Program<'_>) -> RscEnvironmentFact {

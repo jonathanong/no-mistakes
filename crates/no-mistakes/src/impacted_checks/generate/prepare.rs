@@ -102,6 +102,7 @@ fn configured_frameworks(
         TestFramework::Rails,
         TestFramework::Php,
         TestFramework::Java,
+        TestFramework::Kotlin,
         TestFramework::Jest,
     ]
     .into_iter()

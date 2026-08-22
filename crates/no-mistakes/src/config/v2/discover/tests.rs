@@ -193,3 +193,21 @@ fn named_triggers_are_validated_for_every_test_plan_framework() {
     );
     assert!(error.contains("contains invalid glob"), "{error}");
 }
+
+#[test]
+fn kotlin_targeted_project_triggers_require_a_top_level_project() {
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.kotlin.full_suite_triggers.projects.insert(
+        "missing".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["src/**".to_string()],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.kotlin.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+    ));
+}

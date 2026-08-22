@@ -13,6 +13,7 @@ pub(crate) fn lang_config_from_v2(config: &NoMistakesConfig) -> LangFrontendConf
         php_apps: config.tests.php.apps.clone(),
         php_framework: config.tests.php.framework.clone(),
         java_packages: config.tests.java.packages.clone(),
+        kotlin_packages: config.tests.kotlin.packages.clone(),
     }
 }
 
@@ -23,6 +24,7 @@ pub(crate) fn lang_config_is_empty(config: &LangFrontendConfig) -> bool {
         && config.rails_apps.is_empty()
         && config.php_apps.is_empty()
         && config.java_packages.is_empty()
+        && config.kotlin_packages.is_empty()
 }
 
 pub(crate) struct QueueGlobMatchers {
@@ -87,7 +89,7 @@ pub(crate) fn matching_cluster(
     })
 }
 
-pub(crate) fn each_lang_map(facts: &super::CollectedLangFacts) -> [&LangFactMap; 6] {
+pub(crate) fn each_lang_map(facts: &super::CollectedLangFacts) -> [&LangFactMap; 7] {
     [
         &facts.python,
         &facts.go,
@@ -95,6 +97,7 @@ pub(crate) fn each_lang_map(facts: &super::CollectedLangFacts) -> [&LangFactMap;
         &facts.ruby,
         &facts.php,
         &facts.java,
+        &facts.kotlin,
     ]
 }
 

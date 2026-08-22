@@ -112,6 +112,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
         EdgeKind::PhpPackage,
         EdgeKind::JavaImport,
         EdgeKind::JavaReference,
+        EdgeKind::KotlinImport,
+        EdgeKind::KotlinReference,
     ] {
         let allowed: HashSet<_> = [kind].into();
         assert!(

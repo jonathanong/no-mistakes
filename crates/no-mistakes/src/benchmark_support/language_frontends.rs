@@ -67,6 +67,7 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
             php_apps: vec!["php-laravel".into()],
             php_framework: Some("laravel".into()),
             java_packages: vec!["java-spring".into()],
+            kotlin_packages: vec!["kotlin-spring".into()],
         },
         queue_enqueues: vec!["**/*".into()],
         queue_workers: vec!["**/*".into()],
@@ -86,6 +87,7 @@ pub fn collect_language_frontend_facts(
         &facts.ruby,
         &facts.php,
         &facts.java,
+        &facts.kotlin,
     ];
     LanguageFrontendSummary {
         files: fixture.files.len(),
@@ -136,7 +138,7 @@ pub fn match_language_frontend_queue_globs(
 }
 
 fn fact_len(
-    maps: [&LangFactMap; 6],
+    maps: [&LangFactMap; 7],
     field: impl Fn(&crate::codebase::lang_frontends::LangFileFacts) -> usize,
 ) -> usize {
     maps.iter()

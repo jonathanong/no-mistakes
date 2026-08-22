@@ -1,0 +1,5 @@
+tests:
+  kotlin:
+    packages:
+      - libs/shared
+      - services/app

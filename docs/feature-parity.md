@@ -12,8 +12,8 @@ do so without shelling out to `rg` for the graph itself.
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. Playwright, React,
 Next.js fetches, call-sites, dead-exports, ecosystem lockfile diffs, and
-dedicated `no-mistakes python|go|rust|rails|php|java` CLIs are later work. Agents
-use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java`
+dedicated `no-mistakes python|go|rust|rails|php|java|kotlin` CLIs are later work. Agents
+use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin`
 when those stacks are configured. Ecosystem lockfiles and dedicated language
 CLIs are not started.
 
@@ -31,6 +31,7 @@ CLIs are not started.
 | Ruby on Rails | `ruby-require`, `ruby-ref` | `tests plan rails` | `routes.rb` `to:` / `resources` | Active Job `perform_later`, Sidekiq `perform_async` | shipped (v1 extractors + plan) |
 | PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` / `Route::resource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
 | Java, Spring | `java-import`, `java-ref` | `tests plan java` | Spring `@RequestMapping` / `@GetMapping` literals | no | shipped (v1 extractors + plan) |
+| Kotlin, Spring | `kotlin-import`, `kotlin-ref` | `tests plan kotlin` | Spring `@RequestMapping` / `@GetMapping` literals on `.kt` | no | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -76,7 +77,8 @@ graph exists. Full-suite fallback remains explicit opt-in.
 `server contracts` list configured TS/JS route definitions and static client
 calls. Language v1 extractors emit `route` edges into `DepGraph` for Django,
 Flask, FastAPI, Go HTTP, Rails, Laravel, Symfony, Rust Axum/Actix/Rocket,
-ASP.NET `MapGet` / `[HttpGet]`, and Spring `@RequestMapping` / `@GetMapping`;
+ASP.NET `MapGet` / `[HttpGet]`, and Spring `@RequestMapping` / `@GetMapping`
+in configured Java and Kotlin packages;
 query those with
 `dependents --relationship route`. `server routes|edges|related` also project
 those language `RouteRef` facts into the existing server report. Do not invent
@@ -127,7 +129,8 @@ Follow the Swift and .NET adapter shape, not a second analysis session.
    reports project those edges; they do not rebuild a private index.
 5. Test discovery reads the language's explicit package/project config and
    emits `TestExecutionTarget` rows (`pytest`, `go test`, `cargo test`,
-   `bin/rails test` / `rspec`, `phpunit` / `artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`).
+   `bin/rails test` / `rspec`, `phpunit` / `artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`,
+   `gradle [-p <package>] test --tests`).
 6. Ship CLI, N-API, `docs/cli/*`, `docs/graph-edges.md`,
    `docs/configuration/tests.md`, and fixtures in the same change.
 
@@ -399,6 +402,46 @@ intervening non-annotation noise that breaks the method matcher, class-only
 `@RequestMapping` without a method mapping, same-package type refs without an
 explicit `import`, and `import com.example.*` are non-edges.
 
+## Kotlin, Spring
+
+Kotlin support is a language frontend for configured `tests.kotlin.packages`.
+Empty lists disable the extractor; there is no Gradle inference and the list
+is not folded into `tests.java`. Exact `import com.example.User` statements
+emit `kotlin-import`. Star imports are non-edges. Optional `as` aliases still
+record the original fully-qualified class name. Class/interface/object names plus capitalized
+identifiers emit `kotlin-ref`.
+
+Spring HTTP v1 reuses the Java mapping literals on `.kt` files, matching
+`fun listUsers()` handlers after `@GetMapping("/users")`.
+
+| Feature | TS/JS reference | Kotlin equivalent |
+| --- | --- | --- |
+| Module graph | `import` | exact `import com.example.User` |
+| Package identity | workspace packages | configured `tests.kotlin.packages` |
+| Tests | `tests plan vitest` | `tests plan kotlin` over `*Test.kt` / `*Tests.kt` / `*IT.kt`; `gradle [-p <package>] test --tests` |
+| HTTP routes | `server routes` | Spring `@RequestMapping` + `@GetMapping` literals on `.kt` |
+| Queues | BullMQ | no |
+| Lockfile | npm-family | later (`build.gradle.kts` native fallback only) |
+
+```kotlin
+package com.example
+import com.example.User
+
+@RequestMapping("/api")
+class Users {
+  @GetMapping("/users")
+  fun listUsers(): Any? = User.list()
+}
+```
+
+`@GetMapping(PREFIX)`, `@GetMapping`, extra mapping attributes after the path,
+same-package type refs without an explicit `import`, `import com.example.*`,
+top-level functions/properties, extra types in the same file, multi-class
+`@RequestMapping` prefixes, and annotation examples inside raw strings are
+non-edges. Native fallback is `build.gradle` / `build.gradle.kts` plus
+non-test `.kt` files; `settings.gradle*` is not a trigger. `--tests` uses the
+file stem, matching Java `-Dtest`.
+
 ## Shared Domain Rules
 
 Route, queue, and Kafka extractors are language-specific visitors that emit
@@ -414,6 +457,7 @@ Relationship filters for the language graph itself follow Swift/.NET:
 - `ruby` — Ruby require and configured constant edges
 - `php` — PHP `use` / Composer edges
 - `java` — Java import and reference edges
+- `kotlin` — Kotlin import and reference edges
 
 Additive language flags must not change existing TS/JS report fields. When a
 broader resolver catalog is needed (for example tests that live outside the
@@ -457,6 +501,9 @@ tests:
   java:
     packages:
       - services/api
+  kotlin:
+    packages:
+      - services/api
 ```
 
 Counterexample: defaulting to “every `urls.py`, every `go.mod`, every Rails
@@ -466,16 +513,16 @@ opt-in.
 ## Agent Fallback
 
 v1 module graphs, `tests plan <lang>`, and named route/queue extractors are
-shipped for configured Python, Go, Rust, Rails, PHP, and Java packages. Use
+shipped for configured Python, Go, Rust, Rails, PHP, Java, and Kotlin packages. Use
 `dependents --relationship <lang|route|queue>` and
-`tests plan python|go|cargo|rails|php|java` for those questions instead of `rg`.
+`tests plan python|go|cargo|rails|php|java|kotlin` for those questions instead of `rg`.
 
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Laravel
 `Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
-dedicated `no-mistakes python|go|rust|rails|php|java` CLIs.
+dedicated `no-mistakes python|go|rust|rails|php|java|kotlin` CLIs.
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and

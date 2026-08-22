@@ -134,6 +134,36 @@ fn java_target_uses_maven_class_name() {
 }
 
 #[test]
+fn kotlin_target_uses_gradle_class_name() {
+    let target = target_for(
+        TestRunner::Kotlin,
+        Some("."),
+        false,
+        None,
+        "src/test/kotlin/com/example/UserTest.kt",
+    );
+    assert_eq!(target.base_command, vec!["gradle", "test"]);
+    assert_eq!(target.runner_args, vec!["--tests", "UserTest"]);
+    assert_eq!(target.runner, "kotlin");
+}
+
+#[test]
+fn kotlin_nested_package_passes_gradle_project_flag() {
+    let target = target_for(
+        TestRunner::Kotlin,
+        Some("services/api"),
+        false,
+        None,
+        "services/api/src/test/kotlin/com/example/UserTest.kt",
+    );
+    assert_eq!(
+        target.base_command,
+        vec!["gradle", "-p", "services/api", "test"]
+    );
+    assert_eq!(target.runner_args, vec!["--tests", "UserTest"]);
+}
+
+#[test]
 fn java_nested_package_passes_maven_file_flag() {
     let target = target_for(
         TestRunner::Java,

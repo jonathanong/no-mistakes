@@ -26,6 +26,7 @@ pub(super) fn configured_environment(
         TestFramework::Rails => &config.test_plan.rails,
         TestFramework::Php => &config.test_plan.php,
         TestFramework::Java => &config.test_plan.java,
+        TestFramework::Kotlin => &config.test_plan.kotlin,
         TestFramework::Jest => &config.test_plan.jest,
     };
     let key = normalize_environment(&args.environment);
@@ -91,6 +92,7 @@ pub(super) fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Rails => "rails",
         TestFramework::Php => "php",
         TestFramework::Java => "java",
+        TestFramework::Kotlin => "kotlin",
         TestFramework::Jest => "jest",
     }
 }

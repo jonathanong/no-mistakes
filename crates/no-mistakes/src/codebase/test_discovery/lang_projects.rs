@@ -31,6 +31,11 @@ pub(super) fn language_projects(
             config.tests.php.framework.as_deref(),
         ),
         TestRunner::Java => (config.tests.java.packages.as_slice(), java_includes(), None),
+        TestRunner::Kotlin => (
+            config.tests.kotlin.packages.as_slice(),
+            kotlin_includes(),
+            None,
+        ),
         _ => return Vec::new(),
     };
     if roots.is_empty() {
@@ -113,6 +118,11 @@ fn php_includes() -> &'static [String] {
 fn java_includes() -> &'static [String] {
     static GLOBS: OnceLock<Vec<String>> = OnceLock::new();
     GLOBS.get_or_init(|| crate::codebase::dependencies::test_globs("java"))
+}
+
+fn kotlin_includes() -> &'static [String] {
+    static GLOBS: OnceLock<Vec<String>> = OnceLock::new();
+    GLOBS.get_or_init(|| crate::codebase::dependencies::test_globs("kotlin"))
 }
 
 #[cfg(test)]

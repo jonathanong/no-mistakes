@@ -250,6 +250,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 | TestFramework::Rails
                 | TestFramework::Php
                 | TestFramework::Java
+                | TestFramework::Kotlin
         ) && group.type_ == TestPlanGroupType::Coverage
         {
             anyhow::bail!(

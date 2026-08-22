@@ -96,6 +96,8 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::PhpPackage,
         EdgeKind::JavaImport,
         EdgeKind::JavaReference,
+        EdgeKind::KotlinImport,
+        EdgeKind::KotlinReference,
         EdgeKind::TrpcCall,
         EdgeKind::TrpcProcedure,
         EdgeKind::WorkflowJob,
@@ -152,6 +154,8 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::PhpPackage => {}
             EdgeKind::JavaImport => {}
             EdgeKind::JavaReference => {}
+            EdgeKind::KotlinImport => {}
+            EdgeKind::KotlinReference => {}
             EdgeKind::TrpcCall => {}
             EdgeKind::TrpcProcedure => {}
             EdgeKind::WorkflowJob => {}

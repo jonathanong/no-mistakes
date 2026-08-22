@@ -19,6 +19,7 @@ pub(super) fn is_language_native_change(
         TestFramework::Rails => is_rails_native(&rel, root, config),
         TestFramework::Php => is_php_native(&rel, root, config),
         TestFramework::Java => is_java_native(&rel, root, config),
+        TestFramework::Kotlin => is_kotlin_native(&rel, root, config),
         _ => false,
     }
 }
@@ -94,6 +95,8 @@ fn is_java_native(rel: &str, root: &Path, config: &NoMistakesConfig) -> bool {
         || is_named_manifest(root, &config.tests.java.packages, rel, "pom.xml")
 }
 
+include!("native_fallback_lang_kotlin.rs");
+
 fn owning_root(
     framework: TestFramework,
     root: &Path,
@@ -122,6 +125,7 @@ fn configured_roots(framework: TestFramework, config: &NoMistakesConfig) -> &[St
         TestFramework::Rails => &config.tests.rails.apps,
         TestFramework::Php => &config.tests.php.apps,
         TestFramework::Java => &config.tests.java.packages,
+        TestFramework::Kotlin => &config.tests.kotlin.packages,
         _ => &[],
     }
 }
