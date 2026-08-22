@@ -65,9 +65,7 @@ pub(crate) fn build_exclude_globset(patterns: &[String]) -> GlobSet {
             builder.add(glob);
         }
     }
-    builder
-        .build()
-        .expect("GlobSetBuilder with valid globs compiles")
+    builder.build().expect("compiled globset")
 }
 
 pub(crate) fn build_patterns() -> [Regex; 3] {
