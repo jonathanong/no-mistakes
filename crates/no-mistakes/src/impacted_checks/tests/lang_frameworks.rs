@@ -34,6 +34,7 @@ fn language_frameworks_emit_native_test_commands() {
             "gradle test",
         ),
         ("elixir-test-plan", &["lib/my_app/user.ex"], "mix test"),
+        ("dart-test-plan", &["lib/user.dart"], "dart test"),
     ];
     for (name, files, needle) in cases {
         let mut a = args(files);
@@ -75,6 +76,7 @@ fn framework_present_detects_configured_language_packages() {
             TestFramework::Elixir,
             TestFramework::Php,
         ),
+        ("dart-test-plan", TestFramework::Dart, TestFramework::Php),
     ];
     for (name, present, absent) in cases {
         let root = lang_test_plan_fixture(name);

@@ -18,10 +18,10 @@ test impact, Playwright coverage, React traits, queue/server routes, Next.js
 fetches, lockfile diffs, and `no-mistakes check` rules.
 
 **Adjacent graph domains**:
-Configured `tests.python|go|rust|rails|php|java|kotlin|elixir` and `tests.dotnet.projects` /
+Configured `tests.python|go|rust|rails|php|java|kotlin|elixir|dart` and `tests.dotnet.projects` /
 `tests.swift.packages` participate in the canonical graph. Query them with
-`dependents --relationship python|go|rust|ruby|php|java|kotlin|elixir|dotnet|swift` and
-`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dotnet|swift`.
+`dependents --relationship python|go|rust|ruby|php|java|kotlin|elixir|dart|dotnet|swift` and
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart|dotnet|swift`.
 `no-mistakes ci` — GitHub Actions workflow graphs ·
 `no-mistakes infra` — Terraform/OpenTofu resource graphs ·
 `no-mistakes swift` — Swift package importers and test targets.
@@ -46,7 +46,7 @@ rerun after creating them):
 - Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
 - Jest: `no-mistakes tests plan jest --changed-file <file> --format paths`
 - Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
-- Python / Go / Cargo / Rails / PHP / Java / Kotlin / Elixir: `no-mistakes tests plan python|go|cargo|rails|php|java|kotlin|elixir --changed-file <file> --format paths`
+- Python / Go / Cargo / Rails / PHP / Java / Kotlin / Elixir / Dart: `no-mistakes tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart --changed-file <file> --format paths`
 
 See `references/tests.md`.
 For high-signal multi-command workflows around UI selectors, selector-root
@@ -109,7 +109,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | What runtime modules can a Playwright route conservatively reach? | `no-mistakes dependencies <route-file> --relationship route-import` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
 | Which files directly import this one TS/JS file? (fast) | `no-mistakes importers <file>` (TS/JS static imports only) |
-| Which Python/Go/Rust/Ruby/PHP/Java/Kotlin/Elixir/Swift/.NET files depend on this file? | `no-mistakes dependents <file> --relationship python\|go\|rust\|ruby\|php\|java\|kotlin\|elixir\|swift\|dotnet --format json` |
+| Which Python/Go/Rust/Ruby/PHP/Java/Kotlin/Elixir/Dart/Swift/.NET files depend on this file? | `no-mistakes dependents <file> --relationship python\|go\|rust\|ruby\|php\|java\|kotlin\|elixir\|dart\|swift\|dotnet --format json` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
 | What does this file export, and who imports each export? | `no-mistakes exports-of <file>` |
 | Is this export still used anywhere? (yes/no) | `no-mistakes dead-exports <file> [NAME...]` |
@@ -120,7 +120,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, shared-helper test discovery, test deletion, or queue call-disposition question? | Read `references/impact-recipes.md` |
 | Which tests should rerun for everything changed in a diff? | `no-mistakes tests plan vitest --from-git-diff <base>...<head> --format paths` |
 | Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
-| Which Python/Go/Cargo/Rails/PHP/Java/Kotlin/Elixir tests should rerun? | `no-mistakes tests plan python\|go\|cargo\|rails\|php\|java\|kotlin\|elixir --changed-file <file> --format paths` |
+| Which Python/Go/Cargo/Rails/PHP/Java/Kotlin/Elixir/Dart tests should rerun? | `no-mistakes tests plan python\|go\|cargo\|rails\|php\|java\|kotlin\|elixir\|dart --changed-file <file> --format paths` |
 | Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
 | Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both` |
@@ -263,8 +263,8 @@ with `includeSuppressed: true`.
 - `--depth <N>` to limit traversal depth.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
-- `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php|java|kotlin|elixir|jest` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|trpc|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|java|kotlin|elixir|all`.
+- `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php|java|kotlin|elixir|dart|jest` to filter to test files.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|trpc|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|java|kotlin|elixir|dart|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
   `--verbose-timings` (stderr), and `--jobs`.

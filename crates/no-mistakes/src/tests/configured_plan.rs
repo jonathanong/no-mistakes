@@ -252,6 +252,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 | TestFramework::Java
                 | TestFramework::Kotlin
                 | TestFramework::Elixir
+                | TestFramework::Dart
         ) && group.type_ == TestPlanGroupType::Coverage
         {
             anyhow::bail!(

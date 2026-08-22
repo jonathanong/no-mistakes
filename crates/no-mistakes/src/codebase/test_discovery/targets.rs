@@ -138,6 +138,7 @@ fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
         | TestRunner::Java
         | TestRunner::Kotlin
         | TestRunner::Elixir => test_file.to_string(),
+        | TestRunner::Dart => test_file.to_string(),
     }
 }
 

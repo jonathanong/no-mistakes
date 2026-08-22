@@ -221,6 +221,11 @@ fn language_runners_round_trip_names_and_frameworks() {
             TestRunner::Elixir,
             crate::integration_tests::types::Framework::Elixir,
         ),
+        (
+            "dart",
+            TestRunner::Dart,
+            crate::integration_tests::types::Framework::Dart,
+        ),
     ] {
         assert_eq!(TestRunner::from_name(name), Some(runner));
         assert_eq!(runner.as_str(), name);

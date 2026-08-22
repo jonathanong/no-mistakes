@@ -88,6 +88,8 @@ pub enum EdgeKind {
     KotlinReference,
     ElixirImport,
     ElixirReference,
+    DartImport,
+    DartReference,
     /// Workflow file → virtual job node.
     WorkflowJob,
     /// Virtual workflow job → virtual workflow step node.

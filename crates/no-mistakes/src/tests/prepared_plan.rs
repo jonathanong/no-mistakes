@@ -492,6 +492,7 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Java => TestRunner::Java,
         TestFramework::Kotlin => TestRunner::Kotlin,
         TestFramework::Elixir => TestRunner::Elixir,
+        TestFramework::Dart => TestRunner::Dart,
         TestFramework::Jest => TestRunner::Jest,
     }
 }
@@ -520,6 +521,7 @@ fn test_framework(runner: TestRunner) -> TestFramework {
         TestRunner::Java => TestFramework::Java,
         TestRunner::Kotlin => TestFramework::Kotlin,
         TestRunner::Elixir => TestFramework::Elixir,
+        TestRunner::Dart => TestFramework::Dart,
         TestRunner::Jest => TestFramework::Jest,
     }
 }

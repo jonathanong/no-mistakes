@@ -97,6 +97,13 @@ fn collect_language_frontend_edges(
             &mut edges,
             interner,
         );
+        emit_lang_edges(
+            &facts.dart,
+            EdgeKind::DartImport,
+            EdgeKind::DartReference,
+            &mut edges,
+            interner,
+        );
         emit_queue_edges(root, &facts.python, options, &mut edges, interner);
         emit_queue_edges(root, &facts.go, options, &mut edges, interner);
         emit_queue_edges(root, &facts.ruby, options, &mut edges, interner);
@@ -127,6 +134,7 @@ fn lang_config_from_options(options: &GraphConfigOptions) -> LangFrontendConfig 
         java_packages: options.java_packages.clone(),
         kotlin_packages: options.kotlin_packages.clone(),
         elixir_apps: options.elixir_apps.clone(),
+        dart_packages: options.dart_packages.clone(),
     }
 }
 
@@ -139,5 +147,6 @@ fn config_is_empty(config: &LangFrontendConfig) -> bool {
         && config.java_packages.is_empty()
         && config.kotlin_packages.is_empty()
         && config.elixir_apps.is_empty()
+        && config.dart_packages.is_empty()
 }
 

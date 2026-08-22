@@ -229,3 +229,21 @@ fn elixir_targeted_project_triggers_require_a_top_level_project() {
         "config.yml.testPlan.elixir.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
     ));
 }
+
+#[test]
+fn dart_targeted_project_triggers_require_a_top_level_project() {
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.dart.full_suite_triggers.projects.insert(
+        "missing".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["src/**".to_string()],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.dart.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+    ));
+}

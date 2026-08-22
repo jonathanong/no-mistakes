@@ -33,7 +33,7 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file; also Django `path(` / Flask / FastAPI literal decorator handlers inside configured Python packages; also Go `net/http` / Chi / Gin / Echo / Fiber literal registrations inside configured modules; also Rails `to:` / bare `resources :name` / `resources "name"` routes, Laravel `Route::` / `Route::resource` / Symfony attribute/YAML routes, Rust Axum / Actix / Rocket literal registrations inside configured packages, and ASP.NET `MapGet` / `[HttpGet]` literals inside configured .NET projects, and Spring `@RequestMapping` / `@GetMapping` / `@PostMapping` literals inside configured Java and Kotlin packages, and Phoenix `get`/`post`/`put`/`patch`/`delete` literals inside configured Elixir apps | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`python-celery-django`](../fixtures/lang-frontends/python-celery-django), [`python-flask-fastapi`](../fixtures/lang-frontends/python-flask-fastapi), [`go-http`](../fixtures/lang-frontends/go-http), [`rails-jobs`](../fixtures/lang-frontends/rails-jobs), [`php-laravel`](../fixtures/lang-frontends/php-laravel), [`php-symfony`](../fixtures/lang-frontends/php-symfony), [`rust-http`](../fixtures/lang-frontends/rust-http), [`dotnet-aspnet-routes`](../test-cases/codebase-analysis/dotnet-aspnet-routes), [`java-spring`](../fixtures/lang-frontends/java-spring), [`kotlin-spring`](../fixtures/lang-frontends/kotlin-spring), [`phoenix-routes`](../fixtures/lang-frontends/phoenix-routes) |
 | `server-route` | server `ServerRoute` DTO kind | `server edges`, `server related` | configured server route file -> normalized route node; also Remix `app/routes` files under `type: remix` | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships), [`remix`](../test-cases/server-ast-routes/remix) |
 | `client-call` | server `ClientCall` DTO kind | `server edges`, `server related` | static direct or local/imported route-helper client reference -> configured normalized route node; client sources honor filters and configured test exclusion | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships) |
-| `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts) |
+| `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file; also Dart `Uri.parse("/api/...")` / `http.get("/api/...")` literals inside configured packages | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts), [`dart-flutter-http`](../test-cases/codebase-analysis/dart-flutter-http) |
 | `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts), [`rails-sidekiq`](../fixtures/lang-frontends/rails-sidekiq) |
 | `queue-worker` | `QueueWorker` | `queue` | virtual queue job node -> worker/processor file | [`codebase-intel/packages/api/src/worker.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/worker.mts), [`rails-sidekiq`](../fixtures/lang-frontends/rails-sidekiq) |
 | `trpc-call` | `TrpcCall` | `trpc` | caller file -> virtual tRPC procedure node | [`trpc-basic`](../test-cases/codebase-analysis/trpc-basic) |
@@ -77,8 +77,10 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `kotlin-ref` | `KotlinReference` | `kotlin` | Kotlin file -> file declaring a referenced type | [`kotlin-spring`](../fixtures/lang-frontends/kotlin-spring) |
 | `elixir-import` | `ElixirImport` | `elixir` | Elixir file -> file of an exact `alias`/`import`/`use MyApp.User` | [`phoenix-routes`](../fixtures/lang-frontends/phoenix-routes) |
 | `elixir-ref` | `ElixirReference` | `elixir` | Elixir file -> file declaring a referenced module | [`phoenix-routes`](../fixtures/lang-frontends/phoenix-routes) |
+| `dart-import` | `DartImport` | `dart` | Dart file -> file of an exact `import` / `export` / `part` URI | [`dart-cross-package`](../test-cases/codebase-analysis/dart-cross-package) |
+| `dart-ref` | `DartReference` | `dart` | Dart file -> file declaring a referenced type | [`dart-flutter-http`](../test-cases/codebase-analysis/dart-flutter-http) |
 
-Python, Go, Rust, Ruby, PHP, Java, Kotlin, and Elixir edges require matching `tests.<lang>` package,
+Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart edges require matching `tests.<lang>` package,
 module, or app lists. Empty lists disable that frontend. See
 [Tests and selectors](configuration/tests.md).
 
@@ -130,6 +132,7 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | `java` | `java-import`, `java-ref` |
 | `kotlin` | `kotlin-import`, `kotlin-ref` |
 | `elixir` | `elixir-import`, `elixir-ref` |
+| `dart` | `dart-import`, `dart-ref` |
 | `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` and `trpc` views |
 
 Workflow virtual-node IDs are stable and project-relative:

@@ -17,6 +17,7 @@ fn emit_lang_edges(
                                 | EdgeKind::JavaImport
                                 | EdgeKind::KotlinImport
                                 | EdgeKind::ElixirImport
+                                | EdgeKind::DartImport
                         )
                             || facts
                                 .files

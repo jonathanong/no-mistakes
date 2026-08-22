@@ -49,6 +49,7 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
         java_packages: vec!["java-spring".into()],
         kotlin_packages: vec!["kotlin-spring".into()],
         elixir_apps: vec!["phoenix-routes".into()],
+        dart_packages: vec![],
     };
     let store = store_for(&files);
     let collected = collect_all_lang_facts(&root, &files, &config, &store);
@@ -90,6 +91,10 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
         collected.elixir,
         collect_elixir_facts(&root, &files, &config.elixir_apps, &store)
     );
+    assert_eq!(
+        collected.dart,
+        collect_dart_facts(&root, &files, &config.dart_packages, &store)
+    );
     assert!(
         !collected.python.files.is_empty(),
         "composed fixture must produce python facts"
@@ -122,6 +127,10 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
         !collected.elixir.files.is_empty(),
         "composed fixture must produce elixir facts"
     );
+    assert!(
+        collected.dart.files.is_empty(),
+        "composed fixture must not parse Dart packages"
+    );
 }
 
 #[test]
@@ -151,6 +160,7 @@ fn collect_all_lang_facts_with_partially_configured_languages() {
     assert!(collected.java.files.is_empty());
     assert!(collected.kotlin.files.is_empty());
     assert!(collected.elixir.files.is_empty());
+    assert!(collected.dart.files.is_empty());
     assert!(!collected.python.files.is_empty());
     assert!(!collected.go.files.is_empty());
 }
@@ -169,4 +179,5 @@ fn collect_all_lang_facts_skips_unconfigured_languages() {
     assert!(collected.java.files.is_empty());
     assert!(collected.kotlin.files.is_empty());
     assert!(collected.elixir.files.is_empty());
+    assert!(collected.dart.files.is_empty());
 }

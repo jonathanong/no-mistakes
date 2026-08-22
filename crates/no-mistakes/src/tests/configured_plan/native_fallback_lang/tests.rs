@@ -161,3 +161,33 @@ fn elixir_source_under_configured_app_is_native() {
         "mix.lock",
     ));
 }
+
+#[test]
+fn dart_source_under_configured_package_is_native() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.dart.packages = vec![".".to_string()];
+    assert!(is_language_native_change(
+        TestFramework::Dart,
+        Path::new("/repo"),
+        &config,
+        "lib/user.dart",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Dart,
+        Path::new("/repo"),
+        &config,
+        "test/user_test.dart",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Dart,
+        Path::new("/repo"),
+        &config,
+        "test/helper.dart",
+    ));
+    assert!(is_language_native_change(
+        TestFramework::Dart,
+        Path::new("/repo"),
+        &config,
+        "pubspec.yaml",
+    ));
+}

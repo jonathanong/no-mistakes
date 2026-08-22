@@ -15,6 +15,7 @@ pub(super) fn discover_phase(framework: TestFramework) -> &'static str {
         TestFramework::Java => "discover.java",
         TestFramework::Kotlin => "discover.kotlin",
         TestFramework::Elixir => "discover.elixir",
+        TestFramework::Dart => "discover.dart",
         TestFramework::Jest => "discover.jest",
     }
 }
@@ -33,6 +34,7 @@ pub(super) fn select_phase(framework: TestFramework) -> &'static str {
         TestFramework::Java => "select.java",
         TestFramework::Kotlin => "select.kotlin",
         TestFramework::Elixir => "select.elixir",
+        TestFramework::Dart => "select.dart",
         TestFramework::Jest => "select.jest",
     }
 }

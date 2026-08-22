@@ -58,6 +58,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "java" => globs_to_strings(&["**/*Test.java", "**/*Tests.java", "**/*IT.java"]),
         "kotlin" => globs_to_strings(&["**/*Test.kt", "**/*Tests.kt", "**/*IT.kt"]),
         "elixir" => globs_to_strings(&["**/*_test.exs"]),
+        "dart" => globs_to_strings(&["**/*_test.dart"]),
         _ => vec![],
     }
 }

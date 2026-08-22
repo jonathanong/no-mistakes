@@ -17,6 +17,8 @@ fn allowed_requests_language_frontends(allowed: &HashSet<EdgeKind>) -> bool {
         EdgeKind::KotlinReference,
         EdgeKind::ElixirImport,
         EdgeKind::ElixirReference,
+        EdgeKind::DartImport,
+        EdgeKind::DartReference,
     ]
     .into_iter()
     .any(|kind| allowed.contains(&kind))

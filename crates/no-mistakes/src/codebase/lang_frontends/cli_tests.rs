@@ -138,6 +138,8 @@ tests:
     packages: ["kt"]
   elixir:
     apps: ["web"]
+  dart:
+    packages: ["app"]
 "#,
     )
     .unwrap();
@@ -152,4 +154,5 @@ tests:
     assert_eq!(lang.java_packages, vec!["src"]);
     assert_eq!(lang.kotlin_packages, vec!["kt"]);
     assert_eq!(lang.elixir_apps, vec!["web"]);
+    assert_eq!(lang.dart_packages, vec!["app"]);
 }

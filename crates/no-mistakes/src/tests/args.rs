@@ -238,6 +238,7 @@ pub(crate) enum TestFramework {
     Java,
     Kotlin,
     Elixir,
+    Dart,
     Jest,
 }
 

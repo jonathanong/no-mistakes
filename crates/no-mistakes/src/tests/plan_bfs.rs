@@ -210,6 +210,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::JavaImport | EdgeKind::JavaReference => "java",
         EdgeKind::KotlinImport | EdgeKind::KotlinReference => "kotlin",
         EdgeKind::ElixirImport | EdgeKind::ElixirReference => "elixir",
+        EdgeKind::DartImport | EdgeKind::DartReference => "dart",
         EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => "trpc",
         EdgeKind::WorkflowJob => "workflow-job",
         EdgeKind::WorkflowStep => "workflow-step",

@@ -47,6 +47,7 @@ struct GraphConfigOptions {
     java_packages: Vec<String>,
     kotlin_packages: Vec<String>,
     elixir_apps: Vec<String>,
+    dart_packages: Vec<String>,
     queue_enqueues: Vec<String>,
     queue_workers: Vec<String>,
     queue_cluster: Option<String>,
@@ -123,6 +124,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         java_packages: v2_config.tests.java.packages.clone(),
         kotlin_packages: v2_config.tests.kotlin.packages.clone(),
         elixir_apps: v2_config.tests.elixir.apps.clone(),
+        dart_packages: v2_config.tests.dart.packages.clone(),
         queue_enqueues: flatten_queue_globs(v2_config, prefixed_queue_globs_enqueues),
         queue_workers: flatten_queue_globs(v2_config, prefixed_queue_globs_workers),
         queue_cluster: v2_config

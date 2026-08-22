@@ -31,6 +31,7 @@ pub(crate) enum Framework {
     Java,
     Kotlin,
     Elixir,
+    Dart,
     Jest,
 }
 
@@ -49,6 +50,7 @@ impl Framework {
             Self::Java => "java",
             Self::Kotlin => "kotlin",
             Self::Elixir => "elixir",
+            Self::Dart => "dart",
             Self::Jest => "jest",
         }
     }

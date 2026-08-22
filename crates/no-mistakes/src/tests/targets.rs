@@ -218,6 +218,7 @@ fn runner_for(framework: TestFramework) -> TestRunner {
         TestFramework::Java => TestRunner::Java,
         TestFramework::Kotlin => TestRunner::Kotlin,
         TestFramework::Elixir => TestRunner::Elixir,
+        TestFramework::Dart => TestRunner::Dart,
         TestFramework::Jest => TestRunner::Jest,
     }
 }
@@ -236,6 +237,7 @@ fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Java => "java",
         TestFramework::Kotlin => "kotlin",
         TestFramework::Elixir => "elixir",
+        TestFramework::Dart => "dart",
         TestFramework::Jest => "jest",
     }
 }

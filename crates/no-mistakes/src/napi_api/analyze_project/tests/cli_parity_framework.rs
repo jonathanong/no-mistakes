@@ -45,6 +45,10 @@ fn cli_parity_framework_parser_covers_all_public_values() {
         crate::tests::TestFramework::Elixir
     );
     assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("dart").unwrap(),
+        crate::tests::TestFramework::Dart
+    );
+    assert_eq!(
         crate::napi_api::cli_parity::parse_test_framework("jest").unwrap(),
         crate::tests::TestFramework::Jest
     );

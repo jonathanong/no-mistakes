@@ -34,6 +34,7 @@ export type Relationship =
   | "java"
   | "kotlin"
   | "elixir"
+  | "dart"
   | "resource"
   | "trpc"
   | "all";

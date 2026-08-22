@@ -287,6 +287,31 @@ fn resolve_config_reports_elixir_named_triggers() {
 }
 
 #[test]
+fn resolve_config_reports_dart_named_triggers() {
+    let mut config = NoMistakesConfig::default();
+    config
+        .test_plan
+        .dart
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "schema".to_string(),
+            paths: vec!["./db/**".to_string()],
+            targets: Vec::new(),
+        });
+    let frameworks = resolved_framework_triggers(&config);
+    assert_eq!(
+        frameworks
+            .iter()
+            .map(|entry| entry.framework)
+            .collect::<Vec<_>>(),
+        vec!["dart"]
+    );
+    assert_eq!(frameworks[0].triggers[0].name, "schema");
+    assert_eq!(frameworks[0].triggers[0].paths, vec!["db/**"]);
+}
+
+#[test]
 fn resolve_playwright_apps_include_effective_rewrites_and_ignore_routes() {
     let mut config = NoMistakesConfig::default();
     config.tests.playwright.frontend_root = Some("top/app".to_string());

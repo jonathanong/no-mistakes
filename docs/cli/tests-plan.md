@@ -18,6 +18,7 @@ no-mistakes tests plan php --changed-file app/Http/Controllers/UserController.ph
 no-mistakes tests plan java --changed-file src/main/java/com/example/User.java --format commands
 no-mistakes tests plan kotlin --changed-file src/main/kotlin/com/example/User.kt --format commands
 no-mistakes tests plan elixir --changed-file lib/my_app/user.ex --format commands
+no-mistakes tests plan dart --changed-file lib/user.dart --format commands
 no-mistakes tests plan jest --changed-file src/value.ts --format commands
 ```
 

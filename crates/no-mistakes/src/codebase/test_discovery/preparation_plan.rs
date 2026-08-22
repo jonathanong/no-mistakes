@@ -26,6 +26,7 @@ impl FrameworkPreparationPlan {
             TestRunner::Java,
             TestRunner::Kotlin,
             TestRunner::Elixir,
+            TestRunner::Dart,
         ])
     }
 

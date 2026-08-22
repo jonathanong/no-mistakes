@@ -20,8 +20,6 @@ fn collect_http_call_edges(
     config_options: Option<&GraphConfigOptions>,
     interner: &PathInterner,
 ) -> Vec<Edge> {
-    use crate::codebase::ts_http_calls::extract_http_calls;
-
     let Some(config_options) = config_options else {
         return vec![];
     };
@@ -58,30 +56,20 @@ fn collect_http_call_edges(
         return vec![];
     }
     let prefix_strs: Vec<&str> = backend_prefixes.iter().map(String::as_str).collect();
-
-    if let Some(facts) = facts {
-        return graph_files
-            .par_iter()
-            .filter_map(|caller| {
-                facts
-                    .get_ts_facts(caller)
-                    .map(|file_facts| (caller.as_path(), file_facts.http_calls.as_slice()))
-            })
-            .flat_map_iter(|(caller, calls)| {
-                http_edges_for_calls(caller, calls, &route_defs, interner)
-            })
-            .collect();
-    }
-
-    // For each source file, find HTTP calls and match against route defs.
-    files
-        .par_iter()
-        .flat_map_iter(|(caller, source)| {
-            let calls = extract_http_calls(source, &prefix_strs);
-            http_edges_for_calls(caller, &calls, &route_defs, interner)
-        })
-        .collect()
+    collect_ts_and_dart_http_call_edges(
+        root,
+        facts,
+        files,
+        graph_files,
+        all_files,
+        config_options,
+        &route_defs,
+        &prefix_strs,
+        interner,
+    )
 }
+
+include!("edge_dart_http.rs");
 
 fn collect_next_route_handler_defs(
     root: &Path,

@@ -229,6 +229,7 @@ fn python_relationship_enables_language_frontend_plan() {
         crate::codebase::dependencies::RelationshipArg::Java,
         crate::codebase::dependencies::RelationshipArg::Kotlin,
         crate::codebase::dependencies::RelationshipArg::Elixir,
+        crate::codebase::dependencies::RelationshipArg::Dart,
     ] {
         let allowed = crate::codebase::dependencies::relationship_filter(&[relationship])
             .expect("language relationship");
@@ -272,6 +273,9 @@ fn language_frontend_globs_are_explicit() {
     assert!(test_globs("elixir")
         .iter()
         .any(|glob| glob.contains("_test.exs")));
+    assert!(test_globs("dart")
+        .iter()
+        .any(|glob| glob.contains("_test.dart")));
 }
 
 #[test]

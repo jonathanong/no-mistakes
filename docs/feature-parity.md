@@ -12,8 +12,8 @@ do so without shelling out to `rg` for the graph itself.
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. Playwright, React,
 Next.js fetches, call-sites, dead-exports, ecosystem lockfile diffs, and
-dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir` CLIs are later work. Agents
-use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin|elixir`
+dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs are later work. Agents
+use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart`
 when those stacks are configured. Ecosystem lockfiles and dedicated language
 CLIs are not started.
 
@@ -33,6 +33,7 @@ CLIs are not started.
 | Java, Spring | `java-import`, `java-ref` | `tests plan java` | Spring `@RequestMapping` / `@GetMapping` literals | no | shipped (v1 extractors + plan) |
 | Kotlin, Spring | `kotlin-import`, `kotlin-ref` | `tests plan kotlin` | Spring `@RequestMapping` / `@GetMapping` literals on `.kt` | no | shipped (v1 extractors + plan) |
 | Elixir, Phoenix | `elixir-import`, `elixir-ref` | `tests plan elixir` | Phoenix `get`/`post`/`put`/`patch`/`delete` literals | no | shipped (v1 extractors + plan) |
+| Dart / Flutter | `dart-import`, `dart-ref` | `tests plan dart` | no Dart server graph; client `http` edges to TS routes | no | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -480,6 +481,46 @@ native fallback, queues, and a dedicated `no-mistakes elixir` CLI are
 non-edges / later work. Native fallback is `mix.exs` plus non-test `.ex`
 files under configured apps. Any `.ex`/`.exs` under `/test/` is
 non-production. `*_test.exs` is the test suffix.
+## Dart, Flutter
+
+Dart support is a language frontend for configured `tests.dart.packages`.
+Empty lists disable the extractor; there is no pubspec inference of the
+package list. Exact `import` / `export` / `part` / `part of` URIs emit
+`dart-import`. `dart:` and `*` URIs are non-edges. Brace-free `package:app/user.dart`
+imports resolve against `pubspec.yaml` `name:` plus `lib/`. Relative URIs
+resolve then remap to that package URI when they stay under `lib/`.
+Class/mixin/enum/extension/typedef names plus capitalized identifiers emit
+`dart-ref`.
+
+HTTP v1 is client-only: literal `Uri.parse("/api/...")` and
+`http.get("/api/...")` (post/put/patch/delete) emit `http` edges to matching
+configured TypeScript backend routes. Hosted URLs keep the path after the
+host. There is no Dart server graph. `resources`-style and computed URIs are
+non-edges.
+
+| Feature | TS/JS reference | Dart equivalent |
+| --- | --- | --- |
+| Module graph | `import` | exact `import 'package:app/user.dart'` / relative `lib/` URIs |
+| Package identity | workspace packages | configured `tests.dart.packages` + `pubspec.yaml` `name:` |
+| Tests | `tests plan vitest` | `tests plan dart` over `*_test.dart`; `dart test <rel-path>` |
+| HTTP routes | Next.js / Express client `http` | client `Uri.parse` / `http.*` literals to TS backend routes |
+| Queues | BullMQ | no |
+| Lockfile | npm-family | later (`pubspec.yaml` native fallback only) |
+
+```dart
+import 'package:app/user.dart';
+import 'package:http/http.dart' as http;
+
+Future<void> loadUsers() async {
+  await http.get(Uri.parse("/api/users"));
+  User.list();
+}
+```
+
+`dart:async`, `import 'package:app/*'`, computed `Uri.parse(prefix + "/users")`,
+and files outside configured packages are non-edges. Native fallback is
+`pubspec.yaml` plus non-test `.dart` files; any `.dart` under `/test/` is
+non-production. v1 emits `dart test`, not `flutter test`.
 
 ## Shared Domain Rules
 
@@ -498,6 +539,7 @@ Relationship filters for the language graph itself follow Swift/.NET:
 - `java` — Java import and reference edges
 - `kotlin` — Kotlin import and reference edges
 - `elixir` — Elixir import and reference edges
+- `dart` — Dart import and reference edges
 
 Additive language flags must not change existing TS/JS report fields. When a
 broader resolver catalog is needed (for example tests that live outside the
@@ -547,6 +589,9 @@ tests:
   elixir:
     apps:
       - apps/web
+  dart:
+    packages:
+      - apps/mobile
 ```
 
 Counterexample: defaulting to “every `urls.py`, every `go.mod`, every Rails
@@ -556,16 +601,17 @@ opt-in.
 ## Agent Fallback
 
 v1 module graphs, `tests plan <lang>`, and named route/queue extractors are
-shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, and Elixir packages. Use
-`dependents --relationship <lang|route|queue>` and
-`tests plan python|go|cargo|rails|php|java|kotlin|elixir` for those questions instead of `rg`.
+shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart packages. Use
+`dependents --relationship <lang|route|queue|http>` and
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` for those questions instead of `rg`.
 
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
-`Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Laravel
+`Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients besides
+Dart/Flutter `Uri.parse` / `http.*` literals, Laravel
 `Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
-dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir` CLIs.
+dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs.
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and
