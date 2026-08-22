@@ -28,6 +28,14 @@ impl<'a> FallbackTsFactLookup<'a> {
             reuse_primary_playwright_cache,
         }
     }
+
+    fn playwright_scan_lookup(&self) -> &dyn TsFactLookup {
+        if self.reuse_primary_playwright_cache {
+            self.primary
+        } else {
+            self.fallback
+        }
+    }
 }
 
 fn same_graph_universe(
@@ -135,12 +143,8 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         scan_html_ids: bool,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
     ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary
-                .get_or_compute_app_selector_occurrences(settings, scan_html_ids, compute)
-        } else {
-            compute().map(Arc::new)
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_app_selector_occurrences(settings, scan_html_ids, compute)
     }
 
     fn get_or_compute_playwright_routes(
@@ -148,11 +152,8 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary.get_or_compute_playwright_routes(settings, compute)
-        } else {
-            Arc::new(compute())
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_playwright_routes(settings, compute)
     }
 
     fn get_or_compute_app_text_targets(
@@ -160,11 +161,8 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary.get_or_compute_app_text_targets(settings, compute)
-        } else {
-            compute().map(Arc::new)
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_app_text_targets(settings, compute)
     }
 
     fn get_or_compute_route_reachable_files(
@@ -172,11 +170,7 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary
-                .get_or_compute_route_reachable_files(settings, compute)
-        } else {
-            compute().map(Arc::new)
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_route_reachable_files(settings, compute)
     }
 }

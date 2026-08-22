@@ -63,9 +63,9 @@ pub(crate) trait TsFactLookup: Sync {
     /// projects with different roots, selector attributes, or rewrites; those
     /// scopes must never share cached app facts.
     ///
-    /// Default: always calls `compute`, no caching — correct for `TsFactMap`
-    /// and for any standalone single-invocation caller that has no reason to
-    /// share this scan with another call site.
+    /// Default: always calls `compute`, no caching — for implementors that do
+    /// not share this scan across call sites. `TsFactMap` and `CheckFactMap`
+    /// override this with an invocation-scoped DashMap.
     fn get_or_compute_app_selector_occurrences(
         &self,
         _settings: &crate::playwright::config::Settings,
@@ -118,15 +118,7 @@ include!("fact_lookup_fallback.rs");
 pub(crate) type RouteReachableFiles =
     std::collections::BTreeMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>;
 
-impl TsFactLookup for TsFactMap {
-    fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
-        self.get(path)
-    }
-
-    fn covers_ts_fact_plan(&self, required: TsFactPlan) -> bool {
-        self.plan().covers(required)
-    }
-}
+include!("fact_lookup_ts_map.rs");
 
 fn check_file_facts_for_path<'a>(
     facts: &'a crate::codebase::check_facts::CheckFactMap,

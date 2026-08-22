@@ -19,6 +19,7 @@ impl TsFactMap {
                     .map(|(path, facts)| (path, TsFactSlot::Owned(Box::new(facts)))),
             ),
             plan,
+            ..Self::default()
         }
     }
 
@@ -35,6 +36,7 @@ impl TsFactMap {
                 inventory,
             ),
             plan,
+            ..Self::default()
         }
     }
 
@@ -49,6 +51,7 @@ impl TsFactMap {
                     .map(|(path, facts)| (path, TsFactSlot::Shared(facts))),
             ),
             plan,
+            ..Self::default()
         }
     }
 

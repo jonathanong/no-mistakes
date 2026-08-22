@@ -1,3 +1,4 @@
+use crate::codebase::check_facts::PlaywrightSettingsKey;
 use crate::codebase::dependencies::extract::{ExtractedImport, FunctionCall};
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -5,10 +6,25 @@ use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
+use crate::playwright::analysis::text_types::AppTextTarget;
+use crate::playwright::selectors::AppSelector;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
+use dashmap::DashMap;
 use std::sync::Arc;
+
+type AppSelectorOccurrencesCache =
+    Arc<DashMap<(PlaywrightSettingsKey, bool), Result<Arc<Vec<AppSelector>>, String>>>;
+type PlaywrightRoutesCache = Arc<DashMap<PlaywrightSettingsKey, Arc<Vec<crate::routes::Route>>>>;
+type AppTextTargetsCache =
+    Arc<DashMap<PlaywrightSettingsKey, Result<Arc<Vec<AppTextTarget>>, String>>>;
+type RouteReachableFilesCache = Arc<
+    DashMap<
+        PlaywrightSettingsKey,
+        Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>,
+    >,
+>;
 
 pub(crate) mod call_sites;
 mod collect;
@@ -140,6 +156,10 @@ impl TsFactSlot {
 pub struct TsFactMap {
     facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
+    pub(crate) app_selector_occurrences_cache: AppSelectorOccurrencesCache,
+    pub(crate) playwright_routes_cache: PlaywrightRoutesCache,
+    pub(crate) app_text_targets_cache: AppTextTargetsCache,
+    pub(crate) route_reachable_files_cache: RouteReachableFilesCache,
 }
 
 impl std::fmt::Debug for TsFactMap {
