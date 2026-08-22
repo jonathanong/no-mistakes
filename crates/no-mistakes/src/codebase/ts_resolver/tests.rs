@@ -60,6 +60,33 @@ fn interned_resolve_keys_hit_shared_cache() {
 }
 
 #[test]
+fn scoped_shared_cache_attaches_session_interner() {
+    let root = workspace_tsconfig_fixture();
+    let web = root.join("apps/web");
+    let importer = web.join("src/entry.ts");
+    let target = web.join("src/runtime/value.ts");
+    let visible = [
+        root.join("tsconfig.json"),
+        root.join("tsconfig.base.json"),
+        web.join("tsconfig.json"),
+        importer.clone(),
+        target.clone(),
+    ];
+    let catalog = TsConfigCatalog::from_visible(&root, &[root.clone(), web], &visible);
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let cache = ImportResolutionCache::default();
+    let resolver = ScopedImportResolver::new_in_session(&catalog, &visible, &session)
+        .with_shared_cache(&cache);
+    assert_eq!(session.interner().interned_str_count(), 0);
+    assert_eq!(resolver.resolve("@runtime/value", &importer), Some(target));
+    assert!(
+        session.interner().interned_str_count() > 0,
+        "shared-cache scoped resolvers must intern specifiers through the session"
+    );
+}
+
+#[test]
 fn local_arc_resolve_keys_match_interned_keys_by_path_bytes() {
     let interner = crate::codebase::analysis_session::PathInterner::new();
     let interned = ResolveKey {

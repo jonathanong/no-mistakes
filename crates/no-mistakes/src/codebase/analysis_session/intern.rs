@@ -61,6 +61,11 @@ impl PathInterner {
             }
         }
     }
+
+    #[cfg(test)]
+    pub(crate) fn interned_str_count(&self) -> usize {
+        self.strings.len()
+    }
 }
 
 impl AnalysisSession {

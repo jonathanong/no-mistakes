@@ -137,6 +137,9 @@ impl<'a> ScopedImportResolver<'a> {
         if let Some(visible) = self.visible.as_ref() {
             resolver.visible = Some(visible.clone());
         }
+        if let Some(session) = self.session {
+            resolver.interner = Some(session.interner_arc());
+        }
         if let Some(shared_cache) = self.shared_cache {
             return resolver.with_shared_cache(shared_cache);
         }
@@ -176,9 +179,6 @@ impl<'a> ScopedImportResolver<'a> {
             .clone();
         resolver.cache = cache;
         resolver.session_scoped = true;
-        if let Some(session) = self.session {
-            resolver.interner = Some(session.interner_arc());
-        }
         resolver
     }
 
