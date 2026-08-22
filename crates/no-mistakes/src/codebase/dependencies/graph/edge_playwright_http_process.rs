@@ -1,16 +1,12 @@
-// ── HTTP call edges ───────────────────────────────────────────────────────────
-
 /// Collect `HttpCall` edges: files that make literal HTTP calls to paths that
 /// match a backend route definition.
 ///
 /// Route definitions and backend prefixes must be configured by
 /// `http-route-static-paths`, `http-call-static-paths`, or legacy
-/// `route-consistency` options.
-/// HTTP client calls are any `.<verb>(literal_path)` or `fetch(literal_path)`
-/// where `literal_path` starts with a known backend prefix.
-///
-/// Runs defensively: non-literal call sites produce no edge. The
-/// `http-call-static-paths` guardrail enforces literal discipline.
+/// `route-consistency` options. HTTP client calls are any
+/// `.<verb>(literal_path)` or `fetch(literal_path)` where `literal_path`
+/// starts with a known backend prefix. Non-literal call sites produce no
+/// edge; `http-call-static-paths` enforces literal discipline.
 fn collect_http_call_edges(
     root: &Path,
     facts: Option<&dyn TsFactLookup>,
@@ -28,7 +24,6 @@ fn collect_http_call_edges(
         return vec![];
     }
 
-    // Collect backend route definitions: (file, pattern)
     let mut route_defs = match (
         resolved_backend_pattern(config_options),
         resolved_backend_register_object(config_options),
@@ -56,17 +51,36 @@ fn collect_http_call_edges(
         return vec![];
     }
     let prefix_strs: Vec<&str> = backend_prefixes.iter().map(String::as_str).collect();
-    collect_ts_and_dart_http_call_edges(
+    use crate::codebase::ts_http_calls::extract_http_calls;
+    let mut edges: Vec<Edge> = if let Some(facts) = facts {
+        graph_files
+            .par_iter()
+            .filter_map(|caller| {
+                facts
+                    .get_ts_facts(caller)
+                    .map(|file_facts| (caller.as_path(), file_facts.http_calls.as_slice()))
+            })
+            .flat_map_iter(|(caller, calls)| {
+                http_edges_for_calls(caller, calls, &route_defs, interner)
+            })
+            .collect()
+    } else {
+        files
+            .par_iter()
+            .flat_map_iter(|(caller, source)| {
+                let calls = extract_http_calls(source, &prefix_strs);
+                http_edges_for_calls(caller, &calls, &route_defs, interner)
+            })
+            .collect()
+    };
+    edges.extend(collect_dart_http_call_edges(
         root,
-        facts,
-        files,
-        graph_files,
         all_files,
         config_options,
         &route_defs,
-        &prefix_strs,
         interner,
-    )
+    ));
+    edges
 }
 
 include!("edge_dart_http.rs");
