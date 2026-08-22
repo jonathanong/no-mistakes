@@ -85,6 +85,24 @@ fn env_level_limit_with_direct_group_is_a_finding() {
 }
 
 #[test]
+fn env_all_with_limit_is_not_a_direct_group_conflict() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            "testPlan:\n  vitest:\n    environments:\n      prePush:\n        all: true\n        limit:\n          files: 10\n",
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("#9440")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn omitted_groups_still_flag_env_level_limit() {
     let root = fixture("pass");
     let config = enable(
