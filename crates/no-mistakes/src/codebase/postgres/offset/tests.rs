@@ -296,4 +296,8 @@ fn function_args_and_modifying_cte_offsets_are_detected() {
     )
     .unwrap());
     assert!(!sql_has_offset_clause("SELECT CURRENT_TIMESTAMP").unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM generate_series(1, (SELECT id FROM limits OFFSET 1 LIMIT 1)) AS g"
+    )
+    .unwrap());
 }

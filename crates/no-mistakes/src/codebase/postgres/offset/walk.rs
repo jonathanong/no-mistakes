@@ -1,7 +1,8 @@
 use sqlparser::ast::{
     Distinct, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, GroupByExpr,
     JoinConstraint, JoinOperator, LimitClause, NamedWindowDefinition, NamedWindowExpr, Query,
-    Select, SelectItem, SetExpr, TableFactor, TableWithJoins, Values, WindowSpec,
+    Select, SelectItem, SetExpr, TableFactor, TableFunctionArgs, TableWithJoins, Values,
+    WindowSpec,
 };
 
 pub(super) fn query_has_offset(query: &Query) -> bool {
@@ -107,6 +108,13 @@ fn table_factor_has_offset(factor: &TableFactor) -> bool {
         TableFactor::NestedJoin {
             table_with_joins, ..
         } => table_with_joins_has_offset(table_with_joins),
+        TableFactor::Table {
+            args: Some(TableFunctionArgs { args, .. }),
+            ..
+        } => args.iter().any(|arg| match arg {
+            FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => expr_has_offset_query(expr),
+            _ => false,
+        }),
         _ => false,
     }
 }
