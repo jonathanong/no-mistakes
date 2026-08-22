@@ -26,7 +26,11 @@ fn grouped_execution_targets(
     let mut groups: BTreeMap<ExecutionGroupKey, GroupedExecutionTarget> = BTreeMap::new();
     for test in selected {
         for target in &test.targets {
-            let name = prefix_name(&test.test_file, prefixes);
+            let name = if target.runner == "swift" {
+                prefix_name(&test.test_file, prefixes)
+            } else {
+                None
+            };
             let key = (
                 target.runner.clone(),
                 target.config.clone(),

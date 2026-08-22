@@ -20,23 +20,43 @@ function camelizeKey(key) {
   return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-function camelizeValue(value) {
-  if (Array.isArray(value)) return value.map(camelizeValue);
+function decamelizeKey(key) {
+  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+function mapKeys(value, mapKey) {
+  if (Array.isArray(value)) return value.map((item) => mapKeys(item, mapKey));
   if (value && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, nested]) => [camelizeKey(key), camelizeValue(nested)]),
+      Object.entries(value).map(([key, nested]) => [mapKey(key), mapKeys(nested, mapKey)]),
     );
   }
   return value;
 }
 
+function camelizeValue(value) {
+  return mapKeys(value, camelizeKey);
+}
+
+function decamelizeValue(value) {
+  return mapKeys(value, decamelizeKey);
+}
+
+function decamelizePlanOptions(options) {
+  const next = { ...(options || {}) };
+  if (next.planJson && typeof next.planJson === "object") {
+    next.planJson = decamelizeValue(next.planJson);
+  }
+  return next;
+}
+
 async function testsComment(options) {
-  const input = Buffer.from(JSON.stringify(options || {}));
+  const input = Buffer.from(JSON.stringify(decamelizePlanOptions(options)));
   return String(await native.testsCommentMarkdown(input));
 }
 
 async function testsGraphMermaid(options) {
-  const input = Buffer.from(JSON.stringify(options || {}));
+  const input = Buffer.from(JSON.stringify(decamelizePlanOptions(options)));
   return String(await native.testsGraphMermaid(input));
 }
 
@@ -66,11 +86,26 @@ async function testsImpact(options) {
   return camelizeValue(await jsonApis.testsImpact(options));
 }
 
+async function testsTargets(options) {
+  return camelizeValue(await jsonApis.testsTargets(options));
+}
+
+async function testsWhy(options) {
+  return camelizeValue(await jsonApis.testsWhy(options));
+}
+
+async function testsGraph(options) {
+  return camelizeValue(await jsonApis.testsGraph(decamelizePlanOptions(options)));
+}
+
 module.exports = {
   camelizeValue,
   testsComment,
   testsGraphMermaid,
   ...jsonApis,
+  testsGraph,
   testsImpact,
   testsPlan,
+  testsTargets,
+  testsWhy,
 };
