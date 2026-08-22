@@ -27,7 +27,7 @@ where
         .iter()
         .filter_map(|node| {
             if let NodeId::Symbol { file, symbol } = node {
-                Some((Arc::clone(file), Arc::clone(symbol)))
+                Some((file.clone_arc(), Arc::clone(symbol)))
             } else {
                 None
             }
@@ -62,7 +62,7 @@ where
                 ) = (&node, neighbor)
                 {
                     if neighbor_file == owner
-                        && root_symbols.contains(&(Arc::clone(owner), Arc::clone(symbol)))
+                        && root_symbols.contains(&(owner.clone_arc(), Arc::clone(symbol)))
                     {
                         continue;
                     }
@@ -84,7 +84,7 @@ where
                     (NodeId::Symbol { file: owner, .. }, NodeId::File(neighbor_file))
                         if neighbor_file == owner =>
                     {
-                        Some(Arc::clone(owner))
+                        Some(owner.clone_arc())
                     }
                     _ => None,
                 };
@@ -122,11 +122,11 @@ where
         let NodeId::Symbol { file: owner, .. } = target else {
             continue;
         };
-        let files = map.entry(Arc::clone(owner)).or_insert_with(fx_set);
+        let files = map.entry(owner.clone_arc()).or_insert_with(fx_set);
         for (importer, _) in importers.as_ref() {
             match importer {
                 NodeId::File(file) | NodeId::Symbol { file, .. } => {
-                    files.insert(Arc::clone(file));
+                    files.insert(file.clone_arc());
                 }
                 _ => {}
             }

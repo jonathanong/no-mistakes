@@ -14,7 +14,7 @@ fn graph_edge_sources(
         .unwrap_or_else(|| {
             Arc::new(SourceStore::new_observed(
                 Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
-                    &edge_inputs.graph_files.all,
+                    edge_inputs.graph_files.all(),
                 )),
                 session.observer().cloned(),
             ))
@@ -75,7 +75,7 @@ fn collect_http_process_edges(
             facts,
             &[],
             inputs.graph_files.indexable(),
-            &inputs.graph_files.all,
+            inputs.graph_files.all(),
             inputs.config_options,
             &inputs.interner,
         ));
@@ -106,7 +106,7 @@ fn collect_swift_edges_for_plan(
             root: inputs.root,
             tsconfig: inputs.tsconfig,
             tsconfig_catalog: inputs.tsconfig_catalog,
-            all_files: &inputs.graph_files.all,
+            all_files: inputs.graph_files.all(),
             config_options: inputs.config_options,
             ts_facts,
             prepared_facts: inputs.swift_facts,
@@ -122,7 +122,7 @@ fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge>
     }
     collect_dotnet_edges(
         inputs.root,
-        &inputs.graph_files.all,
+        inputs.graph_files.all(),
         inputs.config_options,
         inputs.dotnet_facts,
         &inputs.interner,
@@ -136,7 +136,7 @@ fn merge_language_frontend_edges(
 ) {
     let edges = collect_language_frontend_edges(
         inputs.root,
-        &inputs.graph_files.all,
+        inputs.graph_files.all(),
         inputs.config_options,
         inputs.visible_paths,
         &inputs.interner,
@@ -154,7 +154,7 @@ fn collect_terraform_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Ed
     }
     collect_terraform_edges(
         inputs.root,
-        &inputs.graph_files.all,
+        inputs.graph_files.all(),
         inputs.config_options,
         &inputs.interner,
     )

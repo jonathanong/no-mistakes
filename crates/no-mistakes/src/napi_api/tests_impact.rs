@@ -15,11 +15,11 @@ fn tests_impact_json_preserves_configured_native_test_projects() {
         ),
     ] {
         let output = tests_impact_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": fixture_root(fixture),
                 "entrypoints": [test]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap();
         let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -36,7 +36,7 @@ fn tests_impact_json_returns_plan_for_file_entrypoint() {
         "entrypoints": ["utils.mts"]
     })
     .to_string();
-    let output = tests_impact_json_impl(options).unwrap();
+    let output = tests_impact_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
     let test_files: Vec<&str> = selected
@@ -56,12 +56,12 @@ fn tests_impact_json_forces_explicit_ignored_tsconfig_for_vitest_setups_once() {
     crate::ast::begin_parse_count(&root);
     let output = crate::ast::with_request_parse_cache(|| {
         tests_impact_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "tsconfig": "tsconfig.custom.json",
                 "entrypoints": ["setup/helper.ts"]
             })
-            .to_string(),
+            .to_string(),)
         )
     })
     .unwrap();
@@ -88,7 +88,7 @@ fn tests_impact_json_accepts_structured_symbol_entrypoint() {
         "entrypoints": [{ "file": "utils.mts", "symbol": "parseDate" }]
     })
     .to_string();
-    let output = tests_impact_json_impl(options).unwrap();
+    let output = tests_impact_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
     let test_files: Vec<&str> = selected
@@ -120,7 +120,7 @@ fn dependents_json_accepts_structured_symbol_file() {
         "files": [{ "file": "utils.mts", "symbol": "parseDate" }]
     })
     .to_string();
-    let output = dependents_json_impl(options).unwrap();
+    let output = dependents_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     let files = value["files"].as_array().unwrap();
     assert!(files
@@ -142,7 +142,7 @@ fn tests_plan_json_with_diff_content() {
         "diff": diff
     })
     .to_string();
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
     assert!(
@@ -159,7 +159,7 @@ fn tests_plan_json_with_entrypoints() {
         "entrypoints": ["c.mts"]
     })
     .to_string();
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
     assert!(
@@ -172,7 +172,7 @@ fn tests_plan_json_with_entrypoints() {
 fn tests_plan_json_without_input_returns_empty() {
     let root = fixture_root("tests-impact-diff");
     let options = json!({ "root": root }).to_string();
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
     assert!(selected.is_empty());

@@ -6,7 +6,7 @@ fn supplemental_report_roots_cannot_bridge_primary_check_traversals() {
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let standalone = parse_json(
         crate::napi_api::check_json_impl(
-            json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+            crate::napi_api::options::test_json_arg(json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),)
         )
         .unwrap(),
     );
@@ -14,7 +14,7 @@ fn supplemental_report_roots_cannot_bridge_primary_check_traversals() {
     crate::ast::begin_parse_count(&root);
     let aggregate = parse_json(
         analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "config": ".no-mistakes.yml",
                 "reports": [
@@ -26,7 +26,7 @@ fn supplemental_report_roots_cannot_bridge_primary_check_traversals() {
                     }
                 ]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );

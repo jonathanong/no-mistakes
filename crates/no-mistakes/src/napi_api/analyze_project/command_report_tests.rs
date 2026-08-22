@@ -1,3 +1,4 @@
+use super::options_test_support::parse_options;
 use super::*;
 use serde_json::{json, Value};
 
@@ -14,13 +15,13 @@ fn fixture_root(name: &str) -> String {
 
 #[test]
 fn analyze_project_importers_report_lists_direct_importers() {
-    let output = analyze_project_json_impl(
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": fixture_root("simple"),
             "reports": [{ "type": "importers", "id": "who", "file": "b.mts" }]
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["reports"][0]["id"], "who");
@@ -34,7 +35,7 @@ fn analyze_project_importers_report_lists_direct_importers() {
 #[cfg(feature = "mermaid-validation")]
 #[test]
 fn analyze_project_validates_mermaid_markdown_in_memory() {
-    let output = analyze_project_json_impl(
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": fixture_root("simple"),
             "reports": [{
@@ -43,7 +44,7 @@ fn analyze_project_validates_mermaid_markdown_in_memory() {
             }]
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["reports"][0]["type"], "validateMermaidMarkdown");
@@ -67,13 +68,13 @@ fn analyze_project_tests_comment_renders_inline_plan() {
         "fallback_triggered": false,
         "fallback_reason": null
     });
-    let output = analyze_project_json_impl(
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": fixture_root("simple"),
             "reports": [{ "type": "testsComment", "planJson": plan }]
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["reports"][0]["type"], "testsComment");
@@ -86,15 +87,15 @@ fn analyze_project_tests_comment_renders_inline_plan() {
 #[test]
 fn analyze_project_additive_importers_report_keeps_dependents_fields() {
     let root = fixture_root("simple");
-    let baseline = analyze_project_json_impl(
+    let baseline = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": root,
             "reports": [{ "type": "dependents", "id": "deps", "files": ["b.mts"] }]
         })
         .to_string(),
-    )
+    ))
     .unwrap();
-    let mixed = analyze_project_json_impl(
+    let mixed = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": root,
             "reports": [
@@ -103,7 +104,7 @@ fn analyze_project_additive_importers_report_keeps_dependents_fields() {
             ]
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let baseline: Value = serde_json::from_str(&baseline).unwrap();
     let mixed: Value = serde_json::from_str(&mixed).unwrap();
@@ -111,10 +112,11 @@ fn analyze_project_additive_importers_report_keeps_dependents_fields() {
         mixed["reports"][0]["result"],
         baseline["reports"][0]["result"]
     );
-    let standalone = crate::napi_api::queries::importers_json_impl(
-        json!({ "root": root, "file": "b.mts" }).to_string(),
-    )
-    .unwrap();
+    let standalone =
+        crate::napi_api::queries::importers_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "file": "b.mts" }).to_string(),
+        ))
+        .unwrap();
     let standalone: Value = serde_json::from_str(&standalone).unwrap();
     assert_eq!(mixed["reports"][1]["result"], standalone);
 }
@@ -141,44 +143,30 @@ fn command_options_forward_top_level_tsconfig_and_config() {
     )
     .unwrap();
 
-    let importers: Value =
-        serde_json::from_str(&options::command_options(&options.reports[0], &options).unwrap())
-            .unwrap();
+    let importers = options::command_options(&options.reports[0], &options).unwrap();
     assert_eq!(importers["root"], root);
     assert_eq!(importers["tsconfig"], format!("{root}/tsconfig.json"));
     assert!(importers.get("config").is_none());
 
-    let ci: Value =
-        serde_json::from_str(&options::command_options(&options.reports[1], &options).unwrap())
-            .unwrap();
+    let ci = options::command_options(&options.reports[1], &options).unwrap();
     assert_eq!(ci["config"], format!("{root}/no-mistakes.json"));
     assert!(ci.get("tsconfig").is_none());
 
-    let tests_plan: Value =
-        serde_json::from_str(&options::command_options(&options.reports[2], &options).unwrap())
-            .unwrap();
+    let tests_plan = options::command_options(&options.reports[2], &options).unwrap();
     assert_eq!(tests_plan["tsconfig"], format!("{root}/tsconfig.json"));
     assert_eq!(tests_plan["config"], format!("{root}/no-mistakes.json"));
 
-    let lockfile: Value =
-        serde_json::from_str(&options::command_options(&options.reports[3], &options).unwrap())
-            .unwrap();
+    let lockfile = options::command_options(&options.reports[3], &options).unwrap();
     assert!(lockfile.get("tsconfig").is_none());
     assert!(lockfile.get("config").is_none());
 
-    let registry: Value =
-        serde_json::from_str(&options::command_options(&options.reports[4], &options).unwrap())
-            .unwrap();
+    let registry = options::command_options(&options.reports[4], &options).unwrap();
     assert!(registry.get("tsconfig").is_none());
     assert_eq!(registry["config"], format!("{root}/no-mistakes.json"));
 
-    let keep_tsconfig: Value =
-        serde_json::from_str(&options::command_options(&options.reports[5], &options).unwrap())
-            .unwrap();
+    let keep_tsconfig = options::command_options(&options.reports[5], &options).unwrap();
     assert_eq!(keep_tsconfig["tsconfig"], "keep.json");
 
-    let keep_config: Value =
-        serde_json::from_str(&options::command_options(&options.reports[6], &options).unwrap())
-            .unwrap();
+    let keep_config = options::command_options(&options.reports[6], &options).unwrap();
     assert_eq!(keep_config["config"], "keep.yml");
 }

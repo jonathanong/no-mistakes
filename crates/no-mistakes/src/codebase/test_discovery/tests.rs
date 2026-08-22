@@ -353,7 +353,7 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
             graph_plan,
             &preliminary,
         );
-    fact_context.set_visible_files(graph_files.iter_visible().cloned());
+    fact_context.set_visible_file_set(graph_files.visible_path_set());
 
     crate::ast::begin_parse_count(&root);
     let prepared = prepare_test_projects_from_visible(

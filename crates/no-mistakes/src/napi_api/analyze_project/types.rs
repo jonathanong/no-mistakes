@@ -29,7 +29,7 @@ pub(super) struct AnalyzeReportResult {
     pub(super) id: Option<String>,
     #[serde(rename = "type")]
     pub(super) report_type: String,
-    pub(super) result: Value,
+    pub(super) result: Box<serde_json::value::RawValue>,
 }
 
 #[derive(serde::Serialize)]

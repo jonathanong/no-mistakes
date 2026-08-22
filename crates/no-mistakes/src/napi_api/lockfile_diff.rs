@@ -1,4 +1,4 @@
-use super::options::{parse_options, resolve_project_root, to_napi_error};
+use super::options::{parse_options_value, resolve_project_root, to_napi_error};
 use no_mistakes::codebase::lockfile::{self, PackageManager};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -24,8 +24,8 @@ struct LockfileDiffEntry {
     changed: Vec<String>,
 }
 
-pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<LockfileDiffOptions>(&options_json)?;
+pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<LockfileDiffOptions>(options)?;
     let base = options.base.filter(|s| !s.is_empty()).ok_or_else(|| {
         napi::Error::from_reason(
             "`base` is required; pass a git ref such as `\"HEAD\"` or `\"main\"`",

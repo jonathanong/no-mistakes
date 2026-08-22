@@ -6,27 +6,27 @@ fn playwright_and_symbols_share_full_config_facts_with_standalone_parity() {
     let standalone = [
         parse_json(
             crate::napi_api::playwright_tests_json_impl(
-                json!({ "root": root, "files": ["app/page.tsx"] }).to_string(),
+                crate::napi_api::options::test_json_arg(json!({ "root": root, "files": ["app/page.tsx"] }).to_string(),)
             )
             .unwrap(),
         ),
         parse_json(
             crate::napi_api::symbols_json_impl(
-                json!({ "root": root, "files": ["playwright.config.ts"] }).to_string(),
+                crate::napi_api::options::test_json_arg(json!({ "root": root, "files": ["playwright.config.ts"] }).to_string(),)
             )
             .unwrap(),
         ),
     ];
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [
                 { "type": "playwrightTests", "files": ["app/page.tsx"] },
                 { "type": "symbols", "files": ["playwright.config.ts"] }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -52,10 +52,10 @@ fn playwright_mts_config_keeps_distinct_legacy_symbols_with_parity() {
         "playwrightConfig": ["playwright.config.mts"]
     });
     let standalone = [
-        parse_json(crate::napi_api::playwright_tests_json_impl(playwright.to_string()).unwrap()),
+        parse_json(crate::napi_api::playwright_tests_json_impl(crate::napi_api::options::test_json_arg(playwright)).unwrap()),
         parse_json(
             crate::napi_api::symbols_json_impl(
-                json!({ "root": root, "files": ["playwright.config.mts"] }).to_string(),
+                crate::napi_api::options::test_json_arg(json!({ "root": root, "files": ["playwright.config.mts"] }).to_string(),)
             )
             .unwrap(),
         ),
@@ -63,7 +63,7 @@ fn playwright_mts_config_keeps_distinct_legacy_symbols_with_parity() {
 
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [
                 {
@@ -74,7 +74,7 @@ fn playwright_mts_config_keeps_distinct_legacy_symbols_with_parity() {
                 { "type": "symbols", "files": ["playwright.config.mts"] }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -91,46 +91,46 @@ fn check_playwright_and_symbols_keep_config_symbols_and_check_output() {
     let standalone = [
         parse_json(
             crate::napi_api::check_json_impl(
-                json!({ "root": root, "config": "isolation.no-mistakes.yml" }).to_string(),
+                crate::napi_api::options::test_json_arg(json!({ "root": root, "config": "isolation.no-mistakes.yml" }).to_string(),)
             )
             .unwrap(),
         ),
         parse_json(
             crate::napi_api::playwright_tests_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "files": ["app/page.tsx"],
                     "playwrightConfig": ["ignored/playwright.ignored.config.ts"]
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         ),
         parse_json(
             crate::napi_api::symbols_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "files": ["ignored/playwright.ignored.config.ts"]
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         ),
     ];
     let widened = parse_json(
         crate::napi_api::check_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root.join("ignored"),
                 "config": root.join("isolation.no-mistakes.yml")
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );
 
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "config": "isolation.no-mistakes.yml",
             "reports": [
@@ -146,7 +146,7 @@ fn check_playwright_and_symbols_keep_config_symbols_and_check_output() {
                 }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);

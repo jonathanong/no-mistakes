@@ -22,11 +22,11 @@ impl GraphFiles {
             .map(|path| u8::from(visible_paths.binary_search(path).is_ok()))
             .collect();
         Self {
-            all,
-            indexable,
+            all: std::sync::Arc::new(all),
+            indexable: std::sync::Arc::new(indexable),
             visible: flags,
             canonical_visible: CanonicalVisible::empty(),
-            resource_candidates,
+            resource_candidates: std::sync::Arc::new(resource_candidates),
         }
     }
 }

@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn terraform_edge_collector_covers_empty_config_branches() {
     let root = fixture("terraform-basic");
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
 
     // No config options at all.
     assert!(collect_terraform_edges(
@@ -39,7 +39,7 @@ fn terraform_edge_collector_covers_empty_config_branches() {
 #[test]
 fn terraform_edges_emit_reference_module_and_output_kinds() {
     let root = fixture("terraform-basic");
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).expect("terraform fixture config should parse");
 
     let edges = collect_terraform_edges(

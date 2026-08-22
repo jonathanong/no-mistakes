@@ -10,6 +10,7 @@ use anyhow::Result;
 use globset::{Glob, GlobBuilder, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 

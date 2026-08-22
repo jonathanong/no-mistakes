@@ -105,7 +105,10 @@ fn check_json_accounts_for_each_same_line_dynamic_import_suppression() {
 #[test]
 fn check_json_reads_explicit_gitignored_test_configs_through_request_sources() {
     let root = static_check_fixture("aggregate-dynamic-import-gitignored-config");
-    let output = check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(value["rules"].as_array().is_some_and(|findings| {
         findings.iter().any(|finding| {
@@ -156,11 +159,16 @@ fn check_json_honors_ignored_explicit_storybook_config_patterns() {
 #[test]
 fn check_json_audit_mode_includes_an_empty_suppression_array() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
-    let baseline = check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let baseline = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
     let baseline: serde_json::Value = serde_json::from_str(&baseline).unwrap();
     assert!(baseline.get("suppressed").is_none());
-    let audit =
-        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let audit = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
     let audit: serde_json::Value = serde_json::from_str(&audit).unwrap();
     assert_eq!(audit["suppressed"], json!([]));
 }
@@ -168,16 +176,23 @@ fn check_json_audit_mode_includes_an_empty_suppression_array() {
 #[test]
 fn check_json_keeps_unsuppressed_duplicate_when_suppressed_export_sorts_first() {
     let root = static_check_fixture("suppression-unique-canonical");
-    let baseline: serde_json::Value =
-        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
-            .unwrap();
+    let baseline: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
     assert!(baseline["codebase"].as_array().is_some_and(|items| {
         items
             .iter()
             .any(|item| item["rule"] == "unique-exports" && item["file"] == "src/c.ts")
     }));
     let audit: serde_json::Value = serde_json::from_str(
-        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "includeSuppressed": true }).to_string(),
+        ))
+        .unwrap(),
     )
     .unwrap();
     assert!(audit["codebase"].as_array().is_some_and(|items| {
@@ -198,16 +213,23 @@ fn check_json_keeps_unsuppressed_duplicate_when_suppressed_export_sorts_first() 
 #[test]
 fn check_json_propagates_origin_suppression_through_named_and_wildcard_reexports() {
     let root = static_check_fixture("suppression-unique-canonical");
-    let baseline: serde_json::Value =
-        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
-            .unwrap();
+    let baseline: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
     assert!(baseline["codebase"].as_array().is_some_and(|items| {
         !items
             .iter()
             .any(|item| matches!(item["exportName"].as_str(), Some("wildOnly" | "TypeThing")))
     }));
     let audit: serde_json::Value = serde_json::from_str(
-        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "includeSuppressed": true }).to_string(),
+        ))
+        .unwrap(),
     )
     .unwrap();
     // `wildOnly` has one visible export and one wildcard re-export whose
@@ -411,7 +433,10 @@ fn check_json_keeps_inherited_react_suppressions_distinct_by_parent_component() 
 #[test]
 fn check_json_rejects_disabled_malformed_helpers_reached_from_active_integration_tests() {
     let root = static_check_fixture("suppression-integration-malformed-helper");
-    let error = check_json_impl(json!({ "root": root }).to_string()).unwrap_err();
+    let error = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .unwrap_err();
     let message = format!("{error:#}");
     assert!(
         message.contains("helpers/malformed-helper.mts"),

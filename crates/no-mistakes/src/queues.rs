@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes::cli::{resolve_root, root_scoped_edge_depth, Format};
+use no_mistakes::cli::{print_json, resolve_root, root_scoped_edge_depth, Format};
 use no_mistakes::queue::{
     analyze_project, analyze_project_indexed, CheckFinding, Edge, RelatedDirection,
 };
@@ -127,7 +127,7 @@ fn trace_queue_analysis<T>(operation: impl FnOnce() -> Result<T>) -> Result<T> {
 
 fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string(edges)?),
+        Format::Json => print_json(edges),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Queue edges");
@@ -147,7 +147,7 @@ fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
 
 fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string(edges)?),
+        Format::Json => print_json(edges),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Related queue files");
@@ -178,7 +178,7 @@ fn print_edge_paths(edges: &[Edge]) {
 
 fn print_check(findings: &[CheckFinding], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string(findings)?),
+        Format::Json => print_json(findings),
         Format::Yml => println!("{}", serde_yaml::to_string(findings)?),
         Format::Md => {
             println!("# Queue check");

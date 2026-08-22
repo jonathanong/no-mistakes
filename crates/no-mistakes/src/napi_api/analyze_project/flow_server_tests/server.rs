@@ -1,11 +1,11 @@
 #[test]
 fn analyze_project_dispatches_server_contracts_report() {
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": server_fixture_root("express"),
             "reports": [{ "type": "serverContracts", "id": "contracts" }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -26,14 +26,14 @@ fn analyze_project_server_routes_and_contracts_share_union_facts() {
     crate::ast::begin_parse_count(&root);
 
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [
                 { "type": "serverRoutes", "id": "routes" },
                 { "type": "serverContracts", "id": "contracts" }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -66,10 +66,10 @@ fn analyze_project_server_routes_and_contracts_share_union_facts() {
 #[test]
 fn server_contracts_napi_direct_impl_returns_report() {
     let output = crate::napi_api::server_contracts_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": server_fixture_root("express")
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -81,11 +81,11 @@ fn server_contracts_napi_direct_impl_returns_report() {
         .any(|row| row["route"] == "/api/v1/search"));
 
     let route_list = crate::napi_api::server_route_list_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": server_fixture_root("express"),
             "files": ["/api/v1/search"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let routes: Value = serde_json::from_str(&route_list).unwrap();
@@ -95,11 +95,11 @@ fn server_contracts_napi_direct_impl_returns_report() {
 #[test]
 fn server_contracts_napi_honors_roots_scope() {
     let output = crate::napi_api::server_contracts_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": server_fixture_root("express"),
             "roots": ["backend/api/users.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();

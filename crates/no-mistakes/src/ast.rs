@@ -5,6 +5,7 @@ use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
 use std::cell::RefCell;
 use std::path::Path;
+use std::sync::Arc;
 
 mod expression;
 #[cfg(any(test, feature = "test-instrumentation"))]
@@ -127,11 +128,11 @@ pub fn with_program<T>(
 ) -> Result<T> {
     if let Some(cache) = current_request_parse_cache() {
         return cache
-            .with_program(path, source, analyze)
+            .with_program(path, Arc::from(source), analyze)
             .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()));
     }
     ParsedProgramCache::default()
-        .with_program(path, source, analyze)
+        .with_program(path, Arc::from(source), analyze)
         .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
@@ -139,7 +140,7 @@ pub fn with_program<T>(
 /// `on_parse`.
 pub(crate) fn with_program_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
 ) -> Result<T> {
@@ -155,7 +156,7 @@ pub(crate) fn with_program_observed<T>(
 /// collectors can preserve the panic distinction for sound consumers.
 pub(crate) fn with_recovered_program_status_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>, bool) -> T,
 ) -> Result<T> {
@@ -169,7 +170,7 @@ pub(crate) fn with_recovered_program_status_observed<T>(
 /// extensions. `on_parse` has the same physical-work semantics as above.
 pub(crate) fn with_recovered_typescript_program_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
 ) -> Result<T> {
@@ -184,7 +185,7 @@ pub(crate) fn with_recovered_typescript_program_observed<T>(
 /// available to the caller; only a parser panic is fatal.
 pub(crate) fn with_legacy_symbols_program_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
 ) -> Result<T> {

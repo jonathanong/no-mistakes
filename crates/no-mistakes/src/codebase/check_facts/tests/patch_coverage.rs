@@ -61,25 +61,24 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
         selector_exclude: Vec::new(),
     };
     let settings_key = PlaywrightSettingsKey::new(&settings);
-    let facts = std::collections::HashMap::from([
-        (
-            page,
-            CheckFileFacts {
-                playwright_app_selectors: std::collections::HashMap::from([(
-                    (settings_key.clone(), false),
-                    deferred,
-                )]),
-                ..Default::default()
-            },
-        ),
-        (
-            exports_path,
-            CheckFileFacts {
-                playwright_static_exports: Some(static_exports),
-                ..Default::default()
-            },
-        ),
-    ]);
+    let mut facts = crate::codebase::ts_source::FileIdMap::default();
+    facts.insert(
+        page,
+        CheckFileFacts {
+            playwright_app_selectors: std::collections::HashMap::from([(
+                (settings_key.clone(), false),
+                deferred,
+            )]),
+            ..Default::default()
+        },
+    );
+    facts.insert(
+        exports_path,
+        CheckFileFacts {
+            playwright_static_exports: Some(static_exports),
+            ..Default::default()
+        },
+    );
 
     let (selectors, _) = playwright_aggregate_facts(&facts);
     let resolved = selectors

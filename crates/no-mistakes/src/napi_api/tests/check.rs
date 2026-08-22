@@ -12,11 +12,18 @@ fn static_check_fixture(name: &str) -> PathBuf {
 
 fn baseline_and_audit(name: &str) -> (serde_json::Value, serde_json::Value) {
     let root = static_check_fixture(name);
-    let baseline: serde_json::Value =
-        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
-            .unwrap();
+    let baseline: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
     let audit: serde_json::Value = serde_json::from_str(
-        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "includeSuppressed": true }).to_string(),
+        ))
+        .unwrap(),
     )
     .unwrap();
     let mut comparable = audit.clone();
@@ -54,7 +61,10 @@ fn check_json_reports_tracked_artifacts_below_source_skip_directories() {
     let fixture = crate::test_support::materialize_gitignore_fixture("banned-paths-source-skips");
     crate::test_support::git_init(fixture.path());
     crate::test_support::git_add_all(fixture.path());
-    let output = check_json_impl(json!({ "root": fixture.path() }).to_string()).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": fixture.path() }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     let files = value["rules"]
         .as_array()
@@ -84,7 +94,7 @@ fn check_json_returns_global_check_report() {
         "tsconfig": "tsconfig.json"
     })
     .to_string();
-    let output = check_json_impl(options).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert!(value["codebase"].as_array().unwrap().iter().any(|finding| {
@@ -97,18 +107,21 @@ fn check_json_returns_global_check_report() {
 fn check_json_optionally_accounts_for_suppressed_ordinary_rule_findings() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-accounting");
-    let baseline = check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let baseline = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
     let baseline: serde_json::Value = serde_json::from_str(&baseline).unwrap();
     assert!(baseline.get("suppressed").is_none());
     assert!(baseline["codebase"].as_array().is_some_and(Vec::is_empty));
 
-    let audit = check_json_impl(
+    let audit = check_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": root,
             "includeSuppressed": true,
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let audit: serde_json::Value = serde_json::from_str(&audit).unwrap();
     assert_eq!(audit["codebase"], json!([]));
@@ -263,8 +276,10 @@ fn check_json_accounts_for_react_queue_and_integration_adapters() {
 fn check_json_records_react_next_line_directive_at_the_fetch_location() {
     let root =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/suppression-react");
-    let output =
-        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     let finding = value["suppressed"]
         .as_array()
@@ -281,8 +296,10 @@ fn check_json_records_react_next_line_directive_at_the_fetch_location() {
 fn check_json_uses_filter_precedence_for_overlapping_directives() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-directive-precedence");
-    let output =
-        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     let finding = value["suppressed"]
         .as_array()
@@ -299,8 +316,10 @@ fn check_json_uses_filter_precedence_for_overlapping_directives() {
 fn check_json_does_not_hide_later_react_fetch_after_first_is_suppressed() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-react-multiple");
-    let output =
-        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(!value["react"].as_array().unwrap().is_empty(), "{value}");
     assert!(value["suppressed"]
@@ -315,7 +334,10 @@ fn check_json_does_not_hide_later_react_fetch_after_first_is_suppressed() {
 fn ordinary_check_keeps_later_react_component_after_earlier_component_is_suppressed() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-react-component-order");
-    let output = check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert!(value.get("suppressed").is_none());
@@ -333,8 +355,10 @@ fn ordinary_check_keeps_later_react_component_after_earlier_component_is_suppres
 fn check_json_records_one_react_suppression_per_component_after_all_fetches_are_hidden() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-react-all-multiple");
-    let output =
-        check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(value["react"].as_array().is_some_and(Vec::is_empty));
     let react_suppressions = value["suppressed"]
@@ -372,13 +396,20 @@ fn check_json_records_one_react_suppression_per_component_after_all_fetches_are_
 fn check_json_accounts_for_suppressed_combined_rust_rule() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/suppression-rust-combined");
-    let baseline: serde_json::Value =
-        serde_json::from_str(&check_json_impl(json!({ "root": root }).to_string()).unwrap())
-            .unwrap();
+    let baseline: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
     assert!(baseline["rules"].as_array().is_some_and(Vec::is_empty));
 
     let audit: serde_json::Value = serde_json::from_str(
-        &check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string()).unwrap(),
+        &check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "includeSuppressed": true }).to_string(),
+        ))
+        .unwrap(),
     )
     .unwrap();
     assert!(audit["rules"].as_array().is_some_and(Vec::is_empty));
@@ -395,7 +426,7 @@ fn check_json_returns_warnings_for_skipped_configured_check() {
         "root": fixture_root("test-no-unmocked-dynamic-imports-unknown-vitest-project"),
     })
     .to_string();
-    let output = check_json_impl(options).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert!(value["warnings"].as_array().unwrap().iter().any(|warning| {
@@ -415,7 +446,7 @@ fn check_json_returns_non_blocking_agent_doc_advisories() {
         "config": ".no-mistakes.yml"
     })
     .to_string();
-    let output = check_json_impl(options).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(value["rules"].as_array().map(Vec::len), Some(0));
@@ -441,7 +472,7 @@ fn check_json_returns_migrated_filesystem_rules() {
         "config": ".no-mistakes.yml"
     })
     .to_string();
-    let output = check_json_impl(options).unwrap();
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert!(value["rules"].as_array().unwrap().iter().any(|finding| {
@@ -458,9 +489,9 @@ fn check_json_reports_both_markdown_rule_ids() {
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     crate::test_support::git_init(fixture.path());
     crate::test_support::git_add_all(fixture.path());
-    let output = check_json_impl(
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
         json!({ "root": fixture.path(), "config": ".no-mistakes.yml" }).to_string(),
-    )
+    ))
     .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     let findings = value["rules"].as_array().unwrap();

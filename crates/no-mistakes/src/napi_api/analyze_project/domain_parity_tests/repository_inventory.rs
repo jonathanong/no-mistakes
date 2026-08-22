@@ -7,14 +7,14 @@ fn prepared_check_keeps_repository_inventory_below_source_skips() {
     crate::test_support::git_add_all(fixture.path());
     let root = fixture.path();
     let standalone =
-        parse_json(crate::napi_api::check_json_impl(json!({ "root": root }).to_string()).unwrap());
+        parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap());
     let aggregate = parse_json(
         analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "reports": [{ "type": "check", "id": "check" }]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );

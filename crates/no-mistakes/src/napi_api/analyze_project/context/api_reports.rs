@@ -16,7 +16,7 @@ impl AnalyzeProjectContext {
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
         direction: Direction,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let scope = self.scope(request, options)?;
         scope.graph_report(request, &scope.options, direction)
     }

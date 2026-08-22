@@ -20,7 +20,7 @@ impl GraphFiles {
                 }
             }
             Err(index) => {
-                self.all.insert(index, path.clone());
+                std::sync::Arc::make_mut(&mut self.all).insert(index, path.clone());
                 self.visible.insert(index, 1);
                 if let Ok(canonical) = path.canonicalize() {
                     self.canonical_visible.insert_if_built(
@@ -35,8 +35,9 @@ impl GraphFiles {
         // while excluding it from eager graph parsing. An explicit query restores that ordinary
         // source file to the indexable universe even though it was already visible.
         if is_indexable(&path) && !self.indexable.contains(&path) {
-            self.indexable.push(path);
-            self.indexable.sort();
+            let indexable = std::sync::Arc::make_mut(&mut self.indexable);
+            indexable.push(path);
+            indexable.sort();
             changed = true;
         }
         if changed {
@@ -81,6 +82,11 @@ impl GraphFiles {
 
     pub(crate) fn visible_len(&self) -> usize {
         self.visible.iter().filter(|flag| **flag == 1).count()
+    }
+
+    /// Already-normalized visible paths as a membership set.
+    pub(crate) fn visible_path_set(&self) -> crate::fx::PathSet {
+        self.iter_visible().cloned().collect()
     }
 }
 

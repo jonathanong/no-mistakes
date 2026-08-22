@@ -15,6 +15,13 @@ pub use context::{
 };
 pub use observer::{DiagnosticsSnapshot, InvocationObserver, TimingDiagnostic, TimingKind};
 
+/// Count one AST visitor walk when verbose timings are enabled.
+pub fn record_ast_walk() {
+    if let Some(observer) = current() {
+        observer.increment("ast.walks", 1);
+    }
+}
+
 #[derive(clap::Args, Debug, Clone, Copy, Default)]
 pub struct DiagnosticsArgs {
     /// Print invocation phase timings to stderr.

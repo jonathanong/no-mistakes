@@ -1,7 +1,9 @@
+mod json_write;
 pub mod output_format;
 mod traversal;
 mod traversal_impls;
 
+pub use json_write::print_json;
 pub use output_format::{resolve_format, Format};
 pub(crate) use traversal::related_edge_view;
 pub use traversal::{edge_view, TraversableEdge};

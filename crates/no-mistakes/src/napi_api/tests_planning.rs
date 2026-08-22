@@ -10,11 +10,11 @@ fn tests_plan_json_union_applies_vitest_setup_fallback() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/vitest-setup-dependencies");
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "changedFiles": ["config/setup-selector.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -41,12 +41,12 @@ fn tests_plan_json_tracks_commonjs_dynamic_setup_helper() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/vitest-setup-dependencies");
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "framework": "vitest",
             "root": root,
             "changedFiles": ["config/dynamic-commonjs-values.cjs"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -68,13 +68,13 @@ fn tests_plan_json_setup_fallback_spends_dependency_group_budget() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/vitest-setup-dependencies");
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "framework": "vitest",
             "root": root,
             "config": "dependency-limit.no-mistakes.yml",
             "changedFiles": ["setup/conditional-a.ts", "config/setup-selector.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -97,7 +97,7 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
         "limitFiles": 1
     })
     .to_string();
-    let output = tests_plan_json_impl(plan_options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(plan_options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(plan["fallback_triggered"], false);
@@ -111,7 +111,7 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
         "limitFiles": 1
     })
     .to_string();
-    let fallback_limit_output = tests_plan_json_impl(fallback_limit_options).unwrap();
+    let fallback_limit_output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(fallback_limit_options)).unwrap();
     let fallback_limit: serde_json::Value = serde_json::from_str(&fallback_limit_output).unwrap();
 
     assert_eq!(fallback_limit["fallback_triggered"], true);
@@ -128,7 +128,7 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
         "globalConfigFallback": false
     })
     .to_string();
-    let no_global_fallback_output = tests_plan_json_impl(no_global_fallback_options).unwrap();
+    let no_global_fallback_output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(no_global_fallback_options)).unwrap();
     let no_global_fallback: serde_json::Value =
         serde_json::from_str(&no_global_fallback_output).unwrap();
 
@@ -146,7 +146,7 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
         "changedFiles": ["source.ts"],
     })
     .to_string();
-    let legacy_output = tests_plan_json_impl(legacy_plan_options).unwrap();
+    let legacy_output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(legacy_plan_options)).unwrap();
     let legacy_plan: serde_json::Value = serde_json::from_str(&legacy_output).unwrap();
 
     assert_eq!(legacy_plan["fallback_triggered"], false);
@@ -156,23 +156,28 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
         .iter()
         .any(|test| test["test_file"] == "source.test.mts"));
 
-    let comment = tests_comment_markdown_impl(json!({ "planJson": plan }).to_string()).unwrap();
+    let comment = tests_comment_markdown_impl(crate::napi_api::options::test_json_arg(
+        json!({ "planJson": plan }).to_string(),
+    ))
+    .unwrap();
     assert!(comment.contains("Selected Tests"));
 
     let plan_path = PathBuf::from(&root).join("plan.json");
     let path_comment =
-        tests_comment_markdown_impl(json!({ "plan": plan_path.display().to_string() }).to_string())
+        tests_comment_markdown_impl(crate::napi_api::options::test_json_arg(
+            json!({ "plan": plan_path.display().to_string() }).to_string(),
+        ))
             .unwrap();
     assert!(path_comment.contains("source.test.mts"));
 
-    let graph = tests_graph_json_impl(json!({ "planJson": output }).to_string()).unwrap();
+    let graph = tests_graph_json_impl(crate::napi_api::options::test_json_arg(json!({ "planJson": output }).to_string())).unwrap();
     let graph: serde_json::Value = serde_json::from_str(&graph).unwrap();
     assert!(!graph["nodes"].as_array().unwrap().is_empty());
 
-    let mermaid = tests_graph_mermaid_impl(
+    let mermaid = tests_graph_mermaid_impl(crate::napi_api::options::test_json_arg(
         json!({ "planJson": serde_json::from_str::<serde_json::Value>(&output).unwrap() })
             .to_string(),
-    )
+    ))
     .unwrap();
     assert!(mermaid.starts_with("graph TD"));
 
@@ -182,7 +187,7 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
         "changed": "source.ts"
     })
     .to_string();
-    let why = tests_why_json_impl(why_options).unwrap();
+    let why = tests_why_json_impl(crate::napi_api::options::test_json_arg(why_options)).unwrap();
     let why: serde_json::Value = serde_json::from_str(&why).unwrap();
     assert!(!why["source.ts"].as_array().unwrap().is_empty());
 }
@@ -192,12 +197,12 @@ fn tests_plan_json_exposes_target_scoped_configured_triggers() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/target-scoped-triggers");
     let output = tests_plan_json_impl(
-        serde_json::json!({
+        crate::napi_api::options::test_json_arg(serde_json::json!({
             "framework": "vitest",
             "root": root,
             "changedFiles": ["migrations/001.sql"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();

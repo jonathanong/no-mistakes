@@ -1,4 +1,5 @@
 use super::legacy_test_support::{graph_report, import_usages_report, prepare_shared_traversal};
+use super::options_test_support::parse_options;
 use super::*;
 use crate::codebase::dependencies::Direction;
 use serde_json::{json, Value};
@@ -51,13 +52,13 @@ fn analyze_project_related_reports_require_files() {
     ];
 
     for (root, report_type, expected) in cases {
-        let error = analyze_project_json_impl(
+        let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
             json!({
                 "root": root,
                 "reports": [{ "type": report_type }]
             })
             .to_string(),
-        )
+        ))
         .unwrap_err();
         assert!(error.reason.contains(expected), "{report_type}: {error}");
     }
@@ -65,7 +66,7 @@ fn analyze_project_related_reports_require_files() {
 
 #[test]
 fn analyze_project_dispatches_import_usages_report() {
-    let output = analyze_project_json_impl(
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": fixture_root("import-usages"),
             "reports": [{
@@ -75,7 +76,7 @@ fn analyze_project_dispatches_import_usages_report() {
             }]
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
 
@@ -128,13 +129,13 @@ fn import_usages_report_reuses_shared_traversal_facts() {
 
 #[test]
 fn analyze_project_rejects_unknown_report_type() {
-    let error = analyze_project_json_impl(
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
             "root": fixture_root("simple"),
             "reports": [{ "type": "missing" }]
         })
         .to_string(),
-    )
+    ))
     .unwrap_err();
     assert!(error.reason.contains("unknown analyzeProject report type"));
 }

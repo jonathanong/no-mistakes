@@ -1,5 +1,5 @@
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
-use std::collections::HashMap;
+use crate::codebase::ts_source::FileIdMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) type RunnerConfigFacts = std::collections::BTreeMap<
@@ -16,8 +16,8 @@ pub(crate) fn collect_prepared_runner_facts(
     playwright: Option<&PlaywrightFactPlan>,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> (
-    (HashMap<PathBuf, CheckFileFacts>, RunnerConfigFacts),
-    HashMap<PathBuf, CheckFileFacts>,
+    (FileIdMap<CheckFileFacts>, RunnerConfigFacts),
+    FileIdMap<CheckFileFacts>,
 ) {
     let (files, graph_only_files) = file_scope;
     let (runner_files, _) = split_runner_config_files(files, plan);
@@ -53,7 +53,10 @@ pub(crate) fn collect_prepared_runner_facts(
         (facts, configs)
     };
     let Some(runner_plan) = &plan.integration_runner_configs else {
-        return (collect(), HashMap::new());
+        return (
+            collect(),
+            FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory())),
+        );
     };
     let fact_plan = crate::integration_tests::runner_config::RunnerConfigFactPlan {
         root: root.to_path_buf(),
@@ -69,10 +72,17 @@ pub(crate) fn collect_prepared_runner_facts(
         graph_plan: graph_plan.clone(),
         playwright: playwright.cloned(),
     };
-    runner_plan.with_request_cache_and_sources(
+    let (collected, helper_facts) = runner_plan.with_request_cache_and_sources(
         Some(fact_plan),
         Some(std::sync::Arc::clone(&sources)),
         collect,
+    );
+    (
+        collected,
+        FileIdMap::from_iter_with_inventory(
+            helper_facts,
+            std::sync::Arc::clone(sources.inventory()),
+        ),
     )
 }
 
@@ -89,7 +99,7 @@ fn split_runner_config_files(
         .partition(|path| runner_configs.contains(path))
 }
 
-pub(crate) fn runner_config_facts(facts: &HashMap<PathBuf, CheckFileFacts>) -> RunnerConfigFacts {
+pub(crate) fn runner_config_facts(facts: &FileIdMap<CheckFileFacts>) -> RunnerConfigFacts {
     facts
         .iter()
         .filter_map(|(path, facts)| {

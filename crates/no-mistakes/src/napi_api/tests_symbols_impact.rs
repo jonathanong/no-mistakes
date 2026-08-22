@@ -8,7 +8,7 @@ fn symbols_json_returns_signature_impact_report() {
     })
     .to_string();
 
-    let output = symbols_json_impl(options).unwrap();
+    let output = symbols_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(value["symbol"], "parseDate");
@@ -32,13 +32,13 @@ fn signature_impact_uses_the_importing_packages_tsconfig_alias_for_dependents() 
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
 
     let output = symbols_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "files": ["packages/lib/src/forbidden.ts"],
             "mode": "signature-impact",
             "symbol": "forbidden"
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -61,13 +61,13 @@ fn signature_impact_napi_parses_each_source_file_once() {
 
     crate::ast::begin_parse_count(&root);
     let output = symbols_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "files": ["utils.mts"],
             "mode": "signature-impact",
             "symbol": "parseDate"
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -115,13 +115,13 @@ fn pass4b_signature_impact_cli_and_napi_reports_share_gitignore_visibility() {
     )
     .unwrap();
     let napi_output = symbols_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root_string,
             "files": ["packages/pkg/src/feature.ts"],
             "mode": "signature-impact",
             "symbol": "feature",
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let cli_output: serde_json::Value = serde_json::from_str(&cli_output).unwrap();

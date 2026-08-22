@@ -98,10 +98,22 @@ pub(crate) struct ImportUsagesOptions {
 
 include!("options_entrypoint.rs");
 
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn parse_options<T: for<'de> Deserialize<'de>>(options_json: &str) -> napi::Result<T> {
     serde_json::from_str(options_json)
         .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
 }
+
+pub(crate) fn parse_options_value<T: for<'de> Deserialize<'de>>(options: Value) -> napi::Result<T> {
+    serde_json::from_value(options)
+        .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
+}
+
+include!("options_test_json.rs");
+
+#[cfg(test)]
+#[path = "options_test_json_tests.rs"]
+mod options_test_json_tests;
 
 pub(crate) fn resolve_project_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
     match root {

@@ -28,7 +28,7 @@ fn lockfile_diff_json_impl_binary_lockfile_explicit_returns_err() {
         r#"{{"root": "{}", "base": "HEAD", "lockfile": "bun.lockb"}}"#,
         dir.path().to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "binary lockfile should return an error");
     let err = result.unwrap_err();
     assert!(
@@ -48,7 +48,7 @@ fn lockfile_diff_json_impl_invalid_head_without_explicit_lockfile_returns_err() 
         r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
         dir.path().to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "invalid head ref should return an error");
     let err = result.unwrap_err();
     assert!(
@@ -77,7 +77,7 @@ fn lockfile_diff_json_impl_newly_added_no_head_reports_all_added() {
         r#"{{"root": "{}", "base": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(entries.len(), 1, "should detect newly added lockfile");
     let added = entries[0]["added"].as_array().unwrap();
@@ -103,20 +103,21 @@ fn lockfile_diff_napi_ignores_worktree_lockfile_but_honors_explicit_path() {
         .output()
         .unwrap();
 
-    let automatic =
-        lockfile_diff_json_impl(serde_json::json!({ "root": root, "base": "HEAD" }).to_string())
-            .unwrap();
+    let automatic = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root, "base": "HEAD" }).to_string(),
+    ))
+    .unwrap();
     let automatic: Vec<serde_json::Value> = serde_json::from_str(&automatic).unwrap();
     assert!(automatic.is_empty());
 
-    let explicit = lockfile_diff_json_impl(
+    let explicit = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(
         serde_json::json!({
             "root": root,
             "base": "HEAD",
             "lockfile": "pnpm-lock.yaml"
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let explicit: Vec<serde_json::Value> = serde_json::from_str(&explicit).unwrap();
     assert_eq!(explicit.len(), 1);

@@ -24,7 +24,7 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
     let empty_config = crate::codebase::ts_resolver::normalize_path(
         &fixture("graph-empty-route-config").join(".no-mistakes.yml"),
     );
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let plan = GraphBuildPlan {
         routes: true,
         ..GraphBuildPlan::default()
@@ -126,7 +126,7 @@ fn ts_fact_plan_and_context_for_plan_with_config_uses_explicit_config_path() {
 fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("playwright-config-path-graph"));
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let plan = GraphBuildPlan {
         playwright_routes: true,
         playwright_selectors: true,
@@ -199,7 +199,7 @@ fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
 fn prepared_graph_playwright_edges_cover_every_frontend_app() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-multi-frontend-apps"));
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let plan = GraphBuildPlan {
         playwright_routes: true,
         playwright_selectors: true,
@@ -374,7 +374,7 @@ fn prepare_graph_config_skips_app_resolution_when_playwright_is_unconfigured() {
 fn playwright_route_edges_use_explicit_config_path() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("playwright-config-path-graph"));
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
 
     assert!(collect_playwright_route_edges(&root, None, &all_files, None).is_empty());
 

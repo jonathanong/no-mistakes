@@ -50,7 +50,7 @@ fn analyze_project_dispatches_all_domain_report_types() {
         "swiftTestTargets",
         "validateMermaidMarkdown",
     ] {
-        let result = analyze_project_json_impl(
+        let result = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
             json!({
                 "root": fixture_root("simple"),
                 "reports": [{
@@ -60,7 +60,7 @@ fn analyze_project_dispatches_all_domain_report_types() {
                 }]
             })
             .to_string(),
-        );
+        ));
         if let Err(error) = result {
             assert!(
                 !error.reason.contains("unknown analyzeProject report type"),

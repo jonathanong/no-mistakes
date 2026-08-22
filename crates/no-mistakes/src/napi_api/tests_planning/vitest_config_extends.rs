@@ -3,12 +3,12 @@ fn tests_plan_napi_traces_static_vitest_config_extends() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-config/vitest-extends-config");
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "framework": "vitest",
             "root": root,
             "changedFiles": ["base-setup.ts"],
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -21,12 +21,12 @@ fn tests_plan_napi_traces_static_vitest_config_extends() {
     assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
 
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "framework": "vitest",
             "root": root,
             "changedFiles": ["scope-setup.ts"],
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -37,12 +37,12 @@ fn tests_plan_napi_traces_static_vitest_config_extends() {
     );
 
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "framework": "vitest",
             "root": root,
             "changedFiles": ["configs/shared/inherited-root/setup.ts"],
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -53,12 +53,12 @@ fn tests_plan_napi_traces_static_vitest_config_extends() {
     );
 
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "framework": "vitest",
             "root": root,
             "changedFiles": ["merged-root/merged-setup.ts"],
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();

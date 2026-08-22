@@ -62,7 +62,7 @@ impl PreparedScopePlan {
         let mut report_plan = check_fact_plan(options, &traversal)?;
         report_plan
             .graph_context
-            .set_visible_files(traversal.graph_files().iter_visible().cloned());
+            .set_visible_file_set(traversal.graph_files().visible_path_set());
         let mut check_plan = if let Some(check) = &check {
             check.fact_plan()
         } else {
@@ -133,7 +133,7 @@ impl PreparedScopePlan {
             .unwrap_or_else(|| traversal.graph_files().iter_visible().cloned().collect());
         check_plan
             .graph_context
-            .set_visible_files(graph_files.iter().cloned());
+            .set_visible_file_set(graph_files.iter().cloned().collect());
         let primary_paths = files
             .iter()
             .chain(graph_files.iter())

@@ -8,7 +8,7 @@ fn tests_plan_json_reports_native_source_fallback() {
         "globalConfigFallback": true,
     })
     .to_string();
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(plan["fallback_triggered"], true);
@@ -27,7 +27,7 @@ fn tests_plan_json_reports_configured_dotnet_source_impact() {
         "changedFiles": ["dotnet-clients/src/App/FeedService.cs"],
     })
     .to_string();
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(plan["fallback_triggered"], false);
@@ -52,7 +52,7 @@ fn tests_plan_json_reports_configured_swift_source_impact() {
         "changedFiles": ["swift-clients/core/Sources/VouchaCore/APIClient.swift"],
     })
     .to_string();
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
 

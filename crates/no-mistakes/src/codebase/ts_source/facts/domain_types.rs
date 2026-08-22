@@ -113,15 +113,6 @@ impl TsFactContext {
         });
     }
 
-    pub fn set_visible_files(&mut self, files: impl IntoIterator<Item = PathBuf>) {
-        self.visible_files = Some(Arc::new(
-            files
-                .into_iter()
-                .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-                .collect(),
-        ));
-    }
-
     pub(crate) fn include(&mut self, other: Self) {
         for extractor in other.backend_route_extractors {
             self.add_backend_route_extractor(
@@ -208,3 +199,5 @@ impl Default for TsFactContext {
         }
     }
 }
+
+include!("domain_visible.rs");

@@ -36,6 +36,15 @@ fn intern_hit_shares_arc_from_distinct_pathbufs() {
 }
 
 #[test]
+fn intern_path_borrowed_normalized_hit_does_not_need_dot_segments() {
+    let interner = PathInterner::new();
+    let first = interner.intern_path("src/widget.ts");
+    let borrowed = first.as_ref();
+    let second = interner.intern_path(borrowed);
+    assert!(Arc::ptr_eq(&first, &second));
+}
+
+#[test]
 fn intern_path_miss_then_hit_covers_lookup_arms() {
     let interner = PathInterner::new();
     let miss = interner.intern_path("src/a.ts");
@@ -113,7 +122,7 @@ fn types_node_id_file_vs_symbol_on_same_interned_path_stay_unequal() {
     assert_ne!(hash_of(&file), hash_of(&symbol));
     match (&file, &symbol) {
         (NodeId::File(left), NodeId::Symbol { file: right, .. }) => {
-            assert!(Arc::ptr_eq(left, right));
+            assert!(Arc::ptr_eq(left.as_arc(), right.as_arc()));
         }
         other => panic!("expected File and Symbol, got {other:?}"),
     }
@@ -173,11 +182,12 @@ fn file_in_of_same_path_shares_arc_pointer() {
     let right = NodeId::file_in(&interner, PathBuf::from("src/widget.ts"));
     match (&left, &right) {
         (NodeId::File(first), NodeId::File(second)) => {
-            assert!(Arc::ptr_eq(first, second));
+            assert!(Arc::ptr_eq(first.as_arc(), second.as_arc()));
         }
         other => panic!("expected File nodes, got {other:?}"),
     }
     assert_eq!(left, NodeId::file("src/widget.ts"));
+    assert_eq!(hash_of(&left), hash_of(&NodeId::file("src/widget.ts")));
 }
 
 #[test]

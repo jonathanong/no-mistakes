@@ -8,17 +8,17 @@ fn prepared_check_matches_standalone_and_parses_its_scope_once() {
         "config": ".no-mistakes.yml",
         "tsconfig": "tsconfig.json"
     });
-    let standalone = parse_json(crate::napi_api::check_json_impl(options.to_string()).unwrap());
+    let standalone = parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap());
 
     crate::ast::begin_parse_count(&root);
     let aggregate = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "config": ".no-mistakes.yml",
             "tsconfig": "tsconfig.json",
             "reports": [{ "type": "check", "id": "check" }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -45,11 +45,11 @@ fn prepared_check_advisories_match_standalone_and_share_the_source_store() {
     ]);
     let standalone = parse_json(
         crate::napi_api::check_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "config": ".no-mistakes.yml"
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );
@@ -64,7 +64,7 @@ fn prepared_check_advisories_match_standalone_and_share_the_source_store() {
     .unwrap();
     let context = context::AnalyzeProjectContext::prepare(&options).unwrap();
     let reads_before = context.root_source_read_count();
-    let result = run_report(&options.reports[0], &options, &context).unwrap();
+    let result = report_value(&run_report(&options.reports[0], &options, &context).unwrap());
     let reads_after = context.root_source_read_count();
 
     assert_eq!(result, standalone);
@@ -95,15 +95,15 @@ fn check_only_report_follows_reachable_dynamic_imports_like_standalone_check() {
         "analyze-project-dynamic-import-reachability",
     ]);
     let standalone =
-        parse_json(crate::napi_api::check_json_impl(json!({ "root": root }).to_string()).unwrap());
+        parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap());
 
     let aggregate = parse_json(
         analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "reports": [{ "type": "check" }]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );
@@ -133,19 +133,19 @@ fn prepared_effects_and_rsc_reports_match_standalone_outputs() {
         "component": "app/Target.tsx"
     });
     let standalone = [
-        parse_json(crate::napi_api::effects_json_impl(effects_options.to_string()).unwrap()),
-        parse_json(crate::napi_api::rsc_callers_json_impl(rsc_options.to_string()).unwrap()),
+        parse_json(crate::napi_api::effects_json_impl(crate::napi_api::options::test_json_arg(effects_options)).unwrap()),
+        parse_json(crate::napi_api::rsc_callers_json_impl(crate::napi_api::options::test_json_arg(rsc_options)).unwrap()),
     ];
 
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": effects_root,
             "reports": [
                 { "type": "effects", "kind": "storage", "entry": "entry.ts" },
                 { "type": "rscCallers", "root": rsc_root, "component": "app/Target.tsx" }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
 
@@ -159,29 +159,29 @@ fn prepared_effects_and_rsc_keep_explicit_ignored_roots_authoritative() {
     let standalone = [
         parse_json(
             crate::napi_api::effects_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "kind": "regression",
                     "entry": "ignored-explicit/effect-entry.ts"
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         ),
         parse_json(
             crate::napi_api::rsc_callers_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "component": "ignored-explicit/Button.tsx"
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         ),
     ];
 
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [
                 {
@@ -195,7 +195,7 @@ fn prepared_effects_and_rsc_keep_explicit_ignored_roots_authoritative() {
                 }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
 

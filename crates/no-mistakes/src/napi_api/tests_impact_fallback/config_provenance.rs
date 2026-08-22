@@ -13,7 +13,7 @@ fn tests_plan_json_manual_config_change_does_not_borrow_git_endpoints() {
     .unwrap();
 
     let output = tests_plan_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "framework": "playwright",
             "changedFiles": [".no-mistakes.yml"],
@@ -21,7 +21,7 @@ fn tests_plan_json_manual_config_change_does_not_borrow_git_endpoints() {
             "head": "HEAD",
             "globalConfigFallback": true
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -50,7 +50,7 @@ fn tests_plan_json_overlapping_manual_and_git_config_changes_fail_open() {
 
     for framework in ["vitest", "playwright"] {
         let output = tests_plan_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "framework": framework,
                 "changedFiles": [".no-mistakes.yml"],
@@ -58,7 +58,7 @@ fn tests_plan_json_overlapping_manual_and_git_config_changes_fail_open() {
                 "head": "HEAD",
                 "globalConfigFallback": true
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap();
         let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -94,14 +94,14 @@ fn tests_plan_json_manual_config_requires_same_path_diff_endpoint() {
 
     for (manual_path, expected) in [(".no-mistakes.yaml", false), (".no-mistakes.yml", true)] {
         let output = tests_plan_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "framework": "playwright",
                 "changedFiles": [manual_path],
                 "diff": diff,
                 "globalConfigFallback": true
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap();
         let plan: serde_json::Value = serde_json::from_str(&output).unwrap();

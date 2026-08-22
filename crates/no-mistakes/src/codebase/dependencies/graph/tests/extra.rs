@@ -303,6 +303,15 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         Some(&[EdgeKind::QueueEnqueue].into()),
         &symbol_index,
     );
+    assert!(graph
+        .dependents_of_symbol(
+            &emails,
+            "sendWelcomeEmail",
+            Some(0),
+            Some(&[EdgeKind::QueueEnqueue].into()),
+            &symbol_index,
+        )
+        .is_empty());
     assert!(dependents.iter().any(|entry| {
         matches!(
             entry.node,
@@ -346,10 +355,10 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
 
     let mut forward = EdgeMap::default();
     let mut reverse = EdgeMap::default();
-    let parsed = parsed_workflow_set(&root, &graph_files.all);
+    let parsed = parsed_workflow_set(&root, graph_files.all());
     add_ci_edges(
         &root,
-        &graph_files.all,
+        graph_files.all(),
         &parsed,
         &mut forward,
         &mut reverse,

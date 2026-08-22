@@ -44,7 +44,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
     match cli.command {
         Command::Check => {
             if cli.json {
-                println!("{}", serde_json::to_string(&analysis.coverage)?);
+                crate::cli::print_json(&analysis.coverage);
             } else {
                 print_coverage_text(&analysis.coverage);
             }
@@ -59,7 +59,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         }
         Command::Edges => {
             if cli.json {
-                println!("{}", serde_json::to_string(&analysis.edges)?);
+                crate::cli::print_json(&analysis.edges);
             } else {
                 print_edges_text(&analysis.edges);
             }
@@ -68,7 +68,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         Command::Related { files } => {
             let related = build_related_report(&root, &analysis.edges.edges, &files);
             if cli.json {
-                println!("{}", serde_json::to_string(&related)?);
+                crate::cli::print_json(&related);
             } else {
                 print_related_text(&related);
             }
@@ -77,7 +77,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         Command::Tests { files } => {
             let report = build_tests_report(&analysis.edges.edges, &files, &root);
             if cli.json {
-                println!("{}", serde_json::to_string(&report)?);
+                crate::cli::print_json(&report);
             } else {
                 print_tests_text(&report);
             }

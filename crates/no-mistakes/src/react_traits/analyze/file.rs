@@ -104,7 +104,7 @@ fn analyze_program_inner(
         let dynamic_names = traits::suspense::collect_dynamic_names_for_spans(program, &spans);
         let hits = traits::file_walk::collect_file_trait_hits(
             program,
-            &spans,
+            &component_defs,
             &dynamic_names,
             &import_table,
             abs_path,
@@ -114,12 +114,11 @@ fn analyze_program_inner(
         let mut components = Vec::new();
         for (i, def) in component_defs.into_iter().enumerate() {
             let has_state = hits.has_state[i];
-            let has_props = traits::props::has_function_params(program, def.span);
+            let has_props = hits.has_props[i];
             let passes_props = hits.passes_props[i];
-            let uses_memo = hits.uses_memo[i] || traits::memo::is_wrapped_in_memo(program, &def);
+            let uses_memo = hits.uses_memo[i];
             let uses_context_provider = hits.uses_context_provider[i];
-            let uses_suspense = traits::suspense::is_component_direct_lazy(program, def.span)
-                || hits.uses_suspense_jsx[i];
+            let uses_suspense = hits.uses_suspense_jsx[i];
             let component_fetches = fetches
                 .iter()
                 .filter(|(span, _)| span.start >= def.span.start && span.end <= def.span.end)
