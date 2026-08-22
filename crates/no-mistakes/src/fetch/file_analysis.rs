@@ -42,7 +42,7 @@ pub(crate) fn analyze_file_from_visible(
     cache: &mut Cache,
     inherited: (bool, bool),
     visible: (
-        &HashSet<PathBuf>,
+        &crate::fx::PathSet,
         &crate::codebase::analysis_session::AnalysisSession,
     ),
 ) -> Result<bool> {
@@ -64,7 +64,7 @@ pub(crate) struct VisibleFileAnalysis<'a> {
     pub fetches: &'a mut Vec<FetchOccurrence>,
     pub cache: &'a mut Cache,
     pub parsed_files: &'a mut ParsedFileCache,
-    pub visible_files: &'a HashSet<PathBuf>,
+    pub visible_files: &'a crate::fx::PathSet,
 }
 
 pub(crate) fn analyze_file_from_visible_with_facts(

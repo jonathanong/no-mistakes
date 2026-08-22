@@ -3,12 +3,11 @@ use super::scoped_defaults::{scoped_static_default_for_identifier, ScopedStaticI
 use super::types::{AppSelectorValue, TemplatePattern};
 use crate::playwright::ast;
 use oxc_span::GetSpan;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub(super) struct SelectorFileContext<'a> {
     pub(super) file: &'a Path,
-    pub(super) visible_files: Option<&'a HashSet<PathBuf>>,
+    pub(super) visible_files: Option<&'a crate::fx::PathSet>,
     pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
 

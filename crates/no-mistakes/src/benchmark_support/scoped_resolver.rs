@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::path::PathBuf;
 
 /// Checked-in multi-config fixture used to measure request-level resolver
@@ -6,7 +5,7 @@ use std::path::PathBuf;
 /// repository discovery and parsing.
 pub struct ScopedResolverSelectionFixture {
     catalog: crate::codebase::ts_resolver::TsConfigCatalog,
-    visible: HashSet<PathBuf>,
+    visible: crate::fx::PathSet,
     importer: PathBuf,
 }
 

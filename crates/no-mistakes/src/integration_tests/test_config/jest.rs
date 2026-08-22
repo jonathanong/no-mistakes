@@ -7,8 +7,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use crate::integration_tests::project_config::prefix_globs;
 use anyhow::Result;
 use regex::Regex;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[cfg(test)]
 mod tests;
@@ -18,7 +17,7 @@ pub(in crate::integration_tests) fn config_project(
     raw: &str,
     config_dir: &Path,
     source: &str,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<ConfigProject> {
     let scope = relative_slash_path(root, config_dir);
     Ok(ConfigProject {
@@ -37,7 +36,7 @@ fn include_globs(
     root: &Path,
     config_dir: &Path,
     source: &str,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<String>> {
     let test_match = extract_property_strings(source, "testMatch");
     let test_regex = extract_test_regexes(source);
@@ -60,7 +59,7 @@ fn include_globs(
 fn regex_matched_files(
     root: &Path,
     patterns: &[String],
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<String>> {
     if patterns.is_empty() {
         return Ok(Vec::new());

@@ -34,7 +34,7 @@ pub(super) fn aggregate_children_from_visible(
     facts: &ComponentFacts,
     file_cache: &mut HashMap<PathBuf, Vec<ComponentFacts>>,
     root: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     visited: &mut HashSet<String>,
 ) -> AggregatedFacts {
     aggregate_children_inner(facts, file_cache, root, Some(visible_files), None, visited)

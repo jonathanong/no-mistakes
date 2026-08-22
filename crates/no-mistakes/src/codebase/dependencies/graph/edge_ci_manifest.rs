@@ -16,7 +16,7 @@ fn cargo_member_globset(members: &[String]) -> Option<globset::GlobSet> {
 fn add_manifest_bins(
     manifest: &Path,
     cargo_toml: &str,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     bins: &mut CargoBinIndex,
 ) {
     let Ok(parsed_bins) = crate::codebase::ci_workflows::parse_cargo_bins(cargo_toml) else {
@@ -41,7 +41,7 @@ fn resolve_cargo_bin_source(
     manifest_dir: &Path,
     name: &str,
     rel_path: &str,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     let declared = crate::codebase::ts_resolver::normalize_path(&manifest_dir.join(rel_path));
     if visible_files.contains(&declared) {

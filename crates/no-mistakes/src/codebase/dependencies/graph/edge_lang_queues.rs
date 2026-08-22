@@ -46,7 +46,7 @@ fn emit_queue_edges(
             let identity = topic_identity(cluster.as_deref(), job);
             let node = NodeId::queue_job_in(interner, &file.path, identity.clone());
             edges.push((
-                NodeId::file_in(interner, &file.path),
+                NodeId::file_in(interner, file.path.as_path()),
                 node.clone(),
                 EdgeKind::QueueEnqueue,
             ));
@@ -126,7 +126,7 @@ fn emit_kafka_edges(
             let identity = topic_identity(cluster.as_deref(), &topic);
             let node = NodeId::queue_job_in(interner, &path, identity.clone());
             edges.push((
-                NodeId::file_in(interner, &path),
+                NodeId::file_in(interner, path.as_path()),
                 node.clone(),
                 EdgeKind::QueueEnqueue,
             ));

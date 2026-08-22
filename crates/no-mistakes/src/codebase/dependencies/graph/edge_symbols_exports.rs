@@ -5,7 +5,7 @@ struct ExportEdgeInputs<'a> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a crate::fx::PathSet,
     graph_files: &'a GraphFiles,
     interner: &'a PathInterner,
 }

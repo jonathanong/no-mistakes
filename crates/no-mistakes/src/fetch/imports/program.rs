@@ -10,7 +10,7 @@ pub(crate) fn collect_imports_from_program_from_visible<'a>(
     abs_path: &Path,
     program: &oxc_ast::ast::Program<'a>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     collect_imports_from_program_inner(abs_path, program, import_cache, Some(visible_files))
 }
@@ -19,7 +19,7 @@ fn collect_imports_from_program_inner<'a>(
     abs_path: &Path,
     program: &oxc_ast::ast::Program<'a>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Vec<PathBuf> {
     if let Some(cached_imports) = import_cache.get(abs_path) {
         return cached_imports.clone();
@@ -60,7 +60,7 @@ fn collect_imports_from_program_inner<'a>(
 fn resolve_import_with_visibility(
     abs_path: &Path,
     specifier: &str,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Option<PathBuf> {
     match visible_files {
         Some(visible) => resolve_import_from_visible(abs_path, specifier, visible),

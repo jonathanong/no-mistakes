@@ -28,12 +28,12 @@ impl ResolverTsConfig<'_> {
 }
 
 enum ResolverVisible<'a> {
-    Borrowed(&'a HashSet<PathBuf>),
-    Owned(std::sync::Arc<HashSet<PathBuf>>),
+    Borrowed(&'a crate::fx::PathSet),
+    Owned(std::sync::Arc<crate::fx::PathSet>),
 }
 
 impl ResolverVisible<'_> {
-    fn files(&self) -> &HashSet<PathBuf> {
+    fn files(&self) -> &crate::fx::PathSet {
         match self {
             Self::Borrowed(files) => files,
             Self::Owned(files) => files,
@@ -69,7 +69,7 @@ pub(crate) struct ResolverScopeKey {
 }
 
 impl ResolverScopeKey {
-    pub(crate) fn new(tsconfig: &TsConfig, visible: Option<&HashSet<PathBuf>>) -> Self {
+    pub(crate) fn new(tsconfig: &TsConfig, visible: Option<&crate::fx::PathSet>) -> Self {
         let visible = visible.map(|paths| {
             let mut paths = paths.iter().cloned().collect::<Vec<_>>();
             paths.sort();
@@ -98,7 +98,7 @@ pub(crate) struct ResolverCacheScopeKey {
 impl ResolverCacheScopeKey {
     pub(crate) fn new(
         tsconfig: &TsConfig,
-        visible: Option<&HashSet<PathBuf>>,
+        visible: Option<&crate::fx::PathSet>,
         module_resolution: Option<&str>,
         identity: &[PathBuf],
     ) -> Self {

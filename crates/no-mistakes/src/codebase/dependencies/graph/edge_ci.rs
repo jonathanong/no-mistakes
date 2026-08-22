@@ -39,8 +39,8 @@ fn add_ci_edges(
                     .filter_map(|binary_name| bins.by_name.get(binary_name));
                 for source_file in cargo_target_files.chain(direct_binary_files) {
                     edges.push((
-                        NodeId::file_in(interner, path.clone()),
-                        NodeId::file_in(interner, source_file.clone()),
+                        NodeId::file_in(interner, path.as_path()),
+                        NodeId::file_in(interner, source_file),
                         EdgeKind::CiInvocation,
                     ));
                 }
@@ -90,7 +90,7 @@ fn collect_cargo_bins(
     all_files: &[PathBuf],
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> CargoBinIndex {
-    let visible_files: HashSet<PathBuf> = all_files.iter().cloned().collect();
+    let visible_files: crate::fx::PathSet = all_files.iter().cloned().collect();
     let root_manifest = crate::codebase::ts_resolver::normalize_path(&root.join("Cargo.toml"));
     if !visible_files.contains(&root_manifest) {
         return CargoBinIndex::default();

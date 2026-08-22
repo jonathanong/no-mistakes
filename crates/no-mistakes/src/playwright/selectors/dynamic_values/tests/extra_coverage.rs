@@ -30,7 +30,9 @@ fn deferred_cross_file_exports_resolve_against_precollected_static_values() {
         "page.tsx",
     ]));
     let selectors_path = page_path.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([page_path.clone(), selectors_path.clone()]);
+    let visible: crate::fx::PathSet = [page_path.clone(), selectors_path.clone()]
+        .into_iter()
+        .collect();
     let page_source = std::fs::read_to_string(&page_path).unwrap();
     let marker = ast::with_program(&page_path, &page_source, |program, _| {
         super::super::cross_file::defer_imported_values_from_visible(
@@ -82,7 +84,7 @@ fn visible_collector_resolves_imported_function_and_object_values() {
         "page.tsx",
     ]));
     let selectors_path = page_path.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([page_path.clone(), selectors_path]);
+    let visible: crate::fx::PathSet = [page_path.clone(), selectors_path].into_iter().collect();
     let source = std::fs::read_to_string(&page_path).unwrap();
 
     let collected = ast::with_program(&page_path, &source, |program, source| {
@@ -110,7 +112,9 @@ fn visible_cross_file_resolution_reuses_prepared_source_store() {
         "page.tsx",
     ]));
     let selectors_path = page_path.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([page_path.clone(), selectors_path.clone()]);
+    let visible: crate::fx::PathSet = [page_path.clone(), selectors_path.clone()]
+        .into_iter()
+        .collect();
     let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
         page_path.clone(),
         selectors_path.clone(),
@@ -167,7 +171,9 @@ fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
         "page.tsx",
     ]));
     let selectors_path = imported_path.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([imported_path.clone(), selectors_path]);
+    let visible: crate::fx::PathSet = [imported_path.clone(), selectors_path]
+        .into_iter()
+        .collect();
     let source = std::fs::read_to_string(&imported_path).unwrap();
     let imported = ast::with_program(&imported_path, &source, |program, source| {
         super::collect_dynamic_identifier_values_with_file_from_visible_deferred(
@@ -194,7 +200,7 @@ fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
             program,
             source,
             &local_path,
-            &std::collections::HashSet::new(),
+            &crate::fx::PathSet::default(),
         )
     })
     .unwrap();
@@ -207,7 +213,7 @@ fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
             program,
             source,
             &literal_path,
-            &std::collections::HashSet::new(),
+            &crate::fx::PathSet::default(),
         )
     })
     .unwrap();
@@ -285,11 +291,31 @@ fn static_export_collection_skips_named_functions_without_string_values() {
 }
 
 #[test]
+fn named_function_export_recorder_covers_missing_names_and_empty_values() {
+    let mut facts = super::super::cross_file::StaticExportValues::default();
+    super::super::cross_file::record_named_function_export(None, |_| vec!["x".into()], &mut facts);
+    super::super::cross_file::record_named_function_export(
+        Some("empty".into()),
+        |_| Vec::new(),
+        &mut facts,
+    );
+    super::super::cross_file::record_named_function_export(
+        Some("hit".into()),
+        |_| vec!["v".into()],
+        &mut facts,
+    );
+    assert!(facts.values("empty", false).is_empty());
+    assert_eq!(facts.values("hit", false), &["v".to_string()]);
+}
+
+#[test]
 fn visible_cross_file_resolution_handles_missing_bindings_and_unreadable_targets() {
     let page_path = Path::new("/repo/page.tsx");
     // The visible universe can identify an import even when its saved source
     // is unavailable; selector analysis must degrade to no static values.
-    let visible = std::collections::HashSet::from([Path::new("/repo/selectors.ts").to_path_buf()]);
+    let visible: crate::fx::PathSet = [Path::new("/repo/selectors.ts").to_path_buf()]
+        .into_iter()
+        .collect();
     let source = "import { value } from './selectors';";
     ast::with_program(page_path, source, |program, _| {
         assert!(

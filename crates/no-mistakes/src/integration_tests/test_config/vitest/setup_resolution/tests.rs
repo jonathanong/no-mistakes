@@ -1,6 +1,5 @@
 use super::*;
 use crate::codebase::ts_resolver::ImportClassification;
-use std::collections::HashSet;
 
 struct MissingSourceResolver;
 
@@ -13,7 +12,7 @@ impl ImportResolution for MissingSourceResolver {
         unreachable!("a missing setup source has no imports to resolve")
     }
 
-    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
         None
     }
 
@@ -22,7 +21,7 @@ impl ImportResolution for MissingSourceResolver {
         _: &str,
         _: &Path,
         _: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        _: &HashSet<PathBuf>,
+        _: &crate::fx::PathSet,
     ) -> ImportClassification {
         unreachable!("a missing setup source has no imports to classify")
     }

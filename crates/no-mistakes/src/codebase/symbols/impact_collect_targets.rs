@@ -19,7 +19,7 @@ fn signature_target_symbols(
     target_file: &Path,
     target_symbol: &str,
     export_nodes: &BTreeSet<NodeId>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     facts: &TsFactMap,
 ) -> BTreeMap<PathBuf, BTreeSet<String>> {
     let mut target_symbols = BTreeMap::from([(

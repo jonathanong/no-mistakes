@@ -57,7 +57,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
         .graph_file_universe()
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<std::collections::HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let mut findings = Vec::new();
     for (rule, opts) in applications.iter().zip(opts_list.iter()) {
         findings.extend(check_rule_application(

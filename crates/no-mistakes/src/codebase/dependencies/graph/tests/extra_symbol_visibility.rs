@@ -6,7 +6,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
 
     let current = p("/repo/packages/app/src/current.mts");
     let hidden_target = p("/repo/packages/core/dist/index.mts");
-    let visible = HashSet::from([current.clone()]);
+    let visible = [current.clone()].into_iter().collect();
     let tsconfig = TsConfig {
         dir: p("/repo/packages/app"),
         paths: vec![],

@@ -6,7 +6,7 @@ fn analyze_file_inner(
     cache: &mut Cache,
     inherited: (bool, bool),
     scope: (
-        Option<&HashSet<PathBuf>>,
+        Option<&crate::fx::PathSet>,
         Option<&crate::codebase::analysis_session::AnalysisSession>,
     ),
 ) -> Result<bool> {

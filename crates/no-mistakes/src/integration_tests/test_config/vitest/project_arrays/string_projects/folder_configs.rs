@@ -1,6 +1,6 @@
 use super::{is_vitest_project_config, slash_path};
 use globset::{GlobBuilder, GlobSetBuilder};
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 /// A folder project creates one Vitest project, even when its root contains
@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 pub(super) fn folder_config_paths(
     specifier: &str,
     declaration_path: &Path,
-    visible: &HashSet<PathBuf>,
+    visible: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     let base = declaration_path.parent().unwrap_or(Path::new("."));
     let pattern = crate::codebase::ts_resolver::normalize_path(

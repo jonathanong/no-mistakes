@@ -156,7 +156,7 @@ fn build_report_from_prepared(
 struct LocalCallerContext<'a> {
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a crate::fx::PathSet,
     remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 }
 
@@ -171,7 +171,7 @@ struct LocalCallerContext<'a> {
 fn prepare_local_caller_context<'a>(
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a crate::fx::PathSet,
     remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 ) -> LocalCallerContext<'a> {
     LocalCallerContext {

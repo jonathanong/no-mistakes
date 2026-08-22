@@ -98,7 +98,7 @@ impl AnalysisSession {
     pub(crate) fn resolver_cache(
         &self,
         tsconfig: &TsConfig,
-        visible: Option<&std::collections::HashSet<PathBuf>>,
+        visible: Option<&crate::fx::PathSet>,
     ) -> Arc<ResolverResultCache> {
         self.resolver_cache_for_scope(ResolverCacheScopeKey::new(tsconfig, visible, None, &[]))
     }

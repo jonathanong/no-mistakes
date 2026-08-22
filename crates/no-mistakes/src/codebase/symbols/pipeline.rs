@@ -6,7 +6,7 @@ pub(crate) fn collect_entries_with_prepared_facts(
     args: &SymbolsArgs,
     root: &Path,
     catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     facts: &crate::codebase::check_facts::CheckFactMap,
     supplemental: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -95,7 +95,7 @@ fn collect_entries_with_timings(
     let visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<std::collections::HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let abs_files = resolve_input_files(&args.files, &root, &cwd);
     if let Some(timings) = &mut timings {
         timings.mark("search");

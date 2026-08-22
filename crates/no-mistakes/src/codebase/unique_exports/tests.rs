@@ -60,7 +60,7 @@ fn pass4b_unique_origin_skips_ignored_local_and_workspace_candidates() {
     let visible = visible_paths
         .iter()
         .map(|path| normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
         paths: Vec::new(),

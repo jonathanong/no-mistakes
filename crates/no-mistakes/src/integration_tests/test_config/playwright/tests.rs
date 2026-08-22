@@ -2,8 +2,7 @@ use super::{parse_program_with_resolver, ParsedPlaywrightConfig};
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use anyhow::Result;
 use oxc_ast::ast::Program;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub(in crate::integration_tests) fn parse_program(
     program: &Program<'_>,
@@ -11,7 +10,7 @@ pub(in crate::integration_tests) fn parse_program(
     path: &Path,
     config_dir: &Path,
     tsconfig: &TsConfig,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<ParsedPlaywrightConfig> {
     let resolver = match visible_files {
         Some(visible) => ImportResolver::new(tsconfig).with_visible(visible),

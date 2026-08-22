@@ -168,7 +168,9 @@ fn aggregate_children_skips_children_outside_the_visible_snapshot() {
     let child = component("Child", "app/components/Child.tsx");
     let child_path = root.join("app/components/Child.tsx");
     let mut cache = HashMap::from([(child_path, vec![child])]);
-    let visible = HashSet::from([root.join("app/components/Parent.tsx")]);
+    let visible = [root.join("app/components/Parent.tsx")]
+        .into_iter()
+        .collect();
 
     let agg =
         aggregate_children_from_visible(&parent, &mut cache, &root, &visible, &mut HashSet::new());

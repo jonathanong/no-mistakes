@@ -5,7 +5,7 @@ use crate::playwright::fsutil::{
 use crate::playwright::selectors;
 use anyhow::{Context, Result};
 use rayon::prelude::*;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn collect_app_selector_occurrences_from_visible(
@@ -29,7 +29,7 @@ pub(crate) fn collect_app_selector_occurrences_from_visible(
         .paths_for(root)
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let sources = snapshot.source_store_for(root);
     let app_selectors = source_files
         .par_iter()

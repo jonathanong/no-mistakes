@@ -3,7 +3,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub(crate) fn prefix_globs(root: &Path, base: &Path, patterns: &[String]) -> Vec<String> {
     let rel = relative_slash_path(root, base);
@@ -40,7 +40,7 @@ fn glob_escape_literal(value: &str) -> String {
 pub(super) fn expand_explicit_config_values(
     root: &Path,
     patterns: &[String],
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<String> {
     let mut values = Vec::new();
     let mut seen = HashSet::new();

@@ -83,7 +83,7 @@ fn resolve_entrypoint_node(
     path: &Path,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     root_dependencies: &std::collections::HashSet<String>,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     interner: &PathInterner,
 ) -> NodeId {
     if path.is_dir() {
@@ -147,7 +147,7 @@ fn raw_package_name(raw: &str) -> Option<String> {
 fn package_dir_entry(
     dir: &Path,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     workspace
         .package_by_dir(dir)

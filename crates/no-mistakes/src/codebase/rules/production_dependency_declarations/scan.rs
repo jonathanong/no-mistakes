@@ -12,7 +12,7 @@ use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 const DEFAULT_ALLOWED_FIELDS: &[&str] =
@@ -44,7 +44,7 @@ pub(super) fn run(
         return Ok(Vec::new());
     }
 
-    let visible: HashSet<PathBuf> = files.iter().map(|path| normalize_path(path)).collect();
+    let visible: crate::fx::PathSet = files.iter().map(|path| normalize_path(path)).collect();
     let imports_by_file: HashMap<PathBuf, Vec<FileImport>> = files
         .iter()
         .map(|file| {

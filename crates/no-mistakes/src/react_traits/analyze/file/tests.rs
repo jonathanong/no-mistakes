@@ -90,14 +90,15 @@ fn multi_component_scopes_fetch_to_component_span() {
 #[test]
 fn analyze_file_from_visible_reuses_prepared_source_store() {
     use crate::codebase::ts_source::{FileInventory, SourceStore};
-    use std::collections::HashSet;
     use std::sync::Arc;
 
     let root = fixture("react-traits-components", "basic");
     let file = root.join("app/components/Greeting.tsx");
     let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&file)));
     let store = SourceStore::new(inventory);
-    let visible = HashSet::from([crate::codebase::ts_resolver::normalize_path(&file)]);
+    let visible: crate::fx::PathSet = [crate::codebase::ts_resolver::normalize_path(&file)]
+        .into_iter()
+        .collect();
 
     let first = super::analyze_file_from_visible(&file, &root, &visible, Some(&store))
         .expect("should succeed");

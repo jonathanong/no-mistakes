@@ -13,7 +13,7 @@ use crate::server_routes::types::{
 };
 use anyhow::Context;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]

@@ -80,7 +80,7 @@ pub(crate) fn run_analyze_inner_from_visible(
     let visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let files = discover_react_files_from_visible(&root, file_config, targets, visible_paths)?;
 
     let mut file_cache: HashMap<PathBuf, Vec<ComponentFacts>> = HashMap::new();
@@ -129,7 +129,7 @@ fn aggregate_children_inner(
     facts: &ComponentFacts,
     file_cache: &mut HashMap<PathBuf, Vec<ComponentFacts>>,
     root: &Path,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
     visited: &mut HashSet<String>,
 ) -> AggregatedFacts {

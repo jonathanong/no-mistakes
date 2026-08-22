@@ -3,7 +3,6 @@ use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
     ObjectPropertyKind, Program, Statement,
 };
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 const DEFERRED_IMPORT_PREFIX: &str = "\0no-mistakes-playwright-import:";
@@ -39,7 +38,7 @@ pub(crate) fn resolve_imported_values_from_visible(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Vec<String> {
     resolve_imported_values_inner(
@@ -55,7 +54,7 @@ pub(crate) fn defer_imported_values_from_visible(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<String> {
     let Some((source, exported_name, is_default)) = find_import_info(local_name, program) else {
         return Vec::new();
@@ -107,13 +106,15 @@ pub(crate) fn collect_static_export_values(program: &Program<'_>) -> StaticExpor
                     }
                 }
                 Declaration::FunctionDeclaration(function) => {
-                    if let Some(name) = function.id.as_ref().map(|id| id.name.to_string()) {
-                        let mut values = Vec::new();
-                        collect_from_named_declaration(&export.declaration, &name, &mut values);
-                        if !values.is_empty() {
-                            facts.named.insert(name, values);
-                        }
-                    }
+                    record_named_function_export(
+                        function.id.as_ref().map(|id| id.name.to_string()),
+                        |name| {
+                            let mut values = Vec::new();
+                            collect_from_named_declaration(&export.declaration, name, &mut values);
+                            values
+                        },
+                        &mut facts,
+                    );
                 }
                 _ => {}
             },
@@ -126,11 +127,25 @@ pub(crate) fn collect_static_export_values(program: &Program<'_>) -> StaticExpor
     facts
 }
 
+pub(crate) fn record_named_function_export(
+    name: Option<String>,
+    collect_values: impl FnOnce(&str) -> Vec<String>,
+    facts: &mut StaticExportValues,
+) {
+    let Some(name) = name else {
+        return;
+    };
+    let values = collect_values(&name);
+    if !values.is_empty() {
+        facts.named.insert(name, values);
+    }
+}
+
 fn resolve_imported_values_inner(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Vec<String> {
     let Some((source_str, exported_name, is_default)) = find_import_info(local_name, program)

@@ -66,7 +66,7 @@ pub(super) struct ReachabilityContext<'a> {
     pub(super) imports_by_file: &'a HashMap<PathBuf, Vec<FileImport>>,
     pub(super) owners: &'a HashMap<PathBuf, PathBuf>,
     pub(super) test_globset: &'a GlobSet,
-    pub(super) visible: &'a HashSet<PathBuf>,
+    pub(super) visible: &'a crate::fx::PathSet,
 }
 
 /// Files of the package rooted at `package_dir` that are reachable from
@@ -114,7 +114,7 @@ fn resolved_targets(
     workspace: &WorkspaceMap,
     file: &Path,
     imports: &[FileImport],
-    visible: &HashSet<PathBuf>,
+    visible: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     imports
         .iter()
@@ -127,7 +127,7 @@ fn resolve_target(
     workspace: &WorkspaceMap,
     file: &Path,
     import_specifier: &str,
-    visible: &HashSet<PathBuf>,
+    visible: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     if specifier::is_relative(import_specifier) {
         resolve_relative(file, import_specifier, visible)
@@ -136,12 +136,12 @@ fn resolve_target(
     }
 }
 
-fn resolve_relative(file: &Path, specifier: &str, visible: &HashSet<PathBuf>) -> Option<PathBuf> {
+fn resolve_relative(file: &Path, specifier: &str, visible: &crate::fx::PathSet) -> Option<PathBuf> {
     let dir = file.parent()?;
     try_resolve(&normalize_path(&dir.join(specifier)), visible)
 }
 
-fn try_resolve(candidate: &Path, visible: &HashSet<PathBuf>) -> Option<PathBuf> {
+fn try_resolve(candidate: &Path, visible: &crate::fx::PathSet) -> Option<PathBuf> {
     if visible.contains(candidate) {
         return Some(candidate.to_path_buf());
     }

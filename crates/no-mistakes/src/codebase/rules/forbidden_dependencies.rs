@@ -70,7 +70,7 @@ fn check_rule_application(
     opts: &Options,
     graph: &DepGraph,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    file_universe: Option<&HashSet<std::path::PathBuf>>,
+    file_universe: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<RuleFinding>> {
     if opts.roots.is_empty()
         || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())

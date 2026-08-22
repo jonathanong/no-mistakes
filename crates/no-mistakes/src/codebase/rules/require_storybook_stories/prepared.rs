@@ -2,7 +2,6 @@ use super::{runner::check_with_resolver, CheckFactMap, NoMistakesConfig, RuleFin
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::ts_resolver::{normalize_path, ScopedImportResolver, TsConfigCatalog};
 use anyhow::Result;
-use std::collections::HashSet;
 use std::path::Path;
 
 pub(crate) struct PreparedStorybookCheck<'a> {
@@ -37,7 +36,7 @@ fn check_with_optional_inferred(input: PreparedStorybookCheck<'_>) -> Result<Vec
         .files()
         .iter()
         .map(|path| normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let resolver =
         ScopedImportResolver::new_in_session(prepared_tsconfig_catalog, &visible_files, session);
     check_with_resolver(

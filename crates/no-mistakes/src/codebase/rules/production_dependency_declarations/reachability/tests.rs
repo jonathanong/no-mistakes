@@ -56,7 +56,7 @@ fn file_imports_uses_the_tsx_extractor_for_a_tsx_file() {
 #[test]
 fn try_resolve_matches_an_exact_visible_path() {
     let candidate = PathBuf::from("/repo/packages/lib/helper.mts");
-    let visible: HashSet<PathBuf> = [candidate.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [candidate.clone()].into_iter().collect();
 
     assert_eq!(try_resolve(&candidate, &visible), Some(candidate));
 }
@@ -65,7 +65,7 @@ fn try_resolve_matches_an_exact_visible_path() {
 fn try_resolve_appends_a_resolve_extension() {
     let candidate = PathBuf::from("/repo/packages/lib/helper");
     let resolved = PathBuf::from("/repo/packages/lib/helper.mts");
-    let visible: HashSet<PathBuf> = [resolved.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [resolved.clone()].into_iter().collect();
 
     assert_eq!(try_resolve(&candidate, &visible), Some(resolved));
 }
@@ -74,7 +74,7 @@ fn try_resolve_appends_a_resolve_extension() {
 fn try_resolve_falls_back_to_a_directory_index_file() {
     let candidate = PathBuf::from("/repo/packages/lib/sub");
     let resolved = PathBuf::from("/repo/packages/lib/sub/index.mts");
-    let visible: HashSet<PathBuf> = [resolved.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [resolved.clone()].into_iter().collect();
 
     assert_eq!(try_resolve(&candidate, &visible), Some(resolved));
 }
@@ -83,14 +83,17 @@ fn try_resolve_falls_back_to_a_directory_index_file() {
 fn try_resolve_returns_none_when_nothing_matches() {
     let candidate = PathBuf::from("/repo/packages/lib/missing");
 
-    assert_eq!(try_resolve(&candidate, &HashSet::new()), None);
+    assert_eq!(
+        try_resolve(&candidate, &crate::fx::PathSet::default()),
+        None
+    );
 }
 
 #[test]
 fn resolve_relative_joins_the_importing_files_directory() {
     let file = PathBuf::from("/repo/packages/lib/index.mts");
     let resolved = PathBuf::from("/repo/packages/lib/helper.mts");
-    let visible: HashSet<PathBuf> = [resolved.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [resolved.clone()].into_iter().collect();
 
     assert_eq!(
         resolve_relative(&file, "./helper", &visible),
@@ -102,7 +105,10 @@ fn resolve_relative_joins_the_importing_files_directory() {
 fn resolve_relative_returns_none_for_a_file_with_no_parent() {
     let file = PathBuf::from("");
 
-    assert_eq!(resolve_relative(&file, "./helper", &HashSet::new()), None);
+    assert_eq!(
+        resolve_relative(&file, "./helper", &crate::fx::PathSet::default()),
+        None
+    );
 }
 
 #[test]
@@ -110,7 +116,7 @@ fn resolve_target_dispatches_relative_specifiers_to_resolve_relative() {
     let workspace = WorkspaceMap::from_packages(Vec::new());
     let file = PathBuf::from("/repo/packages/lib/index.mts");
     let resolved = PathBuf::from("/repo/packages/lib/helper.mts");
-    let visible: HashSet<PathBuf> = [resolved.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [resolved.clone()].into_iter().collect();
 
     assert_eq!(
         resolve_target(&workspace, &file, "./helper", &visible),
@@ -129,7 +135,7 @@ fn resolve_target_dispatches_bare_specifiers_to_the_workspace() {
         imports: None,
     }]);
     let file = PathBuf::from("/repo/packages/lib/index.mts");
-    let visible: HashSet<PathBuf> = [entry.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [entry.clone()].into_iter().collect();
 
     assert_eq!(
         resolve_target(&workspace, &file, "@acme/tool", &visible),
@@ -148,7 +154,7 @@ fn resolved_targets_filters_out_type_only_imports() {
         imports: None,
     }]);
     let file = PathBuf::from("/repo/packages/lib/index.mts");
-    let visible: HashSet<PathBuf> = [entry.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [entry.clone()].into_iter().collect();
     let imports = vec![
         FileImport {
             line: 1,
@@ -209,7 +215,7 @@ fn production_reachable_files_seeds_from_an_external_importer_and_follows_relati
     owners.insert(app_entry.clone(), app_dir);
     owners.insert(lib_entry.clone(), package_dir.clone());
     owners.insert(lib_helper.clone(), package_dir.clone());
-    let visible: HashSet<PathBuf> = [app_entry.clone(), lib_entry.clone(), lib_helper.clone()]
+    let visible: crate::fx::PathSet = [app_entry.clone(), lib_entry.clone(), lib_helper.clone()]
         .into_iter()
         .collect();
     let test_globset = globset(&["**/__tests__/**"]);
@@ -257,7 +263,7 @@ fn production_reachable_files_excludes_test_only_importers_from_seeding() {
     );
     let mut owners = HashMap::new();
     owners.insert(test_file.clone(), app_dir);
-    let visible: HashSet<PathBuf> = [lib_entry, test_file].into_iter().collect();
+    let visible: crate::fx::PathSet = [lib_entry, test_file].into_iter().collect();
     let test_globset = globset(&["**/__tests__/**"]);
     let ctx = ReachabilityContext {
         root: &root,
@@ -302,7 +308,7 @@ fn production_reachable_files_treats_a_missing_imports_entry_as_a_leaf() {
     // gracefully when a reachable file was never fed through `file_imports`.
     let mut owners = HashMap::new();
     owners.insert(app_entry.clone(), app_dir);
-    let visible: HashSet<PathBuf> = [app_entry, lib_entry.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [app_entry, lib_entry.clone()].into_iter().collect();
     let test_globset = globset(&["**/__tests__/**"]);
     let ctx = ReachabilityContext {
         root: &root,
@@ -346,7 +352,7 @@ fn production_reachable_files_does_not_seed_from_files_owned_by_the_same_package
     );
     let mut owners = HashMap::new();
     owners.insert(lib_helper.clone(), package_dir.clone());
-    let visible: HashSet<PathBuf> = [lib_entry, lib_helper].into_iter().collect();
+    let visible: crate::fx::PathSet = [lib_entry, lib_helper].into_iter().collect();
     let test_globset = globset(&["**/__tests__/**"]);
     let ctx = ReachabilityContext {
         root: &root,

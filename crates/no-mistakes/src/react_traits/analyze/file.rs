@@ -11,8 +11,7 @@ use crate::react_traits::analyze::import_table::{
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment, FetchCall};
 use crate::react_traits::traits;
 use anyhow::Result;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 
 pub(crate) struct FileAnalysis {
@@ -29,7 +28,7 @@ pub(crate) fn analyze_file(abs_path: &Path, root: &Path) -> Result<FileAnalysis>
 pub(crate) fn analyze_file_from_visible(
     abs_path: &Path,
     root: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     sources: Option<&SourceStore>,
 ) -> Result<FileAnalysis> {
     analyze_file_inner(abs_path, root, Some(visible_files), sources)
@@ -38,7 +37,7 @@ pub(crate) fn analyze_file_from_visible(
 fn analyze_file_inner(
     abs_path: &Path,
     root: &Path,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&SourceStore>,
 ) -> Result<FileAnalysis> {
     let source: Arc<str> = match sources {
@@ -66,7 +65,7 @@ pub(crate) fn analyze_program_from_visible(
     root: &Path,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> FileAnalysis {
     analyze_program_inner(abs_path, root, source, program, Some(visible_files))
 }
@@ -76,7 +75,7 @@ fn analyze_program_inner(
     root: &Path,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> FileAnalysis {
     let rel_path = relative_string(root, abs_path);
 

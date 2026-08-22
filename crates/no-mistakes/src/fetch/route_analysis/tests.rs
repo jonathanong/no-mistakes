@@ -43,7 +43,7 @@ fn visible_fetch_analysis_skips_unlisted_and_already_visited_files() {
     let mut parsed_files = ParsedFileCache::default();
     let mut visited = HashSet::new();
     let mut fetches = Vec::new();
-    let empty_visible = HashSet::new();
+    let empty_visible = crate::fx::PathSet::default();
 
     let skipped = analyze_file_from_visible_with_facts(
         &page,
@@ -62,7 +62,7 @@ fn visible_fetch_analysis_skips_unlisted_and_already_visited_files() {
     assert!(!skipped);
     assert!(fetches.is_empty());
 
-    let visible = HashSet::from([page.clone()]);
+    let visible: crate::fx::PathSet = [page.clone()].into_iter().collect();
     let first = analyze_file_from_visible_with_facts(
         &page,
         (false, false),
@@ -107,7 +107,7 @@ fn visible_fetch_analysis_skips_unlisted_and_already_visited_files() {
             files: HashMap::new(),
             imports: HashMap::new(),
         },
-        &HashSet::new(),
+        &crate::fx::PathSet::default(),
     )
     .unwrap();
     assert!(hidden.is_empty());
@@ -137,7 +137,7 @@ fn visible_fetch_analysis_propagates_imported_fact_load_errors() {
         },
     );
     parsed_files.insert_error(child.clone(), "child source unreadable".to_string());
-    let visible = HashSet::from([parent.clone(), child]);
+    let visible: crate::fx::PathSet = [parent.clone(), child].into_iter().collect();
     let mut visited = HashSet::new();
     let mut fetches = Vec::new();
 

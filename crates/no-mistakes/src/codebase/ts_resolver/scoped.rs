@@ -1,6 +1,6 @@
 use dashmap::mapref::entry::Entry as ScopedEntry;
 use dashmap::DashMap as ScopedDashMap;
-use std::collections::HashSet as ScopedHashSet;
+use crate::fx::FxHashSet as ScopedHashSet;
 use std::path::{Path as ScopedPath, PathBuf as ScopedPathBuf};
 use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
 use std::sync::Arc as ScopedArc;
@@ -114,7 +114,7 @@ impl<'a> ScopedImportResolver<'a> {
         specifier: &str,
         importing_file: &ScopedPath,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &ScopedHashSet<ScopedPathBuf>,
+        visible_files: &crate::fx::PathSet,
     ) -> ImportClassification {
         if let Some(resolver) = self.fixed_resolver_for(importing_file) {
             return resolver.classify_import(specifier, importing_file, workspace, visible_files);

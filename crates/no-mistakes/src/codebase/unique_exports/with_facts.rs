@@ -6,7 +6,6 @@ use super::{
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use anyhow::Result;
-use std::collections::HashSet;
 use std::path::Path;
 
 mod helpers;
@@ -96,7 +95,7 @@ fn analyze_project_roots_with_facts(
     let visible_files = workspace_files
         .iter()
         .map(|path| normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
         .unwrap_or_default();
     let remix_roots = super::remix::configured_roots(root, config, inferred_roots);
