@@ -90,18 +90,38 @@ fn project_import_resolver_owns_normalized_session_visibility() {
 }
 
 #[test]
-fn prepared_symbol_flows_own_normalized_session_visibility() {
+fn borrowed_scoped_resolvers_own_normalized_visibility() {
+    let source = include_str!("scoped_setup.rs");
+    let body = source
+        .split("pub(crate) fn from_lookup(")
+        .nth(1)
+        .expect("from_lookup")
+        .split("fn build(")
+        .next()
+        .expect("from_lookup body");
+    assert!(
+        body.contains("normalized_visible("),
+        "from_lookup must own canonical aliases instead of borrowing GraphFiles exact membership"
+    );
+    assert!(
+        !body.contains("ResolverVisible::Borrowed"),
+        "from_lookup must not borrow GraphFiles exact membership"
+    );
+}
+
+#[test]
+fn prepared_symbol_flows_keep_session_scoped_resolution() {
     for (name, source) in [
         ("pipeline", include_str!("../symbols/pipeline.rs")),
-        ("impact_collect", include_str!("../symbols/impact_collect.rs")),
+        (
+            "impact_collect",
+            include_str!("../symbols/impact_collect.rs"),
+        ),
     ] {
         assert!(
-            source.contains("ScopedImportResolver::new_in_session"),
-            "{name} must own canonical aliases via new_in_session"
-        );
-        assert!(
-            !source.contains("from_lookup"),
-            "{name} must not borrow GraphFiles exact membership via from_lookup"
+            source.contains("ScopedImportResolver::from_lookup")
+                || source.contains("ScopedImportResolver::new_in_session"),
+            "{name} must resolve through a scoped session constructor"
         );
     }
 }
