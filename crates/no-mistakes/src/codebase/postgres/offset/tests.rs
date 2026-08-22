@@ -162,6 +162,7 @@ fn order_by_subquery_offset_is_detected() {
             .unwrap()
     );
     assert!(!sql_has_offset_clause("SELECT id FROM t ORDER BY id").unwrap());
+    assert!(!sql_has_offset_clause("SELECT id FROM t ORDER BY ALL").unwrap());
 }
 
 #[test]

@@ -36,8 +36,7 @@ fn limit_clause_has_offset(clause: Option<&LimitClause>) -> bool {
                 || limit.as_ref().is_some_and(expr_has_offset_query)
                 || limit_by.iter().any(expr_has_offset_query)
         }
-        Some(LimitClause::OffsetCommaLimit { .. }) => true,
-        None => false,
+        other => other.is_some(),
     }
 }
 
@@ -151,8 +150,7 @@ fn function_args_has_offset(args: &FunctionArguments) -> bool {
             FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => expr_has_offset_query(expr),
             _ => false,
         }),
-        FunctionArguments::Subquery(query) => query_has_offset(query),
-        FunctionArguments::None => false,
+        _ => false,
     }
 }
 
