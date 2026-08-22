@@ -478,3 +478,35 @@ fn fallback_lookup_uses_fallback_fetch_when_primary_has_no_facts() {
     };
     assert!(error.contains("fallback"));
 }
+
+#[test]
+fn fallback_lookup_reuses_primary_playwright_cache_only_for_matching_universes() {
+    struct Files(TsFactMap, Vec<PathBuf>);
+    impl TsFactLookup for Files {
+        fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
+            self.0.get(path)
+        }
+        fn graph_files(&self) -> Option<&[PathBuf]> {
+            Some(&self.1)
+        }
+    }
+
+    let path = p("/repo/a.ts");
+    let files = vec![path.clone()];
+    let primary = Files(
+        TsFactMap::from([(path.clone(), TsFileFacts::default())]),
+        files.clone(),
+    );
+    let fallback = TsFactMap::new();
+    let visible: crate::fx::PathSet = files.clone().into_iter().collect();
+    assert!(same_graph_universe(&files, &visible));
+    let lookup = FallbackTsFactLookup::new(&primary, &fallback, false, &files, &visible);
+    assert!(lookup.playwright_source_files().is_none());
+    assert!(lookup
+        .get_or_compute_playwright_routes(&cache_settings(), &|| Vec::new())
+        .is_empty());
+
+    let mismatched: crate::fx::PathSet = [p("/repo/b.ts")].into_iter().collect();
+    let lookup = FallbackTsFactLookup::new(&primary, &fallback, true, &files, &mismatched);
+    assert!(lookup.playwright_source_files().is_none());
+}

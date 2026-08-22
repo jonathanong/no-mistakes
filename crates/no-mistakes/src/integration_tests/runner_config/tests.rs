@@ -355,3 +355,12 @@ fn prepared_runner_source_store_read_failures_surface() {
     assert!(facts.results[0].projects.is_err());
     assert!(prepared.parse_all().is_err());
 }
+
+#[test]
+fn configured_runner_config_dirs_use_each_config_parent() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("apps/web/vitest.config.ts".into()));
+    config.tests.playwright.configs = Some(StringOrList::One("playwright.config.ts".into()));
+    let dirs = super::configured_runner_config_dirs(Path::new("/repo"), &config);
+    assert_eq!(dirs.len(), 2);
+}

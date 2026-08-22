@@ -188,4 +188,22 @@ fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
     assert!(
         !tolerated_failure.failed || dynamic_continue.indeterminate || !dynamic_continue.failed
     );
+
+    let tolerated_unresolved_run = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: echo '${{ matrix.x }}'",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_unresolved_run.failed && !tolerated_unresolved_run.indeterminate);
+
+    let tolerated_unresolved_shell = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    shell: '${{ vars.SHELL }}'\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_unresolved_shell.failed && !tolerated_unresolved_shell.indeterminate);
+
+    let nameless = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    name: no-run",
+        BTreeSet::new(),
+    );
+    assert!(!nameless.failed);
 }

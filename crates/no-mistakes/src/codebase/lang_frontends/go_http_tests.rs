@@ -4,7 +4,7 @@ use super::*;
 fn literal_net_http_and_mux_registrations_extract_handlers() {
     let source = r#"
 http.HandleFunc("/health", Health)
-mux.Handle("/ready", Ready)
+mux.Handle(`/ready`, Ready)
 r.Get("/users", Users)
 g.POST("/items", CreateItem)
 e.PUT("/ping", Ping)

@@ -16,6 +16,7 @@
 
 mod artifact;
 mod artifact_ranges;
+mod call_contract;
 mod coverage;
 mod metadata;
 mod posix;

@@ -102,3 +102,14 @@ fn collect_entries_falls_back_when_the_default_tsconfig_is_invalid() {
     let (entries, _) = collect_entries(&args).expect("invalid default tsconfig falls back");
     assert_eq!(entries.len(), 1);
 }
+
+#[test]
+fn collect_entries_accepts_a_relative_tsconfig_path() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(tmp.path().join("tsconfig.json"), "{\"include\":[\"*.ts\"]}\n").unwrap();
+    std::fs::write(tmp.path().join("src.ts"), "export const value = 1;\n").unwrap();
+    let mut args = args_for(tmp.path(), vec!["src.ts"], Format::Json);
+    args.tsconfig = Some(PathBuf::from("tsconfig.json"));
+    let (entries, _) = collect_entries(&args).expect("relative tsconfig is joined to root");
+    assert_eq!(entries.len(), 1);
+}

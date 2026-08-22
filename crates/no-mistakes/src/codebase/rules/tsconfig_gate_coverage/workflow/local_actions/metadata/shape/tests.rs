@@ -73,4 +73,19 @@ fn action_metadata_accepts_optional_fields_and_absent_blocks() {
     )
     .unwrap();
     assert!(runs_shape_valid(node.as_mapping().unwrap(), "node"));
+    assert!(outputs_valid(
+        Some(
+            &serde_yaml::from_str("out: {description: x, value: \"${{ inputs.name }}\"}\n")
+                .unwrap()
+        ),
+        true
+    ));
+    let docker: Value = serde_yaml::from_str(
+        "using: docker\nimage: docker://example\nargs:\n  - ${{ inputs.tag }}\nenv:\n  NAME: ${{ inputs.name }}\npre-if: always()\npost-if: always()\nentrypoint: /entry\npre-entrypoint: /pre\npost-entrypoint: /post\n",
+    )
+    .unwrap();
+    assert!(runs_shape_valid(docker.as_mapping().unwrap(), "docker"));
+    assert!(branding_valid(Some(
+        &serde_yaml::from_str("icon: activity\ncolor: blue").unwrap()
+    )));
 }

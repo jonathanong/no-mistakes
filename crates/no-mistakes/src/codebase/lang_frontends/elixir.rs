@@ -116,7 +116,7 @@ pub(super) fn extract_elixir_imports(source: &str) -> Vec<String> {
                 && !path.contains('*')
                 && !rest.starts_with('{')
                 && !rest.starts_with(".{"))
-            .then(|| path.to_string())
+            .then_some(path.to_string())
         })
         .collect();
     values.sort();

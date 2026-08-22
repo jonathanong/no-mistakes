@@ -143,12 +143,26 @@ fn require_glob_and_destructure_shapes_are_extracted() {
         import { glob as tinyGlob } from 'tinyglobby';
         import { fileURLToPath } from 'node:url';
         import { parse } from 'node:url';
+        import * as url from 'node:url';
+        import * as fsp from 'node:fs/promises';
+        import * as g from 'glob';
+        import { globSync } from 'glob';
         const fs = require('fs');
         const { readFile: rf = fs.readFile } = require('fs');
-        const [first] = [require('fs')];
+        const [fsArr] = require('fs');
+        const dynamicRequire = require(mod);
+        const promises = require('fs').promises;
         tinyGlob('tiny/**/*.txt');
         fs.readFile(fileURLToPath(new URL('./via-url.json', import.meta.url)));
+        fs.readFile(('paren.json'));
+        g.glob('templates/**/*.txt', { cwd: import.meta.dirname });
+        g.glob(`literal-cwd/**/*.txt`, { cwd: `static-cwd` });
         parse('https://example.test');
+        promises.readdir('dir');
+        fsp.readdir('fsp-dir');
+        g.sync('g-sync/**/*.txt');
+        globSync('glob-sync/**/*.txt');
+        url.fileURLToPath(new URL('./ns-url.json', import.meta.url));
         "#,
     );
     assert!(
