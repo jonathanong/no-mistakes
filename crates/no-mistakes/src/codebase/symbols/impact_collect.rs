@@ -88,10 +88,10 @@ fn build_report_from_prepared(
     }
     let local_caller_context =
         prepare_local_caller_context(facts, workspace, &visible_files, &remapper);
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
         tsconfig_catalog,
         local_caller_context.visible_files,
-        session,
+        Some(session),
     );
     let production_extra_callers = local_caller_entries(
         &local_caller_context,
