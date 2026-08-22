@@ -41,3 +41,20 @@ fn uri_fragments_are_stripped() {
     assert!(extract_http_paths(r#"Uri.parse("/api/users#details");"#)
         .contains(&"/api/users".to_string()));
 }
+
+#[test]
+fn interpolated_uris_are_skipped() {
+    assert!(extract_http_paths(r#"Uri.parse("/api/$userId");"#).is_empty());
+}
+
+#[test]
+fn suffix_receivers_are_skipped() {
+    assert!(
+        extract_http_paths(r#"MyUri.parse("/api/users"); myhttp.get("/api/health");"#).is_empty()
+    );
+}
+
+#[test]
+fn query_slashes_on_hosted_urls_are_not_paths() {
+    assert!(extract_http_paths(r#"Uri.parse("https://example.com?next=/api/users");"#).is_empty());
+}
