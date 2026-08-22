@@ -66,6 +66,8 @@ pub fn find_generated_column_writes(
     if catalog.is_empty() {
         return Vec::new();
     }
+    let sql = super::super::parse::expand_chr_encoded_sql(sql).unwrap_or_else(|| sql.to_string());
+    let sql = sql.as_str();
     if !extract_dml_write_targets(sql)
         .iter()
         .any(|table| catalog.contains_table(table))
