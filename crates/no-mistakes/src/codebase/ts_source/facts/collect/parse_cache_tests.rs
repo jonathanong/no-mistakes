@@ -66,21 +66,28 @@ fn sequential_batch_evicts_after_serial_files_loop() {
 
 #[test]
 fn sequential_same_path_reuses_parse_until_evicted() {
-    let path = fixture("imports.ts");
-    let root = path.parent().expect("fixture directory");
+    // Unique root: `begin_parse_count` attributes every parse under that
+    // prefix, so sharing `test-cases/.../facts` with parallel tests would
+    // count their work as this session's.
+    let isolated = crate::test_support::materialize_saved_fixture(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/ast-snippets/ts-source/fixture/facts"),
+    );
+    let path = crate::codebase::ts_resolver::normalize_path(&isolated.path().join("imports.ts"));
+    let root = crate::codebase::ts_resolver::normalize_path(isolated.path());
     let sources = sources_for(std::slice::from_ref(&path));
 
-    crate::ast::begin_parse_count(root);
+    crate::ast::begin_parse_count(&root);
     crate::ast::with_request_parse_cache(|| {
         collect_one(&path, &sources, true);
         assert_eq!(crate::ast::request_parse_cache_len(), 1);
         collect_one(&path, &sources, true);
         assert_eq!(crate::ast::request_parse_cache_len(), 1);
     });
-    let counts = crate::ast::finish_parse_count(root);
+    let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
 
-    crate::ast::begin_parse_count(root);
+    crate::ast::begin_parse_count(&root);
     crate::ast::with_request_parse_cache(|| {
         collect_one(&path, &sources, true);
         crate::ast::evict_request_parse_cache_path(&path);
@@ -88,7 +95,7 @@ fn sequential_same_path_reuses_parse_until_evicted() {
         collect_one(&path, &sources, true);
         assert_eq!(crate::ast::request_parse_cache_len(), 1);
     });
-    let counts = crate::ast::finish_parse_count(root);
+    let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(
         counts.get(&path),
         Some(&2),
