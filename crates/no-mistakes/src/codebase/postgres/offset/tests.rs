@@ -109,3 +109,35 @@ fn binary_and_unary_predicate_offsets_are_detected() {
     )
     .unwrap());
 }
+
+#[test]
+fn exists_subquery_offset_is_detected() {
+    assert!(
+        sql_has_offset_clause("SELECT * FROM t WHERE EXISTS (SELECT 1 FROM u OFFSET 1)").unwrap()
+    );
+}
+
+#[test]
+fn projection_subquery_offset_is_detected() {
+    assert!(sql_has_offset_clause("SELECT (SELECT 1 FROM u OFFSET 1) FROM t").unwrap());
+}
+
+#[test]
+fn join_on_exists_offset_is_detected() {
+    assert!(
+        sql_has_offset_clause("SELECT * FROM t JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)")
+            .unwrap()
+    );
+}
+
+#[test]
+fn update_and_delete_subquery_offsets_are_detected() {
+    assert!(
+        sql_has_offset_clause("UPDATE users SET rank = (SELECT rank FROM rankings OFFSET 1)")
+            .unwrap()
+    );
+    assert!(
+        sql_has_offset_clause("DELETE FROM users WHERE id IN (SELECT id FROM stale OFFSET 1)")
+            .unwrap()
+    );
+}

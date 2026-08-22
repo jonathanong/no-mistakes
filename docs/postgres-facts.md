@@ -130,7 +130,8 @@ instead of re-parsing SQL with a private parser.
 
 `sql_has_offset_clause(sql)` parses PostgreSQL SQL and returns whether any
 query uses an `OFFSET` clause, including CTEs, derived tables, subqueries,
-`INSERT … SELECT`, and MySQL `LIMIT offset, limit` form. String literals that
+`EXISTS`, select-list scalars, `JOIN … ON`, `INSERT`/`UPDATE`/`DELETE`
+nested queries, and MySQL `LIMIT offset, limit` form. String literals that
 mention the word "offset" are not clauses. Unparseable SQL returns an error.
 `postgres-no-offset` consumes this helper.
 
