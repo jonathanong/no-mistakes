@@ -88,7 +88,7 @@ impl ParsedProgramCache {
         let path = crate::codebase::ts_resolver::normalize_path(path);
         self.entries
             .borrow_mut()
-            .retain(|(cached, _), _| cached != &path);
+            .retain(|(cached, _), _| cached.as_ref() != path.as_path());
     }
 
     pub(crate) fn entry_count(&self) -> usize {
