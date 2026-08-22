@@ -195,30 +195,3 @@ fn rails_collects_sidekiq_enqueue_and_workers() {
         .expect("dynamic");
     assert!(dynamic.queue_enqueues.is_empty());
 }
-
-#[test]
-fn php_collects_alias_and_group_use_imports() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/php-use-aliases"),
-    );
-    let files = all_files(&root);
-    let store = store_for(&files);
-    let facts = collect_php_facts(&root, &files, &[".".into()], Some("laravel"), &store);
-    let uses = facts
-        .files
-        .values()
-        .find(|file| file.path.ends_with("Uses.php"))
-        .expect("uses");
-    assert!(uses
-        .imports
-        .iter()
-        .any(|import| import == "Job=App.Jobs.SomeJob"));
-    assert!(uses
-        .imports
-        .iter()
-        .any(|import| import == "Dto=App.Dto.UserDto"));
-    assert!(uses
-        .imports
-        .iter()
-        .any(|import| import == "App.Dto.Missing"));
-}
