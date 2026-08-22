@@ -24,4 +24,7 @@ include!("ts_resolver/project_resolver.rs");
 mod scoped_test_support;
 
 #[cfg(test)]
+mod catalog_coverage_tests;
+
+#[cfg(test)]
 mod tests;

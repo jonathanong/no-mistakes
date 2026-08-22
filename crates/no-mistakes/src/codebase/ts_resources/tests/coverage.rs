@@ -104,3 +104,14 @@ fn records_static_url_forms_and_scoped_dynamic_diagnostics() {
         ]
     );
 }
+
+#[test]
+fn nested_assignment_targets_are_walked() {
+    let facts = facts(include_str!(
+        "../../../../../../fixtures/test-plan/resource-impact/extractor-nested-assign.ts"
+    ));
+    assert!(
+        facts.calls.is_empty(),
+        "nested assignment targets must invalidate rebound fs bindings: {facts:#?}"
+    );
+}
