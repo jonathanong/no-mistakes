@@ -12,10 +12,14 @@ pub(super) fn looks_like_repo_relative_module(specifier: &str) -> bool {
 pub(super) fn path_ends_with_module(path: &Path, module: &str) -> bool {
     let normalized = path.to_string_lossy().replace('\\', "/");
     let module = module.trim_start_matches("./").replace('\\', "/");
-    normalized.ends_with(&module)
+    has_component_suffix(&normalized, &module)
         || [".ts", ".tsx", ".js", ".jsx", ".mts", ".cts", ".mjs", ".cjs"]
             .iter()
-            .any(|ext| normalized.ends_with(&format!("{module}{ext}")))
+            .any(|ext| has_component_suffix(&normalized, &format!("{module}{ext}")))
+}
+
+fn has_component_suffix(path: &str, suffix: &str) -> bool {
+    path == suffix || path.ends_with(&format!("/{suffix}"))
 }
 
 #[derive(PartialEq)]
@@ -50,3 +54,7 @@ pub(super) fn is_external_terminal(
         && !specifier.starts_with('#')
         && !resolver.matches_alias(specifier)
 }
+
+#[cfg(test)]
+#[path = "module_resolution_path/tests.rs"]
+mod tests;
