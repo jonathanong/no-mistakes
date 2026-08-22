@@ -587,7 +587,8 @@ test("graph declarations expose GitHub Actions workflow relationships and virtua
   assert.match(traversalDeclarations, /workflowFile\?: string;/);
   assert.match(traversalDeclarations, /job\?: string;/);
   assert.match(traversalDeclarations, /step\?: number;/);
-  assert.match(flowDeclarations, /"workflow-job" \| "workflow-step"/);
+  assert.match(flowDeclarations, /"workflow-job"/);
+  assert.match(flowDeclarations, /"workflow-step"/);
   assert.match(flowDeclarations, /workflowFile\?: string;/);
   assert.match(flowDeclarations, /step\?: number;/);
 });
