@@ -1,5 +1,7 @@
 "use strict";
 
+const { directCallerJobIdsForUses, stepOrderIndexes } = require("./workflow-topology-index-helpers");
+
 // A pure-JS query index rebuilt from the `ciTopology()` JSON, ported from
 // the original engine's `topology-index.mts` + `frozen-topology.mts`. This
 // stays JS-only by design: it returns closures over frozen `Map`s, which
@@ -214,6 +216,11 @@ function createWorkflowTopologyIndex(topology) {
     transitiveWorkflowRunSubscriberPaths: workflowQuery(workflowRunSubscribers, true),
     artifactProducersForConsumerJob: artifactEdgeQuery(artifactProducers),
     artifactConsumersForProducerJob: artifactEdgeQuery(artifactConsumers),
+    directCallerJobIdsForUses: (uses) => directCallerJobIdsForUses(jobsById, uses),
+    stepOrderIndexes: (jobId, selectors) => {
+      assertKnown(jobsById, jobId, "workflow job");
+      return stepOrderIndexes(jobsById.get(jobId), selectors);
+    },
   });
 }
 
