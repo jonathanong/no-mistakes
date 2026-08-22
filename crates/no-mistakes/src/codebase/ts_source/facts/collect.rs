@@ -9,6 +9,8 @@ use file::collect_file_facts_with_sources_and_session;
 
 #[cfg(test)]
 pub(crate) mod test_support;
+#[cfg(test)]
+mod parse_cache_tests;
 
 pub fn collect_ts_facts(files: &[PathBuf], plan: TsFactPlan) -> TsFactMap {
     assert!(
@@ -101,7 +103,7 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session_serializing_path
                 .map(|path| {
                     crate::invocation::check_timeout().ok().map(|()| {
                         collect_file_facts_with_sources_and_session(
-                            session, path, plan, context, sources,
+                            session, path, plan, context, sources, false,
                         )
                         .map(|facts| (path.clone(), facts))
                     })
@@ -120,25 +122,28 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session_serializing_path
         .into_iter()
         .partition(|path| serial_paths.contains(path));
     let mut facts = serial_files
-        .into_iter()
+        .iter()
         .filter_map(|path| {
             crate::invocation::check_timeout()
                 .ok()
                 .and_then(|()| {
                     collect_file_facts_with_sources_and_session(
-                        session, &path, plan, context, sources,
+                        session, path, plan, context, sources, true,
                     )
                 })
-                .map(|facts| (path, facts))
+                .map(|facts| (path.clone(), facts))
         })
         .collect::<Vec<_>>();
+    for path in &serial_files {
+        crate::ast::evict_request_parse_cache_path(path);
+    }
     facts.extend(
         parallel_files
             .par_iter()
             .map(|path| {
                 crate::invocation::check_timeout().ok().map(|()| {
                     collect_file_facts_with_sources_and_session(
-                        session, path, plan, context, sources,
+                        session, path, plan, context, sources, false,
                     )
                     .map(|facts| (path.clone(), facts))
                 })

@@ -17,7 +17,7 @@ pub(crate) fn collect_file_facts(
     ]));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
     super::collect_file_facts_with_session_and_sources(
-        &session, root, path, plan, playwright, &sources,
+        &session, root, path, plan, playwright, &sources, false,
     )
 }
 

@@ -8,8 +8,12 @@ use std::path::Path;
 
 mod expression;
 mod parsed_cache;
+#[cfg(any(test, feature = "test-instrumentation"))]
+mod parse_count;
 pub use expression::{binary_concat_path_text, expression_path, span_text, template_literal_text};
 pub(crate) use parsed_cache::{legacy_symbols_share_standard_parse, ParsedProgramCache};
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub use parse_count::{begin_parse_count, finish_parse_count};
 
 thread_local! {
     static REQUEST_PARSE_CACHES: RefCell<Vec<ParsedProgramCache>> = const { RefCell::new(Vec::new()) };
@@ -64,6 +68,14 @@ pub fn clear_request_parse_cache() {
     }
 }
 
+/// Drop every cached parse mode for one path on the current request.
+#[doc(hidden)]
+pub fn evict_request_parse_cache_path(path: &Path) {
+    if let Some(cache) = current_request_parse_cache() {
+        cache.remove_path(path);
+    }
+}
+
 /// Number of programs retained by the current request parse cache.
 #[doc(hidden)]
 pub fn request_parse_cache_len() -> usize {
@@ -90,63 +102,6 @@ pub fn with_owned_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     collect()
 }
 
-#[cfg(any(test, feature = "test-instrumentation"))]
-struct ParseCountSession {
-    owner: std::thread::ThreadId,
-    counts: std::collections::HashMap<std::path::PathBuf, usize>,
-}
-
-#[cfg(any(test, feature = "test-instrumentation"))]
-type ParseCounts = std::collections::HashMap<std::path::PathBuf, ParseCountSession>;
-
-#[cfg(any(test, feature = "test-instrumentation"))]
-fn parse_counts() -> &'static std::sync::Mutex<ParseCounts> {
-    static COUNTS: std::sync::OnceLock<std::sync::Mutex<ParseCounts>> = std::sync::OnceLock::new();
-    COUNTS.get_or_init(|| std::sync::Mutex::new(ParseCounts::new()))
-}
-
-#[doc(hidden)]
-#[cfg(any(test, feature = "test-instrumentation"))]
-pub fn begin_parse_count(root: &Path) {
-    parse_counts()
-        .lock()
-        .expect("parse-count mutex poisoned")
-        .insert(
-            root.to_path_buf(),
-            ParseCountSession {
-                owner: std::thread::current().id(),
-                counts: std::collections::HashMap::new(),
-            },
-        );
-}
-
-#[doc(hidden)]
-#[cfg(any(test, feature = "test-instrumentation"))]
-pub fn finish_parse_count(root: &Path) -> std::collections::HashMap<std::path::PathBuf, usize> {
-    parse_counts()
-        .lock()
-        .expect("parse-count mutex poisoned")
-        .remove(root)
-        .map(|session| session.counts)
-        .unwrap_or_default()
-}
-
-#[cfg(any(test, feature = "test-instrumentation"))]
-pub(crate) fn record_parse_path(path: &Path) {
-    let mut counts = parse_counts().lock().expect("parse-count mutex poisoned");
-    let current_thread = std::thread::current().id();
-    for (root, session) in counts.iter_mut() {
-        // Synthetic parses conventionally use relative sentinel paths and may run on a
-        // worker rather than the thread that opened the request observation. Only the owning
-        // thread may attribute relative sentinels; observed worker parses must use paths rooted
-        // in their request so parallel sessions cannot contaminate one another.
-        let owns_relative_parse = path.is_relative() && session.owner == current_thread;
-        if path.starts_with(root) || owns_relative_parse {
-            *session.counts.entry(path.to_path_buf()).or_insert(0) += 1;
-        }
-    }
-}
-
 /// The single production entrypoint for invoking the OXC parser.
 ///
 /// Keeping observation here makes both successful and failed parses visible to
@@ -159,7 +114,7 @@ pub(crate) fn parse<'a>(
     source_type: SourceType,
 ) -> ParserReturn<'a> {
     #[cfg(any(test, feature = "test-instrumentation"))]
-    record_parse_path(path);
+    parse_count::record_parse_path(path);
     #[cfg(not(any(test, feature = "test-instrumentation")))]
     let _ = path;
     Parser::new(allocator, source, source_type).parse()

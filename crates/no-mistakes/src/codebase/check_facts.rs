@@ -40,3 +40,5 @@ pub use stats::CheckFactStats;
 
 #[cfg(test)]
 pub(crate) mod tests;
+#[cfg(test)]
+mod parse_cache_tests;
