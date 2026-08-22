@@ -13,7 +13,7 @@ pub(super) fn collect_test_partition(
 ) {
     let files = files
         .iter()
-        .filter(|path| !facts.contains_key(*path))
+        .filter(|path| !facts.contains_key(path))
         .cloned()
         .collect::<Vec<_>>();
     facts.extend(super::super::collect::collect_fact_map_with_sources(

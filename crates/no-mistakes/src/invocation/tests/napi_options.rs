@@ -2,10 +2,9 @@ use super::*;
 
 #[test]
 fn napi_options_default_and_strip_controls() {
-    let (json, options) = extract_napi_options(
-        r#"{"timeout":4,"lockTimeout":5,"failOnLock":true,"root":"."}"#.to_string(),
-    )
-    .unwrap();
+    let (json, options) =
+        extract_napi_options(r#"{"timeout":4,"lockTimeout":5,"failOnLock":true,"root":"."}"#)
+            .unwrap();
     assert_eq!(options.timeout, Some(Duration::from_secs(4)));
     assert_eq!(options.lock_timeout, Some(Duration::from_secs(5)));
     assert!(options.fail_on_lock);
@@ -19,7 +18,7 @@ fn napi_options_default_and_strip_controls() {
 #[test]
 fn napi_value_options_strip_controls_without_reserializing() {
     let (value, options) =
-        extract_napi_options_value(r#"{"timeout":4,"root":".","reports":[]}"#.to_string()).unwrap();
+        extract_napi_options_value(r#"{"timeout":4,"root":".","reports":[]}"#).unwrap();
 
     assert_eq!(options.timeout, Some(Duration::from_secs(4)));
     assert_eq!(value, serde_json::json!({"root":".","reports":[]}));
@@ -27,15 +26,14 @@ fn napi_value_options_strip_controls_without_reserializing() {
 
 #[test]
 fn napi_zero_and_null_disable_timeouts() {
-    let (_, options) =
-        extract_napi_options(r#"{"timeout":0,"lockTimeout":null}"#.to_string()).unwrap();
+    let (_, options) = extract_napi_options(r#"{"timeout":0,"lockTimeout":null}"#).unwrap();
     assert_eq!(options.timeout, None);
     assert_eq!(options.lock_timeout, None);
 }
 
 #[test]
 fn napi_missing_controls_disable_timeouts() {
-    let (_, options) = extract_napi_options("{}".to_string()).unwrap();
+    let (_, options) = extract_napi_options("{}").unwrap();
     assert_eq!(options.timeout, None);
     assert_eq!(options.lock_timeout, None);
     assert!(!options.fail_on_lock);
@@ -44,11 +42,11 @@ fn napi_missing_controls_disable_timeouts() {
 
 #[test]
 fn napi_jobs_parses_non_negative_integer_or_null() {
-    let (_, options) = extract_napi_options(r#"{"jobs":4}"#.to_string()).unwrap();
+    let (_, options) = extract_napi_options(r#"{"jobs":4}"#).unwrap();
     assert_eq!(options.jobs, Some(4));
-    let (_, options) = extract_napi_options(r#"{"jobs":0}"#.to_string()).unwrap();
+    let (_, options) = extract_napi_options(r#"{"jobs":0}"#).unwrap();
     assert_eq!(options.jobs, Some(0));
-    let (_, options) = extract_napi_options(r#"{"jobs":null}"#.to_string()).unwrap();
+    let (_, options) = extract_napi_options(r#"{"jobs":null}"#).unwrap();
     assert_eq!(options.jobs, None);
 }
 
@@ -64,6 +62,6 @@ fn napi_controls_validate_types() {
         "[]",
         "not-json",
     ] {
-        assert!(extract_napi_options(json.to_string()).is_err(), "{json}");
+        assert!(extract_napi_options(json).is_err(), "{json}");
     }
 }

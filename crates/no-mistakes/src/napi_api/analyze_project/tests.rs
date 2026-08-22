@@ -1,4 +1,4 @@
-use super::options_test_support::report_value;
+use super::options_test_support::{parse_options, report_value};
 use super::*;
 use serde_json::{json, Value};
 use std::path::PathBuf;
@@ -207,7 +207,7 @@ fn mixed_check_keeps_non_import_edges_from_the_union_graph() {
     let results = options
         .reports
         .iter()
-        .map(|request| report_value(run_report(request, &options, &context).unwrap()))
+        .map(|request| report_value(&run_report(request, &options, &context).unwrap()))
         .collect::<Vec<_>>();
 
     assert!(
@@ -248,7 +248,7 @@ fn mixed_check_collects_ignored_explicit_graph_root_facts() {
     let results = options
         .reports
         .iter()
-        .map(|request| report_value(run_report(request, &options, &context).unwrap()))
+        .map(|request| report_value(&run_report(request, &options, &context).unwrap()))
         .collect::<Vec<_>>();
 
     assert!(

@@ -41,7 +41,7 @@ pub(super) fn uncollected_files(
     files
         .iter()
         .filter(|path| {
-            !facts.contains_key(*path)
+            !facts.contains_key(path)
                 && !helper_paths.contains(&crate::codebase::ts_resolver::normalize_path(path))
         })
         .cloned()

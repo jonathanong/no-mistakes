@@ -101,12 +101,12 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
     ts.extend(precollected);
     let uncollected_files = files
         .iter()
-        .filter(|path| !ts.contains_key(*path))
+        .filter(|path| !ts.contains_key(path))
         .cloned()
         .collect::<Vec<_>>();
     let uncollected_graph_only_files = graph_only_files
         .iter()
-        .filter(|path| !ts.contains_key(*path))
+        .filter(|path| !ts.contains_key(path))
         .cloned()
         .collect::<Vec<_>>();
     // Runner-config helpers can overlap Playwright source files. Collect import
