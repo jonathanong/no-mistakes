@@ -131,6 +131,20 @@ fn join_on_exists_offset_is_detected() {
 }
 
 #[test]
+fn having_exists_offset_is_detected() {
+    assert!(sql_has_offset_clause(
+        "SELECT id FROM t GROUP BY id HAVING EXISTS (SELECT 1 FROM u OFFSET 1)"
+    )
+    .unwrap());
+}
+
+#[test]
+fn join_without_on_subquery_is_clean() {
+    assert!(!sql_has_offset_clause("SELECT * FROM t JOIN u USING (id)").unwrap());
+    assert!(!sql_has_offset_clause("SELECT * FROM t CROSS JOIN u").unwrap());
+}
+
+#[test]
 fn update_and_delete_subquery_offsets_are_detected() {
     assert!(
         sql_has_offset_clause("UPDATE users SET rank = (SELECT rank FROM rankings OFFSET 1)")
