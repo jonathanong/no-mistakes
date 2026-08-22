@@ -303,6 +303,15 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         Some(&[EdgeKind::QueueEnqueue].into()),
         &symbol_index,
     );
+    assert!(graph
+        .dependents_of_symbol(
+            &emails,
+            "sendWelcomeEmail",
+            Some(0),
+            Some(&[EdgeKind::QueueEnqueue].into()),
+            &symbol_index,
+        )
+        .is_empty());
     assert!(dependents.iter().any(|entry| {
         matches!(
             entry.node,
