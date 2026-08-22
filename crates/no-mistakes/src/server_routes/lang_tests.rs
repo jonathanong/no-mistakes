@@ -16,6 +16,13 @@ fn ts_fixture(name: &str) -> PathBuf {
         .join("fixture")
 }
 
+fn codebase_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis")
+        .join(name)
+        .join("fixture")
+}
+
 #[test]
 fn missing_config_does_not_add_language_routes() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -117,7 +124,7 @@ fn rust_http_fixture_lists_literal_routes() {
 
 #[test]
 fn aspnet_fixture_lists_literal_routes() {
-    let report = analyze_project(&lang_fixture("dotnet-aspnet-routes"), None, &[]).unwrap();
+    let report = analyze_project(&codebase_fixture("dotnet-aspnet-routes"), None, &[]).unwrap();
     assert!(report
         .routes
         .iter()

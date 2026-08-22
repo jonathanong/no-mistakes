@@ -1,0 +1,167 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - paragraph [ref=f3e13]:
+      - text: Codecov is joining Harness. Read more about the announcement
+      - link [ref=f3e14] [cursor=pointer]:
+        - /url: https://about.codecov.io/blog/a-new-chapter-for-codecov/
+      - text: .
+    - banner [ref=f3e18]:
+      - generic [ref=f3e20]:
+        - generic [ref=f3e21]:
+          - link "Link to Homepage Codecov Logo An umbrella logo." [ref=f3e22] [cursor=pointer]:
+            - /url: https://about.codecov.io
+            - generic [ref=f3e23]: Link to Homepage
+            - img "Codecov Logo An umbrella logo." [ref=f3e24]
+          - link "Why Test Code?" [ref=f3e28] [cursor=pointer]:
+            - /url: https://about.codecov.io/resource/what-is-code-coverage
+          - link "Get a Demo" [ref=f3e29] [cursor=pointer]:
+            - /url: https://about.codecov.io/demo
+          - link "Pricing" [ref=f3e30] [cursor=pointer]:
+            - /url: https://about.codecov.io/pricing
+        - generic [ref=f3e31]:
+          - button "theme toggle" [ref=f3e32] [cursor=pointer]
+          - generic [ref=f3e35]:
+            - link "Log in" [ref=f3e36] [cursor=pointer]:
+              - /url: /login?to=%2Fgh%2Fjonathanong%2Fno-mistakes%2Fpull%2F733%2Fblob%2Fcrates%2Fno-mistakes%2Fsrc%2Fintegration_tests%2Ftypes.rs
+            - link "Start Free Trial" [ref=f3e37] [cursor=pointer]:
+              - /url: https://about.codecov.io/codecov-free-trial
+      - navigation [ref=f3e38]:
+        - generic [ref=f3e40]:
+          - navigation [ref=f3e42]:
+            - link "jonathanong" [ref=f3e43] [cursor=pointer]:
+              - /url: /gh/jonathanong
+            - generic [ref=f3e44]: /
+            - link "no-mistakes" [ref=f3e45] [cursor=pointer]:
+              - /url: /gh/jonathanong/no-mistakes
+            - generic [ref=f3e47]: /
+            - link "pulls" [ref=f3e48] [cursor=pointer]:
+              - /url: /gh/jonathanong/no-mistakes/pulls
+            - generic [ref=f3e49]: /
+            - generic [ref=f3e50]: "733"
+          - generic [ref=f3e51]: Viewing as visitor
+    - main [ref=f3e52]:
+      - generic [ref=f3e53]:
+        - generic [ref=f3e55]:
+          - 'heading "feat(tests): wire tests plan jest from explicit configs Open" [level=1] [ref=f3e56]':
+            - text: "feat(tests): wire tests plan jest from explicit configs"
+            - generic [ref=f3e57]: Open
+          - paragraph [ref=f3e58]:
+            - generic [ref=f3e59]:
+              - text: 4 minutes ago jonathanong authored
+              - link [ref=f3e60] [cursor=pointer]:
+                - /url: https://github.com/jonathanong/no-mistakes/pull/733
+            - button "CI Passed" [ref=f3e64] [cursor=pointer]
+            - generic [ref=f3e69]: lang-jest-plan
+        - generic [ref=f3e73]:
+          - generic [ref=f3e75]:
+            - generic [ref=f3e76]:
+              - heading "HEAD 41cc45b" [level=4] [ref=f3e77]:
+                - generic [ref=f3e78]: HEAD
+                - generic [ref=f3e79]: 41cc45b
+              - generic [ref=f3e80]: 99.24%
+            - generic [ref=f3e83]:
+              - heading "Patch" [level=4] [ref=f3e84]
+              - generic [ref=f3e85]: 98.50%
+            - generic [ref=f3e88]:
+              - heading "Change" [level=4] [ref=f3e89]
+              - generic [ref=f3e90]: 0.00%
+            - generic [ref=f3e93]:
+              - heading "Source" [level=4] [ref=f3e94]
+              - paragraph [ref=f3e96]:
+                - text: Coverage data is based on head
+                - link "41cc45b" [ref=f3e97] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/commit/41cc45b3d123d07318aaab6fcfb5d8e8a15cc6f0
+                - text: compared to base
+                - link "f4ec4c7" [ref=f3e98] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/commit/f4ec4c75862e061679dd191987381963649adc17
+          - article [ref=f3e100]:
+            - navigation [ref=f3e102]:
+              - link [ref=f3e103] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733
+                - text: Files changed
+                - superscript [ref=f3e104]: "22"
+              - link [ref=f3e105] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/indirect-changes
+                - text: Indirect changes
+                - superscript [ref=f3e106]: "1"
+              - link [ref=f3e107] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/commits
+                - text: Commits
+                - superscript [ref=f3e108]: "6"
+              - link [ref=f3e109] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/flags
+                - text: Flags
+                - superscript [ref=f3e110]: "2"
+              - link [ref=f3e111] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/components
+                - text: Components
+                - superscript [ref=f3e112]: "0"
+              - link "File explorer" [ref=f3e113] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/tree
+            - generic [ref=f3e114]:
+              - generic [ref=f3e115]:
+                - generic [ref=f3e116]: uncovered
+                - generic [ref=f3e122]:
+                  - generic [ref=f3e123]: partial
+                  - generic [ref=f3e124]: "!"
+                - generic [ref=f3e127]: covered
+              - generic [ref=f3e131]:
+                - button "Filter by flags" [disabled] [ref=f3e133]:
+                  - generic [ref=f3e134]: All flags
+                - listbox "Filter by flags"
+            - generic [ref=f3e139]:
+              - navigation [ref=f3e143]:
+                - link "no-mistakes" [ref=f3e144] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/pull/733/tree
+                - generic [ref=f3e145]: /
+                - link "crates" [ref=f3e146] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/pull/733/tree/crates
+                - generic [ref=f3e147]: /
+                - link "no-mistakes" [ref=f3e148] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/pull/733/tree/crates/no-mistakes
+                - generic [ref=f3e149]: /
+                - link "src" [ref=f3e150] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/pull/733/tree/crates/no-mistakes/src
+                - generic [ref=f3e151]: /
+                - link "integration_tests" [ref=f3e152] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/pull/733/tree/crates/no-mistakes/src/integration_tests
+                - generic [ref=f3e153]: /
+                - generic [ref=f3e154]: types.rs
+              - generic [ref=f3e155]:
+                - generic [ref=f3e156]:
+                  - generic [ref=f3e157]:
+                    - link "crates/no-mistakes/src/integration_tests/types.rs" [ref=f3e158] [cursor=pointer]:
+                      - /url: "#crates/no-mistakes/src/integration_tests/types.rs"
+                    - button "Copy crates/no-mistakes/src/integration_tests/types.rs" [ref=f3e159] [cursor=pointer]
+                  - generic [ref=f3e163]: 95.24%
+                - paragraph [ref=f3e170]:
+                  - text: There was a problem getting the source code from your provider. Unable to show line by line coverage.
+                  - generic [ref=f3e171]:
+                    - text: If you continue to experience this issue, please try
+                    - link "logging in" [ref=f3e172] [cursor=pointer]:
+                      - /url: /login?to=%2Fgh%2Fjonathanong%2Fno-mistakes%2Fpull%2F733%2Fblob%2Fcrates%2Fno-mistakes%2Fsrc%2Fintegration_tests%2Ftypes.rs
+                    - text: again to refresh your credentials.
+    - contentinfo [ref=f3e173]:
+      - navigation [ref=f3e174]:
+        - list [ref=f3e175]:
+          - link "Codecov Logo An umbrella logo." [ref=f3e176] [cursor=pointer]:
+            - /url: /gh/jonathanong
+            - img "Codecov Logo An umbrella logo." [ref=f3e177]
+          - listitem [ref=f3e181]:
+            - generic [ref=f3e182]: © 2026 Harness
+          - listitem [ref=f3e183]:
+            - link "Terms" [ref=f3e184] [cursor=pointer]:
+              - /url: https://about.codecov.io/terms-and-conditions
+          - listitem [ref=f3e185]:
+            - link "Privacy" [ref=f3e186] [cursor=pointer]:
+              - /url: https://about.codecov.io/privacy
+          - listitem [ref=f3e187]:
+            - link "Security" [ref=f3e188] [cursor=pointer]:
+              - /url: https://about.codecov.io/security
+          - listitem [ref=f3e189]:
+            - link "GDPR" [ref=f3e190] [cursor=pointer]:
+              - /url: https://about.codecov.io/gdpr
+          - listitem [ref=f3e191]:
+            - link "Pricing" [ref=f3e192] [cursor=pointer]:
+              - /url: https://about.codecov.io/pricing
+  - status [ref=f3e194]

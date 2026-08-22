@@ -1,0 +1,274 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - paragraph [ref=e13]:
+      - text: Codecov is joining Harness. Read more about the announcement
+      - link [ref=e14] [cursor=pointer]:
+        - /url: https://about.codecov.io/blog/a-new-chapter-for-codecov/
+      - text: .
+    - banner [ref=e18]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - link "Link to Homepage Codecov Logo An umbrella logo." [ref=e22] [cursor=pointer]:
+            - /url: https://about.codecov.io
+            - generic [ref=e23]: Link to Homepage
+            - img "Codecov Logo An umbrella logo." [ref=e24]
+          - link "Why Test Code?" [ref=e28] [cursor=pointer]:
+            - /url: https://about.codecov.io/resource/what-is-code-coverage
+          - link "Get a Demo" [ref=e29] [cursor=pointer]:
+            - /url: https://about.codecov.io/demo
+          - link "Pricing" [ref=e30] [cursor=pointer]:
+            - /url: https://about.codecov.io/pricing
+        - generic [ref=e31]:
+          - button "theme toggle" [ref=e32] [cursor=pointer]
+          - generic [ref=e35]:
+            - link "Log in" [ref=e36] [cursor=pointer]:
+              - /url: /login?to=%2Fgh%2Fjonathanong%2Fno-mistakes%2Fpull%2F733
+            - link "Start Free Trial" [ref=e37] [cursor=pointer]:
+              - /url: https://about.codecov.io/codecov-free-trial
+      - navigation [ref=e38]:
+        - generic [ref=e40]:
+          - navigation [ref=e42]:
+            - link "jonathanong" [ref=e43] [cursor=pointer]:
+              - /url: /gh/jonathanong
+            - generic [ref=e44]: /
+            - link "no-mistakes" [ref=e45] [cursor=pointer]:
+              - /url: /gh/jonathanong/no-mistakes
+            - generic [ref=e47]: /
+            - link "pulls" [ref=e48] [cursor=pointer]:
+              - /url: /gh/jonathanong/no-mistakes/pulls
+            - generic [ref=e49]: /
+            - generic [ref=e50]: "733"
+          - generic [ref=e51]: Viewing as visitor
+    - main [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e55]:
+          - 'heading "feat(tests): wire tests plan jest from explicit configs Open" [level=1] [ref=e56]':
+            - text: "feat(tests): wire tests plan jest from explicit configs"
+            - generic [ref=e57]: Open
+          - paragraph [ref=e58]:
+            - generic [ref=e59]:
+              - text: 4 minutes ago jonathanong authored
+              - link [ref=e60] [cursor=pointer]:
+                - /url: https://github.com/jonathanong/no-mistakes/pull/733
+            - button "CI Passed" [ref=e64] [cursor=pointer]
+            - generic [ref=e69]: lang-jest-plan
+        - generic [ref=e73]:
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - heading "HEAD 41cc45b" [level=4] [ref=e77]:
+                - generic [ref=e78]: HEAD
+                - generic [ref=e79]: 41cc45b
+              - generic [ref=e80]: 99.24%
+            - generic [ref=e83]:
+              - heading "Patch" [level=4] [ref=e84]
+              - generic [ref=e85]: 98.50%
+            - generic [ref=e88]:
+              - heading "Change" [level=4] [ref=e89]
+              - generic [ref=e90]: 0.00%
+            - generic [ref=e93]:
+              - heading "Source" [level=4] [ref=e94]
+              - paragraph [ref=e96]:
+                - text: Coverage data is based on head
+                - link "41cc45b" [ref=e97] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/commit/41cc45b3d123d07318aaab6fcfb5d8e8a15cc6f0
+                - text: compared to base
+                - link "f4ec4c7" [ref=e98] [cursor=pointer]:
+                  - /url: /gh/jonathanong/no-mistakes/commit/f4ec4c75862e061679dd191987381963649adc17
+          - article [ref=e100]:
+            - navigation [ref=e102]:
+              - link [ref=e103] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733
+                - text: Files changed
+                - superscript [ref=e104]: "22"
+              - link [ref=e105] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/indirect-changes
+                - text: Indirect changes
+                - superscript [ref=e106]: "1"
+              - link [ref=e107] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/commits
+                - text: Commits
+                - superscript [ref=e108]: "6"
+              - link [ref=e109] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/flags
+                - text: Flags
+                - superscript [ref=e110]: "2"
+              - link [ref=e111] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/components
+                - text: Components
+                - superscript [ref=e112]: "0"
+              - link "File explorer" [ref=e113] [cursor=pointer]:
+                - /url: /gh/jonathanong/no-mistakes/pull/733/tree
+            - generic [ref=e114]:
+              - generic [ref=e115]:
+                - generic [ref=e116]: uncovered
+                - generic [ref=e122]:
+                  - generic [ref=e123]: partial
+                  - generic [ref=e124]: "!"
+                - generic [ref=e127]: covered
+              - generic [ref=e131]:
+                - button "Filter by flags" [disabled] [ref=e133]:
+                  - generic [ref=e134]: All flags
+                - listbox "Filter by flags"
+            - generic [ref=e141]:
+              - generic [ref=e142]:
+                - generic [ref=e143] [cursor=pointer]: Name
+                - generic [ref=e148] [cursor=pointer]: Missed lines
+                - generic [ref=e153] [cursor=pointer]: Head %
+                - generic [ref=e158] [cursor=pointer]: Patch %
+                - generic [ref=e163] [cursor=pointer]: Change %
+              - generic [ref=e168] [cursor=pointer]:
+                - generic [ref=e169]: crates/no-mistakes/src/integration_tests/types.rs
+                - generic [ref=e174]: "1"
+                - generic [ref=e175]: 95.24%
+                - generic [ref=e179]: 50.00%
+                - generic [ref=e183]: "-4.76%"
+              - generic [ref=e187] [cursor=pointer]:
+                - generic [ref=e188]: crates/no-mistakes/src/integration_tests/project_config/parse.rs
+                - generic [ref=e193]: "1"
+                - generic [ref=e194]: 96.88%
+                - generic [ref=e198]: 96.88%
+                - generic [ref=e202]: "-"
+              - generic [ref=e205] [cursor=pointer]:
+                - generic [ref=e206]: crates/no-mistakes/src/integration_tests/project_config.rs
+                - generic [ref=e211]: "1"
+                - generic [ref=e212]: 95.90%
+                - generic [ref=e216]: 90.91%
+                - generic [ref=e220]: +0.73%
+              - generic [ref=e224] [cursor=pointer]:
+                - generic [ref=e225]: crates/no-mistakes/src/codebase/test_discovery/api.rs
+                - generic [ref=e230]: "0"
+                - generic [ref=e231]: 100.00%
+                - generic [ref=e235]: 100.00%
+                - generic [ref=e239]: +1.61%
+              - generic [ref=e243] [cursor=pointer]:
+                - generic [ref=e244]: crates/no-mistakes/src/impacted_checks/generate/args.rs
+                - generic [ref=e249]: "0"
+                - generic [ref=e250]: 100.00%
+                - generic [ref=e254]: 100.00%
+                - generic [ref=e258]: 0.00%
+              - generic [ref=e262] [cursor=pointer]:
+                - generic [ref=e263]: crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/config.rs
+                - generic [ref=e268]: "0"
+                - generic [ref=e269]: 98.47%
+                - generic [ref=e273]: "-"
+                - generic [ref=e276]: 0.00%
+              - generic [ref=e280] [cursor=pointer]:
+                - generic [ref=e281]: crates/no-mistakes/src/napi_api/cli_parity_builders.rs
+                - generic [ref=e286]: "0"
+                - generic [ref=e287]: 100.00%
+                - generic [ref=e291]: 100.00%
+                - generic [ref=e295]: 0.00%
+              - generic [ref=e299] [cursor=pointer]:
+                - generic [ref=e300]: crates/no-mistakes/src/codebase/test_discovery/discover.rs
+                - generic [ref=e305]: "0"
+                - generic [ref=e306]: 100.00%
+                - generic [ref=e310]: 100.00%
+                - generic [ref=e314]: 0.00%
+              - generic [ref=e318] [cursor=pointer]:
+                - generic [ref=e319]: crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/config/discovery.rs
+                - generic [ref=e324]: "0"
+                - generic [ref=e325]: 100.00%
+                - generic [ref=e329]: 100.00%
+                - generic [ref=e333]: 0.00%
+              - generic [ref=e337] [cursor=pointer]:
+                - generic [ref=e338]: crates/no-mistakes/src/impacted_checks/frameworks.rs
+                - generic [ref=e343]: "0"
+                - generic [ref=e344]: 100.00%
+                - generic [ref=e348]: 100.00%
+                - generic [ref=e352]: 0.00%
+              - generic [ref=e356] [cursor=pointer]:
+                - generic [ref=e357]: crates/no-mistakes/src/impacted_checks/generate/prepare.rs
+                - generic [ref=e362]: "0"
+                - generic [ref=e363]: 100.00%
+                - generic [ref=e367]: 100.00%
+                - generic [ref=e371]: 0.00%
+              - generic [ref=e375] [cursor=pointer]:
+                - generic [ref=e376]: crates/no-mistakes/src/codebase/test_discovery/preparation_plan.rs
+                - generic [ref=e381]: "0"
+                - generic [ref=e382]: 100.00%
+                - generic [ref=e386]: 100.00%
+                - generic [ref=e390]: 0.00%
+              - generic [ref=e394] [cursor=pointer]:
+                - generic [ref=e395]: crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/config/discovery/property_strings.rs
+                - generic [ref=e400]: "0"
+                - generic [ref=e401]: 100.00%
+                - generic [ref=e405]: 100.00%
+                - generic [ref=e409]: 0.00%
+              - generic [ref=e413] [cursor=pointer]:
+                - generic [ref=e414]: crates/no-mistakes/src/config/v2/test_plan.rs
+                - generic [ref=e419]: "0"
+                - generic [ref=e420]: 100.00%
+                - generic [ref=e424]: "-"
+                - generic [ref=e427]: 0.00%
+              - generic [ref=e431] [cursor=pointer]:
+                - generic [ref=e432]: crates/no-mistakes/src/codebase/test_discovery/filters.rs
+                - generic [ref=e437]: "0"
+                - generic [ref=e438]: 100.00%
+                - generic [ref=e442]: 100.00%
+                - generic [ref=e446]: 0.00%
+              - generic [ref=e450] [cursor=pointer]:
+                - generic [ref=e451]: crates/no-mistakes/src/integration_tests/test_config/jest.rs
+                - generic [ref=e456]: "0"
+                - generic [ref=e457]: 100.00%
+                - generic [ref=e461]: 100.00%
+                - generic [ref=e465]: "-"
+              - generic [ref=e468] [cursor=pointer]:
+                - generic [ref=e469]: crates/no-mistakes/src/codebase/test_discovery/lang_targets.rs
+                - generic [ref=e474]: "0"
+                - generic [ref=e475]: 100.00%
+                - generic [ref=e479]: "-"
+                - generic [ref=e482]: 0.00%
+              - generic [ref=e486] [cursor=pointer]:
+                - generic [ref=e487]: crates/no-mistakes/src/codebase/test_discovery/projects.rs
+                - generic [ref=e492]: "0"
+                - generic [ref=e493]: 100.00%
+                - generic [ref=e497]: 100.00%
+                - generic [ref=e501]: 0.00%
+              - generic [ref=e505] [cursor=pointer]:
+                - generic [ref=e506]: crates/no-mistakes/src/codebase/test_discovery/reserved.rs
+                - generic [ref=e511]: "0"
+                - generic [ref=e512]: 100.00%
+                - generic [ref=e516]: 100.00%
+                - generic [ref=e520]: 0.00%
+              - generic [ref=e524] [cursor=pointer]:
+                - generic [ref=e525]: crates/no-mistakes/src/codebase/test_discovery/targets.rs
+                - generic [ref=e530]: "0"
+                - generic [ref=e531]: 100.00%
+                - generic [ref=e535]: 100.00%
+                - generic [ref=e539]: 0.00%
+              - generic [ref=e543] [cursor=pointer]:
+                - generic [ref=e544]: crates/no-mistakes/src/codebase/test_discovery/types.rs
+                - generic [ref=e549]: "0"
+                - generic [ref=e550]: 100.00%
+                - generic [ref=e554]: 100.00%
+                - generic [ref=e558]: 0.00%
+              - generic [ref=e562] [cursor=pointer]:
+                - generic [ref=e563]: crates/no-mistakes/src/integration_tests/project_config/globs.rs
+                - generic [ref=e568]: "0"
+                - generic [ref=e569]: 100.00%
+                - generic [ref=e573]: 100.00%
+                - generic [ref=e577]: 0.00%
+    - contentinfo [ref=e581]:
+      - navigation [ref=e582]:
+        - list [ref=e583]:
+          - link "Codecov Logo An umbrella logo." [ref=e584] [cursor=pointer]:
+            - /url: /gh/jonathanong
+            - img "Codecov Logo An umbrella logo." [ref=e585]
+          - listitem [ref=e589]:
+            - generic [ref=e590]: © 2026 Harness
+          - listitem [ref=e591]:
+            - link "Terms" [ref=e592] [cursor=pointer]:
+              - /url: https://about.codecov.io/terms-and-conditions
+          - listitem [ref=e593]:
+            - link "Privacy" [ref=e594] [cursor=pointer]:
+              - /url: https://about.codecov.io/privacy
+          - listitem [ref=e595]:
+            - link "Security" [ref=e596] [cursor=pointer]:
+              - /url: https://about.codecov.io/security
+          - listitem [ref=e597]:
+            - link "GDPR" [ref=e598] [cursor=pointer]:
+              - /url: https://about.codecov.io/gdpr
+          - listitem [ref=e599]:
+            - link "Pricing" [ref=e600] [cursor=pointer]:
+              - /url: https://about.codecov.io/pricing
+  - status [ref=e602]

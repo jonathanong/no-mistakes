@@ -26,7 +26,7 @@ fn csharp_parser_extracts_usings_declarations_refs_and_xunit_tests() {
 #[test]
 fn csharp_parser_extracts_aspnet_routes_and_handler_methods() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/lang-frontends/dotnet-aspnet-routes");
+        .join("../../test-cases/codebase-analysis/dotnet-aspnet-routes/fixture");
     let program = parse_csharp_file(&root.join("src/Api/Program.cs"), None).unwrap();
     assert!(program
         .route_handlers

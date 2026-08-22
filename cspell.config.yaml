@@ -15,8 +15,8 @@ words:
   - ABBA
   - Actix
   - arm64
-  - asynq
   - aspnet
+  - asynq
   - Basenames
   - callees
   - callsite

@@ -122,7 +122,7 @@ fn dotnet_project_edges_skip_missing_sources_and_references() {
 fn aspnet_map_get_emits_route_ref_to_handler_file() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/lang-frontends/dotnet-aspnet-routes"),
+            .join("../../test-cases/codebase-analysis/dotnet-aspnet-routes/fixture"),
     );
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
@@ -156,7 +156,7 @@ fn aspnet_map_get_emits_route_ref_to_handler_file() {
 fn aspnet_route_globs_exclude_registration_files() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/lang-frontends/dotnet-aspnet-routes"),
+            .join("../../test-cases/codebase-analysis/dotnet-aspnet-routes/fixture"),
     );
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
