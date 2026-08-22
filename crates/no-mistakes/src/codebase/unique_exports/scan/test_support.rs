@@ -55,7 +55,7 @@ pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec
             Ok(SourceFile {
                 path: normalize_path(path),
                 rel: relative_slash_path(root, path),
-                source,
+                source: source.into(),
                 disabled,
                 defer_suppression: false,
                 is_nextjs_project: nextjs_projects.contains_file(path),

@@ -116,9 +116,7 @@ fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
     let source: &std::sync::Arc<str> = facts[&file].source.as_ref().unwrap();
     assert!(std::sync::Arc::ptr_eq(source, &expected));
     assert!(facts[&file].symbols.is_none());
-    let components: &mut Vec<crate::react_traits::report::types::ComponentFacts> =
-        &mut facts.get_mut(&file).unwrap().react_components;
-    components.clear();
+    std::sync::Arc::make_mut(&mut facts.get_mut(&file).unwrap().react_components).clear();
     let owned: Vec<(PathBuf, TsFileFacts)> = facts.into_iter().collect();
     assert_eq!(owned.len(), 1);
     assert_eq!(sources.physical_read_count(), 1);

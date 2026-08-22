@@ -95,7 +95,7 @@ fn react_render_edges_cover_empty_and_same_file_children() {
     facts.insert(
         parent.clone(),
         TsFileFacts {
-            react_components: vec![ComponentFacts {
+            react_components: std::sync::Arc::new(vec![ComponentFacts {
                 name: "Parent".to_string(),
                 file: "src/Parent.tsx".to_string(),
                 environment: Environment::Server,
@@ -118,7 +118,7 @@ fn react_render_edges_cover_empty_and_same_file_children() {
                     },
                 ],
                 inherited_from_children: None,
-            }],
+            }]),
             ..Default::default()
         },
     );

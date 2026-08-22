@@ -28,7 +28,7 @@ pub(crate) struct StorybookSideEffectImport {
 pub(crate) fn extract_program_with_references(
     source: &str,
     program: &Program<'_>,
-    referenced: &HashSet<String>,
+    referenced: &HashSet<&str>,
 ) -> StorybookFileFacts {
     let mut used_runtime_imports = Vec::new();
     let mut side_effect_imports = Vec::new();
