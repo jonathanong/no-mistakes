@@ -1,5 +1,5 @@
 use super::{collect_elixir_facts, extract_elixir_imports, primary_module};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn exact_alias_import_and_use_extract() {
@@ -88,4 +88,17 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .find(|file| file.path.ends_with("user_test.exs"))
         .expect("test");
     assert!(test_file.route_handlers.is_empty());
+}
+
+#[test]
+fn elixir_test_tree_is_relative_to_configured_app() {
+    let root = PathBuf::from("/tmp/test/repo");
+    assert!(!super::elixir_test_tree(
+        Path::new("/tmp/test/repo/lib/router.ex"),
+        std::slice::from_ref(&root)
+    ));
+    assert!(super::elixir_test_tree(
+        Path::new("/tmp/test/repo/test/support/router.ex"),
+        &[root]
+    ));
 }

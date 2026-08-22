@@ -54,7 +54,7 @@ fn parse_elixir_file(
         imports: extract_elixir_imports(&symbols),
         declarations,
         references: extract_named(&symbols, elixir_ref_re()),
-        route_handlers: if elixir_test_tree(path) {
+        route_handlers: if elixir_test_tree(path, roots) {
             Vec::new()
         } else {
             http::extract_http_routes(&text)
@@ -78,9 +78,13 @@ pub(super) fn primary_module(declarations: &[String], file_stem: Option<&str>) -
         .or_else(|| declarations.first().cloned())
 }
 
-fn elixir_test_tree(path: &Path) -> bool {
-    path.components()
-        .any(|seg| seg.as_os_str() == std::ffi::OsStr::new("test"))
+fn elixir_test_tree(path: &Path, roots: &[PathBuf]) -> bool {
+    roots.iter().any(|root| {
+        path.strip_prefix(root).is_ok_and(|rel| {
+            rel.components()
+                .any(|seg| seg.as_os_str() == std::ffi::OsStr::new("test"))
+        })
+    })
 }
 
 fn elixir_pascal_case(stem: &str) -> String {
