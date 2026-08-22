@@ -29,6 +29,7 @@ pub(crate) enum Framework {
     Cargo,
     Rails,
     Php,
+    Java,
     Jest,
 }
 
@@ -44,6 +45,7 @@ impl Framework {
             Self::Cargo => "cargo",
             Self::Rails => "rails",
             Self::Php => "php",
+            Self::Java => "java",
             Self::Jest => "jest",
         }
     }

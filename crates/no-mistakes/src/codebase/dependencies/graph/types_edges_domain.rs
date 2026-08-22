@@ -1,0 +1,35 @@
+use super::EdgeKind;
+
+pub(super) fn as_str(kind: &EdgeKind) -> &'static str {
+    match kind {
+        EdgeKind::HttpCall => "http",
+        EdgeKind::ProcessSpawn => "process",
+        EdgeKind::AssetImport => "asset",
+        EdgeKind::Resource => "resource",
+        EdgeKind::ReactRender => "react-render",
+        EdgeKind::Selector => "selector",
+        EdgeKind::SwiftImport => "swift-import",
+        EdgeKind::SwiftReference => "swift-ref",
+        EdgeKind::SwiftPackageDependency => "swift-package",
+        EdgeKind::DotnetUsing => "dotnet-using",
+        EdgeKind::DotnetReference => "dotnet-ref",
+        EdgeKind::DotnetProjectDependency => "dotnet-project",
+        EdgeKind::TerraformReference => "terraform-ref",
+        EdgeKind::TerraformModuleRef => "terraform-module",
+        EdgeKind::TerraformOutputRef => "terraform-output",
+        EdgeKind::PythonImport => "python-import",
+        EdgeKind::PythonReference => "python-ref",
+        EdgeKind::GoImport => "go-import",
+        EdgeKind::GoReference => "go-ref",
+        EdgeKind::RustUse => "rust-use",
+        EdgeKind::RustMod => "rust-mod",
+        EdgeKind::RustPackage => "rust-package",
+        EdgeKind::RubyRequire => "ruby-require",
+        EdgeKind::RubyReference => "ruby-ref",
+        EdgeKind::PhpUse => "php-use",
+        EdgeKind::PhpPackage => "php-package",
+        EdgeKind::JavaImport => "java-import",
+        EdgeKind::JavaReference => "java-ref",
+        _ => unreachable!("core edge kinds are handled before domain rendering"),
+    }
+}

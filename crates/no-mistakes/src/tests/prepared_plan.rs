@@ -489,6 +489,7 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Cargo => TestRunner::Cargo,
         TestFramework::Rails => TestRunner::Rails,
         TestFramework::Php => TestRunner::Php,
+        TestFramework::Java => TestRunner::Java,
         TestFramework::Jest => TestRunner::Jest,
     }
 }
@@ -514,6 +515,7 @@ fn test_framework(runner: TestRunner) -> TestFramework {
         TestRunner::Cargo => TestFramework::Cargo,
         TestRunner::Rails => TestFramework::Rails,
         TestRunner::Php => TestFramework::Php,
+        TestRunner::Java => TestFramework::Java,
         TestRunner::Jest => TestFramework::Jest,
     }
 }

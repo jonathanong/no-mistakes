@@ -206,6 +206,11 @@ fn language_runners_round_trip_names_and_frameworks() {
             TestRunner::Php,
             crate::integration_tests::types::Framework::Php,
         ),
+        (
+            "java",
+            TestRunner::Java,
+            crate::integration_tests::types::Framework::Java,
+        ),
     ] {
         assert_eq!(TestRunner::from_name(name), Some(runner));
         assert_eq!(runner.as_str(), name);

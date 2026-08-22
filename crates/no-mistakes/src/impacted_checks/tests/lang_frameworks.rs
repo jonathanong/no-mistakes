@@ -23,6 +23,11 @@ fn language_frameworks_emit_native_test_commands() {
             &["app/Http/Controllers/UserController.php"],
             "php artisan test",
         ),
+        (
+            "java-test-plan",
+            &["src/main/java/com/example/User.java"],
+            "mvn test",
+        ),
     ];
     for (name, files, needle) in cases {
         let mut a = args(files);
@@ -53,6 +58,7 @@ fn framework_present_detects_configured_language_packages() {
         ),
         ("rails-test-plan", TestFramework::Rails, TestFramework::Php),
         ("php-test-plan", TestFramework::Php, TestFramework::Cargo),
+        ("java-test-plan", TestFramework::Java, TestFramework::Php),
     ];
     for (name, present, absent) in cases {
         let root = lang_test_plan_fixture(name);

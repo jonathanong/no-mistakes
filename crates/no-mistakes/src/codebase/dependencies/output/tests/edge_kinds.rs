@@ -94,6 +94,8 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::RubyReference,
         EdgeKind::PhpUse,
         EdgeKind::PhpPackage,
+        EdgeKind::JavaImport,
+        EdgeKind::JavaReference,
         EdgeKind::TrpcCall,
         EdgeKind::TrpcProcedure,
         EdgeKind::WorkflowJob,
@@ -148,6 +150,8 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::RubyReference => {}
             EdgeKind::PhpUse => {}
             EdgeKind::PhpPackage => {}
+            EdgeKind::JavaImport => {}
+            EdgeKind::JavaReference => {}
             EdgeKind::TrpcCall => {}
             EdgeKind::TrpcProcedure => {}
             EdgeKind::WorkflowJob => {}

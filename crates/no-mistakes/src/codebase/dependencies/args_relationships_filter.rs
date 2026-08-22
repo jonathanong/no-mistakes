@@ -82,6 +82,7 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
         RelationshipArg::Rust => &[EdgeKind::RustUse, EdgeKind::RustMod, EdgeKind::RustPackage],
         RelationshipArg::Ruby => &[EdgeKind::RubyRequire, EdgeKind::RubyReference],
         RelationshipArg::Php => &[EdgeKind::PhpUse, EdgeKind::PhpPackage],
+        RelationshipArg::Java => &[EdgeKind::JavaImport, EdgeKind::JavaReference],
         RelationshipArg::Resource => &[EdgeKind::Resource],
         RelationshipArg::Trpc => &[EdgeKind::TrpcCall, EdgeKind::TrpcProcedure],
         RelationshipArg::Workflow
@@ -153,6 +154,8 @@ fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
         EdgeKind::RubyReference,
         EdgeKind::PhpUse,
         EdgeKind::PhpPackage,
+        EdgeKind::JavaImport,
+        EdgeKind::JavaReference,
         EdgeKind::Resource,
     ]
     .into_iter()

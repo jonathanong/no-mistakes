@@ -101,6 +101,7 @@ fn configured_frameworks(
         TestFramework::Cargo,
         TestFramework::Rails,
         TestFramework::Php,
+        TestFramework::Java,
         TestFramework::Jest,
     ]
     .into_iter()

@@ -44,6 +44,7 @@ struct GraphConfigOptions {
     rails_apps: Vec<String>,
     php_apps: Vec<String>,
     php_framework: Option<String>,
+    java_packages: Vec<String>,
     queue_enqueues: Vec<String>,
     queue_workers: Vec<String>,
     queue_cluster: Option<String>,
@@ -117,6 +118,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         rails_apps: v2_config.tests.rails.apps.clone(),
         php_apps: v2_config.tests.php.apps.clone(),
         php_framework: v2_config.tests.php.framework.clone(),
+        java_packages: v2_config.tests.java.packages.clone(),
         queue_enqueues: flatten_queue_globs(v2_config, prefixed_queue_globs_enqueues),
         queue_workers: flatten_queue_globs(v2_config, prefixed_queue_globs_workers),
         queue_cluster: v2_config

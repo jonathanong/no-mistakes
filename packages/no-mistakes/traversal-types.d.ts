@@ -31,6 +31,7 @@ export type Relationship =
   | "rust"
   | "ruby"
   | "php"
+  | "java"
   | "resource"
   | "trpc"
   | "all";

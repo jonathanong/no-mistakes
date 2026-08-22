@@ -41,6 +41,7 @@ pub enum RelationshipArg {
     Rust,
     Ruby,
     Php,
+    Java,
     Resource,
     Trpc,
     All,
@@ -76,6 +77,7 @@ impl RelationshipArg {
             Self::Rust => Some("rust"),
             Self::Ruby => Some("ruby"),
             Self::Php => Some("php"),
+            Self::Java => Some("java"),
             Self::Trpc => Some("trpc"),
             _ => None,
         }

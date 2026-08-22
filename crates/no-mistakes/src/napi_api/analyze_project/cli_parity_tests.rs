@@ -213,6 +213,10 @@ fn cli_parity_framework_parser_covers_all_public_values() {
         crate::tests::TestFramework::Php
     );
     assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("java").unwrap(),
+        crate::tests::TestFramework::Java
+    );
+    assert_eq!(
         crate::napi_api::cli_parity::parse_test_framework("jest").unwrap(),
         crate::tests::TestFramework::Jest
     );

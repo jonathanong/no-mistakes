@@ -226,6 +226,7 @@ fn python_relationship_enables_language_frontend_plan() {
         crate::codebase::dependencies::RelationshipArg::Rust,
         crate::codebase::dependencies::RelationshipArg::Ruby,
         crate::codebase::dependencies::RelationshipArg::Php,
+        crate::codebase::dependencies::RelationshipArg::Java,
     ] {
         let allowed = crate::codebase::dependencies::relationship_filter(&[relationship])
             .expect("language relationship");
@@ -260,6 +261,9 @@ fn language_frontend_globs_are_explicit() {
     assert!(test_globs("php")
         .iter()
         .any(|glob| glob.contains("Test.php")));
+    assert!(test_globs("java")
+        .iter()
+        .any(|glob| glob.contains("Test.java")));
 }
 
 #[test]

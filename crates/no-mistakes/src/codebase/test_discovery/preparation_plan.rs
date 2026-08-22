@@ -23,6 +23,7 @@ impl FrameworkPreparationPlan {
             TestRunner::Cargo,
             TestRunner::Rails,
             TestRunner::Php,
+            TestRunner::Java,
         ])
     }
 

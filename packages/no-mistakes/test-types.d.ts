@@ -11,6 +11,7 @@ export type TestPlanFramework =
   | "cargo"
   | "rails"
   | "php"
+  | "java"
   | "jest";
 
 interface TestsPlanOptionsBase {

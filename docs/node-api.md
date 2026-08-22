@@ -18,7 +18,7 @@ const {
   const impact = await dependents({
     root: process.cwd(),
     files: ["src/api.mts#handler"],
-    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php", "jest"],
+    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php", "java", "jest"],
   });
 
   const report = await analyzeProject({
@@ -68,7 +68,7 @@ const {
 | `effects` | `effects(options)` |
 | `rsc-callers` | `rscCallers(options)` |
 | `registry-extension` | `registryExtension(options)` |
-| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, `php`, or `jest`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
+| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, `php`, `java`, or `jest`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
 | `tests targets` | `testsTargets(options)` |
 | `tests impact` | `testsImpact(options)` |
 | `tests why` | `testsWhy(options)` |

@@ -20,6 +20,7 @@ pub(crate) fn collect_language_frontend_edges_for_bench(
         rails_apps: request.languages.rails_apps.clone(),
         php_apps: request.languages.php_apps.clone(),
         php_framework: request.languages.php_framework.clone(),
+        java_packages: request.languages.java_packages.clone(),
         queue_enqueues: request.queue_enqueues.to_vec(),
         queue_workers: request.queue_workers.to_vec(),
         queue_cluster: request.queue_cluster,

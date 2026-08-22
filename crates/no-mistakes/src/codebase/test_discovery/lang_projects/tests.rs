@@ -20,6 +20,7 @@ fn empty_language_lists_discover_no_projects() {
         TestRunner::Cargo,
         TestRunner::Rails,
         TestRunner::Php,
+        TestRunner::Java,
     ] {
         assert!(language_projects(&root, &config, runner).is_empty());
     }
@@ -75,4 +76,21 @@ fn php_projects_preserve_laravel_framework() {
     config.tests.php.framework = Some("laravel".to_string());
     let projects = language_projects(&root, &config, TestRunner::Php);
     assert_eq!(projects[0].runner_project_arg.as_deref(), Some("laravel"));
+}
+
+#[test]
+fn java_projects_scope_configured_package_globs() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/lang-frontends/java-spring"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.java.packages = vec![".".to_string()];
+    let projects = language_projects(&root, &config, TestRunner::Java);
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].config.as_deref(), Some("."));
+    assert!(projects[0]
+        .include
+        .iter()
+        .any(|glob| glob.contains("Test.java")));
 }

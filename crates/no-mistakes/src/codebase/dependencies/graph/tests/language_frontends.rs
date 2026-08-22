@@ -46,6 +46,7 @@ fn lang_options() -> GraphConfigOptions {
         rails_apps: vec![".".into()],
         php_apps: vec![".".into()],
         php_framework: Some("laravel".into()),
+        java_packages: vec![".".into()],
         queue_enqueues: vec!["**/*".into()],
         queue_workers: vec!["**/*".into()],
         queue_cluster: Some("orders".into()),
@@ -233,6 +234,26 @@ fn language_frontend_edges_cover_configured_extractors() {
             || from
                 .as_file()
                 .is_none_or(|path| !path.ends_with("Computed.php"))
+    }));
+
+    let java = lang_fixture("java-spring");
+    let java_edges =
+        collect_language_frontend_edges_for_test(&java, &lang_files(&java), Some(&options));
+    assert!(java_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::JavaImport
+            && from.as_file().is_some_and(|path| path.ends_with("App.java"))
+            && to.as_file().is_some_and(|path| path.ends_with("User.java"))
+    }));
+    assert!(java_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::JavaReference
+            && from.as_file().is_some_and(|path| path.ends_with("App.java"))
+            && to.as_file().is_some_and(|path| path.ends_with("User.java"))
+    }));
+    assert!(java_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("Computed.java"))
     }));
 
     let kafka = lang_fixture("kafka-topics");
