@@ -16,6 +16,7 @@ words:
   - Actix
   - arm64
   - asynq
+  - aspnet
   - Basenames
   - callees
   - callsite
