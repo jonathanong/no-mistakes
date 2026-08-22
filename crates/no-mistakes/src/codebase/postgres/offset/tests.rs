@@ -222,6 +222,7 @@ fn values_row_subquery_offset_is_detected() {
 fn explain_analyze_offset_is_detected() {
     assert!(sql_has_offset_clause("EXPLAIN ANALYZE SELECT id FROM posts OFFSET 10").unwrap());
     assert!(!sql_has_offset_clause("EXPLAIN SELECT id FROM posts LIMIT 10").unwrap());
+    assert!(sql_has_offset_clause("COPY (SELECT id FROM posts OFFSET 1) TO STDOUT").unwrap());
 }
 
 #[test]

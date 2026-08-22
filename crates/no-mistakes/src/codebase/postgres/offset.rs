@@ -4,8 +4,8 @@ mod walk;
 
 use super::parse::{parse_postgres_sql, PostgresParseError};
 use sqlparser::ast::{
-    CreateTable, CreateView, Delete, DoUpdate, Insert, OnConflict, OnConflictAction, OnInsert,
-    SelectItem, Statement, Update,
+    CopySource, CreateTable, CreateView, Delete, DoUpdate, Insert, OnConflict, OnConflictAction,
+    OnInsert, SelectItem, Statement, Update,
 };
 use walk::{expr_has_offset_query, query_has_offset, table_with_joins_has_offset};
 
@@ -64,6 +64,10 @@ pub(super) fn statement_has_offset(statement: &Statement) -> bool {
             query.as_deref().is_some_and(query_has_offset)
         }
         Statement::CreateView(CreateView { query, .. }) => query_has_offset(query),
+        Statement::Copy {
+            source: CopySource::Query(query),
+            ..
+        } => query_has_offset(query),
         Statement::Explain { statement, .. } => statement_has_offset(statement),
         _ => false,
     }
