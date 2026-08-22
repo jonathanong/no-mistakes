@@ -36,7 +36,7 @@ pub(super) fn analyze_with<T>(
     let root = root.as_path();
     let filter = build_filter(filters)?;
     let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
-    let visible_files = shared.files().iter().cloned().collect();
+    let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         tsconfig_catalog,
         &visible_files,

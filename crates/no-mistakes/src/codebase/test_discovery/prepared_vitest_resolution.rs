@@ -11,7 +11,7 @@ impl PreparedTestProjects {
         let Some(Ok(projects)) = self.projects.get_mut(&TestRunner::Vitest) else {
             return;
         };
-        let visible = visible_paths.iter().cloned().collect();
+        let visible: crate::fx::PathSet = visible_paths.iter().cloned().collect();
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
             catalog, &visible,
         );
