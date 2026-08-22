@@ -2,7 +2,7 @@ use anyhow::Result;
 use serde::Serialize;
 use std::path::Path;
 
-use super::v2::schema::NoMistakesConfig;
+use super::v2::schema::{NoMistakesConfig, PlaywrightAppBinding, RewriteRule};
 use super::v2::{frontend_apps, load_v2_config_with_path, FrontendApp};
 
 #[path = "resolve/triggers.rs"]
@@ -45,6 +45,8 @@ pub struct ResolvedPlaywrightApp {
     pub project: Option<String>,
     pub frontend_root: Option<String>,
     pub selector_roots: Vec<String>,
+    pub rewrites: Vec<RewriteRule>,
+    pub ignore_routes: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -95,15 +97,18 @@ fn resolved_playwright(config: &NoMistakesConfig, apps: &[FrontendApp]) -> Resol
         apps: playwright
             .apps
             .iter()
-            .map(|(name, binding)| resolved_playwright_app(name, binding, apps))
+            .map(|(name, binding)| {
+                resolved_playwright_app(name, binding, apps, playwright.ignore_routes.as_deref())
+            })
             .collect(),
     }
 }
 
 fn resolved_playwright_app(
     name: &str,
-    binding: &crate::config::v2::schema::PlaywrightAppBinding,
+    binding: &PlaywrightAppBinding,
     apps: &[FrontendApp],
+    fallback_ignore_routes: Option<&[String]>,
 ) -> ResolvedPlaywrightApp {
     let inherited = binding.project.as_ref().and_then(|project| {
         apps.iter()
@@ -123,6 +128,18 @@ fn resolved_playwright_app(
         } else {
             binding.selector_roots.clone()
         },
+        rewrites: if binding.rewrites.is_empty() {
+            inherited
+                .map(|app| app.rewrites.clone())
+                .unwrap_or_default()
+        } else {
+            binding.rewrites.clone()
+        },
+        ignore_routes: binding
+            .ignore_routes
+            .clone()
+            .or_else(|| fallback_ignore_routes.map(|routes| routes.to_vec()))
+            .unwrap_or_default(),
     }
 }
 

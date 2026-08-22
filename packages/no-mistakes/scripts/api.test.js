@@ -557,6 +557,12 @@ test("resolveConfig declarations expose additive per-framework triggers", () => 
     declarations,
     /export interface ResolvedFrameworkTriggers \{\n  framework: TestPlanFramework;\n  triggers: ResolvedTrigger\[\];\n\}/,
   );
+  assert.match(declarations, /rewrites: ResolvedRewrite\[\];/);
+  assert.match(declarations, /ignoreRoutes: string\[\];/);
+  assert.match(
+    declarations,
+    /export interface ResolvedRewrite \{\n  source: string;\n  destination: string;\n\}/,
+  );
 });
 
 test("test plan declarations require current results but accept saved legacy plan documents", () => {

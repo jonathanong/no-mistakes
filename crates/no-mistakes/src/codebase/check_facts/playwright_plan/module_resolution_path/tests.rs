@@ -53,4 +53,13 @@ fn unresolved_repo_relative_wrappers_match_imported_path_suffixes() {
         Some(ModuleIdentity::External("web/app".to_string())),
         Some(ModuleIdentity::Path(PathBuf::from("/repo/src/other.ts"))),
     ));
+    assert!(!identities_match(
+        "src/helpers/locator",
+        Some(ModuleIdentity::Path(PathBuf::from(
+            "/repo/src/helpers/locator.ts"
+        ))),
+        Some(ModuleIdentity::Path(PathBuf::from(
+            "/repo/packages/web/src/helpers/locator.ts"
+        ))),
+    ));
 }

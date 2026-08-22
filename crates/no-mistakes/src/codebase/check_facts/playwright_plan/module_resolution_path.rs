@@ -25,13 +25,18 @@ pub(super) fn identities_match(
 ) -> bool {
     match (configured, imported) {
         (Some(configured_id), Some(imported_id)) if configured_id == imported_id => true,
-        (_, Some(ModuleIdentity::Path(imported_path)))
-            if looks_like_repo_relative_module(configured_specifier) =>
+        (configured, Some(ModuleIdentity::Path(imported_path)))
+            if suffix_fallback_applies(configured.as_ref(), configured_specifier) =>
         {
             path_ends_with_module(&imported_path, configured_specifier)
         }
         _ => false,
     }
+}
+
+fn suffix_fallback_applies(configured: Option<&ModuleIdentity>, specifier: &str) -> bool {
+    !matches!(configured, Some(ModuleIdentity::Path(_)))
+        && looks_like_repo_relative_module(specifier)
 }
 
 fn has_component_suffix(path: &str, suffix: &str) -> bool {

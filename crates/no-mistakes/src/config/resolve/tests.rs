@@ -1,9 +1,10 @@
 use super::resolve_config;
 use super::triggers::{resolved_framework_triggers, resolved_vitest_triggers};
 use crate::config::v2::schema::{
-    NamedFullSuiteTrigger, NoMistakesConfig, Project, TestPlanProjectDependency,
-    TestPlanTargetedProjectDependency,
+    NamedFullSuiteTrigger, NoMistakesConfig, PlaywrightAppBinding, Project, RewriteRule,
+    TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
+use crate::config::v2::FrontendApp;
 use serde_json::json;
 use std::path::PathBuf;
 
@@ -206,4 +207,46 @@ fn resolve_config_reports_non_vitest_named_triggers() {
     );
     assert_eq!(frameworks[0].triggers[0].paths, vec!["db/**"]);
     assert_eq!(frameworks[1].triggers[0].paths, vec!["bare/src/**"]);
+}
+
+#[test]
+fn resolve_playwright_apps_include_effective_rewrites_and_ignore_routes() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.playwright.ignore_routes = Some(vec!["/admin/**".to_string()]);
+    config.tests.playwright.apps.insert(
+        "chromium".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    config.tests.playwright.apps.insert(
+        "override".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            rewrites: vec![RewriteRule {
+                source: "/old".to_string(),
+                destination: "/new".to_string(),
+            }],
+            ignore_routes: Some(vec!["/override/**".to_string()]),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let apps = [FrontendApp {
+        project: Some("web".to_string()),
+        root: "web".to_string(),
+        route_root: "web/app".to_string(),
+        selector_roots: vec!["web".to_string()],
+        rewrites: vec![RewriteRule {
+            source: "/from-app".to_string(),
+            destination: "/to-app".to_string(),
+        }],
+    }];
+    let report = super::resolved_playwright(&config, &apps);
+    assert_eq!(report.apps[0].playwright_project, "chromium");
+    assert_eq!(report.apps[0].rewrites[0].source, "/from-app");
+    assert_eq!(report.apps[0].ignore_routes, vec!["/admin/**"]);
+    assert_eq!(report.apps[1].playwright_project, "override");
+    assert_eq!(report.apps[1].rewrites[0].source, "/old");
+    assert_eq!(report.apps[1].ignore_routes, vec!["/override/**"]);
 }

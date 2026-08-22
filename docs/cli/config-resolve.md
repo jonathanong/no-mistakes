@@ -22,4 +22,6 @@ under `vitestFullSuiteTriggers` with `source: "triggers"`. Deprecated
 project-keyed Vitest triggers use `source: "projects"`. The additive
 `fullSuiteTriggers` array repeats those entries under `framework: "vitest"` and
 includes the same named/project triggers for every other test-plan framework.
-Empty frameworks are omitted.
+Empty frameworks are omitted. Each `playwright.apps` entry includes the
+effective `rewrites` and `ignoreRoutes` after per-project overrides and
+inheritance from the bound frontend app or top-level Playwright settings.

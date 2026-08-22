@@ -28,6 +28,13 @@ export interface ResolvedPlaywrightApp {
   project?: string | null;
   frontendRoot?: string | null;
   selectorRoots: string[];
+  rewrites: ResolvedRewrite[];
+  ignoreRoutes: string[];
+}
+
+export interface ResolvedRewrite {
+  source: string;
+  destination: string;
 }
 
 export interface ResolvedTrigger {
