@@ -111,12 +111,19 @@ fn java_target_for(package: Option<&str>, test_file: &str) -> TestExecutionTarge
         .strip_suffix(".java")
         .unwrap_or(test_file)
         .to_string();
+    let pom = package
+        .map(slash)
+        .filter(|value| !value.is_empty() && value != ".");
+    let mut runner_args = pom
+        .map(|package| vec!["-f".into(), format!("{package}/pom.xml")])
+        .unwrap_or_default();
+    runner_args.push(format!("-Dtest={class_name}"));
     language_target(
         TestRunner::Java,
         package,
         None,
         vec!["mvn".to_string(), "test".to_string()],
-        vec![format!("-Dtest={class_name}")],
+        runner_args,
     )
 }
 

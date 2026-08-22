@@ -127,7 +127,7 @@ Follow the Swift and .NET adapter shape, not a second analysis session.
    reports project those edges; they do not rebuild a private index.
 5. Test discovery reads the language's explicit package/project config and
    emits `TestExecutionTarget` rows (`pytest`, `go test`, `cargo test`,
-   `bin/rails test` / `rspec`, `phpunit` / `artisan test`, `mvn test -Dtest=`).
+   `bin/rails test` / `rspec`, `phpunit` / `artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`).
 6. Ship CLI, N-API, `docs/cli/*`, `docs/graph-edges.md`,
    `docs/configuration/tests.md`, and fixtures in the same change.
 
@@ -378,7 +378,7 @@ wildcard translation are non-edges. Same-file controller methods do not emit
 | --- | --- | --- |
 | Module graph | `import` | exact `import com.example.User;` |
 | Package identity | workspace packages | configured `tests.java.packages` |
-| Tests | `tests plan vitest` | `tests plan java` over `*Test.java` / `*Tests.java` / `*IT.java` |
+| Tests | `tests plan vitest` | `tests plan java` over `*Test.java` / `*Tests.java` / `*IT.java`; `mvn test [-f <package>/pom.xml] -Dtest=` |
 | HTTP routes | `server routes` | Spring `@RequestMapping` + `@GetMapping` literals |
 | Queues | BullMQ | no |
 | Lockfile | npm-family | later (`pom.xml` native fallback only) |
@@ -394,9 +394,10 @@ public class Users {
 }
 ```
 
-`@GetMapping(PREFIX)`, `@GetMapping`, intervening non-annotation noise that
-breaks the method matcher, class-only `@RequestMapping` without a method
-mapping, and `import com.example.*` are non-edges.
+`@GetMapping(PREFIX)`, `@GetMapping`, extra mapping attributes after the path,
+intervening non-annotation noise that breaks the method matcher, class-only
+`@RequestMapping` without a method mapping, same-package type refs without an
+explicit `import`, and `import com.example.*` are non-edges.
 
 ## Shared Domain Rules
 

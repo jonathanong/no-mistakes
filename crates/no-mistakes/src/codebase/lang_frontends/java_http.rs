@@ -65,7 +65,7 @@ fn method_mapping_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"(?s)@(?:(?:Get|Post|Put|Patch|Delete)Mapping|RequestMapping)\(\s*(?:(?:path|value)\s*=\s*)?"([^"]+)"\s*\)(?:\s*@[A-Za-z_.]+(?:\([^)]*\))?)*\s*(?:(?:public|private|protected|static|final|synchronized|native|abstract|default)\s+)+[\w.<>,\[\]?]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\("#,
+            r#"(?s)@(?:(?:Get|Post|Put|Patch|Delete)Mapping|RequestMapping)\(\s*(?:(?:path|value)\s*=\s*)?"([^"]+)"\s*\)(?:\s*@[A-Za-z_.]+(?:\([^)]*\))?)*\s*(?:(?:public|private|protected|static|final|synchronized|native|abstract|default)\s+)*[\w.<>,\[\]?]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\("#,
         )
         .expect("method mapping")
     })

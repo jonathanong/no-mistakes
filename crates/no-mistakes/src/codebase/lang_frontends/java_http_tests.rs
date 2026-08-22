@@ -19,6 +19,19 @@ public class Users {
 }
 
 #[test]
+fn package_private_handlers_extract() {
+    let routes = extract_http_routes(
+        r#"
+public class Users {
+  @GetMapping("/ok")
+  Object ok() { return null; }
+}
+"#,
+    );
+    assert!(routes.contains(&("/ok".into(), "ok".into())));
+}
+
+#[test]
 fn computed_and_empty_mappings_are_skipped() {
     let routes = extract_http_routes(
         r#"
@@ -27,6 +40,8 @@ public class Computed {
   public Object hidden() { return null; }
   @GetMapping
   public Object empty() { return null; }
+  @GetMapping(path = "/users", produces = "application/json")
+  public Object extra() { return null; }
 }
 "#,
     );

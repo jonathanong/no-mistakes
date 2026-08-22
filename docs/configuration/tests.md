@@ -87,7 +87,7 @@ Language test plans follow the same native shape. Configure
 `tests.rails.apps`, `tests.php.apps`, or `tests.java.packages`. Empty lists disable that frontend.
 `tests plan python|go|cargo|rails|php|java` then emits `pytest` /
 `python -m unittest`, `go test`, `cargo test -p`, `bin/rails test` / `rspec`,
-`phpunit` / `php artisan test`, or `mvn test -Dtest=` targets. Untraceable source under those
+`phpunit` / `php artisan test`, or `mvn test [-f <package>/pom.xml] -Dtest=` targets. Untraceable source under those
 roots falls back to discovered tests in the owning package, module, or app.
 
 ## Explicit Vitest projects

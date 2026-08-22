@@ -381,3 +381,21 @@ fn language_frontend_edges_scope_routes_and_go_packages() {
                 .is_some_and(|path| path.ends_with("mail/user.go"))
     }));
 }
+
+#[test]
+fn java_exact_imports_cross_configured_packages() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/java-cross-package/fixture"),
+    );
+    let options = GraphConfigOptions {
+        java_packages: vec!["libs/shared".into(), "services/app".into()],
+        ..GraphConfigOptions::default()
+    };
+    let edges = collect_language_frontend_edges_for_test(&root, &lang_files(&root), Some(&options));
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::JavaImport
+            && from.as_file().is_some_and(|path| path.ends_with("App.java"))
+            && to.as_file().is_some_and(|path| path.ends_with("User.java"))
+    }));
+}

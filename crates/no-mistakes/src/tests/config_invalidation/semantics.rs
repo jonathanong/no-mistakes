@@ -188,6 +188,7 @@ fn global_graph_semantics(config: &NoMistakesConfig) -> GlobalGraphSemantics {
             "rust": &config.tests.rust,
             "rails": &config.tests.rails,
             "php": &config.tests.php,
+            "java": &config.tests.java,
         }),
     }
 }

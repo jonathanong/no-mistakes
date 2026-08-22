@@ -132,3 +132,18 @@ fn java_target_uses_maven_class_name() {
     assert_eq!(target.runner_args, vec!["-Dtest=UserTest"]);
     assert_eq!(target.runner, "java");
 }
+
+#[test]
+fn java_nested_package_passes_maven_file_flag() {
+    let target = target_for(
+        TestRunner::Java,
+        Some("services/api"),
+        false,
+        None,
+        "services/api/src/test/java/com/example/UserTest.java",
+    );
+    assert_eq!(
+        target.runner_args,
+        vec!["-f", "services/api/pom.xml", "-Dtest=UserTest"]
+    );
+}
