@@ -33,7 +33,7 @@ pub(crate) fn check_with_graph_and_inferred(
     let file_universe = files
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.rule_options();
@@ -70,7 +70,7 @@ fn check_rule_application(
     scoped_files: &[PathBuf],
     target_roots: &[PathBuf],
     graph: &DepGraph,
-    file_universe: &HashSet<PathBuf>,
+    file_universe: &crate::fx::PathSet,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     if options.source_globs.is_empty() {

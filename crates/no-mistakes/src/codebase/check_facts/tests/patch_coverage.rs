@@ -9,9 +9,9 @@ use std::path::{Path, PathBuf};
 fn legacy_symbol_plan(path: &Path) -> CheckFactPlan {
     CheckFactPlan {
         symbols: true,
-        legacy_symbol_paths: std::collections::HashSet::from([
-            crate::codebase::ts_resolver::normalize_path(path),
-        ]),
+        legacy_symbol_paths: [crate::codebase::ts_resolver::normalize_path(path)]
+            .into_iter()
+            .collect(),
         ..CheckFactPlan::default()
     }
 }
@@ -25,7 +25,7 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
         "page.tsx",
     ]);
     let exports_path = page.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([page.clone(), exports_path.clone()]);
+    let visible = [page.clone(), exports_path.clone()].into_iter().collect();
     let regexes = crate::playwright::selectors::compile_selector_regexes(
         &["data-pw".to_string()],
         &BTreeMap::new(),

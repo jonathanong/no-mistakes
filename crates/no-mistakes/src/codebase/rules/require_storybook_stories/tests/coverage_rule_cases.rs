@@ -40,7 +40,9 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
                 ..Default::default()
             }
             .into(),
-        )]),
+        )])
+        .into_iter()
+        .collect(),
         ..Default::default()
     };
     let story_files = [story, root.join("stories/missing-facts.stories.tsx")]

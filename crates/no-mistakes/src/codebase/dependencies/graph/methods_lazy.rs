@@ -83,7 +83,7 @@ impl DepGraph {
         roots: &[NodeId],
         max_depth: Option<usize>,
         allowed: Option<&HashSet<EdgeKind>>,
-        file_universe: &HashSet<PathBuf>,
+        file_universe: &crate::fx::PathSet,
     ) -> Vec<NodeEntry> {
         let roots = normalize_nodes(roots);
         bfs_in_file_universe(
@@ -133,14 +133,11 @@ impl DepGraph {
         allowed: Option<&HashSet<EdgeKind>>,
         symbol_index: &SymbolIndex,
     ) -> Vec<NodeEntry> {
-        let mut visited_pairs: HashSet<(PathBuf, String)> = HashSet::new();
-        let mut queue: VecDeque<(PathBuf, String)> = VecDeque::new();
+        let mut visited_pairs: FxHashSet<(Arc<Path>, Arc<str>)> = fx_set();
+        let mut queue: VecDeque<(Arc<Path>, Arc<str>)> = VecDeque::new();
         let mut direct_importers: HashSet<NodeId> = HashSet::new();
 
-        let start = (
-            crate::codebase::ts_resolver::normalize_path(file),
-            symbol.to_string(),
-        );
+        let start = (intern_node_path(file), intern_node_str(symbol));
         visited_pairs.insert(start.clone());
         queue.push_back(start);
 
@@ -149,7 +146,7 @@ impl DepGraph {
                 for (importer, local_name, is_reexport) in importers {
                     direct_importers.insert(NodeId::file(importer.as_ref()));
                     if *is_reexport {
-                        let pair = (importer.to_path_buf(), local_name.to_string());
+                        let pair = (Arc::clone(importer), Arc::clone(local_name));
                         push_unvisited_symbol_pair(&mut visited_pairs, &mut queue, pair);
                     }
                 }

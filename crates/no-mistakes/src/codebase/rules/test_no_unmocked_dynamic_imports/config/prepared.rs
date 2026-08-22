@@ -2,7 +2,6 @@ use super::discovery::config_files_from_visible;
 use super::{ConfigSetupData, TestFilter};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub(in super::super) struct PreparedConfig {
@@ -30,7 +29,7 @@ pub(in super::super) fn prepare_from_visible(
     let visible_files = visible_files
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     Ok(PreparedConfig {
         test_filter: super::filter::test_filter_from_config_files_with_sources(
             root,

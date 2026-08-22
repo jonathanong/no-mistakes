@@ -69,7 +69,7 @@ pub(super) struct ReachableContext<'a> {
     pub(super) resolver: &'a dyn ImportResolution,
     pub(super) graph: &'a DepGraph,
     pub(super) graph_files: Option<&'a GraphFiles>,
-    pub(super) file_universe: Option<&'a HashSet<PathBuf>>,
+    pub(super) file_universe: Option<&'a crate::fx::PathSet>,
     pub(super) shared: Option<&'a CheckFactMap>,
     pub(super) file_cache: Option<&'a DashMap<PathBuf, Arc<CachedFileFacts>>>,
 }

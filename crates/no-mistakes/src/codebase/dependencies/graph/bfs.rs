@@ -15,7 +15,7 @@ fn bfs_in_file_universe<'a, A>(
     edges: &'a FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
-    file_universe: &HashSet<PathBuf>,
+    file_universe: &crate::fx::PathSet,
 ) -> Vec<NodeEntry>
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
@@ -28,7 +28,7 @@ fn bfs_with_file_universe<'a, A>(
     edges: &'a FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
-    file_universe: Option<&HashSet<PathBuf>>,
+    file_universe: Option<&crate::fx::PathSet>,
 ) -> Vec<NodeEntry>
 where
     A: AsRef<[(NodeId, EdgeKind)]>,

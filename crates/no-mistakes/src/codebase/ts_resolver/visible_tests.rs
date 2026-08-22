@@ -44,3 +44,19 @@ fn reference_and_arc_lookups_delegate_to_the_inner_universe() {
         expected_key
     );
 }
+
+#[test]
+fn path_set_lookups_match_hash_set_membership() {
+    let visible: crate::fx::PathSet = sample_visible().into_iter().collect();
+    let path = Path::new("/fixture/a.ts");
+    let missing = Path::new("/fixture/missing.ts");
+
+    assert!(VisiblePathLookup::contains_visible(&visible, path));
+    assert!(!VisiblePathLookup::contains_visible(&visible, missing));
+    assert_eq!(VisiblePathLookup::visible_len(&visible), 2);
+    assert_eq!(
+        VisiblePathLookup::visible_cache_key(&visible),
+        vec![PathBuf::from("/fixture/a.ts"), PathBuf::from("/fixture/b.ts")]
+    );
+}
+

@@ -41,7 +41,7 @@ impl NodeId {
         }
     }
 
-    fn is_in_file_universe(&self, universe: &HashSet<PathBuf>) -> bool {
+    fn is_in_file_universe(&self, universe: &crate::fx::PathSet) -> bool {
         match self {
             Self::File(path) | Self::Symbol { file: path, .. } => universe.contains(path.as_ref()),
             Self::Module(_) => true,
@@ -117,7 +117,7 @@ impl Ord for ResourceCallSite {
     }
 }
 
-type ResourceEdgeDetails = HashMap<(PathBuf, PathBuf), Vec<ResourceCallSite>>;
+type ResourceEdgeDetails = crate::fx::FxHashMap<(PathBuf, PathBuf), Vec<ResourceCallSite>>;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ResourceGraphDiagnostic {

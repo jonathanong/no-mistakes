@@ -56,7 +56,7 @@ fn prepare_inner(
     let mut visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     // Explicit runner configs are authoritative even when Git ignores them.
     // Add their normalized paths to the frozen request view up front; reads are
     // still memoized by the request source store and failures become prepared

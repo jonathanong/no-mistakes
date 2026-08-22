@@ -28,6 +28,22 @@ impl VisiblePathLookup for HashSet<PathBuf> {
     }
 }
 
+impl VisiblePathLookup for crate::fx::PathSet {
+    fn contains_visible(&self, path: &Path) -> bool {
+        self.contains(path)
+    }
+
+    fn visible_len(&self) -> usize {
+        self.len()
+    }
+
+    fn visible_cache_key(&self) -> Vec<PathBuf> {
+        let mut paths: Vec<_> = self.iter().cloned().collect();
+        paths.sort();
+        paths
+    }
+}
+
 impl<T: VisiblePathLookup + ?Sized> VisiblePathLookup for &T {
     fn contains_visible(&self, path: &Path) -> bool {
         (**self).contains_visible(path)

@@ -18,7 +18,7 @@ pub(crate) fn check_inner(
     graph: &DepGraph,
     manual_mocks: &HashSet<PathBuf>,
 ) -> Result<Vec<RuleFinding>> {
-    let visible_files = files.iter().cloned().collect::<HashSet<_>>();
+    let visible_files = files.iter().cloned().collect::<crate::fx::PathSet>();
     let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
     let file_cache: DashMap<PathBuf, Arc<reachable::CachedFileFacts>> = DashMap::new();

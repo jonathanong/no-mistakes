@@ -65,7 +65,7 @@ fn pass4b_storybook_import_skips_ignored_component_for_visible_fallback() {
     let visible = crate::codebase::ts_source::discover_visible_paths(&root)
         .into_iter()
         .map(|path| normalize_path(&path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -118,7 +118,9 @@ fn deferred_suppression_sources_use_prepared_component_text() {
                 source: Some("export function DisabledFile() { return <div />; }".into()),
                 ..Default::default()
             }),
-        )]),
+        )])
+        .into_iter()
+        .collect(),
         ..Default::default()
     };
 
@@ -143,7 +145,9 @@ fn deferred_suppression_sources_use_prepared_component_text() {
                 ),
                 ..Default::default()
             }),
-        )]),
+        )])
+        .into_iter()
+        .collect(),
         ..Default::default()
     };
     let indexed = suppression::component_suppression_sources(

@@ -35,6 +35,61 @@ fn bfs_visited_sets_use_fx_hash() {
         bfs.contains("let root_nodes: FxHashSet<NodeId>"),
         "BFS root-node set must use rustc-hash FxHashSet"
     );
+    assert!(
+        bfs.contains("file_universe: &crate::fx::PathSet")
+            || bfs.contains("file_universe: &FxHashSet<PathBuf>"),
+        "BFS file_universe must use rustc-hash PathSet/FxHashSet"
+    );
+}
+
+#[test]
+fn remaining_path_keyed_maps_use_fx_hash() {
+    let graph_files = include_str!("../graph_files.rs");
+    assert!(
+        graph_files.contains("visible: Vec<u8>"),
+        "GraphFiles.visible must store a dense FileId bitset instead of hashing PathBufs"
+    );
+    let types = include_str!("../types.rs");
+    assert!(
+        types.contains("type ResourceEdgeDetails = crate::fx::FxHashMap")
+            || types.contains("type ResourceEdgeDetails = FxHashMap"),
+        "ResourceEdgeDetails must use rustc-hash FxHashMap"
+    );
+    assert!(
+        types.contains("universe: &crate::fx::PathSet")
+            || types.contains("universe: &FxHashSet<PathBuf>"),
+        "NodeId::is_in_file_universe must use rustc-hash PathSet/FxHashSet"
+    );
+    let facts = include_str!("../../../ts_source/facts.rs");
+    assert!(
+        facts.contains("facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>"),
+        "TsFactMap must intern facts in a FileIdMap"
+    );
+    let check_facts = include_str!("../../../check_facts/map.rs");
+    assert!(
+        check_facts.contains("ts: FileIdMap<Arc<CheckFileFacts>>"),
+        "CheckFactMap.ts must intern facts in a FileIdMap"
+    );
+}
+
+#[test]
+fn leftover_path_keyed_maps_use_fx_hash() {
+    let facts = include_str!("../../../ts_source/facts.rs");
+    assert!(
+        facts.contains("facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>"),
+        "TsFactMap must intern facts in a FileIdMap"
+    );
+    let types = include_str!("../types.rs");
+    assert!(
+        types.contains("type ResourceEdgeDetails = crate::fx::FxHashMap")
+            || types.contains("type ResourceEdgeDetails = FxHashMap"),
+        "ResourceEdgeDetails must use rustc-hash FxHashMap"
+    );
+    let cache = include_str!("../../../../ast/parsed_cache.rs");
+    assert!(
+        cache.contains("type CachedPrograms = FxHashMap"),
+        "ParsedProgramCache must use rustc-hash FxHashMap"
+    );
 }
 
 #[test]

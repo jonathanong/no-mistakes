@@ -42,7 +42,7 @@ fn workflow_virtual_nodes_normalize_display_and_track_their_file_universe() {
         nodes[1].display_name(&root),
         ".github/workflows/main.yml#job:build/step:2"
     );
-    let universe = HashSet::from([normalized_file]);
+    let universe = [normalized_file].into_iter().collect();
     assert!(nodes.iter().all(|node| node.is_in_file_universe(&universe)));
 }
 
@@ -247,7 +247,7 @@ fn workflow_run_collection_skips_steps_absent_from_the_topology_graph() {
         ".github/workflows/main.yml#build".to_string(),
         workflow_node(&root, "build"),
     )]);
-    let universe = HashSet::from([root.join("package.json")]);
+    let universe = [root.join("package.json")].into_iter().collect();
     let mut edges = Vec::new();
 
     add_workflow_run_edges(
@@ -402,11 +402,13 @@ fn workflow_run_resolution_handles_cycles_cargo_and_unsafe_inputs() {
     let root = workflow_topology_fixture();
     let direct = root.join("scripts/direct.mjs");
     let cargo_file = root.join("src/bin/tool.rs");
-    let universe = HashSet::from([
+    let universe = [
         root.join("package.json"),
         direct.clone(),
         cargo_file.clone(),
-    ]);
+    ]
+    .into_iter()
+    .collect();
     let mut bins = CargoBinIndex::default();
     bins.insert(None, "tool".to_string(), cargo_file.clone());
     let mut resolver = WorkflowRunResolver::new(&root, &universe, &bins);
@@ -474,7 +476,7 @@ fn workflow_working_directory_and_local_action_resolution_are_scoped() {
     );
 
     let action = root.join(".github/actions/local/action.yml");
-    let universe = HashSet::from([action.clone()]);
+    let universe = [action.clone()].into_iter().collect();
     let action_dirs = [root.join(".github/actions")];
     assert_eq!(
         resolve_local_action_descriptor(&root, "./.github/actions/local", &universe, &action_dirs,),
@@ -497,7 +499,7 @@ fn workflow_working_directory_and_local_action_resolution_are_scoped() {
         resolve_local_action_descriptor(
             &root,
             "./other-actions/local",
-            &HashSet::from([outside_action]),
+            &[outside_action].into_iter().collect(),
             &action_dirs,
         ),
         None

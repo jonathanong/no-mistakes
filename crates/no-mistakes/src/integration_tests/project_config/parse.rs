@@ -3,13 +3,11 @@ use super::ConfigProjectInput;
 use crate::integration_tests::types::{ConfigProject, Framework};
 use anyhow::Result;
 use oxc_ast::ast::Program;
-use std::collections::HashSet;
-use std::path::PathBuf;
 
 pub(in crate::integration_tests) fn load_config_projects_from_program(
     input: ConfigProjectInput<'_>,
     program: &Program<'_>,
-    _visible_files: Option<&HashSet<PathBuf>>,
+    _visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<ConfigProject>> {
     let ConfigProjectInput {
         root,

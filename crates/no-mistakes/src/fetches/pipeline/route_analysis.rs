@@ -63,7 +63,7 @@ pub(crate) struct RouteMatchContext<'a> {
     pub(crate) session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
     pub(crate) parsed_files: &'a mut no_mistakes::fetch::ParsedFileCache,
     pub(crate) root: &'a Path,
-    pub(crate) visible_files: &'a HashSet<PathBuf>,
+    pub(crate) visible_files: &'a no_mistakes::fx::PathSet,
 }
 
 fn reaches_target(

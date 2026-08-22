@@ -1,6 +1,6 @@
 use crate::playwright::playwright_tests::TestPolicy;
 use crate::playwright::selectors::SelectorRegexes;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -16,8 +16,8 @@ use regex_cache::SelectorRegexCache;
 pub struct PlaywrightFactPlan {
     files: BTreeMap<PathBuf, PlaywrightFileFactPlan>,
     source_files: Arc<Vec<PathBuf>>,
-    source_file_set: Arc<HashSet<PathBuf>>,
-    config_files: Arc<HashSet<PathBuf>>,
+    source_file_set: Arc<crate::fx::PathSet>,
+    config_files: Arc<crate::fx::PathSet>,
     source_plans: Vec<PlaywrightSourceFactPlan>,
     test_files_by_project: super::PlaywrightTestFilesByProject,
     module_resolution: Option<Arc<PlaywrightModuleResolution>>,
@@ -26,10 +26,10 @@ pub struct PlaywrightFactPlan {
 
 #[derive(Clone)]
 pub(crate) struct PlaywrightSourceFactPlan {
-    pub(crate) app_source_files: Arc<HashSet<PathBuf>>,
+    pub(crate) app_source_files: Arc<crate::fx::PathSet>,
     pub(crate) selector_regexes: Arc<SelectorRegexes>,
     pub(crate) settings: Arc<crate::playwright::config::Settings>,
-    pub(crate) visible_files: Arc<HashSet<PathBuf>>,
+    pub(crate) visible_files: Arc<crate::fx::PathSet>,
     pub(crate) scan_html_ids: bool,
     pub(crate) settings_key: PlaywrightSettingsKey,
 }

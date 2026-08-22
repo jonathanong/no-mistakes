@@ -60,7 +60,7 @@ pub(super) fn collect_dynamic_identifier_values_with_file_from_visible(
     program: &Program<'_>,
     source: &str,
     file: &std::path::Path,
-    visible_files: &std::collections::HashSet<std::path::PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<DynamicIdentifierValues> {
     collect_dynamic_identifier_values_for_file(program, source, Some(file), Some(visible_files))
 }
@@ -69,7 +69,7 @@ pub(super) fn collect_dynamic_identifier_values_with_file_from_visible_deferred(
     program: &Program<'_>,
     source: &str,
     file: &std::path::Path,
-    visible_files: &std::collections::HashSet<std::path::PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<DynamicIdentifierValues> {
     collect_dynamic_identifier_values_for_file_deferred(program, source, file, visible_files)
 }
@@ -78,7 +78,7 @@ fn collect_dynamic_identifier_values_for_file(
     program: &Program<'_>,
     _source: &str,
     file: Option<&std::path::Path>,
-    visible_files: Option<&std::collections::HashSet<std::path::PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Vec<DynamicIdentifierValues> {
     let mut v = visitor::DynamicValuesVisitor::new();
     v.visit_program(program);
@@ -129,7 +129,7 @@ fn collect_dynamic_identifier_values_for_file_deferred(
     program: &Program<'_>,
     _source: &str,
     file: &std::path::Path,
-    visible_files: &std::collections::HashSet<std::path::PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<DynamicIdentifierValues> {
     let mut visitor = visitor::DynamicValuesVisitor::new();
     visitor.visit_program(program);

@@ -3,7 +3,7 @@ fn build_report_with_session(
     facts: &HashMap<PathBuf, FileFacts>,
     client_paths: &[PathBuf],
 ) -> ProjectReport {
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
     let resolver = ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
     build_report_with_resolver(
         &prepared.root,
@@ -31,7 +31,7 @@ pub(super) fn build_prepared_report(
     facts: &HashMap<PathBuf, FileFacts>,
     client_paths: &[PathBuf],
 ) -> PreparedProjectReport {
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
     let resolver = ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
     let (report, relationships) = build_report_and_relationships(
         &prepared.root,

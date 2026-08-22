@@ -7,7 +7,7 @@ struct AppSelectorVisitor<'a, 'r> {
     scoped_static_identifier_defaults: &'r [ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &'r [DynamicIdentifierValues],
     program: &'a oxc_ast::ast::Program<'a>,
-    visible_files: Option<&'r HashSet<PathBuf>>,
+    visible_files: Option<&'r crate::fx::PathSet>,
     selectors: Vec<AppSelector>,
 }
 

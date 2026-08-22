@@ -84,7 +84,7 @@ impl<'a> ImportResolver<'a> {
         resolver
     }
 
-    pub fn with_visible(self, visible: &'a HashSet<PathBuf>) -> Self {
+    pub fn with_visible(self, visible: &'a dyn VisiblePathLookup) -> Self {
         self.with_visible_lookup(visible)
     }
 
@@ -101,7 +101,10 @@ impl<'a> ImportResolver<'a> {
     /// Keep an owned frozen visibility universe with an owned resolver.
     /// This is intentionally separate from `with_visible` so common borrowed
     /// consumers retain their no-Arc fast path.
-    pub(crate) fn with_owned_visible(self, visible: std::sync::Arc<HashSet<PathBuf>>) -> Self {
+    pub(crate) fn with_owned_visible(
+        self,
+        visible: std::sync::Arc<dyn VisiblePathLookup>,
+    ) -> Self {
         self.with_owned_visible_lookup(visible)
     }
 

@@ -7,7 +7,7 @@ use super::types::{AppSelector, SelectorRegexes};
 use super::HTML_ID_ATTRIBUTE;
 use crate::playwright::ast;
 use oxc_ast_visit::Visit;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -29,7 +29,7 @@ pub fn collect_app_selectors(
     let visible_files = candidates
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let regexes = super::regex_mod::compile_selector_regexes(attributes, &component_attributes);
 
     let selectors: BTreeSet<AppSelector> = candidates
@@ -81,7 +81,7 @@ pub(crate) fn extract_app_selectors_with_regexes_from_visible(
     path: &Path,
     source: &str,
     regexes: &SelectorRegexes,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> anyhow::Result<Vec<AppSelector>> {
     extract_app_selectors_with_regexes_inner(path, source, regexes, Some(visible_files))
 }
@@ -90,7 +90,7 @@ fn extract_app_selectors_with_regexes_inner(
     path: &Path,
     source: &str,
     regexes: &SelectorRegexes,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> anyhow::Result<Vec<AppSelector>> {
     ast::with_program(path, source, |program, source| {
         extract_app_selectors_from_program(path, source, program, regexes, visible_files, false)
@@ -102,7 +102,7 @@ pub(crate) fn extract_app_selectors_from_program_from_visible_deferred(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     regexes: &SelectorRegexes,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<AppSelector> {
     extract_app_selectors_from_program(path, source, program, regexes, Some(visible_files), true)
 }
@@ -112,7 +112,7 @@ fn extract_app_selectors_from_program(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     regexes: &SelectorRegexes,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     defer_cross_file: bool,
 ) -> Vec<AppSelector> {
     let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);

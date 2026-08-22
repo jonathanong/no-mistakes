@@ -19,7 +19,7 @@ pub fn collect_imports(
 pub(crate) fn collect_imports_from_visible(
     path: &Path,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<PathBuf>> {
     collect_imports_inner(path, import_cache, Some(visible_files))
 }
@@ -27,7 +27,7 @@ pub(crate) fn collect_imports_from_visible(
 fn collect_imports_inner(
     path: &Path,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<PathBuf>> {
     let abs_path = match visible_files {
         Some(_) => crate::codebase::ts_resolver::normalize_path(path),
@@ -74,7 +74,7 @@ pub(crate) fn collect_runtime_imports_from_program_from_visible<'a>(
     abs_path: &Path,
     program: &oxc_ast::ast::Program<'a>,
     referenced_identifiers: &HashSet<String>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     collect_runtime_imports_from_program_inner(
         abs_path,
@@ -88,7 +88,7 @@ fn collect_runtime_imports_from_program_inner<'a>(
     abs_path: &Path,
     program: &oxc_ast::ast::Program<'a>,
     referenced_identifiers: &HashSet<String>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Vec<PathBuf> {
     let mut imports = Vec::new();
     for stmt in &program.body {

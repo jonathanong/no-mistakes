@@ -9,7 +9,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
         base_url: None,
     };
     let resolver = ImportResolver::new(&tsconfig);
-    let visible = HashSet::from([current.clone(), target.clone()]);
+    let visible = [current.clone(), target.clone()].into_iter().collect();
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
         crate::codebase::workspaces::WorkspacePackage {
             name: "@fixture/core".to_string(),

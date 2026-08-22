@@ -5,7 +5,6 @@ use crate::codebase::check_facts::{
 };
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
-use std::collections::HashSet;
 use std::path::Path;
 
 mod colocated_tests;
@@ -117,7 +116,7 @@ fn check_with_facts_and_catalog(
         .files()
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         catalog,
         &visible_files,

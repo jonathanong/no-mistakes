@@ -40,7 +40,7 @@ fn collect_import_edges(
                         return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(
                             || {
                                 (
-                                    NodeId::file_in(interner, (*path).clone()),
+                                    NodeId::file_in(interner, *path),
                                     NodeId::file_in(interner, target),
                                     kind,
                                 )
@@ -49,7 +49,7 @@ fn collect_import_edges(
                     }
                     if classification.is_unresolved_external() {
                         return bare_module_node_in(interner, &imp.specifier).map(|module| {
-                            (NodeId::file_in(interner, (*path).clone()), module, kind)
+                            (NodeId::file_in(interner, *path), module, kind)
                         });
                     }
                     None
@@ -81,7 +81,7 @@ fn collect_asset_edges(
                             return None;
                         }
                         Some((
-                            NodeId::file_in(interner, (*path).clone()),
+                            NodeId::file_in(interner, *path),
                             NodeId::file_in(interner, target),
                             EdgeKind::AssetImport,
                         ))
@@ -126,7 +126,7 @@ fn collect_workspace_edges(
                                 _ => EdgeKind::WorkspaceImport,
                             };
                             (
-                                NodeId::file_in(interner, (*path).clone()),
+                                NodeId::file_in(interner, *path),
                                 NodeId::file_in(interner, entry),
                                 kind,
                             )

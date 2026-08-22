@@ -9,7 +9,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     let asset = p("/repo/packages/app/src/data.json");
     let barrel = p("/repo/packages/app/src/barrel.mts");
     let workspace_target = p("/repo/packages/core/src/index.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(asset.clone());
     visible.insert(barrel.clone());
@@ -234,7 +234,7 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
 
     let current = p("/repo/src/current.mts");
     let target = p("/repo/src/target.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(target.clone());
     let tsconfig = TsConfig {
@@ -355,7 +355,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
 
     let current = p("/repo/src/current.mts");
     let barrel = p("/repo/src/barrel.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(barrel.clone());
     let tsconfig = TsConfig {

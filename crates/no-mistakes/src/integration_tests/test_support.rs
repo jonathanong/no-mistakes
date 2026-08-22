@@ -2,7 +2,7 @@ use super::types::{ConfigProject, FileAnalysis, Suite};
 use crate::codebase::ts_resolver::TsConfig;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 pub(super) fn tsconfig_without_config(root: &Path) -> TsConfig {
@@ -46,7 +46,7 @@ pub(super) fn parse_playwright_from_visible(
     path: &Path,
     config_dir: &Path,
     tsconfig: &TsConfig,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<super::test_config::playwright::ParsedPlaywrightConfig> {
     crate::integration_tests::runner_config::with_program(path, source, |program, source| {
         super::test_config::playwright::tests::parse_program(
@@ -80,7 +80,7 @@ pub(super) fn parse_vitest_from_visible(
     config_dir: &Path,
     root: &Path,
     tsconfig: &TsConfig,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<ConfigProject>> {
     crate::integration_tests::runner_config::with_program(path, source, |program, source| {
         super::test_config::vitest::tests::parse_program(

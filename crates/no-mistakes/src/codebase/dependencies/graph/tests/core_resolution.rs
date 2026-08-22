@@ -3,7 +3,7 @@ fn graph_resolver_forwards_deleted_target_candidates_and_visibility_for_scoped_a
 ) {
     let root = PathBuf::from("/graph-import-resolver-candidates");
     let importer = root.join("src/entry.ts");
-    let visible = HashSet::from([importer.clone()]);
+    let visible: crate::fx::PathSet = [importer.clone()].into_iter().collect();
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: vec![("@app/*".to_string(), vec!["src/*".to_string()])],

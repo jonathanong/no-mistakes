@@ -30,7 +30,7 @@ fn collect_test_edges(
                     let src_path = dir.join(format!("{src_stem}.{ext}"));
                     if file_set.contains(&src_path) {
                         edges.push((
-                            NodeId::file_in(interner, path.clone()),
+                            NodeId::file_in(interner, path.as_path()),
                             NodeId::file_in(interner, src_path),
                             EdgeKind::TestOf,
                         ));
@@ -83,7 +83,7 @@ fn collect_md_edges(
                     let target = crate::codebase::ts_resolver::normalize_path(&target);
                     if graph_files.contains_visible(&target) {
                         Some((
-                            NodeId::file_in(interner, path.clone()),
+                            NodeId::file_in(interner, path.as_path()),
                             NodeId::file_in(interner, target),
                             EdgeKind::MarkdownLink,
                         ))
