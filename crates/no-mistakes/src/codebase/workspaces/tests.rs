@@ -5,7 +5,7 @@ impl WorkspaceMap {
     pub(crate) fn resolve_specifier_from_visible(
         &self,
         specifier: &str,
-        visible_files: &crate::fx::PathSet,
+        visible_files: &dyn VisiblePathLookup,
     ) -> Option<PathBuf> {
         self.resolve_specifier_inner(specifier, Some(visible_files))
     }

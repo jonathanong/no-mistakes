@@ -6,6 +6,7 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         routes: true,
         queues: true,
         http: true,
+        trpc: true,
         ..GraphBuildPlan::default()
     };
     assert!(effective_ts_fact_plan(requested, None).is_empty());
@@ -46,10 +47,12 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         rails_apps: vec![],
         php_apps: vec![],
         php_framework: None,
+        java_packages: vec![],
         queue_enqueues: vec![],
         queue_workers: vec![],
         queue_cluster: None,
         queue_glob_clusters: HashMap::new(),
+        trpc_routers: Vec::new(),
         terraform: Default::default(),
         ci: crate::config::v2::schema::CiConfig::default(),
     };

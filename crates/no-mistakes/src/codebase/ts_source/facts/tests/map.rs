@@ -1,58 +1,119 @@
 use super::super::*;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 impl TsFactMap {
     pub(crate) fn extend_shared(
         &mut self,
-        facts: impl IntoIterator<Item = (PathBuf, std::sync::Arc<TsFileFacts>)>,
+        facts: impl IntoIterator<Item = (PathBuf, Arc<TsFileFacts>)>,
     ) {
-        self.shared.extend(facts);
+        for (path, facts) in facts {
+            self.facts.insert(path, TsFactSlot::Shared(facts));
+        }
+    }
+
+    pub(crate) fn shared_arc(&self, path: &Path) -> Option<&Arc<TsFileFacts>> {
+        match self.facts.get(path)? {
+            TsFactSlot::Shared(facts) => Some(facts),
+            TsFactSlot::Owned(_) => None,
+        }
+    }
+
+    pub(crate) fn has_owned(&self, path: &Path) -> bool {
+        matches!(self.facts.get(path), Some(TsFactSlot::Owned(_)))
+    }
+
+    pub(crate) fn shared_is_empty(&self) -> bool {
+        self.facts
+            .iter()
+            .all(|(_, slot)| matches!(slot, TsFactSlot::Owned(_)))
     }
 }
 
 #[test]
 fn shared_fact_map_reuses_file_fact_allocations() {
     let path = PathBuf::from("/fixture/source.ts");
-    let shared = std::sync::Arc::new(TsFileFacts::default());
+    let shared = Arc::new(TsFileFacts::default());
     let facts = TsFactMap::from_shared_iter_with_plan(
-        [(path.clone(), std::sync::Arc::clone(&shared))],
+        [(path.clone(), Arc::clone(&shared))],
         TsFactPlan::default(),
     );
 
-    assert!(std::sync::Arc::ptr_eq(
-        facts.shared.get(&path).unwrap(),
-        &shared
-    ));
+    assert!(Arc::ptr_eq(facts.shared_arc(&path).unwrap(), &shared));
 }
 
 #[test]
 fn shared_fact_map_materializes_only_mutated_entries() {
     let first_path = PathBuf::from("/fixture/first.ts");
     let second_path = PathBuf::from("/fixture/second.ts");
-    let first = std::sync::Arc::new(TsFileFacts::default());
-    let second = std::sync::Arc::new(TsFileFacts::default());
+    let first = Arc::new(TsFileFacts::default());
+    let second = Arc::new(TsFileFacts::default());
     let mut facts = TsFactMap::from_shared_iter_with_plan(
         [
-            (first_path.clone(), std::sync::Arc::clone(&first)),
-            (second_path.clone(), std::sync::Arc::clone(&second)),
+            (first_path.clone(), Arc::clone(&first)),
+            (second_path.clone(), Arc::clone(&second)),
         ],
         TsFactPlan::default(),
     );
 
     facts.get_mut(&first_path).unwrap().fatal_parse_error = true;
 
-    assert!(facts.owned[&first_path].fatal_parse_error);
-    assert!(!facts.shared.contains_key(&first_path));
-    assert!(std::sync::Arc::ptr_eq(
-        facts.shared.get(&second_path).unwrap(),
+    assert!(facts.has_owned(&first_path));
+    assert!(facts[&first_path].fatal_parse_error);
+    assert!(facts.shared_arc(&first_path).is_none());
+    assert!(Arc::ptr_eq(
+        facts.shared_arc(&second_path).unwrap(),
         &second
     ));
+    assert!(!first.fatal_parse_error);
+}
+
+#[test]
+fn unique_shared_fact_is_unwrapped_on_get_mut() {
+    let path = PathBuf::from("/fixture/source.ts");
+    let mut facts = TsFactMap::from_shared_iter_with_plan(
+        [(
+            path.clone(),
+            Arc::new(TsFileFacts {
+                fatal_parse_error: true,
+                ..TsFileFacts::default()
+            }),
+        )],
+        TsFactPlan::default(),
+    );
+
+    facts.get_mut(&path).unwrap().fatal_parse_error = false;
+
+    assert!(!facts[&path].fatal_parse_error);
+    assert!(facts.has_owned(&path));
+}
+
+#[test]
+fn unique_shared_facts_are_unwrapped_when_iterating_mutably() {
+    let path = PathBuf::from("/fixture/source.ts");
+    let mut facts = TsFactMap::from_shared_iter_with_plan(
+        [(
+            path.clone(),
+            Arc::new(TsFileFacts {
+                fatal_parse_error: true,
+                ..TsFileFacts::default()
+            }),
+        )],
+        TsFactPlan::default(),
+    );
+
+    for (_, fact) in &mut facts {
+        fact.fatal_parse_error = false;
+    }
+
+    assert!(!facts[&path].fatal_parse_error);
+    assert!(facts.has_owned(&path));
 }
 
 #[test]
 fn mixed_fact_map_extension_preserves_new_entry_precedence() {
     let path = PathBuf::from("/fixture/source.ts");
-    let shared = std::sync::Arc::new(TsFileFacts {
+    let shared = Arc::new(TsFileFacts {
         fatal_parse_error: true,
         ..TsFileFacts::default()
     });
@@ -61,7 +122,7 @@ fn mixed_fact_map_extension_preserves_new_entry_precedence() {
     facts.extend(TsFactMap::from([(path.clone(), TsFileFacts::default())]));
 
     assert!(!facts[&path].fatal_parse_error);
-    assert!(facts.shared.is_empty());
+    assert!(facts.shared_is_empty());
     assert_eq!(facts.iter().count(), 1);
 }
 
@@ -73,17 +134,14 @@ fn shared_fact_map_collection_operations_preserve_map_semantics() {
     facts.extend(TsFactMap::from_shared_iter_with_plan(
         [(
             first_path.clone(),
-            std::sync::Arc::new(TsFileFacts {
+            Arc::new(TsFileFacts {
                 fatal_parse_error: true,
                 ..TsFileFacts::default()
             }),
         )],
         TsFactPlan::default(),
     ));
-    facts.extend_shared([(
-        second_path.clone(),
-        std::sync::Arc::new(TsFileFacts::default()),
-    )]);
+    facts.extend_shared([(second_path.clone(), Arc::new(TsFileFacts::default()))]);
 
     assert_eq!(facts.values().count(), 2);
     assert!(facts.remove(&first_path).unwrap().fatal_parse_error);
@@ -92,4 +150,72 @@ fn shared_fact_map_collection_operations_preserve_map_semantics() {
     }
     assert!(facts.remove(&second_path).unwrap().fatal_parse_error);
     assert!(facts.is_empty());
+}
+
+#[test]
+fn fact_map_get_hits_by_path_after_file_id_indexing() {
+    let first = PathBuf::from("/fixture/first.ts");
+    let second = PathBuf::from("/fixture/second.ts");
+    let mut facts = TsFactMap::from_iter_with_plan(
+        [(
+            first.clone(),
+            TsFileFacts {
+                fatal_parse_error: true,
+                ..TsFileFacts::default()
+            },
+        )],
+        TsFactPlan::default(),
+    );
+    facts.insert(second.clone(), TsFileFacts::default());
+
+    assert!(facts.get(&first).unwrap().fatal_parse_error);
+    assert!(facts.contains_key(&second));
+    assert!(!facts.get(&second).unwrap().fatal_parse_error);
+    assert!(facts.get(Path::new("/fixture/missing.ts")).is_none());
+}
+
+#[test]
+fn borrowed_fact_map_into_iter_stays_lazy() {
+    let source = include_str!("../map_iter.rs");
+    assert!(
+        source.contains("type IntoIter = TsFactMapIter<'a>;"),
+        "borrowed TsFactMap iteration must stay a lazy occupied-slot iterator"
+    );
+    assert!(
+        source.contains("type IntoIter = TsFactMapIterMut<'a>;"),
+        "mutable TsFactMap iteration must stay a lazy occupied-slot iterator"
+    );
+    assert!(
+        source.contains("type IntoIter = TsFactMapIntoIter;"),
+        "consuming TsFactMap iteration must wrap into_entries without a second collect"
+    );
+    assert!(
+        !source.contains("collect::<Vec<_>"),
+        "TsFactMap iterators must not materialize an extra Vec of entries"
+    );
+}
+
+#[test]
+fn fact_map_debug_and_owned_into_iter_visit_every_entry() {
+    let path = PathBuf::from("/fixture/source.ts");
+    let facts = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            fatal_parse_error: true,
+            ..TsFileFacts::default()
+        },
+    )]);
+    let debug = format!("{facts:?}");
+    assert!(debug.contains("source.ts"));
+    let owned: Vec<_> = facts.into_iter().collect();
+    assert_eq!(owned.len(), 1);
+    assert_eq!(owned[0].0, path);
+    assert!(owned[0].1.fatal_parse_error);
+}
+
+#[test]
+#[should_panic(expected = "shared slots were materialized")]
+fn shared_slot_as_facts_mut_requires_materialization() {
+    let mut slot = TsFactSlot::Shared(Arc::new(TsFileFacts::default()));
+    let _ = slot.as_facts_mut();
 }

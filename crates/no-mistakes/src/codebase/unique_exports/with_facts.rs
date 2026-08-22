@@ -14,8 +14,6 @@ use helpers::{filter_application_files, shared_symbol_files};
 pub use prepared::{
     analyze_project_with_config_and_facts, analyze_project_with_prepared_facts,
     analyze_project_with_prepared_facts_and_inferred,
-};
-pub use prepared::{
     analyze_project_with_prepared_facts_and_inferred_and_session,
     analyze_project_with_prepared_facts_catalog_and_inferred_and_session,
     analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check,
@@ -101,11 +99,12 @@ fn analyze_project_roots_with_facts(
     let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
         .unwrap_or_default();
     let remix_roots = super::remix::configured_roots(root, config, inferred_roots);
-    let source_files = super::scan::collect_source_files_from_facts(
+    let source_files = super::scan::collect_source_files_from_facts_with_sources(
         root,
         &symbol_files,
         shared,
         defer_suppression,
+        session.existing_sources_for(root).as_deref(),
         &remix_roots,
     )?;
     if let Some(catalog) = resolution.catalog {

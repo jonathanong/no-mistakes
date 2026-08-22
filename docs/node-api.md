@@ -18,7 +18,7 @@ const {
   const impact = await dependents({
     root: process.cwd(),
     files: ["src/api.mts#handler"],
-    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php", "jest"],
+    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php", "java", "jest"],
   });
 
   const report = await analyzeProject({
@@ -69,7 +69,7 @@ const {
 | `effects` | `effects(options)` |
 | `rsc-callers` | `rscCallers(options)` |
 | `registry-extension` | `registryExtension(options)` |
-| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, `php`, or `jest`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
+| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, `php`, `java`, or `jest`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
 | `tests targets` | `testsTargets(options)` |
 | `tests impact` | `testsImpact(options)` |
 | `tests why` | `testsWhy(options)` |
@@ -179,6 +179,12 @@ same-run artifact upload -> download edges. It omits remote `uses`,
 `workflow_run`, malformed/dangling endpoints, dynamic shell resolution, and
 targets outside the tracked graph universe. `ci` remains the separate legacy
 `CiInvocation` relationship from workflow file to supported Rust Cargo binary.
+
+The graph APIs also accept `trpc`. That opt-in relationship follows static
+tRPC router procedures and client calls through virtual nodes identified as
+`router.ts#procedure:user.get`. `DependencyFile` records expose `routerFile`
+and `procedure`; `FlowNode` uses `kind: "trpc-procedure"`. `all` does not
+include `trpc`. Empty `projects.*.trpc.routers` lists disable extraction.
 
 `testsPlan(options)` returns `changed_files`, the sorted, deduplicated
 changed-file inventory prepared by that same call, relative to the request root.

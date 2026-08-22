@@ -63,7 +63,7 @@ impl CatalogModuleResolver {
                     specifier,
                     &importer,
                     workspace,
-                    &self.universe.shared_normalized_visible(),
+                    &self.universe.shared_normalized_visible().as_ref(),
                 );
                 CatalogClassification {
                     is_external_terminal: is_external_terminal(&scope.resolver, specifier),

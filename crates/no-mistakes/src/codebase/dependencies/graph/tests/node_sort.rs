@@ -1,6 +1,6 @@
 use super::super::*;
 
-fn node_sort_table() -> [NodeId; 12] {
+fn node_sort_table() -> [NodeId; 13] {
     [
         NodeId::file("/repo/a.ts"),
         NodeId::symbol("/repo/a.ts", "z"),
@@ -11,6 +11,7 @@ fn node_sort_table() -> [NodeId; 12] {
         NodeId::workflow_job("/repo/a.ts", "build"),
         NodeId::workflow_step("/repo/a.ts", "build", 2),
         NodeId::workflow_step("/repo/a.ts", "build", 10),
+        NodeId::trpc_procedure("/repo/a.ts", "user.get"),
         NodeId::Module("pkg".into()),
         NodeId::Module("other".into()),
         NodeId::file("module:pkg"),

@@ -19,7 +19,7 @@ fn signature_target_symbols(
     target_file: &Path,
     target_symbol: &str,
     export_nodes: &BTreeSet<NodeId>,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     facts: &TsFactMap,
 ) -> BTreeMap<PathBuf, BTreeSet<String>> {
     let mut target_symbols = BTreeMap::from([(
@@ -65,7 +65,8 @@ fn signature_target_symbols(
                 NodeId::Module(_)
                 | NodeId::QueueJob { .. }
                 | NodeId::WorkflowJob { .. }
-                | NodeId::WorkflowStep { .. } => {}
+                | NodeId::WorkflowStep { .. }
+                | NodeId::TrpcProcedure { .. } => {}
             }
         }
     }

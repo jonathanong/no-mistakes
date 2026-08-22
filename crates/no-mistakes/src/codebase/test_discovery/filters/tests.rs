@@ -45,6 +45,14 @@ fn language_fallback_matches_configured_test_shapes() {
         TestRunner::Php,
         "tests/UserControllerTest.php"
     ));
+    assert!(fallback_runner_match(
+        TestRunner::Java,
+        "src/test/java/com/example/UserTest.java"
+    ));
+    assert!(!fallback_runner_match(
+        TestRunner::Java,
+        "src/test/java/com/example/Helper.java"
+    ));
     assert!(!fallback_runner_match(TestRunner::Python, "app/users.py"));
     assert!(!fallback_runner_match(TestRunner::Cargo, "app/src/lib.rs"));
     assert!(fallback_runner_match(TestRunner::Jest, "src/value.test.ts"));

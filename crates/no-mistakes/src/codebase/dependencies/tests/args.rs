@@ -1,7 +1,7 @@
 use super::root_dependency_test_helpers::root_dependency_names;
+use super::traversal::*;
 use super::traversal_entrypoint_test_helpers::resolve_entrypoints_with_files;
 use super::*;
-use super::traversal::*;
 use clap::Parser;
 
 mod extra;
@@ -32,15 +32,7 @@ fn fixture_root(name: &str) -> PathBuf {
 
 fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> Vec<Entrypoint> {
     let graph_files = graph::GraphFiles::discover(root);
-    resolve_entrypoints_with_files(
-        raw_entrypoints,
-        &[],
-        &[],
-        root,
-        cwd,
-        &graph_files,
-        false,
-    )
+    resolve_entrypoints_with_files(raw_entrypoints, &[], &[], root, cwd, &graph_files, false)
 }
 
 #[test]
@@ -198,14 +190,10 @@ fn project_discovery_test_filters_escape_literal_paths_and_fallback_when_empty()
 fn prepared_test_filters(root: &Path, framework: &str) -> Vec<String> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible = snapshot.paths_for(root);
-    let config = crate::config::v2::load_v2_config_from_visible(root, None, &visible)
-        .unwrap_or_default();
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        None,
-        root,
-        &visible,
-    )
-    .unwrap();
+    let config =
+        crate::config::v2::load_v2_config_from_visible(root, None, &visible).unwrap_or_default();
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible).unwrap();
     test_filters_from_prepared(root, framework, &config, &tsconfig, &snapshot, None)
 }
 
@@ -238,13 +226,17 @@ fn python_relationship_enables_language_frontend_plan() {
         crate::codebase::dependencies::RelationshipArg::Rust,
         crate::codebase::dependencies::RelationshipArg::Ruby,
         crate::codebase::dependencies::RelationshipArg::Php,
+        crate::codebase::dependencies::RelationshipArg::Java,
     ] {
         let allowed = crate::codebase::dependencies::relationship_filter(&[relationship])
             .expect("language relationship");
         let plan =
             crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
         assert!(plan.language_frontends, "{relationship:?}");
-        assert_eq!(relationship.as_str(), format!("{relationship:?}").to_ascii_lowercase());
+        assert_eq!(
+            relationship.as_str(),
+            format!("{relationship:?}").to_ascii_lowercase()
+        );
     }
     assert_eq!(
         crate::codebase::dependencies::RelationshipArg::Python.as_str(),
@@ -254,11 +246,24 @@ fn python_relationship_enables_language_frontend_plan() {
 
 #[test]
 fn language_frontend_globs_are_explicit() {
-    assert!(test_globs("python").iter().any(|glob| glob.contains("test_*.py")));
-    assert!(test_globs("python").iter().any(|glob| glob.ends_with("tests.py")));
-    assert!(test_globs("go").iter().any(|glob| glob.contains("*_test.go")));
-    assert!(test_globs("rails").iter().any(|glob| glob.contains("_spec.rb")));
-    assert!(test_globs("php").iter().any(|glob| glob.contains("Test.php")));
+    assert!(test_globs("python")
+        .iter()
+        .any(|glob| glob.contains("test_*.py")));
+    assert!(test_globs("python")
+        .iter()
+        .any(|glob| glob.ends_with("tests.py")));
+    assert!(test_globs("go")
+        .iter()
+        .any(|glob| glob.contains("*_test.go")));
+    assert!(test_globs("rails")
+        .iter()
+        .any(|glob| glob.contains("_spec.rb")));
+    assert!(test_globs("php")
+        .iter()
+        .any(|glob| glob.contains("Test.php")));
+    assert!(test_globs("java")
+        .iter()
+        .any(|glob| glob.contains("Test.java")));
 }
 
 #[test]
@@ -313,6 +318,17 @@ fn workflow_virtual_entrypoint_suffixes_round_trip() {
     assert!(workflow_node_from_suffix_in(&interner, file, "job:/step:3").is_none());
     assert!(workflow_node_from_suffix_in(&interner, file, "job:build/step:nope").is_none());
     assert!(workflow_node_from_suffix_in(&interner, file, "ordinary-symbol").is_none());
+}
+
+#[test]
+fn trpc_virtual_entrypoint_suffixes_round_trip() {
+    let file = Path::new("/repo/src/router.ts");
+    assert_eq!(
+        trpc_procedure_from_suffix(file, "procedure:user.get"),
+        Some(NodeId::trpc_procedure(file, "user.get"))
+    );
+    assert!(trpc_procedure_from_suffix(file, "procedure:").is_none());
+    assert!(trpc_procedure_from_suffix(file, "user.get").is_none());
 }
 
 #[test]
@@ -460,10 +476,7 @@ fn resolve_entrypoints_strips_symbol_suffix_from_module_node() {
     let args = parse(&["dependents", "@external/pkg#handler"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
-    assert_eq!(
-        entrypoints[0].node,
-        graph::NodeId::module("@external/pkg")
-    );
+    assert_eq!(entrypoints[0].node, graph::NodeId::module("@external/pkg"));
     assert_eq!(entrypoints[0].symbol.as_deref(), Some("handler"));
 }
 
@@ -473,14 +486,8 @@ fn resolve_entrypoints_keeps_package_subpath_with_extension_as_module_node() {
     let args = parse(&["dependents", "lodash", "lodash/fp.js"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
-    assert_eq!(
-        entrypoints[0].node,
-        graph::NodeId::module("lodash")
-    );
-    assert_eq!(
-        entrypoints[1].node,
-        graph::NodeId::module("lodash/fp.js")
-    );
+    assert_eq!(entrypoints[0].node, graph::NodeId::module("lodash"));
+    assert_eq!(entrypoints[1].node, graph::NodeId::module("lodash/fp.js"));
 }
 
 #[test]
@@ -537,10 +544,7 @@ fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
     assert!(!root_dependency_names(&simple_root, simple_files.all()).contains("lodash"));
     let malformed_root = fixture_root("unique-exports-malformed-package");
     let malformed_files = graph::GraphFiles::discover(&malformed_root);
-    assert!(
-        !root_dependency_names(&malformed_root, malformed_files.all())
-            .contains("lodash")
-    );
+    assert!(!root_dependency_names(&malformed_root, malformed_files.all()).contains("lodash"));
 }
 
 #[test]

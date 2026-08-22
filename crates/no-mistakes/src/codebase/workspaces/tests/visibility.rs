@@ -51,7 +51,7 @@ fn pass4a_ignored_workspace_candidates_do_not_shadow_visible_entry_and_subpath_f
     crate::test_support::git_add_all(fixture.path());
     let root = normalize_path(fixture.path());
     let files = crate::codebase::ts_source::discover_visible_paths(&root);
-    let visible_files = files.iter().cloned().collect();
+    let visible_files: std::collections::HashSet<PathBuf> = files.iter().cloned().collect();
 
     let workspace = load_from_files(&root, &files).unwrap();
     let indexed_workspace = load_indexed_from_files(&root, &files).unwrap();

@@ -186,7 +186,7 @@ pub fn check_with_prepared_facts_catalog_and_session(
                 .map(|analysis| (path.clone(), analysis.clone()))
         })
         .collect();
-    let visible_files = analyses.keys().cloned().collect();
+    let visible_files: crate::fx::PathSet = analyses.keys().cloned().collect();
     let import_resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         &tsconfig_catalog,
         &visible_files,

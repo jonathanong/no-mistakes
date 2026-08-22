@@ -13,6 +13,7 @@ pub(super) fn language_target_for(
         TestRunner::Cargo => cargo_target_for(config, project, test_file),
         TestRunner::Rails => rails_target_for(config, test_file),
         TestRunner::Php => php_target_for(config, project, test_file),
+        TestRunner::Java => java_target_for(config, test_file),
         TestRunner::Dotnet
         | TestRunner::Playwright
         | TestRunner::Vitest
@@ -100,6 +101,30 @@ fn php_target_for(
         (vec!["phpunit".to_string()], vec![test_file.to_string()])
     };
     language_target(TestRunner::Php, app, framework, base_command, runner_args)
+}
+
+fn java_target_for(package: Option<&str>, test_file: &str) -> TestExecutionTarget {
+    let class_name = slash(test_file)
+        .rsplit('/')
+        .next()
+        .unwrap_or(test_file)
+        .strip_suffix(".java")
+        .unwrap_or(test_file)
+        .to_string();
+    let pom = package
+        .map(slash)
+        .filter(|value| !value.is_empty() && value != ".");
+    let mut runner_args = pom
+        .map(|package| vec!["-f".into(), format!("{package}/pom.xml")])
+        .unwrap_or_default();
+    runner_args.push(format!("-Dtest={class_name}"));
+    language_target(
+        TestRunner::Java,
+        package,
+        None,
+        vec!["mvn".to_string(), "test".to_string()],
+        runner_args,
+    )
 }
 
 fn language_target(

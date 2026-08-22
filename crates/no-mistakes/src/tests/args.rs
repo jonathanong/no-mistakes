@@ -235,6 +235,7 @@ pub(crate) enum TestFramework {
     Cargo,
     Rails,
     Php,
+    Java,
     Jest,
 }
 

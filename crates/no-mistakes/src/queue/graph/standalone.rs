@@ -49,7 +49,7 @@ fn analyze_project_inner<T>(
     let sources = dataset.sources_for(root);
     let visible_files =
         crate::codebase::ts_source::discover_files_from_visible(root, &[], &visible_paths);
-    let visible_set = visible_files.iter().cloned().collect();
+    let visible_set: crate::fx::PathSet = visible_files.iter().cloned().collect();
     // Keep an explicit config as an intentional override, but select aliases
     // from each workspace package for automatic standalone queue analysis.
     // `visible_paths` is frozen by the snapshot above, so catalog construction

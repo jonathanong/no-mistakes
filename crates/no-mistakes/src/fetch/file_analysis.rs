@@ -30,7 +30,7 @@ pub fn analyze_file(
         fetches,
         cache,
         (inherited_is_client, inherited_is_route_handler),
-        None,
+        (None, None),
     )
 }
 
@@ -41,7 +41,10 @@ pub(crate) fn analyze_file_from_visible(
     fetches: &mut Vec<FetchOccurrence>,
     cache: &mut Cache,
     inherited: (bool, bool),
-    visible_files: &crate::fx::PathSet,
+    visible: (
+        &crate::fx::PathSet,
+        &crate::codebase::analysis_session::AnalysisSession,
+    ),
 ) -> Result<bool> {
     analyze_file_inner(
         path,
@@ -50,7 +53,7 @@ pub(crate) fn analyze_file_from_visible(
         fetches,
         cache,
         inherited,
-        Some(visible_files),
+        (Some(visible.0), Some(visible.1)),
     )
 }
 

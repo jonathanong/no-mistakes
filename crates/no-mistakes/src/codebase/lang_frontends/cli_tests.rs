@@ -132,6 +132,8 @@ tests:
   php:
     apps: ["api"]
     framework: symfony
+  java:
+    packages: ["src"]
 "#,
     )
     .unwrap();
@@ -143,4 +145,5 @@ tests:
     assert_eq!(lang.rails_apps, vec!["web"]);
     assert_eq!(lang.php_apps, vec!["api"]);
     assert_eq!(lang.php_framework.as_deref(), Some("symfony"));
+    assert_eq!(lang.java_packages, vec!["src"]);
 }

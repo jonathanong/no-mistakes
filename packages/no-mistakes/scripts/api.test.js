@@ -581,7 +581,7 @@ test("test plan declarations require current results but accept saved legacy pla
   assert.match(declarations, /export type TestsPlanOptions =/);
   assert.match(
     declarations,
-    /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php"\n  \| "jest";/,
+    /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php"\n  \| "java"\n  \| "jest";/,
   );
   assert.match(declarations, /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/);
   assert.match(declarations, /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/);
@@ -607,9 +607,22 @@ test("graph declarations expose GitHub Actions workflow relationships and virtua
   assert.match(traversalDeclarations, /workflowFile\?: string;/);
   assert.match(traversalDeclarations, /job\?: string;/);
   assert.match(traversalDeclarations, /step\?: number;/);
-  assert.match(flowDeclarations, /"workflow-job" \| "workflow-step"/);
+  assert.match(flowDeclarations, /"workflow-job"/);
+  assert.match(flowDeclarations, /"workflow-step"/);
   assert.match(flowDeclarations, /workflowFile\?: string;/);
   assert.match(flowDeclarations, /step\?: number;/);
+});
+
+test("graph declarations expose tRPC relationships and virtual nodes", () => {
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const flowDeclarations = readFileSync(join(packageRoot, "flow-types.d.ts"), "utf8");
+
+  assert.match(traversalDeclarations, /\| "trpc"/);
+  assert.match(traversalDeclarations, /routerFile\?: string;/);
+  assert.match(traversalDeclarations, /procedure\?: string;/);
+  assert.match(flowDeclarations, /"trpc-procedure"/);
+  assert.match(flowDeclarations, /routerFile\?: string;/);
+  assert.match(flowDeclarations, /procedure\?: string;/);
 });
 
 test("declarations expose invocation controls on every analysis", () => {

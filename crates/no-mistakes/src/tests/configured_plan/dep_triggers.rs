@@ -111,6 +111,7 @@ pub(super) fn framework_plan(
         TestFramework::Cargo => &config.test_plan.cargo,
         TestFramework::Rails => &config.test_plan.rails,
         TestFramework::Php => &config.test_plan.php,
+        TestFramework::Java => &config.test_plan.java,
         TestFramework::Jest => &config.test_plan.jest,
     }
 }
@@ -133,6 +134,7 @@ fn ignored_changed_test_sets(
             TestPlanIgnoredChangedTestsFramework::Cargo => TestRunner::Cargo,
             TestPlanIgnoredChangedTestsFramework::Rails => TestRunner::Rails,
             TestPlanIgnoredChangedTestsFramework::Php => TestRunner::Php,
+            TestPlanIgnoredChangedTestsFramework::Java => TestRunner::Java,
             TestPlanIgnoredChangedTestsFramework::Jest => TestRunner::Jest,
         };
         let set = match prepared.discover_runner_tests(runner) {
@@ -278,6 +280,7 @@ pub(super) fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Cargo => TestRunner::Cargo,
         TestFramework::Rails => TestRunner::Rails,
         TestFramework::Php => TestRunner::Php,
+        TestFramework::Java => TestRunner::Java,
         TestFramework::Jest => TestRunner::Jest,
     }
 }

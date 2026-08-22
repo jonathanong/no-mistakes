@@ -161,7 +161,8 @@ fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> 
         NodeId::Module(_)
         | NodeId::QueueJob { .. }
         | NodeId::WorkflowJob { .. }
-        | NodeId::WorkflowStep { .. } => None,
+        | NodeId::WorkflowStep { .. }
+        | NodeId::TrpcProcedure { .. } => None,
     }
 }
 

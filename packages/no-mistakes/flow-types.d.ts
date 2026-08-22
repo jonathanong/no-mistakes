@@ -15,7 +15,14 @@ export interface FlowOptions {
 
 export interface FlowNode {
   id: string;
-  kind: "file" | "symbol" | "module" | "queue-job" | "workflow-job" | "workflow-step";
+  kind:
+    | "file"
+    | "symbol"
+    | "module"
+    | "queue-job"
+    | "workflow-job"
+    | "workflow-step"
+    | "trpc-procedure";
   depth: number;
   file?: string;
   symbol?: string;
@@ -27,6 +34,10 @@ export interface FlowNode {
   job?: string;
   /** Zero-based step index for a virtual GitHub Actions workflow step node. */
   step?: number;
+  /** Router file for a virtual tRPC procedure node. */
+  routerFile?: string;
+  /** Dotted procedure path for a virtual tRPC procedure node (`user.get`). */
+  procedure?: string;
 }
 
 export interface FlowEdge {

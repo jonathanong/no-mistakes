@@ -175,7 +175,7 @@ fn scoped_catalog_selects_and_resolves_workspace_aliases() {
         catalog.provenance_for(&importer).config.as_deref(),
         Some(web.join("tsconfig.json").as_path())
     );
-    let visible = visible.into_iter().collect();
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
     let resolver = ScopedImportResolver::new(&catalog, &visible);
     assert_eq!(
         resolver.resolve("@runtime/value", &importer),
@@ -208,13 +208,43 @@ fn scoped_resolution_candidates_use_importer_workspace_aliases_for_deleted_targe
         importer.clone(),
     ];
     let catalog = TsConfigCatalog::from_visible(&root, &[root.clone(), web.clone()], &visible);
-    let visible = visible.into_iter().collect();
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
     let resolver = ScopedImportResolver::new(&catalog, &visible);
 
     let candidates = resolver.resolution_candidates("@fixture/deleted", &importer);
 
     assert!(candidates.contains(&web.join("src/workspace/deleted.ts")));
     assert!(!candidates.contains(&root.join("src/root/deleted.ts")));
+}
+
+#[test]
+fn scoped_import_resolver_facade_classifies_workspace_aliases() {
+    let root = workspace_tsconfig_fixture();
+    let web = root.join("apps/web");
+    let importer = web.join("src/entry.ts");
+    let target = web.join("src/runtime/value.ts");
+    let visible = [
+        root.join("tsconfig.json"),
+        root.join("tsconfig.base.json"),
+        web.join("tsconfig.json"),
+        importer.clone(),
+        target.clone(),
+    ];
+    let catalog = TsConfigCatalog::from_visible(&root, &[root.clone(), web], &visible);
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
+    let resolver = ScopedImportResolver::new(&catalog, &visible);
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
+
+    let classification = ImportResolverFacade::classify_import(
+        &resolver,
+        "@runtime/value",
+        &importer,
+        &workspace,
+        &visible,
+    );
+
+    assert_eq!(classification.resolver_path(), Some(target.as_path()));
+    assert!(classification.workspace_path().is_none());
 }
 
 #[test]
@@ -231,7 +261,7 @@ fn scoped_catalog_session_reuses_dynamic_importer_scope_cache() {
         target.clone(),
     ];
     let catalog = TsConfigCatalog::from_visible(&root, &[root.clone(), web], &visible);
-    let visible = visible.into_iter().collect();
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
 
@@ -267,7 +297,7 @@ fn project_resolver_legacy_path_retains_the_explicit_shared_cache() {
     let importer = web.join("src/entry.ts");
     let target = web.join("src/runtime/value.ts");
     let tsconfig = load_tsconfig(&web.join("tsconfig.json")).unwrap();
-    let visible = [importer.clone(), target.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [importer.clone(), target.clone()].into_iter().collect();
     let cache = ImportResolutionCache::default();
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
@@ -425,7 +455,7 @@ fn automatic_root_catalog_reuses_one_resolver_without_becoming_forced() {
     assert_eq!(catalog.fixed_config(), Some(catalog.config_for(&entry)));
     assert!(catalog.provenance_for(&external).config.is_none());
 
-    let visible = visible.into_iter().collect();
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
     let resolver = ScopedImportResolver::new(&catalog, &visible);
     assert!(resolver.uses_fixed_resolver());
     assert_eq!(
@@ -450,7 +480,7 @@ fn automatic_catalog_keeps_a_symlinked_config_root_lexical() {
     assert_eq!(catalog.provenance_for(&entry).config, Some(config));
     assert!(catalog.fixed_config().is_none());
 
-    let visible = visible.into_iter().collect();
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
     let resolver = ScopedImportResolver::new(&catalog, &visible);
     assert!(!resolver.uses_fixed_resolver());
     assert_eq!(resolver.resolve("@linked/value", &entry), None);
@@ -486,7 +516,10 @@ fn catalog_keeps_symlink_root_config_paths_lexical_for_extends_and_config_dir() 
 
     assert_eq!(catalog.provenance_for(&entry).config, Some(config));
     assert_eq!(catalog.config_for(&entry).dir, root);
-    let resolver = ScopedImportResolver::new(&catalog, &visible.into_iter().collect());
+    let resolver = ScopedImportResolver::new(
+        &catalog,
+        &visible.into_iter().collect::<crate::fx::PathSet>(),
+    );
     assert_eq!(resolver.resolve("@linked/value", &entry), Some(value));
     assert_eq!(
         catalog.provenance_for(&project_entry).config,
@@ -562,7 +595,10 @@ fn catalog_appends_json_to_dotted_extends_and_reference_basenames() {
         catalog.provenance_for(&referenced_entry).config,
         Some(referenced_config)
     );
-    let resolver = ScopedImportResolver::new(&catalog, &visible.into_iter().collect());
+    let resolver = ScopedImportResolver::new(
+        &catalog,
+        &visible.into_iter().collect::<crate::fx::PathSet>(),
+    );
     assert_eq!(resolver.resolve("@root/value", &entry), Some(value));
     assert_eq!(
         resolver.resolve("@referenced/value", &referenced_entry),
@@ -620,7 +656,10 @@ fn broken_nested_config_blocks_an_applicable_parent_owner() {
         Some(root_config)
     );
     assert!(catalog.provenance_for(&nested_entry).config.is_none());
-    let resolver = ScopedImportResolver::new(&catalog, &visible.into_iter().collect());
+    let resolver = ScopedImportResolver::new(
+        &catalog,
+        &visible.into_iter().collect::<crate::fx::PathSet>(),
+    );
     assert_eq!(resolver.resolve("@root/value", &nested_entry), None);
     assert!(catalog
         .diagnostics()
@@ -671,7 +710,10 @@ fn extended_same_root_tsconfig_base_does_not_compete_for_ownership() {
         Some(root.join("tsconfig.json"))
     );
     assert!(catalog.diagnostics().is_empty());
-    let resolver = ScopedImportResolver::new(&catalog, &visible.into_iter().collect());
+    let resolver = ScopedImportResolver::new(
+        &catalog,
+        &visible.into_iter().collect::<crate::fx::PathSet>(),
+    );
     assert_eq!(resolver.resolve("@app/value", &entry), Some(value));
 }
 
@@ -705,7 +747,7 @@ fn automatic_catalog_prefers_primary_configs_but_keeps_referenced_auxiliaries() 
     // The sibling build config overlaps app sources but is not a project root
     // or reference, so automatic ownership stays with the primary config.
     assert_eq!(catalog.provenance_for(&app_entry).config, Some(app_primary));
-    let visible = visible.into_iter().collect();
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
     let resolver = ScopedImportResolver::new(&catalog, &visible);
     assert_eq!(
         resolver.resolve("@primary/value", &app_entry),
@@ -777,7 +819,10 @@ fn reference_outside_the_visible_snapshot_is_not_loaded() {
             ),
         )]
     );
-    let resolver = ScopedImportResolver::new(&catalog, &visible.into_iter().collect());
+    let resolver = ScopedImportResolver::new(
+        &catalog,
+        &visible.into_iter().collect::<crate::fx::PathSet>(),
+    );
     assert_eq!(resolver.resolve("@hidden/value", &entry), None);
 }
 

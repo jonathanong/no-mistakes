@@ -332,6 +332,8 @@ fn graph_edge_kinds_are_documented() {
         "rust-use",
         "ruby-require",
         "php-use",
+        "trpc-call",
+        "trpc-procedure",
     ];
     for edge_kind in edge_kinds {
         assert!(

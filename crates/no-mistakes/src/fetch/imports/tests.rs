@@ -208,3 +208,42 @@ fn visible_facts_route_traversal_compatibility_wrapper_reaches_an_import() {
 
     assert!(reaches);
 }
+
+#[test]
+fn visible_facts_route_traversal_skips_unlisted_and_visited_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/fetch/visible-facts-route-wrapper"),
+    );
+    let route = root.join("route.ts");
+    let target = root.join("target.ts");
+    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+    let mut parsed_files = crate::fetch::ParsedFileCache::default();
+
+    let hidden = crate::fetch::import_routes::route_reaches_target_from_visible_with_facts(
+        &root.join("missing.ts"),
+        &target,
+        &root,
+        &mut HashSet::new(),
+        &mut HashMap::new(),
+        &mut parsed_files,
+        &visible_files,
+    )
+    .unwrap();
+    assert!(!hidden);
+
+    let mut visited = HashSet::from([crate::codebase::ts_resolver::normalize_path(&route)]);
+    let already = crate::fetch::import_routes::route_reaches_target_from_visible_with_facts(
+        &route,
+        &target,
+        &root,
+        &mut visited,
+        &mut HashMap::new(),
+        &mut parsed_files,
+        &visible_files,
+    )
+    .unwrap();
+    assert!(!already);
+}

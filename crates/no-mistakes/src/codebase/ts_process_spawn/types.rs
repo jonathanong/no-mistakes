@@ -36,7 +36,7 @@ pub(crate) fn extract_spawn_edges_from_visible(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Vec<SpawnEdge> {
     let allocator = Allocator::default();
     let source_type = SourceType::tsx();
@@ -64,7 +64,7 @@ pub(crate) fn extract_spawn_edges_from_program_from_visible<'a>(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Vec<SpawnEdge> {
     extract_spawn_edges_from_program_inner(program, source, file_path, root, Some(visible_files))
 }
@@ -74,7 +74,7 @@ fn extract_spawn_edges_from_program_inner<'a>(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
 ) -> Vec<SpawnEdge> {
     let mut results = Vec::new();
 

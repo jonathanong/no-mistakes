@@ -24,7 +24,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     let resolver = crate::codebase::ts_resolver::ProjectImportResolver::new(
         tsconfig,
         tsconfig_catalog,
-        graph_files.visible(),
+        graph_files,
         import_resolution_cache,
         session,
     );
@@ -69,7 +69,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
                             collected: None,
                         };
                     };
-                    if !graph_files.is_visible(path) || !is_indexable(path) {
+                    if !graph_files.contains_visible(path) || !is_indexable(path) {
                         return ExpandedImportNode {
                             node: node.clone(),
                             neighbors: Vec::new(),

@@ -24,6 +24,7 @@ fn empty_relationships_returns_standard_edges() {
     let set = relationship_filter(&[]).expect("unfiltered traversal has an explicit standard set");
     assert!(set.contains(&EdgeKind::Import));
     assert!(!set.contains(&EdgeKind::RouteImport));
+    assert!(!set.contains(&EdgeKind::TrpcCall));
 }
 
 #[test]
@@ -32,6 +33,7 @@ fn all_keyword_returns_standard_edges() {
         .expect("all excludes opt-in alternate edges");
     assert!(set.contains(&EdgeKind::Selector));
     assert!(!set.contains(&EdgeKind::RouteImport));
+    assert!(!set.contains(&EdgeKind::TrpcCall));
 }
 
 #[test]
@@ -43,7 +45,10 @@ fn standard_edges_include_every_non_opt_in_relationship_mapping() {
         .iter()
         .copied()
         .filter(|relationship| {
-            !matches!(relationship, RelationshipArg::RouteImport | RelationshipArg::All)
+            !matches!(
+                relationship,
+                RelationshipArg::RouteImport | RelationshipArg::Trpc | RelationshipArg::All
+            )
         })
     {
         let edges = relationship_filter(&[relationship]).expect("relationship filter is explicit");
@@ -169,6 +174,16 @@ fn queue_maps_to_queue_enqueue_and_queue_worker() {
     let set = relationship_filter(&[RelationshipArg::Queue]).unwrap();
     assert!(set.contains(&EdgeKind::QueueEnqueue));
     assert!(set.contains(&EdgeKind::QueueWorker));
+}
+
+#[test]
+fn trpc_maps_to_trpc_call_and_trpc_procedure() {
+    let set = relationship_filter(&[RelationshipArg::Trpc]).unwrap();
+    assert!(set.contains(&EdgeKind::TrpcCall));
+    assert!(set.contains(&EdgeKind::TrpcProcedure));
+    let standard = relationship_filter(&[]).unwrap();
+    assert!(!standard.contains(&EdgeKind::TrpcCall));
+    assert!(!standard.contains(&EdgeKind::TrpcProcedure));
 }
 
 #[test]

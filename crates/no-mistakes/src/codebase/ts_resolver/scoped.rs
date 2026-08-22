@@ -1,6 +1,5 @@
 use dashmap::mapref::entry::Entry as ScopedEntry;
 use dashmap::DashMap as ScopedDashMap;
-use crate::fx::FxHashSet as ScopedHashSet;
 use std::path::{Path as ScopedPath, PathBuf as ScopedPathBuf};
 use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
 use std::sync::Arc as ScopedArc;
@@ -45,7 +44,7 @@ struct ImporterSelectionCache {
 /// paths and real config identities share cached resolver outcomes.
 pub(crate) struct ScopedImportResolver<'a> {
     catalog: &'a TsConfigCatalog,
-    visible: Option<ScopedArc<ScopedHashSet<ScopedPathBuf>>>,
+    visible: Option<ResolverVisible<'a>>,
     fixed_resolver: Option<ImportResolver<'a>>,
     automatic_fixed_roots: Option<(ScopedPathBuf, ScopedPathBuf)>,
     caches: ScopedDashMap<ResolverCacheScopeKey, ScopedArc<ResolverResultCache>>,
@@ -114,7 +113,7 @@ impl<'a> ScopedImportResolver<'a> {
         specifier: &str,
         importing_file: &ScopedPath,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &crate::fx::PathSet,
+        visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         if let Some(resolver) = self.fixed_resolver_for(importing_file) {
             return resolver.classify_import(specifier, importing_file, workspace, visible_files);
@@ -136,7 +135,7 @@ impl<'a> ScopedImportResolver<'a> {
         };
         let mut resolver = ImportResolver::new_observed(config, observer);
         if let Some(visible) = self.visible.as_ref() {
-            resolver.visible = Some(ResolverVisible::Owned(ScopedArc::clone(visible)));
+            resolver.visible = Some(visible.clone());
         }
         if let Some(shared_cache) = self.shared_cache {
             return resolver.with_shared_cache(shared_cache);
@@ -150,9 +149,10 @@ impl<'a> ScopedImportResolver<'a> {
             .entry(selection)
             .or_insert_with(|| {
                 self.scope_key_builds.fetch_add(1, ScopedOrdering::Relaxed);
+                let visible_paths = self.visible.as_ref().map(ResolverVisible::cache_paths);
                 let key = ResolverCacheScopeKey::new(
                     config,
-                    self.visible.as_deref(),
+                    visible_paths.as_deref(),
                     module_resolution,
                     identity,
                 );
@@ -219,17 +219,4 @@ impl<'a> ScopedImportResolver<'a> {
         };
         (importer.starts_with(root) || importer.starts_with(config_dir)).then_some(resolver)
     }
-}
-
-fn normalized_visible(visible: &ScopedHashSet<ScopedPathBuf>) -> ScopedHashSet<ScopedPathBuf> {
-    visible
-        .iter()
-        .flat_map(|path| {
-            let normalized = normalize_path(path);
-            path.canonicalize().ok().map_or_else(
-                || vec![normalized.clone()],
-                |real| vec![normalized.clone(), normalize_path(&real)],
-            )
-        })
-        .collect()
 }

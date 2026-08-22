@@ -18,7 +18,7 @@ mod tests_config;
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
-    DotnetConfig, DotnetProjectConfig, GoConfig, ImpactConfig, JestConfig, PhpConfig,
+    DotnetConfig, DotnetProjectConfig, GoConfig, ImpactConfig, JavaConfig, JestConfig, PhpConfig,
     PlaywrightAppBinding, PlaywrightCoverageConfig, PlaywrightSelectorWrapper, PlaywrightSelectors,
     PlaywrightTestConfig, PythonConfig, RailsConfig, RustLangConfig, StorybookConfig, SwiftConfig,
     TestProjectPolicy, Tests, VitestConfig,
@@ -94,6 +94,7 @@ pub struct Project {
     pub exclude: Vec<String>,
     pub routes: Vec<String>,
     pub queues: QueueConfig,
+    pub trpc: TrpcConfig,
     pub rewrites: Vec<RewriteRule>,
 }
 
@@ -123,6 +124,8 @@ pub struct QueueConfig {
     pub workers: Vec<String>,
     pub cluster: Option<String>,
 }
+
+include!("schema_trpc.rs");
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]

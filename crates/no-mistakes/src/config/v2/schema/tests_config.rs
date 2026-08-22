@@ -18,6 +18,7 @@ pub struct Tests {
     pub rust: RustLangConfig,
     pub rails: RailsConfig,
     pub php: PhpConfig,
+    pub java: JavaConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
     pub impact: ImpactConfig,
@@ -152,6 +153,12 @@ pub struct RailsConfig {
 pub struct PhpConfig {
     pub framework: Option<String>,
     pub apps: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct JavaConfig {
+    pub packages: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

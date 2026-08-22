@@ -105,3 +105,33 @@ fn binding_ident_name(pattern: &oxc_ast::ast::BindingPattern<'_>) -> Option<Stri
         _ => None,
     }
 }
+
+fn find_import_info(local_name: &str, program: &Program<'_>) -> Option<(String, String, bool)> {
+    program.body.iter().find_map(|stmt| {
+        let Statement::ImportDeclaration(import) = stmt else {
+            return None;
+        };
+
+        import
+            .specifiers
+            .as_ref()?
+            .iter()
+            .find_map(|specifier| match specifier {
+                ImportDeclarationSpecifier::ImportSpecifier(named)
+                    if named.local.name == local_name =>
+                {
+                    Some((
+                        import.source.value.to_string(),
+                        named.imported.name().to_string(),
+                        false,
+                    ))
+                }
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(default)
+                    if default.local.name == local_name =>
+                {
+                    Some((import.source.value.to_string(), "default".to_string(), true))
+                }
+                _ => None,
+            })
+    })
+}

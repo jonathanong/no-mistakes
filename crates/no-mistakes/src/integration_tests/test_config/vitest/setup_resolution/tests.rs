@@ -12,7 +12,7 @@ impl ImportResolution for MissingSourceResolver {
         unreachable!("a missing setup source has no imports to resolve")
     }
 
-    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
+    fn visible_files(&self) -> Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup> {
         None
     }
 
@@ -21,7 +21,7 @@ impl ImportResolution for MissingSourceResolver {
         _: &str,
         _: &Path,
         _: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        _: &crate::fx::PathSet,
+        _: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> ImportClassification {
         unreachable!("a missing setup source has no imports to classify")
     }

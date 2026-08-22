@@ -16,6 +16,8 @@ fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::RouteRef.as_str(), "route");
     assert_eq!(EdgeKind::QueueEnqueue.as_str(), "queue-enqueue");
     assert_eq!(EdgeKind::QueueWorker.as_str(), "queue-worker");
+    assert_eq!(EdgeKind::TrpcCall.as_str(), "trpc-call");
+    assert_eq!(EdgeKind::TrpcProcedure.as_str(), "trpc-procedure");
     assert_eq!(EdgeKind::RouteTest.as_str(), "route-test");
     assert_eq!(EdgeKind::Layout.as_str(), "layout");
     assert_eq!(EdgeKind::MarkdownLink.as_str(), "md");
@@ -92,6 +94,10 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::RubyReference,
         EdgeKind::PhpUse,
         EdgeKind::PhpPackage,
+        EdgeKind::JavaImport,
+        EdgeKind::JavaReference,
+        EdgeKind::TrpcCall,
+        EdgeKind::TrpcProcedure,
         EdgeKind::WorkflowJob,
         EdgeKind::WorkflowStep,
         EdgeKind::WorkflowNeeds,
@@ -144,6 +150,10 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::RubyReference => {}
             EdgeKind::PhpUse => {}
             EdgeKind::PhpPackage => {}
+            EdgeKind::JavaImport => {}
+            EdgeKind::JavaReference => {}
+            EdgeKind::TrpcCall => {}
+            EdgeKind::TrpcProcedure => {}
             EdgeKind::WorkflowJob => {}
             EdgeKind::WorkflowStep => {}
             EdgeKind::WorkflowNeeds => {}

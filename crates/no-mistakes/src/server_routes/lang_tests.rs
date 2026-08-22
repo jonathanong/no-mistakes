@@ -16,6 +16,13 @@ fn ts_fixture(name: &str) -> PathBuf {
         .join("fixture")
 }
 
+fn codebase_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis")
+        .join(name)
+        .join("fixture")
+}
+
 #[test]
 fn missing_config_does_not_add_language_routes() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -113,4 +120,34 @@ fn rust_http_fixture_lists_literal_routes() {
         .routes
         .iter()
         .all(|route| !route.file.ends_with("computed.rs")));
+}
+
+#[test]
+fn aspnet_fixture_lists_literal_routes() {
+    let report = analyze_project(&codebase_fixture("dotnet-aspnet-routes"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| route.route == "/users" && route.file.ends_with("Program.cs")));
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| route.route == "/orders" && route.file.ends_with("UsersController.cs")));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| !route.file.ends_with("Computed.cs")));
+}
+
+#[test]
+fn spring_fixture_lists_literal_routes() {
+    let report = analyze_project(&lang_fixture("java-spring"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/api/users" && route.file.ends_with("Users.java") }));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| !route.file.ends_with("Computed.java")));
 }

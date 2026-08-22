@@ -88,6 +88,7 @@ include!("extra_symbol_gitignore.rs");
 include!("extra_symlink_visible_paths.rs");
 include!("extra_gitignore_pass3.rs");
 include!("types.rs");
+include!("trpc_edges.rs");
 include!("vitest_setup.rs");
 
 mod core_independent_edges;
@@ -96,4 +97,6 @@ mod finalization;
 mod remaining_edges;
 mod selector_fact_plan;
 mod selector_optimization;
+mod source_store_reuse;
 mod workflow_topology_edges;
+mod workflow_topology_run;

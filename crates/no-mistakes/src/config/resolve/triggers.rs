@@ -23,7 +23,7 @@ pub(super) fn resolved_framework_triggers(
         .collect()
 }
 
-fn framework_plans(config: &NoMistakesConfig) -> [(&'static str, &TestPlanFrameworkConfig); 10] {
+fn framework_plans(config: &NoMistakesConfig) -> [(&'static str, &TestPlanFrameworkConfig); 11] {
     [
         ("dotnet", &config.test_plan.dotnet),
         ("playwright", &config.test_plan.playwright),
@@ -34,6 +34,7 @@ fn framework_plans(config: &NoMistakesConfig) -> [(&'static str, &TestPlanFramew
         ("cargo", &config.test_plan.cargo),
         ("rails", &config.test_plan.rails),
         ("php", &config.test_plan.php),
+        ("java", &config.test_plan.java),
         ("jest", &config.test_plan.jest),
     ]
 }

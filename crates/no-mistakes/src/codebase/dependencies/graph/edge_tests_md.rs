@@ -47,6 +47,7 @@ fn collect_md_edges(
     all_files: &[PathBuf],
     graph_files: &GraphFiles,
     interner: &PathInterner,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Vec<Edge> {
     let md_files: Vec<PathBuf> = all_files
         .iter()
@@ -57,9 +58,10 @@ fn collect_md_edges(
     md_files
         .into_par_iter()
         .flat_map_iter(|path| {
-            let source = match std::fs::read_to_string(&path) {
-                Ok(s) => s,
-                Err(_) => return vec![],
+            let Some(source) =
+                crate::codebase::ts_source::SourceStore::read_optional(sources, &path)
+            else {
+                return vec![];
             };
             let dir = path.parent().unwrap_or(Path::new("")).to_path_buf();
             crate::codebase::md_links::extract_links(&source)
@@ -81,15 +83,16 @@ fn collect_md_edges(
                     // Resolve `..` lexically (no filesystem access) so the path
                     // matches the normalized form used elsewhere in the graph.
                     let target = crate::codebase::ts_resolver::normalize_path(&target);
-                    if graph_files.is_visible(&target) {
-                        Some((
+                    // Canonical remapping belongs in `visible_path`, not exact
+                    // membership. Markdown targets may be the real path while
+                    // discovery recorded a symlink spelling.
+                    graph_files.visible_path(&target).map(|visible| {
+                        (
                             NodeId::file_in(interner, path.as_path()),
-                            NodeId::file_in(interner, target),
+                            NodeId::file_in(interner, visible),
                             EdgeKind::MarkdownLink,
-                        ))
-                    } else {
-                        None
-                    }
+                        )
+                    })
                 })
                 .collect::<Vec<_>>()
         })

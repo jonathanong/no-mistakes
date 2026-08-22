@@ -362,7 +362,7 @@ impl PreparedTestPlanRequest {
                 if let Some(playwright) = playwright {
                     Box::new(no_mistakes::codebase::check_facts::collect_check_facts_with_precollected_graph_facts(
                         &self.root,
-                        self.graph_files.visible().iter().cloned().collect(),
+                        self.graph_files.iter_visible().cloned().collect(),
                         no_mistakes::codebase::check_facts::CheckFactPlan {
                             graph: fact_plan,
                             graph_context: fact_context,
@@ -489,6 +489,7 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Cargo => TestRunner::Cargo,
         TestFramework::Rails => TestRunner::Rails,
         TestFramework::Php => TestRunner::Php,
+        TestFramework::Java => TestRunner::Java,
         TestFramework::Jest => TestRunner::Jest,
     }
 }
@@ -514,6 +515,7 @@ fn test_framework(runner: TestRunner) -> TestFramework {
         TestRunner::Cargo => TestFramework::Cargo,
         TestRunner::Rails => TestFramework::Rails,
         TestRunner::Php => TestFramework::Php,
+        TestRunner::Java => TestFramework::Java,
         TestRunner::Jest => TestFramework::Jest,
     }
 }

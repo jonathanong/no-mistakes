@@ -33,9 +33,10 @@ fn pass4a_ignored_local_spawn_target_does_not_shadow_visible_root_fallback() {
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let spawner = root.join("process/nested/spawn.ts");
     let source = fs::read_to_string(&spawner).unwrap();
-    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
-        .into_iter()
-        .collect();
+    let visible_files: std::collections::HashSet<PathBuf> =
+        crate::codebase::ts_source::discover_visible_paths(&root)
+            .into_iter()
+            .collect();
 
     let edges = extract_spawn_edges_from_visible(&source, &spawner, &root, &visible_files);
 

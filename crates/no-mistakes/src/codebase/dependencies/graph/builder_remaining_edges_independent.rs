@@ -11,6 +11,7 @@ fn collect_independent_remaining_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
     session: &crate::codebase::analysis_session::AnalysisSession,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> IndependentRemainingEdges {
     let observer = session.observer().cloned();
     let timing_kind = crate::diagnostics::TimingKind::Parallel;
@@ -24,6 +25,7 @@ fn collect_independent_remaining_edges(
                                 &edge_inputs.graph_files.all,
                                 edge_inputs.graph_files,
                                 &edge_inputs.interner,
+                                Some(sources),
                             )
                         } else {
                             Vec::new()

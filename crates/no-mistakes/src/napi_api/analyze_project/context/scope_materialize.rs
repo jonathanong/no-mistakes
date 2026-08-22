@@ -19,13 +19,13 @@ impl PreparedScopePlan {
         // Config facts were prepared before the batch. Seed them before the
         // canonical graph so invalidation retains Playwright occurrences.
         self.traversal.seed_cached_program_facts(&self.configs);
-        let traversal_graph_files = self.traversal.graph_files().visible();
+        let traversal_graph = self.traversal.graph_files();
         let graph_fact_files = graph_facts.graph_file_universe();
         let check_shares_traversal_graph_universe = graph_fact_files.len()
-            == traversal_graph_files.len()
+            == traversal_graph.visible_len()
             && graph_fact_files
                 .iter()
-                .all(|path| traversal_graph_files.contains(path));
+                .all(|path| traversal_graph.contains_visible(path));
         if self
             .check
             .as_ref()

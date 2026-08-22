@@ -134,7 +134,8 @@ fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
         | TestRunner::Go
         | TestRunner::Cargo
         | TestRunner::Rails
-        | TestRunner::Php => test_file.to_string(),
+        | TestRunner::Php
+        | TestRunner::Java => test_file.to_string(),
     }
 }
 

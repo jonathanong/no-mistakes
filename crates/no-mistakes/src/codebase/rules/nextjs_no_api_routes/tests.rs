@@ -1,7 +1,6 @@
 use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
-use std::collections::HashMap;
 
 fn check_with_facts(
     root: &Path,
@@ -120,7 +119,7 @@ fn fact_runner_ignores_missing_source_outside_target_roots() {
     let inside = root.join("web/app/api/users/route.ts");
     let facts = CheckFactMap {
         files: vec![outside.clone(), inside.clone()],
-        ts: HashMap::from([
+        ts: crate::codebase::ts_source::FileIdMap::from([
             (outside, CheckFileFacts::default()),
             (
                 inside,
@@ -159,9 +158,10 @@ fn fact_runner_ignores_missing_source_for_non_route_target_files() {
     let inside = root.join("web/app/page.tsx");
     let facts = CheckFactMap {
         files: vec![inside.clone()],
-        ts: HashMap::from([(inside, std::sync::Arc::new(CheckFileFacts::default()))])
-            .into_iter()
-            .collect(),
+        ts: crate::codebase::ts_source::FileIdMap::from([(
+            inside,
+            std::sync::Arc::new(CheckFileFacts::default()),
+        )]),
         ..Default::default()
     };
     let findings = check_with_facts(&root, &config(), &facts).unwrap();
@@ -175,9 +175,10 @@ fn fact_runner_requires_source_for_target_files() {
     let inside = root.join("web/app/api/users/route.ts");
     let facts = CheckFactMap {
         files: vec![inside.clone()],
-        ts: HashMap::from([(inside, std::sync::Arc::new(CheckFileFacts::default()))])
-            .into_iter()
-            .collect(),
+        ts: crate::codebase::ts_source::FileIdMap::from([(
+            inside,
+            std::sync::Arc::new(CheckFileFacts::default()),
+        )]),
         ..Default::default()
     };
     let err = check_with_facts(&root, &config(), &facts).unwrap_err();
@@ -191,16 +192,14 @@ fn fact_runner_skips_parse_errors_for_route_files() {
     let inside = root.join("web/app/api/users/route.ts");
     let facts = CheckFactMap {
         files: vec![inside.clone()],
-        ts: HashMap::from([(
+        ts: crate::codebase::ts_source::FileIdMap::from([(
             inside,
             CheckFileFacts {
                 parse_error: Some("failed to read fixture route".to_string()),
                 ..Default::default()
             }
             .into(),
-        )])
-        .into_iter()
-        .collect(),
+        )]),
         ..Default::default()
     };
     let findings = check_with_facts(&root, &config(), &facts).unwrap();

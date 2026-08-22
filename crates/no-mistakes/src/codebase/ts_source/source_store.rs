@@ -7,6 +7,7 @@ use std::sync::{Arc, OnceLock};
 
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
+mod optional;
 mod regular_paths;
 mod validation;
 use validation::ValidatedPathCache;
@@ -142,51 +143,6 @@ impl SourceStore {
     }
 
     #[doc(hidden)]
-    pub fn parse_json_path(&self, path: &Path) -> JsonParseOutcome {
-        let path = super::normalize_discovery_path(path);
-        let cell = {
-            let mut parses = self
-                .json_parses
-                .lock()
-                .expect("JSON parse cache mutex poisoned");
-            Arc::clone(
-                parses
-                    .entry(path.clone())
-                    .or_insert_with(|| Arc::new(OnceLock::new())),
-            )
-        };
-        self.increment("manifest.requests", 1);
-        let parsed = Cell::new(false);
-        let result = cell
-            .get_or_init(|| {
-                parsed.set(true);
-                self.json_parse_count.fetch_add(1, Ordering::Relaxed);
-                self.increment("manifest.parses", 1);
-                match self.read_path(&path) {
-                    Ok(source) => serde_json::from_str(&source)
-                        .map(Arc::new)
-                        .map_err(|error| {
-                            self.increment("manifest.errors", 1);
-                            JsonLoadError::Syntax(Arc::new(error))
-                        }),
-                    Err(error) => {
-                        self.increment("manifest.errors", 1);
-                        Err(JsonLoadError::Io(error))
-                    }
-                }
-            })
-            .clone();
-        if !parsed.get() {
-            self.increment("manifest.cache_hits", 1);
-        }
-        result
-    }
-
-    #[doc(hidden)]
-    pub fn json_parse_count(&self) -> usize {
-        self.json_parse_count.load(Ordering::Relaxed)
-    }
-
     pub fn physical_read_count(&self) -> usize {
         self.physical_reads.load(Ordering::Relaxed)
     }

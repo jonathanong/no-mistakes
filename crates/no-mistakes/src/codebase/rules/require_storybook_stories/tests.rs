@@ -6,7 +6,7 @@ use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
 use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef, StringOrList};
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -112,7 +112,7 @@ fn deferred_suppression_sources_use_prepared_component_text() {
     };
     let path = normalize_path(&root.join(&component.file));
     let prepared_without_directive = CheckFactMap {
-        ts: HashMap::from([(
+        ts: crate::codebase::ts_source::FileIdMap::from([(
             path.clone(),
             std::sync::Arc::new(CheckFileFacts {
                 source: Some("export function DisabledFile() { return <div />; }".into()),
@@ -135,7 +135,7 @@ fn deferred_suppression_sources_use_prepared_component_text() {
     ));
 
     let prepared_with_directive = CheckFactMap {
-        ts: HashMap::from([(
+        ts: crate::codebase::ts_source::FileIdMap::from([(
             path,
             std::sync::Arc::new(CheckFileFacts {
                 source: Some(

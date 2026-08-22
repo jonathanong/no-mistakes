@@ -4,7 +4,7 @@ impl<'a> ImportResolver<'a> {
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &crate::fx::PathSet,
+        visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> ImportClassification {
         let key = ResolveKey {
             importing_file: normalize_path(importing_file),

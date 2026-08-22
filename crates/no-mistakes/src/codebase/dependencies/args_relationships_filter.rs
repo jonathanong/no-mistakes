@@ -1,3 +1,5 @@
+include!("args_relationships_filter_lang.rs");
+
 /// Convert `--relationship` values into a `HashSet<EdgeKind>` filter.
 /// Empty input and `all` expand to the standard public edge set; the
 /// conservative `route-import` relationship remains explicit opt-in.
@@ -24,6 +26,9 @@ pub(crate) fn relationship_filter(
 }
 
 fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [EdgeKind] {
+    if let Some(edges) = language_relationship_edges(relationship) {
+        return edges;
+    }
     match relationship {
         RelationshipArg::Import => &[
                 EdgeKind::Import,
@@ -77,20 +82,9 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
                 EdgeKind::TerraformModuleRef,
                 EdgeKind::TerraformOutputRef,
             ],
-        RelationshipArg::Python => &[EdgeKind::PythonImport, EdgeKind::PythonReference],
-        RelationshipArg::Go => &[EdgeKind::GoImport, EdgeKind::GoReference],
-        RelationshipArg::Rust => &[EdgeKind::RustUse, EdgeKind::RustMod, EdgeKind::RustPackage],
-        RelationshipArg::Ruby => &[EdgeKind::RubyRequire, EdgeKind::RubyReference],
-        RelationshipArg::Php => &[EdgeKind::PhpUse, EdgeKind::PhpPackage],
         RelationshipArg::Resource => &[EdgeKind::Resource],
-        RelationshipArg::Workflow
-        | RelationshipArg::WorkflowJob
-        | RelationshipArg::WorkflowStep
-        | RelationshipArg::WorkflowNeeds
-        | RelationshipArg::WorkflowUses
-        | RelationshipArg::WorkflowRun
-        | RelationshipArg::WorkflowArtifact
-        | RelationshipArg::All => unreachable!("handled before non-workflow relationship mapping"),
+        RelationshipArg::Trpc => &[EdgeKind::TrpcCall, EdgeKind::TrpcProcedure],
+        _ => unreachable!("handled before non-workflow relationship mapping"),
     }
 }
 
@@ -152,6 +146,8 @@ fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
         EdgeKind::RubyReference,
         EdgeKind::PhpUse,
         EdgeKind::PhpPackage,
+        EdgeKind::JavaImport,
+        EdgeKind::JavaReference,
         EdgeKind::Resource,
     ]
     .into_iter()

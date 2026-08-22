@@ -15,7 +15,7 @@ impl<'a> FallbackTsFactLookup<'a> {
         fallback: &'a TsFactMap,
         prefer_fallback: bool,
         graph_files: &'a [PathBuf],
-        graph_visible: &crate::fx::PathSet,
+        graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> Self {
         let reuse_primary_playwright_cache = primary
             .graph_files()
@@ -30,12 +30,18 @@ impl<'a> FallbackTsFactLookup<'a> {
     }
 }
 
-fn same_graph_universe(primary_files: &[PathBuf], graph_visible: &crate::fx::PathSet) -> bool {
+fn same_graph_universe(
+    primary_files: &[PathBuf],
+    graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
+) -> bool {
     let primary_visible: HashSet<&Path> = primary_files.iter().map(PathBuf::as_path).collect();
-    primary_visible.len() == graph_visible.len()
-        && primary_visible
-            .iter()
-            .all(|path| graph_visible.contains(*path))
+    if primary_visible.len() != graph_visible.visible_len() {
+        return false;
+    }
+    let graph_paths = graph_visible.visible_cache_key();
+    graph_paths
+        .iter()
+        .all(|path| primary_visible.contains(path.as_path()))
 }
 
 impl TsFactLookup for FallbackTsFactLookup<'_> {

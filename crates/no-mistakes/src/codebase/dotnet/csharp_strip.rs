@@ -1,4 +1,12 @@
 pub(super) fn strip_comments_and_strings(source: &str) -> String {
+    strip_csharp(source, false)
+}
+
+pub(super) fn strip_comments_keep_strings(source: &str) -> String {
+    strip_csharp(source, true)
+}
+
+fn strip_csharp(source: &str, keep_strings: bool) -> String {
     let mut out = String::with_capacity(source.len());
     let mut chars = source.char_indices().peekable();
     while let Some((_, ch)) = chars.next() {
@@ -12,7 +20,11 @@ pub(super) fn strip_comments_and_strings(source: &str) -> String {
             continue;
         }
         if ch == '"' {
-            strip_string(&mut out, &mut chars);
+            if keep_strings {
+                keep_regular_string(&mut out, &mut chars);
+            } else {
+                strip_string(&mut out, &mut chars);
+            }
             continue;
         }
         if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '/') {
@@ -72,6 +84,24 @@ fn strip_string(out: &mut String, chars: &mut std::iter::Peekable<std::str::Char
     let mut escaped = false;
     for (_, string_ch) in chars.by_ref() {
         out.push(if string_ch == '\n' { '\n' } else { ' ' });
+        if escaped {
+            escaped = false;
+        } else if string_ch == '\\' {
+            escaped = true;
+        } else if string_ch == '"' {
+            break;
+        }
+    }
+}
+
+fn keep_regular_string(
+    out: &mut String,
+    chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
+) {
+    out.push('"');
+    let mut escaped = false;
+    for (_, string_ch) in chars.by_ref() {
+        out.push(string_ch);
         if escaped {
             escaped = false;
         } else if string_ch == '\\' {

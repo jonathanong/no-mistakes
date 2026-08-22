@@ -30,12 +30,14 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `resource` | `Resource` | `resource` | TS/JS consumer -> tracked runtime filesystem resource | fixture-backed resource-impact tests |
 | `test` | `TestOf` | `test` | test file -> corresponding source file | [`codebase-intel/packages/api/src/index.test.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/index.test.mts) |
 | `vitest-setup` | `VitestSetup` | `test` | Vitest test file -> its effective `setupFiles` or `globalSetup` module; edge detail identifies the field | `fixtures/test-plan/vitest-setup-dependencies` |
-| `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file; also Django `path(` / Flask / FastAPI literal decorator handlers inside configured Python packages; also Go `net/http` / Chi / Gin / Echo / Fiber literal registrations inside configured modules; also Rails `to:` / bare `resources :name` / `resources "name"` routes, Laravel `Route::` / `Route::resource` / Symfony attribute/YAML routes, and Rust Axum / Actix / Rocket literal registrations inside configured packages | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`python-celery-django`](../fixtures/lang-frontends/python-celery-django), [`python-flask-fastapi`](../fixtures/lang-frontends/python-flask-fastapi), [`go-http`](../fixtures/lang-frontends/go-http), [`rails-jobs`](../fixtures/lang-frontends/rails-jobs), [`php-laravel`](../fixtures/lang-frontends/php-laravel), [`php-symfony`](../fixtures/lang-frontends/php-symfony), [`rust-http`](../fixtures/lang-frontends/rust-http) |
+| `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file; also Django `path(` / Flask / FastAPI literal decorator handlers inside configured Python packages; also Go `net/http` / Chi / Gin / Echo / Fiber literal registrations inside configured modules; also Rails `to:` / bare `resources :name` / `resources "name"` routes, Laravel `Route::` / `Route::resource` / Symfony attribute/YAML routes, Rust Axum / Actix / Rocket literal registrations inside configured packages, and ASP.NET `MapGet` / `[HttpGet]` literals inside configured .NET projects, and Spring `@RequestMapping` / `@GetMapping` / `@PostMapping` literals inside configured Java packages | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`python-celery-django`](../fixtures/lang-frontends/python-celery-django), [`python-flask-fastapi`](../fixtures/lang-frontends/python-flask-fastapi), [`go-http`](../fixtures/lang-frontends/go-http), [`rails-jobs`](../fixtures/lang-frontends/rails-jobs), [`php-laravel`](../fixtures/lang-frontends/php-laravel), [`php-symfony`](../fixtures/lang-frontends/php-symfony), [`rust-http`](../fixtures/lang-frontends/rust-http), [`dotnet-aspnet-routes`](../test-cases/codebase-analysis/dotnet-aspnet-routes), [`java-spring`](../fixtures/lang-frontends/java-spring) |
 | `server-route` | server `ServerRoute` DTO kind | `server edges`, `server related` | configured server route file -> normalized route node; also Remix `app/routes` files under `type: remix` | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships), [`remix`](../test-cases/server-ast-routes/remix) |
 | `client-call` | server `ClientCall` DTO kind | `server edges`, `server related` | static direct or local/imported route-helper client reference -> configured normalized route node; client sources honor filters and configured test exclusion | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships) |
 | `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts) |
 | `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts), [`rails-sidekiq`](../fixtures/lang-frontends/rails-sidekiq) |
 | `queue-worker` | `QueueWorker` | `queue` | virtual queue job node -> worker/processor file | [`codebase-intel/packages/api/src/worker.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/worker.mts), [`rails-sidekiq`](../fixtures/lang-frontends/rails-sidekiq) |
+| `trpc-call` | `TrpcCall` | `trpc` | caller file -> virtual tRPC procedure node | [`trpc-basic`](../test-cases/codebase-analysis/trpc-basic) |
+| `trpc-procedure` | `TrpcProcedure` | `trpc` | virtual tRPC procedure node -> router file that declared it | [`trpc-basic`](../test-cases/codebase-analysis/trpc-basic) |
 | `route-test` | `RouteTest` | `test`, `route` | Playwright test file -> Next.js page file; navigated paths with unresolved interpolations match dynamic route segments | [`codebase-intel/tests/e2e/users.spec.ts`](../test-cases/codebase-analysis/codebase-intel/fixture/tests/e2e/users.spec.ts), [`playwright-interpolated-routes`](../test-cases/codebase-analysis/playwright-interpolated-routes) |
 | `selector` | `Selector` | `test` | Playwright test file -> app/component file matched by selector analysis | `data-testid`, `data-pw`, configured component props, configured imported test-ID wrappers, text/role/label/placeholder locators |
 | `layout` | `Layout` | `test`, `route` | Next.js page file -> inherited layout/template/error/loading/not-found file | [`playwright-impact-routing`](../test-cases/codebase-analysis/playwright-impact-routing) |
@@ -69,8 +71,10 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `ruby-ref` | `RubyReference` | `ruby` | Ruby file -> file declaring a referenced constant, including Zeitwerk path matches under configured `app/` | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
 | `php-use` | `PhpUse` | `php` | PHP file -> file declaring a used class | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
 | `php-package` | `PhpPackage` | `php` | PHP file -> files in a configured Composer app | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
+| `java-import` | `JavaImport` | `java` | Java file -> file of an exact `import com.example.User;` | [`java-spring`](../fixtures/lang-frontends/java-spring) |
+| `java-ref` | `JavaReference` | `java` | Java file -> file declaring a referenced type | [`java-spring`](../fixtures/lang-frontends/java-spring) |
 
-Python, Go, Rust, Ruby, and PHP edges require matching `tests.<lang>` package,
+Python, Go, Rust, Ruby, PHP, and Java edges require matching `tests.<lang>` package,
 module, or app lists. Empty lists disable that frontend. See
 [Tests and selectors](configuration/tests.md).
 
@@ -96,6 +100,7 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | `test` | `test`, `vitest-setup`, `route-test`, `layout`, `selector` |
 | `route` | `route`, `route-test`, `layout` |
 | `queue` | `queue-enqueue`, `queue-worker` |
+| `trpc` | `trpc-call`, `trpc-procedure` |
 | `md` | `md` |
 | `ci` | `ci` |
 | `workflow` | `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact` |
@@ -118,7 +123,8 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | `rust` | `rust-use`, `rust-mod`, `rust-package` |
 | `ruby` | `ruby-require`, `ruby-ref` |
 | `php` | `php-use`, `php-package` |
-| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` alternate view |
+| `java` | `java-import`, `java-ref` |
+| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` and `trpc` views |
 
 Workflow virtual-node IDs are stable and project-relative:
 `path/to/workflow.yml#job:<job>` for a job and
@@ -126,6 +132,12 @@ Workflow virtual-node IDs are stable and project-relative:
 dependency records expose the same identity through `workflowFile`, `job`, and
 when applicable `step`; Flow nodes use the `workflow-job` and `workflow-step`
 kinds.
+
+tRPC procedure virtual-node IDs are `path/to/router.ts#procedure:<path>`,
+for example `src/router.ts#procedure:user.get`. JSON/YAML records expose
+`routerFile` and `procedure`; Flow nodes use `kind: "trpc-procedure"`.
+`--relationship trpc` is opt-in: unfiltered traversal and `--relationship all`
+omit these edges, the same way they omit `route-import`.
 
 The precise workflow filters include the structural edges listed above so a
 forward or reverse traversal can enter and leave the relevant virtual node.
@@ -200,6 +212,22 @@ Dynamic queue or job names are not guessed:
 ```ts
 await queue.add(jobName, payload);
 new Worker(prefix + queueName, processor);
+```
+
+Static tRPC routers and client calls produce virtual procedure nodes:
+
+```ts
+export const appRouter = router({
+  user: { get: procedure.query(() => null) },
+});
+await trpc.user.get.query();
+```
+
+Computed procedure paths are not guessed:
+
+```ts
+await trpc[ns].get.query();
+await trpc.user[name].query();
 ```
 
 GitHub Actions workflow edges describe static in-repository topology and
@@ -294,6 +322,12 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   follows ordinary static import/re-export and literal CommonJS `require(...)`
   or `require.resolve(...)` dependencies, retaining edits and deletions as
   owner triggers; computed or non-literal forms are not followed.
+- `trpc` is opt-in. It only follows static `router({ ... })` / `createTRPCRouter`
+  procedure keys and `trpc.user.get.query()`-style client calls whose path exists
+  in a configured router glob. Empty `projects.*.trpc.routers` lists disable the
+  extractor; there is no hardcoded `src/trpc`. Computed keys and
+  `trpc[ns][proc].query()` produce no edge. Unfiltered `dependencies` and
+  `--relationship all` omit these edges; request `--relationship trpc`.
 
 
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse

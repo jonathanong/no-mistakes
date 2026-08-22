@@ -71,6 +71,16 @@ impl PartialEq for NodeId {
                     step: sb,
                 },
             ) => interned_path_eq(fa, fb) && interned_str_eq(ja, jb) && sa == sb,
+            (
+                Self::TrpcProcedure {
+                    router_file: fa,
+                    procedure: pa,
+                },
+                Self::TrpcProcedure {
+                    router_file: fb,
+                    procedure: pb,
+                },
+            ) => interned_path_eq(fa, fb) && interned_str_eq(pa, pb),
             _ => false,
         }
     }
@@ -104,6 +114,13 @@ impl Hash for NodeId {
                 hash_path(workflow_file, state);
                 hash_str(job, state);
                 step.hash(state);
+            }
+            Self::TrpcProcedure {
+                router_file,
+                procedure,
+            } => {
+                hash_path(router_file, state);
+                hash_str(procedure, state);
             }
         }
     }
@@ -212,16 +229,6 @@ impl NodeId {
             step,
         }
     }
-
-    /// Path for any path-bearing variant, including queue/workflow nodes.
-    pub fn as_path(&self) -> Option<&Path> {
-        match self {
-            NodeId::File(path) => Some(path.as_ref()),
-            NodeId::Symbol { file, .. } => Some(file.as_ref()),
-            NodeId::QueueJob { queue_file, .. } => Some(queue_file.as_ref()),
-            NodeId::WorkflowJob { workflow_file, .. }
-            | NodeId::WorkflowStep { workflow_file, .. } => Some(workflow_file.as_ref()),
-            NodeId::Module(_) => None,
-        }
-    }
 }
+
+include!("types_node_id_trpc.rs");

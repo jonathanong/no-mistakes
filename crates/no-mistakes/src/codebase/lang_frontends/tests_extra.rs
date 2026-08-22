@@ -74,6 +74,9 @@ fn empty_config_collects_nothing() {
     assert!(collect_php_facts(&root, &files, &[], None, &store)
         .files
         .is_empty());
+    assert!(collect_java_facts(&root, &files, &[], &store)
+        .files
+        .is_empty());
 }
 
 #[test]

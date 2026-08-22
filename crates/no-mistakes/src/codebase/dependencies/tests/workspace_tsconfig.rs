@@ -82,9 +82,10 @@ fn shared_traversal_prepares_workspace_config_ownership() {
             .as_deref(),
         Some(root.join("apps/web/tsconfig.json").as_path())
     );
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new(
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
         &shared.tsconfig_catalog,
-        shared.graph_files.visible(),
+        &shared.graph_files,
+        None,
     );
     assert_eq!(
         resolver.resolve("@runtime/value", &root.join("apps/web/src/entry.ts")),

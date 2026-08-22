@@ -119,8 +119,7 @@ fn fact_view_with_supplemental_preserves_the_primary_file_and_graph_universes() 
             supplemental.clone(),
             std::sync::Arc::new(super::CheckFileFacts::default()),
         )])
-        .into_iter()
-        .collect(),
+        .into(),
         graph_plan: crate::codebase::ts_source::facts::TsFactPlan {
             call_sites: true,
             ..Default::default()

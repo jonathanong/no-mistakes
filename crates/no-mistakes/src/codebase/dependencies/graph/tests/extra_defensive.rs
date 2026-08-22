@@ -3,13 +3,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let graph_files = GraphFiles {
-        all: vec![],
-        indexable: vec![],
-        visible: crate::fx::PathSet::default(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(vec![], vec![], Vec::<PathBuf>::new(), vec![]);
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let fact_context = TsFactContext::default();
 
@@ -66,13 +60,15 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     assert!(collect_md_edges(
         &[PathBuf::from("/")],
         &graph_files,
-        &crate::codebase::analysis_session::PathInterner::new()
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     )
     .is_empty());
     assert!(collect_md_edges(
         &[PathBuf::from("README.md")],
         &graph_files,
-        &crate::codebase::analysis_session::PathInterner::new()
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     )
     .is_empty());
 
@@ -86,6 +82,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &mut forward,
         &mut reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(forward.is_empty());
 
@@ -132,13 +129,12 @@ fn lazy_import_facts_memoize_parse_errors() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph_files = GraphFiles {
-        all: vec![malformed.clone()],
-        indexable: vec![malformed.clone()],
-        visible: [malformed.clone()].into_iter().collect(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![malformed.clone()],
+        vec![malformed.clone()],
+        [malformed.clone()],
+        vec![],
+    );
     let context = TsFactContext::new(&root);
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
@@ -156,4 +152,32 @@ fn lazy_import_facts_memoize_parse_errors() {
     assert!(collected
         .and_then(|facts| facts.parse_error)
         .is_some_and(|error| error.contains("failed to parse")));
+}
+
+#[cfg(unix)]
+#[test]
+fn markdown_links_remap_canonical_targets_to_the_visible_spelling() {
+    let via_link = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/markdown-canonical-link/link/src/value.ts"),
+    );
+    let notes = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/markdown-canonical-link/real/src/notes.md"),
+    );
+    let files = GraphFiles::from_files(vec![via_link.clone()]);
+    let edges = collect_md_edges(
+        std::slice::from_ref(&notes),
+        &files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
+    );
+    assert_eq!(
+        edges,
+        vec![(
+            NodeId::file(notes),
+            NodeId::file(via_link),
+            EdgeKind::MarkdownLink,
+        )]
+    );
 }

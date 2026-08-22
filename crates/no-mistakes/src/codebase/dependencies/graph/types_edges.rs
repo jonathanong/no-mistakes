@@ -1,5 +1,7 @@
 #[path = "types_edges_sort.rs"]
 mod sort;
+#[path = "types_edges_domain.rs"]
+mod domain;
 
 /// The kind of dependency edge connecting two nodes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
@@ -80,6 +82,8 @@ pub enum EdgeKind {
     RubyReference,
     PhpUse,
     PhpPackage,
+    JavaImport,
+    JavaReference,
     /// Workflow file → virtual job node.
     WorkflowJob,
     /// Virtual workflow job → virtual workflow step node.
@@ -96,6 +100,10 @@ pub enum EdgeKind {
     /// deliberately test → setup so reverse impact traversal reaches the
     /// owning tests after following ordinary setup-module imports.
     VitestSetup(VitestSetupField),
+    /// Caller file → virtual tRPC procedure node.
+    TrpcCall,
+    /// Virtual tRPC procedure node → router file that declared it.
+    TrpcProcedure,
 }
 
 /// The Vitest configuration field that declared a setup dependency.
@@ -146,40 +154,14 @@ impl EdgeKind {
             Self::WorkflowRun => Some("workflow-run"),
             Self::WorkflowArtifact => Some("workflow-artifact"),
             Self::VitestSetup(_) => Some("vitest-setup"),
+            Self::TrpcCall => Some("trpc-call"),
+            Self::TrpcProcedure => Some("trpc-procedure"),
             _ => None,
         }
     }
 
     fn as_domain_str(&self) -> &'static str {
-        match self {
-            Self::HttpCall => "http",
-            Self::ProcessSpawn => "process",
-            Self::AssetImport => "asset",
-            Self::Resource => "resource",
-            Self::ReactRender => "react-render",
-            Self::Selector => "selector",
-            Self::SwiftImport => "swift-import",
-            Self::SwiftReference => "swift-ref",
-            Self::SwiftPackageDependency => "swift-package",
-            Self::DotnetUsing => "dotnet-using",
-            Self::DotnetReference => "dotnet-ref",
-            Self::DotnetProjectDependency => "dotnet-project",
-            Self::TerraformReference => "terraform-ref",
-            Self::TerraformModuleRef => "terraform-module",
-            Self::TerraformOutputRef => "terraform-output",
-            Self::PythonImport => "python-import",
-            Self::PythonReference => "python-ref",
-            Self::GoImport => "go-import",
-            Self::GoReference => "go-ref",
-            Self::RustUse => "rust-use",
-            Self::RustMod => "rust-mod",
-            Self::RustPackage => "rust-package",
-            Self::RubyRequire => "ruby-require",
-            Self::RubyReference => "ruby-ref",
-            Self::PhpUse => "php-use",
-            Self::PhpPackage => "php-package",
-            _ => unreachable!("core edge kinds are handled before domain rendering"),
-        }
+        domain::as_str(self)
     }
 
     /// Optional stable provenance for a field-specific relationship.

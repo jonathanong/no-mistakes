@@ -2,7 +2,9 @@
 
 Analyze Express, Hono, Fastify, Koa, and NestJS server route graphs. Configured Django,
 Flask, FastAPI, Go `net/http` / Chi / Gin / Echo / Fiber, Rails `routes.rb`,
-Laravel, Symfony attribute/YAML, and Rust Axum / Actix / Rocket routes are
+Laravel, Symfony attribute/YAML, Rust Axum / Actix / Rocket, ASP.NET
+`MapGet` / `[HttpGet]`, and Spring `@RequestMapping` / `@GetMapping` /
+`@PostMapping` / `@PutMapping` / `@PatchMapping` / `@DeleteMapping` routes are
 projected into the same `server routes|edges|related` report from the language
 `RouteRef` facts.
 

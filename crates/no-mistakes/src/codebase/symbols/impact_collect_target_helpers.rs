@@ -19,7 +19,7 @@ fn namespace_reexport_target_symbol(
     file: &Path,
     symbol: &str,
     target_symbol: &str,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Option<String> {
     let symbols = facts.get(file)?.symbols.as_ref()?;
     if target_symbol
@@ -76,7 +76,7 @@ fn namespace_tail_applies(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     symbol: &str,
     target_symbol: &str,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> bool {
     let Some((first, _)) = target_symbol.split_once('.') else {
         return true;
@@ -107,7 +107,7 @@ fn source_exports_symbol(
     file: &Path,
     source: &str,
     symbol: &str,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> bool {
     let Some(parent) = file.parent() else {
         return false;
@@ -129,10 +129,10 @@ fn source_exports_symbol(
 fn resolve_relative_source_file(
     parent: &Path,
     source: &str,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Option<PathBuf> {
     let source_file = crate::codebase::ts_resolver::normalize_path(&parent.join(source));
-    if visible_files.contains(&source_file) {
+    if visible_files.contains_visible(&source_file) {
         return Some(source_file);
     }
     if source_file.extension().is_some() {
@@ -142,7 +142,7 @@ fn resolve_relative_source_file(
         let candidate = crate::codebase::ts_resolver::normalize_path(
             &parent.join(format!("{source}.{extension}")),
         );
-        if visible_files.contains(&candidate) {
+        if visible_files.contains_visible(&candidate) {
             return Some(candidate);
         }
     }

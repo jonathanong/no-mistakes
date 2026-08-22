@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 mod classify;
 mod kind;
+mod lookup;
 pub(crate) use classify::{classify_git_listed_paths, GitIndexKind};
 pub use kind::FileClassification;
 
@@ -40,6 +41,10 @@ impl FileInventory {
     pub fn from_paths(paths: &[PathBuf]) -> Self {
         let (entries, metadata_stats) = classify::inventory_paths(paths);
         Self::from_classified_paths_counted(entries, metadata_stats)
+    }
+
+    pub(crate) fn from_classified_paths(entries: Vec<ClassifiedPath>) -> Self {
+        Self::from_classified_paths_counted(entries, 0)
     }
 
     pub(crate) fn from_classified_paths_counted(

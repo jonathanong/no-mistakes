@@ -32,8 +32,9 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_roots_wi
             .build()
             .map(|glob| glob.compile_matcher())
     });
+    let visible_paths = visible.visible_cache_key();
     let mut roots = BTreeSet::new();
-    for path in visible {
+    for path in &visible_paths {
         let mut parent = path.parent();
         while let Some(root) = parent {
             if root == base.parent().unwrap_or(base) {
@@ -44,7 +45,7 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_roots_wi
                 Some(Err(_)) => false,
                 None => root == pattern,
             };
-            if matches && !has_project_config(root, visible) {
+            if matches && !has_project_config(root, &visible_paths) {
                 roots.insert(root.to_path_buf());
             }
             parent = root.parent();
@@ -53,8 +54,8 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_roots_wi
     roots.into_iter().collect()
 }
 
-fn has_project_config(root: &Path, visible: &crate::fx::PathSet) -> bool {
-    visible
+fn has_project_config(root: &Path, visible_paths: &[PathBuf]) -> bool {
+    visible_paths
         .iter()
         .any(|path| path.parent() == Some(root) && is_vitest_project_config(path))
 }

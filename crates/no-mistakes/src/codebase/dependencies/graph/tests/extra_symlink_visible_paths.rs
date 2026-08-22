@@ -14,7 +14,11 @@ fn scoped_route_helper_aliases_remap_real_targets_to_the_symlink_namespace() {
         &catalog_visible,
     );
     let resolver =
-        crate::codebase::ts_resolver::ScopedImportResolver::new(&catalog, graph_files.visible());
+        crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+            &catalog,
+            &graph_files,
+            None,
+        );
     let plan = GraphBuildPlan {
         routes: true,
         ..GraphBuildPlan::default()
@@ -54,14 +58,18 @@ fn scoped_symbol_aliases_remap_real_targets_to_the_symlink_namespace() {
         &catalog_visible,
     );
     let resolver =
-        crate::codebase::ts_resolver::ScopedImportResolver::new(&catalog, graph_files.visible());
+        crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+            &catalog,
+            &graph_files,
+            None,
+        );
     let facts = collect_ts_facts(graph_files.indexable(), TsFactPlan::imports_and_symbols());
     let edges = collect_symbol_edges(
         &root,
         SymbolGraphFiles {
             indexable: graph_files.indexable(),
             all: graph_files.all(),
-            visible: graph_files.visible(),
+            visible: &graph_files,
             graph_files: &graph_files,
         },
         &facts,
@@ -96,14 +104,18 @@ fn scoped_symbol_reexports_and_function_imports_stay_in_the_symlink_namespace() 
         &catalog_visible,
     );
     let resolver =
-        crate::codebase::ts_resolver::ScopedImportResolver::new(&catalog, graph_files.visible());
+        crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+            &catalog,
+            &graph_files,
+            None,
+        );
     let facts = collect_ts_facts(graph_files.indexable(), TsFactPlan::imports_and_symbols());
     let edges = collect_symbol_edges(
         &root,
         SymbolGraphFiles {
             indexable: graph_files.indexable(),
             all: graph_files.all(),
-            visible: graph_files.visible(),
+            visible: &graph_files,
             graph_files: &graph_files,
         },
         &facts,
@@ -153,7 +165,7 @@ fn scoped_symbol_aliases_skip_real_targets_outside_the_visible_namespace() {
         SymbolGraphFiles {
             indexable: graph_files.indexable(),
             all: graph_files.all(),
-            visible: graph_files.visible(),
+            visible: &graph_files,
             graph_files: &graph_files,
         },
         &facts,

@@ -24,6 +24,10 @@ fn public_sort_key_delegates_all_groups_and_non_vitest_detail_is_none() {
     assert_eq!(EdgeKind::RubyReference.sort_key(), (47, 0));
     assert_eq!(EdgeKind::PhpUse.sort_key(), (48, 0));
     assert_eq!(EdgeKind::PhpPackage.sort_key(), (49, 0));
+    assert_eq!(EdgeKind::TrpcCall.sort_key(), (50, 0));
+    assert_eq!(EdgeKind::TrpcProcedure.sort_key(), (51, 0));
+    assert_eq!(EdgeKind::JavaImport.sort_key(), (52, 0));
+    assert_eq!(EdgeKind::JavaReference.sort_key(), (53, 0));
 }
 
 #[test]

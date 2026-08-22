@@ -29,13 +29,12 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     let b = root.join("b.mts");
     let c = root.join("c.mts");
     let hidden = root.join("hidden.mts");
-    let graph_files = GraphFiles {
-        all: vec![a.clone(), b.clone(), c.clone(), hidden.clone()],
-        indexable: vec![a.clone(), b.clone(), c.clone(), hidden],
-        visible: [a.clone(), b.clone(), c.clone()].into_iter().collect(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![a.clone(), b.clone(), c.clone(), hidden.clone()],
+        vec![a.clone(), b.clone(), c.clone(), hidden],
+        [a.clone(), b.clone(), c.clone()],
+        vec![],
+    );
 
     let roots = vec![NodeId::queue_job(a.clone(), "send"), NodeId::file(a)];
     let limited =
@@ -118,13 +117,12 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         paths_dir: hidden_root.clone(),
         base_url: None,
     };
-    let hidden_graph_files = GraphFiles {
-        all: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
-        indexable: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
-        visible: [hidden_root.join("a.mts")].into_iter().collect(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let hidden_graph_files = GraphFiles::from_parts(
+        vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
+        vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
+        [hidden_root.join("a.mts")],
+        vec![],
+    );
     assert!(lazy_import_deps_of_with_files(
         &[NodeId::file(hidden_root.join("a.mts"))],
         &hidden_root,
@@ -145,13 +143,12 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let package = root.join("package.json");
     let web_entry = root.join("packages/web/src/index.tsx");
     let hidden = root.join("packages/api/src/index.mts");
-    let graph_files = GraphFiles {
-        all: vec![package.clone(), web_entry.clone(), hidden],
-        indexable: vec![web_entry.clone()],
-        visible: [package.clone(), web_entry.clone()].into_iter().collect(),
-        canonical_visible: CanonicalVisible::empty(),
-        resource_candidates: vec![],
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![package.clone(), web_entry.clone(), hidden],
+        vec![web_entry.clone()],
+        [package.clone(), web_entry.clone()],
+        vec![],
+    );
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
         crate::codebase::workspaces::WorkspacePackage {
             name: "@x/web".to_string(),
@@ -332,13 +329,15 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     assert!(collect_md_edges(
         &[missing],
         &graph_files,
-        &crate::codebase::analysis_session::PathInterner::new()
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     )
     .is_empty());
     let md_edges = collect_md_edges(
         &[root.join("README.md")],
         &graph_files,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(md_edges.iter().any(|(_, to, kind)| {
         *kind == EdgeKind::MarkdownLink
@@ -355,6 +354,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut forward,
         &mut reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(!forward.is_empty());
 
@@ -375,11 +375,13 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut missing_forward,
         &mut missing_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(missing_forward.is_empty());
 
     let nested_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-nested-bin"));
-    let nested_visible = [nested_root.join("src/bin/nested/main.rs")].into_iter().collect();
+    let nested_visible: crate::fx::PathSet =
+        [nested_root.join("src/bin/nested/main.rs")].into_iter().collect();
     assert_eq!(
         resolve_cargo_bin_source(&nested_root, "nested", "missing.rs", &nested_visible),
         Some(nested_root.join("src/bin/nested/main.rs"))
@@ -399,6 +401,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut nested_forward,
         &mut nested_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(nested_forward.is_empty());
 
@@ -418,6 +421,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut no_workflows_forward,
         &mut no_workflows_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(no_workflows_forward.is_empty());
     let nested_without_workflow = [
@@ -432,6 +436,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut nested_forward,
         &mut nested_reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(nested_forward.is_empty());
     let mut bins = CargoBinIndex::default();
@@ -448,13 +453,14 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &empty_visible,
         &mut bins,
     );
-    let outside = collect_cargo_bins(&root, &[PathBuf::from("/outside/Cargo.toml")]);
+    let outside = collect_cargo_bins(&root, &[PathBuf::from("/outside/Cargo.toml")], None);
     assert!(outside.by_name.is_empty());
-    let missing_member_manifest = collect_cargo_bins(&root, &[root.join("missing/Cargo.toml")]);
+    let missing_member_manifest =
+        collect_cargo_bins(&root, &[root.join("missing/Cargo.toml")], None);
     assert!(missing_member_manifest.by_name.is_empty());
     let invalid_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-invalid"));
     assert!(
-        collect_cargo_bins(&invalid_root, &[invalid_root.join("Cargo.toml")])
+        collect_cargo_bins(&invalid_root, &[invalid_root.join("Cargo.toml")], None)
             .by_name
             .is_empty()
     );

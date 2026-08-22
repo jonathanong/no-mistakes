@@ -165,3 +165,38 @@ fn deferred_suppression_keeps_disabled_reexport_as_fallback_origin() {
 
     assert_eq!(origin.file, "src/barrel.ts");
 }
+
+#[test]
+fn suppressed_reexport_marks_resolved_origin() {
+    let root = fixture("unique-exports-edge-cases");
+    let reexport_path = root.join("src/origin-test.ts");
+    let direct = source_file(&root, "src/direct.ts", "export const Direct = 1;\n");
+    let reexport = source_file(
+        &root,
+        "src/origin-test.ts",
+        "// no-mistakes-disable-next-line unique-exports\nexport { Direct } from './direct'\n",
+    );
+    let files = HashMap::from([
+        (direct.path.clone(), direct),
+        (reexport.path.clone(), reexport),
+    ]);
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tsconfig);
+    let origin = find_origin(
+        &reexport_path,
+        "Direct",
+        &files,
+        &resolver,
+        &WorkspaceMap::default(),
+    );
+    assert!(origin.suppressed);
+    assert_eq!(
+        origin.suppression_location,
+        Some(("src/origin-test.ts".to_string(), 2))
+    );
+}

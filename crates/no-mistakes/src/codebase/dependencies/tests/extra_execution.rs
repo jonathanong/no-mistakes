@@ -485,6 +485,7 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::Test.as_str(), "test");
     assert_eq!(RelationshipArg::Route.as_str(), "route");
     assert_eq!(RelationshipArg::Queue.as_str(), "queue");
+    assert_eq!(RelationshipArg::Trpc.as_str(), "trpc");
     assert_eq!(RelationshipArg::Md.as_str(), "md");
     assert_eq!(RelationshipArg::Ci.as_str(), "ci");
     assert_eq!(RelationshipArg::Workflow.as_str(), "workflow");
@@ -501,6 +502,7 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::Dotnet.as_str(), "dotnet");
     assert_eq!(RelationshipArg::Swift.as_str(), "swift");
     assert_eq!(RelationshipArg::Terraform.as_str(), "terraform");
+    assert_eq!(RelationshipArg::Resource.as_str(), "resource");
     assert_eq!(RelationshipArg::All.as_str(), "all");
 }
 

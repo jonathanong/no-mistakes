@@ -10,11 +10,13 @@ impl<'a> ScopedImportResolver<'a> {
     /// session exists, while still selecting configuration per importer.
     pub(crate) fn from_visible(
         catalog: &'a TsConfigCatalog,
-        visible: &ScopedHashSet<ScopedPathBuf>,
+        visible: &dyn VisiblePathLookup,
     ) -> Self {
         Self::build(
             catalog,
-            Some(ScopedArc::new(normalized_visible(visible))),
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
+                visible,
+            )))),
             None,
         )
     }
@@ -22,19 +24,35 @@ impl<'a> ScopedImportResolver<'a> {
     /// Reuse the invocation-owned cache registry for each selected config.
     pub(crate) fn new_in_session(
         catalog: &'a TsConfigCatalog,
-        visible: &ScopedHashSet<ScopedPathBuf>,
+        visible: &dyn VisiblePathLookup,
         session: &'a crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
         Self::build(
             catalog,
-            Some(ScopedArc::new(normalized_visible(visible))),
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
+                visible,
+            )))),
             Some(session),
+        )
+    }
+
+    pub(crate) fn from_lookup(
+        catalog: &'a TsConfigCatalog,
+        visible: &dyn VisiblePathLookup,
+        session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
+    ) -> Self {
+        Self::build(
+            catalog,
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
+                visible,
+            )))),
+            session,
         )
     }
 
     fn build(
         catalog: &'a TsConfigCatalog,
-        visible: Option<ScopedArc<ScopedHashSet<ScopedPathBuf>>>,
+        visible: Option<ResolverVisible<'a>>,
         session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     ) -> Self {
         let fixed_resolver = Self::fixed_resolver(catalog, visible.as_ref(), session);
@@ -66,7 +84,7 @@ impl<'a> ScopedImportResolver<'a> {
 
     fn fixed_resolver(
         catalog: &'a TsConfigCatalog,
-        visible: Option<&ScopedArc<ScopedHashSet<ScopedPathBuf>>>,
+        visible: Option<&ResolverVisible<'a>>,
         session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     ) -> Option<ImportResolver<'a>> {
         let config = catalog.fixed_config()?;
@@ -75,18 +93,33 @@ impl<'a> ScopedImportResolver<'a> {
             None => None,
         };
         let mut resolver = ImportResolver::new_observed(config, observer);
-        resolver.visible = visible.cloned().map(ResolverVisible::Owned);
+        resolver.visible = visible.cloned();
         if let Some(session) = session {
-            resolver.cache = session.resolver_cache(config, visible.map(|files| files.as_ref()));
+            let visible_paths = visible.map(ResolverVisible::cache_paths);
+            resolver.cache = session.resolver_cache(config, visible_paths.as_deref());
         }
         resolver.session_scoped = session.is_some();
         Some(resolver)
     }
 }
 
-fn canonical_or_normalized(path: &ScopedPath) -> ScopedPathBuf {
+fn canonical_or_normalized(path: &Path) -> PathBuf {
     match path.canonicalize() {
         Ok(path) => normalize_path(&path),
         Err(_) => normalize_path(path),
     }
+}
+
+fn normalized_visible(visible: &dyn VisiblePathLookup) -> crate::fx::PathSet {
+    visible
+        .visible_cache_key()
+        .into_iter()
+        .flat_map(|path| {
+            let normalized = normalize_path(&path);
+            path.canonicalize().ok().map_or_else(
+                || vec![normalized.clone()],
+                |real| vec![normalized.clone(), normalize_path(&real)],
+            )
+        })
+        .collect()
 }

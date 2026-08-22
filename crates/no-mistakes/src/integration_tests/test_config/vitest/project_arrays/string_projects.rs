@@ -57,7 +57,8 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
             .build()
             .map(|glob| glob.compile_matcher())
     });
-    for path in visible {
+    let visible_paths = visible.visible_cache_key();
+    for path in &visible_paths {
         let direct_match = match &direct_glob {
             Some(Ok(glob)) => glob.is_match(slash_path(path)),
             Some(Err(_)) => false,
@@ -67,7 +68,11 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_paths_wi
             paths.insert(path.clone());
         }
     }
-    paths.extend(folder_config_paths(specifier, declaration_path, visible));
+    paths.extend(folder_config_paths(
+        specifier,
+        declaration_path,
+        &visible_paths,
+    ));
     paths.into_iter().collect()
 }
 

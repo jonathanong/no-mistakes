@@ -11,6 +11,8 @@ fn allowed_requests_language_frontends(allowed: &HashSet<EdgeKind>) -> bool {
         EdgeKind::RubyReference,
         EdgeKind::PhpUse,
         EdgeKind::PhpPackage,
+        EdgeKind::JavaImport,
+        EdgeKind::JavaReference,
     ]
     .into_iter()
     .any(|kind| allowed.contains(&kind))
@@ -27,6 +29,7 @@ fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
         || plan.swift
         || plan.terraform
         || plan.language_frontends
+        || plan.trpc
 }
 
 fn effective_ts_fact_plan(
@@ -46,6 +49,9 @@ fn effective_ts_fact_plan(
     fact_plan.queue_usage &= queue_configured;
     fact_plan.queue_factory &= queue_configured;
     fact_plan.queue_project &= queue_configured;
+    let trpc_configured = options.is_some_and(trpc_facts_configured);
+    fact_plan.trpc_router &= trpc_configured;
+    fact_plan.trpc_calls &= trpc_configured;
     fact_plan.server_routes = options.is_some_and(|options| {
         options.project_route_globset.is_some() && (plan.routes || plan.swift)
     });

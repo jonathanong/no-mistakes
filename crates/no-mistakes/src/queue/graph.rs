@@ -175,7 +175,7 @@ fn resolve_queue_relationships<T>(
     ) -> T,
 ) -> T {
     let facts = queue_project_facts_from_shared(shared, filter, root);
-    let visible_files = shared.files().iter().cloned().collect();
+    let visible_files: crate::fx::PathSet = shared.files().iter().cloned().collect();
     let resolver = queue_import_resolver(tsconfig, root, &visible_files);
     resolve_queue_relationships_with_resolver(root, &facts, &resolver, builder)
 }

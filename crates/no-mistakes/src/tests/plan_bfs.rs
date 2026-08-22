@@ -22,6 +22,13 @@ pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, workflow_file);
             format!("{}#job:{job}/step:{step}", rel)
         }
+        NodeId::TrpcProcedure {
+            router_file,
+            procedure,
+        } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, router_file);
+            format!("{}#procedure:{procedure}", rel)
+        }
     }
 }
 
@@ -200,6 +207,8 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::RustUse | EdgeKind::RustMod | EdgeKind::RustPackage => "rust",
         EdgeKind::RubyRequire | EdgeKind::RubyReference => "ruby",
         EdgeKind::PhpUse | EdgeKind::PhpPackage => "php",
+        EdgeKind::JavaImport | EdgeKind::JavaReference => "java",
+        EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => "trpc",
         EdgeKind::WorkflowJob => "workflow-job",
         EdgeKind::WorkflowStep => "workflow-step",
         EdgeKind::WorkflowNeeds => "workflow-needs",
