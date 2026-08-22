@@ -81,6 +81,21 @@ fn flow_query_deps_edges_and_resolvers_cover_path_branches() {
         resolve_target(&root, "src/router.ts#procedure:user.get"),
         NodeId::trpc_procedure(root.join("src/router.ts"), "user.get")
     );
+    let trpc_root = fixture_root("trpc-basic");
+    let trpc = run(&FlowOptions {
+        target: "src/client.ts".to_string(),
+        root: trpc_root.clone(),
+        tsconfig: Some(trpc_root.join("tsconfig.json")),
+        config: Some(trpc_root.join(".no-mistakes.yml")),
+        direction: FlowDirection::Deps,
+        depth: 2,
+        relationships: vec![RelationshipArg::Trpc],
+    })
+    .unwrap();
+    assert!(trpc.nodes.iter().any(|node| {
+        node.kind == "trpc-procedure" && node.procedure.as_deref() == Some("user.get")
+    }));
+    assert!(trpc.edges.iter().any(|edge| edge.kind == "trpc-call"));
     let aliased_root = fixture_root("aliased");
     assert!(resolve_tsconfig(&aliased_root, Some(Path::new("tsconfig.json"))).is_ok());
     assert!(resolve_tsconfig(&aliased_root, None).is_ok());

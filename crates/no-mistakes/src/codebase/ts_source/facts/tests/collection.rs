@@ -160,3 +160,53 @@ fn collect_domain_facts_fuses_http_and_effect_call_walks() {
         "HTTP and effect extractors must not walk the program again"
     );
 }
+
+#[test]
+fn trpc_facts_follow_router_globs_and_call_plan() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/trpc-basic/fixture");
+    let router = root.join("src/router.ts");
+    let client = root.join("src/client.ts");
+    let mut context = TsFactContext::new(&root);
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("src/router.ts").unwrap());
+    context.trpc_router_glob = Some(builder.build().unwrap());
+
+    let enabled = collect_ts_facts_with_context(
+        &[router.clone(), client.clone()],
+        TsFactPlan {
+            trpc_router: true,
+            trpc_calls: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    );
+    assert!(enabled[&router]
+        .trpc_procedures
+        .iter()
+        .any(|procedure| procedure == "user.get"));
+    assert!(enabled[&client]
+        .trpc_calls
+        .iter()
+        .any(|call| call.path == "user.get"));
+
+    let skipped_router = collect_ts_facts_with_context(
+        std::slice::from_ref(&router),
+        TsFactPlan {
+            trpc_router: true,
+            ..TsFactPlan::default()
+        },
+        &TsFactContext::new(&root),
+    );
+    assert!(skipped_router[&router].trpc_procedures.is_empty());
+
+    let skipped_calls = collect_ts_facts_with_context(
+        std::slice::from_ref(&client),
+        TsFactPlan {
+            trpc_router: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    );
+    assert!(skipped_calls[&client].trpc_calls.is_empty());
+}

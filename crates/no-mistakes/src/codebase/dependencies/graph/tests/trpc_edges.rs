@@ -50,7 +50,10 @@ fn configured_trpc_calls_hop_through_virtual_procedure_nodes() {
             NodeId::TrpcProcedure { procedure, .. } if procedure.as_ref() == "user.create"
         )
     }));
-    assert_eq!(procedure.display_name(&root), "src/router.ts#procedure:user.get");
+    assert_eq!(
+        procedure.display_name(&root),
+        "src/router.ts#procedure:user.get"
+    );
 
     let routers = graph.deps_of(&[procedure], None, Some(&[EdgeKind::TrpcProcedure].into()));
     assert!(routers
@@ -107,6 +110,32 @@ fn trpc_router_globs_prefix_project_roots_and_skip_invalid_patterns() {
 }
 
 #[test]
+fn collect_trpc_edges_skip_missing_config_facts_and_invalid_globs() {
+    let files = GraphFiles::from_files(vec![PathBuf::from("/repo/src/router.ts")]);
+    let interner = crate::codebase::analysis_session::PathInterner::new();
+    let root = std::path::Path::new("/repo");
+    assert!(collect_trpc_edges(root, &files, None, None, &interner).is_empty());
+
+    let empty = GraphConfigOptions {
+        trpc_routers: Vec::new(),
+        ..GraphConfigOptions::default()
+    };
+    assert!(collect_trpc_edges(root, &files, None, Some(&empty), &interner).is_empty());
+
+    let invalid = GraphConfigOptions {
+        trpc_routers: vec!["[".into()],
+        ..GraphConfigOptions::default()
+    };
+    assert!(collect_trpc_edges(root, &files, None, Some(&invalid), &interner).is_empty());
+
+    let configured = GraphConfigOptions {
+        trpc_routers: vec!["src/**".into()],
+        ..GraphConfigOptions::default()
+    };
+    assert!(collect_trpc_edges(root, &files, None, Some(&configured), &interner).is_empty());
+}
+
+#[test]
 fn trpc_fact_context_is_opt_in_even_when_routers_are_configured() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("trpc-basic"));
     let options = graph_config_options(&root).unwrap();
@@ -156,5 +185,7 @@ fn unfiltered_graph_omits_configured_trpc_edges() {
     let client = NodeId::file(root.join("src/client.ts"));
     let trpc_filter: std::collections::HashSet<EdgeKind> =
         [EdgeKind::TrpcCall, EdgeKind::TrpcProcedure].into();
-    assert!(graph.deps_of(&[client], None, Some(&trpc_filter)).is_empty());
+    assert!(graph
+        .deps_of(&[client], None, Some(&trpc_filter))
+        .is_empty());
 }

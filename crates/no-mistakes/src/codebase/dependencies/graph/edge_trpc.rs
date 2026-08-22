@@ -77,11 +77,13 @@ fn collect_trpc_edges_for_plan(
     if !edge_inputs.plan.trpc {
         return Vec::new();
     }
-    collect_trpc_edges(
-        edge_inputs.root,
-        edge_inputs.graph_files,
-        facts,
-        edge_inputs.config_options,
-        &edge_inputs.interner,
-    )
+    crate::perf_trace::trace("graph.trpc", || {
+        collect_trpc_edges(
+            edge_inputs.root,
+            edge_inputs.graph_files,
+            facts,
+            edge_inputs.config_options,
+            &edge_inputs.interner,
+        )
+    })
 }
