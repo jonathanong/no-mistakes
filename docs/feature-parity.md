@@ -435,8 +435,12 @@ class Users {
 ```
 
 `@GetMapping(PREFIX)`, `@GetMapping`, extra mapping attributes after the path,
-same-package type refs without an explicit `import`, and `import com.example.*`
-are non-edges.
+same-package type refs without an explicit `import`, `import com.example.*`,
+top-level functions/properties, extra types in the same file, multi-class
+`@RequestMapping` prefixes, and annotation examples inside raw strings are
+non-edges. Native fallback is `build.gradle` / `build.gradle.kts` plus
+non-test `.kt` files; `settings.gradle*` is not a trigger. `--tests` uses the
+file stem, matching Java `-Dtest`.
 
 ## Shared Domain Rules
 
