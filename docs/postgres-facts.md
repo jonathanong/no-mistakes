@@ -30,8 +30,10 @@ Unparseable statements are skipped. `DO $tag$` bodies are peeled so
 parseable schema DDL inside them (`CREATE TABLE`, `CREATE [UNIQUE] INDEX`,
 `ALTER TABLE`) is collected, including `ALTER TABLE` after PL/pgSQL
 `IF/THEN` wrappers. `CREATE FUNCTION` / `CREATE PROCEDURE` bodies are not
-peeled. Other sqlparser-rejected SQL (`chr()`-built fragments, incomplete
-statements) is still skipped. PostgreSQL 18
+peeled. `chr(n)` calls are rewritten to string literals, and concatenations
+of those literals (`chr(85)||chr(80)||…`) are recovered as SQL when the
+chunk is otherwise unparseable. `DROP INDEX CONCURRENTLY` is accepted.
+Incomplete statements are still skipped. PostgreSQL 18
 `GENERATED ALWAYS AS (...) VIRTUAL` is accepted (rewritten to `STORED`
 for the parser). A file that cannot be tokenized yields no tables. The
 extractors do not panic.

@@ -83,6 +83,39 @@ fn extra_generated_columns_cover_tables_absent_from_sql() {
 }
 
 #[test]
+fn extra_generated_columns_that_duplicate_schema_are_stale() {
+    let root = fixture();
+    let findings = check_with_files(
+        &root,
+        &config_with_options("extraGeneratedColumns:\n  - table: items\n    column: created_at\n"),
+        &fixture_files(&root),
+    )
+    .unwrap();
+    assert!(
+        findings.iter().any(|finding| finding
+            .message
+            .contains("stale extraGeneratedColumns entry")),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn chr_encoded_updates_are_parsed() {
+    let root = unit_fixture("chr-encoded");
+    let findings = check_with_files(
+        &root,
+        &config_with_options("{}"),
+        &[root.join("schema.sql"), root.join("write.ts")],
+    )
+    .unwrap();
+    assert!(
+        findings.iter().any(|finding| finding.file == "write.ts"
+            && finding.import.as_deref() == Some("items.created_at")),
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn custom_include_and_executor_bindings() {
     let root = fixture();
     let files = fixture_files(&root);

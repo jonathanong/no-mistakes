@@ -73,3 +73,22 @@ fn ignores_tables_without_generated_columns_and_blank_extras() {
     ];
     assert!(catalog_from_facts(&schema, &extra).is_empty());
 }
+
+#[test]
+fn stale_extras_that_duplicate_schema_generated_columns() {
+    let schema = [SqlSchemaFileFacts {
+        path: PathBuf::from("schema.sql"),
+        tables: vec![SqlCreateTableMetadata {
+            table_name: "items".to_string(),
+            columns: vec![plain_col("id"), generated_col("created_at")],
+        }],
+        ..Default::default()
+    }];
+    let extra = [ExtraGeneratedColumn {
+        table: "items".to_string(),
+        column: "created_at".to_string(),
+    }];
+    let findings = stale_extra_findings(&schema, &extra);
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("items.created_at"));
+}
