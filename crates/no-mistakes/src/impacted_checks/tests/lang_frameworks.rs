@@ -28,6 +28,11 @@ fn language_frameworks_emit_native_test_commands() {
             &["src/main/java/com/example/User.java"],
             "mvn test",
         ),
+        (
+            "kotlin-test-plan",
+            &["src/main/kotlin/com/example/User.kt"],
+            "gradle test",
+        ),
     ];
     for (name, files, needle) in cases {
         let mut a = args(files);

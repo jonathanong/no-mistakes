@@ -408,7 +408,7 @@ Kotlin support is a language frontend for configured `tests.kotlin.packages`.
 Empty lists disable the extractor; there is no Gradle inference and the list
 is not folded into `tests.java`. Exact `import com.example.User` statements
 emit `kotlin-import`. Star imports are non-edges. Optional `as` aliases still
-record the original FQCN. Class/interface/object names plus capitalized
+record the original fully-qualified class name. Class/interface/object names plus capitalized
 identifiers emit `kotlin-ref`.
 
 Spring HTTP v1 reuses the Java mapping literals on `.kt` files, matching
