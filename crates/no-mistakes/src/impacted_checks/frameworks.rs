@@ -74,6 +74,7 @@ pub(super) fn framework_present(
 fn test_plan_configured(plan: &TestPlanFrameworkConfig) -> bool {
     !plan.environments.is_empty()
         || !plan.full_suite_triggers.projects.is_empty()
+        || !plan.full_suite_triggers.triggers.is_empty()
         || !plan.full_suite_triggers.ignore_changed_tests.is_empty()
         || plan.deprecated_dependencies_key
 }

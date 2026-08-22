@@ -30,6 +30,7 @@ fn resource_plan_args(root: &Path, changed: PathBuf) -> PlanArgs {
         direct_test_owner: false,
         format: None,
         json: true,
+        include_comment: false,
     }
 }
 

@@ -55,6 +55,7 @@ pub(crate) fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::
         direct_test_owner: options.direct_test_owner,
         format: Some(crate::tests::PlanFormat::Json),
         json: true,
+        include_comment: options.include_comment,
     })
 }
 

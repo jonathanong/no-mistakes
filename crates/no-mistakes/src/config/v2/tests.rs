@@ -8,6 +8,7 @@ use super::view::ConfigView;
 
 mod config_view;
 mod impact_parse;
+mod named_triggers;
 mod test_plan_parse;
 
 fn fixture(sub: &str) -> std::path::PathBuf {

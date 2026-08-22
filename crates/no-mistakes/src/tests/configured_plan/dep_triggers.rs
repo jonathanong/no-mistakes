@@ -16,6 +16,11 @@ use no_mistakes::config::v2::schema::{
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
+#[path = "dep_triggers_named.rs"]
+mod dep_triggers_named;
+#[path = "dep_triggers_validate.rs"]
+mod dep_triggers_validate;
+
 #[derive(Debug, Default)]
 pub(super) struct DependencyTriggers {
     pub(super) fallback: Option<(String, PathBuf)>,
@@ -32,7 +37,7 @@ pub(super) fn dependency_triggers(
     prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
 ) -> Result<DependencyTriggers> {
     let plan = framework_plan(config, framework);
-    validate_targeted_targets(config, framework, prepared)?;
+    dep_triggers_validate::validate_targeted_targets(config, framework, prepared)?;
     let ignored_sets = ignored_changed_test_sets(
         root,
         &plan.full_suite_triggers.ignore_changed_tests,
@@ -41,6 +46,15 @@ pub(super) fn dependency_triggers(
     )?;
     let mut result = DependencyTriggers::default();
     let mut legacy_match = None;
+    if let Some(named) = dep_triggers_named::apply_named_triggers(
+        root,
+        &plan.full_suite_triggers.triggers,
+        changed_files,
+        &ignored_sets,
+        &mut result,
+    )? {
+        legacy_match = Some(named);
+    }
     for (project_name, trigger) in &plan.full_suite_triggers.projects {
         let Some(project) = config.projects.get(project_name) else {
             continue;
@@ -83,7 +97,7 @@ pub(super) fn dependency_triggers(
     Ok(result)
 }
 
-fn framework_plan(
+pub(super) fn framework_plan(
     config: &NoMistakesConfig,
     framework: TestFramework,
 ) -> &no_mistakes::config::v2::schema::TestPlanFrameworkConfig {
@@ -100,54 +114,6 @@ fn framework_plan(
         TestFramework::Java => &config.test_plan.java,
         TestFramework::Jest => &config.test_plan.jest,
     }
-}
-
-fn validate_targeted_targets(
-    config: &NoMistakesConfig,
-    framework: TestFramework,
-    prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
-) -> Result<()> {
-    let runner = test_runner(framework);
-    let projects = prepared.requested_runner_projects(runner)?;
-    for (resource_project, dependency) in &framework_plan(config, framework)
-        .full_suite_triggers
-        .projects
-    {
-        let TestPlanProjectDependency::Targeted(targeted) = dependency else {
-            continue;
-        };
-        for (index, target) in targeted.targets.iter().enumerate() {
-            let matching = projects
-                .iter()
-                .filter(|project| project.runner_project_arg.as_deref() == Some(target.as_str()))
-                .collect::<Vec<_>>();
-            let field = format!(
-                "{}.testPlan.{}.fullSuiteTriggers.projects.{resource_project}.targets[{index}]",
-                prepared.config_path().map_or_else(
-                    || "<in-memory config>".to_string(),
-                    |path| path.display().to_string()
-                ),
-                runner.as_str()
-            );
-            match matching.len() {
-                1 => {}
-                0 => anyhow::bail!(
-                    "{field} references unknown {} runner project `{target}`",
-                    runner.as_str()
-                ),
-                _ => anyhow::bail!(
-                    "{field} references ambiguous {} runner project `{target}` in configs: {}",
-                    runner.as_str(),
-                    matching
-                        .iter()
-                        .map(|project| project.config.as_deref().unwrap_or("<default>"))
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                ),
-            }
-        }
-    }
-    Ok(())
 }
 
 fn ignored_changed_test_sets(
@@ -233,10 +199,11 @@ pub(super) fn compile_ordered_patterns(patterns: &[String]) -> Result<Vec<Ordere
     patterns
         .iter()
         .map(|pattern| {
-            let (negated, pattern) = pattern
+            let trimmed = pattern.trim();
+            let (negated, pattern) = trimmed
                 .strip_prefix('!')
-                .map_or((false, pattern.as_str()), |pattern| (true, pattern));
-            let matcher = GlobBuilder::new(pattern)
+                .map_or((false, trimmed), |pattern| (true, pattern.trim()));
+            let matcher = GlobBuilder::new(&normalize_trigger_glob(pattern))
                 .literal_separator(false)
                 .build()?
                 .compile_matcher();
@@ -254,6 +221,14 @@ pub(super) fn matches_ordered(patterns: &[OrderedPattern], path: &str) -> bool {
         }
     }
     matched
+}
+
+fn normalize_trigger_glob(pattern: &str) -> String {
+    let mut part = pattern.trim().to_string();
+    while let Some(rest) = part.strip_prefix("./") {
+        part = rest.trim().to_string();
+    }
+    part
 }
 
 fn project_root_patterns(project_root: &str) -> Vec<String> {
@@ -294,7 +269,7 @@ fn normalize_project_glob_part(raw: &str) -> String {
     part
 }
 
-fn test_runner(framework: TestFramework) -> TestRunner {
+pub(super) fn test_runner(framework: TestFramework) -> TestRunner {
     match framework {
         TestFramework::Dotnet => TestRunner::Dotnet,
         TestFramework::Playwright => TestRunner::Playwright,

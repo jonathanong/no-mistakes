@@ -455,6 +455,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
         warnings: sorted_warnings(warnings),
         fallback_triggered: !fallback_reasons.is_empty(),
         fallback_reason: (!fallback_reasons.is_empty()).then(|| fallback_reasons.join("; ")),
+        ..Default::default()
     };
     attach_targets(&mut plan, root, &discovered_tests);
     Ok(plan)

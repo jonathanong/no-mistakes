@@ -24,10 +24,12 @@ pub(crate) mod prepared_plan;
 pub(crate) mod targets;
 pub(crate) mod why;
 
+mod plan_finish;
+
 pub use args::TestsArgs;
 pub(crate) use args::*;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Default)]
 pub struct TestPlan {
     /// Complete normalized changed-file inventory used to prepare this plan.
     #[serde(default)]
@@ -38,6 +40,25 @@ pub struct TestPlan {
     pub warnings: Vec<Warning>,
     pub fallback_triggered: bool,
     pub fallback_reason: Option<String>,
+    /// Selected tests grouped by runner/config/project for CI command assembly.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub execution_targets: Vec<GroupedExecutionTarget>,
+    /// Markdown comment, present when `includeComment` / `--include-comment` is set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Default)]
+pub struct GroupedExecutionTarget {
+    pub runner: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub config: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project: Option<String>,
+    pub base_command: Vec<String>,
+    /// Runner flags without test file paths.
+    pub runner_args: Vec<String>,
+    pub test_files: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

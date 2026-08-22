@@ -93,6 +93,7 @@ fn post_loop_seed_merges_into_used_targeted_test_at_zero_budget() {
         warnings: Vec::new(),
         fallback_triggered: false,
         fallback_reason: None,
+        ..Default::default()
     };
     super::super::attach_targets(&mut plan, &root, &discovered);
     assert_eq!(

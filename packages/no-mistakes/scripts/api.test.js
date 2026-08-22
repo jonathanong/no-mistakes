@@ -102,6 +102,8 @@ test("programmatic API proxies object options through async native addon calls",
       fetchesJson: async (json) =>
         JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
       checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
+      resolveConfigJson: async (json) =>
+        JSON.stringify({ command: "resolveConfig", options: JSON.parse(json) }),
       validateMermaidMarkdownJson: async (json) =>
         JSON.stringify({ command: "validateMermaidMarkdown", options: JSON.parse(json) }),
       testsPlanJson: async (json) =>
@@ -258,6 +260,7 @@ test("programmatic API proxies object options through async native addon calls",
       command: "check",
       options: { tsconfig: "tsconfig.json", includeSuppressed: true },
     });
+    assert.equal((await api.resolveConfig({ root: "." })).command, "resolveConfig");
     assert.deepEqual(
       await api.validateMermaidMarkdown({ content: "diagram source", file: "docs/design.md" }),
       {
@@ -543,6 +546,23 @@ test("resolveCheck declarations mirror its mutually exclusive runtime inputs", (
   assert.match(declarations, /ResolveCheckOptions = QueryFileOptions & \{\n  files\?: never;/);
   assert.match(declarations, /files: \[string, \.\.\.string\[\]\];/);
   assert.match(declarations, /file\?: never;/);
+});
+
+test("resolveConfig declarations expose additive per-framework triggers", () => {
+  const declarations = readFileSync(join(packageRoot, "resolve-config-types.d.ts"), "utf8");
+
+  assert.match(declarations, /vitestFullSuiteTriggers: ResolvedTrigger\[\];/);
+  assert.match(declarations, /fullSuiteTriggers: ResolvedFrameworkTriggers\[\];/);
+  assert.match(
+    declarations,
+    /export interface ResolvedFrameworkTriggers \{\n  framework: TestPlanFramework;\n  triggers: ResolvedTrigger\[\];\n\}/,
+  );
+  assert.match(declarations, /rewrites: ResolvedRewrite\[\];/);
+  assert.match(declarations, /ignoreRoutes: string\[\];/);
+  assert.match(
+    declarations,
+    /export interface ResolvedRewrite \{\n  source: string;\n  destination: string;\n\}/,
+  );
 });
 
 test("test plan declarations require current results but accept saved legacy plan documents", () => {

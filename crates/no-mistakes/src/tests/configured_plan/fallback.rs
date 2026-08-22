@@ -37,6 +37,7 @@ pub(super) fn fallback_plan(
         warnings: Vec::new(),
         fallback_triggered: true,
         fallback_reason: Some(request.reason),
+        ..Default::default()
     }
 }
 

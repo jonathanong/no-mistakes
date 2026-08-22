@@ -28,9 +28,13 @@ rules:
 ```
 
 or via [`tests.playwright.apps.<project>.project`](../configuration/tests.md#multiple-frontend-apps).
-An unbound rule with more than one candidate app fails with an error naming
-the candidates, instead of silently analyzing whichever project happened to
-sort first.
+When `tests.playwright.apps` binds every Playwright project, a single unbound
+rule application fans out over those apps. An unbound rule with more than one
+candidate app and no `apps` map fails with an error naming the candidates.
+
+Set `tests.playwright.coverage.routes: false` to disable uncovered-route
+findings without dropping route selection edges. Selector findings stay on
+unless `coverage.selectors` is also false.
 
 ## HTML IDs
 

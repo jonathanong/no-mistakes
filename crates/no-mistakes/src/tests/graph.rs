@@ -282,6 +282,7 @@ mod tests {
             warnings: Vec::<Warning>::new(),
             fallback_triggered: false,
             fallback_reason: None,
+            ..Default::default()
         };
 
         let graph = graph_json(&plan).unwrap();

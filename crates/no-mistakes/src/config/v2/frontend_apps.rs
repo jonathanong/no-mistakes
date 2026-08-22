@@ -2,6 +2,9 @@ use super::schema::{NoMistakesConfig, Project, ProjectType, RewriteRule};
 use anyhow::{anyhow, Result};
 use std::path::{Path, PathBuf};
 
+mod build;
+use build::{build_app, relative_string};
+
 /// A single frontend (Next.js) application resolved from `.no-mistakes.yml`.
 ///
 /// Playwright rules, `no-mistakes graph`, and `no-mistakes fetches` all need
@@ -100,7 +103,10 @@ fn inferred_anonymous_app(root: &Path, visible_paths: &[PathBuf]) -> Option<Fron
     let package_root =
         crate::codebase::config::infer_nextjs_root_from_visible(root, visible_paths)?;
     let package_root = relative_string(root, &package_root);
-    Some(build_app(root, None, package_root, visible_paths, &[]))
+    Some(
+        build_app(root, None, package_root, visible_paths, &[])
+            .expect("anonymous app package-root fallback never fails"),
+    )
 }
 
 fn resolve_named_app(
@@ -125,13 +131,13 @@ fn resolve_named_app(
             relative_string(root, &inferred)
         }
     };
-    Ok(build_app(
+    build_app(
         root,
         Some(name.to_string()),
         package_root,
         visible_paths,
         &project.rewrites,
-    ))
+    )
 }
 
 /// Same as [`frontend_apps`], but never returns an empty list: when nothing
@@ -160,53 +166,6 @@ pub fn frontend_apps_or_default(
     } else {
         Ok(apps)
     }
-}
-
-fn build_app(
-    root: &Path,
-    project: Option<String>,
-    package_root: String,
-    visible_paths: &[PathBuf],
-    rewrites: &[RewriteRule],
-) -> FrontendApp {
-    let route_root = probe_route_root(root, &package_root, visible_paths);
-    FrontendApp {
-        project,
-        selector_roots: vec![package_root.clone()],
-        root: package_root,
-        route_root,
-        rewrites: rewrites.to_vec(),
-    }
-}
-
-/// Probe `<package_root>/src/app` then `<package_root>/app`, preferring
-/// whichever actually has visible paths under it; falls back to
-/// `package_root` itself when neither exists (the previous, still-supported
-/// behavior for apps that keep pages outside an `app` directory).
-fn probe_route_root(root: &Path, package_root: &str, visible_paths: &[PathBuf]) -> String {
-    for candidate in ["src/app", "app"] {
-        let candidate_root = join_relative(package_root, candidate);
-        let absolute = crate::codebase::ts_resolver::normalize_path(&root.join(&candidate_root));
-        let exists = visible_paths
-            .iter()
-            .any(|path| crate::codebase::ts_resolver::normalize_path(path).starts_with(&absolute));
-        if exists {
-            return candidate_root;
-        }
-    }
-    package_root.to_string()
-}
-
-fn join_relative(base: &str, suffix: &str) -> String {
-    if base.is_empty() || base == "." {
-        suffix.to_string()
-    } else {
-        format!("{base}/{suffix}")
-    }
-}
-
-fn relative_string(root: &Path, path: &Path) -> String {
-    crate::codebase::ts_source::relative_slash_path(root, path)
 }
 
 #[cfg(test)]

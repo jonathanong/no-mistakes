@@ -34,6 +34,13 @@ tests:
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
 
+`tests.playwright.coverage.routes` and `tests.playwright.coverage.selectors`
+default to `true`. Set `routes: false` to skip uncovered-route *findings*
+while keeping `[route]` graph edges used by `tests plan`. `ignoreRoutes`
+remains for specific path exceptions. Test-file globs
+(`**/*.{test,spec}.{ts,tsx}`) are excluded from selector *declaration* scans
+by default; they still count as coverage evidence.
+
 Language frontends are explicit. Empty lists disable analysis:
 
 ```yaml
@@ -218,8 +225,9 @@ rules:
       playwright: [agent]
 ```
 
-Or bind per Playwright project directly under `tests.playwright.apps`, which
-does not require `rules[].projects` at all:
+Or bind per Playwright project directly under `tests.playwright.apps`. A
+single unbound rule (`- rule: playwright-coverage` with no
+`tests.playwright` list) then applies once per `apps` entry:
 
 ```yaml
 tests:
@@ -229,6 +237,8 @@ tests:
         project: control-web
       agent:
         project: agent-web
+rules:
+  - rule: playwright-coverage
 ```
 
 Each entry under `tests.playwright.apps.<name>` accepts:
@@ -236,10 +246,14 @@ Each entry under `tests.playwright.apps.<name>` accepts:
 | Field | Meaning |
 | --- | --- |
 | `project` | The `.no-mistakes.yml` `projects:` key this Playwright project exercises. |
-| `frontendRoot` | Overrides the resolved app's route root for this Playwright project only. |
+| `frontendRoot` | Overrides the resolved app's route root for this Playwright project only. Does not change the shared frontend-app resolution used by graph/check. |
 | `selectorRoots` | Overrides the resolved app's selector roots for this Playwright project only. |
 | `rewrites` | Overrides the resolved app's rewrites for this Playwright project only. |
 | `ignoreRoutes` | Overrides `tests.playwright.ignoreRoutes` for this Playwright project only. |
+
+An `apps` entry that sets `frontendRoot`, `selectorRoots`, and `rewrites`
+without `project` is fully explicit: Playwright settings do not resolve a
+frontend app, so the entry can coexist with multiple `type: nextjs` projects.
 
 `tests.playwright.apps.<name>.project` takes precedence over `rules[].projects`
 when both are set. `frontendRoot`/`selectorRoots`/`rewrites`/`ignoreRoutes`

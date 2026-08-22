@@ -38,6 +38,8 @@ interface TestsPlanOptionsBase {
   limitPercent?: number;
   limitFiles?: number;
   globalConfigFallback?: boolean;
+  /** Include the markdown PR comment as `comment` on the returned plan. */
+  includeComment?: boolean;
 }
 
 /**
@@ -88,11 +90,31 @@ export interface TestsTargetsOptions {
 export interface TestPlan {
   /** Complete deterministic changed-file inventory, relative to the request root. */
   changed_files: string[];
+  /** @deprecated Prefer `changedFiles` once both keys are present. */
+  changedFiles?: string[];
   selected_tests: SelectedTest[];
+  selectedTests?: SelectedTest[];
   groups?: TestPlanGroup[];
   warnings: TestPlanWarning[];
   fallback_triggered: boolean;
+  fallbackTriggered?: boolean;
   fallback_reason?: string | null;
+  fallbackReason?: string | null;
+  execution_targets?: GroupedExecutionTarget[];
+  executionTargets?: GroupedExecutionTarget[];
+  comment?: string | null;
+}
+
+export interface GroupedExecutionTarget {
+  runner: TestPlanFramework;
+  config?: string | null;
+  project?: string | null;
+  baseCommand?: string[];
+  base_command: string[];
+  runnerArgs?: string[];
+  runner_args: string[];
+  testFiles?: string[];
+  test_files: string[];
 }
 
 export interface SelectedTest {

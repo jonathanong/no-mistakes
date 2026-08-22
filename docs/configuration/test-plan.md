@@ -36,7 +36,37 @@ Group types:
 Global full-suite fallback is explicit opt-in through config or
 `--global-config-fallback true`.
 
-## Project triggers
+## Named triggers
+
+Prefer a list of named triggers when the matching paths are not owned by a
+real top-level `projects:` entry. Paths are repository-relative. Empty
+`targets` is a framework-wide fallback for those paths:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: postgres-resources
+        paths:
+          - db/schema.sql
+          - db/migrations/**
+        targets:
+          - backend
+      - name: root-config
+        paths:
+          - package.json
+          - vitest.config.ts
+```
+
+`vitest-ci-path-coverage` `projectFilters` keys off runner-project `targets`
+when a trigger has them, and off the trigger `name` only when `targets` is
+empty. Do not list both the alias and the runner project for the same paths.
+
+The object form `fullSuiteTriggers.projects.<name>` still works and still
+requires a matching top-level `projects:` key. Treat it as deprecated for
+dummy `root: .` buckets.
+
+## Project-keyed triggers (deprecated)
 
 `fullSuiteTriggers.projects` accepts legacy broad triggers and target-scoped
 triggers. A target-scoped trigger selects only tests owned by the named runner

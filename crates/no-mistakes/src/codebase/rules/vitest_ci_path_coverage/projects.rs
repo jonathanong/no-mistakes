@@ -1,4 +1,5 @@
 mod merge;
+mod named;
 mod patterns;
 
 use super::Options;
@@ -59,30 +60,7 @@ pub(super) fn coverage_units_with_catalog(
         }
     }
     if opts.include_full_suite_triggers.unwrap_or(true) {
-        for (project_name, trigger) in &config.test_plan.vitest.full_suite_triggers.projects {
-            let Some(project) = config.projects.get(project_name) else {
-                continue;
-            };
-            let patterns = project_dependency_patterns(project_name, project, trigger);
-            match trigger {
-                TestPlanProjectDependency::Targeted(targeted) => {
-                    for target in &targeted.targets {
-                        units.push(CoverageUnit {
-                            project: target.clone(),
-                            source: CoverageSource::FullSuiteTrigger,
-                            patterns: patterns.clone(),
-                        });
-                    }
-                }
-                TestPlanProjectDependency::All(_) | TestPlanProjectDependency::Patterns(_) => {
-                    units.push(CoverageUnit {
-                        project: project_name.clone(),
-                        source: CoverageSource::FullSuiteTrigger,
-                        patterns,
-                    });
-                }
-            }
-        }
+        named::push_full_suite_trigger_units(config, &mut units);
     }
     for (project, patterns) in &opts.source_globs_by_project {
         units.push(CoverageUnit {

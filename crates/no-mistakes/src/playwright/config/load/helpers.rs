@@ -51,6 +51,7 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || !playwright.navigation_helpers.is_empty()
         || playwright.frontend_root.is_some()
         || playwright.ignore_routes.is_some()
+        || !playwright.apps.is_empty()
 }
 
 pub(super) fn find_default_playwright_configs_from_snapshot(
@@ -108,4 +109,13 @@ pub(super) fn default_selector_attributes() -> Vec<String> {
         .iter()
         .map(|attribute| attribute.to_string())
         .collect()
+}
+
+pub(in crate::playwright::config::load) fn default_selector_test_excludes(
+) -> &'static [&'static str] {
+    &[
+        "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}",
+        "**/*.test.*",
+        "**/*.spec.*",
+    ]
 }

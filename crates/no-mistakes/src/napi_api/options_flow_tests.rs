@@ -39,6 +39,7 @@ pub(crate) struct TestsPlanOptions {
     pub(crate) limit_files: Option<usize>,
     pub(crate) global_config_fallback: Option<bool>,
     pub(crate) direct_test_owner: bool,
+    pub(crate) include_comment: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]

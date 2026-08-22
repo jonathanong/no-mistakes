@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+mod named_triggers;
+pub use named_triggers::NamedFullSuiteTrigger;
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct TestPlanConfig {
@@ -64,12 +67,17 @@ impl TestPlanFrameworkConfig {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct TestPlanDependencies {
     #[serde(alias = "ignore_changed_tests")]
     pub ignore_changed_tests: Vec<TestPlanIgnoredChangedTestsFramework>,
+    /// Deprecated: keys must name top-level `projects:`. Prefer [`Self::triggers`].
     pub projects: BTreeMap<String, TestPlanProjectDependency>,
+    /// Named path/target triggers that do not require a dummy `projects:` entry.
+    /// Paths are repository-relative.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub triggers: Vec<NamedFullSuiteTrigger>,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]

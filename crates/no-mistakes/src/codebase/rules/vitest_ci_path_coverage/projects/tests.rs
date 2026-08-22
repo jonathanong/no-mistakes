@@ -8,7 +8,8 @@ fn coverage_units(
     coverage_units_with_catalog(root, config, opts, None)
 }
 use crate::config::v2::schema::{
-    StringOrList, TestPlanProjectDependency, TestPlanTargetedProjectDependency, TestProjectPolicy,
+    NamedFullSuiteTrigger, StringOrList, TestPlanProjectDependency,
+    TestPlanTargetedProjectDependency, TestProjectPolicy,
 };
 use std::collections::BTreeMap;
 
@@ -145,6 +146,55 @@ fn targeted_trigger_coverage_is_attributed_to_runner_targets() {
     assert!(units
         .iter()
         .all(|unit| unit.patterns == ["migrations/**/*.sql"]));
+}
+
+#[test]
+fn named_trigger_coverage_uses_targets_or_the_trigger_name() {
+    let root = fixture_root("fixture");
+    let mut config = NoMistakesConfig::default();
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "postgres-resources".to_string(),
+            paths: vec!["src/**".to_string(), "!./src/generated/**".to_string()],
+            targets: vec!["backend".to_string()],
+        });
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "root-config".to_string(),
+            paths: vec!["package.json".to_string()],
+            targets: Vec::new(),
+        });
+
+    let units = coverage_units(
+        &root,
+        &config,
+        &Options {
+            include_vitest_project_globs: Some(false),
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        units
+            .iter()
+            .map(|unit| (unit.project.as_str(), unit.patterns.clone()))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "backend",
+                vec!["src/**".to_string(), "!src/generated/**".to_string()]
+            ),
+            ("root-config", vec!["package.json".to_string()]),
+        ]
+    );
 }
 
 #[test]

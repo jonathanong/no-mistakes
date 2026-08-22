@@ -11,8 +11,9 @@ Global `--jobs <N>` controls rayon worker count for commands that parallelize
 analysis.
 
 Every analysis invocation takes a per-user, machine-wide lock so CPU-intensive
-CLI and Node/N-API work cannot overlap, even across repositories. Lock waiting
-is silent and does not change successful stdout or JSON output. The following
+CLI and Node/N-API work cannot overlap, even across repositories. While waiting,
+stderr reports `waiting for lock held by pid <pid> for <n>s`. Successful stdout
+or JSON output is unchanged. The following
 root-global options are inherited by every nested command and may appear before
 or after the command name:
 
@@ -53,6 +54,7 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`rsc-callers`](rsc-callers.md) | Find server components/pages that import a component. |
 | [`registry-extension`](registry-extension.md) | Summarize how entries register in a registry file. |
 | [`check`](check.md) | Configured project-wide checks. |
+| [`config`](config.md) | Dump the effective resolved configuration ([`config resolve`](config-resolve.md)). |
 | [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |
 | [`tests`](tests.md) | Test plan, impact, explanation, comments, and graphs. |
 | [`playwright`](playwright.md) | Playwright route, selector, and assertion coverage. |

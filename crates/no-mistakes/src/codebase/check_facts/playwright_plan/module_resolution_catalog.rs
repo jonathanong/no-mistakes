@@ -1,4 +1,4 @@
-use super::is_external_terminal;
+use super::path_match::is_external_terminal;
 use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};

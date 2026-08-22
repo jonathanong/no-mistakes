@@ -64,6 +64,7 @@ const {
 | `fetches` | `fetches(options)` |
 | `flow` | `flow(options)` |
 | `check` | `check(options)` |
+| `config resolve` | `resolveConfig(options)` |
 | `data-pw` | `dataPw(options)` |
 | `effects` | `effects(options)` |
 | `rsc-callers` | `rscCallers(options)` |
@@ -126,6 +127,7 @@ does not have a one-to-one CLI command:
 | `registryExtension` | `registryExtension(options)` |
 | `related` | `related(options)` |
 | `resolveCheck` | `resolveCheck(options)` |
+| `resolveConfig` | `resolveConfig(options)` |
 | `rscCallers` | `rscCallers(options)` |
 | `swiftImporters` | `swiftImporters(options)` |
 | `swiftTestTargets` | `swiftTestTargets(options)` |
@@ -259,6 +261,12 @@ edges.
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 
+`resolveConfig(options)` returns the same JSON as `config resolve`: frontend
+apps, Playwright coverage gates, effective per-app `rewrites`/`ignoreRoutes`,
+Vitest `vitestFullSuiteTriggers`, and the additive `fullSuiteTriggers` array
+keyed by `TestPlanFramework`. Existing `vitestFullSuiteTriggers` contents stay
+unchanged.
+
 The Node declarations model the stable report DTOs for `fetches()`, `queues()`,
 `reactAnalyze()`, and `check()`. Fetch reports use `FetchOccurrence`,
 `DuplicateApiCall`, and `UnsupportedApiCall`; queue reports use typed producer,
@@ -372,17 +380,19 @@ interface InvocationOptions {
 ```
 
 Durations are non-negative integer seconds. `timeout` limits command execution
-after the lock is acquired, while `lockTimeout` limits only the lock wait. Both
-default to 30 seconds; `0` or `null` disables the corresponding timeout.
-`failOnLock: true` fails immediately on contention and overrides
+after the lock is acquired, while `lockTimeout` limits only the lock wait. The
+Node/N-API defaults disable both deadlines (`timeout`/`lockTimeout` omitted,
+`0`, or `null`). The CLI still defaults to 30 seconds; pass `0` there to
+disable. `failOnLock: true` fails immediately on contention and overrides
 `lockTimeout`. `jobs` sets the rayon worker count for that invocation;
 omit it to leave the process pool unchanged, and pass `0` to use the CPU
 count (matching CLI `--jobs 0`).
 
 The lock is shared by CLI and Node/N-API analyses for the current OS user across
-all repositories. Waiting is silent, successful return values keep their
-existing shapes, and lock or timeout failures reject the returned Promise with
-an actionable error. For `analyzeProject()`, put these options at the top level,
+all repositories. While waiting, stderr reports `waiting for lock held by pid
+<pid> for <n>s`. Successful return values keep their existing shapes, and lock
+or timeout failures reject the returned Promise with an actionable error. For
+`analyzeProject()`, put these options at the top level,
 not inside individual report requests:
 
 ```js

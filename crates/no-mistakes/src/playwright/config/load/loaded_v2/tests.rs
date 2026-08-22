@@ -1,5 +1,7 @@
 use super::*;
-use crate::config::v2::schema::{Project, ProjectType, RewriteRule, RuleDef, RuleTestTargets};
+use crate::config::v2::schema::{
+    PlaywrightAppBinding, Project, ProjectType, RewriteRule, RuleDef, RuleTestTargets,
+};
 use crate::playwright::fsutil::VisiblePathSnapshot;
 use std::collections::BTreeMap;
 
@@ -139,7 +141,7 @@ fn default_frontend_root_falls_back_to_the_bare_literal() {
 #[test]
 fn rule_scoped_playwright_target_alone_opts_into_v2_resolution() {
     let config = NoMistakesConfig {
-        projects: BTreeMap::from([("web".to_string(), nextjs_project("web/src/app"))]),
+        projects: BTreeMap::from([("web".to_string(), nextjs_project("web"))]),
         rules: vec![RuleDef {
             rule: "playwright-coverage".to_string(),
             projects: vec!["web".to_string()],
@@ -152,11 +154,114 @@ fn rule_scoped_playwright_target_alone_opts_into_v2_resolution() {
         ..NoMistakesConfig::default()
     };
     let root = Path::new("/repo");
-    let snapshot = VisiblePathSnapshot::from_paths(root, &[]);
+    let snapshot = VisiblePathSnapshot::from_paths(root, &[root.join("web/src/app/page.tsx")]);
 
     let settings =
         settings_from_loaded_v2(root, &config, &[], None, Some("web".to_string()), &snapshot)
             .unwrap();
 
     assert_eq!(settings.frontend_root, "web/src/app");
+}
+
+#[test]
+fn apps_map_alone_opts_into_v2_resolution() {
+    let mut config = NoMistakesConfig {
+        projects: BTreeMap::from([("web".to_string(), nextjs_project("web"))]),
+        rules: vec![RuleDef {
+            rule: "playwright-coverage".to_string(),
+            ..RuleDef::default()
+        }],
+        ..NoMistakesConfig::default()
+    };
+    config.tests.playwright.apps.insert(
+        "chromium".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let root = Path::new("/repo");
+    let snapshot = VisiblePathSnapshot::from_paths(root, &[root.join("web/src/app/page.tsx")]);
+
+    let settings = settings_from_loaded_v2(
+        root,
+        &config,
+        &[],
+        Some("chromium".to_string()),
+        None,
+        &snapshot,
+    )
+    .unwrap();
+
+    assert_eq!(settings.frontend_root, "web/src/app");
+}
+
+/// Two Playwright projects can bind the same Next.js project; a
+/// `frontendRoot` on one binding must not leak into the other's settings.
+#[test]
+fn playwright_frontend_root_override_stays_on_its_binding() {
+    let mut config = NoMistakesConfig {
+        projects: BTreeMap::from([("web".to_string(), nextjs_project("web"))]),
+        ..NoMistakesConfig::default()
+    };
+    config.tests.playwright.apps.insert(
+        "chromium".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            frontend_root: Some("web/pages".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    config.tests.playwright.apps.insert(
+        "firefox".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let root = Path::new("/repo");
+    let snapshot = VisiblePathSnapshot::from_paths(root, &[]);
+
+    let chromium = settings_from_v2(
+        root,
+        &config,
+        &[],
+        Some("chromium".to_string()),
+        None,
+        &snapshot,
+    )
+    .unwrap();
+    let firefox = settings_from_v2(
+        root,
+        &config,
+        &[],
+        Some("firefox".to_string()),
+        None,
+        &snapshot,
+    )
+    .unwrap();
+
+    assert_eq!(chromium.frontend_root, "web/pages");
+    assert_eq!(firefox.frontend_root, "web");
+}
+
+#[test]
+fn default_settings_exclude_colocated_selector_test_files() {
+    let settings = settings_from_loaded_v2(
+        Path::new("/repo"),
+        &NoMistakesConfig::default(),
+        &[],
+        None,
+        None,
+        &VisiblePathSnapshot::from_paths(Path::new("/repo"), &[]),
+    )
+    .unwrap();
+    assert_eq!(
+        settings.selector_exclude,
+        vec![
+            "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}".to_string(),
+            "**/*.test.*".to_string(),
+            "**/*.spec.*".to_string(),
+        ]
+    );
 }

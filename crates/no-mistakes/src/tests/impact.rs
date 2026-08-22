@@ -276,6 +276,7 @@ pub(crate) fn generate_impact_plan_with_prepared(
         warnings,
         fallback_triggered: vitest_fallback.is_some(),
         fallback_reason: vitest_fallback.map(|(reason, _)| reason),
+        ..Default::default()
     })
 }
 

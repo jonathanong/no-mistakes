@@ -45,8 +45,9 @@ pub(crate) use cli_parity::{
     check_json_impl, ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl,
     fetches_json_impl, impacted_checks_json_impl, playwright_check_json_impl,
     playwright_edges_json_impl, playwright_related_json_impl, playwright_tests_json_impl,
-    tests_comment_markdown_impl, tests_graph_json_impl, tests_graph_mermaid_impl,
-    tests_impact_json_impl, tests_plan_json_impl, tests_targets_json_impl, tests_why_json_impl,
+    resolve_config_json_impl, tests_comment_markdown_impl, tests_graph_json_impl,
+    tests_graph_mermaid_impl, tests_impact_json_impl, tests_plan_json_impl,
+    tests_targets_json_impl, tests_why_json_impl,
 };
 pub(crate) use codebase::{
     dependencies_json_impl, dependents_json_impl, import_usages_json_impl, related_json_impl,
@@ -101,6 +102,11 @@ include!("napi_api/codebase_bindings.rs");
 
 json_binding!(fetches_json, "fetchesJson", fetches_json_impl);
 json_binding!(check_json, "checkJson", check_json_impl);
+json_binding!(
+    resolve_config_json,
+    "resolveConfigJson",
+    resolve_config_json_impl
+);
 #[cfg(feature = "mermaid-validation")]
 json_binding!(
     validate_mermaid_markdown_json,

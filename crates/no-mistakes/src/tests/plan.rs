@@ -127,6 +127,7 @@ fn generate_plan_with_prepared_inner(
             },
             fallback_triggered: true,
             fallback_reason: Some(reason),
+            ..Default::default()
         });
     }
 
@@ -414,6 +415,7 @@ fn generate_plan_with_prepared_inner(
             warnings: prepared.tsconfig_warnings(),
             fallback_triggered: true,
             fallback_reason: Some(msg),
+            ..Default::default()
         });
     }
 
@@ -473,6 +475,7 @@ fn generate_plan_with_prepared_inner(
         warnings,
         fallback_triggered: vitest_fallback_reason.is_some(),
         fallback_reason: vitest_fallback_reason,
+        ..Default::default()
     })
 }
 

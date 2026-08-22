@@ -7,5 +7,6 @@ pub(crate) fn generate_plan_with_prepared(
 ) -> Result<TestPlan> {
     let mut plan = generate_plan_with_prepared_inner(args, prepared, timing)?;
     plan.changed_files = prepared.changed_file_inventory();
+    plan.finish(args.include_comment);
     Ok(plan)
 }

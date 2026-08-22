@@ -3,6 +3,9 @@ use std::collections::BTreeMap;
 
 use super::{RewriteRule, StringOrList};
 
+mod coverage;
+pub use coverage::PlaywrightCoverageConfig;
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Tests {
@@ -66,6 +69,9 @@ pub struct PlaywrightTestConfig {
     /// app when a repository configures more than one `type: nextjs` project.
     /// A Playwright project binds to at most one frontend app.
     pub apps: BTreeMap<String, PlaywrightAppBinding>,
+    /// Coverage-gate knobs. Route *selection* edges stay on when `routes` is
+    /// false; only uncovered-route findings are suppressed.
+    pub coverage: PlaywrightCoverageConfig,
 }
 
 /// Explicit frontend-app binding for one Playwright project. Every field is

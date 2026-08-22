@@ -1,7 +1,7 @@
 use super::{frontend_apps, frontend_apps_lenient};
 use crate::codebase::ts_source::discover_visible_paths;
 use crate::config::v2::discover::load_v2_config;
-use crate::config::v2::schema::NoMistakesConfig;
+use crate::config::v2::schema::{NoMistakesConfig, PlaywrightAppBinding};
 use std::path::Path;
 
 fn fixture(sub: &str) -> std::path::PathBuf {
@@ -45,12 +45,40 @@ fn route_root_falls_back_to_app_layout() {
     assert_eq!(apps[0].route_root, "web/app");
 }
 
-/// Neither `src/app` nor `app` exists: the route root falls back to the
-/// package root itself, matching the pre-#625 default.
+/// Neither `src/app` nor `app` exists on a named `type: nextjs` project:
+/// `frontend_apps` still falls back to the package root so graph/check
+/// consumers keep working. Playwright `frontendRoot` is per binding and
+/// must not mutate this shared app.
 #[test]
-fn route_root_falls_back_to_package_root_when_no_app_dir() {
+fn named_project_without_app_dir_falls_back_to_package_root() {
     let dir = fixture("frontend-apps-no-app-dir");
     let cfg = load_v2_config(&dir, None).unwrap();
+    let visible = discover_visible_paths(&dir);
+    let apps = frontend_apps(&dir, &cfg, &visible).unwrap();
+    assert_eq!(apps.len(), 1);
+    assert_eq!(apps[0].root, "web");
+    assert_eq!(apps[0].route_root, "web");
+}
+
+#[test]
+fn playwright_frontend_root_does_not_mutate_shared_app() {
+    let dir = fixture("frontend-apps-no-app-dir");
+    let mut cfg = load_v2_config(&dir, None).unwrap();
+    cfg.tests.playwright.apps.insert(
+        "chromium".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            frontend_root: Some("web/pages".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    cfg.tests.playwright.apps.insert(
+        "firefox".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
     let visible = discover_visible_paths(&dir);
     let apps = frontend_apps(&dir, &cfg, &visible).unwrap();
     assert_eq!(apps.len(), 1);

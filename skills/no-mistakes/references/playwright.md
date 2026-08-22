@@ -188,4 +188,6 @@ tests:
 `tests.playwright.apps.<name>` also accepts `frontendRoot`, `selectorRoots`,
 `rewrites`, and `ignoreRoutes` overrides scoped to that one Playwright
 project, taking precedence over both the resolved app's defaults and the
-top-level `tests.playwright.frontendRoot`/`selectorRoots`.
+top-level `tests.playwright.frontendRoot`/`selectorRoots`. An entry that
+sets `frontendRoot`, `selectorRoots`, and `rewrites` without `project` is
+fully explicit and does not need a frontend app name.
