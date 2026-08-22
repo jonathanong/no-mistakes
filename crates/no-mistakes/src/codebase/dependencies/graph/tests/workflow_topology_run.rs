@@ -42,6 +42,10 @@ fn workflow_run_resolution_handles_cycles_cargo_and_unsafe_inputs() {
         .is_empty());
     assert!(resolver.resolve("ONLY_ENV=set", &root).is_empty());
     assert_eq!(resolver.nearest_package_json(root.parent().unwrap()), None);
+    assert_eq!(
+        resolver.nearest_package_json(&root.join("scripts")),
+        Some(root.join("package.json"))
+    );
     let mut targets = HashSet::new();
     resolver.resolve_cargo_targets(&[], &mut targets);
     resolver.resolve_package_script("${DYNAMIC}", &root, &mut HashSet::new(), &mut targets);

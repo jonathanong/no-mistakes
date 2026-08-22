@@ -107,13 +107,12 @@ pub(crate) fn collect_static_export_values(program: &Program<'_>) -> StaticExpor
                     }
                 }
                 Declaration::FunctionDeclaration(function) => {
-                    let Some(name) = function.id.as_ref().map(|id| id.name.to_string()) else {
-                        continue;
-                    };
-                    let mut values = Vec::new();
-                    collect_from_named_declaration(&export.declaration, &name, &mut values);
-                    if !values.is_empty() {
-                        facts.named.insert(name, values);
+                    if let Some(name) = function.id.as_ref().map(|id| id.name.to_string()) {
+                        let mut values = Vec::new();
+                        collect_from_named_declaration(&export.declaration, &name, &mut values);
+                        if !values.is_empty() {
+                            facts.named.insert(name, values);
+                        }
                     }
                 }
                 _ => {}

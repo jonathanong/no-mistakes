@@ -250,6 +250,17 @@ fn static_export_collection_covers_default_and_destructured_declarations() {
     .unwrap();
     assert!(anonymous.values("ignored", true).is_empty());
 
+    let spread = ast::with_program(
+        Path::new("spread-default.ts"),
+        "const extra = { b: 'spread-val' }; export default { ...extra, a: 'static-val' };",
+        |program, _| super::super::cross_file::collect_static_export_values(program),
+    )
+    .unwrap();
+    assert_eq!(
+        spread.values("ignored", true),
+        &["static-val".to_string()]
+    );
+
     let extras_path = root.join("extras.ts");
     let extras_source = std::fs::read_to_string(&extras_path).unwrap();
     let extras = ast::with_program(&extras_path, &extras_source, |program, _| {

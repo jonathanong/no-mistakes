@@ -112,9 +112,7 @@ fn collect_remaining_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.playwright_routes", || -> Result<()> {
         if plan.playwright_routes {
-            let Some(snapshot) = playwright_snapshot else {
-                anyhow::bail!("Playwright graph plan requires a visible-path snapshot");
-            };
+            let snapshot = require_playwright_route_snapshot(playwright_snapshot)?;
             let edges = collect_playwright_route_edges_from_snapshot(
                 root,
                 edge_inputs.config_path,

@@ -75,3 +75,26 @@ fn cargo_bin_collector_skips_unreadable_and_out_of_root_manifests() {
         "manifests outside the workspace root must not contribute cargo bins"
     );
 }
+
+#[test]
+fn graph_helpers_require_facts_and_playwright_snapshots() {
+    let err = parsed_imports_for_plan(
+        GraphBuildPlan {
+            imports: true,
+            ..GraphBuildPlan::default()
+        },
+        &[],
+        None,
+    )
+    .unwrap_err();
+    assert!(err
+        .to_string()
+        .contains("TS import facts are required when import, workspace, or asset edges are requested"));
+    let playwright_err = match require_playwright_route_snapshot(None) {
+        Ok(_) => panic!("missing Playwright snapshot must fail"),
+        Err(error) => error,
+    };
+    assert!(playwright_err
+        .to_string()
+        .contains("Playwright graph plan requires a visible-path snapshot"));
+}
