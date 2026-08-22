@@ -85,10 +85,10 @@ fn graph_config_options_from_loaded_with_test_filter(
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
 ) -> GraphConfigOptions {
     let project_route_globs = ConfigView::new(v2_config).server_route_globs();
-    let test_filter = Some(match test_filter {
-        Some(filter) => filter,
-        None => crate::codebase::test_filter::TestFileFilter::new(root, v2_config),
-    });
+    let test_filter = Some(
+        test_filter
+            .unwrap_or_else(|| crate::codebase::test_filter::TestFileFilter::new(root, v2_config)),
+    );
     // Union of every configured frontend app's rewrites. #624 was caused by
     // this list being sourced from whichever `type: nextjs` project sorted
     // first. `frontend_apps_lenient` resolves each `type: nextjs` project
