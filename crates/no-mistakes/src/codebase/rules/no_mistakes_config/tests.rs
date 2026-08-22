@@ -117,3 +117,76 @@ fn disabled_rule_is_silent() {
         .unwrap()
         .is_empty());
 }
+
+#[test]
+fn repo_root_dot_is_a_present_directory() {
+    let root = fixture("pass");
+    let config = enable(serde_yaml::from_str("projects:\n  app:\n    root: .\n").unwrap());
+    assert!(
+        check_with_files(&root, &config, &files(&root))
+            .unwrap()
+            .iter()
+            .all(|finding| !finding.message.contains("projects.app.root")),
+        "{:?}",
+        check_with_files(&root, &config, &files(&root)).unwrap()
+    );
+}
+
+#[test]
+fn percent_limit_and_runner_paths_are_linted() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+frontendRoot: web
+projects:
+  web:
+    root: web
+    include: ["web/src/**"]
+    exclude: ["no-such-dir/**"]
+tests:
+  playwright:
+    configs: [vitest.config.ts, ""]
+    selectorRoots: [web]
+    frontendRoot: web
+    navigationHelpers: [vitest.config.ts]
+  vitest:
+    configs: vitest.config.ts
+  jest:
+    configs: vitest.config.ts
+  storybook:
+    configs: vitest.config.ts
+  swift:
+    packages: [web]
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: sources
+        paths:
+          - web/src/**
+          - vitest.config.ts
+    environments:
+      prePush:
+        include: ["web/src/**"]
+        exclude: [""]
+        limit:
+          percent: 40
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("no-such-dir")
+                && finding.message.contains("matches no tracked files")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("#9440")),
+        "{findings:?}"
+    );
+}

@@ -63,6 +63,9 @@ fn kind_label(kind: Kind) -> &'static str {
 
 fn directory_present(value: &str, tracked: &BTreeSet<String>) -> bool {
     let prefix = value.trim_start_matches("./").trim_end_matches('/');
+    if prefix.is_empty() || prefix == "." {
+        return true;
+    }
     tracked.contains(prefix)
         || tracked
             .iter()
