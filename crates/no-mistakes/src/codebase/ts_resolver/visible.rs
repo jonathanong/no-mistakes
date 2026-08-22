@@ -55,3 +55,7 @@ impl<T: VisiblePathLookup + ?Sized> VisiblePathLookup for std::sync::Arc<T> {
         (**self).visible_cache_key()
     }
 }
+
+#[cfg(test)]
+#[path = "visible_tests.rs"]
+mod visible_tests;

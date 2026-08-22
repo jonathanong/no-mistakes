@@ -68,7 +68,7 @@ impl TsFactMap {
         }
         match slot {
             TsFactSlot::Owned(facts) => Some(facts),
-            TsFactSlot::Shared(_) => None,
+            TsFactSlot::Shared(_) => unreachable!("shared slots were materialized"),
         }
     }
 
