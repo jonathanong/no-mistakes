@@ -63,6 +63,9 @@ fn last_arg_selects_test_file(last: &str, test_file: &str) -> bool {
     if last == as_module {
         return true;
     }
+    if file.ends_with(&format!("/{last}")) {
+        return true;
+    }
     if let Some(dir) = file.rsplit_once('/').map(|(dir, _)| dir) {
         if last == format!("./{dir}") || last.trim_start_matches("./") == dir {
             return true;

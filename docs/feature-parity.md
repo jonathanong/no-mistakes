@@ -502,7 +502,7 @@ non-edges.
 | --- | --- | --- |
 | Module graph | `import` | exact `import 'package:app/user.dart'` / relative `lib/` URIs |
 | Package identity | workspace packages | configured `tests.dart.packages` + `pubspec.yaml` `name:` |
-| Tests | `tests plan vitest` | `tests plan dart` over `*_test.dart`; `dart test <rel-path>` |
+| Tests | `tests plan vitest` | `tests plan dart` over `*_test.dart`; `dart test <path>` or `dart pub --directory <package> run test <rel-path>` |
 | HTTP routes | Next.js / Express client `http` | client `Uri.parse` / `http.*` literals to TS backend routes |
 | Queues | BullMQ | no |
 | Lockfile | npm-family | later (`pubspec.yaml` native fallback only) |

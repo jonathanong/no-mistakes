@@ -18,3 +18,8 @@ http.get("https://example.com/api/health");
 fn computed_uris_are_skipped() {
     assert!(extract_http_paths(r#"http.get(Uri.parse(prefix + "/users"));"#).is_empty());
 }
+
+#[test]
+fn commented_http_calls_are_skipped() {
+    assert!(extract_http_paths(r#"// http.get(Uri.parse("/api/users"));"#).is_empty());
+}

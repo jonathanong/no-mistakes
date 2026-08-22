@@ -527,4 +527,8 @@ fn dart_http_calls_match_configured_ts_backend_routes() {
             && from.as_file().is_some_and(|path| path.ends_with("api.dart"))
             && to.as_file().is_some_and(|path| path.ends_with("server.ts"))
     }));
+    assert!(edges.iter().all(|(_, to, kind)| {
+        *kind != EdgeKind::HttpCall
+            || to.as_file().is_none_or(|path| !path.ends_with("admin.ts"))
+    }));
 }

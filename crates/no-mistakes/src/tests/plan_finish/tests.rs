@@ -53,3 +53,22 @@ fn mixed_python_runners_keep_separate_execution_targets() {
         ]
     );
 }
+
+#[test]
+fn nested_package_relative_runner_args_are_stripped_when_grouping() {
+    let mut dart = target(
+        "dart",
+        None,
+        &["dart", "pub", "--directory", "packages/app", "run", "test"],
+    );
+    dart.runner_args = vec!["test/user_test.dart".into()];
+    dart.config = Some("packages/app".into());
+    let groups =
+        grouped_execution_targets(&[selected("packages/app/test/user_test.dart", vec![dart])]);
+    assert_eq!(groups.len(), 1);
+    assert!(groups[0].runner_args.is_empty());
+    assert_eq!(
+        groups[0].test_files,
+        vec!["packages/app/test/user_test.dart".to_string()]
+    );
+}

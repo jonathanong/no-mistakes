@@ -3,5 +3,6 @@ import 'package:http/http.dart' as http;
 
 Future<void> loadUsers() async {
   await http.get(Uri.parse("/api/users"));
+  await http.get(Uri.parse("/admin/users"));
   User.list();
 }

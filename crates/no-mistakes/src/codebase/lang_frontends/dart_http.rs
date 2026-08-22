@@ -2,13 +2,14 @@ use regex::Regex;
 use std::sync::OnceLock;
 
 pub(crate) fn extract_http_paths(source: &str) -> Vec<String> {
+    let source = super::super::strip::strip_comments_keep_strings(source);
     let mut values: Vec<String> = dart_uri_parse_re()
-        .captures_iter(source)
+        .captures_iter(&source)
         .filter_map(|cap| normalize_path(cap.get(1)?.as_str()))
         .collect();
     values.extend(
         dart_http_verb_re()
-            .captures_iter(source)
+            .captures_iter(&source)
             .filter_map(|cap| normalize_path(cap.get(1)?.as_str())),
     );
     values.sort();
