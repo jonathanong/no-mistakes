@@ -8,9 +8,9 @@ pub(crate) use file::collect_file_facts_from_program;
 use file::collect_file_facts_with_sources_and_session;
 
 #[cfg(test)]
-pub(crate) mod test_support;
-#[cfg(test)]
 mod parse_cache_tests;
+#[cfg(test)]
+pub(crate) mod test_support;
 
 pub fn collect_ts_facts(files: &[PathBuf], plan: TsFactPlan) -> TsFactMap {
     assert!(

@@ -7,13 +7,13 @@ use std::cell::RefCell;
 use std::path::Path;
 
 mod expression;
-mod parsed_cache;
 #[cfg(any(test, feature = "test-instrumentation"))]
 mod parse_count;
+mod parsed_cache;
 pub use expression::{binary_concat_path_text, expression_path, span_text, template_literal_text};
-pub(crate) use parsed_cache::{legacy_symbols_share_standard_parse, ParsedProgramCache};
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub use parse_count::{begin_parse_count, finish_parse_count};
+pub(crate) use parsed_cache::{legacy_symbols_share_standard_parse, ParsedProgramCache};
 
 thread_local! {
     static REQUEST_PARSE_CACHES: RefCell<Vec<ParsedProgramCache>> = const { RefCell::new(Vec::new()) };
