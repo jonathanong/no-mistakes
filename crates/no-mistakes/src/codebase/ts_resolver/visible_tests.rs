@@ -110,6 +110,15 @@ fn borrowed_scoped_resolvers_own_normalized_visibility() {
 }
 
 #[test]
+fn missing_paths_normalize_without_canonicalize() {
+    let missing = Path::new("/definitely-not-a-real-no-mistakes-path");
+    assert_eq!(
+        super::canonical_or_normalized(missing),
+        crate::codebase::ts_resolver::normalize_path(missing)
+    );
+}
+
+#[test]
 fn prepared_symbol_flows_keep_session_scoped_resolution() {
     for (name, source) in [
         ("pipeline", include_str!("../symbols/pipeline.rs")),

@@ -22,19 +22,18 @@ pub(super) fn folder_config_paths(
         .iter()
         .filter(|path| is_vitest_project_config(path))
     {
-        let Some(root) = path.parent() else {
-            continue;
-        };
-        let matches = match &glob {
-            Some(Ok(glob)) => glob.is_match(slash_path(root)),
-            Some(Err(_)) => false,
-            None => root == pattern,
-        };
-        if matches {
-            candidates
-                .entry(root.to_path_buf())
-                .or_default()
-                .push(path.clone());
+        if let Some(root) = path.parent() {
+            let matches = match &glob {
+                Some(Ok(glob)) => glob.is_match(slash_path(root)),
+                Some(Err(_)) => false,
+                None => root == pattern,
+            };
+            if matches {
+                candidates
+                    .entry(root.to_path_buf())
+                    .or_default()
+                    .push(path.clone());
+            }
         }
     }
     candidates

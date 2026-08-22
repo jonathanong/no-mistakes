@@ -194,3 +194,21 @@ fn borrowed_fact_map_into_iter_stays_lazy() {
         "TsFactMap iterators must not materialize an extra Vec of entries"
     );
 }
+
+#[test]
+fn fact_map_debug_and_owned_into_iter_visit_every_entry() {
+    let path = PathBuf::from("/fixture/source.ts");
+    let facts = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            fatal_parse_error: true,
+            ..TsFileFacts::default()
+        },
+    )]);
+    let debug = format!("{facts:?}");
+    assert!(debug.contains("source.ts"));
+    let owned: Vec<_> = facts.into_iter().collect();
+    assert_eq!(owned.len(), 1);
+    assert_eq!(owned[0].0, path);
+    assert!(owned[0].1.fatal_parse_error);
+}

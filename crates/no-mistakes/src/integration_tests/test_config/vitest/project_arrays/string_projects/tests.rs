@@ -234,3 +234,29 @@ fn string_project_paths_reuse_one_visible_snapshot_for_folder_configs() {
     assert_eq!(paths, [PathBuf::from("/repo/packages/c/vitest.config.ts")]);
     assert_eq!(resolver.visible.cache_key_calls.load(Ordering::Relaxed), 1);
 }
+
+#[test]
+fn folder_config_paths_prefer_named_vite_config_when_no_vitest_config_exists() {
+    let paths = super::folder_configs::folder_config_paths(
+        "./packages/*",
+        Path::new("/repo/vitest.config.ts"),
+        &[
+            PathBuf::from("/repo/packages/c/vite.unit.config.ts"),
+            PathBuf::from("/repo/packages/c/src/c.test.ts"),
+        ],
+    );
+    assert_eq!(
+        paths,
+        [PathBuf::from("/repo/packages/c/vite.unit.config.ts")]
+    );
+}
+
+#[test]
+fn folder_config_paths_ignore_invalid_project_globs() {
+    let paths = super::folder_configs::folder_config_paths(
+        "./packages/**[",
+        Path::new("/repo/vitest.config.ts"),
+        std::slice::from_ref(&PathBuf::from("/repo/packages/c/vitest.config.ts")),
+    );
+    assert!(paths.is_empty());
+}
