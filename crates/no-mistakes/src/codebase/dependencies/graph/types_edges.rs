@@ -84,6 +84,8 @@ pub enum EdgeKind {
     PhpPackage,
     JavaImport,
     JavaReference,
+    KotlinImport,
+    KotlinReference,
     /// Workflow file → virtual job node.
     WorkflowJob,
     /// Virtual workflow job → virtual workflow step node.

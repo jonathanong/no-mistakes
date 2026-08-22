@@ -47,6 +47,7 @@ fn lang_options() -> GraphConfigOptions {
         php_apps: vec![".".into()],
         php_framework: Some("laravel".into()),
         java_packages: vec![".".into()],
+        kotlin_packages: vec![".".into()],
         queue_enqueues: vec!["**/*".into()],
         queue_workers: vec!["**/*".into()],
         queue_cluster: Some("orders".into()),
@@ -256,6 +257,26 @@ fn language_frontend_edges_cover_configured_extractors() {
                 .is_none_or(|path| !path.ends_with("Computed.java"))
     }));
 
+    let kotlin = lang_fixture("kotlin-spring");
+    let kotlin_edges =
+        collect_language_frontend_edges_for_test(&kotlin, &lang_files(&kotlin), Some(&options));
+    assert!(kotlin_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::KotlinImport
+            && from.as_file().is_some_and(|path| path.ends_with("App.kt"))
+            && to.as_file().is_some_and(|path| path.ends_with("User.kt"))
+    }));
+    assert!(kotlin_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::KotlinReference
+            && from.as_file().is_some_and(|path| path.ends_with("App.kt"))
+            && to.as_file().is_some_and(|path| path.ends_with("User.kt"))
+    }));
+    assert!(kotlin_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("Computed.kt"))
+    }));
+
     let kafka = lang_fixture("kafka-topics");
     let kafka_edges =
         collect_language_frontend_edges_for_test(&kafka, &lang_files(&kafka), Some(&options));
@@ -397,5 +418,23 @@ fn java_exact_imports_cross_configured_packages() {
         *kind == EdgeKind::JavaImport
             && from.as_file().is_some_and(|path| path.ends_with("App.java"))
             && to.as_file().is_some_and(|path| path.ends_with("User.java"))
+    }));
+}
+
+#[test]
+fn kotlin_exact_imports_cross_configured_packages() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/kotlin-cross-package/fixture"),
+    );
+    let options = GraphConfigOptions {
+        kotlin_packages: vec!["libs/shared".into(), "services/app".into()],
+        ..GraphConfigOptions::default()
+    };
+    let edges = collect_language_frontend_edges_for_test(&root, &lang_files(&root), Some(&options));
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::KotlinImport
+            && from.as_file().is_some_and(|path| path.ends_with("App.kt"))
+            && to.as_file().is_some_and(|path| path.ends_with("User.kt"))
     }));
 }

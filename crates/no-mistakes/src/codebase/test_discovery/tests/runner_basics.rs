@@ -211,6 +211,11 @@ fn language_runners_round_trip_names_and_frameworks() {
             TestRunner::Java,
             crate::integration_tests::types::Framework::Java,
         ),
+        (
+            "kotlin",
+            TestRunner::Kotlin,
+            crate::integration_tests::types::Framework::Kotlin,
+        ),
     ] {
         assert_eq!(TestRunner::from_name(name), Some(runner));
         assert_eq!(runner.as_str(), name);
@@ -282,7 +287,7 @@ fn framework_preparation_plan_expands_only_required_runner_dependencies() {
             tests: true,
             ..Default::default()
         });
-    assert_eq!(tests.runners().count(), 11);
+    assert_eq!(tests.runners().count(), 12);
 
     let vitest = FrameworkPreparationPlan::for_runners([TestRunner::Vitest]);
     assert!(vitest.contains(TestRunner::Vitest));

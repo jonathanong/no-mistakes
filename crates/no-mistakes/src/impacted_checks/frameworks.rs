@@ -60,6 +60,10 @@ pub(super) fn framework_present(
         TestFramework::Java => {
             !config.tests.java.packages.is_empty() || test_plan_configured(&config.test_plan.java)
         }
+        TestFramework::Kotlin => {
+            !config.tests.kotlin.packages.is_empty()
+                || test_plan_configured(&config.test_plan.kotlin)
+        }
         TestFramework::Jest => {
             let c = &config.tests.jest;
             c.configs.is_some()

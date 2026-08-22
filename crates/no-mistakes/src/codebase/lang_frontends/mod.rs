@@ -3,6 +3,7 @@ mod facts;
 mod go;
 mod java;
 mod kafka;
+mod kotlin;
 mod php;
 mod python;
 mod ruby;
@@ -32,6 +33,7 @@ pub(crate) use facts::{LangFactMap, LangFileFacts};
 pub(crate) use go::collect_go_facts;
 pub(crate) use java::collect_java_facts;
 pub(crate) use kafka::{scan_file as scan_kafka_file, topic_identity};
+pub(crate) use kotlin::collect_kotlin_facts;
 pub(crate) use php::collect_php_facts;
 pub(crate) use python::collect_python_facts;
 pub(crate) use ruby::collect_ruby_facts;
@@ -46,6 +48,7 @@ pub(crate) struct LangFrontendConfig {
     pub php_apps: Vec<String>,
     pub php_framework: Option<String>,
     pub java_packages: Vec<String>,
+    pub kotlin_packages: Vec<String>,
 }
 
 #[derive(Default)]
@@ -56,6 +59,7 @@ pub(crate) struct CollectedLangFacts {
     pub ruby: LangFactMap,
     pub php: LangFactMap,
     pub java: LangFactMap,
+    pub kotlin: LangFactMap,
 }
 
 pub(crate) fn collect_all_lang_facts(
@@ -64,7 +68,7 @@ pub(crate) fn collect_all_lang_facts(
     config: &LangFrontendConfig,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> CollectedLangFacts {
-    // Each collect_*_facts already file-parallelizes. Overlapping the six
+    // Each collect_*_facts already file-parallelizes. Overlapping the seven
     // extractors with nested rayon::join raised language_frontends::extract
     // peak memory 260.8 KB → 688.5 KB, past the extra-join ≤10% memory gate.
     CollectedLangFacts {
@@ -80,5 +84,6 @@ pub(crate) fn collect_all_lang_facts(
             sources,
         ),
         java: collect_java_facts(root, all_files, &config.java_packages, sources),
+        kotlin: collect_kotlin_facts(root, all_files, &config.kotlin_packages, sources),
     }
 }

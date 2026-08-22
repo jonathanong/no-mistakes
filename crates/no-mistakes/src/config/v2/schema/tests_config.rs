@@ -5,6 +5,9 @@ use super::{RewriteRule, StringOrList};
 
 mod coverage;
 pub use coverage::PlaywrightCoverageConfig;
+#[path = "tests_config_jvm.rs"]
+mod tests_config_jvm;
+pub use tests_config_jvm::{JavaConfig, KotlinConfig};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
@@ -19,6 +22,7 @@ pub struct Tests {
     pub rails: RailsConfig,
     pub php: PhpConfig,
     pub java: JavaConfig,
+    pub kotlin: KotlinConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
     pub impact: ImpactConfig,
@@ -153,12 +157,6 @@ pub struct RailsConfig {
 pub struct PhpConfig {
     pub framework: Option<String>,
     pub apps: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct JavaConfig {
-    pub packages: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

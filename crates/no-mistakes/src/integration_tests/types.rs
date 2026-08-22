@@ -30,6 +30,7 @@ pub(crate) enum Framework {
     Rails,
     Php,
     Java,
+    Kotlin,
     Jest,
 }
 
@@ -46,6 +47,7 @@ impl Framework {
             Self::Rails => "rails",
             Self::Php => "php",
             Self::Java => "java",
+            Self::Kotlin => "kotlin",
             Self::Jest => "jest",
         }
     }

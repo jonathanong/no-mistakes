@@ -11,7 +11,10 @@ fn emit_lang_edges(
                 let scoped: std::collections::BTreeSet<_> = targets
                     .iter()
                     .filter(|target| {
-                        matches!(import_kind, EdgeKind::GoImport | EdgeKind::JavaImport)
+                        matches!(
+                            import_kind,
+                            EdgeKind::GoImport | EdgeKind::JavaImport | EdgeKind::KotlinImport
+                        )
                             || facts
                                 .files
                                 .get(*target)

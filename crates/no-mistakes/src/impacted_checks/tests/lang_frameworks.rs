@@ -59,6 +59,11 @@ fn framework_present_detects_configured_language_packages() {
         ("rails-test-plan", TestFramework::Rails, TestFramework::Php),
         ("php-test-plan", TestFramework::Php, TestFramework::Cargo),
         ("java-test-plan", TestFramework::Java, TestFramework::Php),
+        (
+            "kotlin-test-plan",
+            TestFramework::Kotlin,
+            TestFramework::Php,
+        ),
     ];
     for (name, present, absent) in cases {
         let root = lang_test_plan_fixture(name);

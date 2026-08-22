@@ -32,6 +32,7 @@ export type Relationship =
   | "ruby"
   | "php"
   | "java"
+  | "kotlin"
   | "resource"
   | "trpc"
   | "all";
