@@ -11,11 +11,10 @@ impl TestPlan {
     }
 }
 
+type ExecutionGroupKey = (String, Option<String>, Option<String>, Vec<String>);
+
 fn grouped_execution_targets(selected: &[super::SelectedTest]) -> Vec<GroupedExecutionTarget> {
-    let mut groups: BTreeMap<
-        (String, Option<String>, Option<String>, Vec<String>),
-        GroupedExecutionTarget,
-    > = BTreeMap::new();
+    let mut groups: BTreeMap<ExecutionGroupKey, GroupedExecutionTarget> = BTreeMap::new();
     for test in selected {
         for target in &test.targets {
             let key = (
