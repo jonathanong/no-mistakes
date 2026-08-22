@@ -186,10 +186,7 @@ fn elixir_nested_app_passes_mix_change_directory_flag() {
         None,
         "apps/web/test/my_app/user_test.exs",
     );
-    assert_eq!(
-        target.base_command,
-        vec!["mix", "-C", "apps/web", "test"]
-    );
+    assert_eq!(target.base_command, vec!["mix", "-C", "apps/web", "test"]);
     assert_eq!(target.runner_args, vec!["test/my_app/user_test.exs"]);
 }
 
