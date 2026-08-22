@@ -12,6 +12,7 @@ pub(super) fn discover_phase(framework: TestFramework) -> &'static str {
         TestFramework::Cargo => "discover.cargo",
         TestFramework::Rails => "discover.rails",
         TestFramework::Php => "discover.php",
+        TestFramework::Java => "discover.java",
         TestFramework::Jest => "discover.jest",
     }
 }
@@ -27,6 +28,7 @@ pub(super) fn select_phase(framework: TestFramework) -> &'static str {
         TestFramework::Cargo => "select.cargo",
         TestFramework::Rails => "select.rails",
         TestFramework::Php => "select.php",
+        TestFramework::Java => "select.java",
         TestFramework::Jest => "select.jest",
     }
 }

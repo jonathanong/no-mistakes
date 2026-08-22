@@ -44,7 +44,9 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::RubyRequire
         | EdgeKind::RubyReference
         | EdgeKind::PhpUse
-        | EdgeKind::PhpPackage => language(kind),
+        | EdgeKind::PhpPackage
+        | EdgeKind::JavaImport
+        | EdgeKind::JavaReference => language(kind),
         EdgeKind::WorkflowJob
         | EdgeKind::WorkflowStep
         | EdgeKind::WorkflowNeeds
@@ -115,6 +117,8 @@ const fn language(kind: EdgeKind) -> (u8, u8) {
         EdgeKind::RubyReference => (47, 0),
         EdgeKind::PhpUse => (48, 0),
         EdgeKind::PhpPackage => (49, 0),
+        EdgeKind::JavaImport => (52, 0),
+        EdgeKind::JavaReference => (53, 0),
         _ => panic!("language edge group is exhaustive"),
     }
 }

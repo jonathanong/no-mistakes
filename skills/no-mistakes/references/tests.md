@@ -27,6 +27,7 @@ no-mistakes tests plan go --changed-file pkg/ping.go --format commands
 no-mistakes tests plan cargo --changed-file app/src/lib.rs --format commands
 no-mistakes tests plan rails --changed-file app/models/user.rb --format paths
 no-mistakes tests plan php --changed-file app/Http/Controllers/UserController.php --format commands
+no-mistakes tests plan java --changed-file src/main/java/com/example/User.java --format commands
 no-mistakes tests plan jest --changed-file src/value.ts --format commands
 
 # Diff-based (from git)

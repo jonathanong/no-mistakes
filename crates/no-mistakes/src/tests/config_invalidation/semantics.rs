@@ -34,6 +34,7 @@ fn framework_test_plan(
         TestFramework::Cargo => config.test_plan.cargo.clone(),
         TestFramework::Rails => config.test_plan.rails.clone(),
         TestFramework::Php => config.test_plan.php.clone(),
+        TestFramework::Java => config.test_plan.java.clone(),
         TestFramework::Jest => config.test_plan.jest.clone(),
     };
     // Compatibility warning bookkeeping is not behavior.
@@ -56,6 +57,7 @@ fn framework_tests(config: &NoMistakesConfig, framework: TestFramework) -> serde
         TestFramework::Cargo => serde_json::to_value(&config.tests.rust),
         TestFramework::Rails => serde_json::to_value(&config.tests.rails),
         TestFramework::Php => serde_json::to_value(&config.tests.php),
+        TestFramework::Java => serde_json::to_value(&config.tests.java),
         TestFramework::Jest => serde_json::to_value(&config.tests.jest),
     }
     .expect("test configuration must serialize")
@@ -90,6 +92,7 @@ fn framework_trigger_projects(
         TestFramework::Cargo => &config.test_plan.cargo,
         TestFramework::Rails => &config.test_plan.rails,
         TestFramework::Php => &config.test_plan.php,
+        TestFramework::Java => &config.test_plan.java,
         TestFramework::Jest => &config.test_plan.jest,
     };
     plan.full_suite_triggers
@@ -185,6 +188,7 @@ fn global_graph_semantics(config: &NoMistakesConfig) -> GlobalGraphSemantics {
             "rust": &config.tests.rust,
             "rails": &config.tests.rails,
             "php": &config.tests.php,
+            "java": &config.tests.java,
         }),
     }
 }

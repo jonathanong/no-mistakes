@@ -59,3 +59,33 @@ fn owning_root_picks_longest_configured_prefix() {
         Some("app/users")
     );
 }
+
+#[test]
+fn java_source_under_configured_package_is_native() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.java.packages = vec![".".to_string()];
+    assert!(is_language_native_change(
+        TestFramework::Java,
+        Path::new("/repo"),
+        &config,
+        "src/main/java/com/example/User.java",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Java,
+        Path::new("/repo"),
+        &config,
+        "src/test/java/com/example/UserTest.java",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Java,
+        Path::new("/repo"),
+        &config,
+        "src/test/java/com/example/Helper.java",
+    ));
+    assert!(is_language_native_change(
+        TestFramework::Java,
+        Path::new("/repo"),
+        &config,
+        "pom.xml",
+    ));
+}

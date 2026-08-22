@@ -138,3 +138,16 @@ fn aspnet_fixture_lists_literal_routes() {
         .iter()
         .all(|route| !route.file.ends_with("Computed.cs")));
 }
+
+#[test]
+fn spring_fixture_lists_literal_routes() {
+    let report = analyze_project(&lang_fixture("java-spring"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/api/users" && route.file.ends_with("Users.java") }));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| !route.file.ends_with("Computed.java")));
+}

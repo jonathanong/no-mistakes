@@ -25,6 +25,7 @@ pub(super) fn runner_reserved_tests_from_visible(
         | TestRunner::Cargo
         | TestRunner::Rails
         | TestRunner::Php
+        | TestRunner::Java
         | TestRunner::Jest => return BTreeSet::new(),
     };
     let reserved_projects = prepared_projects.unwrap_or_else(|| {

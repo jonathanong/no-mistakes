@@ -2,7 +2,7 @@
 
 List extracted server routes, including configured language HTTP
 registrations (Django, Flask, FastAPI, Go, Rails, Laravel, Symfony, Rust,
-ASP.NET) and Remix file-based route modules under `type: remix` project roots
+ASP.NET, Spring) and Remix file-based route modules under `type: remix` project roots
 (`app/routes/users.$id.tsx` → `/users/:id`). Remix is not a Playwright
 frontend app: this index does not change Next.js coverage or fetches.
 

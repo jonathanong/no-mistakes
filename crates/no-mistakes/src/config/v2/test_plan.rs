@@ -13,6 +13,7 @@ pub struct TestPlanConfig {
     pub cargo: TestPlanFrameworkConfig,
     pub rails: TestPlanFrameworkConfig,
     pub php: TestPlanFrameworkConfig,
+    pub java: TestPlanFrameworkConfig,
     pub jest: TestPlanFrameworkConfig,
 }
 
@@ -83,6 +84,7 @@ pub enum TestPlanIgnoredChangedTestsFramework {
     Cargo,
     Rails,
     Php,
+    Java,
     Jest,
 }
 

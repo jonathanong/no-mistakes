@@ -47,6 +47,7 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         rails_apps: vec![],
         php_apps: vec![],
         php_framework: None,
+        java_packages: vec![],
         queue_enqueues: vec![],
         queue_workers: vec![],
         queue_cluster: None,

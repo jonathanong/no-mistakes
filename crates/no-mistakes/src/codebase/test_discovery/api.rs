@@ -49,6 +49,7 @@ pub fn discover_tests_from_prepared_projects(
             | TestRunner::Cargo
             | TestRunner::Rails
             | TestRunner::Php
+            | TestRunner::Java
             | TestRunner::Jest => None,
         }
         .map(|reserved_runner| {
@@ -111,6 +112,7 @@ pub fn project_filters_from_visible(
         TestRunner::Cargo,
         TestRunner::Rails,
         TestRunner::Php,
+        TestRunner::Java,
     ]
         .into_iter()
         .flat_map(|runner| {

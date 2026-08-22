@@ -18,6 +18,7 @@ pub(super) fn is_language_native_change(
         TestFramework::Cargo => is_cargo_native(&rel, root, config),
         TestFramework::Rails => is_rails_native(&rel, root, config),
         TestFramework::Php => is_php_native(&rel, root, config),
+        TestFramework::Java => is_java_native(&rel, root, config),
         _ => false,
     }
 }
@@ -84,6 +85,15 @@ fn is_php_native(rel: &str, root: &Path, config: &NoMistakesConfig) -> bool {
         || is_named_manifest(root, &config.tests.php.apps, rel, "composer.json")
 }
 
+fn is_java_native(rel: &str, root: &Path, config: &NoMistakesConfig) -> bool {
+    under_roots(rel, &config.tests.java.packages)
+        && (rel.ends_with("pom.xml")
+            || rel.ends_with("build.gradle")
+            || rel.ends_with("build.gradle.kts")
+            || (rel.ends_with(".java") && !is_java_test(rel)))
+        || is_named_manifest(root, &config.tests.java.packages, rel, "pom.xml")
+}
+
 fn owning_root(
     framework: TestFramework,
     root: &Path,
@@ -111,6 +121,7 @@ fn configured_roots(framework: TestFramework, config: &NoMistakesConfig) -> &[St
         TestFramework::Cargo => &config.tests.rust.packages,
         TestFramework::Rails => &config.tests.rails.apps,
         TestFramework::Php => &config.tests.php.apps,
+        TestFramework::Java => &config.tests.java.packages,
         _ => &[],
     }
 }
@@ -140,6 +151,14 @@ fn is_python_test(rel: &str) -> bool {
         || name.ends_with("_test.py")
         || name == "tests.py"
         || rel.contains("/tests/") && name.ends_with(".py")
+}
+
+fn is_java_test(rel: &str) -> bool {
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    name.ends_with("Test.java")
+        || name.ends_with("Tests.java")
+        || name.ends_with("IT.java")
+        || (rel.contains("/src/test/") || rel.starts_with("src/test/")) && name.ends_with(".java")
 }
 
 fn is_cargo_test(rel: &str) -> bool {

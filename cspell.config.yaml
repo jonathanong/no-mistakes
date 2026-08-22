@@ -36,6 +36,13 @@ words:
   - fanout
   - fastapi
   - FastAPI
+  - GetMapping
+  - PostMapping
+  - PutMapping
+  - PatchMapping
+  - DeleteMapping
+  - Dtest
+  - RequestMapping
   - frontends
   - funcs
   - gitignore
