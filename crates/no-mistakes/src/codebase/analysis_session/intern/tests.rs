@@ -51,11 +51,13 @@ fn intern_path_insert_occupied_and_vacant_are_distinct() {
 #[test]
 fn intern_str_miss_then_hit_and_insert_arms() {
     let interner = PathInterner::new();
-    let owned: Arc<str> = Arc::from("send");
-    let miss = interner.intern_str(owned.clone());
+    // Hit path must accept a borrowed &str without building Arc first.
+    let miss = interner.intern_str("send");
     let hit = interner.intern_str("send");
     assert!(Arc::ptr_eq(&miss, &hit));
-    assert!(Arc::ptr_eq(&miss, &owned) || miss.as_ref() == owned.as_ref());
+    let owned: Arc<str> = Arc::from("send");
+    let from_owned = interner.intern_str(owned.as_ref());
+    assert!(Arc::ptr_eq(&miss, &from_owned));
 
     let vacant = interner.insert_str_arc(Arc::from("vacant"));
     let occupied = interner.insert_str_arc(Arc::from("vacant"));
