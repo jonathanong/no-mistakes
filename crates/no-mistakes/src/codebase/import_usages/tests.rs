@@ -122,8 +122,19 @@ fn root_scan_and_filters_limit_source_files() {
 #[test]
 fn json_output_uses_camel_case_fields() {
     let json = run_json(args(vec!["src/main.mts"])).unwrap();
-    assert!(json.contains("\"packageName\": \"react\""));
-    assert!(json.contains("\"sideEffectOnly\": true"));
-    assert!(json.contains("\"reExport\": true"));
-    assert!(json.contains("\"kind\": \"require-resolve\""));
+    assert!(
+        !json.trim_end().contains('\n'),
+        "import-usages JSON must stay compact"
+    );
+    let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let imports: Vec<&serde_json::Value> = value["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|file| file["imports"].as_array().unwrap())
+        .collect();
+    assert!(imports.iter().any(|row| row["packageName"] == "react"));
+    assert!(imports.iter().any(|row| row["sideEffectOnly"] == true));
+    assert!(imports.iter().any(|row| row["reExport"] == true));
+    assert!(imports.iter().any(|row| row["kind"] == "require-resolve"));
 }
