@@ -1,6 +1,7 @@
-use super::*;
+use super::helpers::{filter_application_files, relative, shared_symbol_files};
 use crate::codebase::config::{Config, ProjectConfig, RuleApplicationConfig};
 use std::collections::{HashMap, HashSet};
+use std::path::Path;
 
 fn config_with_projects(projects: HashMap<String, ProjectConfig>) -> Config {
     Config {
@@ -172,4 +173,30 @@ fn filter_application_files_reports_invalid_rule_filters() {
     assert!(error
         .to_string()
         .contains("unique-exports rule exclude contains invalid glob"));
+}
+
+#[test]
+fn relative_keeps_paths_outside_the_root() {
+    assert_eq!(
+        relative(Path::new("/repo"), Path::new("/other/app.ts")),
+        "/other/app.ts"
+    );
+}
+
+#[test]
+fn shared_symbol_files_dedupes_workspace_and_analysis_paths() {
+    let files = shared_symbol_files(
+        &[Path::new("/repo/src/a.ts").to_path_buf()],
+        &[
+            Path::new("/repo/src/a.ts").to_path_buf(),
+            Path::new("/repo/src/b.ts").to_path_buf(),
+        ],
+    );
+    assert_eq!(
+        files,
+        vec![
+            Path::new("/repo/src/a.ts").to_path_buf(),
+            Path::new("/repo/src/b.ts").to_path_buf()
+        ]
+    );
 }

@@ -36,6 +36,7 @@ pub(super) struct SourceFile {
     pub(super) disabled: bool,
     pub(super) defer_suppression: bool,
     pub(super) is_nextjs_project: bool,
+    pub(super) is_remix_route_module: bool,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]

@@ -26,6 +26,7 @@ pub(super) fn collect_source_files_from_facts_with_sources(
     shared: &crate::codebase::check_facts::CheckFactMap,
     defer_suppression: bool,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
+    remix_roots: &[PathBuf],
 ) -> Result<Vec<SourceFile>> {
     let nextjs_projects = NextJsProjectLookup::with_sources(root, files, shared.files(), sources);
     let mut source_files = Vec::new();
@@ -55,6 +56,7 @@ pub(super) fn collect_source_files_from_facts_with_sources(
             disabled,
             defer_suppression,
             is_nextjs_project: nextjs_projects.contains_file(path),
+            is_remix_route_module: super::remix::is_route_module(path, remix_roots),
             symbols,
         });
     }

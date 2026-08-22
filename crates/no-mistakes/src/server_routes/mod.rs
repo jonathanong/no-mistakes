@@ -6,6 +6,7 @@ pub(crate) mod model;
 mod mounts;
 mod normalize;
 mod related;
+mod remix;
 mod source;
 mod types;
 

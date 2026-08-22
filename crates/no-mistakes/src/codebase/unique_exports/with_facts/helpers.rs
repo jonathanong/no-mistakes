@@ -1,6 +1,7 @@
 use super::filter_source_files;
-use super::normalize_path;
+use crate::codebase::config::{Config, InferredRoots, RuleApplicationConfig};
 use crate::codebase::rules::path_filter::GlobMatcher;
+use crate::codebase::ts_resolver::normalize_path;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -30,10 +31,10 @@ pub(super) fn shared_symbol_files(
 
 pub(super) fn filter_application_files(
     root: &Path,
-    config: &crate::codebase::config::Config,
-    application: &crate::codebase::config::RuleApplicationConfig,
+    config: &Config,
+    application: &RuleApplicationConfig,
     files: Vec<PathBuf>,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    inferred_roots: Option<&InferredRoots>,
 ) -> Result<Vec<PathBuf>> {
     let include = GlobMatcher::new(&application.include, "unique-exports rule include")?;
     let exclude = GlobMatcher::new(&application.exclude, "unique-exports rule exclude")?;

@@ -45,6 +45,7 @@ struct ProjectRootsAnalysis<'a> {
     options: UniqueExportsOptions,
     defer_suppression: bool,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    config: &'a crate::codebase::config::Config,
 }
 
 fn analyze_project_roots_with_facts(
@@ -60,6 +61,7 @@ fn analyze_project_roots_with_facts(
         options,
         defer_suppression,
         inferred_roots,
+        config,
     } = inputs;
     if project_roots.is_empty() {
         return Ok(Vec::new());
@@ -97,12 +99,14 @@ fn analyze_project_roots_with_facts(
         .collect::<HashSet<_>>();
     let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
         .unwrap_or_default();
+    let remix_roots = super::remix::configured_roots(root, config, inferred_roots);
     let source_files = super::scan::collect_source_files_from_facts_with_sources(
         root,
         &symbol_files,
         shared,
         defer_suppression,
         session.existing_sources_for(root).as_deref(),
+        &remix_roots,
     )?;
     if let Some(catalog) = resolution.catalog {
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(

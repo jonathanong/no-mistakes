@@ -166,6 +166,7 @@ pub(super) fn analyze_project_with_optional_prepared_facts_prepared(
                 options,
                 defer_suppression,
                 inferred_roots,
+                config,
             })?);
         }
         findings.sort();
@@ -191,5 +192,6 @@ pub(super) fn analyze_project_with_optional_prepared_facts_prepared(
         options: config.rule_options(RULE_ID),
         defer_suppression,
         inferred_roots,
+        config,
     })
 }

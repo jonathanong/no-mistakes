@@ -18,10 +18,14 @@ projects:
 Supported project types include `server`, `nextjs`, `remix`, `vitejs`,
 `library`, `tests`, `rust`, and `cloudflare-workers`.
 
-`type: remix` and `type: vitejs` only infer a project root from
-`remix.config.*` / Vite+Remix or `vite.config.*`. They do not build Remix
-loader/action/route-module graphs or a Vite SPA analyzer. Playwright coverage
-remains Next.js App Router–oriented (`page.tsx` routes).
+`type: remix` infers a project root from `remix.config.*` / Vite+Remix when
+`root` is omitted. That root feeds a thin file-based `server routes` index
+(`app/routes/users.$id.tsx` → `/users/:id`) and `unique-exports` exemptions
+for Remix route-module exports (`loader`, `action`, `clientLoader`,
+`clientAction`, `meta`, `links`, `ErrorBoundary`). Remix is not added to
+`frontend_apps()`, so Playwright coverage and Next.js fetches stay Next.js App
+Router–oriented (`page.tsx` routes). `type: vitejs` still only infers a
+project root from `vite.config.*`; it does not build a Vite SPA analyzer.
 
 `type: cloudflare-workers` is a scoping label only: there is no wrangler, KV,
 or Durable Object domain analyzer.
