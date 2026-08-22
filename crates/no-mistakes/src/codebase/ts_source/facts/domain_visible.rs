@@ -9,11 +9,10 @@ impl TsFactContext {
     }
 
     /// Install an already-normalized visible set without cloning it again.
+    ///
+    /// An empty set stays `Some` so scoped analyses keep an explicit empty
+    /// universe instead of falling back to unrestricted filesystem resolution.
     pub fn set_visible_file_set(&mut self, files: crate::fx::PathSet) {
-        if files.is_empty() {
-            self.visible_files = None;
-            return;
-        }
         self.visible_files = Some(Arc::new(files));
     }
 }
