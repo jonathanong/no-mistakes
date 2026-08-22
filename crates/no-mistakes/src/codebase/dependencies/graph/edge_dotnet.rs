@@ -29,7 +29,36 @@ fn collect_dotnet_edges(
     collect_dotnet_using_edges(facts, &mut edges, interner);
     collect_dotnet_reference_edges(facts, &mut edges, interner);
     collect_dotnet_project_edges(facts, &mut edges, interner);
+    collect_dotnet_route_edges(root, facts, config_options, &mut edges, interner);
     edges
+}
+
+fn collect_dotnet_route_edges(
+    root: &Path,
+    facts: &crate::codebase::dotnet::DotnetFactMap,
+    options: &GraphConfigOptions,
+    edges: &mut Vec<Edge>,
+    interner: &PathInterner,
+) {
+    for file in facts.files.values() {
+        if !dotnet_route_file_allowed(root, &file.path, options) {
+            continue;
+        }
+        for (_, handler) in &file.route_handlers {
+            let name = handler.rsplit('.').next().unwrap_or(handler);
+            if let Some(targets) = facts.methods.get(name) {
+                push_dotnet_file_edges(edges, &file.path, targets, EdgeKind::RouteRef, interner);
+            }
+        }
+    }
+}
+
+fn dotnet_route_file_allowed(root: &Path, path: &Path, options: &GraphConfigOptions) -> bool {
+    let Some(globset) = options.project_route_globset.as_ref() else {
+        return true;
+    };
+    let rel = path.strip_prefix(root).unwrap_or(path);
+    globset.is_match(rel.to_string_lossy().as_ref())
 }
 
 fn collect_dotnet_using_edges(

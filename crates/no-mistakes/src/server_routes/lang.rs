@@ -18,6 +18,16 @@ pub(super) fn merge_language_route_facts(
     let Some(config) = prepared.config.as_ref() else {
         return;
     };
+    merge_configured_lang_routes(prepared, facts, cli_filter, config);
+    merge_dotnet_routes(prepared, facts, cli_filter, config);
+}
+
+fn merge_configured_lang_routes(
+    prepared: &PreparedServerAnalysis,
+    facts: &mut HashMap<PathBuf, FileFacts>,
+    cli_filter: Option<&GlobSet>,
+    config: &crate::config::v2::NoMistakesConfig,
+) {
     let lang = lang_config_from_v2(config);
     if lang_config_is_empty(&lang) {
         return;
@@ -41,6 +51,42 @@ pub(super) fn merge_language_route_facts(
                 Some(&test_filter),
             );
         }
+    }
+}
+
+fn merge_dotnet_routes(
+    prepared: &PreparedServerAnalysis,
+    facts: &mut HashMap<PathBuf, FileFacts>,
+    cli_filter: Option<&GlobSet>,
+    config: &crate::config::v2::NoMistakesConfig,
+) {
+    let projects =
+        crate::codebase::dotnet::configured_projects(&prepared.root, &config.tests.dotnet);
+    if projects.is_empty() {
+        return;
+    }
+    let dataset = prepared.session.dataset(&prepared.root);
+    let all_files = dataset.paths_for(&prepared.root);
+    let collected =
+        crate::codebase::dotnet::collect_dotnet_facts(&prepared.root, &all_files, &projects);
+    let config_route_filter = build_filter(&ConfigView::new(config).server_route_globs())
+        .ok()
+        .flatten();
+    let test_filter = TestFileFilter::new(&prepared.root, config);
+    for file in collected.files.values() {
+        let lang_file = LangFileFacts {
+            path: file.path.clone(),
+            route_handlers: file.route_handlers.clone(),
+            ..Default::default()
+        };
+        merge_file_routes(
+            &prepared.root,
+            &lang_file,
+            facts,
+            cli_filter,
+            config_route_filter.as_ref(),
+            Some(&test_filter),
+        );
     }
 }
 

@@ -62,6 +62,7 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(plan.markdown);
     assert!(plan.ci);
     assert!(plan.routes);
+    assert!(plan.dotnet);
     assert!(plan.queues);
     assert!(plan.playwright_routes);
     assert!(plan.http);

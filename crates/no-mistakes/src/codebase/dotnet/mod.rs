@@ -1,5 +1,6 @@
 mod config;
 mod csharp;
+mod csharp_http;
 mod csharp_strip;
 mod project;
 mod project_static;
@@ -93,6 +94,13 @@ fn index_file(facts: &mut DotnetFactMap, file: DotnetFileFacts) {
                 .or_default()
                 .insert(file.path.clone());
         }
+    }
+    for method in &file.methods {
+        facts
+            .methods
+            .entry(method.clone())
+            .or_default()
+            .insert(file.path.clone());
     }
     facts.files.insert(file.path.clone(), file);
 }
