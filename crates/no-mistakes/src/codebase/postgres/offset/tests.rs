@@ -222,3 +222,55 @@ fn explain_analyze_offset_is_detected() {
     assert!(sql_has_offset_clause("EXPLAIN ANALYZE SELECT id FROM posts OFFSET 10").unwrap());
     assert!(!sql_has_offset_clause("EXPLAIN SELECT id FROM posts LIMIT 10").unwrap());
 }
+
+#[test]
+fn returning_and_on_conflict_offsets_are_detected() {
+    assert!(sql_has_offset_clause(
+        "INSERT INTO audit DEFAULT VALUES RETURNING (SELECT id FROM pages OFFSET 1 LIMIT 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "UPDATE users SET rank = 1 RETURNING (SELECT id FROM pages OFFSET 1 LIMIT 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "DELETE FROM users RETURNING (SELECT id FROM pages OFFSET 1 LIMIT 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "INSERT INTO t(id, value) VALUES (1, 1) ON CONFLICT (id) DO UPDATE SET value = (SELECT value FROM u OFFSET 1 LIMIT 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "INSERT INTO t(id) VALUES (1) ON CONFLICT (id) DO UPDATE SET id = 1 WHERE id IN (SELECT id FROM u OFFSET 1)"
+    )
+    .unwrap());
+}
+
+#[test]
+fn nested_join_group_by_distinct_and_limit_offsets_are_detected() {
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM (a JOIN (SELECT * FROM b OFFSET 1) AS page ON true) AS joined"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT count(*) FROM t GROUP BY (SELECT id FROM pages OFFSET 1 LIMIT 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT DISTINCT ON ((SELECT id FROM pages OFFSET 1 LIMIT 1)) id FROM t"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM t LIMIT (SELECT id FROM limits OFFSET 1 LIMIT 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT count(*) OVER w FROM t WINDOW w AS (ORDER BY (SELECT id FROM u OFFSET 1 LIMIT 1))"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT count(*) OVER w FROM t WINDOW w AS (PARTITION BY (SELECT id FROM u OFFSET 1 LIMIT 1))"
+    )
+    .unwrap());
+}
