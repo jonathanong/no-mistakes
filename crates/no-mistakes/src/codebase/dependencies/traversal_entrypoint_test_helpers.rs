@@ -20,5 +20,6 @@ pub(super) fn resolve_entrypoints_with_files(
         graph_files,
         include_symbols,
         workspace: &workspace,
+        interner: &PathInterner::new(),
     })
 }

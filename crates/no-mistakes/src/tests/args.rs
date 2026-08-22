@@ -231,6 +231,7 @@ pub(crate) enum TestFramework {
     Cargo,
     Rails,
     Php,
+    Jest,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]

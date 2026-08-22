@@ -2,10 +2,15 @@ use super::{ClassifiedPath, FileClassification};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum GitIndexKind {
+    RegularFile,
+    Symlink,
+}
+
 /// Classify already-discovered paths with parallel `symlink_metadata` calls.
-/// Git listing does not report file-vs-symlink type, so the syscalls stay;
-/// they do not need to run on one thread. Timeout checks are per path because
-/// a parallel `take_while` would drop in-flight successes.
+/// Callers that already have Git index modes should use
+/// [`classify_git_listed_paths`] so tracked regular files skip these syscalls.
 pub(super) fn inventory_paths(paths: &[PathBuf]) -> (Vec<ClassifiedPath>, usize) {
     crate::perf_trace::trace("discovery.inventory_classify", || {
         let classified: Vec<ClassifiedPath> = paths
@@ -22,16 +27,51 @@ pub(super) fn inventory_paths(paths: &[PathBuf]) -> (Vec<ClassifiedPath>, usize)
     })
 }
 
-pub(crate) fn classify_relative_paths(root: &Path, paths: Vec<PathBuf>) -> Vec<ClassifiedPath> {
+/// Classify Git-listed relative paths. Tracked regular files (`100644`/`100755`)
+/// use index mode and skip worktree metadata; tracked symlinks (`120000`) still
+/// call `symlink_metadata`. Untracked paths and other modes keep `symlink_metadata`.
+///
+/// Skipping stats for `100644` trusts the index: an unstaged file→symlink swap
+/// is still classified as a regular file. Missing worktree paths are dropped
+/// from the `R` records produced by `git ls-files --deleted`, not by `lstat`.
+/// Skip-worktree (`S`) and unmerged (`M`) entries still take the metadata path.
+pub(crate) fn classify_git_listed_paths(
+    root: &Path,
+    paths: Vec<(PathBuf, Option<GitIndexKind>)>,
+) -> (Vec<ClassifiedPath>, usize) {
     crate::perf_trace::trace("discovery.classify", || {
-        paths
+        let classified: Vec<(Option<ClassifiedPath>, bool)> = paths
             .into_par_iter()
-            .filter_map(|relative| {
+            .filter_map(|(relative, index_kind)| {
                 crate::invocation::check_timeout().ok()?;
-                stat_existing_path(root.join(relative))
+                Some(classify_listed_path(root.join(relative), index_kind))
             })
-            .collect()
+            .collect();
+        let metadata_stats = classified.iter().filter(|(_, stated)| *stated).count();
+        (
+            classified
+                .into_iter()
+                .filter_map(|(entry, _)| entry)
+                .collect(),
+            metadata_stats,
+        )
     })
+}
+
+fn classify_listed_path(
+    path: PathBuf,
+    index_kind: Option<GitIndexKind>,
+) -> (Option<ClassifiedPath>, bool) {
+    match index_kind {
+        Some(GitIndexKind::RegularFile) => (
+            Some(ClassifiedPath {
+                path,
+                classification: FileClassification::TRACKED_REGULAR,
+            }),
+            false,
+        ),
+        Some(GitIndexKind::Symlink) | None => (stat_existing_path(path), true),
+    }
 }
 
 fn stat_inventory_path(path: PathBuf) -> ClassifiedPath {

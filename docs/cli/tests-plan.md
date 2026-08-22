@@ -15,6 +15,7 @@ no-mistakes tests plan go --changed-file pkg/ping.go --format commands
 no-mistakes tests plan cargo --changed-file app/src/lib.rs --format commands
 no-mistakes tests plan rails --changed-file app/models/user.rb --format paths
 no-mistakes tests plan php --changed-file app/Http/Controllers/UserController.php --format commands
+no-mistakes tests plan jest --changed-file src/value.ts --format commands
 ```
 
 Use this for agent test selection before running expensive suites. Inputs can
@@ -160,6 +161,10 @@ Framework selection filters test endpoints before graph traversal terminates.
 `tests plan vitest` can terminate only at Vitest-owned tests, and
 `tests plan playwright` only at Playwright-owned tests; canonical dependency and
 resource edges between ordinary files remain available to both traversals.
+`tests plan jest` uses explicit `tests.jest.configs` (or `tests.jest.projects`)
+and parses static `testMatch` / `testRegex` literals. Empty `configs: []`
+disables Jest discovery; there is no default-on `jest.config.*` scan. Jest
+plans do not follow Vitest `setupFiles` / `globalSetup` edges.
 Vitest `setupFiles` and `globalSetup` are included in the test dependency
 graph automatically. A change to either configured module, or to a static
 import/re-export reachable from one, selects only the tests owned by that

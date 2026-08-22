@@ -28,26 +28,30 @@ fn collect_uncached_entries(
         Direction::Deps if import_only => {
             let sources = shared.dataset.sources_for(&shared.root);
             let workspace = shared.dataset.workspace();
-            let (entries, collected) = graph::lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
-                graph::LazyImportBuild {
-                    roots,
-                    tsconfig: &shared.tsconfig,
-                    tsconfig_catalog: Some(&shared.tsconfig_catalog),
-                    max_depth: args.depth,
-                    graph_files: &shared.graph_files,
-                    allowed,
-                    facts: graph::LazyImportFacts::new(
-                        shared.facts.as_ref().map(|facts| facts as &dyn graph::TsFactLookup),
-                        shared.fact_plan,
-                        &shared.fact_context,
-                    )
-                    .with_source_store(&sources)
-                    .retain_collected(),
-                    workspace: &workspace,
-                    import_resolution_cache: Some(&shared.import_resolution_cache),
-                },
-                &shared.session,
-            );
+            let (entries, collected) =
+                graph::lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
+                    graph::LazyImportBuild {
+                        roots,
+                        tsconfig: &shared.tsconfig,
+                        tsconfig_catalog: Some(&shared.tsconfig_catalog),
+                        max_depth: args.depth,
+                        graph_files: &shared.graph_files,
+                        allowed,
+                        facts: graph::LazyImportFacts::new(
+                            shared
+                                .facts
+                                .as_ref()
+                                .map(|facts| facts as &dyn graph::TsFactLookup),
+                            shared.fact_plan,
+                            &shared.fact_context,
+                        )
+                        .with_source_store(&sources)
+                        .retain_collected(),
+                        workspace: &workspace,
+                        import_resolution_cache: Some(&shared.import_resolution_cache),
+                    },
+                    &shared.session,
+                );
             *shared
                 .pending_lazy_facts
                 .lock()
@@ -65,7 +69,12 @@ fn collect_uncached_entries(
         Direction::Deps => shared.graph_shared()?.deps_of(roots, args.depth, allowed),
         Direction::Dependents if args.include_symbols => {
             let graph = shared.graph_shared()?;
-            let roots = roots_with_existing_queue_jobs(roots, entrypoints, graph.as_ref());
+            let roots = roots_with_existing_queue_jobs(
+                roots,
+                entrypoints,
+                graph.as_ref(),
+                shared.session.interner(),
+            );
             let roots = roots_with_exported_symbol_roots(&roots, graph.as_ref());
             graph.dependents_of_symbol_nodes(&roots, args.depth, allowed)
         }
@@ -77,8 +86,7 @@ fn collect_uncached_entries(
                 args.depth,
                 allowed,
                 &graph,
-                symbol_index
-                    .expect("symbol index is built for symbol dependents"),
+                symbol_index.expect("symbol index is built for symbol dependents"),
             )
         }
         Direction::Dependents if any_symbol => {
