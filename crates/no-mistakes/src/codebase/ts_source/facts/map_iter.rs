@@ -84,6 +84,7 @@ impl<'a> IntoIterator for &'a mut TsFactMap {
     type IntoIter = TsFactMapIterMut<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
+        self.bump_playwright_scan_generation();
         self.materialize_shared();
         TsFactMapIterMut {
             inner: (&mut self.facts).into_iter(),

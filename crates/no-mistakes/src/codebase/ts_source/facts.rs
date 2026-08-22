@@ -1,3 +1,4 @@
+use crate::codebase::check_facts::PlaywrightSettingsKey;
 use crate::codebase::dependencies::extract::{ExtractedImport, FunctionCall};
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -5,10 +6,26 @@ use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
+use crate::playwright::analysis::text_types::AppTextTarget;
+use crate::playwright::selectors::AppSelector;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
+use dashmap::DashMap;
+use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
+
+type PlaywrightScanKey = (u64, PlaywrightSettingsKey);
+type AppSelectorOccurrencesCache =
+    Arc<DashMap<(PlaywrightScanKey, bool), Result<Arc<Vec<AppSelector>>, String>>>;
+type PlaywrightRoutesCache = Arc<DashMap<PlaywrightScanKey, Arc<Vec<crate::routes::Route>>>>;
+type AppTextTargetsCache = Arc<DashMap<PlaywrightScanKey, Result<Arc<Vec<AppTextTarget>>, String>>>;
+type RouteReachableFilesCache = Arc<
+    DashMap<
+        PlaywrightScanKey,
+        Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>,
+    >,
+>;
 
 pub(crate) mod call_sites;
 mod collect;
@@ -136,10 +153,20 @@ impl TsFactSlot {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct TsFactMap {
     facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
+    /// Shared by clones. `bump_playwright_scan_generation` takes the next
+    /// unique value so independently mutated clones cannot collide on
+    /// `(generation, settings)` while still sharing the DashMap Arcs.
+    playwright_scan_epoch: Arc<AtomicU64>,
+    /// Copied on `Clone` so an unmutated clone keeps the previous universe.
+    pub(crate) playwright_scan_generation: u64,
+    pub(crate) app_selector_occurrences_cache: AppSelectorOccurrencesCache,
+    pub(crate) playwright_routes_cache: PlaywrightRoutesCache,
+    pub(crate) app_text_targets_cache: AppTextTargetsCache,
+    pub(crate) route_reachable_files_cache: RouteReachableFilesCache,
 }
 
 impl std::fmt::Debug for TsFactMap {

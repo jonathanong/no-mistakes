@@ -431,10 +431,14 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
             .expect("isolated reachability computes");
     }
 
-    assert_eq!(selector_calls.get(), 2);
-    assert_eq!(route_calls.get(), 2);
-    assert_eq!(text_calls.get(), 2);
-    assert_eq!(reachability_calls.get(), 2);
+    assert_eq!(
+        selector_calls.get(),
+        1,
+        "isolated fallback TsFactMap must cache selector scans instead of forwarding to primary"
+    );
+    assert_eq!(route_calls.get(), 1);
+    assert_eq!(text_calls.get(), 1);
+    assert_eq!(reachability_calls.get(), 1);
     assert_eq!(primary_selector_calls.get(), 1);
     assert_eq!(primary_route_calls.get(), 1);
     assert_eq!(primary_text_calls.get(), 1);

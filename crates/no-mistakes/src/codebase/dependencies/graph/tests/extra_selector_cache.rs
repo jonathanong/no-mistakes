@@ -185,40 +185,6 @@ fn get_or_compute_routes_and_app_text_targets_cache_across_calls() {
     );
 }
 
-/// `TsFactMap` never overrides the `get_or_compute_*` cache methods (only
-/// `CheckFactMap` does — it's the only implementor that ever needs to share
-/// these scans across call sites), so it exercises the trait's default
-/// "always call compute, no caching" bodies. Every `compute` still runs
-/// exactly once per call here (there's nothing to cache), which is the
-/// correct, expected behavior for this fallback path.
-#[test]
-fn ts_fact_map_uses_uncached_trait_defaults_for_get_or_compute_methods() {
-    use crate::codebase::dependencies::graph::TsFactLookup;
-    use crate::codebase::ts_source::facts::TsFactMap;
-
-    let facts = TsFactMap::new();
-
-    let selectors = facts
-        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &|| Ok(Vec::new()))
-        .unwrap();
-    assert!(selectors.is_empty());
-
-    let routes = facts.get_or_compute_playwright_routes(&cache_settings(), &|| {
-        Vec::<crate::routes::Route>::new()
-    });
-    assert!(routes.is_empty());
-
-    let app_text_targets = facts
-        .get_or_compute_app_text_targets(&cache_settings(), &|| Ok(Vec::new()))
-        .unwrap();
-    assert!(app_text_targets.is_empty());
-
-    let route_reachable_files = facts
-        .get_or_compute_route_reachable_files(&cache_settings(), &|| Ok(Default::default()))
-        .unwrap();
-    assert!(route_reachable_files.is_empty());
-}
-
 #[test]
 fn graph_build_plan_playwright_selectors_enabled_in_all() {
     let plan = GraphBuildPlan::all();

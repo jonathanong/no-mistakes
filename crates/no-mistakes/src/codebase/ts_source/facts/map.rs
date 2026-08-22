@@ -1,7 +1,24 @@
 use super::{TsFactMap, TsFactPlan, TsFactSlot, TsFileFacts};
 use crate::codebase::ts_source::FileIdMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+
+impl Default for TsFactMap {
+    fn default() -> Self {
+        Self {
+            facts: FileIdMap::default(),
+            plan: TsFactPlan::default(),
+            // Start at 1 so the first bump cannot reuse generation 0.
+            playwright_scan_epoch: Arc::new(AtomicU64::new(1)),
+            playwright_scan_generation: 0,
+            app_selector_occurrences_cache: Default::default(),
+            playwright_routes_cache: Default::default(),
+            app_text_targets_cache: Default::default(),
+            route_reachable_files_cache: Default::default(),
+        }
+    }
+}
 
 impl TsFactMap {
     pub fn new() -> Self {
@@ -19,6 +36,7 @@ impl TsFactMap {
                     .map(|(path, facts)| (path, TsFactSlot::Owned(Box::new(facts)))),
             ),
             plan,
+            ..Self::default()
         }
     }
 
@@ -35,6 +53,7 @@ impl TsFactMap {
                 inventory,
             ),
             plan,
+            ..Self::default()
         }
     }
 
@@ -49,6 +68,7 @@ impl TsFactMap {
                     .map(|(path, facts)| (path, TsFactSlot::Shared(facts))),
             ),
             plan,
+            ..Self::default()
         }
     }
 
@@ -56,24 +76,48 @@ impl TsFactMap {
         self.plan
     }
 
+    pub(crate) fn bump_playwright_scan_generation(&mut self) {
+        self.playwright_scan_generation =
+            self.playwright_scan_epoch.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub(crate) fn playwright_scan_cache_key(
+        &self,
+        settings: &crate::playwright::config::Settings,
+    ) -> (u64, crate::codebase::check_facts::PlaywrightSettingsKey) {
+        (
+            self.playwright_scan_generation,
+            crate::codebase::check_facts::PlaywrightSettingsKey::new(settings),
+        )
+    }
+
     pub fn get(&self, path: &Path) -> Option<&TsFileFacts> {
         self.facts.get(path).map(TsFactSlot::as_facts)
     }
 
     pub fn get_mut(&mut self, path: &Path) -> Option<&mut TsFileFacts> {
+        if !self.facts.contains_key(path) {
+            return None;
+        }
+        self.bump_playwright_scan_generation();
         let slot = self.facts.get_mut(path)?;
         slot.materialize_owned();
         Some(slot.as_facts_mut())
     }
 
     pub fn insert(&mut self, path: PathBuf, facts: TsFileFacts) -> Option<TsFileFacts> {
-        self.facts
+        let previous = self
+            .facts
             .insert(path, TsFactSlot::Owned(Box::new(facts)))
-            .map(TsFactSlot::into_owned)
+            .map(TsFactSlot::into_owned);
+        self.bump_playwright_scan_generation();
+        previous
     }
 
     pub fn remove(&mut self, path: &Path) -> Option<TsFileFacts> {
-        self.facts.remove(path).map(TsFactSlot::into_owned)
+        let previous = self.facts.remove(path).map(TsFactSlot::into_owned)?;
+        self.bump_playwright_scan_generation();
+        Some(previous)
     }
 
     pub fn contains_key(&self, path: &Path) -> bool {
@@ -103,7 +147,11 @@ impl TsFactMap {
     }
 
     pub(crate) fn extend(&mut self, other: Self) {
+        if other.is_empty() {
+            return;
+        }
         self.facts.extend(other.facts);
+        self.bump_playwright_scan_generation();
     }
 }
 
