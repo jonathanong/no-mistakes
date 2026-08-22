@@ -164,7 +164,7 @@ fn markdown_links_remap_canonical_targets_to_the_visible_spelling() {
     );
     let files = GraphFiles::from_files(vec![via_link.clone()]);
     let edges = collect_md_edges(
-        &[notes.clone()],
+        std::slice::from_ref(&notes),
         &files,
         &crate::codebase::analysis_session::PathInterner::new(),
     );
