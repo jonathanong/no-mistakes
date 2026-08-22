@@ -146,6 +146,20 @@ fn require_named_package_does_not_treat_star_as_crossing_directories() {
         }),
         "{findings:?}"
     );
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "packages/unnamed/package.json"
+                && finding.message.contains("must declare a name")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings.iter().all(|finding| {
+            finding.file != "packages/unnamed/package.json"
+                || !finding.message.contains("not covered")
+        }),
+        "{findings:?}"
+    );
 }
 
 #[test]
