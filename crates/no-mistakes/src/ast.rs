@@ -12,7 +12,7 @@ mod parse_count;
 mod parsed_cache;
 pub use expression::{binary_concat_path_text, expression_path, span_text, template_literal_text};
 #[cfg(any(test, feature = "test-instrumentation"))]
-pub use parse_count::{begin_parse_count, finish_parse_count};
+pub use parse_count::{begin_parse_count, begin_parse_count_this_thread, finish_parse_count};
 pub(crate) use parsed_cache::{legacy_symbols_share_standard_parse, ParsedProgramCache};
 
 thread_local! {

@@ -11,7 +11,7 @@ impl NodeId {
     pub fn trpc_procedure_in(
         interner: &PathInterner,
         path: impl AsRef<Path>,
-        procedure: impl Into<Arc<str>>,
+        procedure: impl AsRef<str>,
     ) -> Self {
         Self::TrpcProcedure {
             router_file: interner.intern_path(path),

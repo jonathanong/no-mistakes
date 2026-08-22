@@ -34,6 +34,35 @@ fn identities_are_sorted_deduplicated_and_lexically_normalized() {
 }
 
 #[test]
+fn from_classified_paths_keeps_moved_paths() {
+    let later = PathBuf::from("src/b.ts");
+    let earlier = PathBuf::from("src/a.ts");
+    let inventory = FileInventory::from_classified_paths(vec![
+        ClassifiedPath {
+            path: later.clone(),
+            classification: FileClassification::TRACKED_REGULAR,
+        },
+        ClassifiedPath {
+            path: earlier.clone(),
+            classification: FileClassification::TRACKED_REGULAR,
+        },
+    ]);
+
+    assert_eq!(
+        inventory.paths().as_slice(),
+        [earlier.clone(), later.clone()]
+    );
+    assert_eq!(
+        inventory.classification_for_path(&earlier),
+        Some(FileClassification::TRACKED_REGULAR)
+    );
+    assert_eq!(
+        inventory.classification_for_path(&later),
+        Some(FileClassification::TRACKED_REGULAR)
+    );
+}
+
+#[test]
 fn identity_assignment_is_independent_of_candidate_order() {
     let alpha = fixture("alpha.ts");
     let beta = fixture("beta.ts");

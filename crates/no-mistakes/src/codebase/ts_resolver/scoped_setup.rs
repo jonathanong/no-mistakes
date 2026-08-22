@@ -97,6 +97,7 @@ impl<'a> ScopedImportResolver<'a> {
         if let Some(session) = session {
             let visible_paths = visible.map(ResolverVisible::cache_paths);
             resolver.cache = session.resolver_cache(config, visible_paths.as_deref());
+            resolver.interner = Some(session.interner_arc());
         }
         resolver.session_scoped = session.is_some();
         Some(resolver)

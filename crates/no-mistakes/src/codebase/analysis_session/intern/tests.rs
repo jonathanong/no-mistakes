@@ -6,6 +6,12 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+impl PathInterner {
+    pub(crate) fn interned_str_count(&self) -> usize {
+        self.strings.len()
+    }
+}
+
 fn hash_of(node: &NodeId) -> u64 {
     let mut hasher = DefaultHasher::new();
     node.hash(&mut hasher);
@@ -51,11 +57,14 @@ fn intern_path_insert_occupied_and_vacant_are_distinct() {
 #[test]
 fn intern_str_miss_then_hit_and_insert_arms() {
     let interner = PathInterner::new();
-    let owned: Arc<str> = Arc::from("send");
-    let miss = interner.intern_str(owned.clone());
+    // Hit path must accept a borrowed &str without building Arc first.
+    let miss = interner.intern_str("send");
     let hit = interner.intern_str("send");
     assert!(Arc::ptr_eq(&miss, &hit));
-    assert!(Arc::ptr_eq(&miss, &owned) || miss.as_ref() == owned.as_ref());
+    let owned: Arc<str> = Arc::from("send");
+    let from_owned = interner.intern_str(owned.as_ref());
+    assert!(Arc::ptr_eq(&miss, &from_owned));
+    assert_eq!(interner.interned_str_count(), 1);
 
     let vacant = interner.insert_str_arc(Arc::from("vacant"));
     let occupied = interner.insert_str_arc(Arc::from("vacant"));

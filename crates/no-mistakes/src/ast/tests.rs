@@ -58,6 +58,21 @@ fn parser_chokepoint_observes_synthetic_parses_from_rayon_workers() {
 }
 
 #[test]
+fn owner_only_parse_count_ignores_other_threads() {
+    let root = PathBuf::from("owner-only-parse-count");
+    let file = root.join("file.ts");
+    begin_parse_count_this_thread(&root);
+    std::thread::scope(|scope| {
+        scope.spawn(|| {
+            assert!(with_program(&file, "export const value = 1;", |_, _| ()).is_ok());
+        });
+    });
+    assert!(with_program(&file, "export const value = 1;", |_, _| ()).is_ok());
+    let counts = finish_parse_count(&root);
+    assert_eq!(counts.get(&file), Some(&1), "{counts:#?}");
+}
+
+#[test]
 fn production_oxc_parses_use_the_observable_chokepoint() {
     let src = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src");
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&src);

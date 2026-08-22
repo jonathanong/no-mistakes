@@ -27,16 +27,19 @@ impl PathInterner {
         if let Some(hit) = self.paths.get(normalized.as_path()) {
             return Arc::clone(hit.key());
         }
-        self.insert_path_arc(Arc::from(normalized.as_path()))
+        self.insert_path_arc(Arc::<Path>::from(normalized))
     }
 
     /// Return the request-owned `Arc<str>` for `value`.
-    pub fn intern_str(&self, value: impl Into<Arc<str>>) -> Arc<str> {
-        let value = value.into();
-        if let Some(hit) = self.strings.get(value.as_ref()) {
+    ///
+    /// Look up the borrowed `&str` first so repeated resolver and Playwright
+    /// catalog specifiers do not allocate an `Arc` on cache hits.
+    pub fn intern_str(&self, value: impl AsRef<str>) -> Arc<str> {
+        let value = value.as_ref();
+        if let Some(hit) = self.strings.get(value) {
             return Arc::clone(hit.key());
         }
-        self.insert_str_arc(value)
+        self.insert_str_arc(Arc::from(value))
     }
 
     pub(crate) fn insert_path_arc(&self, interned: Arc<Path>) -> Arc<Path> {

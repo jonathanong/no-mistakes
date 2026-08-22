@@ -1,5 +1,6 @@
 // no-mistakes-disable-file rust-max-lines-per-file: legacy resolver coverage suite
 use super::*;
+use std::sync::Arc;
 use tempfile::TempDir;
 
 impl ImportResolutionCache {
@@ -20,8 +21,8 @@ fn import_resolution_cache_clear_removes_raw_and_classified_entries() {
     let target = root.join("apps/web/src/runtime/value.ts");
     let cache = ImportResolutionCache::default();
     let key = ResolveKey {
-        importing_file: importer,
-        specifier: "@runtime/value".to_string(),
+        importing_file: Arc::from(importer),
+        specifier: Arc::from("@runtime/value"),
     };
     cache.raw_entries.insert(key.clone(), Some(target.clone()));
     cache.final_entries.insert(
@@ -37,6 +38,74 @@ fn import_resolution_cache_clear_removes_raw_and_classified_entries() {
 
     assert!(cache.raw_entries.get(&key).is_none());
     assert!(cache.final_entries.get(&key).is_none());
+}
+
+#[test]
+fn interned_resolve_keys_hit_shared_cache() {
+    let interner = crate::codebase::analysis_session::PathInterner::new();
+    let first = ResolveKey {
+        importing_file: interner.intern_path("src/a.ts"),
+        specifier: interner.intern_str("./b"),
+    };
+    let second = ResolveKey {
+        importing_file: interner.intern_path("src/./a.ts"),
+        specifier: interner.intern_str("./b"),
+    };
+    assert!(Arc::ptr_eq(&first.importing_file, &second.importing_file));
+    assert_eq!(first, second);
+
+    let cache = ImportResolutionCache::default();
+    cache.raw_entries.insert(first.clone(), None);
+    assert!(cache.raw_entries.get(&second).is_some());
+}
+
+#[test]
+fn scoped_shared_cache_attaches_session_interner() {
+    let root = workspace_tsconfig_fixture();
+    let web = root.join("apps/web");
+    let importer = web.join("src/entry.ts");
+    let target = web.join("src/runtime/value.ts");
+    let visible = [
+        root.join("tsconfig.json"),
+        root.join("tsconfig.base.json"),
+        web.join("tsconfig.json"),
+        importer.clone(),
+        target.clone(),
+    ];
+    let catalog = TsConfigCatalog::from_visible(&root, &[root.clone(), web], &visible);
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let cache = ImportResolutionCache::default();
+    let resolver = ScopedImportResolver::new_in_session(&catalog, &visible, &session)
+        .with_shared_cache(&cache);
+    assert_eq!(session.interner().interned_str_count(), 0);
+    assert_eq!(resolver.resolve("@runtime/value", &importer), Some(target));
+    assert!(
+        session.interner().interned_str_count() > 0,
+        "shared-cache scoped resolvers must intern specifiers through the session"
+    );
+}
+
+#[test]
+fn local_arc_resolve_keys_match_interned_keys_by_path_bytes() {
+    let interner = crate::codebase::analysis_session::PathInterner::new();
+    let interned = ResolveKey {
+        importing_file: interner.intern_path("src/./a.ts"),
+        specifier: interner.intern_str("./b"),
+    };
+    let local = ResolveKey {
+        importing_file: Arc::from(normalize_path(Path::new("src/a.ts"))),
+        specifier: Arc::from("./b"),
+    };
+    assert!(!Arc::ptr_eq(
+        &interned.importing_file,
+        &local.importing_file
+    ));
+    assert_eq!(interned, local);
+
+    let cache = ImportResolutionCache::default();
+    cache.raw_entries.insert(interned, None);
+    assert!(cache.raw_entries.get(&local).is_some());
 }
 
 fn write(path: &Path, content: &str) {

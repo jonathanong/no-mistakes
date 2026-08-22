@@ -6,6 +6,31 @@ pub(in crate::ast) fn len(cache: &ParsedProgramCache) -> usize {
 }
 
 #[test]
+fn cached_program_hit_does_not_reparse() {
+    let cache = ParsedProgramCache::default();
+    let mut parses = 0;
+    cache
+        .with_program_observed(
+            Path::new("src/./widget.ts"),
+            "export const value = 1;",
+            || parses += 1,
+            |_, _| (),
+        )
+        .unwrap();
+    cache
+        .with_program_observed(
+            Path::new("src/widget.ts"),
+            "export const value = 1;",
+            || parses += 1,
+            |_, _| (),
+        )
+        .unwrap();
+    assert_eq!(parses, 1);
+    assert_eq!(len(&cache), 1);
+    assert!(cache.parse_error(Path::new("src/widget.ts")).is_none());
+}
+
+#[test]
 fn cached_parse_errors_are_available_without_reparsing() {
     let cache = ParsedProgramCache::default();
     let path = Path::new("unsupported.runner-config");
@@ -77,6 +102,7 @@ fn legacy_symbols_reuse_or_split_physical_cache_by_source_semantics() {
 
 #[test]
 fn remove_path_drops_every_parse_mode_for_the_normalized_path() {
+    // Keys are interned Arc<Path>; eviction must compare as Path, not PathBuf.
     let cache = ParsedProgramCache::default();
     let path = Path::new("source.js");
     cache

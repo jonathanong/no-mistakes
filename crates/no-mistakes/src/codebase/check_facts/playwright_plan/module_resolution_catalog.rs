@@ -1,6 +1,7 @@
 use super::path_match::is_external_terminal;
+use crate::codebase::analysis_session::PathInterner;
 use dashmap::DashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
@@ -14,9 +15,10 @@ use std::sync::Arc;
 pub(super) struct CatalogModuleResolver {
     catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     pub(super) universe: Arc<crate::codebase::ts_source::FrozenPathRemapper>,
-    importer_scopes: DashMap<PathBuf, Option<usize>>,
+    interner: Arc<PathInterner>,
+    importer_scopes: DashMap<Arc<Path>, Option<usize>>,
     scopes: DashMap<Option<usize>, Arc<CatalogScopeResolver>>,
-    pub(super) classifications: DashMap<(PathBuf, String), CatalogClassification>,
+    pub(super) classifications: DashMap<(Arc<Path>, Arc<str>), CatalogClassification>,
     pub(super) scope_selections: AtomicUsize,
     pub(super) scope_builds: AtomicUsize,
 }
@@ -39,6 +41,7 @@ impl CatalogModuleResolver {
         Self {
             catalog,
             universe,
+            interner: Arc::new(PathInterner::new()),
             importer_scopes: DashMap::new(),
             scopes: DashMap::new(),
             classifications: DashMap::new(),
@@ -53,8 +56,9 @@ impl CatalogModuleResolver {
         importer: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     ) -> CatalogClassification {
-        let importer = crate::codebase::ts_resolver::normalize_path(importer);
-        let key = (importer.clone(), specifier.to_string());
+        let importer = self.interner.intern_path(importer);
+        let specifier_key = self.interner.intern_str(specifier);
+        let key = (Arc::clone(&importer), Arc::clone(&specifier_key));
         self.classifications
             .entry(key)
             .or_insert_with(|| {
@@ -73,10 +77,10 @@ impl CatalogModuleResolver {
             .clone()
     }
 
-    fn scope_for(&self, importer: &Path) -> Arc<CatalogScopeResolver> {
+    fn scope_for(&self, importer: &Arc<Path>) -> Arc<CatalogScopeResolver> {
         let index = *self
             .importer_scopes
-            .entry(importer.to_path_buf())
+            .entry(Arc::clone(importer))
             .or_insert_with(|| {
                 self.scope_selections.fetch_add(1, Ordering::Relaxed);
                 self.catalog.resolver_scope_index_for(importer)
@@ -90,7 +94,8 @@ impl CatalogModuleResolver {
                     resolver: crate::codebase::ts_resolver::ImportResolver::new_owned(Arc::new(
                         config.clone(),
                     ))
-                    .with_owned_visible(self.universe.shared_normalized_visible()),
+                    .with_owned_visible(self.universe.shared_normalized_visible())
+                    .with_interner(Arc::clone(&self.interner)),
                 })
             })
             .clone()

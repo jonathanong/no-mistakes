@@ -34,6 +34,7 @@ impl<'a> ImportResolver<'a> {
         resolver.visible = Some(ResolverVisible::Owned(visible));
         resolver.session_scoped = true;
         resolver.observer = session.observer().cloned();
+        resolver.interner = Some(session.interner_arc());
         resolver
     }
 
@@ -59,6 +60,7 @@ impl<'a> ImportResolver<'a> {
             shared_cache: None,
             session_scoped: false,
             observer,
+            interner: None,
         }
     }
 
@@ -81,6 +83,7 @@ impl<'a> ImportResolver<'a> {
         resolver.cache = session.resolver_cache(tsconfig, visible_paths.as_deref());
         resolver.visible = visible.map(ResolverVisible::Borrowed);
         resolver.session_scoped = true;
+        resolver.interner = Some(session.interner_arc());
         resolver
     }
 
@@ -123,6 +126,14 @@ impl<'a> ImportResolver<'a> {
     pub(crate) fn with_shared_cache(mut self, cache: &'a ImportResolutionCache) -> Self {
         self.cache.clear();
         self.shared_cache = Some(cache);
+        self
+    }
+
+    pub(crate) fn with_interner(
+        mut self,
+        interner: Arc<crate::codebase::analysis_session::PathInterner>,
+    ) -> Self {
+        self.interner = Some(interner);
         self
     }
 

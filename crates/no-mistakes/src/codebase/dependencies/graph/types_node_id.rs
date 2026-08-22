@@ -149,7 +149,7 @@ impl NodeId {
     pub fn symbol_in(
         interner: &PathInterner,
         path: impl AsRef<Path>,
-        symbol: impl Into<Arc<str>>,
+        symbol: impl AsRef<str>,
     ) -> Self {
         Self::Symbol {
             file: interner.intern_path(path),
@@ -163,7 +163,7 @@ impl NodeId {
     }
 
     /// Session-interned module node. Match `NodeId::Module(...)`.
-    pub fn module_in(interner: &PathInterner, value: impl Into<Arc<str>>) -> Self {
+    pub fn module_in(interner: &PathInterner, value: impl AsRef<str>) -> Self {
         Self::Module(interner.intern_str(value))
     }
 
@@ -179,7 +179,7 @@ impl NodeId {
     pub fn queue_job_in(
         interner: &PathInterner,
         path: impl AsRef<Path>,
-        job: impl Into<Arc<str>>,
+        job: impl AsRef<str>,
     ) -> Self {
         Self::QueueJob {
             queue_file: interner.intern_path(path),
@@ -199,7 +199,7 @@ impl NodeId {
     pub fn workflow_job_in(
         interner: &PathInterner,
         path: impl AsRef<Path>,
-        job: impl Into<Arc<str>>,
+        job: impl AsRef<str>,
     ) -> Self {
         Self::WorkflowJob {
             workflow_file: interner.intern_path(path),
@@ -220,7 +220,7 @@ impl NodeId {
     pub fn workflow_step_in(
         interner: &PathInterner,
         path: impl AsRef<Path>,
-        job: impl Into<Arc<str>>,
+        job: impl AsRef<str>,
         step: usize,
     ) -> Self {
         Self::WorkflowStep {
