@@ -1,7 +1,7 @@
 use super::parse::{parse_postgres_sql, PostgresParseError};
 use sqlparser::ast::{
-    Delete, Expr, Insert, JoinConstraint, JoinOperator, LimitClause, Query, Select, SelectItem,
-    SetExpr, Statement, TableFactor, TableWithJoins, Update,
+    CreateTable, CreateView, Delete, Expr, Insert, JoinConstraint, JoinOperator, LimitClause,
+    Query, Select, SelectItem, SetExpr, Statement, TableFactor, TableWithJoins, Update,
 };
 
 /// Parse `sql` and report whether any query uses an `OFFSET` clause.
@@ -31,6 +31,10 @@ fn statement_has_offset(statement: &Statement) -> bool {
         Statement::Delete(Delete { selection, .. }) => {
             selection.as_ref().is_some_and(expr_has_offset_query)
         }
+        Statement::CreateTable(CreateTable { query, .. }) => {
+            query.as_deref().is_some_and(query_has_offset)
+        }
+        Statement::CreateView(CreateView { query, .. }) => query_has_offset(query),
         _ => false,
     }
 }
@@ -45,6 +49,13 @@ fn query_has_offset(query: &Query) -> bool {
             .any(|cte| query_has_offset(&cte.query))
     }) {
         return true;
+    }
+    if let Some(order_by) = &query.order_by {
+        if let sqlparser::ast::OrderByKind::Expressions(exprs) = &order_by.kind {
+            if exprs.iter().any(|item| expr_has_offset_query(&item.expr)) {
+                return true;
+            }
+        }
     }
     set_expr_has_offset(&query.body)
 }
@@ -99,7 +110,13 @@ fn table_factor_has_offset(factor: &TableFactor) -> bool {
 
 fn join_operator_has_offset(op: &JoinOperator) -> bool {
     match op {
-        JoinOperator::Join(c) | JoinOperator::Inner(c) => constraint_has_offset(c),
+        JoinOperator::Join(c)
+        | JoinOperator::Inner(c)
+        | JoinOperator::Left(c)
+        | JoinOperator::LeftOuter(c)
+        | JoinOperator::Right(c)
+        | JoinOperator::RightOuter(c)
+        | JoinOperator::FullOuter(c) => constraint_has_offset(c),
         _ => false,
     }
 }

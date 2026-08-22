@@ -128,6 +128,32 @@ fn join_on_exists_offset_is_detected() {
         sql_has_offset_clause("SELECT * FROM t JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)")
             .unwrap()
     );
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM t LEFT JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM t RIGHT JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT * FROM t FULL JOIN u ON EXISTS (SELECT 1 FROM v OFFSET 1)"
+    )
+    .unwrap());
+}
+
+#[test]
+fn order_by_subquery_offset_is_detected() {
+    assert!(
+        sql_has_offset_clause("SELECT id FROM t ORDER BY (SELECT id FROM u OFFSET 1 LIMIT 1)")
+            .unwrap()
+    );
+}
+
+#[test]
+fn create_table_and_view_offsets_are_detected() {
+    assert!(sql_has_offset_clause("CREATE TABLE page AS SELECT * FROM posts OFFSET 10").unwrap());
+    assert!(sql_has_offset_clause("CREATE VIEW page AS SELECT * FROM posts OFFSET 10").unwrap());
 }
 
 #[test]
