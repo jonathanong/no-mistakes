@@ -55,7 +55,7 @@ fn workspace_manifest_edges_remap_canonical_entries_to_visible_paths() {
     .with_manifest_dependency_names(manifest.clone(), vec!["@x/linked".to_string()]);
 
     let edges = collect_workspace_manifest_edges(
-        &[manifest.clone()],
+        std::slice::from_ref(&manifest),
         &workspace,
         &graph_files,
         &crate::codebase::analysis_session::PathInterner::new(),
