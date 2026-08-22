@@ -12,7 +12,7 @@ fn heterogeneous_request_keeps_compatible_and_check_scopes_deterministic() {
     let check_root = analysis_fixture("simple");
 
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": queue_root,
             "reports": [
                 { "type": "queues" },
@@ -45,7 +45,7 @@ fn heterogeneous_request_keeps_compatible_and_check_scopes_deterministic() {
                 }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value = parse_json(output);

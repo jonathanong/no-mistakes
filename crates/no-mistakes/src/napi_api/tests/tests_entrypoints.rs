@@ -11,7 +11,7 @@ fn dependencies_json_preserves_hash_in_structured_entrypoint_file() {
     })
     .to_string();
 
-    let output = dependencies_json_impl(options).unwrap();
+    let output = dependencies_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert!(value["files"]
@@ -31,7 +31,7 @@ fn dependencies_json_preserves_structured_hash_file_entrypoints_without_symbol()
     })
     .to_string();
 
-    let output = dependencies_json_impl(options).unwrap();
+    let output = dependencies_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert!(value["files"]
@@ -50,7 +50,7 @@ fn tests_impact_json_preserves_hash_in_structured_entrypoint_file() {
     })
     .to_string();
 
-    let output = tests_impact_json_impl(options).unwrap();
+    let output = tests_impact_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
 
@@ -71,7 +71,7 @@ fn tests_impact_json_preserves_structured_hash_file_entrypoints_without_symbol()
     })
     .to_string();
 
-    let output = tests_impact_json_impl(options).unwrap();
+    let output = tests_impact_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
 
@@ -88,7 +88,7 @@ fn tests_plan_json_preserves_hash_in_structured_entrypoint_file() {
     })
     .to_string();
 
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
 
@@ -109,7 +109,7 @@ fn tests_plan_json_preserves_structured_hash_file_entrypoints_without_symbol() {
     })
     .to_string();
 
-    let output = tests_plan_json_impl(options).unwrap();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
 
@@ -120,6 +120,6 @@ fn tests_plan_json_preserves_structured_hash_file_entrypoints_without_symbol() {
 #[test]
 fn tests_targets_json_requires_framework() {
     let error =
-        tests_targets_json_impl(json!({ "files": ["tests/app.test.ts"] }).to_string()).unwrap_err();
+        tests_targets_json_impl(crate::napi_api::options::test_json_arg(json!({ "files": ["tests/app.test.ts"] }).to_string())).unwrap_err();
     assert!(error.reason.contains("framework is required"));
 }

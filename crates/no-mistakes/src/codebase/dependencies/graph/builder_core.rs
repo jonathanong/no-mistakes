@@ -16,7 +16,7 @@ impl DepGraph {
         let resolver = graph_import_resolver(&edge_inputs, &session);
         let fact_plan = effective_ts_fact_plan(plan, config_options);
         let mut fact_context = ts_fact_context_from_options(root, plan, config_options);
-        fact_context.set_visible_files(graph_files.iter_visible().cloned());
+        fact_context.set_visible_file_set(graph_files.visible_path_set());
         let owned_facts = if !fact_plan.is_empty() && facts.is_none() {
             Some(collect_ts_facts_with_session_and_context(
                 &session,
@@ -103,7 +103,7 @@ impl DepGraph {
         let mut reverse: EdgeMap = EdgeMap::default();
         let mut resource_edge_details: ResourceEdgeDetails = fx_map();
         let mut resource_diagnostics = Vec::new();
-        let files = &graph_files.indexable;
+        let files = graph_files.indexable();
 
         for file in files {
             forward
@@ -115,7 +115,7 @@ impl DepGraph {
         crate::invocation::check_timeout()?;
         let needs_workspace = plan.imports || plan.workspace || plan.package || plan.symbols;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
-            crate::codebase::workspaces::load_indexed_from_files(root, &graph_files.all)
+            crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
                 .unwrap_or_default()
         });
         let empty_workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
@@ -174,7 +174,7 @@ impl DepGraph {
                     root,
                     config_path,
                     PlaywrightSelectorEdgeInputs {
-                        all_files: &graph_files.all,
+                        all_files: graph_files.all(),
                         facts,
                         partial_graph: plan.route_imports.then_some(&graph),
                         graph_tsconfig: plan.route_imports.then_some(tsconfig),
@@ -188,11 +188,7 @@ impl DepGraph {
             // its historical reconstruction path. Direct selectors can append
             // to the finished index without renumbering the base graph.
             crate::perf_trace::trace("graph.playwright_selector_merge", || {
-                if plan.route_imports {
-                    graph.merge_canonical_edges(selector_edges);
-                } else {
-                    graph.append_canonical_edges(selector_edges);
-                }
+                graph.append_canonical_edges(selector_edges);
             });
         }
         record_graph_observability(&graph, &session);

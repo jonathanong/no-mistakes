@@ -9,25 +9,25 @@ fn mixed_check_and_legacy_symbols_parse_each_required_semantic_mode_once() {
     let standalone = [
         parse_json(
             crate::napi_api::check_json_impl(
-                json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+                crate::napi_api::options::test_json_arg(json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),)
             )
             .unwrap(),
         ),
         parse_json(
             crate::napi_api::symbols_json_impl(
-                json!({ "root": root, "files": files }).to_string(),
+                crate::napi_api::options::test_json_arg(json!({ "root": root, "files": files }).to_string(),)
             )
             .unwrap(),
         ),
         parse_json(
             crate::napi_api::flow_json_impl(
-                json!({
+                crate::napi_api::options::test_json_arg(json!({
                     "root": root,
                     "target": "types.js",
                     "direction": "deps",
                     "relationships": ["import"]
                 })
-                .to_string(),
+                .to_string(),)
             )
             .unwrap(),
         ),
@@ -35,7 +35,7 @@ fn mixed_check_and_legacy_symbols_parse_each_required_semantic_mode_once() {
 
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "config": ".no-mistakes.yml",
             "reports": [
@@ -49,7 +49,7 @@ fn mixed_check_and_legacy_symbols_parse_each_required_semantic_mode_once() {
                 }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -71,15 +71,15 @@ fn compatible_legacy_symbol_cache_hit_retains_fatal_panic_semantics() {
         "analyze-project-legacy-symbol-panic",
     ]);
     let request = json!({ "root": root, "files": ["invalid.ts"] });
-    let standalone = crate::napi_api::symbols_json_impl(request.to_string()).unwrap_err();
+    let standalone = crate::napi_api::symbols_json_impl(crate::napi_api::options::test_json_arg(request)).unwrap_err();
 
     crate::ast::begin_parse_count(&root);
     let aggregate = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [{ "type": "symbols", "files": ["invalid.ts"] }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap_err();
     let counts = crate::ast::finish_parse_count(&root);

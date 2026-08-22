@@ -1,6 +1,6 @@
 pub(crate) struct GraphFiles {
-    all: Vec<PathBuf>,
-    indexable: Vec<PathBuf>,
+    all: std::sync::Arc<Vec<PathBuf>>,
+    indexable: std::sync::Arc<Vec<PathBuf>>,
     /// 1 if `all[i]` is visible. Kept parallel to `all` so lookup can binary
     /// search paths without cloning them into a second set.
     visible: Vec<u8>,
@@ -8,7 +8,7 @@ pub(crate) struct GraphFiles {
     /// The tracked (or non-Git fallback) files eligible for runtime resource
     /// edges. This intentionally excludes explicit request roots and merely
     /// visible ignored files.
-    resource_candidates: Vec<PathBuf>,
+    resource_candidates: std::sync::Arc<Vec<PathBuf>>,
 }
 
 impl GraphFiles {
@@ -65,14 +65,20 @@ impl GraphFiles {
         let visible = vec![1u8; all.len()];
         resource_candidates.sort();
         resource_candidates.dedup();
-        let indexable = all
+        let indexable: Vec<PathBuf> = all
             .iter()
             .filter(|path| is_indexable(path) && !excluded_indexable.contains(*path))
             .cloned()
             .collect();
+        let all = std::sync::Arc::new(all);
+        let resource_candidates = if resource_candidates.as_slice() == all.as_slice() {
+            std::sync::Arc::clone(&all)
+        } else {
+            std::sync::Arc::new(resource_candidates)
+        };
         Self {
             all,
-            indexable,
+            indexable: std::sync::Arc::new(indexable),
             visible,
             canonical_visible: CanonicalVisible::empty(),
             resource_candidates,

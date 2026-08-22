@@ -26,7 +26,7 @@ fn check_json_reports_suppressed_findings_from_prepared_root_fixtures() {
             .join("../../fixtures/check")
             .join(fixture);
         let output =
-            check_json_impl(json!({ "root": root, "includeSuppressed": true }).to_string())
+            check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root, "includeSuppressed": true }).to_string()))
                 .unwrap();
         let report: serde_json::Value = serde_json::from_str(&output).unwrap();
         assert!(

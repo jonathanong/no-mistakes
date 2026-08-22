@@ -134,6 +134,22 @@ impl<T> FileIdMap<T> {
             self.insert(path, value);
         }
     }
+
+    pub(crate) fn map_values<U>(self, mut map: impl FnMut(T) -> U) -> FileIdMap<U> {
+        FileIdMap {
+            inventory: self.inventory,
+            slots: self
+                .slots
+                .into_iter()
+                .map(|slot| slot.map(&mut map))
+                .collect(),
+            overflow: self
+                .overflow
+                .into_iter()
+                .map(|(path, value)| (path, map(value)))
+                .collect(),
+        }
+    }
 }
 
 #[path = "file_id_map_iter.rs"]

@@ -103,6 +103,15 @@ pub(crate) fn parse_options<T: for<'de> Deserialize<'de>>(options_json: &str) ->
         .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
 }
 
+pub(crate) fn parse_options_value<T: for<'de> Deserialize<'de>>(
+    options: Value,
+) -> napi::Result<T> {
+    serde_json::from_value(options)
+        .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
+}
+
+include!("options_test_json.rs");
+
 pub(crate) fn resolve_project_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
     match root {
         Some(root) => Ok(PathBuf::from(root)),

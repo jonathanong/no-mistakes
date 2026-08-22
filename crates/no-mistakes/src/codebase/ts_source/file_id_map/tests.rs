@@ -129,3 +129,22 @@ fn consuming_file_id_map_into_iter_reuses_into_entries() {
         "owned FileIdMap into_iter must not collect into_entries a second time"
     );
 }
+
+#[test]
+fn map_values_rewrites_occupied_slots_and_overflow() {
+    let inventoried = path("inventoried.ts");
+    let occupied = path("occupied.ts");
+    let overflow = path("overflow.ts");
+    let inventory = Arc::new(FileInventory::from_lookup_paths([
+        inventoried,
+        occupied.clone(),
+    ]));
+    let mut map = FileIdMap::with_inventory(inventory);
+    map.insert(occupied.clone(), 1u32);
+    map.insert(overflow.clone(), 2u32);
+
+    let mapped = map.map_values(|value| value * 10);
+    assert_eq!(mapped.get(&occupied), Some(&10));
+    assert_eq!(mapped.get(&overflow), Some(&20));
+    assert_eq!(mapped.len(), 2);
+}

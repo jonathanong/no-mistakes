@@ -9,10 +9,9 @@ fn hits_for(source: &str) -> super::FileTraitHits {
     let path = Path::new("test.tsx");
     ast::with_program(path, source, |program, _| {
         let defs = extract_components(program);
-        let spans: Vec<_> = defs.iter().map(|def| def.span).collect();
-        let dynamic_names = vec![HashSet::new(); spans.len()];
+        let dynamic_names = vec![HashSet::new(); defs.len()];
         let import_table = build_import_table(path, program);
-        collect_file_trait_hits(program, &spans, &dynamic_names, &import_table, path)
+        collect_file_trait_hits(program, &defs, &dynamic_names, &import_table, path)
     })
     .expect("source should parse")
 }

@@ -70,11 +70,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
             let results = react_traits::run_analyze(&root, config.as_deref(), targets, None)?;
             match effective_format {
                 Format::Json => {
-                    println!(
-                        "{}",
-                        serde_json::to_string(&results)
-                            .expect("serialization of Rust structs never fails")
-                    );
+                    crate::cli::print_json(&results);
                 }
                 Format::Yml => {
                     println!(
@@ -106,11 +102,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
             }
             match effective_format {
                 Format::Json => {
-                    println!(
-                        "{}",
-                        serde_json::to_string(&violations)
-                            .expect("serialization of Rust structs never fails")
-                    );
+                    crate::cli::print_json(&violations);
                 }
                 Format::Yml => {
                     println!(
@@ -141,11 +133,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                 react_traits::run_usages(&root, config.as_deref(), target, scan, &include)?;
             match effective_format {
                 Format::Json => {
-                    println!(
-                        "{}",
-                        serde_json::to_string(&report)
-                            .expect("serialization of Rust structs never fails")
-                    );
+                    crate::cli::print_json(&report);
                 }
                 Format::Yml => {
                     println!(

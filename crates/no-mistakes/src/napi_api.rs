@@ -10,17 +10,20 @@ use napi_derive::napi;
 // child modules so their registrations use the same declarative boundary.
 macro_rules! json_binding {
     ($rust_name:ident, $js_name:literal, $implementation:path) => {
-        #[cfg(not(coverage))]
-        #[cfg_attr(not(test), napi(js_name = $js_name))]
-        pub fn $rust_name(options_json: napi::bindgen_prelude::Buffer) -> AsyncTask<JsonTask> {
-            AsyncTask::new(JsonTask::new(options_json, $implementation))
-        }
+        json_binding!($rust_name, $js_name, $implementation, value);
     };
     ($rust_name:ident, $js_name:literal, $implementation:path, value) => {
         #[cfg(not(coverage))]
         #[cfg_attr(not(test), napi(js_name = $js_name))]
         pub fn $rust_name(options_json: napi::bindgen_prelude::Buffer) -> AsyncTask<JsonValueTask> {
             AsyncTask::new(JsonValueTask::new(options_json, $implementation))
+        }
+    };
+    ($rust_name:ident, $js_name:literal, $implementation:path, string) => {
+        #[cfg(not(coverage))]
+        #[cfg_attr(not(test), napi(js_name = $js_name))]
+        pub fn $rust_name(options_json: napi::bindgen_prelude::Buffer) -> AsyncTask<JsonTask> {
+            AsyncTask::new(JsonTask::new(options_json, $implementation))
         }
     };
 }
@@ -35,11 +38,12 @@ pub(crate) mod infra_swift;
 mod lockfile_diff;
 #[cfg(feature = "mermaid-validation")]
 mod mermaid;
-mod options;
+pub(crate) mod options;
 mod project;
 pub mod queries;
 
 #[cfg(not(coverage))]
+#[allow(unused_imports)]
 use async_task::{JsonTask, JsonValueTask, VersionTask};
 pub(crate) use cli_parity::{
     check_json_impl, ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl,

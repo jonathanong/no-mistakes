@@ -11,7 +11,7 @@ use crate::fx::FxHashMap;
 
 struct ProgramOwner {
     allocator: Allocator,
-    source: String,
+    source: Arc<str>,
     source_type: SourceType,
 }
 
@@ -59,7 +59,7 @@ impl ParsedProgramCache {
     pub(crate) fn with_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
     ) -> Result<T, String> {
         self.with_program_observed(path, source, || {}, analyze)
@@ -68,14 +68,14 @@ impl ParsedProgramCache {
     pub(crate) fn with_program_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
     ) -> Result<T, String> {
         let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
         cached.with_dependent(|owner, parsed| match &parsed.strict_error {
             Some(error) => Err(error.clone()),
-            None => Ok(analyze(&parsed.program, owner.source.as_str())),
+            None => Ok(analyze(&parsed.program, owner.source.as_ref())),
         })
     }
 
@@ -113,7 +113,7 @@ impl ParsedProgramCache {
     pub(crate) fn with_recovered_program_status_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>, bool) -> T,
     ) -> Result<T, String> {
@@ -121,7 +121,7 @@ impl ParsedProgramCache {
         Ok(cached.with_dependent(|owner, parsed| {
             analyze(
                 &parsed.program,
-                owner.source.as_str(),
+                owner.source.as_ref(),
                 parsed.diagnostic_error.clone(),
                 parsed.panic_error.is_some(),
             )
@@ -131,7 +131,7 @@ impl ParsedProgramCache {
     pub(crate) fn with_recovered_typescript_program_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
     ) -> Result<T, String> {
@@ -139,7 +139,7 @@ impl ParsedProgramCache {
         Ok(cached.with_dependent(|owner, parsed| {
             analyze(
                 &parsed.program,
-                owner.source.as_str(),
+                owner.source.as_ref(),
                 parsed.diagnostic_error.clone(),
             )
         }))
@@ -148,7 +148,7 @@ impl ParsedProgramCache {
     pub(crate) fn with_legacy_symbols_program_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
     ) -> Result<T, String> {
@@ -162,7 +162,7 @@ impl ParsedProgramCache {
             Some(error) => Err(error.clone()),
             None => Ok(analyze(
                 &parsed.program,
-                owner.source.as_str(),
+                owner.source.as_ref(),
                 parsed.diagnostic_error.clone(),
             )),
         })
@@ -171,7 +171,7 @@ impl ParsedProgramCache {
     fn cached_program(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         mode: ParseMode,
         on_parse: impl FnOnce(),
     ) -> Result<Rc<CachedProgram>, String> {

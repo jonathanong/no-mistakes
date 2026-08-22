@@ -7,17 +7,17 @@ fn finite_set_call_literals_match_standalone_and_parse_only_the_call_source_once
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
     let options = json!({ "root": root, "config": ".no-mistakes.yml" });
-    let standalone = parse_json(crate::napi_api::check_json_impl(options.to_string()).unwrap());
+    let standalone = parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap());
 
     crate::ast::begin_parse_count(&root);
     let aggregate = parse_json(
         analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "config": ".no-mistakes.yml",
                 "reports": [{ "type": "check", "id": "check" }]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );
@@ -41,7 +41,7 @@ fn supplemental_skipped_call_sources_preserve_check_scope_and_parse_once() {
     );
     let standalone = parse_json(
         crate::napi_api::check_json_impl(
-            json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+            crate::napi_api::options::test_json_arg(json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),)
         )
         .unwrap(),
     );
@@ -49,12 +49,12 @@ fn supplemental_skipped_call_sources_preserve_check_scope_and_parse_once() {
     crate::ast::begin_parse_count(&root);
     let aggregate = parse_json(
         analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "config": ".no-mistakes.yml",
                 "reports": [{ "type": "check", "id": "check" }]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );
@@ -99,18 +99,18 @@ fn finite_set_skill_directory_symlinks_match_standalone_and_analyze_project() {
     );
     let standalone = parse_json(
         crate::napi_api::check_json_impl(
-            json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+            crate::napi_api::options::test_json_arg(json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),)
         )
         .unwrap(),
     );
     let aggregate = parse_json(
         analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "config": ".no-mistakes.yml",
                 "reports": [{ "type": "check", "id": "check" }]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap(),
     );

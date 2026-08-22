@@ -35,7 +35,7 @@ fn resolve_config_reports_named_triggers_and_coverage_gates() {
 fn resolve_config_json_impl_returns_the_same_named_triggers() {
     let root = named_triggers_fixture();
     let output =
-        crate::napi_api::resolve_config_json_impl(json!({ "root": root }).to_string()).unwrap();
+        crate::napi_api::resolve_config_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
     let names: Vec<&str> = report["vitestFullSuiteTriggers"]
         .as_array()

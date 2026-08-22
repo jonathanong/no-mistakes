@@ -14,7 +14,7 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
     let empty = crate::codebase::ts_resolver::normalize_path(&fixture("graph-empty-route-config"));
     let frontend_only =
         crate::codebase::ts_resolver::normalize_path(&fixture("playwright-coverage"));
-    let frontend_files = GraphFiles::discover(&frontend_only).all;
+    let frontend_files = GraphFiles::discover(&frontend_only).all().to_vec();
     let malformed_options = graph_config_options(&malformed);
     let invalid_options = graph_config_options(&invalid);
     let empty_options = graph_config_options(&empty);
@@ -130,7 +130,7 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let client = root.join("src/client.ts");
     let route = root.join("backend/api/users.mts");
     let entity_route = root.join("backend/api/entity.mts");
@@ -263,7 +263,7 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-split-route-http-config"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let client = root.join("src/client.ts");
     let route_def = root.join("routes/users.mts");
     let http_def = root.join("http/users.mts");

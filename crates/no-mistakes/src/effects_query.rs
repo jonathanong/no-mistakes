@@ -145,7 +145,7 @@ pub fn run(
     let plan = GraphBuildPlan::from_allowed(Some(&allowed));
     let mut fact_context = crate::codebase::ts_source::facts::TsFactContext::new(&root);
     fact_context.effect_functions = selection.names.clone();
-    fact_context.set_visible_files(graph_files.iter_visible().cloned());
+    fact_context.set_visible_file_set(graph_files.visible_path_set());
     let facts =
         crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
             &session,

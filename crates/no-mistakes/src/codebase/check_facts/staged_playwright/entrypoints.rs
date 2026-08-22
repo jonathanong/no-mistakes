@@ -1,4 +1,5 @@
 use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
+use crate::codebase::ts_source::FileIdMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn collect_with_precollected_ts(
@@ -21,7 +22,7 @@ pub(crate) fn collect_with_precollected_ts(
         playwright,
         super::PrecollectedFacts {
             ts: precollected_ts,
-            files: Default::default(),
+            files: FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory())),
         },
         sources,
     )

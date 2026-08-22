@@ -99,7 +99,7 @@ impl SharedTraversalContext {
             build_plan,
             &prepared_graph,
         );
-        fact_context.set_visible_files(graph_files.iter_visible().cloned());
+        fact_context.set_visible_file_set(graph_files.visible_path_set());
         Ok(Self {
             session,
             root,

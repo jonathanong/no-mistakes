@@ -1,6 +1,6 @@
 use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use rayon::prelude::*;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -51,7 +51,11 @@ pub(crate) fn collect_check_fact_batch_with_session(
         .while_some()
         .collect::<Vec<_>>();
     let mut precollected = (0..requests.len())
-        .map(|_| HashMap::new())
+        .map(|index| {
+            crate::codebase::ts_source::FileIdMap::with_inventory(Arc::clone(
+                requests[index].sources.inventory(),
+            ))
+        })
         .collect::<Vec<_>>();
     for (path, demands, facts) in collected
         .into_iter()

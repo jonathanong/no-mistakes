@@ -280,10 +280,14 @@ fn standard_and_legacy_requests_share_only_equivalent_physical_parses() {
         let path = normalize_path(&fixture_root().join(name));
         crate::ast::with_request_parse_cache(|| {
             session
-                .with_recovered_program(&path, "export const value = 1;", |_, _, _| ())
+                .with_recovered_program(&path, &Arc::from("export const value = 1;"), |_, _, _| ())
                 .unwrap();
             session
-                .with_legacy_symbols_program(&path, "export const value = 1;", |_, _, _| ())
+                .with_legacy_symbols_program(
+                    &path,
+                    &Arc::from("export const value = 1;"),
+                    |_, _, _| (),
+                )
                 .unwrap();
         });
         assert_eq!(

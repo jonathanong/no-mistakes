@@ -1,10 +1,12 @@
 use anyhow::{bail, Result as AnyhowResult};
 use rayon::prelude::*;
-use serde_json::Value;
+use serde_json::{value::RawValue, Value};
 
 use super::codebase::build_traverse_args;
 #[cfg(any(test, feature = "test-instrumentation"))]
-use super::options::parse_options;
+use super::options::parse_options_value;
+#[cfg(test)]
+pub(super) use super::options::parse_options;
 use super::options::to_napi_error;
 use crate::codebase::dependencies::TraverseArgs;
 
@@ -57,8 +59,8 @@ mod tests_dispatch;
 mod tracked_banned_paths_tests;
 
 #[cfg(any(test, feature = "test-instrumentation"))]
-pub(crate) fn analyze_project_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<AnalyzeProjectOptions>(&options_json)?;
+pub(crate) fn analyze_project_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<AnalyzeProjectOptions>(options)?;
     analyze_project_options_impl(options)
 }
 
@@ -94,34 +96,49 @@ fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjec
     Ok(AnalyzeProjectResult { reports })
 }
 
+fn json_raw_value(value: Value) -> Box<RawValue> {
+    RawValue::from_string(value.to_string()).expect("JSON Value re-serialize never fails")
+}
+
+#[cfg(test)]
+pub(super) fn report_value(raw: Box<RawValue>) -> Value {
+    serde_json::from_str(raw.get()).expect("report JSON is valid")
+}
+
 fn run_report(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
     context: &context::AnalyzeProjectContext,
-) -> AnyhowResult<Value> {
+) -> AnyhowResult<Box<RawValue>> {
     if let Some(direction) = graph_direction(&request.report_type) {
         return context.graph_report(request, options, direction);
     }
     if is_symbols_report(&request.report_type) {
-        return context.symbols_report(request, options);
+        return Ok(json_raw_value(context.symbols_report(request, options)?));
     }
     if request.report_type == "importUsages" {
-        return context.import_usages_report(request, options);
+        return Ok(json_raw_value(
+            context.import_usages_report(request, options)?,
+        ));
     }
     if is_playwright_report(&request.report_type) {
-        return context.playwright_report(request, options);
+        return Ok(json_raw_value(
+            context.playwright_report(request, options)?,
+        ));
     }
     if request.report_type == "flow" {
-        return context.flow_report(request, options);
+        return Ok(json_raw_value(context.flow_report(request, options)?));
     }
     if request.report_type == "effects" {
-        return context.effects_report(request, options);
+        return Ok(json_raw_value(context.effects_report(request, options)?));
     }
     if request.report_type == "rscCallers" {
-        return context.rsc_callers_report(request, options);
+        return Ok(json_raw_value(
+            context.rsc_callers_report(request, options)?,
+        ));
     }
     if is_project_report(&request.report_type) {
-        return context.project_report(request, options);
+        return Ok(json_raw_value(context.project_report(request, options)?));
     }
     if is_command_report(&request.report_type) {
         return context.command_report(request, options);

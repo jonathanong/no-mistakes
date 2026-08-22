@@ -10,8 +10,10 @@ use std::sync::{Arc, OnceLock};
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
 mod optional;
+mod read;
 mod regular_paths;
 mod validation;
+use read::read_utf8_arc;
 use validation::ValidatedPathCache;
 
 /// Memoized result of a strict UTF-8 source read.
@@ -77,10 +79,10 @@ impl SourceStore {
             .get_or_init(|| {
                 physical_read.set(true);
                 self.record_source_read(path);
-                match std::fs::read_to_string(path) {
+                match read_utf8_arc(path) {
                     Ok(source) => {
                         self.increment("source.bytes", source.len() as u64);
-                        Ok(Arc::<str>::from(source))
+                        Ok(source)
                     }
                     Err(error) => {
                         self.increment("source.read_errors", 1);
@@ -115,10 +117,10 @@ impl SourceStore {
             .get_or_init(|| {
                 physical_read.set(true);
                 self.record_source_read(&path);
-                match std::fs::read_to_string(&path) {
+                match read_utf8_arc(&path) {
                     Ok(source) => {
                         self.increment("source.bytes", source.len() as u64);
-                        Ok(Arc::<str>::from(source))
+                        Ok(source)
                     }
                     Err(error) => {
                         self.increment("source.read_errors", 1);

@@ -7,7 +7,7 @@ impl AnalysisSession {
     pub(crate) fn with_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
@@ -15,7 +15,7 @@ impl AnalysisSession {
         let parse_started = Cell::new(false);
         let result = crate::ast::with_program_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
@@ -33,7 +33,7 @@ impl AnalysisSession {
     pub(crate) fn with_recovered_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
     ) -> anyhow::Result<T> {
         self.with_recovered_program_status(path, source, |program, source, diagnostic, _| {
@@ -46,7 +46,7 @@ impl AnalysisSession {
     pub(crate) fn with_recovered_program_status<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>, bool) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
@@ -54,7 +54,7 @@ impl AnalysisSession {
         let parse_started = Cell::new(false);
         let result = crate::ast::with_recovered_program_status_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
@@ -77,7 +77,7 @@ impl AnalysisSession {
     pub(crate) fn with_recovered_typescript_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
@@ -85,7 +85,7 @@ impl AnalysisSession {
         let parse_started = Cell::new(false);
         let result = crate::ast::with_recovered_typescript_program_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
@@ -108,7 +108,7 @@ impl AnalysisSession {
     pub(crate) fn with_legacy_symbols_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
@@ -116,7 +116,7 @@ impl AnalysisSession {
         let parse_started = Cell::new(false);
         let result = crate::ast::with_legacy_symbols_program_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);

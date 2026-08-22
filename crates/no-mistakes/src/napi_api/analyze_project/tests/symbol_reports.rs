@@ -1,7 +1,7 @@
 #[test]
 fn analyze_project_shared_dependencies_uses_symbol_graph_when_included() {
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "reports": [{
                 "type": "dependencies",
@@ -11,7 +11,7 @@ fn analyze_project_shared_dependencies_uses_symbol_graph_when_included() {
                 "files": [{ "file": "other.mts", "symbol": "parse" }]
             }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -34,18 +34,18 @@ fn analyze_project_list_symbols_matches_legacy_standalone_parse_semantics_once()
         "src/types-in-mjs.mjs",
     ];
     let standalone = crate::napi_api::symbols_json_impl(
-        json!({ "root": root, "files": files }).to_string(),
+        crate::napi_api::options::test_json_arg(json!({ "root": root, "files": files }).to_string(),)
     )
     .unwrap();
     let standalone: Value = serde_json::from_str(&standalone).unwrap();
 
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [{ "type": "symbols", "files": files }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -58,11 +58,11 @@ fn analyze_project_list_symbols_matches_legacy_standalone_parse_semantics_once()
     }
 
     let error = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [{ "type": "symbols", "files": ["src/invalid.mts"] }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap_err();
     assert!(error.reason.contains("failed to parse TypeScript source"));
@@ -71,7 +71,7 @@ fn analyze_project_list_symbols_matches_legacy_standalone_parse_semantics_once()
 #[test]
 fn analyze_project_shared_symbol_graph_does_not_leak_into_plain_reports() {
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "reports": [
                 {
@@ -89,7 +89,7 @@ fn analyze_project_shared_symbol_graph_does_not_leak_into_plain_reports() {
                 }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -102,7 +102,7 @@ fn analyze_project_shared_symbol_graph_does_not_leak_into_plain_reports() {
 #[test]
 fn analyze_project_shared_dependents_uses_symbol_graph_when_included() {
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "reports": [{
                 "type": "dependents",
@@ -112,7 +112,7 @@ fn analyze_project_shared_dependents_uses_symbol_graph_when_included() {
                 "files": [{ "file": "utils.mts", "symbol": "parseDate" }]
             }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -141,9 +141,9 @@ fn analyze_project_symbol_entrypoints_match_standalone_without_symbol_output() {
             "includeSymbols": false,
             "relationships": ["import"]
         });
-        let standalone = crate::napi_api::dependents_json_impl(options.to_string()).unwrap();
+        let standalone = crate::napi_api::dependents_json_impl(crate::napi_api::options::test_json_arg(options.clone())).unwrap();
         let output = analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "reports": [{
                     "type": "dependents",
@@ -152,7 +152,7 @@ fn analyze_project_symbol_entrypoints_match_standalone_without_symbol_output() {
                     "relationships": ["import"]
                 }]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap();
         let standalone: Value = serde_json::from_str(&standalone).unwrap();
@@ -173,7 +173,7 @@ fn analyze_project_dispatches_signature_impact_symbols_report() {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("tests-impact-symbol"),
             "reports": [{
                 "type": "symbols",
@@ -183,7 +183,7 @@ fn analyze_project_dispatches_signature_impact_symbols_report() {
                 "symbol": "parseDate"
             }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -242,11 +242,11 @@ fn analyze_project_signature_impact_validates_prepared_inputs() {
 
     for (report, expected) in cases {
         let error = analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": root,
                 "reports": [report]
             })
-            .to_string(),
+            .to_string(),)
         )
         .unwrap_err();
 
@@ -257,7 +257,7 @@ fn analyze_project_signature_impact_validates_prepared_inputs() {
 #[test]
 fn analyze_project_shared_symbol_dependents_expands_file_roots() {
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": fixture_root("symbol-export"),
             "reports": [{
                 "type": "dependents",
@@ -267,7 +267,7 @@ fn analyze_project_shared_symbol_dependents_expands_file_roots() {
                 "files": ["file-root-source.mts"]
             }]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();

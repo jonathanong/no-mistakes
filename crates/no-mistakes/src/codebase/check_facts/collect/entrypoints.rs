@@ -146,7 +146,7 @@ pub(crate) fn collect_check_facts_with_precollected_file_facts(
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
-    precollected: std::collections::HashMap<PathBuf, super::super::CheckFileFacts>,
+    precollected: crate::codebase::ts_source::FileIdMap<super::super::CheckFileFacts>,
 ) -> CheckFactMap {
     collect_with_scope(
         session,
@@ -166,7 +166,7 @@ fn collect_with_scope(
     mut plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
-    precollected: std::collections::HashMap<PathBuf, super::super::CheckFileFacts>,
+    precollected: crate::codebase::ts_source::FileIdMap<super::super::CheckFileFacts>,
 ) -> CheckFactMap {
     let (files, graph_files, graph_files_complete) = file_scope;
     if plan.graph_context.visible_files.is_none() {

@@ -17,7 +17,7 @@ fn react_usages_json_returns_report() {
         "include": "stories,props"
     })
     .to_string();
-    let output = react_usages_json_impl(options).unwrap();
+    let output = react_usages_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["callsites"].as_array().unwrap().len(), 5);
     assert!(value["stories"].as_array().is_some());
@@ -29,12 +29,12 @@ fn react_usages_json_returns_report() {
 #[test]
 fn react_usages_json_requires_target() {
     let root = usages_fixture_root();
-    let error = react_usages_json_impl(json!({ "root": root }).to_string()).unwrap_err();
+    let error = react_usages_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap_err();
     assert!(error.reason.contains("target is required"));
 }
 
 #[test]
 fn react_usages_json_requires_target_without_root() {
-    let error = react_usages_json_impl(json!({}).to_string()).unwrap_err();
+    let error = react_usages_json_impl(crate::napi_api::options::test_json_arg(json!({}).to_string())).unwrap_err();
     assert!(error.reason.contains("target is required for react usages"));
 }

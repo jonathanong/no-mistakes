@@ -51,7 +51,7 @@ fn analyze_project_dispatches_all_domain_report_types() {
         "validateMermaidMarkdown",
     ] {
         let result = analyze_project_json_impl(
-            json!({
+            crate::napi_api::options::test_json_arg(json!({
                 "root": fixture_root("simple"),
                 "reports": [{
                     "type": report_type,
@@ -59,7 +59,7 @@ fn analyze_project_dispatches_all_domain_report_types() {
                     "files": ["a.mts"]
                 }]
             })
-            .to_string(),
+            .to_string(),)
         );
         if let Err(error) = result {
             assert!(

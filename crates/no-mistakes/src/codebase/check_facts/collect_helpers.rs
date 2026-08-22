@@ -1,7 +1,8 @@
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::dependencies::extract::is_indexable;
+use crate::codebase::ts_source::FileIdMap;
 use rayon::prelude::*;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -34,7 +35,7 @@ pub(super) fn request_sources(
 
 pub(super) fn uncollected_files(
     files: &[PathBuf],
-    facts: &HashMap<PathBuf, CheckFileFacts>,
+    facts: &FileIdMap<CheckFileFacts>,
     helper_paths: &HashSet<PathBuf>,
 ) -> Vec<PathBuf> {
     files
@@ -54,13 +55,13 @@ pub(crate) fn collect_fact_map_with_sources(
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> HashMap<PathBuf, CheckFileFacts> {
+) -> FileIdMap<CheckFileFacts> {
     let files = crate::codebase::ts_source::deduplicate_analysis_paths(
         files
             .iter()
             .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path))),
     );
-    files
+    let collected: Vec<(PathBuf, CheckFileFacts)> = files
         .par_iter()
         .map(|path| {
             crate::invocation::check_timeout().ok().map(|()| {
@@ -72,7 +73,8 @@ pub(crate) fn collect_fact_map_with_sources(
         })
         .while_some()
         .flatten()
-        .collect()
+        .collect();
+    FileIdMap::from_iter_with_inventory(collected, Arc::clone(sources.inventory()))
 }
 
 pub(super) fn collect_fact_map_sequential_with_sources(
@@ -82,13 +84,13 @@ pub(super) fn collect_fact_map_sequential_with_sources(
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> HashMap<PathBuf, CheckFileFacts> {
+) -> FileIdMap<CheckFileFacts> {
     let files = crate::codebase::ts_source::deduplicate_analysis_paths(
         files
             .iter()
             .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path))),
     );
-    let collected = files
+    let collected: Vec<(PathBuf, CheckFileFacts)> = files
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|path| {
@@ -101,7 +103,7 @@ pub(super) fn collect_fact_map_sequential_with_sources(
     for path in &files {
         crate::ast::evict_request_parse_cache_path(path);
     }
-    collected
+    FileIdMap::from_iter_with_inventory(collected, Arc::clone(sources.inventory()))
 }
 
 pub(crate) fn graph_only_files(files: &[PathBuf], graph_files: &[PathBuf]) -> Vec<PathBuf> {

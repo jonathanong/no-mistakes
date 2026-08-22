@@ -75,7 +75,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     fact_plan.function_calls = true;
     fact_plan.symbols = true;
     fact_plan.source = true;
-    fact_context.set_visible_files(graph_files.iter_visible().cloned());
+    fact_context.set_visible_file_set(graph_files.visible_path_set());
     let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_session_and_context(
         &session,
         graph_files.indexable(),

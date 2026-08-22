@@ -1,6 +1,8 @@
 #[derive(Default)]
 struct ImportCollector {
-    source: String,
+    /// 0-based byte offsets of each line start. Empty when line numbers are
+    /// unused so the collector does not retain a full source copy.
+    line_starts: Vec<u32>,
     imports: Vec<ExtractedImport>,
     function_calls: Vec<FunctionCall>,
     symbol_references: Vec<FunctionCall>,

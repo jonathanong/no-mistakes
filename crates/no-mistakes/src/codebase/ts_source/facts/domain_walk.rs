@@ -41,6 +41,7 @@ pub(super) fn collect_fused_domain_calls(
         hits: FusedDomainCalls::default(),
     };
     visitor.visit_program(program);
+    crate::diagnostics::record_ast_walk();
     finish_trpc_calls(&mut visitor.hits.trpc_calls);
     visitor.hits
 }
@@ -54,8 +55,8 @@ struct DomainCallVisitor<'a, 'b> {
     collect_trpc: bool,
     collect_call_sites: bool,
     effect_names: &'b EffectNames,
-    caller_stack: Vec<String>,
-    call_site_scope: Vec<String>,
+    caller_stack: Vec<&'a str>,
+    call_site_scope: Vec<&'a str>,
     hits: FusedDomainCalls,
 }
 
@@ -68,7 +69,7 @@ impl DomainCallVisitor<'_, '_> {
             EffectSink {
                 source: self.source,
                 names: self.effect_names,
-                caller: self.caller_stack.last(),
+                caller: self.caller_stack.last().copied(),
                 hits: &mut self.hits.effect_calls,
             },
             callee,
@@ -94,7 +95,7 @@ impl DomainCallVisitor<'_, '_> {
         if self.collect_call_sites {
             record_call_site(
                 self.source,
-                self.call_site_scope.last(),
+                self.call_site_scope.last().copied(),
                 call,
                 &mut self.hits.call_sites,
             );
@@ -114,11 +115,11 @@ impl<'a> Visit<'a> for DomainCallVisitor<'a, '_> {
     }
 
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
-        let name = function.id.as_ref().map(|id| id.name.to_string());
-        if let Some(name) = &name {
-            self.caller_stack.push(name.clone());
+        let name = function.id.as_ref().map(|id| id.name.as_str());
+        if let Some(name) = name {
+            self.caller_stack.push(name);
             if self.collect_call_sites {
-                self.call_site_scope.push(name.clone());
+                self.call_site_scope.push(name);
             }
         }
         walk::walk_function(self, function, flags);
@@ -132,8 +133,8 @@ impl<'a> Visit<'a> for DomainCallVisitor<'a, '_> {
 
     fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
         let name = declarator_function_name(declarator);
-        if let Some(name) = &name {
-            self.caller_stack.push(name.clone());
+        if let Some(name) = name {
+            self.caller_stack.push(name);
         }
         walk::walk_variable_declarator(self, declarator);
         if name.is_some() {

@@ -36,6 +36,15 @@ fn intern_hit_shares_arc_from_distinct_pathbufs() {
 }
 
 #[test]
+fn intern_path_borrowed_normalized_hit_does_not_need_dot_segments() {
+    let interner = PathInterner::new();
+    let first = interner.intern_path("src/widget.ts");
+    let borrowed = first.as_ref();
+    let second = interner.intern_path(borrowed);
+    assert!(Arc::ptr_eq(&first, &second));
+}
+
+#[test]
 fn intern_path_miss_then_hit_covers_lookup_arms() {
     let interner = PathInterner::new();
     let miss = interner.intern_path("src/a.ts");

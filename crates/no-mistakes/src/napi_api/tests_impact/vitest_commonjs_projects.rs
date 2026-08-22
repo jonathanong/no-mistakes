@@ -5,11 +5,11 @@ fn tests_impact_json_keeps_named_commonjs_project_setup_owner_exact() {
             .join("../../fixtures/test-plan/vitest-setup-dependencies"),
     );
     let output = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["cjs-named-replacement-owner/setup/named-replacement.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
@@ -29,11 +29,11 @@ fn tests_impact_json_ignores_named_commonjs_excluded_projects() {
             .join("../../fixtures/test-plan/vitest-setup-dependencies"),
     );
     let output = tests_impact_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "entrypoints": ["cjs-commonjs-excluded-owner/setup/named-reexport-excluded.ts"]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
