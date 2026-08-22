@@ -58,8 +58,9 @@ testPlan:
           - vitest.config.ts
 ```
 
-`vitest-ci-path-coverage` `projectFilters` may key off these trigger names as
-well as Vitest runner-project names.
+`vitest-ci-path-coverage` `projectFilters` keys off runner-project `targets`
+when a trigger has them, and off the trigger `name` only when `targets` is
+empty. Do not list both the alias and the runner project for the same paths.
 
 The object form `fullSuiteTriggers.projects.<name>` still works and still
 requires a matching top-level `projects:` key. Treat it as deprecated for

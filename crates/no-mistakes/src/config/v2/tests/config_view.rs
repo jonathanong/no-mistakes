@@ -143,6 +143,25 @@ rules:
 }
 
 #[test]
+fn playwright_apps_do_not_activate_unbound_generic_test_rules() {
+    let yaml = r#"
+tests:
+  playwright:
+    apps:
+      web:
+        project: web
+rules:
+  - rule: integration-test-no-mocks
+  - rule: test-no-unmocked-dynamic-imports
+  - rule: playwright-coverage
+"#;
+    let cfg: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+    assert!(!cfg.rule_configured("integration-test-no-mocks"));
+    assert!(!cfg.rule_configured("test-no-unmocked-dynamic-imports"));
+    assert!(cfg.rule_configured("playwright-coverage"));
+}
+
+#[test]
 fn config_view_enabled_rules() {
     let cfg = load_v2_config(&fixture("multi-project"), None).unwrap();
     let view = ConfigView::new(&cfg);

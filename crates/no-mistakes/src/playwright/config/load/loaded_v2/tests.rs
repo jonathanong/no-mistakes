@@ -244,3 +244,24 @@ fn playwright_frontend_root_override_stays_on_its_binding() {
     assert_eq!(chromium.frontend_root, "web/pages");
     assert_eq!(firefox.frontend_root, "web");
 }
+
+#[test]
+fn default_settings_exclude_colocated_selector_test_files() {
+    let settings = settings_from_loaded_v2(
+        Path::new("/repo"),
+        &NoMistakesConfig::default(),
+        &[],
+        None,
+        None,
+        &VisiblePathSnapshot::from_paths(Path::new("/repo"), &[]),
+    )
+    .unwrap();
+    assert_eq!(
+        settings.selector_exclude,
+        vec![
+            "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}".to_string(),
+            "**/*.test.*".to_string(),
+            "**/*.spec.*".to_string(),
+        ]
+    );
+}

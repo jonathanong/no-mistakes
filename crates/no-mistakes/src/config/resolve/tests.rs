@@ -1,4 +1,6 @@
 use super::resolve_config;
+use super::triggers::resolved_triggers;
+use crate::config::v2::schema::{NoMistakesConfig, Project, TestPlanProjectDependency};
 use serde_json::json;
 use std::path::PathBuf;
 
@@ -31,4 +33,25 @@ fn resolve_config_json_impl_returns_the_same_named_triggers() {
         .filter_map(|trigger| trigger["name"].as_str())
         .collect();
     assert!(names.contains(&"postgres-resources"));
+}
+
+#[test]
+fn resolve_config_expands_project_keyed_trigger_paths() {
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "generated".to_string(),
+        Project {
+            root: Some("packages/generated".to_string()),
+            ..Project::default()
+        },
+    );
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "generated".to_string(),
+        TestPlanProjectDependency::Patterns(vec!["src/**".to_string()]),
+    );
+    let triggers = resolved_triggers(&config);
+    assert_eq!(triggers.len(), 1);
+    assert_eq!(triggers[0].name, "generated");
+    assert_eq!(triggers[0].source, "projects");
+    assert_eq!(triggers[0].paths, vec!["packages/generated/src/**"]);
 }

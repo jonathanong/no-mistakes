@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 
 #[path = "loaded_v2/defaults.rs"]
 mod defaults;
-use defaults::{default_frontend_root, default_selector_test_excludes};
+use defaults::default_frontend_root;
+use helpers::default_selector_test_excludes;
 
 /// Build [`Settings`] for one Playwright project, resolving which frontend
 /// app it exercises.

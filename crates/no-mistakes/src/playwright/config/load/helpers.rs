@@ -110,3 +110,11 @@ pub(super) fn default_selector_attributes() -> Vec<String> {
         .map(|attribute| attribute.to_string())
         .collect()
 }
+
+pub(in crate::playwright::config::load) fn default_selector_test_excludes() -> &'static [&'static str] {
+    &[
+        "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}",
+        "**/*.test.*",
+        "**/*.spec.*",
+    ]
+}

@@ -2,8 +2,12 @@ use anyhow::Result;
 use serde::Serialize;
 use std::path::Path;
 
-use super::v2::schema::{NamedFullSuiteTrigger, NoMistakesConfig};
+use super::v2::schema::NoMistakesConfig;
 use super::v2::{frontend_apps, load_v2_config_with_path, FrontendApp};
+
+#[path = "resolve/triggers.rs"]
+mod triggers;
+use triggers::resolved_triggers;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -111,60 +115,6 @@ fn resolved_playwright_app(
             binding.selector_roots.clone()
         },
     }
-}
-
-fn resolved_triggers(config: &NoMistakesConfig) -> Vec<ResolvedTrigger> {
-    let mut triggers = config
-        .test_plan
-        .vitest
-        .full_suite_triggers
-        .triggers
-        .iter()
-        .map(named_trigger)
-        .collect::<Vec<_>>();
-    for (name, dependency) in &config.test_plan.vitest.full_suite_triggers.projects {
-        if let Some(trigger) = project_trigger(name, dependency) {
-            triggers.push(trigger);
-        }
-    }
-    triggers
-}
-
-fn named_trigger(trigger: &NamedFullSuiteTrigger) -> ResolvedTrigger {
-    ResolvedTrigger {
-        name: trigger.name.clone(),
-        paths: trigger.paths.clone(),
-        targets: trigger.targets.clone(),
-        source: "triggers",
-    }
-}
-
-fn project_trigger(
-    name: &str,
-    dependency: &crate::config::v2::schema::TestPlanProjectDependency,
-) -> Option<ResolvedTrigger> {
-    use crate::config::v2::schema::TestPlanProjectDependency;
-    Some(match dependency {
-        TestPlanProjectDependency::All(false) => return None,
-        TestPlanProjectDependency::All(true) => ResolvedTrigger {
-            name: name.to_string(),
-            paths: Vec::new(),
-            targets: Vec::new(),
-            source: "projects",
-        },
-        TestPlanProjectDependency::Patterns(paths) => ResolvedTrigger {
-            name: name.to_string(),
-            paths: paths.clone(),
-            targets: Vec::new(),
-            source: "projects",
-        },
-        TestPlanProjectDependency::Targeted(targeted) => ResolvedTrigger {
-            name: name.to_string(),
-            paths: targeted.paths.clone(),
-            targets: targeted.targets.clone(),
-            source: "projects",
-        },
-    })
 }
 
 fn display_rel(root: &Path, path: &Path) -> String {

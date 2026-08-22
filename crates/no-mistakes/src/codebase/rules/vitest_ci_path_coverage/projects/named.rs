@@ -1,6 +1,4 @@
-use super::{
-    normalize_project_glob_part, project_dependency_patterns, CoverageSource, CoverageUnit,
-};
+use super::{project_dependency_patterns, project_relative_pattern, CoverageSource, CoverageUnit};
 use crate::config::v2::schema::{NoMistakesConfig, TestPlanProjectDependency};
 
 pub(super) fn push_full_suite_trigger_units(
@@ -35,19 +33,19 @@ pub(super) fn push_full_suite_trigger_units(
         let patterns = trigger
             .paths
             .iter()
-            .map(|pattern| normalize_project_glob_part(pattern))
+            .map(|pattern| project_relative_pattern(".", pattern))
             .collect::<Vec<_>>();
-        units.push(CoverageUnit {
-            project: trigger.name.clone(),
-            source: CoverageSource::FullSuiteTrigger,
-            patterns: patterns.clone(),
-        });
-        for target in &trigger.targets {
-            if target == &trigger.name {
-                continue;
-            }
+        // Targeted names are aliases for the runner projects they select.
+        // Framework-wide triggers (empty targets) keep the trigger name as
+        // the coverage unit so `projectFilters` can key off that name.
+        let projects = if trigger.targets.is_empty() {
+            vec![trigger.name.clone()]
+        } else {
+            trigger.targets.clone()
+        };
+        for project in projects {
             units.push(CoverageUnit {
-                project: target.clone(),
+                project,
                 source: CoverageSource::FullSuiteTrigger,
                 patterns: patterns.clone(),
             });

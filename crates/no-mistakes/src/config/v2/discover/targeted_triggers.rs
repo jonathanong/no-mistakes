@@ -12,6 +12,12 @@ pub(super) fn validate(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         ("playwright", &config.test_plan.playwright),
         ("vitest", &config.test_plan.vitest),
         ("swift", &config.test_plan.swift),
+        ("python", &config.test_plan.python),
+        ("go", &config.test_plan.go),
+        ("cargo", &config.test_plan.cargo),
+        ("rails", &config.test_plan.rails),
+        ("php", &config.test_plan.php),
+        ("jest", &config.test_plan.jest),
     ] {
         validate_named_triggers(&plan.full_suite_triggers.triggers, path, framework)?;
         for (project, dependency) in &plan.full_suite_triggers.projects {

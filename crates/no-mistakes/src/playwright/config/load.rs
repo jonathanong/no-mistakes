@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 
 #[path = "load/helpers.rs"]
 pub(super) mod helpers;
-use helpers::default_selector_attributes;
 pub(super) use helpers::has_v2_playwright_settings;
+use helpers::{default_selector_attributes, default_selector_test_excludes};
 
 #[path = "load/loaded_v2.rs"]
 mod loaded_v2;
@@ -146,6 +146,9 @@ fn settings_from_defaults(
         html_ids: false,
         selector_roots: vec![frontend_root],
         selector_include: Vec::new(),
-        selector_exclude: Vec::new(),
+        selector_exclude: default_selector_test_excludes()
+            .iter()
+            .map(|pattern| (*pattern).to_string())
+            .collect(),
     })
 }

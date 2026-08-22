@@ -197,9 +197,10 @@ pub(super) fn compile_ordered_patterns(patterns: &[String]) -> Result<Vec<Ordere
     patterns
         .iter()
         .map(|pattern| {
-            let (negated, pattern) = pattern
+            let trimmed = pattern.trim();
+            let (negated, pattern) = trimmed
                 .strip_prefix('!')
-                .map_or((false, pattern.as_str()), |pattern| (true, pattern));
+                .map_or((false, trimmed), |pattern| (true, pattern.trim()));
             let matcher = GlobBuilder::new(&normalize_trigger_glob(pattern))
                 .literal_separator(false)
                 .build()?

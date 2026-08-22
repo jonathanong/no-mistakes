@@ -1,7 +1,7 @@
 use super::{validate_playwright_selector_wrappers, validate_v2_config};
 use crate::config::v2::schema::{
-    NoMistakesConfig, PlaywrightSelectorWrapper, Project, RuleDef, TestPlanProjectDependency,
-    TestPlanTargetedProjectDependency,
+    NamedFullSuiteTrigger, NoMistakesConfig, PlaywrightSelectorWrapper, Project, RuleDef,
+    TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 use std::path::{Path, PathBuf};
 
@@ -169,4 +169,27 @@ fn source_store_config_loading_uses_the_request_snapshot_and_validates_globs() {
     assert!(error
         .to_string()
         .contains("rules[0].exclude contains invalid glob `[`"));
+}
+
+#[test]
+fn named_triggers_are_validated_for_every_test_plan_framework() {
+    let mut config = NoMistakesConfig::default();
+    config
+        .test_plan
+        .python
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "resources".to_string(),
+            paths: vec!["[".to_string()],
+            targets: Vec::new(),
+        });
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains("config.yml.testPlan.python.fullSuiteTriggers.triggers[0]"),
+        "{error}"
+    );
+    assert!(error.contains("contains invalid glob"), "{error}");
 }

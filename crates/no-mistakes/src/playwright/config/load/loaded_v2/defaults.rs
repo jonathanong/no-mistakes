@@ -21,11 +21,3 @@ pub(super) fn default_frontend_root(
         nextjs_root.to_string()
     }
 }
-
-pub(super) fn default_selector_test_excludes() -> &'static [&'static str] {
-    &[
-        "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}",
-        "**/*.test.*",
-        "**/*.spec.*",
-    ]
-}
