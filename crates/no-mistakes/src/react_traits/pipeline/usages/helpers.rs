@@ -74,8 +74,13 @@ pub(crate) fn filter_importers(files: &BTreeSet<String>, pred: fn(&str) -> bool)
 }
 
 /// Exported `interface` / `type` names declared in the target file.
-pub(crate) fn prop_type_names(path: &Path) -> Vec<String> {
-    let source = std::fs::read_to_string(path).unwrap_or_default();
+pub(crate) fn prop_type_names_with_sources(
+    path: &Path,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Vec<String> {
+    let Some(source) = crate::codebase::ts_source::SourceStore::read_optional(sources, path) else {
+        return Vec::new();
+    };
     let is_tsx = matches!(
         path.extension().and_then(|e| e.to_str()),
         Some("tsx") | Some("jsx")

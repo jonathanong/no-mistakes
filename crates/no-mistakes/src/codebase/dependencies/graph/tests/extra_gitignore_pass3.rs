@@ -6,7 +6,7 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let graph_files = GraphFiles::discover(&root);
 
-    let bins = collect_cargo_bins(&root, graph_files.all());
+    let bins = collect_cargo_bins(&root, graph_files.all(), None);
     assert_eq!(
         bins.by_name.get("visible"),
         Some(&root.join("src/bin/visible.rs"))
@@ -16,7 +16,7 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
 
     let ignored_root = root.join("ignored-root");
     let ignored_root_files = GraphFiles::discover(&ignored_root);
-    assert!(collect_cargo_bins(&ignored_root, ignored_root_files.all())
+    assert!(collect_cargo_bins(&ignored_root, ignored_root_files.all(), None)
         .by_name
         .is_empty());
 
@@ -30,6 +30,7 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
         &mut forward,
         &mut reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     let workflow = NodeId::file(root.join(".github/workflows/ci.yml"));
     let targets = forward.get(&workflow).cloned().unwrap_or_default();

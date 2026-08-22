@@ -320,63 +320,6 @@ fn analyze_project_with_facts_honors_disable_comments() {
 }
 
 #[test]
-fn collect_source_files_from_facts_reports_missing_fact_shapes() {
-    let root = fixture("unique-exports-basic");
-    let file = root.join("src/a.ts");
-    let files = vec![file.clone()];
-    let missing = crate::codebase::check_facts::CheckFactMap::default();
-
-    assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing, false, &[])
-            .unwrap_err()
-            .to_string()
-            .contains("missing shared facts")
-    );
-
-    let mut parse_error = crate::codebase::check_facts::CheckFactMap::default();
-    parse_error.ts.insert(
-        file.clone(),
-        crate::codebase::check_facts::CheckFileFacts {
-            source: Some("export const Broken =".into()),
-            parse_error: Some("bad syntax".to_string()),
-            ..Default::default()
-        }
-        .into(),
-    );
-    assert!(
-        scan::collect_source_files_from_facts(&root, &files, &parse_error, false, &[])
-            .unwrap_err()
-            .to_string()
-            .contains("bad syntax")
-    );
-
-    let mut missing_source = crate::codebase::check_facts::CheckFactMap::default();
-    missing_source.ts.insert(file.clone(), Default::default());
-    assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_source, false, &[])
-            .unwrap_err()
-            .to_string()
-            .contains("missing source facts")
-    );
-
-    let mut missing_symbols = crate::codebase::check_facts::CheckFactMap::default();
-    missing_symbols.ts.insert(
-        file,
-        crate::codebase::check_facts::CheckFileFacts {
-            source: Some("export const value = 1;".into()),
-            ..Default::default()
-        }
-        .into(),
-    );
-    assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_symbols, false, &[])
-            .unwrap_err()
-            .to_string()
-            .contains("missing symbol facts")
-    );
-}
-
-#[test]
 fn root_is_normalized_before_analysis() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture/.");
@@ -489,4 +432,5 @@ fn exempts_known_nextjs_framework_exports_only_in_convention_files() {
 }
 
 mod helper_edges;
+mod source_store;
 mod tail;

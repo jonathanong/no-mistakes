@@ -215,6 +215,12 @@ fn collect_usage_file_facts_supports_unscoped_import_resolution() {
 }
 
 #[test]
+fn missing_target_file_yields_empty_prop_types() {
+    let missing = fixture().join("app/components/not-on-disk.tsx");
+    assert!(super::helpers::prop_type_names_with_sources(&missing, None).is_empty());
+}
+
+#[test]
 fn unparseable_target_file_yields_empty_prop_types() {
     let root = fixture();
     // broken.tsx is unparseable: scanning skips it, and its prop types come back empty.

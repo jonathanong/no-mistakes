@@ -51,7 +51,8 @@ fn collect_remaining_edges(
     });
 
     crate::invocation::check_timeout()?;
-    let independent = collect_independent_remaining_edges(edge_inputs, facts, session);
+    let sources = graph_edge_sources(session, edge_inputs);
+    let independent = collect_independent_remaining_edges(edge_inputs, facts, session, &sources);
     merge_independent_remaining_edges(forward, reverse, independent);
 
     crate::invocation::check_timeout()?;
@@ -66,6 +67,7 @@ fn collect_remaining_edges(
                 forward,
                 reverse,
                 session.interner(),
+                Some(&sources),
             );
         }
     });
@@ -91,6 +93,7 @@ fn collect_remaining_edges(
                     parsed,
                     &topology,
                     session.interner(),
+                    Some(&sources),
                 ),
             );
         }
@@ -109,9 +112,7 @@ fn collect_remaining_edges(
     crate::invocation::check_timeout()?;
     crate::perf_trace::trace("graph.playwright_routes", || -> Result<()> {
         if plan.playwright_routes {
-            let Some(snapshot) = playwright_snapshot else {
-                anyhow::bail!("Playwright graph plan requires a visible-path snapshot");
-            };
+            let snapshot = require_playwright_route_snapshot(playwright_snapshot)?;
             let edges = collect_playwright_route_edges_from_snapshot(
                 root,
                 edge_inputs.config_path,

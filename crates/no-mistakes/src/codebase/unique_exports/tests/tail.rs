@@ -17,7 +17,7 @@ fn checks_framework_named_exports_outside_nextjs_projects() {
     ));
 
     let next_root = fixture("unique-exports-nextjs");
-    assert!(scan::package_json_has_next_dependency(
+    assert!(scan::test_support::package_json_has_next_dependency(
         &next_root.join("package.json")
     ));
     assert!(scan::test_support::file_is_in_nextjs_project(
@@ -30,7 +30,7 @@ fn checks_framework_named_exports_outside_nextjs_projects() {
         &not_next_root,
         Path::new("")
     ));
-    assert!(!scan::package_json_has_next_dependency(
+    assert!(!scan::test_support::package_json_has_next_dependency(
         &fixture("unique-exports-not-next-deps").join("package.json")
     ));
 }

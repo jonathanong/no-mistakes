@@ -3,6 +3,7 @@ struct WorkflowRunResolver<'a> {
     universe: &'a HashSet<PathBuf>,
     cargo_bins: &'a CargoBinIndex,
     package_scripts: HashMap<PathBuf, Option<HashMap<String, String>>>,
+    sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
 
 impl<'a> WorkflowRunResolver<'a> {
@@ -10,12 +11,14 @@ impl<'a> WorkflowRunResolver<'a> {
         root: &'a Path,
         universe: &'a HashSet<PathBuf>,
         cargo_bins: &'a CargoBinIndex,
+        sources: Option<&'a crate::codebase::ts_source::SourceStore>,
     ) -> Self {
         Self {
             root: crate::codebase::ts_resolver::normalize_path(root),
             universe,
             cargo_bins,
             package_scripts: HashMap::new(),
+            sources,
         }
     }
 
@@ -36,7 +39,10 @@ impl<'a> WorkflowRunResolver<'a> {
         targets: &mut HashSet<PathBuf>,
     ) {
         for mut words in static_command_segments(source) {
-            while words.first().is_some_and(|word| is_environment_assignment(word)) {
+            while words
+                .first()
+                .is_some_and(|word| is_environment_assignment(word))
+            {
                 words.remove(0);
             }
             if words.is_empty() {
@@ -127,21 +133,20 @@ impl<'a> WorkflowRunResolver<'a> {
 
     fn scripts_for(&mut self, manifest: &Path) -> Option<&HashMap<String, String>> {
         if !self.package_scripts.contains_key(manifest) {
-            let scripts = std::fs::read_to_string(manifest)
-                .ok()
-                .and_then(|source| serde_json::from_str::<serde_json::Value>(&source).ok())
-                .and_then(|value| value.get("scripts").and_then(serde_json::Value::as_object).cloned())
-                .map(|scripts| {
-                    scripts
-                        .into_iter()
-                        .filter_map(|(name, value)| Some((name, value.as_str()?.to_string())))
-                        .collect()
-                });
+            let scripts = crate::codebase::ts_source::SourceStore::parse_json_optional(
+                self.sources,
+                manifest,
+            )
+            .and_then(|value| value.get("scripts")?.as_object().cloned())
+            .map(|scripts| {
+                scripts
+                    .into_iter()
+                    .filter_map(|(name, value)| Some((name, value.as_str()?.to_string())))
+                    .collect()
+            });
             self.package_scripts.insert(manifest.to_path_buf(), scripts);
         }
-        self.package_scripts
-            .get(manifest)
-            .and_then(Option::as_ref)
+        self.package_scripts.get(manifest).and_then(Option::as_ref)
     }
 
     fn insert_local_path(
@@ -166,32 +171,4 @@ impl<'a> WorkflowRunResolver<'a> {
     }
 }
 
-fn workflow_run_working_directory(
-    root: &Path,
-    workflow: &serde_yaml::Value,
-    job: &serde_yaml::Value,
-    step: &serde_yaml::Value,
-) -> Option<PathBuf> {
-    let root = crate::codebase::ts_resolver::normalize_path(root);
-    let raw = step
-        .get("working-directory")
-        .and_then(serde_yaml::Value::as_str)
-        .or_else(|| default_run_working_directory(job))
-        .or_else(|| default_run_working_directory(workflow));
-    let Some(raw) = raw else {
-        return Some(root);
-    };
-    if !is_static_path_token(raw) {
-        return None;
-    }
-    let resolved = crate::codebase::ts_resolver::normalize_path(&root.join(raw));
-    resolved.starts_with(&root).then_some(resolved)
-}
-
-fn default_run_working_directory(value: &serde_yaml::Value) -> Option<&str> {
-    value
-        .get("defaults")?
-        .get("run")?
-        .get("working-directory")?
-        .as_str()
-}
+include!("edge_workflow_run_cwd.rs");

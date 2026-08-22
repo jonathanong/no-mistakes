@@ -5,6 +5,12 @@ use crate::playwright::ast;
 use oxc_span::GetSpan;
 use std::path::Path;
 
+pub(super) struct SelectorFileContext<'a> {
+    pub(super) file: &'a Path,
+    pub(super) visible_files: Option<&'a crate::fx::PathSet>,
+    pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+}
+
 pub(super) fn app_selector_values(
     value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
     source: &str,
@@ -16,42 +22,42 @@ pub(super) fn app_selector_values(
     app_selector_values_inner(
         value,
         source,
-        file,
         scoped_static_identifier_defaults,
         dynamic_identifier_values,
         program,
-        None,
+        SelectorFileContext {
+            file,
+            visible_files: None,
+            sources: None,
+        },
     )
 }
 
 pub(super) fn app_selector_values_from_visible(
     value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
     source: &str,
-    file: &Path,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: &crate::fx::PathSet,
+    file_context: SelectorFileContext<'_>,
 ) -> Vec<AppSelectorValue> {
     app_selector_values_inner(
         value,
         source,
-        file,
         scoped_static_identifier_defaults,
         dynamic_identifier_values,
         program,
-        Some(visible_files),
+        file_context,
     )
 }
 
 fn app_selector_values_inner(
     value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
     source: &str,
-    file: &Path,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&crate::fx::PathSet>,
+    file_context: SelectorFileContext<'_>,
 ) -> Vec<AppSelectorValue> {
     let Some(value) = value else {
         return vec![];
@@ -64,30 +70,23 @@ fn app_selector_values_inner(
             jsx_expression_values_inner(
                 &container.expression,
                 source,
-                file,
                 scoped_static_identifier_defaults,
                 dynamic_identifier_values,
                 program,
-                visible_files,
+                file_context,
             )
         }
         _ => vec![],
     }
 }
 
-struct SelectorFileContext<'a> {
-    file: &'a Path,
-    visible_files: Option<&'a crate::fx::PathSet>,
-}
-
 fn jsx_expression_values_inner(
     expression: &oxc_ast::ast::JSXExpression<'_>,
     source: &str,
-    file: &Path,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&crate::fx::PathSet>,
+    file_context: SelectorFileContext<'_>,
 ) -> Vec<AppSelectorValue> {
     match expression {
         oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
@@ -103,10 +102,7 @@ fn jsx_expression_values_inner(
             identifier.name.as_str(),
             identifier.span(),
             source,
-            SelectorFileContext {
-                file,
-                visible_files,
-            },
+            file_context,
             scoped_static_identifier_defaults,
             dynamic_identifier_values,
             program,
@@ -163,6 +159,7 @@ fn resolve_identifier(
                 program,
                 file_context.file,
                 visible,
+                file_context.sources,
             ),
             None => dynamic_values::cross_file::resolve_imported_values(
                 name,
