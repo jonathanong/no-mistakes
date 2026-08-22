@@ -9,12 +9,7 @@ pub struct TrpcCallFact {
 pub fn extract_trpc_calls_from_program(program: &Program<'_>) -> Vec<TrpcCallFact> {
     let mut visitor = CallVisitor { calls: Vec::new() };
     visitor.visit_program(program);
-    visitor
-        .calls
-        .sort_by(|left, right| left.path.cmp(&right.path));
-    visitor
-        .calls
-        .dedup_by(|left, right| left.path == right.path);
+    finish_trpc_calls(&mut visitor.calls);
     visitor.calls
 }
 
@@ -31,7 +26,12 @@ impl<'a> Visit<'a> for CallVisitor {
     }
 }
 
-fn procedure_path_from_call(call: &CallExpression<'_>) -> Option<String> {
+pub(crate) fn finish_trpc_calls(calls: &mut Vec<TrpcCallFact>) {
+    calls.sort_by(|left, right| left.path.cmp(&right.path));
+    calls.dedup_by(|left, right| left.path == right.path);
+}
+
+pub(crate) fn procedure_path_from_call(call: &CallExpression<'_>) -> Option<String> {
     let Expression::StaticMemberExpression(terminal) = &call.callee else {
         return None;
     };

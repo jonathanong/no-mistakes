@@ -109,16 +109,12 @@ pub(crate) fn collect_file_facts_from_program(
     let symbols = plan
         .symbols
         .then(|| Arc::new(extract_symbols_from_program(program, source)));
-    let call_sites = if plan.call_sites {
-        super::super::call_sites::collect_call_site_facts(program, source)
-    } else {
-        Vec::new()
-    };
-    let domain = if plan.has_domain_facts() {
+    let domain = if plan.has_domain_facts() || plan.call_sites {
         domain::collect_domain_facts(program, path, source, plan, context)
     } else {
         domain::DomainFacts::default()
     };
+    let call_sites = domain.call_sites;
     let react_components = if plan.react {
         match context.visible_files.as_deref() {
             Some(visible) => crate::react_traits::analyze::file::analyze_program_from_visible(

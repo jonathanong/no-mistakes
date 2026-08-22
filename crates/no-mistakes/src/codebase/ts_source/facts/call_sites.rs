@@ -7,7 +7,7 @@ use oxc_syntax::scope::ScopeFlags;
 /// A direct identifier or one-level static member call recorded during the
 /// shared TypeScript fact pass. Query consumers select the relevant callee
 /// names without reparsing callers.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CallSiteFact {
     pub callee: String,
     /// Whether invocation is conditional through an optional call or member chain.
@@ -115,26 +115,36 @@ impl<'a> Visit<'a> for CallSiteVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Some(callee) = callee_name(&call.callee) {
-            let is_optional = call.optional
-                || matches!(
-                    &call.callee,
-                    Expression::StaticMemberExpression(member) if member.optional
-                );
-            self.sites.push(CallSiteFact {
-                callee,
-                is_optional,
-                line: byte_offset_to_line(self.source, call.span.start as usize),
-                caller: self.scope.last().cloned(),
-                static_arg_source: static_first_string_arg_source(call, self.source),
-                arg_count: call.arguments.len(),
-                has_spread: call
-                    .arguments
-                    .iter()
-                    .any(|arg| matches!(arg, Argument::SpreadElement(_))),
-                args: call.arguments.iter().map(arg_tag).collect(),
-            });
-        }
+        record_call_site(self.source, self.scope.last(), call, &mut self.sites);
         walk::walk_call_expression(self, call);
     }
+}
+
+pub(crate) fn record_call_site(
+    source: &str,
+    caller: Option<&String>,
+    call: &CallExpression<'_>,
+    sites: &mut Vec<CallSiteFact>,
+) {
+    let Some(callee) = callee_name(&call.callee) else {
+        return;
+    };
+    let is_optional = call.optional
+        || matches!(
+            &call.callee,
+            Expression::StaticMemberExpression(member) if member.optional
+        );
+    sites.push(CallSiteFact {
+        callee,
+        is_optional,
+        line: byte_offset_to_line(source, call.span.start as usize),
+        caller: caller.cloned(),
+        static_arg_source: static_first_string_arg_source(call, source),
+        arg_count: call.arguments.len(),
+        has_spread: call
+            .arguments
+            .iter()
+            .any(|arg| matches!(arg, Argument::SpreadElement(_))),
+        args: call.arguments.iter().map(arg_tag).collect(),
+    });
 }

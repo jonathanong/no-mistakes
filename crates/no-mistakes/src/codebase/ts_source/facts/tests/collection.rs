@@ -150,14 +150,25 @@ fn empty_serial_paths_collect_symbols_with_the_parallel_fact_path() {
 #[test]
 fn collect_domain_facts_fuses_http_and_effect_call_walks() {
     let source = include_str!("../domain.rs");
+    let walk = include_str!("../domain_walk.rs");
+    let collect = include_str!("../collect/file.rs");
     assert!(
         source.contains("collect_fused_domain_calls"),
         "domain facts must walk HTTP and effect calls together"
     );
     assert!(
         !source.contains("extract_http_calls_from_program")
-            && !source.contains("effect_calls::extract"),
-        "HTTP and effect extractors must not walk the program again"
+            && !source.contains("effect_calls::extract")
+            && !source.contains("extract_trpc_calls_from_program"),
+        "HTTP, effect, and tRPC call extractors must not walk the program again"
+    );
+    assert!(
+        walk.contains("record_call_site") && walk.contains("procedure_path_from_call"),
+        "the fused domain walk must record call sites and tRPC calls"
+    );
+    assert!(
+        !collect.contains("collect_call_site_facts"),
+        "file fact collection must not walk call sites separately from domain facts"
     );
 }
 
@@ -209,4 +220,51 @@ fn trpc_facts_follow_router_globs_and_call_plan() {
         &context,
     );
     assert!(skipped_calls[&client].trpc_calls.is_empty());
+}
+
+#[test]
+fn fused_call_sites_match_standalone_walker() {
+    let file = fixture("imports.ts");
+    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+        std::slice::from_ref(&file),
+    ));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    let source = sources.read_path(&file).unwrap();
+    let fused = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan {
+            call_sites: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let standalone = crate::ast::with_program(&file, &source, |program, src| {
+        super::call_sites::collect_call_site_facts(program, src)
+    })
+    .expect("imports fixture should parse");
+    assert_eq!(fused[&file].call_sites, standalone);
+}
+
+#[test]
+fn fused_trpc_calls_match_standalone_walker() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/trpc-basic/fixture");
+    let client = root.join("src/client.ts");
+    let source = crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&client)),
+    ))
+    .read_path(&client)
+    .unwrap();
+    let fused = collect_ts_facts_with_context(
+        std::slice::from_ref(&client),
+        TsFactPlan {
+            trpc_calls: true,
+            ..TsFactPlan::default()
+        },
+        &TsFactContext::new(&root),
+    );
+    let standalone = crate::ast::with_program(&client, &source, |program, _src| {
+        crate::codebase::ts_trpc::extract_trpc_calls_from_program(program)
+    })
+    .expect("tRPC client fixture should parse");
+    assert_eq!(fused[&client].trpc_calls, standalone);
 }
