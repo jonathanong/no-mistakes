@@ -256,10 +256,7 @@ fn static_export_collection_covers_default_and_destructured_declarations() {
         |program, _| super::super::cross_file::collect_static_export_values(program),
     )
     .unwrap();
-    assert_eq!(
-        spread.values("ignored", true),
-        &["static-val".to_string()]
-    );
+    assert_eq!(spread.values("ignored", true), &["static-val".to_string()]);
 
     let extras_path = root.join("extras.ts");
     let extras_source = std::fs::read_to_string(&extras_path).unwrap();

@@ -87,9 +87,9 @@ fn graph_helpers_require_facts_and_playwright_snapshots() {
         None,
     )
     .unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("TS import facts are required when import, workspace, or asset edges are requested"));
+    assert!(err.to_string().contains(
+        "TS import facts are required when import, workspace, or asset edges are requested"
+    ));
     let playwright_err = match require_playwright_route_snapshot(None) {
         Ok(_) => panic!("missing Playwright snapshot must fail"),
         Err(error) => error,
