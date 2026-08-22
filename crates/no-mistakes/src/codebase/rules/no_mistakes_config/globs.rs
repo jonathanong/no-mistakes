@@ -76,7 +76,7 @@ fn lint_patterns(
         if pattern.trim().is_empty() || !looks_like_glob(pattern) {
             continue;
         }
-        let matcher = GlobMatcher::new(&[pattern.clone()], field)?;
+        let matcher = GlobMatcher::new(std::slice::from_ref(pattern), field)?;
         if !tracked.iter().any(|rel| matcher.is_match(rel)) {
             findings.push(finding(
                 config_file,
