@@ -1,4 +1,5 @@
 use super::legacy_test_support::{graph_report, import_usages_report, prepare_shared_traversal};
+use super::options_test_support::parse_options;
 use super::*;
 use crate::codebase::dependencies::Direction;
 use serde_json::{json, Value};

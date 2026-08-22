@@ -1,4 +1,4 @@
-use super::options_test_support::report_value;
+use super::options_test_support::{parse_options, report_value};
 use super::*;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};

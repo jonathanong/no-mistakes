@@ -4,8 +4,6 @@ use serde_json::{value::RawValue, Value};
 
 use super::codebase::build_traverse_args;
 #[cfg(any(test, feature = "test-instrumentation"))]
-pub(super) use super::options::parse_options;
-#[cfg(any(test, feature = "test-instrumentation"))]
 use super::options::parse_options_value;
 use super::options::to_napi_error;
 use crate::codebase::dependencies::TraverseArgs;
