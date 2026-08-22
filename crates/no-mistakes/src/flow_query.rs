@@ -1,7 +1,7 @@
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{
-    RelationshipArg, parse_entrypoint, relationship_filter, trpc_procedure_from_suffix,
-    workflow_node_from_suffix_in,
+    parse_entrypoint, relationship_filter, trpc_procedure_from_suffix,
+    workflow_node_from_suffix_in, RelationshipArg,
 };
 use crate::codebase::ts_resolver::normalize_path;
 use anyhow::Result;
