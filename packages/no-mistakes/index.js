@@ -59,13 +59,23 @@ const jsonApis = createJsonApis({
   symbols: "symbolsJson",
 });
 
+async function analyzeProject(options) {
+  const result = await jsonApis.analyzeProject(options);
+  for (const report of result.reports || []) {
+    if (report.type === "testsPlan" || report.type === "testsImpact") {
+      report.result = planning.camelizeValue(report.result);
+    }
+  }
+  return result;
+}
+
 async function version() {
   return native.version();
 }
 
 module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
 module.exports.version = version;
-module.exports.analyzeProject = jsonApis.analyzeProject;
+module.exports.analyzeProject = analyzeProject;
 module.exports.callSites = jsonApis.callSites;
 module.exports.check = jsonApis.check;
 module.exports.resolveConfig = jsonApis.resolveConfig;

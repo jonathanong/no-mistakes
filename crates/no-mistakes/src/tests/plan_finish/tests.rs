@@ -27,16 +27,19 @@ fn selected(file: &str, targets: Vec<TestExecutionTarget>) -> SelectedTest {
 /// `base_command`.
 #[test]
 fn mixed_python_runners_keep_separate_execution_targets() {
-    let groups = grouped_execution_targets(&[
-        selected(
-            "pkg/tests.py",
-            vec![target("python", Some("pkg"), &["python", "-m", "unittest"])],
-        ),
-        selected(
-            "pkg/test_foo.py",
-            vec![target("python", Some("pkg"), &["pytest"])],
-        ),
-    ]);
+    let groups = grouped_execution_targets(
+        &[
+            selected(
+                "pkg/tests.py",
+                vec![target("python", Some("pkg"), &["python", "-m", "unittest"])],
+            ),
+            selected(
+                "pkg/test_foo.py",
+                vec![target("python", Some("pkg"), &["pytest"])],
+            ),
+        ],
+        &[],
+    );
 
     assert_eq!(groups.len(), 2);
     let mut commands: Vec<_> = groups.into_iter().map(|group| group.base_command).collect();
@@ -63,12 +66,41 @@ fn nested_package_relative_runner_args_are_stripped_when_grouping() {
     );
     dart.runner_args = vec!["test/user_test.dart".into()];
     dart.config = Some("packages/app".into());
-    let groups =
-        grouped_execution_targets(&[selected("packages/app/test/user_test.dart", vec![dart])]);
+    let groups = grouped_execution_targets(
+        &[selected("packages/app/test/user_test.dart", vec![dart])],
+        &[],
+    );
     assert_eq!(groups.len(), 1);
     assert!(groups[0].runner_args.is_empty());
     assert_eq!(
         groups[0].test_files,
         vec!["packages/app/test/user_test.dart".to_string()]
+    );
+}
+
+#[test]
+fn path_prefixes_split_and_name_execution_targets() {
+    let groups = grouped_execution_targets(
+        &[
+            selected(
+                "swift-clients/core/Tests/A.swift",
+                vec![target("swift", None, &["swift", "test"])],
+            ),
+            selected(
+                "swift-clients/ui/Tests/B.swift",
+                vec![target("swift", None, &["swift", "test"])],
+            ),
+        ],
+        &["swift-clients/core".into(), "swift-clients/ui".into()],
+    );
+    assert_eq!(groups.len(), 2);
+    let mut names: Vec<_> = groups.into_iter().map(|group| group.name).collect();
+    names.sort();
+    assert_eq!(
+        names,
+        vec![
+            Some("swift-clients/core".into()),
+            Some("swift-clients/ui".into())
+        ]
     );
 }

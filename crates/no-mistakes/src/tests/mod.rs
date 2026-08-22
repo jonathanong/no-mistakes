@@ -55,6 +55,9 @@ pub struct GroupedExecutionTarget {
     pub config: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
+    /// Path-prefix display name, such as a Swift package root.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     pub base_command: Vec<String>,
     /// Runner flags without test file paths.
     pub runner_args: Vec<String>,

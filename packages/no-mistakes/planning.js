@@ -16,6 +16,20 @@ function createJsonApis(descriptors) {
   );
 }
 
+function camelizeKey(key) {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function camelizeValue(value) {
+  if (Array.isArray(value)) return value.map(camelizeValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [camelizeKey(key), camelizeValue(nested)]),
+    );
+  }
+  return value;
+}
+
 async function testsComment(options) {
   const input = Buffer.from(JSON.stringify(options || {}));
   return String(await native.testsCommentMarkdown(input));
@@ -44,8 +58,19 @@ const jsonApis = createJsonApis({
   testsWhy: "testsWhyJson",
 });
 
+async function testsPlan(options) {
+  return camelizeValue(await jsonApis.testsPlan(options));
+}
+
+async function testsImpact(options) {
+  return camelizeValue(await jsonApis.testsImpact(options));
+}
+
 module.exports = {
+  camelizeValue,
   testsComment,
   testsGraphMermaid,
   ...jsonApis,
+  testsImpact,
+  testsPlan,
 };

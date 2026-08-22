@@ -31,6 +31,7 @@ fn resource_plan_args(root: &Path, changed: PathBuf) -> PlanArgs {
         format: None,
         json: true,
         include_comment: false,
+        include_glob: Vec::new(),
     }
 }
 
