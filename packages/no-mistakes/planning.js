@@ -1,5 +1,6 @@
 "use strict";
 
+const fs = require("node:fs");
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 
 async function callJson(fn, options) {
@@ -42,19 +43,31 @@ function decamelizeValue(value) {
   return mapKeys(value, decamelizeKey);
 }
 
+function loadPlanJson(planJson) {
+  let parsed = planJson;
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return planJson;
+    }
+  }
+  if (parsed && typeof parsed === "object") {
+    return decamelizeValue(parsed);
+  }
+  return planJson;
+}
+
 function decamelizePlanOptions(options = {}) {
   const next = { ...options };
   if (next.planJson != null) {
-    let parsed = next.planJson;
-    if (typeof parsed === "string") {
-      try {
-        parsed = JSON.parse(parsed);
-      } catch {
-        parsed = next.planJson;
-      }
-    }
-    if (parsed && typeof parsed === "object") {
-      next.planJson = decamelizeValue(parsed);
+    next.planJson = loadPlanJson(next.planJson);
+  } else if (typeof next.plan === "string") {
+    try {
+      next.planJson = loadPlanJson(fs.readFileSync(next.plan, "utf8"));
+      delete next.plan;
+    } catch {
+      // Native still loads missing or invalid plan paths.
     }
   }
   return next;
@@ -110,7 +123,7 @@ async function testsTargets(options) {
 }
 
 async function testsWhy(options) {
-  return camelizeWhy(await jsonApis.testsWhy(options));
+  return camelizeWhy(await jsonApis.testsWhy(decamelizePlanOptions(options)));
 }
 
 async function testsGraph(options) {
@@ -119,6 +132,7 @@ async function testsGraph(options) {
 
 module.exports = {
   camelizeValue,
+  camelizeWhy,
   decamelizePlanOptions,
   testsComment,
   testsGraphMermaid,

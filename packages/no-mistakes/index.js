@@ -59,18 +59,26 @@ const jsonApis = createJsonApis({
   symbols: "symbolsJson",
 });
 
-const DOCUMENT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid"]);
+const PLAN_INPUT_REPORTS = new Set([
+  "testsComment",
+  "testsGraph",
+  "testsGraphMermaid",
+  "testsWhy",
+]);
+const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "testsGraph"]);
 
 async function analyzeProject(options = {}) {
   const request = { ...options };
   if (Array.isArray(request.reports)) {
     request.reports = request.reports.map((report) =>
-      DOCUMENT_REPORTS.has(report.type) ? planning.decamelizePlanOptions(report) : report,
+      PLAN_INPUT_REPORTS.has(report.type) ? planning.decamelizePlanOptions(report) : report,
     );
   }
   const result = await jsonApis.analyzeProject(request);
   for (const report of result.reports || []) {
-    if (report.type === "testsPlan" || report.type === "testsImpact") {
+    if (report.type === "testsWhy") {
+      report.result = planning.camelizeWhy(report.result);
+    } else if (CAMELIZE_REPORTS.has(report.type)) {
       report.result = planning.camelizeValue(report.result);
     }
   }
