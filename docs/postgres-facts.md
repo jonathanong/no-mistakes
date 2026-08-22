@@ -5,7 +5,8 @@ work. Check rules consume these facts instead of re-parsing SQL or
 TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
-`postgres-lock-ordering`, `postgres-no-generated-column-writes`,
+`postgres-lock-ordering`, `postgres-no-offset`,
+`postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`, and
 `postgres-constraint-validate` consume
 the facts through `no-mistakes check`.
@@ -124,6 +125,14 @@ rule's `extraGeneratedColumns` option; this layer does not scrape
 
 Unparseable SQL returns an error. The lock-ordering rule consumes this helper
 instead of re-parsing SQL with a private parser.
+
+## Offset facts
+
+`sql_has_offset_clause(sql)` parses PostgreSQL SQL and returns whether any
+query uses an `OFFSET` clause, including CTEs, derived tables, subqueries,
+`INSERT … SELECT`, and MySQL `LIMIT offset, limit` form. String literals that
+mention the word "offset" are not clauses. Unparseable SQL returns an error.
+`postgres-no-offset` consumes this helper.
 
 ## Out of scope
 
