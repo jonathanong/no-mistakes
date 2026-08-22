@@ -27,6 +27,7 @@ fn framework_args(root: &Path, framework: TestFramework) -> PlanArgs {
         format: None,
         json: false,
         include_comment: false,
+        include_glob: Vec::new(),
     }
 }
 

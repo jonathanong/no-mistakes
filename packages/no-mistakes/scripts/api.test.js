@@ -1,7 +1,8 @@
 const assert = require("node:assert/strict");
 const test = globalThis.test || require("node:test").test;
-const { readFileSync } = require("node:fs");
+const { readFileSync, writeFileSync, mkdtempSync } = require("node:fs");
 const { join } = require("node:path");
+const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
 
 const packageRoot = join(__dirname, "..");
@@ -283,6 +284,10 @@ test("programmatic API proxies object options through async native addon calls",
       "testsGraph",
     );
     assert.equal(await api.testsGraphMermaid({ planJson: { selected_tests: [] } }), "graph:0");
+    const planDir = mkdtempSync(join(tmpdir(), "no-mistakes-plan-"));
+    const planPath = join(planDir, "plan.json");
+    writeFileSync(planPath, JSON.stringify({ selectedTests: [] }));
+    assert.equal(await api.testsGraphMermaid({ plan: planPath }), "graph:0");
     assert.equal((await api.playwrightCheck({ root: "." })).command, "playwrightCheck");
     assert.equal((await api.playwrightEdges({ root: "." })).command, "playwrightEdges");
     assert.equal(
@@ -572,11 +577,8 @@ test("test plan declarations require current results but accept saved legacy pla
     declarations,
     /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
   );
-  assert.match(declarations, /\n  changed_files: string\[\];/);
-  assert.match(
-    declarations,
-    /export type SavedTestPlan = Omit<TestPlan, "changed_files"> & \{\n  changed_files\?: string\[\];\n\};/,
-  );
+  assert.match(declarations, /\n  changedFiles: string\[\];/);
+  assert.match(declarations, /export type SavedTestPlan = TestPlan;/);
   assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
   assert.match(declarations, /export type TestsPlanOptions =/);
   assert.match(

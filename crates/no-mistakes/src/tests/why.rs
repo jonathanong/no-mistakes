@@ -189,6 +189,7 @@ fn run_live_analysis(
         format: None,
         json: true,
         include_comment: false,
+        include_glob: Vec::new(),
     };
 
     let plan = generate_plan(&plan_args)?;
