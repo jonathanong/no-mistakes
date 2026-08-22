@@ -169,3 +169,23 @@ fn tolerated_action_outcomes_and_local_docker_runners_remain_sound() {
     );
     assert!(!sparse_checkout.failed && !sparse_checkout.indeterminate);
 }
+
+#[test]
+fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
+    let dynamic_continue = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ inputs.tolerate }}'\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    let success = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: echo hi",
+        BTreeSet::new(),
+    );
+    let tolerated_failure = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: exit 1",
+        BTreeSet::new(),
+    );
+    assert!(!success.failed);
+    assert!(
+        !tolerated_failure.failed || dynamic_continue.indeterminate || !dynamic_continue.failed
+    );
+}

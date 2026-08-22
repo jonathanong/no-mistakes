@@ -46,13 +46,13 @@ pub(crate) fn check_with_files_sources_and_facts(
         let baseline = read_baseline(root, opts.baseline_file.as_deref(), files)?;
         let mut seen = BTreeSet::new();
         for path in targets {
-            let _scope_root = super::markdown_scope::scope_root_for_path(&scope_roots, &path)
-                .with_context(|| {
-                    format!(
-                        "{RULE_ID} filtered target {} is outside its configured scope",
-                        path.display()
-                    )
-                })?;
+            let Some(_scope_root) = super::markdown_scope::scope_root_for_path(&scope_roots, &path)
+            else {
+                anyhow::bail!(
+                    "{RULE_ID} filtered target {} is outside its configured scope",
+                    path.display()
+                );
+            };
             let markdown = facts.get_for_rule(&path, RULE_ID)?;
             let baseline_key = super::markdown_scope::baseline_key(root, _scope_root, &path);
             let file = super::markdown_scope::finding_key(root, &path);

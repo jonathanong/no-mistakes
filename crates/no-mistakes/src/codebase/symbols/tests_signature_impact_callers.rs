@@ -66,9 +66,9 @@ fn signature_impact_suggests_recovered_private_test_callers() {
     assert!(v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "private-caller-with-export.test.mts"
     }));
-    assert!(!v["warnings"].as_array().unwrap().iter().any(|entry| {
-        entry["type"] == "no-suggested-tests"
-    }));
+    for entry in v["warnings"].as_array().unwrap() {
+        assert_ne!(entry["type"], "no-suggested-tests");
+    }
 }
 
 #[test]
@@ -215,10 +215,10 @@ fn signature_impact_does_not_reclassify_excluded_tests_as_production() {
     let out = run_capture(args);
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
 
-    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
-        entry["file"] == "excluded-private-caller.test.mts"
-    }));
-    assert!(!v["testCallers"].as_array().unwrap().iter().any(|entry| {
-        entry["file"] == "excluded-private-caller.test.mts"
-    }));
+    for entry in v["productionCallers"].as_array().unwrap() {
+        assert_ne!(entry["file"], "excluded-private-caller.test.mts");
+    }
+    for entry in v["testCallers"].as_array().unwrap() {
+        assert_ne!(entry["file"], "excluded-private-caller.test.mts");
+    }
 }

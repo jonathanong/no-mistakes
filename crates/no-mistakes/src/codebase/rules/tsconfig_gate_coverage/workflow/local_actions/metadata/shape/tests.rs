@@ -52,3 +52,25 @@ fn action_metadata_rejects_duplicate_and_non_string_fields() {
         serde_yaml::from_str("using: docker\nimage: docker://example\nenv:\n  1: value\n").unwrap();
     assert!(!runs_shape_valid(env.as_mapping().unwrap(), "docker"));
 }
+
+#[test]
+fn action_metadata_accepts_optional_fields_and_absent_blocks() {
+    assert!(action_inputs_valid(None));
+    assert!(outputs_valid(None, false));
+    assert!(branding_valid(None));
+    assert!(action_inputs_valid(Some(
+        &serde_yaml::from_str(
+            "name: {description: x, required: true, default: y, deprecationMessage: old}"
+        )
+        .unwrap()
+    )));
+    assert!(outputs_valid(
+        Some(&serde_yaml::from_str("out: {description: x}\n").unwrap()),
+        false
+    ));
+    let node: Value = serde_yaml::from_str(
+        "using: node20\nmain: index.js\npost: cleanup.js\npost-if: always()\n",
+    )
+    .unwrap();
+    assert!(runs_shape_valid(node.as_mapping().unwrap(), "node"));
+}

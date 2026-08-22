@@ -91,12 +91,13 @@ pub(super) fn require_module<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
     let Expression::Identifier(callee) = &call.callee else {
         return None;
     };
-    (callee.name == "require")
-        .then(|| match call.arguments.first() {
-            Some(Argument::StringLiteral(value)) => Some(value.value.as_str()),
-            _ => None,
-        })
-        .flatten()
+    if callee.name != "require" {
+        return None;
+    }
+    match call.arguments.first() {
+        Some(Argument::StringLiteral(value)) => Some(value.value.as_str()),
+        _ => None,
+    }
 }
 
 pub(super) fn require_module_or_promises<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
@@ -106,10 +107,13 @@ pub(super) fn require_module_or_promises<'a>(expr: &'a Expression<'a>) -> Option
     let Expression::StaticMemberExpression(member) = expr else {
         return None;
     };
-    (member.property.name == "promises")
-        .then(|| require_module(&member.object))
-        .flatten()
-        .and_then(|module| matches!(module, "fs" | "node:fs").then_some("node:fs/promises"))
+    if member.property.name != "promises" {
+        return None;
+    }
+    match require_module(&member.object) {
+        Some("fs" | "node:fs") => Some("node:fs/promises"),
+        _ => None,
+    }
 }
 
 pub(super) fn require_member_binding(expr: &Expression<'_>) -> Option<Binding> {

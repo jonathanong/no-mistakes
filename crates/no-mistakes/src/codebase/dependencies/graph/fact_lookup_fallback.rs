@@ -67,13 +67,15 @@ fn same_graph_universe(
 impl TsFactLookup for FallbackTsFactLookup<'_> {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         if self.prefer_fallback {
-            self.fallback
-                .get(path)
-                .or_else(|| self.primary.get_ts_facts(path))
+            match self.fallback.get(path) {
+                Some(facts) => Some(facts),
+                None => self.primary.get_ts_facts(path),
+            }
         } else {
-            self.primary
-                .get_ts_facts(path)
-                .or_else(|| self.fallback.get(path))
+            match self.primary.get_ts_facts(path) {
+                Some(facts) => Some(facts),
+                None => self.fallback.get(path),
+            }
         }
     }
 
@@ -94,16 +96,22 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
         if self.prefer_fallback {
-            self.fallback
+            match self
+                .fallback
                 .get(path)
                 .and_then(|facts| facts.parse_error.as_deref())
-                .or_else(|| self.primary.get_playwright_parse_error(path))
+            {
+                Some(error) => Some(error),
+                None => self.primary.get_playwright_parse_error(path),
+            }
         } else {
-            self.primary.get_playwright_parse_error(path).or_else(|| {
-                self.fallback
+            match self.primary.get_playwright_parse_error(path) {
+                Some(error) => Some(error),
+                None => self
+                    .fallback
                     .get(path)
-                    .and_then(|facts| facts.parse_error.as_deref())
-            })
+                    .and_then(|facts| facts.parse_error.as_deref()),
+            }
         }
     }
 

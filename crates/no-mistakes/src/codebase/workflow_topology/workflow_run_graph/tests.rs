@@ -148,3 +148,14 @@ fn three_node_cycle_with_a_chord_still_reports_a_witness() {
         .iter()
         .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
 }
+
+#[test]
+fn self_cycle_reports_a_two_node_witness() {
+    let workflows = [workflow("loop.yml")];
+    let diagnostics = diagnose(&workflows, &[edge("loop.yml", "loop.yml")]);
+    let cycle = diagnostics
+        .iter()
+        .find(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
+        .expect("self-cycle");
+    assert!(cycle.message.contains("loop.yml -> loop.yml"));
+}

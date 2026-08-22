@@ -37,10 +37,9 @@ fn parse_ruby_file(
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
-        module: ruby_module_key(path, roots).or_else(|| {
-            path.file_stem()
-                .map(|name| name.to_string_lossy().into_owned())
-        }),
+        // `files_under` already scoped this path to a configured root, so the
+        // module key is always present.
+        module: ruby_module_key(path, roots),
         imports: extract_requires(&text, path, roots),
         declarations: extract_ruby_declarations(&text),
         references: extract_static_consts(&text),

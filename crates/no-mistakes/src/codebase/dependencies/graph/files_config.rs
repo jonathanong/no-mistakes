@@ -85,10 +85,10 @@ fn graph_config_options_from_loaded_with_test_filter(
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
 ) -> GraphConfigOptions {
     let project_route_globs = ConfigView::new(v2_config).server_route_globs();
-    let test_filter = Some(
-        test_filter
-            .unwrap_or_else(|| crate::codebase::test_filter::TestFileFilter::new(root, v2_config)),
-    );
+    let test_filter = Some(match test_filter {
+        Some(filter) => filter,
+        None => crate::codebase::test_filter::TestFileFilter::new(root, v2_config),
+    });
     // Union of every configured frontend app's rewrites. #624 was caused by
     // this list being sourced from whichever `type: nextjs` project sorted
     // first. `frontend_apps_lenient` resolves each `type: nextjs` project
@@ -96,10 +96,10 @@ fn graph_config_options_from_loaded_with_test_filter(
     // so one app's ambiguous root no longer discards every other app's
     // rewrites too — this is a best-effort convenience list, not a
     // Playwright rule execution, so per-app skip-on-error is intentional.
-    let rewrites = crate::config::v2::frontend_apps_lenient(root, v2_config, visible_paths)
-        .into_iter()
-        .flat_map(|app| app.rewrites)
-        .collect::<Vec<_>>();
+    let mut rewrites = Vec::new();
+    for app in crate::config::v2::frontend_apps_lenient(root, v2_config, visible_paths) {
+        rewrites.extend(app.rewrites);
+    }
     let rewrites = dedup_rewrites(rewrites);
     GraphConfigOptions {
         route: config.rule_options("route-consistency"),
@@ -127,10 +127,16 @@ fn graph_config_options_from_loaded_with_test_filter(
         dart_packages: v2_config.tests.dart.packages.clone(),
         queue_enqueues: flatten_queue_globs(v2_config, prefixed_queue_globs_enqueues),
         queue_workers: flatten_queue_globs(v2_config, prefixed_queue_globs_workers),
-        queue_cluster: v2_config
-            .projects
-            .values()
-            .find_map(|project| project.queues.cluster.clone()),
+        queue_cluster: {
+            let mut cluster = None;
+            for project in v2_config.projects.values() {
+                if let Some(value) = project.queues.cluster.clone() {
+                    cluster = Some(value);
+                    break;
+                }
+            }
+            cluster
+        },
         queue_glob_clusters: flatten_queue_glob_clusters(v2_config),
         trpc_routers: flatten_trpc_routers(v2_config),
         terraform: v2_config.infra.terraform.clone(),

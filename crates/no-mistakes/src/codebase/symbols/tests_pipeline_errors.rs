@@ -82,3 +82,23 @@ fn collect_entries_with_prepared_facts_reports_missing_symbols() {
     .unwrap_err();
     assert!(format!("{err:#}").contains("missing symbols"));
 }
+
+#[test]
+fn collect_entries_reports_an_explicit_missing_tsconfig() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(tmp.path().join("src.ts"), "export const value = 1;\n").unwrap();
+    let mut args = args_for(tmp.path(), vec!["src.ts"], Format::Json);
+    args.tsconfig = Some(tmp.path().join("missing-tsconfig.json"));
+    let err = collect_entries(&args).unwrap_err();
+    assert!(!format!("{err:#}").is_empty());
+}
+
+#[test]
+fn collect_entries_falls_back_when_the_default_tsconfig_is_invalid() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(tmp.path().join("tsconfig.json"), "not json").unwrap();
+    std::fs::write(tmp.path().join("src.ts"), "export const value = 1;\n").unwrap();
+    let args = args_for(tmp.path(), vec!["src.ts"], Format::Json);
+    let (entries, _) = collect_entries(&args).expect("invalid default tsconfig falls back");
+    assert_eq!(entries.len(), 1);
+}

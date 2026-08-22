@@ -190,8 +190,11 @@ pub fn edge_belongs_to_selection(
     if !selected.contains(topology_identifiers::workflow_path_from_id(edge.from())) {
         return false;
     }
-    matches!(edge, model::WorkflowTopologyEdge::Calls(_))
-        || selected.contains(topology_identifiers::workflow_path_from_id(
-            edge.to().unwrap_or(""),
-        ))
+    if matches!(edge, model::WorkflowTopologyEdge::Calls(_)) {
+        return true;
+    }
+    selected.contains(topology_identifiers::workflow_path_from_id(
+        edge.to()
+            .expect("non-call topology edges have a destination"),
+    ))
 }

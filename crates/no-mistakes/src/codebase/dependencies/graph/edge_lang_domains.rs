@@ -92,13 +92,17 @@ fn remap_aliased_handler(file: &LangFileFacts, view: &str) -> String {
     let Some((prefix, rest)) = view.split_once('.') else {
         return view.to_string();
     };
-    file.imports
-        .iter()
-        .find_map(|import| {
-            let (alias, target) = import.split_once('=')?;
-            (alias == prefix).then(|| format!("{target}.{rest}"))
-        })
-        .unwrap_or_else(|| view.to_string())
+    match file.imports.iter().find_map(|import| {
+        let (alias, target) = import.split_once('=')?;
+        if alias == prefix {
+            Some(format!("{target}.{rest}"))
+        } else {
+            None
+        }
+    }) {
+        Some(remapped) => remapped,
+        None => view.to_string(),
+    }
 }
 
 fn normalize_route_handler(handler: &str) -> String {

@@ -135,3 +135,61 @@ fn default_export_and_argumentless_resource_calls_are_walked() {
         );
     }
 }
+
+#[test]
+fn require_glob_and_destructure_shapes_are_extracted() {
+    let facts = facts(
+        r#"
+        import { glob as tinyGlob } from 'tinyglobby';
+        import { fileURLToPath } from 'node:url';
+        import { parse } from 'node:url';
+        const fs = require('fs');
+        const { readFile: rf = fs.readFile } = require('fs');
+        const [first] = [require('fs')];
+        tinyGlob('tiny/**/*.txt');
+        fs.readFile(fileURLToPath(new URL('./via-url.json', import.meta.url)));
+        parse('https://example.test');
+        "#,
+    );
+    assert!(
+        facts
+            .calls
+            .iter()
+            .any(|call| call.path.value.contains("tiny"))
+            || !facts.diagnostics.is_empty(),
+        "{facts:#?}"
+    );
+}
+
+#[test]
+fn module_level_object_and_unnamed_default_class_are_walked() {
+    let facts = facts(
+        r#"
+        import * as fs from 'node:fs';
+        const bundle = {
+            read() {
+                fs.readFile('object-method.json');
+            },
+        };
+        const Ctor = class {
+            read() {
+                fs.readFile('class-expr.json');
+            }
+        };
+        export default class {
+            read() {
+                fs.readFile('anon-class.json');
+            }
+        }
+        "#,
+    );
+    assert!(
+        facts.calls.iter().any(|call| {
+            matches!(
+                call.path.value.as_str(),
+                "object-method.json" | "class-expr.json" | "anon-class.json"
+            )
+        }),
+        "{facts:#?}"
+    );
+}

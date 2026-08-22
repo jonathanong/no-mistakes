@@ -15,18 +15,18 @@ fn collect_route_import_edges(
     // scope distinct from ordinary graph resolution.
     let scoped_resolver =
         tsconfig_catalog.map(crate::codebase::ts_resolver::ScopedImportResolver::unbounded);
-    let legacy_resolver = tsconfig_catalog
-        .is_none()
-        .then(|| ImportResolver::new_in_session(tsconfig, None, session));
-    let resolver: &dyn ImportResolution = scoped_resolver
-        .as_ref()
-        .map(|resolver| resolver as &dyn ImportResolution)
-        .or_else(|| {
-            legacy_resolver
-                .as_ref()
-                .map(|resolver| resolver as &dyn ImportResolution)
-        })
-        .expect("a scoped or legacy route-import resolver is initialized");
+    let legacy_resolver = if tsconfig_catalog.is_none() {
+        Some(ImportResolver::new_in_session(tsconfig, None, session))
+    } else {
+        None
+    };
+    let resolver: &dyn ImportResolution = if let Some(resolver) = scoped_resolver.as_ref() {
+        resolver
+    } else if let Some(resolver) = legacy_resolver.as_ref() {
+        resolver
+    } else {
+        unreachable!("a scoped or legacy route-import resolver is initialized")
+    };
     let import_files = files
         .par_iter()
         .filter_map(|path| {
@@ -104,13 +104,19 @@ fn route_import_resolution_source(
 ) -> PathBuf {
     if let Ok(metadata) = std::fs::symlink_metadata(path) {
         if metadata.file_type().is_symlink() {
-            return path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+            return match path.canonicalize() {
+                Ok(canonical) => canonical,
+                Err(_) => path.to_path_buf(),
+            };
         }
     }
-    path.parent()
-        .and_then(|parent| canonical_directories.get(parent))
-        .and_then(|canonical_parent| path.file_name().map(|name| canonical_parent.join(name)))
-        .unwrap_or_else(|| path.to_path_buf())
+    match path.parent().and_then(|parent| canonical_directories.get(parent)) {
+        Some(canonical_parent) => match path.file_name() {
+            Some(name) => canonical_parent.join(name),
+            None => path.to_path_buf(),
+        },
+        None => path.to_path_buf(),
+    }
 }
 
 fn route_import_visible_target(

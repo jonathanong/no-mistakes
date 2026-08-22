@@ -62,10 +62,11 @@ fn extract_package(source: &str) -> Option<String> {
 }
 
 fn primary_type(declarations: &[String], file_stem: Option<&str>) -> Option<String> {
-    file_stem
-        .filter(|stem| declarations.iter().any(|name| name == *stem))
-        .map(str::to_string)
-        .or_else(|| declarations.first().cloned())
+    if let Some(stem) = file_stem.filter(|stem| declarations.iter().any(|name| name == *stem)) {
+        Some(stem.to_string())
+    } else {
+        declarations.first().cloned()
+    }
 }
 
 fn extract_java_imports(source: &str) -> Vec<String> {
@@ -76,7 +77,11 @@ fn extract_java_imports(source: &str) -> Vec<String> {
                 return None;
             }
             let path = cap.get(2)?.as_str();
-            (!path.ends_with(".*")).then(|| path.to_string())
+            if path.ends_with(".*") {
+                None
+            } else {
+                Some(path.to_string())
+            }
         })
         .collect();
     values.sort();

@@ -127,11 +127,12 @@ fn diagnose_chain_limits(
     let mut indegree: HashMap<String, u32> =
         acyclic_nodes.iter().map(|node| (node.clone(), 0)).collect();
     for source in &acyclic_nodes {
-        if let Some(targets) = adjacency.get(source) {
-            for target in targets {
-                if let Some(count) = indegree.get_mut(target) {
-                    *count += 1;
-                }
+        for target in adjacency
+            .get(source)
+            .expect("acyclic sources are adjacency keys")
+        {
+            if let Some(count) = indegree.get_mut(target) {
+                *count += 1;
             }
         }
     }
@@ -156,7 +157,10 @@ fn diagnose_chain_limits(
             if !indegree.contains_key(target) {
                 continue;
             }
-            let mut candidate = paths.get(&source).cloned().unwrap_or_default();
+            let mut candidate = paths
+                .get(&source)
+                .cloned()
+                .expect("Kahn sources start with a path");
             candidate.push(target.clone());
             let should_replace = match paths.get(target) {
                 None => true,
