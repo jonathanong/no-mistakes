@@ -20,6 +20,7 @@ pub struct CallSiteFact {
     pub args: Vec<&'static str>,
 }
 
+#[cfg(test)]
 pub(crate) fn collect_call_site_facts(program: &Program<'_>, source: &str) -> Vec<CallSiteFact> {
     let mut visitor = CallSiteVisitor {
         source,
@@ -30,6 +31,7 @@ pub(crate) fn collect_call_site_facts(program: &Program<'_>, source: &str) -> Ve
     visitor.sites
 }
 
+#[cfg(test)]
 struct CallSiteVisitor<'a> {
     source: &'a str,
     scope: Vec<String>,
@@ -102,6 +104,7 @@ fn arg_tag(arg: &Argument<'_>) -> &'static str {
     }
 }
 
+#[cfg(test)]
 impl<'a> Visit<'a> for CallSiteVisitor<'a> {
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         let name = function.id.as_ref().map(|id| id.name.as_str().to_string());

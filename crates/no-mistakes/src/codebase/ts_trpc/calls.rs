@@ -6,6 +6,7 @@ pub struct TrpcCallFact {
     pub path: String,
 }
 
+#[cfg(test)]
 pub fn extract_trpc_calls_from_program(program: &Program<'_>) -> Vec<TrpcCallFact> {
     let mut visitor = CallVisitor { calls: Vec::new() };
     visitor.visit_program(program);
@@ -13,10 +14,12 @@ pub fn extract_trpc_calls_from_program(program: &Program<'_>) -> Vec<TrpcCallFac
     visitor.calls
 }
 
+#[cfg(test)]
 struct CallVisitor {
     calls: Vec<TrpcCallFact>,
 }
 
+#[cfg(test)]
 impl<'a> Visit<'a> for CallVisitor {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Some(path) = procedure_path_from_call(call) {
