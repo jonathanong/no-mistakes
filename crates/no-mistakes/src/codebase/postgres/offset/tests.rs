@@ -73,3 +73,39 @@ fn join_derived_offset_is_detected() {
 fn parenthesized_predicate_without_offset_is_clean() {
     assert!(!sql_has_offset_clause("SELECT * FROM t WHERE (id = ANY($1))").unwrap());
 }
+
+#[test]
+fn union_arm_offset_is_detected() {
+    assert!(sql_has_offset_clause(
+        "SELECT id FROM a WHERE id IN (SELECT x FROM t OFFSET 1) UNION SELECT id FROM b"
+    )
+    .unwrap());
+}
+
+#[test]
+fn parenthesized_union_offset_is_detected() {
+    assert!(
+        sql_has_offset_clause("(SELECT id FROM posts OFFSET 1) UNION SELECT id FROM other")
+            .unwrap()
+    );
+}
+
+#[test]
+fn scalar_subquery_offset_is_detected() {
+    assert!(sql_has_offset_clause(
+        "SELECT id FROM posts WHERE id = (SELECT id FROM other OFFSET 1)"
+    )
+    .unwrap());
+}
+
+#[test]
+fn binary_and_unary_predicate_offsets_are_detected() {
+    assert!(sql_has_offset_clause(
+        "SELECT id FROM posts WHERE live AND id IN (SELECT id FROM other OFFSET 1)"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "SELECT id FROM posts WHERE NOT (id IN (SELECT id FROM other OFFSET 1))"
+    )
+    .unwrap());
+}

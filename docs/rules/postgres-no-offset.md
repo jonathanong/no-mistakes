@@ -1,7 +1,7 @@
 # `postgres-no-offset`
 
 Flags executed PostgreSQL SQL that uses an `OFFSET` clause. Offset pagination
-rescans skipped rows on every page and is usually the wrong default next to
+reads skipped rows again on every page and is usually the wrong default next to
 cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
 The rule uses the shared PostgreSQL embedded-SQL facts
