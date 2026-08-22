@@ -53,12 +53,10 @@ fn relative_missing_extends_is_an_invalid_config() {
 fn extends_cycle_is_reported_without_hanging() {
     let root = fixture("extends-cycle");
     let catalog = catalog_for(&root);
-    assert!(
-        catalog
-            .diagnostics()
-            .iter()
-            .any(|diagnostic| diagnostic.detail.contains("cycle"))
-    );
+    assert!(catalog
+        .diagnostics()
+        .iter()
+        .any(|diagnostic| diagnostic.detail.contains("cycle")));
 }
 
 #[test]

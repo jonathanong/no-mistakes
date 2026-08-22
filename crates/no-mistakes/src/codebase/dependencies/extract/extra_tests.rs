@@ -34,13 +34,11 @@ fn inline_function_like_members_record_parameters_and_type_parameters() {
             Some("default")
         ]
     );
-    assert!(
-        facts
-            .symbol_references
-            .iter()
-            .any(|call| call.caller.as_deref() == Some("handlers/method")
-                && call.callee == "SourceShape")
-    );
+    assert!(facts
+        .symbol_references
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("handlers/method")
+            && call.callee == "SourceShape"));
 }
 
 #[test]
@@ -121,12 +119,10 @@ fn destructuring_array_defaults_are_scoped_to_each_binding() {
 
     let facts = extract_import_facts_from_program(&ret.program);
 
-    assert!(
-        facts
-            .symbol_references
-            .iter()
-            .any(|call| call.caller.as_deref() == Some("api") && call.callee == "alpha")
-    );
+    assert!(facts
+        .symbol_references
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("api") && call.callee == "alpha"));
 }
 
 #[test]
@@ -143,12 +139,10 @@ fn default_expression_helpers_cover_parenthesized_forms_and_static_args() {
 
     let facts = extract_import_facts_from_program(&ret.program);
 
-    assert!(
-        facts
-            .function_calls
-            .iter()
-            .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha")
-    );
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha"));
     assert!(facts.function_calls.iter().any(|call| {
         call.caller.as_deref() == Some("template")
             && call.callee == "fetch"
@@ -161,12 +155,10 @@ fn default_expression_helpers_cover_parenthesized_forms_and_static_args() {
     )
     .parse();
     let facts = extract_import_facts_from_program(&ret.program);
-    assert!(
-        facts
-            .function_calls
-            .iter()
-            .any(|call| call.caller.as_deref() == Some("default") && call.callee == "run")
-    );
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "run"));
 
     let ret = Parser::new(
         &allocator,
@@ -175,10 +167,8 @@ fn default_expression_helpers_cover_parenthesized_forms_and_static_args() {
     )
     .parse();
     let facts = extract_import_facts_from_program(&ret.program);
-    assert!(
-        facts
-            .function_calls
-            .iter()
-            .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha")
-    );
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha"));
 }

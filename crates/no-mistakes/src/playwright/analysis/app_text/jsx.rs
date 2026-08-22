@@ -2,10 +2,10 @@ use super::elements::is_component_jsx_element_name;
 use crate::playwright::analysis::types::SelectorRef;
 use crate::playwright::ast;
 use crate::playwright::config::Settings;
-use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 use crate::playwright::selectors::scoped_defaults::{
-    ScopedStaticIdentifierDefault, scoped_static_default_for_identifier,
+    scoped_static_default_for_identifier, ScopedStaticIdentifierDefault,
 };
+use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 use oxc_span::GetSpan;
 
 mod attrs;

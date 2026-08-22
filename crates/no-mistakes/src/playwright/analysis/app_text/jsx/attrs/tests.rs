@@ -1,6 +1,6 @@
 use super::*;
 use oxc_ast::ast::{JSXElement, JSXOpeningElement};
-use oxc_ast_visit::{Visit, walk};
+use oxc_ast_visit::{walk, Visit};
 use std::collections::BTreeMap;
 use std::path::Path;
 

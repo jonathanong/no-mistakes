@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::{
-    conditions::{MatrixState, direct_inputs, inputs_with_matrix_values},
+    conditions::{direct_inputs, inputs_with_matrix_values, MatrixState},
     reusable::model::{GithubEventContext, GithubRef},
 };
 use crate::codebase::{

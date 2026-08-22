@@ -1,6 +1,6 @@
 use super::{
-    MATRIX_JOB_LIMIT, STATIC_MATRIX_ENUMERATION_LIMIT, StaticMappings, StaticMatrixAxes,
-    StaticMatrixJobCount, static_mappings, static_matrix_axes, static_matrix_job_count,
+    static_mappings, static_matrix_axes, static_matrix_job_count, StaticMappings, StaticMatrixAxes,
+    StaticMatrixJobCount, MATRIX_JOB_LIMIT, STATIC_MATRIX_ENUMERATION_LIMIT,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputState;
 use serde_yaml::Value;

@@ -33,12 +33,10 @@ fn nested_jsx_member_references_are_recorded() {
 
     let facts = extract_import_facts_from_program(&ret.program);
 
-    assert!(
-        facts
-            .symbol_references
-            .iter()
-            .any(|reference| reference.callee == "UI.Form.Input")
-    );
+    assert!(facts
+        .symbol_references
+        .iter()
+        .any(|reference| reference.callee == "UI.Form.Input"));
 }
 
 #[test]
@@ -89,12 +87,10 @@ fn default_arrow_object_and_rest_params_are_collected() {
     )
     .parse();
     let facts = extract_import_facts_from_program(&ret.program);
-    assert!(
-        facts
-            .function_calls
-            .iter()
-            .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha")
-    );
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha"));
 
     let ret = Parser::new(
         &allocator,
@@ -103,12 +99,10 @@ fn default_arrow_object_and_rest_params_are_collected() {
     )
     .parse();
     let facts = extract_import_facts_from_program(&ret.program);
-    assert!(
-        facts
-            .function_calls
-            .iter()
-            .any(|call| call.caller.as_deref() == Some("default") && call.callee == "run")
-    );
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "run"));
 
     let ret = Parser::new(
         &allocator,
@@ -116,11 +110,9 @@ fn default_arrow_object_and_rest_params_are_collected() {
         SourceType::ts(),
     )
     .parse();
-    assert!(
-        extract_import_facts_from_program(&ret.program)
-            .imports
-            .is_empty()
-    );
+    assert!(extract_import_facts_from_program(&ret.program)
+        .imports
+        .is_empty());
 }
 
 #[test]

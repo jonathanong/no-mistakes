@@ -1,5 +1,5 @@
-use super::ResourceVisitor;
 use super::bindings::{require_member_binding, require_module_or_promises};
+use super::ResourceVisitor;
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, Expression, Function, VariableDeclarator,

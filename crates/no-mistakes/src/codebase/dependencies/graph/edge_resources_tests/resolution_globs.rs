@@ -64,11 +64,9 @@ fn resource_edges_cover_source_module_globs_invalid_patterns_and_missing_exact_p
         &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(diagnostics.is_empty());
-    assert!(
-        edges
-            .iter()
-            .any(|(_, target, _)| target.as_file() == Some(page.as_path()))
-    );
+    assert!(edges
+        .iter()
+        .any(|(_, target, _)| target.as_file() == Some(page.as_path())));
 
     let missing_root = PathBuf::from("/no-mistakes-missing-resource-root");
     let (edges, _, _) = collect_resource_edges(

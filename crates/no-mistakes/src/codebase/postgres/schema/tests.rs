@@ -42,12 +42,10 @@ fn extracts_generated_column_and_quoted_table_name() {
         Some("uuid_extract_timestamp")
     );
     assert_eq!(created.generated_function_arg_columns, ["id"]);
-    assert!(
-        created
-            .generated_expression
-            .as_deref()
-            .is_some_and(|expr| expr.contains("uuid_extract_timestamp"))
-    );
+    assert!(created
+        .generated_expression
+        .as_deref()
+        .is_some_and(|expr| expr.contains("uuid_extract_timestamp")));
     assert!(table.columns[0].is_primary_key);
     assert!(!created.is_primary_key);
 }
@@ -69,26 +67,18 @@ fn extracts_additional_column_constraints() {
     let table = &tables[0];
     assert_eq!(table.table_name, "constraint_kitchen");
     let by_name = |name: &str| table.columns.iter().find(|c| c.name == name).unwrap();
-    assert!(
-        by_name("email")
-            .constraints
-            .contains(&"CONSTR_UNIQUE".to_string())
-    );
-    assert!(
-        by_name("nickname")
-            .constraints
-            .contains(&"CONSTR_NULL".to_string())
-    );
-    assert!(
-        by_name("parent_id")
-            .constraints
-            .contains(&"CONSTR_FOREIGN".to_string())
-    );
-    assert!(
-        by_name("score")
-            .constraints
-            .contains(&"CONSTR_CHECK".to_string())
-    );
+    assert!(by_name("email")
+        .constraints
+        .contains(&"CONSTR_UNIQUE".to_string()));
+    assert!(by_name("nickname")
+        .constraints
+        .contains(&"CONSTR_NULL".to_string()));
+    assert!(by_name("parent_id")
+        .constraints
+        .contains(&"CONSTR_FOREIGN".to_string()));
+    assert!(by_name("score")
+        .constraints
+        .contains(&"CONSTR_CHECK".to_string()));
     assert!(
         by_name("serial_id").is_generated
             || by_name("serial_id")
@@ -99,11 +89,9 @@ fn extracts_additional_column_constraints() {
         by_name("computed").generated_function.as_deref(),
         Some("now")
     );
-    assert!(
-        by_name("computed")
-            .generated_function_arg_columns
-            .is_empty()
-    );
+    assert!(by_name("computed")
+        .generated_function_arg_columns
+        .is_empty());
     assert_eq!(
         by_name("nested_gen").generated_function.as_deref(),
         Some("uuid_extract_timestamp")
@@ -367,12 +355,10 @@ fn generated_without_expression_or_sequence_is_still_marked() {
         },
     );
     assert!(facts.is_generated);
-    assert!(
-        facts
-            .constraints
-            .iter()
-            .any(|constraint| constraint == "CONSTR_GENERATED")
-    );
+    assert!(facts
+        .constraints
+        .iter()
+        .any(|constraint| constraint == "CONSTR_GENERATED"));
 }
 
 #[test]
