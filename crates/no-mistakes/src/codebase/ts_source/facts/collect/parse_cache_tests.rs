@@ -5,12 +5,21 @@ use super::{
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-fn fixture(name: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/ast-snippets/ts-source/fixture/facts")
-            .join(name),
-    )
+fn isolated_facts_dir() -> (tempfile::TempDir, PathBuf) {
+    // Copy into a unique directory so begin_parse_count cannot pick up
+    // parallel tests that parse the shared ast-snippets facts fixtures.
+    let dir = tempfile::tempdir().unwrap();
+    let src = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/ast-snippets/ts-source/fixture/facts");
+    for name in ["imports.ts", "component.tsx"] {
+        std::fs::copy(src.join(name), dir.path().join(name)).expect("copy facts fixture");
+    }
+    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
+    (dir, root)
+}
+
+fn fixture(root: &Path, name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(&root.join(name))
 }
 
 fn sources_for(paths: &[PathBuf]) -> crate::codebase::ts_source::SourceStore {
@@ -33,7 +42,11 @@ fn collect_one(path: &Path, sources: &crate::codebase::ts_source::SourceStore, r
 
 #[test]
 fn parallel_collect_ts_facts_evicts_request_parse_cache() {
-    let files = [fixture("imports.ts"), fixture("component.tsx")];
+    let (_dir, root) = isolated_facts_dir();
+    let files = [
+        fixture(&root, "imports.ts"),
+        fixture(&root, "component.tsx"),
+    ];
     crate::ast::with_request_parse_cache(|| {
         let facts = super::collect_ts_facts(&files, TsFactPlan::imports());
         assert_eq!(facts.len(), 2);
@@ -47,7 +60,11 @@ fn parallel_collect_ts_facts_evicts_request_parse_cache() {
 
 #[test]
 fn sequential_batch_evicts_after_serial_files_loop() {
-    let files = [fixture("imports.ts"), fixture("component.tsx")];
+    let (_dir, root) = isolated_facts_dir();
+    let files = [
+        fixture(&root, "imports.ts"),
+        fixture(&root, "component.tsx"),
+    ];
     let sources = sources_for(&files);
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     crate::ast::with_request_parse_cache(|| {
@@ -66,15 +83,8 @@ fn sequential_batch_evicts_after_serial_files_loop() {
 
 #[test]
 fn sequential_same_path_reuses_parse_until_evicted() {
-    // Unique root: `begin_parse_count` attributes every parse under that
-    // prefix, so sharing `test-cases/.../facts` with parallel tests would
-    // count their work as this session's.
-    let isolated = crate::test_support::materialize_saved_fixture(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/ast-snippets/ts-source/fixture/facts"),
-    );
-    let path = crate::codebase::ts_resolver::normalize_path(&isolated.path().join("imports.ts"));
-    let root = crate::codebase::ts_resolver::normalize_path(isolated.path());
+    let (_dir, root) = isolated_facts_dir();
+    let path = fixture(&root, "imports.ts");
     let sources = sources_for(std::slice::from_ref(&path));
 
     crate::ast::begin_parse_count(&root);
