@@ -269,8 +269,9 @@ fn graph_includes_external_module_and_package_dependency_nodes() {
 
 #[test]
 fn node_builtin_imports_do_not_create_module_nodes() {
-    assert_eq!(bare_module_node("node:path"), None);
-    assert_eq!(bare_module_node("node:fs/promises"), None);
+    let interner = PathInterner::new();
+    assert_eq!(bare_module_node_in(&interner, "node:path"), None);
+    assert_eq!(bare_module_node_in(&interner, "node:fs/promises"), None);
 }
 
 #[test]

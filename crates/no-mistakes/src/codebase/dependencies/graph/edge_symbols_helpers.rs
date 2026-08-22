@@ -39,7 +39,7 @@ fn imported_symbol_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {
@@ -78,7 +78,7 @@ fn imported_symbol_map(
             }
         } else if workspace.recognizes_specifier_from(&import.source, path) {
             continue;
-        } else if let Some(node) = bare_module_node(&import.source) {
+        } else if let Some(node) = bare_module_node_in(interner, &import.source) {
             ImportedSymbolTarget::Node { node, kind }
         } else {
             continue;
@@ -93,7 +93,7 @@ fn namespace_import_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {
@@ -132,7 +132,7 @@ fn namespace_import_map(
             }
         } else if workspace.recognizes_specifier_from(&import.source, path) {
             continue;
-        } else if let Some(node) = bare_module_node(&import.source) {
+        } else if let Some(node) = bare_module_node_in(interner, &import.source) {
             ImportedSymbolTarget::Node { node, kind }
         } else {
             continue;

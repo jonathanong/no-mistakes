@@ -16,6 +16,7 @@ impl FrameworkPreparationPlan {
             TestRunner::Dotnet,
             TestRunner::Playwright,
             TestRunner::Vitest,
+            TestRunner::Jest,
             TestRunner::Swift,
             TestRunner::Python,
             TestRunner::Go,

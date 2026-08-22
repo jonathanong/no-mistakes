@@ -177,6 +177,7 @@ pub struct DotnetProjectConfig {
 #[serde(rename_all = "camelCase", default)]
 pub struct JestConfig {
     pub configs: Option<StringOrList>,
+    pub projects: BTreeMap<String, TestProjectPolicy>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

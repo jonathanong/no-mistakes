@@ -6,11 +6,11 @@ mod rule_targets;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use discovery::{
-    build_globset, build_regexes, config_files, extract_property_strings,
-    extract_test_property_strings, extract_test_regexes, ConfigFile,
+    build_globset, build_regexes, config_files, extract_test_property_strings, ConfigFile,
 };
 use std::path::{Path, PathBuf};
 
+pub(crate) use discovery::{extract_property_strings, extract_test_regexes};
 pub(crate) use filter::test_filter_from_visible;
 pub use filter::{test_filter, TestFilter};
 pub(super) use prepared::prepare_from_visible;
@@ -45,7 +45,7 @@ fn precompute_setup_data_from_config_files(
 fn precompute_setup_data_from_config_files_from_visible(
     root: &Path,
     config_files: &[ConfigFile],
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<ConfigSetupData>> {
     precompute_setup_data_from_config_files_inner(
@@ -59,7 +59,7 @@ fn precompute_setup_data_from_config_files_from_visible(
 fn precompute_setup_data_from_config_files_inner(
     root: &Path,
     config_files: &[ConfigFile],
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<ConfigSetupData>> {
     let mut result = Vec::new();
@@ -137,7 +137,7 @@ fn normalize_matcher_pattern(root: &Path, base: &Path, pattern: String) -> Strin
 fn setup_files_from_configs_inner(
     root: &Path,
     config_files: Vec<PathBuf>,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();

@@ -130,7 +130,7 @@ fn http_edges_for_calls(
             if def_file != caller && matcher::matches(&call.path, def_pattern) {
                 edges.push((
                     NodeId::file_in(interner, caller),
-                    NodeId::file_in(interner, def_file.clone()),
+                    NodeId::file_in(interner, def_file),
                     EdgeKind::HttpCall,
                 ));
             }
@@ -151,7 +151,7 @@ fn collect_process_spawn_edges(
     facts: Option<&dyn TsFactLookup>,
     files: &[(PathBuf, String)],
     graph_files: &[PathBuf],
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     interner: &PathInterner,
 ) -> Vec<Edge> {
     use crate::codebase::ts_process_spawn::extract_spawn_edges_from_visible;
@@ -167,8 +167,8 @@ fn collect_process_spawn_edges(
                     .filter(|edge| visible_files.contains(&edge.entry))
                     .map(|e| {
                         (
-                            NodeId::file_in(interner, e.spawner.clone()),
-                            NodeId::file_in(interner, e.entry.clone()),
+                            NodeId::file_in(interner, e.spawner.as_path()),
+                            NodeId::file_in(interner, e.entry.as_path()),
                             EdgeKind::ProcessSpawn,
                         )
                     })

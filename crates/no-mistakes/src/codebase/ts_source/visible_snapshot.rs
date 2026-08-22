@@ -170,7 +170,10 @@ fn snapshot_path_view(
     tracked_paths.dedup();
     Arc::new(SnapshotPathView {
         sources: Arc::new(SourceStore::new_observed(
-            Arc::new(FileInventory::from_classified_paths(paths.visible)),
+            Arc::new(FileInventory::from_classified_paths_counted(
+                paths.visible,
+                paths.metadata_stats,
+            )),
             observer,
         )),
         tracked_paths: Arc::new(tracked_paths),

@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use crate::fx::PathSet;
 use std::path::{Path, PathBuf};
 
 pub(super) fn looks_like_repo_relative_module(specifier: &str) -> bool {
@@ -26,7 +26,7 @@ pub(super) fn identity_from_resolver(
     specifier: &str,
     importing_file: &Path,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &PathSet,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Option<ModuleIdentity> {
     let classification =

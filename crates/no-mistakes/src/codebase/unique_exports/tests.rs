@@ -60,7 +60,7 @@ fn pass4b_unique_origin_skips_ignored_local_and_workspace_candidates() {
     let visible = visible_paths
         .iter()
         .map(|path| normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -327,7 +327,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
     let missing = crate::codebase::check_facts::CheckFactMap::default();
 
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing, false)
+        scan::collect_source_files_from_facts(&root, &files, &missing, false, &[])
             .unwrap_err()
             .to_string()
             .contains("missing shared facts")
@@ -344,7 +344,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
         .into(),
     );
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &parse_error, false)
+        scan::collect_source_files_from_facts(&root, &files, &parse_error, false, &[])
             .unwrap_err()
             .to_string()
             .contains("bad syntax")
@@ -353,7 +353,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
     let mut missing_source = crate::codebase::check_facts::CheckFactMap::default();
     missing_source.ts.insert(file.clone(), Default::default());
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_source, false)
+        scan::collect_source_files_from_facts(&root, &files, &missing_source, false, &[])
             .unwrap_err()
             .to_string()
             .contains("missing source facts")
@@ -369,7 +369,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
         .into(),
     );
     assert!(
-        scan::collect_source_files_from_facts(&root, &files, &missing_symbols, false)
+        scan::collect_source_files_from_facts(&root, &files, &missing_symbols, false, &[])
             .unwrap_err()
             .to_string()
             .contains("missing symbol facts")

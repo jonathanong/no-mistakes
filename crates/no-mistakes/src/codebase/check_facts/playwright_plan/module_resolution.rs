@@ -1,6 +1,6 @@
 use super::PlaywrightFactPlan;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use crate::fx::PathSet;
+use std::path::Path;
 use std::sync::Arc;
 
 #[path = "module_resolution_catalog.rs"]
@@ -19,7 +19,7 @@ mod tests;
 pub(crate) struct PlaywrightModuleResolution {
     tsconfig: PlaywrightTsConfig,
     workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
-    visible_files: Arc<HashSet<PathBuf>>,
+    visible_files: Arc<PathSet>,
     remapper: Arc<crate::codebase::ts_source::FrozenPathRemapper>,
     cache: Arc<crate::codebase::ts_resolver::ImportResolutionCache>,
     catalog_resolver: Option<CatalogModuleResolver>,
@@ -34,7 +34,7 @@ impl PlaywrightModuleResolution {
     pub(crate) fn new(
         tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
         workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
-        visible_files: Arc<HashSet<PathBuf>>,
+        visible_files: Arc<PathSet>,
     ) -> Self {
         let remapper = Arc::new(crate::codebase::ts_source::FrozenPathRemapper::from_paths(
             visible_files.iter().cloned(),
@@ -52,7 +52,7 @@ impl PlaywrightModuleResolution {
     pub(crate) fn with_catalog(
         tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
         workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
-        visible_files: Arc<HashSet<PathBuf>>,
+        visible_files: Arc<PathSet>,
     ) -> Self {
         let remapper = Arc::new(crate::codebase::ts_source::FrozenPathRemapper::from_paths(
             visible_files.iter().cloned(),

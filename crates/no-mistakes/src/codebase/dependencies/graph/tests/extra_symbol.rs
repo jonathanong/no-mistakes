@@ -25,9 +25,9 @@ fn symbol_index_multiple_importers() {
 
 #[test]
 fn graph_private_helpers_cover_noop_branches() {
-    let mut visited_pairs = HashSet::new();
+    let mut visited_pairs = fx_set();
     let mut queue = VecDeque::new();
-    let pair = (p("/src/a.mts"), "alpha".to_string());
+    let pair = (intern_node_path(p("/src/a.mts")), intern_node_str("alpha"));
     visited_pairs.insert(pair.clone());
     push_unvisited_symbol_pair(&mut visited_pairs, &mut queue, pair);
     assert!(queue.is_empty());
@@ -65,7 +65,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
     let current = p("/repo/src/current.mts");
     let no_symbols = p("/repo/src/no-symbols.mts");
     let target = p("/repo/src/source.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(no_symbols.clone());
     visible.insert(target.clone());
@@ -215,7 +215,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
     let current = p("/repo/src/current.mts");
     let source = p("/repo/src/source.mts");
     let asset = p("/repo/src/data.json");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(source.clone());
     visible.insert(asset.clone());

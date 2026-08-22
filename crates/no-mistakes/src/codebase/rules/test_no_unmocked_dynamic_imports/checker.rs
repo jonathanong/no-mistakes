@@ -26,7 +26,7 @@ pub(super) struct DynamicCheckContext<'a> {
     pub(super) resolver: &'a dyn ImportResolution,
     pub(super) graph: &'a DepGraph,
     pub(super) graph_files: Option<&'a GraphFiles>,
-    pub(super) file_universe: Option<&'a HashSet<PathBuf>>,
+    pub(super) file_universe: Option<&'a crate::fx::PathSet>,
     pub(super) mocks: &'a HashSet<PathBuf>,
     pub(super) dependency_cache: &'a DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     pub(super) findings: &'a mut Vec<RuleFinding>,

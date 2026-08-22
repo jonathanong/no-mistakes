@@ -352,7 +352,10 @@ fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes()
         .test_plan
         .vitest
         .full_suite_triggers
-        .ignore_changed_tests = vec![TestPlanIgnoredChangedTestsFramework::Vitest];
+        .ignore_changed_tests = vec![
+        TestPlanIgnoredChangedTestsFramework::Vitest,
+        TestPlanIgnoredChangedTestsFramework::Jest,
+    ];
     config
         .test_plan
         .vitest

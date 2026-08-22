@@ -3,8 +3,7 @@ use super::scoped_defaults::{scoped_static_default_for_identifier, ScopedStaticI
 use super::types::{AppSelectorValue, TemplatePattern};
 use crate::playwright::ast;
 use oxc_span::GetSpan;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub(super) fn app_selector_values(
     value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
@@ -32,7 +31,7 @@ pub(super) fn app_selector_values_from_visible(
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<AppSelectorValue> {
     app_selector_values_inner(
         value,
@@ -52,7 +51,7 @@ fn app_selector_values_inner(
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Vec<AppSelectorValue> {
     let Some(value) = value else {
         return vec![];
@@ -78,7 +77,7 @@ fn app_selector_values_inner(
 
 struct SelectorFileContext<'a> {
     file: &'a Path,
-    visible_files: Option<&'a HashSet<PathBuf>>,
+    visible_files: Option<&'a crate::fx::PathSet>,
 }
 
 fn jsx_expression_values_inner(
@@ -88,7 +87,7 @@ fn jsx_expression_values_inner(
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Vec<AppSelectorValue> {
     match expression {
         oxc_ast::ast::JSXExpression::StringLiteral(literal) => {

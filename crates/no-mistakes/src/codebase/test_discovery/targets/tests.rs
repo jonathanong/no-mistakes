@@ -117,3 +117,20 @@ fn swift_test_file_arg_keeps_literal_path_for_private_fallback() {
         "Tests/AppTests.swift"
     );
 }
+
+#[test]
+fn jest_uses_jest_binary_and_config_flag() {
+    let target = target_for(
+        TestRunner::Jest,
+        Some("jest.config.js"),
+        false,
+        None,
+        "src/value.test.ts",
+    );
+    assert_eq!(target.base_command, vec!["jest"]);
+    assert_eq!(
+        target.runner_args,
+        vec!["--config", "jest.config.js", "src/value.test.ts"]
+    );
+    assert_eq!(target.runner, "jest");
+}

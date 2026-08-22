@@ -6,7 +6,7 @@ struct SymbolRuntimeEdgeInputs<'a> {
     calls_by_caller: &'a HashMap<String, Vec<FunctionCall>>,
     http_route_defs: &'a [(PathBuf, String)],
     process_spawns: &'a [crate::codebase::ts_process_spawn::SpawnEdge],
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a crate::fx::PathSet,
     interner: &'a PathInterner,
 }
 
@@ -37,14 +37,14 @@ fn collect_symbol_runtime_owner_file_edges(
         for target in &http_targets {
             edges.push((
                 from.clone(),
-                NodeId::file_in(interner, target.clone()),
+                NodeId::file_in(interner, target),
                 EdgeKind::HttpCall,
             ));
         }
         for target in &process_targets {
             edges.push((
                 from.clone(),
-                NodeId::file_in(interner, target.clone()),
+                NodeId::file_in(interner, target),
                 EdgeKind::ProcessSpawn,
             ));
         }
@@ -56,7 +56,7 @@ fn symbol_process_targets(
     path: &Path,
     calls: &[FunctionCall],
     process_spawns: &[crate::codebase::ts_process_spawn::SpawnEdge],
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     let mut targets = Vec::new();
     for call in calls {

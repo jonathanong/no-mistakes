@@ -1,6 +1,5 @@
 // no-mistakes-disable-file rust-max-lines-per-file: legacy resolver coverage suite
 use super::*;
-use std::collections::HashSet;
 use tempfile::TempDir;
 
 impl ImportResolutionCache {
@@ -268,7 +267,7 @@ fn project_resolver_legacy_path_retains_the_explicit_shared_cache() {
     let importer = web.join("src/entry.ts");
     let target = web.join("src/runtime/value.ts");
     let tsconfig = load_tsconfig(&web.join("tsconfig.json")).unwrap();
-    let visible = HashSet::from([importer.clone(), target.clone()]);
+    let visible = [importer.clone(), target.clone()].into_iter().collect();
     let cache = ImportResolutionCache::default();
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
@@ -309,7 +308,10 @@ fn queue_compatibility_never_clears_the_standard_fixed_session_cache() {
     let importer = root.join("enqueue.ts");
     let target = root.join("queues/email.ts");
     let visible_paths = [importer.clone(), target.clone()];
-    let visible = visible_paths.iter().cloned().collect::<HashSet<_>>();
+    let visible = visible_paths
+        .iter()
+        .cloned()
+        .collect::<crate::fx::PathSet>();
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -363,7 +365,7 @@ fn standalone_scoped_resolver_builds_one_visibility_scope_per_selected_catalog_c
         worker_target.clone(),
     ]
     .into_iter()
-    .collect::<HashSet<_>>();
+    .collect::<crate::fx::PathSet>();
     // The resolver must not sort this request-wide universe for each of the
     // synthetic importers below. They model a large one-config package.
     visible.extend((0..256).map(|index| root.join(format!("generated/{index}.ts"))));
@@ -1340,7 +1342,7 @@ fn import_resolver_uses_visible_file_set() {
         paths_dir: dir.path().to_path_buf(),
         base_url: None,
     };
-    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let visible: crate::fx::PathSet = [target.clone()].into_iter().collect();
     let resolver = ImportResolver::new(&tc).with_visible(&visible);
 
     assert_eq!(resolver.resolve("./utils", &importer), Some(target));
@@ -1362,7 +1364,7 @@ fn import_resolver_with_visible_keeps_cache_enabled() {
         paths_dir: dir.path().to_path_buf(),
         base_url: None,
     };
-    let visible: HashSet<PathBuf> = [target].into();
+    let visible: crate::fx::PathSet = [target].into_iter().collect();
     let resolver = ImportResolver::new(&tc).with_visible(&visible);
     assert!(resolver.cache_enabled);
 
@@ -1391,7 +1393,7 @@ fn import_resolver_with_visible_clears_stale_cache_entries() {
     let resolver = ImportResolver::new(&tc);
     assert_eq!(resolver.resolve("./utils", &importer), Some(target));
 
-    let visible: HashSet<PathBuf> = HashSet::new();
+    let visible: crate::fx::PathSet = crate::fx::PathSet::default();
     let resolver = resolver.with_visible(&visible);
 
     assert!(resolver.resolve("./utils", &importer).is_none());
@@ -1408,7 +1410,7 @@ fn import_resolver_cache_reuses_present_result() {
         paths_dir: dir.path().to_path_buf(),
         base_url: None,
     };
-    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let visible: crate::fx::PathSet = [target.clone()].into_iter().collect();
     let resolver = ImportResolver::new(&tc).with_visible(&visible);
 
     assert_eq!(resolver.resolve("./utils", &importer), Some(target.clone()));
@@ -1440,7 +1442,7 @@ fn import_resolver_reports_exact_cached_work_for_hits_and_misses() {
     let root = fixture("explicit-json");
     let importer = root.join("src/main.mts");
     let target = normalize_path(&root.join("src/data.json"));
-    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let visible: crate::fx::PathSet = [target.clone()].into_iter().collect();
     let config = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -1472,7 +1474,7 @@ fn import_resolver_single_flights_concurrent_hits_and_misses() {
     let root = fixture("explicit-json");
     let importer = root.join("src/main.mts");
     let target = normalize_path(&root.join("src/data.json"));
-    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let visible: crate::fx::PathSet = [target.clone()].into_iter().collect();
     let config = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -1518,8 +1520,8 @@ fn import_resolver_session_reuses_only_exact_resolution_scopes() {
     let root = fixture("explicit-json");
     let importer = root.join("src/main.mts");
     let target = normalize_path(&root.join("src/data.json"));
-    let visible: HashSet<PathBuf> = [target.clone()].into();
-    let hidden = HashSet::new();
+    let visible: crate::fx::PathSet = [target.clone()].into_iter().collect();
+    let hidden: crate::fx::PathSet = crate::fx::PathSet::default();
     let config = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),

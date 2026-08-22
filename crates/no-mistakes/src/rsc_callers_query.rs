@@ -113,6 +113,7 @@ pub(crate) fn run_with_prepared(
     depth: Option<usize>,
     graph: &DepGraph,
     facts: &crate::codebase::ts_source::facts::TsFactMap,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Result<RscCallersReport> {
     let component_abs = if component.is_absolute() {
         component.to_path_buf()
@@ -122,7 +123,7 @@ pub(crate) fn run_with_prepared(
     if !component_abs.is_file() {
         anyhow::bail!("component file not found: {}", component_abs.display());
     }
-    let component_node = NodeId::file(normalize_path(&component_abs));
+    let component_node = NodeId::file_in(interner, normalize_path(&component_abs));
 
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut callers: Vec<RscCaller> = Vec::new();

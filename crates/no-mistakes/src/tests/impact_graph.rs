@@ -18,7 +18,7 @@ pub(crate) struct ImpactGraph {
     pub(crate) test_filter: TestFileFilter,
     pub(crate) vitest_projects: Vec<no_mistakes::integration_tests::types::ConfigProject>,
     pub(crate) vitest_discovered: DiscoveredTests,
-    pub(crate) visible_files: HashSet<PathBuf>,
+    pub(crate) visible_files: crate::fx::PathSet,
 }
 
 /// Test impact plus the union fact map collected for an enclosing reverse

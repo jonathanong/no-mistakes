@@ -29,7 +29,7 @@ impl PlaywrightFactPlan {
             .paths()
             .iter()
             .cloned()
-            .collect::<HashSet<_>>();
+            .collect::<crate::fx::PathSet>();
         let playwright_configs = settings
             .playwright_configs
             .iter()
@@ -146,11 +146,11 @@ impl PlaywrightFactPlan {
         self.source_file_set.contains(path)
     }
 
-    pub(crate) fn source_file_set(&self) -> &HashSet<PathBuf> {
+    pub(crate) fn source_file_set(&self) -> &crate::fx::PathSet {
         &self.source_file_set
     }
 
-    pub(crate) fn config_files(&self) -> &HashSet<PathBuf> {
+    pub(crate) fn config_files(&self) -> &crate::fx::PathSet {
         &self.config_files
     }
 

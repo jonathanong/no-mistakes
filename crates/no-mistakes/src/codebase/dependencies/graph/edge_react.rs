@@ -31,7 +31,7 @@ fn collect_react_render_edges(
                             return None;
                         }
                         Some((
-                            NodeId::file_in(interner, path.clone()),
+                            NodeId::file_in(interner, path),
                             NodeId::file_in(interner, child_path),
                             EdgeKind::ReactRender,
                         ))

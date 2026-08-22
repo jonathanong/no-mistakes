@@ -184,7 +184,7 @@ fn collect_dashboard_queue_relationships(
             // Enqueue site → QueueJob.
             for enqueue_file in enqueue_files {
                 relationships.push(DashboardQueueRelationship::new(
-                    NodeId::file_in(interner, enqueue_file.clone()),
+                    NodeId::file_in(interner, enqueue_file),
                     queue_job.clone(),
                     EdgeKind::QueueEnqueue,
                 ));
@@ -193,13 +193,13 @@ fn collect_dashboard_queue_relationships(
             // QueueJob → processor file.
             relationships.push(DashboardQueueRelationship::new(
                 queue_job.clone(),
-                NodeId::file_in(interner, processor_file.clone()),
+                NodeId::file_in(interner, processor_file),
                 EdgeKind::QueueWorker,
             ));
             if worker_file != processor_file {
                 relationships.push(DashboardQueueRelationship::new(
                     queue_job.clone(),
-                    NodeId::file_in(interner, worker_file.clone()),
+                    NodeId::file_in(interner, worker_file),
                     EdgeKind::QueueWorker,
                 ));
             }

@@ -34,7 +34,7 @@ pub struct PreparedIntegrationRunnerConfigs {
     root: PathBuf,
     specs: Vec<RunnerConfigSpec>,
     tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-    visible_files: HashSet<PathBuf>,
+    visible_files: crate::fx::PathSet,
     sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
 }
 

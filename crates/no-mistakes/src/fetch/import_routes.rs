@@ -23,7 +23,7 @@ pub fn route_reaches_target_from_visible(
     target: &Path,
     visited: &mut HashSet<PathBuf>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<bool> {
     route_reaches_target_with_visibility(path, target, visited, import_cache, Some(visible_files))
 }
@@ -36,7 +36,7 @@ pub fn route_reaches_target_from_visible_with_facts(
     visited: &mut HashSet<PathBuf>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
     parsed_files: &mut ParsedFileCache,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<bool> {
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let mut facts = RouteTargetFacts {
@@ -56,7 +56,7 @@ pub struct RouteTargetFacts<'a> {
     pub visited: &'a mut HashSet<PathBuf>,
     pub import_cache: &'a mut HashMap<PathBuf, Vec<PathBuf>>,
     pub parsed_files: &'a mut ParsedFileCache,
-    pub visible_files: &'a HashSet<PathBuf>,
+    pub visible_files: &'a crate::fx::PathSet,
 }
 
 #[doc(hidden)]
@@ -107,7 +107,7 @@ fn route_reaches_target_with_visibility(
     target: &Path,
     visited: &mut HashSet<PathBuf>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<bool> {
     let abs_target = match visible_files {
         Some(_) => crate::codebase::ts_resolver::normalize_path(target),
@@ -123,7 +123,7 @@ fn route_reaches_target_inner(
     abs_target: &Path,
     visited: &mut HashSet<PathBuf>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<bool> {
     let abs_path = match visible_files {
         Some(_) => crate::codebase::ts_resolver::normalize_path(path),
@@ -165,7 +165,7 @@ pub fn collect_layout_chain_files(route_file: &Path, frontend_root: &Path) -> Ve
 pub fn collect_layout_chain_files_from_visible(
     route_file: &Path,
     frontend_root: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     collect_layout_chain_files_inner(route_file, frontend_root, Some(visible_files))
 }
@@ -173,7 +173,7 @@ pub fn collect_layout_chain_files_from_visible(
 fn collect_layout_chain_files_inner(
     route_file: &Path,
     frontend_root: &Path,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Vec<PathBuf> {
     let mut layout_files = Vec::new();
     let mut current = route_file.parent();

@@ -17,6 +17,8 @@ tests:
     selectorExclude: ["web/generated/**"]
   vitest:
     configs: vitest.config.mts
+  jest:
+    configs: jest.config.js
   swift:
     packages:
       - swift-clients/core
@@ -113,13 +115,32 @@ tests:
 These policies are also used by `vitest-project-mapping` when that rule sets
 `explicitProjectsOnly: true`.
 
-Recovered Vitest/Playwright config projects and explicit project policies are
+## Jest
+
+`tests.jest.configs` lists explicit Jest config files for `tests plan jest`.
+Empty lists disable discovery; `no-mistakes` does not scan for `jest.config.*`
+at the repo root. Static `testMatch` string/array literals become include
+globs. Static `testRegex` literals match visible files into the same include
+list. When neither matcher is present, the shared Vitest/Jest test globs
+apply. Jest does not copy Vitest `setupFiles` / `globalSetup` edges.
+
+```yaml
+tests:
+  jest:
+    configs: jest.config.js
+    projects:
+      unit:
+        include: [src/**/*.test.ts]
+```
+
+Recovered Vitest/Playwright/Jest config projects and explicit project policies are
 authoritative test universes. Generic filename fallback is used only when that
 runner has no recovered projects; it does not add tests outside configured
 `include`/`exclude` globs. Vitest and Playwright also reserve each other's owned
 files before applying that fallback, while an explicit overlapping policy for
-the requested runner remains authoritative. Dotnet and Swift keep their
-documented explicit native full-suite fallback behavior.
+the requested runner remains authoritative. Jest never uses filename fallback.
+Dotnet and Swift keep their documented explicit native full-suite fallback
+behavior.
 
 ## Dotnet
 

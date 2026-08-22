@@ -41,7 +41,7 @@ pub(crate) fn analyze_file_from_visible(
     fetches: &mut Vec<FetchOccurrence>,
     cache: &mut Cache,
     inherited: (bool, bool),
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<bool> {
     analyze_file_inner(
         path,
@@ -61,7 +61,7 @@ pub(crate) struct VisibleFileAnalysis<'a> {
     pub fetches: &'a mut Vec<FetchOccurrence>,
     pub cache: &'a mut Cache,
     pub parsed_files: &'a mut ParsedFileCache,
-    pub visible_files: &'a HashSet<PathBuf>,
+    pub visible_files: &'a crate::fx::PathSet,
 }
 
 pub(crate) fn analyze_file_from_visible_with_facts(

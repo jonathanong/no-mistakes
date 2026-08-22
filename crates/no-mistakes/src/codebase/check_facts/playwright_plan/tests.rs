@@ -3,7 +3,7 @@ use super::{
     PlaywrightOccurrenceKey, PlaywrightSettingsKey,
 };
 use crate::playwright::playwright_tests::TestPolicy;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -201,7 +201,7 @@ impl PlaywrightFactPlan {
             files
                 .into_iter()
                 .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-                .collect::<HashSet<_>>(),
+                .collect::<crate::fx::PathSet>(),
         );
         for plan in &mut self.source_plans {
             plan.app_source_files = Arc::clone(&files);
@@ -316,10 +316,10 @@ fn source_plans_coalesce_when_only_selector_wrappers_differ() {
     let source_plan = |settings: crate::playwright::config::Settings, file: &str| {
         let settings_key = PlaywrightSettingsKey::new(&settings);
         super::PlaywrightSourceFactPlan {
-            app_source_files: Arc::new(HashSet::from([PathBuf::from(file)])),
+            app_source_files: Arc::new([PathBuf::from(file)].into_iter().collect()),
             selector_regexes: Arc::clone(&regexes),
             settings: Arc::new(settings),
-            visible_files: Arc::new(HashSet::new()),
+            visible_files: Arc::new(crate::fx::PathSet::default()),
             scan_html_ids: false,
             settings_key,
         }

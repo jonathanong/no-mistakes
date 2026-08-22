@@ -1,5 +1,5 @@
 use super::{TsFactMap, TsFactPlan, TsFileFacts};
-use std::collections::HashMap;
+use crate::fx::{fx_map, FxHashMap};
 use std::path::PathBuf;
 
 impl TsFactMap {
@@ -7,10 +7,10 @@ impl TsFactMap {
         Self::default()
     }
 
-    pub(super) fn with_plan(facts: HashMap<PathBuf, TsFileFacts>, plan: TsFactPlan) -> Self {
+    pub(super) fn with_plan(facts: FxHashMap<PathBuf, TsFileFacts>, plan: TsFactPlan) -> Self {
         Self {
             owned: facts,
-            shared: HashMap::new(),
+            shared: fx_map(),
             plan,
         }
     }
@@ -27,7 +27,7 @@ impl TsFactMap {
         plan: TsFactPlan,
     ) -> Self {
         Self {
-            owned: HashMap::new(),
+            owned: fx_map(),
             shared: facts.into_iter().collect(),
             plan,
         }
@@ -134,7 +134,7 @@ impl std::ops::Index<&PathBuf> for TsFactMap {
 
 impl<const N: usize> From<[(PathBuf, TsFileFacts); N]> for TsFactMap {
     fn from(entries: [(PathBuf, TsFileFacts); N]) -> Self {
-        Self::with_plan(HashMap::from(entries), TsFactPlan::default())
+        Self::with_plan(entries.into_iter().collect(), TsFactPlan::default())
     }
 }
 

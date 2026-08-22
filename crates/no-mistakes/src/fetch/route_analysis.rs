@@ -26,7 +26,7 @@ pub fn collect_route_fetches_from_visible(
     frontend_root: &Path,
     root: &Path,
     cache: &mut Cache,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<FetchOccurrence>> {
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     collect_route_fetches_inner(
@@ -47,7 +47,7 @@ pub fn collect_route_fetches_from_visible_with_facts(
     root: &Path,
     cache: &mut Cache,
     parsed_files: &mut ParsedFileCache,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<FetchOccurrence>> {
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     collect_route_fetches_from_visible_with_facts_and_session(
@@ -70,7 +70,7 @@ pub fn collect_route_fetches_from_visible_with_facts_and_session(
     root: &Path,
     cache: &mut Cache,
     parsed_files: &mut ParsedFileCache,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<FetchOccurrence>> {
     collect_route_fetches_inner(
         session,
@@ -89,7 +89,7 @@ fn collect_route_fetches_inner(
     frontend_root: &Path,
     root: &Path,
     cache: &mut Cache,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     parsed_files: Option<&mut ParsedFileCache>,
 ) -> Result<Vec<FetchOccurrence>> {
     let route_is_page = route.file.file_stem().and_then(|s| s.to_str()) == Some("page");
@@ -149,7 +149,7 @@ struct FetchTraversal<'a> {
     visited: &'a mut HashSet<(PathBuf, bool, bool)>,
     fetches: &'a mut Vec<FetchOccurrence>,
     cache: &'a mut Cache,
-    visible_files: Option<&'a HashSet<PathBuf>>,
+    visible_files: Option<&'a crate::fx::PathSet>,
     parsed_files: Option<&'a mut ParsedFileCache>,
     session: &'a crate::codebase::analysis_session::AnalysisSession,
 }

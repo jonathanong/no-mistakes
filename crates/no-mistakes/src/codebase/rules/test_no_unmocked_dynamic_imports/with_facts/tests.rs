@@ -33,7 +33,7 @@ fn dynamic_facts(path: &Path, source: &str) -> std::sync::Arc<CheckFileFacts> {
 fn per_test_requires_a_prepared_test_fact_entry() {
     let root = fixture();
     let test = root.join("tests/bad.test.mts");
-    let visible = HashSet::from([test.clone()]);
+    let visible = [test.clone()].into_iter().collect();
     let config = NoMistakesConfig::default();
     let tsconfig = tsconfig(&root);
     let catalog = TsConfigCatalog::forced(&root, tsconfig, None);
@@ -72,7 +72,7 @@ fn per_test_requires_a_prepared_test_fact_entry() {
 fn per_test_analyzes_empty_prepared_dynamic_facts() {
     let root = fixture();
     let test = root.join("tests/bad.test.mts");
-    let visible = HashSet::from([test.clone()]);
+    let visible = [test.clone()].into_iter().collect();
     let config = NoMistakesConfig::default();
     let tsconfig = tsconfig(&root);
     let catalog = TsConfigCatalog::forced(&root, tsconfig, None);
@@ -117,7 +117,7 @@ fn prepared_reachability_skips_unavailable_facts_and_keeps_disabled_origin() {
     let root = fixture();
     let test = root.join("tests/disabled.test.mts");
     let dependency = root.join("src/unmocked-next-dynamic-component.mts");
-    let visible = HashSet::from([test.clone(), dependency.clone()]);
+    let visible = [test.clone(), dependency.clone()].into_iter().collect();
     let config = NoMistakesConfig::default();
     let tsconfig = tsconfig(&root);
     let catalog = TsConfigCatalog::forced(&root, tsconfig, None);

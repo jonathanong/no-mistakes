@@ -19,7 +19,8 @@ pub mod effects_query;
 pub mod fetch;
 mod fetches;
 pub mod flow_query;
-mod fx;
+#[doc(hidden)]
+pub mod fx;
 pub mod impacted_checks;
 pub mod import_shape;
 pub mod imports;

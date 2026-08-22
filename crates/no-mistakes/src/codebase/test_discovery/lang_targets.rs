@@ -13,7 +13,11 @@ pub(super) fn language_target_for(
         TestRunner::Cargo => cargo_target_for(config, project, test_file),
         TestRunner::Rails => rails_target_for(config, test_file),
         TestRunner::Php => php_target_for(config, project, test_file),
-        TestRunner::Dotnet | TestRunner::Playwright | TestRunner::Vitest | TestRunner::Swift => {
+        TestRunner::Dotnet
+        | TestRunner::Playwright
+        | TestRunner::Vitest
+        | TestRunner::Jest
+        | TestRunner::Swift => {
             return None;
         }
     })

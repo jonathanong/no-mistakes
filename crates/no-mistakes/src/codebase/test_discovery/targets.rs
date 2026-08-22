@@ -52,10 +52,10 @@ pub(super) fn target_for(
     }
     runner_args.push(test_file_arg(runner, test_file));
 
-    let base_command = if runner == TestRunner::Playwright {
-        vec!["playwright".to_string(), "test".to_string()]
-    } else {
-        vec!["vitest".to_string()]
+    let base_command = match runner {
+        TestRunner::Playwright => vec!["playwright".to_string(), "test".to_string()],
+        TestRunner::Jest => vec!["jest".to_string()],
+        _ => vec!["vitest".to_string()],
     };
 
     TestExecutionTarget {
@@ -128,7 +128,7 @@ fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
     match runner {
         TestRunner::Dotnet => test_file.to_string(),
         TestRunner::Playwright => regex_escape(test_file),
-        TestRunner::Vitest => test_file.to_string(),
+        TestRunner::Vitest | TestRunner::Jest => test_file.to_string(),
         TestRunner::Swift
         | TestRunner::Python
         | TestRunner::Go

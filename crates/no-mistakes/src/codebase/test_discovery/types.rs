@@ -15,6 +15,7 @@ pub enum TestRunner {
     Cargo,
     Rails,
     Php,
+    Jest,
 }
 
 impl TestRunner {
@@ -29,6 +30,7 @@ impl TestRunner {
             "cargo" => Some(Self::Cargo),
             "rails" => Some(Self::Rails),
             "php" => Some(Self::Php),
+            "jest" => Some(Self::Jest),
             _ => None,
         }
     }
@@ -44,6 +46,7 @@ impl TestRunner {
             Self::Cargo => "cargo",
             Self::Rails => "rails",
             Self::Php => "php",
+            Self::Jest => "jest",
         }
     }
 
@@ -65,6 +68,7 @@ impl TestRunner {
             Self::Cargo => Framework::Cargo,
             Self::Rails => Framework::Rails,
             Self::Php => Framework::Php,
+            Self::Jest => Framework::Jest,
         }
     }
 }

@@ -383,7 +383,7 @@ fn vitest_setup_config_fallbacks_are_fixture_backed() {
     );
 
     let tsconfig = test_support::tsconfig_without_config(&root);
-    let visible = std::collections::HashSet::from([root.join("config")]);
+    let visible: crate::fx::PathSet = [root.join("config")].into_iter().collect();
 
     let projects =
         test_support::parse_vitest_from_visible(&source, &path, &root, &root, &tsconfig, &visible)

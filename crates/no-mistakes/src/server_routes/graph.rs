@@ -13,7 +13,7 @@ use crate::server_routes::types::{
 };
 use anyhow::Context;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -115,6 +115,7 @@ fn analyze_project_with_prepared_inner<T>(
         }
     }
     crate::server_routes::lang::merge_language_route_facts(prepared, &mut facts, filter.as_ref());
+    crate::server_routes::remix::merge_remix_route_facts(prepared, &mut facts, filter.as_ref());
     Ok(builder(prepared, &facts, &client_paths))
 }
 

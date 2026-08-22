@@ -19,7 +19,7 @@ pub(super) struct Request<'a> {
     pub(super) resolver: &'a ScopedImportResolver<'a>,
     pub(super) graph: &'a DepGraph,
     pub(super) graph_files: &'a GraphFiles,
-    pub(super) visible_files: &'a HashSet<PathBuf>,
+    pub(super) visible_files: &'a crate::fx::PathSet,
     pub(super) manual_mocks: &'a HashSet<PathBuf>,
     pub(super) setup_data: &'a [config::ConfigSetupData],
     pub(super) shared: &'a CheckFactMap,

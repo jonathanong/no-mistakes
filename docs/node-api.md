@@ -18,7 +18,7 @@ const {
   const impact = await dependents({
     root: process.cwd(),
     files: ["src/api.mts#handler"],
-    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php"],
+    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php", "jest"],
   });
 
   const report = await analyzeProject({
@@ -69,7 +69,7 @@ const {
 | `effects` | `effects(options)` |
 | `rsc-callers` | `rscCallers(options)` |
 | `registry-extension` | `registryExtension(options)` |
-| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, or `php`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
+| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, `php`, or `jest`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
 | `tests targets` | `testsTargets(options)` |
 | `tests impact` | `testsImpact(options)` |
 | `tests why` | `testsWhy(options)` |
@@ -142,7 +142,7 @@ does not have a one-to-one CLI command:
 | `serverRouteEdges` | `serverRouteEdges(options)` |
 | `serverRouteList` | `serverRouteList(options)` |
 | `serverRouteRelated` | `serverRouteRelated(options)` |
-| `serverRoutes` | `serverRoutes(options)` |
+| `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
 | `testsGraph` | `testsGraph(options)` |
 | `testsImpact` | `testsImpact(options)` |
 | `testsPlan` | `testsPlan(options)` |

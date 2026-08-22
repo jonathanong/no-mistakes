@@ -1,13 +1,13 @@
 fn load_package(
     dir: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Option<WorkspacePackage>> {
     load_package_with_sources(dir, visible_files, WorkspaceSources::Filesystem)
 }
 
 fn load_package_with_sources(
     dir: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: WorkspaceSources<'_>,
 ) -> Result<Option<WorkspacePackage>> {
     let pkg_path = dir.join("package.json");
@@ -26,7 +26,7 @@ fn load_package_with_sources(
 fn workspace_package_from_json(
     dir: &Path,
     package: PackageJson,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Option<WorkspacePackage> {
     let name = package
         .name
@@ -60,7 +60,7 @@ pub fn load_root_package_from_files(
     if !files.iter().any(|path| normalize_path(path) == manifest) {
         return Ok(None);
     }
-    let visible: std::collections::HashSet<PathBuf> =
+    let visible: crate::fx::PathSet =
         files.iter().map(|path| normalize_path(path)).collect();
     load_package(dir, Some(&visible))
 }
@@ -75,7 +75,7 @@ pub fn load_root_package_from_source_store(
     if !files.iter().any(|path| normalize_path(path) == manifest) {
         return Ok(None);
     }
-    let visible: std::collections::HashSet<PathBuf> =
+    let visible: crate::fx::PathSet =
         files.iter().map(|path| normalize_path(path)).collect();
     load_package_with_sources(dir, Some(&visible), WorkspaceSources::Store(sources))
 }
@@ -83,7 +83,7 @@ pub fn load_root_package_from_source_store(
 fn resolve_entry_with_visibility(
     dir: &Path,
     pkg: &PackageJson,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Option<PathBuf> {
     // Check `exports` first (supports both string and `{".": ...}` forms).
     if let Some(exports) = &pkg.exports {
@@ -138,7 +138,7 @@ fn resolve_entry_with_visibility(
 
 fn resolve_workspace_path(
     path: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Option<PathBuf> {
     match visible_files {
         Some(visible) => try_resolve_from_visible(path, visible),

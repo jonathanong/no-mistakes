@@ -120,6 +120,10 @@ pub(super) fn runner_config(
             config.tests.vitest.configs.as_ref(),
             &config.tests.vitest.projects,
         ),
+        TestRunner::Jest => (
+            config.tests.jest.configs.as_ref(),
+            &config.tests.jest.projects,
+        ),
         TestRunner::Swift => (None, &config.tests.swift.projects),
         TestRunner::Python
         | TestRunner::Go

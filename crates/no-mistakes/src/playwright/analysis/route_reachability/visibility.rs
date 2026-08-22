@@ -26,7 +26,7 @@ pub(super) fn collect(
     settings: &Settings,
     snapshot: &VisiblePathSnapshot,
 ) -> HashSet<PathBuf> {
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     extend(&mut visible, &snapshot.paths_for(root));
     extend(
         &mut visible,
@@ -50,7 +50,7 @@ fn extend(visible: &mut HashSet<PathBuf>, paths: &[PathBuf]) {
 pub(super) fn resolve_tsconfig(
     root: &Path,
     frontend_root: &Path,
-    visible: &HashSet<PathBuf>,
+    visible: &crate::fx::PathSet,
 ) -> Result<TsConfig> {
     find_tsconfig(frontend_root, visible)
         .or_else(|| find_tsconfig(root, visible))
@@ -59,7 +59,7 @@ pub(super) fn resolve_tsconfig(
         .map(|config| config.unwrap_or_else(|| empty_tsconfig(root)))
 }
 
-fn find_tsconfig(start: &Path, visible: &HashSet<PathBuf>) -> Option<PathBuf> {
+fn find_tsconfig(start: &Path, visible: &crate::fx::PathSet) -> Option<PathBuf> {
     let mut current = normalize_path(start);
     loop {
         let candidate = current.join("tsconfig.json");
@@ -85,7 +85,7 @@ pub(super) fn route_entry_files(
     root: &Path,
     settings: &Settings,
     route_file: &Path,
-    visible: &HashSet<PathBuf>,
+    visible: &crate::fx::PathSet,
 ) -> Vec<PathBuf> {
     let frontend_root = normalize_path(&root.join(&settings.frontend_root));
     let route_file = normalize_path(route_file);

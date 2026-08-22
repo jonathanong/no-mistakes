@@ -1,7 +1,7 @@
 fn push_unvisited_symbol_pair(
-    visited_pairs: &mut HashSet<(PathBuf, String)>,
-    queue: &mut VecDeque<(PathBuf, String)>,
-    pair: (PathBuf, String),
+    visited_pairs: &mut FxHashSet<(Arc<Path>, Arc<str>)>,
+    queue: &mut VecDeque<(Arc<Path>, Arc<str>)>,
+    pair: (Arc<Path>, Arc<str>),
 ) {
     if !visited_pairs.contains(&pair) {
         visited_pairs.insert(pair.clone());
@@ -18,16 +18,16 @@ fn bfs_skipping_symbol_owner_files<A>(
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
-    let mut visited: FxHashSet<(NodeId, Option<PathBuf>)> = fx_set();
-    let mut queue: VecDeque<(NodeId, usize, Option<PathBuf>)> = VecDeque::new();
+    let mut visited: FxHashSet<(NodeId, Option<Arc<Path>>)> = fx_set();
+    let mut queue: VecDeque<(NodeId, usize, Option<Arc<Path>>)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
     let mut result_idx: FxHashMap<NodeId, usize> = fx_map();
     let symbol_importer_files_by_owner = symbol_importer_files_by_owner(edges);
-    let root_symbols: HashSet<(PathBuf, std::sync::Arc<str>)> = starts
+    let root_symbols: FxHashSet<(Arc<Path>, Arc<str>)> = starts
         .iter()
         .filter_map(|node| {
             if let NodeId::Symbol { file, symbol } = node {
-                Some((file.to_path_buf(), symbol.clone()))
+                Some((Arc::clone(file), Arc::clone(symbol)))
             } else {
                 None
             }
@@ -62,14 +62,14 @@ where
                 ) = (&node, neighbor)
                 {
                     if neighbor_file == owner
-                        && root_symbols.contains(&(owner.to_path_buf(), symbol.clone()))
+                        && root_symbols.contains(&(Arc::clone(owner), Arc::clone(symbol)))
                     {
                         continue;
                     }
                 }
                 if let (Some(owner), NodeId::File(importer)) = (&owner_context, neighbor) {
                     if symbol_importer_files_by_owner
-                        .get(owner.as_path())
+                        .get(owner.as_ref())
                         .is_some_and(|files| files.contains(importer.as_ref()))
                     {
                         continue;
@@ -84,7 +84,7 @@ where
                     (NodeId::Symbol { file: owner, .. }, NodeId::File(neighbor_file))
                         if neighbor_file == owner =>
                     {
-                        Some(owner.to_path_buf())
+                        Some(Arc::clone(owner))
                     }
                     _ => None,
                 };
@@ -113,20 +113,20 @@ where
 
 fn symbol_importer_files_by_owner<A>(
     edges: &FxHashMap<NodeId, A>,
-) -> HashMap<PathBuf, HashSet<PathBuf>>
+) -> FxHashMap<Arc<Path>, FxHashSet<Arc<Path>>>
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
-    let mut map: HashMap<PathBuf, HashSet<PathBuf>> = HashMap::new();
+    let mut map: FxHashMap<Arc<Path>, FxHashSet<Arc<Path>>> = fx_map();
     for (target, importers) in edges {
         let NodeId::Symbol { file: owner, .. } = target else {
             continue;
         };
-        let files = map.entry(owner.to_path_buf()).or_default();
+        let files = map.entry(Arc::clone(owner)).or_insert_with(fx_set);
         for (importer, _) in importers.as_ref() {
             match importer {
                 NodeId::File(file) | NodeId::Symbol { file, .. } => {
-                    files.insert(file.to_path_buf());
+                    files.insert(Arc::clone(file));
                 }
                 _ => {}
             }

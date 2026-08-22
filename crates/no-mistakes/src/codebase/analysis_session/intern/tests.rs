@@ -158,6 +158,20 @@ fn intern_table_is_shared_across_session_handle_clones() {
 }
 
 #[test]
+fn file_in_of_same_path_shares_arc_pointer() {
+    let interner = PathInterner::new();
+    let left = NodeId::file_in(&interner, "src/widget.ts");
+    let right = NodeId::file_in(&interner, PathBuf::from("src/widget.ts"));
+    match (&left, &right) {
+        (NodeId::File(first), NodeId::File(second)) => {
+            assert!(Arc::ptr_eq(first, second));
+        }
+        other => panic!("expected File nodes, got {other:?}"),
+    }
+    assert_eq!(left, NodeId::file("src/widget.ts"));
+}
+
+#[test]
 fn concurrent_intern_path_and_str_share_one_arc() {
     let interner = Arc::new(PathInterner::new());
     let path_workers: Vec<_> = (0..8)

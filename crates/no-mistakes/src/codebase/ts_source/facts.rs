@@ -5,10 +5,10 @@ use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
+use crate::fx::FxHashMap;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -95,8 +95,8 @@ pub struct TsFileFacts {
 
 #[derive(Debug, Clone, Default)]
 pub struct TsFactMap {
-    owned: HashMap<PathBuf, TsFileFacts>,
-    shared: HashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
+    owned: FxHashMap<PathBuf, TsFileFacts>,
+    shared: FxHashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
     plan: TsFactPlan,
 }
 

@@ -16,6 +16,7 @@ pub struct TestPlanConfig {
     pub cargo: TestPlanFrameworkConfig,
     pub rails: TestPlanFrameworkConfig,
     pub php: TestPlanFrameworkConfig,
+    pub jest: TestPlanFrameworkConfig,
 }
 
 /// Raw deserialization target that accepts both `fullSuiteTriggers` (current)
@@ -90,6 +91,7 @@ pub enum TestPlanIgnoredChangedTestsFramework {
     Cargo,
     Rails,
     Php,
+    Jest,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
