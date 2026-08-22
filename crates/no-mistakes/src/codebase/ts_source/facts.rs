@@ -176,6 +176,6 @@ impl std::fmt::Debug for TsFactMap {
 }
 
 #[cfg(test)]
-mod tests;
-#[cfg(test)]
 mod domain_visible_tests;
+#[cfg(test)]
+mod tests;
