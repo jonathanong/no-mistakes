@@ -48,11 +48,9 @@ fn two_node_cycle_ignores_edges_to_acyclic_neighbors() {
             edge("a.yml", "c.yml"),
         ],
     );
-    assert!(
-        diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
-    );
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
 }
 
 #[test]
@@ -66,16 +64,12 @@ fn acyclic_predecessor_of_a_cycle_does_not_join_the_scc() {
             edge("c.yml", "b.yml"),
         ],
     );
-    assert!(
-        diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
-    );
-    assert!(
-        diagnostics
-            .iter()
-            .all(|diagnostic| { diagnostic.code != DiagnosticCode::WorkflowRunChainLimit })
-    );
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
+    assert!(diagnostics
+        .iter()
+        .all(|diagnostic| { diagnostic.code != DiagnosticCode::WorkflowRunChainLimit }));
 }
 
 #[test]
@@ -98,9 +92,7 @@ fn diamond_keeps_the_longest_chain_witness() {
             edge("w4.yml", "w5.yml"),
         ],
     );
-    assert!(
-        diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunChainLimit)
-    );
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunChainLimit));
 }

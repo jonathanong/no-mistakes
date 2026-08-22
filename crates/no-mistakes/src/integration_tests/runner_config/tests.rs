@@ -56,18 +56,14 @@ fn prepared_runner_records_cached_parse_errors_as_project_results() {
         .parse_path_for_facts_with_session(&session, &path)
         .unwrap();
     assert_eq!(facts.results.len(), 1);
-    assert!(
-        facts.results[0]
-            .projects
-            .as_ref()
-            .unwrap_err()
-            .contains("failed to parse")
-    );
-    assert!(
-        prepared
-            .parse_error(&root.join("unprepared.mts"), "ignored".to_string())
-            .is_none()
-    );
+    assert!(facts.results[0]
+        .projects
+        .as_ref()
+        .unwrap_err()
+        .contains("failed to parse"));
+    assert!(prepared
+        .parse_error(&root.join("unprepared.mts"), "ignored".to_string())
+        .is_none());
 }
 
 #[test]
@@ -146,11 +142,9 @@ fn json_workspace_folder_strings_use_default_projects_and_global_negations() {
         scopes,
         ["string-project", "configless", "folder-projects/one"]
     );
-    assert!(
-        projects
-            .iter()
-            .all(|project| { project.scope.as_deref() != Some("folder-projects/skip") })
-    );
+    assert!(projects
+        .iter()
+        .all(|project| { project.scope.as_deref() != Some("folder-projects/skip") }));
     assert!(projects.iter().any(|project| {
         project.scope.as_deref() == Some("configless")
             && project
@@ -200,11 +194,9 @@ fn prepared_runner_uses_session_source_and_parser_gateways_once() {
 
     crate::ast::with_request_parse_cache(|| {
         for _ in 0..2 {
-            assert!(
-                prepared
-                    .parse_path_for_facts_with_session(&session, &path)
-                    .is_some()
-            );
+            assert!(prepared
+                .parse_path_for_facts_with_session(&session, &path)
+                .is_some());
         }
     });
 
@@ -320,13 +312,11 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
         visible_files: [missing_path].into_iter().collect(),
         ..plan
     };
-    assert!(
-        parsed
-            .projects_for(&missing_plan, Framework::Vitest)
-            .unwrap_err()
-            .to_string()
-            .contains("missing prepared vitest config")
-    );
+    assert!(parsed
+        .projects_for(&missing_plan, Framework::Vitest)
+        .unwrap_err()
+        .to_string()
+        .contains("missing prepared vitest config"));
 }
 
 #[test]
